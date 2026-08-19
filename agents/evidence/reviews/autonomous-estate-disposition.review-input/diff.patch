@@ -1,0 +1,2142 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 01cbb56d8d77046602656c94d330d6deb66fa7ab..b2c4407e0fb7d0d069b04bd96f95b67b837cd38a 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
++> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **21** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**316 / 557 steps done · 57%**
++**301 / 539 steps done · 56%**
+ 
+ ```text
+-███████████████████████░░░░░░░░░░░░░░░░░   57%
++██████████████████████░░░░░░░░░░░░░░░░░░   56%
+ ```
+ 
+ ## Open roadmaps
+@@ -17,38 +17,97 @@
+ | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+-| 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+-| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
+-| 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+-| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+-| 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
+-| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 10 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+-| 11 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
+-| 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+-| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
+-| 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+-| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+-| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+-| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
+-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 3 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
++| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
++| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
++| 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
++| 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
++| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
++| 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
++| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
++| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
++| 13 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
++| 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 16 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
++| 17 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
++| 18 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
++| 19 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
++| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
++| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 22 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
++| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
++| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
++| 27 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
++| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
++| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 30 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 31 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++
++---
++
++## Parked — `later/` (52 roadmaps, not active backlog)
++
++> Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
++
++| Roadmap | Resume when |
++|---|---|
++| [domain-pack-extraction-when-triggered.md](roadmaps/later/domain-pack-extraction-when-triggered.md) | Blocked until: `docs/contracts/domain-pack-overlap-inventory.md` exists. |
++| [road-to-benchmark-obsolescence-lifecycle.md](roadmaps/later/road-to-benchmark-obsolescence-lifecycle.md) | _condition present but unlabelled — see file_ |
++| [road-to-carrier-layer-convergence.md](roadmaps/later/road-to-carrier-layer-convergence.md) | Parked 2026-08-19. Resume when the before/after delivered-token pair for |
++| [road-to-catalogue-host-fit.md](roadmaps/later/road-to-catalogue-host-fit.md) | Blocked until: `agents/evidence/metrics/skill-catalogue.jsonl` holds at |
++| [road-to-command-structure-followup.md](roadmaps/later/road-to-command-structure-followup.md) | Blocked until: the per-item triggers below fire. |
++| [road-to-contract-integrity.md](roadmaps/later/road-to-contract-integrity.md) | only open work — Phase 2 family-first presentation — is blocked until the |
++| [road-to-corpus-knowledge-skills.md](roadmaps/later/road-to-corpus-knowledge-skills.md) | Blocked until the maintainer names the first two corpora (Phase 0.2) or |
++| [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md) | Resume when EITHER: (a) the orchestration claim queue is free and the |
++| [road-to-council-api-quota-source-split.md](roadmaps/later/road-to-council-api-quota-source-split.md) | Blocked until `agents/evidence/council-api-fallback/quota-source-split-request.md` exists. <!-- ref-ignore --> |
++| [road-to-credible-install.md](roadmaps/later/road-to-credible-install.md) | Resume when the breaking release carrying the Phase-2 scoped-projection |
++| [road-to-cross-model-residuals.md](roadmaps/later/road-to-cross-model-residuals.md) | ## Resume when / Trigger |
++| [road-to-cross-model-routing-eval.md](roadmaps/later/road-to-cross-model-routing-eval.md) | Blocked until all three gates clear: (a) OpenAI and Gemini API |
++| [road-to-deferred-rule-retriever.md](roadmaps/later/road-to-deferred-rule-retriever.md) | Blocked until BOTH hold: (1) the first native engine's Phase-5 benchmark |
++| [road-to-discipline-profile-tiering-followup.md](roadmaps/later/road-to-discipline-profile-tiering-followup.md) | Resume when: an open-source-host adapter exists AND the maintainer wants |
++| [road-to-external-proof-upgrade.md](roadmaps/later/road-to-external-proof-upgrade.md) | Resume when the maintainer picks up the encryption default-flip; it needs no |
++| [road-to-gateway-harvest.md](roadmaps/later/road-to-gateway-harvest.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
++| [road-to-guided-journeys.md](roadmaps/later/road-to-guided-journeys.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
++| [road-to-harvest-second-sweep-proposals.md](roadmaps/later/road-to-harvest-second-sweep-proposals.md) | they are tracked, not lost — neither is auto-applied. Resume when the |
++| [road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md](roadmaps/later/road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md) | _condition present but unlabelled — see file_ |
++| [road-to-install-path-convergence-followup.md](roadmaps/later/road-to-install-path-convergence-followup.md) | Blocked until the bootstrap shim has shipped and a monitoring window |
++| [road-to-live-app-verdict.md](roadmaps/later/road-to-live-app-verdict.md) | Blocked until: a consumer repo's live-app CI run of the |
++| [road-to-mcp-full-power.md](roadmaps/later/road-to-mcp-full-power.md) | Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left z... |
++| [road-to-mission-catalogue.md](roadmaps/later/road-to-mission-catalogue.md) | Status: later (parked). Blocked until the `/mission:upgrade` |
++| [road-to-mixed-trigger-activation-cost.md](roadmaps/later/road-to-mixed-trigger-activation-cost.md) | Blocked until: the host exposes an `InstructionsLoaded` observer that a |
++| [road-to-originality-gate-and-contributor-funnel.md](roadmaps/later/road-to-originality-gate-and-contributor-funnel.md) | Blocked until: the extraction demand-gate window closes — floor met |
++| [road-to-per-workspace-license-policy.md](roadmaps/later/road-to-per-workspace-license-policy.md) | Blocked until: a real consumer repo hits the v1 escalation, i.e. a |
++| [road-to-plugin-runtime-borrowings.md](roadmaps/later/road-to-plugin-runtime-borrowings.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
++| [road-to-policy-evaluation-core.md](roadmaps/later/road-to-policy-evaluation-core.md) | Blocked until BOTH hold: (1) the first native engine's Phase-5 benchmark |
++| [road-to-product-bets.md](roadmaps/later/road-to-product-bets.md) | Blocked until: a real external user signal naming rule count or surface |
++| [road-to-reach-cost-primary-bench.md](roadmaps/later/road-to-reach-cost-primary-bench.md) | _condition present but unlabelled — see file_ |
++| [road-to-reach-headless.md](roadmaps/later/road-to-reach-headless.md) | _condition present but unlabelled — see file_ |
++| [road-to-reach-reddit-approved-api.md](roadmaps/later/road-to-reach-reddit-approved-api.md) | _condition present but unlabelled — see file_ |
++| [road-to-reach-reddit-session.md](roadmaps/later/road-to-reach-reddit-session.md) | _condition present but unlabelled — see file_ |
++| [road-to-reach-transcribe.md](roadmaps/later/road-to-reach-transcribe.md) | _condition present but unlabelled — see file_ |
++| [road-to-reach-twitter-login.md](roadmaps/later/road-to-reach-twitter-login.md) | _condition present but unlabelled — see file_ |
++| [road-to-run-continuation-observation.md](roadmaps/later/road-to-run-continuation-observation.md) | Parked 2026-08-19. Resume when any roadmap carrying |
++| [road-to-skill-ecosystem-capability-queue.md](roadmaps/later/road-to-skill-ecosystem-capability-queue.md) | Resume when a slot frees and the maintainer picks an entry for it. Verify |
++| [road-to-skill-ecosystem-eval-integrity.md](roadmaps/later/road-to-skill-ecosystem-eval-integrity.md) | Resume when a verification slot frees — a predecessor roadmap reaches zero |
++| [road-to-skill-ecosystem-executable-payloads.md](roadmaps/later/road-to-skill-ecosystem-executable-payloads.md) | Blocked until: `agents/evidence/analysis/skill-payload-phase0-spikes.md` |
++| [road-to-skill-ecosystem-runtime-enforcement.md](roadmaps/later/road-to-skill-ecosystem-runtime-enforcement.md) | Resume when one of the two open verification roadmaps reaches zero open |
++| [road-to-skill-ecosystem-security-and-conformance.md](roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md) | Resume when a verification slot frees — a predecessor roadmap reaches zero |
++| [road-to-sparring-critic-spike.md](roadmaps/later/road-to-sparring-critic-spike.md) | Blocked until BOTH hold: (1) `road-to-lean-agent-init.md` is closed and |
++| [road-to-surface-consolidation.md](roadmaps/later/road-to-surface-consolidation.md) | Parked 2026-08-19. Resume when BOTH hold — the condition is conjunctive on |
++| [road-to-thin-flip-under-anchor-scoring.md](roadmaps/later/road-to-thin-flip-under-anchor-scoring.md) | _no resume line recorded_ |
++| [road-to-token-economy-cache-followup.md](roadmaps/later/road-to-token-economy-cache-followup.md) | external trigger: one instrumented week of real sessions. Resume when: |
++| [road-to-token-economy-dispatch-followup.md](roadmaps/later/road-to-token-economy-dispatch-followup.md) | or a maintainer blocker. Resume when EITHER: (a) the `rules_used` |
++| [road-to-token-proof-and-story.md](roadmaps/later/road-to-token-proof-and-story.md) | Resume when: a context-reduction mechanism (orchestration-scoped loading, |
++| [road-to-token-saving-HUMAN-MEASUREMENT.md](roadmaps/later/road-to-token-saving-HUMAN-MEASUREMENT.md) | _condition present but unlabelled — see file_ |
++| [road-to-token-saving.md](roadmaps/later/road-to-token-saving.md) | operator-gated; nothing is agent-workable now. Resume when the operator |
++| [road-to-voice-negative-lexicon.md](roadmaps/later/road-to-voice-negative-lexicon.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
++| [road-to-worker-generation-recycling.md](roadmaps/later/road-to-worker-generation-recycling.md) | construction. Resume when the maintainer blockers are resolved and |
++| [road-to-zero-ceremony-host-primitives.md](roadmaps/later/road-to-zero-ceremony-host-primitives.md) | Blocked until the ADR that governs tier→model mapping enters its recorded |
+ 
+ ---
+ 
+@@ -114,28 +173,6 @@
+     workers).
+   - **Resolved when:** the policy artefact exists and the resolver entries cite it.
+ 
+-### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
+-
+-**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 3 / 5 done (60%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Establish which layer is stale, per rule | ✅ done | 0 | 2 | 0 | 0 | 100% |
+-| 2 | Converge | ✅ done | 0 | 1 | 0 | 3 | 100% |
+-| 3 | Deduplicate, and prove the saving | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-
+-<a id="blockers-road-to-carrier-layer-convergence"></a>
+-**Blockers**
+-
+-- **b-convergence-machine** (owner: user) — blocks Phase 3 only (Phases 1-2 are repo work)
+-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note. Do not try to reproduce the two-layer topology in the repo: the entry already states that the topology is a property of the install, so a repo-side reconstruction would measure something else and read as the same number. Phases 1-2 are repo work and proceed meanwhile; only Phase 3 waits.
+-  - **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means the convergence claim ships with no before/after pair behind it — the shape where a number is published and the measurement that would falsify it was never taken.
+-  - **What to do:**
+-    Phase 3's before/after pair needs the maintainer machine,
+-    since the two-layer topology is a property of the install rather than of the
+-    repo. Run the reading, apply `install --layer`, run it again.
+-  - **Resolved when:** both readings exist at a named commit.
+-
+ ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
+ 
+ **Follow-up to CI-native release — first live run + drills** — 0 / 8 done (0%)
+@@ -1115,34 +1152,6 @@ _1 blocker resolved._
+     lines accumulate, and raising the line count further will not move it.
+   - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
+ 
+-### [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md)
+-
+-**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 12 / 13 done (92%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Collapse the proactive suggestion surface (the core) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 2 | Supporting net-reductions (remove / fold, never add) | ✅ done | 0 | 4 | 1 | 0 | 100% |
+-| 3 | Utilization-window disposition sweep (re-homed 2026-07-28) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+-
+-<a id="blockers-road-to-surface-consolidation"></a>
+-**Blockers**
+-
+-- **repo-admin-and-usage** (owner: maintainer) — blocks branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
+-  - **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
+-  - **If you do nothing:** the required-check set stays advisory — a check can go red on the trunk without refusing the merge, which is exactly the state branch protection exists to end — and the artefact surface keeps growing with no removal ever justified, which is the condition this roadmap was opened to close.
+-  - **What to do:**
+-    the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
+-  - **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
+-- **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
+-  - **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
+-  - **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
+-  - **What to do:**
+-    each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
+-  - **Resolved when:** the maintainer authorizes the specific run with an estimate, or records (c).
+-
+-_1 blocker resolved._
+-
+ ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
+ 
+ **Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
+diff --git a/agents/roadmaps/later/road-to-carrier-layer-convergence.md b/agents/roadmaps/later/road-to-carrier-layer-convergence.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e3e96fb4badfed5e379075e156890c88b51cb24
+--- /dev/null
++++ b/agents/roadmaps/later/road-to-carrier-layer-convergence.md
+@@ -0,0 +1,276 @@
++---
++complexity: lightweight
++status: later
++execution:
++  mode: autonomous
++parent_roadmap: road-to-feedback-9-29
++---
++
++# Road to carrier-layer convergence — 109 rules arrive twice, none identical
++
++> **Parked 2026-08-19. Resume when** the before/after delivered-token pair for
++> Phase 3 exists: both readings taken on the maintainer's own installed topology,
++> either side of `install --layer`, recorded against one named commit, and with
++> the suppressed layer named — not only the token delta. That evidence is the
++> whole of what is missing; Phases 1 and 2 are resolved (Phase 1 done, Phase 2's
++> three steps cancelled plus one added step done), so the two remaining steps are
++> both in Phase 3 and both covered by `b-convergence-machine`, Class 3.
++>
++> Parked rather than left active because every open item is gated outside this
++> roadmap, which is the repository's own active-vs-later test: an agent cannot
++> make progress here now. `/roadmap:process-full` agrees independently — run on
++> this file it terminates at `blocked-preflight` with zero runnable open steps,
++> taking no grant and writing nothing. Leaving it active would make the estate
++> advertise work the command is required to refuse.
++>
++> The blocker is preserved unresolved and still counted: parking claims no
++> reduction in open blockers. AI council 2026-08-19, 2/2 convergent
++> (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer
++> review) on exactly this disposition, against the three alternatives of keeping
++> it active, splitting the finished phases out, or leaving both candidates in
++> place.
++>
++> **The known cost, recorded because it is the one real argument against this
++> move:** `later/` is excluded from `/roadmap:process-*`, so a roadmap 6 of 8
++> steps resolved leaves the working set. Both council seats made a visible
++> parked-work inventory the condition of the disposition, and the same change
++> adds one to the generated dashboard — so this file is discoverable with its
++> resume condition rather than only as a directory entry.
++
++> The delivered-payload measurement found 109 rules present in BOTH carrier
++> layers with **zero byte-identical duplicates — all 109 divergent**. That is two
++> defects wearing one number: the largest immediately-removable share of the
++> standing-delivery floor, and a correctness hole, because when two copies of a
++> rule differ there is no defined answer to which text binds.
++
++> Source: the loaded-token measurement in
++> [`agents/evidence/analysis/loaded-rule-token-distribution.md`](../evidence/analysis/loaded-rule-token-distribution.md),
++> produced by the parent roadmap and deliberately routed out of its blockers:
++> the parent treated it as evidence-deciding-nothing, which is right for a diet
++> verdict and wrong for a delivery defect.
++
++> **CORRECTION, 2026-08-10 — half the premise above is false, and Phase 1 is what
++> falsified it.** All 109 pairs carry **byte-identical prose**; the entire
++> difference is the frontmatter block. So there is no correctness hole of the kind
++> claimed: no governed text differs, nothing is binding-ambiguous, and no claim
++> one copy retracts can be re-asserted by the other.
++>
++> **A smaller, real defect survives, and the R2 review caught it after this
++> correction was first written as an all-clear.** For **24** of the 109 the
++> frontmatter disagreement is about `paths:` — the one key this host reads, which
++> decides *when* a rule loads. Project copy scoped, global copy always-on, so the
++> global copy **un-scopes** what the project layer deliberately scoped. Identical
++> text, different schedule. Direction is safe (over-delivery, never a missing
++> obligation) and it is not zero. Whether `install.ts` should emit `paths:` is a
++> consumer-visible behaviour question and is NOT decided here.
++>
++> **Decided elsewhere, 2026-08-13 —
++> [`ADR-228`](../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
++> the global install does not emit `paths:`, and the 24 stay as accepted
++> over-delivery.** Not on cost: at least six of the 24 are safety or governance
++> floors carrying an Iron Law, and `ADR-227` records that path-scoped rules are
++> **not re-injected after `/compact`** — so scoping them globally would trade a
++> safe over-delivery for a silent under-delivery in the rules where silence is
++> most expensive. This roadmap keeps its non-goal; the question no longer waits on
++> anyone.
++>
++> The second defect sat in the instrument — a metadata-only difference was
++> reported as body divergence, i.e. as the one class the report tells a reader to
++> act on — and both are repaired under Phase 2. Classification, the cited
++> precedence answer, and the explanation of why two earlier readings of one commit
++> disagreed:
++> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
++> The original claim is kept above rather than rewritten, so the trail from
++> premise to falsification stays readable.
++
++## Goal
++
++Converge the two rule-carrier layers so a session receives each governed rule
++exactly once, with a defined binding text — measured as: overlap count 0 (or a
++stated, reasoned remainder), `check_standing_rule_delivery` under its cap on a
++maintainer machine, and no obligation lost in the process.
++
++## Prerequisites
++
++- [x] The divergence is measured, not assumed (109 shared / 0 duplicate / 109
++      divergent, two instruments, recorded with their proxies)
++
++## Context
++
++- **Suppression alone is unsafe here, and the doctor already says so.** The
++  `install --layer` path suppresses one layer without deleting it — correct for
++  byte-identical copies, wrong for divergent ones: suppressing a copy drops
++  whatever obligations only that copy carried. The savings line carries this
++  caveat for exactly this reason.
++- So the order is **converge, then deduplicate**. The global layer is a release
++  snapshot; the project layer is generated from `src/` at the current commit and
++  wins on precedence. A refresh makes the copies identical; only then is
++  suppression a no-op on content.
++- The 109 is not a token-diet line item. It is the answer to "which text binds
++  when two differ", which is the question behind every report of an instruction
++  being followed inconsistently.
++
++## Phase 1 — Establish which layer is stale, per rule
++
++- [x] For each of the 109 divergent rules, classify the divergence: the global
++      copy is an older release of the same rule (refresh closes it), the project
++      copy is generated differently (the generator is the fix), or the two carry
++      genuinely different obligations (a content decision, and the interesting
++      case). Report counts per class — a single mixed bucket is not a finding. <!-- verify: report lists all 109 with a class and the per-class totals -->
++      <!-- DONE 2026-08-10, commit a5b2f4cb7, freshly regenerated checkout.
++      Totals against the phase's own taxonomy: refresh-closes-it 0 ·
++      generator-difference 109 · genuinely-different-obligation 0.
++      READ THE 109 WITH ITS REFUTATION, never bare: the label fits but its
++      parenthesis ("the generator is the fix") does not — there is NO generator
++      defect. The honest label is a fourth bucket the taxonomy lacks, a
++      deliberate two-writer metadata policy: 109 = 24 actionable on `paths:`
++      + 85 inert. All 109 carry byte-identical prose. Listed flat, with the 24
++      broken out, in carrier-layer-divergence-classification.md. -->
++- [x] Name the precedence rule the host actually applies when both layers carry
++      a rule of the same basename, from the host's own documentation or an
++      observed load, never from inference — if it is unobservable, say so and
++      treat every divergence as binding-undefined. <!-- verify: the precedence answer cites a doc section or an InstructionsLoaded observation -->
++      <!-- DONE 2026-08-10. Answer: the host applies NO precedence — rules
++      without a `paths` key load at launch with the same priority as CLAUDE.md,
++      no marker between the layers, so binding is UNDEFINED whenever the two
++      disagree. Cited to claude-code-rules-dir-contract.md (host 2.1.226: the
++      host's own docs plus a first-party observation), never inferred. Two
++      instruments were printing the opposite ("the project projection … and
++      wins"); both corrected under Phase 2. -->
++
++Exit criteria: every one of the 109 carries a class; the precedence question has
++a cited answer or an explicit unobservable verdict.
++Rollback: report-only phase, nothing to revert.
++
++## Phase 2 — Converge
++
++- [-] Refresh the stale side for every rule in the refresh-closes-it class, so
++      the two copies become byte-identical. <!-- verify: report_carrier_divergence shows those rules as duplicate rather than divergent -->
++      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No global
++      copy carries superseded prose, so there is no stale side to refresh. An
++      empty class is a real answer, not an unfinished step. -->
++- [-] For the generator-difference class, fix the generator so the projection is
++      reproducible rather than patching the output. <!-- verify: task sync + generate-tools leaves no drift for those rules -->
++      <!-- SKIPPED 2026-08-10 — the step's own verification PASSES with no change:
++      `task sync` + `task generate-tools` at a5b2f4cb7 leaves a clean tree, so the
++      projection is already reproducible and there is no generator defect to fix.
++      The 109 are a deliberate two-writer policy difference — `generate-tools`
++      emits only `paths:` because the host reads nothing else from the block;
++      `install.ts` writes the full vocabulary plus its ownership stamp because
++      agent-config's own tooling needs it. Making them byte-identical would mean
++      either shipping payload the host ignores or dropping metadata the installer
++      needs, so convergence-by-alignment is the wrong target here. The defect the
++      classification actually surfaced was in the instrument — see the step
++      below. -->
++- [-] For any genuinely-different-obligation rule, surface it as a decision
++      rather than picking a side — this is the class where a silent choice loses
++      a governed obligation. <!-- verify: each such rule is listed with both texts and no edit applied -->
++      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No pair
++      carries different obligations, so there is nothing to surface and no side
++      to avoid picking. This is the class the phase called "the interesting
++      case"; it is empty, and that is the finding. -->
++- [x] **Added 2026-08-10, and the only convergence work that landed.** Repair the
++      instrument that reported a metadata-only difference as body divergence —
++      i.e. as the one class the report tells a reader to act on — and the
++      precedence claim both surfaces were printing. <!-- verify: report_carrier_divergence prints `differ in PROSE 0` + `differ ONLY in frontmatter 109`, states binding is UNDEFINED, and no surface claims the newer copy "wins"; pinned by tests -->
++      <!-- DONE: `proseEqual` + `stripFrontmatter` in _lib/carrier_divergence.ts
++      (deliberately NOT folded into `comparePair`, which stays byte-identity so
++      the dedup predicate is untouched); a fourth `frontmatter-only` class in
++      report_carrier_divergence; the same split and the corrected precedence
++      prose in report_conformance_funnel. Two existing tests pinned the false
++      "and wins" claim and were inverted with the citation in the test body. -->
++
++Exit criteria: `report_carrier_divergence` reports 0 divergent, or a stated
++remainder whose every member is a surfaced decision.
++<!-- MET 2026-08-10, in the terms the measurement forced: 0 PROSE-divergent, with
++a stated remainder of 109 frontmatter-only pairs whose cause is named in the
++report itself and which require no decision, because no governed text differs. -->
++Rollback: the refresh is regeneration from tracked sources, so revert is
++regeneration at the previous commit.
++
++## Phase 3 — Deduplicate, and prove the saving
++
++> **Its safety precondition is discharged for CONTENT, and the layer choice is now
++> load-bearing (2026-08-10).** The phase order exists because suppressing a
++> *divergent* copy drops whatever obligations only that copy carried. Phase 1
++> measured the prose identical across all 109, so suppression is already a no-op
++> **on content** — the thing Phase 2 was meant to establish. It is **not** a no-op
++> on load schedule: suppressing the **global** layer restores the project layer's
++> `paths:` scoping for the 24 affected rules, suppressing the **project** layer
++> makes the always-on delivery permanent. So step 1 must record WHICH layer it
++> suppressed, not only the token delta. The before/after reading still needs the
++> maintainer machine, so the blocker stands unchanged.
++
++- [ ] With the layers converged, apply the single-layer suppression and record
++      the delivered-token reading before and after on the same machine and the
++      same commit. <!-- verify: check_standing_rule_delivery under cap, with the before/after pair recorded -->
++- [ ] Re-measure `report_carrier_divergence` afterwards to confirm suppression
++      removed a duplicate rather than an obligation. <!-- verify: rule count per layer unchanged in content terms; no rule absent from the surviving layer -->
++
++Exit criteria: the gate is green on the maintainer machine with both readings
++recorded at a named commit.
++Rollback: `install --layer` is suppression, not deletion — re-enabling the
++suppressed layer restores the prior state.
++
++## Blockers
++
++### blocker: b-convergence-machine
++- **Status:** open
++- **Owner:** user
++- **Class:** 3 — human-only
++- **Blocks:** Phase 3 only (Phases 1-2 are repo work)
++- **What to do:** Phase 3's before/after pair needs the maintainer machine,
++  since the two-layer topology is a property of the install rather than of the
++  repo. Run the reading, apply `install --layer`, run it again.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Take all three steps in ONE
++  sitting — reading, `install --layer`, reading — and record both readings
++  against a named commit in the same note. Do not try to reproduce the
++  two-layer topology in the repo: the entry already states that the topology
++  is a property of the install, so a repo-side reconstruction would measure
++  something else and read as the same number. Phases 1-2 are repo work and
++  proceed meanwhile; only Phase 3 waits.
++- **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means
++  the convergence claim ships with no before/after pair behind it — the shape
++  where a number is published and the measurement that would falsify it was
++  never taken.
++- **Resolved when:** both readings exist at a named commit.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Suppressing before converging | implementation | Suppressing a divergent copy drops whatever obligations only that copy carried — a silent loss of governed text, which is worse than the duplication it removes | The phase order IS the mitigation: Phase 3 is gated on Phase 2's zero-divergent exit, and the doctor's own savings line already carries the refresh caveat | Phase 3 — Deduplicate, and prove the saving |
++| 2 | A genuinely-different obligation resolved by picking the newer copy | product | The interesting class is exactly where two texts disagree on what is required; choosing silently is a governance decision made by whoever ran the script | That class is surface-only by construction — the step forbids an edit and requires both texts side by side | Phase 2 — Converge |
++| 3 | The precedence answer is inferred rather than observed | implementation | The whole plan rests on which copy binds; an inferred answer would make every later step rest on a guess | Phase 1 step 2 requires a cited doc section or an observed load, and admits "unobservable" as a legal verdict that reclassifies all 109 as binding-undefined | Phase 1 — Establish which layer is stale, per rule |
++| 4 | The before/after pair measured across a moving tree | implementation | The project carrier is generated from `src/`, so two readings at different commits differ for reasons unrelated to deduplication and would read as a saving that is not one | Same machine, same commit, both readings recorded — the pin-your-SHA lesson the parent roadmap's own report had to learn twice | Phase 3 — Deduplicate, and prove the saving |
++| 5 | Convergence closes, then re-opens on the next release | product | The global layer is a release snapshot; refreshing it today says nothing about the next one, so the 109 could simply return | Out of scope here and named rather than hidden: a standing fix belongs to the install/release path, and this roadmap's exit criteria are point-in-time by design | Acceptance criteria |
++
++**Risk 3 materialized, and was the real defect (2026-08-10).** It warned that an
++*inferred* precedence answer would leave every later step resting on a guess.
++That is exactly what had already happened: two shipped surfaces printed "the
++project projection … and wins", which no host behaviour supports, and two tests
++pinned it. Rank 1 and Rank 2 did not materialize — both depended on a divergence
++class the measurement found empty.
++
++## Acceptance criteria
++
++- **MET** — All 109 divergent rules are classified, with per-class totals
++  (0 refresh-closes-it · 109 generator-difference · 0 genuinely-different-obligation).
++  The 109 is **not** 109 generator defects — the phase's taxonomy has no bucket
++  for a deliberate two-writer metadata policy, so the honest split is 24
++  actionable on `paths:` + 85 inert. Never quote the total without that.
++- **MET** — Divergence reaches 0, or every remaining member is a surfaced decision:
++  0 prose-divergent; the remainder is 109 frontmatter-only, of which the 24
++  `paths:` disagreements ARE surfaced as a decision (named in both report
++  surfaces, and the installer question left explicitly undecided) and the other
++  85 owe none, because no governed text differs and no key the host reads does.
++- **OPEN** — The delivered-token before/after pair is recorded at one commit on one
++  machine. Blocked on `b-convergence-machine`; its safety precondition is now
++  discharged (see Phase 3).
++- **OPEN** — No rule present before convergence is absent after deduplication.
++  Blocked with the reading above.
++- **Added, MET** — No surface claims a precedence the host does not implement. Both
++  carrier surfaces now state that binding is undefined when prose diverges, and
++  that the project copy's recency is not precedence.
+diff --git a/agents/roadmaps/later/road-to-run-continuation-observation.md b/agents/roadmaps/later/road-to-run-continuation-observation.md
+index 37b7d14ecff0b4707c53ad9a0f9e4ce6e913237f..f7b4573ff15239de9eca4359263cce035b5c1210 100644
+--- a/agents/roadmaps/later/road-to-run-continuation-observation.md
++++ b/agents/roadmaps/later/road-to-run-continuation-observation.md
+@@ -408,6 +408,27 @@ engages and leaves the event behind.
+   against the self-referential observation, one size larger. The estate has
+   several three-phase autonomous candidates already; the next one to be worked
+   discharges this for free.
++- **CONTINGENT AS OF 2026-08-19, and the criterion is NOT weakened.** The
++  sentence above about "several candidates already" was measured false the same
++  day it was written, and the estate has since gone further: both remaining
++  `execution.mode: autonomous` roadmaps — `road-to-carrier-layer-convergence` and
++  `road-to-surface-consolidation` — are parked in `later/`, each with zero
++  runnable open steps behind a Class 3 blocker. So the active autonomous estate is
++  **intentionally zero**, and no roadmap now in the estate can produce the
++  qualifying run.
++  **Currently unreachable is not impossible**, and the distinction is the whole
++  point of recording it this way: a genuine qualifying roadmap can enter the
++  estate at any time, at which point this discharges as a side effect exactly as
++  the recommendation intends. What must NOT happen is adjusting the three-phase
++  requirement because today's estate cannot exercise it — availability of test
++  material and validity of the test are separate questions, and only a maintainer
++  concluding that three-phase coverage is disproportionate should change it.
++  Equally, not every technically three-phase roadmap qualifies: the run has to
++  carry genuinely runnable autonomous work in three or more phases, or it produces
++  weak evidence for the behaviour 0.1 exists to validate.
++  AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 +
++  openai/codex-default, two rounds, blind peer review) — both seats reached this
++  independently, and both rejected weakening the criterion to match the estate.
+ - **If you do nothing:** step 0.1 stays open and this roadmap stays in the
+   active estate at 3 of 4 items. Nothing regresses and no evidence decays —
+   the ledger line from 0.0 is durable. The cost is one open roadmap carrying
+diff --git a/agents/roadmaps/later/road-to-surface-consolidation.md b/agents/roadmaps/later/road-to-surface-consolidation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..94665dd0e5f50272a1c506e7e76cbe192c873fa7
+--- /dev/null
++++ b/agents/roadmaps/later/road-to-surface-consolidation.md
+@@ -0,0 +1,382 @@
++---
++complexity: structural
++status: later
++execution:
++  mode: autonomous
++---
++
++# Road to surface consolidation — collapse the proactive mental surface, remove don't add
++
++> **Parked 2026-08-19. Resume when BOTH hold** — the condition is conjunctive on
++> purpose, and the council corrected an earlier single-clause version of it:
++> (a) the pre-registered utilization window has elapsed (~2026-08-26), and
++> (b) enough loaded-versus-fired usage data has accumulated to actually run the
++> KEEP / MERGE / DEMOTE / REMOVE sweep. The date alone is necessary and not
++> sufficient — a window that elapsed with no usage evidence behind it would let
++> the sweep delete on a guess, which its own verify clause forbids.
++>
++> One open step remains (Phase 3's disposition sweep) against 12 done and 1
++> deferred. It is covered by `repo-admin-and-usage`, Class 3, whose `Blocks:`
++> field names that sweep directly.
++>
++> Parked rather than left active on the repository's own active-vs-later test:
++> every open item is gated outside this roadmap, and `/roadmap:process-full`
++> terminates on it at `blocked-preflight` with zero runnable open steps. Both
++> blockers are preserved unresolved and still counted; parking claims no
++> reduction. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 +
++> openai/codex-default, two rounds, blind peer review).
++
++> The 9.4.0 review's dominant verdict: the package is no longer
++> capability-limited but **complexity-limited** — "die Oberfläche wächst erneut
++> stark." Net-reduce the *mental* command surface to a few journeys, by
++> demotion not deletion, while obeying the review's own load-bearing rule —
++> every change removes or retires surface, and no new governance mechanism is
++> added without naming what it replaces.
++
++## Goal
++
++Cut the proactive command-suggestion surface from ~160 self-suggesting commands
++to the cluster-head journeys (+ genuine standalone entry points), fold the
++proposed complexity-budget into an existing checklist (zero new surface), drain
++the CHANGELOG fossil, re-address the locked-decision collision before any
++catalog flip, and record the restraint decisions — with every command still
++fully invokable and every gated item (launch, branch protection, external
++session, utilization removal, benchmarks, verification router) left an explicit
++blocker.
++
++## Context (measured 2026-07-20, do not relitigate)
++
++The review is user-owned (Source: the 9.4.0 review, see Provenance). Verified in
++the repo:
++
++- **Visibility is already tiered:** 5 `visible`, 17 `advanced`, 168 `internal`.
++  The "few visible, many internal" model the review asks for is already in the
++  `visibility` frontmatter — so demoting visibility further is cosmetic.
++- **The real surface is `suggestion.eligible`:** 160 of 190 commands are
++  `suggestion.eligible: true`, and the command-suggestion flow scores "per
++  eligible command" — so 160 commands proactively compete to suggest
++  themselves. THAT is "190 gleichwertig sichtbare Einstiegspunkte" in practice.
++- **107 of those are cluster sub-commands** (`sub:` set — `tdd-green/red/refactor`,
++  `feature-*`, `brand-*`, `roadmap-process-*`, `analyze-*`, `context-*`, …) —
++  exactly the "subcommands als eigene mentale Oberfläche" the review names, with
++  the TDD cluster called out as the canonical anti-pattern and `/fix:route`
++  praised as the entry-point-with-routing template.
++
++### Council notes (2026-07-20, anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds)
++
++- **The lever is the suggestion (+ catalog) surface, not visibility.** Both
++  members converged (round 2): `visibility` is the right *signal*, but the
++  *receivers* (command-suggestion, catalog) must honor it; the journeys
++  themselves are `internal`, so a blunt "internal ⇒ not-eligible" would kill the
++  journeys. The precise mechanical lever is the **cluster sub-command** level:
++  cluster heads self-suggest, sub-commands route via their head and do not.
++- **Complexity-Budget = FOLD, not a new rule.** A new gate to enforce "add less"
++  is itself the governance inflation the review condemns — fold the six-question
++  checklist into the existing `artifact-drafting-protocol` (net-zero surface).
++- **Unified Verification Router = DEFER (out of scope).** It cannot replace the
++  scattered self-review/judge/council/team/adversarial modes without breaking
++  changes or a forwarding shim (a seventh entry point above six) — either way
++  net-positive surface. A *consolidation* roadmap does not add it; revisit only
++  if utilization data shows modes collapsing to near-zero use.
++- **learning-tutor = de-eligible + quarantine-then-measure**, not delete: the
++  one named farthest-from-core artefact, but removing a working skill on a
++  hunch is a real capability cut — measure over the utilization window first.
++
++### Gap-table (KEEP / FOLD / CUT — 9.4.0 review recommendations)
++
++| Review recommendation | Verdict | Where |
++|---|---|---|
++| Command-surface consolidation to ~5 journeys | **KEEP** | Phase 1 — de-eligible the 107 cluster sub-commands |
++| Complexity-Budget per-artefact gate (Prio 5) | **FOLD** | Phase 2 — checklist into `artifact-drafting-protocol`, names what it replaces |
++| Fossil drain (CHANGELOG `[Unreleased]` opens with "6.0.0 at a glance") | **KEEP** | Phase 2 |
++| learning-tutor farthest-from-core | **KEEP (demote+measure)** | Phase 2 |
++| Locked-decision re-address before catalog flip (P2) | **KEEP** | Phase 2 |
++| Harvest-freeze + "no new council/review modes" | **KEEP (record)** | Phase 2 — decision-context, not a new rule |
++| Unified Verification Router (Prio 1) | **CUT (defer)** | Blocker — can't replace without inflation |
++| Post the launch / distribute the wedge | **CUT (gated)** | Blocker — Hard-Floor publish, maintainer |
++| Branch protection apply | **CUT (gated)** | Blocker — maintainer repo-UI |
++| External session / first-run-check | **CUT (gated)** | Blocker — real external human |
++| Auto-tiering monitoring / utilization removal / catalog A/B / team+council benchmarks | **CUT (gated)** | Blockers — usage-over-time / spend / corpus |
++
++## Phase 1 — Collapse the proactive suggestion surface (the core)
++
++- [x] Flip `suggestion.eligible: true → false` on every **cluster sub-command**
++      (`sub:` field set) — the 107 `/cluster:sub` commands that today
++      self-suggest. Cluster heads and genuine standalone entry points keep
++      `eligible: true`. No command is removed; every one stays invokable by its
++      exact `/cluster:sub` name — only the proactive suggestion is retired. <!-- done 2026-07-20: 107 cluster sub-commands flipped (129 total now ineligible); src+dist twins; every /cluster:sub still invokable -->
++      <!-- verify: for f in $(git diff --name-only origin/main -- 'src/domains/**/command.md'); do grep -q '^sub:' "$f" && grep -q 'eligible: false' "$f" || true; done; echo swept -->
++- [x] Document the invariant in the command-suggestion contract
++      (`src/agent-src/contexts/contracts/command-suggestion-flow.md`): "cluster sub-commands route
++      via their head and are not independently suggestion-eligible; the head is
++      the journey." Fold the check into the existing frontmatter validator — do
++      NOT add a new lint script (that would be the inflation the review warns
++      against). <!-- verify: grep -n 'route via their head' src/agent-src/contexts/contracts/command-suggestion-flow.md -->
++- [x] Regenerate the derived trees (`task sync` + `task generate-tools`) and the
++      catalog; confirm the suggestion surface counts dropped and every command
++      still resolves. <!-- carve-out: new-gate-verification -->
++
++Exit: proactive suggestion-eligible count drops from ~160 to the cluster-head +
++standalone set (~53); frontmatter validation + command-routing lint green; no
++command deleted. Rollback: the flip is a single reversible frontmatter field.
++
++## Phase 2 — Supporting net-reductions (remove / fold, never add)
++
++- [x] **Fossil drain:** the CHANGELOG `## [Unreleased]` still opens with
++      "6.0.0 at a glance"; move that era block behind the era split and add the
++      one-sentence guard to the era-split test so `[Unreleased]` starts clean. <!-- deferred 2026-07-20: correct fix is an era-split of the 6.0.0 block; doing it blind risks the era-split drift test (tests/test_changelog_eras). P3 nicety — separated to avoid coupling a CHANGELOG-history restructure to the surface-consolidation diff. -->
++      <!-- done — resolved 2026-07-28 by verification, not by new work: the
++      deferral was STALE. Both halves already shipped under
++      `road-to-changelog-unreleased-drain` on 2026-07-21.
++      (a) The block was moved to `docs/archive/CHANGELOG-6.0.0-overview.md`,
++      with a pointer note left at CHANGELOG.md:118; `## [Unreleased]` now opens
++      on `### Added`, and this step's own verify command passes.
++      (b) The guard exists as `test_unreleased_carries_no_at_a_glance_fossil`
++      in `tests/lib/changelog_eras.test.ts:113` — it asserts the region between
++      `## [Unreleased]` and the first `# Era:` header carries no
++      `### N.Y.Z at a glance` block, so the fossil class cannot recur.
++      17/17 green this run. Note the CHANGELOG header still points at the
++      pre-py2ts path `tests/test_changelog_eras.py`; the live test is the `.ts`
++      file above (corrected in this run). -->
++      <!-- verify: grep -A2 '## \[Unreleased\]' CHANGELOG.md | grep -vq '6.0.0 at a glance' -->
++- [x] **learning-tutor:** set `suggestion.eligible: false` and add a
++      quarantine note (measure over the utilization window; remove only on
++      data) — the one review-named farthest-from-core artefact, demoted not
++      deleted. <!-- done 2026-07-20: learning-tutor is a skill (no suggestion.eligible field — carries no proactive command surface), so recorded as the named QUARANTINE CANDIDATE for the utilization sweep in agents/settings/contexts/surface-consolidation-restraint.md; measure-first, not deleted. --> <!-- was-verify: grep -q 'eligible: false' src/skills/learning-tutor/SKILL.md || grep -rq 'eligible: false' src/domains/*/learning-tutor* 2>/dev/null; true -->
++- [x] **Fold the Complexity-Budget checklist** into
++      `artifact-drafting-protocol` (the six questions: replaces? overlaps?
++      discoverable? measurable? removable? who debugs?) — as a checklist in the
++      existing rule, explicitly naming that it REPLACES the ad-hoc
++      "should this exist" prose, adding zero new artefacts.
++      <!-- done 2026-07-20: folded into artifact-drafting-protocol-mechanics § Complexity budget (guideline, net-zero — no new rule/lint). --> <!-- was-verify: grep -qi 'complexity budget\|who debugs' src/rules/artifact-drafting-protocol.md docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md -->
++- [x] **Record the restraint decisions** (harvest-freeze until the first
++      external adopter; no new council/review modes before the pending
++      benchmarks) as a decision-context note, NOT a new rule. <!-- done 2026-07-20: agents/settings/contexts/surface-consolidation-restraint.md (one note: harvest-freeze + no-new-modes + learning-tutor quarantine + complexity-budget pointer). --> <!-- superseded 2026-08-05: ADR-216 struck the "until the first external adopter" anchoring on BOTH recorded restraints — the freeze is capacity-anchored and now lifted; the no-new-modes restraint waits on the pending benchmarks only. The step stays [x] because the note WAS written as specified; its content was later corrected. -->
++- [~] **Locked-decision re-address:** before the catalog flip can proceed
++      (blocker), record the 8.0.0-era locked-decision collision as a superseding
++      note / documented non-collision (decision-record), so the flip is not
++      blocked on an un-adjudicated lock. <!-- deferred 2026-07-20: the catalog flip itself is a gated blocker (repo-admin/usage); the superseding ADR is authored when the flip is authorized, not before. -->
++
++Exit: CHANGELOG `[Unreleased]` clean; learning-tutor de-eligible; the
++complexity-budget lives in the drafting checklist (net-zero); restraint +
++locked-decision notes recorded. Rollback: each is an isolated reversible edit.
++
++## Phase 3 — Utilization-window disposition sweep (re-homed 2026-07-28)
++
++> Re-homed verbatim from `road-to-feedback-9.8.0-followups.md` Phase 4 at its
++> archive time (council 2026-07-28, 2-round debate, anthropic/claude-sonnet-4-5
++> + openai/gpt-4o, unanimous) — that step's own text says it "extends
++> road-to-surface-consolidation.md, not forking it", so the one active roadmap
++> carries it. Time-gated: the pre-registered window elapses ~2026-08-26; its
++> verify forbids pre-window deletions. Gate tracked by the existing
++> `repo-admin-and-usage` blocker below.
++
++- [ ] **Utilization-window disposition (after ~2026-08-26).** When the
++      pre-registered window elapses, run the KEEP / MERGE / DEMOTE / REMOVE
++      sweep on commands + skills with the window's data; target the reviewers'
++      190 → <150 commands direction by folding variants into cluster-head modes
++      and deleting de-eligibled, unused commands.
++      *Verify:* post-window decision log exists; command count and the per-item
++      decisions recorded; no pre-window deletions.
++
++### Input evidence — the no-invocation-path enumeration (2026-08-02, NULL)
++
++Fed in from `road-to-renewal-leverage.md` Phase 1, whose step reads: *"Feed
++the ~1,900-line no-invocation-path finding (analysis estimate — enumerate
++first: file list + method) as input evidence into
++`road-to-surface-consolidation.md` Phase 3."* The enumeration was run; the
++estimate **does not reproduce**. Recorded here so the post-window sweep does
++not budget for a 1,900-line deletion that has no target.
++
++**Method** (reproducible; three reference forms, checked in order):
++
++```bash
++# for each src/domains/**/command.md, resolve slug = <cluster>:<sub> (else <name>)
++# a command has a DISCOVERY path if any of:
++#   1. suggestion.eligible: true                    -> proactively suggested
++#   2. its `name` appears in some hub's routes_to:  -> reached via the cluster head
++#   3. any of these strings occurs in src/, docs/, README.md, CONTRIBUTING.md
++#      OUTSIDE its own file:
++#         /<cluster>:<sub>        (canonical invocation slug)
++#         /<cluster> <sub>        (space form used by most hub bodies)
++#         commands/<cluster>/<sub>.md   (relative link form)
++#         /<name>                 (flat form)
++# a command with none of the three, and visibility: internal, has no discovery path.
++```
++
++**Result** over 193 command files:
++
++| Class | Count |
++|---|---|
++| `suggestion.eligible: true` | 53 |
++| Reached via a hub `routes_to:` | 65 |
++| Named in a stable surface (one of the three forms) | 73 |
++| **No discovery path** | **2** (449 lines) |
++
++The two residuals are `src/domains/git/commit/in-chunks/command.md` and
++`src/domains/git/pr/create/description-only/command.md`. Both are **reachable
++under their `replaces:` aliases** (`commit:in-chunks`,
++`create-pr:description-only`), which are the forms actually cited across
++`src/` — so the true no-invocation-path count is **0 commands / 0 lines**, not
++~1,900. The residual defect is an *alias*, not an orphan: the canonical
++`<cluster>:<sub>` slug of those two appears nowhere.
++
++**By-product finding — sub-command drift the cluster checker cannot see.**
++While enumerating, a second and load-bearing defect surfaced: hubs and the
++locked cluster contract disagree with what is actually on disk.
++
++- `/roadmap` has 6 sub-commands on disk; its `## Sub-commands` table lists 5
++  (`materialize` is in neither the table nor the contract).
++- `/memory` has 6 on disk; its table lists 5 (`learn-low-impact` is missing
++  from the hub although the contract registers it).
++- `routes_to:` is systematically incomplete — 12 of 25 contract-listed
++  dispatch clusters omit at least one existing sub-command, and several
++  orchestrators carry no `routes_to` at all.
++- Contract-side, the inverse also exists: rows for sub-commands that have no
++  file, and orchestrators with no contract row.
++
++**Correction (2026-08-17) — the two named examples have been repaired since,
++and the by-product finding must not be budgeted as if they had not.** Both
++bullets are now false: `/roadmap` has **7** sub-commands on disk and its
++`## Sub-commands` table lists **7**, `materialize` included; `/memory` has **6**
++on disk and its table lists **6**, `learn-low-impact` included. They are left
++above with this note rather than rewritten, so the finding stays auditable —
++but the post-window sweep this block feeds would otherwise budget for two fixes
++that no longer exist. **Scope of this correction, stated because it bounds
++what it proves:** only the first two bullets were re-measured. The `routes_to:`
++bullet (12 of 25) and the contract-side inverse were **not** re-checked and are
++neither confirmed nor refuted here.
++
++`check_cluster_patterns` cannot catch this class: it iterates the **contract**,
++never the filesystem, checks `routes_to` for *resolvability* but never
++*completeness*, and matches only the `## Sub-commands` table **header**, never
++its rows. Its contract row regex additionally requires a numeric phase column,
++so clusters whose row carries `—` fall outside the gate entirely. The
++filesystem-enumeration half is closed in `road-to-renewal-leverage.md`; the
++**contract-side** half (rows with no file, orchestrators with no row, and the
++numeric-phase-column narrowing) is left here as input for the sweep, because
++resolving it means deciding per cluster whether an unlisted hub is dead or
++intentional — a disposition call, which is what this phase owns.
++
++Not drift, checked and dismissed: hubs mixing `` `/worktree create` `` with
++`` `/analyze:decision` `` is **style, not defect** — `docs/contracts/command-clusters.md:157`
++makes `/<cluster> <sub>` a first-class equivalent of the colon form.
++
++No parking action is taken here and no command is deleted — per this phase's
++own verify, pre-window deletions are forbidden.
++
++## Acceptance criteria (anti-dump — the review's own rule)
++
++- [x] **Net-negative surface:** the diff removes/retires more surface than it
++      adds; the proactive suggestion-eligible count strictly drops.
++      <!-- verified 2026-07-28 by counting frontmatter across all 191
++      `src/domains/**/command.md`: `suggestion.eligible: true` = **53**, false =
++      138, absent = 0. Baseline in § Context was 160 eligible of 190, so the
++      proactive surface dropped 160 → 53 (-67%), landing exactly on the Phase-1
++      exit target of ~53. The Phase-1 invariant is total, not partial: of 130
++      cluster sub-commands (`sub:` set), **0 remain eligible**; the 53 eligible
++      are all heads/standalone entry points (61 of those exist, 8 are
++      additionally ineligible). Nothing was added to offset the reduction — the
++      complexity budget went into an existing guideline and the restraint
++      decisions into a context note, both net-zero. -->
++- [x] **No new mechanism without naming what it retires:** the complexity-budget
++      folds into an existing rule; no new lint/rule/command/hook is created.
++      <!-- verified 2026-07-28: the complexity-budget checklist lives in the
++      EXISTING `docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md`
++      (§ Complexity budget), and the restraint decisions in the EXISTING context
++      dir as `agents/settings/contexts/surface-consolidation-restraint.md` — a
++      note, not a rule. No new lint script, rule file, command, or hook is
++      attributable to this roadmap.
++      STATED RATHER THAN GLOSSED: a `git log --diff-filter=A` sweep over
++      `src/rules/`, `src/scripts/lint_*` and `src/scripts/hooks/` in the
++      Phase-1/2 window returns exactly one added rule, `src/rules/secret-vcs-guard.md`.
++      That belongs to the secret-hygiene guardrail roadmap (rule-first + CI net,
++      commit-hook cut), not to this one — the window overlaps, the authorship
++      does not. -->
++- [x] **Demote, not delete:** every affected command/skill remains fully
++      invokable; only suggestion-eligibility (and, for learning-tutor,
++      proactive surfacing) is retired.
++      <!-- verified 2026-07-28 two ways. (1) Nothing was deleted: 191 source
++      `command.md` files and 191 command artefacts in
++      `dist/discovery/discovery-manifest.json` — the § Context baseline was 190,
++      so the count GREW by one over the window. (2) Invokability spot-checked on
++      five de-eligibled cluster sub-commands across five different clusters —
++      `tdd-green`, `feature-plan`, `roadmap-process-step`, `brand-tokens`,
++      `analyze-decision`: `./agent-config commands explain <slug>` resolves for
++      all five. Note the eligibility flag is frontmatter-only and is NOT carried
++      in the discovery manifest, so it cannot affect resolution by construction —
++      the CLI check is the real evidence, a manifest field check would have been
++      vacuous. -->
++- [x] The Unified Verification Router is NOT built here (deferred blocker).
++      <!-- verified 2026-07-28: a case-insensitive sweep for
++      "unified verification router" across `src/` and `docs/contracts/` returns
++      no implementation — only the defer/CUT records in this roadmap's gap-table
++      and council notes, plus the `benchmark-spend` blocker that gates its
++      re-opening. No seventh entry point, no forwarding shim. -->
++- [x] Every gated item (launch, branch protection, external session,
++      utilization removal, benchmarks) is a `## Blockers` entry, not a step.
++      <!-- verified 2026-07-28 — all five map onto the three blockers below:
++      launch → `launch-and-adoption`; external session → `launch-and-adoption`;
++      branch protection → `repo-admin-and-usage`; utilization removal →
++      `repo-admin-and-usage`; benchmarks → `benchmark-spend` (which also gates
++      the verification-router re-open).
++      ONE NUANCE, recorded rather than smoothed over: Phase 3 IS a step, and its
++      subject is utilization-driven disposition. It was re-homed here verbatim
++      on 2026-07-28 from an archiving sibling roadmap, and its own header ties
++      it to `repo-admin-and-usage`. So the gated WORK is tracked by a blocker as
++      this criterion requires; it additionally carries a step so the re-homed
++      item stays visible on the dashboard instead of vanishing into a blocker.
++      Live check of that gate: branch protection is confirmed OFF
++      (`gh api .../branches/main/protection` → 404) and the utilization window
++      does not elapse until ~2026-08-26, so the step is correctly still open. -->
++
++## Blockers
++
++### blocker: launch-and-adoption
++- **Status:** resolved
++- **Owner:** user
++- **Blocks:** the product half of the review (post the drafted launch, distribute the wedge, run a first external session)
++- **What to do:** RESOLVED AS OUT OF SCOPE, 2026-08-05, per [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md). Owner decision: external adoption is not a project goal, so posting a launch and running an external session are not work this project will do. The blocker is kept rather than deleted so the disposition is visible in history — it was never going to resolve, and leaving it open would have read as pending.
++- **Resolved when:** resolved by the ADR-216 scope decision. The adoption-facing half of this review is closed as out of scope, not as done.
++
++### blocker: repo-admin-and-usage
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 3 — human-only
++- **Blocks:** branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
++- **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
++- **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
++- **If you do nothing:** the required-check set stays advisory — a check can go red on the trunk without refusing the merge, which is exactly the state branch protection exists to end — and the artefact surface keeps growing with no removal ever justified, which is the condition this roadmap was opened to close.
++- **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
++
++### blocker: benchmark-spend
++- **Status:** open
++- **Owner:** user
++- **Class:** 2 — consent-once (authorise the A/B with an estimate)
++- **History note, 2026-08-17 — the cap works now; it did not when the two
++  statements below were written.** They claim that
++  `task bench:ab:live -- --budget <N>` "caps per-task spend" and that this option
++  has "a spend cap already in the tree". Both were **false when authored**:
++  `taskfiles/bench-ab.yml` invoked the runner without `{{.CLI_ARGS}}`, so the
++  trailing flag never reached it and the run took the parser default of `2.0`
++  instead of `<N>`. **Fixed and merged the same day (PR #1406), so the statements
++  below are now accurate and (a) may be authorised on their strength.** Kept as a
++  note rather than deleted because this entry was promoted from the absent-field
++  default to `Class: 2` on that same day, which made it renderable as a consent
++  gate for the first time — for a few hours it presented a wrong money claim more
++  prominently than before, which is worth a reader knowing (R2 finding 2). The
++  prose below is left as authored: correcting another roadmap's recommendation is
++  its owner's call, not this pass's.
++- **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
++- **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
++- **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
++- **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
++- **Resolved when:** the maintainer authorizes the specific run with an estimate, or records (c).
++
++## Provenance
++
++Source: the user-authored 9.4.0 review (`agents/tmp.old/feedback-9.4.0-1.txt`,
++local, gitignored). One external competitor is named in the review's comparison
++table (referred to only as **Source A** here per `source-confidentiality`); this
++roadmap does not depend on that comparison. Council convergence recorded inline
++above (date + members), no session-file path cited.
+diff --git a/agents/roadmaps/road-to-carrier-layer-convergence.md b/agents/roadmaps/road-to-carrier-layer-convergence.md
+deleted file mode 100644
+index 7fba4e1cf77084a0e06cf08e3870b3633440a6b8..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-carrier-layer-convergence.md
++++ /dev/null
+@@ -1,247 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: autonomous
+-parent_roadmap: road-to-feedback-9-29
+----
+-
+-# Road to carrier-layer convergence — 109 rules arrive twice, none identical
+-
+-> The delivered-payload measurement found 109 rules present in BOTH carrier
+-> layers with **zero byte-identical duplicates — all 109 divergent**. That is two
+-> defects wearing one number: the largest immediately-removable share of the
+-> standing-delivery floor, and a correctness hole, because when two copies of a
+-> rule differ there is no defined answer to which text binds.
+-
+-> Source: the loaded-token measurement in
+-> [`agents/evidence/analysis/loaded-rule-token-distribution.md`](../evidence/analysis/loaded-rule-token-distribution.md),
+-> produced by the parent roadmap and deliberately routed out of its blockers:
+-> the parent treated it as evidence-deciding-nothing, which is right for a diet
+-> verdict and wrong for a delivery defect.
+-
+-> **CORRECTION, 2026-08-10 — half the premise above is false, and Phase 1 is what
+-> falsified it.** All 109 pairs carry **byte-identical prose**; the entire
+-> difference is the frontmatter block. So there is no correctness hole of the kind
+-> claimed: no governed text differs, nothing is binding-ambiguous, and no claim
+-> one copy retracts can be re-asserted by the other.
+->
+-> **A smaller, real defect survives, and the R2 review caught it after this
+-> correction was first written as an all-clear.** For **24** of the 109 the
+-> frontmatter disagreement is about `paths:` — the one key this host reads, which
+-> decides *when* a rule loads. Project copy scoped, global copy always-on, so the
+-> global copy **un-scopes** what the project layer deliberately scoped. Identical
+-> text, different schedule. Direction is safe (over-delivery, never a missing
+-> obligation) and it is not zero. Whether `install.ts` should emit `paths:` is a
+-> consumer-visible behaviour question and is NOT decided here.
+->
+-> **Decided elsewhere, 2026-08-13 —
+-> [`ADR-228`](../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
+-> the global install does not emit `paths:`, and the 24 stay as accepted
+-> over-delivery.** Not on cost: at least six of the 24 are safety or governance
+-> floors carrying an Iron Law, and `ADR-227` records that path-scoped rules are
+-> **not re-injected after `/compact`** — so scoping them globally would trade a
+-> safe over-delivery for a silent under-delivery in the rules where silence is
+-> most expensive. This roadmap keeps its non-goal; the question no longer waits on
+-> anyone.
+->
+-> The second defect sat in the instrument — a metadata-only difference was
+-> reported as body divergence, i.e. as the one class the report tells a reader to
+-> act on — and both are repaired under Phase 2. Classification, the cited
+-> precedence answer, and the explanation of why two earlier readings of one commit
+-> disagreed:
+-> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
+-> The original claim is kept above rather than rewritten, so the trail from
+-> premise to falsification stays readable.
+-
+-## Goal
+-
+-Converge the two rule-carrier layers so a session receives each governed rule
+-exactly once, with a defined binding text — measured as: overlap count 0 (or a
+-stated, reasoned remainder), `check_standing_rule_delivery` under its cap on a
+-maintainer machine, and no obligation lost in the process.
+-
+-## Prerequisites
+-
+-- [x] The divergence is measured, not assumed (109 shared / 0 duplicate / 109
+-      divergent, two instruments, recorded with their proxies)
+-
+-## Context
+-
+-- **Suppression alone is unsafe here, and the doctor already says so.** The
+-  `install --layer` path suppresses one layer without deleting it — correct for
+-  byte-identical copies, wrong for divergent ones: suppressing a copy drops
+-  whatever obligations only that copy carried. The savings line carries this
+-  caveat for exactly this reason.
+-- So the order is **converge, then deduplicate**. The global layer is a release
+-  snapshot; the project layer is generated from `src/` at the current commit and
+-  wins on precedence. A refresh makes the copies identical; only then is
+-  suppression a no-op on content.
+-- The 109 is not a token-diet line item. It is the answer to "which text binds
+-  when two differ", which is the question behind every report of an instruction
+-  being followed inconsistently.
+-
+-## Phase 1 — Establish which layer is stale, per rule
+-
+-- [x] For each of the 109 divergent rules, classify the divergence: the global
+-      copy is an older release of the same rule (refresh closes it), the project
+-      copy is generated differently (the generator is the fix), or the two carry
+-      genuinely different obligations (a content decision, and the interesting
+-      case). Report counts per class — a single mixed bucket is not a finding. <!-- verify: report lists all 109 with a class and the per-class totals -->
+-      <!-- DONE 2026-08-10, commit a5b2f4cb7, freshly regenerated checkout.
+-      Totals against the phase's own taxonomy: refresh-closes-it 0 ·
+-      generator-difference 109 · genuinely-different-obligation 0.
+-      READ THE 109 WITH ITS REFUTATION, never bare: the label fits but its
+-      parenthesis ("the generator is the fix") does not — there is NO generator
+-      defect. The honest label is a fourth bucket the taxonomy lacks, a
+-      deliberate two-writer metadata policy: 109 = 24 actionable on `paths:`
+-      + 85 inert. All 109 carry byte-identical prose. Listed flat, with the 24
+-      broken out, in carrier-layer-divergence-classification.md. -->
+-- [x] Name the precedence rule the host actually applies when both layers carry
+-      a rule of the same basename, from the host's own documentation or an
+-      observed load, never from inference — if it is unobservable, say so and
+-      treat every divergence as binding-undefined. <!-- verify: the precedence answer cites a doc section or an InstructionsLoaded observation -->
+-      <!-- DONE 2026-08-10. Answer: the host applies NO precedence — rules
+-      without a `paths` key load at launch with the same priority as CLAUDE.md,
+-      no marker between the layers, so binding is UNDEFINED whenever the two
+-      disagree. Cited to claude-code-rules-dir-contract.md (host 2.1.226: the
+-      host's own docs plus a first-party observation), never inferred. Two
+-      instruments were printing the opposite ("the project projection … and
+-      wins"); both corrected under Phase 2. -->
+-
+-Exit criteria: every one of the 109 carries a class; the precedence question has
+-a cited answer or an explicit unobservable verdict.
+-Rollback: report-only phase, nothing to revert.
+-
+-## Phase 2 — Converge
+-
+-- [-] Refresh the stale side for every rule in the refresh-closes-it class, so
+-      the two copies become byte-identical. <!-- verify: report_carrier_divergence shows those rules as duplicate rather than divergent -->
+-      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No global
+-      copy carries superseded prose, so there is no stale side to refresh. An
+-      empty class is a real answer, not an unfinished step. -->
+-- [-] For the generator-difference class, fix the generator so the projection is
+-      reproducible rather than patching the output. <!-- verify: task sync + generate-tools leaves no drift for those rules -->
+-      <!-- SKIPPED 2026-08-10 — the step's own verification PASSES with no change:
+-      `task sync` + `task generate-tools` at a5b2f4cb7 leaves a clean tree, so the
+-      projection is already reproducible and there is no generator defect to fix.
+-      The 109 are a deliberate two-writer policy difference — `generate-tools`
+-      emits only `paths:` because the host reads nothing else from the block;
+-      `install.ts` writes the full vocabulary plus its ownership stamp because
+-      agent-config's own tooling needs it. Making them byte-identical would mean
+-      either shipping payload the host ignores or dropping metadata the installer
+-      needs, so convergence-by-alignment is the wrong target here. The defect the
+-      classification actually surfaced was in the instrument — see the step
+-      below. -->
+-- [-] For any genuinely-different-obligation rule, surface it as a decision
+-      rather than picking a side — this is the class where a silent choice loses
+-      a governed obligation. <!-- verify: each such rule is listed with both texts and no edit applied -->
+-      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No pair
+-      carries different obligations, so there is nothing to surface and no side
+-      to avoid picking. This is the class the phase called "the interesting
+-      case"; it is empty, and that is the finding. -->
+-- [x] **Added 2026-08-10, and the only convergence work that landed.** Repair the
+-      instrument that reported a metadata-only difference as body divergence —
+-      i.e. as the one class the report tells a reader to act on — and the
+-      precedence claim both surfaces were printing. <!-- verify: report_carrier_divergence prints `differ in PROSE 0` + `differ ONLY in frontmatter 109`, states binding is UNDEFINED, and no surface claims the newer copy "wins"; pinned by tests -->
+-      <!-- DONE: `proseEqual` + `stripFrontmatter` in _lib/carrier_divergence.ts
+-      (deliberately NOT folded into `comparePair`, which stays byte-identity so
+-      the dedup predicate is untouched); a fourth `frontmatter-only` class in
+-      report_carrier_divergence; the same split and the corrected precedence
+-      prose in report_conformance_funnel. Two existing tests pinned the false
+-      "and wins" claim and were inverted with the citation in the test body. -->
+-
+-Exit criteria: `report_carrier_divergence` reports 0 divergent, or a stated
+-remainder whose every member is a surfaced decision.
+-<!-- MET 2026-08-10, in the terms the measurement forced: 0 PROSE-divergent, with
+-a stated remainder of 109 frontmatter-only pairs whose cause is named in the
+-report itself and which require no decision, because no governed text differs. -->
+-Rollback: the refresh is regeneration from tracked sources, so revert is
+-regeneration at the previous commit.
+-
+-## Phase 3 — Deduplicate, and prove the saving
+-
+-> **Its safety precondition is discharged for CONTENT, and the layer choice is now
+-> load-bearing (2026-08-10).** The phase order exists because suppressing a
+-> *divergent* copy drops whatever obligations only that copy carried. Phase 1
+-> measured the prose identical across all 109, so suppression is already a no-op
+-> **on content** — the thing Phase 2 was meant to establish. It is **not** a no-op
+-> on load schedule: suppressing the **global** layer restores the project layer's
+-> `paths:` scoping for the 24 affected rules, suppressing the **project** layer
+-> makes the always-on delivery permanent. So step 1 must record WHICH layer it
+-> suppressed, not only the token delta. The before/after reading still needs the
+-> maintainer machine, so the blocker stands unchanged.
+-
+-- [ ] With the layers converged, apply the single-layer suppression and record
+-      the delivered-token reading before and after on the same machine and the
+-      same commit. <!-- verify: check_standing_rule_delivery under cap, with the before/after pair recorded -->
+-- [ ] Re-measure `report_carrier_divergence` afterwards to confirm suppression
+-      removed a duplicate rather than an obligation. <!-- verify: rule count per layer unchanged in content terms; no rule absent from the surviving layer -->
+-
+-Exit criteria: the gate is green on the maintainer machine with both readings
+-recorded at a named commit.
+-Rollback: `install --layer` is suppression, not deletion — re-enabling the
+-suppressed layer restores the prior state.
+-
+-## Blockers
+-
+-### blocker: b-convergence-machine
+-- **Status:** open
+-- **Owner:** user
+-- **Class:** 3 — human-only
+-- **Blocks:** Phase 3 only (Phases 1-2 are repo work)
+-- **What to do:** Phase 3's before/after pair needs the maintainer machine,
+-  since the two-layer topology is a property of the install rather than of the
+-  repo. Run the reading, apply `install --layer`, run it again.
+-- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+-  field; drafted from the roadmap's own text for the consolidated decision
+-  sheet, not from a maintainer decision.)** Take all three steps in ONE
+-  sitting — reading, `install --layer`, reading — and record both readings
+-  against a named commit in the same note. Do not try to reproduce the
+-  two-layer topology in the repo: the entry already states that the topology
+-  is a property of the install, so a repo-side reconstruction would measure
+-  something else and read as the same number. Phases 1-2 are repo work and
+-  proceed meanwhile; only Phase 3 waits.
+-- **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means
+-  the convergence claim ships with no before/after pair behind it — the shape
+-  where a number is published and the measurement that would falsify it was
+-  never taken.
+-- **Resolved when:** both readings exist at a named commit.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Suppressing before converging | implementation | Suppressing a divergent copy drops whatever obligations only that copy carried — a silent loss of governed text, which is worse than the duplication it removes | The phase order IS the mitigation: Phase 3 is gated on Phase 2's zero-divergent exit, and the doctor's own savings line already carries the refresh caveat | Phase 3 — Deduplicate, and prove the saving |
+-| 2 | A genuinely-different obligation resolved by picking the newer copy | product | The interesting class is exactly where two texts disagree on what is required; choosing silently is a governance decision made by whoever ran the script | That class is surface-only by construction — the step forbids an edit and requires both texts side by side | Phase 2 — Converge |
+-| 3 | The precedence answer is inferred rather than observed | implementation | The whole plan rests on which copy binds; an inferred answer would make every later step rest on a guess | Phase 1 step 2 requires a cited doc section or an observed load, and admits "unobservable" as a legal verdict that reclassifies all 109 as binding-undefined | Phase 1 — Establish which layer is stale, per rule |
+-| 4 | The before/after pair measured across a moving tree | implementation | The project carrier is generated from `src/`, so two readings at different commits differ for reasons unrelated to deduplication and would read as a saving that is not one | Same machine, same commit, both readings recorded — the pin-your-SHA lesson the parent roadmap's own report had to learn twice | Phase 3 — Deduplicate, and prove the saving |
+-| 5 | Convergence closes, then re-opens on the next release | product | The global layer is a release snapshot; refreshing it today says nothing about the next one, so the 109 could simply return | Out of scope here and named rather than hidden: a standing fix belongs to the install/release path, and this roadmap's exit criteria are point-in-time by design | Acceptance criteria |
+-
+-**Risk 3 materialized, and was the real defect (2026-08-10).** It warned that an
+-*inferred* precedence answer would leave every later step resting on a guess.
+-That is exactly what had already happened: two shipped surfaces printed "the
+-project projection … and wins", which no host behaviour supports, and two tests
+-pinned it. Rank 1 and Rank 2 did not materialize — both depended on a divergence
+-class the measurement found empty.
+-
+-## Acceptance criteria
+-
+-- **MET** — All 109 divergent rules are classified, with per-class totals
+-  (0 refresh-closes-it · 109 generator-difference · 0 genuinely-different-obligation).
+-  The 109 is **not** 109 generator defects — the phase's taxonomy has no bucket
+-  for a deliberate two-writer metadata policy, so the honest split is 24
+-  actionable on `paths:` + 85 inert. Never quote the total without that.
+-- **MET** — Divergence reaches 0, or every remaining member is a surfaced decision:
+-  0 prose-divergent; the remainder is 109 frontmatter-only, of which the 24
+-  `paths:` disagreements ARE surfaced as a decision (named in both report
+-  surfaces, and the installer question left explicitly undecided) and the other
+-  85 owe none, because no governed text differs and no key the host reads does.
+-- **OPEN** — The delivered-token before/after pair is recorded at one commit on one
+-  machine. Blocked on `b-convergence-machine`; its safety precondition is now
+-  discharged (see Phase 3).
+-- **OPEN** — No rule present before convergence is absent after deduplication.
+-  Blocked with the reading above.
+-- **Added, MET** — No surface claims a precedence the host does not implement. Both
+-  carrier surfaces now state that binding is undefined when prose diverges, and
+-  that the project copy's recency is not precedence.
+diff --git a/agents/roadmaps/road-to-surface-consolidation.md b/agents/roadmaps/road-to-surface-consolidation.md
+deleted file mode 100644
+index e3e86c9271b3a1661084bcee5d233703c4cc3133..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-surface-consolidation.md
++++ /dev/null
+@@ -1,362 +0,0 @@
+----
+-complexity: structural
+-execution:
+-  mode: autonomous
+----
+-
+-# Road to surface consolidation — collapse the proactive mental surface, remove don't add
+-
+-> The 9.4.0 review's dominant verdict: the package is no longer
+-> capability-limited but **complexity-limited** — "die Oberfläche wächst erneut
+-> stark." Net-reduce the *mental* command surface to a few journeys, by
+-> demotion not deletion, while obeying the review's own load-bearing rule —
+-> every change removes or retires surface, and no new governance mechanism is
+-> added without naming what it replaces.
+-
+-## Goal
+-
+-Cut the proactive command-suggestion surface from ~160 self-suggesting commands
+-to the cluster-head journeys (+ genuine standalone entry points), fold the
+-proposed complexity-budget into an existing checklist (zero new surface), drain
+-the CHANGELOG fossil, re-address the locked-decision collision before any
+-catalog flip, and record the restraint decisions — with every command still
+-fully invokable and every gated item (launch, branch protection, external
+-session, utilization removal, benchmarks, verification router) left an explicit
+-blocker.
+-
+-## Context (measured 2026-07-20, do not relitigate)
+-
+-The review is user-owned (Source: the 9.4.0 review, see Provenance). Verified in
+-the repo:
+-
+-- **Visibility is already tiered:** 5 `visible`, 17 `advanced`, 168 `internal`.
+-  The "few visible, many internal" model the review asks for is already in the
+-  `visibility` frontmatter — so demoting visibility further is cosmetic.
+-- **The real surface is `suggestion.eligible`:** 160 of 190 commands are
+-  `suggestion.eligible: true`, and the command-suggestion flow scores "per
+-  eligible command" — so 160 commands proactively compete to suggest
+-  themselves. THAT is "190 gleichwertig sichtbare Einstiegspunkte" in practice.
+-- **107 of those are cluster sub-commands** (`sub:` set — `tdd-green/red/refactor`,
+-  `feature-*`, `brand-*`, `roadmap-process-*`, `analyze-*`, `context-*`, …) —
+-  exactly the "subcommands als eigene mentale Oberfläche" the review names, with
+-  the TDD cluster called out as the canonical anti-pattern and `/fix:route`
+-  praised as the entry-point-with-routing template.
+-
+-### Council notes (2026-07-20, anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds)
+-
+-- **The lever is the suggestion (+ catalog) surface, not visibility.** Both
+-  members converged (round 2): `visibility` is the right *signal*, but the
+-  *receivers* (command-suggestion, catalog) must honor it; the journeys
+-  themselves are `internal`, so a blunt "internal ⇒ not-eligible" would kill the
+-  journeys. The precise mechanical lever is the **cluster sub-command** level:
+-  cluster heads self-suggest, sub-commands route via their head and do not.
+-- **Complexity-Budget = FOLD, not a new rule.** A new gate to enforce "add less"
+-  is itself the governance inflation the review condemns — fold the six-question
+-  checklist into the existing `artifact-drafting-protocol` (net-zero surface).
+-- **Unified Verification Router = DEFER (out of scope).** It cannot replace the
+-  scattered self-review/judge/council/team/adversarial modes without breaking
+-  changes or a forwarding shim (a seventh entry point above six) — either way
+-  net-positive surface. A *consolidation* roadmap does not add it; revisit only
+-  if utilization data shows modes collapsing to near-zero use.
+-- **learning-tutor = de-eligible + quarantine-then-measure**, not delete: the
+-  one named farthest-from-core artefact, but removing a working skill on a
+-  hunch is a real capability cut — measure over the utilization window first.
+-
+-### Gap-table (KEEP / FOLD / CUT — 9.4.0 review recommendations)
+-
+-| Review recommendation | Verdict | Where |
+-|---|---|---|
+-| Command-surface consolidation to ~5 journeys | **KEEP** | Phase 1 — de-eligible the 107 cluster sub-commands |
+-| Complexity-Budget per-artefact gate (Prio 5) | **FOLD** | Phase 2 — checklist into `artifact-drafting-protocol`, names what it replaces |
+-| Fossil drain (CHANGELOG `[Unreleased]` opens with "6.0.0 at a glance") | **KEEP** | Phase 2 |
+-| learning-tutor farthest-from-core | **KEEP (demote+measure)** | Phase 2 |
+-| Locked-decision re-address before catalog flip (P2) | **KEEP** | Phase 2 |
+-| Harvest-freeze + "no new council/review modes" | **KEEP (record)** | Phase 2 — decision-context, not a new rule |
+-| Unified Verification Router (Prio 1) | **CUT (defer)** | Blocker — can't replace without inflation |
+-| Post the launch / distribute the wedge | **CUT (gated)** | Blocker — Hard-Floor publish, maintainer |
+-| Branch protection apply | **CUT (gated)** | Blocker — maintainer repo-UI |
+-| External session / first-run-check | **CUT (gated)** | Blocker — real external human |
+-| Auto-tiering monitoring / utilization removal / catalog A/B / team+council benchmarks | **CUT (gated)** | Blockers — usage-over-time / spend / corpus |
+-
+-## Phase 1 — Collapse the proactive suggestion surface (the core)
+-
+-- [x] Flip `suggestion.eligible: true → false` on every **cluster sub-command**
+-      (`sub:` field set) — the 107 `/cluster:sub` commands that today
+-      self-suggest. Cluster heads and genuine standalone entry points keep
+-      `eligible: true`. No command is removed; every one stays invokable by its
+-      exact `/cluster:sub` name — only the proactive suggestion is retired. <!-- done 2026-07-20: 107 cluster sub-commands flipped (129 total now ineligible); src+dist twins; every /cluster:sub still invokable -->
+-      <!-- verify: for f in $(git diff --name-only origin/main -- 'src/domains/**/command.md'); do grep -q '^sub:' "$f" && grep -q 'eligible: false' "$f" || true; done; echo swept -->
+-- [x] Document the invariant in the command-suggestion contract
+-      (`src/agent-src/contexts/contracts/command-suggestion-flow.md`): "cluster sub-commands route
+-      via their head and are not independently suggestion-eligible; the head is
+-      the journey." Fold the check into the existing frontmatter validator — do
+-      NOT add a new lint script (that would be the inflation the review warns
+-      against). <!-- verify: grep -n 'route via their head' src/agent-src/contexts/contracts/command-suggestion-flow.md -->
+-- [x] Regenerate the derived trees (`task sync` + `task generate-tools`) and the
+-      catalog; confirm the suggestion surface counts dropped and every command
+-      still resolves. <!-- carve-out: new-gate-verification -->
+-
+-Exit: proactive suggestion-eligible count drops from ~160 to the cluster-head +
+-standalone set (~53); frontmatter validation + command-routing lint green; no
+-command deleted. Rollback: the flip is a single reversible frontmatter field.
+-
+-## Phase 2 — Supporting net-reductions (remove / fold, never add)
+-
+-- [x] **Fossil drain:** the CHANGELOG `## [Unreleased]` still opens with
+-      "6.0.0 at a glance"; move that era block behind the era split and add the
+-      one-sentence guard to the era-split test so `[Unreleased]` starts clean. <!-- deferred 2026-07-20: correct fix is an era-split of the 6.0.0 block; doing it blind risks the era-split drift test (tests/test_changelog_eras). P3 nicety — separated to avoid coupling a CHANGELOG-history restructure to the surface-consolidation diff. -->
+-      <!-- done — resolved 2026-07-28 by verification, not by new work: the
+-      deferral was STALE. Both halves already shipped under
+-      `road-to-changelog-unreleased-drain` on 2026-07-21.
+-      (a) The block was moved to `docs/archive/CHANGELOG-6.0.0-overview.md`,
+-      with a pointer note left at CHANGELOG.md:118; `## [Unreleased]` now opens
+-      on `### Added`, and this step's own verify command passes.
+-      (b) The guard exists as `test_unreleased_carries_no_at_a_glance_fossil`
+-      in `tests/lib/changelog_eras.test.ts:113` — it asserts the region between
+-      `## [Unreleased]` and the first `# Era:` header carries no
+-      `### N.Y.Z at a glance` block, so the fossil class cannot recur.
+-      17/17 green this run. Note the CHANGELOG header still points at the
+-      pre-py2ts path `tests/test_changelog_eras.py`; the live test is the `.ts`
+-      file above (corrected in this run). -->
+-      <!-- verify: grep -A2 '## \[Unreleased\]' CHANGELOG.md | grep -vq '6.0.0 at a glance' -->
+-- [x] **learning-tutor:** set `suggestion.eligible: false` and add a
+-      quarantine note (measure over the utilization window; remove only on
+-      data) — the one review-named farthest-from-core artefact, demoted not
+-      deleted. <!-- done 2026-07-20: learning-tutor is a skill (no suggestion.eligible field — carries no proactive command surface), so recorded as the named QUARANTINE CANDIDATE for the utilization sweep in agents/settings/contexts/surface-consolidation-restraint.md; measure-first, not deleted. --> <!-- was-verify: grep -q 'eligible: false' src/skills/learning-tutor/SKILL.md || grep -rq 'eligible: false' src/domains/*/learning-tutor* 2>/dev/null; true -->
+-- [x] **Fold the Complexity-Budget checklist** into
+-      `artifact-drafting-protocol` (the six questions: replaces? overlaps?
+-      discoverable? measurable? removable? who debugs?) — as a checklist in the
+-      existing rule, explicitly naming that it REPLACES the ad-hoc
+-      "should this exist" prose, adding zero new artefacts.
+-      <!-- done 2026-07-20: folded into artifact-drafting-protocol-mechanics § Complexity budget (guideline, net-zero — no new rule/lint). --> <!-- was-verify: grep -qi 'complexity budget\|who debugs' src/rules/artifact-drafting-protocol.md docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md -->
+-- [x] **Record the restraint decisions** (harvest-freeze until the first
+-      external adopter; no new council/review modes before the pending
+-      benchmarks) as a decision-context note, NOT a new rule. <!-- done 2026-07-20: agents/settings/contexts/surface-consolidation-restraint.md (one note: harvest-freeze + no-new-modes + learning-tutor quarantine + complexity-budget pointer). --> <!-- superseded 2026-08-05: ADR-216 struck the "until the first external adopter" anchoring on BOTH recorded restraints — the freeze is capacity-anchored and now lifted; the no-new-modes restraint waits on the pending benchmarks only. The step stays [x] because the note WAS written as specified; its content was later corrected. -->
+-- [~] **Locked-decision re-address:** before the catalog flip can proceed
+-      (blocker), record the 8.0.0-era locked-decision collision as a superseding
+-      note / documented non-collision (decision-record), so the flip is not
+-      blocked on an un-adjudicated lock. <!-- deferred 2026-07-20: the catalog flip itself is a gated blocker (repo-admin/usage); the superseding ADR is authored when the flip is authorized, not before. -->
+-
+-Exit: CHANGELOG `[Unreleased]` clean; learning-tutor de-eligible; the
+-complexity-budget lives in the drafting checklist (net-zero); restraint +
+-locked-decision notes recorded. Rollback: each is an isolated reversible edit.
+-
+-## Phase 3 — Utilization-window disposition sweep (re-homed 2026-07-28)
+-
+-> Re-homed verbatim from `road-to-feedback-9.8.0-followups.md` Phase 4 at its
+-> archive time (council 2026-07-28, 2-round debate, anthropic/claude-sonnet-4-5
+-> + openai/gpt-4o, unanimous) — that step's own text says it "extends
+-> road-to-surface-consolidation.md, not forking it", so the one active roadmap
+-> carries it. Time-gated: the pre-registered window elapses ~2026-08-26; its
+-> verify forbids pre-window deletions. Gate tracked by the existing
+-> `repo-admin-and-usage` blocker below.
+-
+-- [ ] **Utilization-window disposition (after ~2026-08-26).** When the
+-      pre-registered window elapses, run the KEEP / MERGE / DEMOTE / REMOVE
+-      sweep on commands + skills with the window's data; target the reviewers'
+-      190 → <150 commands direction by folding variants into cluster-head modes
+-      and deleting de-eligibled, unused commands.
+-      *Verify:* post-window decision log exists; command count and the per-item
+-      decisions recorded; no pre-window deletions.
+-
+-### Input evidence — the no-invocation-path enumeration (2026-08-02, NULL)
+-
+-Fed in from `road-to-renewal-leverage.md` Phase 1, whose step reads: *"Feed
+-the ~1,900-line no-invocation-path finding (analysis estimate — enumerate
+-first: file list + method) as input evidence into
+-`road-to-surface-consolidation.md` Phase 3."* The enumeration was run; the
+-estimate **does not reproduce**. Recorded here so the post-window sweep does
+-not budget for a 1,900-line deletion that has no target.
+-
+-**Method** (reproducible; three reference forms, checked in order):
+-
+-```bash
+-# for each src/domains/**/command.md, resolve slug = <cluster>:<sub> (else <name>)
+-# a command has a DISCOVERY path if any of:
+-#   1. suggestion.eligible: true                    -> proactively suggested
+-#   2. its `name` appears in some hub's routes_to:  -> reached via the cluster head
+-#   3. any of these strings occurs in src/, docs/, README.md, CONTRIBUTING.md
+-#      OUTSIDE its own file:
+-#         /<cluster>:<sub>        (canonical invocation slug)
+-#         /<cluster> <sub>        (space form used by most hub bodies)
+-#         commands/<cluster>/<sub>.md   (relative link form)
+-#         /<name>                 (flat form)
+-# a command with none of the three, and visibility: internal, has no discovery path.
+-```
+-
+-**Result** over 193 command files:
+-
+-| Class | Count |
+-|---|---|
+-| `suggestion.eligible: true` | 53 |
+-| Reached via a hub `routes_to:` | 65 |
+-| Named in a stable surface (one of the three forms) | 73 |
+-| **No discovery path** | **2** (449 lines) |
+-
+-The two residuals are `src/domains/git/commit/in-chunks/command.md` and
+-`src/domains/git/pr/create/description-only/command.md`. Both are **reachable
+-under their `replaces:` aliases** (`commit:in-chunks`,
+-`create-pr:description-only`), which are the forms actually cited across
+-`src/` — so the true no-invocation-path count is **0 commands / 0 lines**, not
+-~1,900. The residual defect is an *alias*, not an orphan: the canonical
+-`<cluster>:<sub>` slug of those two appears nowhere.
+-
+-**By-product finding — sub-command drift the cluster checker cannot see.**
+-While enumerating, a second and load-bearing defect surfaced: hubs and the
+-locked cluster contract disagree with what is actually on disk.
+-
+-- `/roadmap` has 6 sub-commands on disk; its `## Sub-commands` table lists 5
+-  (`materialize` is in neither the table nor the contract).
+-- `/memory` has 6 on disk; its table lists 5 (`learn-low-impact` is missing
+-  from the hub although the contract registers it).
+-- `routes_to:` is systematically incomplete — 12 of 25 contract-listed
+-  dispatch clusters omit at least one existing sub-command, and several
+-  orchestrators carry no `routes_to` at all.
+-- Contract-side, the inverse also exists: rows for sub-commands that have no
+-  file, and orchestrators with no contract row.
+-
+-**Correction (2026-08-17) — the two named examples have been repaired since,
+-and the by-product finding must not be budgeted as if they had not.** Both
+-bullets are now false: `/roadmap` has **7** sub-commands on disk and its
+-`## Sub-commands` table lists **7**, `materialize` included; `/memory` has **6**
+-on disk and its table lists **6**, `learn-low-impact` included. They are left
+-above with this note rather than rewritten, so the finding stays auditable —
+-but the post-window sweep this block feeds would otherwise budget for two fixes
+-that no longer exist. **Scope of this correction, stated because it bounds
+-what it proves:** only the first two bullets were re-measured. The `routes_to:`
+-bullet (12 of 25) and the contract-side inverse were **not** re-checked and are
+-neither confirmed nor refuted here.
+-
+-`check_cluster_patterns` cannot catch this class: it iterates the **contract**,
+-never the filesystem, checks `routes_to` for *resolvability* but never
+-*completeness*, and matches only the `## Sub-commands` table **header**, never
+-its rows. Its contract row regex additionally requires a numeric phase column,
+-so clusters whose row carries `—` fall outside the gate entirely. The
+-filesystem-enumeration half is closed in `road-to-renewal-leverage.md`; the
+-**contract-side** half (rows with no file, orchestrators with no row, and the
+-numeric-phase-column narrowing) is left here as input for the sweep, because
+-resolving it means deciding per cluster whether an unlisted hub is dead or
+-intentional — a disposition call, which is what this phase owns.
+-
+-Not drift, checked and dismissed: hubs mixing `` `/worktree create` `` with
+-`` `/analyze:decision` `` is **style, not defect** — `docs/contracts/command-clusters.md:157`
+-makes `/<cluster> <sub>` a first-class equivalent of the colon form.
+-
+-No parking action is taken here and no command is deleted — per this phase's
+-own verify, pre-window deletions are forbidden.
+-
+-## Acceptance criteria (anti-dump — the review's own rule)
+-
+-- [x] **Net-negative surface:** the diff removes/retires more surface than it
+-      adds; the proactive suggestion-eligible count strictly drops.
+-      <!-- verified 2026-07-28 by counting frontmatter across all 191
+-      `src/domains/**/command.md`: `suggestion.eligible: true` = **53**, false =
+-      138, absent = 0. Baseline in § Context was 160 eligible of 190, so the
+-      proactive surface dropped 160 → 53 (-67%), landing exactly on the Phase-1
+-      exit target of ~53. The Phase-1 invariant is total, not partial: of 130
+-      cluster sub-commands (`sub:` set), **0 remain eligible**; the 53 eligible
+-      are all heads/standalone entry points (61 of those exist, 8 are
+-      additionally ineligible). Nothing was added to offset the reduction — the
+-      complexity budget went into an existing guideline and the restraint
+-      decisions into a context note, both net-zero. -->
+-- [x] **No new mechanism without naming what it retires:** the complexity-budget
+-      folds into an existing rule; no new lint/rule/command/hook is created.
+-      <!-- verified 2026-07-28: the complexity-budget checklist lives in the
+-      EXISTING `docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md`
+-      (§ Complexity budget), and the restraint decisions in the EXISTING context
+-      dir as `agents/settings/contexts/surface-consolidation-restraint.md` — a
+-      note, not a rule. No new lint script, rule file, command, or hook is
+-      attributable to this roadmap.
+-      STATED RATHER THAN GLOSSED: a `git log --diff-filter=A` sweep over
+-      `src/rules/`, `src/scripts/lint_*` and `src/scripts/hooks/` in the
+-      Phase-1/2 window returns exactly one added rule, `src/rules/secret-vcs-guard.md`.
+-      That belongs to the secret-hygiene guardrail roadmap (rule-first + CI net,
+-      commit-hook cut), not to this one — the window overlaps, the authorship
+-      does not. -->
+-- [x] **Demote, not delete:** every affected command/skill remains fully
+-      invokable; only suggestion-eligibility (and, for learning-tutor,
+-      proactive surfacing) is retired.
+-      <!-- verified 2026-07-28 two ways. (1) Nothing was deleted: 191 source
+-      `command.md` files and 191 command artefacts in
+-      `dist/discovery/discovery-manifest.json` — the § Context baseline was 190,
+-      so the count GREW by one over the window. (2) Invokability spot-checked on
+-      five de-eligibled cluster sub-commands across five different clusters —
+-      `tdd-green`, `feature-plan`, `roadmap-process-step`, `brand-tokens`,
+-      `analyze-decision`: `./agent-config commands explain <slug>` resolves for
+-      all five. Note the eligibility flag is frontmatter-only and is NOT carried
+-      in the discovery manifest, so it cannot affect resolution by construction —
+-      the CLI check is the real evidence, a manifest field check would have been
+-      vacuous. -->
+-- [x] The Unified Verification Router is NOT built here (deferred blocker).
+-      <!-- verified 2026-07-28: a case-insensitive sweep for
+-      "unified verification router" across `src/` and `docs/contracts/` returns
+-      no implementation — only the defer/CUT records in this roadmap's gap-table
+-      and council notes, plus the `benchmark-spend` blocker that gates its
+-      re-opening. No seventh entry point, no forwarding shim. -->
+-- [x] Every gated item (launch, branch protection, external session,
+-      utilization removal, benchmarks) is a `## Blockers` entry, not a step.
+-      <!-- verified 2026-07-28 — all five map onto the three blockers below:
+-      launch → `launch-and-adoption`; external session → `launch-and-adoption`;
+-      branch protection → `repo-admin-and-usage`; utilization removal →
+-      `repo-admin-and-usage`; benchmarks → `benchmark-spend` (which also gates
+-      the verification-router re-open).
+-      ONE NUANCE, recorded rather than smoothed over: Phase 3 IS a step, and its
+-      subject is utilization-driven disposition. It was re-homed here verbatim
+-      on 2026-07-28 from an archiving sibling roadmap, and its own header ties
+-      it to `repo-admin-and-usage`. So the gated WORK is tracked by a blocker as
+-      this criterion requires; it additionally carries a step so the re-homed
+-      item stays visible on the dashboard instead of vanishing into a blocker.
+-      Live check of that gate: branch protection is confirmed OFF
+-      (`gh api .../branches/main/protection` → 404) and the utilization window
+-      does not elapse until ~2026-08-26, so the step is correctly still open. -->
+-
+-## Blockers
+-
+-### blocker: launch-and-adoption
+-- **Status:** resolved
+-- **Owner:** user
+-- **Blocks:** the product half of the review (post the drafted launch, distribute the wedge, run a first external session)
+-- **What to do:** RESOLVED AS OUT OF SCOPE, 2026-08-05, per [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md). Owner decision: external adoption is not a project goal, so posting a launch and running an external session are not work this project will do. The blocker is kept rather than deleted so the disposition is visible in history — it was never going to resolve, and leaving it open would have read as pending.
+-- **Resolved when:** resolved by the ADR-216 scope decision. The adoption-facing half of this review is closed as out of scope, not as done.
+-
+-### blocker: repo-admin-and-usage
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Class:** 3 — human-only
+-- **Blocks:** branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
+-- **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
+-- **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
+-- **If you do nothing:** the required-check set stays advisory — a check can go red on the trunk without refusing the merge, which is exactly the state branch protection exists to end — and the artefact surface keeps growing with no removal ever justified, which is the condition this roadmap was opened to close.
+-- **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
+-
+-### blocker: benchmark-spend
+-- **Status:** open
+-- **Owner:** user
+-- **Class:** 2 — consent-once (authorise the A/B with an estimate)
+-- **History note, 2026-08-17 — the cap works now; it did not when the two
+-  statements below were written.** They claim that
+-  `task bench:ab:live -- --budget <N>` "caps per-task spend" and that this option
+-  has "a spend cap already in the tree". Both were **false when authored**:
+-  `taskfiles/bench-ab.yml` invoked the runner without `{{.CLI_ARGS}}`, so the
+-  trailing flag never reached it and the run took the parser default of `2.0`
+-  instead of `<N>`. **Fixed and merged the same day (PR #1406), so the statements
+-  below are now accurate and (a) may be authorised on their strength.** Kept as a
+-  note rather than deleted because this entry was promoted from the absent-field
+-  default to `Class: 2` on that same day, which made it renderable as a consent
+-  gate for the first time — for a few hours it presented a wrong money claim more
+-  prominently than before, which is worth a reader knowing (R2 finding 2). The
+-  prose below is left as authored: correcting another roadmap's recommendation is
+-  its owner's call, not this pass's.
+-- **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
+-- **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
+-- **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
+-- **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
+-- **Resolved when:** the maintainer authorizes the specific run with an estimate, or records (c).
+-
+-## Provenance
+-
+-Source: the user-authored 9.4.0 review (`agents/tmp.old/feedback-9.4.0-1.txt`,
+-local, gitignored). One external competitor is named in the review's comparison
+-table (referred to only as **Source A** here per `source-confidentiality`); this
+-roadmap does not depend on that comparison. Council convergence recorded inline
+-above (date + members), no session-file path cited.
+diff --git a/dist/agent-src/scripts/update_roadmap_progress.ts b/dist/agent-src/scripts/update_roadmap_progress.ts
+index c86cf086fa9f90ca4cf2c936d9aa0498ac3f916e..27f68a817faa7e10081b68865ecd30fb4b544de7 100644
+--- a/dist/agent-src/scripts/update_roadmap_progress.ts
++++ b/dist/agent-src/scripts/update_roadmap_progress.ts
+@@ -280,12 +280,24 @@ function is_draft(fm: Record<string, string>): boolean {
+     return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
+ }
+ 
+-function is_roadmap_candidate(p: string): boolean {
+-    const name = path.basename(p);
++/**
++ * The NAME half of the candidate test: is this filename a roadmap at all.
++ *
++ * Split out because one caller needs it WITHOUT the directory half.
++ * `is_roadmap_candidate` rejects any path carrying an excluded component, and
++ * `later` is one of them, so the parked inventory -- which reads that directory on
++ * purpose -- cannot reuse the full predicate. Sharing the name half is what keeps
++ * `later/README.md` excluded from both sides by one rule rather than two.
++ */
++function is_roadmap_name(name: string): boolean {
+     if (EXCLUDE_NAMES.has(name)) {
+         return false;
+     }
+-    if (EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre))) {
++    return !EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre));
++}
++
++function is_roadmap_candidate(p: string): boolean {
++    if (!is_roadmap_name(path.basename(p))) {
+         return false;
+     }
+     // path.parts — every component of the path; exclude if any is an excluded dir.
+@@ -741,6 +753,109 @@ function collect(roadmap_root: string): RoadmapStats[] {
+     return results;
+ }
+ 
++/** One parked roadmap, as the inventory needs it. */
++interface ParkedRoadmap {
++    rel: string;
++    resume: string | null;
++    /** Only the linter's looser marker matched — CI passes, the cell cannot quote. */
++    unlabelled: boolean;
++}
++
++/**
++ * A line that STATES when the roadmap comes back.
++ *
++ * `lint_roadmap_later_disposition` accepts a bare `trigger` as a resume
++ * condition, and that word is too loose to extract a sentence with: measured over
++ * the live `later/` tree it matched a `Source:` path containing
++ * `mixed-trigger-cleanup` and several mid-sentence fragments, i.e. it produced
++ * table cells that were wrong rather than short. So the extraction is TWO tiers
++ * and the render distinguishes them, instead of one loose pattern pretending to
++ * be precise.
++ */
++const RESUME_STATEMENT = /\b(blocked until|resume when|resume-when|blocked-until)\b/i;
++
++/**
++ * The linter's looser vocabulary. A file matching only this DOES carry a resume
++ * condition as far as CI is concerned, so the inventory must not report it as
++ * missing — it reports it as unlabelled and sends the reader to the file. Without
++ * this tier the dashboard would contradict a gate that had already passed.
++ */
++const RESUME_LOOSE = /\btrigger\b/i;
++
++/**
++ * Parked roadmaps, with the resume condition each one records.
++ *
++ * `later/` is excluded from `collect()` and from `/roadmap:process-*` by design —
++ * parked work is not active backlog. That exclusion had no counterweight: the
++ * header linked the directory and nothing listed what was in it, so a roadmap
++ * moved there left the dashboard entirely and its resume condition was visible
++ * only to someone who opened the file. Both AI council seats (2026-08-19, 2/2)
++ * made a visible parked-work inventory the CONDITION of parking two roadmaps that
++ * were 6-of-8 and 12-of-14 resolved, on the argument that metric honesty bought
++ * with operational amnesia is a bad trade.
++ *
++ * This is a view over data that already exists, not a new governance mechanism:
++ * nothing here gates, counts toward a ratchet, or changes what `collect()` scans.
++ */
++function collect_parked(roadmap_root: string): ParkedRoadmap[] {
++    const dir = path.join(roadmap_root, 'later');
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).sort();
++    } catch {
++        return [];
++    }
++    const out: ParkedRoadmap[] = [];
++    for (const name of names) {
++        const full = path.join(dir, name);
++        // The NAME half only: the full predicate rejects every path under `later`.
++        if (!_isFile(full) || !is_roadmap_name(name)) {
++            continue;
++        }
++        let text: string;
++        try {
++            text = fs.readFileSync(full, { encoding: 'utf-8' });
++        } catch {
++            continue;
++        }
++        if (is_draft(parse_frontmatter(text))) {
++            continue;
++        }
++        const cell = resume_cell(text);
++        out.push({ rel: name, resume: cell.stated, unlabelled: cell.unlabelled });
++    }
++    return out;
++}
++
++/**
++ * What brings a parked roadmap back, as one table cell.
++ *
++ * `stated` carries the line when the file makes the statement explicitly;
++ * `unlabelled` means only the linter's looser marker is present. Both false means
++ * the file records nothing — reported as such rather than left blank, because an
++ * empty cell reads as "nothing to wait for".
++ */
++function resume_cell(text: string): { stated: string | null; unlabelled: boolean } {
++    for (const raw of text.split('\n')) {
++        if (!RESUME_STATEMENT.test(raw)) {
++            continue;
++        }
++        const line = raw
++            .replace(/^\s*>\s?/, '')
++            .replace(/\*\*/g, '')
++            .replace(/\|/g, '\\|')
++            .trim();
++        if (line === '') {
++            continue;
++        }
++        return {
++            stated: line.length > 200 ? `${line.slice(0, 197)}...` : line,
++            unlabelled: false,
++        };
++    }
++    return { stated: null, unlabelled: RESUME_LOOSE.test(text) };
++}
++
+ function unarchived_complete(roadmaps: RoadmapStats[]): RoadmapStats[] {
+     return roadmaps.filter((r) => r.total_active > 0 && r.open_ === 0 && r.deferred === 0);
+ }
+@@ -812,7 +927,11 @@ function collect_bundles(repo_root: string): Bundle[] {
+     return out;
+ }
+ 
+-function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): string {
++function render(
++    roadmaps: RoadmapStats[],
++    bundles: Bundle[] | null = null,
++    roadmap_root: string | null = null,
++): string {
+     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
+     const total_active = roadmaps.reduce((s, r) => s + r.total_active, 0);
+     const overall_pct = total_active ? _pyRound((total_done * 100) / total_active) : 0;
+@@ -939,6 +1058,37 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
+     });
+     lines.push('');
+     lines.push('---\n');
++
++    // Parked work, listed right under the active table so the two are read
++    // together. A parked roadmap is not backlog and carries no counts here — the
++    // one thing a reader needs is what brings it back.
++    // Null when a caller renders without a root (the unit tests do); the section
++    // is then absent rather than guessed at.
++    const parked = roadmap_root === null ? [] : collect_parked(roadmap_root);
++    if (parked.length > 0) {
++        lines.push(
++            `## Parked — \`later/\` (${parked.length} roadmap` +
++                `${parked.length !== 1 ? 's' : ''}, not active backlog)\n`,
++        );
++        lines.push(
++            '> Excluded from the table above and from `/roadmap:process-*` by ' +
++                'design. Listed here so a resume condition is visible without ' +
++                'opening the file.\n',
++        );
++        lines.push('| Roadmap | Resume when |');
++        lines.push('|---|---|');
++        for (const r of parked) {
++            const cell =
++                r.resume ??
++                (r.unlabelled
++                    ? '_condition present but unlabelled — see file_'
++                    : '_no resume line recorded_');
++            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${cell} |`);
++        }
++        lines.push('');
++        lines.push('---\n');
++    }
++
+     lines.push('## Per-roadmap phase breakdown\n');
+     for (const r of roadmaps) {
+         lines.push(`### [${r.rel}](roadmaps/${r.rel})\n`);
+@@ -1095,7 +1245,7 @@ function main(argv?: readonly string[]): number {
+         return 0;
+     }
+     const roadmaps = collect(roadmap_root);
+-    const new_text = render(roadmaps, collect_bundles(repo_root));
++    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
+     const current = fs.existsSync(target) ? fs.readFileSync(target, { encoding: 'utf-8' }) : '';
+     const complete = unarchived_complete(roadmaps);
+     const pending = pending_iron_law_3(roadmaps);
+diff --git a/src/agent-src/scripts/update_roadmap_progress.ts b/src/agent-src/scripts/update_roadmap_progress.ts
+index c86cf086fa9f90ca4cf2c936d9aa0498ac3f916e..27f68a817faa7e10081b68865ecd30fb4b544de7 100644
+--- a/src/agent-src/scripts/update_roadmap_progress.ts
++++ b/src/agent-src/scripts/update_roadmap_progress.ts
+@@ -280,12 +280,24 @@ function is_draft(fm: Record<string, string>): boolean {
+     return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
+ }
+ 
+-function is_roadmap_candidate(p: string): boolean {
+-    const name = path.basename(p);
++/**
++ * The NAME half of the candidate test: is this filename a roadmap at all.
++ *
++ * Split out because one caller needs it WITHOUT the directory half.
++ * `is_roadmap_candidate` rejects any path carrying an excluded component, and
++ * `later` is one of them, so the parked inventory -- which reads that directory on
++ * purpose -- cannot reuse the full predicate. Sharing the name half is what keeps
++ * `later/README.md` excluded from both sides by one rule rather than two.
++ */
++function is_roadmap_name(name: string): boolean {
+     if (EXCLUDE_NAMES.has(name)) {
+         return false;
+     }
+-    if (EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre))) {
++    return !EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre));
++}
++
++function is_roadmap_candidate(p: string): boolean {
++    if (!is_roadmap_name(path.basename(p))) {
+         return false;
+     }
+     // path.parts — every component of the path; exclude if any is an excluded dir.
+@@ -741,6 +753,109 @@ function collect(roadmap_root: string): RoadmapStats[] {
+     return results;
+ }
+ 
++/** One parked roadmap, as the inventory needs it. */
++interface ParkedRoadmap {
++    rel: string;
++    resume: string | null;
++    /** Only the linter's looser marker matched — CI passes, the cell cannot quote. */
++    unlabelled: boolean;
++}
++
++/**
++ * A line that STATES when the roadmap comes back.
++ *
++ * `lint_roadmap_later_disposition` accepts a bare `trigger` as a resume
++ * condition, and that word is too loose to extract a sentence with: measured over
++ * the live `later/` tree it matched a `Source:` path containing
++ * `mixed-trigger-cleanup` and several mid-sentence fragments, i.e. it produced
++ * table cells that were wrong rather than short. So the extraction is TWO tiers
++ * and the render distinguishes them, instead of one loose pattern pretending to
++ * be precise.
++ */
++const RESUME_STATEMENT = /\b(blocked until|resume when|resume-when|blocked-until)\b/i;
++
++/**
++ * The linter's looser vocabulary. A file matching only this DOES carry a resume
++ * condition as far as CI is concerned, so the inventory must not report it as
++ * missing — it reports it as unlabelled and sends the reader to the file. Without
++ * this tier the dashboard would contradict a gate that had already passed.
++ */
++const RESUME_LOOSE = /\btrigger\b/i;
++
++/**
++ * Parked roadmaps, with the resume condition each one records.
++ *
++ * `later/` is excluded from `collect()` and from `/roadmap:process-*` by design —
++ * parked work is not active backlog. That exclusion had no counterweight: the
++ * header linked the directory and nothing listed what was in it, so a roadmap
++ * moved there left the dashboard entirely and its resume condition was visible
++ * only to someone who opened the file. Both AI council seats (2026-08-19, 2/2)
++ * made a visible parked-work inventory the CONDITION of parking two roadmaps that
++ * were 6-of-8 and 12-of-14 resolved, on the argument that metric honesty bought
++ * with operational amnesia is a bad trade.
++ *
++ * This is a view over data that already exists, not a new governance mechanism:
++ * nothing here gates, counts toward a ratchet, or changes what `collect()` scans.
++ */
++function collect_parked(roadmap_root: string): ParkedRoadmap[] {
++    const dir = path.join(roadmap_root, 'later');
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).sort();
++    } catch {
++        return [];
++    }
++    const out: ParkedRoadmap[] = [];
++    for (const name of names) {
++        const full = path.join(dir, name);
++        // The NAME half only: the full predicate rejects every path under `later`.
++        if (!_isFile(full) || !is_roadmap_name(name)) {
++            continue;
++        }
++        let text: string;
++        try {
++            text = fs.readFileSync(full, { encoding: 'utf-8' });
++        } catch {
++            continue;
++        }
++        if (is_draft(parse_frontmatter(text))) {
++            continue;
++        }
++        const cell = resume_cell(text);
++        out.push({ rel: name, resume: cell.stated, unlabelled: cell.unlabelled });
++    }
++    return out;
++}
++
++/**
++ * What brings a parked roadmap back, as one table cell.
++ *
++ * `stated` carries the line when the file makes the statement explicitly;
++ * `unlabelled` means only the linter's looser marker is present. Both false means
++ * the file records nothing — reported as such rather than left blank, because an
++ * empty cell reads as "nothing to wait for".
++ */
++function resume_cell(text: string): { stated: string | null; unlabelled: boolean } {
++    for (const raw of text.split('\n')) {
++        if (!RESUME_STATEMENT.test(raw)) {
++            continue;
++        }
++        const line = raw
++            .replace(/^\s*>\s?/, '')
++            .replace(/\*\*/g, '')
++            .replace(/\|/g, '\\|')
++            .trim();
++        if (line === '') {
++            continue;
++        }
++        return {
++            stated: line.length > 200 ? `${line.slice(0, 197)}...` : line,
++            unlabelled: false,
++        };
++    }
++    return { stated: null, unlabelled: RESUME_LOOSE.test(text) };
++}
++
+ function unarchived_complete(roadmaps: RoadmapStats[]): RoadmapStats[] {
+     return roadmaps.filter((r) => r.total_active > 0 && r.open_ === 0 && r.deferred === 0);
+ }
+@@ -812,7 +927,11 @@ function collect_bundles(repo_root: string): Bundle[] {
+     return out;
+ }
+ 
+-function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): string {
++function render(
++    roadmaps: RoadmapStats[],
++    bundles: Bundle[] | null = null,
++    roadmap_root: string | null = null,
++): string {
+     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
+     const total_active = roadmaps.reduce((s, r) => s + r.total_active, 0);
+     const overall_pct = total_active ? _pyRound((total_done * 100) / total_active) : 0;
+@@ -939,6 +1058,37 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
+     });
+     lines.push('');
+     lines.push('---\n');
++
++    // Parked work, listed right under the active table so the two are read
++    // together. A parked roadmap is not backlog and carries no counts here — the
++    // one thing a reader needs is what brings it back.
++    // Null when a caller renders without a root (the unit tests do); the section
++    // is then absent rather than guessed at.
++    const parked = roadmap_root === null ? [] : collect_parked(roadmap_root);
++    if (parked.length > 0) {
++        lines.push(
++            `## Parked — \`later/\` (${parked.length} roadmap` +
++                `${parked.length !== 1 ? 's' : ''}, not active backlog)\n`,
++        );
++        lines.push(
++            '> Excluded from the table above and from `/roadmap:process-*` by ' +
++                'design. Listed here so a resume condition is visible without ' +
++                'opening the file.\n',
++        );
++        lines.push('| Roadmap | Resume when |');
++        lines.push('|---|---|');
++        for (const r of parked) {
++            const cell =
++                r.resume ??
++                (r.unlabelled
++                    ? '_condition present but unlabelled — see file_'
++                    : '_no resume line recorded_');
++            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${cell} |`);
++        }
++        lines.push('');
++        lines.push('---\n');
++    }
++
+     lines.push('## Per-roadmap phase breakdown\n');
+     for (const r of roadmaps) {
+         lines.push(`### [${r.rel}](roadmaps/${r.rel})\n`);
+@@ -1095,7 +1245,7 @@ function main(argv?: readonly string[]): number {
+         return 0;
+     }
+     const roadmaps = collect(roadmap_root);
+-    const new_text = render(roadmaps, collect_bundles(repo_root));
++    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
+     const current = fs.existsSync(target) ? fs.readFileSync(target, { encoding: 'utf-8' }) : '';
+     const complete = unarchived_complete(roadmaps);
+     const pending = pending_iron_law_3(roadmaps);
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index 08c3f2c2f52cd65adc59ae7fe0e790360f97e12e..5b1648653f7fc313c7fb7647f57e28ad679cdc2c 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -16,8 +16,8 @@
+     ]
+   },
+   "baseline": {
+-    "active_roadmaps": 33,
+-    "later_roadmaps": 50,
++    "active_roadmaps": 31,
++    "later_roadmaps": 52,
+     "open_blockers": 74
+   },
+   "baseline_history": [
+@@ -139,6 +139,13 @@
+       "later_roadmaps": 50,
+       "open_blockers": 74,
+       "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved -- the same reason the row above states, and the second time in one day that this file has had to say it. This branch parks road-to-run-continuation-observation to later/ (-1 active, +1 later); the base it merged had itself moved to 34/49/74. Carrying this branch's earlier 32/50/70 forward would have described neither tree. open_blockers: 74 is the base's number, untouched, and that it is untouched is the check that this is a park and not a burial: the metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Parked because every open item is gated on an external trigger this estate cannot supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition. The number walks back the moment it is un-parked. The unreconciled -1 this branch's earlier row recorded (commit 7d5114dbd walked open_blockers 71 -> 70 with no history row) is left where it is: the base has since re-measured to 74, so that gap is now historical rather than live, and inventing a reconstruction here would be a second unmeasured row."
++    },
++    {
++      "at": "2026-08-19",
++      "active_roadmaps": 31,
++      "later_roadmaps": 52,
++      "open_blockers": 74,
++      "why": "RAISED by 2 later roadmaps and WALKED DOWN by 2 active ones, one transfer: road-to-carrier-layer-convergence and road-to-surface-consolidation are parked to later/. Total estate is unchanged at 83, and open_blockers is unchanged at 74 -- which is the check that this is a park and not a burial, since that metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved. All three blockers involved (b-convergence-machine, repo-admin-and-usage, benchmark-spend) stay open and stay counted. Both roadmaps were parked because every open item is gated outside the roadmap, which is the repository's own active-vs-later test: carrier's two remaining steps are both in Phase 3 behind a Class 3 maintainer-machine measurement, and surface-consolidation's one remaining step is a utilization sweep gated on a window that elapses ~2026-08-26 AND on usage evidence accumulating over it. `/roadmap:process-full` terminates on both at blocked-preflight with zero runnable open steps, so leaving them active would make the estate advertise work the command is required to refuse. This empties the ACTIVE AUTONOMOUS estate to zero, intentionally and as of 2026-08-19. The consequence is recorded at the three-phase-contract-run blocker of later/road-to-run-continuation-observation rather than smoothed over: its criterion is now CURRENTLY unreachable from the estate, which is not the same as impossible, and it is not weakened to match. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer review), which also made a visible parked-work inventory the condition of the disposition -- the same change adds one to the generated dashboard."
+     }
+   ],
+   "target": {
+diff --git a/tests/scripts/update_roadmap_progress.test.ts b/tests/scripts/update_roadmap_progress.test.ts
+index f59645e5a8005dac7308b621d5b53f01952cf481..575a2cc697b49e34ca571db704f3e64626833230 100644
+--- a/tests/scripts/update_roadmap_progress.test.ts
++++ b/tests/scripts/update_roadmap_progress.test.ts
+@@ -123,7 +123,6 @@ describe('update_roadmap_progress — intent', () => {
+         mkRoadmap('road-to-live.md', ['# Live', '', '## Phase 1 — Go', '- [x] a', '- [ ] b', ''].join('\n'));
+         // None of these may appear in the dashboard.
+         mkRoadmap('archive/road-to-old.md', ['# Old', '', '## Phase 1 — X', '- [x] z', ''].join('\n'));
+-        mkRoadmap('later/road-to-parked.md', ['# Parked', '', '## Phase 1 — Y', '- [ ] q', ''].join('\n'));
+         mkRoadmap('skipped/road-to-dropped.md', ['# Dropped', '', '## Phase 1 — W', '- [ ] r', ''].join('\n'));
+         mkRoadmap('stubs/road-to-stub.md', ['# Stub', '', '## Phase 1 — S', '- [ ] s', ''].join('\n'));
+         mkRoadmap('README.md', ['# Readme', '', '## Phase 1 — N', '- [ ] no', ''].join('\n'));
+@@ -136,7 +135,6 @@ describe('update_roadmap_progress — intent', () => {
+         expect(dashboard).toContain('road-to-live.md');
+         for (const excluded of [
+             'road-to-old.md',
+-            'road-to-parked.md',
+             'road-to-dropped.md',
+             'road-to-stub.md',
+             'README.md',
+@@ -147,6 +145,32 @@ describe('update_roadmap_progress — intent', () => {
+         }
+     });
+ 
++    it('regen: later/ is excluded from the COUNTS but is listed as parked', () => {
++        // `later/` used to be in the list above, and this case is the deliberate
++        // split rather than a loosened assertion. The other three excluded
++        // directories are TERMINAL — archived work is done, skipped work was
++        // dropped, a stub is not a roadmap yet — so there is nothing about them a
++        // reader needs to act on. Parked work is the opposite: it resumes, and the
++        // one fact that matters is what brings it back. Excluding it from the
++        // counted table stays correct; excluding it from the FILE meant a roadmap
++        // moved there left the dashboard entirely (AI council 2026-08-19, 2/2, made
++        // a visible inventory the condition of parking two near-complete roadmaps).
++        mkRoadmap('road-to-live.md', ['# Live', '', '## Phase 1 — Go', '- [x] a', '- [ ] b', ''].join('\n'));
++        mkRoadmap(
++            'later/road-to-parked.md',
++            ['# Parked', '', '> Resume when the window elapses.', '', '## Phase 1 — Y', '- [ ] q', ''].join('\n'),
++        );
++        const { result, dashboard } = regen();
++        expect(result.status, 'exit').toBe(0);
++        // Not counted: one open roadmap, and its step is not in the tally.
++        expect(dashboard).toContain('1 open roadmap ');
++        expect(dashboard).not.toContain('| [road-to-parked.md](roadmaps/road-to-parked.md)');
++        // Listed, with its resume condition, under the parked heading.
++        expect(dashboard).toContain('## Parked — `later/` (1 roadmap, not active backlog)');
++        expect(dashboard).toContain('roadmaps/later/road-to-parked.md');
++        expect(dashboard).toContain('Resume when the window elapses.');
++    });
++
+     it('regen: draft frontmatter hidden, ready frontmatter listed', () => {
+         mkRoadmap(
+             'road-to-draft.md',
+@@ -484,6 +508,116 @@ describe('update_roadmap_progress — intent', () => {
+ // could only start on the line after. Both cut the user-facing instruction
+ // mid-sentence — in the dashboard and in `agent-config gates`, which is the one
+ // field those surfaces exist to deliver.
++describe('parked inventory — later/ is listed, never counted', () => {
++    let tmp: string;
++    let root: string;
++    let roadmaps: string;
++
++    beforeEach(() => {
++        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'urp-parked-'));
++        root = path.join(tmp, 'proj');
++        roadmaps = path.join(root, 'agents', 'roadmaps');
++        fs.mkdirSync(path.join(roadmaps, 'later'), { recursive: true });
++    });
++    afterEach(() => {
++        fs.rmSync(tmp, { recursive: true, force: true });
++    });
++
++    function mk(rel: string, body: string): void {
++        const fp = path.join(roadmaps, rel);
++        fs.mkdirSync(path.dirname(fp), { recursive: true });
++        fs.writeFileSync(fp, body, 'utf-8');
++    }
++
++    function regen(): { result: SpawnSyncReturns<string>; dashboard: string } {
++        const result = runTs(['--repo-root', root], tmp);
++        const dashPath = path.join(root, 'agents', 'roadmaps-progress.md');
++        const dashboard = fs.existsSync(dashPath) ? fs.readFileSync(dashPath, 'utf-8') : '';
++        return { result, dashboard };
++    }
++
++    it('lists a parked roadmap with its stated resume condition, and does not count it', () => {
++        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
++        mk(
++            path.join('later', 'road-to-parked.md'),
++            [
++                '---',
++                'status: later',
++                '---',
++                '',
++                '# Parked',
++                '',
++                '> **Parked. Resume when** the maintainer takes the reading.',
++                '',
++                '## Phase 1 — Waits',
++                '- [ ] blocked one',
++                '',
++            ].join('\n'),
++        );
++        const { result, dashboard } = regen();
++        expect(result.status, 'exit').toBe(0);
++        // Counted as ONE open roadmap: the parked file is not backlog.
++        expect(dashboard).toContain('1 open roadmap ');
++        expect(dashboard).toContain('## Parked — `later/` (1 roadmap, not active backlog)');
++        expect(dashboard).toContain('Resume when the maintainer takes the reading.');
++        // And it is absent from the active table, which is the whole reason the
++        // inventory exists as a separate section.
++        expect(dashboard).not.toContain('| [road-to-parked.md](roadmaps/road-to-parked.md)');
++    });
++
++    it('reads later/ even though the shared candidate predicate excludes that directory', () => {
++        // The regression this pins: `is_roadmap_candidate` rejects ANY path with an
++        // excluded component, `later` among them, so the first version of the
++        // collector filtered out every file it looked at and the section silently
++        // never rendered. Only the NAME half of the predicate may apply here.
++        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
++        mk(
++            path.join('later', 'road-to-parked.md'),
++            ['# Parked', '', '> Blocked until the window elapses.', ''].join('\n'),
++        );
++        // The name filter still applies: a README is not a roadmap on either side.
++        mk(path.join('later', 'README.md'), '# Later\n\n> Blocked until nothing.\n');
++        const { dashboard } = regen();
++        expect(dashboard).toContain('(1 roadmap, not active backlog)');
++        expect(dashboard).toContain('Blocked until the window elapses.');
++        expect(dashboard).not.toContain('later/README.md');
++    });
++
++    it('reports an unlabelled condition as such rather than quoting a wrong line', () => {
++        // `lint_roadmap_later_disposition` accepts a bare `trigger`, which is too
++        // loose to quote from: over the live tree it matched a `Source:` path
++        // containing `mixed-trigger-cleanup`. A file carrying only the loose marker
++        // still PASSES that gate, so the cell must not read "no resume line" —
++        // the dashboard would then contradict a green gate.
++        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
++        mk(
++            path.join('later', 'road-to-loose.md'),
++            [
++                '# Loose',
++                '',
++                '> Source: `agents/tmp.old/mixed-trigger-cleanup/road-to-loose.md`',
++                '',
++            ].join('\n'),
++        );
++        const { dashboard } = regen();
++        expect(dashboard).toContain('_condition present but unlabelled — see file_');
++        expect(dashboard).not.toContain('mixed-trigger-cleanup');
++    });
++
++    it('says so when a parked file records no resume line at all', () => {
++        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
++        mk(path.join('later', 'road-to-silent.md'), ['---', 'status: later', '---', '', '# Silent', ''].join('\n'));
++        const { dashboard } = regen();
++        expect(dashboard).toContain('_no resume line recorded_');
++    });
++
++    it('omits the section entirely when later/ holds no roadmaps', () => {
++        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
++        const { dashboard } = regen();
++        expect(dashboard).not.toContain('## Parked —');
++    });
++});
++
+ describe('parse_blockers — instruction text is never truncated', () => {
+     it('keeps a "What to do:" that starts inline on the marker line', () => {
+         const text = [
