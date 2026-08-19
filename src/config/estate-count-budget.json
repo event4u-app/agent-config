@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 33,
-    "later_roadmaps": 50,
+    "active_roadmaps": 34,
+    "later_roadmaps": 49,
     "open_blockers": 71
   },
   "baseline_history": [
@@ -111,6 +111,13 @@
       "later_roadmaps": 50,
       "open_blockers": 71,
       "why": "RAISED by 1 blocker, and the raise is the alternative to a silent drop rather than room made for new growth. road-to-run-continuation-observation step 0.1 carries the parent criterion \"a process-full contract run finishes a 3-phase roadmap with zero synchronous contacts, re-engaging across turns, and opens the PR\". Its sibling step 0.0 closed on a real engagement observed 2026-08-19, and 0.1 did NOT: this roadmap has one phase, so the three-phase half cannot be read off that run however the rest of it went, and closing it there would be the attribution error the step's own text warns against. The choice was therefore between recording the gap as three-phase-contract-run, where the dashboard and this ratchet both see it, and leaving it as prose in a step nobody counts \u2014 which is the invisible-gate failure road-to-solution-minimalism recorded when its own halt lived in prose and the generated dashboard published zero blockers for a roadmap stopped for four days. Active and later are unchanged, which is the check that this is not a park wearing a tightening's clothes. The entry is class 3 rather than 0 on purpose and that bounds what the raise buys: an agent does the work, but choosing which roadmap gets worked next is the operator's, so no command produces a qualifying run and this number walks back down on the first three-phase autonomous roadmap anyone finishes from a worktree \u2014 as a side effect, with no dedicated effort."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 34,
+      "later_roadmaps": 49,
+      "open_blockers": 71,
+      "why": "An UN-PARK, which is the one estate move this gate had no shape for. active_roadmaps 33 -> 34 is RAISED and later_roadmaps 50 -> 49 is WALKED DOWN, by the same single file moving in the same commit: later/road-to-request-scoped-rule-load.md returns to the active tree. Net estate is zero, and the two numbers move in opposite directions for that reason rather than by coincidence. Read the raise together with the walk-down or it reads as growth, which it is not: no roadmap was created, no work was added, and open_blockers is UNCHANGED at 71 because open_blockers already spans active plus later/ and therefore cannot notice a move between them. That invariance is the check that this is a disposition change and not a park wearing a tightening's clothes, in the exact mirror of the test the 2026-08-19 batch-1 entry above applies in the parking direction. WHY THE FILE MOVES: its resume condition, restated 2026-08-08 and owned by the maintainer, was 'Resume when P2.1 of road-to-rule-delivery-integrity closes'. P2.1's own completion marker in the archived parent reads done 2026-08-08, the parent archived 2026-08-09 at 259039157, and git log over the parked file since 2026-08-08 returns ZERO commits. So the condition has been satisfied for eleven days with nothing acting on it and nothing recording a decision not to, while three consecutive /roadmap:next screens logged the FIRED probe as a by-product finding and each correctly declined the work behind it as maintainer-owned. Declining the work and leaving the file parked are different acts, and only the first was ever decided. THE RAISE IS NOT UNDERWRITTEN BY FUTURE WORK, which distinguishes it from every prior raise in this history: nothing is promised, and it does not walk back down on a measurement. It walks down when Phase 4 terminates in either direction, and Phase 4 stays council-parked by the 2026-07-07 verdict with its design locked and both steps still open. The file carries estate_offset_exempt so the one-in-one-out half passes on its own terms; what fires is the raw COUNT half, which is diff-blind by design and cannot see that the offset it wants is the later/ decrement recorded on the very same line. The alternative was archiving an unrelated roadmap to buy the number back, which moves the count without moving the estate and is what this ratchet's own history repeatedly refuses. Left unrecorded, the shape has a worse cost than one raise: an un-park would be permanently unrepresentable, later/ would be a one-way door, and burial would be the cheapest disposition available - which is precisely the failure the later_roadmaps metric was added to prevent."
     }
   ],
   "target": {

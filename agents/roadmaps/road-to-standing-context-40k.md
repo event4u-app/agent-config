@@ -113,20 +113,29 @@ colleague's report on its own.
 > resumption evidence note. Steps 1.1 and 1.2 stay below as a description of what
 > the resumption delivers, not as work to duplicate.
 
-- [ ] **1.1** Write the resumption evidence note into that roadmap's park block:
+- [x] **1.1** Write the resumption evidence note into that roadmap's park block:
       the resume condition, the date it was satisfied, the artefact that satisfied
       it, and the fact that no resumption event followed. Move the file out of
       `later/` under its own disposition rules.
       `verify:` the file is in the active tree and the dashboard counts it.
-      **NOT executed 2026-08-19 — a scope call, not a blocker, and the cheapest
-      open item left in this file.** It is genuinely repo work and nothing gates
-      it. It is also a *disposition change to a different roadmap*: it moves a
-      file between dispositions, changes what the dashboard counts, and can
-      interact with `lint_roadmap_family_cap`. Landing that inside a PR whose
-      subject is a dispatcher mechanism mixes two reviewable concerns in one diff,
-      which `minimal-safe-diff` refuses. It wants its own small PR, together with
-      the park-note read — `agent-config gates` reports that resume condition
-      FIRED. **Next executor: start here.**
+      **DONE 2026-08-19 — in its own PR, as the prior screen's note asked for.**
+      [`road-to-request-scoped-rule-load.md`](road-to-request-scoped-rule-load.md)
+      is in the active tree with `status: ready`; the park block is kept verbatim
+      and discharged by an appended note carrying all four required facts. The
+      condition — *"Resume when P2.1 of `road-to-rule-delivery-integrity` closes"* —
+      was satisfied **2026-08-08** by
+      [`skill-catalogue-description-delivery.md`](../evidence/analysis/skill-catalogue-description-delivery.md)
+      (parent roadmap archived 2026-08-09, `259039157`, which is what the
+      machine-decidable probe reports FIRED on). **No resumption event followed for
+      eleven days:** `git log` over the parked file since 2026-08-08 returns zero
+      commits. Three consecutive screens logged the FIRED probe and each declined
+      it — correctly, since Phase 4 is maintainer-owned; both its steps stay `[ ]`
+      and stay council-parked. Two gate consequences, both handled here rather than
+      left for the reader: the resumed file carries `estate_offset_exempt` (the
+      ratchet gates `active_roadmaps` and `later_roadmaps` separately with no
+      cross-metric offset, so without it an un-park is unrecordable and `later/`
+      becomes a one-way door), and `lint_roadmap_family_cap` is unaffected — the
+      file is a `road-to-request-*` singleton.
 - [ ] **1.2** (Owned by that roadmap, tracked here for the interlock only.) The
       machinery is built and tested; only the human gate is unpulled. Consumer
       installs default to workspace-derived scope, `legacy-all` becomes the
