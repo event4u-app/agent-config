@@ -2,23 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **24** need you → `agent-config gates`
+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
-**297 / 543 steps done · 55%**
+**277 / 527 steps done · 53%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
-
-## ⚠️ Iron Law 3 — unresolved deferred items
-
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
-
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 20 | 1 | 3 |
 
 ## Open roadmaps
 
@@ -40,13 +32,13 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 14 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 15 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 17 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 0 | 20 | 1 | 3 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 100% |
-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
-| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 20 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
-| 21 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 22 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
-| 23 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+| 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 19 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
+| 20 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 21 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+| 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 23 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -542,39 +534,6 @@ _1 blocker resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | apply through the kernel process | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
-### [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md)
-
-**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 20 / 20 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Baseline before behaviour | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 1 | Re-engagement concern | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Question ladder closure | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Session immortality | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Unattended backlog | ✅ done | 0 | 3 | 0 | 1 | 100% |
-| 5 | Standing measurement | ✅ done | 0 | 4 | 1 | 2 | 100% |
-
-<a id="blockers-road-to-long-horizon-execution"></a>
-**Blockers**
-
-- **worktree-claim-root-split** (owner: user) — blocks the `process-full` contract-run acceptance criterion, and every future observation of `run-continuation` made from a worktree. - **The defect, measured 2026-08-19.** The run contract has two halves that resolve their root differently, and in a worktree they land in different trees. `sessions_cli.cmd_claim` writes `agents/runtime/state/roadmap-claim-<session>.json` under `process.cwd()` — the worktree the operator is in. The stop-slot concern reads it under `envelope.workspace_root`, which `dispatch_hook` sets from `--project-dir`, i.e. the host's `CLAUDE_PROJECT_DIR` — the parent checkout. Neither side is wrong on its own; they simply never agreed on which tree the contract lives in. - **Why it stayed invisible.** The concern's first rung is `contract absent → no-op`, and a no-op writes no event. So the ledger built to make the mechanism auditable is empty in exactly the case where it never ran, and empty is also what a healthy idle run looks like. The dispatch integration test cannot see it either: it passes the SAME root to the writer and the reader, which is the one arrangement in which the two agree. - **Second symptom, same cause.** `session_register_hook` reads the slug through `read_claimed_slug(workspace_root, …)` on the same envelope, so the register records `roadmap_slug: null` for a session that has claimed. `run:supervise` listed this session as `roadmap=-` minutes after its claim. A watcher whose whole job is "dead session, roadmap still open" cannot see the roadmap of any worktree session.
-  - **Recommendation:** (a). It is one shared helper called by the writer and both readers, it makes the claim agree with the register that already carries it, and it fixes the watcher symptom in the same move. Not taken autonomously in this run: the claim file is a shared contract carrier read by four modules, and relocating one is a structural change `scope-control` reserves for the maintainer.
-  - **If you do nothing:** `run-continuation` remains inert for every worktree session, which in this repository means effectively always, and the acceptance criterion above cannot be observed.
-  - **What to do:**
-    pick exactly one — (a) move the claim beside the
-    session register, under the git **common dir**, which every worktree of
-    a repo shares. That is the location `register_dir()` already uses and
-    for the same reason, and a roadmap claim is repo-global by intent —
-    `sessions:claim` tells the operator it "becomes visible to other
-    sessions". Back-compat: read the old per-tree path when the new one is
-    absent. Or (b) keep the claim per-tree and make the hook resolve the
-    same tree, which means the concern stops trusting `--project-dir` — a
-    larger change touching every concern, not just this one.
-  - **Resolved when:** a `process-full` run started from a worktree writes at least one `engage` event to `agents/runtime/state/run-continuation.jsonl`.
-
-_1 blocker resolved._
-
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
 **Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 11 done (64%)
@@ -858,6 +817,14 @@ _1 blocker resolved._
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
+
+### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
+
+**Road to a run-continuation engagement anybody can point at** — 0 / 4 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Observe one engagement | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

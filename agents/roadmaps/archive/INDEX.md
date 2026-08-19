@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**510 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 170 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**511 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 171 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -315,6 +315,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-llm-provider-knowledge-skill`](road-to-llm-provider-knowledge-skill.md) | Road to: `llm-provider-knowledge` skill | completed | 5 | 18/18 | _not extractable_ |
 | [`road-to-local-ci-trust`](road-to-local-ci-trust.md) | Road to a Trustworthy Local CI | completed-with-deferrals | 3 | 3/6 | _not extractable_ |
 | [`road-to-local-only-gate-reds`](road-to-local-only-gate-reds.md) | Road to local-only gate reds — four red gates nobody sees | completed | 4 | 10/10 | _not extractable_ |
+| [`road-to-long-horizon-execution`](road-to-long-horizon-execution.md) | Road to long-horizon execution — the agent stops when the roadmap doesn't | closed-with-cancellations | 6 | 20/24 | _not extractable_ |
 | [`road-to-loop-engineering`](road-to-loop-engineering.md) | Road to Loop-Engineering Discipline | completed | 2 | 10/10 | _not extractable_ |
 | [`road-to-mcp-discovery-helper`](road-to-mcp-discovery-helper.md) | Roadmap: Read-only cross-agent MCP discovery helper | closed-with-cancellations | 4 | 4/14 | _not extractable_ |
 | [`road-to-mcp-distribution`](road-to-mcp-distribution.md) | Road to MCP Distribution | closed-with-cancellations | 0 | 0/5 | _not extractable_ |

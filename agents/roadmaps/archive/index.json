@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 510,
+  "count": 511,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -4073,6 +4073,20 @@
         "done": 10,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-long-horizon-execution",
+      "title": "Road to long-horizon execution — the agent stops when the roadmap doesn't",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 20,
+        "deferred": 0,
+        "cancelled": 4
       },
       "verdict": null,
       "status": null

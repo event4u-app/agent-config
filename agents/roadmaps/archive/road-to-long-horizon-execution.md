@@ -523,7 +523,23 @@ budgets for it rather than discovering it at preflight.
 
 ### blocker: worktree-claim-root-split
 
-- **Status:** open
+- **Status:** resolved
+- **Resolution:** option (a), 2026-08-19 — the claim moved beside the
+  session register, under the git **common dir** every worktree shares
+  (`session_register_hook.claim_dir` / `claim_file`), with the per-tree
+  path kept as a read-only back-compat fallback. AI council unanimous
+  2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer
+  review) for "fix now, own PR", against carrying it forward — a carried
+  defect is the D-5 shape this roadmap opens by naming, and 1C would
+  have abandoned a mechanism over a path accident.
+  **The proof is the test, not the fix.** Every pre-existing test in
+  `session_register.test.ts` passed both before and after, because they
+  all write and read from the SAME root — the one arrangement in which
+  this bug is invisible. Six cases were added; three of them fail
+  against the pre-fix behaviour (verified by temporarily disabling
+  `claim_dir`) and 84 stay green, so they measure the defect rather
+  than themselves.
+  `verify:` `npx vitest run tests/scripts/session_register.test.ts` — 87 green.
 - **Owner:** user
 - **Blocks:** the `process-full` contract-run acceptance criterion, and
   every future observation of `run-continuation` made from a worktree.
@@ -573,7 +589,7 @@ budgets for it rather than discovering it at preflight.
 
 ## Acceptance criteria
 
-- [~] A `process-full` contract run finishes a 3-phase roadmap with zero
+- [-] A `process-full` contract run finishes a 3-phase roadmap with zero
       synchronous contacts, re-engaging across turns, and opens the PR.
       **Half observed, and the half that is missing is the load-bearing
       one.** The run that built this roadmap took both it and
@@ -607,6 +623,29 @@ budgets for it rather than discovering it at preflight.
       So the criterion is not "not tried" and not "will not measure" — it
       is blocked on one identified defect, and it closes on the first run
       after that defect is fixed.
+      **Resolved 2026-08-19 by the council path, not by a hand-back.** The
+      defect is fixed in the same change (`blocker:
+      worktree-claim-root-split`, option (a)) and the criterion is CARRIED
+      into `road-to-run-continuation-observation`, created in this same
+      change and estate-ratchet compliant. That is a preserving
+      disposition under `roadmap-progress-sync § Who resolves it`, so the
+      council resolved it: unanimous 2/2 (anthropic/claude-sonnet-4-5 +
+      openai/codex-default, blind peer review) for "fix now and carry",
+      against both carrying-without-fixing (the D-5 shape this roadmap
+      opens by naming) and cancelling (abandoning a built mechanism over
+      a path accident).
+      Recorded per that section's own requirement: **criterion** — the
+      verbatim text above · **blocker** — `worktree-claim-root-split`,
+      now resolved · **options** — 1A fix now / 1B carry only / 1C cancel
+      / 1D other · **verdict** — 1A, because the defect makes the
+      roadmap's centrepiece inert in the operating mode the roadmap is
+      itself run in, and the fix reuses a helper that already existed ·
+      **dissent** — none; both seats named the same residual risk, that a
+      carried item can still become an indefinite deferral ·
+      **destination** — `road-to-run-continuation-observation` Phase 0 ·
+      **closes on** — the first `engage` line in
+      `agents/runtime/state/run-continuation.jsonl` from a
+      worktree-started run.
 - [-] A killed session resumes via the watcher and completes without a
       contact; the resumed run's first commit shows the re-verification.
       **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** This criterion needs a
