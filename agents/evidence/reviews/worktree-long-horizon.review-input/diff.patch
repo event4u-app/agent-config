@@ -978,7 +978,7 @@ index 0000000000000000000000000000000000000000..55c680f6599e7ad2a03087f0406e55fa
 +| 6 | The benchmark stays pending forever and the gate is neither open nor honestly closed | product | D-5 is exactly this shape already; a second indefinite pending would reproduce the defect the roadmap names. | The gate is a declared blocker with two mutually exclusive resolutions, one of which is a published null. | Phase 4 |
 +| 7 | A continuation prompt that names no next step degrades into "keep going" | product | A bare imperative is the anti-pattern the harvest section rejects by name, and it produces work with no verifiable target. | The continuation must name the next unchecked step AND its `verify:` line; 2.3 restates the no-self-adversarial-fallback rule in the ladder text. | Phase 1 |
 diff --git a/agents/templates/.ai-council.yml.example b/agents/templates/.ai-council.yml.example
-index dc8c0f1dc34893886ac51dc6959ff249534be334..8c21cfb88212096005e57c4a65e06760ba40bf5d 100644
+index dc8c0f1dc34893886ac51dc6959ff249534be334..f2dd7c693ec5b6d762f40ae65abb126af731d3e5 100644
 --- a/agents/templates/.ai-council.yml.example
 +++ b/agents/templates/.ai-council.yml.example
 @@ -207,6 +207,23 @@ cli_call_budget:
@@ -1005,7 +1005,7 @@ index dc8c0f1dc34893886ac51dc6959ff249534be334..8c21cfb88212096005e57c4a65e06760
  # Quorum for a council pass to CONCLUDE (road-to-always-on-orchestration
  # Phase 3.3). Default "majority" resolves to ceil(n / 2) enabled members —
  # a SIMPLE majority, deliberately not "more than half": at n=2 that is
-@@ -499,6 +516,21 @@ necessity_classifier:
+@@ -499,6 +516,23 @@ necessity_classifier:
  #
  # See docs/contracts/ai-council-config.md for the trigger lists and the
  # Iron-Law clause.
@@ -1019,15 +1019,17 @@ index dc8c0f1dc34893886ac51dc6959ff249534be334..8c21cfb88212096005e57c4a65e06760
 +# providers `members:` accepts, on purpose: xai and perplexity ship
 +# community CLI wrappers that consume an API key, so routing a
 +# resolution there would spend USD on the rung whose whole point is not
-+# to. The rung books against the same `cli_call_budget` counter above —
-+# one subscription, one counter.
++# to. The rung MUST book against the same `cli_call_budget` counter above
++# — one subscription, one counter. That is an obligation on the rung, not
++# a guard that already exists: nothing reads this key at runtime yet, so
++# setting it declares intent rather than activating a bounded mechanism.
 +#
 +# The key is REFUSED on high_impact and user_required, not ignored. Those
 +# classes reach you, and a silently-dropped key would read as configured.
  decision_resolution:
    enabled: true
    classes:
-@@ -511,6 +543,7 @@ decision_resolution:
+@@ -511,6 +545,7 @@ decision_resolution:
      medium_impact:
        mode: council
        confidence_threshold: 0.6
@@ -1139,20 +1141,49 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825f
  An accepted execution contract **never lifts a Hard Floor** or any of
  the other halts above — it removes redundant *asks* (git shape,
 diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
-index 088bfdecae1d8325cd8c2d024f1334eeb845a5c2..102afce0e79faa8f7260e1825d97f01d2296c767 100644
+index 088bfdecae1d8325cd8c2d024f1334eeb845a5c2..9daf7b67b68c07e9856ddef9d645d346c3c87092 100644
 --- a/docs/CLAIMS.md
 +++ b/docs/CLAIMS.md
-@@ -637,3 +637,17 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+@@ -637,3 +637,46 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
  - evidence: PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4). THE THRESHOLD PREDATES THE DATA, THE LEDGER ENTRY DOES NOT, and the distinction is stated rather than blurred: the roadmap fixed **a stale ratio below 10 % shrinks Phase 2 to stamps only** on the day it was written, BEFORE any census ran; this entry was written after cf02 produced a first reading, so it records a resolution-in-progress rather than claiming the ledger row itself came first. FIRST READING, from `agents/evidence/eval-findings/context-fidelity-cf02.md`: 107 curated entries walked one by one against the tree — 73 still-true, 23 stale, 11 unverifiable, i.e. **21.5 % of all entries and 24.0 % of the verifiable subset**. Both denominators clear 10 %, so the kill criterion does not fire on either reading and the ladder stays justified. THE LOAD-BEARING FINDING is that the shipped instrument disagrees: `memory_report` reports `staleness-rate=0.0%` because all 107 entries carry the SAME `last_validated: 2026-07-09` and the SAME `review_after_days: 365` — one bulk stamping event, so the age axis cannot read stale before 2027-07-09. Reading the kill criterion off that 0.0 % would have closed Phase 2 on a number that measures stamping rather than truth, which is the already-satisfied-test failure this repository has recorded before. WHY THIS STAYS UNBACKED despite having a number: the tree axis was walked BY HAND because no store-wide contradiction sweep exists (`check_memory_contradiction` takes `--type --key --body`, i.e. it validates one proposed entry), three observers each classified one store, and inter-rater agreement is therefore UNMEASURED. A hand classification is not a reproducible instrument, and a ratio that cannot be re-derived by a command is not backing. BACKING TRIGGER: a store-wide sweep exists AND reproduces a ratio within its own stated error of 21.5 %. FALSIFICATION fixed before data: (1) unverifiable entries are counted as their own class and folded into neither side — folding them into still-true inflates the pass rate, folding them into stale manufactures defects; (2) the commit anchor is the precondition for any automated reading, because without it a date cannot be tied to a tree state; (3) below 10 % on a reproducible sweep the recorded consequence is the roadmap's own: the ladder is unbuilt, only stamps ship, and the null is published.
  - status: unbacked
  - last_verified:
 +
 +### claim: council-fallback-loses-zero-seats
-+- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats — the seat answers over the api rung instead of dropping out of the pass.
++- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
 +- kind: qual
 +- evidence: exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0
 +- status: backed
 +- last_verified: 2026-08-19
++
++**The condition was added 2026-08-19, after a review found the unconditional
++wording refuted by its own evidence.** Recorded here rather than quietly
++applied, because this is the failure shape the ledger exists against. The cited
++suite contains `a fallback that was REFUSED by the retry budget still counts as
++absent` — an ELIGIBLE failure with a CONSTRUCTIBLE twin whose seat IS lost,
++precisely the case the unconditional sentence denied. Nothing was steered and
++no test was wrong; the pointer simply did not prove what the prose above it
++said.
++
++**The gate could not have caught it, and that limitation is not fixed by this
++entry.** `check_claims` runs the command and compares an exit code, so a green
++suite publishes a ✅ over a sentence the suite refutes. An `exec:` pointer
++proves that a suite PASSES — never that the suite tests the claim. The
++mitigation available at authoring time is the boundary statement below; a
++reviewer reading the claim and the suite together is what closed this one.
++
++**What the suite does prove**, per test: a vendor-official cli member
++(`billable: false`, `transport: cli`) that fails eligibly is answered by its api
++twin and counts PRESENT in the quorum; the substitution is sticky, so a later
++round reuses the twin rather than re-spawning the dead binary and losing the
++seat to the ledger's one-shot rule; and a dead FREE seat cannot trigger the
++round-wide budget short-circuit.
++
++**What it does not prove**, stated so the boundary is not re-blurred: nothing
++about an ineligible failure class (`timeout` and `server_error` are ineligible
++under every policy and no config key can enable them), nothing about a provider
++with no api rung (`no_twin`), and nothing about the budget-refused path, which
++is the named exception in the claim itself.
 +
 +### claim: unattended-demotion-gate
 +- claim: An unattended run's 14-day rework rate does not exceed the attended baseline; a breach returns the scheduler default to off.
@@ -1161,7 +1192,7 @@ index 088bfdecae1d8325cd8c2d024f1334eeb845a5c2..102afce0e79faa8f7260e1825d97f01d
 +- status: unbacked
 +- last_verified:
 diff --git a/docs/contracts/ai-council-config.md b/docs/contracts/ai-council-config.md
-index e7bf9a9274bb9c119fbe394967d10b52b402b80f..712c1398d2012639b42f42fe0a3cffb501c09826 100644
+index e7bf9a9274bb9c119fbe394967d10b52b402b80f..9f376f49d9b86a9cc36bfbea6d48934e68176aab 100644
 --- a/docs/contracts/ai-council-config.md
 +++ b/docs/contracts/ai-council-config.md
 @@ -175,11 +175,62 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
@@ -1266,7 +1297,7 @@ index e7bf9a9274bb9c119fbe394967d10b52b402b80f..712c1398d2012639b42f42fe0a3cffb5
  - `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
    is **never** written — privacy floor per
    [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md).
-@@ -835,6 +896,41 @@ threshold, the configured mode is upgraded one rung
+@@ -835,6 +896,52 @@ threshold, the configured mode is upgraded one rung
  (`agent` → `council` → `user`) so low-certainty calls escalate rather
  than silently auto-resolve.
  
@@ -1287,6 +1318,17 @@ index e7bf9a9274bb9c119fbe394967d10b52b402b80f..712c1398d2012639b42f42fe0a3cffb5
 +- **Quota-bounded by the same `cli_call_budget` counter** the council's
 +  own cli transport books against. One subscription, one counter — a
 +  parallel count is how a plan quota gets spent twice.
++
++  **This one is an OBLIGATION ON THE RUNG, not an enforced coupling, and
++  the difference is stated because three surfaces asserted the stronger
++  reading at once (R2 round 4, finding 4).** No TypeScript path reads
++  `second_model` at runtime — the contract's own honesty note further
++  down says so for `decision_resolution.classes[*]` generally — and
++  `cli_call_budget.ts` declares its set of booking consumers closed at
++  two, neither of them this. So a rung that books nothing is not
++  prevented by a counter; it is required by this line to book against
++  the counter when it is built. Until then, "quota-bounded" describes
++  the contract the implementation must meet, never a guard that exists.
 +- **Rejected on `high_impact` / `user_required`**, not ignored, and even
 +  an explicit `null` is refused there. Same treatment `dispatch` gets on
 +  those classes, for the same reason: a key that is silently dropped
@@ -1308,7 +1350,7 @@ index e7bf9a9274bb9c119fbe394967d10b52b402b80f..712c1398d2012639b42f42fe0a3cffb5
  ```yaml
  decision_resolution:
    enabled: true
-@@ -848,14 +944,26 @@ decision_resolution:
+@@ -848,14 +955,26 @@ decision_resolution:
      medium_impact:
        mode: council
        confidence_threshold: 0.6
@@ -1336,14 +1378,14 @@ index e7bf9a9274bb9c119fbe394967d10b52b402b80f..712c1398d2012639b42f42fe0a3cffb5
  
  An unaffiliated agent project publicly DELETED its 6-judge LLM content
 diff --git a/docs/proof.md b/docs/proof.md
-index b5ebec824dcc732a9594a3d0364ef0e6fbf7fccf..5b00cdddfc61069e2d98100b314b808e9ffa60ce 100644
+index b5ebec824dcc732a9594a3d0364ef0e6fbf7fccf..9fc14e89dc860e807cb3f1ace5f5c055041eae99 100644
 --- a/docs/proof.md
 +++ b/docs/proof.md
 @@ -53,6 +53,7 @@ evidence pointer, or `task check-claims` fails the build.
  | 200 commands. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
  | On the first post-fix behaviour-conformance measurement (round 5, `/analyze:conformance --limit 30`, run 2026-08-07, every violation split by its own timestamp against the 2026-08-06 carrier merge), both BLOCKING `pre_tool_use` guards eliminated their classes — unauthorized irreversible git ops 8 → 0, evaluator prompt pre-loading its verdict 1 → 0 — while neither advisory carrier did: language-mirror violations fell 555 → 19 under advisory state injection at `user_prompt_submit` (−96.6%, not zero) and verification-claimed-on-empty-output fell 4 → 1 at `post_tool_use`. Advisory reduces massively; only blocking eliminates. Scope bounds, inseparable from the numbers: the post-fix corpus is ONE session (~600 assistant turns), so this is a recorded prior, not a law; the language pin was verified PRESENT on the violating post-fix turns (which is why higher injection frequency is refused as a fix); and the 555 pre-merge count is partly contaminated by the synthetic-turn mis-pin fixed in the same round (`isSyntheticPrompt`). NOT PRE-REGISTERED, and it could not have been: this is a post-hoc audit reading taken after the carrier landed, so no bar existed to freeze before the data. What stands in for pre-registration is that the one choice a post-hoc split could game — where before ends and after begins — was not chosen by the measurement: the boundary is the carrier merge's own commit timestamp (2026-08-06) and every violation is assigned by its own timestamp against it. The detector is deterministic and re-runnable over the same transcript store, so the numbers are reproducible rather than attested. Read it as a recorded prior, never as a pre-registered result; the sibling claim that DOES carry a frozen bar is the scoped-rule absence experiment, pre-registered precisely because its data does not exist yet. | quant | `src/domains/analysis-workbench/analyze/conformance/command.md#Both blocking carriers reached zero` | ✅ |
  | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
-+| An eligible mid-flight cli failure with a constructible api twin loses zero council seats — the seat answers over the api rung instead of dropping out of the pass. | qual | `exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0` | ✅ |
++| An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so. | qual | `exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0` | ✅ |
  | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
  | The scoped-projection default for new installs ships 219 of 290 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:update_counts --check -> 0` | ✅ |
  | On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned. | quant | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` | ✅ |
@@ -1411,17 +1453,23 @@ index f01b9a7bc7775c40d89aded552973f1d2cd1bc52..0ddef27c825164abe39c128b98732e73
    "exec_feasible": 10,
    "delta_pp": 38.5,
 diff --git a/src/agent-src/contexts/execution/roadmap-process-loop.md b/src/agent-src/contexts/execution/roadmap-process-loop.md
-index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825facf6177c 100644
+index 400eb7885024531bb301ba286bcf370daaedcc1e..c350dfba4535954cf40d367774e2f236b1d90adb 100644
 --- a/src/agent-src/contexts/execution/roadmap-process-loop.md
 +++ b/src/agent-src/contexts/execution/roadmap-process-loop.md
-@@ -277,11 +277,33 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -277,11 +277,39 @@ For each open step in the working set (scope-bound — see wrapper):
       summary named the members). `high_impact` / `user_required`
       classifications still escalate to the user per
       [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
 +   - **Second-model rung, when the class declares one**
 +     (`decision_resolution.classes.<cls>.second_model`, UOTL Phase 4.1)
-+     → one local vendor-CLI pass under subscription auth, bounded by the
-+     same `cli_call_budget` counter the council books against. Available
++     → one local vendor-CLI pass under subscription auth. **The rung is
++     MODEL-CARRIED: the key is declared and schema-validated, and no
++     TypeScript path reads it at runtime** — so "bounded by the
++     `cli_call_budget` counter" is what the rung must respect, never
++     something a booking consumer enforces (`cli_call_budget.ts` declares
++     its consumer set closed at two, and this is not one of them). Stated
++     rather than implied after R2 round 4 finding 4 found the coupling
++     asserted on three surfaces at once. Available
 +     to `trivial` / `low_impact` / `medium_impact` only; the config
 +     schema REFUSES the key on `high_impact` and `user_required`, so no
 +     locked question can reach it.
@@ -1448,7 +1496,7 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825f
  5. **Atomic flip — same reply, every step.**
     Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
     `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
-@@ -345,20 +367,56 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -345,20 +373,56 @@ For each open step in the working set (scope-bound — see wrapper):
     file is the source of truth between regens.
  7. Run quality pipeline if cadence is `per_step`.
  
@@ -2116,10 +2164,10 @@ index 0000000000000000000000000000000000000000..23de7e0f53b8ce6072e38e261873f2a4
 +}
 diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..93472437f03836c85e428b1ca4e29361bcef5222
+index 0000000000000000000000000000000000000000..7b7d8bcf2dae63c3854bd9b65a71dcffc8f1ccd8
 --- /dev/null
 +++ b/src/scripts/_lib/run_checkpoint.ts
-@@ -0,0 +1,368 @@
+@@ -0,0 +1,378 @@
 +/**
 + * run_checkpoint — the deterministic checkpoint a dying run leaves behind,
 + * and the re-verification a resumed run owes before trusting it.
@@ -2459,7 +2507,17 @@ index 0000000000000000000000000000000000000000..93472437f03836c85e428b1ca4e29361
 +            field: 'head',
 +            claimed: cp.head,
 +            actual: head,
-+            agrees: cp.head === head,
++            // A `null` on EITHER side is "not known", never "different".
++            //
++            // R2 round 4, finding 2. `readHead` is explicitly designed to
++            // return null on any failure — no git, an unreadable ref, a
++            // packed-refs miss — so a strict `===` turned "I could not read
++            // the commit" into "the tree moved since the checkpoint", on a
++            // resume at the SAME commit with every other field agreeing. That
++            // is a false alarm on the one field whose whole job is to tell a
++            // human whether anything moved, and a false alarm there costs more
++            // than a missing one: it trains the reader to skip the line.
++            agrees: cp.head === null || head === null || cp.head === head,
 +        },
 +    ];
 +    return { readable: true, fields, agrees: fields.every((f) => f.agrees) };
@@ -2488,12 +2546,74 @@ index 0000000000000000000000000000000000000000..93472437f03836c85e428b1ca4e29361
 +    );
 +    return lines.join('\n');
 +}
+diff --git a/src/scripts/_lib/session_register.ts b/src/scripts/_lib/session_register.ts
+index 4b48863c8b2e51b6ae753f965a667683e127de7e..3d857f2b15b362e0b4cc565561455568711c03d5 100644
+--- a/src/scripts/_lib/session_register.ts
++++ b/src/scripts/_lib/session_register.ts
+@@ -321,10 +321,37 @@ export function delete_record(dir: string, session_id: string): boolean {
+ export interface ReadLiveOptions {
+     /** Unlink expired records as they are encountered. Default `false`. */
+     prune?: boolean;
++    /**
++     * How long an EXPIRED record survives the prune. Default 24 h.
++     *
++     * R2 round 4, finding 5. The register has two consumers with opposite
++     * needs and only one of them knew: `sessions:list` and the session-start
++     * hook both read with `prune: true`, while `run:supervise` exists
++     * ENTIRELY to classify expired records — the runs whose session died. So
++     * the watcher's whole input was deleted by two routine read paths, the
++     * hook one of them, which fires on every session start. The digest could
++     * then report nothing, and round 3's `clearCompleted` release could never
++     * fire because no completed candidate ever reached it.
++     *
++     * The 24 h is derived, not picked: `digest` is documented as the MORNING
++     * report, so a once-a-day reader must be able to see a full day of deaths.
++     * A shorter grace loses runs that died overnight, which is precisely the
++     * population the watcher was built for.
++     *
++     * `0` restores the old delete-on-sight behaviour for a caller that really
++     * wants it. Nothing in the tree passes it today.
++     */
++    prune_grace_ms?: number;
+     /** Clock injection for tests. */
+     now?: Date;
+ }
+ 
++/**
++ * How long an expired record outlives its expiry before a prune may remove it.
++ * See {@link ReadLiveOptions.prune_grace_ms} for why this is a day.
++ */
++export const PRUNE_GRACE_MS = 24 * 60 * 60 * 1000;
++
+ /**
+  * Every live record in the register, optionally pruning expired ones as it goes.
+  *
+@@ -339,6 +366,7 @@ export interface ReadLiveOptions {
+ export function read_live_records(dir: string, options: ReadLiveOptions = {}): SessionRecord[] {
+     const now = options.now ?? new Date();
+     const prune = options.prune === true;
++    const grace = options.prune_grace_ms ?? PRUNE_GRACE_MS;
+     let names: string[];
+     try {
+         names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+@@ -356,7 +384,10 @@ export function read_live_records(dir: string, options: ReadLiveOptions = {}): S
+             rec = null;
+         }
+         if (rec === null || is_expired(rec, now)) {
+-            if (prune) {
++            // A record is dropped from the LIVE set the moment it expires, and
++            // deleted from disk only after the grace window — the watcher
++            // reads the register directly and needs the expired ones.
++            if (prune && (rec === null || is_expired(rec, new Date(now.getTime() - grace)))) {
+                 try {
+                     fs.unlinkSync(full);
+                 } catch {
 diff --git a/src/scripts/_lib/unattended_guard.ts b/src/scripts/_lib/unattended_guard.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..93a02b7b5fd09a6e7513fb9c7f83fd44d55412ef
+index 0000000000000000000000000000000000000000..12cffcb7af38ff526d081c318ed1b8ec959caffb
 --- /dev/null
 +++ b/src/scripts/_lib/unattended_guard.ts
-@@ -0,0 +1,344 @@
+@@ -0,0 +1,352 @@
 +/**
 + * unattended_guard — the three preconditions an unattended run must clear
 + * before anything spawns, and the ledger that bounds it once it has.
@@ -2552,16 +2672,24 @@ index 0000000000000000000000000000000000000000..93a02b7b5fd09a6e7513fb9c7f83fd44
 +export function isProductionRemote(url: string): boolean {
 +    const u = url.trim();
 +    if (u === '') return false;
++    // ONLY a recognisably-local remote is non-production. Everything else is
++    // treated as reachable, including a shape this function does not know.
++    //
++    // R2 round 4, finding 6. The test used to be positive — enumerate the
++    // network shapes and return false otherwise — which meant an unrecognised
++    // URL cleared the "no production remote" precondition. An SSH-config alias
++    // is the concrete case: `gh:org/repo.git` matches no prefix here and fails
++    // the scp-style pattern (which requires `user@host:`), yet a push through
++    // it reaches GitHub exactly as `git@github.com:` does. The whole module
++    // fails CLOSED on an unreadable git config for precisely this reason, and
++    // this one function was reading "I do not recognise it" as "it is safe".
++    //
 +    // A filesystem path — a sibling worktree, a bare mirror on disk. A push
 +    // there is recoverable and reaches nobody.
-+    if (u.startsWith('/') || u.startsWith('.') || u.startsWith('file://')) return false;
-+    return (
-+        u.startsWith('http://') ||
-+        u.startsWith('https://') ||
-+        u.startsWith('ssh://') ||
-+        u.startsWith('git://') ||
-+        /^[\w.-]+@[\w.-]+:/.test(u) // scp-style: git@github.com:org/repo.git
-+    );
++    if (u.startsWith('/') || u.startsWith('.') || u.startsWith('~') || u.startsWith('file://')) {
++        return false;
++    }
++    return true;
 +}
 +
 +export interface RemoteVerdict {
@@ -4978,10 +5106,10 @@ index 8c5f0b97f20e3284ed6ccba06eca0d1ca66a2275..93f1bb82597b2cfbf8fbad1d18d4cde0
          if (exc instanceof DebateCapExceeded) {
 diff --git a/src/scripts/decision_memo.ts b/src/scripts/decision_memo.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..0912f00f6e15859e2ed281349afb9ab67b83b25b
+index 0000000000000000000000000000000000000000..a56c86c321f3bc1e17094dd2f0f39159d1be6fa4
 --- /dev/null
 +++ b/src/scripts/decision_memo.ts
-@@ -0,0 +1,313 @@
+@@ -0,0 +1,325 @@
 +/**
 + * decision_memo — the decision-memo channel (UOTL Phase 4.3, sequenced by
 + * road-to-long-horizon-execution Phase 2.2).
@@ -5206,6 +5334,18 @@ index 0000000000000000000000000000000000000000..0912f00f6e15859e2ed281349afb9ab6
 +
 +Records one autonomously-resolved question so it is reviewable after the run.
 +Writes agents/runtime/state/decisions/<run>/NNN.md — local-only (gitignored).
++
++--run takes ANY slug, and that freedom has a cost worth stating (R2 round 4,
++finding 3): interruption_report attributes memos to a run by joining on the
++session-derived run id, so a memo written under a hand-picked slug is counted
++by 'run:supervise --digest' (which counts directories) and NOT by the report's
++median_memos_per_run (which joins). The two disagree about the same files, and
++the report's zero reads as "no memos" rather than "no join".
++
++To be attributable, pass the id the ledger uses:
++  agent-config run:supervise --digest    # lists the session ids in play
++A free-form slug is still valid and still recorded — it is simply a memo about
++a run the report cannot name.
 +
 +Locked classes (high_impact, user_required) are refused at the CONFIG SCHEMA,
 +never here: this is the ledger, not the gate.
@@ -6341,10 +6481,10 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..b2e27c5e7a0485819331ad11674a4be7
      }
 diff --git a/src/scripts/run_supervise.ts b/src/scripts/run_supervise.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..92c8d5a76e82395b70f489d48abd503831ba35e8
+index 0000000000000000000000000000000000000000..891dea034fa48b5cb1e47abf1f1619969fdf823d
 --- /dev/null
 +++ b/src/scripts/run_supervise.ts
-@@ -0,0 +1,505 @@
+@@ -0,0 +1,513 @@
 +/**
 + * run_supervise — the out-of-process watcher for runs whose session died.
 + *
@@ -6599,7 +6739,15 @@ index 0000000000000000000000000000000000000000..92c8d5a76e82395b70f489d48abd5038
 + * records out by design. Reading only live records here would return exactly
 + * the sessions that need no supervision and none of the ones that do.
 + *
-+ * It also never prunes. `read_live_records({ prune: true })` deletes expired
++ * It also never prunes, and since R2 round 4 finding 5 it no longer has to
++ * hope the other readers do not. `read_live_records({ prune: true })` holds an
++ * expired record for `PRUNE_GRACE_MS` (24 h, derived from this digest's daily
++ * cadence) before unlinking it, so the two routine read paths that DO prune —
++ * `sessions:list` and the session-start hook, which fires on every start —
++ * can no longer delete this watcher's entire input between one morning and the
++ * next.
++ *
++ * `read_live_records({ prune: true })` deletes expired
 + * records as it walks; deleting the evidence a watcher exists to act on would
 + * make the first scan the last one that could see anything.
 + */
@@ -6851,13 +6999,30 @@ index 0000000000000000000000000000000000000000..92c8d5a76e82395b70f489d48abd5038
 + */
 +export { latestCheckpointFor, readCheckpoint };
 diff --git a/src/server/io/yamlIO.ts b/src/server/io/yamlIO.ts
-index 3998239861d5422a0e8084c8edcc59af509267ca..4944135d5cd2f701b2a6bba559a2781a7da6edf6 100644
+index 3998239861d5422a0e8084c8edcc59af509267ca..f4274d510fc2fb893915dfab736d30538dc3be42 100644
 --- a/src/server/io/yamlIO.ts
 +++ b/src/server/io/yamlIO.ts
-@@ -105,6 +105,106 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+@@ -105,6 +105,134 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
      return template;
  }
  
++/**
++ * The indent width this document actually uses, or 2 when it has no nesting.
++ *
++ * Read from the FIRST indented mapping line rather than assumed, because an
++ * assumed width silently produces a duplicate mapping key on any other one
++ * (see `upsertScalar`). Tabs are not YAML indentation and are ignored.
++ */
++export function detectIndentWidth(lines: readonly string[]): number {
++    for (const line of lines) {
++        if (line.trim() === '' || line.trim().startsWith('#')) continue;
++        if (line.startsWith('\t')) continue;
++        const indentLen = line.length - line.trimStart().length;
++        if (indentLen > 0 && /^[A-Za-z_][A-Za-z0-9_]*\s*:/.test(line.trim())) return indentLen;
++    }
++    return 2;
++}
++
 +/**
 + * Set the scalar at `dottedPath`, CREATING the nesting when it is absent.
 + *
@@ -6889,6 +7054,17 @@ index 3998239861d5422a0e8084c8edcc59af509267ca..4944135d5cd2f701b2a6bba559a2781a
 +    const key = dottedPath[dottedPath.length - 1] as string;
 +    const formatted = formatScalar(value);
 +    const lines = template.split('\n');
++    // The document's OWN indent width, not an assumed two.
++    //
++    // R2 round 4, finding 7. Both the ancestor search and the emitted block
++    // hardcoded `'  '.repeat(depth)`, so on a 4-space file the depth-2 walk
++    // round 3 added matched nothing at depth 1, `matched` stayed 0, and the
++    // whole chain was appended at EOF — producing a SECOND `fallback:` mapping
++    // key beside the existing one. `wizard.ts` writes the result without
++    // re-parsing and reports `{ok: true}`, so the user gets a 200 over a file
++    // a strict parser now rejects and a lenient one reads last-wins.
++    const width = detectIndentWidth(lines);
++    const pad = (depth: number): string => ' '.repeat(width * depth);
 +
 +    // How deep an existing ancestor chain runs, and where its block ends.
 +    let matched = 0;
@@ -6900,7 +7076,7 @@ index 3998239861d5422a0e8084c8edcc59af509267ca..4944135d5cd2f701b2a6bba559a2781a
 +    let parentEnd = lines.length;
 +    for (let depth = 0; depth < sections.length; depth++) {
 +        const want = sections[depth];
-+        const indent = '  '.repeat(depth);
++        const indent = pad(depth);
 +        let found = -1;
 +        // R2 round 3, finding 5: this carried `depth === 0 ? 0 : insertAt ===
 +        // lines.length ? 0 : 0` — every branch zero, i.e. a comment claiming a
@@ -6944,9 +7120,9 @@ index 3998239861d5422a0e8084c8edcc59af509267ca..4944135d5cd2f701b2a6bba559a2781a
 +
 +    const block: string[] = [];
 +    for (let depth = matched; depth < sections.length; depth++) {
-+        block.push(`${'  '.repeat(depth)}${sections[depth] as string}:`);
++        block.push(`${pad(depth)}${sections[depth] as string}:`);
 +    }
-+    block.push(`${'  '.repeat(sections.length)}${key}: ${formatted}`);
++    block.push(`${pad(sections.length)}${key}: ${formatted}`);
 +
 +    if (matched === 0) {
 +        // No ancestor at all — append at EOF as its own block.
@@ -9352,10 +9528,10 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..6933ce470a7ca4e2a171a453e6d28b94
 +});
 diff --git a/tests/scripts/run_checkpoint.test.ts b/tests/scripts/run_checkpoint.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..e8ba3cf97e1361edafbb5934c330ba7b600fd7c4
+index 0000000000000000000000000000000000000000..648735aa9e7eaa4a7191d66952a67fada16f21b5
 --- /dev/null
 +++ b/tests/scripts/run_checkpoint.test.ts
-@@ -0,0 +1,510 @@
+@@ -0,0 +1,532 @@
 +/**
 + * run_checkpoint — the derived checkpoint and its re-verification.
 + *
@@ -9845,6 +10021,28 @@ index 0000000000000000000000000000000000000000..e8ba3cf97e1361edafbb5934c330ba7b
 +        expect(field).toBeDefined();
 +        expect(field?.agrees).toBe(true);
 +        expect(field?.actual).toBe('a'.repeat(40));
++    });
++
++    it('an UNKNOWN head on either side is not a disagreement', () => {
++        // R2 round 4, finding 2. `readHead` returns null on every failure by
++        // design, so a strict comparison reported "the tree moved" for "I
++        // could not read the commit" — on a resume at the same commit with
++        // every other field agreeing.
++        const repoRoot = withGit('a'.repeat(40));
++        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
++        // The checkpoint knows the commit; the verifying tree cannot read one.
++        fs.rmSync(path.join(repoRoot, '.git'), { recursive: true, force: true });
++        const res = verifyCheckpoint(repoRoot, cp);
++        expect(res.fields.find((f) => f.field === 'head')?.agrees).toBe(true);
++        expect(res.agrees).toBe(true);
++    });
++
++    it('a checkpoint written without a head does not fail its own verification', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
++        expect(cp.head).toBeNull();
++        expect(verifyCheckpoint(repoRoot, cp).agrees).toBe(true);
 +    });
 +
 +    it('a moved HEAD is a reported DISAGREEMENT, never an error', () => {
@@ -10337,12 +10535,73 @@ index 418ebd2d054f29ea1a0564f776d5f2f5b921381f..0caddb83f5f6c226406d2a0132d71181
 +        expect(r.out).toContain('warn');
 +    });
 +});
+diff --git a/tests/scripts/session_register.test.ts b/tests/scripts/session_register.test.ts
+index 1bebbf6b72b0c14224407a400baa18a23e4dc9be..2231e863d324729a394e4aa26782564e8b856757 100644
+--- a/tests/scripts/session_register.test.ts
++++ b/tests/scripts/session_register.test.ts
+@@ -21,6 +21,7 @@ import {
+     DEREGISTER_ON_STOP_PLATFORMS,
+     HEARTBEAT_REACHABLE_PLATFORMS,
+     type SessionRecord,
++    PRUNE_GRACE_MS,
+     TTL_DEFAULT_SECONDS,
+     TTL_MEASURED_SECONDS,
+     classify_collisions,
+@@ -172,11 +173,48 @@ describe('acceptance — liveness: both halves hold simultaneously', () => {
+     });
+ 
+     it('pruning unlinks the expired file, so the register cannot grow without bound', () => {
++        const { main } = make_repo();
++        const dir = register_dir(main)!;
++        // Expired AND past the grace window — the register still cannot grow
++        // without bound, it just does not shed a record the watcher may still
++        // need. See `ReadLiveOptions.prune_grace_ms`.
++        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS * 1000 + PRUNE_GRACE_MS + 60_000));
++        write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
++        expect(fs.readdirSync(dir)).toHaveLength(1);
++        read_live_records(dir, { prune: true });
++        expect(fs.readdirSync(dir)).toHaveLength(0);
++    });
++
++    it('a JUST-expired record survives the prune — the watcher still needs it', () => {
++        // R2 round 4, finding 5. `run:supervise` exists entirely to classify
++        // expired records, and two routine read paths pruned with
++        // `prune: true` — `sessions:list` and the session-start hook, which
++        // fires on every start. The watcher's whole input was being deleted
++        // between one morning digest and the next.
+         const { main } = make_repo();
+         const dir = register_dir(main)!;
+         const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS + 60) * 1000);
+         write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
++        // Not live any more...
++        expect(read_live_records(dir, { prune: true })).toEqual([]);
++        // ...but still on disk, which is what the watcher reads.
+         expect(fs.readdirSync(dir)).toHaveLength(1);
++    });
++
++    it('grace 0 restores delete-on-sight for a caller that wants it', () => {
++        const { main } = make_repo();
++        const dir = register_dir(main)!;
++        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS + 60) * 1000);
++        write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
++        read_live_records(dir, { prune: true, prune_grace_ms: 0 });
++        expect(fs.readdirSync(dir)).toHaveLength(0);
++    });
++
++    it('an unparseable file is deleted immediately — no run can need it', () => {
++        const { main } = make_repo();
++        const dir = register_dir(main)!;
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'broken.json'), '{ not json', 'utf-8');
+         read_live_records(dir, { prune: true });
+         expect(fs.readdirSync(dir)).toHaveLength(0);
+     });
 diff --git a/tests/scripts/unattended_guard.test.ts b/tests/scripts/unattended_guard.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..110de8c170a6d8544d05ffc4305d575ec41457d1
+index 0000000000000000000000000000000000000000..4a2178a9648eac2246517f839120189e90ccd7ee
 --- /dev/null
 +++ b/tests/scripts/unattended_guard.test.ts
-@@ -0,0 +1,286 @@
+@@ -0,0 +1,323 @@
 +/**
 + * unattended_guard — the three preconditions, and the defaults that decide
 + * what happens when a config is missing.
@@ -10629,6 +10888,43 @@ index 0000000000000000000000000000000000000000..110de8c170a6d8544d05ffc4305d575e
 +        expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 9, 100).allowed).toBe(false);
 +    });
 +});
++
++describe('isProductionRemote — unrecognised means REACHABLE, never safe', () => {
++    // R2 round 4, finding 6. The test was positive — enumerate the network
++    // shapes, return false otherwise — so a shape it did not know cleared the
++    // "no production remote" precondition. The module fails closed on an
++    // unreadable git config for exactly this reason; this one function was
++    // reading "I do not recognise it" as "it is safe".
++    it('an SSH-config alias is production', () => {
++        // Matches no prefix and fails the scp-style pattern, yet a push
++        // through it reaches the forge exactly as `git@github.com:` does.
++        expect(isProductionRemote('gh:org/repo.git')).toBe(true);
++        expect(isProductionRemote('work:team/thing')).toBe(true);
++    });
++
++    it('the known network shapes stay production', () => {
++        for (const u of [
++            'https://github.com/o/r.git',
++            'http://example.com/r.git',
++            'ssh://git@host/r.git',
++            'git://host/r.git',
++            'git@github.com:o/r.git',
++        ]) {
++            expect(isProductionRemote(u)).toBe(true);
++        }
++    });
++
++    it('only a recognisably LOCAL remote is non-production', () => {
++        for (const u of ['/srv/mirrors/r.git', './sibling', '../other', '~/mirror', 'file:///m']) {
++            expect(isProductionRemote(u)).toBe(false);
++        }
++    });
++
++    it('an empty remote is not production — there is nothing to reach', () => {
++        expect(isProductionRemote('')).toBe(false);
++        expect(isProductionRemote('   ')).toBe(false);
++    });
++});
 diff --git a/tests/server/wizard.aiCouncil.test.ts b/tests/server/wizard.aiCouncil.test.ts
 index f61fcb35de55c299512730762f4253935d57bd64..8a0f128a5d447ca236ead01ba21bad8d29683f4f 100644
 --- a/tests/server/wizard.aiCouncil.test.ts
@@ -10677,10 +10973,10 @@ index f61fcb35de55c299512730762f4253935d57bd64..8a0f128a5d447ca236ead01ba21bad8d
          const res = await ctx.app.inject({
 diff --git a/tests/server/yamlIO.upsert.test.ts b/tests/server/yamlIO.upsert.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..b26c15a254450a4c54ef6ece60f2bf1fc789d56c
+index 0000000000000000000000000000000000000000..62866785ce2800f13c86974e2e7f9007283ce613
 --- /dev/null
 +++ b/tests/server/yamlIO.upsert.test.ts
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,140 @@
 +/**
 + * `upsertScalar` — the write path a key the user's file does NOT yet carry.
 + *
@@ -10787,5 +11083,37 @@ index 0000000000000000000000000000000000000000..b26c15a254450a4c54ef6ece60f2bf1f
 +        const after = upsertScalar(before, ['council', 'fallback', 'api_on_quota'], true);
 +        expect(read2(after, 'council', 'fallback', 'api_on_quota')).toBe(true);
 +        expect((parseYaml(after) as Record<string, Record<string, unknown>>)['council']?.['enabled']).toBe(true);
++    });
++});
++
++describe('upsertScalar — the document\'s own indent width', () => {
++    // R2 round 4, finding 7. Both halves hardcoded two spaces, so on a
++    // 4-space file the depth-2 walk matched nothing at depth 1 and appended
++    // the whole chain at EOF — a SECOND mapping key beside the existing one.
++    // `wizard.ts` writes that without re-parsing and reports {ok: true}.
++    it('adds a key to an existing 4-space section, not a duplicate one', () => {
++        const before = 'council:\n    members:\n        openai: 2\n';
++        const after = upsertScalar(before, ['council', 'members', 'gemini'], false);
++        // Parses at all — the decisive check, since a duplicate key is what
++        // the old version produced.
++        const doc = parseYaml(after) as Record<string, Record<string, Record<string, unknown>>>;
++        expect(doc['council']?.['members']?.['gemini']).toBe(false);
++        expect(doc['council']?.['members']?.['openai']).toBe(2);
++        expect(after.split('\n').filter((l) => l === 'council:')).toHaveLength(1);
++        // And it matched the file's own width rather than imposing two.
++        expect(after).toContain('        gemini: false');
++    });
++
++    it('a 4-space file gains a missing top-level section correctly', () => {
++        const before = 'defaults:\n    min_rounds: 2\n';
++        const after = upsertScalar(before, ['fallback', 'api_on_quota'], true);
++        const doc = parseYaml(after) as Record<string, Record<string, unknown>>;
++        expect(doc['fallback']?.['api_on_quota']).toBe(true);
++        expect(doc['defaults']?.['min_rounds']).toBe(2);
++    });
++
++    it('a flat document falls back to two spaces', () => {
++        const after = upsertScalar('enabled: true\n', ['fallback', 'api_on_quota'], true);
++        expect(after).toContain('  api_on_quota: true');
 +    });
 +});

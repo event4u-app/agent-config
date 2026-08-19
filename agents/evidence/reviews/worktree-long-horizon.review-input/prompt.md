@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 76d1db5b33e33c0c5c17a6203c1c9aee511f01aa, review
-  artefacts excluded), scope hash `fa369cf83bb27a360c7d0aa0f153b2f9975d4bbadb3b7416b38cd50eaf1b3ddf`
+- diff: `diff.patch` — the review scope (branch head 6b60f30622fe663bc2ae249966835126a818a64c, review
+  artefacts excluded), scope hash `c630322b9ce787e87747a354c5239856825bb9be115909e1f9c59aef31467593`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -48,6 +48,7 @@ Changed files:
 - src/scripts/_lib/map_to_object.ts
 - src/scripts/_lib/roadmap_checkboxes.ts
 - src/scripts/_lib/run_checkpoint.ts
+- src/scripts/_lib/session_register.ts
 - src/scripts/_lib/unattended_guard.ts
 - src/scripts/ai_council/config.ts
 - src/scripts/ai_council/events_log.ts
@@ -81,6 +82,7 @@ Changed files:
 - tests/scripts/run_checkpoint.test.ts
 - tests/scripts/run_supervise.test.ts
 - tests/scripts/session_eol_hook.test.ts
+- tests/scripts/session_register.test.ts
 - tests/scripts/unattended_guard.test.ts
 - tests/server/wizard.aiCouncil.test.ts
 - tests/server/yamlIO.upsert.test.ts
@@ -105,5 +107,5 @@ Fill the findings table in `worktree-long-horizon.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope fa369cf83bb27a360c7d0aa0f153b2f9975d4bbadb3b7416b38cd50eaf1b3ddf, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope c630322b9ce787e87747a354c5239856825bb9be115909e1f9c59aef31467593, reviewed <YYYY-MM-DD>
 ```
