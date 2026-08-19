@@ -59,8 +59,27 @@ import {
 
 let tmp: string;
 
+/**
+ * `git` against a fixture tree with the ambient repository pointers AND the
+ * ambient config stripped.
+ *
+ * Round 4 finding 6: the sibling fixture helper in
+ * `tests/hooks/run_continuation_dispatch.test.ts` was hardened on both axes and
+ * this one was not, while the same change added a `git worktree add` case here.
+ * With `GIT_DIR` exported — the suite run from inside a git hook — `make_repo`s
+ * `git config user.email` writes the REAL repository local config instead of the
+ * fixture one, and a global `commit.gpgsign` with no available key reds the
+ * fixture commit for a reason unrelated to anything under test.
+ */
 function git(cwd: string, ...args: string[]): string {
-    return execFileSync('git', args, { cwd, encoding: 'utf-8' }).trim();
+    const env = { ...process.env };
+    delete env['GIT_DIR'];
+    delete env['GIT_WORK_TREE'];
+    delete env['GIT_INDEX_FILE'];
+    delete env['GIT_COMMON_DIR'];
+    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
+    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
+    return execFileSync('git', args, { cwd, encoding: 'utf-8', env }).trim();
 }
 
 /** A repo with a linked worktree — the shape the whole design rests on. */
@@ -834,12 +853,19 @@ describe('the record describes THIS session checkout, not the chdir target', () 
 
     it('falls back to workspace_root when the cwd is absent, empty, or not a directory', () => {
         const { main } = make_repo();
-        expect(session_checkout(main, null)).toBe(main);
-        expect(session_checkout(main, '   ')).toBe(main);
-        expect(session_checkout(main, path.join(main, 'nope'))).toBe(main);
+        // Canonical on the fallback branch too, which is round 4 finding 5:
+        // the resolve branch realpath-normalised and the fallbacks did not, so
+        // two sessions in one working tree stored different strings for it under a
+        // symlinked ancestor and the foreign-session block read them as separate
+        // trees. Asserted as the canonical form rather than as the raw input, so a
+        // regression back to the asymmetry reds here.
+        const canon = fs.realpathSync(main);
+        expect(session_checkout(main, null)).toBe(canon);
+        expect(session_checkout(main, '   ')).toBe(canon);
+        expect(session_checkout(main, path.join(main, 'nope'))).toBe(canon);
         const file = path.join(main, 'a-file');
         fs.writeFileSync(file, 'x');
-        expect(session_checkout(main, file)).toBe(main);
+        expect(session_checkout(main, file)).toBe(canon);
     });
 
     it('walks up from a subdirectory to the nearest enclosing checkout root', () => {
@@ -875,7 +901,7 @@ describe('the record describes THIS session checkout, not the chdir target', () 
         const other = path.join(tmp, 'other-repo');
         fs.mkdirSync(other, { recursive: true });
         git(other, 'init', '-q', '-b', 'main');
-        expect(session_checkout(main, other)).toBe(main);
+        expect(session_checkout(main, other)).toBe(fs.realpathSync(main));
     });
 });
 

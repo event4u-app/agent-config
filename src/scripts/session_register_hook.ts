@@ -444,21 +444,43 @@ export function session_checkout(
     workspace_root: string,
     payload_cwd: string | null | undefined,
 ): string {
+    // EVERY branch returns a canonical path, resolve and fallback alike.
+    //
+    // Round 4 finding 5: the resolve branch realpath-normalised and the four
+    // fallback branches returned `workspace_root` verbatim, so under a repo
+    // reached through a symlinked ancestor two sessions in the SAME working tree
+    // stored different strings for it — `/private/var/…/repo` from the resolver
+    // and `/var/…/repo` from the envelope. `foreign_sessions_block` compares the
+    // stored forms with `path.resolve`, which does not follow symlinks, so it read
+    // them as different worktrees and printed the benign "separate trees" note
+    // where the same-worktree COLLISION prompt belongs. The walk-up widened the
+    // exposure by moving subdirectory sessions onto the normalising branch.
+    const fallback = canonical(workspace_root);
     const cwd = String(payload_cwd ?? '').trim();
-    if (cwd === '') return workspace_root;
+    if (cwd === '') return fallback;
     let start: string;
     try {
-        if (!fs.statSync(cwd).isDirectory()) return workspace_root;
+        if (!fs.statSync(cwd).isDirectory()) return fallback;
         start = fs.realpathSync(cwd);
     } catch {
-        return workspace_root;
+        return fallback;
     }
     const root = nearest_checkout_root(start);
-    if (root === null) return workspace_root;
+    if (root === null) return fallback;
     const mine = git_common_dir(root);
     const theirs = git_common_dir(workspace_root);
-    if (mine === null || theirs === null || mine !== theirs) return workspace_root;
+    if (mine === null || theirs === null || mine !== theirs) return fallback;
     return root;
+}
+
+/** `realpath` that falls back to an absolute form when the path is unreadable. */
+function canonical(p: string): string {
+    const abs = path.resolve(p);
+    try {
+        return fs.realpathSync(abs);
+    } catch {
+        return abs;
+    }
 }
 
 /**

@@ -618,6 +618,68 @@ describe('run-continuation — driven through the live dispatcher', () => {
         );
     });
 
+    it('names the roadmap file it read on the line', () => {
+        // Round 4 finding 4: the line carried six path fields and not the path the
+        // only tree-dependent NUMBER on it came from, so `open: 1` on a two-tree
+        // line could not be told apart from `open: 1` after a silent fallback.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        dispatchStop(main, writeTranscript(3), sub);
+        const ev = events(main).filter((e) => e['event'] === 'engage')[0] as Record<
+            string,
+            unknown
+        >;
+        expect(ev['roadmap_path']).toBe(
+            path.join(fs.realpathSync(worktree), 'agents', 'roadmaps', `${SLUG}.md`),
+        );
+        // And the count on the same line comes from that file, not the parent's.
+        expect(ev['open']).toBe(1);
+    });
+
+    it('ALLOWS when the session tree archived the roadmap — never falls back to the parent', () => {
+        // Round 4 finding 1, and it is the fix's own failure mode rather than the
+        // original defect's. `roadmap-progress-sync` mandates archival in the same
+        // change that closes the last step, so a completing run `git mv`s the file
+        // into `agents/roadmaps/archive/`. Resolving PER FILE, the next fire found
+        // the session copy gone, silently read the parent's un-archived copy, saw
+        // its still-open steps, and blocked with "continue with this step now"
+        // against a path that no longer exists in the tree being edited — engaging
+        // to the iteration cap instead of ever reaching complete.
+        //
+        // Resolving per DIRECTORY, the session tree stays authoritative and a
+        // missing file means the roadmap is gone from this run, which the
+        // unreadable-roadmap branch already handles by allowing the turn to end.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        const live = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
+        const archive = path.join(worktree, 'agents', 'roadmaps', 'archive');
+        fs.mkdirSync(archive, { recursive: true });
+        fs.renameSync(live, path.join(archive, `${SLUG}.md`));
+        // The parent copy is deliberately left in place with its two open steps —
+        // it is exactly what a fallback would have found.
+        expect(fs.existsSync(path.join(main, 'agents', 'roadmaps', `${SLUG}.md`))).toBe(true);
+
+        const res = dispatchStop(main, writeTranscript(3), sub);
+        expect(res.code).toBe(0);
+        expect(events(main).length).toBe(0);
+    });
+
+    it('ALLOWS on a claim slug that would escape the roadmaps directory', () => {
+        // Round 4 finding 7. `_read_claim_file` accepts any non-empty trimmed
+        // string as a slug, and the resolver now builds paths in TWO trees, so a
+        // traversal slug would have made the concern read outside
+        // `agents/roadmaps/` twice over. Refusing to name a file is the safe
+        // direction for a concern whose only power is refusing to end a turn.
+        const root = writeWorkspace();
+        const claim = path.join(root, roadmap_claim_rel(SESSION));
+        fs.writeFileSync(
+            claim,
+            JSON.stringify({ slug: '../../etc/passwd', session_id: SESSION }),
+            'utf-8',
+        );
+        const res = dispatchStop(root, writeTranscript(3));
+        expect(res.code).toBe(0);
+        expect(events(root).length).toBe(0);
+    });
+
     it('does not stall while the SESSION tree count keeps moving', () => {
         // The second half of the council's fixture: three fires with the worktree
         // count advancing between them. Reading the parent, the count is frozen

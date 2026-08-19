@@ -53,7 +53,8 @@
  *
  * Every event this concern writes carries `workspace_root`, `session_root`,
  * `session_cwd`, `git_dir`, `git_common_dir` and `claim_path` — the two-tree
- * provenance, per `provenance()` below. Without them the ledger records that an
+ * provenance, per `provenance()` below — plus `roadmap_path`, the file the
+ * open-step count on that same line was read from (round 4 finding 4). Without them the ledger records that an
  * engagement happened but not that it crossed the tree boundary the fix was
  * about, and crossing it is the whole claim. This list is the file's canonical
  * statement of the contract: R2 round 2 finding 4 caught it enumerating four
@@ -151,6 +152,22 @@ export interface RunState {
     last_turn: number;
     /** Open-step count recorded at each engagement, newest last. */
     history: number[];
+    /**
+     * The roadmap file the counts in `history` were read from.
+     *
+     * Round 4 finding 2: `resolveRoadmap` re-chooses the source tree on every
+     * fire, and `ladder`'s stall test compares the counts for equality — so a run
+     * whose source changed mid-flight compared numbers from two different
+     * documents. Both directions were wrong: a differing earlier count from the
+     * other tree reset a genuine stall streak, and a coincidentally equal one
+     * contributed a false match toward `halt-stall`. Recording the source lets a
+     * change reset the window, which is the only honest reading — the counts
+     * before the change measured a different file.
+     *
+     * Optional so a state file written before this field parses unchanged; absent
+     * means "unknown source", which resets once and then tracks.
+     */
+    history_source?: string;
     /** ISO stamp of the most recent engagement — half of the duplicate key. */
     last_engaged_at?: string;
     /**
@@ -380,6 +397,12 @@ function readState(file: string): RunState | null {
         if (typeof o['last_engaged_at'] === 'string') {
             rec.last_engaged_at = o['last_engaged_at'];
         }
+        // Round-tripped, and it has to be: dropping it here would make the
+        // source look changed on EVERY fire, reset the window every time, and
+        // silently disable the stall detector the field was added to protect.
+        if (typeof o['history_source'] === 'string') {
+            rec.history_source = o['history_source'];
+        }
         // Validated against the halt set rather than accepted as any string:
         // an unrecognised value would be returned verbatim by `ladder` and
         // become an action no branch below handles.
@@ -398,7 +421,8 @@ function readState(file: string): RunState | null {
 
 /**
  * The six fields that make an event's two-tree property checkable by a third
- * party holding nothing but the ledger line.
+ * party holding nothing but the ledger line. The caller adds a seventh,
+ * `roadmap_path`, which it knows and this function does not.
  *
  * Keep this count in step with the file header and the call-site comment. Round 2
  * finding 4 caught the header saying four where the function emitted five; the
@@ -459,11 +483,20 @@ function readState(file: string): RunState | null {
  *
  * `session_cwd` exists for the same reason, and it is a fact rather than an
  * assertion. `session_checkout` degrades to `workspace_root` when its guards
- * fail, and the raw `cwd` is what makes a degraded line distinguishable from a
- * genuine same-tree one: `session_cwd` is then a path that is neither
- * `session_root` nor under it, which no healthy resolution produces. A boolean
- * `resolved: false` would have been the system under observation asserting its
- * own health; the raw path is checkable.
+ * fail, and the raw `cwd` is what can make a degraded line distinguishable from a
+ * genuine same-tree one. A boolean `resolved: false` would have been the system
+ * under observation asserting its own health; the raw path is checkable.
+ *
+ * **The relation is SUFFICIENT, never necessary, and this file has now written it
+ * as necessary three rounds running.** A `session_cwd` outside `session_root`
+ * proves a fallback happened. The converse does not hold: round 4 finding 3 names
+ * three reachable inputs where the resolver falls back and the raw cwd still sits
+ * under `session_root` — a cwd inside a DIFFERENT repository nested under this
+ * checkout (a vendored clone, a test fixture) failing the identity check, a cwd
+ * that does not exist, and a relative cwd resolved against the reader's root. On
+ * those lines the provenance cannot tell a reader that a fallback occurred, and
+ * saying so is the honest bound rather than a wider claim that keeps being
+ * refuted.
  *
  * **The degradation this field was introduced for is gone, and the field stayed.**
  * Round 2 added it because a session started from a SUBDIRECTORY of a worktree
@@ -567,19 +600,61 @@ export function provenance(
 }
 
 /**
- * The roadmap file this run is executing: the session's copy when it exists,
- * otherwise the reader's.
+ * The roadmap file this run is executing, chosen by which tree OWNS the
+ * roadmaps directory — never by whether one particular file is present.
  *
- * `existsSync` rather than a try/read, because the fallback has to be chosen
- * before the read in order to keep the "no readable roadmap" branch meaning what
- * it says — a claim naming a roadmap that exists in NEITHER tree, rather than one
- * that merely has not been created in the session's tree yet.
+ * ## The per-file fallback was wrong, and round 4 finding 1 named the cost
+ *
+ * The first version resolved per FILE: session copy if it exists, else the
+ * reader's. That reads correctly in a fresh worktree and breaks a finished run.
+ * `roadmap-progress-sync` mandates archival in the SAME change that closes the
+ * last step, so a completing run `git mv`s the file into
+ * `agents/roadmaps/archive/`. On the next stop fire the session copy is gone, the
+ * per-file rule silently fell back to the parent's UN-archived copy, read its
+ * still-open steps, and blocked with "continue with this step now" against a path
+ * that no longer exists in the tree the agent is editing — re-engaging to the
+ * iteration cap instead of ever reaching `complete`.
+ *
+ * Per DIRECTORY instead: if the session's tree has `agents/roadmaps/` at all,
+ * that tree is authoritative and a missing slug file means the roadmap is gone
+ * from this run — archived, renamed, or never created — which the caller's
+ * unreadable-roadmap branch already handles correctly by allowing the turn to
+ * end. The fallback survives for the case it was actually for: a session root
+ * that is not a checkout of this project layout.
+ *
+ * ## Slug containment
+ *
+ * The slug comes from a claim file, and `_read_claim_file` accepts any non-empty
+ * trimmed string. `claim_is_stale` in the same module treats containment as
+ * necessary before any read; round 4 finding 7 observed that this function did
+ * not, and that it now builds paths in TWO trees rather than one. A slug that
+ * escapes `agents/roadmaps/` returns `null` and the caller allows — refusing to
+ * name a file is the safe direction for a concern whose only power is refusing to
+ * end a turn.
  */
-function resolveRoadmap(sessionRoot: string, workspaceRoot: string, slug: string): string {
-    const rel = path.join('agents', 'roadmaps', `${slug}.md`);
-    const mine = path.join(sessionRoot, rel);
-    if (sessionRoot !== workspaceRoot && fs.existsSync(mine)) return mine;
-    return path.join(workspaceRoot, rel);
+function resolveRoadmap(
+    sessionRoot: string,
+    workspaceRoot: string,
+    slug: string,
+): string | null {
+    const dirRel = path.join('agents', 'roadmaps');
+    const rel = path.join(dirRel, `${slug}.md`);
+    // `path.join` has already collapsed `..`; the assertion is that what came out
+    // is still inside the roadmaps directory.
+    const norm = path.normalize(rel);
+    if (!norm.startsWith(`${dirRel}${path.sep}`) || norm.includes('..')) return null;
+    if (sessionRoot !== workspaceRoot && isDirectory(path.join(sessionRoot, dirRel))) {
+        return path.join(sessionRoot, norm);
+    }
+    return path.join(workspaceRoot, norm);
+}
+
+function isDirectory(p: string): boolean {
+    try {
+        return fs.statSync(p).isDirectory();
+    } catch {
+        return false;
+    }
 }
 
 function appendEvent(workspaceRoot: string, record: JsonObject): void {
@@ -668,6 +743,7 @@ export function main(): number {
         str(payload['cwd'] as JsonValue | undefined),
     );
     const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
+    if (roadmapPath === null) return EXIT_ALLOW;
     let roadmapText: string;
     try {
         roadmapText = fs.readFileSync(roadmapPath, 'utf8');
@@ -742,6 +818,13 @@ export function main(): number {
         sessionRoot,
         str(payload['cwd'] as JsonValue | undefined),
     );
+    // Round 4 finding 4: the line carried six path fields and not the one path
+    // the only tree-dependent NUMBER on it came from. On a line with
+    // `session_root !== workspace_root` and `open: 2`, a reader could not tell
+    // whether the count came from the session copy (the fix working) or from the
+    // reader's after a fallback (the defect still live) — the exact ambiguity the
+    // other six fields exist to remove.
+    roots['roadmap_path'] = roadmapPath;
 
     // ── defer to the quality gate ────────────────────────────────────
     if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
@@ -820,6 +903,12 @@ export function main(): number {
 
     state.iterations += 1;
     state.last_turn = turnOrdinal;
+    // Reset the stall window when the source document changed — see
+    // `RunState.history_source`.
+    if (state.history_source !== roadmapPath) {
+        state.history = [];
+        state.history_source = roadmapPath;
+    }
     state.history.push(scan.open);
     state.last_engaged_at = new Date().toISOString();
     try {
