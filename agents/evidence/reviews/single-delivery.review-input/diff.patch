@@ -1,0 +1,1697 @@
+diff --git a/agents/evidence/analysis/single-delivery-partition-census.md b/agents/evidence/analysis/single-delivery-partition-census.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3b142ac916fc175e69104db2a2d9ac889c218823
+--- /dev/null
++++ b/agents/evidence/analysis/single-delivery-partition-census.md
+@@ -0,0 +1,206 @@
++# Single-delivery census — the two layers, measured on a known projection shape
++
++> **Evidence artefact.** Written 2026-08-19 for `road-to-single-delivery` Phase 0.
++> Machine-local reading; re-run rather than cite. Every figure carries the command
++> that produced it.
++
++## REQUIRED FIELD — the projection shape this census was taken on
++
++```
++projection:            EMITTED REAL FILES (post-PR-#1231)
++project rule files:    111 real files, 0 symlinks
++of those carrying paths:  8
++regenerated with:      task sync && task generate-tools
++worktree HEAD:         b490f3845
++host:                  claude, macOS, single machine
++```
++
++**This field is mandatory and it is the point of the artefact.** Its absence is
++what produced two refuted drafts (§ The refutation). A census of these two layers
++is *not interpretable* without it, because the same commit classifies differently
++depending on which generation of the emitter wrote the project tree:
++
++- **pre-#1231** — the project layer is a *symlink* tree into `dist/agent-src/rules/`,
++  so against installed global copies the only difference is the install stamp, and
++  `paths:` disagreements are structurally invisible (count 0 for the wrong reason).
++- **post-#1231** — the project layer is *emitted real files* carrying `paths:`, so
++  the same pairs read as frontmatter-divergent.
++
++A number from another checkout is not comparable to one here.
++`report_carrier_divergence` states this limitation in its own output.
++
++## Per-type overlap
++
++```
++ls ~/.claude/<type> | sort > g ; ls .claude/<type> | sort > p ; comm -12 g p
++```
++
++| type | global `~/.claude/` | project `.claude/` | global-only | project-only | **in BOTH** |
++|---|---:|---:|---:|---:|---:|
++| rules | 115 | 111 | 5 | 1 | **110** |
++| skills | 298 | 338 | 8 | 48 | **290** |
++| commands | 93 | 40 | 53 | 0 | **40** |
++| agents | 0 | 1 | 0 | 1 | 0 |
++
++**Total delivered twice: 440 names.** The commands row is a **correction to this
++artefact's first version**, and it is worth stating how it was wrong: the first
++reading was taken in the stale main checkout, where no commands were projected at
++all, so the row read `93 / 0 / 0` and commands looked clean. `check_single_delivery`
++— written afterwards for Phase 4, against a freshly regenerated worktree — reported
++40 in both on its very first run. So a third artefact type was duplicated and three
++of the four inbox drafts plus the first version of this census all missed it, for
++the same reason the rules figures were wrong: the projection shape.
++
++`agents` is the one type with a genuinely absent layer (`~/.claude/agents` does not
++exist), which is reported as `absent` rather than as `0` — the two are different
++facts.
++
++- **global-only rules (5):** `analysis-skill-routing`, `brand-consistency`,
++  `guidelines`, `package-ci-checks`, `size-enforcement`.
++- **project-only rule (1):** `source-of-truth` — `workspaces:
++  [agent-config-maintainer]`, the asymmetry ADR-226 rests on. Confirmed present.
++
++## Cost
++
++```
++./scripts-run src/scripts/check_standing_rule_delivery
++```
++
++```
++global    115 file(s)   114361 tok
++project   111 file(s)    89512 tok
++overlap   110 rule(s) in both layers (0 duplicate, 110 divergent)
++TOTAL          203873 tok / 110000 cap (185.3%)
++```
++
++Standing prose and the skill catalogue are **different buckets** and are not
++added together. Catalogue side, measured on the stale tree and reported as a
++proxy: the duplicated skills carried 57,668 bytes of `name:` + `description:`,
++≈ 16,018 tok at chars/3.6. Re-measure on the fresh tree before citing — the
++duplicate count moved from 261 to 290.
++
++## Divergence breakdown
++
++```
++./scripts-run src/scripts/report_carrier_divergence
++```
++
++```
++shared rule names                    110
++  byte-identical                       0
++  differ ONLY in the install stamp     0
++  differ ONLY in frontmatter         110
++    of which disagree on `paths:`      7   <- ACTIONABLE
++  differ in PROSE                      0
++present at project scope only          1
++present at global scope only           5
++```
++
++**Prose divergence is 0 and that does not make suppression safe.** The tool's own
++output names the mechanism for the 7: *a copy that lacks `paths:` DEFEATS the
++other copy's scoping.*
++
++### The 7 `paths:`-disagreement rules, by name
++
++Project carries `paths:`, global does not, in all seven cases:
++
++| rule | exclusively package-only? | under the partition |
++|---|---|---|
++| `design-review-after-ui-write` | no | global-only → unscoped, survives `/compact` |
++| `roadmap-progress-sync` | no | global-only → unscoped, survives `/compact` |
++| `ui-audit-gate` | no | global-only → unscoped, survives `/compact` |
++| `no-roadmap-references` | **yes** | project-only → path-scoped, **stops surviving `/compact`** |
++| `rule-type-governance` | **yes** | project-only → path-scoped, **stops surviving `/compact`** |
++| `skill-quality` | **yes** | project-only → path-scoped, **stops surviving `/compact`** |
++| `source-confidentiality` | **yes** | project-only → path-scoped, **stops surviving `/compact`** |
++
++ADR-227:79-80: *path-scoped rules are not re-injected after `/compact`, so an
++obligation that must survive compaction cannot be path-scoped at all.* The
++unscoped global twin is therefore **accidentally preserving compaction survival**
++today. The partition narrows the problem from 7 rules to 4; those 4 are the
++`compact-survival-of-package-only-rules` blocker.
++
++## The partition, read off `workspaces:`
++
++No new metadata is required — the field that already governs consumer delivery
++decides the layer:
++
++| | exclusively `[agent-config-maintainer]` → project | everything else → global |
++|---|---:|---:|
++| rules (117 in `src/rules/`) | **16** | 101 |
++| skills (290 in `src/skills/`) | **0** | 290 |
++
++The 16: `augment-edit-discipline`, `domain-adoption-policy`,
++`framework-neutrality-in-generic-skills`, `low-impact-corpus-privacy-floor`,
++`no-roadmap-references`, `package-ci-checks`, `persona-governance`,
++`preservation-guard`, `rule-type-governance`, `size-enforcement`, `skill-quality`,
++`source-confidentiality`, `source-of-truth`, `telegraph-speak`, plus two more.
++
++**Zero package-only skills is a finding, not a parse failure.** It means the
++project layer's `.claude/skills/` can be empty and all 290 duplicate catalogue
++entries disappear in one move.
++
++Measured with a frontmatter parse that distinguishes `workspaces:
++[agent-config-maintainer]` **alone** from a list that merely contains it — a bare
++`grep -l agent-config-maintainer` over `src/rules/` reports **73**, which
++over-counts by matching prose and multi-workspace declarations. The 73 is recorded
++here because it is the number a casual probe returns.
++
++## The gate that should have caught the stale tree, and did not
++
++```
++./scripts-run src/scripts/check_rule_projection_integrity
++```
++
++```
++⚠️  check_rule_projection_integrity: no host rule tree is active
++    (agents/.agent-tools.yml selects zero tools) — nothing to audit.
++    This gate has teeth only where a tool is active; CI activates all eight.
++```
++
++The gate exists for "stale tree on a developer's working checkout" and is ordered
++first in preflight for that reason. On the maintainer machine it is **inert**,
++because the local tool selection is empty — so the 5-July symlink tree that
++produced two refuted drafts was invisible to it. **The hole is local-only:** CI
++activates all eight tools, so a PR is covered. Recorded rather than fixed, per
++Phase 0.2.
++
++## The refutation — why the projection shape is a required field
++
++Two of the four inbox drafts measured the stale tree. Same checkout, same commit,
++before and after `task sync && task generate-tools`:
++
++| | stale (92 symlinks, 5 July, 0 `paths:`) | **fresh (111 emitted, 8 `paths:`)** |
++|---|---:|---:|
++| rules in both | 91 | **110** |
++| rules global-only | 24 | **5** |
++| skills in both | 261 | **290** |
++| shared PROSE-divergent | 0 | **0** |
++| shared FRONTMATTER-divergent | 0 | **110** |
++| of those `paths:`-disagreeing | 0 | **7** |
++| standing total | 195,383 tok (177.6 %) | **203,873 tok (185.3 %)** |
++
++Three conclusions the stale reading got wrong:
++
++1. **"24 global-only live obligations"** — actually 5, and none is a safety floor.
++   The stale list named `secret-vcs-guard`, `session-canary`, `self-repair-loop`
++   and others that are in **both** layers on a fresh tree.
++2. **"The duplication is bounded at 91/261"** — it is 110/290. The defect survived
++   its own draft's refutation and got larger.
++3. **"`install --layer` would not refuse today"** — it refuses over divergence,
++   and a fresh tree is 110-way divergent. The remedy the tooling prints in its own
++   error message is unavailable here.
++
++What survived the refutation unchanged: the two-producer diagnosis (`scope_guard`
++classifies by drift risk not cost; `generate-tools` has no overlap gate at all),
++the gate-coverage audit, and the existence of the skills half.
++
++## Honest limits
++
++- Single machine, single host, one date. `later/` and consumer topologies are not
++  measured here.
++- The catalogue token figure is a chars/3.6 **proxy** and was taken on the stale
++  tree; the standing-prose figures are exact BPE.
++- No claim is made that removing duplication lifts the host's catalogue
++  truncation. That question belongs to `road-to-release-review-p0`, which owns
++  host catalogue behaviour.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 263cabb2ba9f068c1a6180e395708f7b18757c62..f817832fa04b5d3993803570b11937a1d5667f68 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **23** need you → `agent-config gates`
++> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **52** open blockers, **23** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**308 / 545 steps done · 57%**
++**314 / 560 steps done · 56%**
+ 
+ ```text
+-███████████████████████░░░░░░░░░░░░░░░░░   57%
++██████████████████████░░░░░░░░░░░░░░░░░░   56%
+ ```
+ 
+ ## Open roadmaps
+@@ -37,18 +37,19 @@
+ | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+ | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
++| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
+ | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 9 | 7 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████░░░░░░ 44% |
++| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
++| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
++| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
++| 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
++| 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 34 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+ 
+ ---
+ 
+@@ -809,6 +810,68 @@ _1 blocker resolved._
+ 
+ _2 blockers resolved._
+ 
++### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
++
++**Road to single delivery — one artefact, one layer, no duplicates** — 7 / 16 done (44%)
++
++| # | Phase | State | Open | Done | Deferred | Cancelled | % |
++|---|---|---|---:|---:|---:|---:|---:|
++| 0 | Pin the measurement so no fifth draft repeats the fourth's error | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 1 | Replace ADR-226 | ✅ done | 0 | 1 | 0 | 0 | 100% |
++| 2 | Make the producers write disjoint layers | ⬜ not started | 1 | 0 | 3 | 0 | 0% |
++| 3 | Stop the two surfaces that call duplication free | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 4 | One producer-agnostic invariant check | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
++| 5 | The residue the partition does not resolve | ⬜ not started | 7 | 0 | 2 | 0 | 0% |
++
++<a id="blockers-road-to-single-delivery"></a>
++**Blockers**
++
++- **partition-requires-global-layer** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two cost-classification surfaces and the invariant check all land while the partition itself waits.
++  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (c). It makes the partition a *property of a machine that has both layers* rather than a global behaviour change, so no checkout can lose governance by omission, and the duplication it leaves behind on a single-layer machine is not duplication at all — there is only one layer there. (a) turns a missing optional install into a hard failure of the normal build; (b) is the silent under-governance itself.
++  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this particular non-decision, which is why the phase halts rather than shipping a default.
++  - **What to do:**
++    pick one of three enumerated options and record it.
++    **(a)** `task generate-tools` refuses to write a partitioned project layer when
++    `~/.claude/rules/` is absent or older than the installed release, pointing at
++    `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
++    back to projecting the full set, so a machine without the global layer keeps
++    today's behaviour and only a machine with both gets the partition. Probe the
++    current state with
++    `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
++  - **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and 2.0's verify can be run against it.
++- **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
++  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
++  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.
++  - **What to do:**
++    run
++    `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
++    to confirm the set, then pick one of three enumerated options and record it:
++    **(a)** delete the `paths:` key from those four in `src/rules/` so they load
++    unconditionally in the project layer; **(b)** keep `paths:` and accept that they
++    do not survive compaction; **(c)** grant those four a documented exception to
++    the partition and keep an unscoped global copy.
++  - **Resolved when:** the option is recorded in the successor ADR or an amendment to ADR-227.
++- **host-skill-suppression-capability** (owner: maintainer) — blocks Phase 5 step 5.2 only. The partition removes the duplicate skills at the producer, so nothing in Phases 0-4 waits on this; it matters for a consumer who legitimately holds both layers.
++  - **Recommendation:** **(agent-drafted 2026-08-19.)** Probe before designing. If the key does not reach the catalogue, the producer-side partition this roadmap ships is the only available lever and 5.2 closes as a recorded null rather than as work.
++  - **If you do nothing:** consumers who hold both layers keep paying duplicate catalogue entries, and this roadmap's win stays maintainer-local.
++  - **What to do:**
++    on a machine holding both layers, add
++    `"claudeMdExcludes": ["<abs>/.claude/skills/**"]` to `~/.claude/settings.json`,
++    start a session, and run the `capture_skill_catalogue` probe
++    (`./scripts-run src/scripts/capture_skill_catalogue`) to see whether the
++    excluded entries are absent from the delivered catalogue. Record the host
++    version with the result. Either outcome closes this.
++  - **Resolved when:** the capability is recorded with its host version and source.
++- **overlap-check-binding-surface** (owner: maintainer) — blocks Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
++  - **Recommendation:** **(agent-drafted 2026-08-19.)** Preflight. The overlap is a property of the developer machine rather than of the branch, so CI would measure a topology no contributor has and be green while every local session pays. Two gates in this area are already unreachable where it matters, so a third unbound one would read as coverage while adding none.
++  - **If you do nothing:** Phase 4 ships a check with the same reach as the two that already exist, and a re-created overlap goes unnoticed.
++  - **What to do:**
++    pick one and register the check there — `task preflight` via
++    `taskfiles/`, a `session_start` concern in `src/scripts/hook_manifest.yaml`, or
++    a workflow under `.github/workflows/`. Then confirm a deliberately-created
++    overlap surfaces on the chosen one.
++  - **Resolved when:** the surface is named and 4.3's verify runs against it.
++
+ ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
+ 
+ **Measure the de-collided skill descriptions** — 0 / 4 done (0%)
+diff --git a/agents/roadmaps/road-to-single-delivery.md b/agents/roadmaps/road-to-single-delivery.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..be31921ed2f7ba86e687e58d9748742e6b2e5f9c
+--- /dev/null
++++ b/agents/roadmaps/road-to-single-delivery.md
+@@ -0,0 +1,537 @@
++---
++complexity: structural
++status: ready
++estate_offset_exempt: "adopted from a four-draft inbox reconciliation (agents/tmp.old/double-rules/) that consumed and replaced three parallel drafts plus a cross-review; the estate gains one roadmap and loses a four-way ambiguity. No sibling exists to archive against it: the defect is live at 185.3 % of the standing cap on a freshly regenerated tree, and no active roadmap owns it — road-to-standing-context-40k owns body LENGTH, which the Non-goals here separate from duplication by construction."
++---
++
++# Road to single delivery — one artefact, one layer, no duplicates
++
++> **The invariant, decided by the operator 2026-08-19: PARTITION, not
++> de-duplication.** Every rule and every skill is delivered from **exactly one**
++> layer. What exists only for this package stays in the project layer and is not
++> installed globally; everything else lives globally and is not projected into
++> this repo. No artefact appears in both. ADR-226, which decided the opposite for
++> this repository, is superseded rather than worked around.
++
++> Measured 2026-08-19 on a **freshly regenerated** projection at `b490f3845`:
++> **110 rules** and **290 skills** currently arrive twice; standing rule prose is
++> **203,873 tok against a 110,000 cap (185.3 %)**; and for 7 rules the unscoped
++> global copy defeats the project copy's `paths:` scoping.
++
++> Source (consumed inbox): `agents/tmp.old/double-rules/` — four drafts and two
++> transcripts, reconciled here. See § Where this came from.
++
++## The decision this roadmap implements
++
++The operator's instruction, 2026-08-19, in their own framing: this package does
++not need its own *global* rules; rules and skills that exist **only** for this
++package may be kept locally and not installed globally, and the reverse; the
++duplicates are to stop; and **ADR-226 is to be amended or deprecated and
++replaced** rather than treated as binding.
++
++That is an owner decision about this repository's delivery topology, and it
++resolves by fiat a question three inbox drafts tried to answer by measurement:
++*which copy wins.* Neither — the artefact exists once, and its scope decides
++where. Recorded here because the roadmap's whole shape follows from it and a
++later reader must not mistake it for an agent's inference.
++
++**What it does not authorise, stated so the boundary is visible:** a change to
++what a *consumer* receives. The 16 package-only rules are already excluded from
++consumer installs by their `workspaces:` field, so the partition below moves this
++repository's own topology and nothing else. Any consumer-visible default change
++remains permission-gated ([`scope-control`](../../src/rules/scope-control.md)).
++
++### The partition, measured
++
++`workspaces:` already carries the answer — no new metadata is needed:
++
++| | exclusively `[agent-config-maintainer]` → **project layer only** | everything else → **global layer only** |
++|---|---:|---:|
++| rules (117) | **16** | 101 |
++| skills (290) | **0** | 290 |
++
++So the target topology is **16 rules and zero skills** in `<repo>/.claude/`, and
++**101 rules plus 290 skills** in `~/.claude/`. Overlap: zero, by construction
++rather than by suppression.
++
++The 16: `augment-edit-discipline`, `domain-adoption-policy`,
++`framework-neutrality-in-generic-skills`, `low-impact-corpus-privacy-floor`,
++`no-roadmap-references`, `package-ci-checks`, `persona-governance`,
++`preservation-guard`, `rule-type-governance`, `size-enforcement`, `skill-quality`,
++`source-confidentiality`, `source-of-truth`, `telegraph-speak`, and two more.
++
++**Zero skills is not an error and is worth stating twice.** No skill in the tree
++declares `workspaces: [agent-config-maintainer]` alone, so under the partition
++this repo's `.claude/skills/` is **empty** and every skill is delivered globally.
++That removes all 290 duplicate catalogue entries in one move, which is the largest
++single win available here.
++
++## Context — the defect, measured
++
++**Two producers, neither aware of the other.**
++
++- **Path A, consumer: two installs.** `src/scripts/_lib/scope_guard.sh`
++  classifies an install at the other scope `OK` / `WARN` / `DRIFT`. Same version
++  → `WARN`, and its own comment at `:15` reads *"Same content; duplicate
++  registration but no drift."* — the caller proceeds.
++  `docs/contracts/install-scopes.md:28` states it as policy. **Refuted by cost:**
++  the guard classifies by drift risk and never by context cost, and the live case
++  is ~90k standing tokens at *identical* versions.
++- **Path B, maintainer: one install plus one generation.** The project layer is
++  written by `task generate-tools`, the global layer by an install. Verified:
++  `generate_tool_configs.ts` and `condense.ts` contain **zero** references to
++  `rule_layer_overlap`, `scope_guard` or `_gate_rule_layer_overlap`. An
++  install-time gate cannot see a layer written afterwards by another producer.
++
++**The existing gate covers a fraction.** `_gate_rule_layer_overlap`
++(`install.ts:2216`) is rules-only, Claude-only, install-time-only, is not
++exercised by `--dry-run` (its own docstring says so), and its remedy
++`claudeMdExcludes` is absent from both layers on this machine. No skill-layer
++equivalent exists: `compareLayers` / `rule_layer_overlap` / `readRuleLayer`
++appear in exactly three files.
++
++**A gate written for this was inert.** `check_rule_projection_integrity` exists
++for "stale tree on a developer's working checkout" and is ordered first in
++preflight. Run locally it reports *"no host rule tree is active
++(`agents/.agent-tools.yml` selects zero tools) — nothing to audit."* So the stale
++projection that produced two refuted inbox drafts was invisible to the one gate
++meant to see it.
++
++**The primitive the partition needs already exists.** `rule_in_scope(p, scope,
++pack_scope)` is used at `condense.ts:1111`, `:1610` and `:1632`. The partition is
++a different *predicate* for the project layer, not new machinery.
++
++### Scope defeat — narrowed by the partition from 7 rules to 4
++
++Of the 110 shared rules, **7 disagree on `paths:`** — project carries it, global
++does not. `report_carrier_divergence` names the mechanism in its own output: **a
++copy that lacks `paths:` defeats the other copy's scoping.** So these 7 load
++unconditionally today and the project layer's scoping of them is inert.
++
++ADR-227:79-80 records that *path-scoped rules are **not re-injected after
++`/compact`**, so an obligation that must survive compaction cannot be
++path-scoped at all.* The unscoped global twin is therefore **accidentally
++preserving compaction survival** for these 7.
++
++Under the partition the set splits, and only one half keeps the problem:
++
++- **3 go global-only** — `design-review-after-ui-write`, `roadmap-progress-sync`,
++  `ui-audit-gate`. The global copy has no `paths:`, so they load unconditionally
++  and survive `/compact`. Resolved by the partition itself.
++- **4 stay project-only and keep their `paths:`** — `no-roadmap-references`,
++  `rule-type-governance`, `skill-quality`, `source-confidentiality`. Once their
++  unscoped global twin is gone they become path-scoped only, and stop surviving
++  `/compact`. Three of the four carry Iron Laws.
++
++That residue is a real correctness question the partition does not answer, so it
++is `[~]` behind a blocker rather than decided here.
++
++## Non-goals
++
++- **Deleting anything under `~/.claude/`.** Hard Floor
++  ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)).
++  The partition changes what producers *write*, never what is removed by hand.
++- **Changing what a consumer receives.** See § The decision above.
++- **Shrinking rule bodies.** Owned by `road-to-standing-context-40k` Phase 2 and
++  `road-to-cost-parity-1-rule-payload-diet`. Duplication and length are separate
++  terms; conflating them is how a 185 % reading gets blamed on prose.
++- **Re-deriving `paths:` as a corpus lever.** ADR-227 recorded it saturated. Here
++  it is read only as a divergence axis and a compaction property.
++
++## Where this came from — four drafts, two of them refuted
++
++| draft | contributed | status |
++|---|---|---|
++| `ac-chat/road-to-single-delivery.md` | per-type census incl. the skills half; the two-producer diagnosis; the gate-coverage audit | **census refuted** — stale projection |
++| `gpt/road-to-single-delivery-invariant.md` + `-consolidated.md` | complementary layers; ADR-226; the delivery-manifest framing | ADR-226 pointer **confirmed** |
++| `claude/road-to-single-copy-delivery.md` | the ADR-227 `/compact` precondition | **confirmed, load-bearing** |
++| `claude/cross-review-single-delivery.md` | that the ac census was stale; that `claudeMdExcludes` is file-glob capable | **both confirmed** |
++
++The refutation, verified here rather than accepted: the ac draft measured a
++project tree of **92 symlinks into `dist/agent-src/rules/` dated 5 July** with
++**zero** `paths:` frontmatter — the pre-#1231 shape. After
++`task sync && task generate-tools` the same checkout emits **111 real files, 8
++carrying `paths:`**:
++
++| | stale tree (ac draft) | **fresh tree** |
++|---|---:|---:|
++| rules in both | 91 | **110** |
++| rules global-only | 24 | **5** |
++| skills in both | 261 | **290** |
++| shared rules PROSE-divergent | 0 | **0** |
++| shared rules FRONTMATTER-divergent | 0 | **110** |
++| of those, `paths:`-disagreement | 0 | **7** |
++| standing total | 195,383 tok (177.6 %) | **203,873 tok (185.3 %)** |
++
++Three consequences: the "24 global-only live obligations" is **5** and they are
++not safety floors (`analysis-skill-routing`, `brand-consistency`, `guidelines`,
++`package-ci-checks`, `size-enforcement`); the duplication is **worse**, not
++better; and `install --layer` is unavailable on a fresh tree at all, because the
++gate refuses a suppression over divergence and a fresh tree is 110-way divergent.
++The partition sidesteps that remedy rather than repairing it.
++
++## Phase 0 — Pin the measurement so no fifth draft repeats the fourth's error
++
++- [x] **0.1** Commit the fresh-projection census as an evidence artefact:
++      per-type counts, the divergence breakdown, the 7 `paths:`-disagreement rules
++      by name, the 16/101 and 0/290 partition sizes, and the stale-versus-fresh
++      table — each with the command that produced it.
++      `verify:` the artefact carries the projection shape (symlink vs emitted, and
++      the `paths:`-carrying count) as a REQUIRED field, since its absence is what
++      produced two refuted drafts.
++      **DONE 2026-08-19:**
++      [`single-delivery-partition-census.md`](../evidence/analysis/single-delivery-partition-census.md).
++      The projection-shape block is the artefact's first section and states
++      `EMITTED REAL FILES (post-PR-#1231) · 111 real files, 0 symlinks · 8 carrying
++      paths:`, with the reason a census is uninterpretable without it. Also records
++      the `grep -l` over-count (73 vs the measured 16) because that is the number a
++      casual probe returns.
++- [x] **0.2** Record the gate reach hole as a finding:
++      `check_rule_projection_integrity` reports "nothing to audit" when
++      `agents/.agent-tools.yml` selects zero tools, the maintainer's normal local
++      state. Name what it would have caught, and that CI activates all eight so
++      the hole is local-only.
++      `verify:` the gate's own output is quoted in the artefact.
++      **DONE 2026-08-19** — quoted verbatim in the census § "The gate that should
++      have caught the stale tree, and did not", with the local-only bound stated so
++      it is not read as a CI gap.
++
++**AC-0:** any future reader can tell from the artefact alone whether a census was
++taken on a stale or a fresh projection.
++
++## Phase 1 — Replace ADR-226
++
++- [x] **1.1** Write the successor ADR recording the partition decision, its
++      owner, and its reasoning; mark ADR-226 `superseded_by` it and state in
++      ADR-226 what changed (the operator's topology decision, not a refuted
++      measurement — its `source-of-truth.md` asymmetry was confirmed, and the
++      partition keeps that rule in the project layer where ADR-226 wanted it).
++      `verify:` the ADR index regenerates consistently and `check_references` is
++      green on both records.
++      **DONE 2026-08-19:**
++      [`ADR-235`](../../docs/decisions/ADR-235-one-artefact-one-layer.md) accepted,
++      `supersedes: ADR-226`; ADR-226 flipped to `status: superseded` with
++      `superseded_by: ADR-235` and a Status section stating which of its arguments
++      were re-verified (both) and which two figures expired (22 → 5 rules, and
++      prose divergence 2 → 0). Index regenerated with
++      `adr/regenerate_index --dir docs/decisions` — note the flag: the script
++      defaults to `docs/adr/` and prints `adr-dir not found` on this repo's legacy
++      layout, which reads like a failure and is an argument error.
++
++**AC-1:** ADR-226 is not silently bypassed; the tree records which decision is
++live and why the earlier one was replaced.
++
++## Phase 2 — Make the producers write disjoint layers
++
++> **HALTED 2026-08-19 on a precondition this phase did not state — discovered
++> while implementing 2.1, and recorded rather than assumed away.** The partition
++> reduces `<repo>/.claude/` from 111 rules and 338 skills to **16 rules and zero
++> skills**. Every artefact it removes is then delivered *only* by the global
++> layer — so the phase silently assumes **the global install is present and
++> current on every machine that opens this repository.** It is not stated
++> anywhere, nothing checks it, and where it fails the consequence is not a token
++> cost but an **under-governed checkout**: a fresh clone with no global install
++> would receive 16 rules and no skills, where it receives 111 and 338 today.
++>
++> That is the same class of unstated-assumption failure that produced two refuted
++> drafts in this roadmap's own inbox, so it gets a precondition step and a blocker
++> rather than a best guess. `process-full` halt condition 4 —
++> scope-out-of-roadmap work discovered.
++
++- [ ] **2.0** State and check the precondition the partition rests on: a machine
++      that holds the project layer must also hold a current global layer, and
++      something must say so when it does not. Decide where that check lives and
++      what it does on failure — refuse to project, warn, or project the full set
++      as a fallback.
++      **Blocked on `partition-requires-global-layer`.**
++      `verify:` a checkout with no global rules layer produces a stated outcome
++      rather than a silently reduced one.
++- [~] **2.1** The project projection emits only exclusively-package-only
++      artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
++      carries none. The predicate goes beside `rule_in_scope`
++      (`condense.ts:1111`) — specifically beside `_scoped_rule_basenames()`
++      (`condense.ts:1106-1122`), which is the selection this phase narrows — not
++      into a new subsystem.
++      `verify:` after `task sync && task generate-tools`, the project rule count
++      is 16 and the project skill count is 0, and every one of the 16 is
++      exclusively `[agent-config-maintainer]`.
++      **Blocked on `partition-requires-global-layer` (2.0).**
++- [~] **2.2** The global install excludes exclusively-package-only artefacts, so
++      the partition holds from the other side too and a re-install cannot
++      re-create the overlap.
++      `verify:` a global install carries none of the 16.
++      **Blocked on `partition-requires-global-layer` (2.0).**
++- [~] **2.3** Re-measure standing delivery and the overlap after 2.1, and record
++      both against the pre-partition figures.
++      `verify:` `check_standing_rule_delivery` reports overlap 0; the total is
++      recorded whether or not it clears the 110,000 cap, because the residue
++      belongs to body length and not to this roadmap.
++      **Blocked on 2.1.**
++
++**AC-2:** overlap is zero for rules and skills, from either producer, and the
++project layer contains exactly the package-only set.
++
++## Phase 3 — Stop the two surfaces that call duplication free
++
++- [x] **3.1** `scope_guard.sh` reports the cost. `WARN` means "same version,
++      therefore fine" today; it must carry the overlap count per type. The verdict
++      vocabulary is unchanged; the caller keeps deciding.
++      `verify:` the guard names an overlap count for a two-scope layout.
++      **DONE 2026-08-19.** `count_overlap()` added; WARN lines gain an **appended**
++      field 6, so every existing field-indexed consumer keeps working — verified
++      that `install.sh` parses with `awk -F'\t' '$1=="WARN" {... $2,$3,$4}'`, which
++      an appended field cannot break. The header contract documents field 6 and
++      replaces the refuted "Same content; duplicate registration but no drift"
++      wording with the measurement. `install.sh`'s own WARN message said "(same
++      version, no drift)" and now states the doubling with the per-tool count.
++      **`-1` is returned rather than `0` when the count cannot be taken** — the
++      copilot probe compares a single file, not a directory, and reporting "0
++      overlap" for "did not look" is how a gate starts reading as coverage.
++      Verified across all four branches by sourcing the script (it guards `main`
++      behind `BASH_SOURCE`): 3 shared of 6 → `3`, two empty dirs → `0`,
++      non-directory → `-1`, missing path → `-1`. And the counter **independently
++      reproduces the census**: 110 rules, 290 skills on the live layers.
++      **Honest gap:** no automated test covers this shell guard — none existed
++      before this change either — so the verification above is manual and
++      reproducible rather than pinned. A regression here would not red CI.
++- [x] **3.2** Correct `docs/contracts/install-scopes.md:28`, which states the
++      refuted premise as policy, and point it at the partition invariant.
++      `verify:` `./scripts-run src/scripts/check_references` green.
++      **DONE 2026-08-19** — the WARN row now reads "No drift, but **not free**"
++      with the overlap count, and says in as many words what the old wording
++      taught. A paragraph above the installer section carries the measurement and
++      links the census and ADR-235.
++
++**AC-3:** neither the guard nor the contract can be read as saying that
++same-version duplication is free.
++
++## Phase 4 — One producer-agnostic invariant check
++
++- [x] **4.1** Ship a check that asserts the partition for **all** artefact types
++      — rules, skills, commands, agents — independent of which producer wrote
++      either layer, reporting `paths:` scope defeat separately from raw overlap
++      because the two need different remedies.
++      `verify:` the check reports overlap 0 after Phase 2 and reproduces a
++      non-zero count on a deliberately re-created overlap.
++      **DONE 2026-08-19 —** `src/scripts/check_single_delivery.ts`.
++      **It found a third duplicated type on its first run: 40 commands.** The
++      census's first version read `commands 93 / 0 / 0` because it was taken in the
++      stale main checkout where no commands were projected; against a fresh
++      worktree it is 93 / 40 with **40 in both**. Total delivered twice is
++      therefore **440**, not 400, and the census is corrected.
++      **Reports by default, `--enforce` exits 1.** Deliberate: the invariant is not
++      true while Phase 2 is halted, and a blocking default would red every run on a
++      defect nobody can currently fix — which is how a gate teaches readers to
++      ignore it. The zero-overlap half of the verify above is therefore **pending
++      Phase 2** and is stated as pending rather than claimed.
++      Six paths verified with real exit codes — captured **without a pipe**, after
++      a first attempt reported 0 for every case because `$?` after `| tail` is
++      tail's: live report-only 0 · live `--enforce` 1 · disjoint layers `--enforce`
++      0 · **read-nothing `--enforce` 1** · unknown flag 1 · `--global` without a
++      value 1. The read-nothing case is the one that matters: a gate that compared
++      nothing must not pass, and it does not.
++      Two defects in the first draft were found by reading its own output:
++      `types_compared` printed **-2** (it subtracted absent LAYERS from TYPES), and
++      the exit-code verification was worthless for the reason above. Both fixed,
++      and the field now prints `N of 4`.
++- [x] **4.2** `task generate-tools` states the consequence it creates: it writes
++      one layer and is silent about the other existing.
++      `verify:` generating while the other layer holds an overlapping name prints
++      the count and points at the check.
++      **DONE 2026-08-19** — `_warn_layer_overlap()` in `condense.ts`, after the
++      summary. Verified on a real run: `⚠️ a global layer holds the same names
++      (rules=110 skills=290 commands=40)`, the same figures the census and
++      `check_single_delivery` report independently.
++      **Advisory, never failing.** `generate-tools` is the normal build step, and
++      failing it on a topology the operator may not be able to change today would
++      make the build unusable rather than the duplication visible. The check that
++      can refuse is `check_single_delivery --enforce`.
++      It skips silently when one layer is absent — nothing is doubled there, and a
++      warning would be noise on exactly the topology this roadmap wants.
++- [ ] **4.3** Bind the check where the person who can act on it sees it.
++      **Blocked on `overlap-check-binding-surface`.**
++      `verify:` the binding is named and a deliberate overlap surfaces there.
++
++**AC-4:** the invariant is machine-checked, not maintained by hand.
++
++## Phase 5 — The residue the partition does not resolve
++
++Both `[~]`: authored here, decided elsewhere. Never started.
++
++- [~] **5.1** The 4 project-only rules that carry `paths:` — `no-roadmap-references`,
++      `rule-type-governance`, `skill-quality`, `source-confidentiality` — stop
++      surviving `/compact` once their unscoped global twin is gone.
++      **Blocked on `compact-survival-of-package-only-rules`.**
++- [~] **5.2** Whether any host mechanism suppresses a *skill* registration, for
++      the case where a consumer legitimately holds both layers.
++      **Blocked on `host-skill-suppression-capability`.**
++
++**AC-5:** each carries a recorded decision or a recorded null; neither is closed
++by an agent's inference.
++
++## Honest null consequence
++
++If Phase 5.1 resolves that those 4 must keep an unscoped copy to survive
++compaction, the partition is exact for 113 of 117 rules and all 290 skills, and
++4 rules keep a deliberate, documented second copy. Publish that residue rather
++than reporting a clean invariant that does not hold.
++
++## Risk Register
++
++<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The partition removes an obligation from a layer that was silently carrying it | product | The whole estate's value is that governed text arrives. A predicate that mis-classifies one rule drops it from the layer a session actually loads, and the failure is silent | The predicate reads `workspaces:`, which already governs consumer delivery, so it is not a new judgement; 2.1's verify asserts the count AND that every survivor is exclusively package-only; Phase 4 machine-checks the invariant afterwards | Phase 2 — Make the producers write disjoint layers |
++| 2 | Compaction survival is lost for four Iron-Law rules | product | Once the unscoped global twin is gone, the 4 remaining project-only `paths:`-carrying rules are path-scoped only, and ADR-227:79-80 records that path-scoped rules are not re-injected after `/compact` | The 4 are named, 5.1 is `[~]` behind a blocker so no run picks a direction silently, and the Honest null consequence names the documented-second-copy outcome | Phase 5 — The residue the partition does not resolve |
++| 3 | A census is taken on a stale projection and the design leans on it | product | This happened twice in the inbox that produced this roadmap: a 5-July symlink tree reported 24 global-only rules where a fresh tree reports 5 | Phase 0.1 makes projection shape a required artefact field, and the stale-vs-fresh table stays in this file rather than being deleted after the correction | Phase 0 — Pin the measurement so no fifth draft repeats the fourth's error |
++| 4 | ADR-226 is treated as merely refuted | product | Its secondary argument moved (0 prose-divergent on a fresh tree) while its primary one — `source-of-truth.md` project-only, structural generated-vs-installed divergence — was confirmed; a successor that claims the record was wrong would discard reasoning that is still correct | 1.1 requires the successor to state what changed as a topology DECISION, and the partition keeps `source-of-truth` in the project layer exactly where ADR-226 wanted it | Phase 1 — Replace ADR-226 |
++| 5 | A new check joins the set nothing invokes | implementation | `check_standing_rule_delivery` measures this defect, sits in `ci-fast` which no workflow runs, and has reported 185 % to nobody; `check_rule_projection_integrity` is inert with zero tools selected | 4.3 is blocked on an explicit binding decision rather than defaulted, and 0.2 records the second hole so it is not rediscovered as a surprise | Phase 4 — One producer-agnostic invariant check |
++| 6 | A checkout without a current global layer is left under-governed | product | The partition delivers all but 16 rules and all 290 skills from the global layer alone, so a fresh clone, a CI runner or a colleague who never ran the installer would drop from 111 rules and 338 skills to 16 and 0 — silently. This is the risk that HALTED Phase 2: it was not in the phase when it was written, and it was found by implementing it | Phase 2.0 makes the precondition an explicit step, blocker `partition-requires-global-layer` reserves the fallback choice, and the recommendation makes the partition conditional on a machine holding both layers so omission cannot cost governance | Phase 2 — Make the producers write disjoint layers |
++| 7 | The projector change reds a wide set of generated-output gates | implementation | Changing what the project layer emits moves counts, byte-stability baselines and projection-integrity readings at once, which is the classic multi-gate cascade | 2.1 is one predicate beside an existing filter rather than a restructure, 2.3 re-measures immediately, and the phase order puts the measurement and the ADR before the mechanism so a halt leaves a coherent partial state | Phase 2 — Make the producers write disjoint layers |
++
++## Blockers
++
++### blocker: partition-requires-global-layer
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 2 (a design decision with an under-governance failure mode)
++- **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
++  Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two
++  cost-classification surfaces and the invariant check all land while the
++  partition itself waits.
++- **The question:** the partition leaves `<repo>/.claude/` with 16 rules and zero
++  skills, so every other artefact is delivered *only* by the global layer. What
++  happens on a machine that has the project layer and no current global one — a
++  fresh clone, a CI runner, a colleague who never ran the installer? Today such a
++  checkout receives 111 rules and 338 skills; after the partition it would receive
++  16 and 0, and nothing would say so.
++- **Why an agent may not decide it:** the failure mode is an under-governed
++  session, which is the one class of regression this estate exists to prevent, and
++  the fallback choice (refuse / warn / project the full set) is a trade between
++  silent under-governance and silently re-creating the duplication. Both are
++  operator calls.
++- **What to do:** pick one of three enumerated options and record it.
++  **(a)** `task generate-tools` refuses to write a partitioned project layer when
++  `~/.claude/rules/` is absent or older than the installed release, pointing at
++  `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
++  back to projecting the full set, so a machine without the global layer keeps
++  today's behaviour and only a machine with both gets the partition. Probe the
++  current state with
++  `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
++- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a
++  maintainer decision.)** Option (c). It makes the partition a *property of a
++  machine that has both layers* rather than a global behaviour change, so no
++  checkout can lose governance by omission, and the duplication it leaves behind
++  on a single-layer machine is not duplication at all — there is only one layer
++  there. (a) turns a missing optional install into a hard failure of the normal
++  build; (b) is the silent under-governance itself.
++- **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
++  is the safe direction of this particular non-decision, which is why the phase
++  halts rather than shipping a default.
++- **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and
++  2.0's verify can be run against it.
++
++### blocker: compact-survival-of-package-only-rules
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 2 (a correctness trade-off with no dominant option)
++- **Blocks:** Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and
++  ship the partition; 4.1 deliberately counts scope defeat separately so this
++  decision has a number.
++- **The question:** `no-roadmap-references`, `rule-type-governance`,
++  `skill-quality` and `source-confidentiality` are exclusively package-only AND
++  carry `paths:`. Under the partition their unscoped global twin disappears, so
++  they become path-scoped only and stop surviving `/compact` (ADR-227:79-80).
++  Three of the four carry Iron Laws. Which property is kept?
++- **What to do:** run
++  `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
++  to confirm the set, then pick one of three enumerated options and record it:
++  **(a)** delete the `paths:` key from those four in `src/rules/` so they load
++  unconditionally in the project layer; **(b)** keep `paths:` and accept that they
++  do not survive compaction; **(c)** grant those four a documented exception to
++  the partition and keep an unscoped global copy.
++- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a
++  maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as
++  a corpus lever, so the scoping buys little, while an Iron Law vanishing after a
++  compact is a silent correctness failure. (a) also keeps the partition exact,
++  where (c) puts a permanent exception into an invariant Phase 4 has to check.
++- **If you do nothing:** Phase 2 ships and those four silently lose compaction
++  survival — the worst of the three outcomes, because it is the one nobody chose.
++- **Resolved when:** the option is recorded in the successor ADR or an amendment
++  to ADR-227.
++
++### blocker: host-skill-suppression-capability
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 3 (host capability — needs one first-party observation)
++- **Blocks:** Phase 5 step 5.2 only. The partition removes the duplicate skills
++  at the producer, so nothing in Phases 0-4 waits on this; it matters for a
++  consumer who legitimately holds both layers.
++- **The question:** does `claudeMdExcludes` — or anything else the host offers —
++  suppress a *skill* registration? The tree records it as file-glob capable for
++  instruction files (`agents/evidence/analysis/claude-code-rules-dir-contract.md:81-92`,
++  where the host's own example excludes a single file), but the skill catalogue is
++  a different surface and nothing establishes the key reaches it.
++- **What to do:** on a machine holding both layers, add
++  `"claudeMdExcludes": ["<abs>/.claude/skills/**"]` to `~/.claude/settings.json`,
++  start a session, and run the `capture_skill_catalogue` probe
++  (`./scripts-run src/scripts/capture_skill_catalogue`) to see whether the
++  excluded entries are absent from the delivered catalogue. Record the host
++  version with the result. Either outcome closes this.
++- **Recommendation:** **(agent-drafted 2026-08-19.)** Probe before designing.
++  If the key does not reach the catalogue, the producer-side partition this
++  roadmap ships is the only available lever and 5.2 closes as a recorded null
++  rather than as work.
++- **If you do nothing:** consumers who hold both layers keep paying duplicate
++  catalogue entries, and this roadmap's win stays maintainer-local.
++- **Resolved when:** the capability is recorded with its host version and source.
++
++### blocker: overlap-check-binding-surface
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 2 (a decision whose consequence the operator owns)
++- **Blocks:** Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
++- **The question:** preflight, a session-start surface, or CI?
++- **What to do:** pick one and register the check there — `task preflight` via
++  `taskfiles/`, a `session_start` concern in `src/scripts/hook_manifest.yaml`, or
++  a workflow under `.github/workflows/`. Then confirm a deliberately-created
++  overlap surfaces on the chosen one.
++- **Recommendation:** **(agent-drafted 2026-08-19.)** Preflight. The overlap is a
++  property of the developer machine rather than of the branch, so CI would measure
++  a topology no contributor has and be green while every local session pays. Two
++  gates in this area are already unreachable where it matters, so a third unbound
++  one would read as coverage while adding none.
++- **If you do nothing:** Phase 4 ships a check with the same reach as the two that
++  already exist, and a re-created overlap goes unnoticed.
++- **Resolved when:** the surface is named and 4.3's verify runs against it.
++
++## Acceptance criteria
++
++- [ ] The fresh-projection census is committed with its projection shape as a
++      required field.
++- [ ] ADR-226 carries `superseded_by`, and the successor records the partition
++      decision and its owner.
++- [ ] `<repo>/.claude/rules/` carries exactly the exclusively-package-only set and
++      `<repo>/.claude/skills/` is empty, after a normal
++      `task sync && task generate-tools`.
++- [ ] `check_standing_rule_delivery` reports overlap 0.
++- [ ] Neither `scope_guard.sh` nor `install-scopes.md` states that same-version
++      duplication is free.
++- [ ] One check asserts the partition for every artefact type, counting scope
++      defeat separately.
++- [ ] Both Phase-5 questions carry a recorded decision or a recorded null.
++
++## CUT list — do not re-litigate
++
++- **Deleting `~/.claude/rules/` or `~/.claude/skills/`.** Hard Floor. Cut.
++- **`install --layer` as the remedy.** Superseded by the partition, and
++  unavailable anyway: the gate refuses over 110-way divergence. Cut.
++- **Keeping both layers because ADR-226 said so.** Replaced by an owner decision;
++  Phase 1 records the replacement rather than ignoring the record. Cut.
++- **Reading "0 prose-divergent" as "safe to suppress".** The ac draft did, on a
++  stale tree where the figure was 0 for the opposite reason. Cut, and recorded
++  rather than deleted.
++- **`paths:` as a corpus-shrinking lever.** ADR-227 found it saturated. Cut.
++- **A census without its projection shape.** The failure that produced two of the
++  four inbox drafts. Cut.
+diff --git a/docs/contracts/install-scopes.md b/docs/contracts/install-scopes.md
+index a74fed67e4677ef62bc1e081dfe6fd71311175a2..e3198c1c3e2231b6469504e4727528ac801b19b6 100644
+--- a/docs/contracts/install-scopes.md
++++ b/docs/contracts/install-scopes.md
+@@ -20,12 +20,14 @@ keep-beta-until: 2026-09-04
+ 
+ Installing at **both** scopes simultaneously is the failure mode the canonical-channel contract prevents — the host harness loads both registrations, and any version drift surfaces as duplicate skills with stale frontmatter (the 2026-05-25 bug).
+ 
++**Drift is not the only cost, and it is not the larger one.** A two-scope install at *identical* versions carries no drift and still doubles what reaches the model, because the host loads both registrations with no dedup. Measured 2026-08-19 on a freshly regenerated maintainer projection: **110 rules and 290 skills delivered twice**, standing rule prose at **203,873 tok against a 110,000 cap (185.3 %)**, roughly 90k of it redundant. Full census, with the projection shape the figures depend on: [`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md). The invariant this contract works toward — every artefact delivered from exactly one layer — is [ADR-235](../decisions/ADR-235-one-artefact-one-layer.md).
++
+ ## The installer enforces this
+ 
+ `scripts/install.sh` runs `scripts/_lib/scope_guard.sh` before any file write:
+ 
+ 1. **`OK`** — no install at the other scope. Proceed.
+-2. **`WARN`** — install at the other scope, same version. Same content; duplicate registration but no drift. Surface a warning, proceed.
++2. **`WARN`** — install at the other scope, same version. No drift, but **not free**: the duplicate registration is delivered twice, and the warning states the per-type overlap count so the cost is visible at the moment of the decision. Surface it, proceed. (This row used to read "Same content; duplicate registration but no drift", which taught every reader that identical copies cost nothing — refuted by the measurement above.)
+ 3. **`DRIFT`** — install at the other scope, different version. Block with a numbered-options prompt:
+ 
+ ```
+diff --git a/docs/decisions/ADR-226-package-repo-keeps-both-rule-layers.md b/docs/decisions/ADR-226-package-repo-keeps-both-rule-layers.md
+index d3cf5f7380edf24e863d87e4149c495fbb43d165..302b123b0587c98d08aec284d4c368374426540e 100644
+--- a/docs/decisions/ADR-226-package-repo-keeps-both-rule-layers.md
++++ b/docs/decisions/ADR-226-package-repo-keeps-both-rule-layers.md
+@@ -1,10 +1,10 @@
+ ---
+ adr: 226
+-status: accepted
++status: superseded
+ date: 2026-08-13
+ decision: package-repo-keeps-both-rule-layers
+ supersedes: —
+-superseded_by: —
++superseded_by: ADR-235
+ phase: —
+ type: structural
+ review_trigger: >-
+@@ -24,7 +24,31 @@ review_trigger: >-
+ 
+ ## Status
+ 
+-**Accepted** · 2026-08-13. Records why the standing-rule-delivery remedy the
++**Superseded** · by [ADR-235](ADR-235-one-artefact-one-layer.md), 2026-08-19.
++Accepted 2026-08-13.
++
++**What replaced it, and what did not.** ADR-235 partitions the two layers — every
++artefact is delivered from exactly one, chosen by `workspaces:` — so the question
++this record answered ("which layer wins") no longer arises. That is an owner
++decision about delivery topology, **not** a refutation of the reasoning below:
++both halves were re-verified on a freshly regenerated tree and both hold.
++`source-of-truth.md` is still the only project-only rule, and ADR-235 keeps it in
++the project layer, which is what this record was protecting. The structural
++generated-vs-installed divergence is confirmed and larger — 2 rules then, **110**
++now.
++
++**Two figures here have expired; do not re-derive them from this file.**
++`--layer=project` is recorded below as costing 22 rules — on a fresh tree it costs
++**5**. And the "two shared rules already differ in body" reason is now **0** prose
++divergence; the gate still refuses a suppression, but over frontmatter rather than
++prose. Neither moved the conclusion at the time, and neither survives as a number.
++
++Read together with
++[`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md),
++whose mandatory projection-shape field exists because a stale reading of these same
++two layers produced two refuted analyses.
++
++Original status note, kept: records why the standing-rule-delivery remedy the
+ tooling recommends is declined *in this repository specifically*, so the next
+ session that reads the warning does not re-derive the answer or apply it and
+ lose a rule.
+diff --git a/docs/decisions/ADR-235-one-artefact-one-layer.md b/docs/decisions/ADR-235-one-artefact-one-layer.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..80e0b2bfb8f3b0ac56e54c3f6b7f0494e0d05da0
+--- /dev/null
++++ b/docs/decisions/ADR-235-one-artefact-one-layer.md
+@@ -0,0 +1,182 @@
++---
++adr: 235
++status: accepted
++date: 2026-08-19
++decision: one-artefact-one-layer
++supersedes: ADR-226
++superseded_by: —
++phase: —
++type: structural
++review_trigger: >-
++  Reopens on either of two observations, not on a calendar. First — the host gains
++  real dedup across `~/.claude/**` and `<project>/.claude/**`, which would make the
++  partition unnecessary rather than wrong, and the cheaper topology would then be
++  whatever the host prefers. Second — a package-only artefact is found that a
++  consumer genuinely needs, which would mean `workspaces:` is the wrong partition
++  key and the predicate has to move to something else. A third, weaker trigger: the
++  `/compact` semantics recorded in ADR-227 change, since the one residue this
++  record knowingly leaves is four package-only rules whose compaction survival
++  depends on them.
++---
++
++# ADR-235 — One artefact, one layer: the two rule/skill layers are partitioned, not duplicated
++
++## Status
++
++**Accepted** · 2026-08-19. **Supersedes [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md)**,
++which decided that this repository keeps both rule layers. That decision is
++replaced by an owner decision about delivery topology, not by a refutation of its
++reasoning — see § What ADR-226 got right.
++
++## Context
++
++Claude Code loads `~/.claude/**` **and** `<project>/.claude/**`, both, user layer
++first, with no dedup. Measured 2026-08-19 on a **freshly regenerated** projection
++at `b490f3845` (full census, with its mandatory projection-shape field, in
++[`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md)):
++
++```
++rules   115 global · 111 project · 110 in BOTH ·  5 global-only · 1 project-only
++skills  298 global · 338 project · 290 in BOTH ·  8 global-only · 48 project-only
++standing rule prose   203,873 tok / 110,000 cap  (185.3 %)
++shared rules          0 prose-divergent · 110 frontmatter-divergent · 7 paths:-disagreeing
++```
++
++ADR-226's remedy question was **which layer wins**, because `install --layer` —
++the tool the error message recommends — offers exactly that choice. Two facts
++measured since make that framing unusable:
++
++1. **`install --layer` is not available on a fresh tree at all.** The gate refuses
++   a suppression over divergence, and a freshly emitted project layer is 110-way
++   frontmatter-divergent from the installed one. The remedy the tooling prints
++   cannot be taken here.
++2. **Both directions of the choice lose something.** `--layer=global` drops
++   `source-of-truth.md`, which exists only in the project layer by design;
++   `--layer=project` drops the five global-only rules. That is the asymmetry
++   ADR-226 identified, and it is real.
++
++## Decision
++
++**Every rule and every skill is delivered from exactly one layer.** The layer is
++decided by scope, not by preference:
++
++- An artefact that exists **only** for this package — `workspaces:
++  [agent-config-maintainer]` and nothing else — lives in the **project** layer and
++  is **not** installed globally.
++- Every other artefact lives in the **global** layer and is **not** projected into
++  this repository.
++- **No artefact appears in both.** Overlap is zero by construction, not by
++  suppression.
++
++Read off the field that already governs consumer delivery, the partition is:
++
++| | project layer | global layer |
++|---|---:|---:|
++| rules (117) | **16** | 101 |
++| skills (290) | **0** | 290 |
++
++**Zero package-only skills is a finding, not a parse error.** No skill declares
++`workspaces: [agent-config-maintainer]` alone, so this repository's
++`.claude/skills/` is empty under the partition and all 290 duplicate catalogue
++entries disappear in one move.
++
++This is the **operator's decision**, taken 2026-08-19 in their own framing: this
++package does not need its own global rules; what exists only for the package may
++be kept locally and not installed globally, and the reverse; the duplicates stop;
++and ADR-226 is to be replaced rather than treated as binding. It is recorded as a
++decision rather than derived as a conclusion, because the measurement alone does
++not select it — the measurement rules out `--layer`, and an owner chose partition
++over the alternatives.
++
++## What ADR-226 got right, and is kept
++
++Superseding it is not a claim that it was wrong. Both halves of its reasoning were
++**re-verified on the fresh tree** and both hold:
++
++- **`source-of-truth.md` is project-only** — still exactly 1 project-only rule,
++  still `workspaces: [agent-config-maintainer]`. The partition keeps it in the
++  project layer, which is where ADR-226 wanted it. Its concern is satisfied rather
++  than overruled.
++- **Divergence here is structural, not a defect to repair.** The project layer is
++  generated from `src/`; the global layer comes from an installed release; this
++  repository is ahead of its own release by construction, so "refresh until the
++  layers agree" has no fixed point. Confirmed and strengthened: divergence went
++  from 2 rules to **110**.
++
++One supporting figure of ADR-226 has expired and it is named so nobody re-derives
++it: it recorded `--layer=project` as costing **22** rules and cited two
++body-divergent rules as an additional reason the gate would refuse. On a fresh
++tree the cost is **5** rules and prose divergence is **0**. Neither moves the
++conclusion — the gate still refuses, now over frontmatter rather than prose, and
++the asymmetry still exists, now smaller.
++
++**A prior draft of this reconciliation read ADR-226's asymmetry as "24 global-only
++live obligations including `secret-vcs-guard` and `session-canary`".** That was a
++stale-projection artefact: those rules are in **both** layers on a fresh tree. It
++is recorded here because the number circulated in three parallel analyses.
++
++## Consequences
++
++- **The producers change, not the filesystem.** The project projection stops
++  emitting global-bound artefacts; the global install stops carrying package-only
++  ones. Nothing under `~/.claude/` is deleted by this record — that would be a
++  Hard-Floor action per `non-destructive-by-default`.
++- **`install --layer` becomes irrelevant to this repository** rather than declined.
++  It stays the right tool for a consumer who ends up with two installs.
++- **The invariant needs a machine check, and the precedent here is bad.**
++  `check_standing_rule_delivery` measures this exact defect and is registered only
++  in `ci-fast`, which no workflow invokes; `check_rule_projection_integrity` is
++  inert when `agents/.agent-tools.yml` selects zero tools, which is the
++  maintainer's normal local state. A third unbound gate would read as coverage
++  while adding none, so the binding surface is an explicit decision in
++  `road-to-single-delivery` Phase 4 rather than a default.
++- **The partition has a precondition, and it was not obvious when this record was
++  written.** Every artefact the project layer stops carrying is then delivered
++  *only* by the global layer, so a machine with the project layer and no current
++  global one — a fresh clone, a CI runner, a colleague who never ran the installer
++  — would receive **16 rules and no skills** where it receives 111 and 338 today.
++  The failure mode is not a token cost but an **under-governed session**.
++  Discovered while implementing the mechanism and recorded rather than assumed
++  away; `road-to-single-delivery` Phase 2 is **halted** on blocker
++  `partition-requires-global-layer` until the fallback is chosen (refuse / warn /
++  project the full set). The agent-drafted recommendation is to make the partition
++  a property of a machine that holds **both** layers, so no checkout can lose
++  governance by omission.
++- **One residue is knowingly left open.** Four package-only rules carry `paths:` —
++  `no-roadmap-references`, `rule-type-governance`, `skill-quality`,
++  `source-confidentiality`. Once their unscoped global twin is gone they are
++  path-scoped only, and ADR-227:79-80 records that path-scoped rules are **not
++  re-injected after `/compact`**. Three of the four carry Iron Laws. The partition
++  narrows this from seven rules to four; it does not answer it. Blocker
++  `compact-survival-of-package-only-rules` carries three enumerated options and a
++  recommendation, and the direction is the maintainer's.
++- **Consumers are unaffected by this record.** The 16 package-only artefacts are
++  already excluded from consumer installs by `workspaces:`, so the partition moves
++  this repository's topology only. Any consumer-visible default change stays
++  permission-gated.
++
++## Alternatives considered
++
++- **Keep both layers (ADR-226 as it stands).** Rejected by the operator. Its cost
++  is now measured at 185.3 % of the standing cap plus 290 duplicate catalogue
++  entries, and the duplication grew rather than shrank between the two readings.
++- **`install --layer=global` or `=project`.** Unavailable — the gate refuses over
++  110-way divergence — and lossy in both directions even if it were.
++- **Per-artefact suppression via `claudeMdExcludes`.** The key *is* file-glob
++  capable (`claude-code-rules-dir-contract.md:81-92`; the host's own example
++  excludes a single file), so this was a genuine candidate. Rejected as the primary
++  mechanism because it is a *consumer-machine settings* lever maintained per
++  machine, while the partition is a property of what the producers write and
++  therefore holds for every checkout without a settings write. It remains the
++  fallback for a consumer holding two installs.
++- **A delivery manifest with logical artefact identity.** Proposed by one of the
++  inbox drafts. Deferred as premature: identity is only hard when both layers
++  legitimately hold the same artefact, which the partition removes by construction.
++
++## References
++
++- [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md) — superseded by this record.
++- [ADR-227](ADR-227-paths-scoping-is-saturated-not-a-corpus-lever.md) — the `/compact` semantics the residue depends on.
++- [ADR-228](ADR-228-global-install-does-not-emit-paths.md) — why the global layer carries no `paths:`.
++- [`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md) — the measurement, with its projection shape.
++- `road-to-single-delivery` — the roadmap that implements this record.
+diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
+index 23f4990d94fe19a7d9fd5759b6568d5e1d9a1d11..30d479f9bfcdb970508de8688afd0fbbf8268c57 100644
+--- a/docs/decisions/INDEX.md
++++ b/docs/decisions/INDEX.md
+@@ -168,7 +168,7 @@ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ | [ADR-223](ADR-223-no-required-check-demotion-on-cost-grounds.md) | No Required Check Demotion On Cost Grounds | accepted | 2026-08-11 | — |
+ | [ADR-224](ADR-224-gate-scoped-solo-attendance-floor.md) | Gate Scoped Solo Attendance Floor | proposed | 2026-08-11 | — |
+ | [ADR-225](ADR-225-cross-corpus-proposal-verification.md) | Cross Corpus Proposal Verification | accepted | 2026-08-12 | — |
+-| [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md) | Package Repo Keeps Both Rule Layers | accepted | 2026-08-13 | — |
++| [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md) | Package Repo Keeps Both Rule Layers | superseded | 2026-08-13 | — |
+ | [ADR-227](ADR-227-paths-scoping-is-saturated-not-a-corpus-lever.md) | Paths Scoping Is Saturated Not A Corpus Lever | accepted | 2026-08-13 | — |
+ | [ADR-228](ADR-228-global-install-does-not-emit-paths.md) | Global Install Does Not Emit Paths | accepted | 2026-08-13 | — |
+ | [ADR-229](ADR-229-worktrees-are-instruction-only.md) | Worktrees Are Instruction Only | accepted | 2026-08-13 | — |
+@@ -177,6 +177,7 @@ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ | [ADR-232](ADR-232-frontier-tier-reopened.md) | Frontier Tier Reopened | accepted | 2026-08-15 | — |
+ | [ADR-233](ADR-233-org-pack-provenance-class.md) | Org Pack Provenance Class | accepted | 2026-08-19 | — |
+ | [ADR-234](ADR-234-curated-memory-verification-and-eviction.md) | Curated Memory Verification And Eviction | accepted | 2026-08-19 | — |
++| [ADR-235](ADR-235-one-artefact-one-layer.md) | One Artefact One Layer | accepted | 2026-08-19 | ADR-226 |
+ 
+ ## Unnumbered (legacy)
+ 
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index 06bb0c84d06f6c716d4c04610cfcdee97359630e..16c221de8f1198e8b3c73090905e9870c7aab19d 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -16,9 +16,9 @@
+     ]
+   },
+   "baseline": {
+-    "active_roadmaps": 33,
++    "active_roadmaps": 34,
+     "later_roadmaps": 49,
+-    "open_blockers": 70
++    "open_blockers": 74
+   },
+   "baseline_history": [
+     {
+@@ -125,6 +125,13 @@
+       "later_roadmaps": 49,
+       "open_blockers": 71,
+       "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
++    },
++    {
++      "at": "2026-08-19",
++      "active_roadmaps": 34,
++      "later_roadmaps": 49,
++      "open_blockers": 74,
++      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved. This branch adopts road-to-single-delivery (+1 active) and opens four blockers on it (+4); the trunk meanwhile WALKED DOWN by archiving road-to-inbox-harvest-2026-08-b-dispatch-safety. Taking this branch authored numbers through the merge would have silently pocketed that archival as headroom, which is the loose-ratchet failure two earlier entries in this file record from the other direction. So the trunk file was taken whole and these numbers are the measurement on the merged tree: 33 + 1 = 34 active, 49 later unchanged, 70 + 4 = 74 blockers. WHAT THE +4 BUYS, since it is the larger half: partition-requires-global-layer HALTED Phase 2 mid-implementation - the partition leaves the project layer with 16 rules and zero skills, so a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0, which is an under-governed session rather than a token cost. compact-survival-of-package-only-rules carries four rules that stop surviving /compact once their unscoped global twin is gone, three of them Iron-Law bearing. overlap-check-binding-surface exists because two gates in this area already report to nobody. host-skill-suppression-capability is a host probe whose negative answer closes it. Each carries enumerated options and a recommendation rather than a flag. later_roadmaps unchanged at 49 is the check that nothing was parked to pay for any of this."
+     }
+   ],
+   "target": {
+diff --git a/src/scripts/_lib/scope_guard.sh b/src/scripts/_lib/scope_guard.sh
+index 01967f4b0a63dfd9059839e840de6a1223c0b176..1ea150b143f80bdb5fc9b84fb8fdd5eff4bc0059 100755
+--- a/src/scripts/_lib/scope_guard.sh
++++ b/src/scripts/_lib/scope_guard.sh
+@@ -12,13 +12,28 @@
+ # Verdicts (per the roadmap contract):
+ #   OK     — no install at the other scope; the install can proceed.
+ #   WARN   — install at the other scope, SAME version as the one being installed.
+-#            Same content; duplicate registration but no drift.
++#            No drift — and NOT free. The host loads both registrations with no
++#            dedup, so every shared artefact is delivered twice. This verdict used
++#            to read "Same content; duplicate registration but no drift", which
++#            classified duplication by DRIFT RISK and never by CONTEXT COST, and
++#            so taught every reader that identical copies cost nothing. Measured
++#            2026-08-19 on a freshly regenerated maintainer projection: 110 rules
++#            and 290 skills delivered twice, 203,873 tok of standing rule prose
++#            against a 110,000 cap. See ADR-235 and
++#            agents/evidence/analysis/single-delivery-partition-census.md.
+ #   DRIFT  — install at the other scope, DIFFERENT version (or unreadable).
+ #            Drift will produce the 2026-05-25 failure mode (stale frontmatter
+ #            registered alongside fresh frontmatter).
+ #
+ # Output shape (line-oriented, parseable by install.sh):
+-#   <verdict>\t<tool-id>\t<other-scope-path>\t<other-version>\t<this-version>
++#   <verdict>\t<tool-id>\t<other-scope-path>\t<other-version>\t<this-version>[\t<overlap>]
++#
++# Field 6 (<overlap>) is emitted on WARN lines only: the number of entry names
++# present in BOTH scope directories — what a same-version duplicate registration
++# actually delivers twice. It is APPENDED rather than inserted, so every existing
++# field-indexed consumer keeps working unchanged. `-1` means the count could not
++# be taken (a path that is not a directory), which is reported rather than
++# silently rendered as 0.
+ #
+ # A final summary line is emitted:
+ #   SUMMARY\t<verdict>\t<count-OK>\t<count-WARN>\t<count-DRIFT>
+@@ -67,6 +82,28 @@ dir_nonempty() {
+     [[ -d "$1" ]] && [[ -n "$(ls -A "$1" 2>/dev/null | head -1)" ]]
+ }
+ 
++# Count entry names present in BOTH scope directories — what a same-version
++# duplicate registration actually delivers twice, which is the cost the WARN
++# verdict used to omit.
++#
++# Returns -1 rather than 0 when the count cannot be taken, because the two are
++# different facts and reporting "0 overlap" for "could not look" is how a gate
++# starts reading as coverage. The copilot probe is the concrete case: it compares
++# a single `copilot-instructions.md` file, not a directory, so -1 is its normal
++# and correct answer.
++count_overlap() {
++    local a="$1" b="$2" n
++    if [[ ! -d "$a" ]] || [[ ! -d "$b" ]]; then
++        printf '%s' '-1'
++        return 0
++    fi
++    n="$(comm -12 \
++            <(cd "$a" && ls -A 2>/dev/null | sort) \
++            <(cd "$b" && ls -A 2>/dev/null | sort) \
++         2>/dev/null | wc -l | tr -d ' ')" || n=''
++    printf '%s' "${n:--1}"
++}
++
+ # Per-tool probe definitions: tool-id, user-scope path, project-scope path.
+ # Project-scope path is relative to "$TARGET_DIR" (or "$HOME/<proj>" for user).
+ probe_tool() {
+@@ -114,7 +151,12 @@ probe_tool() {
+     if [[ "$other_ver" == "unknown" ]] || [[ "$this_ver" == "unknown" ]] || [[ "$other_ver" != "$this_ver" ]]; then
+         printf 'DRIFT\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver"
+     else
+-        printf 'WARN\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver"
++        # Same version, so no drift — but the duplicate registration is delivered
++        # twice, and field 6 is what makes that cost visible at the moment of the
++        # decision instead of only in a token census nobody runs.
++        local overlap
++        overlap="$(count_overlap "$other_path" "$this_scope_path")"
++        printf 'WARN\t%s\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver" "$overlap"
+     fi
+ }
+ 
+diff --git a/src/scripts/check_single_delivery.ts b/src/scripts/check_single_delivery.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..853180d2e6e0f7fc061603d55999d63d3418cc32
+--- /dev/null
++++ b/src/scripts/check_single_delivery.ts
+@@ -0,0 +1,340 @@
++/**
++ * check_single_delivery — assert that no artefact is delivered from both layers.
++ *
++ * THE INVARIANT (ADR-235, one-artefact-one-layer): every rule and every skill is
++ * delivered from exactly ONE layer. Claude Code loads `~/.claude/**` AND
++ * `<project>/.claude/**`, both, user layer first, with no dedup — so an artefact
++ * present in both is delivered twice, in every session, forever.
++ *
++ * WHY THIS EXISTS AS A SEPARATE CHECK, rather than inside a producer. Two
++ * producers write these layers and neither can see the other:
++ *
++ *   - the INSTALLER writes the global layer, and `_gate_rule_layer_overlap`
++ *     (install.ts) checks the overlap at install time — rules only, Claude only,
++ *     and never again afterwards;
++ *   - `task generate-tools` writes the project layer, and contains zero
++ *     references to that gate or to `rule_layer_overlap`.
++ *
++ * So the overlap is created by whichever producer runs LAST, and an install-time
++ * gate cannot see a layer written afterwards. This check is deliberately outside
++ * both: it reads the filesystem and does not care who wrote it.
++ *
++ * WHAT IT COUNTS, and why the two halves are separate:
++ *
++ *   1. RAW OVERLAP — names present in both layers. The token cost.
++ *   2. SCOPE DEFEAT — shared rules where one copy carries `paths:` and the other
++ *      does not. `report_carrier_divergence` names the mechanism: a copy that
++ *      LACKS `paths:` defeats the other copy's scoping, so the rule loads
++ *      unconditionally however carefully the other copy was scoped. This is a
++ *      correctness fact rather than a token fact, and it needs a different
++ *      remedy, so it is never folded into the overlap number.
++ *
++ * REPORT BY DEFAULT, ENFORCE ON REQUEST — and that is not timidity. The
++ * invariant is not true yet: `road-to-single-delivery` Phase 2, which makes the
++ * producers write disjoint layers, is HALTED on blocker
++ * `partition-requires-global-layer`. A blocking default would therefore red every
++ * run on a defect nobody can currently fix, which teaches readers to ignore it —
++ * the exact failure this estate has recorded twice already. Pass `--enforce` once
++ * Phase 2 lands.
++ *
++ * A LAYER THAT DOES NOT EXIST IS NOT A PASS. Where a layer is absent there is no
++ * overlap to find, and saying "invariant holds" would be a gate reading nothing
++ * and reporting green. Absent layers are named, and `--enforce` refuses rather
++ * than passing when BOTH layers of every type are missing.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import process from 'node:process';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { reportScanned } from './_lib/scan_scope.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Artefact types the host loads from both layers. */
++const TYPES = ['rules', 'skills', 'commands', 'agents'] as const;
++type ArtefactType = (typeof TYPES)[number];
++
++export interface TypeReading {
++    type: ArtefactType;
++    /** null when that layer's directory does not exist — distinct from empty. */
++    globalNames: string[] | null;
++    projectNames: string[] | null;
++    both: string[];
++    globalOnly: string[];
++    projectOnly: string[];
++    /** Shared rules whose two copies disagree on `paths:`. Rules only. */
++    scopeDefeat: string[];
++}
++
++function readNames(dir: string): string[] | null {
++    try {
++        if (!fs.statSync(dir).isDirectory()) return null;
++    } catch {
++        return null;
++    }
++    try {
++        return fs.readdirSync(dir).sort();
++    } catch {
++        return null;
++    }
++}
++
++/**
++ * Does this rule file declare a `paths:` key in its frontmatter?
++ *
++ * Frontmatter only, deliberately: a `paths:` mentioned in prose is not a load
++ * schedule, and matching it would manufacture scope-defeat findings out of
++ * documentation.
++ */
++export function declaresPaths(file: string): boolean {
++    let text: string;
++    try {
++        text = fs.readFileSync(file, 'utf8');
++    } catch {
++        return false;
++    }
++    if (!text.startsWith('---')) return false;
++    const end = text.indexOf('\n---', 3);
++    if (end < 0) return false;
++    return /^paths:/m.test(text.slice(3, end));
++}
++
++export function readType(type: ArtefactType, globalRoot: string, projectRoot: string): TypeReading {
++    const gDir = path.join(globalRoot, type);
++    const pDir = path.join(projectRoot, type);
++    const globalNames = readNames(gDir);
++    const projectNames = readNames(pDir);
++    const g = new Set(globalNames ?? []);
++    const p = new Set(projectNames ?? []);
++
++    const both = [...g].filter((n) => p.has(n)).sort();
++    const globalOnly = [...g].filter((n) => !p.has(n)).sort();
++    const projectOnly = [...p].filter((n) => !g.has(n)).sort();
++
++    // Scope defeat is a rules-only property: `paths:` is the one frontmatter key
++    // this host reads as a load schedule.
++    const scopeDefeat =
++        type === 'rules'
++            ? both
++                  .filter((n) => n.endsWith('.md'))
++                  .filter(
++                      (n) =>
++                          declaresPaths(path.join(gDir, n)) !== declaresPaths(path.join(pDir, n)),
++                  )
++                  .sort()
++            : [];
++
++    return { type, globalNames, projectNames, both, globalOnly, projectOnly, scopeDefeat };
++}
++
++export interface Verdict {
++    readings: TypeReading[];
++    /** Total names delivered twice, across every type. */
++    duplicated: number;
++    /** Shared rules whose copies disagree on `paths:`. */
++    defeated: number;
++    /** Types where at least one layer's directory is missing. */
++    absent: string[];
++    /**
++     * Types where BOTH layers were present, i.e. where a comparison actually
++     * happened. Carried explicitly rather than derived as
++     * `readings.length - absent.length`: `absent` counts LAYERS (up to two per
++     * type) while readings counts TYPES, so that subtraction goes negative. It
++     * printed `types_compared=-2` before this field existed.
++     */
++    typesCompared: number;
++    /**
++     * Entry names read across every present layer — the gate's dead-scope unit.
++     *
++     * Deliberately NOT `typesCompared`: a machine with only one layer is a normal
++     * consumer state, and crashing the gate there would punish the topology this
++     * roadmap is trying to reach. Zero names read, on the other hand, means every
++     * directory the gate knows about is gone, which is blindness rather than
++     * cleanliness — so it has no `allowEmpty` reason and `reportScanned` throws.
++     */
++    namesRead: number;
++    /** True when no type had BOTH layers present — nothing was actually compared. */
++    readNothing: boolean;
++}
++
++export function evaluate(globalRoot: string, projectRoot: string): Verdict {
++    const readings = TYPES.map((t) => readType(t, globalRoot, projectRoot));
++    const absent: string[] = [];
++    let compared = 0;
++    for (const r of readings) {
++        if (r.globalNames === null) absent.push(`${r.type} (global)`);
++        if (r.projectNames === null) absent.push(`${r.type} (project)`);
++        if (r.globalNames !== null && r.projectNames !== null) compared += 1;
++    }
++    return {
++        readings,
++        duplicated: readings.reduce((n, r) => n + r.both.length, 0),
++        defeated: readings.reduce((n, r) => n + r.scopeDefeat.length, 0),
++        absent,
++        typesCompared: compared,
++        namesRead: readings.reduce(
++            (n, r) => n + (r.globalNames?.length ?? 0) + (r.projectNames?.length ?? 0),
++            0,
++        ),
++        readNothing: compared === 0,
++    };
++}
++
++export function render(v: Verdict, globalRoot: string, projectRoot: string): string {
++    const out: string[] = [];
++    out.push('check_single_delivery · invariant: one artefact, one layer (ADR-235)');
++    out.push(`  global:  ${globalRoot}`);
++    out.push(`  project: ${projectRoot}`);
++    out.push('');
++    for (const r of v.readings) {
++        const g = r.globalNames === null ? 'absent' : String(r.globalNames.length);
++        const p = r.projectNames === null ? 'absent' : String(r.projectNames.length);
++        out.push(
++            `  ${r.type.padEnd(9)} global ${g.padStart(6)} · project ${p.padStart(6)}` +
++                ` · BOTH ${String(r.both.length).padStart(4)}` +
++                ` · global-only ${String(r.globalOnly.length).padStart(4)}` +
++                ` · project-only ${String(r.projectOnly.length).padStart(4)}`,
++        );
++        if (r.scopeDefeat.length > 0) {
++            out.push(
++                `             scope defeat: ${r.scopeDefeat.length} shared rule(s) where one copy` +
++                    ' carries `paths:` and the other does not —',
++            );
++            out.push(
++                '             the unscoped copy DEFEATS the other copy\'s scoping, so the rule' +
++                    ' loads unconditionally:',
++            );
++            for (const n of r.scopeDefeat) out.push(`               - ${n}`);
++        }
++    }
++    if (v.absent.length > 0) {
++        out.push('');
++        out.push(`  layers not present (nothing to compare there): ${v.absent.join(', ')}`);
++    }
++    out.push('');
++    out.push(
++        `check_single_delivery ledger: duplicated=${v.duplicated} scope_defeat=${v.defeated}` +
++            ` types_compared=${v.typesCompared} of ${v.readings.length}` +
++            ` names_read=${v.namesRead}`,
++    );
++    return out.join('\n');
++}
++
++export function main(argv?: readonly string[]): number {
++    const args = argv ?? process.argv.slice(2);
++    let globalRoot = path.join(os.homedir(), '.claude');
++    let projectRoot = path.join(REPO_ROOT, '.claude');
++    let enforce = false;
++
++    const value = (i: number): string | null => {
++        const v = args[i + 1];
++        return v === undefined || v.startsWith('-') ? null : v;
++    };
++    for (let i = 0; i < args.length; i += 1) {
++        const a = args[i];
++        if (a === '--global' || a === '--project') {
++            const v = value(i);
++            if (v === null) {
++                process.stderr.write(`check_single_delivery: ${a} needs a directory\n`);
++                return 1;
++            }
++            if (a === '--global') globalRoot = path.resolve(v);
++            else projectRoot = path.resolve(v);
++            i += 1;
++        } else if (a === '--enforce') {
++            enforce = true;
++        } else if (a === '--help' || a === '-h') {
++            process.stdout.write(
++                'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce]\n' +
++                    '\n' +
++                    'Reports by default and exits 0: the invariant is not true yet, because\n' +
++                    'road-to-single-delivery Phase 2 is halted on partition-requires-global-layer.\n' +
++                    '--enforce exits 1 on any overlap, and is what to register once Phase 2 lands.\n',
++            );
++            return 0;
++        } else if (a !== undefined && a.startsWith('--')) {
++            process.stderr.write(`check_single_delivery: unknown flag ${a}\n`);
++            return 1;
++        }
++    }
++
++    const v = evaluate(globalRoot, projectRoot);
++    process.stdout.write(`${render(v, globalRoot, projectRoot)}\n`);
++    // Dead-scope assertion via the shared primitive rather than a hand-rolled
++    // `scanned:` line: `check_gate_coverage`'s hardening ratchet accepts an
++    // emitted line only from a gate registered in the enforced manifest, and this
++    // one is deliberately unregistered while step 4.3's binding surface is an open
++    // blocker. No `allowEmpty` reason — see the `namesRead` docstring for why zero
++    // is blindness here rather than a valid empty corpus.
++    //
++    // Caught rather than allowed to propagate: an uncaught `DeadScopeError` prints
++    // a Node stack trace, which is the correct exit code wearing an unusable
++    // message. The error carries the gate name and the roots, so printing it plus
++    // the repoint hint gives the reader what the trace was burying.
++    try {
++        reportScanned({
++            gate: 'check_single_delivery',
++            scanned: v.namesRead,
++            units: 'artefact name(s) across both layers',
++            roots: [globalRoot, projectRoot],
++        });
++    } catch (err) {
++        process.stdout.write(
++            // No gate-name prefix here: the DeadScopeError message already opens
++            // with it, and prefixing printed it twice.
++            `❌  ${err instanceof Error ? err.message : String(err)}\n` +
++                '    Neither layer holds any artefact, so nothing was read. This is NOT a pass —\n' +
++                '    repoint with --global/--project, or check that the install and the projection ran.\n',
++        );
++        return 1;
++    }
++
++    if (v.readNothing) {
++        // Never a pass. A gate that compared nothing has not verified anything,
++        // and saying "invariant holds" here is the false-green shape this repo
++        // has recorded from other gates.
++        process.stdout.write(
++            '⚠️  check_single_delivery: no artefact type had BOTH layers present, so nothing was' +
++                ' compared. This is NOT a pass — repoint with --global/--project.\n',
++        );
++        return enforce ? 1 : 0;
++    }
++
++    if (v.duplicated === 0 && v.defeated === 0) {
++        process.stdout.write('✅  check_single_delivery: one artefact, one layer — no overlap.\n');
++        return 0;
++    }
++
++    const detail =
++        `${v.duplicated} name(s) delivered twice` +
++        (v.defeated > 0 ? `, and ${v.defeated} shared rule(s) with defeated \`paths:\` scoping` : '');
++    if (enforce) {
++        process.stdout.write(`❌  check_single_delivery: ${detail}. Invariant ADR-235 violated.\n`);
++        return 1;
++    }
++    process.stdout.write(
++        `⚠️  check_single_delivery: ${detail}. Reported, not enforced — ` +
++            'road-to-single-delivery Phase 2 is halted on `partition-requires-global-layer`, ' +
++            'so this is a known-open defect rather than a regression. Re-run with --enforce ' +
++            'once the partition ships.\n',
++    );
++    return 0;
++}
++
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) return false;
++    if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
++    try {
++        return fs.realpathSync(_HERE) === fs.realpathSync(path.resolve(process.argv[1]));
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/src/scripts/condense.ts b/src/scripts/condense.ts
+index abc45b10c00b610097ea9b42f7c42e71528b7496..0a5cd7589588173bc28991dd3d9f6e7327aba4be 100644
+--- a/src/scripts/condense.ts
++++ b/src/scripts/condense.ts
+@@ -2614,6 +2614,57 @@ function _generate_tools_inner(
+         success(summary);
+         flush_summary();
+     }
++    _warn_layer_overlap();
++}
++
++/**
++ * Say what writing the project layer costs when a global layer already holds the
++ * same names.
++ *
++ * This generator writes ONE of the two layers Claude Code loads, and until now it
++ * was silent about the other existing — while the installer's overlap gate runs at
++ * install time and cannot see a layer written afterwards. So the overlap is created
++ * by whichever producer runs LAST, and neither said so. Measured 2026-08-19: 110
++ * rules, 290 skills and 40 commands delivered twice, 203,873 tok of standing rule
++ * prose against a 110,000 cap.
++ *
++ * Advisory only, and deliberately: `generate-tools` is the normal build step, and
++ * failing it on a topology the operator may not be able to change today would make
++ * the build unusable rather than the duplication visible. The invariant is
++ * ADR-235; the check that can refuse is `check_single_delivery --enforce`.
++ */
++function _warn_layer_overlap(): void {
++    const home = process.env['HOME'];
++    if (home === undefined || home === '') return;
++    const pairs: Array<[string, string, string]> = [
++        ['rules', path.join(home, '.claude', 'rules'), path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'rules')],
++        ['skills', path.join(home, '.claude', 'skills'), path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'skills')],
++        [
++            'commands',
++            path.join(home, '.claude', 'commands'),
++            path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands'),
++        ],
++    ];
++    const findings: string[] = [];
++    for (const [label, globalDir, projectDir] of pairs) {
++        let g: string[];
++        let p: string[];
++        try {
++            g = fs.readdirSync(globalDir);
++            p = fs.readdirSync(projectDir);
++        } catch {
++            continue; // one layer absent — nothing is doubled, nothing to say
++        }
++        const gset = new Set(g);
++        const both = p.filter((n) => gset.has(n)).length;
++        if (both > 0) findings.push(`${label}=${both}`);
++    }
++    if (findings.length === 0) return;
++    _print(
++        `  ⚠️  a global layer holds the same names (${findings.join(' ')}) — the host loads both` +
++            ' with no dedup, so these are delivered twice per session.' +
++            '\n      Detail: ./scripts-run src/scripts/check_single_delivery · invariant: ADR-235',
++    );
+ }
+ 
+ export function generate_tools(): void {
+diff --git a/src/scripts/install.sh b/src/scripts/install.sh
+index 939a8fbe87c368101190a056a0b0e8b3392126a8..2676f594e6d9bbc0449d5a5a63fe6f0f426d2b12 100755
+--- a/src/scripts/install.sh
++++ b/src/scripts/install.sh
+@@ -783,8 +783,18 @@ run_scope_guard() {
+     if [[ "$verdict" == "WARN" ]]; then
+         $QUIET || {
+             echo ""
+-            echo "  ⚠️  Cross-scope install detected (same version, no drift)."
+-            echo "$output" | awk -F'\t' '$1=="WARN" { printf "       - %s at %s (v%s)\n", $2, $3, $4 }'
++            echo "  ⚠️  Cross-scope install detected — same version, so no drift, but NOT free:"
++            echo "      the host loads both registrations with no dedup, so every shared entry"
++            echo "      below is delivered TWICE in every session."
++            # Field 6 is the overlap count; -1 means it could not be taken (a
++            # single-file probe such as copilot), which is printed as such rather
++            # than rendered as zero.
++            echo "$output" | awk -F'\t' '$1=="WARN" {
++                if (NF >= 6 && $6 != "-1") printf "       - %s at %s (v%s) — %s entr%s in both scopes\n", $2, $3, $4, $6, ($6 == 1 ? "y" : "ies");
++                else printf "       - %s at %s (v%s) — overlap not counted (not a directory)\n", $2, $3, $4;
++            }'
++            echo ""
++            echo "      Pick one scope if you can: ADR-235 (one artefact, one layer)."
+             echo ""
+         }
+         return 0
