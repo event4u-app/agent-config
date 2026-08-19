@@ -362,17 +362,39 @@ export function renderVerification(cp: RunCheckpoint, res: VerifyResult): string
         );
     }
     const lines = [`checkpoint ${cp.run_id} · roadmap ${cp.roadmap} · written ${cp.written_at}`];
+    // Three states, not two. R2 round 5, finding 3: the null-head tolerance
+    // added in round 4 is correct as a VERDICT — an unknown commit is not a
+    // moved one — but rendering it as `ok head: null` alongside "the tree
+    // still matches the checkpoint" tells the reader something was checked
+    // when nothing could be. UNKNOWN is a third word because the reader's next
+    // action differs: `ok` needs nothing, `CHANGED` names what moved, and
+    // UNKNOWN says this axis carries no information and the other four are
+    // what the verdict rests on.
+    let unknown = 0;
     for (const f of res.fields) {
+        if (f.claimed === null || f.actual === null) {
+            unknown += 1;
+            lines.push(
+                `  UNKNOWN  ${f.field}: not readable ` +
+                    `(claimed ${String(f.claimed)}, actual ${String(f.actual)}) — not compared`,
+            );
+            continue;
+        }
         lines.push(
             f.agrees
                 ? `  ok       ${f.field}: ${String(f.actual)}`
                 : `  CHANGED  ${f.field}: claimed ${String(f.claimed)} → actual ${String(f.actual)}`,
         );
     }
-    lines.push(
-        res.agrees
-            ? '  the tree still matches the checkpoint.'
-            : '  the tree moved since the checkpoint — the ACTUAL column is what to resume from.',
-    );
+    if (!res.agrees) {
+        lines.push('  the tree moved since the checkpoint — the ACTUAL column is what to resume from.');
+    } else if (unknown > 0) {
+        lines.push(
+            `  the ${res.fields.length - unknown} comparable field(s) match; ` +
+                `${unknown} could not be read and were not compared.`,
+        );
+    } else {
+        lines.push('  the tree still matches the checkpoint.');
+    }
     return lines.join('\n');
 }

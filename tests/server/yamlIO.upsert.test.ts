@@ -138,3 +138,49 @@ describe('upsertScalar — the document\'s own indent width', () => {
         expect(after).toContain('  api_on_quota: true');
     });
 });
+
+describe('the writer and its existence-probe agree about the format', () => {
+    // R2 round 5, finding 1 — the second half of round 4's finding 7, and the
+    // reviewer EXECUTED it rather than reasoning about it. Round 4 taught
+    // `upsertScalar` to write at the detected width and left `replaceScalar`
+    // hardcoded at two, so the second toggle of the same switch could not see
+    // the line the first one wrote.
+    it('a SECOND toggle on a 4-space file replaces, never duplicates', () => {
+        const before = 'council:\n    enabled: true\n';
+        const once = upsertScalar(before, ['fallback', 'api_on_quota'], true);
+        const twice = upsertScalar(once, ['fallback', 'api_on_quota'], false);
+
+        // The decisive assertion: it still parses. A duplicate mapping key is
+        // what the defect produced, and `wizard.ts` writes without re-parsing.
+        const doc = parseYaml(twice) as Record<string, Record<string, unknown>>;
+        expect(doc['fallback']?.['api_on_quota']).toBe(false);
+        expect(twice.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
+        expect(twice.split('\n').filter((l) => l === 'fallback:')).toHaveLength(1);
+    });
+
+    it('replaceScalar alone finds a key written at a 4-space width', () => {
+        // The probe in isolation — `upsertScalar` delegates to it first, so a
+        // miss here is what fell through to the duplicating insert branch.
+        const body = 'fallback:\n    api_on_quota: true\n';
+        const after = replaceScalar(body, ['fallback', 'api_on_quota'], false);
+        expect(after).not.toBe(body);
+        expect(after).toContain('    api_on_quota: false');
+    });
+
+    it('a third toggle is still stable — the loop does not accumulate', () => {
+        let body = 'council:\n    enabled: true\n';
+        for (const v of [true, false, true]) {
+            body = upsertScalar(body, ['fallback', 'api_on_quota'], v);
+        }
+        expect(body.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
+        const doc = parseYaml(body) as Record<string, Record<string, unknown>>;
+        expect(doc['fallback']?.['api_on_quota']).toBe(true);
+    });
+
+    it('the 2-space path is unchanged by the shared width', () => {
+        const once = upsertScalar('council:\n  enabled: true\n', ['fallback', 'api_on_quota'], true);
+        const twice = upsertScalar(once, ['fallback', 'api_on_quota'], false);
+        expect(twice.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
+        expect(twice).toContain('  api_on_quota: false');
+    });
+});

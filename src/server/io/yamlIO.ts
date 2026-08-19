@@ -66,9 +66,25 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
     if (dottedPath.length === 0) return template;
     const sections = dottedPath.slice(0, -1);
     const key = dottedPath[dottedPath.length - 1];
-    const targetIndent = '  '.repeat(sections.length);
 
     const lines = template.split('\n');
+    // The document's own width, the same read `upsertScalar` performs.
+    //
+    // R2 round 5, finding 1, and it is the second half of round 4's finding 7.
+    // That round taught `upsertScalar` to WRITE at the detected width and left
+    // this function — the probe that answers "does this key already exist?" —
+    // at a hardcoded two, in three places: the emitted indent, the `% 2`
+    // alignment test and the `/ 2` level. On a 4-space file `indentLen` 4
+    // passes `% 2` and computes level 2 for a depth-1 key, so the key is never
+    // found. The wizard then writes a correctly-indented line on the first
+    // toggle and, on the second, cannot see it and appends a DUPLICATE mapping
+    // key in the same block — two POSTs, both `{ok: true}`, and a config the
+    // parser rejects with "Map keys must be unique".
+    //
+    // A writer and its own existence-probe disagreeing about the format is the
+    // shape to look for whenever one of a pair is taught something new.
+    const width = detectIndentWidth(lines);
+    const targetIndent = ' '.repeat(width * sections.length);
     const currentPath: (string | null)[] = new Array<string | null>(sections.length).fill(null);
     const formatted = formatScalar(value);
 
@@ -78,8 +94,8 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         const stripped = line.trim();
         if (stripped === '' || stripped.startsWith('#')) continue;
         const indentLen = line.length - line.trimStart().length;
-        if (indentLen % 2 !== 0) continue;
-        const level = indentLen / 2;
+        if (indentLen % width !== 0) continue;
+        const level = indentLen / width;
         if (level > sections.length) continue;
 
         const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(stripped);

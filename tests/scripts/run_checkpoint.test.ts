@@ -195,10 +195,35 @@ describe('renderVerification', () => {
     it('an agreeing report says the tree still matches', () => {
         const r = root();
         writeRoadmap(r, 'road-to-x', ROADMAP);
+        // A readable HEAD, so every field is comparable — otherwise the report
+        // correctly says "N could not be read", which is the UNKNOWN case
+        // below rather than this one.
+        fs.mkdirSync(path.join(r, '.git'), { recursive: true });
+        fs.writeFileSync(path.join(r, '.git', 'HEAD'), `${'a'.repeat(40)}\n`, 'utf-8');
         const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
         const out = renderVerification(cp, verifyCheckpoint(r, cp));
         expect(out).toContain('the tree still matches');
         expect(out).not.toContain('CHANGED');
+        expect(out).not.toContain('UNKNOWN');
+    });
+
+    it('an unreadable field renders UNKNOWN, never `ok` — a third state', () => {
+        // R2 round 5, finding 3. The null-head tolerance is right as a VERDICT
+        // (an unknown commit is not a moved one) but rendering it `ok head:
+        // null` under "the tree still matches" told the reader something was
+        // checked when nothing could be. The reader's next action differs per
+        // state, so the word does too.
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
+        expect(cp.head).toBeNull();
+        const out = renderVerification(cp, verifyCheckpoint(r, cp));
+        expect(out).toContain('UNKNOWN  head');
+        expect(out).toContain('not compared');
+        expect(out).not.toContain('ok       head');
+        expect(out).not.toContain('the tree still matches');
+        // Still not a failure: the comparable fields did agree.
+        expect(out).not.toContain('the tree moved');
     });
 
     it('a disagreeing report marks the moved field and points at ACTUAL', () => {

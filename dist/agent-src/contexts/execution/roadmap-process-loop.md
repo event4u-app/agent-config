@@ -279,8 +279,14 @@ For each open step in the working set (scope-bound — see wrapper):
      [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
    - **Second-model rung, when the class declares one**
      (`decision_resolution.classes.<cls>.second_model`, UOTL Phase 4.1)
-     → one local vendor-CLI pass under subscription auth, bounded by the
-     same `cli_call_budget` counter the council books against. Available
+     → one local vendor-CLI pass under subscription auth. **The rung is
+     MODEL-CARRIED: the key is declared and schema-validated, and no
+     TypeScript path reads it at runtime** — so "bounded by the
+     `cli_call_budget` counter" is what the rung must respect, never
+     something a booking consumer enforces (`cli_call_budget.ts` declares
+     its consumer set closed at two, and this is not one of them). Stated
+     rather than implied after R2 round 4 finding 4 found the coupling
+     asserted on three surfaces at once. Available
      to `trivial` / `low_impact` / `medium_impact` only; the config
      schema REFUSES the key on `high_impact` and `user_required`, so no
      locked question can reach it.
