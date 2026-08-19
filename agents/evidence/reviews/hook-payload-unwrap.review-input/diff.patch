@@ -191,8 +191,24 @@ index 823da4dd7ad85411e15fc0adb99d4ea88b3a5298..948407e6387521c57e19b1d1e27f4940
  ### blocker: b-stop-async-split-prerequisites
  - **Status:** open
  - **Owner:** user
+diff --git a/src/config/pack-size-budget.json b/src/config/pack-size-budget.json
+index ca4d24b354c86a748b68147d527cfc5431b3ca35..c1546defb8384db49df382af503095d6d19381a5 100644
+--- a/src/config/pack-size-budget.json
++++ b/src/config/pack-size-budget.json
+@@ -7,8 +7,9 @@
+     "measurement_conditions": "npm pack --dry-run --json --ignore-scripts, run at the repo root on a clean checkout. `--ignore-scripts` means NO build runs, so dist/cli, dist/ui, dist/mcp and dist/hooks are absent and the figure covers only the TRACKED payload (src/scripts/, dist/agent-src/, dist/install/, docs/guidelines/, templates). That is deliberate: this gate is always-on for every PR, and the tracked content tree is exactly the surface that grows by accretion. The built artifact is ~5.4 MB larger and is gated separately, at release time, by evaluator-budgets.unpacked_size_mb.",
+     "budgets": {
+         "packed_size_mb": {
+-            "max": 7.8,
+-            "last_measured": 7.238,
++            "max": 7.9,
++            "last_measured": 7.801,
++            "baseline_note_2026_08_20": "7.8 → 7.9, maintainer-decided in the PR that tripped it. RATCHET RESET OR CONFIG BENT AROUND A FAILING CHECK — the discriminator this file demands, answered first: the cap was exhausted before the change arrived. MEASUREMENT: CI measured 7.801 on the tripping commit; the only packed-path change in that diff is one file, src/scripts/hooks/ship_diff_volume_hook.ts, whose COMPRESSED size went 2,980 → 4,340 B (+1,360). Subtracting it puts origin/main itself at ≈7.7996 — about 400 bytes of headroom under a 7.8 cap, so the next legitimate addition of ANY size was going to cross it. That is the same sentence the 2026-08-05 note wrote about 6.372-of-6.4, and it is now the third occurrence. METHOD: CI's own figure on the tripping commit, minus the gzip -9 delta of the single changed packed file. NOT a local run — this branch's worktree is BUILT and therefore reads 8.240, the trap the 2026-08-10 note above documents by name; the fix was consequently NOT verifiable locally and that was stated before the raise rather than after. TRIP CAUSE: making a dead concern live. `ship-diff-volume` read tool_input at the envelope root and could never fire; fixing it added a command-tool gate, a partial-envelope descent, a stubbed-body branch, and the prose documenting each — all six items demanded by an R2 completion review. ALTERNATIVE EXAMINED AND REJECTED, so it is not re-proposed: shaving the concern's comments. It was actually attempted and it works partially — 4,340 → 4,121 B compressed, 219 B saved, kept in the diff because the shorter comments read better. It does not close a 400-byte gap against a 1,141-byte delta, and going further means deleting the defect documentation the review had just required, i.e. paying for a budget line with the reviewability the review bought. HONEST LIMIT ON THIS CAP, recorded because the file's own doctrine says a cap pinned just above the measurement teaches the reader to raise it again: 7.9 carries ~1.3 % headroom over 7.801, against the ~8 % both prior raises took (6.372→6.9, 7.238→7.8). Measured accretion between the last two CI figures — 6.907 on 2026-08-10, ≈7.7996 on 2026-08-19 — is ≈99 KB/day, so 7.9 buys roughly ONE DAY. This is a deliberate short raise, not an oversight: the maintainer chose the number, the deficit is on the record, and the structural question it points at — a cap being outrun by accretion faster than it can be re-based — is bigger than any single PR and does not belong to this one.",
+             "method": "npm pack --dry-run --json --ignore-scripts → dist.size / 1e6 (the compressed tarball a consumer actually downloads)",
+             "baseline_note_2026_08_10": "6.9 → 7.8 re-baselined 2026-08-10. WHICH OF THE TWO THIS IS, stated because the guard asks: a RATCHET RESET, not the config bent around a failing check — and the discriminator is that the payload is real and needed rather than that the check was inconvenient. The 44 KB is two source files a shipped instruction depends on, the cheaper alternative was examined and rejected on that ground (below), the new cap carries ~8% headroom over the higher of two disagreeing measurements rather than clearing by a hair, and the raise was put to the maintainer as a decision instead of applied to make a red go away. A reader who disagrees has everything needed to reverse it: the measurement, its method, the trip cause, and the rejected option. Maintainer-decided in the PR that tripped it, surfaced rather than smuggled — the same standing this file's `owner: maintainer` requires. MEASURED TWICE, and the two do not agree: CI reported 6.907 on this exact commit, a local run under the documented conditions reports 7.238. The 331 KB gap is UNEXPLAINED — the tree matches the pushed commit and only this file differs — so the cap is set over the HIGHER figure rather than the convenient one, and the discrepancy is recorded here as an open question instead of resolved by assumption. A third party reproducing this should expect either number and should not treat the lower one as authoritative. Separately, and this part IS understood: `npm pack --dry-run --ignore-scripts` in a worktree that has been BUILT reads 8.45, because the flag assumes dist/cli, dist/ui, dist/mcp and dist/hooks are absent and a built tree has them. That figure is not comparable to this budget and must never be written here — recorded because it is a trap the documented method invites. Trip cause: road-to-conformance-round5 Phase 3 added src/scripts/hooks/turn_end_gate_hook.ts (32 KB) and src/scripts/measure_turn_end_gate.ts (12 KB) in packed paths plus schema/template/contract growth, landing 7 KB over a 6.9 cap. Max set to 7.8 (~8% headroom over 7.238, and ~13% over CI's 6.907) for the reason the 2026-08-05 note already gives: a cap pinned just above the measurement reds on the next commit and teaches the reader to raise it again. ALTERNATIVE EXAMINED AND REJECTED, so it is not re-proposed: dropping measure_turn_end_gate.ts from the pack would have cleared the cap with room, but the settings description added in the same change instructs CONSUMERS to run that script against their own transcript store before arming the gate — excluding it would break a shipped instruction.",
+             "baseline_note": "5.903 → 6.398 re-baselined 2026-08-05. This is a RE-BASELINE, not a carve-out for the change that tripped it: measured on the tracked tree, `origin/main` alone was already at 6.372 of a 6.4 cap, so 28 KB of headroom remained after months of accretion and the next legitimate addition of any size was going to cross it. The addition here is 26 KB — docs/contracts/settings-classes.md (the A/B/C fence, read at RUNTIME by the settings writer, so it must ship) plus src/server/io/yamlIO.ts (imported by that writer to preserve the user's comments). CI measures ~4 KB above the local figure because it regenerates dist/agent-src first. Max set to 6.9 rather than to a number that merely clears: a cap pinned 2 KB above the measurement reds on the next commit and teaches the reader to raise it again, which is how a budget becomes a formality. That restores the ~8% headroom the 5.903/6.4 pair originally carried. The `owner: maintainer` on this file stands — this raise is surfaced in the PR for that decision, not smuggled."
 diff --git a/src/scripts/hooks/ship_diff_volume_hook.ts b/src/scripts/hooks/ship_diff_volume_hook.ts
-index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff799ef550 100644
+index bd727ac7a71f85e6d71f444ecfb97d550d593175..993831b1e578c6b5c48557eb78d3dc294221189f 100644
 --- a/src/scripts/hooks/ship_diff_volume_hook.ts
 +++ b/src/scripts/hooks/ship_diff_volume_hook.ts
 @@ -33,6 +33,7 @@ import path from 'node:path';
@@ -203,7 +219,7 @@ index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff
  import { atomic_write_json } from './state_io.js';
  
  export const STATE_FILE = path.join('agents', 'state', 'ship-diff-volume.json');
-@@ -89,31 +90,108 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
+@@ -89,31 +90,96 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
      return { volume, excluded, files };
  }
  
@@ -212,19 +228,13 @@ index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff
 -    if (ti !== null && typeof ti === 'object') {
 -        const c = (ti as Record<string, unknown>)['command'];
 +/**
-+ * Tools that carry a shell command.
++ * Tools that carry a shell command. Mirrors `block_unauthorized_git`'s set.
 + *
-+ * Without this gate the concern reads `tool_input.command` from every tool that
-+ * happens to carry one, and `SHIP_PATTERNS` are unanchored — so a `grep` for the
-+ * string `git push`, or a heredoc writing this very file, would spawn two `git`
-+ * subprocesses on a blocking slot. Mirrors `COMMAND_TOOLS` in
-+ * `block_unauthorized_git.ts`, the sibling guard on the same slot.
-+ *
-+ * The set is an ALLOW-list: a named tool outside it is declined, so a host whose
-+ * shell tool is not listed here goes dark until it is added. That is the same
-+ * trade `block_unauthorized_git` already makes while BLOCKING, so an advisory
-+ * concern can hardly demand more. A payload naming no tool at all still reads —
-+ * that is the bare-host and legacy shape, where there is nothing to gate on.
++ * `SHIP_PATTERNS` are unanchored, so without this gate a `grep` for the string
++ * `git push` spawns two `git` subprocesses on a blocking slot. ALLOW-list: a
++ * named tool outside it is declined, so an unlisted host shell goes dark until
++ * added — the trade that sibling already makes while BLOCKING. A payload naming
++ * no tool still reads; that is the bare-host shape, with nothing to gate on.
 + */
 +const COMMAND_TOOLS: ReadonlySet<string> = new Set([
 +    'launch-process',
@@ -246,17 +256,15 @@ index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff
 + * Descend to the platform payload.
 + *
 + * The dispatcher nests the host-shaped tool fields under `payload`
-+ * (`_build_envelope` in `dispatch_hook.ts`); a bare host invocation puts them at
-+ * the top level. This concern shipped reading the top level ONLY, so under the
-+ * real dispatcher it found nothing and returned `''` on every invocation — it
-+ * ran, cost a dispatch, and could never fire.
++ * (`_build_envelope`); a bare host invocation puts them at the top level. This
++ * concern shipped reading the top level ONLY, so under the real dispatcher it
++ * found nothing and returned `''` every time — it ran, cost a dispatch, and
++ * could never fire.
 + *
-+ * Deliberately NOT `envelope.ts`'s shared `unwrap`: that one descends only when
-+ * all four `ENVELOPE_KEYS` are present, so a producer emitting a partial
-+ * envelope would return this concern to exactly its pre-fix dead state with no
-+ * test noticing. `design-slop` and `ui-route-nudge` each carry their own local
-+ * descent for the same reason; this is the third instance of that shape, not an
-+ * adoption of a shared accessor.
++ * Deliberately NOT `envelope.ts`'s shared `unwrap`, which descends only when all
++ * four `ENVELOPE_KEYS` are present: a partial envelope would return this concern
++ * to its pre-fix dead state with no test noticing. `design-slop` and
++ * `ui-route-nudge` each carry their own local descent for the same reason.
 + */
 +function payloadOf(root: Record<string, unknown>): Record<string, unknown> {
 +    const inner = root['payload'];
@@ -270,9 +278,8 @@ index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff
 +
 +    const ti = payload['tool_input'] ?? payload['toolInput'];
 +    if (isPayloadStub(ti)) {
-+        // The dispatcher omitted the body this concern declares it needs
-+        // (`needs_payload_bodies: [input]`). Returning '' here is indistinguishable
-+        // from "no ship verb", which is precisely the silent death this file was
++        // Body omitted despite `needs_payload_bodies: [input]`. A bare '' here is
++        // indistinguishable from "no ship verb" — the silent death this file was
 +        // fixed to remove — so say so instead of dying quietly again.
 +        process.stderr.write(
 +            'ship-diff-volume: tool_input arrived stubbed; the concern declares ' +
@@ -290,11 +297,8 @@ index bd727ac7a71f85e6d71f444ecfb97d550d593175..359237c2ae2ef2eeb825772b2cb9eeff
  }
  
 +/**
-+ * The stdin boundary itself: raw concern stdin → the ship command.
-+ *
-+ * Exported so a regression can drive the boundary rather than the extractor.
-+ * Never throws — a concern that crashes in the agent loop is worse than one
-+ * that declines.
++ * The stdin boundary: raw concern stdin → the ship command. Exported so a
++ * regression drives the boundary rather than the extractor. Never throws.
 + */
 +export function commandFromStdin(raw: string): string {
 +    if (!raw.trim()) return '';

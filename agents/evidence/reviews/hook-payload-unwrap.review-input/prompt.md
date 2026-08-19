@@ -21,14 +21,15 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 15785e5d56deb2e352ff8dcfe93cc9632269591d, review
-  artefacts excluded), scope hash `71146161e09b6ee603e5c0ae6489a136e2c698865a7c24adffb17a19758666ee`
+- diff: `diff.patch` — the review scope (branch head 830454529c885c64939365c2696533da3ec74b03, review
+  artefacts excluded), scope hash `54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-per-turn-hook-economy.md
+- src/config/pack-size-budget.json
 - src/scripts/hooks/ship_diff_volume_hook.ts
 - tests/hooks/ship_diff_volume.test.ts
 
@@ -52,5 +53,5 @@ Fill the findings table in `hook-payload-unwrap.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 71146161e09b6ee603e5c0ae6489a136e2c698865a7c24adffb17a19758666ee, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab, reviewed <YYYY-MM-DD>
 ```

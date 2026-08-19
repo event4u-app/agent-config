@@ -1,17 +1,17 @@
 # Findings: hook-payload-unwrap
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 71146161e09b6ee603e5c0ae6489a136e2c698865a7c24adffb17a19758666ee | diff: 15785e5d56deb2e352ff8dcfe93cc9632269591d | reviewer: r2-fresh-subagent-hook-payload-unwrap | prompt_hash: a49a7b9f31d449a07cf4202e7e9b11586799984ffeca6d483cd64014dc4faaa9 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab | diff: 830454529c885c64939365c2696533da3ec74b03 | reviewer: r2-fresh-subagent-hook-payload-unwrap | prompt_hash: f1aebfd6dad2237fce06ddcb860b540cd46ac86498b0befbc95ae81a9d396e25 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 15785e5d56deb2e352ff8dcfe93cc9632269591d
-  scope_hash: 71146161e09b6ee603e5c0ae6489a136e2c698865a7c24adffb17a19758666ee
+  diff_sha: 830454529c885c64939365c2696533da3ec74b03
+  scope_hash: 54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab
   roadmap: agents/roadmaps/road-to-per-turn-hook-economy.md
   roadmap_hash: 26d111490cd53ba022e9577fa5ffb6533a339155e18cf8ecf9cdea312b31723d
   ac_hash: 8b3d8200231b13c05e62f5b58611857c85c94ade33509e924fb0420f8e18c9ba
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-19T22:28:52Z
+dispatched: 2026-08-19T23:51:51Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
