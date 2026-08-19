@@ -1,0 +1,86 @@
+# Nudge-interference corpus — road-to-standing-context-40k Phase 4.2.
+#
+# WHAT THIS PINS. The `user_prompt_submit` slot runs ten concerns on `claude`,
+# two of which are conditional-silence NUDGES that read the same submitted
+# prompt: `delegation-nudge` and `skill-route`. Nothing asserted they stay out
+# of each other's way, so a widened trigger on either could start injecting two
+# advisory lines on one prompt with no gate noticing. This corpus is the
+# instrument: one prompt class per row, each with the number of nudges that
+# fired when it was measured.
+#
+# Data only. The runner is `tests/scripts/hooks/nudge_interference.test.ts`, and
+# it is deliberately bidirectional — a class going ABOVE its number reds (a
+# nudge widened into its sibling's territory) and the recorded overlap going
+# BELOW its number reds too (a suppression landed and this file did not follow).
+#
+# MEASURED, NOT ASSUMED (2026-08-19, platform `claude`, this tree). The 510
+# prompt lines of `tests/eval/routing-matrix/*.yaml` were run through both
+# nudges first: 3 fired delegation-nudge only, 44 fired skill-route only, 463
+# fired neither, and **0 fired both**. So the ≤1 invariant holds across the
+# widest prompt corpus in the repo — which is why the `overlap` class below is
+# hand-constructed rather than harvested. It reproduces the interference the
+# roadmap step names, and it is a real finding: the pair CAN double-fire, the
+# routing-matrix corpus simply never asks it to.
+#
+# THE OVERLAP IS RECORDED, NOT FIXED. 4.2 asks for the fixture; suppressing one
+# nudge when the other fires is a behaviour change to two shipped concerns and
+# belongs to its own step. Pinning the double-fire here publishes it instead of
+# leaving the fixture green over a case it never exercises.
+
+pair: [delegation-nudge, skill-route]
+slot: user_prompt_submit
+platform: claude
+measured_at: 2026-08-19
+
+classes:
+  - class: delegation-only
+    intent: >
+      Enumerated slices / for-each shapes that give the judgment ladder a
+      positive dispatch verdict, with no single-skill task language for the
+      ranker to clear its p90 floor on.
+    max_nudges: 1
+    prompts:
+      - "Review src/a.ts, src/b.ts, src/c.ts and src/d.ts for contrast violations"
+      - "For each of the six migration files, write a rollback case"
+      - "Split this into 4 slices: the modules, the policies, the records, the runbook"
+      - "Gehe alle fünf Komponenten durch und prüfe jeweils die Klassen auf Konsistenz"
+
+  - class: skill-route-only
+    intent: >
+      Single-deliverable tasks whose terms score above the ranker's floor, with
+      no enumeration, slice count, or ordered-plan marker for the delegation
+      classifier to read.
+    max_nudges: 1
+    prompts:
+      - "Schreibe eine Eloquent-Scope-Methode für aktive Abonnements"
+      - "Set up Terraform state locking for the staging bucket"
+      - "Add a Livewire component for the invoice line editor"
+
+  - class: silent
+    intent: >
+      Acknowledgements and conversational turns. The anti-canary default is
+      silence, so ZERO nudges is the correct reading here — a nudge appearing
+      on any of these is the per-turn reminder shape both concerns' headers
+      refuse.
+    max_nudges: 0
+    prompts:
+      - "Thanks, that looks right to me"
+      - "Was denkst Du dazu?"
+      - "ok"
+      - "sounds good, go ahead"
+      - "Passt so."
+
+  - class: overlap
+    intent: >
+      Enumerated files AND strong single-skill terms in one prompt — the
+      delegation classifier reads the enumeration while the ranker scores the
+      skill terms, and both speak. This is the interference the roadmap step
+      names as the first pair to pin.
+    expect_nudges: 2
+    recorded: >
+      Measured double-fire on 2026-08-19, both nudges. Not a regression and not
+      fixed here: 4.2 ships the instrument. A step that suppresses the second
+      nudge lowers this number, and that edit must land in this file with it.
+    prompts:
+      - "Refactor auth.ts, session.ts, token.ts one after another, then run the security audit on each"
+      - "Audit these files: a.php, b.php, c.php — each needs an Eloquent scope and a FormRequest"
