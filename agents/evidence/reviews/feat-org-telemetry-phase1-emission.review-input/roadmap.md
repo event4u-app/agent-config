@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 execution:
@@ -129,7 +131,6 @@ Recorded here so nobody re-derives it from the findings files.
 ## Phase 2 — Transport
 
 - [ ] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. <!-- verify: ./scripts-run src/scripts/test_telemetry_transport -->
-- [ ] Declare a retention policy for the local record log and enforce it. Phase 1 ships an append-only file with no cap and no pruning, and `flush: never` endorses that as an indefinite steady state — one line per skill invocation, forever. The R2 review of Phase 1 raised it; it is a `scale-discipline` R-A7 growth-budget obligation and it is owed before the namespace is enabled anywhere broadly. <!-- verify: grep -q retention src/agent-src/templates/scripts/telemetry/remote.ts -->
 - [ ] Stand up the sink as a minimal append-only ingest with no read API in this phase. <!-- blocked-by: sink-choice -->
 
 **Exit criteria:** records written on a second machine appear in the sink, and an endpoint outage is invisible to the session.
@@ -211,7 +212,7 @@ Recorded here so nobody re-derives it from the findings files.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -222,8 +223,6 @@ Recorded here so nobody re-derives it from the findings files.
 | 5 | Complaint-phrase false positives flood the sink | implementation | Over-firing triggers form clusters on noise. | The three-distinct-session threshold gates issue creation; singles remain visible as counts only. | Phase 6 |
 | 6 | The consent doctrine erodes | product | The org-pack class becomes a precedent for machine-granted permissions. | The ADR defines it narrowly as a human administrator's decision disclosed to the affected user, and restates that auto-detected stays never-consent verbatim. | Phase 3 |
 | 7 | The telemetry confirms the zero | product | Real activation is genuinely near zero even with correct instrumentation. | That is a result rather than a failure: the null is published and effort redirects to the estate. | Phase 4 |
-| 8 | The local record log grows without bound | implementation | Phase 1 ships an append-only file with no cap and no pruning — one line per skill invocation — and `flush: never` endorses that as an indefinite steady state. Raised by the Phase 1 completion review. | A retention policy is a Phase 2 step with the `scale-discipline` R-A7 growth-budget obligation named, and the `flush` documentation states the unbounded case rather than leaving an operator to discover it. | Phase 2 |
-| 9 | A host without a `Skill` tool reads as non-adoption | product | The capture concern is bound on six platforms but fires only on a `Skill` tool-use, a Claude-family surface. A zero from any other host means "no instrument", which is the blind-zero class this roadmap exists to remove, reproduced one layer up. | Every record carries `host`, so the denominator is reconstructable per host; the manifest entry states the caveat where a future reader of Phase 4 will meet it. Unbinding was rejected — it would convert a readable absence into a guaranteed one. | Phase 4 |
 
 ## Acceptance Criteria
 

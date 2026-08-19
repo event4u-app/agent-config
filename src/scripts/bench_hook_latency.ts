@@ -333,12 +333,15 @@ export interface AppliedCap {
  * Every cap that applies to one slot, tightest first.
  *
  * `pre_tool_use` carries a slot-specific cap AND the shared `any_hook_event`
- * one. Before the posture split the specific cap was the only one consulted for
- * that slot, which was harmless while it was the tighter of the two and
- * blocking. It stops being harmless the moment the tight cap goes advisory:
- * returning only that cap would drop `pre_tool_use` out of the blocking gate
- * altogether — the one slot the whole budget exists for. Both are returned, and
- * each is judged against its own `blocking` flag.
+ * one, and previously only the specific cap was consulted for that slot. That
+ * was harmless while it was both the tighter of the two and blocking — which is
+ * the shipped configuration today (175 vs 250, neither advisory).
+ *
+ * Returning both anyway is the fail-closed shape: `blocking` defaults to TRUE
+ * on an absent key, so an older or hand-edited budget file cannot silently
+ * demote a cap, and if a future config ever does mark the tight cap advisory,
+ * `pre_tool_use` still stays inside the blocking gate rather than dropping out
+ * of it — the one slot the whole budget exists for. A test pins that.
  */
 export function capsFor(budget: Budget, event: string): AppliedCap[] {
     const any = budget.budgets_ms.any_hook_event;
@@ -572,14 +575,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // p95 upward and never downward, so re-measuring and keeping the MINIMUM
         // is the estimator that discards the spike instead of recording it.
         //
-        // Honest bound, because it decides how much this is worth: consecutive
-        // samples inside ONE job are correlated. This removes a spike WITHIN a
-        // run; it does not rescue a job that landed on a runner which is slow
-        // for its whole lifetime — the 2026-08-19 release case, where three
-        // separate CI runs read 152/153/159 and a fourth read 107. That case is
-        // what the posture split in the budget file addresses, not this.
-        if (gate) {
-            const attempts = Math.max(1, budget.gate_remeasure?.attempts ?? 3);
+        // SHIPS DISABLED (`gate_remeasure.attempts` is 1). The budget file's
+        // `why_not_a_retry_or_best_of_n` rejected it as the first move on
+        // measured grounds: the spread is between runner CLASSES (p50
+        // 111-148 ms), not noise within one machine, so a slow runner measures
+        // slow twice. Two CI runs of this mechanism agree — it recovered
+        // 151→150 and 160→153, i.e. 1-7 ms against a 42 ms spread. The cap was
+        // re-derived to 175 instead; this stays as the escalation that block
+        // names, reachable by setting `attempts` to 3, and costs nothing while
+        // it is off.
+        const attempts = Math.max(1, budget.gate_remeasure?.attempts ?? 1);
+        if (gate && attempts > 1) {
             for (let i = 0; i < results.length; i += 1) {
                 const first = results[i] as EventResult;
                 if (first.p95_ms <= capFor(budget, first.event)) continue;
