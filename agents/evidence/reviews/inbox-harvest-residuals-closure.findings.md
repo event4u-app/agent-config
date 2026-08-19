@@ -1,15 +1,38 @@
 # Completion review — inbox-harvest residuals, closed on two named locks
 
-**Skipped:** no code surface for this completion — the diff is one roadmap file moved into `archive/` with its two dispositions recorded, plus the regenerated dashboard, archive index and index JSON that are generated views of that same move, and the gate measures zero code paths of four changed files, scope d5f20f75e530053d81c3864847fc40915218e7e1a67ddda3bbfa3b16f7e062af, declared 2026-08-19
+**Skipped:** no code surface for this completion — the diff is one roadmap file moved into `archive/` with its two dispositions recorded, its three regenerated views, this artefact, and a two-number ratchet walk-down in `src/config/estate-count-budget.json`, and the gate measures zero code paths of six changed files, scope 00a4f1fdaa3bd61ea65630d5c34908b82f2e5791dd92f3b0d11d45a2d9ff8e67, declared 2026-08-19
 
 ## Why a skip rather than a review
 
 The change records two dispositions and archives the file that carried them. It
-ships no executable surface: no script, no hook, no config, no test, no
-frontmatter field, and no rule or skill body. All four changed paths sit under
-`agents/`, and three of the four are regenerated artefacts
-(`agents/roadmaps-progress.md` by `agent-config roadmap:progress`,
-`agents/roadmaps/archive/{INDEX.md,index.json}` by `build_archive_index`).
+ships no executable surface: no script, no hook, no test, no frontmatter field,
+and no rule or skill body. Five of six changed paths sit under `agents/`, three
+of those are regenerated artefacts (`agents/roadmaps-progress.md` by
+`agent-config roadmap:progress`, `agents/roadmaps/archive/{INDEX.md,index.json}`
+by `build_archive_index`), and one is this artefact.
+
+**The sixth path is under `src/`, and the skip is claimed on the gate's own
+classification rather than on my reading of it.**
+`src/config/estate-count-budget.json` changes two integers and appends one
+`baseline_history` entry. § 2.4's classifier (`isCodePath`) returns code for
+anything under `src/scripts/` and otherwise decides by extension; `json` is not
+in `CODE_EXTENSIONS`, deliberately — the list's own comment excludes dependency
+state and data files while including IaC and templates that carry executable
+behaviour. So the gate measures zero code paths here and does not emit its
+`skip declaration present but the diff touches N code path(s)` finding, which it
+would otherwise raise before any of this prose mattered. Stated because "a config
+under `src/` is not code" is exactly the sentence a reader should distrust on an
+author's word.
+
+**What that config change is, so it is not taken on trust either.** It is a
+**tightening**: `active_roadmaps` 34 → 33 and `open_blockers` 73 → 71, both
+ceilings moving DOWN, because `check_estate_count` failed the first CI run with
+*"un-walked tightening"* and names the walk-down as belonging in the change that
+earned the lower measurement. `later_roadmaps` stays at 50, which is that gate's
+own check distinguishing a closure from a park. Green afterwards at 33/50/71
+(+0/+0/+0), with `tests/scripts/check_estate_count.test.ts` at 29 passed. The
+`block-config-weakening` guard flagged the edit for a direction statement, which
+is what this paragraph and the commit message both supply.
 
 What replaces a code review here is the verification that produced the two
 dispositions. Both are re-runnable, and in one case the verification **changed
@@ -51,11 +74,20 @@ the outcome** rather than confirming it.
 - **The terminal state was counted, not asserted.** After the edits: 0 open, 0
   deferred, 2 done, 2 cancelled, 0 open blockers — so no Iron Law 3 deferral
   flow applies and the archive gate clears on its own terms.
+- **One gate was not run locally, and CI is how that surfaced.**
+  `check_estate_count` is registered in the Consistency workflow and **not** in
+  `task preflight`, so a green preflight said nothing about it and the first
+  signal was the PR turning red. Recorded rather than smoothed over: the local
+  suite's blindness here is a property of the gate registration, not of this
+  change, and the same shape will red the next roadmap-disposing PR that trusts
+  preflight alone.
 - **Gates run on this branch:** `task preflight` green including `lint_regression`
   (no regressions) and the kernel-rule bundle check (no kernel rule touched);
   `check_references` → no broken references after the move;
   `lint_roadmap_complexity` → 36 roadmaps complexity-clean;
-  `agent-config roadmap:progress` → 33 active, no unarchived completion left.
+  `agent-config roadmap:progress` → 33 active, no unarchived completion left;
+  `check_estate_count` → estate within its ratchet at 33/50/71 after the
+  walk-down; `task consistency` → no derived drift.
 
 ## Authority for recording the dispositions
 
