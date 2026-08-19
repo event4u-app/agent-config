@@ -783,8 +783,18 @@ run_scope_guard() {
     if [[ "$verdict" == "WARN" ]]; then
         $QUIET || {
             echo ""
-            echo "  ⚠️  Cross-scope install detected (same version, no drift)."
-            echo "$output" | awk -F'\t' '$1=="WARN" { printf "       - %s at %s (v%s)\n", $2, $3, $4 }'
+            echo "  ⚠️  Cross-scope install detected — same version, so no drift, but NOT free:"
+            echo "      the host loads both registrations with no dedup, so every shared entry"
+            echo "      below is delivered TWICE in every session."
+            # Field 6 is the overlap count; -1 means it could not be taken (a
+            # single-file probe such as copilot), which is printed as such rather
+            # than rendered as zero.
+            echo "$output" | awk -F'\t' '$1=="WARN" {
+                if (NF >= 6 && $6 != "-1") printf "       - %s at %s (v%s) — %s entr%s in both scopes\n", $2, $3, $4, $6, ($6 == 1 ? "y" : "ies");
+                else printf "       - %s at %s (v%s) — overlap not counted (this scope is empty or unreadable; a first install here has nothing to double yet)\n", $2, $3, $4;
+            }'
+            echo ""
+            echo "      Pick one scope if you can: ADR-236 (one artefact, one layer)."
             echo ""
         }
         return 0
