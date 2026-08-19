@@ -96,6 +96,11 @@ colleague's report on its own.
       predates the installer gate: apply the `claudeMdExcludes` suppression for the
       unchosen layer — one settings entry, no deletion of anything.
       `verify:` the task's own output, recorded per machine with its date.
+      **NOT executed 2026-08-19 — human action, by the step's own wording.** "On
+      the maintainer machine and on each affected colleague machine" names
+      hardware an agent cannot reach, and the remedy is a settings write per
+      machine. This is a `/roadmap:next` disqualifier (a blocker whose resolution
+      is a human ACTION), recorded here so the next screen does not re-derive it.
 - **AC-0:** every machine in the team reports under the governed cap on that gate,
   or carries a dated exemption note saying why it does not.
 
@@ -113,6 +118,15 @@ colleague's report on its own.
       it, and the fact that no resumption event followed. Move the file out of
       `later/` under its own disposition rules.
       `verify:` the file is in the active tree and the dashboard counts it.
+      **NOT executed 2026-08-19 — a scope call, not a blocker, and the cheapest
+      open item left in this file.** It is genuinely repo work and nothing gates
+      it. It is also a *disposition change to a different roadmap*: it moves a
+      file between dispositions, changes what the dashboard counts, and can
+      interact with `lint_roadmap_family_cap`. Landing that inside a PR whose
+      subject is a dispatcher mechanism mixes two reviewable concerns in one diff,
+      which `minimal-safe-diff` refuses. It wants its own small PR, together with
+      the park-note read — `agent-config gates` reports that resume condition
+      FIRED. **Next executor: start here.**
 - [ ] **1.2** (Owned by that roadmap, tracked here for the interlock only.) The
       machinery is built and tested; only the human gate is unpulled. Consumer
       installs default to workspace-derived scope, `legacy-all` becomes the
@@ -133,6 +147,14 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       before any prose shrinks.
       `verify:` routing matrix green; the diff contains zero `triggers:` edits,
       machine-checkable by byte-comparing every `triggers:` block.
+      **NOT executed 2026-08-19 — its own sequencing condition is unmet, and this
+      is a one-command check rather than a reading of intent.** The step says to
+      sequence condensation *after* the per-rule norm lint exists, so the
+      obligation sentence is pinned before any prose shrinks. That lint is
+      `road-to-cost-parity-1-rule-payload-diet` step 3.1, still `[ ]`, and no
+      `norm`-pinning script exists under `src/scripts/`. Condensing first would
+      shrink prose with nothing holding the obligation — precisely the ordering
+      this step was written to prevent.
 
   > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
   > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
@@ -185,6 +207,13 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       none is deleted, and Iron Law headings survive verbatim at their level.
       `verify:` the condensation gate is green and each moved passage is reachable
       from its rule by a link.
+      **NOT executed 2026-08-19 — same sequencing as 2.1, for the same reason.**
+      Moving rationale out of a rule body is a `preservation-guard` transform over
+      the same corpus 2.1 condenses, and it shares 2.1's precondition: with no
+      norm-line pinned, "which passage is the obligation" is a judgement per rule
+      rather than a checkable field, and `preservation-guard`'s every-passage-stays
+      rule cannot distinguish a legitimate move from a quiet softening. Sequence
+      it behind 2.1, not beside it.
 - **AC-2:** the unconditional-corpus token count falls against the committed
   census bucket; routing matrix green; zero trigger edits in the diff.
 
@@ -204,6 +233,26 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       per-session ground-truth count — exactly the demand-signal datum the
       retriever's own gate reads. Decide the fork *after* the observer has data.
       `verify:` the observer records a load event with its reason on this tree.
+      **NOT executed 2026-08-19, and the reason is a refuted premise rather than
+      effort.** This step reads "the host fires that event" as given. Nothing in
+      this tree establishes it: `InstructionsLoaded` appears in no
+      `EVENT_VOCABULARY` (`dispatch_hook.ts:99-110`, ten events, not this one),
+      in no `native_event_aliases` row for any platform, and
+      `check_standing_rule_delivery.instructionsLoadedRecord`'s own docblock calls
+      it "a host feature this suite does not yet bind" while returning a path that
+      is *expected* not to exist. So "register the observer" is not a binding task
+      today — it is first a host-capability question, and binding an event whose
+      existence was never confirmed is designing against an assumption, which
+      `source-discovery-gate` forbids by name.
+      **What would close it:** one recorded observation that the installed host
+      emits the event (version-stamped, like the `subagent_start`/`subagent_stop`
+      evidence that justified those two rows), *then* the vocabulary + alias +
+      platform-row change, *then* the concern. Until the first exists the rest is
+      speculative wiring.
+      **Consequence for the blocker below:** its Recommendation says to land this
+      observer first and re-date the fork against it. That recommendation is not
+      actionable as written, so the fork stays open on a *different* ground than
+      the one recorded there — see the correction in the blocker itself.
 - [~] **3.1** Fork, stated so it cannot be half-done. **(a)** Execute
       `later/road-to-deferred-rule-retriever` when its `rules_efficiency` gate
       converts, lexical-core comparison first, per its own text. **(b)** If the
@@ -216,7 +265,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 
 ### Phase 4 — Per-turn injection aggregate
 
-- [ ] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
+- [x] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
       concern emissions per session-turn, capped outside `session_start`, with the
       dispatcher enforcing by dropping lowest-severity advisories first and
       recording each drop in dispatch issues. The cap exempts `severity: blocking`
@@ -224,12 +273,78 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       safety-relevant warning.
       `verify:` the injection bench reports the aggregate; a fixture exceeding the
       cap drops the right advisory and records it.
-- [ ] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
+      **Landed 2026-08-19.** `per_turn_aggregate_bytes` in
+      `src/config/hook-token-budget.json`; `bench_hook_injection.perTurnAggregate`
+      derives and prints it on **every** run from the same `slotSums` the
+      per-slot rows come from, so the local reading and the CI gate run are the
+      same number. Runtime enforcement is
+      `src/scripts/hooks/injection_budget.shapeEmissions`, wired into
+      `dispatch_hook` between reduction and `emitFor`.
+      **The ceiling is DERIVED, not a new number:** 47,104 B is
+      `4096 + (2048 + 2048) × 10 + 2048`, i.e. the arithmetic consequence of the
+      per-slot rows already registered above it. A tighter per-turn ceiling would
+      contradict per-slot decisions that are already committed; a looser one would
+      let the composition exceed what every part was capped at.
+      `tests/scripts/bench_hook_injection_aggregate.test.ts` asserts that
+      derivation against the live config, so the two cannot drift.
+      **`gate_on_ceiling: false`, and the reason is a measurement, not caution.**
+      Under the committed fixtures a turn injects 1,140 B against a 47,104 B
+      ceiling — the row sits roughly forty times above the only reading that
+      exists, and arming an inequality nobody has approached would gate on
+      nothing. The flag governs **CI only**; runtime shaping is always on.
+      **Two findings this step produced and did not fix.** (a) The bench reading
+      MOVES between runs — 922 B and 1,140 B minutes apart — because the
+      stop-slot `end-review-nudge` is session-state-conditional and replay skips
+      its writes but not its reads. That is a pre-existing bench
+      non-determinism this row surfaces rather than introduces, and it is one
+      more reason the ceiling is unarmed. (b) A `nudge_rank` tie between two
+      concerns is a manifest defect that nothing detects; `lint_hook_manifest`
+      is where it belongs and the check does not exist. Both are noted at the
+      code, not silently carried.
+      `verify:` `./scripts-run src/scripts/bench_hook_injection` ·
+      `npx vitest run tests/scripts/hooks/injection_budget.test.ts tests/scripts/bench_hook_injection_aggregate.test.ts tests/hooks/injection_budget_dispatch.test.ts`
+- [x] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
       that for each prompt class at most one nudge fires. The delegation-nudge and
       skill-route overlap is the first known pair to pin.
       `verify:` the fixture is green and fails when a second nudge is forced.
+      **Landed 2026-08-19.** `tests/eval/nudge-interference/prompts.yaml` +
+      `tests/scripts/nudge_interference.test.ts`, same shape as
+      `tests/eval/orchestration-matrix/`: positives AND pinned near-misses,
+      executed against the real `classifyPrompt` / `routePointers` predicates
+      with the ranks read live from the manifest.
+      **The overlap was MEASURED before the policy was written, so this file
+      pins a fact rather than a hypothesis.** The prompt "Use when starting
+      parallel work in isolation from the current branch — spawn a git worktree
+      with ignore-safety checks and a clean test baseline for src/a.ts, src/b.ts,
+      src/c.ts and src/d.ts, each independently" fires **both** carriers: its
+      first clause is `using-git-worktrees`' own description (ranker top-1 58,
+      over skill-route's 31/100 floor) and its trailing clause carries four file
+      tokens (over delegation-nudge's `FILE_SIGNAL_FLOOR` of 3). Four near-miss
+      rows pin the classes that must fire exactly one carrier, or none.
+      **Each row pins TWO expectations on purpose** — the pre-policy fire set
+      *and* the post-shaping emission. A trigger change that shrinks the overlap
+      then reads as a corpus failure instead of being silently absorbed by the
+      fix that hides it.
+      **The precedence is a decision and is stated as one:** delegation-nudge
+      outranks skill-route because the delegation verdict changes the *shape* of
+      the work while a skill pointer is a hint, and the suppressed pointer has a
+      first-class recovery path the suppressed verdict would not —
+      `suggest_skill_for_task` ranks the same catalogue on demand. Losing the
+      pointer costs one tool call; losing the verdict costs the plan. It lives in
+      the manifest as `nudge_rank`, so changing it is a reviewable one-line diff
+      rather than an edit to a hardcoded pair.
+      **A test-fixture trap worth carrying:** the first version of the
+      end-to-end fixture wrote a folded multi-line `description:` into its
+      `SKILL.md`. The catalogue loader reads that as its first line only, which
+      halved the ranker's score, and the co-fire the test exists to reproduce
+      never fired — a green-looking fixture over the wrong measurement. The
+      description must be ONE physical line.
+      `verify:` `npx vitest run tests/scripts/nudge_interference.test.ts`
 - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
-  green.
+  green. **Met 2026-08-19** — `per-turn aggregate 1140 B (ceiling 47104 B,
+  reported, not gated)` on the bench's own output line; 50 tests across four
+  files, including the end-to-end proof that the shaping is *wired* and not
+  merely defined.
 
 ## Blockers
 
@@ -246,6 +361,15 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   itself progress, per the same discipline the telemetry-count gates use. Do not
   build a retriever before the comparison against `src/scripts/_lib/lexical_index.ts`
   that `later/road-to-deferred-rule-retriever` pre-registered.
+- **Correction 2026-08-19:** the Recommendation below is **not actionable as
+  written**, and the reason is checkable rather than a judgement — step 3.0's
+  observer cannot be landed today because `InstructionsLoaded` is in no event
+  vocabulary and no alias table in this tree, and the one module that names it
+  documents it as unbound (evidence at step 3.0). The Recommendation is kept
+  verbatim below rather than rewritten, because *what it wanted* is still right —
+  a ground-truth count before deciding the fork — and only its stated route is
+  unavailable. The fork therefore stays open on the missing HOST CAPABILITY, not
+  on an unfilled metric window.
 - **Recommendation:** **land step 3.0's observer first and re-date this blocker
   against it.** The fork cannot be decided today in either direction: option (a)
   needs a demand signal that does not exist, and option (b) would delete trigger
