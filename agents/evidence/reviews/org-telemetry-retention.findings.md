@@ -1,11 +1,11 @@
 # Findings: org-telemetry-retention
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: c4905a06dbde119c105ab20a1038c7a3f8e69e59e079483c71a8e575007acb2b | diff: d7b50e5eef25321cb94120a0c8df35317b84f202 | reviewer: r2-fresh-subagent-org-telemetry-retention | prompt_hash: 46332c88f6b56a4e5f6b1aff542397b2669cbc88fed900e761e2baaff80827c7 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 986d9e83ca7eb8d5cc08b084fbeb0378f0a53627c8e8637c646646ebf0f0731b | diff: 322bad99084a73c928ead674bbd94daf7e43aa25 | reviewer: r2-fresh-subagent-org-telemetry-retention | prompt_hash: 46332c88f6b56a4e5f6b1aff542397b2669cbc88fed900e761e2baaff80827c7 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: d7b50e5eef25321cb94120a0c8df35317b84f202
-  scope_hash: c4905a06dbde119c105ab20a1038c7a3f8e69e59e079483c71a8e575007acb2b
+  diff_sha: 322bad99084a73c928ead674bbd94daf7e43aa25
+  scope_hash: 986d9e83ca7eb8d5cc08b084fbeb0378f0a53627c8e8637c646646ebf0f0731b
   roadmap: agents/roadmaps/road-to-org-telemetry.md
   roadmap_hash: 9fca6dff92e1aff95af0ee16fe8ea779c842c496b76ea8dad581888778111464
   ac_hash: 62d3483b628c50db130545b5ffbacbfd2cbdc618a6f39774b7b6465d1176fc1a
@@ -53,6 +53,21 @@ regenerated artefact. So the findings above stand unchanged and no second
 review was dispatched — but a reader comparing the reviewed head
 (`ffb9dbacc`) with the current one deserves to know what sits between them
 without having to diff for it.
+
+3. **`origin/main` was merged a second time** (29 commits), which brought PR
+   #1432 and its own new `stop` concern, `run-continuation`. Two conflicts:
+   `agents/roadmaps-progress.md` again, and `src/scripts/hook_manifest.json`.
+   The YAML source merged cleanly and carries **both** concerns — mine 8 times,
+   `run-continuation` 3 times — so the JSON was recompiled from that merged
+   YAML rather than hunk-merged. Worth noting for the next person:
+   `sync_pr_branch` classifies `hook_manifest.json` as **AUTHORED**, i.e. "a
+   human decision, read both sides". It is not; it is a generated projection of
+   the YAML, and mixing its hunks would be the one resolution that can produce
+   a table matching neither branch.
+
+Measured rather than asserted for both merges: `git diff <reviewed-head> HEAD --
+<the feature files>` is **empty**. Every byte the reviewer read is unchanged;
+only generated artefacts moved.
 
 **Worth carrying:** neither `task sync` nor `task generate-tools` writes
 `hook_manifest.json`, so both reported no drift while the compiled table was
