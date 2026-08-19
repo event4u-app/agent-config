@@ -14,6 +14,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { SESSION_ID_LEN, derive_session_tag } from '../../src/scripts/chat_history.js';
+import { deriveSessionKey } from '../../src/scripts/_lib/turn_end_refusals.js';
+
 import {
     DEFAULT_WINDOW,
     buildReport,
@@ -309,7 +312,56 @@ function writeContinuation(lines: readonly object[]): void {
     );
 }
 
-describe('buildReport — the autonomy axis', () => {
+describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', () => {
+    // R2 review, finding 2, and the reason it survived the original suite:
+    // every autonomy test hand-wrote `r1` into all three sources, so it
+    // verified the READER and could not see that the three WRITERS emit three
+    // different key spaces for one run. These tests derive each key the way
+    // its producer does, so a future divergence fails here instead of quietly
+    // printing 0.
+    const SESSION = 'b7c1f2a4-0d3e-4f56-9a8b-1c2d3e4f5061';
+
+    it('a run whose three sources use three producer keys joins into one row', () => {
+        const tag = derive_session_tag(SESSION); // the interruption ledger
+        const key = deriveSessionKey(SESSION); // run-continuation.jsonl
+        // The keys really are different — if this ever stops holding, the
+        // test below would pass for the wrong reason.
+        expect(key).not.toBe(tag);
+        expect(SESSION).not.toBe(tag);
+
+        writeLedger([{ run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        writeContinuation([
+            { run_id: key, event: 'engage' },
+            { run_id: key, event: 'engage' },
+            { run_id: key, event: 'halt-stall' },
+        ]);
+        const state = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(path.join(state, 'decisions', SESSION), { recursive: true });
+        fs.writeFileSync(path.join(state, 'decisions', SESSION, '001.md'), 'x', 'utf8');
+        // run_supervise keys its ledger on the RAW session id.
+        fs.writeFileSync(
+            path.join(state, 'supervise-relaunches.json'),
+            JSON.stringify({ [SESSION]: 2 }),
+            'utf8',
+        );
+
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === tag);
+        expect(run?.reengagements).toBe(2);
+        expect(run?.stall_halts).toBe(1);
+        expect(run?.relaunches).toBe(2);
+        expect(run?.memos).toBe(1);
+    });
+
+    it('the 16-hex tag is the 32-hex key truncated — pinned, not assumed', () => {
+        // `toLedgerRunId` re-derives a raw id rather than truncating it,
+        // because `fingerprint` normalises whitespace and `deriveSessionKey`
+        // does not. For an id without whitespace the two agree, and that
+        // agreement is what lets the continuation key be truncated at all.
+        expect(deriveSessionKey(SESSION).slice(0, SESSION_ID_LEN)).toBe(
+            derive_session_tag(SESSION),
+        );
+    });
+
     it('counts engage and halt-stall events per run', () => {
         writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
         writeContinuation([

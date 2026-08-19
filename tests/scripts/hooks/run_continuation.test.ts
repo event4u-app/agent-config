@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     DUPLICATE_WINDOW_MS,
+    HALT_ACTIONS,
     MAX_ITERATIONS,
     STALL_WINDOW,
     WALL_CLOCK_CAP_MS,
@@ -160,6 +161,40 @@ describe('ladder — both directions pinned', () => {
         expect(ladder(stalled, 2, Date.now())).toBe('engage');
         // Fewer than STALL_WINDOW readings can never read as a stall.
         expect(ladder(base({ iterations: 2, history: [3, 3] }), 3, Date.now())).toBe('engage');
+    });
+});
+
+describe('ladder — a halt is terminal, and outranks every other rung', () => {
+    const base = (over: Partial<RunState> = {}): RunState => ({
+        started_at: new Date().toISOString(),
+        iterations: 0,
+        last_turn: -1,
+        history: [],
+        ...over,
+    });
+
+    // The R2 review's finding 4. Every non-engage rung used to DELETE the
+    // state file, so the next Stop — and a host may fire `stop` several times
+    // for one reply — read `prev === null`, built `iterations: 0` with a fresh
+    // `started_at`, and engaged again. The cap bounded a 25-block, not a run.
+    for (const rung of HALT_ACTIONS) {
+        it(`${rung} stays ${rung} on a later stop with a healthy-looking state`, () => {
+            // Everything else about this state says "engage": no iterations
+            // spent, started now, no stall history. Only the stamp halts it.
+            expect(ladder(base({ halted: rung }), 5, Date.now())).toBe(rung);
+        });
+    }
+
+    it('a halted run does not report `complete` when the roadmap later reads zero-open', () => {
+        // Checked before the openCount rung on purpose: a run that was halted
+        // for exhausting its budget never reached a completion, and recording
+        // one would tell the digest the opposite of what happened.
+        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now())).toBe('halt-stall');
+    });
+
+    it('an un-halted state is unaffected — the stamp is the only new input', () => {
+        expect(ladder(base(), 5, Date.now())).toBe('engage');
+        expect(ladder(base(), 0, Date.now())).toBe('complete');
     });
 });
 

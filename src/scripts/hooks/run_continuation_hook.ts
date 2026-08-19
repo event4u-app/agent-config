@@ -114,6 +114,17 @@ export interface RunState {
     history: number[];
     /** ISO stamp of the most recent engagement — half of the duplicate key. */
     last_engaged_at?: string;
+    /**
+     * Which halt rung ended this run's budget, if one did. Set instead of
+     * deleting the state file, and the difference is the whole point: a host
+     * may fire `stop` several times for one reply, and a deleted state makes
+     * the next fire read `prev === null`, build `iterations: 0` with a fresh
+     * `started_at`, and engage again — so the 25-iteration cap bounded a
+     * 25-block and the 4 h clock restarted on every halt. The R2 review found
+     * this; the roadmap's Risk 2 ("the agent loops forever on a roadmap it
+     * cannot finish") named these rungs as its mitigation.
+     */
+    halted?: LadderAction;
 }
 
 /**
@@ -161,6 +172,13 @@ export type LadderAction =
     | 'halt-max-iterations'
     | 'halt-wall-clock'
     | 'halt-stall';
+
+/** The terminal rungs — the set `RunState.halted` may hold. */
+export const HALT_ACTIONS: readonly LadderAction[] = [
+    'halt-max-iterations',
+    'halt-wall-clock',
+    'halt-stall',
+];
 
 /**
  * Frontmatter `execution.mode`, or null. Line-oriented on purpose: the
@@ -226,6 +244,10 @@ export function ladder(
         stallWindow: STALL_WINDOW,
     },
 ): LadderAction {
+    // A halt is terminal for this run id. Checked BEFORE `complete` so a
+    // halted run whose roadmap later reads zero-open does not report a
+    // completion it never reached.
+    if (state.halted) return state.halted;
     if (openCount === 0) return 'complete';
     if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
     const started = Date.parse(state.started_at);
@@ -263,6 +285,16 @@ function readState(file: string): RunState | null {
         };
         if (typeof o['last_engaged_at'] === 'string') {
             rec.last_engaged_at = o['last_engaged_at'];
+        }
+        // Validated against the halt set rather than accepted as any string:
+        // an unrecognised value would be returned verbatim by `ladder` and
+        // become an action no branch below handles.
+        const halted = o['halted'];
+        if (
+            typeof halted === 'string' &&
+            (HALT_ACTIONS as readonly string[]).includes(halted)
+        ) {
+            rec.halted = halted as LadderAction;
         }
         return rec;
     } catch {
@@ -399,12 +431,28 @@ export function main(): number {
             blocked: scan.blocked,
             at: new Date().toISOString(),
         });
-        // A finished ladder clears its state so a later run on the same
-        // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
-        try {
-            fs.rmSync(stateFile, { force: true });
-        } catch {
-            /* fail-open */
+        if (action === 'complete') {
+            // Only a COMPLETION clears the state, so a later run on the same
+            // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
+            // A halt must NOT clear it — see `RunState.halted`.
+            try {
+                fs.rmSync(stateFile, { force: true });
+            } catch {
+                /* fail-open */
+            }
+            return EXIT_ALLOW;
+        }
+        // A halt is recorded in place. A failed write is fail-open in the safe
+        // direction here: the rung already decided to allow this stop, and the
+        // worst case of a lost stamp is the pre-fix behaviour, never a block.
+        if (!state.halted) {
+            state.halted = action;
+            try {
+                fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+                fs.writeFileSync(stateFile, `${JSON.stringify(state)}\n`, 'utf8');
+            } catch {
+                /* fail-open */
+            }
         }
         return EXIT_ALLOW;
     }

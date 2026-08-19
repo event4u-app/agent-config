@@ -72,6 +72,7 @@ import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 import { MidFlightFallback } from './transport_resolver.js';
 import {
+    emitOutcome,
     escalateUnmetered,
     establishTwin,
     isFailedCliCall,
@@ -696,6 +697,11 @@ function _run_round(
         let established = twins?.get(declared.name) ?? null;
         const substituted_on_entry = established !== null;
         let member = established !== null ? established.client : declared;
+        // Set only when THIS iteration escalated an unmetered seat; read by
+        // the breach handler below so a refusal degrades that one seat instead
+        // of the round. See the `unmetered_original !== null` branch there.
+        let unmetered_original: CouncilResponse | null = null;
+        let unmetered_twin: EstablishedTwin | null = null;
         // ── non-billable members skip the cost gate entirely ─────────
         // ManualClient (and future PlaywrightClient) cost us $0; their
         // token counts are still tracked from the response below for
@@ -719,6 +725,10 @@ function _run_round(
                 established = nb_twin;
                 twins?.set(member.name, nb_twin);
                 member = nb_twin.client;
+                // Kept so a budget refusal below can return the ORIGINAL cli
+                // failure rather than aborting the seat as its twin.
+                unmetered_original = response;
+                unmetered_twin = nb_twin;
             }
             if (!escalated) {
                 _stamp_transport_metadata(response, member);
@@ -749,11 +759,53 @@ function _run_round(
                 breach_kind === 'daily'
                     ? 'daily_budget_exceeded'
                     : 'cost_budget_exceeded';
+            // A seat that arrived here by escalating from an UNMETERED cli
+            // call degrades to its own original failure — never to an abort,
+            // and never to the round-wide short-circuit below.
+            //
+            // The R2 review's finding 3. Before the escalation existed, a
+            // `billable: false` member `continue`d above and could not reach
+            // this gate at all, so a dead free CLI cost its own seat and
+            // nothing else. Falling through priced as the metered twin put it
+            // one branch away from `_aborted(left, …)` for EVERY remaining
+            // member — a missing vendor binary near a `max_total_usd` could
+            // terminate the round, which is precisely what the shipped claim
+            // `council-fallback-loses-zero-seats` says cannot happen.
+            //
+            // The shape matches `runGatedRetry`'s refusal path exactly: the
+            // original response, `fallback_skipped: cost_budget` so a reader
+            // can tell "not retried" from "retry refused", and the outcome on
+            // the event log.
+            if (unmetered_original !== null && unmetered_twin !== null) {
+                unmetered_original.metadata = {
+                    ...(unmetered_original.metadata ?? {}),
+                    fallback_skipped: 'cost_budget',
+                };
+                const fb = opts.cli_fallback ?? null;
+                if (fb !== null) {
+                    emitOutcome(fb, declared.name, unmetered_twin, 'cost_budget');
+                }
+                _stamp_transport_metadata(unmetered_original, declared);
+                results.push(unmetered_original);
+                spent.input += unmetered_original.input_tokens;
+                spent.output += unmetered_original.output_tokens;
+                // The sticky map is rolled back: the twin was never called, so
+                // a later round must re-decide rather than inherit a
+                // substitution that never happened.
+                twins?.delete(declared.name);
+                continue;
+            }
             if (on_overrun !== null && estimates !== null) {
                 const event = new OverrunEvent({
                     member_index: idx,
                     member,
-                    next_estimate: estimates[idx] as CostEstimate,
+                    // `est`, not `estimates[idx]`. The breach decision two
+                    // lines up was already re-priced for a substituted twin;
+                    // the event that ASKS the operator to approve it showed
+                    // the pre-loop row for the unmetered DECLARED seat, i.e. a
+                    // ~$0 next-call estimate for the very call the gate just
+                    // refused as over budget. R2 review, finding 8.
+                    next_estimate: (est ?? estimates[idx]) as CostEstimate,
                     spent_input_tokens: _pyInt(spent.input),
                     spent_output_tokens: _pyInt(spent.output),
                     spent_usd: spent.usd,

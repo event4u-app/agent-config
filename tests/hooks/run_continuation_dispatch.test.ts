@@ -180,10 +180,17 @@ describe('run-continuation — driven through the live dispatcher', () => {
         const transcript = writeTranscript(3);
         const res = dispatchStop(root, transcript);
         const log = events(root);
-        // The event log is the assertion, not the exit code: the dispatcher maps
-        // its internal ladder onto each host's own contract, and pinning a host
-        // exit code here would make this test a claim about Claude's protocol
-        // rather than about this concern being reached and deciding.
+        // Two assertions, and the second one exists because its absence hid a
+        // critical defect. The event log proves the concern was REACHED and
+        // decided; the exit code proves the decision REACHED THE HOST. The
+        // original version of this test asserted only the first and said so
+        // deliberately — that pinning an exit code would make it "a claim about
+        // Claude's protocol". It is exactly that claim, and it is the one worth
+        // making: the concern shipped `severity: advisory`, the dispatcher's
+        // severity ceiling downgraded its EXIT_BLOCK to WARN, and stop+warn maps
+        // to exit 0. The concern ran, logged `engage`, injected its text as
+        // context — and did not stop the stop. Every assertion below passed the
+        // whole time.
         expect(log.length).toBeGreaterThan(0);
         const engaged = log.filter((e) => e['event'] === 'engage');
         expect(engaged.length).toBe(1);
@@ -202,6 +209,11 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(seen).toContain('0.1');
         expect(seen).toContain('lint_hook_manifest');
         expect(res.code).not.toBe(-1);
+        // exit 2 is the ONLY value that makes Claude Code refuse the Stop and
+        // feed the reason back to the model (`host_semantics.emitFor`, stop is
+        // block-capable). exit 0 here means the continuation was delivered as
+        // passive context on a turn that ended anyway — the inert shape.
+        expect(res.code).toBe(2);
     });
 
     it('DEFERS when turn-end-gate refused this turn — the quality gate always wins', () => {

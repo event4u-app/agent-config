@@ -34,7 +34,7 @@ import {
     run_debate,
     run_peer_review,
 } from '../../../src/scripts/ai_council/orchestrator.js';
-import { load_prices } from '../../../src/scripts/ai_council/pricing.js';
+import { load_prices, type CostEstimate } from '../../../src/scripts/ai_council/pricing.js';
 import { ANTI_CONFORMITY_DIRECTIVE } from '../../../src/scripts/ai_council/prompts.js';
 import { EMPTY_HANDOFF } from '../../../src/scripts/ai_council/handoff.js';
 
@@ -587,6 +587,68 @@ describe('orchestrator — cost gating', () => {
             'cost_budget_exceeded',
             'cost_budget_exceeded',
         ]);
+    });
+
+    // R2 review, finding 3. Before the unmetered escalation existed, a
+    // `billable: false` member returned before this gate and could not reach
+    // it; after it, a dead FREE cli seat arrives priced as its metered twin,
+    // one branch away from aborting every remaining member of the round. The
+    // shipped claim `council-fallback-loses-zero-seats` says that cannot
+    // happen, so this pins it from both sides.
+    it('a dead FREE cli seat refused by the budget costs its own seat, never the round', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x'.repeat(40) });
+        const table = load_prices();
+        const members = [
+            new Mock('anthropic', 'claude-sonnet-4-5', {
+                error: 'auth_expired',
+                transport: 'cli',
+                billable: false,
+            }),
+            new Mock('openai', 'gpt-4o', { text: 'second seat answered', it: 1, ot: 1 }),
+        ];
+        // A USD ceiling, DERIVED, and both halves matter. A token cap tight
+        // enough to breach the twin also breaches seat 1 on its own merits, so
+        // the round would end aborted either way and the assertion could not
+        // tell the fix from the defect. And a hand-picked USD number is the
+        // same trap one layer down — too low breaches everyone, too high
+        // breaches no one, and either reads as a passing test. So the ceiling
+        // is read off the real price table, strictly between the two seats.
+        const twinEst = estimate(
+            q,
+            [new Mock('anthropic', 'claude-sonnet-4-5')],
+            table,
+        )[0] as CostEstimate;
+        const cheapEst = estimate(q, [members[1] as Mock], table)[0] as CostEstimate;
+        const twinUsd = twinEst.input_usd + twinEst.output_usd;
+        const cheapUsd = cheapEst.input_usd + cheapEst.output_usd;
+        // If this ever stops holding the test is measuring nothing, so it
+        // fails loudly here rather than passing for the wrong reason.
+        expect(cheapUsd).toBeLessThan(twinUsd);
+        const budget = new CostBudget({
+            max_input_tokens: 50_000,
+            max_output_tokens: 20_000,
+            max_total_usd: (cheapUsd + twinUsd) / 2,
+        });
+        const res = consult(members, q, budget, {
+            table,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () =>
+                    new Mock('anthropic', 'claude-sonnet-4-5', { text: 'via api' }),
+            },
+        });
+        // Seat 0 degrades to its OWN original cli failure — not to
+        // `cost_budget_exceeded`, which would report the twin's abort as the
+        // seat's outcome and discard why the cli died.
+        expect(res[0]!.error).toBe('auth_expired');
+        // Named, so a reader can tell "not retried" from "retry refused" —
+        // the same marker `runGatedRetry` sets on the billable path.
+        expect(res[0]!.metadata['fallback_skipped']).toBe('cost_budget');
+        expect(res[0]!.metadata['fallback_from']).toBeUndefined();
+        // The round survives. This is the assertion the claim rests on.
+        expect(res).toHaveLength(2);
+        expect(res[1]!.error).toBeNull();
+        expect(res[1]!.text).toBe('second seat answered');
     });
 
     it('on_overrun(false) skips the breaching member only', () => {

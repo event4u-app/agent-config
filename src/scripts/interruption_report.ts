@@ -49,6 +49,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { SESSION_ID_LEN, derive_session_tag } from './chat_history.js';
+
 export const DEFAULT_WINDOW = 30;
 
 export interface LedgerRow {
@@ -119,6 +121,58 @@ const SYNTHETIC_MARKERS = [
 
 export function isSyntheticUserText(text: string): boolean {
     return SYNTHETIC_MARKERS.some((m) => text.includes(m));
+}
+
+/**
+ * Look one run's value up in a source keyed differently from the ledger.
+ *
+ * R2 review, finding 2. Three producers write three key spaces for the same
+ * run and the report joined them with exact lookups, so `reengagements`,
+ * `stall_halts`, `stall_halt_rate` and `relaunches` read 0 / 0 % for every
+ * real run while the data sat on disk:
+ *
+ *   - the interruption ledger  `derive_session_tag(id)`  = 16 hex
+ *   - run-continuation.jsonl   `deriveSessionKey(id)`    = 32 hex
+ *   - supervise-relaunches     the RAW `session_id`
+ *
+ * A zero meaning "no instrument" and a zero meaning "the key did not match"
+ * are indistinguishable in the output, and this report prints an explicit
+ * NO INSTRUMENT for two other axes precisely to avoid the first — so a silent
+ * second kind was the worse failure.
+ *
+ * Resolution is EXACT-FIRST and lives here rather than in the readers: a
+ * reader that rewrote its own keys would have to guess what an unrecognised
+ * string means, and guessing "hash it" turns a would-have-matched key into a
+ * guaranteed miss. The readers keep reporting what is on disk; the join owns
+ * the reconciliation, because only the join knows the ledger id it is
+ * looking for.
+ *
+ * The 32-hex key is a prefix-extension of the 16-hex tag ONLY because a
+ * session id carries no whitespace for `fingerprint` to normalise away.
+ * `interruption_report.test.ts` pins that equivalence rather than assuming it.
+ */
+export function lookupByRunId<T>(
+    source: ReadonlyMap<string, T> | Readonly<Record<string, T>>,
+    runId: string,
+): T | undefined {
+    const get = (k: string): T | undefined =>
+        source instanceof Map ? source.get(k) : (source as Record<string, T>)[k];
+    // 1. The key as the ledger spells it. Covers a source that already agrees,
+    //    and every fixture that writes one id everywhere.
+    const exact = get(runId);
+    if (exact !== undefined) return exact;
+    // 2. A 32-hex continuation key whose first SESSION_ID_LEN chars are this tag.
+    const keys: string[] = source instanceof Map ? [...source.keys()] : Object.keys(source);
+    for (const k of keys) {
+        if (k.length === 32 && /^[0-9a-f]+$/.test(k) && k.slice(0, SESSION_ID_LEN) === runId) {
+            return get(k);
+        }
+    }
+    // 3. A raw session id that hashes to this tag.
+    for (const k of keys) {
+        if (derive_session_tag(k) === runId) return get(k);
+    }
+    return undefined;
 }
 
 /**
@@ -368,7 +422,7 @@ export function buildReport(root: string, windowRequested: number): Report {
             if (elapsed !== null) working = Math.max(0, elapsed - waiting);
         }
 
-        const cont = continuation.get(runId) ?? { engage: 0, stall: 0 };
+        const cont = lookupByRunId(continuation, runId) ?? { engage: 0, stall: 0 };
         runs.push({
             run_id: runId,
             roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
@@ -381,8 +435,8 @@ export function buildReport(root: string, windowRequested: number): Report {
             working_minutes: working,
             reengagements: cont.engage,
             stall_halts: cont.stall,
-            relaunches: relaunches[runId] ?? 0,
-            memos: memosByRun[runId] ?? 0,
+            relaunches: lookupByRunId(relaunches, runId) ?? 0,
+            memos: lookupByRunId(memosByRun, runId) ?? 0,
         });
     }
 
