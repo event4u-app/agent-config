@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 511,
+  "count": 512,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3782,6 +3782,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-residuals",
+      "title": "Road to the inbox-harvest residuals — four deferrals that outlived their parent",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 2,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-injection-and-authority-harvest",

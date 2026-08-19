@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**511 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 171 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**512 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 172 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -294,6 +294,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-d-top-band-model-economy`](road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | Road to at most one top-band context per task | closed-with-cancellations | 4 | 13/14 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08`](road-to-inbox-harvest-2026-08.md) | Road to inbox harvest 2026-08 | closed-with-cancellations | 5 | 12/21 | _not extractable_ |
 | [`road-to-inbox-harvest-distillation`](road-to-inbox-harvest-distillation.md) | Road to harvested-claim provenance and router-head skills | closed-with-cancellations | 4 | 9/16 | _not extractable_ |
+| [`road-to-inbox-harvest-residuals`](road-to-inbox-harvest-residuals.md) | Road to the inbox-harvest residuals — four deferrals that outlived their parent | closed-with-cancellations | 1 | 2/4 | _not extractable_ |
 | [`road-to-injection-and-authority-harvest`](road-to-injection-and-authority-harvest.md) | Road to injection-and-authority harvest | completed | 5 | 17/17 | _not extractable_ |
 | [`road-to-injection-defense-pressure-corpus`](road-to-injection-defense-pressure-corpus.md) | Road to an injection-defense pressure-corpus (with a defensive judge sliver) | closed-with-cancellations | 3 | 11/20 | _not extractable_ |
 | [`road-to-install-contract-stability`](road-to-install-contract-stability.md) | Roadmap: Install-Contract Stability — freeze the install ABI, split the lean core from the lab | completed | 2 | 15/15 | _not extractable_ |
