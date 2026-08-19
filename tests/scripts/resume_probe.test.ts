@@ -13,8 +13,10 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    conditionClause,
     extractCondition,
     probeLater,
+    referencedPath,
     referencedRoadmaps,
     roadmapDisposition,
     stepIsDone,
@@ -329,5 +331,76 @@ describe('resume_probe — the parsing pieces', () => {
     it('README.md in later/ is not a park note', () => {
         write('later/README.md', '# how later/ works\n');
         expect(probeLater(root)).toEqual([]);
+    });
+});
+
+// The second decidable condition form, added by `road-to-estate-drawdown`
+// Phase 2 batch 1. Until it existed the probe could decide exactly ONE
+// phrasing — a roadmap slug — so 42 of 44 live park notes were `undecidable`,
+// and the batch's own PARK-PROBEABLE verdict would have promised a probe that
+// could not read the conditions it was writing.
+describe('resume_probe — a repo path as the condition', () => {
+    let repoRoot = '';
+
+    function park(body: string): void {
+        write('later/road-to-parked.md', ['---', 'status: later', '---', '', '# Parked', '', body, ''].join('\n'));
+    }
+
+    beforeEach(() => {
+        repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'resume-probe-repo-'));
+    });
+
+    afterEach(() => {
+        fs.rmSync(repoRoot, { recursive: true, force: true });
+    });
+
+    it('fires when the named file exists', () => {
+        park('> **Blocked until:** `docs/contracts/thing.md` exists.');
+        fs.mkdirSync(path.join(repoRoot, 'docs', 'contracts'), { recursive: true });
+        fs.writeFileSync(path.join(repoRoot, 'docs', 'contracts', 'thing.md'), 'x', 'utf-8');
+        const [f] = probeLater(root, repoRoot);
+        expect(f!.verdict).toBe('fired');
+        expect(f!.why).toContain('exists');
+    });
+
+    it('reports unmet — not undecidable — when the named file is absent', () => {
+        park('> **Blocked until:** `agents/evidence/analysis/never-written.md` exists.');
+        const [f] = probeLater(root, repoRoot);
+        expect(f!.verdict).toBe('unmet');
+        expect(f!.why).toContain('does not exist');
+    });
+
+    // The over-fire this guard exists to stop, reproduced from the live case:
+    // `skill-catalogue.jsonl` exists with 7 lines while the bar is 20, so a
+    // bare existence test would have un-parked a roadmap 13 observations early.
+    it('stays undecidable when the predicate is a content bar, not existence', () => {
+        park('> **Blocked until:** `agents/evidence/metrics/skill-catalogue.jsonl` holds at least 20 observations.');
+        fs.mkdirSync(path.join(repoRoot, 'agents', 'evidence', 'metrics'), { recursive: true });
+        fs.writeFileSync(path.join(repoRoot, 'agents', 'evidence', 'metrics', 'skill-catalogue.jsonl'), '{}\n', 'utf-8');
+        const [f] = probeLater(root, repoRoot);
+        expect(f!.verdict).toBe('undecidable');
+    });
+
+    it('stays undecidable for a bare directory, which exists in every checkout', () => {
+        park('> **Blocked until:** a signal exists under `agents/evidence/`.');
+        fs.mkdirSync(path.join(repoRoot, 'agents', 'evidence'), { recursive: true });
+        const [f] = probeLater(root, repoRoot);
+        expect(f!.verdict).toBe('undecidable');
+    });
+
+    it('refuses two paths — a conjunction it could only half-weigh', () => {
+        expect(referencedPath('`docs/a.md` exists and `docs/b.md` exists')).toBeNull();
+    });
+
+    it('refuses a path when the predicate is not existence', () => {
+        expect(referencedPath('`docs/a.md` holds at least 20 rows')).toBeNull();
+    });
+
+    // The truncation this fix repairs: a naive stop-at-any-dot cut the clause
+    // at the `.` inside `.md`, hiding the very path the condition named.
+    it('a dot inside a backticked path does not end the clause', () => {
+        const c = conditionClause('**Blocked until:** `docs/contracts/thing.md` exists. Commentary follows.');
+        expect(c).toContain('thing.md`');
+        expect(c).not.toContain('Commentary');
     });
 });
