@@ -370,9 +370,18 @@ export function renderVerification(cp: RunCheckpoint, res: VerifyResult): string
     // action differs: `ok` needs nothing, `CHANGED` names what moved, and
     // UNKNOWN says this axis carries no information and the other four are
     // what the verdict rests on.
+    // ONLY `head` can be unknown. R2 round 6, finding 6: the predicate was
+    // written for `head` — where `null` means "could not read" — and applied
+    // to all five fields, but for `next_step` a `null` is a documented VALUE
+    // ("or `null` when none remains"). A finished roadmap therefore rendered
+    // `UNKNOWN next_step: not readable` and claimed a field had not been
+    // compared when it had been, on the exact state a resume most wants to
+    // see. The field name is the discriminator because the meaning of `null`
+    // is a property of the field, not of the value.
+    const UNKNOWNABLE: ReadonlySet<string> = new Set(['head']);
     let unknown = 0;
     for (const f of res.fields) {
-        if (f.claimed === null || f.actual === null) {
+        if (UNKNOWNABLE.has(f.field) && (f.claimed === null || f.actual === null)) {
             unknown += 1;
             lines.push(
                 `  UNKNOWN  ${f.field}: not readable ` +

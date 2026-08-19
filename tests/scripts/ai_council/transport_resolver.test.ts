@@ -558,3 +558,28 @@ describe('resolveMemberTransport — the reconciled entry point', () => {
         ).toThrow(/expected one of/);
     });
 });
+
+describe('classifyCliFailure — the token the producers actually write', () => {
+    // R2 round 6, finding 4. `model_unservable` is one of the four
+    // fallback-eligible classes, and the classifier matched a token no
+    // producer emits: `clients.ts` writes `model_unsupported_on_transport` at
+    // both sites and puts the vendor sentence in `metadata.detail`, never in
+    // `error`. The contract's fourth eligible class was dead.
+    it('model_unsupported_on_transport classifies as model_unservable', () => {
+        expect(classifyCliFailure('model_unsupported_on_transport')).toBe('model_unservable');
+    });
+
+    it('and is therefore fallback-eligible end to end', () => {
+        expect(isFallbackEligible(classifyCliFailure('model_unsupported_on_transport'))).toBe(true);
+    });
+
+    it('the original token and the vendor sentence still classify', () => {
+        expect(classifyCliFailure('model_unservable')).toBe('model_unservable');
+        expect(classifyCliFailure('o3 is not supported when using codex')).toBe('model_unservable');
+    });
+
+    it('an unrelated token is unaffected', () => {
+        expect(classifyCliFailure('timeout')).toBe('timeout');
+        expect(classifyCliFailure('something_else')).toBe('other');
+    });
+});

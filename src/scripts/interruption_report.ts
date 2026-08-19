@@ -72,10 +72,25 @@ export interface HistoryTurn {
 export interface RunReport {
     run_id: string;
     roadmap: string | null;
-    asks: number;
-    handbacks: number;
-    contacts: number;
-    halts: number;
+    /**
+     * Contact counts, or `null` when this run has NO interruption-ledger
+     * entry — a session predating the ledger, or one whose stop hook never
+     * fired.
+     *
+     * R2 round 6, finding 8. These were built unconditionally from the ledger
+     * rows, so an absent run emitted `asks: 0, contacts: 0, halts: 0` — while
+     * this report's own note tells the reader such a run is "reported with the
+     * missing axis null". The aggregate median already excluded them; the ROWS
+     * did not, and a reader consuming rows would score an unmeasured run as
+     * zero contacts. That is precisely the arithmetic falsification criterion
+     * (3) of the pre-registered `user-out-of-loop-baseline` claim forbids —
+     * "scoring an unmeasured run as zero contacts is the arithmetic that would
+     * manufacture the result".
+     */
+    asks: number | null;
+    handbacks: number | null;
+    contacts: number | null;
+    halts: number | null;
     elapsed_minutes: number | null;
     waiting_minutes: number | null;
     working_minutes: number | null;
@@ -423,13 +438,16 @@ export function buildReport(root: string, windowRequested: number): Report {
         }
 
         const cont = lookupByRunId(continuation, runId) ?? { engage: 0, stall: 0 };
+        const inLedger = ledgerRuns.has(runId);
         runs.push({
             run_id: runId,
             roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
-            asks,
-            handbacks,
-            contacts: contacts.length,
-            halts,
+            // `null`, not 0, when this run is absent from the ledger — see
+            // the field docs above and falsification criterion (3).
+            asks: inLedger ? asks : null,
+            handbacks: inLedger ? handbacks : null,
+            contacts: inLedger ? contacts.length : null,
+            halts: inLedger ? halts : null,
             elapsed_minutes: elapsed,
             waiting_minutes: waiting,
             working_minutes: working,
@@ -475,7 +493,10 @@ export function buildReport(root: string, windowRequested: number): Report {
         runs,
         notes,
         median_contacts_per_run: median(
-            runs.filter((r) => ledgerRuns.has(r.run_id)).map((r) => r.contacts),
+            runs
+                .filter((r) => ledgerRuns.has(r.run_id))
+                .map((r) => r.contacts)
+                .filter((v): v is number => v !== null),
         ),
         median_user_wait_minutes: median(allGaps),
         median_elapsed_minutes: median(

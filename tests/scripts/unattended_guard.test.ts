@@ -99,6 +99,30 @@ describe('checkRemotes', () => {
         expect(v.reason).toContain('github.com');
     });
 
+    it('a diverging pushurl makes the remote production — the fetch URL is not the risk', () => {
+        // R2 round 6, finding 5. The parser read only `(fetch)` rows, so a
+        // remote that FETCHES from a local mirror and PUSHES to the forge read
+        // as local and cleared the gate. This precondition exists to stop a
+        // push, and it was judging the wrong URL — fail-open, in the one
+        // module whose stated posture is fail-closed.
+        const d = gitRepo({ origin: '/srv/mirrors/repo.git' });
+        spawnSync('git', ['remote', 'set-url', '--push', 'origin', 'git@github.com:org/repo.git'], {
+            cwd: d,
+        });
+        const v = checkRemotes(d);
+        expect(v.safe).toBe(false);
+        expect(v.reason).toContain('github.com');
+        expect(v.remotes).toEqual([
+            { name: 'origin', url: 'git@github.com:org/repo.git', production: true },
+        ]);
+    });
+
+    it('a remote local on BOTH urls is still safe', () => {
+        const d = gitRepo({ mirror: '/srv/mirror.git' });
+        spawnSync('git', ['remote', 'set-url', '--push', 'mirror', '/srv/other.git'], { cwd: d });
+        expect(checkRemotes(d).safe).toBe(true);
+    });
+
     it('an unreadable git config FAILS CLOSED', () => {
         // "I could not tell" and "there is no production remote" must not
         // resolve to the same answer when being wrong means an unattended

@@ -58,6 +58,17 @@ const REFUSAL_NAMES: ReadonlySet<string> = new Set([
     'CouncilDisabledError',
     'CliClientError',
     'CouncilConfigError',
+    // R2 round 6, critical finding 1 — and the docblock above already told the
+    // story one name short. `KeyGateError` is what an api-twin construction
+    // raises when the provider key is absent or violates the 0600 contract,
+    // which is the ORDINARY shape of the very configuration this fallback
+    // targets: a cli member under subscription auth, no `api_key_ref`, no
+    // local key. It escaped `construct()`, escaped `consult()`, and is not in
+    // `main`'s catch list — so instead of losing one seat, the whole pass died
+    // with an unhandled exception. A mechanism that turns a recoverable seat
+    // loss into a total loss is worse than no mechanism, which is the sentence
+    // directly above this list.
+    'KeyGateError',
 ]);
 
 function isRefusal(exc: unknown): boolean {

@@ -426,7 +426,19 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     // Also matched on the provider's own wording, so a model refused at call
     // time (one the deny-list has never seen) classifies the same as one the
     // pre-spend gate caught.
-    if (s.startsWith('model_unservable') || s.includes('is not supported when using codex')) {
+    if (
+        s.startsWith('model_unservable') ||
+        // The token the PRODUCERS actually write. R2 round 6, finding 4:
+        // `clients.ts` emits `model_unsupported_on_transport` at both sites
+        // (the pre-spend gate at :1857 and the turn-failed path at :2002) and
+        // puts the vendor sentence in `metadata.detail`, never in `error` — so
+        // the class matched nothing a caller could produce and the contract's
+        // fourth eligible class was dead. The token is matched here rather
+        // than renamed at the producers because `code:` values reach the
+        // events log and a rename would break every reader of the history.
+        s.startsWith('model_unsupported_on_transport') ||
+        s.includes('is not supported when using codex')
+    ) {
         return 'model_unservable';
     }
     if (s === 'timeout') return 'timeout';

@@ -124,18 +124,38 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
 /**
  * The indent width this document actually uses, or 2 when it has no nesting.
  *
- * Read from the FIRST indented mapping line rather than assumed, because an
- * assumed width silently produces a duplicate mapping key on any other one
- * (see `upsertScalar`). Tabs are not YAML indentation and are ignored.
+ * The SMALLEST indent of any mapping line, not the first one seen. R2 round 6,
+ * finding 3: reading the first was wrong in two ways at once, and both were
+ * reachable on files this repository ships.
+ *
+ *   - The key pattern excluded `-`, so a dashed key (`first-principles:`, and
+ *     the shipped template has one) was skipped and the next, DEEPER line won:
+ *     a 2-space document read as 4.
+ *   - Even with the pattern fixed, "first" is not "representative" — a
+ *     document whose first indented line sits at depth 3 read as 6.
+ *
+ * Either way every `replaceScalar` probe then misses and `upsertScalar`
+ * appends a duplicate mapping key the parser rejects, over a `{ok: true}`.
+ * The minimum is the width by construction: nesting is a multiple of it, so
+ * the shallowest indented line IS one unit.
+ *
+ * Tabs are not YAML indentation and are ignored. A list item (`- x`) is not a
+ * mapping line and does not vote.
  */
 export function detectIndentWidth(lines: readonly string[]): number {
+    let min = 0;
     for (const line of lines) {
-        if (line.trim() === '' || line.trim().startsWith('#')) continue;
+        const trimmed = line.trim();
+        if (trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith('-')) continue;
         if (line.startsWith('\t')) continue;
         const indentLen = line.length - line.trimStart().length;
-        if (indentLen > 0 && /^[A-Za-z_][A-Za-z0-9_]*\s*:/.test(line.trim())) return indentLen;
+        if (indentLen === 0) continue;
+        // Hyphens and dots are legal in a YAML key and appear in this repo's
+        // own templates; excluding them is what let a deeper line win.
+        if (!/^[A-Za-z_][\w.-]*\s*:/.test(trimmed)) continue;
+        if (min === 0 || indentLen < min) min = indentLen;
     }
-    return 2;
+    return min === 0 ? 2 : min;
 }
 
 /**

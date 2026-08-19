@@ -12,7 +12,17 @@
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
-import { replaceScalar, upsertScalar } from '../../src/server/io/yamlIO.js';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+import {
+    detectIndentWidth,
+    replaceScalar,
+    upsertScalar,
+} from '../../src/server/io/yamlIO.js';
+
+/** This worktree's root — two levels up from tests/server/. */
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 const read = (body: string, a: string, b: string): unknown =>
     ((parseYaml(body) as Record<string, Record<string, unknown>>)[a] ?? {})[b];
@@ -182,5 +192,51 @@ describe('the writer and its existence-probe agree about the format', () => {
         const twice = upsertScalar(once, ['fallback', 'api_on_quota'], false);
         expect(twice.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
         expect(twice).toContain('  api_on_quota: false');
+    });
+});
+
+describe('detectIndentWidth — the SMALLEST indent, not the first line seen', () => {
+    // R2 round 6, finding 3. Reading the first indented mapping line was wrong
+    // twice over, and both were reachable on files this repo ships.
+    it('a dashed key does not hand the vote to a deeper line', () => {
+        // The shipped template has `first-principles:`. The old key pattern
+        // excluded `-`, so that line was skipped and the next, deeper one won.
+        expect(detectIndentWidth(['root:', '  first-principles:', '    a: 1'])).toBe(2);
+    });
+
+    it('an unrepresentative first line does not set the width', () => {
+        expect(detectIndentWidth(['root:', '      deep: 1', '  shallow: 2'])).toBe(2);
+    });
+
+    it('a list item is not a mapping line and does not vote', () => {
+        // The mapping line at 2 decides. Asserting anything for a document
+        // whose ONLY indented mapping sits at 4 would be asserting something
+        // unknowable — there the minimum genuinely is 4.
+        expect(detectIndentWidth(['root:', '  - item', '  key: 1'])).toBe(2);
+    });
+
+    it('a genuine 4-space document still reads 4', () => {
+        expect(detectIndentWidth(['root:', '    key: 1', '        deeper: 2'])).toBe(4);
+    });
+
+    it('tabs, comments and flat documents fall back to 2', () => {
+        expect(detectIndentWidth(['root:', '\tkey: 1'])).toBe(2);
+        expect(detectIndentWidth(['root:', '  # note'])).toBe(2);
+        expect(detectIndentWidth(['a: 1', 'b: 2'])).toBe(2);
+        expect(detectIndentWidth([])).toBe(2);
+    });
+
+    it('the shipped council template round-trips two toggles and still parses', () => {
+        // The end-to-end statement against a real file, not a fixture.
+        const body = fs.readFileSync(
+            path.join(REPO_ROOT, 'agents', 'templates', '.ai-council.yml.example'),
+            'utf8',
+        );
+        let b = upsertScalar(body, ['fallback', 'api_on_quota'], true);
+        b = upsertScalar(b, ['fallback', 'api_on_quota'], false);
+        const doc = parseYaml(b) as Record<string, Record<string, unknown>>;
+        expect(doc['fallback']?.['api_on_quota']).toBe(false);
+        // One real key. The other match in this file is a comment.
+        expect(b.split('\n').filter((l) => /^\s*api_on_quota:/.test(l))).toHaveLength(1);
     });
 });

@@ -207,6 +207,25 @@ describe('renderVerification', () => {
         expect(out).not.toContain('UNKNOWN');
     });
 
+    it('a finished roadmap does NOT render next_step as UNKNOWN — null is a VALUE there', () => {
+        // R2 round 6, finding 6. The UNKNOWN predicate was written for `head`,
+        // where null means "could not read", and applied to every field — but
+        // `next_step` is documented as null when no open step remains. A
+        // finished roadmap therefore claimed a field had not been compared
+        // when it had been, on the exact state a resume most wants to see.
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['## Phase 1', '- [x] all done']);
+        const git = path.join(r, '.git');
+        fs.mkdirSync(git, { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), `${'a'.repeat(40)}\n`, 'utf-8');
+        const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
+        expect(cp.next_step).toBeNull();
+        const out = renderVerification(cp, verifyCheckpoint(r, cp));
+        expect(out).toContain('ok       next_step: null');
+        expect(out).not.toContain('UNKNOWN');
+        expect(out).toContain('the tree still matches');
+    });
+
     it('an unreadable field renders UNKNOWN, never `ok` — a third state', () => {
         // R2 round 5, finding 3. The null-head tolerance is right as a VERDICT
         // (an unknown commit is not a moved one) but rendering it `ok head:
@@ -553,5 +572,73 @@ describe('verifyCheckpoint — head is re-verified like every other field', () =
         expect(field?.claimed).toBe('a'.repeat(40));
         expect(field?.actual).toBe('9'.repeat(40));
         expect(renderVerification(cp, res)).toContain('head');
+    });
+});
+
+describe('countRoadmap — a phase span survives its own sub-headings', () => {
+    // R2 round 6, critical finding 2. The first version closed a span at ANY
+    // H2/H3, so a `###` sub-heading inside a `## Phase` ended it — and the
+    // module then produced the exact false-completion it was written to
+    // prevent.
+    it('an H3 inside a phase does NOT close it', () => {
+        const md = [
+            '## Phase 1: two measurements',
+            '',
+            '### Measurement A',
+            '- [ ] the first step',
+            '',
+            '### Measurement B',
+            '- [ ] the second step',
+        ].join('\n');
+        expect(countRoadmap(md).open).toBe(2);
+    });
+
+    it('a sibling H2 still closes it — the level rule, not a section allowlist', () => {
+        const md = [
+            '## Phase 1',
+            '### detail',
+            '- [ ] inside',
+            '## Acceptance criteria',
+            '- [ ] outside',
+            '## Blockers',
+            '- [ ] also outside',
+        ].join('\n');
+        expect(countRoadmap(md).open).toBe(1);
+    });
+
+    it('an H3 phase is closed by the next H3, not only by an H2', () => {
+        const md = [
+            '### Phase 1',
+            '- [ ] inside',
+            '### Notes',
+            '- [ ] outside',
+        ].join('\n');
+        expect(countRoadmap(md).open).toBe(1);
+    });
+
+    // The test that would actually have caught it: the real corpus, not a
+    // fixture built by the same hand that wrote the regex.
+    it('no committed roadmap with open phase steps reads as zero', () => {
+        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const files = fs
+            .readdirSync(dir)
+            .filter((n) => n.endsWith('.md') && n.startsWith('road-to-'));
+        expect(files.length).toBeGreaterThan(10);
+        const falseCompletions: string[] = [];
+        for (const name of files) {
+            const body = fs.readFileSync(path.join(dir, name), 'utf-8');
+            // Only roadmaps that HAVE a phase heading and an open box under it
+            // are in scope; the question is whether the scanner can see them.
+            if (!/^#{2,3}[ \t]+Phase[ \t]/m.test(body)) continue;
+            const rawOpen = body.split('\n').filter((l) => /^[ \t]*[-*][ \t]+\[ \]/.test(l)).length;
+            if (rawOpen === 0) continue;
+            if (countRoadmap(body).open === 0 && countRoadmap(body).done === 0) {
+                falseCompletions.push(name);
+            }
+        }
+        // A roadmap whose every open box sits under Blockers/AC legitimately
+        // reads 0 open — but it will have DONE boxes in its phases. One with
+        // neither is the scanner failing to see the phase at all.
+        expect(falseCompletions).toEqual([]);
     });
 });

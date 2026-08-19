@@ -101,16 +101,35 @@ export function checkRemotes(worktree: string): RemoteVerdict {
                 `refusing, because "unreadable" and "none" must not mean the same thing here`,
         };
     }
-    const seen = new Map<string, string>();
+    // BOTH rows, and the push row decides. R2 round 6, finding 5: parsing only
+    // `(fetch)` judged a remote by the URL it reads from, while the thing this
+    // precondition guards against is a PUSH. `git remote -v` emits a separate
+    // `(push)` row whenever `pushurl` diverges, so a worktree with
+    // `url = /srv/mirrors/repo.git` and `pushurl = git@github.com:org/repo.git`
+    // read as local and cleared the gate — fail-open, in the one module whose
+    // stated posture is fail-closed.
+    //
+    // A remote is production if EITHER of its URLs is, because either one
+    // being reachable is enough for the harm this check exists to prevent.
+    const urls = new Map<string, Set<string>>();
     for (const line of (r.stdout ?? '').split('\n')) {
-        const m = /^(\S+)\s+(\S+)\s+\(fetch\)$/.exec(line.trim());
-        if (m !== null) seen.set(m[1] as string, m[2] as string);
+        const m = /^(\S+)\s+(\S+)\s+\((fetch|push)\)$/.exec(line.trim());
+        if (m === null) continue;
+        const name = m[1] as string;
+        const set = urls.get(name) ?? new Set<string>();
+        set.add(m[2] as string);
+        urls.set(name, set);
     }
-    const remotes = [...seen.entries()].map(([name, url]) => ({
-        name,
-        url,
-        production: isProductionRemote(url),
-    }));
+    const remotes = [...urls.entries()].map(([name, set]) => {
+        const all = [...set];
+        const prod = all.filter((u) => isProductionRemote(u));
+        return {
+            name,
+            // The production URL is the one worth naming in a refusal.
+            url: (prod[0] ?? all[0]) as string,
+            production: prod.length > 0,
+        };
+    });
     const bad = remotes.filter((x) => x.production);
     if (bad.length > 0) {
         return {

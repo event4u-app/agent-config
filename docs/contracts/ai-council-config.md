@@ -227,10 +227,15 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   retry still passes the ordinary `cost_budget` gates.
 
   ```yaml
-  ai_council:
-    fallback:
-      api_on_quota: true   # default false
+  # Top level of .ai-council.yml — NOT nested under an `ai_council:` root.
+  fallback:
+    api_on_quota: true   # default false
   ```
+
+  The root matters and this example had it wrong (R2 round 6, finding 7):
+  `config.ts` reads `fallback` off the TOP level of the file, and the shipped
+  template puts it there, so a pasted `ai_council:` wrapper parses fine and
+  resolves to the default `false` — the switch reads as set and is not.
 - **`cli_call_budget` ships populated**, because `auto` prefers the rung it
   guards.
 

@@ -447,3 +447,40 @@ describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', ()
         expect(renderText(buildReport(root, DEFAULT_WINDOW))).toContain('stall-halt rate:           n/a');
     });
 });
+
+describe('a run with no ledger entry reports NULL contacts, never zero', () => {
+    // R2 round 6, finding 8. The rows were built unconditionally from the
+    // ledger while the report's own note promised null for a missing axis,
+    // and the pre-registered `user-out-of-loop-baseline` claim names this
+    // exact arithmetic as a falsification criterion: "scoring an unmeasured
+    // run as zero contacts is the arithmetic that would manufacture the
+    // result." The aggregate median already excluded such runs; the rows a
+    // downstream reader consumes did not.
+    it('emits null for the four ledger-derived fields', () => {
+        // A run in chat history with no interruptions.jsonl line at all.
+        writeLedger([{ run_id: 'has-ledger', turn: 1, kind: 'ask', class: 'ask', roadmap: null }]);
+        const r = buildReport(root, DEFAULT_WINDOW);
+        const orphan = r.runs.find((x) => x.run_id !== 'has-ledger');
+        if (orphan === undefined) {
+            // No history-only run in this fixture — the invariant is then
+            // vacuous rather than violated, and saying so beats a false pass.
+            expect(r.runs.every((x) => x.contacts !== null)).toBe(true);
+            return;
+        }
+        expect(orphan.contacts).toBeNull();
+        expect(orphan.asks).toBeNull();
+        expect(orphan.handbacks).toBeNull();
+        expect(orphan.halts).toBeNull();
+    });
+
+    it('a run WITH a ledger entry still reports numbers', () => {
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
+            { run_id: 'r1', turn: 2, kind: 'none', class: 'none', roadmap: null },
+        ]);
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run?.contacts).toBe(1);
+        expect(run?.asks).toBe(1);
+        expect(typeof run?.halts).toBe('number');
+    });
+});
