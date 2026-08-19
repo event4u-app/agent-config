@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**507 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**508 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 168 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -439,6 +439,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |
 | [`road-to-skill-ecosystem-authoring-discipline`](road-to-skill-ecosystem-authoring-discipline.md) | Road to authoring discipline — forced artifacts, named biases, and a removal signal | closed-with-cancellations | 6 | 53/54 | _not extractable_ |
 | [`road-to-skill-eval-coverage`](road-to-skill-eval-coverage.md) | Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted | completed | 4 | 14/14 | _not extractable_ |
+| [`road-to-slot-scoped-concern-loading`](road-to-slot-scoped-concern-loading.md) | Road to slot-scoped concern loading — stop every concern taxing every slot | closed-with-cancellations | 4 | 2/8 | _not extractable_ |
 | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
 | [`road-to-starlight-project-docs`](road-to-starlight-project-docs.md) | Roadmap: Starlight project documentation | archived-with-open-steps | 9 | 31/38 | _not extractable_ |

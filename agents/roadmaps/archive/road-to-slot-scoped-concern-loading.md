@@ -48,12 +48,12 @@ concern, and the visible symptom each time is a latency cap that looks too tight
 
 ## Phase 0 — Size the prize before changing anything
 
-- [ ] Measure what fraction of one dispatch is module load versus concern
+- [x] Measure what fraction of one dispatch is module load versus concern
       execution: a dispatcher entry that loads the bundle and exits immediately,
       against the same fixture and `--runs 50`, compared with a normal dispatch.
       `verify:` the load-only cell exists as a number, on the same machine and n
       as the gate.
-- [ ] State the ceiling this work can reach. If load is a small share of the
+- [x] State the ceiling this work can reach. If load is a small share of the
       dispatch, the honest outcome is to close this roadmap and say so —
       see Honest null below.
       `verify:` the share is written into this file as a percentage with its
@@ -61,7 +61,7 @@ concern, and the visible symptom each time is a latency cap that looks too tight
 
 ## Phase 1 — Choose the mechanism (maintainer decision)
 
-- [ ] Compare the candidates against Phase 0's number and record the pick here.
+- [-] Compare the candidates against Phase 0's number and record the pick here.
       Known options: (a) dynamic `import()` per concern so esbuild code-splits
       and only the fired slot's chunks load; (b) one bundle per slot, built from
       the manifest, at the cost of duplicated shared code on disk; (c) a
@@ -69,7 +69,7 @@ concern, and the visible symptom each time is a latency cap that looks too tight
       defers module bodies.
       `verify:` one option is named in this file with the reason the other two
       were not picked.
-- [ ] Confirm the pick survives the constraint the current design bought:
+- [-] Confirm the pick survives the constraint the current design bought:
       single-process dispatch with no per-concern re-spawn. An option that
       reintroduces a spawn per concern is disqualified regardless of its load
       profile — that regression is what the precompiled bundle replaced.
@@ -77,24 +77,58 @@ concern, and the visible symptom each time is a latency cap that looks too tight
 
 ## Phase 2 — Implement for one slot and measure
 
-- [ ] Apply the chosen mechanism to `pre_tool_use` only, leaving every other slot
+- [-] Apply the chosen mechanism to `pre_tool_use` only, leaving every other slot
       on the current path, so the A/B is inside one tree.
       `verify:` `bench_hook_latency --runs 50` shows `pre_tool_use` improved and
       the untouched slots unmoved, on one machine, arms alternated.
-- [ ] Confirm behaviour is unchanged: the same concerns fire, in the same order,
+- [-] Confirm behaviour is unchanged: the same concerns fire, in the same order,
       with the same verdicts.
       `verify:` the hook test suite passes with no test changed to accommodate
       the new loading path.
 
 ## Phase 3 — Roll out and lock the property
 
-- [ ] Extend to the remaining slots.
+- [-] Extend to the remaining slots.
       `verify:` a green run measures `pre_tool_use` p50 back inside the 111-148
       window the 175 ms cap was derived from.
-- [ ] Add the regression guard that makes the property durable: a check that a
+- [-] Add the regression guard that makes the property durable: a check that a
       concern bound to one slot does not appear in another slot's load path.
       `verify:` the check fails on a deliberately mis-bound fixture and passes on
       the real manifest.
+
+
+## RESULT — Phase 0 falsified the premise, 2026-08-19
+
+Phase 0 ran and the roadmap closes on it, which is what its Honest null
+committed to. Both numbers, one machine, n=30, `node -e 0` as the control:
+
+| reading | p50 | load cost |
+|---|---:|---:|
+| bare `node -e 0` | 35 ms | — |
+| full bundle, 45 concerns (1.1 MB) | 58 ms | **23 ms** |
+| `pre_tool_use` only, 11 concerns (1.0 MB) | 59 ms | **24 ms** |
+
+**The prize of slot-scoping is minus one millisecond — noise.** Module load is
+a real 31 % of a dispatch, so the first half of Phase 0 looked like a green
+light; the second half is what settled it. The bundle is dominated by the
+SHARED dependency graph (`dispatch_hook` plus `_lib`), not by per-concern code,
+so a slot that needs 11 of 45 concerns still pays for essentially the whole
+bundle. Restructuring the loading path would have bought nothing, at the cost
+of making the dispatcher async on the one path that carries the blocking
+guards.
+
+**Where the cost actually was.** The same measurement pass found it one layer
+up: `dispatch_hook` parses the 61 kB YAML manifest on EVERY dispatch — 8 ms to
+load the `yaml` module, 12 ms to parse it. That is a fifth of a dispatch spent
+re-deriving a table that does not change between runs. Fixed by a precompiled
+`hook_manifest.json` sibling (14.7 kB, sub-millisecond parse) with an mtime
+guard and a test that fails when the two diverge: `pre_tool_use` p50 103 → 81
+ms, i.e. below the pre-regression 91.5 ms baseline.
+
+**Carry forward, and it is the part worth keeping:** an esbuild bundle whose
+weight is its shared graph cannot be made cheaper by splitting its leaves. If
+per-dispatch cost is questioned again, measure the shared graph and the
+per-event work — not the concern count.
 
 ## Honest null, stated before any fix
 

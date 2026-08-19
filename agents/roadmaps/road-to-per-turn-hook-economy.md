@@ -1166,7 +1166,7 @@ PR is already a performance change carrying one security fix.
 
 ### blocker: b-concern-load-taxes-every-slot
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** the trunk, right now. `main` is RED on the pre-registered
@@ -1226,6 +1226,26 @@ PR is already a performance change carrying one security fix.
   re-running the job by hand — which the cap re-derivation recorded as the
   problem it was fixing — and the next cap raise happens with a real regression
   underneath it.
+
+- **Resolution (2026-08-19):** cause found and fixed, and it was NOT where this
+  entry predicted. Option (b) — slot-scoped loading — was measured and
+  FALSIFIED before being built: a bundle carrying only the 11 `pre_tool_use`
+  concerns loads in 24 ms against the full 45-concern bundle at 23 ms, because
+  the bundle is dominated by the shared dependency graph rather than by
+  per-concern code. The prize was minus one millisecond.
+
+  The cost was one layer up: `dispatch_hook` parses the 61 kB YAML manifest on
+  every dispatch — 8 ms to load the `yaml` module, 12 ms to parse — a fifth of a
+  ~103 ms dispatch spent re-deriving a table that does not change between runs.
+  A precompiled `hook_manifest.json` sibling (14.7 kB, sub-millisecond parse,
+  mtime-guarded, with a test that fails when the two diverge) takes
+  `pre_tool_use` p50 from 103 ms to 81 ms — below the 91.5 ms pre-regression
+  baseline, and back inside the 111-148 window the cap was derived from.
+
+  Option (a), naming the dominant merged module, is therefore moot and is NOT
+  being pursued: the regression was never the added module graph, it was the
+  per-dispatch parse the added manifest lines made slightly worse.
+  `road-to-slot-scoped-concern-loading` closes on this same measurement.
 
 **A wording hole in the cap file, found by this case and worth closing with it.**
 `pre_tool_use_cap_derivation.revisit_if` reads "a GREEN run whose p50 rises above
