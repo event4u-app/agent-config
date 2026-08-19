@@ -1,11 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
+import { _build_envelope } from '../../src/scripts/hooks/dispatch_hook.js';
 import {
+    commandFromStdin,
     correctedVolume,
     isExcluded,
     isShipCommand,
     DEFAULT_THRESHOLD,
 } from '../../src/scripts/hooks/ship_diff_volume_hook.js';
+
+/** The dispatcher's own argument shape, so the envelope under test is the real one. */
+const DISPATCH_ARGS = {
+    platform: 'claude',
+    event: 'pre_tool_use',
+    native_event: 'PreToolUse',
+    manifest: '',
+    dry_run: false,
+    project_dir: '',
+    min_version: 1,
+};
+
+/** Exactly the text the dispatcher writes to a concern's stdin. */
+function dispatcherStdin(hostPayload: unknown): string {
+    return JSON.stringify(_build_envelope(DISPATCH_ARGS, JSON.stringify(hostPayload)));
+}
 
 describe('ship-diff-volume', () => {
     it('fires only on ship verbs', () => {
@@ -52,5 +70,53 @@ describe('ship-diff-volume', () => {
 
     it('pins the threshold to the derived p90, so a silent retune is a visible diff', () => {
         expect(DEFAULT_THRESHOLD).toBe(1695);
+    });
+
+    // The defect this concern shipped with: it read `tool_input` off the
+    // ENVELOPE ROOT, one level above where the dispatcher puts it. Under the
+    // real dispatcher it therefore found nothing and returned '' on every
+    // invocation — a concern that ran, cost a dispatch, and could never fire.
+    // These build their input with the dispatcher's OWN `_build_envelope`, so a
+    // fixture cannot drift into agreeing with the bug.
+    describe('the dispatcher stdin boundary', () => {
+        it('finds the ship verb in a dispatcher envelope, where the tool fields are under payload', () => {
+            const stdin = dispatcherStdin({
+                session_id: 'boundary-test',
+                hook_event_name: 'PreToolUse',
+                tool_name: 'Bash',
+                tool_input: { command: 'git push --force-with-lease origin x' },
+            });
+            // Pre-fix this read the envelope root and returned ''.
+            expect(commandFromStdin(stdin)).toBe('git push --force-with-lease origin x');
+            expect(isShipCommand(commandFromStdin(stdin))).toBe(true);
+        });
+
+        it('keeps reading a bare host payload, the direct-invocation shape', () => {
+            const raw = JSON.stringify({
+                hook_event_name: 'PreToolUse',
+                tool_name: 'Bash',
+                tool_input: { command: 'gh pr create --fill' },
+            });
+            expect(commandFromStdin(raw)).toBe('gh pr create --fill');
+        });
+
+        it('reads a payload that carries the command without a tool_input wrapper', () => {
+            const stdin = dispatcherStdin({ command: 'git push' });
+            expect(commandFromStdin(stdin)).toBe('git push');
+        });
+
+        it('stays silent on a non-ship tool call rather than guessing', () => {
+            const stdin = dispatcherStdin({
+                tool_name: 'Bash',
+                tool_input: { command: 'git status --short' },
+            });
+            expect(isShipCommand(commandFromStdin(stdin))).toBe(false);
+        });
+
+        it('returns empty on empty, non-JSON, and payload-less stdin instead of throwing', () => {
+            expect(commandFromStdin('')).toBe('');
+            expect(commandFromStdin('not json {')).toBe('');
+            expect(commandFromStdin(dispatcherStdin({}))).toBe('');
+        });
     });
 });

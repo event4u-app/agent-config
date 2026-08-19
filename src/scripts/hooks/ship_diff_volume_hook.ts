@@ -32,6 +32,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 
@@ -89,14 +90,36 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
     return { volume, excluded, files };
 }
 
-function extractCommand(envelope: Record<string, unknown>): string {
-    const ti = envelope['tool_input'];
+/**
+ * The tool command, read off the PLATFORM PAYLOAD — never off the envelope root.
+ *
+ * The dispatcher nests the host-shaped tool fields under `payload`
+ * (`_build_envelope` in `dispatch_hook.ts`); only a bare host invocation puts
+ * them at the top level. This concern shipped reading the top level only, so
+ * under the real dispatcher it found nothing and returned `''` on every
+ * invocation — it ran, cost a dispatch, and could never fire. Same defect the
+ * `design-slop` concern already carries a note about; `unwrap` is the shared
+ * accessor that makes both shapes read alike.
+ */
+export function extractCommand(payload: Record<string, unknown>): string {
+    const ti = payload['tool_input'];
     if (ti !== null && typeof ti === 'object') {
         const c = (ti as Record<string, unknown>)['command'];
         if (typeof c === 'string') return c;
     }
-    const c = envelope['command'];
+    const c = payload['command'];
     return typeof c === 'string' ? c : '';
+}
+
+/**
+ * The stdin boundary itself: raw dispatcher stdin → the ship command.
+ *
+ * Exported so a regression can exercise the same text the dispatcher writes,
+ * rather than a hand-built fixture that could agree with the bug.
+ */
+export function commandFromStdin(raw: string): string {
+    const [, payload] = unwrap(raw);
+    return extractCommand(payload);
 }
 
 export function main(argv?: string[]): number {
@@ -104,16 +127,7 @@ export function main(argv?: string[]): number {
     const idx = args.indexOf('--command');
     let cmd = idx >= 0 && args[idx + 1] !== undefined ? args[idx + 1]! : '';
     if (!cmd) {
-        const raw = readHookStdin();
-        let envelope: Record<string, unknown> = {};
-        if (raw.trim()) {
-            try {
-                envelope = JSON.parse(raw) as Record<string, unknown>;
-            } catch {
-                envelope = {};
-            }
-        }
-        cmd = extractCommand(envelope);
+        cmd = commandFromStdin(readHookStdin());
     }
     if (!isShipCommand(cmd)) return 0;
 
