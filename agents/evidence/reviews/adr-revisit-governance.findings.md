@@ -1,11 +1,11 @@
 # Findings: adr-revisit-governance
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 4278e40010bbcef8b08bc36e6afdc36578773c3b9cc8ce751caf69161f3ee673 | diff: 6ebae092658839b4d1103ae8536817a704be2c15 | reviewer: r2-fresh-subagent-adr-revisit-governance | prompt_hash: 432cdf46eed7a3f2a8ad395314a23fdf106b4b80ad97bda33c0c42c31f05f21b -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 70cb01d1c668ba02a7317997dfae0833f6d81b2cdea1dbb6d79d5b4e31f5ee53 | diff: 074b8c3bf14344602cec91d9a5404af606123b9a | reviewer: r2-fresh-subagent-adr-revisit-governance | prompt_hash: 432cdf46eed7a3f2a8ad395314a23fdf106b4b80ad97bda33c0c42c31f05f21b -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 6ebae092658839b4d1103ae8536817a704be2c15
-  scope_hash: 4278e40010bbcef8b08bc36e6afdc36578773c3b9cc8ce751caf69161f3ee673
+  diff_sha: 074b8c3bf14344602cec91d9a5404af606123b9a
+  scope_hash: 70cb01d1c668ba02a7317997dfae0833f6d81b2cdea1dbb6d79d5b4e31f5ee53
   roadmap: agents/roadmaps/archive/road-to-adr-revisit-governance.md
   roadmap_hash: 5ea8e4822c33d3117d462f447aa63ec43e98be3ef4a171e233fb4978611ea688
   ac_hash: 8a9273e657b3b46e713306cb7aeae2c2d9a71bad55aac4606b228f59cfe0aa4f
