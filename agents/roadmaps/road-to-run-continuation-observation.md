@@ -168,6 +168,36 @@ engages and leaves the event behind.
       would be exactly the attribution error its own text warns about,
       one layer up. See `### blocker: three-phase-contract-run`.
 
+      **2026-08-19, second reading — one more half arrived, and it is
+      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
+      across turns and `interruption_report` reports it
+      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
+      That matters for a specific reason this step's own text names: the
+      zero-contact half was previously attributable to the operator's
+      standing mandate rather than to the mechanism, and here the two
+      re-engagements ARE the mechanism's own events. Zero-contact and
+      mechanism-driven re-engagement now co-occur on one run id.
+
+      What is still missing is the element the criterion actually turns
+      on: **three phases.** This roadmap has one, and the run above is
+      the session working THIS roadmap, so it cannot supply it. Recorded
+      as a second partial rather than folded into a closure, because two
+      halves of different criteria do not make one criterion — that is
+      the same attribution error at a smaller scale.
+
+      **The blocker's own recommendation was tested and holds.** It says
+      "do not schedule this — the estate has several three-phase
+      autonomous candidates already; the next one to be worked discharges
+      this for free." On 2026-08-19 the estate had **none**: of 33 active
+      roadmaps exactly three carry `execution.mode: autonomous`
+      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
+      one), and neither of the other two has open steps in three or more
+      `## Phase` sections. A `phase-checkpoints` roadmap makes the
+      concern a no-op and produces no event at all, so the 30 remaining
+      roadmaps cannot supply the run either. The recommendation stays
+      right; the "already several candidates" premise it rests on was
+      measured false, which is worth knowing before anyone waits on it.
+
 ## Acceptance criteria
 
 - [x] `run-continuation.jsonl` holds at least one `engage` event from a
