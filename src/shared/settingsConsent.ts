@@ -35,8 +35,21 @@
 
 import { isConservativeDefault, type SettingsClass } from './settingsClasses.js';
 
-/** The provenance vocabulary `settings:set` writes. Mirrors its own enum. */
-export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui';
+/**
+ * The provenance vocabulary this READER understands.
+ *
+ * Deliberately one value wider than what `settings:set` can write: `org-pack`
+ * is readable here and absent from `ProvenanceSource` in
+ * `src/scripts/_cli/cmd_settings_set.ts`. That asymmetry is ADR-233 § D3 and
+ * it is the whole safety property — a value no agent-reachable path can write
+ * is a value the agent cannot stamp on its own permission. It is a type
+ * difference rather than a runtime check on purpose: there is no branch to
+ * forget and none to bypass.
+ */
+export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui' | 'org-pack';
+
+/** Keys `org-pack` provenance may grant. ADR-233 § D2. */
+const ORG_PACK_KEY_PREFIX = 'telemetry.remote.';
 
 /**
  * The sources that can carry a human decision.
@@ -44,6 +57,11 @@ export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui';
  * `jit-answer` is a question the user answered. `gui` is a human at the settings
  * editor. `manual` is a hand-edit or an explicit CLI write on the user's
  * instruction. `auto-detected` is excluded on purpose — see the module header.
+ *
+ * `org-pack` is NOT in this list, and its absence is not an oversight: it
+ * grants, but only for one namespace, so it is handled by its own branch in
+ * `consentVerdict` rather than by membership here. Putting it in this list
+ * would make it grant everywhere, which is the erosion ADR-233 § D2 refuses.
  */
 const HUMAN_SOURCES: readonly ConsentSource[] = ['jit-answer', 'gui', 'manual'];
 
@@ -56,12 +74,23 @@ export type ConsentVerdict =
     | 'withheld-unrecorded'
     /** Permissive and recorded, but recorded as a machine inference. */
     | 'withheld-machine-inferred'
+    /**
+     * An org administrator consented, but for a key outside the namespace
+     * that grant covers (ADR-233 § D2).
+     */
+    | 'withheld-org-pack-out-of-scope'
     /** Not a consent question at all: A needs none, C is human-only. */
     | 'not-a-consent-key';
 
 export interface ConsentQuery {
     /** The key's class, from the contract — `undefined` means unclassified. */
     cls: SettingsClass | undefined;
+    /**
+     * The dotted key. Required only to evaluate an `org-pack` grant, which is
+     * namespace-scoped; every other source decides without it, so it stays
+     * optional rather than breaking existing callers.
+     */
+    key?: string | undefined;
     /** The effective value after normal resolution. */
     value: unknown;
     /**
@@ -97,6 +126,21 @@ export function consentVerdict(query: ConsentQuery): ConsentVerdict {
     if (isConservativeDefault(query.value)) {
         return 'withheld-default';
     }
+    // The org-pack branch runs BEFORE the hand-edit branch, and the order is
+    // the fix rather than a style choice. `handEdited` is true for a
+    // project-local `.agent-settings.yml` — which is precisely the file an org
+    // pack ships — so with hand-edit first, a recorded `org-pack` provenance
+    // on an out-of-scope key would be granted by the wrong branch and ADR-233
+    // § D2's namespace scope would hold for no real deployment. A recorded
+    // source is the more specific fact and decides first.
+    if (query.source === 'org-pack') {
+        // A human decided, but not the human this value binds — so the grant
+        // is real and narrow. An absent key cannot be shown to be in scope,
+        // and unproven is withheld here as everywhere else in this function.
+        return query.key !== undefined && query.key.startsWith(ORG_PACK_KEY_PREFIX)
+            ? 'granted'
+            : 'withheld-org-pack-out-of-scope';
+    }
     if (query.handEdited === true) {
         return 'granted';
     }
@@ -130,6 +174,9 @@ export function withheldReason(verdict: ConsentVerdict, key: string): string | n
             return `${key} permits this, but nothing records who decided it. Ask, or set it via the GUI.`;
         case 'withheld-machine-inferred':
             return `${key} was auto-detected, not decided. A machine inference is not a consent.`;
+        case 'withheld-org-pack-out-of-scope':
+            return `${key} carries an org-pack consent, which grants only under `
+                + `${ORG_PACK_KEY_PREFIX}* (ADR-233). Ask this user directly.`;
         case 'not-a-consent-key':
             return `${key} is not a class-B consent key — this gate does not apply to it.`;
     }
