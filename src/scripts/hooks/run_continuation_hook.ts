@@ -51,6 +51,12 @@
  *   checkbox delta)            → allow            (event: halt-stall)
  *   otherwise                  → BLOCK + continue (event: engage)
  *
+ * Every event this concern writes carries `workspace_root`, `git_dir`,
+ * `git_common_dir` and `claim_path` — the two-tree provenance, per
+ * `provenance()` below. Without them the ledger records that an engagement
+ * happened but not that it crossed the tree boundary the fix was about, and
+ * crossing it is the whole claim.
+ *
  * Stall counts CONSECUTIVE ENGAGEMENTS whose open-step count did not move.
  * The upstream stalls on 5-of-5 completed-count readings; AC's checkbox
  * signal is finer-grained (a step in progress usually flips SOMETHING), so
@@ -88,7 +94,8 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { is_replay_mode } from './state_io.js';
 import { readTranscriptTail } from './turn_end_gate_hook.js';
-import { read_claimed_slug } from '../session_register_hook.js';
+import { resolve_claim } from '../session_register_hook.js';
+import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
 import {
     deriveSessionKey,
     parseRecord,
@@ -386,6 +393,48 @@ function readState(file: string): RunState | null {
     }
 }
 
+/**
+ * The four fields that make an event's two-tree property checkable by a third
+ * party holding nothing but the ledger line.
+ *
+ * The defect this concern shipped with was a writer and a reader resolving
+ * DIFFERENT trees: `sessions:claim` wrote under `process.cwd()` (the operator's
+ * worktree) while this concern read under `--project-dir` (the parent
+ * checkout), so the claim was never found and no event was written. An empty
+ * ledger looked exactly like a healthy idle run, which is how it survived a
+ * release.
+ *
+ * A reader therefore has to see, from the line alone, which trees were in play
+ * and where the contract was actually read out of. A boolean such as
+ * `worktree_started: true` would be another assertion by the system under
+ * observation rather than a check on it; the falsifiable facts are concrete
+ * (AI council 2026-08-19, 2/2 convergent):
+ *
+ *   `git_dir !== git_common_dir`        → this IS a linked worktree
+ *   `claim_path` under `git_common_dir` → the contract crossed into the shared
+ *                                         root, which is the fix working
+ *
+ * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
+ * `--project-dir` before the chain runs, so at concern time cwd equals
+ * `workspace_root` on every shipped path — a field that can never disagree with
+ * another cannot falsify anything, and shipping it as provenance would be the
+ * decorative-evidence shape this whole change exists to remove. Measured while
+ * writing the test that asserted the opposite.
+ *
+ * Absolute paths, deliberately: a relative form is interpreted against whichever
+ * root the reader happens to hold, which is the exact ambiguity being removed.
+ * These are local filesystem paths in gitignored runtime state, never published
+ * — the same posture the session register already takes.
+ */
+export function provenance(workspaceRoot: string, claimPath: string): JsonObject {
+    return {
+        workspace_root: workspaceRoot,
+        git_dir: git_dir(workspaceRoot) ?? '',
+        git_common_dir: git_common_dir(workspaceRoot) ?? '',
+        claim_path: claimPath,
+    };
+}
+
 function appendEvent(workspaceRoot: string, record: JsonObject): void {
     try {
         const file = path.join(workspaceRoot, EVENTS_RELPATH);
@@ -438,8 +487,12 @@ export function main(): number {
         str(envelope['session_id'] as JsonValue | undefined);
 
     // ── contract gate ────────────────────────────────────────────────
-    const slug = read_claimed_slug(workspaceRoot, sessionId || null);
-    if (slug === null) return EXIT_ALLOW;
+    const claim = resolve_claim(workspaceRoot, sessionId || null);
+    if (claim === null) return EXIT_ALLOW;
+    const slug = claim.slug;
+    // The two-root provenance, carried on every event this run emits. See
+    // `provenance()` for why these three and not a boolean.
+    const roots = provenance(workspaceRoot, claim.path);
 
     const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
     let roadmapText: string;
@@ -491,6 +544,7 @@ export function main(): number {
             roadmap: slug,
             turn: turnOrdinal,
             at: new Date().toISOString(),
+            ...roots,
         });
         return EXIT_ALLOW;
     }
@@ -529,6 +583,7 @@ export function main(): number {
             open: scan.open,
             blocked: scan.blocked,
             at: new Date().toISOString(),
+            ...roots,
         });
         if (action === 'complete') {
             // Only a COMPLETION clears the state, so a later run on the same
@@ -580,6 +635,7 @@ export function main(): number {
         open: scan.open,
         blocked: scan.blocked,
         at: new Date().toISOString(),
+        ...roots,
     });
 
     process.stderr.write(_continuationText(slug, scan, state.iterations));
