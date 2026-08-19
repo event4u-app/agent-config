@@ -1,0 +1,1500 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 263cabb2ba9f068c1a6180e395708f7b18757c62..239b351745a2b51505ac34a8b24f917972fb0349 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **23** need you → `agent-config gates`
++> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **47** open blockers, **23** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**308 / 545 steps done · 57%**
++**305 / 541 steps done · 56%**
+ 
+ ```text
+-███████████████████████░░░░░░░░░░░░░░░░░   57%
++██████████████████████░░░░░░░░░░░░░░░░░░   56%
+ ```
+ 
+ ## Open roadmaps
+@@ -37,18 +37,17 @@
+ | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+ | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
+-| 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
++| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
++| 27 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
++| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
++| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+ 
+ ---
+ 
+@@ -756,33 +755,6 @@ _1 blocker resolved._
+     adequate N.
+   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
+ 
+-### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
+-
+-**Road to a run-continuation engagement anybody can point at** — 2 / 3 done (67%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Observe one engagement | 🟡 in progress | 1 | 2 | 1 | 0 | 67% |
+-
+-<a id="blockers-road-to-run-continuation-observation"></a>
+-**Blockers**
+-
+-- **three-phase-contract-run** (owner: any autonomous `process-full` run, no dedicated effort) — blocks step 0.1 only. Step 0.0 is closed on its own evidence and does not wait for this.
+-  - **Recommendation:** **do not schedule this.** Wait for the first qualifying run and close 0.1 off it, because the criterion is about what the mechanism does during ordinary work — manufacturing a three-phase run to satisfy it reproduces the ecological-validity problem the council already flagged against the self-referential observation, one size larger. The estate has several three-phase autonomous candidates already; the next one to be worked discharges this for free.
+-  - **If you do nothing:** step 0.1 stays open and this roadmap stays in the active estate at 3 of 4 items. Nothing regresses and no evidence decays — the ledger line from 0.0 is durable. The cost is one open roadmap carrying one criterion, which is the shape its own risk 3 accepts by design.
+-  - **What to do:**
+-    claim a roadmap that (a) carries `execution.mode: autonomous`
+-    in its frontmatter, (b) has **three or more `## Phase` sections with open
+-    steps**, and (c) is not this roadmap — then run it to completion from a
+-    worktree and open its PR. Check candidates with
+-    `./agent-config roadmap:progress` for the phase count and
+-    `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
+-    `phase-checkpoints` mode makes the concern a no-op and produces no event at
+-    all. Then read the run back with
+-    `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
+-    confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
+-  - **Resolved when:** `interruption_report` shows one run id with `re=` non-zero, `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a PR — and that run id is recorded at step 0.1.
+-
+ ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
+ 
+ **Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
+diff --git a/agents/roadmaps/later/road-to-run-continuation-observation.md b/agents/roadmaps/later/road-to-run-continuation-observation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..37b7d14ecff0b4707c53ad9a0f9e4ce6e913237f
+--- /dev/null
++++ b/agents/roadmaps/later/road-to-run-continuation-observation.md
+@@ -0,0 +1,427 @@
++---
++complexity: lightweight
++status: later
++execution:
++  mode: autonomous
++parent_roadmap: road-to-long-horizon-execution
++estate_offset_exempt: >-
++  Offset in the same change by archiving road-to-long-horizon-execution, whose sole deferred item
++  this roadmap carries. Net estate change is zero; the field is present because the ratchet reads
++  the addition before it reads the archival.
++---
++
++# Road to a run-continuation engagement anybody can point at
++
++> **Parked 2026-08-19. Resume when** any roadmap carrying
++> `execution.mode: autonomous` with open steps in three or more `## Phase`
++> sections is run to completion from a worktree and reaches a PR — then read the
++> run back with `./scripts-run src/scripts/interruption_report --root <main-checkout>`
++> and close step 0.1 off that run id. Parked rather than left active because
++> every open item here is gated on that external trigger and the estate has no
++> qualifying candidate: measured 2026-08-19, of the active roadmaps exactly three
++> carried `mode: autonomous` and none of the other two had open steps in three
++> phases. A blocked roadmap left in the active tree lies to the dashboard and to
++> `/roadmap:process-*`, which keeps trying to execute it — and `process-full`
++> terminated on this one as `blocked-preflight` for exactly that reason.
++
++> **Source:** the sole deferred acceptance criterion of
++> `road-to-long-horizon-execution`, carried here under the preservation
++> test in `roadmap-progress-sync § Who resolves it` rather than dropped
++> at that roadmap's archival. AI council 2026-08-19, unanimous 2/2
++> (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer
++> review): fix the blocker now, carry the criterion, close it only on a
++> recorded run.
++
++## Context
++
++`run-continuation` is the stop-slot concern that re-engages a run while
++its claimed roadmap still has open steps. It shipped, it was tested, and
++it had **never fired once** outside a test.
++
++**The test counts are deliberately not quoted here any more.** Four
++separate review rounds caught this sentence carrying a stale figure —
++round 3 finding 8, round 5 finding 4, round 6 finding 7, and round 8
++finding 8, the last of which found the unit half still claiming 21
++against an actual 40 in the same revision that had just corrected the
++integration half. A number nobody can keep current is worse than no
++number, because its whole purpose was to be checkable. The counts are
++one command away and that command cannot go stale:
++
++```
++npx vitest run tests/scripts/hooks/run_continuation.test.ts \
++              tests/hooks/run_continuation_dispatch.test.ts
++```
++
++What the prose does claim, and what stays checkable by reading rather
++than counting: the unit suite exercises `ladder()`, `scanOpenSteps()` and
++`refusedThisTurn()` directly, the dispatch suite drives the real
++`dispatch_hook` binary over the real manifest, and a subset of the latter
++only parses the manifest without dispatching at all.
++
++The cause was a defect, not a missing step, and it is fixed: the run
++contract had two halves resolving different roots. `sessions:claim`
++wrote the claim under `process.cwd()` (the operator's worktree) while
++the concern read it under `--project-dir` (the parent checkout). In a
++worktree those are different trees, so the concern found no contract,
++took its `contract absent → no-op` rung, and wrote **no event** — an
++empty ledger that looks exactly like a healthy idle run. The claim now
++lives in the git common dir beside the session register.
++
++What remains is not work. It is an **observation**, and it is the one
++thing the fix cannot supply: a real run, started from a worktree, that
++engages and leaves the event behind.
++
++## Phases
++
++### Phase 0 — Observe one engagement
++
++- [x] **0.0** A `process-full` run started from a worktree, under a
++      `sessions:claim`, writes at least one `engage` line to
++      `agents/runtime/state/run-continuation.jsonl`. Record the run id,
++      the roadmap, and the iteration count the ladder reached.
++      The event is the evidence; a green test is not, and the reason is
++      the whole point of this roadmap — the integration test passes the
++      SAME root to writer and reader, which is the one arrangement in
++      which the defect was invisible. Only a real two-tree run proves
++      it.
++      `verify:` `cat agents/runtime/state/run-continuation.jsonl`
++
++  **OBSERVED 2026-08-19T14:24:20Z.** The mechanism fired for the first
++  time outside a test.
++
++  | Field | Value |
++  |---|---|
++  | run id | `12653f90d7cb4243821392afd5d8c4db` |
++  | roadmap | `road-to-run-continuation-observation` |
++  | iteration reached | 1 of 25 (`engage`, not a halt rung) |
++  | turn / open / blocked | 2 / 2 / 0 |
++  | claim written from | the worktree `<repo>/.claude/worktrees/long-horizon`, by `agent-config sessions:claim` at 14:23:21Z |
++  | claim file | `<repo>/.git/agent-claims/roadmap-claim-fc48c551-….json` — the SHARED common dir |
++  | concern read under | `--project-dir <repo>` — the parent checkout |
++  | `git_dir` vs `git_common_dir` | `<repo>/.git/worktrees/long-horizon` vs `<repo>/.git` — different, i.e. a genuine linked worktree |
++
++  `<repo>` stands for the absolute checkout path, redacted on purpose: the real
++  prefix carries the maintainer's name, which `domain-safety-pii` keeps out of a
++  tracked file. The *relations* above are what the audit needs and they survive
++  the substitution intact — every path shares the one prefix, so the
++  inequalities and the containment still read off the table.
++
++  **Why this is the two-tree case and not a same-root one.** The writer
++  ran in the worktree and the reader ran in the parent checkout — the
++  exact asymmetry that produced no event before the fix. It is also
++  sharper than the roadmap anticipated: `CLAUDE_PROJECT_DIR` resolves to
++  the **parent checkout** even in a worktree session, so the ledger and
++  the step's own `verify:` path both live in the parent tree, not in the
++  worktree the run was started from. The roadmap's `verify:` line is
++  therefore correct only when run with the parent checkout as cwd.
++
++  **Two limits, recorded rather than smoothed over** (AI council
++  2026-08-19, 2/2 convergent, blind peer review — anthropic +
++  openai seats):
++
++  1. *Self-referential.* The claimed roadmap IS this roadmap, so the
++     open checkbox that caused the engagement is the one the engagement
++     discharges. Both seats accepted it for 0.0 — the property under
++     test is two-tree claim discovery, which does not care which roadmap
++     is claimed — and both bounded it: this proves claim discovery
++     across distinct roots, and **nothing** about sustained
++     re-engagement, timing, or diverse-work detection. Ecological
++     validity is that of a production smoke probe, not of ordinary
++     autonomous work.
++  2. *The provenance fields are test-verified, not self-verified.* The
++     same change adds `workspace_root` / `session_root` / `session_cwd` /
++     `git_dir` / `git_common_dir` / `claim_path` / `roadmap_path` — **seven
++     fields** — to every event, so a future line carries the two-tree fact
++     itself instead of needing this table.
++
++     This enumeration has now been caught wrong twice: round 3 finding 4
++     found it listing five where the code emitted six, and round 5 finding 3
++     found it listing six where the code emits seven, `roadmap_path` having
++     arrived in between. Both times the consequence is the same — a reader
++     auditing a real ledger line finds a field the contract does not mention
++     and cannot tell whether it is part of the contract or noise.
++     `roadmap_path` names the file the open-step count on that same line was
++     read from, which is the one number on the line whose meaning depends on
++     which tree was chosen.
++     `session_root` is the field R2 finding 1 added after the fact: the
++     first version derived both git fields from the READER's root, where
++     they are equal in exactly the arrangement documented above, so the
++     enrichment could not express the property it was built for. This event does not
++     carry them: the live hook is the parent checkout's `dist/` build,
++     and the enrichment was built in the worktree. Verified by
++     `tests/hooks/run_continuation_dispatch.test.ts` over a real
++     `git worktree add` fixture — which reds against the un-enriched
++     event while the other cases stay green.
++
++     **The counts in this bullet went stale twice, in the same branch that
++     corrected them, and the second time is the more useful lesson.** Round
++     3 finding 8 caught "nine cases, one asserting the provenance" when the
++     file held twelve with three; the correction to twelve/three was then
++     overtaken by rounds 4 and 5, which added six more cases, and round 5
++     finding 4 caught that — along with the `## Context` line above still
++     saying 7.
++
++     Then round 6 finding 7 caught it a THIRD time, in the revision that
++     corrected the second: "22 cases against the real dispatcher" counted
++     every `it(` in the file, and two of them only parse the hook manifest
++     and never call `dispatchStop`.
++
++     **At three misses the number is the defect, so it is now stated with
++     the distinction that kept breaking it: 26 cases in the file, 24 of
++     which drive the dispatcher, 2 of which read only the manifest.** A
++     bullet whose whole purpose is to let a reader check the artefact
++     against a falsifiable number is worse than useless when the number is
++     wrong — and a per-round correction is a number that will be wrong again
++     by the next round. Anyone extending that file updates this line or
++     deletes it; leaving a stale figure standing is the one option that has
++     already failed three times.
++
++     **Superseded 2026-08-19 by a live event, and the live event refuted
++     the fields.** The enrichment merged, `dist/` was rebuilt, and the
++     concern fired again from a worktree session at
++     `2026-08-19T17:18:12.843Z` (run `e9bcaa908c103495bd817f4217a03316`).
++     That line carries the four fields — and reads:
++
++     | Field | Value |
++     |---|---|
++     | `workspace_root` | `<parent checkout>` |
++     | `git_dir` | `<parent checkout>/.git` |
++     | `git_common_dir` | `<parent checkout>/.git` |
++     | `claim_path` | `<parent checkout>/.git/agent-claims/roadmap-claim-<session>.json` |
++
++     The two git paths are **identical**, on a run that genuinely started
++     from `.claude/worktrees/long-horizon`. So the discriminator this note
++     promised — `git_dir !== git_common_dir` → linked worktree — reads
++     FALSE for exactly the case it was built to detect, and
++     `claim_path ⊂ git_common_dir` holds in a plain checkout too and
++     cannot disambiguate. The two-tree fact is not recoverable from the
++     line at all.
++
++     R2 finding 1 predicted this from the code before the line existed;
++     the line is the production confirmation, not a second opinion. The
++     fix derives both git fields from `session_root` — the session's own
++     checkout, resolved through the register's `session_checkout` guard —
++     and ships `session_root` plus `session_cwd`, taking the line to six
++     fields, so writer-vs-reader divergence is itself readable per event.
++     On the line above, `session_root` would have been the worktree and
++     `workspace_root` the parent: different, which is the fact.
++
++     `session_cwd` came out of round 2 finding 1 as a way to make a
++     degraded resolution *distinguishable* rather than silent, on the
++     reasoning that the resolver's conditions belonged to the register and
++     loosening them was a different change.
++
++     **Round 3 finding 2 refuted that reasoning by measuring where the
++     field is blind, and the fix moved upstream after all.** Worktrees in
++     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
++     under the parent. For a session standing one directory deeper, the
++     collapsed `session_root` equals the reader's root, both git fields
++     taken from it are equal, **and** the raw `cwd` is under the parent
++     too. All three signals report a healthy same-tree run for a genuine
++     two-tree one. A confidently wrong answer is not a loss of precision,
++     and the resolver's own docblock had defended the rejection as "never
++     something worse".
++
++     Two things followed, both ratified by the AI council (2026-08-19,
++     2/2 convergent, A/A):
++
++     1. `session_checkout` now walks UP to the nearest enclosing checkout
++        root, bounded by the same-repository identity check it already had.
++        The first hit wins, so a nested worktree resolves to itself rather
++        than to the checkout containing it. The session register gets the
++        same correction for free — it records which worktree a session is
++        in, and had the identical blind spot.
++     2. The roadmap the run executes is resolved against the **session's**
++        checkout, falling back to the reader's. Round 3 finding 1: the
++        open-step count feeds a stall detector, and reading the reader's
++        tree meant watching a file nobody was editing — the count never
++        moved and the detector declared a working run finished after three
++        engagements. The mechanism whose job is to detect a stall was
++        manufacturing one.
++
++     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
++     repository, a cwd that does not exist, a cwd under no checkout root.
++     Those still fall back, and on those lines it is still the only field
++     that says so.
++
++     **Rounds 4-7 then rewrote the run-state contract twice, and both
++     rewrites came from the same place: the state's identity was wrong.**
++     Worth recording because the intermediate steps each looked correct.
++
++     Round 4 introduced a `halt-roadmap-absent` rung so a completing run
++     stopped leaking its budget, and round 5 found it cleared a halt stamp;
++     round 6 guarded the stamp and keyed the roadmap INSIDE the state file;
++     round 7 then found two highs in that guard. The absent branch never
++     applied it, so it reported one roadmap's iteration count under
++     another's slug and deleted a live state — and on the main path,
++     nulling the previous state on a slug mismatch let the next write
++     OVERWRITE the other roadmap's halt stamp, so "a halt must NOT clear
++     it" was not durable. A halted roadmap became re-engageable with a full
++     budget by the detour of claiming something else once.
++
++     One session-keyed file cannot hold two roadmaps' budgets. The state
++     path is keyed on **(session, roadmap)** now, and round 6's objection —
++     that keying the path "would orphan every state file in existence" —
++     is answered by migrating rather than by avoiding: the legacy
++     per-session file is adopted once when its recorded roadmap is absent
++     or equal, and ignored when it belongs to another roadmap.
++
++     The second rewrite is the absence semantics. Round 6 stopped the rung
++     erasing a *halted* run's stamp and left the larger half open: a run
++     with a **live** budget still lost its state on one unreadable fire —
++     an ordinary event (a branch switch to a ref without the roadmap, a
++     non-atomic rewrite landing on the stop fire) with an unbounded
++     consequence, since iteration 20 becomes iteration 1 with a fresh 4 h
++     clock, repeatable. One fire cannot tell an archival from a rewrite
++     window; two can, because a rewrite is sub-second and an archival lasts
++     across turns. So the absence is counted, the ledger line is written
++     once, and the budget is reclaimed only at `ABSENT_CONFIRM_FIRES`.
++
++     Round 7 also closed the last silent rung: a transcript over the shared
++     read cap made this concern go inert for the rest of a long run while
++     its budget stayed live, writing nothing — an inert mechanism
++     indistinguishable in the ledger from a healthy idle run, which is the
++     failure this whole roadmap exists over. It emits
++     `inert-transcript-over-cap` once per run now.
++
++     The test both council seats named independently is the one that closes
++     both findings at once, and it is in the tree: a real nested worktree,
++     the session in a subdirectory of it, and the two roadmap copies made
++     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
++     assertion about paths alone can show which file was read. Its sibling
++     fires three times with the worktree count advancing and asserts the
++     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
++     reader's tree the count is frozen at 2 for all three and the third
++     fire halts.
++
++- [ ] **0.1** The parent criterion closes on that evidence: *"a
++      `process-full` contract run finishes a 3-phase roadmap with zero
++      synchronous contacts, re-engaging across turns, and opens the
++      PR."* Half of it was observed on 2026-08-19 — the zero-contact
++      property — but it came from the operator's standing mandate, not
++      from the mechanism, and attributing it to the mechanism is the
++      attribution error the parent roadmap's own falsification criteria
++      are written against. Step 0.0 supplies the missing half.
++      `verify:` `./scripts-run src/scripts/interruption_report --root <main-checkout>`
++      <!-- blocked-by: three-phase-contract-run -->
++      **Stays open on the council's explicit scope boundary, not on
++      effort.** Step 0.0's engagement discharges 0.0 and no more: this
++      roadmap has ONE phase, so "finishes a 3-phase roadmap" cannot be
++      read off this run however the rest of it went. Closing 0.1 here
++      would be exactly the attribution error its own text warns about,
++      one layer up. See `### blocker: three-phase-contract-run`.
++
++      **2026-08-19, second reading — one more half arrived, and it is
++      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
++      across turns and `interruption_report` reports it
++      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
++      That matters for a specific reason this step's own text names: the
++      zero-contact half was previously attributable to the operator's
++      standing mandate rather than to the mechanism, and here the two
++      re-engagements ARE the mechanism's own events. Zero-contact and
++      mechanism-driven re-engagement now co-occur on one run id.
++
++      What is still missing is the element the criterion actually turns
++      on: **three phases.** This roadmap has one, and the run above is
++      the session working THIS roadmap, so it cannot supply it. Recorded
++      as a second partial rather than folded into a closure, because two
++      halves of different criteria do not make one criterion — that is
++      the same attribution error at a smaller scale.
++
++      **The blocker's own recommendation was tested and holds.** It says
++      "do not schedule this — the estate has several three-phase
++      autonomous candidates already; the next one to be worked discharges
++      this for free." On 2026-08-19 the estate had **none**: of 33 active
++      roadmaps exactly three carry `execution.mode: autonomous`
++      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
++      one), and neither of the other two has open steps in three or more
++      `## Phase` sections. A `phase-checkpoints` roadmap makes the
++      concern a no-op and produces no event at all, so the 30 remaining
++      roadmaps cannot supply the run either. The recommendation stays
++      right; the "already several candidates" premise it rests on was
++      measured false, which is worth knowing before anyone waits on it.
++
++## Acceptance criteria
++
++- [x] `run-continuation.jsonl` holds at least one `engage` event from a
++      worktree-started run, with the run id recorded here.
++      Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
++- [~] The AUTONOMY AXIS in `interruption_report` reports a non-zero
++      median re-engagement count for at least one run.
++      **Satisfied on the per-run reading, unsatisfiable on the aggregate
++      one, and therefore DEFERRED rather than closed.** A median is taken
++      *across* runs, so "median … for at least one run" cannot be
++      satisfied as literally written by any number of runs. The per-run
++      breakdown is what the qualifier points at, and it reports
++      `12653f90d7cb4243  … re=1` — non-zero for exactly one run, as
++      asked. The aggregate `median re-engagements:` stays **0**, and will
++      until a majority of the window's runs engage (13 of 24 today); that
++      is a property of the statistic, not a gap in the evidence.
++
++      **Reopened 2026-08-19 on R2 finding 5, and the glyph is the whole
++      point.** The previous revision ended "anyone reading the criterion
++      the aggregate way should reopen this box" — and then marked the box
++      `[x]`, which is the one glyph that makes that instruction
++      unreachable. `[x]` counts as done, so once step 0.1 closes the
++      archival sweep would have seen `count_open == 0` **and**
++      `count_deferred == 0` and archived this roadmap over a criterion the
++      roadmap itself flags as unresolved: the silent-archive-of-open-work
++      case Iron Law 3 of `roadmap-progress-sync` exists to catch, routed
++      around by glyph choice rather than by argument. `[~]` routes it
++      through the deferred-resolution gate instead, where the two readings
++      are decided by someone rather than left "settled" by a checkbox.
++
++      **What closes it:** either a window in which a majority of runs
++      engage, so the aggregate median is non-zero on the criterion's
++      literal wording — or a deliberate re-wording of the criterion to the
++      per-run reading, which is a decision about what was being measured
++      and not a re-measurement.
++
++## Blockers
++
++### blocker: three-phase-contract-run
++- **Status:** open
++- **Owner:** any autonomous `process-full` run, no dedicated effort
++- **Class:** 3 — human-only, and deliberately not 0. An agent executes the
++  *work* that discharges this, but it cannot authorize the trigger: picking
++  which roadmap gets worked next is the operator's call
++  (`scope-control § Authoring vs. implementation`), so there is no `Run:`
++  command that produces a qualifying run. Declaring 0 and pointing `Run:` at
++  the *check* command would label a verification as a discharge, which is the
++  gate-that-cannot-fire shape this repo already rejects once.
++- **Blocks:** step 0.1 only. Step 0.0 is closed on its own evidence and does
++  not wait for this.
++- **What to do:** claim a roadmap that (a) carries `execution.mode: autonomous`
++  in its frontmatter, (b) has **three or more `## Phase` sections with open
++  steps**, and (c) is not this roadmap — then run it to completion from a
++  worktree and open its PR. Check candidates with
++  `./agent-config roadmap:progress` for the phase count and
++  `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
++  `phase-checkpoints` mode makes the concern a no-op and produces no event at
++  all. Then read the run back with
++  `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
++  confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
++- **Recommendation:** **do not schedule this.** Wait for the first qualifying
++  run and close 0.1 off it, because the criterion is about what the mechanism
++  does during ordinary work — manufacturing a three-phase run to satisfy it
++  reproduces the ecological-validity problem the council already flagged
++  against the self-referential observation, one size larger. The estate has
++  several three-phase autonomous candidates already; the next one to be worked
++  discharges this for free.
++- **If you do nothing:** step 0.1 stays open and this roadmap stays in the
++  active estate at 3 of 4 items. Nothing regresses and no evidence decays —
++  the ledger line from 0.0 is durable. The cost is one open roadmap carrying
++  one criterion, which is the shape its own risk 3 accepts by design.
++- **Resolved when:** `interruption_report` shows one run id with `re=` non-zero,
++  `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a
++  PR — and that run id is recorded at step 0.1.
++
++## Risk Register
++
++<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The observation is claimed from a green test rather than a real run | product | The defect survived a release precisely because a passing integration test looked like proof; accepting a test as the evidence here would repeat that exactly. | Step 0.0 names the `.jsonl` line as the artifact and says in its own text why a test cannot substitute. | Phase 0 |
++| 2 | The engagement fires but the ladder halts on the wrong rung | implementation | An `engage` event proves the contract was found, not that the termination ladder behaves; a stall-halt on the first iteration would satisfy the letter of 0.0. | 0.0 records the iteration count reached, so a degenerate single-iteration engagement is visible in the evidence rather than hidden by it. | Phase 0 |
++| 3 | This roadmap becomes the indefinite deferral it was created to avoid | product | Carrying an item into a follow-up is exactly the shape both council seats named in their strongest counter — a named destination is not a schedule. | The criterion closes on the FIRST qualifying run rather than on a dedicated effort, so any future `process-full` in a worktree discharges it as a side effect. If none has by the next task boundary it is raised again per `active-remediation`, not aged out. | Phase 0 |
+diff --git a/agents/roadmaps/road-to-run-continuation-observation.md b/agents/roadmaps/road-to-run-continuation-observation.md
+deleted file mode 100644
+index e4c9d65169c81e02db01c307249550f11a8ad82b..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-run-continuation-observation.md
++++ /dev/null
+@@ -1,397 +0,0 @@
+----
+-complexity: lightweight
+-execution:
+-  mode: autonomous
+-parent_roadmap: road-to-long-horizon-execution
+-estate_offset_exempt: >-
+-  Offset in the same change by archiving road-to-long-horizon-execution, whose sole deferred item
+-  this roadmap carries. Net estate change is zero; the field is present because the ratchet reads
+-  the addition before it reads the archival.
+----
+-
+-# Road to a run-continuation engagement anybody can point at
+-
+-> **Source:** the sole deferred acceptance criterion of
+-> `road-to-long-horizon-execution`, carried here under the preservation
+-> test in `roadmap-progress-sync § Who resolves it` rather than dropped
+-> at that roadmap's archival. AI council 2026-08-19, unanimous 2/2
+-> (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer
+-> review): fix the blocker now, carry the criterion, close it only on a
+-> recorded run.
+-
+-## Context
+-
+-`run-continuation` is the stop-slot concern that re-engages a run while
+-its claimed roadmap still has open steps. It shipped, it is unit-tested
+-(21 cases), it is integration-tested against the real dispatcher (7 cases
+-when this roadmap was written; the file holds 26 at the close of this
+-branch, of which 24 drive the dispatcher and 2 only read the hook
+-manifest) — and it had **never fired once** outside a test.
+-
+-The cause was a defect, not a missing step, and it is fixed: the run
+-contract had two halves resolving different roots. `sessions:claim`
+-wrote the claim under `process.cwd()` (the operator's worktree) while
+-the concern read it under `--project-dir` (the parent checkout). In a
+-worktree those are different trees, so the concern found no contract,
+-took its `contract absent → no-op` rung, and wrote **no event** — an
+-empty ledger that looks exactly like a healthy idle run. The claim now
+-lives in the git common dir beside the session register.
+-
+-What remains is not work. It is an **observation**, and it is the one
+-thing the fix cannot supply: a real run, started from a worktree, that
+-engages and leaves the event behind.
+-
+-## Phases
+-
+-### Phase 0 — Observe one engagement
+-
+-- [x] **0.0** A `process-full` run started from a worktree, under a
+-      `sessions:claim`, writes at least one `engage` line to
+-      `agents/runtime/state/run-continuation.jsonl`. Record the run id,
+-      the roadmap, and the iteration count the ladder reached.
+-      The event is the evidence; a green test is not, and the reason is
+-      the whole point of this roadmap — the integration test passes the
+-      SAME root to writer and reader, which is the one arrangement in
+-      which the defect was invisible. Only a real two-tree run proves
+-      it.
+-      `verify:` `cat agents/runtime/state/run-continuation.jsonl`
+-
+-  **OBSERVED 2026-08-19T14:24:20Z.** The mechanism fired for the first
+-  time outside a test.
+-
+-  | Field | Value |
+-  |---|---|
+-  | run id | `12653f90d7cb4243821392afd5d8c4db` |
+-  | roadmap | `road-to-run-continuation-observation` |
+-  | iteration reached | 1 of 25 (`engage`, not a halt rung) |
+-  | turn / open / blocked | 2 / 2 / 0 |
+-  | claim written from | the worktree `<repo>/.claude/worktrees/long-horizon`, by `agent-config sessions:claim` at 14:23:21Z |
+-  | claim file | `<repo>/.git/agent-claims/roadmap-claim-fc48c551-….json` — the SHARED common dir |
+-  | concern read under | `--project-dir <repo>` — the parent checkout |
+-  | `git_dir` vs `git_common_dir` | `<repo>/.git/worktrees/long-horizon` vs `<repo>/.git` — different, i.e. a genuine linked worktree |
+-
+-  `<repo>` stands for the absolute checkout path, redacted on purpose: the real
+-  prefix carries the maintainer's name, which `domain-safety-pii` keeps out of a
+-  tracked file. The *relations* above are what the audit needs and they survive
+-  the substitution intact — every path shares the one prefix, so the
+-  inequalities and the containment still read off the table.
+-
+-  **Why this is the two-tree case and not a same-root one.** The writer
+-  ran in the worktree and the reader ran in the parent checkout — the
+-  exact asymmetry that produced no event before the fix. It is also
+-  sharper than the roadmap anticipated: `CLAUDE_PROJECT_DIR` resolves to
+-  the **parent checkout** even in a worktree session, so the ledger and
+-  the step's own `verify:` path both live in the parent tree, not in the
+-  worktree the run was started from. The roadmap's `verify:` line is
+-  therefore correct only when run with the parent checkout as cwd.
+-
+-  **Two limits, recorded rather than smoothed over** (AI council
+-  2026-08-19, 2/2 convergent, blind peer review — anthropic +
+-  openai seats):
+-
+-  1. *Self-referential.* The claimed roadmap IS this roadmap, so the
+-     open checkbox that caused the engagement is the one the engagement
+-     discharges. Both seats accepted it for 0.0 — the property under
+-     test is two-tree claim discovery, which does not care which roadmap
+-     is claimed — and both bounded it: this proves claim discovery
+-     across distinct roots, and **nothing** about sustained
+-     re-engagement, timing, or diverse-work detection. Ecological
+-     validity is that of a production smoke probe, not of ordinary
+-     autonomous work.
+-  2. *The provenance fields are test-verified, not self-verified.* The
+-     same change adds `workspace_root` / `session_root` / `session_cwd` /
+-     `git_dir` / `git_common_dir` / `claim_path` / `roadmap_path` — **seven
+-     fields** — to every event, so a future line carries the two-tree fact
+-     itself instead of needing this table.
+-
+-     This enumeration has now been caught wrong twice: round 3 finding 4
+-     found it listing five where the code emitted six, and round 5 finding 3
+-     found it listing six where the code emits seven, `roadmap_path` having
+-     arrived in between. Both times the consequence is the same — a reader
+-     auditing a real ledger line finds a field the contract does not mention
+-     and cannot tell whether it is part of the contract or noise.
+-     `roadmap_path` names the file the open-step count on that same line was
+-     read from, which is the one number on the line whose meaning depends on
+-     which tree was chosen.
+-     `session_root` is the field R2 finding 1 added after the fact: the
+-     first version derived both git fields from the READER's root, where
+-     they are equal in exactly the arrangement documented above, so the
+-     enrichment could not express the property it was built for. This event does not
+-     carry them: the live hook is the parent checkout's `dist/` build,
+-     and the enrichment was built in the worktree. Verified by
+-     `tests/hooks/run_continuation_dispatch.test.ts` over a real
+-     `git worktree add` fixture — which reds against the un-enriched
+-     event while the other cases stay green.
+-
+-     **The counts in this bullet went stale twice, in the same branch that
+-     corrected them, and the second time is the more useful lesson.** Round
+-     3 finding 8 caught "nine cases, one asserting the provenance" when the
+-     file held twelve with three; the correction to twelve/three was then
+-     overtaken by rounds 4 and 5, which added six more cases, and round 5
+-     finding 4 caught that — along with the `## Context` line above still
+-     saying 7.
+-
+-     Then round 6 finding 7 caught it a THIRD time, in the revision that
+-     corrected the second: "22 cases against the real dispatcher" counted
+-     every `it(` in the file, and two of them only parse the hook manifest
+-     and never call `dispatchStop`.
+-
+-     **At three misses the number is the defect, so it is now stated with
+-     the distinction that kept breaking it: 26 cases in the file, 24 of
+-     which drive the dispatcher, 2 of which read only the manifest.** A
+-     bullet whose whole purpose is to let a reader check the artefact
+-     against a falsifiable number is worse than useless when the number is
+-     wrong — and a per-round correction is a number that will be wrong again
+-     by the next round. Anyone extending that file updates this line or
+-     deletes it; leaving a stale figure standing is the one option that has
+-     already failed three times.
+-
+-     **Superseded 2026-08-19 by a live event, and the live event refuted
+-     the fields.** The enrichment merged, `dist/` was rebuilt, and the
+-     concern fired again from a worktree session at
+-     `2026-08-19T17:18:12.843Z` (run `e9bcaa908c103495bd817f4217a03316`).
+-     That line carries the four fields — and reads:
+-
+-     | Field | Value |
+-     |---|---|
+-     | `workspace_root` | `<parent checkout>` |
+-     | `git_dir` | `<parent checkout>/.git` |
+-     | `git_common_dir` | `<parent checkout>/.git` |
+-     | `claim_path` | `<parent checkout>/.git/agent-claims/roadmap-claim-<session>.json` |
+-
+-     The two git paths are **identical**, on a run that genuinely started
+-     from `.claude/worktrees/long-horizon`. So the discriminator this note
+-     promised — `git_dir !== git_common_dir` → linked worktree — reads
+-     FALSE for exactly the case it was built to detect, and
+-     `claim_path ⊂ git_common_dir` holds in a plain checkout too and
+-     cannot disambiguate. The two-tree fact is not recoverable from the
+-     line at all.
+-
+-     R2 finding 1 predicted this from the code before the line existed;
+-     the line is the production confirmation, not a second opinion. The
+-     fix derives both git fields from `session_root` — the session's own
+-     checkout, resolved through the register's `session_checkout` guard —
+-     and ships `session_root` plus `session_cwd`, taking the line to six
+-     fields, so writer-vs-reader divergence is itself readable per event.
+-     On the line above, `session_root` would have been the worktree and
+-     `workspace_root` the parent: different, which is the fact.
+-
+-     `session_cwd` came out of round 2 finding 1 as a way to make a
+-     degraded resolution *distinguishable* rather than silent, on the
+-     reasoning that the resolver's conditions belonged to the register and
+-     loosening them was a different change.
+-
+-     **Round 3 finding 2 refuted that reasoning by measuring where the
+-     field is blind, and the fix moved upstream after all.** Worktrees in
+-     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
+-     under the parent. For a session standing one directory deeper, the
+-     collapsed `session_root` equals the reader's root, both git fields
+-     taken from it are equal, **and** the raw `cwd` is under the parent
+-     too. All three signals report a healthy same-tree run for a genuine
+-     two-tree one. A confidently wrong answer is not a loss of precision,
+-     and the resolver's own docblock had defended the rejection as "never
+-     something worse".
+-
+-     Two things followed, both ratified by the AI council (2026-08-19,
+-     2/2 convergent, A/A):
+-
+-     1. `session_checkout` now walks UP to the nearest enclosing checkout
+-        root, bounded by the same-repository identity check it already had.
+-        The first hit wins, so a nested worktree resolves to itself rather
+-        than to the checkout containing it. The session register gets the
+-        same correction for free — it records which worktree a session is
+-        in, and had the identical blind spot.
+-     2. The roadmap the run executes is resolved against the **session's**
+-        checkout, falling back to the reader's. Round 3 finding 1: the
+-        open-step count feeds a stall detector, and reading the reader's
+-        tree meant watching a file nobody was editing — the count never
+-        moved and the detector declared a working run finished after three
+-        engagements. The mechanism whose job is to detect a stall was
+-        manufacturing one.
+-
+-     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
+-     repository, a cwd that does not exist, a cwd under no checkout root.
+-     Those still fall back, and on those lines it is still the only field
+-     that says so.
+-
+-     **Rounds 4-7 then rewrote the run-state contract twice, and both
+-     rewrites came from the same place: the state's identity was wrong.**
+-     Worth recording because the intermediate steps each looked correct.
+-
+-     Round 4 introduced a `halt-roadmap-absent` rung so a completing run
+-     stopped leaking its budget, and round 5 found it cleared a halt stamp;
+-     round 6 guarded the stamp and keyed the roadmap INSIDE the state file;
+-     round 7 then found two highs in that guard. The absent branch never
+-     applied it, so it reported one roadmap's iteration count under
+-     another's slug and deleted a live state — and on the main path,
+-     nulling the previous state on a slug mismatch let the next write
+-     OVERWRITE the other roadmap's halt stamp, so "a halt must NOT clear
+-     it" was not durable. A halted roadmap became re-engageable with a full
+-     budget by the detour of claiming something else once.
+-
+-     One session-keyed file cannot hold two roadmaps' budgets. The state
+-     path is keyed on **(session, roadmap)** now, and round 6's objection —
+-     that keying the path "would orphan every state file in existence" —
+-     is answered by migrating rather than by avoiding: the legacy
+-     per-session file is adopted once when its recorded roadmap is absent
+-     or equal, and ignored when it belongs to another roadmap.
+-
+-     The second rewrite is the absence semantics. Round 6 stopped the rung
+-     erasing a *halted* run's stamp and left the larger half open: a run
+-     with a **live** budget still lost its state on one unreadable fire —
+-     an ordinary event (a branch switch to a ref without the roadmap, a
+-     non-atomic rewrite landing on the stop fire) with an unbounded
+-     consequence, since iteration 20 becomes iteration 1 with a fresh 4 h
+-     clock, repeatable. One fire cannot tell an archival from a rewrite
+-     window; two can, because a rewrite is sub-second and an archival lasts
+-     across turns. So the absence is counted, the ledger line is written
+-     once, and the budget is reclaimed only at `ABSENT_CONFIRM_FIRES`.
+-
+-     Round 7 also closed the last silent rung: a transcript over the shared
+-     read cap made this concern go inert for the rest of a long run while
+-     its budget stayed live, writing nothing — an inert mechanism
+-     indistinguishable in the ledger from a healthy idle run, which is the
+-     failure this whole roadmap exists over. It emits
+-     `inert-transcript-over-cap` once per run now.
+-
+-     The test both council seats named independently is the one that closes
+-     both findings at once, and it is in the tree: a real nested worktree,
+-     the session in a subdirectory of it, and the two roadmap copies made
+-     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
+-     assertion about paths alone can show which file was read. Its sibling
+-     fires three times with the worktree count advancing and asserts the
+-     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
+-     reader's tree the count is frozen at 2 for all three and the third
+-     fire halts.
+-
+-- [ ] **0.1** The parent criterion closes on that evidence: *"a
+-      `process-full` contract run finishes a 3-phase roadmap with zero
+-      synchronous contacts, re-engaging across turns, and opens the
+-      PR."* Half of it was observed on 2026-08-19 — the zero-contact
+-      property — but it came from the operator's standing mandate, not
+-      from the mechanism, and attributing it to the mechanism is the
+-      attribution error the parent roadmap's own falsification criteria
+-      are written against. Step 0.0 supplies the missing half.
+-      `verify:` `./scripts-run src/scripts/interruption_report --root <main-checkout>`
+-      <!-- blocked-by: three-phase-contract-run -->
+-      **Stays open on the council's explicit scope boundary, not on
+-      effort.** Step 0.0's engagement discharges 0.0 and no more: this
+-      roadmap has ONE phase, so "finishes a 3-phase roadmap" cannot be
+-      read off this run however the rest of it went. Closing 0.1 here
+-      would be exactly the attribution error its own text warns about,
+-      one layer up. See `### blocker: three-phase-contract-run`.
+-
+-      **2026-08-19, second reading — one more half arrived, and it is
+-      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
+-      across turns and `interruption_report` reports it
+-      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
+-      That matters for a specific reason this step's own text names: the
+-      zero-contact half was previously attributable to the operator's
+-      standing mandate rather than to the mechanism, and here the two
+-      re-engagements ARE the mechanism's own events. Zero-contact and
+-      mechanism-driven re-engagement now co-occur on one run id.
+-
+-      What is still missing is the element the criterion actually turns
+-      on: **three phases.** This roadmap has one, and the run above is
+-      the session working THIS roadmap, so it cannot supply it. Recorded
+-      as a second partial rather than folded into a closure, because two
+-      halves of different criteria do not make one criterion — that is
+-      the same attribution error at a smaller scale.
+-
+-      **The blocker's own recommendation was tested and holds.** It says
+-      "do not schedule this — the estate has several three-phase
+-      autonomous candidates already; the next one to be worked discharges
+-      this for free." On 2026-08-19 the estate had **none**: of 33 active
+-      roadmaps exactly three carry `execution.mode: autonomous`
+-      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
+-      one), and neither of the other two has open steps in three or more
+-      `## Phase` sections. A `phase-checkpoints` roadmap makes the
+-      concern a no-op and produces no event at all, so the 30 remaining
+-      roadmaps cannot supply the run either. The recommendation stays
+-      right; the "already several candidates" premise it rests on was
+-      measured false, which is worth knowing before anyone waits on it.
+-
+-## Acceptance criteria
+-
+-- [x] `run-continuation.jsonl` holds at least one `engage` event from a
+-      worktree-started run, with the run id recorded here.
+-      Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
+-- [~] The AUTONOMY AXIS in `interruption_report` reports a non-zero
+-      median re-engagement count for at least one run.
+-      **Satisfied on the per-run reading, unsatisfiable on the aggregate
+-      one, and therefore DEFERRED rather than closed.** A median is taken
+-      *across* runs, so "median … for at least one run" cannot be
+-      satisfied as literally written by any number of runs. The per-run
+-      breakdown is what the qualifier points at, and it reports
+-      `12653f90d7cb4243  … re=1` — non-zero for exactly one run, as
+-      asked. The aggregate `median re-engagements:` stays **0**, and will
+-      until a majority of the window's runs engage (13 of 24 today); that
+-      is a property of the statistic, not a gap in the evidence.
+-
+-      **Reopened 2026-08-19 on R2 finding 5, and the glyph is the whole
+-      point.** The previous revision ended "anyone reading the criterion
+-      the aggregate way should reopen this box" — and then marked the box
+-      `[x]`, which is the one glyph that makes that instruction
+-      unreachable. `[x]` counts as done, so once step 0.1 closes the
+-      archival sweep would have seen `count_open == 0` **and**
+-      `count_deferred == 0` and archived this roadmap over a criterion the
+-      roadmap itself flags as unresolved: the silent-archive-of-open-work
+-      case Iron Law 3 of `roadmap-progress-sync` exists to catch, routed
+-      around by glyph choice rather than by argument. `[~]` routes it
+-      through the deferred-resolution gate instead, where the two readings
+-      are decided by someone rather than left "settled" by a checkbox.
+-
+-      **What closes it:** either a window in which a majority of runs
+-      engage, so the aggregate median is non-zero on the criterion's
+-      literal wording — or a deliberate re-wording of the criterion to the
+-      per-run reading, which is a decision about what was being measured
+-      and not a re-measurement.
+-
+-## Blockers
+-
+-### blocker: three-phase-contract-run
+-- **Status:** open
+-- **Owner:** any autonomous `process-full` run, no dedicated effort
+-- **Class:** 3 — human-only, and deliberately not 0. An agent executes the
+-  *work* that discharges this, but it cannot authorize the trigger: picking
+-  which roadmap gets worked next is the operator's call
+-  (`scope-control § Authoring vs. implementation`), so there is no `Run:`
+-  command that produces a qualifying run. Declaring 0 and pointing `Run:` at
+-  the *check* command would label a verification as a discharge, which is the
+-  gate-that-cannot-fire shape this repo already rejects once.
+-- **Blocks:** step 0.1 only. Step 0.0 is closed on its own evidence and does
+-  not wait for this.
+-- **What to do:** claim a roadmap that (a) carries `execution.mode: autonomous`
+-  in its frontmatter, (b) has **three or more `## Phase` sections with open
+-  steps**, and (c) is not this roadmap — then run it to completion from a
+-  worktree and open its PR. Check candidates with
+-  `./agent-config roadmap:progress` for the phase count and
+-  `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
+-  `phase-checkpoints` mode makes the concern a no-op and produces no event at
+-  all. Then read the run back with
+-  `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
+-  confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
+-- **Recommendation:** **do not schedule this.** Wait for the first qualifying
+-  run and close 0.1 off it, because the criterion is about what the mechanism
+-  does during ordinary work — manufacturing a three-phase run to satisfy it
+-  reproduces the ecological-validity problem the council already flagged
+-  against the self-referential observation, one size larger. The estate has
+-  several three-phase autonomous candidates already; the next one to be worked
+-  discharges this for free.
+-- **If you do nothing:** step 0.1 stays open and this roadmap stays in the
+-  active estate at 3 of 4 items. Nothing regresses and no evidence decays —
+-  the ledger line from 0.0 is durable. The cost is one open roadmap carrying
+-  one criterion, which is the shape its own risk 3 accepts by design.
+-- **Resolved when:** `interruption_report` shows one run id with `re=` non-zero,
+-  `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a
+-  PR — and that run id is recorded at step 0.1.
+-
+-## Risk Register
+-
+-<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The observation is claimed from a green test rather than a real run | product | The defect survived a release precisely because a passing integration test looked like proof; accepting a test as the evidence here would repeat that exactly. | Step 0.0 names the `.jsonl` line as the artifact and says in its own text why a test cannot substitute. | Phase 0 |
+-| 2 | The engagement fires but the ladder halts on the wrong rung | implementation | An `engage` event proves the contract was found, not that the termination ladder behaves; a stall-halt on the first iteration would satisfy the letter of 0.0. | 0.0 records the iteration count reached, so a degenerate single-iteration engagement is visible in the evidence rather than hidden by it. | Phase 0 |
+-| 3 | This roadmap becomes the indefinite deferral it was created to avoid | product | Carrying an item into a follow-up is exactly the shape both council seats named in their strongest counter — a named destination is not a schedule. | The criterion closes on the FIRST qualifying run rather than on a dedicated effort, so any future `process-full` in a worktree discharges it as a side effect. If none has by the next task boundary it is raised again per `active-remediation`, not aged out. | Phase 0 |
+diff --git a/dist/agent-src/contexts/execution/roadmap-process-loop.md b/dist/agent-src/contexts/execution/roadmap-process-loop.md
+index f8965fb15e1d33d526fa16fa1e04d3b619f2acef..51b92a2c273fdbdc3ee4a697b039a44e542a02d3 100644
+--- a/dist/agent-src/contexts/execution/roadmap-process-loop.md
++++ b/dist/agent-src/contexts/execution/roadmap-process-loop.md
+@@ -213,6 +213,24 @@ refusing work an agent could have done.
+   open-step count, and each blocker with its class and its clearing action.
+   Create no branch, write no state, take no grant.
+ 
++**A step this precondition judges non-runnable carries a `blocked-by:` marker on
++its own line.** The obligation is here because two mechanisms read blockedness
++from two different places and only one of them reads this section: `run-continuation`,
++the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked
++from the inline `<!-- blocked-by: <id> -->` marker and never parses `## Blockers`
++at all. Without the marker a step that IS blocked per the four conditions above
++still counts as open work to the concern, which re-engages the agent into it every
++stop fire until the stall rung fires — the mechanism whose job is to detect a
++stall manufacturing one, which is the failure shape this file already records once
++for the roadmap-root split.
++
++Round 8 finding 7 caught the two predicates as disjoint. The fix is this coupling
++sentence rather than teaching the concern to parse `## Blockers`: a second
++implementation of the four conditions is a second thing to keep in step, and the
++one-line marker is checkable by eye at the step it belongs to. **The residual is
++real and is not papered over:** nothing enforces the pairing, so a `## Blockers`
++entry authored without its marker is caught by review or not at all.
++
+ **Why a precondition and not a sixth halt.** The five halt conditions interrupt
+ work that is still runnable; this decides whether any runnable work exists at
+ all. Keeping them structurally separate is what preserves the forbidden-list's
+diff --git a/src/agent-src/contexts/execution/roadmap-process-loop.md b/src/agent-src/contexts/execution/roadmap-process-loop.md
+index f8965fb15e1d33d526fa16fa1e04d3b619f2acef..51b92a2c273fdbdc3ee4a697b039a44e542a02d3 100644
+--- a/src/agent-src/contexts/execution/roadmap-process-loop.md
++++ b/src/agent-src/contexts/execution/roadmap-process-loop.md
+@@ -213,6 +213,24 @@ refusing work an agent could have done.
+   open-step count, and each blocker with its class and its clearing action.
+   Create no branch, write no state, take no grant.
+ 
++**A step this precondition judges non-runnable carries a `blocked-by:` marker on
++its own line.** The obligation is here because two mechanisms read blockedness
++from two different places and only one of them reads this section: `run-continuation`,
++the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked
++from the inline `<!-- blocked-by: <id> -->` marker and never parses `## Blockers`
++at all. Without the marker a step that IS blocked per the four conditions above
++still counts as open work to the concern, which re-engages the agent into it every
++stop fire until the stall rung fires — the mechanism whose job is to detect a
++stall manufacturing one, which is the failure shape this file already records once
++for the roadmap-root split.
++
++Round 8 finding 7 caught the two predicates as disjoint. The fix is this coupling
++sentence rather than teaching the concern to parse `## Blockers`: a second
++implementation of the four conditions is a second thing to keep in step, and the
++one-line marker is checkable by eye at the step it belongs to. **The residual is
++real and is not papered over:** nothing enforces the pairing, so a `## Blockers`
++entry authored without its marker is caught by review or not at all.
++
+ **Why a precondition and not a sixth halt.** The five halt conditions interrupt
+ work that is still runnable; this decides whether any runnable work exists at
+ all. Keeping them structurally separate is what preserves the forbidden-list's
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index 06bb0c84d06f6c716d4c04610cfcdee97359630e..70191b07ef4c1f7d76a137820ea54d18ab1b2832 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -16,8 +16,8 @@
+     ]
+   },
+   "baseline": {
+-    "active_roadmaps": 33,
+-    "later_roadmaps": 49,
++    "active_roadmaps": 32,
++    "later_roadmaps": 50,
+     "open_blockers": 70
+   },
+   "baseline_history": [
+@@ -125,6 +125,13 @@
+       "later_roadmaps": 49,
+       "open_blockers": 71,
+       "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
++    },
++    {
++      "at": "2026-08-19",
++      "active_roadmaps": 32,
++      "later_roadmaps": 50,
++      "open_blockers": 70,
++      "why": "RAISED by 1 later roadmap and WALKED DOWN by 1 active one, in the same move: road-to-run-continuation-observation was parked to later/. It is a transfer rather than growth (total estate unchanged at 82), and open_blockers is unchanged at 70 by construction \u2014 which is the check that this is a park and not a burial. That metric deliberately spans active AND later/ precisely so parking cannot print a free tightening over an unresolved blocker, and three-phase-contract-run is still open and still counted. Parked rather than left active because every open item is gated on an external trigger this estate cannot currently supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full itself terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition: a roadmap with zero runnable open steps left in the active tree lies to the dashboard and to /roadmap:process-*, which keeps trying to execute it. The number walks back the moment the roadmap is un-parked, which is what the resume condition in its own header is for."
+     }
+   ],
+   "target": {
+diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
+index 9de4150fd194980167447c2fa8cbbfc7cc523665..dcf858917ad22ce32ed4aa5578ecfbc30931db24 100644
+--- a/src/scripts/hooks/run_continuation_hook.ts
++++ b/src/scripts/hooks/run_continuation_hook.ts
+@@ -65,7 +65,15 @@
+  *                                one event earlier exists to continue). A fire
+  *                                whose roadmap SOURCE changed is never a
+  *                                duplicate, whatever the counts say.
+- *   scope complete (0 open)    → allow            (event: complete; state cleared)
++ *   scope complete (0 open,
++ *   none blocked)              → allow            (event: complete; state cleared)
++ *   runnable work exhausted
++ *   (0 open, ≥1 blocked)       → allow  (event: blocked, ONCE per run via
++ *                                `blocked_reported`. ADR-235's terminal outcome:
++ *                                NOT a sixth halt condition and NOT in
++ *                                `HALT_ACTIONS`, and the state is neither stamped
++ *                                `halted` nor cleared. Reporting this as
++ *                                `complete` is what round 8 finding 3 caught)
+  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
+  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
+  *   stall (3 engagements, no
+@@ -156,6 +164,14 @@ import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
+ /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
+ export { TRANSCRIPT_READ_MAX_BYTES };
+ 
++/**
++ * How far back `absentAlreadyLogged` reads. The ledger is append-only and the
++ * line it looks for belongs to the CURRENT run, so it is always within a few
++ * lines of the end; the cap bounds the read on a long-lived ledger rather than
++ * expressing a belief about where the line is.
++ */
++const LEDGER_TAIL_MAX_BYTES = 512 * 1024;
++
+ export const EVENTS_RELPATH = path.join(
+     'agents',
+     'runtime',
+@@ -192,6 +208,16 @@ export interface RunState {
+      * so is information while a stream of identical lines is noise.
+      */
+     inert_reported?: boolean;
++    /**
++     * Set once the `blocked` terminal has reported this run.
++     *
++     * `blocked` is a terminal outcome and not a halt (ADR-235), so it must not be
++     * stamped into `halted` -- `HALT_ACTIONS` is the set `parseRecord` validates
++     * that field against, and widening it would let a cleared budget also carry a
++     * halt stamp. This field gives the once-per-run guarantee without that, the
++     * same way `inert_reported` does for the over-cap rung.
++     */
++    blocked_reported?: boolean;
+     /**
+      * Consecutive stop fires on which the roadmap was unreadable.
+      *
+@@ -313,6 +339,7 @@ export interface ScanResult {
+ export type LadderAction =
+     | 'engage'
+     | 'complete'
++    | 'blocked'
+     | 'halt-max-iterations'
+     | 'halt-wall-clock'
+     | 'halt-stall';
+@@ -445,6 +472,7 @@ export function ladder(
+     state: RunState,
+     openCount: number,
+     nowMs: number,
++    blockedCount = 0,
+     caps: { maxIterations: number; wallClockMs: number; stallWindow: number } = {
+         maxIterations: MAX_ITERATIONS,
+         wallClockMs: WALL_CLOCK_CAP_MS,
+@@ -455,7 +483,15 @@ export function ladder(
+     // halted run whose roadmap later reads zero-open does not report a
+     // completion it never reached.
+     if (state.halted) return state.halted;
+-    if (openCount === 0) return 'complete';
++    // Round 8 finding 3: this returned `complete` on `openCount === 0` alone,
++    // while `scanOpenSteps` had already EXCLUDED every step carrying a
++    // `blocked-by:` marker from that count. So the one state ADR-235 defines as
++    // its own terminal outcome was reported as a completion, and cleared the
++    // budget with it. `blocked` is deliberately not a sixth halt condition -- the
++    // ADR is explicit that the five halts interrupt runnable work while this is
++    // exhaustion OF runnable work -- so it stays out of `HALT_ACTIONS` and is
++    // stamped through `blocked_reported` instead.
++    if (openCount === 0) return blockedCount > 0 ? 'blocked' : 'complete';
+     if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
+     const started = Date.parse(state.started_at);
+     if (Number.isFinite(started) && nowMs - started >= caps.wallClockMs) {
+@@ -536,14 +572,57 @@ export function readRunState(
+ }
+ 
+ /**
+- * The only writer of a run-state file. Fail-open on every error: the state is a
+- * budget, and losing a write costs at most one iteration of accounting, while
+- * throwing here would turn an observability concern into a turn-end failure.
++ * The only writer of a run-state file. Never throws: the state is a budget, and
++ * losing a write costs at most one iteration of accounting, while throwing here
++ * would turn an observability concern into a turn-end failure.
++ *
++ * Returns whether the write landed. Round 8 finding 2: this used to swallow the
++ * error and return `void`, which made the engage path's own
++ * `catch { return EXIT_ALLOW }` unreachable -- the guard against an unbounded
++ * BLOCK loop on an unpersistable counter was gone while the comment explaining
++ * it stayed. Every other caller ignores the result on purpose (fail-open); the
++ * engage path is the one branch where a lost write means an unbounded
++ * re-engagement rather than a missed one.
+  */
+-function writeState(file: string, state: RunState): void {
++function writeState(file: string, state: RunState): boolean {
+     try {
+         fs.mkdirSync(path.dirname(file), { recursive: true });
+         fs.writeFileSync(file, `${JSON.stringify(state)}\n`, 'utf8');
++        return true;
++    } catch {
++        return false;
++    }
++}
++
++/**
++ * Clear a run's budget: the keyed file, plus the legacy per-session file when
++ * that file is adoptable by THIS slug.
++ *
++ * Round 8 finding 4: `readRunState` ADOPTS the legacy file for a migrated run,
++ * and both clear sites removed only the keyed one -- so on a migrated run every
++ * clear was a no-op. The next read adopted the same stale budget again, which
++ * made `complete` resumable and turned the absent-confirm clear into a cycle
++ * that repeated every `ABSENT_CONFIRM_FIRES` fires. Another roadmap's legacy
++ * file is still not ours to delete, so the adoption condition is reused
++ * verbatim rather than restated loosely.
++ */
++function clearRunState(
++    workspaceRoot: string,
++    runId: string,
++    slug: string,
++    keyedFile: string,
++): void {
++    try {
++        fs.rmSync(keyedFile, { force: true });
++    } catch {
++        /* fail-open */
++    }
++    const legacyFile = path.join(workspaceRoot, legacyStateRelPath(runId));
++    const legacy = readState(legacyFile);
++    if (legacy === null) return;
++    if (legacy.roadmap !== undefined && legacy.roadmap !== slug) return;
++    try {
++        fs.rmSync(legacyFile, { force: true });
+     } catch {
+         /* fail-open */
+     }
+@@ -592,6 +671,11 @@ function readState(file: string): RunState | null {
+         if (o['inert_reported'] === true) {
+             rec.inert_reported = true;
+         }
++        // Round-tripped for the same reason as `inert_reported`: dropping it would
++        // re-emit the `blocked` terminal on every later stop fire of the run.
++        if (o['blocked_reported'] === true) {
++            rec.blocked_reported = true;
++        }
+         // Validated against the halt set rather than accepted as any string:
+         // an unrecognised value would be returned verbatim by `ladder` and
+         // become an action no branch below handles.
+@@ -860,6 +944,60 @@ function isDirectory(p: string): boolean {
+     }
+ }
+ 
++/**
++ * True when a `halt-roadmap-absent` line for this run and roadmap is already in
++ * the ledger.
++ *
++ * Round 8 finding 5: the ONCE guarantee was carried by `absent_fires` in the
++ * state file, which is exactly the thing that does not exist in the case the
++ * branch itself calls out -- a state file present but unparseable, or absent.
++ * There `absentFires` recomputed to 1 on every fire and the line was re-emitted
++ * every stop. The ledger is the one durable record available on that path, so it
++ * is the guard. Read from the tail: the file is append-only and the answer is
++ * always near the end.
++ */
++function absentAlreadyLogged(workspaceRoot: string, runId: string, slug: string): boolean {
++    try {
++        const file = path.join(workspaceRoot, EVENTS_RELPATH);
++        const size = fs.statSync(file).size;
++        const start = Math.max(0, size - LEDGER_TAIL_MAX_BYTES);
++        const fd = fs.openSync(file, 'r');
++        let text: string;
++        try {
++            const buf = Buffer.alloc(size - start);
++            fs.readSync(fd, buf, 0, buf.length, start);
++            text = buf.toString('utf8');
++        } finally {
++            fs.closeSync(fd);
++        }
++        for (const line of text.split('\n')) {
++            if (line === '') continue;
++            let rec: unknown;
++            try {
++                rec = JSON.parse(line);
++            } catch {
++                // A partial first line from the tail cut, or a torn append.
++                continue;
++            }
++            if (rec === null || typeof rec !== 'object') continue;
++            const o = rec as Record<string, unknown>;
++            if (
++                o['event'] === 'halt-roadmap-absent' &&
++                o['run_id'] === runId &&
++                o['roadmap'] === slug
++            ) {
++                return true;
++            }
++        }
++        return false;
++    } catch {
++        // No ledger, or unreadable: nothing proves the line was written, and
++        // emitting once more is the lesser failure than going silent on the rung
++        // this whole file exists to make visible.
++        return false;
++    }
++}
++
+ function appendEvent(workspaceRoot: string, record: JsonObject): void {
+     try {
+         const file = path.join(workspaceRoot, EVENTS_RELPATH);
+@@ -1042,7 +1180,12 @@ export function main(): number {
+         // could not read would erase an interrupted halt stamp — the exact leak the
+         // presence check was added to close. The next healthy write supersedes it.
+         const absentFires = (driven?.absent_fires ?? 0) + 1;
+-        if (absentFires === 1) {
++        // With a readable state the counter itself is the durable once-guard. With
++        // `driven === null` it has nowhere to live and recomputed to 1 every fire,
++        // so the ledger answers instead (round 8 finding 5).
++        const firstAbsence =
++            driven === null ? !absentAlreadyLogged(workspaceRoot, runId, slug) : absentFires === 1;
++        if (firstAbsence) {
+             appendEvent(workspaceRoot, {
+                 event: 'halt-roadmap-absent',
+                 run_id: runId,
+@@ -1062,14 +1205,12 @@ export function main(): number {
+             writeState(runState.keyedFile, driven);
+             return EXIT_ALLOW;
+         }
+-        // Confirmed. Only the KEYED file is removed — a legacy per-session file is
+-        // shared with other roadmaps and is never this branch's to delete; the
+-        // keyed write above supersedes it for this slug.
+-        try {
+-            fs.rmSync(runState.keyedFile, { force: true });
+-        } catch {
+-            /* fail-open — the ledger line is the durable half */
+-        }
++        // Confirmed. The keyed file goes, and so does a legacy per-session file
++        // that is adoptable by this slug -- leaving it made this clear a no-op on a
++        // migrated run and the absence then repeated as a cycle (round 8 finding
++        // 4). Another roadmap's legacy file is still never this branch's to delete,
++        // which `clearRunState` enforces with the adoption condition itself.
++        clearRunState(workspaceRoot, runId, slug, runState.keyedFile);
+         return EXIT_ALLOW;
+     }
+     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
+@@ -1104,12 +1245,25 @@ export function main(): number {
+             // run to report on — the same silence the contract-absent rung takes.
+             const inert = readRunState(workspaceRoot, runId, slug);
+             if (inert.state !== null && inert.state.inert_reported !== true) {
++                // Round 8 finding 6: this line shipped without the seven
++                // provenance fields the header declares mandatory for EVERY event,
++                // while every value was already in scope. A rung that exists to be
++                // distinguishable in the ledger is the last one that should be
++                // missing the fields a reader distinguishes runs by.
++                const inertRoots = provenance(
++                    workspaceRoot,
++                    claim.path,
++                    sessionRoot,
++                    str(payload['cwd'] as JsonValue | undefined),
++                );
++                inertRoots['roadmap_path'] = roadmapFile;
+                 appendEvent(workspaceRoot, {
+                     event: 'inert-transcript-over-cap',
+                     run_id: runId,
+                     roadmap: slug,
+                     iterations: inert.state.iterations,
+                     at: new Date().toISOString(),
++                    ...inertRoots,
+                 });
+                 inert.state.inert_reported = true;
+                 writeState(inert.keyedFile, inert.state);
+@@ -1211,6 +1365,14 @@ export function main(): number {
+     // Stamped on an inherited state too, so the field fills in on first contact
+     // rather than staying absent for the life of the run.
+     state.roadmap = slug;
++    // Round 8 finding 1: the field's own docblock promised "reset by any
++    // successful read", and nothing reset it -- the engage and halt paths write
++    // THIS object straight back, so it accumulated as a lifetime total. Two
++    // absences separated by healthy fires then reclaimed a live budget, and the
++    // second reclaim wrote no ledger line because the once-guard had already
++    // fired on the first. Reaching this line means the roadmap read succeeded:
++    // the absent branch returns above it.
++    delete state.absent_fires;
+ 
+     const scan = scanOpenSteps(roadmapText);
+ 
+@@ -1237,7 +1399,7 @@ export function main(): number {
+         state.history_source = roadmapFile;
+     }
+ 
+-    const action = ladder(state, scan.open, Date.now());
++    const action = ladder(state, scan.open, Date.now(), scan.blocked);
+ 
+     if (action !== 'engage') {
+         // A run that is ALREADY stamped emits nothing further — round 6 finding 6.
+@@ -1248,7 +1410,10 @@ export function main(): number {
+         // criteria's counts are derived from. The FIRST halt is the event; the rest
+         // are the same fact re-stated.
+         const alreadyStamped = prev?.halted !== undefined;
+-        if (!alreadyStamped) {
++        // `blocked` cannot use `halted` as its once-guard: it is not in
++        // `HALT_ACTIONS`, by ADR-235's own framing (round 8 finding 3).
++        const alreadyBlocked = action === 'blocked' && prev?.blocked_reported === true;
++        if (!alreadyStamped && !alreadyBlocked) {
+             appendEvent(workspaceRoot, {
+                 event: action,
+                 run_id: runId,
+@@ -1265,10 +1430,19 @@ export function main(): number {
+             // Only a COMPLETION clears the state, so a later run on the same
+             // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
+             // A halt must NOT clear it — see `RunState.halted`.
+-            try {
+-                fs.rmSync(stateFile, { force: true });
+-            } catch {
+-                /* fail-open */
++            clearRunState(workspaceRoot, runId, slug, stateFile);
++            return EXIT_ALLOW;
++        }
++        if (action === 'blocked') {
++            // Recorded in place and NOT cleared. Clearing would make the next stop
++            // fire read no state, build a fresh one, reach `blocked` again and
++            // re-emit -- the duplicate-line shape round 6 finding 6 closed for
++            // halts. The budget is not reclaimed either: the run is over, and a
++            // later run carries a different run id and therefore a different keyed
++            // state file, so there is nothing to reclaim it FOR.
++            if (state.blocked_reported !== true) {
++                state.blocked_reported = true;
++                writeState(stateFile, state);
+             }
+             return EXIT_ALLOW;
+         }
+@@ -1286,13 +1460,15 @@ export function main(): number {
+     state.last_turn = turnOrdinal;
+     state.history.push(scan.open);
+     state.last_engaged_at = new Date().toISOString();
+-    try {
+-        writeState(stateFile, state);
+-    } catch {
++    if (!writeState(stateFile, state)) {
+         // If the counter cannot persist, the ladder cannot bound the loop —
+         // so the loop must not run. Allowing here is the fail-open posture
+         // applied to the ONE branch where a lost write means an unbounded
+         // re-engagement rather than a missed one.
++        //
++        // Round 8 finding 2: this was a `try/catch` around a `writeState` that
++        // swallowed every error itself, so the branch was unreachable and the
++        // guard the comment describes did not exist. `writeState` reports now.
+         return EXIT_ALLOW;
+     }
+ 
+diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
+index 9558468b082081b4768ccea78187af29ae771f17..c92f5d87790d806a63d39c639e28a87886a0f53b 100644
+--- a/tests/hooks/run_continuation_dispatch.test.ts
++++ b/tests/hooks/run_continuation_dispatch.test.ts
+@@ -939,6 +939,95 @@ describe('run-continuation — driven through the live dispatcher', () => {
+         expect(fs.existsSync(keyed)).toBe(true);
+     });
+ 
++    it('reports blocked — not complete — when the only open step is blocked, ONCE', () => {
++        // Round 8 finding 3. `scanOpenSteps` excludes a `blocked-by:` step from the
++        // open count, so this roadmap reads `open: 0, blocked: 1` — and the ladder
++        // returned `complete` for it, reporting a completion the run never reached
++        // and clearing the budget with it. ADR-235 defines exactly this state as
++        // its own terminal outcome.
++        const root = writeWorkspace();
++        fs.writeFileSync(
++            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
++            [
++                '---',
++                'complexity: structural',
++                'execution:',
++                '  mode: autonomous',
++                '---',
++                '',
++                '# Fixture',
++                '',
++                '## Phase 0 — nothing runnable left',
++                '',
++                '- [x] **0.0** done',
++                '- [ ] **0.1** gated <!-- blocked-by: some-human-gate -->',
++                '',
++            ].join('\n'),
++            'utf-8',
++        );
++
++        dispatchStop(root, writeTranscript(3));
++        dispatchStop(root, writeTranscript(4));
++
++        const blocked = events(root).filter((e) => e['event'] === 'blocked');
++        expect(blocked.length).toBe(1);
++        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(0);
++        expect(blocked[0]?.['blocked']).toBe(1);
++        expect(blocked[0]?.['open']).toBe(0);
++        // The header declares the provenance mandatory for EVERY event.
++        expect(typeof blocked[0]?.['workspace_root']).toBe('string');
++        expect(typeof blocked[0]?.['session_root']).toBe('string');
++        expect(typeof blocked[0]?.['roadmap_path']).toBe('string');
++        // Terminal, but not a halt: the stamp lives in its own field so
++        // `parseRecord` never has to accept `blocked` as a `halted` value.
++        const keyed = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
++        const state = JSON.parse(fs.readFileSync(keyed, 'utf-8')) as Record<string, unknown>;
++        expect(state['blocked_reported']).toBe(true);
++        expect(state['halted']).toBeUndefined();
++    });
++
++    it('clears the LEGACY state file too, so a migrated run cannot resume a spent budget', () => {
++        // Round 8 finding 4: `readRunState` adopts the legacy per-session file, and
++        // both clear sites removed only the keyed one — so on a migrated run every
++        // clear was a no-op and the next read adopted the same spent budget again.
++        const root = writeWorkspace();
++        fs.writeFileSync(
++            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
++            [
++                '---',
++                'complexity: structural',
++                'execution:',
++                '  mode: autonomous',
++                '---',
++                '',
++                '# Fixture',
++                '',
++                '## Phase 0 — finished',
++                '',
++                '- [x] **0.0** done',
++                '',
++            ].join('\n'),
++            'utf-8',
++        );
++        const legacy = path.join(root, legacyStateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(legacy), { recursive: true });
++        fs.writeFileSync(
++            legacy,
++            JSON.stringify({
++                started_at: new Date().toISOString(),
++                iterations: 4,
++                last_turn: 1,
++                history: [1],
++            }),
++            'utf-8',
++        );
++
++        dispatchStop(root, writeTranscript(3));
++
++        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(1);
++        expect(fs.existsSync(legacy)).toBe(false);
++    });
++
+     it('writes ONE halt line, not one per subsequent stop fire', () => {
+         // Round 6 finding 6: once `halted` is stamped the state file is immortal for
+         // the session, so every later stop fire re-entered the non-engage branch and
+diff --git a/tests/scripts/hooks/run_continuation.test.ts b/tests/scripts/hooks/run_continuation.test.ts
+index 423d0ec8cfb5a14a8638644b0e1124d952951347..447fd532ae96cb6ae76ba2745a402ae6d0869989 100644
+--- a/tests/scripts/hooks/run_continuation.test.ts
++++ b/tests/scripts/hooks/run_continuation.test.ts
+@@ -142,6 +142,25 @@ describe('ladder — both directions pinned', () => {
+         expect(ladder(base({ iterations: MAX_ITERATIONS + 5 }), 0, Date.now())).toBe('complete');
+     });
+ 
++    // Round 8 finding 3. The two rows differ in ONE input — the blocked count —
++    // so a regression that re-collapses them cannot pass by accident.
++    it('zero open with blocked steps remaining → blocked, never complete', () => {
++        expect(ladder(base(), 0, Date.now(), 1)).toBe('blocked');
++        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
++    });
++
++    it('blocked is terminal but is NOT a halt — it stays out of HALT_ACTIONS', () => {
++        expect(HALT_ACTIONS).not.toContain('blocked');
++    });
++
++    it('a stamped halt still outranks blocked', () => {
++        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 2)).toBe('halt-stall');
++    });
++
++    it('blocked does not pre-empt a run with runnable work left', () => {
++        expect(ladder(base(), 3, Date.now(), 4)).toBe('engage');
++    });
++
+     it('iteration cap halts', () => {
+         expect(ladder(base({ iterations: MAX_ITERATIONS }), 3, Date.now())).toBe(
+             'halt-max-iterations',
