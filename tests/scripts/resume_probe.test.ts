@@ -404,3 +404,55 @@ describe('resume_probe — a repo path as the condition', () => {
         expect(c).not.toContain('Commentary');
     });
 });
+
+// R2 round 1 findings 4, 5, 6 — each row is the shape the reviewer named, and
+// each fails when its guard is reverted.
+describe('resume_probe — R2 round 1: the path branch, hardened', () => {
+    let repoRoot = '';
+
+    function park(body: string): void {
+        write('later/road-to-parked.md', ['---', 'status: later', '---', '', '# Parked', '', body, ''].join('\n'));
+    }
+
+    beforeEach(() => {
+        repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'resume-probe-repo2-'));
+    });
+
+    afterEach(() => {
+        fs.rmSync(repoRoot, { recursive: true, force: true });
+    });
+
+    // Finding 4 — word-presence is not a predicate. A negated "exists" used to
+    // take the path branch and report FIRED while the file was still there.
+    it('refuses a NEGATED existence claim over the path', () => {
+        expect(referencedPath('`docs/legacy.md` no longer exists')).toBeNull();
+    });
+
+    // Finding 4, the other half — the existence word paired with a path it does
+    // not govern.
+    it('refuses an existence word detached from the path', () => {
+        expect(referencedPath('blocked until a workaround exists, see `docs/x.md`')).toBeNull();
+    });
+
+    it('still accepts the predicate bound to its own path', () => {
+        expect(referencedPath('`docs/x.md` exists')).toBe('docs/x.md');
+        expect(referencedPath('`docs/x.md` currently exists')).toBe('docs/x.md');
+    });
+
+    // Finding 5 — a clause naming a roadmap AND a path is a conjunction; the
+    // path used to be dropped silently and the roadmap half decided alone.
+    it('refuses a clause naming both a roadmap and a path', () => {
+        write('archive/road-to-gone.md', 'x');
+        park('> **Blocked until:** `road-to-gone` closes, `docs/contracts/thing.md` exists.');
+        const [f] = probeLater(root, repoRoot);
+        expect(f!.verdict).toBe('undecidable');
+        expect(f!.why).toContain('conjunction');
+    });
+
+    // Finding 6 — an unbalanced backtick left `inCode` stuck true, so the whole
+    // commentary became the clause and a path mentioned only there could decide.
+    it('an unbalanced backtick does not pull commentary into the clause', () => {
+        const c = conditionClause('**Blocked until:** the `host ships it. Commentary names `docs/x.md` exists.');
+        expect(c).not.toContain('docs/x.md');
+    });
+});

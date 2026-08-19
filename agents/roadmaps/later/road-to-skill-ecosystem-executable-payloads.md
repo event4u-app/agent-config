@@ -13,11 +13,17 @@ execution:
 > estate carries.
 
 > **Blocked until:** `agents/evidence/analysis/skill-payload-phase0-spikes.md`
-> exists.
-> **What it must record:** the S0.1 invocation rate, the S0.2 median token delta,
-> the S0.3 detection result. A null counts as a recorded result. The content bar
-> is stated in its own field on purpose — inside the condition it reads as a
-> conjunction, and the resume probe refuses a conjunction it can only half-weigh.
+> records the S0.1 invocation rate, the S0.2 median token delta and the S0.3
+> detection result — a null counts as a recorded result.
+> **Why the bar is stated inside the condition and not beside it:** an earlier
+> draft of this note put it in a sibling field so the resume probe would see a
+> bare existence test and decide the note. That works, and that is the objection:
+> `_truncateAtNextField` cuts the condition at the next bolded label, so neither
+> the compound guard nor the existence guard sees a bar moved one field down, and
+> the probe would have reported FIRED on an empty file at this path. Field
+> placement flipping a verdict is a bypass, so the bar sits where it belongs and
+> the probe correctly reports `undecidable` — a conjunction it can only
+> half-weigh is exactly what it should refuse.
 > **Why:** all 14 open steps are downstream of blocker
 > `phase-0-spikes-need-a-live-host-session` (class 3, human-only, spend-bearing,
 > and the trigger-style eval hard-aborts under automation), so zero of them is

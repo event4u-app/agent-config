@@ -6,14 +6,20 @@ parent_roadmap: autonomous-verify-loop
 
 # Roadmap: Live-app Playwright as the canonical verdict source (verify-repair-loop)
 
-> **Blocked until:** a consumer repo's CI runs the `playwright-testing` skill
-> against a live app and that run is recorded under `agents/evidence/`.
-> **Why that half and not the other:** the trigger below is a conjunction, and
-> its first conjunct has already fired — `road-to-mission-mode` is archived. Only
-> the consumer-CI half is still open, so naming the whole conjunction as the
-> resume condition would read as FIRED to the resume probe on a third of the
-> evidence. Parked 2026-08-19 by `road-to-estate-drawdown` Phase 2 batch 1,
-> verdict PARK-PROBEABLE.
+> **Blocked until:** a consumer repo's live-app CI run of the
+> `playwright-testing` skill is recorded under `agents/evidence/`.
+> **Why that half and not the other:** the trigger below is a conjunction whose
+> first conjunct has already fired — `road-to-mission-mode` is archived. Only
+> the consumer-CI half is still open, so naming the whole conjunction would let
+> the probe resolve the archived half and report FIRED on a third of the
+> evidence.
+> **What the probe actually returns here, and why that is correct:**
+> `undecidable`. The condition names a directory rather than a file, and a
+> directory exists in every checkout, so no existence test decides it. Giving it
+> a concrete filename would mean inventing an artefact nobody has agreed to
+> produce — a probe lighting up on a name this note made up is worse than an
+> honest `undecidable`. Parked 2026-08-19 by `road-to-estate-drawdown` Phase 2
+> batch 1, verdict PARK-PROBEABLE.
 > **Origin:** spawned from `road-to-autonomous-verify-loop.md` (Phase 2,
 > 2026-06-15) to carry its one deferred item without trapping the parent in
 > Iron Law 3.

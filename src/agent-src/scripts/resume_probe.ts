@@ -16,14 +16,19 @@
  *
  * ## What it can and cannot decide, stated plainly
  *
- * A resume condition is prose. Two shapes are machine-decidable and the rest
- * are not, so the verdict set has three values rather than two:
+ * A resume condition is prose. TWO shapes are machine-decidable — a roadmap
+ * reference, and a single repo-relative file path under an existence predicate
+ * — and the rest are not, so the verdict set has three values rather than two:
  *
  *   - `fired`       — every roadmap the condition names has archived, or the
- *                     named step in a still-active roadmap is ticked.
+ *                     named step in a still-active roadmap is ticked; or the
+ *                     single path it names under `exists` is there.
  *   - `unmet`       — at least one named roadmap is still active with the
- *                     named step (or the whole file) still open.
- *   - `undecidable` — the condition names no roadmap this tree can resolve.
+ *                     named step (or the whole file) still open; or the single
+ *                     path it names under `exists` is absent.
+ *   - `undecidable` — the condition names neither, names both (a conjunction
+ *                     this probe can only half-weigh), names two of either, or
+ *                     states a predicate other than existence over its path.
  *
  * `undecidable` is reported as its own count and never folded into "nothing
  * fired". A probe that reads 44 files, understands 12 of them and announces
@@ -267,10 +272,16 @@ function _blankFencedCode(text: string): string {
  * about a condition that named a file.
  */
 function _sentenceHead(s: string): string {
+    // An ODD backtick count means the span never closes, and toggling on it
+    // would leave `inCode` stuck true for the whole remainder — the commentary
+    // paragraph then becomes the clause, and a path mentioned only in that
+    // commentary could decide the verdict. Fall back to the plain scan, which
+    // cuts at the first terminator and is the conservative direction.
+    const balanced = (s.match(/`/g) ?? []).length % 2 === 0;
     let inCode = false;
     for (let i = 0; i < s.length; i++) {
         const ch = s[i] as string;
-        if (ch === '`') {
+        if (ch === '`' && balanced) {
             inCode = !inCode;
             continue;
         }
@@ -326,8 +337,20 @@ function conditionClause(condition: string): string {
  * have reported FIRED and un-parked a roadmap whose bar is 13 observations away.
  * A content bar is decidable — by `capture_skill_catalogue --cadence` — but not
  * by this probe, and `undecidable` is the honest verdict for it.
+ *
+ * The predicate is bound POSITIONALLY to the path rather than tested as a word
+ * anywhere in the clause, because word-presence is not a predicate: `\`x.md\` no
+ * longer exists` would have reported FIRED while the file was still there, and
+ * `blocked until a workaround exists, see \`docs/x.md\`` would have paired the
+ * word with a path it does not govern. Both shapes are regression tests.
+ *
+ * KNOWN LIMIT, stated rather than papered over: this probe reads the condition
+ * AFTER `_truncateAtNextField`, so a content bar an author moves into a sibling
+ * bolded field is invisible to it and the note decides as bare existence. That
+ * is an authoring bypass no check here can see — the guard is that a resume
+ * condition states its whole bar inside the condition, and it is model-carried.
  */
-const EXISTENCE_PREDICATE_RE = /\bexists\b/i;
+const EXISTENCE_PREDICATE_RE = /`(?:agents|docs|src|tests|internal|scripts|evals|\.github)\/[A-Za-z0-9._\-/]+`[ \t]*(?:currently[ \t]+)?exists\b/i;
 
 /**
  * The single repo-relative path a condition names, or `null`.
@@ -340,13 +363,19 @@ function referencedPath(condition: string): string | null {
     if (!EXISTENCE_PREDICATE_RE.test(condition)) {
         return null;
     }
+    const paths = _pathsIn(condition);
+    return paths.length === 1 ? (paths[0] as string) : null;
+}
+
+/** Every distinct repo-relative file path a clause names, predicate or not. */
+function _pathsIn(condition: string): string[] {
     REPO_PATH_RE.lastIndex = 0;
     const found = new Set<string>();
     let m: RegExpExecArray | null;
     while ((m = REPO_PATH_RE.exec(condition)) !== null) {
         found.add(m[1] as string);
     }
-    return found.size === 1 ? ([...found][0] as string) : null;
+    return [...found].sort();
 }
 
 /** Roadmap slugs named by the condition, minus the parked file's own slug. */
@@ -438,6 +467,21 @@ function probeLater(roadmapRoot: string, repoRootArg?: string): ResumeFinding[] 
             continue;
         }
         const refs = referencedRoadmaps(clause, ownSlug);
+        // A clause naming a roadmap AND a path is a conjunction, and deciding it
+        // on the roadmap half alone is the partial-match resume `COMPOUND_RE`
+        // already refuses for two roadmaps. `COMPOUND_RE` does not close it —
+        // a comma joins the two without an `and`, which is the same hole the
+        // two-paths rule in `referencedPath` exists for. Refused symmetrically.
+        if (refs.length > 0 && _pathsIn(clause).length > 0) {
+            findings.push({
+                file: `later/${name}`,
+                condition,
+                refs,
+                verdict: 'undecidable',
+                why: 'names a roadmap and a repo path — a conjunction the probe can only half-weigh',
+            });
+            continue;
+        }
         if (refs.length === 0) {
             // Second decidable form: a single repo-relative path. `exists` is
             // the whole test — the condition says the artefact will appear, so
