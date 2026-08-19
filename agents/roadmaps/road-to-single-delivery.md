@@ -172,19 +172,29 @@ The partition sidesteps that remedy rather than repairing it.
 
 ## Phase 0 — Pin the measurement so no fifth draft repeats the fourth's error
 
-- [ ] **0.1** Commit the fresh-projection census as an evidence artefact:
+- [x] **0.1** Commit the fresh-projection census as an evidence artefact:
       per-type counts, the divergence breakdown, the 7 `paths:`-disagreement rules
       by name, the 16/101 and 0/290 partition sizes, and the stale-versus-fresh
       table — each with the command that produced it.
       `verify:` the artefact carries the projection shape (symlink vs emitted, and
       the `paths:`-carrying count) as a REQUIRED field, since its absence is what
       produced two refuted drafts.
-- [ ] **0.2** Record the gate reach hole as a finding:
+      **DONE 2026-08-19:**
+      [`single-delivery-partition-census.md`](../evidence/analysis/single-delivery-partition-census.md).
+      The projection-shape block is the artefact's first section and states
+      `EMITTED REAL FILES (post-PR-#1231) · 111 real files, 0 symlinks · 8 carrying
+      paths:`, with the reason a census is uninterpretable without it. Also records
+      the `grep -l` over-count (73 vs the measured 16) because that is the number a
+      casual probe returns.
+- [x] **0.2** Record the gate reach hole as a finding:
       `check_rule_projection_integrity` reports "nothing to audit" when
       `agents/.agent-tools.yml` selects zero tools, the maintainer's normal local
       state. Name what it would have caught, and that CI activates all eight so
       the hole is local-only.
       `verify:` the gate's own output is quoted in the artefact.
+      **DONE 2026-08-19** — quoted verbatim in the census § "The gate that should
+      have caught the stale tree, and did not", with the local-only bound stated so
+      it is not read as a CI gap.
 
 **AC-0:** any future reader can tell from the artefact alone whether a census was
 taken on a stale or a fresh projection.
