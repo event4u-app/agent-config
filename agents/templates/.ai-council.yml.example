@@ -526,8 +526,10 @@ necessity_classifier:
 # providers `members:` accepts, on purpose: xai and perplexity ship
 # community CLI wrappers that consume an API key, so routing a
 # resolution there would spend USD on the rung whose whole point is not
-# to. The rung books against the same `cli_call_budget` counter above —
-# one subscription, one counter.
+# to. The rung MUST book against the same `cli_call_budget` counter above
+# — one subscription, one counter. That is an obligation on the rung, not
+# a guard that already exists: nothing reads this key at runtime yet, so
+# setting it declares intent rather than activating a bounded mechanism.
 #
 # The key is REFUSED on high_impact and user_required, not ignored. Those
 # classes reach you, and a silently-dropped key would read as configured.

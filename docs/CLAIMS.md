@@ -639,11 +639,40 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified:
 
 ### claim: council-fallback-loses-zero-seats
-- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats — the seat answers over the api rung instead of dropping out of the pass.
+- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
 - kind: qual
 - evidence: exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0
 - status: backed
 - last_verified: 2026-08-19
+
+**The condition was added 2026-08-19, after a review found the unconditional
+wording refuted by its own evidence.** Recorded here rather than quietly
+applied, because this is the failure shape the ledger exists against. The cited
+suite contains `a fallback that was REFUSED by the retry budget still counts as
+absent` — an ELIGIBLE failure with a CONSTRUCTIBLE twin whose seat IS lost,
+precisely the case the unconditional sentence denied. Nothing was steered and
+no test was wrong; the pointer simply did not prove what the prose above it
+said.
+
+**The gate could not have caught it, and that limitation is not fixed by this
+entry.** `check_claims` runs the command and compares an exit code, so a green
+suite publishes a ✅ over a sentence the suite refutes. An `exec:` pointer
+proves that a suite PASSES — never that the suite tests the claim. The
+mitigation available at authoring time is the boundary statement below; a
+reviewer reading the claim and the suite together is what closed this one.
+
+**What the suite does prove**, per test: a vendor-official cli member
+(`billable: false`, `transport: cli`) that fails eligibly is answered by its api
+twin and counts PRESENT in the quorum; the substitution is sticky, so a later
+round reuses the twin rather than re-spawning the dead binary and losing the
+seat to the ledger's one-shot rule; and a dead FREE seat cannot trigger the
+round-wide budget short-circuit.
+
+**What it does not prove**, stated so the boundary is not re-blurred: nothing
+about an ineligible failure class (`timeout` and `server_error` are ineligible
+under every policy and no config key can enable them), nothing about a provider
+with no api rung (`no_twin`), and nothing about the budget-refused path, which
+is the named exception in the claim itself.
 
 ### claim: unattended-demotion-gate
 - claim: An unattended run's 14-day rework rate does not exceed the attended baseline; a breach returns the scheduler default to off.

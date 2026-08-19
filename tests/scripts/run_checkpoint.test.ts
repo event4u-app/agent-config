@@ -489,6 +489,28 @@ describe('verifyCheckpoint — head is re-verified like every other field', () =
         expect(field?.actual).toBe('a'.repeat(40));
     });
 
+    it('an UNKNOWN head on either side is not a disagreement', () => {
+        // R2 round 4, finding 2. `readHead` returns null on every failure by
+        // design, so a strict comparison reported "the tree moved" for "I
+        // could not read the commit" — on a resume at the same commit with
+        // every other field agreeing.
+        const repoRoot = withGit('a'.repeat(40));
+        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
+        // The checkpoint knows the commit; the verifying tree cannot read one.
+        fs.rmSync(path.join(repoRoot, '.git'), { recursive: true, force: true });
+        const res = verifyCheckpoint(repoRoot, cp);
+        expect(res.fields.find((f) => f.field === 'head')?.agrees).toBe(true);
+        expect(res.agrees).toBe(true);
+    });
+
+    it('a checkpoint written without a head does not fail its own verification', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
+        expect(cp.head).toBeNull();
+        expect(verifyCheckpoint(repoRoot, cp).agrees).toBe(true);
+    });
+
     it('a moved HEAD is a reported DISAGREEMENT, never an error', () => {
         // Work landing between the checkpoint and the resume is the normal
         // case; treating it as corruption would refuse every healthy resume.

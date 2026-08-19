@@ -56,16 +56,24 @@ export const JOBS_REL = path.join('agents', 'runtime', 'state', 'unattended-jobs
 export function isProductionRemote(url: string): boolean {
     const u = url.trim();
     if (u === '') return false;
+    // ONLY a recognisably-local remote is non-production. Everything else is
+    // treated as reachable, including a shape this function does not know.
+    //
+    // R2 round 4, finding 6. The test used to be positive — enumerate the
+    // network shapes and return false otherwise — which meant an unrecognised
+    // URL cleared the "no production remote" precondition. An SSH-config alias
+    // is the concrete case: `gh:org/repo.git` matches no prefix here and fails
+    // the scp-style pattern (which requires `user@host:`), yet a push through
+    // it reaches GitHub exactly as `git@github.com:` does. The whole module
+    // fails CLOSED on an unreadable git config for precisely this reason, and
+    // this one function was reading "I do not recognise it" as "it is safe".
+    //
     // A filesystem path — a sibling worktree, a bare mirror on disk. A push
     // there is recoverable and reaches nobody.
-    if (u.startsWith('/') || u.startsWith('.') || u.startsWith('file://')) return false;
-    return (
-        u.startsWith('http://') ||
-        u.startsWith('https://') ||
-        u.startsWith('ssh://') ||
-        u.startsWith('git://') ||
-        /^[\w.-]+@[\w.-]+:/.test(u) // scp-style: git@github.com:org/repo.git
-    );
+    if (u.startsWith('/') || u.startsWith('.') || u.startsWith('~') || u.startsWith('file://')) {
+        return false;
+    }
+    return true;
 }
 
 export interface RemoteVerdict {

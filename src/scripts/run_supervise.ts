@@ -252,7 +252,15 @@ export interface ScanOptions {
  * records out by design. Reading only live records here would return exactly
  * the sessions that need no supervision and none of the ones that do.
  *
- * It also never prunes. `read_live_records({ prune: true })` deletes expired
+ * It also never prunes, and since R2 round 4 finding 5 it no longer has to
+ * hope the other readers do not. `read_live_records({ prune: true })` holds an
+ * expired record for `PRUNE_GRACE_MS` (24 h, derived from this digest's daily
+ * cadence) before unlinking it, so the two routine read paths that DO prune —
+ * `sessions:list` and the session-start hook, which fires on every start —
+ * can no longer delete this watcher's entire input between one morning and the
+ * next.
+ *
+ * `read_live_records({ prune: true })` deletes expired
  * records as it walks; deleting the evidence a watcher exists to act on would
  * make the first scan the last one that could see anything.
  */

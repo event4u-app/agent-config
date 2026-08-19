@@ -223,6 +223,18 @@ const USAGE = `usage: decision_memo write --run <id> --question <q> --chosen <c>
 Records one autonomously-resolved question so it is reviewable after the run.
 Writes agents/runtime/state/decisions/<run>/NNN.md — local-only (gitignored).
 
+--run takes ANY slug, and that freedom has a cost worth stating (R2 round 4,
+finding 3): interruption_report attributes memos to a run by joining on the
+session-derived run id, so a memo written under a hand-picked slug is counted
+by 'run:supervise --digest' (which counts directories) and NOT by the report's
+median_memos_per_run (which joins). The two disagree about the same files, and
+the report's zero reads as "no memos" rather than "no join".
+
+To be attributable, pass the id the ledger uses:
+  agent-config run:supervise --digest    # lists the session ids in play
+A free-form slug is still valid and still recorded — it is simply a memo about
+a run the report cannot name.
+
 Locked classes (high_impact, user_required) are refused at the CONFIG SCHEMA,
 never here: this is the ledger, not the gate.
 `;

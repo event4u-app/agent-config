@@ -337,7 +337,17 @@ export function verifyCheckpoint(repoRoot: string, cp: RunCheckpoint): VerifyRes
             field: 'head',
             claimed: cp.head,
             actual: head,
-            agrees: cp.head === head,
+            // A `null` on EITHER side is "not known", never "different".
+            //
+            // R2 round 4, finding 2. `readHead` is explicitly designed to
+            // return null on any failure — no git, an unreadable ref, a
+            // packed-refs miss — so a strict `===` turned "I could not read
+            // the commit" into "the tree moved since the checkpoint", on a
+            // resume at the SAME commit with every other field agreeing. That
+            // is a false alarm on the one field whose whole job is to tell a
+            // human whether anything moved, and a false alarm there costs more
+            // than a missing one: it trains the reader to skip the line.
+            agrees: cp.head === null || head === null || cp.head === head,
         },
     ];
     return { readable: true, fields, agrees: fields.every((f) => f.agrees) };

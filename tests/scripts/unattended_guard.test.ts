@@ -284,3 +284,40 @@ describe('checkBudget — a ceiling written as 0 disables its dimension', () => 
         expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 9, 100).allowed).toBe(false);
     });
 });
+
+describe('isProductionRemote — unrecognised means REACHABLE, never safe', () => {
+    // R2 round 4, finding 6. The test was positive — enumerate the network
+    // shapes, return false otherwise — so a shape it did not know cleared the
+    // "no production remote" precondition. The module fails closed on an
+    // unreadable git config for exactly this reason; this one function was
+    // reading "I do not recognise it" as "it is safe".
+    it('an SSH-config alias is production', () => {
+        // Matches no prefix and fails the scp-style pattern, yet a push
+        // through it reaches the forge exactly as `git@github.com:` does.
+        expect(isProductionRemote('gh:org/repo.git')).toBe(true);
+        expect(isProductionRemote('work:team/thing')).toBe(true);
+    });
+
+    it('the known network shapes stay production', () => {
+        for (const u of [
+            'https://github.com/o/r.git',
+            'http://example.com/r.git',
+            'ssh://git@host/r.git',
+            'git://host/r.git',
+            'git@github.com:o/r.git',
+        ]) {
+            expect(isProductionRemote(u)).toBe(true);
+        }
+    });
+
+    it('only a recognisably LOCAL remote is non-production', () => {
+        for (const u of ['/srv/mirrors/r.git', './sibling', '../other', '~/mirror', 'file:///m']) {
+            expect(isProductionRemote(u)).toBe(false);
+        }
+    });
+
+    it('an empty remote is not production — there is nothing to reach', () => {
+        expect(isProductionRemote('')).toBe(false);
+        expect(isProductionRemote('   ')).toBe(false);
+    });
+});

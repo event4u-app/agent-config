@@ -106,3 +106,35 @@ describe('upsertScalar — nested paths bind under the RIGHT parent', () => {
         expect((parseYaml(after) as Record<string, Record<string, unknown>>)['council']?.['enabled']).toBe(true);
     });
 });
+
+describe('upsertScalar — the document\'s own indent width', () => {
+    // R2 round 4, finding 7. Both halves hardcoded two spaces, so on a
+    // 4-space file the depth-2 walk matched nothing at depth 1 and appended
+    // the whole chain at EOF — a SECOND mapping key beside the existing one.
+    // `wizard.ts` writes that without re-parsing and reports {ok: true}.
+    it('adds a key to an existing 4-space section, not a duplicate one', () => {
+        const before = 'council:\n    members:\n        openai: 2\n';
+        const after = upsertScalar(before, ['council', 'members', 'gemini'], false);
+        // Parses at all — the decisive check, since a duplicate key is what
+        // the old version produced.
+        const doc = parseYaml(after) as Record<string, Record<string, Record<string, unknown>>>;
+        expect(doc['council']?.['members']?.['gemini']).toBe(false);
+        expect(doc['council']?.['members']?.['openai']).toBe(2);
+        expect(after.split('\n').filter((l) => l === 'council:')).toHaveLength(1);
+        // And it matched the file's own width rather than imposing two.
+        expect(after).toContain('        gemini: false');
+    });
+
+    it('a 4-space file gains a missing top-level section correctly', () => {
+        const before = 'defaults:\n    min_rounds: 2\n';
+        const after = upsertScalar(before, ['fallback', 'api_on_quota'], true);
+        const doc = parseYaml(after) as Record<string, Record<string, unknown>>;
+        expect(doc['fallback']?.['api_on_quota']).toBe(true);
+        expect(doc['defaults']?.['min_rounds']).toBe(2);
+    });
+
+    it('a flat document falls back to two spaces', () => {
+        const after = upsertScalar('enabled: true\n', ['fallback', 'api_on_quota'], true);
+        expect(after).toContain('  api_on_quota: true');
+    });
+});

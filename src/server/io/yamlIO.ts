@@ -106,6 +106,23 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
 }
 
 /**
+ * The indent width this document actually uses, or 2 when it has no nesting.
+ *
+ * Read from the FIRST indented mapping line rather than assumed, because an
+ * assumed width silently produces a duplicate mapping key on any other one
+ * (see `upsertScalar`). Tabs are not YAML indentation and are ignored.
+ */
+export function detectIndentWidth(lines: readonly string[]): number {
+    for (const line of lines) {
+        if (line.trim() === '' || line.trim().startsWith('#')) continue;
+        if (line.startsWith('\t')) continue;
+        const indentLen = line.length - line.trimStart().length;
+        if (indentLen > 0 && /^[A-Za-z_][A-Za-z0-9_]*\s*:/.test(line.trim())) return indentLen;
+    }
+    return 2;
+}
+
+/**
  * Set the scalar at `dottedPath`, CREATING the nesting when it is absent.
  *
  * R2 round 2, finding 6. `replaceScalar` returns the template unchanged when
@@ -136,6 +153,17 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
     const key = dottedPath[dottedPath.length - 1] as string;
     const formatted = formatScalar(value);
     const lines = template.split('\n');
+    // The document's OWN indent width, not an assumed two.
+    //
+    // R2 round 4, finding 7. Both the ancestor search and the emitted block
+    // hardcoded `'  '.repeat(depth)`, so on a 4-space file the depth-2 walk
+    // round 3 added matched nothing at depth 1, `matched` stayed 0, and the
+    // whole chain was appended at EOF — producing a SECOND `fallback:` mapping
+    // key beside the existing one. `wizard.ts` writes the result without
+    // re-parsing and reports `{ok: true}`, so the user gets a 200 over a file
+    // a strict parser now rejects and a lenient one reads last-wins.
+    const width = detectIndentWidth(lines);
+    const pad = (depth: number): string => ' '.repeat(width * depth);
 
     // How deep an existing ancestor chain runs, and where its block ends.
     let matched = 0;
@@ -147,7 +175,7 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
     let parentEnd = lines.length;
     for (let depth = 0; depth < sections.length; depth++) {
         const want = sections[depth];
-        const indent = '  '.repeat(depth);
+        const indent = pad(depth);
         let found = -1;
         // R2 round 3, finding 5: this carried `depth === 0 ? 0 : insertAt ===
         // lines.length ? 0 : 0` — every branch zero, i.e. a comment claiming a
@@ -191,9 +219,9 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
 
     const block: string[] = [];
     for (let depth = matched; depth < sections.length; depth++) {
-        block.push(`${'  '.repeat(depth)}${sections[depth] as string}:`);
+        block.push(`${pad(depth)}${sections[depth] as string}:`);
     }
-    block.push(`${'  '.repeat(sections.length)}${key}: ${formatted}`);
+    block.push(`${pad(sections.length)}${key}: ${formatted}`);
 
     if (matched === 0) {
         // No ancestor at all — append at EOF as its own block.

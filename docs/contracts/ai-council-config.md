@@ -913,6 +913,17 @@ Three constraints, each with its own reason:
 - **Quota-bounded by the same `cli_call_budget` counter** the council's
   own cli transport books against. One subscription, one counter — a
   parallel count is how a plan quota gets spent twice.
+
+  **This one is an OBLIGATION ON THE RUNG, not an enforced coupling, and
+  the difference is stated because three surfaces asserted the stronger
+  reading at once (R2 round 4, finding 4).** No TypeScript path reads
+  `second_model` at runtime — the contract's own honesty note further
+  down says so for `decision_resolution.classes[*]` generally — and
+  `cli_call_budget.ts` declares its set of booking consumers closed at
+  two, neither of them this. So a rung that books nothing is not
+  prevented by a counter; it is required by this line to book against
+  the counter when it is built. Until then, "quota-bounded" describes
+  the contract the implementation must meet, never a guard that exists.
 - **Rejected on `high_impact` / `user_required`**, not ignored, and even
   an explicit `null` is refused there. Same treatment `dispatch` gets on
   those classes, for the same reason: a key that is silently dropped
