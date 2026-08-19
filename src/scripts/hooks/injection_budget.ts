@@ -67,7 +67,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { log_dispatch_issue } from "./dispatch_issues.js";
-import { VERIFIED_PLATFORMS } from "./host_semantics.js";
+import { VERIFIED_PLATFORMS, emissionCarriesReasons, type Severity } from "./host_semantics.js";
 
 /**
  * The event that STARTS a turn, and therefore the one that resets the per-turn
@@ -80,6 +80,20 @@ export const TURN_START_EVENT = "user_prompt_submit";
 export const RC_ALLOW = 0;
 export const RC_BLOCK = 1;
 export const RC_WARN = 2;
+
+/**
+ * The host-facing severity for a reduced exit code, mirroring
+ * `dispatch_hook._severity_for`. Local rather than imported: this module is
+ * imported BY the dispatcher, so reaching back would close an import cycle.
+ * Anything outside the ladder reads as `block`, the conservative direction —
+ * an unknown verdict must never be treated as "emits nothing" and silently
+ * skip the ceiling.
+ */
+function _severityForRc(rc: number): Severity {
+    if (rc === RC_ALLOW) return "allow";
+    if (rc === RC_WARN) return "warn";
+    return "block";
+}
 
 /** Why a candidate did not survive shaping. */
 export type DropReason = "nudge_interference" | "injection_budget";
@@ -323,8 +337,81 @@ export interface TurnSpend {
 
 export const TURN_SPEND_BASENAME = "injection-turn.json";
 
-export function turnSpendPath(workspaceRoot: string): string {
-    return path.join(workspaceRoot, "agents", "runtime", "state", TURN_SPEND_BASENAME);
+/** The per-session directory the counters live in. */
+export const TURN_SPEND_DIR_REL = path.join("agents", "runtime", "state", "injection-turn");
+
+/** Keep the directory bounded; oldest files are pruned past this many. */
+export const TURN_SPEND_MAX_FILES = 64;
+
+/**
+ * A session id reduced to ONE safe path segment.
+ *
+ * Two jobs, and the second is why a plain `replace` is not enough: the id is
+ * host-supplied, so it must not escape the directory (`../`), and it must not
+ * blow the filesystem's name limit. Anything outside a conservative charset is
+ * replaced, and an id that is too long — or that sanitises to something
+ * ambiguous — is suffixed with a short FNV-1a digest of the ORIGINAL so two
+ * different ids can never collide onto one counter.
+ */
+export function turnSpendKey(session: string): string {
+    const safe = session.replace(/[^A-Za-z0-9._-]/g, "_");
+    let h = 0x811c9dc5;
+    for (let i = 0; i < session.length; i += 1) {
+        h ^= session.charCodeAt(i);
+        h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    const digest = h.toString(16).padStart(8, "0");
+    // The digest is unconditional rather than only-when-needed: a conditional
+    // suffix means two code paths can produce the same basename for different
+    // ids, which is the collision it exists to prevent.
+    return `${safe.slice(0, 96)}.${digest}`;
+}
+
+/**
+ * Path of ONE session's counter.
+ *
+ * Per session, not per workspace, and that was a defect rather than a
+ * refinement: with a single shared file, two concurrent sessions in one
+ * workspace read each other's record, saw a foreign id, resolved to "nothing
+ * spent", and then overwrote it — so the ceiling was effectively unenforced for
+ * both, every fire. The estate's existing pattern for per-session state is a
+ * directory (`agents/runtime/state/end-review-nudge/`); this follows it.
+ */
+export function turnSpendPath(workspaceRoot: string, session: string): string {
+    return path.join(workspaceRoot, TURN_SPEND_DIR_REL, `${turnSpendKey(session)}.json`);
+}
+
+/**
+ * Drop the oldest counters once the directory passes its cap.
+ *
+ * A per-session file trades one unbounded counter for unbounded FILES, so the
+ * cap is part of the same change rather than a follow-up. Best-effort and
+ * silent: failing to prune must never affect a dispatch.
+ */
+function _pruneTurnSpend(dir: string): void {
+    try {
+        const entries = fs
+            .readdirSync(dir)
+            .filter((n) => n.endsWith(".json"))
+            .map((n) => {
+                const p = path.join(dir, n);
+                try {
+                    return { p, mtime: fs.statSync(p).mtimeMs };
+                } catch {
+                    return { p, mtime: 0 };
+                }
+            })
+            .sort((a, b) => b.mtime - a.mtime);
+        for (const stale of entries.slice(TURN_SPEND_MAX_FILES)) {
+            try {
+                fs.unlinkSync(stale.p);
+            } catch {
+                /* a file another process already removed is the desired state */
+            }
+        }
+    } catch {
+        /* unreadable directory — nothing to prune, nothing to report */
+    }
 }
 
 /**
@@ -335,7 +422,7 @@ export function turnSpendPath(workspaceRoot: string): string {
  */
 export function readTurnSpend(workspaceRoot: string, session: string): number {
     try {
-        const raw = fs.readFileSync(turnSpendPath(workspaceRoot), "utf-8");
+        const raw = fs.readFileSync(turnSpendPath(workspaceRoot, session), "utf-8");
         const parsed = JSON.parse(raw) as Partial<TurnSpend>;
         if (parsed.session !== session) return 0;
         return typeof parsed.bytes === "number" &&
@@ -355,6 +442,15 @@ export function readTurnSpend(workspaceRoot: string, session: string): number {
  *
  * `reset` is passed on the slot that STARTS a turn (`user_prompt_submit`), so
  * the count is bounded by one turn rather than growing across a session.
+ *
+ * The write is ATOMIC — a temp file plus a rename — because the read-modify-write
+ * above is not. Two dispatches of the SAME session can interleave (parallel tool
+ * calls, a subagent fire landing between the parent's read and write), and a
+ * plain `writeFileSync` there loses an update or leaves a torn file. The sibling
+ * counter in this estate (`rule-trips.json`) already uses the same primitive for
+ * the same class of artefact in the same directory; a lost update degrades to
+ * under-counting, which is the safe direction, but it is avoidable and this makes
+ * it so.
  */
 export function recordTurnSpend(
     workspaceRoot: string,
@@ -366,9 +462,13 @@ export function recordTurnSpend(
     const previous = opts.reset === true ? 0 : readTurnSpend(workspaceRoot, session);
     const entry: TurnSpend = { session, bytes: previous + Math.max(0, bytes) };
     try {
-        const target = turnSpendPath(workspaceRoot);
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, JSON.stringify(entry) + "\n", { encoding: "utf-8" });
+        const target = turnSpendPath(workspaceRoot, session);
+        const dir = path.dirname(target);
+        fs.mkdirSync(dir, { recursive: true });
+        const tmp = `${target}.${String(process.pid)}.tmp`;
+        fs.writeFileSync(tmp, JSON.stringify(entry) + "\n", { encoding: "utf-8" });
+        fs.renameSync(tmp, target);
+        _pruneTurnSpend(dir);
     } catch {
         /* observability-adjacent bookkeeping never breaks the agent loop */
     }
@@ -536,12 +636,29 @@ export function shapeAndRecord(
                 nudgeRank: typeof rank === "number" ? rank : null,
             };
         });
-    // Skipped wholesale where the emission carries nothing: on an unverified
-    // platform `emitFor` returns empty stdout AND stderr, so choosing between two
-    // messages there would write advisory-suppression records into the consumer's
-    // log for output that never left the process. Nothing to shape is not the
-    // same as shaping to nothing.
-    if (!VERIFIED_PLATFORMS.has(ctx.platform)) {
+    // Skipped wholesale where the emission carries nothing. Two such cases, and
+    // one reason for both: this is an INJECTION ceiling, so it may only charge
+    // bytes the host actually receives. Shaping output that never left would
+    // write advisory-suppression records for nothing and — worse — spend the
+    // turn's budget, so a LATER dispatch whose advisory WOULD have been delivered
+    // gets dropped instead. Nothing to shape is not the same as shaping to
+    // nothing.
+    //
+    //   1. an unverified platform — `emitFor` returns the legacy pass-through,
+    //      empty stdout AND stderr;
+    //   2. a reduced verdict of ALLOW — `emitFor` returns
+    //      `{exit: 0, stdout: "", stderr: ""}` for `severity: allow`, on every
+    //      platform including the verified one.
+    //
+    // Case 2 was missed when this module landed, and it is not theoretical. A
+    // non-`fail_closed` concern that CRASHES is fail-opened to `EXIT_ALLOW` by
+    // the dispatcher and its stderr then becomes the deciding message — usually
+    // the largest candidate in the set. Measured against this module before the
+    // fix: a 9,000-byte rc-0 message emitted 0 bytes and charged 9,000, so about
+    // five such dispatches exhausted a 47,104-byte turn ceiling on output nobody
+    // received. `emissionCarriesReasons` is the shared predicate, kept beside
+    // `emitFor` so it cannot drift from the function whose behaviour it reports.
+    if (!emissionCarriesReasons(ctx.platform, _severityForRc(finalRc))) {
         return textOf(new Set(candidates.map((c) => c.concern)));
     }
     const workspaceRoot = _workspaceRoot(ctx);

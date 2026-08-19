@@ -98,6 +98,26 @@ export function claudeAdditionalContext(event: string, text: string): string {
 }
 
 /**
+ * Will `emitFor` actually put the reasons on a stream?
+ *
+ * The per-turn injection ceiling (`injection_budget.ts`) may only charge bytes
+ * the host receives, and TWO branches of `emitFor` below emit nothing at all: an
+ * unverified platform (legacy pass-through) and `severity: allow`. The budget
+ * module originally covered only the first, which let an `allow` dispatch spend
+ * the turn on output nobody got — and a crashed non-`fail_closed` concern is
+ * fail-opened to exactly that verdict with its stack trace as the largest
+ * candidate.
+ *
+ * Kept beside `emitFor` deliberately rather than re-derived at the call site:
+ * the predicate is only correct while it mirrors the function below it, and a
+ * copy one module away is a copy that drifts.
+ */
+export function emissionCarriesReasons(platform: string, severity: Severity): boolean {
+    if (!VERIFIED_PLATFORMS.has(platform)) return false;
+    return severity !== "allow";
+}
+
+/**
  * Translate (platform, event, severity, reasons) into a native emission.
  *
  * `legacyExit` is the internal reduced code; unverified platforms get it back
