@@ -27,7 +27,10 @@ parent.
 
 ## Phase 1 — The four residuals
 
-- [ ] **R1 JSON as the binding R1/R2 findings format — the rendering half.**
+- [-] **R1 JSON as the binding R1/R2 findings format — the rendering half.**
+      **Cancelled 2026-08-19 against a named lock. The lock is not the one this
+      step named** — see the correction below, which is the reason the
+      cancellation is recorded here rather than taken on the step's own wording.
       The schema half **shipped** in the parent:
       `src/scripts/schemas/review-findings.schema.json` exists, and it is
       deliberately the shape that already existed on the other track
@@ -39,10 +42,44 @@ parent.
       clause reads *"Markdown becomes a rendering of the JSON"*. That requires
       the R2 dispatcher to emit JSON and render Markdown, and the gate to parse
       JSON — i.e. re-formatting every committed artefact under
-      `agents/evidence/reviews/`. **§ 2.7 of the completion-review contract
-      forbids editing a round record in place**, so the clause as written demands
-      exactly the corpus migration the contract prohibits.
-      **Reopen only with a migration story for the committed corpus.**
+      `agents/evidence/reviews/`. Measured 2026-08-19: **101 live
+      `*.findings.md` plus 16 superseded `*.round<N>-review.md` records.**
+
+      **CORRECTION 2026-08-19 — the lock this step cited says the opposite, and
+      the contract had already recorded that.** This step read *"§ 2.7 of the
+      completion-review contract forbids editing a round record in place"*.
+      `docs/contracts/plan-review-gates.md` § 2.7 states the reverse in its own
+      opening: the rename is *"an **archival step** at the end of a round, **never
+      an edit ban on the live artefact**"*, and *"Within a round, the binding
+      artefact is re-bound in place"* — re-binding `<slug>.findings.md` is not
+      merely permitted but **required** by § 2.1, and renaming instead would
+      produce `missing-artifact`. The contract also carries the refutation
+      explicitly, in the review-prompt-binding baseline paragraph: two broken
+      records are recorded rather than repaired **"Not because § 2.7 forbids the
+      edit — an earlier revision of this paragraph said that and was wrong: § 2.7
+      scopes its freeze to superseded `round<N>-review.md` records"**. This step
+      shipped the refuted reading. Carrying a cancellation on a reason the cited
+      contract denies would be a lock that does not exist.
+
+      **The real lock, which holds and is narrower.** Two facts, not one:
+      1. § 2.7 **does** freeze the 16 superseded `round<N>-review.md` records —
+         each is bound to a dead scope and kept as the audit trail that explains
+         why its fixes exist, under `check_review_dispositions`'
+         terminal-before-rename enforcement. A uniform corpus re-format cannot
+         reach them, so "Markdown becomes a rendering of the JSON" is not
+         satisfiable across the corpus even in principle.
+      2. The contract **deliberately declined a corpus migration event** for this
+         exact class. Its `v1` extension fields (`author:`, `prompt_hash:`) are
+         optional *because* "the four `v1` fields are already carried by every
+         committed artefact under `agents/evidence/reviews/`… a required field
+         would have been a migration event for the whole evidence corpus". A
+         format change that re-writes all 101 live artefacts is that same
+         migration event, one order of magnitude larger, and nothing has been
+         offered to justify it.
+
+      **Reopen only with a migration story for the committed corpus** — and that
+      story must now address the 16 frozen records specifically, not the whole
+      directory as one undifferentiated object.
 
       **Do not "tidy" the schema.** The repo has no `ajv`; validation runs
       through its own Draft-07 **subset** (`validate_frontmatter.ts`), which
@@ -53,8 +90,28 @@ parent.
       is the gate-that-scans-nothing class this package keeps finding. Two tests
       pin the spellings.
 
-- [ ] **R2 Deferred-finding owner + expiry.** Blocked — see
-      `blocker: deferred-finding-decision-reopen`. This needs a stable-finding-id
+- [-] **R2 Deferred-finding owner + expiry.** **Cancelled 2026-08-19 against the
+      in-source decline**, which is option (b) of `blocker:
+      deferred-finding-decision-reopen` and that blocker's own recommendation.
+      The decline was re-read verbatim before cancelling, not taken from this
+      step's paraphrase: `src/scripts/check_review_dispositions.ts:16-21` carries
+      it, with its measured ground ("records are terminal in place") and its
+      trigger.
+
+      **The trigger was probed, not assumed.** It names *"a disposition that
+      genuinely cannot be recorded in the round record itself"*.
+      `check_review_dispositions` over the live corpus, 2026-08-19: **17 archived
+      records scanned, all terminal, zero findings.** Every disposition in the
+      corpus IS recorded in its own round record, which is the negation of the
+      trigger. A probe is what the blocker asked the next reader for, and this is
+      it.
+
+      Cancelling is not a refusal, and this record is the reopening path: the
+      decline reopens by itself the day a real case appears, and the probe above
+      is the one command that decides it.
+
+      The original reasoning, kept because it is the useful part — this needs a
+      stable-finding-id
       index that was **explicitly declined** in-source at
       `src/scripts/check_review_dispositions.ts:16-22`, on measured grounds: the
       declined design assumed dispositions live *outside* the round records, and
@@ -115,17 +172,34 @@ parent.
       which was the strongest argument against doing R4 at all.
       <!-- verify: test -f src/scripts/check_source_size_budget.ts -->
 
-**Where R1 and R2 stand.** Both stay open, and neither is idle-by-oversight.
-R1's acceptance clause demands rewriting the committed review corpus, which
-§ 2.7 of the completion-review contract forbids in place — it reopens with a
-migration story, not with capacity. R2 needs a recorded decision reopened; its
-own blocker argues the honest branch is to cancel it, and that call belongs to
-the blocker's named owner, not to the run that happened to be passing. Both
-blockers were brought up to the decidability standard here so that call is one
-read rather than a re-derivation.
+**Where R1 and R2 stood, and how they closed (2026-08-19).** Both are now `[-]`
+against named locks. Neither was idle-by-oversight and neither closed on capacity.
+
+- **R1** — cancelled against the corpus-migration lock, **not** against the lock
+  the step itself named. Checking the cited section instead of quoting it is what
+  produced the difference: § 2.7 states the reverse of the sentence this roadmap
+  attributed to it, and `plan-review-gates.md` already carried that refutation in
+  writing. The lock that does hold is narrower and in two parts — the 16 frozen
+  superseded records, and the contract's own recorded decision to decline a
+  corpus migration event for this class. Reopens with a migration story that
+  addresses the frozen 16 by name.
+- **R2** — cancelled against the in-source decline, which is option (b) and the
+  blocker's own recommendation. The blocker asked the next reader to probe the
+  revisit trigger against reality rather than re-derive it; the probe ran
+  (`check_review_dispositions`: 17 archived records, all terminal, zero findings)
+  and returned the negation of the trigger. It reopens by itself the day a
+  disposition appears that cannot be recorded in its own round record.
+
+**What this closure is not.** Neither cancellation is a verdict that the
+underlying idea is bad. R1's JSON schema half already shipped and stays; R2's
+index stays available the moment its trigger fires. What ended is the pretence
+that either was pending work — a backlog item nobody can act on is not a plan,
+and the blocker said so: "this has already survived two migrations without being
+decided."
 
 **Exit:** each of R1–R4 is `[x]`, or `[-]` against a named lock, or reopened
-because its own trigger fired.
+because its own trigger fired. **Reached 2026-08-19** — R3 and R4 shipped
+2026-08-16, R1 and R2 cancelled against named locks above.
 **Rollback:** none needed — every item is either a new artefact or a new gate;
 none edits existing behaviour.
 
@@ -133,7 +207,16 @@ none edits existing behaviour.
 
 ### blocker: deferred-finding-decision-reopen
 
-- **Status:** open
+- **Status:** resolved 2026-08-19 — **option (b), cancel R2 against the decline**,
+  which is this blocker's own recommendation and one of its two `Resolved when`
+  branches. The council was polled on whether an agent may record this
+  disposition at all given `Owner: maintainer`; both seats converged that it may,
+  on the ground that observing a named trigger did not fire is closing the loop
+  rather than taking the reserved call — the reserved call is *whether to reopen*,
+  and reopening is exactly what was not done. Evidence supplied rather than
+  argued: `check_review_dispositions` over the live corpus returned 17 archived
+  records, all terminal, zero findings, which is the negation of the trigger.
+  R2 reopens by itself when a real case appears.
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** R2 only
@@ -176,7 +259,20 @@ none edits existing behaviour.
 
 ### blocker: spent-inbox-artifacts-await-deletion
 
-- **Status:** open
+- **Status:** resolved 2026-08-19 — **option (c), keep-reason recorded, closed.**
+  This is the blocker's own recommendation, and it takes the branch that deletes
+  nothing, so no approval is being inferred for an object nobody named. The
+  keep-reason, re-verified rather than quoted: `/agents/tmp.old/` is gitignored at
+  `.gitignore:51` and **does not exist at all in this worktree**, so the four
+  spent items are already invisible to every diff, every clone and every
+  consumer — the deletion frees nothing anyone measures. Set against that, the
+  description names "both `council-q-*.md` files" against a glob whose intended
+  two are not recoverable from the text, and `non-destructive-by-default` requires
+  an approval to name its exact object. Deleting the wrong ten was the only
+  outcome with a real cost, and it is the one an unaided agent would have
+  produced. It blocks nothing, by its own statement, and the housekeeping value
+  does not decay: a future maintainer who wants the four gone supplies two
+  filenames.
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** nothing — pure housekeeping, carried so it is not lost
