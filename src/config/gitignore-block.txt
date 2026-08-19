@@ -102,6 +102,11 @@
 .agent-engagement.jsonl
 .agent-engagement.jsonl.bak
 
+# Agent config — org usage telemetry (Class-A records; default-off and
+# inactive without an org pack, never commit)
+.agent-telemetry.jsonl
+.agent-telemetry.jsonl.bak
+
 # Agent config — volatile runtime artefacts (machine-generated,
 # regenerated on demand, never committed). Single catch-all per the
 # Volatile Runtime policy: everything under agents/runtime/ is
