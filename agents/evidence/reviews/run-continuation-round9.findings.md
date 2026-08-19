@@ -1,11 +1,11 @@
 # Findings: run-continuation-round9
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 255299709d3bc8ae3fefa1d091726e0dcc0c05ccde9587f33a3b3dae2e6bffc1 | diff: 42e8c056aceb9953e45d6e572e8d28f43f0a8a6c | reviewer: r2-fresh-subagent-run-continuation-round9 | prompt_hash: e04477b983a507a8737a093abd49efbf4f7296806a37d34862c0a239f689d5fe -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: a7a01ce63b8d3121444388bf4774781ce0f819edb8fc10ff48755da5a081e2ab | diff: 0b1763be6d43d94e1d91b8d7e4a113a00aae2517 | reviewer: r2-fresh-subagent-run-continuation-round9 | prompt_hash: e04477b983a507a8737a093abd49efbf4f7296806a37d34862c0a239f689d5fe -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 42e8c056aceb9953e45d6e572e8d28f43f0a8a6c
-  scope_hash: 255299709d3bc8ae3fefa1d091726e0dcc0c05ccde9587f33a3b3dae2e6bffc1
+  diff_sha: 0b1763be6d43d94e1d91b8d7e4a113a00aae2517
+  scope_hash: a7a01ce63b8d3121444388bf4774781ce0f819edb8fc10ff48755da5a081e2ab
   roadmap: agents/roadmaps/later/road-to-run-continuation-observation.md
   roadmap_hash: abdd73cba7628538a7fa135ac4d8b9092ee3d4b0baaab22a2235999215039d73
   ac_hash: bb34537a4ce90a2ac144c0346d9d3817fc8ddd788722900f17cdb6b7ed59bea7
