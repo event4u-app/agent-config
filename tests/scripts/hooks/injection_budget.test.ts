@@ -67,6 +67,9 @@ describe("nudge exclusivity", () => {
     expect(result.dropped).toHaveLength(1);
     expect(result.dropped[0]?.concern).toBe("skill-route");
     expect(result.dropped[0]?.reason).toBe("nudge_interference");
+    // The detail promises a comparison, so it must carry BOTH ranks. It used to
+    // print the loser's rank followed by the literal text "vs the winner's".
+    expect(result.dropped[0]?.detail).toContain("1 beats 2");
   });
 
   it("near-miss — a single nudge is never suppressed", () => {
@@ -167,7 +170,12 @@ describe("byte budget", () => {
     expect(over.dropped).toHaveLength(1);
   });
 
-  it("never drops an exempt concern, and reports the overflow instead", () => {
+  // The R2 completion review found this pinned the WRONG behaviour: the module
+  // header (and the contract doc, and the dispatcher's stderr) all promise
+  // "nothing dropped" when the exempt set alone is over, and the loop dropped
+  // every advisory anyway — for zero benefit, since no sequence of drops can get
+  // under a floor that is already above the cap.
+  it("drops NOTHING when dropping cannot help — the exempt floor is over the cap", () => {
     const result = shapeEmissions(
       [
         candidate({ concern: "guard", severity: "blocking", bytes: 5000 }),
@@ -175,9 +183,49 @@ describe("byte budget", () => {
       ],
       { capBytes: 1000 },
     );
-    expect(result.kept).toContain("guard");
-    expect(result.dropped.map((d) => d.concern)).toEqual(["noise"]);
+    expect(result.kept).toEqual(["guard", "noise"]);
+    expect(result.dropped).toEqual([]);
     expect(result.ceilingExceeded).toBe(true);
+    expect(result.ceilingCause).toBe("exempt-floor");
+  });
+
+  it("near-miss — an exempt floor UNDER the cap still lets advisories be dropped", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "guard", severity: "blocking", bytes: 400 }),
+        candidate({ concern: "noise", bytes: 900 }),
+      ],
+      { capBytes: 1000 },
+    );
+    expect(result.dropped.map((d) => d.concern)).toEqual(["noise"]);
+    expect(result.kept).toEqual(["guard"]);
+    expect(result.ceilingExceeded).toBe(false);
+    expect(result.ceilingCause).toBeNull();
+  });
+
+  it("attributes an overflow to carried spend when that alone is over the cap", () => {
+    // No exempt concern at all. Dropping is futile for the same reason as the
+    // exempt floor — the turn is already over before this dispatch's advisories
+    // are counted — so nothing is dropped, but the cause must not read "exempt".
+    const result = shapeEmissions([candidate({ concern: "noise", bytes: 200 })], {
+      capBytes: 1000,
+      spentBytes: 5000,
+    });
+    expect(result.dropped).toEqual([]);
+    expect(result.kept).toEqual(["noise"]);
+    expect(result.ceilingExceeded).toBe(true);
+    expect(result.ceilingCause).toBe("carried-spend");
+  });
+
+  it("drops when carried spend is under the cap and this dispatch pushes it over", () => {
+    // The case the budget exists for: the floor (900) is under the cap, so a
+    // drop genuinely helps.
+    const result = shapeEmissions([candidate({ concern: "noise", bytes: 300 })], {
+      capBytes: 1000,
+      spentBytes: 900,
+    });
+    expect(result.dropped.map((d) => d.concern)).toEqual(["noise"]);
+    expect(result.ceilingExceeded).toBe(false);
   });
 
   it("skips the budget entirely when the cap is null (the session_start case)", () => {

@@ -31,7 +31,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { read_dispatch_issues } from "./hooks/dispatch_issues.js";
+import {
+  POLICY_OUTCOME_ISSUES,
+  read_dispatch_issues,
+} from "./hooks/dispatch_issues.js";
 import { type JsonObject, type JsonValue, _load_yaml } from "./hooks/dispatch_hook.js";
 import * as hooks_status from "./hooks_status.js";
 import {
@@ -240,9 +243,20 @@ export function collect(
 
   // Phase 1 of road-to-hooks-actually-fire-in-consumers: surface
   // the dispatch-issues log so users see hooks that tried and failed.
+  //
+  // POLICY OUTCOMES ARE FILTERED OUT, and the filter is the point: this view
+  // means "a hook tried to fire and couldn't", and its CTA is a reinstall. The
+  // two emission-shaping codes mean the opposite — the concern ran correctly and
+  // the dispatcher chose not to emit it — so they are neither a failure nor
+  // fixable by reinstalling. They fire as a routine per-dispatch outcome, so
+  // leaving them in would let normal traffic push a real `script_not_found` out
+  // of the last-20 window. They stay in the log, which is where the "why did
+  // that advisory not appear" question is answered. (R2 review, 2026-08-19.)
   let issues: JsonObject[] = [];
   try {
-    issues = read_dispatch_issues(REPO_ROOT).slice(-20) as unknown as JsonObject[];
+    issues = read_dispatch_issues(REPO_ROOT)
+      .filter((e) => !POLICY_OUTCOME_ISSUES.has(String(e["issue"])))
+      .slice(-20) as unknown as JsonObject[];
   } catch {
     issues = [];
   }

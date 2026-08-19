@@ -69,7 +69,35 @@ describe("perTurnAggregate", () => {
     const agg = perTurnAggregate(partial, cfg);
     expect(agg?.bytes).toBeNull();
     expect(agg?.unresolved).toBe("post_tool_use");
+    // Unarmed: nothing to breach, because the row is not gating yet.
     expect(agg?.breach).toBe(false);
+  });
+
+  // The R2 review found the previous version of this pinned a false green: with
+  // the row ARMED, an unresolved composite returned breach:false, so the gate
+  // would have exited 0 over a measurement that does not exist — the exact
+  // direction the module header calls load-bearing.
+  it("an UNRESOLVED composite BREACHES once the row is armed", () => {
+    const armed = { ...cfg, gate_on_ceiling: true };
+    const agg = perTurnAggregate({ user_prompt_submit: { bytes: 10 } }, armed);
+    expect(agg?.bytes).toBeNull();
+    expect(agg?.breach).toBe(true);
+  });
+
+  it("treats a slot marked unresolved by the bench as unresolved, not as its partial sum", () => {
+    const armed = { ...cfg, gate_on_ceiling: true };
+    const agg = perTurnAggregate(
+      {
+        user_prompt_submit: { bytes: 900 },
+        pre_tool_use: { bytes: 0, unresolved: true },
+        post_tool_use: { bytes: 50 },
+        stop: { bytes: 200 },
+      },
+      armed,
+    );
+    expect(agg?.bytes).toBeNull();
+    expect(agg?.unresolved).toBe("pre_tool_use");
+    expect(agg?.breach).toBe(true);
   });
 
   it("does not breach while the row is unarmed, even over the ceiling", () => {
@@ -125,8 +153,11 @@ describe("the committed row", () => {
         "utf-8",
       ),
     ) as { per_turn_composite?: { tool_calls?: number } };
+    // Asserted, not skipped. A conditional `return` here made the test pass
+    // silently if the twin row disappeared — which is the exact drift it exists
+    // to catch, turned into a green run. (R2 review, 2026-08-19.)
     const twin = latency.per_turn_composite?.tool_calls;
-    if (twin === undefined) return; // twin row absent — nothing to compare against
+    expect(twin).toBeTypeOf("number");
     expect(row.per_turn_aggregate_bytes?.["tool_calls"]).toBe(twin);
   });
 });
