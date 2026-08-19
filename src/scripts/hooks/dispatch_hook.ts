@@ -178,6 +178,29 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
  * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
  */
 export function _load_yaml(p: string): JsonObject {
+  // Precompiled fast path. The manifest is ~61 kB of YAML and is parsed on
+  // EVERY dispatch, which measured 12 ms of a ~103 ms dispatch (plus 8 ms to
+  // load the `yaml` module itself). The sibling `.json` is the same data with
+  // comments stripped — 14.7 kB — and JSON.parse of it is sub-millisecond.
+  //
+  // Freshness is decided by mtime rather than by trust: a YAML newer than its
+  // compiled sibling means someone edited the source, so the parse path runs
+  // and the stale JSON is ignored. That keeps a hand-edited manifest correct
+  // at the cost of the slow path, which is the safe direction — a dispatcher
+  // reading a stale concern table would silently run the wrong guards.
+  const compiled = p.replace(/\.ya?ml$/u, ".json");
+  if (compiled !== p) {
+    try {
+      const cs = fs.statSync(compiled);
+      if (cs.mtimeMs >= fs.statSync(p).mtimeMs) {
+        const data = JSON.parse(fs.readFileSync(compiled, "utf-8")) as JsonValue;
+        if (_isObject(data)) return data;
+      }
+    } catch {
+      // Missing, unreadable or malformed → fall through to the YAML source.
+      // Never fail the dispatch on the optimisation.
+    }
+  }
   const text = fs.readFileSync(p, "utf-8");
   const data = parseYaml(text, { version: "1.1" }) as JsonValue;
   return _isObject(data) ? data : {};
