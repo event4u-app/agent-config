@@ -6,10 +6,10 @@
 
 ## Overall
 
-**299 / 570 steps done · 52%**
+**302 / 571 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -852,6 +852,8 @@ _1 blocker resolved._
     still needs P1 and P3 but not P2; (c) cancel 5.3 the way 5.1 was cancelled and
     record that turn-end wall clock is addressed only by Phase 4's measurement.
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
+
+_1 blocker resolved._
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 

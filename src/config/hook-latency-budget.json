@@ -12,6 +12,17 @@
         "pre_tool_use": { "p95_ci": 175, "p95_1vcpu": 400 },
         "any_hook_event": { "p95_ci": 250 }
     },
+    "gate_remeasure": {
+        "attempts": 1,
+        "_comment": "OFF (attempts 1 = measure once, no re-measure). The mechanism exists in bench_hook_latency.ts: under --gate a slot over its cap is re-measured and the MINIMUM p95 kept, because a load spike inside one 50-run sample moves p95 up and never down. It ships DISABLED because pre_tool_use_cap_derivation.why_not_a_retry_or_best_of_n rejected it as the first move on measured grounds — the spread is between runner CLASSES (p50 111-148 ms), not noise within one machine, so a slow runner measures slow twice. Two CI runs of the mechanism agree: it recovered 151->150 and 160->153, i.e. 1-7 ms against a 42 ms spread. Set attempts to 3 ONLY as the escalation that same block names, if the re-derived 175 cap starts flapping."
+    },
+    "normalized": {
+        "observe_only": true,
+        "p95_excess_ci": null,
+        "control": "node -e 0, measured through the identical spawnSync harness in the same run",
+        "_comment": "Observe-only measurement row, printed on every bench run and gating nothing. Every slot reading is spawn + interpreter start + bundle load + concern work, and only the last term is ours; the control isolates the process-spawn term so excess_ms = slot - control is closer to this tree's own cost than the raw reading. It exists to collect the data a future normalized gate would need, and to sharpen pre_tool_use_cap_derivation.revisit_if — which currently reads runner speed off the p50, a cheaper signal that needs no extra measurement. Arming this row would be a config change (p95_excess_ci + observe_only false), and the limitation below says why that is not justified today.",
+        "_measured_limitation_2026_08_19": "THE CONTROL UNDER-CORRECTS, measured, and this is recorded so nobody arms the row believing a property that was not shown. Same commit, two environments: darwin read slot 101 / control 45 / excess 56 ms; GitHub ubuntu read slot 151 / control 26 / excess 124 ms. The control went DOWN while the slot went UP, because node -e 0 covers interpreter startup only while a dispatch also loads a ~1 MB bundle and runs the concern chain — the dominant and varying term. So excess_ms is NOT portable across hardware classes. Whether it is nonetheless steadier than the absolute WITHIN one runner class is UNMEASURED: two CI runs read control 26/28 ms and excess 124/125 ms against raw first samples of 151/160, which is suggestive but n=2 and computed on post-re-measure values. Collect from the nightly before setting a bar, and keep the row observe-only if it does not hold rather than arming a second flapping gate."
+    },
     "pre_tool_use_cap_derivation": {
         "_comment": "Why p95_ci is 175 and not the 150 registered on 2026-07-27. 150 was NOT bent around a red check — it was measured to sit INSIDE the legitimate distribution, which concern-activation-policy.md § Deriving a threshold names as a false-positive generator by construction: `a threshold inside the legitimate distribution`. The gate was flapping on IDENTICAL code, and the flap was already diagnosed in this tree by road-to-per-turn-hook-economy step 0.5 — it names three main runs at 151, 152 and 117 ms and concludes cross-runner variance after step 0.4 excluded the CLI wrapper (2 ms). What was missing was never the diagnosis; it was moving the cap.",
         "re_derived_at": "2026-08-19",
