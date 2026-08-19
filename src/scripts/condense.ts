@@ -2644,6 +2644,15 @@ function _warn_layer_overlap(): void {
             path.join(home, '.claude', 'commands'),
             path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands'),
         ],
+        // `agents` covered too (R2 finding): this notice read three types where
+        // check_single_delivery reads four, so a subagent duplicated across layers
+        // was invisible here while the gate reported it — two surfaces disagreeing
+        // about the same question is worse than one surface being silent.
+        [
+            'agents',
+            path.join(home, '.claude', 'agents'),
+            path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'agents'),
+        ],
     ];
     const findings: string[] = [];
     for (const [label, globalDir, projectDir] of pairs) {

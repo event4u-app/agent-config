@@ -135,17 +135,21 @@ function readLayer(dir: string): LayerReading | null {
  * schedule, and matching it would manufacture scope-defeat findings out of
  * documentation.
  */
-export function declaresPaths(file: string): boolean {
+export function declaresPaths(file: string): 'yes' | 'no' | 'unreadable' {
+    // Three-valued on purpose (R2 finding): a boolean collapsed "no paths: key"
+    // and "could not read the file" into the same answer, so an unreadable copy
+    // silently matched an unscoped one and the pair vanished from the scope-defeat
+    // set — the direction that hides a finding rather than inventing one.
     let text: string;
     try {
         text = fs.readFileSync(file, 'utf8');
     } catch {
-        return false;
+        return 'unreadable';
     }
-    if (!text.startsWith('---')) return false;
+    if (!text.startsWith('---')) return 'no';
     const end = text.indexOf('\n---', 3);
-    if (end < 0) return false;
-    return /^paths:/m.test(text.slice(3, end));
+    if (end < 0) return 'no';
+    return /^paths:/m.test(text.slice(3, end)) ? 'yes' : 'no';
 }
 
 export function readType(type: ArtefactType, globalRoot: string, projectRoot: string): TypeReading {
@@ -172,10 +176,15 @@ export function readType(type: ArtefactType, globalRoot: string, projectRoot: st
         type === 'rules'
             ? both
                   .filter((n) => n.endsWith('.md'))
-                  .filter(
-                      (n) =>
-                          declaresPaths(path.join(gDir, n)) !== declaresPaths(path.join(pDir, n)),
-                  )
+                  .filter((n) => {
+                      const g2 = declaresPaths(path.join(gDir, n));
+                      const p2 = declaresPaths(path.join(pDir, n));
+                      // An unreadable copy is reported as a disagreement rather
+                      // than dropped: not knowing whether a rule is scoped is a
+                      // finding, and the alternative silently shrinks the set.
+                      if (g2 === 'unreadable' || p2 === 'unreadable') return true;
+                      return g2 !== p2;
+                  })
                   .sort()
             : [];
 

@@ -88,18 +88,34 @@ dir_nonempty() {
 #
 # Returns -1 rather than 0 when the count cannot be taken, because the two are
 # different facts and reporting "0 overlap" for "could not look" is how a gate
-# starts reading as coverage. The copilot probe is the concrete case: it compares
-# a single `copilot-instructions.md` file, not a directory, so -1 is its normal
-# and correct answer.
+# starts reading as coverage.
+#
+# R2 review corrected the docstring twice over. The copilot probe was named here
+# as the concrete -1 case; it is UNREACHABLE, because `dir_nonempty`'s `[[ -d ]]`
+# test short-circuits a single-file path to OK before probe_tool ever reaches a
+# version comparison. The reachable cases are: the scope being installed TO does
+# not exist yet (a first install at this scope — genuinely no overlap to count,
+# not a failure), and a directory that exists but cannot be read.
+#
+# The unreadable case used to return 0 — the precise failure this function's own
+# docstring claimed to prevent, because `cd` failed inside the process
+# substitution and `comm` compared two empty streams. It is now detected before
+# the comparison.
 count_overlap() {
     local a="$1" b="$2" n
     if [[ ! -d "$a" ]] || [[ ! -d "$b" ]]; then
         printf '%s' '-1'
         return 0
     fi
+    # Readability is checked explicitly: `ls` on an unreadable directory fails,
+    # and inside `<(...)` that failure is invisible to the caller.
+    if ! ls -A "$a" >/dev/null 2>&1 || ! ls -A "$b" >/dev/null 2>&1; then
+        printf '%s' '-1'
+        return 0
+    fi
     n="$(comm -12 \
-            <(cd "$a" && ls -A 2>/dev/null | sort) \
-            <(cd "$b" && ls -A 2>/dev/null | sort) \
+            <(ls -A "$a" 2>/dev/null | sort) \
+            <(ls -A "$b" 2>/dev/null | sort) \
          2>/dev/null | wc -l | tr -d ' ')" || n=''
     printf '%s' "${n:--1}"
 }
