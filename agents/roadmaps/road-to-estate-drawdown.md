@@ -173,6 +173,41 @@ sibling roadmap — it is runnable with today's tooling.**
   reaches T1's registered ceiling; **no closure lands without its house-form
   artifacts.**
 
+> **Batch 1 landed 2026-08-19** — `agents/decisions/estate-triage-dispositions.yml`,
+> ten verdict rows, the register's first batch. 2.1 and 2.2 stay `[ ]` on purpose:
+> they close when the sweep reaches the whole estate, and one PR is one batch by
+> 2.1's own ceiling. Selection followed 2.2 exactly — the seven-file
+> `/analyze:inbox` cohort plus the three oldest-untouched active files.
+> **Result:** 6 PARK-PROBEABLE, 2 DECISION-SHEET, 2 EXECUTE. No ARCHIVE and no
+> MERGE-INTO-OWNER, so no council round was needed — 2.2 admits council decision
+> only for MERGE-versus-ARCHIVE inside its reversible class.
+> **Estate effect:** active 37 → 33, `later/` 43 → 49. The `later/` rise is the
+> whole point of the metric being ratcheted, so it is raised with a reason rather
+> than absorbed silently — see `src/config/estate-count-budget.json`.
+>
+> **Three findings the sweep produced, recorded because they change what
+> PARK-PROBEABLE means:**
+>
+> 1. **The verdict's name outran its probe.** `resume_probe` could decide exactly
+>    one phrasing — a roadmap slug — so 42 of 44 park notes were `undecidable`
+>    before this batch, and six more would have been. A verdict called
+>    PARK-PROBEABLE that produces conditions nothing can probe is the
+>    gate-that-scans-nothing class this package keeps finding. The probe now also
+>    decides a single backticked repo-relative **file** path under an
+>    **existence** predicate; 2 of the 6 new notes are decidable and report
+>    `unmet`, and the other 4 are recorded as undecidable-by-design with the
+>    reason per row rather than smoothed into the same word.
+> 2. **A clause was being cut inside its own backticks.** `conditionClause`
+>    stopped at the first `.`, which is the dot in `foo.md` and in a step id like
+>    `3.3` — so three of the six notes lost the very path they named. Fixed with
+>    a backtick-aware sentence head; the regression is a test.
+> 3. **An existence test would have un-parked live work.**
+>    `road-to-catalogue-host-fit` waits until `skill-catalogue.jsonl` holds 20
+>    observations; the file exists today with 7 lines, so a bare existence probe
+>    would have reported FIRED 13 observations early. The path branch is gated on
+>    an existence predicate for exactly that reason, and that row is the
+>    regression fixture.
+
 ### Phase 3 — The ratchet lands
 
 - [x] **3.1** An estate-count gate: read the dashboard, compare against the

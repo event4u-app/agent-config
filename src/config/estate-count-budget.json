@@ -16,9 +16,9 @@
         ]
     },
     "baseline": {
-        "active_roadmaps": 37,
-        "later_roadmaps": 43,
-        "open_blockers": 71
+        "active_roadmaps": 34,
+        "later_roadmaps": 49,
+        "open_blockers": 72
     },
     "baseline_history": [
         {
@@ -55,6 +55,13 @@
             "later_roadmaps": 43,
             "open_blockers": 71,
             "why": "LOWERED by 1 on each gated metric, in the direction this ratchet exists for. road-to-stop-gate-honesty reached zero open steps and zero deferred items and was archived, which is a terminal disposition rather than a park; its `b-detector-demotion-bars` was resolved with the decision recorded at the entry, not moved elsewhere. Both numbers are therefore measurements of a smaller estate, not room bought by relocating work — later_roadmaps is unchanged at 43, which is the check that distinguishes the two. Walked down because the count gate reported both as free tightening and its unit test asserts the committed budget equals the live tree: a baseline left above a lower measurement is headroom a later change can spend without any gate objecting, which is the loose-ratchet failure the 67 -> 69 entry above records from the other direction."
+        },
+        {
+            "at": "2026-08-19",
+            "active_roadmaps": 34,
+            "later_roadmaps": 49,
+            "open_blockers": 72,
+            "why": "road-to-estate-drawdown Phase 2 triage batch 1 — the first batch of the sweep this ratchet was registered to make stick. Six of the ten files in the batch took the verdict PARK-PROBEABLE and moved to later/ with a rewritten resume condition, so active_roadmaps 37 -> 34 is WALKED DOWN (a lower measurement is the new ceiling) while later_roadmaps 43 -> 49 is RAISED by 6. The raise is exactly the move this metric exists to make visible: parking is not closing, and a drawdown that moved everything into later/ and called the number down is the burial T1's quality anchor forbids. It is taken rather than avoided because all six are the later/ definition verbatim — open work that cannot proceed now, gated on an external trigger, not abandoned — and every one carries an open-step count that stayed open and a resume condition a script or a named command can test. Four is not six: two of the six (domain-pack-extraction-when-triggered, road-to-skill-ecosystem-executable-payloads) are decidable by resume_probe and report `unmet`; the other four are recorded as undecidable-by-design with a per-row reason in agents/decisions/estate-triage-dispositions.yml, because their conditions name an external fact or a content bar rather than a file's existence. open_blockers 71 -> 72 is +1 and has one cause, stated because it looks like drift and is not: road-to-product-bets carried `status: draft`, so collect() excluded it and its one blocker was invisible to this metric; parking it into later/ brought that blocker into the counted corpus. No blocker was opened, closed or moved — a draft's blocker became countable. Nothing in this batch was archived, so no closure needed a migration note; the two DECISION-SHEET verdicts route to the existing consolidated sheet and the two EXECUTE verdicts leave their files in the active tree."
         }
     ],
     "target": {
