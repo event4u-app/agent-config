@@ -1,0 +1,1259 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index cec8c0db40bfdedd0050d460de6ba03473c98020..cb6f5dda2c7ec037f7e4931734174b900cd1e8af 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**297 / 543 steps done · 55%**
++**299 / 543 steps done · 55%**
+ 
+ ```text
+ ██████████████████████░░░░░░░░░░░░░░░░░░   55%
+@@ -52,7 +52,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+ | 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+ | 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
++| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 6 | 2 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ██░░░░░░░░ 25% |
+ | 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+ | 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+ | 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+@@ -1027,7 +1027,7 @@ _1 blocker resolved._
+ 
+ ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
+ 
+-**Road to standing context 40k — the registered destination, given a route** — 0 / 8 done (0%)
++**Road to standing context 40k — the registered destination, given a route** — 2 / 8 done (25%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+@@ -1035,7 +1035,7 @@ _1 blocker resolved._
+ | 1 | Pull the lever that already exists | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 2 | Shrink the structural payload without touching reach | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 3 | Give rules a runtime carrier, or retire the dead triggers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+-| 4 | Per-turn injection aggregate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 4 | Per-turn injection aggregate | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ 
+ <a id="blockers-road-to-standing-context-40k"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-standing-context-40k.md b/agents/roadmaps/road-to-standing-context-40k.md
+index 3c07decc74a25e779b0e613b3f741c0ea1437216..13f22d86676e6e549293fd05cecf0b317ceaf519 100644
+--- a/agents/roadmaps/road-to-standing-context-40k.md
++++ b/agents/roadmaps/road-to-standing-context-40k.md
+@@ -216,7 +216,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+ 
+ ### Phase 4 — Per-turn injection aggregate
+ 
+-- [ ] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
++- [x] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
+       concern emissions per session-turn, capped outside `session_start`, with the
+       dispatcher enforcing by dropping lowest-severity advisories first and
+       recording each drop in dispatch issues. The cap exempts `severity: blocking`
+@@ -224,12 +224,67 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       safety-relevant warning.
+       `verify:` the injection bench reports the aggregate; a fixture exceeding the
+       cap drops the right advisory and records it.
+-- [ ] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
++      <!-- DONE 2026-08-19. `per_turn_aggregate_cap_bytes` in
++      `src/config/hook-token-budget.json`; runtime half in
++      `src/scripts/hooks/turn_injection_budget.ts`, wired at
++      `dispatch_hook._apply_turn_injection_cap`; bench reports a
++      `turn-aggregate` line and reds on breach; 21 tests in
++      `tests/scripts/hooks/turn_injection_budget.test.ts`.
++      **The step understated what was missing.** It reads as "add a row", but
++      NOTHING in the tree read this budget file at runtime — `bench_hook_injection`
++      was its only consumer, over committed fixtures. So the per-concern and
++      per-slot caps that shipped in 3.1 were CI-only too, and this step is the
++      file's first row with runtime teeth rather than one more row beside
++      equals.
++      `cap_bytes: 10240` is DERIVED, not measured, and the config says so:
++      4096 (user_prompt_submit) + 2048 (stop) + 2048 (pre_tool_use) + 2048
++      (post_tool_use) — the committed per-slot caps for a turn with exactly one
++      tool call. No live per-turn distribution exists; the injection census
++      revises it at the review date.
++      Second finding, for the same reason: a turn boundary had no representation
++      anywhere. `user_prompt_submit` is used as the boundary here, which is
++      correct on `claude` and is a *choice* rather than a host fact — a host
++      without that slot gets no turn accounting at all, and the module fails
++      open rather than pretending otherwise. -->
++      <!-- verify: ./scripts-run src/scripts/bench_hook_injection -->
++- [x] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
+       that for each prompt class at most one nudge fires. The delegation-nudge and
+       skill-route overlap is the first known pair to pin.
+       `verify:` the fixture is green and fails when a second nudge is forced.
++      <!-- DONE 2026-08-19. Corpus
++      `tests/eval/nudge-interference/user-prompt-submit.yaml`, runner
++      `tests/scripts/hooks/nudge_interference.test.ts`, 10 tests green.
++      **THE PAIR DOES DOUBLE-FIRE, and the fixture records it rather than
++      passing over it.** Measured first over the widest prompt corpus in the
++      repo — the 510 prompt lines of `tests/eval/routing-matrix/*.yaml`, platform
++      `claude`: 3 fired delegation-nudge only, 44 skill-route only, 463 neither,
++      **0 both**. So ≤1 holds there, and a fixture built only from that corpus
++      would have been green over a case it never exercises. Two hand-constructed
++      prompts — enumerated files AND strong single-skill terms in one sentence —
++      fire BOTH, reproducibly, e.g. "Audit these files: a.php, b.php, c.php —
++      each needs an Eloquent scope and a FormRequest".
++      The corpus is therefore bidirectional: a `max_nudges` class going above its
++      number reds (a nudge widened), and the recorded `overlap` class going below
++      its number reds too (a suppression landed and the corpus did not follow).
++      NOT FIXED HERE, deliberately: suppressing the second nudge is a behaviour
++      change to two shipped concerns, which is a step of its own, and 4.2 asks
++      for the instrument. See the follow-up note under this phase. -->
++      <!-- verify: npx vitest run tests/scripts/hooks/nudge_interference.test.ts -->
+ - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
+-  green.
++  green. <!-- MET 2026-08-19: `bench_hook_injection` prints
++  `turn-aggregate 1140 B (cap 10240) over 4 non-exempt slot(s), one fire each`;
++  the fixture is 10/10 green. -->
++
++> **Follow-up this phase produced, recorded so it is not lost.** The
++> delegation-nudge × skill-route double-fire above is a live interference, not a
++> hypothetical: on a prompt carrying both signals the model gets two advisory
++> lines in one turn, which is the per-turn noise this whole roadmap is about. The
++> fix is a suppression rule (one nudge yields when the other has a verdict) plus
++> a decision about WHICH yields — a delegation verdict is coarser and a skill
++> pointer is cheaper to ignore, so the ordering is a judgement, not a
++> derivation. That makes it a maintainer call and a separate step; the corpus
++> above is what makes it measurable, and it will red the moment the suppression
++> lands, which is the intended signal.
+ 
+ ## Blockers
+ 
+diff --git a/src/config/hook-token-budget.json b/src/config/hook-token-budget.json
+index 4a9eaca8610a383d0ffbc90f651f23f9f8f32ae9..2c028dbaab3f7f88d8f5b6deff687daff7514e3b 100644
+--- a/src/config/hook-token-budget.json
++++ b/src/config/hook-token-budget.json
+@@ -42,6 +42,15 @@
+         "pre_compact": 2048,
+         "agent_error": 1024
+     },
++    "per_turn_aggregate_cap_bytes": {
++        "_comment": "road-to-standing-context-40k Phase 4.1 — the SUM across every per-turn slot within ONE session-turn, which the per-slot rows above cannot express: they cap one FIRE, and pre_tool_use/post_tool_use fire once per tool call, so a turn's real injected total is the unbounded axis and had no ceiling at all. This is also the file's first row with RUNTIME teeth: every cap above is enforced only by bench_hook_injection in CI over committed fixtures, and dispatch_hook.ts never read this file. cap_bytes is DERIVED, not measured, and says so: 4096 (user_prompt_submit) + 2048 (stop) + 2048 (pre_tool_use) + 2048 (post_tool_use) = 10240, i.e. the committed per-slot caps for a turn with exactly one tool call. No live per-turn distribution exists yet; the injection census is the instrument that revises this number at the review date, by evidence, in a PR.",
++        "cap_bytes": 10240,
++        "exempt_slots": ["session_start", "session_end", "pre_compact", "subagent_start", "subagent_stop", "agent_error"],
++        "exempt_slots_reason": "A turn boundary is a user_prompt_submit; these slots fire outside one (session lifecycle, compaction, subagent lifecycle, error paths) and carry the one-shot restore payloads the roadmap step names as exempt.",
++        "enforcement": "dispatch_hook.ts accumulates emitted payload bytes per turn in agents/runtime/state/turn-injection.json (counts and ids only) and drops advisory messages — lowest severity first, largest first within a severity — until the remaining emission fits. severity: blocking and fail_closed: true concerns are NEVER dropped, by construction, so the policy cannot hide a safety-relevant warning (Risk 5). Every drop appends one budget_exceeded line to dispatch-issues.jsonl.",
++        "owner": "maintainer",
++        "review_by": "2026-11-19"
++    },
+     "injection_load_metric": {
+         "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
+         "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"
+diff --git a/src/scripts/bench_hook_injection.ts b/src/scripts/bench_hook_injection.ts
+index 77aa3017f97b55a526a49f09e81e176b2cfd1577..6ecf5f7a1f868fb536b13fa713fc677026738a71 100644
+--- a/src/scripts/bench_hook_injection.ts
++++ b/src/scripts/bench_hook_injection.ts
+@@ -16,6 +16,12 @@
+  *     the default cap IS its row — but a breach names the missing row so
+  *     the fix is a registered decision, not a silent default bump
+  *   - per-slot SUM over all bound concerns > the slot cap → RED
++ *   - per-TURN aggregate (the sum over every non-exempt slot, one fire each)
++ *     > `per_turn_aggregate_cap_bytes.cap_bytes` → RED. Added by
++ *     road-to-standing-context-40k 4.1, because every row above caps one FIRE
++ *     and `pre_tool_use` / `post_tool_use` fire once per tool call — so a turn's
++ *     real total was the one axis with no ceiling. The runtime half lives in
++ *     `hooks/turn_injection_budget.ts`; this is the authoring-time reading.
+  *
+  * HONEST SCOPE, stated up front: concerns are conditional-silence by design —
+  * a generic fixture triggers few of them, so most measure 0 bytes here. The
+@@ -66,6 +72,20 @@ interface Budget {
+     default_cap_bytes: number;
+     per_concern_caps_bytes: Record<string, number | string>;
+     per_slot_sum_caps_bytes: Record<string, number | string>;
++    /** road-to-standing-context-40k 4.1 — optional so an older budget file still benches. */
++    per_turn_aggregate_cap_bytes?: {
++        cap_bytes?: number;
++        exempt_slots?: string[];
++    };
++}
++
++/** The per-turn aggregate: the sum across every non-exempt slot, one fire each. */
++export interface TurnAggregate {
++    bytes: number;
++    cap: number;
++    breach: boolean;
++    /** Slots that fed the sum, so the reading is auditable rather than a bare number. */
++    slots: string[];
+ }
+ 
+ function capFor(budget: Budget, concern: string): number {
+@@ -129,7 +149,7 @@ export function runConcernOnce(
+     }
+ }
+ 
+-export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[] } {
++export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; turnAggregate: TurnAggregate | null; errors: string[] } {
+     const platform = opts.platform ?? 'claude';
+     const manifest = _load_yaml(MANIFEST);
+     const budget = JSON.parse(fs.readFileSync(opts.budgetPath ?? BUDGET, 'utf8')) as Budget;
+@@ -158,7 +178,27 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): {
+         const slotCap = typeof slotCapRaw === 'number' ? slotCapRaw : Number.MAX_SAFE_INTEGER;
+         slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap };
+     }
+-    return { measurements, slotSums, errors };
++
++    // Per-turn aggregate (road-to-standing-context-40k 4.1). The per-slot rows
++    // above cap ONE fire each; a turn spans several slots, so the sum over the
++    // non-exempt ones is the reading the runtime enforcer accumulates against.
++    //
++    // HONEST SCOPE, inherited from this bench's header and worth restating for
++    // the new row: the fixtures fire one of each slot, so this is a per-turn
++    // FLOOR, not the live distribution. A real turn with n tool calls fires
++    // pre/post_tool_use n times and the true aggregate is higher — that axis is
++    // exactly what the dispatcher enforces at runtime and the injection census
++    // measures. Reporting the fixture sum as "the per-turn load" would be the
++    // coverage inflation the honest-scope note refuses.
++    const turnRow = budget.per_turn_aggregate_cap_bytes;
++    let turnAggregate: TurnAggregate | null = null;
++    if (turnRow !== undefined && typeof turnRow.cap_bytes === 'number') {
++        const exempt = new Set(turnRow.exempt_slots ?? []);
++        const slots = Object.keys(slotSums).filter((s) => !exempt.has(s));
++        const bytes = slots.reduce((n, s) => n + (slotSums[s]?.bytes ?? 0), 0);
++        turnAggregate = { bytes, cap: turnRow.cap_bytes, breach: bytes > turnRow.cap_bytes, slots };
++    }
++    return { measurements, slotSums, turnAggregate, errors };
+ }
+ 
+ export function main(argv: readonly string[]): number {
+@@ -211,10 +251,20 @@ export function main(argv: readonly string[]): number {
+         for (const [slot, s] of Object.entries(result.slotSums)) {
+             if (s.bytes > 0) process.stdout.write(`  slot-sum ${slot.padEnd(20)} ${String(s.bytes).padStart(6)} B (cap ${s.cap === Number.MAX_SAFE_INTEGER ? '—' : s.cap})${s.breach ? '  ❌ BREACH' : ''}\n`);
+         }
++        if (result.turnAggregate !== null) {
++            const t = result.turnAggregate;
++            process.stdout.write(
++                `  turn-aggregate ${String(t.bytes).padStart(6)} B (cap ${t.cap}) over ${t.slots.length} non-exempt slot(s), one fire each` +
++                `${t.breach ? '  ❌ BREACH' : ''}\n`,
++            );
++        } else {
++            process.stdout.write('  turn-aggregate — no per_turn_aggregate_cap_bytes row in the budget; not measured\n');
++        }
+         for (const e of result.errors) process.stdout.write(`  warn: ${e}\n`);
+     }
+-    if (breaches.length > 0 || slotBreaches.length > 0) {
+-        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es) — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
++    const turnBreach = result.turnAggregate?.breach === true;
++    if (breaches.length > 0 || slotBreaches.length > 0 || turnBreach) {
++        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es)${turnBreach ? ', per-turn aggregate breached' : ''} — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
+         return 1;
+     }
+     return 0;
+diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
+index 1103362da7468e3edd1e3f8f18a1df58788cbb6d..e6558902403ce67a28ba85a5e9f25d6957ce4e4f 100644
+--- a/src/scripts/hooks/dispatch_hook.ts
++++ b/src/scripts/hooks/dispatch_hook.ts
+@@ -52,6 +52,14 @@ import {
+ import { emitFor, type Severity } from "./host_semantics.js";
+ import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
+ import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
++import {
++  applyTurnCap,
++  readTurnBudget,
++  readTurnState,
++  writeTurnState,
++  slotCounts,
++  type CandidateMessage,
++} from "./turn_injection_budget.js";
+ 
+ // Free-form JSON values flow through every helper here; a documented
+ // alias keeps the surface honest without `any` (ADR-200 § strict TS).
+@@ -75,6 +83,7 @@ const REPO_ROOT = path.resolve(
+   ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
+ );
+ const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
++const TOKEN_BUDGET_PATH = path.join(REPO_ROOT, "src", "config", "hook-token-budget.json");
+ 
+ export const EXIT_ALLOW = 0;
+ export const EXIT_BLOCK = 1;
+@@ -1040,6 +1049,89 @@ function _write_feedback(
+  * Fail-open (a broken counter must never affect dispatch), skipped in
+  * replay mode like the feedback dir.
+  */
++/**
++ * Per-turn injection aggregate (road-to-standing-context-40k Phase 4.1).
++ *
++ * Returns the messages that may actually be emitted. Every cap in
++ * `hook-token-budget.json` before this row was CI-only — `bench_hook_injection`
++ * measured committed fixtures and nothing read the file at runtime — and none
++ * of them bounded a TURN: `pre_tool_use` / `post_tool_use` fire once per tool
++ * call, so the per-slot rows capped one fire of a repeating axis.
++ *
++ * A `user_prompt_submit` opens a turn and zeroes the accumulator; every other
++ * non-exempt slot adds to it. Overflow drops advisory messages, largest first,
++ * until the emission fits — never a `severity: blocking` or `fail_closed`
++ * concern, which is what keeps the policy from hiding a safety-relevant
++ * warning (roadmap Risk 5). An emission that still exceeds the cap after every
++ * droppable message is gone is emitted in full and recorded: an over-cap
++ * warning is a budget finding, a swallowed block is a safety failure, and the
++ * two are not tradeable.
++ *
++ * Fail-open on every path — no budget row, an unreadable file, a missing
++ * workspace all mean "emit everything", which is the pre-4.1 behaviour.
++ * Skipped in replay mode so fixture replays write no state, exactly like the
++ * feedback dir and the trip counters.
++ */
++export function _apply_turn_injection_cap<
++  T extends { text: string; concern: string; advisory: boolean; fail_closed: boolean },
++>(envelope: JsonObject, session_id: string, event: string, messages: T[]): T[] {
++  if (messages.length === 0) return messages;
++  const budget = readTurnBudget(TOKEN_BUDGET_PATH);
++  if (budget === null || !slotCounts(event, budget)) return messages;
++  const workspace = String(envelope["workspace_root"] || process.cwd());
++
++  const prior = is_replay_mode()
++    ? { schema_version: 1, session_id, turn: 0, spent_bytes: 0, dropped: 0 }
++    : readTurnState(workspace, session_id);
++  // A prompt submission IS the turn boundary — the accumulator starts at zero
++  // and the turn counter advances, so a long turn's tool-call fires all charge
++  // against the same budget while the next prompt gets a clean one.
++  const opensTurn = event === "user_prompt_submit";
++  const spent = opensTurn ? 0 : prior.spent_bytes;
++
++  const candidates: CandidateMessage[] = messages.map((m) => ({
++    concern: m.concern,
++    text: m.text,
++    advisory: m.advisory,
++    failClosed: m.fail_closed,
++  }));
++  const verdict = applyTurnCap(candidates, spent, budget.capBytes);
++
++  if (!is_replay_mode()) {
++    writeTurnState(workspace, {
++      schema_version: 1,
++      session_id,
++      turn: opensTurn ? prior.turn + 1 : prior.turn,
++      spent_bytes: spent + verdict.keptBytes,
++      dropped: (opensTurn ? 0 : prior.dropped) + verdict.dropped.length,
++    });
++    for (const d of verdict.dropped) {
++      log_dispatch_issue(
++        workspace,
++        d.concern,
++        "budget_exceeded",
++        `advisory dropped: ${String(d.bytes)} B would take the turn past the ` +
++          `${String(budget.capBytes)} B per-turn injection cap (${String(spent)} B already spent)`,
++        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
++      );
++    }
++    if (verdict.overCapAfterDrops) {
++      log_dispatch_issue(
++        workspace,
++        "dispatch",
++        "budget_exceeded",
++        `turn injection is ${String(spent + verdict.keptBytes)} B over a ` +
++          `${String(budget.capBytes)} B cap with nothing droppable left — ` +
++          "blocking and fail_closed concerns are never dropped",
++        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
++      );
++    }
++  }
++
++  if (verdict.dropped.length === 0) return messages;
++  return verdict.keptIndices.map((i) => messages[i] as T);
++}
++
+ function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): void {
+   if (is_replay_mode()) return;
+   const tripped = entries.filter(
+@@ -1269,7 +1361,17 @@ export function main(argv?: string[]): number {
+   // feedback_entries on purpose: that record is written to disk with a
+   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
+   // stderr is free-form content. This array is in-memory only.
+-  const concern_messages: Array<{ rc: number; text: string }> = [];
++  //
++  // Carries `concern` / `advisory` / `fail_closed` alongside the text since
++  // 4.1: the per-turn aggregate has to know which messages are droppable, and
++  // that is a property of the manifest declaration, not of the text.
++  const concern_messages: Array<{
++    rc: number;
++    text: string;
++    concern: string;
++    advisory: boolean;
++    fail_closed: boolean;
++  }> = [];
+   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
+   // is one place, after the envelope exists and before any concern is spawned.
+   const tool_name = _payload_tool_name(envelope);
+@@ -1355,7 +1457,13 @@ export function main(argv?: string[]): number {
+         : "";
+     const message = [stated, extra].filter(Boolean).join("\n\n");
+     if (message) {
+-      concern_messages.push({ rc, text: message });
++      concern_messages.push({
++        rc,
++        text: message,
++        concern: String(concern["name"]),
++        advisory: _is_advisory(concern),
++        fail_closed: Boolean(concern["fail_closed"]),
++      });
+     }
+     if (
+       args.event === "session_start" &&
+@@ -1400,9 +1508,13 @@ export function main(argv?: string[]): number {
+   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
+   // inverted every verdict (see host_semantics.ts for the documented mapping).
+   // Unverified platforms keep the legacy pass-through byte-for-byte.
+-  const decidingReasons = concern_messages
+-    .filter((m) => m.rc === final_rc)
+-    .map((m) => m.text);
++  const deciding = concern_messages.filter((m) => m.rc === final_rc);
++  const decidingReasons = _apply_turn_injection_cap(
++    envelope,
++    session_id,
++    args.event,
++    deciding,
++  ).map((m) => m.text);
+   const emission = emitFor(
+     args.platform,
+     args.event,
+diff --git a/src/scripts/hooks/dispatch_issues.ts b/src/scripts/hooks/dispatch_issues.ts
+index 893b9571b59f3c3a29ff93acddf1cc6ed8ec2da9..0cdcb2cc10e7df1dbded45bc44f04205dc066f1f 100644
+--- a/src/scripts/hooks/dispatch_issues.ts
++++ b/src/scripts/hooks/dispatch_issues.ts
+@@ -19,7 +19,8 @@
+  *       "timestamp": "<ISO-8601 UTC>",
+  *       "hook":      "<concern-id>",
+  *       "issue":     "prerequisite_missing | script_not_found | "
+- *                    "permission_denied | execution_failed",
++ *                    "permission_denied | execution_failed | "
++ *                    "budget_exceeded",
+  *       "detail":    "<freeform one-line explanation>",
+  *       "resolution": "<one-line command or doc link>"
+  *     }
+@@ -42,6 +43,18 @@ export const VALID_ISSUE: ReadonlySet<string> = new Set([
+   "script_not_found",
+   "permission_denied",
+   "execution_failed",
++  // road-to-standing-context-40k 4.1. The four above are all resolver
++  // FAILURES — the class this log was built for. This fifth value is a POLICY
++  // action: the per-turn injection aggregate dropped an advisory message, or
++  // retained an emission that still exceeds the cap. It belongs here rather
++  // than in the feedback dir because a drop is exactly the "failure that would
++  // otherwise vanish into the never-block contract" this log exists for — the
++  // concern ran, returned a message, and the dispatcher chose not to forward
++  // it. Additive to the R3-locked set, deliberately: `VALID_ISSUE` is a write
++  // allowlist and no reader switches exhaustively on `issue` (`hooks_doctor`
++  // and `roadmap_progress_hook` write it, they do not classify), so widening
++  // it cannot invalidate a record already on disk.
++  "budget_exceeded",
+ ]);
+ 
+ export interface DispatchIssueEntry {
+diff --git a/src/scripts/hooks/turn_injection_budget.ts b/src/scripts/hooks/turn_injection_budget.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c791d7a83a9165a724eca87ffdbd0cddb77cda7c
+--- /dev/null
++++ b/src/scripts/hooks/turn_injection_budget.ts
+@@ -0,0 +1,232 @@
++/**
++ * Per-turn injection aggregate — road-to-standing-context-40k Phase 4.1.
++ *
++ * `src/config/hook-token-budget.json` caps a concern's emission per FIRE and
++ * the cross-concern sum per SLOT per fire. Both are enforced by
++ * `bench_hook_injection` in CI, over committed fixtures. Two consequences the
++ * step this module implements exists to fix:
++ *
++ *   1. There was no ceiling on a TURN. `pre_tool_use` / `post_tool_use` fire
++ *      once per tool call, so the per-slot rows bound one fire of an axis that
++ *      repeats — a turn with twelve tool calls could inject twelve times the
++ *      `pre_tool_use` cap and every per-slot check stayed green.
++ *   2. Nothing read the budget at runtime. `dispatch_hook.ts` never imported
++ *      the file; a live breach was invisible until someone ran the bench.
++ *
++ * This module is the runtime half. It accumulates the bytes a dispatch is
++ * about to emit, per turn, and — when the aggregate would exceed the cap —
++ * drops advisory messages until the remainder fits.
++ *
++ * SAFETY BY CONSTRUCTION (roadmap Risk 5: "the advisory-drop policy hides a
++ * safety-relevant warning"). A droppable message is one whose concern declares
++ * `severity: advisory` AND `fail_closed: false`. Everything else is retained
++ * unconditionally, even when that leaves the emission over cap — an over-cap
++ * emission is a budget finding, whereas a swallowed blocking warning is a
++ * safety failure, and the two are not tradeable. The over-cap case is recorded
++ * rather than silently tolerated.
++ *
++ * WHAT COUNTS AS A TURN. A `user_prompt_submit` fire starts one. Every
++ * non-exempt slot after it accumulates into the same turn until the next
++ * `user_prompt_submit`. Slots listed in `exempt_slots` neither open a turn nor
++ * accumulate — they are the session-lifecycle and compaction paths that carry
++ * the one-shot restore payloads.
++ *
++ * PII-EXCLUSION-BY-CONSTRUCTION. The state file's type carries a schema
++ * version, a session id, a turn counter and two integers. It has NO field
++ * capable of holding a message, a prompt, a path, or any free-form content —
++ * the same discipline `domain-safety-pii` § Surface 2 states for logs and
++ * `_record_rule_trips` applies to its counters. Never widen it.
++ *
++ * Fail-open throughout: an unreadable budget, an unwritable state file, or a
++ * corrupt record all resolve to "no cap applied". A broken accountant must
++ * never swallow a concern's message.
++ */
++
++import * as fs from "node:fs";
++import * as path from "node:path";
++
++/** The turn accumulator, on disk. Counts and ids only — never content. */
++export interface TurnInjectionState {
++    schema_version: number;
++    session_id: string;
++    /** Monotonic per session; incremented on each `user_prompt_submit`. */
++    turn: number;
++    /** Payload bytes already emitted in this turn, across slots. */
++    spent_bytes: number;
++    /** Advisory messages dropped in this turn, across slots. */
++    dropped: number;
++}
++
++export interface TurnBudget {
++    readonly capBytes: number;
++    readonly exemptSlots: ReadonlySet<string>;
++}
++
++/** One candidate message, with the two facts the drop decision needs. */
++export interface CandidateMessage {
++    /** Concern id — used for the dispatch-issues record, never emitted. */
++    readonly concern: string;
++    readonly text: string;
++    /** `severity: advisory` in the manifest. */
++    readonly advisory: boolean;
++    /** `fail_closed: true` in the manifest. */
++    readonly failClosed: boolean;
++}
++
++export interface DropRecord {
++    readonly concern: string;
++    readonly bytes: number;
++}
++
++export interface CapVerdict {
++    /** Messages that survive, in their original order. */
++    readonly kept: CandidateMessage[];
++    /**
++     * Indices into the input array of the surviving messages, ascending. The
++     * caller maps back by index rather than by text: two concerns emitting the
++     * same string is rare and a text-keyed filter would drop both.
++     */
++    readonly keptIndices: number[];
++    readonly dropped: DropRecord[];
++    /** Bytes the kept set will emit. */
++    readonly keptBytes: number;
++    /** Bytes already spent earlier in this turn. */
++    readonly spentBytes: number;
++    readonly capBytes: number;
++    /** True when the retained set still exceeds the cap (undroppable overflow). */
++    readonly overCapAfterDrops: boolean;
++}
++
++export const STATE_REL = path.join("agents", "runtime", "state", "turn-injection.json");
++const SCHEMA_VERSION = 1;
++
++/** Byte length of a message as the emission layer will write it. */
++export function messageBytes(text: string): number {
++    return Buffer.byteLength(text, "utf-8");
++}
++
++/**
++ * Read the per-turn aggregate row. Returns `null` when the row is absent or
++ * unusable — the caller then applies no cap, which is the pre-4.1 behaviour.
++ */
++export function readTurnBudget(budgetPath: string): TurnBudget | null {
++    let doc: Record<string, unknown>;
++    try {
++        doc = JSON.parse(fs.readFileSync(budgetPath, "utf-8")) as Record<string, unknown>;
++    } catch {
++        return null;
++    }
++    const row = doc["per_turn_aggregate_cap_bytes"];
++    if (typeof row !== "object" || row === null || Array.isArray(row)) return null;
++    const cap = (row as Record<string, unknown>)["cap_bytes"];
++    if (typeof cap !== "number" || !Number.isFinite(cap) || cap <= 0) return null;
++    const exemptRaw = (row as Record<string, unknown>)["exempt_slots"];
++    const exempt = Array.isArray(exemptRaw)
++        ? exemptRaw.filter((s): s is string => typeof s === "string")
++        : [];
++    return { capBytes: cap, exemptSlots: new Set(exempt) };
++}
++
++function statePath(workspaceRoot: string): string {
++    return path.join(workspaceRoot, STATE_REL);
++}
++
++/** Read the accumulator, or a zeroed one for a session with no record yet. */
++export function readTurnState(workspaceRoot: string, sessionId: string): TurnInjectionState {
++    const zero: TurnInjectionState = {
++        schema_version: SCHEMA_VERSION,
++        session_id: sessionId,
++        turn: 0,
++        spent_bytes: 0,
++        dropped: 0,
++    };
++    let parsed: unknown;
++    try {
++        parsed = JSON.parse(fs.readFileSync(statePath(workspaceRoot), "utf-8"));
++    } catch {
++        return zero;
++    }
++    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return zero;
++    const doc = parsed as Record<string, unknown>;
++    // A record from a different session says nothing about this one's turn.
++    if (doc["session_id"] !== sessionId) return zero;
++    const turn = typeof doc["turn"] === "number" ? doc["turn"] : 0;
++    const spent = typeof doc["spent_bytes"] === "number" ? doc["spent_bytes"] : 0;
++    const dropped = typeof doc["dropped"] === "number" ? doc["dropped"] : 0;
++    return {
++        schema_version: SCHEMA_VERSION,
++        session_id: sessionId,
++        turn: Math.max(0, Math.trunc(turn)),
++        spent_bytes: Math.max(0, Math.trunc(spent)),
++        dropped: Math.max(0, Math.trunc(dropped)),
++    };
++}
++
++/** Persist the accumulator. Fail-open: a write failure applies no cap later. */
++export function writeTurnState(workspaceRoot: string, state: TurnInjectionState): void {
++    try {
++        const target = statePath(workspaceRoot);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, JSON.stringify(state, null, 2) + "\n", "utf-8");
++    } catch {
++        /* observability, never a dispatch failure */
++    }
++}
++
++/**
++ * Decide which messages survive the turn cap.
++ *
++ * Pure: no I/O, no clock. The drop order is lowest-severity-first, and within
++ * the droppable set LARGEST-first — dropping one 3 KB advisory beats dropping
++ * four 200-byte ones to free the same room, and it keeps the verdict
++ * deterministic for a fixture.
++ */
++export function applyTurnCap(
++    messages: readonly CandidateMessage[],
++    spentBytes: number,
++    capBytes: number,
++): CapVerdict {
++    const retained = new Set(messages.map((_, i) => i));
++    const dropped: DropRecord[] = [];
++    const bytesOf = (i: number): number => messageBytes(messages[i]?.text ?? "");
++    const total = (): number => {
++        let n = spentBytes;
++        for (const i of retained) n += bytesOf(i);
++        return n;
++    };
++
++    if (total() > capBytes) {
++        // Droppable = advisory AND not fail_closed. Largest first.
++        const droppable = messages
++            .map((m, i) => ({ m, i }))
++            .filter(({ m }) => m.advisory && !m.failClosed)
++            .sort((a, b) => bytesOf(b.i) - bytesOf(a.i) || a.i - b.i);
++        for (const { m, i } of droppable) {
++            if (total() <= capBytes) break;
++            retained.delete(i);
++            dropped.push({ concern: m.concern, bytes: bytesOf(i) });
++        }
++    }
++
++    const keptIndices = [...retained].sort((a, b) => a - b);
++    const kept = keptIndices.map((i) => messages[i] as CandidateMessage);
++    let keptBytes = 0;
++    for (const i of retained) keptBytes += bytesOf(i);
++    return {
++        kept,
++        keptIndices,
++        dropped,
++        keptBytes,
++        spentBytes,
++        capBytes,
++        overCapAfterDrops: spentBytes + keptBytes > capBytes,
++    };
++}
++
++/**
++ * True when this slot participates in the turn aggregate at all.
++ * An exempt slot neither opens a turn nor accumulates.
++ */
++export function slotCounts(slot: string, budget: TurnBudget): boolean {
++    return !budget.exemptSlots.has(slot);
++}
+diff --git a/tests/eval/nudge-interference/user-prompt-submit.yaml b/tests/eval/nudge-interference/user-prompt-submit.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..9aeb78c45c19efb4fce3519450c6cea459cd941f
+--- /dev/null
++++ b/tests/eval/nudge-interference/user-prompt-submit.yaml
+@@ -0,0 +1,86 @@
++# Nudge-interference corpus — road-to-standing-context-40k Phase 4.2.
++#
++# WHAT THIS PINS. The `user_prompt_submit` slot runs ten concerns on `claude`,
++# two of which are conditional-silence NUDGES that read the same submitted
++# prompt: `delegation-nudge` and `skill-route`. Nothing asserted they stay out
++# of each other's way, so a widened trigger on either could start injecting two
++# advisory lines on one prompt with no gate noticing. This corpus is the
++# instrument: one prompt class per row, each with the number of nudges that
++# fired when it was measured.
++#
++# Data only. The runner is `tests/scripts/hooks/nudge_interference.test.ts`, and
++# it is deliberately bidirectional — a class going ABOVE its number reds (a
++# nudge widened into its sibling's territory) and the recorded overlap going
++# BELOW its number reds too (a suppression landed and this file did not follow).
++#
++# MEASURED, NOT ASSUMED (2026-08-19, platform `claude`, this tree). The 510
++# prompt lines of `tests/eval/routing-matrix/*.yaml` were run through both
++# nudges first: 3 fired delegation-nudge only, 44 fired skill-route only, 463
++# fired neither, and **0 fired both**. So the ≤1 invariant holds across the
++# widest prompt corpus in the repo — which is why the `overlap` class below is
++# hand-constructed rather than harvested. It reproduces the interference the
++# roadmap step names, and it is a real finding: the pair CAN double-fire, the
++# routing-matrix corpus simply never asks it to.
++#
++# THE OVERLAP IS RECORDED, NOT FIXED. 4.2 asks for the fixture; suppressing one
++# nudge when the other fires is a behaviour change to two shipped concerns and
++# belongs to its own step. Pinning the double-fire here publishes it instead of
++# leaving the fixture green over a case it never exercises.
++
++pair: [delegation-nudge, skill-route]
++slot: user_prompt_submit
++platform: claude
++measured_at: 2026-08-19
++
++classes:
++  - class: delegation-only
++    intent: >
++      Enumerated slices / for-each shapes that give the judgment ladder a
++      positive dispatch verdict, with no single-skill task language for the
++      ranker to clear its p90 floor on.
++    max_nudges: 1
++    prompts:
++      - "Review src/a.ts, src/b.ts, src/c.ts and src/d.ts for contrast violations"
++      - "For each of the six migration files, write a rollback case"
++      - "Split this into 4 slices: the modules, the policies, the records, the runbook"
++      - "Gehe alle fünf Komponenten durch und prüfe jeweils die Klassen auf Konsistenz"
++
++  - class: skill-route-only
++    intent: >
++      Single-deliverable tasks whose terms score above the ranker's floor, with
++      no enumeration, slice count, or ordered-plan marker for the delegation
++      classifier to read.
++    max_nudges: 1
++    prompts:
++      - "Schreibe eine Eloquent-Scope-Methode für aktive Abonnements"
++      - "Set up Terraform state locking for the staging bucket"
++      - "Add a Livewire component for the invoice line editor"
++
++  - class: silent
++    intent: >
++      Acknowledgements and conversational turns. The anti-canary default is
++      silence, so ZERO nudges is the correct reading here — a nudge appearing
++      on any of these is the per-turn reminder shape both concerns' headers
++      refuse.
++    max_nudges: 0
++    prompts:
++      - "Thanks, that looks right to me"
++      - "Was denkst Du dazu?"
++      - "ok"
++      - "sounds good, go ahead"
++      - "Passt so."
++
++  - class: overlap
++    intent: >
++      Enumerated files AND strong single-skill terms in one prompt — the
++      delegation classifier reads the enumeration while the ranker scores the
++      skill terms, and both speak. This is the interference the roadmap step
++      names as the first pair to pin.
++    expect_nudges: 2
++    recorded: >
++      Measured double-fire on 2026-08-19, both nudges. Not a regression and not
++      fixed here: 4.2 ships the instrument. A step that suppresses the second
++      nudge lowers this number, and that edit must land in this file with it.
++    prompts:
++      - "Refactor auth.ts, session.ts, token.ts one after another, then run the security audit on each"
++      - "Audit these files: a.php, b.php, c.php — each needs an Eloquent scope and a FormRequest"
+diff --git a/tests/scripts/hooks/dispatch_issues.test.ts b/tests/scripts/hooks/dispatch_issues.test.ts
+index 1d7a10736551201d2afb5457c71dabf28dd9b773..06051fc5919ae3258b2933fc93c3c4427a4d520a 100644
+--- a/tests/scripts/hooks/dispatch_issues.test.ts
++++ b/tests/scripts/hooks/dispatch_issues.test.ts
+@@ -38,6 +38,7 @@ describe('dispatch_issues — constants', () => {
+     it('cap is 200 and VALID_ISSUE matches the schema', () => {
+         expect(LOG_CAP).toBe(200);
+         expect([...VALID_ISSUE].sort()).toEqual([
++            'budget_exceeded',
+             'execution_failed',
+             'permission_denied',
+             'prerequisite_missing',
+diff --git a/tests/scripts/hooks/nudge_interference.test.ts b/tests/scripts/hooks/nudge_interference.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3df3bc73c52608f96bfa1dea405492ea7503e9a0
+--- /dev/null
++++ b/tests/scripts/hooks/nudge_interference.test.ts
+@@ -0,0 +1,199 @@
++// Nudge-interference runner — road-to-standing-context-40k Phase 4.2.
++//
++// The corpus (`tests/eval/nudge-interference/user-prompt-submit.yaml`) records
++// how many of the two `user_prompt_submit` nudges fire per prompt class. This
++// file is the assertion half, and it is bidirectional on purpose:
++//
++//   - a `max_nudges` class going ABOVE its number reds — a nudge widened into
++//     its sibling's territory, which is the interference the step exists to
++//     catch and the "fails when a second nudge is forced" verify clause;
++//   - the `expect_nudges` overlap class going BELOW its number reds too — a
++//     suppression landed and the corpus was not updated with it.
++//
++// Concerns run IN-PROCESS via CONCERN_REGISTRY with the stdin override, the
++// same harness `bench_hook_injection` uses, under AGENT_CONFIG_REPLAY=1 so no
++// state is written. "Fires" means non-empty stdout: both nudges are
++// conditional-silence and emit their JSON payload only on a positive verdict.
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { describe, expect, it } from 'vitest';
++import YAML from 'yaml';
++
++import { CONCERN_REGISTRY } from '../../../src/scripts/hooks/concern_registry.js';
++import {
++    setHookStdinOverride,
++    clearHookStdinOverride,
++} from '../../../src/scripts/hooks/hook_stdin.js';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
++const CORPUS = path.join(
++    REPO_ROOT,
++    'tests',
++    'eval',
++    'nudge-interference',
++    'user-prompt-submit.yaml',
++);
++
++/** Concern id → the registry key the manifest binds for it. */
++const NUDGE_SCRIPTS: Record<string, string> = {
++    'delegation-nudge': 'src/scripts/hooks/delegation_nudge_hook.ts',
++    'skill-route': 'src/scripts/hooks/skill_route_hook.ts',
++};
++
++interface CorpusClass {
++    class: string;
++    intent?: string;
++    max_nudges?: number;
++    expect_nudges?: number;
++    recorded?: string;
++    prompts: string[];
++}
++interface Corpus {
++    pair: string[];
++    slot: string;
++    platform: string;
++    classes: CorpusClass[];
++}
++
++const corpus = YAML.parse(fs.readFileSync(CORPUS, 'utf-8')) as Corpus;
++
++/** Run one nudge against one prompt; true when it injected anything. */
++function nudgeFires(script: string, prompt: string): boolean {
++    const main = CONCERN_REGISTRY[script];
++    if (main === undefined) throw new Error(`not in CONCERN_REGISTRY: ${script}`);
++    let out = '';
++    const prevOut = process.stdout.write;
++    const prevErr = process.stderr.write;
++    const prevReplay = process.env['AGENT_CONFIG_REPLAY'];
++    setHookStdinOverride(
++        JSON.stringify({
++            event: corpus.slot,
++            platform: corpus.platform,
++            workspace_root: REPO_ROOT,
++            payload: { prompt },
++        }),
++    );
++    process.env['AGENT_CONFIG_REPLAY'] = '1';
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    process.stdout.write = ((chunk: any, enc?: any, cb?: any): boolean => {
++        out += typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8');
++        const done = typeof enc === 'function' ? enc : cb;
++        if (typeof done === 'function') done();
++        return true;
++    }) as typeof process.stdout.write;
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    process.stderr.write = ((_chunk: any, enc?: any, cb?: any): boolean => {
++        const done = typeof enc === 'function' ? enc : cb;
++        if (typeof done === 'function') done();
++        return true;
++    }) as typeof process.stderr.write;
++    try {
++        main(['--platform', corpus.platform]);
++    } catch {
++        /* a crashing concern injects nothing — the latency/parity suites own crashes */
++    } finally {
++        process.stdout.write = prevOut;
++        process.stderr.write = prevErr;
++        if (prevReplay === undefined) delete process.env['AGENT_CONFIG_REPLAY'];
++        else process.env['AGENT_CONFIG_REPLAY'] = prevReplay;
++        clearHookStdinOverride();
++    }
++    return out.trim().length > 0;
++}
++
++/** Which of the corpus's nudges fired on this prompt. */
++export function firedNudges(prompt: string): string[] {
++    return corpus.pair.filter((id) => {
++        const script = NUDGE_SCRIPTS[id];
++        if (script === undefined) throw new Error(`corpus names an unmapped nudge: ${id}`);
++        return nudgeFires(script, prompt);
++    });
++}
++
++describe('nudge-interference corpus — shape', () => {
++    it('names exactly the pair this runner can execute', () => {
++        expect(corpus.pair.length).toBeGreaterThanOrEqual(2);
++        for (const id of corpus.pair) {
++            expect(Object.keys(NUDGE_SCRIPTS)).toContain(id);
++            expect(CONCERN_REGISTRY[NUDGE_SCRIPTS[id] as string]).toBeTypeOf('function');
++        }
++    });
++
++    it('gives every class prompts and exactly one expectation key', () => {
++        expect(corpus.classes.length).toBeGreaterThan(0);
++        for (const c of corpus.classes) {
++            expect(c.prompts.length, `${c.class} has no prompts`).toBeGreaterThan(0);
++            const keys = [c.max_nudges, c.expect_nudges].filter((v) => v !== undefined);
++            expect(keys, `${c.class} needs exactly one of max_nudges / expect_nudges`).toHaveLength(1);
++        }
++    });
++
++    it('carries at least one German prompt, per the routing-matrix convention', () => {
++        const all = corpus.classes.flatMap((c) => c.prompts).join(' ');
++        expect(/[äöüÄÖÜß]|\bDu\b|\bdurch\b/.test(all)).toBe(true);
++    });
++
++    it('records a reason for every class that expects more than one nudge', () => {
++        for (const c of corpus.classes) {
++            if ((c.expect_nudges ?? 0) > 1) {
++                expect(c.recorded, `${c.class} expects >1 nudge without a recorded reason`).toBeTruthy();
++            }
++        }
++    });
++});
++
++describe('nudge-interference — at most one nudge per prompt class', () => {
++    for (const c of corpus.classes.filter((x) => x.max_nudges !== undefined)) {
++        const cap = c.max_nudges as number;
++        it(`${c.class}: no prompt fires more than ${String(cap)} nudge(s)`, () => {
++            for (const prompt of c.prompts) {
++                const fired = firedNudges(prompt);
++                expect(
++                    fired.length,
++                    `class '${c.class}' allows at most ${String(cap)} nudge(s) but ` +
++                        `[${fired.join(', ')}] fired on: ${prompt}`,
++                ).toBeLessThanOrEqual(cap);
++            }
++        });
++    }
++});
++
++describe('nudge-interference — the recorded overlap stays recorded', () => {
++    for (const c of corpus.classes.filter((x) => x.expect_nudges !== undefined)) {
++        const want = c.expect_nudges as number;
++        it(`${c.class}: every prompt fires exactly ${String(want)} nudge(s)`, () => {
++            for (const prompt of c.prompts) {
++                const fired = firedNudges(prompt);
++                expect(
++                    fired.length,
++                    `class '${c.class}' records ${String(want)} nudge(s); [${fired.join(', ')}] ` +
++                        `fired on: ${prompt}. A suppression that lowers this must update the corpus.`,
++                ).toBe(want);
++            }
++        });
++    }
++});
++
++describe('nudge-interference — the assertion has teeth', () => {
++    // The verify clause is "fails when a second nudge is forced". The classes
++    // above cover the real path; this covers the mechanism directly, so a future
++    // refactor of `firedNudges` cannot quietly make every class vacuously green.
++    it('a forced double-fire violates a max_nudges class', () => {
++        const singles = corpus.classes.filter((c) => c.max_nudges === 1);
++        expect(singles.length).toBeGreaterThan(0);
++        const overlap = corpus.classes.find((c) => (c.expect_nudges ?? 0) === 2);
++        expect(overlap).toBeDefined();
++        // A prompt from the overlap class, judged under a single-nudge class's
++        // cap: the same assertion the classes above run must reject it.
++        const forced = firedNudges(overlap!.prompts[0] as string);
++        expect(forced.length).toBe(2);
++        expect(forced.length <= (singles[0]!.max_nudges as number)).toBe(false);
++    });
++
++    it('the runner distinguishes fire from silence', () => {
++        expect(firedNudges('ok')).toEqual([]);
++        expect(firedNudges('Set up Terraform state locking for the staging bucket')).toEqual([
++            'skill-route',
++        ]);
++    });
++});
+diff --git a/tests/scripts/hooks/turn_injection_budget.test.ts b/tests/scripts/hooks/turn_injection_budget.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..78cc7a2789f7b70ea7f38943be77e242ac62b5e4
+--- /dev/null
++++ b/tests/scripts/hooks/turn_injection_budget.test.ts
+@@ -0,0 +1,263 @@
++// Tests for the per-turn injection aggregate — road-to-standing-context-40k 4.1.
++//
++// Two halves, and the second is the step's own `verify:` clause:
++//   - `applyTurnCap` is pure, so the drop policy is asserted directly: order,
++//     the blocking/fail_closed exemption (roadmap Risk 5), and the
++//     undroppable-overflow case.
++//   - `_apply_turn_injection_cap` is the dispatcher seam: a fixture that
++//     exceeds the cap must drop the RIGHT advisory and RECORD the drop in
++//     dispatch-issues.jsonl.
++//
++// Assertions derive their expected values from the inputs (message sizes, the
++// cap read from the shipped config) rather than hardcoding a byte count a
++// prose edit would falsify.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    applyTurnCap,
++    messageBytes,
++    readTurnBudget,
++    readTurnState,
++    writeTurnState,
++    slotCounts,
++    STATE_REL,
++    type CandidateMessage,
++} from '../../../src/scripts/hooks/turn_injection_budget.js';
++import { _apply_turn_injection_cap } from '../../../src/scripts/hooks/dispatch_hook.js';
++import { read_dispatch_issues } from '../../../src/scripts/hooks/dispatch_issues.js';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
++const BUDGET_PATH = path.join(REPO_ROOT, 'src', 'config', 'hook-token-budget.json');
++
++let tmp: string;
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'turn-injection-'));
++    delete process.env['AGENT_CONFIG_REPLAY'];
++});
++afterEach(() => {
++    delete process.env['AGENT_CONFIG_REPLAY'];
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++function advisory(concern: string, bytes: number): CandidateMessage {
++    return { concern, text: 'x'.repeat(bytes), advisory: true, failClosed: false };
++}
++function blocking(concern: string, bytes: number): CandidateMessage {
++    return { concern, text: 'y'.repeat(bytes), advisory: false, failClosed: false };
++}
++function failClosed(concern: string, bytes: number): CandidateMessage {
++    return { concern, text: 'z'.repeat(bytes), advisory: true, failClosed: true };
++}
++
++describe('applyTurnCap — the drop policy', () => {
++    it('drops nothing while the aggregate fits', () => {
++        const msgs = [advisory('a', 100), advisory('b', 100)];
++        const cap = messageBytes(msgs[0]!.text) + messageBytes(msgs[1]!.text) + 1;
++        const v = applyTurnCap(msgs, 0, cap);
++        expect(v.dropped).toEqual([]);
++        expect(v.kept).toHaveLength(2);
++        expect(v.keptIndices).toEqual([0, 1]);
++        expect(v.overCapAfterDrops).toBe(false);
++    });
++
++    it('counts bytes already spent earlier in the same turn', () => {
++        const msgs = [advisory('a', 100)];
++        const size = messageBytes(msgs[0]!.text);
++        // Fits on its own, does not fit on top of what the turn already spent.
++        expect(applyTurnCap(msgs, 0, size).dropped).toEqual([]);
++        expect(applyTurnCap(msgs, size, size).dropped).toHaveLength(1);
++    });
++
++    it('drops the LARGEST advisory first, and only as many as needed', () => {
++        const small = advisory('small', 50);
++        const big = advisory('big', 400);
++        const mid = advisory('mid', 100);
++        const msgs = [small, big, mid];
++        // Room for everything except `big`.
++        const cap = messageBytes(small.text) + messageBytes(mid.text);
++        const v = applyTurnCap(msgs, 0, cap);
++        expect(v.dropped.map((d) => d.concern)).toEqual(['big']);
++        expect(v.kept.map((k) => k.concern)).toEqual(['small', 'mid']);
++        expect(v.keptIndices).toEqual([0, 2]);
++        expect(v.keptBytes).toBe(cap);
++    });
++
++    it('keeps surviving messages in their original order', () => {
++        const msgs = [advisory('first', 30), advisory('huge', 500), advisory('third', 30)];
++        const v = applyTurnCap(msgs, 0, 100);
++        expect(v.kept.map((k) => k.concern)).toEqual(['first', 'third']);
++    });
++
++    it('NEVER drops a blocking concern, even when that leaves the turn over cap', () => {
++        const msgs = [blocking('block-no-verify', 400), advisory('nudge', 400)];
++        const v = applyTurnCap(msgs, 0, 100);
++        expect(v.dropped.map((d) => d.concern)).toEqual(['nudge']);
++        expect(v.kept.map((k) => k.concern)).toEqual(['block-no-verify']);
++        expect(v.overCapAfterDrops).toBe(true);
++    });
++
++    it('NEVER drops a fail_closed concern', () => {
++        const msgs = [failClosed('guard', 400), advisory('nudge', 50)];
++        const v = applyTurnCap(msgs, 0, 60);
++        expect(v.dropped.map((d) => d.concern)).toEqual(['nudge']);
++        expect(v.kept.map((k) => k.concern)).toEqual(['guard']);
++        expect(v.overCapAfterDrops).toBe(true);
++    });
++
++    it('reports the dropped byte count per drop', () => {
++        const big = advisory('big', 400);
++        const v = applyTurnCap([big], 0, 10);
++        expect(v.dropped).toEqual([{ concern: 'big', bytes: messageBytes(big.text) }]);
++    });
++
++    it('measures UTF-8 bytes, not characters', () => {
++        const multibyte: CandidateMessage = {
++            concern: 'de',
++            text: 'Änderungen über Grenzen',
++            advisory: true,
++            failClosed: false,
++        };
++        expect(messageBytes(multibyte.text)).toBeGreaterThan(multibyte.text.length);
++        const v = applyTurnCap([multibyte], 0, multibyte.text.length);
++        expect(v.dropped).toHaveLength(1);
++    });
++});
++
++describe('readTurnBudget — the shipped row', () => {
++    it('reads a positive cap and the exempt slots from the real config', () => {
++        const budget = readTurnBudget(BUDGET_PATH);
++        expect(budget).not.toBeNull();
++        expect(budget!.capBytes).toBeGreaterThan(0);
++        // session_start carries the one-shot restore payloads the step exempts.
++        expect(budget!.exemptSlots.has('session_start')).toBe(true);
++        expect(slotCounts('user_prompt_submit', budget!)).toBe(true);
++        expect(slotCounts('session_start', budget!)).toBe(false);
++    });
++
++    it('returns null — i.e. no cap applied — for an absent or unusable row', () => {
++        const noRow = path.join(tmp, 'no-row.json');
++        fs.writeFileSync(noRow, JSON.stringify({ default_cap_bytes: 1024 }));
++        expect(readTurnBudget(noRow)).toBeNull();
++
++        const zeroCap = path.join(tmp, 'zero.json');
++        fs.writeFileSync(zeroCap, JSON.stringify({ per_turn_aggregate_cap_bytes: { cap_bytes: 0 } }));
++        expect(readTurnBudget(zeroCap)).toBeNull();
++
++        expect(readTurnBudget(path.join(tmp, 'missing.json'))).toBeNull();
++    });
++});
++
++describe('turn state — counts only, per session', () => {
++    it('round-trips through the state file', () => {
++        writeTurnState(tmp, { schema_version: 1, session_id: 's1', turn: 3, spent_bytes: 900, dropped: 2 });
++        const back = readTurnState(tmp, 's1');
++        expect(back.turn).toBe(3);
++        expect(back.spent_bytes).toBe(900);
++        expect(back.dropped).toBe(2);
++    });
++
++    it('ignores a record belonging to a different session', () => {
++        writeTurnState(tmp, { schema_version: 1, session_id: 's1', turn: 3, spent_bytes: 900, dropped: 2 });
++        expect(readTurnState(tmp, 's2').spent_bytes).toBe(0);
++    });
++
++    it('zeroes on a corrupt or absent record rather than throwing', () => {
++        expect(readTurnState(tmp, 's1').spent_bytes).toBe(0);
++        const target = path.join(tmp, STATE_REL);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, 'not json');
++        expect(readTurnState(tmp, 's1').spent_bytes).toBe(0);
++    });
++
++    it('carries no field capable of holding content', () => {
++        writeTurnState(tmp, { schema_version: 1, session_id: 's1', turn: 1, spent_bytes: 10, dropped: 0 });
++        const doc = JSON.parse(fs.readFileSync(path.join(tmp, STATE_REL), 'utf-8')) as Record<string, unknown>;
++        expect(Object.keys(doc).sort()).toEqual(['dropped', 'schema_version', 'session_id', 'spent_bytes', 'turn']);
++    });
++});
++
++describe('_apply_turn_injection_cap — the dispatcher seam', () => {
++    const envelope = { workspace_root: '' } as Record<string, unknown>;
++    const cap = (): number => readTurnBudget(BUDGET_PATH)!.capBytes;
++
++    function msg(concern: string, bytes: number, opts: { advisory?: boolean; fail_closed?: boolean } = {}) {
++        return {
++            concern,
++            text: 'x'.repeat(bytes),
++            advisory: opts.advisory ?? true,
++            fail_closed: opts.fail_closed ?? false,
++        };
++    }
++
++    it('passes everything through under the cap and opens a turn', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        const msgs = [msg('nudge', 100)];
++        const out = _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', msgs);
++        expect(out).toHaveLength(1);
++        const state = readTurnState(tmp, 'sess');
++        expect(state.turn).toBe(1);
++        expect(state.spent_bytes).toBe(messageBytes(msgs[0]!.text));
++    });
++
++    it('a fixture over the cap drops the right advisory AND records it', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        const msgs = [
++            msg('block-no-verify', 200, { advisory: false }),
++            msg('big-nudge', cap() + 1),
++            msg('small-nudge', 50),
++        ];
++        const out = _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', msgs);
++
++        expect(out.map((m) => m.concern)).toEqual(['block-no-verify', 'small-nudge']);
++
++        const issues = read_dispatch_issues(tmp);
++        const budgetIssues = issues.filter((e) => e['issue'] === 'budget_exceeded');
++        expect(budgetIssues.map((e) => e['hook'])).toContain('big-nudge');
++        expect(readTurnState(tmp, 'sess').dropped).toBe(1);
++    });
++
++    it('records the undroppable-overflow case instead of swallowing a block', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        const msgs = [msg('block-no-verify', cap() + 1, { advisory: false })];
++        const out = _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', msgs);
++        expect(out).toHaveLength(1); // the block survives, over cap
++        const issues = read_dispatch_issues(tmp).filter((e) => e['issue'] === 'budget_exceeded');
++        expect(issues.map((e) => e['hook'])).toContain('dispatch');
++    });
++
++    it('accumulates across slots within one turn, and resets on the next prompt', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        const half = Math.floor(cap() / 2) + 10;
++        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('a', half)]);
++        // Same turn, a later slot: the two together exceed the cap, so this drops.
++        const out = _apply_turn_injection_cap(env, 'sess', 'post_tool_use', [msg('b', half)]);
++        expect(out).toHaveLength(0);
++        // A new prompt opens a fresh turn — the same message now fits.
++        const fresh = _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('c', half)]);
++        expect(fresh).toHaveLength(1);
++        expect(readTurnState(tmp, 'sess').turn).toBe(2);
++    });
++
++    it('leaves an exempt slot untouched and unaccounted', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        const msgs = [msg('restore', cap() + 1)];
++        const out = _apply_turn_injection_cap(env, 'sess', 'session_start', msgs);
++        expect(out).toHaveLength(1);
++        expect(readTurnState(tmp, 'sess').spent_bytes).toBe(0);
++    });
++
++    it('writes no state in replay mode', () => {
++        process.env['AGENT_CONFIG_REPLAY'] = '1';
++        const env = { ...envelope, workspace_root: tmp };
++        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('a', 100)]);
++        expect(fs.existsSync(path.join(tmp, STATE_REL))).toBe(false);
++    });
++
++    it('is a no-op on an empty message list', () => {
++        const env = { ...envelope, workspace_root: tmp };
++        expect(_apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [])).toEqual([]);
++    });
++});
