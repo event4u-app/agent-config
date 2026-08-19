@@ -373,7 +373,7 @@ export function main(argv?: readonly string[]): number {
             quiet = true;
         } else if (a === '--help' || a === '-h') {
             process.stdout.write(
-                'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce]\n' +
+                'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce] [--quiet]\n' +
                     '\n' +
                     'Reports by default and exits 0: the invariant is not true yet, because\n' +
                     'road-to-single-delivery Phase 2 is halted on partition-current-layer-undecidable.\n' +
