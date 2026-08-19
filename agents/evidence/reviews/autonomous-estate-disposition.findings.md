@@ -1,13 +1,13 @@
 # Findings: autonomous-estate-disposition
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 4687c09a39c24858ddf0fc8b7997171bc32464deb4ebc121f54301ad81a82ef1 | diff: 222bbdfa2d8477d669a2089ca9aef054a42f1222 | reviewer: r2-fresh-subagent-autonomous-estate-disposition | prompt_hash: 26ec3f5556c8f623f7879ca59847ace182839328f928641baf2abc96c6eb17d8 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 6080a5289f20f1edb0a448a95c3871c9b2b142397c335fd6f4ffd9e43b5fe25b | diff: df83cccf46d8f927231437892589c53f9871af50 | reviewer: r2-fresh-subagent-autonomous-estate-disposition | prompt_hash: 26ec3f5556c8f623f7879ca59847ace182839328f928641baf2abc96c6eb17d8 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 222bbdfa2d8477d669a2089ca9aef054a42f1222
-  scope_hash: 4687c09a39c24858ddf0fc8b7997171bc32464deb4ebc121f54301ad81a82ef1
+  diff_sha: df83cccf46d8f927231437892589c53f9871af50
+  scope_hash: 6080a5289f20f1edb0a448a95c3871c9b2b142397c335fd6f4ffd9e43b5fe25b
   roadmap: agents/roadmaps/later/road-to-surface-consolidation.md
-  roadmap_hash: acc73d33cd1a84af8de4b229efdaeebd6aa59608c95cc0da0db7b7ac1a96e64e
+  roadmap_hash: 910c33257055c138481b70841fc3e1479d50d48b136058edf6d28d063381e380
   ac_hash: 92bc7ed0761690c0a8e42cad7a4a0561dba938492856e1d5b93029f71e61ca70
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
