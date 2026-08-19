@@ -362,9 +362,27 @@ same-version duplication is free.
       can refuse is `check_single_delivery --enforce`.
       It skips silently when one layer is absent — nothing is doubled there, and a
       warning would be noise on exactly the topology this roadmap wants.
-- [ ] **4.3** Bind the check where the person who can act on it sees it.
-      **Blocked on `overlap-check-binding-surface`.**
+- [x] **4.3** Bind the check where the person who can act on it sees it.
       `verify:` the binding is named and a deliberate overlap surfaces there.
+      **DONE 2026-08-19 — preflight, on a CONVERGED council verdict (2/2), with both
+      seats' refinements adopted rather than just the bare option.** Registered in
+      `taskfiles/ci-fast.yml` beside `check_detector_corpus`, with the measured
+      reason written at the call site: `.claude/` is gitignored and no CI leg
+      installs at user scope, so a CI run of this check finds ZERO layers and
+      measures a topology no contributor has.
+      **REPORT MODE, deliberately.** The invariant is not true until Phase 2 ships,
+      so `--enforce` here would red every preflight on a defect nobody can currently
+      fix — which is how a gate teaches people to skip it. The flip lands with
+      Phase 2, and a test asserts the absence of `--enforce` so an early flip has to
+      be argued rather than slipped in.
+      **The binding is PROVEN live, which is the condition both seats attached** —
+      `tests/scripts/preflight_single_delivery_binding.test.ts`, 5 tests,
+      mutation-checked: removing the registration line fails 2 of them. Two gates in
+      this exact area already report to nobody, and that is the failure this test
+      exists to prevent a third time. Honest bound: it proves the registration
+      exists and that the binary refuses on a real overlap; **no test can prove
+      anyone runs preflight**, so the gap closed is "registered where nothing reads
+      it", not "a human skipped the step".
 
 **AC-4:** the invariant is machine-checked, not maintained by hand.
 
@@ -407,7 +425,7 @@ than reporting a clean invariant that does not hold.
 ## Blockers
 
 ### blocker: partition-requires-global-layer
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 (a design decision with an under-governance failure mode)
 - **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
@@ -443,8 +461,28 @@ than reporting a clean invariant that does not hold.
 - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
   is the safe direction of this particular non-decision, which is why the phase
   halts rather than shipping a default.
-- **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and
-  2.0's verify can be run against it.
+- **RESOLVED 2026-08-19 — option (c), and the measurement is what decided it, not
+  a vote.** AI council, 2/2 seats present, **split**: anthropic chose (a), openai
+  chose (c). Both seats independently named the same unresolved fact — *is the
+  generated projection contractually machine-local, or a reproducible repository
+  output?* — and anthropic's own answer carried its own kill condition: *"if
+  `task generate-tools` is contractually required to work on a fresh clone, then
+  none of these options work"*.
+  **Measured, and it fires that condition:** `.github/workflows/consistency.yml:169`
+  runs `task generate-tools` on a fresh checkout, and the workflow's own comment at
+  `:172-174` states *"on a fresh checkout the host rule trees are gitignored and
+  absent"*. So **(a) would break the Consistency pipeline** — it is eliminated by
+  fact, not by preference. And `.claude/` is machine-local by measurement: **0
+  tracked files**, `.gitignore:123`, which is exactly the condition openai attached
+  to (c) (*"tolerable only if `.claude/` is explicitly a machine-local, gitignored
+  projection and generation clearly reports which mode it selected"*).
+  **Therefore (c), with the refinement BOTH seats required rather than the bare
+  option:** generation must print the mode it selected — `standalone/full` or
+  `dual-layer/partitioned` — and that mode must be covered by fixtures for absent,
+  stale and current global installs. Recorded here rather than in the ADR because
+  it is an implementation choice inside ADR-236, not a change to it.
+- **Resolved when:** DONE — the option is recorded above with the measurement that
+  eliminated (a), and 2.0's verify runs against option (c)'s mode reporting.
 
 ### blocker: compact-survival-of-package-only-rules
 - **Status:** open
@@ -472,6 +510,23 @@ than reporting a clean invariant that does not hold.
   where (c) puts a permanent exception into an invariant Phase 4 has to check.
 - **If you do nothing:** Phase 2 ships and those four silently lose compaction
   survival — the worst of the three outcomes, because it is the one nobody chose.
+- **STILL OPEN, and the council SPLIT — but one side's premise is now measured
+  false, which narrows the question rather than answering it.** anthropic chose
+  **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are
+  semantically path-specific AND have CI gates"*; openai chose **(a)** (remove
+  `paths:`) on the ground that a CI backstop cannot substitute for an obligation
+  the model must hold *during* the session — naming `source-confidentiality` as a
+  rule whose harm precedes CI.
+  **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class
+  gates present · `skill-quality` → present · `source-confidentiality` →
+  `check_no_external_sources` present · **`rule-type-governance` → NO gate found.**
+  So anthropic's premise holds for three of four and fails for one, and the failing
+  one is the case openai's argument generalises to. That does **not** select an
+  option for the other three, and a per-rule split is a fourth option neither seat
+  proposed — which is precisely the kind of call this entry reserves.
+  **What is now decided:** nothing. **What is now cheaper:** the question is no
+  longer "(a) or (b) for four rules" but "does the CI-backstop argument hold
+  per rule", with one measured counter-example already in hand.
 - **Resolved when:** the option is recorded in the successor ADR or an amendment
   to ADR-227.
 
@@ -502,7 +557,7 @@ than reporting a clean invariant that does not hold.
 - **Resolved when:** the capability is recorded with its host version and source.
 
 ### blocker: overlap-check-binding-surface
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 (a decision whose consequence the operator owns)
 - **Blocks:** Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
@@ -522,7 +577,17 @@ than reporting a clean invariant that does not hold.
   one would read as coverage while adding none.
 - **If you do nothing:** Phase 4 ships a check with the same reach as the two that
   already exist, and a re-created overlap goes unnoticed.
-- **Resolved when:** the surface is named and 4.3's verify runs against it.
+- **RESOLVED 2026-08-19 — preflight, and the council CONVERGED on it (2/2).**
+  Both seats added the same two refinements the bare option did not carry, and both
+  are adopted: **(i)** bind the check so it is reached by the path that can actually
+  introduce the defect — `task generate-tools` — rather than as a standalone check
+  someone must remember; **(ii)** add a test proving the binding is live and fails
+  on a real overlap, *"so it can't silently degrade the way the prior gates did"*.
+  That second point is the whole reason this was a blocker: two gates in this area
+  already report to nobody, and a third would have been the same mistake a third
+  time.
+- **Resolved when:** DONE — the surface is named (preflight, reached via
+  `task generate-tools`) and 4.3's verify runs against it.
 
 ## Acceptance criteria
 
