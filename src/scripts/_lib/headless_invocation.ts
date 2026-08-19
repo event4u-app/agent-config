@@ -58,8 +58,11 @@
  * license "the need does not exist".
  */
 
-import { HOST_CONFIGS } from '../../cli/python/workspace_drive.js';
-import { HOST_INVENTORY } from '../../cli/python/workspace_hosts.js';
+// Both imports resolve inside the shipped tree. They used to reach into
+// `src/cli/python/`, which is NOT in the package.json `files` whitelist, so a
+// global install of this module would have died on ERR_MODULE_NOT_FOUND —
+// caught by `prepack-check`, not by anything local. See `host_launch.ts`.
+import { HOST_INVENTORY, LAUNCH_ARGV } from './host_launch.js';
 import { CHECKPOINT_DIR_REL } from './run_checkpoint.js';
 import { preflight, type PreflightVerdict } from './unattended_guard.js';
 
@@ -102,7 +105,7 @@ export function buildResumeArgv(
     platform: string,
     roadmapSlug: string,
     inventory: Readonly<Record<string, { tier: number; cli: string | null }>> = HOST_INVENTORY,
-    configs: Readonly<Record<string, { build_args: (p: string, cwd: string | null) => string[] }>> = HOST_CONFIGS,
+    launch: Readonly<Record<string, (prompt: string) => string[]>> = LAUNCH_ARGV,
 ): readonly string[] | null {
     const hostId = PLATFORM_TO_HOST[platform];
     if (hostId === undefined) return null;
@@ -135,12 +138,12 @@ export function buildResumeArgv(
     // command would have piped a prompt into a CLI that was not reading one.
     //
     // So the fix is not to choose a row. Prose can contradict itself; the
-    // config the drive loop runs cannot, and there is no reason for a second
+    // table the drive loop runs on cannot, and there is no reason for a second
     // derivation of the same argv to exist. `promptOnStdin` is gone with it —
     // no supported host takes the prompt on stdin.
-    const cfg = configs[hostId];
-    if (cfg === undefined) return null;
-    return cfg.build_args(resumePrompt(roadmapSlug), null);
+    const build = launch[hostId];
+    if (build === undefined) return null;
+    return build(resumePrompt(roadmapSlug));
 }
 
 /**

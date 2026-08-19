@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { HOST_CONFIGS } from '../../src/cli/python/workspace_drive.js';
-import { HOST_INVENTORY } from '../../src/cli/python/workspace_hosts.js';
+import { HOST_INVENTORY, LAUNCH_ARGV } from '../../src/scripts/_lib/host_launch.js';
 import {
     CHECKPOINT_DIR_REL,
     LIVE_SPAWN_REFUSAL,
@@ -190,7 +190,7 @@ describe('platform → host mapping', () => {
 });
 
 describe('buildResumeArgv', () => {
-    it('delegates to HOST_CONFIGS rather than re-deriving the argv', () => {
+    it('delegates to LAUNCH_ARGV rather than re-deriving the argv', () => {
         // R2 round 2, finding 12. The first version hand-built each host's
         // argv off a prose contract that contradicts itself, and got BOTH
         // codex and gemini wrong — it modelled them as stdin consumers while
@@ -199,10 +199,19 @@ describe('buildResumeArgv', () => {
         // Delegating removes the second derivation instead of choosing between
         // two prose rows.
         for (const [platform, hostId] of Object.entries(PLATFORM_TO_HOST)) {
-            const cfg = HOST_CONFIGS[hostId];
-            expect(cfg, `no drive config for ${hostId}`).toBeDefined();
-            expect(buildResumeArgv(platform, 'road-to-x')).toEqual(
-                cfg?.build_args(resumePrompt('road-to-x'), null),
+            const build = LAUNCH_ARGV[hostId];
+            expect(build, `no launch argv for ${hostId}`).toBeDefined();
+            expect(buildResumeArgv(platform, 'road-to-x')).toEqual(build?.(resumePrompt('road-to-x')));
+        }
+    });
+
+    it('and the drive loop runs the SAME table, so the two cannot drift', () => {
+        // The point of the shared table. `workspace_drive` is not shipped, so
+        // this reaches across a packaging boundary that the production module
+        // deliberately does not — a test may, a shipped module may not.
+        for (const hostId of Object.keys(LAUNCH_ARGV)) {
+            expect(HOST_CONFIGS[hostId]?.build_args('P', null), hostId).toEqual(
+                LAUNCH_ARGV[hostId]?.('P'),
             );
         }
     });
