@@ -135,10 +135,21 @@ engages and leaves the event behind.
      the line is the production confirmation, not a second opinion. The
      fix derives both git fields from `session_root` — the session's own
      checkout, resolved through the register's `session_checkout` guard —
-     and ships `session_root` as a fifth field so writer-vs-reader
-     divergence is itself readable per event. On the line above,
-     `session_root` would have been the worktree and `workspace_root` the
-     parent: different, which is the fact.
+     and ships `session_root` plus `session_cwd`, taking the line to six
+     fields, so writer-vs-reader divergence is itself readable per event.
+     On the line above, `session_root` would have been the worktree and
+     `workspace_root` the parent: different, which is the fact.
+
+     `session_cwd` came out of round 2 finding 1, and it is worth naming
+     because it bounds the fix rather than extending it. `session_checkout`
+     requires the reported directory to BE a checkout root, so a session
+     started from a SUBDIRECTORY of a worktree still collapses
+     `session_root` onto the reader's root and both path discriminators
+     still read FALSE. The guard's conditions belong to the register and
+     loosening them is a different change; carrying the raw `cwd` makes
+     that case *distinguishable* instead of silent — a path that is
+     neither `session_root` nor under it, which no healthy resolution
+     produces.
 
 - [ ] **0.1** The parent criterion closes on that evidence: *"a
       `process-full` contract run finishes a 3-phase roadmap with zero

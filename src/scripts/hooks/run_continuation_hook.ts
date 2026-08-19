@@ -51,11 +51,14 @@
  *   checkbox delta)            → allow            (event: halt-stall)
  *   otherwise                  → BLOCK + continue (event: engage)
  *
- * Every event this concern writes carries `workspace_root`, `git_dir`,
- * `git_common_dir` and `claim_path` — the two-tree provenance, per
- * `provenance()` below. Without them the ledger records that an engagement
- * happened but not that it crossed the tree boundary the fix was about, and
- * crossing it is the whole claim.
+ * Every event this concern writes carries `workspace_root`, `session_root`,
+ * `session_cwd`, `git_dir`, `git_common_dir` and `claim_path` — the two-tree
+ * provenance, per `provenance()` below. Without them the ledger records that an
+ * engagement happened but not that it crossed the tree boundary the fix was
+ * about, and crossing it is the whole claim. This list is the file's canonical
+ * statement of the contract: R2 round 2 finding 4 caught it enumerating four
+ * fields while the function emitted five, which would have let a later edit drop
+ * one without contradicting any documented promise.
  *
  * Stall counts CONSECUTIVE ENGAGEMENTS whose open-step count did not move.
  * The upstream stalls on 5-of-5 completed-count readings; AC's checkbox
@@ -411,12 +414,54 @@ function readState(file: string): RunState | null {
  * (AI council 2026-08-19, 2/2 convergent):
  *
  *   `session_root !== workspace_root`   → writer and reader resolved different
- *                                         trees, which IS the shipped defect
- *                                         condition, now visible per event
+ *                                         trees. After the fix this is the
+ *                                         NORMAL healthy two-tree arrangement,
+ *                                         not a defect: the claim now lives in
+ *                                         the shared root, so the line existing
+ *                                         at all with the two roots differing is
+ *                                         the fix working. Round 2 finding 7
+ *                                         caught the previous wording calling it
+ *                                         "the shipped defect condition", which
+ *                                         made a healthy engagement line read as
+ *                                         evidence of the bug
  *   `git_dir !== git_common_dir`        → the session's own tree IS a linked
- *                                         worktree
+ *                                         worktree. Only meaningful when both
+ *                                         are non-empty — see the degenerate
+ *                                         reading below
  *   `claim_path` under `git_common_dir` → the contract crossed into the shared
- *                                         root, which is the fix working
+ *                                         root. Also gated on a non-empty
+ *                                         `git_common_dir`: round 2 finding 2
+ *                                         measured that on a non-repo line both
+ *                                         git fields are `''` and every absolute
+ *                                         path satisfies `startsWith('')`, so a
+ *                                         reader applying the rule unguarded
+ *                                         concludes the contract crossed a
+ *                                         boundary the line says nothing about
+ *   `session_cwd`                       → the raw directory the session reported
+ *                                         before any resolution, so a reader can
+ *                                         tell "same tree" from "could not
+ *                                         resolve"
+ *
+ * ## The degenerate reading, stated so it cannot be mistaken for a negative
+ *
+ * Two of the three path relations above are only interpretable on a line whose
+ * git fields are non-empty. Empty means git could not be read from the session's
+ * root at all — a plain temp directory, a broken checkout — and that is an
+ * ABSENCE of evidence rather than evidence of a same-root run. A reader must
+ * check `git_common_dir !== ''` before applying either relation.
+ *
+ * `session_cwd` exists for the same reason, and it is a fact rather than an
+ * assertion. `session_checkout` degrades to `workspace_root` on any of its three
+ * guard failures, and one of them is ordinary: a session started from a
+ * SUBDIRECTORY of a worktree (`cd <worktree>/src && claude`) fails the
+ * checkout-root condition, so `session_root` collapses onto the reader's root
+ * and BOTH discriminators above read FALSE for a genuine two-tree run — the
+ * round-1 false negative, re-entering through the degradation path. Round 2
+ * finding 1 measured it. Carrying the raw `cwd` makes that case distinguishable
+ * from a real same-tree run: `session_cwd` is then a path that is neither
+ * `session_root` nor under it, which no healthy resolution produces. A boolean
+ * `resolved: false` would have been the system under observation asserting its
+ * own health; the raw path is checkable.
  *
  * ## Both git fields come from `session_root`, not from `workspace_root`
  *
@@ -479,12 +524,18 @@ export function provenance(
     workspaceRoot: string,
     claimPath: string,
     sessionRoot: string,
+    sessionCwd: string,
 ): JsonObject {
     const reader = normalizeDir(workspaceRoot);
     const writer = normalizeDir(sessionRoot);
     return {
         workspace_root: reader,
         session_root: writer,
+        // Empty when the host sent no `cwd` at all, which is a different fact
+        // from a `cwd` that failed resolution — the first says the host is
+        // silent, the second says the session sat somewhere `session_checkout`
+        // would not trust. Both are readable; neither is guessed.
+        session_cwd: sessionCwd === '' ? '' : normalizeDir(sessionCwd),
         git_dir: git_dir(writer) ?? '',
         git_common_dir: git_common_dir(writer) ?? '',
         claim_path: normalizeFile(claimPath),
@@ -558,21 +609,6 @@ export function main(): number {
     }
     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
 
-    // The two-tree provenance, carried on every event this run emits. See
-    // `provenance()` for why these five fields and not a boolean.
-    //
-    // Built AFTER the mode gate, not before it (R2 finding 6): a session
-    // holding a claim on a `phase-checkpoints` roadmap makes this concern a
-    // no-op, and the first version paid two `statSync` plus two `realpathSync`
-    // — more in a worktree — on every `stop` fire of such a session to build a
-    // value the next line discarded. Every path that can still emit an event
-    // is below this line.
-    const roots = provenance(
-        workspaceRoot,
-        claim.path,
-        session_checkout(workspaceRoot, str(payload['cwd'] as JsonValue | undefined)),
-    );
-
     // ── turn identity ────────────────────────────────────────────────
     const transcriptPath = str(
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
@@ -603,6 +639,35 @@ export function main(): number {
     }
 
     const runId = deriveSessionKey(sessionId || 'unknown-session');
+
+    // The two-tree provenance, carried on every event this run emits. See
+    // `provenance()` for the six fields and why none of them is a boolean.
+    //
+    // Position is deliberate and was moved twice. Round 1 finding 6 moved it
+    // below the execution-mode gate, because a session holding a claim on a
+    // `phase-checkpoints` roadmap makes this concern a no-op and was paying the
+    // resolution on every stop fire for a discarded value. Round 2 finding 6
+    // then observed the same argument applied only half way: three transcript
+    // early-returns still sat below it, so an autonomous session whose
+    // transcript is over `TRANSCRIPT_READ_MAX_BYTES` kept paying it for
+    // nothing. It now sits below every early return and above every
+    // `appendEvent`, which is the only position where the cost is paid exactly
+    // when a line is written.
+    //
+    // The git resolution here duplicates the one `session_checkout` does to
+    // validate the cwd, and that duplication is ACCEPTED rather than removed
+    // (round 2 finding 5): collapsing it means widening a register API that
+    // other callers use, to save six syscalls on a path that has already read a
+    // roadmap file and a transcript tail. The two resolutions also answer
+    // different questions — the guard asks whether the cwd belongs to this
+    // repository, this asks what the session's own tree is.
+    const sessionCwd = str(payload['cwd'] as JsonValue | undefined);
+    const roots = provenance(
+        workspaceRoot,
+        claim.path,
+        session_checkout(workspaceRoot, sessionCwd),
+        sessionCwd,
+    );
 
     // ── defer to the quality gate ────────────────────────────────────
     if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {

@@ -378,6 +378,14 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(real(ev['session_root'])).toBe(real(worktree));
         expect(ev['workspace_root']).not.toBe(ev['session_root']);
 
+        // Round 2 finding 3: every `session_root` assertion wrapped BOTH sides
+        // in `real()`, so dropping `normalizeDir` from that branch — passing the
+        // envelope value verbatim, the precise regression finding 3 fixed —
+        // stayed green on macOS, where `/var` resolves to `/private/var`. Pinned
+        // as an exact string, the way the two sibling fields already were.
+        expect(ev['session_root']).toBe(real(worktree));
+        expect(ev['session_cwd']).toBe(real(worktree));
+
         // The discriminator now holds where it has to: derived from the
         // session's tree, these differ. Derived from the reader's tree — the
         // shipped behaviour this replaces — they would be equal.
@@ -396,6 +404,57 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(ev['workspace_root']).toBe(real(main));
         const claimPath = ev['claim_path'] as string;
         expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
+    });
+
+    it('keeps the degraded resolution distinguishable — cwd inside a worktree subdirectory', () => {
+        // Round 2 finding 1. `session_checkout` requires the cwd to BE a
+        // checkout root, and a session started with `cd <worktree>/src` is not:
+        // `session_root` therefore collapses onto the reader's root and BOTH
+        // path discriminators read FALSE for a genuine two-tree run — the
+        // round-1 false negative re-entering through the degradation path.
+        //
+        // The fields cannot prevent the degradation (the guard's three
+        // conditions are the register's, and loosening them is a change to the
+        // register). What they must do is make it VISIBLE, which is what
+        // `session_cwd` is for: a raw path that is neither `session_root` nor
+        // under it, a shape no healthy resolution produces.
+        const { main, worktree } = writeWorktreePair();
+        const sub = path.join(worktree, 'src');
+        fs.mkdirSync(sub, { recursive: true });
+        const transcript = writeTranscript(3);
+        dispatchStop(main, transcript, sub);
+
+        const engaged = events(main).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        const ev = engaged[0] as Record<string, unknown>;
+        const real = (p: unknown): string => fs.realpathSync(p as string);
+
+        // The degradation itself, pinned as the honest current behaviour rather
+        // than asserted away.
+        expect(ev['session_root']).toBe(real(main));
+        expect(ev['session_root']).toBe(ev['workspace_root']);
+
+        // And the fact that makes it readable: the raw cwd is the subdirectory,
+        // which is NOT under the resolved session root. A reader comparing the
+        // two can tell this line apart from a genuine same-tree run, where the
+        // cwd would sit under `session_root`.
+        expect(ev['session_cwd']).toBe(real(sub));
+        expect(
+            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
+        ).toBe(false);
+    });
+
+    it('reports an empty session_cwd when the host sends no cwd at all', () => {
+        // The other half of finding 1: host silence and a failed resolution are
+        // different facts, and a reader must not have to guess which one a line
+        // records. Every other case in this file dispatches without a `cwd`, so
+        // this pins what those lines say about it.
+        const root = writeWorkspace();
+        const transcript = writeTranscript(3);
+        dispatchStop(root, transcript);
+        const engaged = events(root).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        expect(engaged[0]?.['session_cwd']).toBe('');
     });
 
     it('records the provenance on a non-engage event too — the defer branch', () => {
