@@ -297,21 +297,55 @@ budgets for it rather than discovering it at preflight.
 
 ### Phase 3 — Session immortality
 
-- [ ] **3.0** UOTL 6.1: session-eol writes deterministic checkpoint +
-      auto-handoff above the recycle threshold inside a running contract.
-      `verify:` `npm run typecheck`
-- [ ] **3.1** Supervisor à la row 11, scoped down: a local watcher (not a
-      daemonized service in v1 — a foreground supervise loop is enough to
-      falsify the design) with PID-liveness over session-register claims,
-      relaunching a fresh headless session from handoff-plus-resume
-      marker. Budgets verbatim from UOTL 6.2: ≤3 relaunches per run, daily
-      token cap, emergency-halt stops the watcher. **No auto-merge, ever**
-      (H-2 rejection).
-      `verify:` `npm run typecheck`
-- [ ] **3.2** Crash-resume honesty: a relaunched session's first act is
-      re-verifying the checkpoint's claimed state against the worktree
-      (row 13 resumes by PID bookkeeping; AC resumes by evidence).
-      `verify:` `npm run typecheck`
+- [x] **3.0** `session-eol` writes a DERIVED checkpoint
+      (`agents/runtime/state/checkpoints/<run>.json`) when the advisory
+      fires inside a running contract — open / done / parked counts, the
+      next open step, the head. "Derived" is the load-bearing word: a
+      handoff summary is authored and can be wrong in ways nothing
+      catches, while every field here is recomputed from the roadmap on
+      disk, which is what makes 3.2 possible at all. The contract carrier
+      is the same `sessions:claim` file `run-continuation` uses — no
+      second one invented — and the whole path is best-effort, because a
+      recovery aid that can fail a Stop is a liability.
+      `verify:` `npx vitest run tests/scripts/session_eol_hook.test.ts` — 22 green.
+- [x] **3.1** `agent-config run:supervise --once` + `src/scripts/run_supervise.ts`.
+      Classifies every register record: alive / no-roadmap /
+      roadmap-unreadable / complete / budget-exhausted / relaunchable, in
+      that order, because the order IS the logic. Relaunch budget
+      ≤3 per run in a readable ledger; `AGENT_CONFIG_ORCHESTRATION_HALT`
+      stops the watcher. **Never merges, pushes, or closes** — the H-2
+      rejection, restated in the code, the help text and the output.
+      `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 19 green.
+- [x] **3.2** `verifyCheckpoint` recomputes every claim against the tree
+      and reports PER FIELD, and `roadmap-process-loop.md § 5d` makes
+      re-verification the resumed run's first act. A disagreement is
+      explicitly NOT an error: work landing between the checkpoint and the
+      resume is the normal case, and a verifier that treated progress as
+      corruption would refuse every healthy resume.
+      `verify:` `npx vitest run tests/scripts/run_checkpoint.test.ts` — 16 green.
+
+#### Two honest departures and one piece of debt
+
+- **Liveness is the heartbeat, not a PID.** The borrowed design resumes by
+  PID liveness; this register has no PID field, and `last_seen` against a
+  per-platform TTL is what it actually maintains. Weaker in one way — a
+  session killed seconds ago reads live until its TTL expires, so the
+  watcher is late by up to one TTL. Stronger in another — a wedged session
+  that still holds its PID reads dead here once it stops beating, and
+  reads alive to a PID check forever. Stated rather than papered over.
+- **`--relaunch` is accepted and refuses to act.** The headless invocation
+  primitive is Phase 4.0 and is not built, so the flag reports what it
+  would have done and exits non-zero. A flag that accepts and silently
+  no-ops is what makes an operator believe a watcher is running when
+  nothing is.
+- **Debt added, measured rather than estimated.**
+  `roadmap-process-loop.md` is one of the four files over
+  `check_depth_budget`'s 16,000-char ceiling. Its baseline entry records
+  20,360; it read ~25,620 before this phase and 26,891 after, so ~5,260
+  chars of the drift predate this work and ~1,270 are mine. The gate is a
+  count ratchet (a FIFTH over-ceiling file reds) and stays green, so this
+  is recorded as debt rather than fixed here — splitting the loop context
+  is its own change.
 
 ### Phase 4 — Unattended backlog
 

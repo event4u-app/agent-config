@@ -27,6 +27,9 @@ import {
     THRESHOLD_OVERRIDE_ENV,
 } from '../../src/scripts/hooks/session_eol_hook.js';
 import { RECYCLE_ENVELOPE_REL } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { readCheckpoint } from '../../src/scripts/_lib/run_checkpoint.js';
+import { eolSessionKey } from '../../src/scripts/_lib/session_eol.js';
+import { roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 
 let workspace: string;
@@ -342,5 +345,85 @@ describe('slot + replay guards', () => {
         } finally {
             delete process.env['AGENT_CONFIG_REPLAY'];
         }
+    });
+});
+
+// ── UOTL Phase 6.1 — the deterministic checkpoint ───────────────────────────
+//
+// The advisory alone cannot help a session that has no context left to write a
+// summary with. The checkpoint is DERIVED from the roadmap on disk, so a dying
+// session produces it correctly regardless, and a resumed run can re-verify
+// every field rather than trusting a record (Phase 3.2).
+//
+// The gate is "inside a running contract" — the same `sessions:claim` carrier
+// `run-continuation` uses, and no second one invented. Outside a contract this
+// stays silent: a checkpoint for a conversational session names work nobody is
+// executing.
+
+describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
+    const SLUG = 'road-to-eol-fixture';
+
+    function claimRoadmap(sessionId: string, lines: string[]): void {
+        const roadmaps = path.join(workspace, 'agents', 'roadmaps');
+        fs.mkdirSync(roadmaps, { recursive: true });
+        fs.writeFileSync(path.join(roadmaps, `${SLUG}.md`), `${lines.join('\n')}\n`, 'utf-8');
+        const claim = path.join(workspace, roadmap_claim_rel(sessionId));
+        fs.mkdirSync(path.dirname(claim), { recursive: true });
+        fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: sessionId }), 'utf-8');
+    }
+
+    it('writes a derived checkpoint when the advisory fires inside a contract', () => {
+        writeThreshold(10);
+        claimRoadmap('session-a', ['- [x] done', '- [ ] the next one', '- [~] parked']);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2);
+
+        const cp = readCheckpoint(workspace, eolSessionKey('session-a'));
+        expect(cp).not.toBeNull();
+        expect(cp).toMatchObject({
+            roadmap: SLUG,
+            open_steps: 1,
+            done_steps: 1,
+            parked_steps: 1,
+            next_step: 'the next one',
+        });
+    });
+
+    it('writes NOTHING without a claim — a checkpoint outside a contract names nobody work', () => {
+        writeThreshold(10);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2); // the advisory still fires
+        expect(readCheckpoint(workspace, eolSessionKey('session-a'))).toBeNull();
+    });
+
+    it('writes nothing below the threshold — the checkpoint rides the advisory', () => {
+        writeThreshold(1_000_000);
+        claimRoadmap('session-a', ['- [ ] open']);
+        fs.writeFileSync(transcript, assistantLine(5_000, 1_000));
+        expect(runMain().rc).toBe(0);
+        expect(readCheckpoint(workspace, eolSessionKey('session-a'))).toBeNull();
+    });
+
+    it('a claim naming an unreadable roadmap writes nothing rather than a guessed checkpoint', () => {
+        writeThreshold(10);
+        const claim = path.join(workspace, roadmap_claim_rel('session-a'));
+        fs.mkdirSync(path.dirname(claim), { recursive: true });
+        fs.writeFileSync(claim, JSON.stringify({ slug: 'gone', session_id: 'session-a' }), 'utf-8');
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2);
+        expect(readCheckpoint(workspace, eolSessionKey('session-a'))).toBeNull();
+    });
+
+    it('the advisory still fires when the checkpoint cannot be built', () => {
+        // Best-effort by construction: a checkpoint is a recovery aid, and a
+        // recovery aid that can suppress the advisory is a liability.
+        writeThreshold(10);
+        const claim = path.join(workspace, roadmap_claim_rel('session-a'));
+        fs.mkdirSync(path.dirname(claim), { recursive: true });
+        fs.writeFileSync(claim, JSON.stringify({ slug: 'gone', session_id: 'session-a' }), 'utf-8');
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        const r = runMain();
+        expect(r.rc).toBe(2);
+        expect(r.out).toContain('warn');
     });
 });

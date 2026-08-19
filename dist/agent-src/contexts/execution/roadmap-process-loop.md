@@ -367,6 +367,32 @@ For each open step in the working set (scope-bound — see wrapper):
    file is the source of truth between regens.
 7. Run quality pipeline if cadence is `per_step`.
 
+### 5d. Resuming a run whose previous session died
+
+A session above the recycle threshold and inside a running contract leaves a
+**deterministic checkpoint** at
+`agents/runtime/state/checkpoints/<run>.json` — open / done / parked counts,
+the next open step, and the commit the tree was on. Every field is recomputed
+from the roadmap on disk rather than summarised, which is what makes the next
+line possible.
+
+```
+A RESUMED RUN RE-VERIFIES THE CHECKPOINT BEFORE ACTING ON IT.
+RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
+```
+
+The first act of a resumed run is `verifyCheckpoint` against the current
+tree — the per-field report names WHICH claim went stale, which is what a bare
+"stale/fresh" verdict cannot. **A disagreement is not an error**: work landing
+between the checkpoint and the resume is the normal case (a human committed, a
+sibling worktree moved, the dying session finished a step it never recorded),
+and the `actual` column is what to resume from. Treating progress as corruption
+would refuse every healthy resume.
+
+`agent-config run:supervise --once` reports which runs died with open steps
+left. It never merges, pushes, or closes anything — that boundary is a named
+rejection, not a missing feature.
+
 ### Halt conditions
 
 - Hard-Floor trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md))

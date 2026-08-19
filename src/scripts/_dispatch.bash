@@ -178,6 +178,10 @@ Tier 1 — power-user (release shape, audit, migration):
                              --chosen <c> --reasoning <r> --resolver <who>
                              --confidence <high|medium|low>
                                     decision:memo list --run <id>
+  run:supervise              Report runs whose session died with open steps
+                             left. Report-only; --relaunch is the acting path.
+                             NEVER merges, pushes, or closes anything.
+                             Usage: run:supervise --once [--root PATH]
 EOF
   fi
 
@@ -1198,6 +1202,17 @@ cmd_decision_memo() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `run:supervise` — the out-of-process watcher for runs whose session died
+# with open steps left. Report-only by default; the acting path is behind
+# --relaunch because starting a session spends tokens with nobody watching.
+# It NEVER merges, pushes, or closes anything — the auto-merge the reference
+# design carries is a named rejection, not an unbuilt feature.
+cmd_run_supervise() {
+  local script
+  script="$(resolve_script "src/scripts/run_supervise.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
 # `use --profile=<id>` — switch the active experience/profile. Writes
 # profile.id into the canonical .agent-settings.yml; the explicit
 # profile-switch seam named by ADR-040 (road-to-6.0.0-a Step 8).
@@ -1474,6 +1489,7 @@ main() {
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
     decision:memo)           cmd_decision_memo "$@" ;;
+    run:supervise)           cmd_run_supervise "$@" ;;
     update)                  cmd_update "$@" ;;
     upgrade)                 cmd_upgrade "$@" ;;
     refresh)                 cmd_refresh "$@" ;;
