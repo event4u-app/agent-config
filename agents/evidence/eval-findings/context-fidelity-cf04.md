@@ -106,8 +106,8 @@ The three flagged entries, and what cf02 said about each:
 
 | id | flagged because | cf02 verdict |
 |---|---|---|
-| `bench-ab-cost-and-activation-mechanics` | cites `src/scripts/bench_ab_task_runner.py`, now `.ts` | **still-true** — cf02 explicitly notes "path drift only" |
-| `pr-gate-roadmap-archival` | cites `src/agent-src/scripts/archive_completed_roadmaps.py`, now `.ts` | **still-true** — same note |
+| `bench-ab-cost-and-activation-mechanics` | cites the retired `bench_ab_task_runner` **.py** under `src/scripts/`, now `.ts` <!-- ref-ignore --> | **still-true** — cf02 explicitly notes "path drift only" |
+| `pr-gate-roadmap-archival` | cites the retired `archive_completed_roadmaps` **.py** under `src/agent-src/scripts/`, now `.ts` <!-- ref-ignore --> | **still-true** — same note |
 | `no-cheap-sequencing-questions` | `[[no-cheap-questions]]` resolves to no entry (it is a RULE, not a memory id) | **still-true** |
 
 Three flags, three entries the hand walk had already confirmed as correct. Not a
