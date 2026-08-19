@@ -12,13 +12,29 @@
 # Verdicts (per the roadmap contract):
 #   OK     — no install at the other scope; the install can proceed.
 #   WARN   — install at the other scope, SAME version as the one being installed.
-#            Same content; duplicate registration but no drift.
+#            No drift — and NOT free. The host loads both registrations with no
+#            dedup, so every shared artefact is delivered twice. This verdict used
+#            to read "Same content; duplicate registration but no drift", which
+#            classified duplication by DRIFT RISK and never by CONTEXT COST, and
+#            so taught every reader that identical copies cost nothing. Measured
+#            2026-08-19 on a freshly regenerated maintainer projection: 110 rules
+#            and 290 skills delivered twice, 203,873 tok of standing rule prose
+#            against a 110,000 cap. See ADR-236 and
+#            agents/evidence/analysis/single-delivery-partition-census.md.
 #   DRIFT  — install at the other scope, DIFFERENT version (or unreadable).
 #            Drift will produce the 2026-05-25 failure mode (stale frontmatter
 #            registered alongside fresh frontmatter).
 #
 # Output shape (line-oriented, parseable by install.sh):
-#   <verdict>\t<tool-id>\t<other-scope-path>\t<other-version>\t<this-version>
+#   <verdict>\t<tool-id>\t<other-scope-path>\t<other-version>\t<this-version>[\t<overlap>]
+#
+# Field 6 (<overlap>) is emitted on WARN lines only: the number of entry names
+# present in BOTH scope directories — what a same-version duplicate registration
+# actually delivers twice. It is APPENDED rather than inserted, so every existing
+# field-indexed consumer keeps working unchanged. `-1` means the count could not
+# be taken — the scope being installed to does not exist yet, or a directory is
+# unreadable — which is reported rather than silently rendered as 0. See
+# `count_overlap` for why the two are different facts.
 #
 # A final summary line is emitted:
 #   SUMMARY\t<verdict>\t<count-OK>\t<count-WARN>\t<count-DRIFT>
@@ -65,6 +81,44 @@ installed_version_at() {
 # but we keep the check coarse: simply that the directory is non-empty.
 dir_nonempty() {
     [[ -d "$1" ]] && [[ -n "$(ls -A "$1" 2>/dev/null | head -1)" ]]
+}
+
+# Count entry names present in BOTH scope directories — what a same-version
+# duplicate registration actually delivers twice, which is the cost the WARN
+# verdict used to omit.
+#
+# Returns -1 rather than 0 when the count cannot be taken, because the two are
+# different facts and reporting "0 overlap" for "could not look" is how a gate
+# starts reading as coverage.
+#
+# R2 review corrected the docstring twice over. The copilot probe was named here
+# as the concrete -1 case; it is UNREACHABLE, because `dir_nonempty`'s `[[ -d ]]`
+# test short-circuits a single-file path to OK before probe_tool ever reaches a
+# version comparison. The reachable cases are: the scope being installed TO does
+# not exist yet (a first install at this scope — genuinely no overlap to count,
+# not a failure), and a directory that exists but cannot be read.
+#
+# The unreadable case used to return 0 — the precise failure this function's own
+# docstring claimed to prevent, because `cd` failed inside the process
+# substitution and `comm` compared two empty streams. It is now detected before
+# the comparison.
+count_overlap() {
+    local a="$1" b="$2" n
+    if [[ ! -d "$a" ]] || [[ ! -d "$b" ]]; then
+        printf '%s' '-1'
+        return 0
+    fi
+    # Readability is checked explicitly: `ls` on an unreadable directory fails,
+    # and inside `<(...)` that failure is invisible to the caller.
+    if ! ls -A "$a" >/dev/null 2>&1 || ! ls -A "$b" >/dev/null 2>&1; then
+        printf '%s' '-1'
+        return 0
+    fi
+    n="$(comm -12 \
+            <(ls -A "$a" 2>/dev/null | sort) \
+            <(ls -A "$b" 2>/dev/null | sort) \
+         2>/dev/null | wc -l | tr -d ' ')" || n=''
+    printf '%s' "${n:--1}"
 }
 
 # Per-tool probe definitions: tool-id, user-scope path, project-scope path.
@@ -114,7 +168,12 @@ probe_tool() {
     if [[ "$other_ver" == "unknown" ]] || [[ "$this_ver" == "unknown" ]] || [[ "$other_ver" != "$this_ver" ]]; then
         printf 'DRIFT\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver"
     else
-        printf 'WARN\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver"
+        # Same version, so no drift — but the duplicate registration is delivered
+        # twice, and field 6 is what makes that cost visible at the moment of the
+        # decision instead of only in a token census nobody runs.
+        local overlap
+        overlap="$(count_overlap "$other_path" "$this_scope_path")"
+        printf 'WARN\t%s\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver" "$overlap"
     fi
 }
 

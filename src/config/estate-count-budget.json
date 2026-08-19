@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 33,
     "later_roadmaps": 50,
-    "open_blockers": 70
+    "open_blockers": 74
   },
   "baseline_history": [
     {
@@ -128,10 +128,17 @@
     },
     {
       "at": "2026-08-19",
-      "active_roadmaps": 32,
+      "active_roadmaps": 34,
+      "later_roadmaps": 49,
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved. This branch adopts road-to-single-delivery (+1 active) and opens four blockers on it (+4); the trunk meanwhile WALKED DOWN by archiving road-to-inbox-harvest-2026-08-b-dispatch-safety. Taking this branch authored numbers through the merge would have silently pocketed that archival as headroom, which is the loose-ratchet failure two earlier entries in this file record from the other direction. So the trunk file was taken whole and these numbers are the measurement on the merged tree: 33 + 1 = 34 active, 49 later unchanged, 70 + 4 = 74 blockers. WHAT THE +4 BUYS, since it is the larger half: partition-requires-global-layer HALTED Phase 2 mid-implementation - the partition leaves the project layer with 16 rules and zero skills, so a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0, which is an under-governed session rather than a token cost. compact-survival-of-package-only-rules carries four rules that stop surviving /compact once their unscoped global twin is gone, three of them Iron-Law bearing. overlap-check-binding-surface exists because two gates in this area already report to nobody. host-skill-suppression-capability is a host probe whose negative answer closes it. Each carries enumerated options and a recommendation rather than a flag. later_roadmaps unchanged at 49 is the check that nothing was parked to pay for any of this."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 33,
       "later_roadmaps": 50,
-      "open_blockers": 70,
-      "why": "RAISED by 1 later roadmap and WALKED DOWN by 1 active one, in the same move: road-to-run-continuation-observation was parked to later/. It is a transfer rather than growth (total estate unchanged at 82). Parked rather than left active because every open item is gated on an external trigger this estate cannot currently supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full itself terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition: a roadmap with zero runnable open steps left in the active tree lies to the dashboard and to /roadmap:process-*, which keeps trying to execute it. The number walks back the moment the roadmap is un-parked, which is what the resume condition in its own header is for. open_blockers: 70 is unchanged against the baseline this change read, and the park cannot move it by construction \u2014 that metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Round 9 finding 3, recorded rather than smoothed over: the row immediately above records 71, which does NOT reconcile with the 70 this row and the baseline both carry. The gap predates this change and is not repaired by it \u2014 commit 7d5114dbd walked baseline.open_blockers from 71 to 70 after resolving memory-sweep-instrument as a one-line edit with no appended history row, so the array's tail and the baseline have disagreed since. Stated here because the first version of this row asserted \"unchanged at 70\" as if the preceding row said 70, which a reader cannot verify from the array; reconstructing the missing row is a separate change against a measurement this one did not take."
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved -- the same reason the row above states, and the second time in one day that this file has had to say it. This branch parks road-to-run-continuation-observation to later/ (-1 active, +1 later); the base it merged had itself moved to 34/49/74. Carrying this branch's earlier 32/50/70 forward would have described neither tree. open_blockers: 74 is the base's number, untouched, and that it is untouched is the check that this is a park and not a burial: the metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Parked because every open item is gated on an external trigger this estate cannot supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition. The number walks back the moment it is un-parked. The unreconciled -1 this branch's earlier row recorded (commit 7d5114dbd walked open_blockers 71 -> 70 with no history row) is left where it is: the base has since re-measured to 74, so that gap is now historical rather than live, and inventing a reconstruction here would be a second unmeasured row."
     }
   ],
   "target": {
