@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**508 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 168 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**510 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 170 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -172,6 +172,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-cost-parity-0-program`](road-to-cost-parity-0-program.md) | Road to cost parity — 0: the median session gets a measured target and the family gets its order | completed | 4 | 25/25 | _not extractable_ |
 | [`road-to-cost-parity-3-handoff-envelope`](road-to-cost-parity-3-handoff-envelope.md) | Road to cost parity — 3: the handoff envelope carries what the successor actually needs | completed | 4 | 30/30 | _not extractable_ |
 | [`road-to-cost-profile-untangle`](road-to-cost-profile-untangle.md) | Roadmap: Untangle `cost_profile` | closed-with-cancellations | 8 | 41/45 | _not extractable_ |
+| [`road-to-council-api-fallback`](road-to-council-api-fallback.md) | Road to council api fallback — the contract promised a retry no path performed | closed-with-cancellations | 6 | 16/17 | _not extractable_ |
 | [`road-to-council-modes`](road-to-council-modes.md) | Road to Council Modes | closed-with-cancellations | 3 | 14/24 | _not extractable_ |
 | [`road-to-council-quota-accounting-truth`](road-to-council-quota-accounting-truth.md) | Roadmap: Council quota accounting truth | completed | 4 | 26/26 | _not extractable_ |
 | [`road-to-council-solo-floor-implementation`](road-to-council-solo-floor-implementation.md) | Road to the gate-scoped solo-attendance floor | closed-with-cancellations | 3 | 15/16 | _not extractable_ |
@@ -290,6 +291,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-d-context-ledger`](road-to-inbox-harvest-2026-08-d-context-ledger.md) | Road to a context ledger that captures before the state is destroyed | closed-with-cancellations | 5 | 15/16 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-d-runtime-skill-routing`](road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | Road to a ranker that actually routes | completed | 4 | 14/14 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-d-scheduled-deprecation`](road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | Road to a deprecation table that cannot miss its own dates | completed | 2 | 10/10 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-d-top-band-model-economy`](road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | Road to at most one top-band context per task | closed-with-cancellations | 4 | 13/14 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08`](road-to-inbox-harvest-2026-08.md) | Road to inbox harvest 2026-08 | closed-with-cancellations | 5 | 12/21 | _not extractable_ |
 | [`road-to-inbox-harvest-distillation`](road-to-inbox-harvest-distillation.md) | Road to harvested-claim provenance and router-head skills | closed-with-cancellations | 4 | 9/16 | _not extractable_ |
 | [`road-to-injection-and-authority-harvest`](road-to-injection-and-authority-harvest.md) | Road to injection-and-authority harvest | completed | 5 | 17/17 | _not extractable_ |
