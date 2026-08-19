@@ -153,6 +153,13 @@
       "later_roadmaps": 50,
       "open_blockers": 74,
       "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved -- the same reason the row above states, and the second time in one day that this file has had to say it. This branch parks road-to-run-continuation-observation to later/ (-1 active, +1 later); the base it merged had itself moved to 34/49/74. Carrying this branch's earlier 32/50/70 forward would have described neither tree. open_blockers: 74 is the base's number, untouched, and that it is untouched is the check that this is a park and not a burial: the metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Parked because every open item is gated on an external trigger this estate cannot supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition. The number walks back the moment it is un-parked. The unreconciled -1 this branch's earlier row recorded (commit 7d5114dbd walked open_blockers 71 -> 70 with no history row) is left where it is: the base has since re-measured to 74, so that gap is now historical rather than live, and inventing a reconstruction here would be a second unmeasured row."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 33,
+      "later_roadmaps": 50,
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT MERGE. Both sides had moved: this branch's rows above were measured against 34/49/74, and the base it merged had parked a roadmap to later/ (33/50). Carrying either side's number forward would have described neither tree, so the values here are read off the merged filesystem. open_blockers stays 74, and the reason it stays is CHECKED rather than assumed - a net zero is the shape a walk-down hides in, which is what the row two above records going wrong on this same branch. Verified against origin/main: 4 open before, 4 open after, and the SETS differ. Resolved: partition-requires-global-layer (option (c), on a measurement that eliminated (a)) and overlap-check-binding-surface (converged council verdict). Opened: warn-path-unreachable-without-version-marker (a finding against completed Phase 3 work) and partition-current-layer-undecidable (Phase 2's second halt, which R2 review caught being carried as prose). Two out, two in - not one error cancelling another."
     }
   ],
   "target": {
