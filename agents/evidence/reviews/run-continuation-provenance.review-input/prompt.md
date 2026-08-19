@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 7db889696374c2c9f8d001d5b905d262f1e6cecf, review
-  artefacts excluded), scope hash `e77b7a46ebec6e9255b28c38e0b9f7661ec43ef0e043790e98c379bb6976d797`
+- diff: `diff.patch` — the review scope (branch head 5fa347a5ae9496eb0b4876ffd0e93361f03048ef, review
+  artefacts excluded), scope hash `57e6acd5b451f923a1a38c66666d77a3faf44ec9fba2e1b7fee7f3cf22760733`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -30,7 +30,9 @@ Changed files:
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-run-continuation-observation.md
 - src/scripts/hooks/run_continuation_hook.ts
+- src/scripts/session_register_hook.ts
 - tests/hooks/run_continuation_dispatch.test.ts
+- tests/scripts/session_register.test.ts
 
 ## Output format (contract §2.2)
 
@@ -52,5 +54,5 @@ Fill the findings table in `run-continuation-provenance.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope e77b7a46ebec6e9255b28c38e0b9f7661ec43ef0e043790e98c379bb6976d797, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 57e6acd5b451f923a1a38c66666d77a3faf44ec9fba2e1b7fee7f3cf22760733, reviewed <YYYY-MM-DD>
 ```

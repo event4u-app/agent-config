@@ -99,9 +99,14 @@ engages and leaves the event behind.
      validity is that of a production smoke probe, not of ordinary
      autonomous work.
   2. *The provenance fields are test-verified, not self-verified.* The
-     same change adds `workspace_root` / `session_root` / `git_dir` /
-     `git_common_dir` / `claim_path` to every event, so a future line
-     carries the two-tree fact itself instead of needing this table.
+     same change adds `workspace_root` / `session_root` / `session_cwd` /
+     `git_dir` / `git_common_dir` / `claim_path` — six fields — to every
+     event, so a future line carries the two-tree fact itself instead of
+     needing this table. Round 3 finding 4 caught this enumeration listing
+     five while the same bullet said six forty lines down, which would have
+     had a reader auditing a real ledger line conclude either that an
+     undocumented field was present or that `session_cwd` was not part of
+     the contract.
      `session_root` is the field R2 finding 1 added after the fact: the
      first version derived both git fields from the READER's root, where
      they are equal in exactly the arrangement documented above, so the
@@ -110,7 +115,12 @@ engages and leaves the event behind.
      and the enrichment was built in the worktree. Verified by
      `tests/hooks/run_continuation_dispatch.test.ts` over a real
      `git worktree add` fixture — which reds against the un-enriched
-     event while the other eight cases stay green.
+     event while the other cases stay green. **Counts corrected on round 3
+     finding 8:** that file now holds twelve cases, not nine, and THREE of
+     them assert the provenance rather than one. The stale figure mattered
+     more here than it would elsewhere — this bullet exists so a reader can
+     check the artefact against a falsifiable number, and the number was
+     wrong.
 
      **Superseded 2026-08-19 by a live event, and the live event refuted
      the fields.** The enrichment merged, `dist/` was rebuilt, and the
@@ -142,16 +152,53 @@ engages and leaves the event behind.
      On the line above, `session_root` would have been the worktree and
      `workspace_root` the parent: different, which is the fact.
 
-     `session_cwd` came out of round 2 finding 1, and it is worth naming
-     because it bounds the fix rather than extending it. `session_checkout`
-     requires the reported directory to BE a checkout root, so a session
-     started from a SUBDIRECTORY of a worktree still collapses
-     `session_root` onto the reader's root and both path discriminators
-     still read FALSE. The guard's conditions belong to the register and
-     loosening them is a different change; carrying the raw `cwd` makes
-     that case *distinguishable* instead of silent — a path that is
-     neither `session_root` nor under it, which no healthy resolution
-     produces.
+     `session_cwd` came out of round 2 finding 1 as a way to make a
+     degraded resolution *distinguishable* rather than silent, on the
+     reasoning that the resolver's conditions belonged to the register and
+     loosening them was a different change.
+
+     **Round 3 finding 2 refuted that reasoning by measuring where the
+     field is blind, and the fix moved upstream after all.** Worktrees in
+     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
+     under the parent. For a session standing one directory deeper, the
+     collapsed `session_root` equals the reader's root, both git fields
+     taken from it are equal, **and** the raw `cwd` is under the parent
+     too. All three signals report a healthy same-tree run for a genuine
+     two-tree one. A confidently wrong answer is not a loss of precision,
+     and the resolver's own docblock had defended the rejection as "never
+     something worse".
+
+     Two things followed, both ratified by the AI council (2026-08-19,
+     2/2 convergent, A/A):
+
+     1. `session_checkout` now walks UP to the nearest enclosing checkout
+        root, bounded by the same-repository identity check it already had.
+        The first hit wins, so a nested worktree resolves to itself rather
+        than to the checkout containing it. The session register gets the
+        same correction for free — it records which worktree a session is
+        in, and had the identical blind spot.
+     2. The roadmap the run executes is resolved against the **session's**
+        checkout, falling back to the reader's. Round 3 finding 1: the
+        open-step count feeds a stall detector, and reading the reader's
+        tree meant watching a file nobody was editing — the count never
+        moved and the detector declared a working run finished after three
+        engagements. The mechanism whose job is to detect a stall was
+        manufacturing one.
+
+     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
+     repository, a cwd that does not exist, a cwd under no checkout root.
+     Those still fall back, and on those lines it is still the only field
+     that says so.
+
+     The test both council seats named independently is the one that closes
+     both findings at once, and it is in the tree: a real nested worktree,
+     the session in a subdirectory of it, and the two roadmap copies made
+     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
+     assertion about paths alone can show which file was read. Its sibling
+     fires three times with the worktree count advancing and asserts the
+     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
+     reader's tree the count is frozen at 2 for all three and the third
+     fire halts.
 
 - [ ] **0.1** The parent criterion closes on that evidence: *"a
       `process-full` contract run finishes a 3-phase roadmap with zero
@@ -169,6 +216,36 @@ engages and leaves the event behind.
       read off this run however the rest of it went. Closing 0.1 here
       would be exactly the attribution error its own text warns about,
       one layer up. See `### blocker: three-phase-contract-run`.
+
+      **2026-08-19, second reading — one more half arrived, and it is
+      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
+      across turns and `interruption_report` reports it
+      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
+      That matters for a specific reason this step's own text names: the
+      zero-contact half was previously attributable to the operator's
+      standing mandate rather than to the mechanism, and here the two
+      re-engagements ARE the mechanism's own events. Zero-contact and
+      mechanism-driven re-engagement now co-occur on one run id.
+
+      What is still missing is the element the criterion actually turns
+      on: **three phases.** This roadmap has one, and the run above is
+      the session working THIS roadmap, so it cannot supply it. Recorded
+      as a second partial rather than folded into a closure, because two
+      halves of different criteria do not make one criterion — that is
+      the same attribution error at a smaller scale.
+
+      **The blocker's own recommendation was tested and holds.** It says
+      "do not schedule this — the estate has several three-phase
+      autonomous candidates already; the next one to be worked discharges
+      this for free." On 2026-08-19 the estate had **none**: of 33 active
+      roadmaps exactly three carry `execution.mode: autonomous`
+      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
+      one), and neither of the other two has open steps in three or more
+      `## Phase` sections. A `phase-checkpoints` roadmap makes the
+      concern a no-op and produces no event at all, so the 30 remaining
+      roadmaps cannot supply the run either. The recommendation stays
+      right; the "already several candidates" premise it rests on was
+      measured false, which is worth knowing before anyone waits on it.
 
 ## Acceptance criteria
 

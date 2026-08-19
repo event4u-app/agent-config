@@ -39,19 +39,24 @@ index 14bbcfcb56fb4e8de79867ab1fba63d7d7f3821b..557532289606776a01d9e1dc839d75bb
  <a id="blockers-road-to-run-continuation-observation"></a>
  **Blockers**
 diff --git a/agents/roadmaps/road-to-run-continuation-observation.md b/agents/roadmaps/road-to-run-continuation-observation.md
-index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..0571fb9ad6819b7a45a8d4829fc338718fe7b1cb 100644
+index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..fbcd9037af67918717392c0cd624a209a1fcb0b5 100644
 --- a/agents/roadmaps/road-to-run-continuation-observation.md
 +++ b/agents/roadmaps/road-to-run-continuation-observation.md
-@@ -97,15 +97,60 @@ engages and leaves the event behind.
+@@ -97,14 +97,106 @@ engages and leaves the event behind.
       validity is that of a production smoke probe, not of ordinary
       autonomous work.
    2. *The provenance fields are test-verified, not self-verified.* The
 -     same change adds `workspace_root` / `git_dir` / `git_common_dir` /
 -     `claim_path` to every event, so a future line carries the two-tree
 -     fact itself instead of needing this table. This event does not
-+     same change adds `workspace_root` / `session_root` / `git_dir` /
-+     `git_common_dir` / `claim_path` to every event, so a future line
-+     carries the two-tree fact itself instead of needing this table.
++     same change adds `workspace_root` / `session_root` / `session_cwd` /
++     `git_dir` / `git_common_dir` / `claim_path` — six fields — to every
++     event, so a future line carries the two-tree fact itself instead of
++     needing this table. Round 3 finding 4 caught this enumeration listing
++     five while the same bullet said six forty lines down, which would have
++     had a reader auditing a real ledger line conclude either that an
++     undocumented field was present or that `session_cwd` was not part of
++     the contract.
 +     `session_root` is the field R2 finding 1 added after the fact: the
 +     first version derived both git fields from the READER's root, where
 +     they are equal in exactly the arrangement documented above, so the
@@ -60,8 +65,14 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..0571fb9ad6819b7a45a8d4829fc33871
       and the enrichment was built in the worktree. Verified by
       `tests/hooks/run_continuation_dispatch.test.ts` over a real
       `git worktree add` fixture — which reds against the un-enriched
-      event while the other eight cases stay green.
- 
+-     event while the other eight cases stay green.
++     event while the other cases stay green. **Counts corrected on round 3
++     finding 8:** that file now holds twelve cases, not nine, and THREE of
++     them assert the provenance rather than one. The stale figure mattered
++     more here than it would elsewhere — this bullet exists so a reader can
++     check the artefact against a falsifiable number, and the number was
++     wrong.
++
 +     **Superseded 2026-08-19 by a live event, and the live event refuted
 +     the fields.** The enrichment merged, `dist/` was rebuilt, and the
 +     concern fired again from a worktree session at
@@ -92,21 +103,92 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..0571fb9ad6819b7a45a8d4829fc33871
 +     On the line above, `session_root` would have been the worktree and
 +     `workspace_root` the parent: different, which is the fact.
 +
-+     `session_cwd` came out of round 2 finding 1, and it is worth naming
-+     because it bounds the fix rather than extending it. `session_checkout`
-+     requires the reported directory to BE a checkout root, so a session
-+     started from a SUBDIRECTORY of a worktree still collapses
-+     `session_root` onto the reader's root and both path discriminators
-+     still read FALSE. The guard's conditions belong to the register and
-+     loosening them is a different change; carrying the raw `cwd` makes
-+     that case *distinguishable* instead of silent — a path that is
-+     neither `session_root` nor under it, which no healthy resolution
-+     produces.
++     `session_cwd` came out of round 2 finding 1 as a way to make a
++     degraded resolution *distinguishable* rather than silent, on the
++     reasoning that the resolver's conditions belonged to the register and
++     loosening them was a different change.
 +
++     **Round 3 finding 2 refuted that reasoning by measuring where the
++     field is blind, and the fix moved upstream after all.** Worktrees in
++     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
++     under the parent. For a session standing one directory deeper, the
++     collapsed `session_root` equals the reader's root, both git fields
++     taken from it are equal, **and** the raw `cwd` is under the parent
++     too. All three signals report a healthy same-tree run for a genuine
++     two-tree one. A confidently wrong answer is not a loss of precision,
++     and the resolver's own docblock had defended the rejection as "never
++     something worse".
++
++     Two things followed, both ratified by the AI council (2026-08-19,
++     2/2 convergent, A/A):
++
++     1. `session_checkout` now walks UP to the nearest enclosing checkout
++        root, bounded by the same-repository identity check it already had.
++        The first hit wins, so a nested worktree resolves to itself rather
++        than to the checkout containing it. The session register gets the
++        same correction for free — it records which worktree a session is
++        in, and had the identical blind spot.
++     2. The roadmap the run executes is resolved against the **session's**
++        checkout, falling back to the reader's. Round 3 finding 1: the
++        open-step count feeds a stall detector, and reading the reader's
++        tree meant watching a file nobody was editing — the count never
++        moved and the detector declared a working run finished after three
++        engagements. The mechanism whose job is to detect a stall was
++        manufacturing one.
++
++     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
++     repository, a cwd that does not exist, a cwd under no checkout root.
++     Those still fall back, and on those lines it is still the only field
++     that says so.
++
++     The test both council seats named independently is the one that closes
++     both findings at once, and it is in the tree: a real nested worktree,
++     the session in a subdirectory of it, and the two roadmap copies made
++     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
++     assertion about paths alone can show which file was read. Its sibling
++     fires three times with the worktree count advancing and asserts the
++     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
++     reader's tree the count is frozen at 2 for all three and the third
++     fire halts.
+ 
  - [ ] **0.1** The parent criterion closes on that evidence: *"a
        `process-full` contract run finishes a 3-phase roadmap with zero
-       synchronous contacts, re-engaging across turns, and opens the
-@@ -128,19 +173,36 @@ engages and leaves the event behind.
+@@ -123,24 +215,71 @@ engages and leaves the event behind.
+       would be exactly the attribution error its own text warns about,
+       one layer up. See `### blocker: three-phase-contract-run`.
+ 
++      **2026-08-19, second reading — one more half arrived, and it is
++      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
++      across turns and `interruption_report` reports it
++      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
++      That matters for a specific reason this step's own text names: the
++      zero-contact half was previously attributable to the operator's
++      standing mandate rather than to the mechanism, and here the two
++      re-engagements ARE the mechanism's own events. Zero-contact and
++      mechanism-driven re-engagement now co-occur on one run id.
++
++      What is still missing is the element the criterion actually turns
++      on: **three phases.** This roadmap has one, and the run above is
++      the session working THIS roadmap, so it cannot supply it. Recorded
++      as a second partial rather than folded into a closure, because two
++      halves of different criteria do not make one criterion — that is
++      the same attribution error at a smaller scale.
++
++      **The blocker's own recommendation was tested and holds.** It says
++      "do not schedule this — the estate has several three-phase
++      autonomous candidates already; the next one to be worked discharges
++      this for free." On 2026-08-19 the estate had **none**: of 33 active
++      roadmaps exactly three carry `execution.mode: autonomous`
++      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
++      one), and neither of the other two has open steps in three or more
++      `## Phase` sections. A `phase-checkpoints` roadmap makes the
++      concern a no-op and produces no event at all, so the 30 remaining
++      roadmaps cannot supply the run either. The recommendation stays
++      right; the "already several candidates" premise it rests on was
++      measured false, which is worth knowing before anyone waits on it.
++
+ ## Acceptance criteria
+ 
  - [x] `run-continuation.jsonl` holds at least one `engage` event from a
        worktree-started run, with the run id recorded here.
        Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
@@ -153,7 +235,7 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..0571fb9ad6819b7a45a8d4829fc33871
  ## Blockers
  
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
-index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763b2ffe1a2 100644
+index 00c56abab92153551ac63a9b057777b1b6df04fe..e9976d9f35136d7ad38a332207e3ab4f2c9c7cc1 100644
 --- a/src/scripts/hooks/run_continuation_hook.ts
 +++ b/src/scripts/hooks/run_continuation_hook.ts
 @@ -51,11 +51,14 @@
@@ -185,16 +267,25 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
  import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
  import {
      deriveSessionKey,
-@@ -394,7 +397,7 @@ function readState(file: string): RunState | null {
+@@ -394,9 +397,16 @@ function readState(file: string): RunState | null {
  }
  
  /**
 - * The four fields that make an event's two-tree property checkable by a third
-+ * The five fields that make an event's two-tree property checkable by a third
++ * The six fields that make an event's two-tree property checkable by a third
   * party holding nothing but the ledger line.
   *
++ * Keep this count in step with the file header and the call-site comment. Round 2
++ * finding 4 caught the header saying four where the function emitted five; the
++ * edit that fixed it added `session_cwd` and left THIS heading saying five, which
++ * round 3 finding 3 then caught. Two rounds, same drift, opposite direction — the
++ * count is load-bearing because it is what a later edit dropping a field would
++ * have to contradict.
++ *
   * The defect this concern shipped with was a writer and a reader resolving
-@@ -410,28 +413,132 @@ function readState(file: string): RunState | null {
+  * DIFFERENT trees: `sessions:claim` wrote under `process.cwd()` (the operator's
+  * worktree) while this concern read under `--project-dir` (the parent
+@@ -410,31 +420,168 @@ function readState(file: string): RunState | null {
   * observation rather than a check on it; the falsifiable facts are concrete
   * (AI council 2026-08-19, 2/2 convergent):
   *
@@ -228,9 +319,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 + *                                         before any resolution, so a reader can
 + *                                         tell "same tree" from "could not
 + *                                         resolve"
-  *
-- * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
-- * `--project-dir` before the chain runs, so at concern time cwd equals
++ *
 + * ## The degenerate reading, stated so it cannot be mistaken for a negative
 + *
 + * Two of the three path relations above are only interpretable on a line whose
@@ -240,17 +329,26 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 + * check `git_common_dir !== ''` before applying either relation.
 + *
 + * `session_cwd` exists for the same reason, and it is a fact rather than an
-+ * assertion. `session_checkout` degrades to `workspace_root` on any of its three
-+ * guard failures, and one of them is ordinary: a session started from a
-+ * SUBDIRECTORY of a worktree (`cd <worktree>/src && claude`) fails the
-+ * checkout-root condition, so `session_root` collapses onto the reader's root
-+ * and BOTH discriminators above read FALSE for a genuine two-tree run — the
-+ * round-1 false negative, re-entering through the degradation path. Round 2
-+ * finding 1 measured it. Carrying the raw `cwd` makes that case distinguishable
-+ * from a real same-tree run: `session_cwd` is then a path that is neither
++ * assertion. `session_checkout` degrades to `workspace_root` when its guards
++ * fail, and the raw `cwd` is what makes a degraded line distinguishable from a
++ * genuine same-tree one: `session_cwd` is then a path that is neither
 + * `session_root` nor under it, which no healthy resolution produces. A boolean
 + * `resolved: false` would have been the system under observation asserting its
 + * own health; the raw path is checkable.
++ *
++ * **The degradation this field was introduced for is gone, and the field stayed.**
++ * Round 2 added it because a session started from a SUBDIRECTORY of a worktree
++ * failed the resolver's checkout-root condition and collapsed onto the reader's
++ * root. Round 3 finding 2 then showed the field was BLIND to exactly that case in
++ * the layout it mattered in: with the worktree nested under the parent, the
++ * collapsed root, both git fields AND the raw cwd all read healthy same-tree.
++ * The fix was upstream — `session_checkout` now walks up to the nearest enclosing
++ * checkout root — so a subdirectory is no longer a degradation at all.
++ *
++ * What remains, and what the field is now for: a cwd inside a DIFFERENT
++ * repository, a cwd that does not exist, a cwd under no checkout root at all.
++ * Those still fall back, and on those lines `session_cwd` is still the only
++ * thing that says so. Two cases pin both directions.
 + *
 + * ## Both git fields come from `session_root`, not from `workspace_root`
 + *
@@ -270,7 +368,9 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 + * `payload.cwd`. It degrades to `workspace_root` when any condition fails,
 + * which makes `session_root === workspace_root` mean "same tree, or unresolvable"
 + * and never a false two-tree claim.
-+ *
+  *
+- * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
+- * `--project-dir` before the chain runs, so at concern time cwd equals
 + * `process.cwd()` is deliberately NOT among the fields. The dispatcher chdirs
 + * into `--project-dir` before the chain runs, so at concern time cwd equals
   * `workspace_root` on every shipped path — a field that can never disagree with
@@ -292,7 +392,8 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 + * it. Normalising here is the only place a ledger-only reader can inherit it
 + * from. These are local filesystem paths in gitignored runtime state, never
 + * published — the same posture the session register already takes.
-+ */
+  */
+-export function provenance(workspaceRoot: string, claimPath: string): JsonObject {
 +function normalizeDir(p: string): string {
 +    const abs = path.resolve(p);
 +    try {
@@ -307,8 +408,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 + * normalised and the basename rejoined. The per-tree claim fallback names a
 + * path that may not have been written, and a missing file must not downgrade
 + * the whole line to un-normalised paths.
-  */
--export function provenance(workspaceRoot: string, claimPath: string): JsonObject {
++ */
 +function normalizeFile(p: string): string {
 +    const abs = path.resolve(p);
 +    return path.join(normalizeDir(path.dirname(abs)), path.basename(abs));
@@ -333,14 +433,41 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 +        // from a `cwd` that failed resolution — the first says the host is
 +        // silent, the second says the session sat somewhere `session_checkout`
 +        // would not trust. Both are readable; neither is guessed.
-+        session_cwd: sessionCwd === '' ? '' : normalizeDir(sessionCwd),
++        //
++        // Trimmed with the SAME rule `session_checkout` applies to the same
++        // string (round 3 finding 6). Without it a whitespace-padded value
++        // validated fine there and was `path.resolve`d here against the reader's
++        // cwd, fabricating a path that is neither `session_root` nor under it —
++        // precisely the shape the docblock above says no healthy resolution
++        // produces, so a healthy line read as degraded. A whitespace-only value
++        // now reads as host silence, which is what it is.
++        session_cwd: sessionCwd.trim() === '' ? '' : normalizeDir(sessionCwd.trim()),
 +        git_dir: git_dir(writer) ?? '',
 +        git_common_dir: git_common_dir(writer) ?? '',
 +        claim_path: normalizeFile(claimPath),
      };
  }
  
-@@ -490,9 +597,6 @@ export function main(): number {
++/**
++ * The roadmap file this run is executing: the session's copy when it exists,
++ * otherwise the reader's.
++ *
++ * `existsSync` rather than a try/read, because the fallback has to be chosen
++ * before the read in order to keep the "no readable roadmap" branch meaning what
++ * it says — a claim naming a roadmap that exists in NEITHER tree, rather than one
++ * that merely has not been created in the session's tree yet.
++ */
++function resolveRoadmap(sessionRoot: string, workspaceRoot: string, slug: string): string {
++    const rel = path.join('agents', 'roadmaps', `${slug}.md`);
++    const mine = path.join(sessionRoot, rel);
++    if (sessionRoot !== workspaceRoot && fs.existsSync(mine)) return mine;
++    return path.join(workspaceRoot, rel);
++}
++
+ function appendEvent(workspaceRoot: string, record: JsonObject): void {
+     try {
+         const file = path.join(workspaceRoot, EVENTS_RELPATH);
+@@ -490,11 +637,37 @@ export function main(): number {
      const claim = resolve_claim(workspaceRoot, sessionId || null);
      if (claim === null) return EXIT_ALLOW;
      const slug = claim.slug;
@@ -348,25 +475,63 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 -    // `provenance()` for why these three and not a boolean.
 -    const roots = provenance(workspaceRoot, claim.path);
  
-     const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
+-    const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
++    // ── which tree's roadmap is the run ──────────────────────────────
++    //
++    // The SESSION's own checkout, falling back to the reader's root. In a plain
++    // checkout the two are the same path and nothing about this changes; only
++    // the two-tree case moves.
++    //
++    // R2 round 3 finding 1: this read the READER's tree unconditionally, and the
++    // count it produces feeds the stall detector. In a worktree session the agent
++    // flips checkboxes in the worktree copy while the parent copy does not move
++    // until a merge — so the detector watched a file nobody was editing, the
++    // count never changed, and after three engagements it emitted `halt-stall`
++    // and declared a working run finished. The mechanism whose job is to detect a
++    // stall was manufacturing one, which is the failure this file's own header
++    // warns about in the abstract.
++    //
++    // AI council 2026-08-19, 2/2 convergent: resolve against the session
++    // checkout, keep the fallback. Both seats also flagged, independently, that
++    // `execution.mode` and the open-step count need not share an authority —
++    // progress is inherently session-local while a mode could be read as
++    // repo-wide policy. That choice is made HERE and stated rather than left
++    // implicit: BOTH come from the session's file, because the session is
++    // executing the file in its own tree and the parent's copy is simply an older
++    // revision of the same document. A genuinely repo-wide mode policy would need
++    // its own precedence rule, and inventing one on this evidence would be
++    // designing for a case nobody has met.
++    const sessionRoot = session_checkout(
++        workspaceRoot,
++        str(payload['cwd'] as JsonValue | undefined),
++    );
++    const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
      let roadmapText: string;
-@@ -536,6 +640,35 @@ export function main(): number {
+     try {
+         roadmapText = fs.readFileSync(roadmapPath, 'utf8');
+@@ -536,6 +709,40 @@ export function main(): number {
  
      const runId = deriveSessionKey(sessionId || 'unknown-session');
  
 +    // The two-tree provenance, carried on every event this run emits. See
 +    // `provenance()` for the six fields and why none of them is a boolean.
 +    //
-+    // Position is deliberate and was moved twice. Round 1 finding 6 moved it
-+    // below the execution-mode gate, because a session holding a claim on a
-+    // `phase-checkpoints` roadmap makes this concern a no-op and was paying the
-+    // resolution on every stop fire for a discarded value. Round 2 finding 6
-+    // then observed the same argument applied only half way: three transcript
-+    // early-returns still sat below it, so an autonomous session whose
-+    // transcript is over `TRANSCRIPT_READ_MAX_BYTES` kept paying it for
-+    // nothing. It now sits below every early return and above every
-+    // `appendEvent`, which is the only position where the cost is paid exactly
-+    // when a line is written.
++    // Position, and what changed about the cost argument. Rounds 1 and 2 pushed
++    // this call downward to stop a `phase-checkpoints` session, and then a
++    // session with an over-cap transcript, from paying the git resolution for a
++    // value the next line discarded.
++    //
++    // Round 3 finding 1 made half of that moot: the session root is now needed
++    // ABOVE the mode gate, because it decides which tree's roadmap the mode is
++    // read from. So the resolution happens early by necessity and this call
++    // merely reuses it — the double resolution round 2 finding 5 accepted is
++    // gone as a side effect, and nothing here re-derives it.
++    //
++    // What remains true, and round 3 finding 5 was right to catch the previous
++    // comment claiming otherwise: two branches below still return without an
++    // `appendEvent` — the duplicate-stop-fire guard and the failed-state-write
++    // path — so this is not a position where every path writes a line. It is
++    // simply the cheapest honest one now that the value is already in hand.
 +    //
 +    // The git resolution here duplicates the one `session_checkout` does to
 +    // validate the cwd, and that duplication is ACCEPTED rather than removed
@@ -375,19 +540,107 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763
 +    // roadmap file and a transcript tail. The two resolutions also answer
 +    // different questions — the guard asks whether the cwd belongs to this
 +    // repository, this asks what the session's own tree is.
-+    const sessionCwd = str(payload['cwd'] as JsonValue | undefined);
 +    const roots = provenance(
 +        workspaceRoot,
 +        claim.path,
-+        session_checkout(workspaceRoot, sessionCwd),
-+        sessionCwd,
++        sessionRoot,
++        str(payload['cwd'] as JsonValue | undefined),
 +    );
 +
      // ── defer to the quality gate ────────────────────────────────────
      if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
          appendEvent(workspaceRoot, {
+diff --git a/src/scripts/session_register_hook.ts b/src/scripts/session_register_hook.ts
+index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..be0154a6371994f19fa57104053d688e8be68335 100644
+--- a/src/scripts/session_register_hook.ts
++++ b/src/scripts/session_register_hook.ts
+@@ -409,12 +409,36 @@ export function claim_is_stale(
+  * conditions, because a wrong anchor is worse than the fallback:
+  *
+  * 1. it is an existing directory;
+- * 2. it is the ROOT of a checkout (`git_dir` looks for `<dir>/.git` and does not
+- *    walk up, so a session whose cwd is a subdirectory degrades to
+- *    `workspace_root` — today's behaviour, never something worse);
+- * 3. it belongs to the SAME repository — identical git common dir. A cwd in
+- *    another repo would otherwise write this repo's register with a foreign
++ * 2. it resolves to the NEAREST enclosing checkout root, walking up from the
++ *    reported directory;
++ * 3. that root belongs to the SAME repository — identical git common dir. A cwd
++ *    in another repo would otherwise write this repo's register with a foreign
+  *    branch, and the register is shared by every worktree here.
++ *
++ * ## Condition 2 used to reject a subdirectory, and that was wrong here
++ *
++ * It required the reported directory to BE a checkout root, and defended the
++ * rejection as "a session whose cwd is a subdirectory degrades to
++ * `workspace_root` — today's behaviour, never something worse". R2 round 3
++ * finding 2 measured that claim false in this repository's own layout, where
++ * worktrees live at `<parent>/.claude/worktrees/<name>` — NESTED under the
++ * parent. For a session standing at `<parent>/.claude/worktrees/wt/src`:
++ *
++ *   - the degraded root is `<parent>`, i.e. equal to `workspace_root`;
++ *   - so `git_dir` and `git_common_dir` taken from it are both `<parent>/.git`;
++ *   - and the reported cwd is under `<parent>` as well.
++ *
++ * Every available signal then reports a healthy same-tree run for a genuine
++ * two-tree one. That is not a loss of precision, it is a confident wrong answer,
++ * which is strictly worse than the fallback the docblock was defending.
++ *
++ * The walk is bounded twice over, per the AI council's condition (2026-08-19,
++ * 2/2 convergent on this shape): it stops at the FIRST enclosing checkout root,
++ * so a nested worktree is found before the parent that contains it, and the
++ * same-repository check is retained on whatever it finds — a cwd inside an
++ * unrelated repo nested in this tree resolves to that repo's root, fails the
++ * identity check, and falls back. Paths are canonicalised before the walk so a
++ * symlinked cwd cannot walk a different chain than the one it names.
+  */
+ export function session_checkout(
+     workspace_root: string,
+@@ -422,16 +446,39 @@ export function session_checkout(
+ ): string {
+     const cwd = String(payload_cwd ?? '').trim();
+     if (cwd === '') return workspace_root;
++    let start: string;
+     try {
+         if (!fs.statSync(cwd).isDirectory()) return workspace_root;
++        start = fs.realpathSync(cwd);
+     } catch {
+         return workspace_root;
+     }
+-    if (git_dir(cwd) === null) return workspace_root;
+-    const mine = git_common_dir(cwd);
++    const root = nearest_checkout_root(start);
++    if (root === null) return workspace_root;
++    const mine = git_common_dir(root);
+     const theirs = git_common_dir(workspace_root);
+     if (mine === null || theirs === null || mine !== theirs) return workspace_root;
+-    return cwd;
++    return root;
++}
++
++/**
++ * The nearest enclosing directory that is a checkout root, or `null`.
++ *
++ * The iteration cap is a loop guard, not a policy: `path.dirname` is a fixed
++ * point at the filesystem root, so the terminating condition is the unchanged
++ * path and the counter only bounds a pathological filesystem. The FIRST hit
++ * wins, which is what makes a nested worktree resolve to itself rather than to
++ * the checkout it sits inside.
++ */
++function nearest_checkout_root(start: string): string | null {
++    let dir = start;
++    for (let i = 0; i < 64; i++) {
++        if (git_dir(dir) !== null) return dir;
++        const up = path.dirname(dir);
++        if (up === dir) return null;
++        dir = up;
++    }
++    return null;
+ }
+ 
+ /**
 diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
-index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e935fae64b 100644
+index 4837ca02e528a2ab55336c30368f36c29324712a..56d6bbd8f08148db46aafe7232b1380ac7865f47 100644
 --- a/tests/hooks/run_continuation_dispatch.test.ts
 +++ b/tests/hooks/run_continuation_dispatch.test.ts
 @@ -83,25 +83,12 @@ function writeWorkspace(): string {
@@ -422,7 +675,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
      const claim = path.join(root, roadmap_claim_rel(SESSION));
      fs.mkdirSync(path.dirname(claim), { recursive: true });
      fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
-@@ -127,8 +114,24 @@ function fixtureRoadmap(): string {
+@@ -127,8 +114,33 @@ function fixtureRoadmap(): string {
      ].join('\n');
  }
  
@@ -444,11 +697,20 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
 +    delete env['GIT_WORK_TREE'];
 +    delete env['GIT_INDEX_FILE'];
 +    delete env['GIT_COMMON_DIR'];
++    // Round 3 finding 7: stripping the four pointers closed the ENV axis and
++    // left the CONFIG axis open. A maintainer with a global `core.hooksPath`
++    // had their real hook set run against the fixture repo on `commit`, and a
++    // global `commit.gpgsign = true` without an available key made the fixture
++    // commit throw — reding three cases for a reason unrelated to the concern.
++    // Pointing both config scopes at /dev/null is the documented way to run git
++    // against nothing but the repository-local config.
++    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
++    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
 +    const r = spawnSync('git', args, { cwd, encoding: 'utf-8', env });
      if ((r.status ?? -1) !== 0) {
          throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
      }
-@@ -161,9 +164,16 @@ function writeWorktreePair(): { main: string; worktree: string } {
+@@ -161,9 +173,16 @@ function writeWorktreePair(): { main: string; worktree: string } {
      cleanups.push(worktree);
      git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-wt', worktree);
  
@@ -468,7 +730,91 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
  
      // Through the production writer, never a hand-built path: the whole defect
      // was writer and reader disagreeing, so a fixture that hard-codes the
-@@ -179,6 +189,7 @@ function writeWorktreePair(): { main: string; worktree: string } {
+@@ -175,10 +194,91 @@ function writeWorktreePair(): { main: string; worktree: string } {
+     return { main, worktree };
+ }
+ 
++/**
++ * A roadmap body with a chosen number of open steps, so the parent and the
++ * worktree copies of the SAME slug can be made to disagree. That disagreement is
++ * the whole instrument: it is what tells a reader which tree the concern actually
++ * read, and no assertion about paths alone can establish it.
++ */
++function fixtureRoadmapWithOpen(openSteps: number): string {
++    const lines = [
++        '---',
++        'complexity: structural',
++        'execution:',
++        '  mode: autonomous',
++        '---',
++        '',
++        '# Fixture',
++        '',
++        '## Phase 0 — parameterised open steps',
++        '',
++        '- [x] **0.0** done',
++    ];
++    for (let i = 1; i <= openSteps; i++) {
++        lines.push(`- [ ] **0.${i}** open ${i}`);
++    }
++    lines.push('');
++    return lines.join('\n');
++}
++
++/**
++ * A main checkout with the worktree NESTED INSIDE IT, at
++ * `<main>/.claude/worktrees/wt` — this repository's own layout.
++ *
++ * `writeWorktreePair` deliberately places the worktree OUTSIDE `main`, to keep a
++ * shared path prefix from hiding a prefix mistake. That choice also made the
++ * whole nested class unreachable, which is how round 3 finding 2 survived two
++ * review rounds: every signal the concern emits reads "healthy same-tree" when
++ * the session sits in a SUBDIRECTORY of a nested worktree, because the degraded
++ * session root lands on the parent and the raw cwd is under the parent too.
++ *
++ * Both fixtures are kept. Nested and non-nested are different topologies and the
++ * concern has to be right in both.
++ */
++function writeNestedWorktreePair(): { main: string; worktree: string; sub: string } {
++    const main = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-nested-main-'));
++    cleanups.push(main);
++    git(main, 'init', '--quiet', '--initial-branch=main');
++    git(main, 'config', 'user.email', 'fixture@example.com');
++    git(main, 'config', 'user.name', 'fixture');
++    fs.writeFileSync(path.join(main, 'README.md'), 'fixture\n', 'utf-8');
++    git(main, 'add', 'README.md');
++    git(main, 'commit', '--quiet', '-m', 'fixture base');
++
++    const worktree = path.join(main, '.claude', 'worktrees', 'wt');
++    fs.mkdirSync(path.dirname(worktree), { recursive: true });
++    git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-nested-wt', worktree);
++
++    // The parent copy carries TWO open steps, the worktree copy ONE. A concern
++    // reading the parent reports 2; reading the worktree reports 1.
++    const parentRoadmaps = path.join(main, 'agents', 'roadmaps');
++    fs.mkdirSync(parentRoadmaps, { recursive: true });
++    fs.writeFileSync(
++        path.join(parentRoadmaps, `${SLUG}.md`),
++        fixtureRoadmapWithOpen(2),
++        'utf-8',
++    );
++    const wtRoadmaps = path.join(worktree, 'agents', 'roadmaps');
++    fs.mkdirSync(wtRoadmaps, { recursive: true });
++    fs.writeFileSync(path.join(wtRoadmaps, `${SLUG}.md`), fixtureRoadmapWithOpen(1), 'utf-8');
++
++    const claim = claim_file(worktree, SESSION);
++    fs.mkdirSync(path.dirname(claim), { recursive: true });
++    fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
++
++    // The session stands in a SUBDIRECTORY of the worktree, which is the shape
++    // `session_checkout`'s checkout-root condition used to reject.
++    const sub = path.join(worktree, 'src');
++    fs.mkdirSync(sub, { recursive: true });
++
++    return { main, worktree, sub };
++}
++
+ /** Drive the real dispatcher over the real manifest for a claude `stop`. */
  function dispatchStop(
      root: string,
      transcript: string,
@@ -476,7 +822,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
  ): { code: number; err: string; out: string } {
      const r = spawnSync(
          'npx',
-@@ -195,7 +206,11 @@ function dispatchStop(
+@@ -195,7 +295,11 @@ function dispatchStop(
              root,
          ],
          {
@@ -489,7 +835,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
              encoding: 'utf-8',
              cwd: REPO,
              timeout: 180_000,
-@@ -306,10 +321,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -306,10 +410,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
          // 1. The tree the CONCERN resolved under — the `--project-dir` half.
          expect(real(ev['workspace_root'])).toBe(real(worktree));
  
@@ -509,7 +855,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
          const gitDir = ev['git_dir'] as string;
          const commonDir = ev['git_common_dir'] as string;
          expect(gitDir).not.toBe('');
-@@ -326,6 +349,114 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -326,6 +438,210 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
      });
  
@@ -570,18 +916,19 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
 +        expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
 +    });
 +
-+    it('keeps the degraded resolution distinguishable — cwd inside a worktree subdirectory', () => {
-+        // Round 2 finding 1. `session_checkout` requires the cwd to BE a
-+        // checkout root, and a session started with `cd <worktree>/src` is not:
-+        // `session_root` therefore collapses onto the reader's root and BOTH
-+        // path discriminators read FALSE for a genuine two-tree run — the
-+        // round-1 false negative re-entering through the degradation path.
++    it('walks up from a worktree subdirectory — the non-nested topology too', () => {
++        // This case was written for round 2 finding 1 and PINNED THE OPPOSITE
++        // BEHAVIOUR: `session_checkout` required the cwd to BE a checkout root,
++        // so `cd <worktree>/src` degraded onto the reader's root, and the case
++        // asserted that degradation as "the honest current behaviour" while
++        // arguing that only its VISIBILITY could be fixed.
 +        //
-+        // The fields cannot prevent the degradation (the guard's three
-+        // conditions are the register's, and loosening them is a change to the
-+        // register). What they must do is make it VISIBLE, which is what
-+        // `session_cwd` is for: a raw path that is neither `session_root` nor
-+        // under it, a shape no healthy resolution produces.
++        // Round 3 finding 2 refuted the premise: in a NESTED worktree layout the
++        // degraded answer is not merely imprecise, it is confidently wrong, and
++        // every signal then reads healthy same-tree. The council's fix walks the
++        // resolver up, which makes the old assertion false. Retargeted rather
++        // than deleted — the topology it covers (worktree OUTSIDE the parent) is
++        // still one the walk has to get right, and it is the one this fixture has.
 +        const { main, worktree } = writeWorktreePair();
 +        const sub = path.join(worktree, 'src');
 +        fs.mkdirSync(sub, { recursive: true });
@@ -593,16 +940,38 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
 +        const ev = engaged[0] as Record<string, unknown>;
 +        const real = (p: unknown): string => fs.realpathSync(p as string);
 +
-+        // The degradation itself, pinned as the honest current behaviour rather
-+        // than asserted away.
-+        expect(ev['session_root']).toBe(real(main));
-+        expect(ev['session_root']).toBe(ev['workspace_root']);
-+
-+        // And the fact that makes it readable: the raw cwd is the subdirectory,
-+        // which is NOT under the resolved session root. A reader comparing the
-+        // two can tell this line apart from a genuine same-tree run, where the
-+        // cwd would sit under `session_root`.
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_root']).not.toBe(ev['workspace_root']);
++        // The raw cwd stays on the line, and now it sits UNDER the resolved root
++        // — which is what a healthy resolution looks like, and is the reading the
++        // field exists to make available either way.
 +        expect(ev['session_cwd']).toBe(real(sub));
++        expect(
++            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
++        ).toBe(true);
++    });
++
++    it('still falls back when the cwd belongs to a DIFFERENT repository', () => {
++        // The same-repository bound the council named, and the reason
++        // `session_cwd` keeps earning its place after the walk-up: degradation
++        // did not disappear, it narrowed. A cwd in a foreign checkout resolves to
++        // that checkout's root, fails the common-dir identity check, and falls
++        // back — and the raw cwd is then a path outside the resolved root, which
++        // is the shape that tells a reader a fallback happened.
++        const { main } = writeWorktreePair();
++        const foreign = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-foreign-'));
++        cleanups.push(foreign);
++        git(foreign, 'init', '--quiet', '--initial-branch=main');
++        const transcript = writeTranscript(3);
++        dispatchStop(main, transcript, foreign);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        expect(ev['session_root']).toBe(real(main));
++        expect(ev['session_cwd']).toBe(real(foreign));
 +        expect(
 +            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
 +        ).toBe(false);
@@ -621,10 +990,83 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
 +        expect(engaged[0]?.['session_cwd']).toBe('');
 +    });
 +
++    it('reads the SESSION tree roadmap from a nested worktree subdirectory — no false stall', () => {
++        // The fixture both council seats named independently (2026-08-19, 2/2 on
++        // A/A), and it is the one that closes round 3's two highs together:
++        //
++        //   finding 2 — `session_checkout` required the reported cwd to BE a
++        //   checkout root, so a session in `<worktree>/src` degraded onto the
++        //   parent. With the worktree NESTED under the parent, every signal then
++        //   reads healthy same-tree for a genuine two-tree run.
++        //
++        //   finding 1 — the progress scan read the roadmap from the READER's
++        //   tree, so the count follows a file nobody is editing. The agent flips
++        //   a checkbox in the worktree, the parent copy does not move, and the
++        //   stall detector declares a working run finished.
++        //
++        // The two roadmap copies disagree ON PURPOSE — parent 2 open, worktree 1.
++        // That disagreement is the instrument: no assertion about paths alone
++        // can show which file was read.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const transcript = writeTranscript(3);
++        const res = dispatchStop(main, transcript, sub);
++        expect(res.code).toBe(2);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        // 1. The resolver walked up out of the subdirectory to the worktree root.
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_root']).not.toBe(ev['workspace_root']);
++        expect(ev['workspace_root']).toBe(real(main));
++
++        // 2. Which tree was actually READ. The worktree copy has one open step,
++        // the parent copy two — so this single number is the finding-1 assertion.
++        expect(ev['open']).toBe(1);
++
++        // 3. And the two-tree discriminators hold in the nested topology, where
++        // before the fix all three read healthy same-tree.
++        expect(real(ev['git_dir'] as string)).not.toBe(real(ev['git_common_dir'] as string));
++        expect(real(ev['git_common_dir'] as string)).toBe(real(path.join(main, '.git')));
++        expect(ev['session_cwd']).toBe(real(sub));
++
++        // 4. The council's same-repository bound: walking up must not cross into
++        // another repository, and the proof is the shared common dir.
++        expect(real(ev['git_common_dir'] as string)).toBe(
++            real(path.join(main, '.git')),
++        );
++    });
++
++    it('does not stall while the SESSION tree count keeps moving', () => {
++        // The second half of the council's fixture: three fires with the worktree
++        // count advancing between them. Reading the parent, the count is frozen
++        // at 2 for all three and the third fire emits `halt-stall` — a working
++        // run declared finished. Reading the session tree, it moves 3 → 2 → 1 and
++        // no halt is emitted.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const wtRoadmap = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
++
++        for (const [i, open] of [3, 2, 1].entries()) {
++            fs.writeFileSync(wtRoadmap, fixtureRoadmapWithOpen(open), 'utf-8');
++            // A fresh transcript per fire, with a growing user-turn count: the
++            // concern keys its duplicate-fire guard on the turn ordinal, so
++            // re-firing on the same transcript would be discarded as a duplicate
++            // rather than counted as an engagement.
++            dispatchStop(main, writeTranscript(3 + i), sub);
++        }
++
++        const log = events(main);
++        expect(log.filter((e) => e['event'] === 'halt-stall').length).toBe(0);
++        const opens = log.filter((e) => e['event'] === 'engage').map((e) => e['open']);
++        expect(opens).toEqual([3, 2, 1]);
++    });
++
      it('records the provenance on a non-engage event too — the defer branch', () => {
          const root = writeWorkspace();
          const transcript = writeTranscript(3);
-@@ -350,7 +481,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -350,7 +666,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
              fs.realpathSync(root),
          );
@@ -644,3 +1086,43 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e9
          // This fixture is a plain temp directory, not a repository — so both git
          // fields are empty, and that is the honest degenerate reading rather
          // than a gap. Pinned so a future change cannot start emitting a guessed
+diff --git a/tests/scripts/session_register.test.ts b/tests/scripts/session_register.test.ts
+index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..2f45bf14405fdaa4630e49ba560ed9d3a97c1e69 100644
+--- a/tests/scripts/session_register.test.ts
++++ b/tests/scripts/session_register.test.ts
+@@ -842,11 +842,32 @@ describe('the record describes THIS session checkout, not the chdir target', ()
+         expect(session_checkout(main, file)).toBe(main);
+     });
+ 
+-    it('refuses a cwd that is not a checkout root — git_dir does not walk up', () => {
++    it('walks up from a subdirectory to the nearest enclosing checkout root', () => {
++        // This case previously asserted the OPPOSITE — "refuses a cwd that is not
++        // a checkout root — git_dir does not walk up" — and it was testing wrong
++        // behaviour. R2 round 3 finding 2 measured what the refusal cost: with a
++        // worktree NESTED under the parent (this repository's own layout,
++        // `.claude/worktrees/<name>`), a session standing in a subdirectory
++        // resolved to the PARENT, and every downstream signal then reported a
++        // healthy same-tree run for a genuine two-tree one. A confidently wrong
++        // answer, not a loss of precision.
+         const { main, wt } = make_repo();
+-        const sub = path.join(wt, 'src');
++        const sub = path.join(wt, 'src', 'deeper');
+         fs.mkdirSync(sub, { recursive: true });
+-        expect(session_checkout(main, sub)).toBe(main);
++        expect(session_checkout(main, sub)).toBe(fs.realpathSync(wt));
++    });
++
++    it('walks up out of a NESTED worktree to the worktree, never to the parent', () => {
++        // The topology the finding was measured in, and the one the walk has to
++        // resolve in the narrow direction: the first enclosing checkout root wins,
++        // so the nested worktree is found before the checkout that contains it.
++        const { main } = make_repo();
++        const nested = path.join(main, '.claude', 'worktrees', 'wt-nested');
++        fs.mkdirSync(path.dirname(nested), { recursive: true });
++        git(main, 'worktree', 'add', '--quiet', '-b', 'nested-branch', nested);
++        const sub = path.join(nested, 'src');
++        fs.mkdirSync(sub, { recursive: true });
++        expect(session_checkout(main, sub)).toBe(fs.realpathSync(nested));
+     });
+ 
+     it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {
