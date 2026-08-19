@@ -32,7 +32,7 @@
  * REPORT BY DEFAULT, ENFORCE ON REQUEST — and that is not timidity. The
  * invariant is not true yet: `road-to-single-delivery` Phase 2, which makes the
  * producers write disjoint layers, is HALTED on blocker
- * `partition-requires-global-layer`. A blocking default would therefore red every
+ * `partition-current-layer-undecidable`. A blocking default would therefore red every
  * run on a defect nobody can currently fix, which teaches readers to ignore it —
  * the exact failure this estate has recorded twice already. Pass `--enforce` once
  * Phase 2 lands.
@@ -50,6 +50,17 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { reportScanned } from './_lib/scan_scope.js';
+
+// ledger-exempt: this gate has no skip semantics to account for. `_lib/gate_ledger`
+// exists so a gate that PASSES OVER targets says which and why; here the target set
+// is four fixed artefact types, every one of them appears in the output, and a type
+// whose layer is missing is printed as `absent` rather than quietly dropped — see
+// the `absent` field and the `types_compared=N of 4` ledger line, which together
+// already carry what a per-target ledger would. Adding one would restate the render
+// in a second format, and the gate's own docstring warns that the degenerate pass
+// here is a marker with no argument behind it. If a future version gains a real skip
+// path — a type it declines to compare for a reason — this exemption is void and the
+// ledger is the right answer.
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -336,6 +347,7 @@ export function main(argv?: readonly string[]): number {
     let globalRoot = path.join(os.homedir(), '.claude');
     let projectRoot = path.join(REPO_ROOT, '.claude');
     let enforce = false;
+    let quiet = false;
 
     const value = (i: number): string | null => {
         const v = args[i + 1];
@@ -354,12 +366,17 @@ export function main(argv?: readonly string[]): number {
             i += 1;
         } else if (a === '--enforce') {
             enforce = true;
+        } else if (a === '--quiet') {
+            // R2 finding: the full per-type table is ~30 lines, and preflight is a
+            // `silent: true` task. A gate that floods a quiet chain is a gate people
+            // learn to scroll past, which is the same end state as an unbound one.
+            quiet = true;
         } else if (a === '--help' || a === '-h') {
             process.stdout.write(
                 'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce]\n' +
                     '\n' +
                     'Reports by default and exits 0: the invariant is not true yet, because\n' +
-                    'road-to-single-delivery Phase 2 is halted on partition-requires-global-layer.\n' +
+                    'road-to-single-delivery Phase 2 is halted on partition-current-layer-undecidable.\n' +
                     '--enforce exits 1 on any overlap, and is what to register once Phase 2 lands.\n',
             );
             return 0;
@@ -379,7 +396,7 @@ export function main(argv?: readonly string[]): number {
     }
 
     const v = evaluate(globalRoot, projectRoot);
-    process.stdout.write(`${render(v, globalRoot, projectRoot)}\n`);
+    if (!quiet) process.stdout.write(`${render(v, globalRoot, projectRoot)}\n`);
     // Dead-scope assertion via the shared primitive rather than a hand-rolled
     // `scanned:` line: `check_gate_coverage`'s hardening ratchet accepts an
     // emitted line only from a gate registered in the enforced manifest, and this
@@ -451,7 +468,7 @@ export function main(argv?: readonly string[]): number {
     }
     process.stdout.write(
         `⚠️  check_single_delivery: ${detail}. Reported, not enforced — ` +
-            'road-to-single-delivery Phase 2 is halted on `partition-requires-global-layer`, ' +
+            'road-to-single-delivery Phase 2 is halted on `partition-current-layer-undecidable`, ' +
             'so this is a known-open defect rather than a regression. Re-run with --enforce ' +
             'once the partition ships.\n',
     );

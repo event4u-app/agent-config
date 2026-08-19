@@ -14,10 +14,16 @@
 //     which is the maintainer's normal local state.
 //
 // WHAT THIS TEST CAN AND CANNOT PROVE, stated because the distinction is the whole
-// point. It proves (1) the registration is present in the preflight recipe and
-// (2) the binary genuinely refuses on a real overlap under --enforce. It CANNOT
-// prove anyone runs preflight — no test can — so the gap it closes is
-// "registered somewhere nothing reads", not "a human skipped the step".
+// point — and because the first version of this file got it wrong. It proves
+// (1) the command is inside the `preflight` task's OWN block, not merely somewhere
+// in the file, and (2) the binary genuinely refuses on a real overlap under
+// --enforce. It CANNOT prove anyone runs preflight — no test can — so the gap it
+// closes is "registered where nothing reads it", not "a human skipped the step".
+//
+// The correction matters: the original assertions read the whole taskfile as a flat
+// string, so moving the command into a task nobody invokes left them green. R2
+// review caught it, and the claim "the binding is PROVEN live" was an overstatement
+// of exactly the failure this file exists to catch.
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -29,31 +35,66 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+/**
+ * Extract the command list of ONE task from the taskfile.
+ *
+ * R2 finding: the first version of these assertions read the whole file as a flat
+ * string, so moving the command — comment block and all — into a task nobody
+ * invokes left every assertion green while `preflight` no longer listed it. That
+ * proved PRESENCE while claiming REACHABILITY, which is the exact failure the test
+ * exists to prevent. Parsing one task's own block is the cheapest thing that can
+ * tell the difference.
+ *
+ * Deliberately a small indentation-aware reader rather than a YAML dependency: the
+ * assertion is about which task owns a line, and a full parse would still have to
+ * be told that.
+ */
+function taskCommands(recipe: string, task: string): string[] {
+    const lines = recipe.split('\n');
+    const start = lines.findIndex((l) => l.trimEnd() === `  ${task}:`);
+    if (start < 0) return [];
+    const out: string[] = [];
+    for (let i = start + 1; i < lines.length; i += 1) {
+        const l = lines[i] as string;
+        // A new top-level task ends the block. Two-space indent + name + colon.
+        if (/^ {2}[A-Za-z0-9_:.-]+:\s*$/.test(l)) break;
+        out.push(l);
+    }
+    return out;
+}
+
 describe('preflight binding for check_single_delivery', () => {
     const recipe = readFileSync(join(REPO, 'taskfiles', 'ci-fast.yml'), 'utf8');
+    const preflight = taskCommands(recipe, 'preflight');
 
-    it('is registered in the preflight recipe', () => {
-        expect(recipe).toContain('src/scripts/check_single_delivery');
+    it('finds the preflight task at all (guards the parser itself)', () => {
+        // Vacuity guard: every assertion below is over `preflight`, so an empty
+        // slice would make them all pass for the wrong reason.
+        expect(preflight.length).toBeGreaterThan(10);
+        expect(preflight.join('\n')).toContain('src/scripts/check_detector_corpus');
+    });
+
+    it('is registered INSIDE the preflight task, not merely somewhere in the file', () => {
+        expect(preflight.join('\n')).toContain('src/scripts/check_single_delivery');
     });
 
     it('is registered in REPORT mode, not --enforce, while Phase 2 is open', () => {
         // --enforce here would red every preflight run on a defect nobody can
         // currently fix, which is how a gate teaches people to skip it. The flip
-        // lands with the partition; if someone flips it earlier, this fails and
-        // they have to say why.
-        const line = recipe
-            .split('\n')
-            .find((l) => l.includes('src/scripts/check_single_delivery'));
+        // lands with the partition; an early flip has to fail here and be argued.
+        const line = preflight.find((l) => l.includes('src/scripts/check_single_delivery'));
         expect(line).toBeDefined();
         expect(line).not.toContain('--enforce');
     });
 
-    it('states why it binds to preflight rather than CI', () => {
-        // The reason is a measured fact (CI has no .claude/ layers), and a binding
-        // whose reason is not written down is the one a later cleanup deletes.
-        const idx = recipe.indexOf('src/scripts/check_single_delivery');
-        const preamble = recipe.slice(Math.max(0, idx - 1200), idx);
-        expect(preamble).toMatch(/gitignored|no CI leg|developer\s*\n?\s*#?\s*machine/i);
+    it('states, at the call site, why it binds to preflight rather than CI', () => {
+        // A binding whose reason is not written down is the one a later cleanup
+        // deletes. Scoped to the preflight block so the reason cannot be satisfied
+        // by prose elsewhere in the file.
+        const body = preflight.join('\n');
+        const idx = body.indexOf('src/scripts/check_single_delivery');
+        expect(idx).toBeGreaterThan(-1);
+        expect(body.slice(Math.max(0, idx - 1400), idx)).toMatch(/gitignored|no CI leg/i);
     });
 });
 

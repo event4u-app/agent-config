@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **52** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
@@ -39,7 +39,7 @@
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
 | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [3](#blockers-road-to-single-delivery) | ████████░░ 75% |
+| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████████░░ 75% |
 | 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
@@ -837,6 +837,20 @@ _2 blockers resolved._
     half only, keeping DRIFT's block but printing the cost. Probe first with
     `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
   - **Resolved when:** the option is recorded and a live guard run prints the count on the line it actually emits.
+- **partition-current-layer-undecidable** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 are landed and do not depend on it.
+  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (a), because it is the one option that closes two blockers with one change and turns an absent fact into a present one rather than working around it. (b) ships a partition that can silently prefer an outdated global rule over a fresh local one — the same class of silent wrongness this roadmap exists to remove. (c) is correct but pays on every build for a question (a) answers once.
+  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this non-decision, which is why the phase halts rather than shipping a proxy.
+  - **What to do:**
+    pick one. **(a)** have the installer write a version stamp beside
+    each host layer it writes (`~/.claude/.agent-config-version` or equivalent), which
+    makes `unknown` stop being the normal answer and also fixes
+    `warn-path-unreachable-without-version-marker`; **(b)** redefine the predicate to
+    the decidable half — present/absent — and drop staleness explicitly, stating the
+    cost (a stale global layer would partition against outdated rules); **(c)** compare
+    content instead of versions (hash the shared set), which is decidable but pays a
+    read of both layers on every generation. Probe with
+    `bash -c 'source src/scripts/_lib/scope_guard.sh project . .; installed_version_at "$HOME/.claude"'`.
+  - **Resolved when:** the option is recorded and 2.0's verify can be run against it.
 - **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
   - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
   - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose. - **STILL OPEN, and the council SPLIT — but one side's premise is now measured false, which narrows the question rather than answering it.** anthropic chose **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are semantically path-specific AND have CI gates"*; openai chose **(a)** (remove `paths:`) on the ground that a CI backstop cannot substitute for an obligation the model must hold *during* the session — naming `source-confidentiality` as a rule whose harm precedes CI. **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class gates present · `skill-quality` → present · `source-confidentiality` → `check_no_external_sources` present · **`rule-type-governance` → NO gate found.** So anthropic's premise holds for three of four and fails for one, and the failing one is the case openai's argument generalises to. That does **not** select an option for the other three, and a per-rule split is a fourth option neither seat proposed — which is precisely the kind of call this entry reserves. **What is now decided:** nothing. **What is now cheaper:** the question is no longer "(a) or (b) for four rules" but "does the CI-backstop argument hold per rule", with one measured counter-example already in hand.

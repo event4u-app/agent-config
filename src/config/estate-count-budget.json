@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 34,
     "later_roadmaps": 49,
-    "open_blockers": 73
+    "open_blockers": 74
   },
   "baseline_history": [
     {
@@ -139,6 +139,13 @@
       "later_roadmaps": 49,
       "open_blockers": 73,
       "why": "WALKED DOWN by 1 blocker, net of two resolutions and one new finding, which is why the delta is -1 rather than -2. RESOLVED: overlap-check-binding-surface, on a CONVERGED AI council verdict (2/2) - preflight, with both seats requiring the binding be provably live, which it now is. And partition-requires-global-layer, resolved to option (c) not by a vote but by a MEASUREMENT that eliminated option (a): consistency.yml runs task generate-tools on a fresh checkout, so refusing without a global layer would break the pipeline - the exact counter-case one seat had named against its own choice. OPENED: warn-path-unreachable-without-version-marker, and it is a finding against work this same branch marked DONE. Phase 3 instrumented the scope guard WARN verdict with an overlap count; measured, that branch never executes, because installed_version_at returns unknown for ~/.claude (no package.json beside a host directory) so every real cross-scope install classifies as DRIFT. The instrumentation is live and unreachable, which reads as coverage in the diff. Recording it as a blocker rather than silently repairing it is the point: it falsifies part of a completed phase. active and later unchanged, which says nothing was created or parked to absorb any of this."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 34,
+      "later_roadmaps": 49,
+      "open_blockers": 74,
+      "why": "RESTORED to 74, and this entry records a WRONG WALK-DOWN rather than growth. The entry directly above walked open_blockers 74 -> 73 on the grounds that two blockers resolved and one opened. Two did resolve. But Phase 2 had halted a SECOND time in the same change - on an undecidable current-global-layer predicate - and that halt was written as PROSE in step 2.0 instead of as a blocker. So the number of open DECISIONS never fell, only the number of recorded ones did, and the ratchet was satisfied by not writing something down. R2 review caught it: after the flip, no open blocker blocked Phase 2, the dashboard stopped explaining the halt, and lint_roadmap_blockers decidability fields never applied to the live decision. partition-current-layer-undecidable now carries it with three enumerated options and a recommendation, and 74 is the measurement again. The lesson is the one this file keeps recording from the other direction: a walk-down is only honest if the work it claims to have removed is actually gone."
     }
   ],
   "target": {

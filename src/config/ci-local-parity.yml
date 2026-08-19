@@ -184,6 +184,24 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: check_single_delivery
+    class: developer-machine-scoped
+    reason: >
+      Compares the two host artefact layers — `~/.claude/**` against
+      `<project>/.claude/**` — and the overlap it looks for is a property of the
+      DEVELOPER MACHINE, not of the branch. In CI there is nothing to compare:
+      `.claude/` is gitignored and no workflow leg installs at user scope, so a
+      run finds zero layers on both sides and can only ever report "nothing was
+      compared". Measured, not assumed — that is why the gate carries an
+      OPTIONAL_SURFACE `allowEmpty` reason rather than treating the absence as a
+      dead scope. Declared rather than wired for the same reason
+      `check_pr_ci_current` below is: there is no remote equivalent to write, and
+      writing one would measure a topology no contributor has. The AI council
+      (2/2, 2026-08-19) converged on preflight for exactly this argument. Note the
+      gate is registered in REPORT mode while `road-to-single-delivery` Phase 2 is
+      halted; the `--enforce` flip lands with the partition and does not change
+      this declaration, because enforcing remotely would still have nothing to
+      enforce against.
   - id: check_pr_ci_current
     class: pre-push-scoped
     reason: >
