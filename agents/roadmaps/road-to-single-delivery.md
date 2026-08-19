@@ -223,22 +223,50 @@ live and why the earlier one was replaced.
 
 ## Phase 2 — Make the producers write disjoint layers
 
-- [ ] **2.1** The project projection emits only exclusively-package-only
+> **HALTED 2026-08-19 on a precondition this phase did not state — discovered
+> while implementing 2.1, and recorded rather than assumed away.** The partition
+> reduces `<repo>/.claude/` from 111 rules and 338 skills to **16 rules and zero
+> skills**. Every artefact it removes is then delivered *only* by the global
+> layer — so the phase silently assumes **the global install is present and
+> current on every machine that opens this repository.** It is not stated
+> anywhere, nothing checks it, and where it fails the consequence is not a token
+> cost but an **under-governed checkout**: a fresh clone with no global install
+> would receive 16 rules and no skills, where it receives 111 and 338 today.
+>
+> That is the same class of unstated-assumption failure that produced two refuted
+> drafts in this roadmap's own inbox, so it gets a precondition step and a blocker
+> rather than a best guess. `process-full` halt condition 4 —
+> scope-out-of-roadmap work discovered.
+
+- [ ] **2.0** State and check the precondition the partition rests on: a machine
+      that holds the project layer must also hold a current global layer, and
+      something must say so when it does not. Decide where that check lives and
+      what it does on failure — refuse to project, warn, or project the full set
+      as a fallback.
+      **Blocked on `partition-requires-global-layer`.**
+      `verify:` a checkout with no global rules layer produces a stated outcome
+      rather than a silently reduced one.
+- [~] **2.1** The project projection emits only exclusively-package-only
       artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
       carries none. The predicate goes beside `rule_in_scope`
-      (`condense.ts:1111`), not into a new subsystem.
+      (`condense.ts:1111`) — specifically beside `_scoped_rule_basenames()`
+      (`condense.ts:1106-1122`), which is the selection this phase narrows — not
+      into a new subsystem.
       `verify:` after `task sync && task generate-tools`, the project rule count
       is 16 and the project skill count is 0, and every one of the 16 is
       exclusively `[agent-config-maintainer]`.
-- [ ] **2.2** The global install excludes exclusively-package-only artefacts, so
+      **Blocked on `partition-requires-global-layer` (2.0).**
+- [~] **2.2** The global install excludes exclusively-package-only artefacts, so
       the partition holds from the other side too and a re-install cannot
       re-create the overlap.
       `verify:` a global install carries none of the 16.
-- [ ] **2.3** Re-measure standing delivery and the overlap after 2.1, and record
+      **Blocked on `partition-requires-global-layer` (2.0).**
+- [~] **2.3** Re-measure standing delivery and the overlap after 2.1, and record
       both against the pre-partition figures.
       `verify:` `check_standing_rule_delivery` reports overlap 0; the total is
       recorded whether or not it clears the 110,000 cap, because the residue
       belongs to body length and not to this roadmap.
+      **Blocked on 2.1.**
 
 **AC-2:** overlap is zero for rules and skills, from either producer, and the
 project layer contains exactly the package-only set.
@@ -307,9 +335,50 @@ than reporting a clean invariant that does not hold.
 | 3 | A census is taken on a stale projection and the design leans on it | product | This happened twice in the inbox that produced this roadmap: a 5-July symlink tree reported 24 global-only rules where a fresh tree reports 5 | Phase 0.1 makes projection shape a required artefact field, and the stale-vs-fresh table stays in this file rather than being deleted after the correction | Phase 0 — Pin the measurement so no fifth draft repeats the fourth's error |
 | 4 | ADR-226 is treated as merely refuted | product | Its secondary argument moved (0 prose-divergent on a fresh tree) while its primary one — `source-of-truth.md` project-only, structural generated-vs-installed divergence — was confirmed; a successor that claims the record was wrong would discard reasoning that is still correct | 1.1 requires the successor to state what changed as a topology DECISION, and the partition keeps `source-of-truth` in the project layer exactly where ADR-226 wanted it | Phase 1 — Replace ADR-226 |
 | 5 | A new check joins the set nothing invokes | implementation | `check_standing_rule_delivery` measures this defect, sits in `ci-fast` which no workflow runs, and has reported 185 % to nobody; `check_rule_projection_integrity` is inert with zero tools selected | 4.3 is blocked on an explicit binding decision rather than defaulted, and 0.2 records the second hole so it is not rediscovered as a surprise | Phase 4 — One producer-agnostic invariant check |
-| 6 | The projector change reds a wide set of generated-output gates | implementation | Changing what the project layer emits moves counts, byte-stability baselines and projection-integrity readings at once, which is the classic multi-gate cascade | 2.1 is one predicate beside an existing filter rather than a restructure, 2.3 re-measures immediately, and the phase order puts the measurement and the ADR before the mechanism so a halt leaves a coherent partial state | Phase 2 — Make the producers write disjoint layers |
+| 6 | A checkout without a current global layer is left under-governed | product | The partition delivers all but 16 rules and all 290 skills from the global layer alone, so a fresh clone, a CI runner or a colleague who never ran the installer would drop from 111 rules and 338 skills to 16 and 0 — silently. This is the risk that HALTED Phase 2: it was not in the phase when it was written, and it was found by implementing it | Phase 2.0 makes the precondition an explicit step, blocker `partition-requires-global-layer` reserves the fallback choice, and the recommendation makes the partition conditional on a machine holding both layers so omission cannot cost governance | Phase 2 — Make the producers write disjoint layers |
+| 7 | The projector change reds a wide set of generated-output gates | implementation | Changing what the project layer emits moves counts, byte-stability baselines and projection-integrity readings at once, which is the classic multi-gate cascade | 2.1 is one predicate beside an existing filter rather than a restructure, 2.3 re-measures immediately, and the phase order puts the measurement and the ADR before the mechanism so a halt leaves a coherent partial state | Phase 2 — Make the producers write disjoint layers |
 
 ## Blockers
+
+### blocker: partition-requires-global-layer
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 2 (a design decision with an under-governance failure mode)
+- **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
+  Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two
+  cost-classification surfaces and the invariant check all land while the
+  partition itself waits.
+- **The question:** the partition leaves `<repo>/.claude/` with 16 rules and zero
+  skills, so every other artefact is delivered *only* by the global layer. What
+  happens on a machine that has the project layer and no current global one — a
+  fresh clone, a CI runner, a colleague who never ran the installer? Today such a
+  checkout receives 111 rules and 338 skills; after the partition it would receive
+  16 and 0, and nothing would say so.
+- **Why an agent may not decide it:** the failure mode is an under-governed
+  session, which is the one class of regression this estate exists to prevent, and
+  the fallback choice (refuse / warn / project the full set) is a trade between
+  silent under-governance and silently re-creating the duplication. Both are
+  operator calls.
+- **What to do:** pick one of three enumerated options and record it.
+  **(a)** `task generate-tools` refuses to write a partitioned project layer when
+  `~/.claude/rules/` is absent or older than the installed release, pointing at
+  `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
+  back to projecting the full set, so a machine without the global layer keeps
+  today's behaviour and only a machine with both gets the partition. Probe the
+  current state with
+  `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
+- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a
+  maintainer decision.)** Option (c). It makes the partition a *property of a
+  machine that has both layers* rather than a global behaviour change, so no
+  checkout can lose governance by omission, and the duplication it leaves behind
+  on a single-layer machine is not duplication at all — there is only one layer
+  there. (a) turns a missing optional install into a hard failure of the normal
+  build; (b) is the silent under-governance itself.
+- **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
+  is the safe direction of this particular non-decision, which is why the phase
+  halts rather than shipping a default.
+- **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and
+  2.0's verify can be run against it.
 
 ### blocker: compact-survival-of-package-only-rules
 - **Status:** open

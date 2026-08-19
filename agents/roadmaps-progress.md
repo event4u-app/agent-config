@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **52** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
-**325 / 577 steps done · 56%**
+**325 / 575 steps done · 57%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -40,7 +40,7 @@
 | 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 23 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
 | 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 25 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 20 | 15 | 3 | 2 | 0 | [3](#blockers-road-to-single-delivery) | ██░░░░░░░░ 17% |
+| 25 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 13 | 3 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ██░░░░░░░░ 19% |
 | 26 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 27 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 28 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
@@ -824,13 +824,13 @@ _2 blockers resolved._
 
 ### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
 
-**Road to single delivery — one artefact, one layer, no duplicates** — 3 / 18 done (17%)
+**Road to single delivery — one artefact, one layer, no duplicates** — 3 / 16 done (19%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Pin the measurement so no fifth draft repeats the fourth's error | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 1 | Replace ADR-226 | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 2 | Make the producers write disjoint layers | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Make the producers write disjoint layers | ⬜ not started | 1 | 0 | 3 | 0 | 0% |
 | 3 | Stop the two surfaces that call duplication free | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | One producer-agnostic invariant check | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | The residue the partition does not resolve | ⬜ not started | 7 | 0 | 2 | 0 | 0% |
@@ -838,6 +838,19 @@ _2 blockers resolved._
 <a id="blockers-road-to-single-delivery"></a>
 **Blockers**
 
+- **partition-requires-global-layer** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two cost-classification surfaces and the invariant check all land while the partition itself waits.
+  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (c). It makes the partition a *property of a machine that has both layers* rather than a global behaviour change, so no checkout can lose governance by omission, and the duplication it leaves behind on a single-layer machine is not duplication at all — there is only one layer there. (a) turns a missing optional install into a hard failure of the normal build; (b) is the silent under-governance itself.
+  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this particular non-decision, which is why the phase halts rather than shipping a default.
+  - **What to do:**
+    pick one of three enumerated options and record it.
+    **(a)** `task generate-tools` refuses to write a partitioned project layer when
+    `~/.claude/rules/` is absent or older than the installed release, pointing at
+    `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
+    back to projecting the full set, so a machine without the global layer keeps
+    today's behaviour and only a machine with both gets the partition. Probe the
+    current state with
+    `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
+  - **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and 2.0's verify can be run against it.
 - **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
   - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
   - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.

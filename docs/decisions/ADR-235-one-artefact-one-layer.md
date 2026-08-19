@@ -130,6 +130,18 @@ is recorded here because the number circulated in three parallel analyses.
   maintainer's normal local state. A third unbound gate would read as coverage
   while adding none, so the binding surface is an explicit decision in
   `road-to-single-delivery` Phase 4 rather than a default.
+- **The partition has a precondition, and it was not obvious when this record was
+  written.** Every artefact the project layer stops carrying is then delivered
+  *only* by the global layer, so a machine with the project layer and no current
+  global one — a fresh clone, a CI runner, a colleague who never ran the installer
+  — would receive **16 rules and no skills** where it receives 111 and 338 today.
+  The failure mode is not a token cost but an **under-governed session**.
+  Discovered while implementing the mechanism and recorded rather than assumed
+  away; `road-to-single-delivery` Phase 2 is **halted** on blocker
+  `partition-requires-global-layer` until the fallback is chosen (refuse / warn /
+  project the full set). The agent-drafted recommendation is to make the partition
+  a property of a machine that holds **both** layers, so no checkout can lose
+  governance by omission.
 - **One residue is knowingly left open.** Four package-only rules carry `paths:` —
   `no-roadmap-references`, `rule-type-governance`, `skill-quality`,
   `source-confidentiality`. Once their unscoped global twin is gone they are
