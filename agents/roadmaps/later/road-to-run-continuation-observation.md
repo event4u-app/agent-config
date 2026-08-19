@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+status: later
 execution:
   mode: autonomous
 parent_roadmap: road-to-long-horizon-execution
@@ -10,6 +11,18 @@ estate_offset_exempt: >-
 ---
 
 # Road to a run-continuation engagement anybody can point at
+
+> **Parked 2026-08-19. Resume when** any roadmap carrying
+> `execution.mode: autonomous` with open steps in three or more `## Phase`
+> sections is run to completion from a worktree and reaches a PR — then read the
+> run back with `./scripts-run src/scripts/interruption_report --root <main-checkout>`
+> and close step 0.1 off that run id. Parked rather than left active because
+> every open item here is gated on that external trigger and the estate has no
+> qualifying candidate: measured 2026-08-19, of the active roadmaps exactly three
+> carried `mode: autonomous` and none of the other two had open steps in three
+> phases. A blocked roadmap left in the active tree lies to the dashboard and to
+> `/roadmap:process-*`, which keeps trying to execute it — and `process-full`
+> terminated on this one as `blocked-preflight` for exactly that reason.
 
 > **Source:** the sole deferred acceptance criterion of
 > `road-to-long-horizon-execution`, carried here under the preservation

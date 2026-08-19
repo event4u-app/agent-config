@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 33,
-    "later_roadmaps": 49,
+    "active_roadmaps": 32,
+    "later_roadmaps": 50,
     "open_blockers": 70
   },
   "baseline_history": [
@@ -125,6 +125,13 @@
       "later_roadmaps": 49,
       "open_blockers": 71,
       "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 32,
+      "later_roadmaps": 50,
+      "open_blockers": 70,
+      "why": "RAISED by 1 later roadmap and WALKED DOWN by 1 active one, in the same move: road-to-run-continuation-observation was parked to later/. It is a transfer rather than growth (total estate unchanged at 82), and open_blockers is unchanged at 70 by construction \u2014 which is the check that this is a park and not a burial. That metric deliberately spans active AND later/ precisely so parking cannot print a free tightening over an unresolved blocker, and three-phase-contract-run is still open and still counted. Parked rather than left active because every open item is gated on an external trigger this estate cannot currently supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full itself terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition: a roadmap with zero runnable open steps left in the active tree lies to the dashboard and to /roadmap:process-*, which keeps trying to execute it. The number walks back the moment the roadmap is un-parked, which is what the resume condition in its own header is for."
     }
   ],
   "target": {
