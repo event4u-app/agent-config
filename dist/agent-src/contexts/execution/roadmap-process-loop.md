@@ -213,6 +213,24 @@ refusing work an agent could have done.
   open-step count, and each blocker with its class and its clearing action.
   Create no branch, write no state, take no grant.
 
+**A step this precondition judges non-runnable carries a `blocked-by:` marker on
+its own line.** The obligation is here because two mechanisms read blockedness
+from two different places and only one of them reads this section: `run-continuation`,
+the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked
+from the inline `<!-- blocked-by: <id> -->` marker and never parses `## Blockers`
+at all. Without the marker a step that IS blocked per the four conditions above
+still counts as open work to the concern, which re-engages the agent into it every
+stop fire until the stall rung fires — the mechanism whose job is to detect a
+stall manufacturing one, which is the failure shape this file already records once
+for the roadmap-root split.
+
+Round 8 finding 7 caught the two predicates as disjoint. The fix is this coupling
+sentence rather than teaching the concern to parse `## Blockers`: a second
+implementation of the four conditions is a second thing to keep in step, and the
+one-line marker is checkable by eye at the step it belongs to. **The residual is
+real and is not papered over:** nothing enforces the pairing, so a `## Blockers`
+entry authored without its marker is caught by review or not at all.
+
 **Why a precondition and not a sixth halt.** The five halt conditions interrupt
 work that is still runnable; this decides whether any runnable work exists at
 all. Keeping them structurally separate is what preserves the forbidden-list's

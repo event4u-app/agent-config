@@ -135,39 +135,58 @@ describe('ladder — both directions pinned', () => {
     });
 
     it('healthy run with open work → engage', () => {
-        expect(ladder(base(), 5, Date.now())).toBe('engage');
+        expect(ladder(base(), 5, Date.now(), 0)).toBe('engage');
     });
 
     it('zero open steps → complete, regardless of every other rung', () => {
-        expect(ladder(base({ iterations: MAX_ITERATIONS + 5 }), 0, Date.now())).toBe('complete');
+        expect(ladder(base({ iterations: MAX_ITERATIONS + 5 }), 0, Date.now(), 0)).toBe('complete');
+    });
+
+    // Round 8 finding 3. The two rows differ in ONE input — the blocked count —
+    // so a regression that re-collapses them cannot pass by accident.
+    it('zero open with blocked steps remaining → blocked, never complete', () => {
+        expect(ladder(base(), 0, Date.now(), 1)).toBe('blocked');
+        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
+    });
+
+    it('blocked is terminal but is NOT a halt — it stays out of HALT_ACTIONS', () => {
+        expect(HALT_ACTIONS).not.toContain('blocked');
+    });
+
+    it('a stamped halt still outranks blocked', () => {
+        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 2)).toBe('halt-stall');
+    });
+
+    it('blocked does not pre-empt a run with runnable work left', () => {
+        expect(ladder(base(), 3, Date.now(), 4)).toBe('engage');
     });
 
     it('iteration cap halts', () => {
-        expect(ladder(base({ iterations: MAX_ITERATIONS }), 3, Date.now())).toBe(
+        expect(ladder(base({ iterations: MAX_ITERATIONS }), 3, Date.now(), 0)).toBe(
             'halt-max-iterations',
         );
     });
 
     it('wall clock halts', () => {
         const old = new Date(Date.now() - WALL_CLOCK_CAP_MS - 1000).toISOString();
-        expect(ladder(base({ started_at: old, iterations: 1 }), 3, Date.now())).toBe(
+        expect(ladder(base({ started_at: old, iterations: 1 }), 3, Date.now(), 0)).toBe(
             'halt-wall-clock',
         );
     });
 
     it('an unparseable started_at never halts the clock rung (fail-open)', () => {
-        expect(ladder(base({ started_at: 'not-a-date', iterations: 1 }), 3, Date.now())).toBe(
+        expect(ladder(base({ started_at: 'not-a-date', iterations: 1 }), 3, Date.now(), 0)).toBe(
             'engage',
         );
     });
 
     it(`stall: ${STALL_WINDOW} engagements without a delta halt; a moving count does not`, () => {
         const stalled = base({ iterations: 4, history: [3, 3, 3] });
-        expect(ladder(stalled, 3, Date.now())).toBe('halt-stall');
+        expect(ladder(stalled, 3, Date.now(), 0)).toBe('halt-stall');
         // Progress since the last engagement (open moved 3 → 2): keep going.
-        expect(ladder(stalled, 2, Date.now())).toBe('engage');
+        expect(ladder(stalled, 2, Date.now(), 0)).toBe('engage');
         // Fewer than STALL_WINDOW readings can never read as a stall.
-        expect(ladder(base({ iterations: 2, history: [3, 3] }), 3, Date.now())).toBe('engage');
+        expect(ladder(base({ iterations: 2, history: [3, 3] }), 3, Date.now(), 0)).toBe('engage');
     });
 });
 
@@ -188,7 +207,7 @@ describe('ladder — a halt is terminal, and outranks every other rung', () => {
         it(`${rung} stays ${rung} on a later stop with a healthy-looking state`, () => {
             // Everything else about this state says "engage": no iterations
             // spent, started now, no stall history. Only the stamp halts it.
-            expect(ladder(base({ halted: rung }), 5, Date.now())).toBe(rung);
+            expect(ladder(base({ halted: rung }), 5, Date.now(), 0)).toBe(rung);
         });
     }
 
@@ -196,12 +215,12 @@ describe('ladder — a halt is terminal, and outranks every other rung', () => {
         // Checked before the openCount rung on purpose: a run that was halted
         // for exhausting its budget never reached a completion, and recording
         // one would tell the digest the opposite of what happened.
-        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now())).toBe('halt-stall');
+        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 0)).toBe('halt-stall');
     });
 
     it('an un-halted state is unaffected — the stamp is the only new input', () => {
-        expect(ladder(base(), 5, Date.now())).toBe('engage');
-        expect(ladder(base(), 0, Date.now())).toBe('complete');
+        expect(ladder(base(), 5, Date.now(), 0)).toBe('engage');
+        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
     });
 });
 
