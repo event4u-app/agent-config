@@ -1038,17 +1038,23 @@ index dc8c0f1dc34893886ac51dc6959ff249534be334..f2dd7c693ec5b6d762f40ae65abb126a
        mode: user            # LOCKED — Iron Law
        confidence_threshold: 0.6
 diff --git a/dist/agent-src/contexts/execution/roadmap-process-loop.md b/dist/agent-src/contexts/execution/roadmap-process-loop.md
-index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825facf6177c 100644
+index 400eb7885024531bb301ba286bcf370daaedcc1e..c350dfba4535954cf40d367774e2f236b1d90adb 100644
 --- a/dist/agent-src/contexts/execution/roadmap-process-loop.md
 +++ b/dist/agent-src/contexts/execution/roadmap-process-loop.md
-@@ -277,11 +277,33 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -277,11 +277,39 @@ For each open step in the working set (scope-bound — see wrapper):
       summary named the members). `high_impact` / `user_required`
       classifications still escalate to the user per
       [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
 +   - **Second-model rung, when the class declares one**
 +     (`decision_resolution.classes.<cls>.second_model`, UOTL Phase 4.1)
-+     → one local vendor-CLI pass under subscription auth, bounded by the
-+     same `cli_call_budget` counter the council books against. Available
++     → one local vendor-CLI pass under subscription auth. **The rung is
++     MODEL-CARRIED: the key is declared and schema-validated, and no
++     TypeScript path reads it at runtime** — so "bounded by the
++     `cli_call_budget` counter" is what the rung must respect, never
++     something a booking consumer enforces (`cli_call_budget.ts` declares
++     its consumer set closed at two, and this is not one of them). Stated
++     rather than implied after R2 round 4 finding 4 found the coupling
++     asserted on three surfaces at once. Available
 +     to `trivial` / `low_impact` / `medium_impact` only; the config
 +     schema REFUSES the key on `high_impact` and `user_required`, so no
 +     locked question can reach it.
@@ -1075,7 +1081,7 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825f
  5. **Atomic flip — same reply, every step.**
     Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
     `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
-@@ -345,20 +367,56 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -345,20 +373,56 @@ For each open step in the working set (scope-bound — see wrapper):
     file is the source of truth between regens.
  7. Run quality pipeline if cadence is `per_step`.
  
@@ -2164,10 +2170,10 @@ index 0000000000000000000000000000000000000000..23de7e0f53b8ce6072e38e261873f2a4
 +}
 diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7b7d8bcf2dae63c3854bd9b65a71dcffc8f1ccd8
+index 0000000000000000000000000000000000000000..ba7277981d0e4e0a13b3837624087b93cd28b7e0
 --- /dev/null
 +++ b/src/scripts/_lib/run_checkpoint.ts
-@@ -0,0 +1,378 @@
+@@ -0,0 +1,400 @@
 +/**
 + * run_checkpoint — the deterministic checkpoint a dying run leaves behind,
 + * and the re-verification a resumed run owes before trusting it.
@@ -2532,18 +2538,40 @@ index 0000000000000000000000000000000000000000..7b7d8bcf2dae63c3854bd9b65a71dcff
 +        );
 +    }
 +    const lines = [`checkpoint ${cp.run_id} · roadmap ${cp.roadmap} · written ${cp.written_at}`];
++    // Three states, not two. R2 round 5, finding 3: the null-head tolerance
++    // added in round 4 is correct as a VERDICT — an unknown commit is not a
++    // moved one — but rendering it as `ok head: null` alongside "the tree
++    // still matches the checkpoint" tells the reader something was checked
++    // when nothing could be. UNKNOWN is a third word because the reader's next
++    // action differs: `ok` needs nothing, `CHANGED` names what moved, and
++    // UNKNOWN says this axis carries no information and the other four are
++    // what the verdict rests on.
++    let unknown = 0;
 +    for (const f of res.fields) {
++        if (f.claimed === null || f.actual === null) {
++            unknown += 1;
++            lines.push(
++                `  UNKNOWN  ${f.field}: not readable ` +
++                    `(claimed ${String(f.claimed)}, actual ${String(f.actual)}) — not compared`,
++            );
++            continue;
++        }
 +        lines.push(
 +            f.agrees
 +                ? `  ok       ${f.field}: ${String(f.actual)}`
 +                : `  CHANGED  ${f.field}: claimed ${String(f.claimed)} → actual ${String(f.actual)}`,
 +        );
 +    }
-+    lines.push(
-+        res.agrees
-+            ? '  the tree still matches the checkpoint.'
-+            : '  the tree moved since the checkpoint — the ACTUAL column is what to resume from.',
-+    );
++    if (!res.agrees) {
++        lines.push('  the tree moved since the checkpoint — the ACTUAL column is what to resume from.');
++    } else if (unknown > 0) {
++        lines.push(
++            `  the ${res.fields.length - unknown} comparable field(s) match; ` +
++                `${unknown} could not be read and were not compared.`,
++        );
++    } else {
++        lines.push('  the tree still matches the checkpoint.');
++    }
 +    return lines.join('\n');
 +}
 diff --git a/src/scripts/_lib/session_register.ts b/src/scripts/_lib/session_register.ts
@@ -6999,10 +7027,48 @@ index 0000000000000000000000000000000000000000..891dea034fa48b5cb1e47abf1f161996
 + */
 +export { latestCheckpointFor, readCheckpoint };
 diff --git a/src/server/io/yamlIO.ts b/src/server/io/yamlIO.ts
-index 3998239861d5422a0e8084c8edcc59af509267ca..f4274d510fc2fb893915dfab736d30538dc3be42 100644
+index 3998239861d5422a0e8084c8edcc59af509267ca..699b8b62ba0918d38c1b23f43fb208300529ee20 100644
 --- a/src/server/io/yamlIO.ts
 +++ b/src/server/io/yamlIO.ts
-@@ -105,6 +105,134 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+@@ -66,9 +66,25 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+     if (dottedPath.length === 0) return template;
+     const sections = dottedPath.slice(0, -1);
+     const key = dottedPath[dottedPath.length - 1];
+-    const targetIndent = '  '.repeat(sections.length);
+ 
+     const lines = template.split('\n');
++    // The document's own width, the same read `upsertScalar` performs.
++    //
++    // R2 round 5, finding 1, and it is the second half of round 4's finding 7.
++    // That round taught `upsertScalar` to WRITE at the detected width and left
++    // this function — the probe that answers "does this key already exist?" —
++    // at a hardcoded two, in three places: the emitted indent, the `% 2`
++    // alignment test and the `/ 2` level. On a 4-space file `indentLen` 4
++    // passes `% 2` and computes level 2 for a depth-1 key, so the key is never
++    // found. The wizard then writes a correctly-indented line on the first
++    // toggle and, on the second, cannot see it and appends a DUPLICATE mapping
++    // key in the same block — two POSTs, both `{ok: true}`, and a config the
++    // parser rejects with "Map keys must be unique".
++    //
++    // A writer and its own existence-probe disagreeing about the format is the
++    // shape to look for whenever one of a pair is taught something new.
++    const width = detectIndentWidth(lines);
++    const targetIndent = ' '.repeat(width * sections.length);
+     const currentPath: (string | null)[] = new Array<string | null>(sections.length).fill(null);
+     const formatted = formatScalar(value);
+ 
+@@ -78,8 +94,8 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+         const stripped = line.trim();
+         if (stripped === '' || stripped.startsWith('#')) continue;
+         const indentLen = line.length - line.trimStart().length;
+-        if (indentLen % 2 !== 0) continue;
+-        const level = indentLen / 2;
++        if (indentLen % width !== 0) continue;
++        const level = indentLen / width;
+         if (level > sections.length) continue;
+ 
+         const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(stripped);
+@@ -105,6 +121,134 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
      return template;
  }
  
@@ -9528,10 +9594,10 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..6933ce470a7ca4e2a171a453e6d28b94
 +});
 diff --git a/tests/scripts/run_checkpoint.test.ts b/tests/scripts/run_checkpoint.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..648735aa9e7eaa4a7191d66952a67fada16f21b5
+index 0000000000000000000000000000000000000000..2d06c908ddad805f4184deb0fd3272ab5838e9f9
 --- /dev/null
 +++ b/tests/scripts/run_checkpoint.test.ts
-@@ -0,0 +1,532 @@
+@@ -0,0 +1,557 @@
 +/**
 + * run_checkpoint — the derived checkpoint and its re-verification.
 + *
@@ -9729,10 +9795,35 @@ index 0000000000000000000000000000000000000000..648735aa9e7eaa4a7191d66952a67fad
 +    it('an agreeing report says the tree still matches', () => {
 +        const r = root();
 +        writeRoadmap(r, 'road-to-x', ROADMAP);
++        // A readable HEAD, so every field is comparable — otherwise the report
++        // correctly says "N could not be read", which is the UNKNOWN case
++        // below rather than this one.
++        fs.mkdirSync(path.join(r, '.git'), { recursive: true });
++        fs.writeFileSync(path.join(r, '.git', 'HEAD'), `${'a'.repeat(40)}\n`, 'utf-8');
 +        const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
 +        const out = renderVerification(cp, verifyCheckpoint(r, cp));
 +        expect(out).toContain('the tree still matches');
 +        expect(out).not.toContain('CHANGED');
++        expect(out).not.toContain('UNKNOWN');
++    });
++
++    it('an unreadable field renders UNKNOWN, never `ok` — a third state', () => {
++        // R2 round 5, finding 3. The null-head tolerance is right as a VERDICT
++        // (an unknown commit is not a moved one) but rendering it `ok head:
++        // null` under "the tree still matches" told the reader something was
++        // checked when nothing could be. The reader's next action differs per
++        // state, so the word does too.
++        const r = root();
++        writeRoadmap(r, 'road-to-x', ROADMAP);
++        const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
++        expect(cp.head).toBeNull();
++        const out = renderVerification(cp, verifyCheckpoint(r, cp));
++        expect(out).toContain('UNKNOWN  head');
++        expect(out).toContain('not compared');
++        expect(out).not.toContain('ok       head');
++        expect(out).not.toContain('the tree still matches');
++        // Still not a failure: the comparable fields did agree.
++        expect(out).not.toContain('the tree moved');
 +    });
 +
 +    it('a disagreeing report marks the moved field and points at ACTUAL', () => {
@@ -10973,10 +11064,10 @@ index f61fcb35de55c299512730762f4253935d57bd64..8a0f128a5d447ca236ead01ba21bad8d
          const res = await ctx.app.inject({
 diff --git a/tests/server/yamlIO.upsert.test.ts b/tests/server/yamlIO.upsert.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..62866785ce2800f13c86974e2e7f9007283ce613
+index 0000000000000000000000000000000000000000..e49894147dfdf7196b1ee512fddaee5d03970fe1
 --- /dev/null
 +++ b/tests/server/yamlIO.upsert.test.ts
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,186 @@
 +/**
 + * `upsertScalar` — the write path a key the user's file does NOT yet carry.
 + *
@@ -11115,5 +11206,51 @@ index 0000000000000000000000000000000000000000..62866785ce2800f13c86974e2e7f9007
 +    it('a flat document falls back to two spaces', () => {
 +        const after = upsertScalar('enabled: true\n', ['fallback', 'api_on_quota'], true);
 +        expect(after).toContain('  api_on_quota: true');
++    });
++});
++
++describe('the writer and its existence-probe agree about the format', () => {
++    // R2 round 5, finding 1 — the second half of round 4's finding 7, and the
++    // reviewer EXECUTED it rather than reasoning about it. Round 4 taught
++    // `upsertScalar` to write at the detected width and left `replaceScalar`
++    // hardcoded at two, so the second toggle of the same switch could not see
++    // the line the first one wrote.
++    it('a SECOND toggle on a 4-space file replaces, never duplicates', () => {
++        const before = 'council:\n    enabled: true\n';
++        const once = upsertScalar(before, ['fallback', 'api_on_quota'], true);
++        const twice = upsertScalar(once, ['fallback', 'api_on_quota'], false);
++
++        // The decisive assertion: it still parses. A duplicate mapping key is
++        // what the defect produced, and `wizard.ts` writes without re-parsing.
++        const doc = parseYaml(twice) as Record<string, Record<string, unknown>>;
++        expect(doc['fallback']?.['api_on_quota']).toBe(false);
++        expect(twice.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
++        expect(twice.split('\n').filter((l) => l === 'fallback:')).toHaveLength(1);
++    });
++
++    it('replaceScalar alone finds a key written at a 4-space width', () => {
++        // The probe in isolation — `upsertScalar` delegates to it first, so a
++        // miss here is what fell through to the duplicating insert branch.
++        const body = 'fallback:\n    api_on_quota: true\n';
++        const after = replaceScalar(body, ['fallback', 'api_on_quota'], false);
++        expect(after).not.toBe(body);
++        expect(after).toContain('    api_on_quota: false');
++    });
++
++    it('a third toggle is still stable — the loop does not accumulate', () => {
++        let body = 'council:\n    enabled: true\n';
++        for (const v of [true, false, true]) {
++            body = upsertScalar(body, ['fallback', 'api_on_quota'], v);
++        }
++        expect(body.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
++        const doc = parseYaml(body) as Record<string, Record<string, unknown>>;
++        expect(doc['fallback']?.['api_on_quota']).toBe(true);
++    });
++
++    it('the 2-space path is unchanged by the shared width', () => {
++        const once = upsertScalar('council:\n  enabled: true\n', ['fallback', 'api_on_quota'], true);
++        const twice = upsertScalar(once, ['fallback', 'api_on_quota'], false);
++        expect(twice.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
++        expect(twice).toContain('  api_on_quota: false');
 +    });
 +});
