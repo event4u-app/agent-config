@@ -544,6 +544,20 @@ export function enforce_retention(
     return { kept: kept_lines.length, dropped_by_age, dropped_by_size };
 }
 
+/** Append one line to one bounded JSONL file. Both targets share it. */
+function _append_and_bound(
+    target: string,
+    payload: string,
+    policy: RetentionPolicy,
+    now: Date,
+): void {
+    fs.mkdirSync(path.dirname(target) || '.', { recursive: true });
+    fs.appendFileSync(target, payload, { encoding: 'utf-8' });
+    if (retention_due(target, policy, now)) {
+        enforce_retention(target, policy, now);
+    }
+}
+
 /**
  * Append one record as a JSONL line, then enforce the retention policy.
  *
@@ -555,17 +569,34 @@ export function enforce_retention(
  * which makes the common append one extra `stat` plus one bounded read. It
  * lives here rather than in a separate sweep because this is the only writer:
  * a policy a caller has to remember to run is a policy that stops running.
+ *
+ * THE SPOOL IS WRITTEN HERE, IN THE SAME CALL (Phase 2, step 2.1). When
+ * `spool_path` is given, the SAME bytes are appended to the outbound spool
+ * under the SAME retention policy, and the session-end flush then only has
+ * to drain a file. The alternative — a flush that works out for itself which
+ * logged records are still unsent — needs a byte watermark into a file that
+ * `enforce_retention` rewrites in place, and a watermark over a compacting
+ * file is a silent-corruption pair: the offset survives the prune, the
+ * records it points at do not. Enqueue-at-write has no watermark to
+ * invalidate and spools each record exactly once, by the only writer.
+ *
+ * The spool inherits the log's growth budget rather than getting its own,
+ * which is what answers Phase 0's unmeasured "queue growth bound across a
+ * multi-day outage": a sink that is down for days cannot push the spool past
+ * `max_bytes`. The cost of that bound is that the oldest UNSENT records are
+ * dropped rather than kept — the same trade the log already makes, stated
+ * here rather than discovered later in a truncated file.
  */
 export function append_class_a_record(
     log_path: string,
     record: ClassARecord,
     policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
     now: Date = new Date(),
+    spool_path: string | null = null,
 ): void {
     const payload = `${py_json_dumps_compact_sorted(record as unknown as Record<string, unknown>)}\n`;
-    fs.mkdirSync(path.dirname(log_path) || '.', { recursive: true });
-    fs.appendFileSync(log_path, payload, { encoding: 'utf-8' });
-    if (retention_due(log_path, policy, now)) {
-        enforce_retention(log_path, policy, now);
+    _append_and_bound(log_path, payload, policy, now);
+    if (spool_path !== null && spool_path !== '') {
+        _append_and_bound(spool_path, payload, policy, now);
     }
 }

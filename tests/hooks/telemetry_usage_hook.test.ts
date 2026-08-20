@@ -99,6 +99,32 @@ describe('the tool filter', () => {
     });
 });
 
+describe('the outbound spool wiring (Phase 2, step 2.1)', () => {
+    // The spool is written by the appender, in the same call that logs the
+    // record. This asserts the WIRING rather than the appender: a hook that
+    // stopped passing the spool path would still log correctly and would
+    // silently never send anything, which is the failure with no symptom.
+    it('spools the same line it logs when the install declared a flush', () => {
+        const root = makeRoot(ACTIVE.replace('org_id: "acme"', 'org_id: "acme"\n    flush: session-end'));
+        expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
+
+        const spool = `${logPath(root).replace(/\.jsonl$/u, '')}.spool.jsonl`;
+        expect(fs.existsSync(spool)).toBe(true);
+        expect(fs.readFileSync(spool, 'utf-8')).toBe(fs.readFileSync(logPath(root), 'utf-8'));
+    });
+
+    // `flush: never` means no transport, so a spool would be a file that
+    // grows and is never drained.
+    it('writes no spool under flush: never', () => {
+        const root = makeRoot(ACTIVE.replace('org_id: "acme"', 'org_id: "acme"\n    flush: never'));
+        expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
+
+        expect(fs.existsSync(logPath(root))).toBe(true);
+        const spool = `${logPath(root).replace(/\.jsonl$/u, '')}.spool.jsonl`;
+        expect(fs.existsSync(spool)).toBe(false);
+    });
+});
+
 describe('an active install records the invocation', () => {
     it('writes one Class-A record with the resolved tier and host', () => {
         const root = makeRoot(ACTIVE);
