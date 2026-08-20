@@ -6,11 +6,19 @@
 
 ## Overall
 
-**205 / 469 steps done · 44%**
+**205 / 466 steps done · 44%**
 
 ```text
 ██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 11 | 2 | 5 |
 
 ## Open roadmaps
 
@@ -29,7 +37,7 @@
 | 11 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 13 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
-| 14 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | 0 | ████████░░ 79% |
+| 14 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 0 | 11 | 2 | 5 | 0 | ██████████ 100% |
 | 15 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 16 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -493,11 +501,11 @@ _1 blocker resolved._
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
-**Road to per-turn hook economy — the latency tax no registered budget can see** — 11 / 14 done (79%)
+**Road to per-turn hook economy — the latency tax no registered budget can see** — 11 / 11 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsify or localise the report | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
+| 0 | Falsify or localise the report | ✅ done | 0 | 3 | 0 | 3 | 100% |
 | 5 | Host-native prefiltering (runs first, deliberately) | ✅ done | 0 | 1 | 1 | 1 | 100% |
 | 1 | Serialize once (D-2) | ✅ done | 0 | 1 | 0 | 1 | 100% |
 | 2 | Payload opt-in per concern (D-2, second lever) | ✅ done | 0 | 2 | 0 | 0 | 100% |

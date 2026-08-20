@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 25,
     "later_roadmaps": 52,
-    "open_blockers": 65
+    "open_blockers": 59
   },
   "baseline_history": [
     {
@@ -244,6 +244,13 @@
       "later_roadmaps": 52,
       "open_blockers": 65,
       "why": "WALKED DOWN by 1 active and 2 blockers: road-to-gate-autonomy reached zero open steps and archived, and the two blockers it carried open \u2014 b-gate-budget-preauth on option (a) and b-delegate-gate-maintainer-profile on option (b), both against the council record \u2014 moved to RESOLVED in this change. Its third blocker, b-estate-prose-pass-from-1-3, was already resolved on 2026-08-17 and is not part of the delta. later_roadmaps is UNCHANGED at 52, which is the check that says this is a closure and not a park: nothing was relocated to buy the number, and the one item the roadmap could not finish went to a STUB with its own named probe (stubs/road-to-gate-preauth-authorization.md) rather than to later/, so the open work is still counted somewhere a reader can find it. The archive move was performed by `task roadmap-progress` itself rather than by hand \u2014 this is the first walk-down taken under the --archive default that PR #1493 put on the regen, so the number and the file move come from the same run."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 59,
+      "why": "open_blockers 65 -> 59: all SIX open blockers of road-to-per-turn-hook-economy resolved on the autonomous drain run, every one under AI-council disposition D (decide now; 2/2 quorum, anthropic + openai; record agents/evidence/council/drain-blocker-dispositions-b.md). Four of the six were SPLIT verdicts and each dissent is recorded at its blocker and inline at the step it touches. The trunk recorded the same six answers independently via road-to-estate-drawdown's consolidated decision sheet, and the merge kept both records: the sheet's `Answer: ACCEPTED` line states the choice, this branch's `Resolution` paragraph states what shipped for it. They agree because they read the same council record.\\n\\nRead the -6 honestly, because it hides three different kinds of movement. FOUR were discharged by shipped code: b-stdin-read-failure-policy (a failed payload read now DENIES on a block-capable slot carrying a fail-closed blocking concern, where it previously allowed silently), b-injection-scan-unwrap-security (output contract written first, then the unwrap narrowed against 14 fixtures; restoring the pre-fix extraction fails 11 of them), b-payload-read-parse-dominates (a read-and-exit bench cell that produced the number the roadmap had been assuming: ~70 percent of the large-payload delta is the dispatcher's own read plus parse, 69 and 74 percent over two rounds at --runs 50), and b-stop-async-split-prerequisites' P3 (three state files made safe under concurrent dispatch; pre-fix survival measured against 8 real processes at 3 of 96 log lines, 3 of 24 increments, 1 of 8 rollups). ONE is a decline with no code by design (b-guard-tool-partition, option (c): the zero-dispatch goal is abandoned, the Phase 4 measurement and the in-process tools: filter retained). ONE is a decision to NOT set a number for one release (b-per-turn-composite-bar, option (b)): the composite row stays observe-only and now carries its arming procedure and precondition, so there is still no ceiling on the per-turn cost and that is deliberate rather than forgotten.\\n\\nactive_roadmaps unchanged at 25 and later_roadmaps unchanged at 52, and both are load-bearing rather than incidental. The parent was NOT archived (out of scope for this run) even though its count_open reached 0, so it stays in the active tree. And its three Phase-0 steps were TRANSFERRED rather than cancelled -- to agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md, which sits under stubs/ and is therefore counted by neither metric. That is the honest shape of a capability-gated transfer: it moves no number, which is exactly why the stub carries the three criteria verbatim, the complete moved list, and a named producer (the reporter of the original slowdown, on their own machine at the version installed when they reported it) with three probes measured on the transfer date as the wrong-machine control -- AGENT_CONFIG_HOOKS_ISOLATED unset, installed 14.6.0, and zero turn-end-gate refusal records against a schema that carries no refusal counter at all."
     }
   ],
   "target": {

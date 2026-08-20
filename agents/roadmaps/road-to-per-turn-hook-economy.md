@@ -25,7 +25,7 @@ dissent is recorded at its blocker and inline at the step it touches.
 
 | Phase | State | What that means |
 |---|---|---|
-| **0** — falsify or localise | **open** | 0.1 / 0.2 / 0.3 need the AFFECTED MACHINE and nobody here has it. Not deferred, not cancelled: genuinely blocked on access. § 3 already records that the best candidate for what the colleague hit is not in this file at all — it is the activation flip owned by `road-to-mixed-trigger-activation-cost`. |
+| **0** — falsify or localise | **transferred** | 0.1 / 0.2 / 0.3 need the AFFECTED MACHINE at the version installed on it when the slowdown was reported, and nobody here has either. Moved verbatim to [`stubs/road-to-per-turn-hook-economy-host-repro.md`](stubs/road-to-per-turn-hook-economy-host-repro.md) with a named producer (the reporter), a three-reading probe, and every reading measured here as the wrong-machine control. 0.0 already RAN here and stays `[x]` — its result (the mixed-trigger flip is not live locally) is why these three are a transfer rather than a cancellation. |
 | **1** — serialize once | **satisfied, null result** | 1.2 measured it: ten of eleven stringifies removed, latency unmoved. 1.1 stays `[-]`. The null stands. |
 | **2** — payload opt-in | **satisfied, null result + two spin-offs** | 2.1/2.2 landed and moved nothing either. What the phase's AUDIT produced outlived it: `ship-diff-volume`'s dead unwrap (fixed earlier), `injection-scan`'s accidental one (fixed here), and the read+parse attribution now measured. |
 | **3** — spawns off the hot path | **satisfied** | 3.1 and 3.2 landed. Unchanged by this pass. |
@@ -49,6 +49,13 @@ dissent is recorded at its blocker and inline at the step it touches.
   been assuming: ~70 % of the large-payload delta is the dispatcher's own read
   and parse.
 - **The composite's arming procedure**, recorded on the row itself.
+- **The Phase 0 transfer**, which is what lets this roadmap close at all: three
+  steps that needed a host this run is not are moved to a stub under an explicit
+  `transferred` outcome state, rather than being cancelled (which would drop a
+  live question) or left open (which would park the whole roadmap on one
+  unavailable machine). The § 3 finding — that the likelier cause is the
+  activation flip in `road-to-mixed-trigger-activation-cost`, not anything in this
+  file — travels INTO the stub, so it does not die with this document.
 - **A merge convergence that the clean auto-merge hid.** `origin/main`
   (`bcbb0380b`) changed the read-modify-write lock primitive under this branch
   while P3 was being written: FILE-keyed instead of directory-keyed, on a
@@ -85,7 +92,11 @@ Nothing here is closed by the archival, and none of it has a home yet:
   makes the gate ALLOW.
 - **P5** — the step's `verify:` is a claim about what the HOST does with
   `async: true`, and is not observable from this repository.
-- **Phase 0's three steps** — blocked on the affected machine.
+- **Phase 0's three steps** — transferred, not merely blocked: [`stubs/road-to-per-turn-hook-economy-host-repro.md`](stubs/road-to-per-turn-hook-economy-host-repro.md)
+  holds them with the criteria verbatim, the complete moved list, and a named
+  producer plus probe. Promotion can be decided by ONE reading —
+  `AGENT_CONFIG_HOOKS_ISOLATED=1` anywhere in that environment closes the whole
+  report and retires 0.2 unrun.
 - **The per-concern `<concern>.json` feedback files** carry the same
   lossy-overwrite property schema-1 `summary.json` had. Left alone because
   `hooks_doctor._latest_feedback` resolves them by that exact path; noted in
@@ -213,13 +224,17 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `road-to-mixed-trigger-activation-cost` owns is the conversion of those 17,
       and none of it has happened. The one-liner refutation this step carries is
       unchanged and was not re-tested, because the census supersedes it.
-- [ ] **0.1** On the affected machine, record: the prior installed version
+- [-] **0.1** On the affected machine, record: the prior installed version
       (lockfile history), the node version, the OS, and whether
       `AGENT_CONFIG_HOOKS_ISOLATED=1` is set anywhere — env, shell profile, or CI.
       That flag alone restores the retired ~1.6 s/event class, which would explain
       the entire report by itself.
       `verify:` a one-page note per machine with all four values filled in.
-- [ ] **0.2** Run the § 2 matrix on that machine at the installed version and at
+      **Cancelled here 2026-08-20 → transferred, not dropped:** all four values are
+      properties of the AFFECTED machine, so recording this one answers a different
+      question. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
+- [-] **0.2** Run the § 2 matrix on that machine at the installed version and at
       11.0.0. Decidable outcome: a per-event p50 delta above a declared threshold
       across two or more slots means the regression is confirmed and localisable;
       otherwise the latency claim closes as environment or workload, and the
@@ -235,11 +250,20 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       one container's milliseconds as a repo fact — but a comparison needs the
       same fixtures on both arms, and those are specifiable without claiming a
       number.
-- [ ] **0.3** Read the turn-end-gate refusal state for the affected sessions and
+      **Cancelled here 2026-08-20 → transferred, not dropped:** the second arm is "the
+      version installed on that machine", which this tree cannot supply, and a one-armed
+      matrix is not this comparison. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
+- [-] **0.3** Read the turn-end-gate refusal state for the affected sessions and
       count refusals per session. A median above one refusal per session means the
       perceived slowness is extra model turns rather than hook wall clock.
       `verify:` the per-session counts, with the split before and after the local
       12.1 install date.
+      **Cancelled here 2026-08-20 → transferred, not dropped:** "the affected sessions"
+      are on that machine — this workspace holds zero refusal records, and the one
+      `verify-before-complete.json` present is a May smoke fixture whose schema carries
+      no refusal counter at all. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
 - [x] **0.4** Same-runner path split, so 0.2 does not have to measure two things
       at once. CI run **32103306843** (job 95607853943, `ubuntu-latest`) measures
       the bundle path and the cli path back to back inside ONE job:
