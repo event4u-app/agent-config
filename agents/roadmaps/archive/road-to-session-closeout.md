@@ -33,7 +33,7 @@ execution:
 ## Outcome — the up-front classification (2026-08-20 drain run)
 
 Closed against explicit outcome states, per the framework of record in
-[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md) <!-- ref-ignore -->
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md) <!-- ref-ignore -->
 and its batch-B sibling. **Archived does not mean achieved.** The dashboard
 renders a file with no `[ ]` and no `[~]` at 100 %; that percentage describes
 whether every line reached a *decided* state, never whether the goal was
@@ -159,7 +159,7 @@ The step's verify — *"every remaining release branch on origin has either a ta
 or a recorded unique-commit finding, and the check is quoted per branch"* — is
 satisfied by this table. **The deletion is not done and is not this run's to do:**
 a remote-branch deletion is a Hard-Floor act under
-[`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md),
+[`non-destructive-by-default`](../../../src/rules/non-destructive-by-default.md),
 needing a this-turn approval that names the exact object. Four refs are cleared
 for that approval; the first is not, and would have been deleted by any procedure
 that trusted "old" over a measurement.

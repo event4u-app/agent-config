@@ -1,6 +1,6 @@
 # Session-closeout residue that needs something this repository cannot supply
 
-> **Transferred from** [`road-to-session-closeout.md`](../road-to-session-closeout.md),
+> **Transferred from** [`road-to-session-closeout.md`](../archive/road-to-session-closeout.md),
 > 2026-08-20, by the autonomous drain run that closed it. **Outcome state:**
 > `transferred`. The parent roadmap closed against explicit outcome states, so
 > its completion can never be read as an achieved goal.

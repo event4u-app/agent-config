@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 52,
     "open_blockers": 64
   },
@@ -251,6 +251,13 @@
       "later_roadmaps": 52,
       "open_blockers": 64,
       "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 active roadmap and nothing else. road-to-session-closeout was closed against explicit outcome states and archived by `roadmap:progress`, which now performs the archival itself rather than warning. Measured on the merged tree AFTER the archival, not on a branch: active_roadmaps 24, later_roadmaps 52, open_blockers 64. No blocker moved -- that file shipped with none by maintainer instruction, its three decisions having been taken by the council instead, so there was never an entry here to dispose of. The lower measurement is the new ceiling, not headroom: the gate refused a silent tightening and asked for exactly this edit in the change that earned it. Honest note on what the archival means, because a count cannot carry it: 35 of that roadmap's 54 lines are TRANSFERRED to stubs/road-to-session-closeout-gated.md with named producers and probes, not done. The estate is one file smaller; the work is not one file's worth smaller."
     }
   ],
   "target": {
