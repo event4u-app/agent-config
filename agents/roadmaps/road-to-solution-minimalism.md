@@ -19,16 +19,24 @@ status: ready
 
 ## Outcome
 
-**Archived does not mean achieved, and this roadmap is not archived.** Five of
-its six open items closed; one is open and transferred. Per phase:
+**Archived does not mean achieved, and this roadmap is not archived.** Two of its
+six open items closed on evidence, three are `[-]` transferred to a stub, and one
+stays open.
+
+**The dashboard reads 97 %, and that number is not a claim about the goal.** It
+counts checkboxes, and three of them are transferred rather than done — a
+percentage cannot distinguish "the work was done" from "the work moved to
+somewhere it can be done". The transfer is the reason the figure is high, so it
+is stated here next to the figure rather than left for a reader to reconstruct:
+**Phase 3 has never reported.** Per phase:
 
 | Phase | Disposition | What that means |
 |---|---|---|
 | Phase 0 — spikes | **satisfied** | S0.1/S0.2/S0.3 all closed on evidence, unchanged by this pass. |
 | Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
 | Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
-| Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** (B, below). Phase 3 has never reported and does not report now. |
-| Acceptance criteria | **4 of 6 satisfied, 2 still open** | The full-tier criterion is transferred (B). The quality-gates criterion stays open and is NOT claimed: see its own note for what actually ran. |
+| Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
+| Acceptance criteria | **4 of 6 satisfied, 1 transferred, 1 open** | The full-tier criterion is transferred to the stub. The quality-gates criterion stays open and is NOT claimed: see its own note for what actually ran, and note that it did **not** move to the stub — it is not gated on the run. |
 
 ### The blocker disposition (A — re-scope, narrowed)
 
@@ -48,6 +56,14 @@ repository SHA. Implemented in `_lib/bench_ab_pinned_repo.ts`, wired through
 directions against the real pinned tree (§ Phase 3, Repo).
 
 ### Transferred (B) — the ~30 oracles and the full-tier run
+
+**The transfer has a home, and that is the point.** It lives in
+[`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md),
+alongside the estate's other drain-run transfers and registered in their
+[`README`](stubs/README.md) table with its baselines. The three items below carry
+`[-]` here with a one-line pointer each. A transfer recorded only as prose in a
+roadmap that stays open is indistinguishable from work nobody started — the stub
+is what makes it a moved obligation rather than a note.
 
 **Where the line falls, and why it is not "this is large".** Authoring oracles is
 ordinary work; *calibrating* one is a claim about model behaviour, and the run
@@ -70,7 +86,8 @@ The three-point integrity check:
 2. **Complete list of dependent steps moved** — three, and no others: Phase 3
    **Tasks** (the mixed ~30-task corpus), Phase 3 **Hygiene** (the escalation
    ladder through the full tier), and the acceptance criterion in (1). Phase 3
-   **Repo** and **Reproducibility** are *not* moved: they closed here.
+   **Repo** and **Reproducibility** are *not* moved: they closed here. Nor did
+   the quality-gates criterion move — it is not gated on the run.
 3. **Re-entry producer and detection probe** — producer: the maintainer authoring
    the remaining pinned tasks against `pallets/click@150d1071d` (or a second
    pinned repo) and then running
@@ -612,11 +629,13 @@ blocker as standing overstates its own gating.
       no report, because there has been no run. What this step asked for — a repo
       pinned at a SHA that the harness can actually run — exists.
       <!-- verify: BENCH_AB_PINNED_NETWORK=1 npx vitest run tests/scripts/bench_ab_pinned_repo.test.ts -->
-- [ ] **Tasks:** deliberately mixed — over-build-trap tickets **and** irreducible
+- [-] **Tasks:** deliberately mixed — over-build-trap tickets **and** irreducible
       CRUD **and** this package's own discipline family — so the report can show
       where the effect lives and where it is honestly zero.
       *Verify:* the per-task table shows both.
-      **Open, and transferred — see § Outcome (B).** One pinned task exists
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 1 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: ≥ 30 tasks declaring
+      `repo` + `sha`, at 1 today. One pinned task exists
       (`trapA-pinned-click-01`); the substitute criterion asks for ~30. Authoring
       them is ordinary work and is NOT blocked. What is blocked is *calibrating*
       them: the schema's own `notes` field asks why a trap is a trap, and that is
@@ -731,11 +750,13 @@ blocker as standing overstates its own gating.
       judges or a paid sweep, and Phase 3 still cannot report: deltas #9/#10
       remain open. What closed is the endpoint definition and its producer — the
       thing this step actually asked for.
-- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full,
+- [-] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full,
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
-      **Open, and transferred — see § Outcome (B).** The ladder and the statistics
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 2 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: a `Gate verdict:` in
+      `docs/benchmark.md` from a pinned report with a non-empty `sha`, none today. The ladder and the statistics
       are implemented; what is missing is a run. This is the one part of the
       substitute criterion that genuinely depends on something no repository
       change supplies: metered model calls. No credential is present in the
@@ -1079,10 +1100,14 @@ twenty-nine steps that already landed.
       the scorer discriminates. Contract-level, deterministic, no model call —
       the find-the-plant half is stated as needing a scored eval run rather than
       claimed.
-- [ ] Phase 3 either reports from the full tier with every pre-registered
+- [-] Phase 3 either reports from the full tier with every pre-registered
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 3 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: item 2's, plus every
+      pre-registered endpoint present in the rendered report. All four endpoints
+      are implemented; reports rendered from them: 0.
       ~~**Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
       the metric pair additionally needs a complexity endpoint that does not
       exist yet.~~

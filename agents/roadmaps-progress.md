@@ -6,7 +6,7 @@
 
 ## Overall
 
-**304 / 578 steps done · 53%**
+**304 / 575 steps done · 53%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   53%
@@ -51,7 +51,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 23 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 4 | 31 | 0 | 1 | 0 | █████████░ 89% |
+| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
 | 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
 | 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
@@ -959,14 +959,14 @@ _2 blockers resolved._
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
-**Road to solution minimalism — a first-class discipline against over-building** — 31 / 35 done (89%)
+**Road to solution minimalism — a first-class discipline against over-building** — 31 / 32 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
 | 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 4 | 12 | 0 | 0 | 75% |
+| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 1 | 12 | 0 | 3 | 92% |
 
 ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
 
