@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **711 public artefacts** shipped by
+Consumer-facing catalog of all **712 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -318,7 +318,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (115)
+## Rules (116)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -403,6 +403,7 @@ are excluded.
 | rule | [`preservation-guard`](../dist/agent-src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../dist/agent-src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
 | rule | [`question-not-instruction`](../dist/agent-src/rules/question-not-instruction.md) | auto | A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute |
+| rule | [`recurring-criticism`](../dist/agent-src/rules/recurring-criticism.md) | auto | The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count |
 | rule | [`reviewer-awareness`](../dist/agent-src/rules/reviewer-awareness.md) | auto | Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary |
 | rule | [`roadmap-ci-steps-policy`](../dist/agent-src/rules/roadmap-ci-steps-policy.md) | auto | Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline |
 | rule | [`roadmap-progress-sync`](../dist/agent-src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open |

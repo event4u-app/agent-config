@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 297
+- **artefacts**: 298
 
 ## Commands (153)
 
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (69)
+## Rules (70)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -213,6 +213,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
 - **`question-not-instruction`** — A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute
+- **`recurring-criticism`** — The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open

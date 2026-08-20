@@ -338,6 +338,25 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     /\byou (didn'?t|did not|failed to|ignored|forgot)\b/i,
     /\bthat'?s (wrong|not right|incorrect)\b/i,
     /\byou (worked|did (it|that)) (wrong|incorrectly)\b/i,
+    // Recurrence phrasings. A restated complaint often carries none of the fault
+    // words above — "das habe ich dir schon dreimal gesagt" names no fault at
+    // all — so without these the SECOND and THIRD report of a defect were
+    // silently not records, which is exactly when the occurrences counter
+    // carries the most signal.
+    //
+    // Every branch requires an explicit COUNT word next to a saying-verb, and
+    // that is the precision knob: "nochmal" / "wieder" / "again" are deliberately
+    // NOT counts, because a bare repetition word fires on a large share of
+    // ordinary prompts ("mach das nochmal") and a spurious record becomes a
+    // spurious PR. Ordinals and numerals only.
+    /\b(schon|bereits)[^.!?]{0,30}(zum (zweiten|dritten|vierten|fünften) mal|(zwei|drei|vier|fünf)mal|mehrmals|mehrfach|\d+ ?mal)[^.!?]{0,20}(gesagt|erwähnt|geschrieben|angesprochen)\b/i,
+    /\b(sage|sag|sagte)[^.!?]{0,30}(zum (zweiten|dritten|vierten|fünften) mal|(zwei|drei|vier|fünf)mal|mehrmals|mehrfach|\d+ ?mal)\b/i,
+    /\bwie oft (soll|muss|müssen)\b/i,
+    // Typographic AND ASCII apostrophe: the curly form is what a real prompt
+    // carries, and matching only the ASCII one is a dead branch on live input.
+    /\bi ?(have|['’]ve)? ?already (told|said)\b/i,
+    /\b(told|said) (you )?(this|that|it)? ?(\w+|\d+) times?\b/i,
+    /\bhow many times (do|must|should) i\b/i,
 ];
 
 // Phrasings that MATCH a complaint pattern but are not complaints — a curious
