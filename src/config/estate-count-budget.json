@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 52,
-    "open_blockers": 64
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -251,6 +251,13 @@
       "later_roadmaps": 52,
       "open_blockers": 64,
       "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 62,
+      "why": "WALKED DOWN by 2 blockers, and NOTHING IN THE REPOSITORY EARNED THE DROP - a transfer lowers this number by construction, which is the one case where a falling measurement is not progress. The drain run that closed road-to-rule-coherence-followup resolved its two entries (default-flip-release-gate, bench-spend-and-methodology) under the council's B and D dispositions: the shipped-default flip and the human-judged A/B run both left for stubs/road-to-discipline-default-flip.md with verbatim criteria, complete moved-step lists, a named producer and probes measured at transfer. The work is not done and is not gone; it is counted in the stub instead of here, exactly as the 2026-08-20 phase3-harness-deltas-9-10 entry above records for its own transfer. Written as `resolved` because that is the ONLY closed token lint_roadmap_blockers reads - `transferred` scans as open to every gate - so the outcome state lives in the resolution prose, the stub and the stubs/README row rather than in the status token. Anyone reading this series as a drawdown curve should discount these 2 the way they discount the parking entries: the estate got smaller, the obligation did not. Re-measured over the merged tree after merging origin/main, not carried over from before the merge. Active roadmaps also fall 25 -> 24 in the same change, and that half IS earned in the ordinary way: road-to-rule-coherence-followup reached zero open steps and `agent-config roadmap:progress` archived it. The two halves of this entry are therefore different kinds of movement and are recorded separately on purpose - the roadmap genuinely left the active tree, while the 2 blockers only changed which file counts them."
     }
   ],
   "target": {
