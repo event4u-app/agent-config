@@ -77,10 +77,31 @@ describe('route:explain — pinned prompt → explanation goldens', () => {
     it('G8: an editing prompt with a skills file fires the path_prefix rules via --files', () => {
         const report = build_report(ROUTER, 'polish this skill', ['src/skills/foo/SKILL.md'], 'full');
         const ids = report.matches.map((m) => m.id);
-        expect(ids).toContain('skill-quality');
         expect(ids).toContain('framework-neutrality-in-generic-skills');
-        const sq = report.matches.find((m) => m.id === 'skill-quality');
-        expect(sq?.matched.some((l) => l.startsWith('path_prefix:'))).toBe(true);
+        const fn = report.matches.find((m) => m.id === 'framework-neutrality-in-generic-skills');
+        expect(fn?.matched.some((l) => l.startsWith('path_prefix:'))).toBe(true);
+    });
+
+    it('G8b: skill-quality is NOT routed here — it loads unconditionally instead', () => {
+        // This golden used to assert the opposite, and the change is the point
+        // rather than an accommodation. road-to-single-delivery Phase 5.1 removed
+        // the `src/skills/` path trigger from `skill-quality` (and from three
+        // sibling package-only rules) so they survive `/compact` once ADR-236's
+        // delivery partition removes their unscoped global twin — a path-scoped
+        // rule is not re-injected after compaction (ADR-227), which would let an
+        // Iron Law vanish mid-session.
+        //
+        // So the rule is no longer ROUTED at all: it is delivered unconditionally,
+        // which is strictly more available than a path match. Asserting its absence
+        // from the router's match set is what distinguishes that from a regression
+        // where a rule silently stopped arriving.
+        const report = build_report(ROUTER, 'polish this skill', ['src/skills/foo/SKILL.md'], 'full');
+        expect(report.matches.map((m) => m.id)).not.toContain('skill-quality');
+        const entry = [...(ROUTER.tier_1 as Array<{ id: string; triggers: unknown[] }>),
+                       ...(ROUTER.tier_2 as Array<{ id: string; triggers: unknown[] }>)]
+            .find((r) => r.id === 'skill-quality');
+        expect(entry, 'skill-quality must still be a router entry').toBeDefined();
+        expect(entry?.triggers, 'with an empty trigger list, i.e. unconditional').toEqual([]);
     });
 
     it('G9: a no-match prompt leaves only the kernel and reports every candidate as rejected', () => {

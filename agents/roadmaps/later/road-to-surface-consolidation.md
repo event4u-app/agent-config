@@ -25,6 +25,22 @@ execution:
 > blockers are preserved unresolved and still counted; parking claims no
 > reduction. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 +
 > openai/codex-default, two rounds, blind peer review).
+>
+> **ADR-237 note, added 2026-08-20 — one leg of this justification is gone.** The
+> `blocked-preflight` termination cited above no longer exists: ADR-237 supersedes
+> ADR-235, makes `/roadmap:process-full` an end-to-end delegation, and reclassifies
+> repository-local prerequisites (a branch, a push, a PR, a settings flip, a CI
+> re-run, a failing test, a paid call under USD 25) as remediation work rather than
+> blockers. So the command no longer refuses to start here and no longer "agrees
+> independently" with the park.
+>
+> **The park is NOT reversed by this note, and the reason is scope, not conviction.**
+> The other leg — every open item genuinely gated outside this roadmap — is the one
+> that has to be re-tested under the new capability screen
+> (`roadmap-process-loop` § 3c: *can the agent execute this at all?*), and that is a
+> per-item judgement this note does not make. What is recorded here is that the
+> justification is now **partly stale** and the roadmap is a candidate for
+> re-activation, not that it stays parked on the old grounds.
 
 > The 9.4.0 review's dominant verdict: the package is no longer
 > capability-limited but **complexity-limited** — "die Oberfläche wächst erneut

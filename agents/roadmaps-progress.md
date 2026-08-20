@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
-**302 / 603 steps done · 50%**
+**290 / 587 steps done · 49%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
 ## Open roadmaps
@@ -39,16 +39,15 @@
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████████░░ 75% |
-| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
-| 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
-| 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -849,73 +848,6 @@ _2 blockers resolved._
 | 6 | the shared checkout, which is a cause and not a symptom | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 7 | rescue, then deletion | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 | 8 | maintenance risk, process economy, and the homeless defects | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
-
-### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
-
-**Road to single delivery — one artefact, one layer, no duplicates** — 12 / 16 done (75%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Pin the measurement so no fifth draft repeats the fourth's error | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 1 | Replace ADR-226 | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 2 | Make the producers write disjoint layers | ⬜ not started | 1 | 0 | 3 | 0 | 0% |
-| 3 | Stop the two surfaces that call duplication free | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | One producer-agnostic invariant check | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | The residue the partition does not resolve | 🟡 in progress | 3 | 4 | 2 | 0 | 57% |
-
-<a id="blockers-road-to-single-delivery"></a>
-**Blockers**
-
-- **warn-path-unreachable-without-version-marker** (owner: maintainer) — blocks nothing in this roadmap — Phase 3 shipped and its contract half is unconditional. It is recorded here because it falsifies part of a completed phase's claim, and a finding against done work has nowhere else to live.
-  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (b). It is the smallest change that puts the number in front of the person deciding, it needs no new artefact on disk, and it does not weaken the DRIFT block the way (c) would. (a) is the principled fix and a larger one — it changes what the installer writes, which is a consumer-facing surface.
-  - **If you do nothing:** the cost instrumentation stays live and unreachable, which is strictly worse than absent — it reads as coverage in the diff and in this roadmap, and only a live run refutes it.
-  - **What to do:**
-    pick one. **(a)** have the installer write a version stamp beside
-    each host layer it writes, so `unknown` stops being the normal answer;
-    **(b)** report the overlap count on the `DRIFT` line too, since that is the line
-    operators actually see; **(c)** treat `unknown` as "same version" for the overlap
-    half only, keeping DRIFT's block but printing the cost. Probe first with
-    `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
-  - **Resolved when:** the option is recorded and a live guard run prints the count on the line it actually emits.
-- **partition-current-layer-undecidable** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 are landed and do not depend on it.
-  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (a), because it is the one option that closes two blockers with one change and turns an absent fact into a present one rather than working around it. (b) ships a partition that can silently prefer an outdated global rule over a fresh local one — the same class of silent wrongness this roadmap exists to remove. (c) is correct but pays on every build for a question (a) answers once.
-  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this non-decision, which is why the phase halts rather than shipping a proxy.
-  - **What to do:**
-    pick one. **(a)** have the installer write a version stamp beside
-    each host layer it writes (`~/.claude/.agent-config-version` or equivalent), which
-    makes `unknown` stop being the normal answer and also fixes
-    `warn-path-unreachable-without-version-marker`; **(b)** redefine the predicate to
-    the decidable half — present/absent — and drop staleness explicitly, stating the
-    cost (a stale global layer would partition against outdated rules); **(c)** compare
-    content instead of versions (hash the shared set), which is decidable but pays a
-    read of both layers on every generation. Probe with
-    `bash -c 'source src/scripts/_lib/scope_guard.sh project . .; installed_version_at "$HOME/.claude"'`.
-  - **Resolved when:** the option is recorded and 2.0's verify can be run against it.
-- **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
-  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
-  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose. - **STILL OPEN, and the council SPLIT — but one side's premise is now measured false, which narrows the question rather than answering it.** anthropic chose **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are semantically path-specific AND have CI gates"*; openai chose **(a)** (remove `paths:`) on the ground that a CI backstop cannot substitute for an obligation the model must hold *during* the session — naming `source-confidentiality` as a rule whose harm precedes CI. **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class gates present · `skill-quality` → present · `source-confidentiality` → `check_no_external_sources` present · **`rule-type-governance` → NO gate found.** So anthropic's premise holds for three of four and fails for one, and the failing one is the case openai's argument generalises to. That does **not** select an option for the other three, and a per-rule split is a fourth option neither seat proposed — which is precisely the kind of call this entry reserves. **What is now decided:** nothing. **What is now cheaper:** the question is no longer "(a) or (b) for four rules" but "does the CI-backstop argument hold per rule", with one measured counter-example already in hand.
-  - **What to do:**
-    run
-    `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
-    to confirm the set, then pick one of three enumerated options and record it:
-    **(a)** delete the `paths:` key from those four in `src/rules/` so they load
-    unconditionally in the project layer; **(b)** keep `paths:` and accept that they
-    do not survive compaction; **(c)** grant those four a documented exception to
-    the partition and keep an unscoped global copy.
-  - **Resolved when:** the option is recorded in the successor ADR or an amendment to ADR-227.
-- **host-skill-suppression-capability** (owner: maintainer) — blocks Phase 5 step 5.2 only. The partition removes the duplicate skills at the producer, so nothing in Phases 0-4 waits on this; it matters for a consumer who legitimately holds both layers.
-  - **Recommendation:** **(agent-drafted 2026-08-19.)** Probe before designing. If the key does not reach the catalogue, the producer-side partition this roadmap ships is the only available lever and 5.2 closes as a recorded null rather than as work.
-  - **If you do nothing:** consumers who hold both layers keep paying duplicate catalogue entries, and this roadmap's win stays maintainer-local.
-  - **What to do:**
-    on a machine holding both layers, add
-    `"claudeMdExcludes": ["<abs>/.claude/skills/**"]` to `~/.claude/settings.json`,
-    start a session, and run the `capture_skill_catalogue` probe
-    (`./scripts-run src/scripts/capture_skill_catalogue`) to see whether the
-    excluded entries are absent from the delivered catalogue. Record the host
-    version with the result. Either outcome closes this.
-  - **Resolved when:** the capability is recorded with its host version and source.
-
-_2 blockers resolved._
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 

@@ -2,8 +2,6 @@
 type: "auto"
 tier: "mechanical-already"
 description: "Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained"
-triggers:
-  - path_prefix: "src/skills/"
 routes_to:
   - "guideline:agent-infra/skill-quality-checklist"
 workspaces: [agent-config-maintainer]

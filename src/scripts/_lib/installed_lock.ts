@@ -44,6 +44,13 @@ export interface LockfileData {
   agent_config_version?: string;
   installed_at?: string;
   tools: string[];
+  /**
+   * Content fingerprint of the host artefact layers this install wrote
+   * (`hostLayerFingerprint.fingerprintLayers`). Absent on every lockfile
+   * written before the single-delivery partition, which is why the partition
+   * predicate treats absence as "not verified" and keeps the full projection.
+   */
+  host_layer_fingerprint?: string;
 }
 
 export const LOCKFILE_ENV = "AGENT_CONFIG_INSTALLED_LOCK";
@@ -65,6 +72,7 @@ const _VERSION_RE = /^\s*agent_config_version\s*:\s*"?([^"\s]+)"?\s*$/;
 const _SCHEMA_RE = /^\s*schema_version\s*:\s*(\d+)\s*$/;
 const _LAYOUT_RE = /^\s*install_layout_version\s*:\s*(\d+)\s*$/;
 const _INSTALLED_AT_RE = /^\s*installed_at\s*:\s*"?([^"\s]+)"?\s*$/;
+const _FINGERPRINT_RE = /^\s*host_layer_fingerprint\s*:\s*"?([0-9a-f]{64})"?\s*$/;
 const _TOOL_RE = /^\s*-\s*([A-Za-z0-9_\-.]+)\s*$/;
 
 /** Expand a leading `~` like Python's `Path.expanduser()`. */
@@ -158,6 +166,12 @@ export function read_lockfile(path?: string | null): LockfileData | null {
       in_tools = false;
       continue;
     }
+    const fp_m = _FINGERPRINT_RE.exec(raw_line);
+    if (fp_m) {
+      data.host_layer_fingerprint = fp_m[1]!;
+      in_tools = false;
+      continue;
+    }
     if (raw_line.trim().startsWith("tools:")) {
       in_tools = true;
       continue;
@@ -186,14 +200,24 @@ function splitlines(text: string): string[] {
   return parts;
 }
 
-function _render(version: string, tools: string[], installed_at: string): string {
+function _render(
+  version: string,
+  tools: string[],
+  installed_at: string,
+  fingerprint?: string | null,
+): string {
   const lines = [
     `schema_version: ${SCHEMA_VERSION}`,
     `install_layout_version: ${INSTALL_LAYOUT_VERSION}`,
     `agent_config_version: "${version}"`,
     `installed_at: "${installed_at}"`,
-    "tools:",
   ];
+  // Written BEFORE `tools:` so the sequence block stays last and the parser's
+  // in_tools state machine needs no extra exit condition.
+  if (fingerprint) {
+    lines.push(`host_layer_fingerprint: "${fingerprint}"`);
+  }
+  lines.push("tools:");
   for (const tool of tools) {
     lines.push(`  - ${tool}`);
   }
@@ -204,12 +228,26 @@ function _render(version: string, tools: string[], installed_at: string): string
 export function write_lockfile(
   version: string,
   tools: string[],
-  options: { path?: string | null; now?: Date | null } = {},
+  options: {
+    path?: string | null;
+    now?: Date | null;
+    /**
+     * Host-layer content fingerprint. Omit to write no fingerprint line at
+     * all — never write a placeholder: absence means "not verified" to the
+     * partition predicate, and a placeholder would mean "verified, wrongly".
+     */
+    host_layer_fingerprint?: string | null;
+  } = {},
 ): string {
   const target = options.path ?? lockfile_path();
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const stamp = strftime_iso_z(options.now ?? new Date());
-  const rendered = _render(version, sorted_unique(tools), stamp);
+  const rendered = _render(
+    version,
+    sorted_unique(tools),
+    stamp,
+    options.host_layer_fingerprint ?? null,
+  );
   // Atomic write: tempfile in the same dir + rename. The same-dir constraint
   // keeps the rename atomic across all POSIX filesystems and Windows when the
   // file already exists.
@@ -316,7 +354,14 @@ export function migrate_layout(
   const version = existing.agent_config_version || current_package_version();
   const tools = [...(existing.tools ?? [])];
   const when = options.now ?? _parse_installed_at(existing.installed_at);
-  write_lockfile(version, tools, { path: target, now: when });
+  // Carry the fingerprint across the migration. Dropping it would silently
+  // demote a verified host layer to "not verified" and turn the partition off
+  // on the next build — a layout migration must not change delivery.
+  write_lockfile(version, tools, {
+    path: target,
+    now: when,
+    host_layer_fingerprint: existing.host_layer_fingerprint ?? null,
+  });
   return {
     from: from_v,
     to: INSTALL_LAYOUT_VERSION,

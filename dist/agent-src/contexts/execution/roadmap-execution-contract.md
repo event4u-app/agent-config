@@ -23,6 +23,21 @@ declared mode into this-turn grants **cached for this run only**
 (same mechanism as the commit pre-scan it extends). Stale frontmatter
 is harmless: no confirmation, no grants.
 
+**`/roadmap:process-full` is the exception, per
+[ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md):
+the invocation IS the confirmation.** There is no separate acceptance round
+and no contract screen to wait on — the user asked for the finished PR, and
+the grants in § 3 activate on the invocation itself, whatever
+`execution.mode` says or fails to say. **A missing `execution:` block does
+not reduce the grant** under this wrapper; it only means the roadmap's author
+declared nothing, which was never the authorization anyway. Waiting for an
+acceptance the user already gave is the mid-run interruption
+`process-full § Final-PR-only` forbids.
+
+For `process-step` and `process-phase` the confirmation round stays: their
+scope is narrow enough that a contract screen costs one line, and neither
+carries ADR-237's end-to-end delegation.
+
 ## 1. Pre-scan — four detection classes
 
 Scan every open step (text + inline notes) for:
@@ -93,6 +108,17 @@ repo's current state.
 | Batched artifact drafting | The drafting-protocol **Research/overlap pass runs NOW at contract time against current artifact state**; results cached; Understand/Draft phases run non-interactively during the run. Artifacts NOT in the batch still trigger the interactive protocol |
 | Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` classifications STILL escalate to the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
 
+**`process-full` only — added by ADR-237**, because a delegation that ends at
+the PR has to be able to reach one:
+
+| Grant | Boundary |
+|---|---|
+| Update the PR after opening it — title, body, further pushes to the same branch | Still never merge, close or retarget |
+| Reversible repository / branch settings the agent can change (branch protection included) | Only settings this run needs to reach a reviewable PR, and only reversible ones; a setting the agent changes it also restores if the run's need ends |
+| Start, re-run and fix CI; update the merge base; resolve conflicts | Standard git and CI operations on the run's own branch |
+| Install project-local dependencies | Inside the repo; never a global or system package manager without its own confirmation |
+| Any tool, CLI, API, model, council or external service the work needs | Cumulative **USD 25** per run of variable spend; over that, the owner is asked BEFORE crossing. Uncertainty is not a reason to ask. Marginal cost of an existing subscription is $0. Splitting spend across services, subagents or rounds to keep each item under the ceiling is a violation |
+
 These grants satisfy [`scope-control`](../../rules/scope-control.md)'s
 "standing instruction" clause for the run — see
 [`scope-mechanics § Roadmap execution contract`](../authority/scope-mechanics.md).
@@ -110,6 +136,11 @@ git grants are omitted from the contract (nothing to authorize —
 [`commit-policy`](../../rules/commit-policy.md) default: never commit).
 
 ## 5. What acceptance can NEVER cover
+
+**ADR-237 widens § 3 and leaves this section untouched — deliberately.** An
+end-to-end delegation is tolerable precisely because a PR is reviewable before
+it merges, so the boundary that keeps merging out is the one that makes the rest
+safe. Nothing below is reachable by any invocation.
 
 - Any [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
   trigger beyond the two named grants (own-branch push, PR-open):

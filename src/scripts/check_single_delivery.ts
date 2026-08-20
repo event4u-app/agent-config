@@ -375,9 +375,11 @@ export function main(argv?: readonly string[]): number {
             process.stdout.write(
                 'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce] [--quiet]\n' +
                     '\n' +
-                    'Reports by default and exits 0: the invariant is not true yet, because\n' +
-                    'road-to-single-delivery Phase 2 is halted on partition-current-layer-undecidable.\n' +
-                    '--enforce exits 1 on any overlap, and is what to register once Phase 2 lands.\n',
+                    'Reports by default and exits 0: the partition SHIPPED (ADR-236, Phase 2)\n' +
+                    'but activates per machine — only where a verified host layer exists, so a\n' +
+                    'checkout without one keeps the full projection BY DESIGN and reports overlap.\n' +
+                    '--enforce exits 1 on any overlap; registering it would fail every machine\n' +
+                    'that has not re-run `agent-config install`, which is why it stays opt-in.\n',
             );
             return 0;
         } else if (a !== undefined) {
@@ -468,9 +470,11 @@ export function main(argv?: readonly string[]): number {
     }
     process.stdout.write(
         `⚠️  check_single_delivery: ${detail}. Reported, not enforced — ` +
-            'road-to-single-delivery Phase 2 is halted on `partition-current-layer-undecidable`, ' +
-            'so this is a known-open defect rather than a regression. Re-run with --enforce ' +
-            'once the partition ships.\n',
+            'the partition shipped (ADR-236 Phase 2) but activates per machine: it withholds ' +
+            'artefacts only where the host layer is verified against `installed.lock`, so a ' +
+            'machine whose install predates the fingerprint keeps the full projection BY DESIGN ' +
+            'and this overlap is the fail-safe working. Run `agent-config install` to enable it ' +
+            'here; use --enforce where every machine is known to be verified.\n',
     );
     return 0;
 }

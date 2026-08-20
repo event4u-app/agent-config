@@ -3,11 +3,6 @@ type: "auto"
 tier: "mechanical-already"
 description: "Linking transient files (agents/roadmaps/, agents/runtime/council/) from stable artifacts — both expire; promote findings"
 alwaysApply: false
-triggers:
-  - path_prefix: "agents/roadmaps/"
-  - path_prefix: "agents/runtime/council/questions/"
-  - path_prefix: "agents/runtime/council/responses/"
-  - path_prefix: "agents/runtime/council/sessions/"
 routes_to:
   - "skill:ai-council"
   - "skill:agent-docs-writing"
