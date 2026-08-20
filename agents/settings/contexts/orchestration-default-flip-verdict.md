@@ -5,6 +5,11 @@
 > the record — it is superseded by the re-evaluation in
 > [§ Superseding decision (2026-07-09)](#superseding-decision-2026-07-09--flip-to-on-on-bounded-downside-re-evaluation)
 > at the end of this file (ADR-117).
+>
+> A third evidence pass ran on 2026-08-20 and changed nothing: see
+> [§ Evidence pass (2026-08-20)](#evidence-pass-2026-08-20--no-usable-evidence-the-default-is-unexamined-not-confirmed).
+> It records a measured null — the `on` default is neither confirmed on evidence
+> nor demoted.
 
 **Decision (2026-06-26).** The shipped default `subagents.auto` stays **`ask`**.
 It is NOT flipped to `on`. The flip is re-gated on accumulated real-world
@@ -102,6 +107,52 @@ Anthropic's core catastrophe premise).
 **revisit-if / demotion trigger.** Accumulated real-world orchestration
 telemetry showing a net token-or-time *loss* or a quality regression on the
 delegable subset → demote to `ask` via `gateVerdict`/`resolveShippedDefault`.
+
+## Evidence pass (2026-08-20) — no usable evidence; the default is unexamined, not confirmed
+
+**Outcome: neither branch fires.** The default `on` is **not** confirmed on
+measured evidence, and the demotion trigger below is **not** met. This is the
+third entry in this file's history (after 2026-06-26 "keep `ask`" and 2026-07-09
+"flip to `on`"); the two intermediate readings on 2026-08-10 and 2026-08-17 were
+recorded in the roadmap blocker rather than here.
+
+**What was measured.** `agents/runtime/state/audit/` (gitignored host state), read
+2026-08-20:
+
+- `2026-08.jsonl` — 591 lines, **582 orchestration rows**; `2026-07.jsonl` — 1.
+- `first_pass_success`, `escalated`, `task_class`, `dispatch_mode`: non-null on
+  **0 of 582**. The entire held-quality corpus is the single July line.
+- `token_delta`: `0` with `token_delta_provenance: estimated` on **582 of 582**.
+- `dispatch_tokens`: numeric on **40 of 582**, all dated 2026-08-09 to
+  2026-08-13 — none since. `wall_clock_ms` numeric on 582 but `> 0` on only
+  those same 40.
+- `spawn_count >= 2`: **0 of 582**. Across 582 recorded dispatches this corpus has
+  never produced a fan-out.
+- `orchestration_savings_report`: `dispatches: 582 (total spawns: 584)`, net
+  `token_delta 1087078` — tokens **added**, entirely from the one July line;
+  `first_pass_success_rate: n/a (n=1)`, `escalation_rate: n/a (n=1)`,
+  `measured share: 0%`, `MODELED cost reduction: n/a`.
+
+**Why neither branch fires.** `gateVerdict` is a pure function of
+`{net_win, quality_held}` and the corpus supplies neither: no measured net (all
+provenance `estimated`) and no quality signal (`first_pass_success` null on all
+582). The demotion trigger stated below requires *a measured net loss or a
+quality regression*; an **unmeasurable** corpus is neither. Reading the
+`measured share: 0%` aggregate as a loss would be quoting a single July line as a
+population.
+
+**Why more usage will not change this.** The quality columns are not derivable
+from any hook payload by construction — `first_pass_success` and `escalated` are
+defined over the parent's *subsequent* rework and re-dispatch, which have not
+happened at task completion. Cost and latency already arrive on a **sync**
+completion (`orchestration_record_hook.ts:193-199`, hence the 40 numeric rows);
+background dispatches carry no usage fields at that slot. So volume produces more
+`null`, not more evidence. The observability work is transferred to a stub
+carrying its own re-entry probes.
+
+**Standing state.** ADR-117's `on` default continues to rest on the 2026-07-09
+bounded-downside basis, unchanged and un-upgraded. It stands **by decision** —
+this pass is on the record — rather than by default going unexamined.
 
 ## See also
 
