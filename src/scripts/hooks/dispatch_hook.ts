@@ -146,6 +146,16 @@ interface Args {
   dry_run: boolean;
   project_dir: string;
   min_version: number;
+  /**
+   * Measurement-only: read stdin, build the envelope, exit. See `--read-exit`.
+   *
+   * OPTIONAL, unlike `dry_run` beside it, and the asymmetry is deliberate: this
+   * flag exists for one bench cell, so every caller that constructs an `Args`
+   * by hand — eight test fixtures across three files — would otherwise have to
+   * name a field it has no opinion about. `_parse_args` still sets it
+   * explicitly, so the production path never reads an absent value.
+   */
+  read_exit?: boolean;
 }
 
 function _resolve_session_id(envelope: JsonObject): string {
@@ -1139,6 +1149,7 @@ function _parse_args(argv: string[]): Args {
     dry_run: false,
     project_dir: "",
     min_version: 0,
+    read_exit: false,
   };
   let sawPlatform = false;
   let sawEvent = false;
@@ -1161,6 +1172,9 @@ function _parse_args(argv: string[]): Args {
         break;
       case "--dry-run":
         args.dry_run = true;
+        break;
+      case "--read-exit":
+        args.read_exit = true;
         break;
       case "--project-dir":
         args.project_dir = argv[++i] ?? "";
@@ -1226,6 +1240,44 @@ export function main(argv?: string[]): number {
           `${project_dir} — resolving against cwd ${process.cwd()}\n`,
       );
     }
+  }
+
+  // ── `--read-exit`: the transport-isolation cell ─────────────────────────────
+  //
+  // `b-payload-read-parse-dominates`, option (a), council 2026-08-20 (2/2
+  // quorum): "add a same-fixture dispatcher cell that reads stdin and exits
+  // immediately, reporting its own latency and its share of the large-payload
+  // delta".
+  //
+  // WHY IT LIVES IN THE DISPATCHER rather than in a standalone probe script.
+  // The term being isolated is `readFd0ToEnd` + one `JSON.parse` of the same
+  // payload, and it must be measured through the SAME process shape as the
+  // slot it is a share of — same interpreter, same bundle, same spawn. A
+  // separate probe would have to re-implement the audited retrying reader, and
+  // a copy of that reader is precisely the drift `hook_stdin` was consolidated
+  // to remove. Bundle load does not vary with payload size, so it cancels in
+  // the large-minus-small delta, which is the number the option asks for.
+  //
+  // Measurement-only, and it exits BEFORE the manifest load, the concern
+  // resolution and every concern — so it can neither run a guard nor suppress
+  // one. Same exposure `--dry-run` already carries: reaching it requires
+  // editing the installed hook command, and anyone who can do that can delete
+  // the hook instead.
+  if (args.read_exit === true) {
+    const probe = tty.isatty(0) ? { text: "", failure: null } : stdinReadFailure();
+    if (probe.failure !== null) {
+      process.stderr.write(`dispatch_hook: --read-exit read failed: ${probe.failure}\n`);
+      return EXIT_ALLOW;
+    }
+    // The parse is the half of the term under test, so it must actually happen
+    // and its result must be observable — otherwise a future optimiser could
+    // elide it and the cell would silently measure the read alone.
+    const envelope = _build_envelope(args, probe.text);
+    process.stderr.write(
+      `dispatch_hook: --read-exit ok (${probe.text.length} chars, ` +
+        `${Object.keys(_isObject(envelope["payload"]) ? envelope["payload"] : {}).length} payload keys)\n`,
+    );
+    return EXIT_ALLOW;
   }
 
   if (!EVENT_VOCABULARY.has(args.event)) {

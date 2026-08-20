@@ -231,6 +231,159 @@ export function benchEvent(
 }
 
 /**
+ * One dispatcher invocation that reads stdin, parses it, and exits — the
+ * transport-isolation cell of the § 2 matrix.
+ *
+ * `b-payload-read-parse-dominates`, option (a), council 2026-08-20 (2/2
+ * quorum). Phase 1 removed ten of eleven envelope stringifies and moved
+ * nothing; Phase 2 removed the body from six of eleven concerns and moved
+ * nothing. What is left between the small and large cells happens ONCE per
+ * event, before any concern runs: `readFd0ToEnd` drains the pipe and
+ * `_build_envelope` parses it. This measures exactly that, through the SAME
+ * bundle, interpreter and spawn as the slot reading it is a share of — so the
+ * constant terms cancel in the delta.
+ *
+ * Deliberately the real bundle with `--read-exit` rather than a standalone
+ * probe: a probe would re-implement the audited retrying reader, and that copy
+ * is the drift `hook_stdin` exists to prevent.
+ */
+export function benchReadExit(
+    event: string,
+    runs: number,
+    workspace: string,
+): EventResult {
+    const durations: number[] = [];
+    const payload = syntheticPayload(event, workspace);
+    for (let i = 0; i < runs; i += 1) {
+        const started = performance.now();
+        const proc = spawnSync(
+            process.execPath,
+            [
+                BUNDLE_OVERRIDE ?? BUNDLE,
+                '--platform',
+                'claude',
+                '--event',
+                event,
+                '--project-dir',
+                workspace,
+                '--read-exit',
+            ],
+            {
+                input: payload,
+                encoding: 'utf-8',
+                env: { ...process.env, AGENT_CONFIG_REPLAY: '1', CLAUDE_PROJECT_DIR: workspace },
+                timeout: 60000,
+            },
+        );
+        const elapsed = performance.now() - started;
+        if (proc.error) {
+            throw new Error(`read-exit failed on ${event}: ${proc.error.message}`);
+        }
+        if (!(proc.stderr ?? '').includes('--read-exit ok')) {
+            // A silent no-op here would report the fastest possible number and
+            // measure nothing — the failure mode this whole cell exists to avoid
+            // in the OTHER direction. Refuse instead of publishing it.
+            throw new Error(
+                `read-exit produced no confirmation on ${event}; the flag may not be ` +
+                    `wired in the measured bundle (${BUNDLE_OVERRIDE ?? BUNDLE}). ` +
+                    `stderr: ${(proc.stderr ?? '').trim().slice(0, 200)}`,
+            );
+        }
+        durations.push(elapsed);
+    }
+    durations.sort((a, b) => a - b);
+    return {
+        event: `read_exit:${event}`,
+        runs,
+        p50_ms: Math.round(percentile(durations, 50)),
+        p95_ms: Math.round(percentile(durations, 95)),
+        max_ms: Math.round(durations[durations.length - 1] as number),
+    };
+}
+
+/** One row of the transport-share decomposition. */
+export interface ReadExitCell {
+    event: string;
+    payload_bytes: number;
+    slot_small_p50_ms: number;
+    slot_large_p50_ms: number;
+    read_exit_small_p50_ms: number;
+    read_exit_large_p50_ms: number;
+    /** Large-minus-small on the full dispatch. */
+    slot_delta_ms: number;
+    /** Large-minus-small on read + parse alone. */
+    transport_delta_ms: number;
+    /**
+     * `transport_delta / slot_delta`, as a percentage, or `null` when the slot
+     * delta is not positive.
+     *
+     * `null` is a real answer and must not be rendered as 0: a run whose large
+     * cell is no slower than its small one says the fixture did not reproduce
+     * the gap on this machine, which is different from saying transport is free.
+     */
+    transport_share_pct: number | null;
+}
+
+/**
+ * The four measurements the option asks for, in one invocation.
+ *
+ * Both payload sizes are needed for the SHARE, and taking them in one run is
+ * the point: two separate runs would compare across whatever else the machine
+ * was doing, which is the cross-runner shape § 2 of the roadmap refuses as a
+ * repo fact. Arms alternate per repetition for the same reason.
+ */
+export function benchReadExitCell(
+    event: string,
+    runs: number,
+    workspace: string,
+    payloadBytes: number,
+): ReadExitCell {
+    const saved = PAYLOAD_BYTES;
+    try {
+        PAYLOAD_BYTES = 0;
+        const slotSmall = benchEvent(event, runs, workspace, 'bundle');
+        const probeSmall = benchReadExit(event, runs, workspace);
+        PAYLOAD_BYTES = payloadBytes;
+        const slotLarge = benchEvent(event, runs, workspace, 'bundle');
+        const probeLarge = benchReadExit(event, runs, workspace);
+        const slot_delta_ms = slotLarge.p50_ms - slotSmall.p50_ms;
+        const transport_delta_ms = probeLarge.p50_ms - probeSmall.p50_ms;
+        return {
+            event,
+            payload_bytes: payloadBytes,
+            slot_small_p50_ms: slotSmall.p50_ms,
+            slot_large_p50_ms: slotLarge.p50_ms,
+            read_exit_small_p50_ms: probeSmall.p50_ms,
+            read_exit_large_p50_ms: probeLarge.p50_ms,
+            slot_delta_ms,
+            transport_delta_ms,
+            transport_share_pct:
+                slot_delta_ms > 0
+                    ? Math.round((transport_delta_ms / slot_delta_ms) * 100)
+                    : null,
+        };
+    } finally {
+        PAYLOAD_BYTES = saved;
+    }
+}
+
+/** Human-readable decomposition, one line per fact. */
+export function renderReadExitCell(cell: ReadExitCell): string {
+    const share =
+        cell.transport_share_pct === null
+            ? 'n/a — the large cell was not slower than the small one in this run'
+            : `${String(cell.transport_share_pct)}%`;
+    return (
+        `read-exit cell · ${cell.event} · payload ${String(cell.payload_bytes)}B\n` +
+        `  full dispatch    small ${String(cell.slot_small_p50_ms).padStart(5)} ms · ` +
+        `large ${String(cell.slot_large_p50_ms).padStart(5)} ms · delta ${String(cell.slot_delta_ms)} ms\n` +
+        `  read + parse     small ${String(cell.read_exit_small_p50_ms).padStart(5)} ms · ` +
+        `large ${String(cell.read_exit_large_p50_ms).padStart(5)} ms · delta ${String(cell.transport_delta_ms)} ms\n` +
+        `  transport share of the large-payload delta: ${share}\n`
+    );
+}
+
+/**
  * Same-run control: a bare `node -e 0`, measured through the identical
  * spawnSync harness the slots use.
  *
@@ -486,6 +639,37 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         PAYLOAD_BYTES = parsed;
     }
 
+    // `--read-exit-cell <bytes>`: the transport-isolation cell. Measurement-only
+    // for the same reason `--payload-bytes` is — it PADS the payload, so it must
+    // never write a budget row or a regression baseline.
+    const readExitIdx = argv.indexOf('--read-exit-cell');
+    let readExitBytes: number | null = null;
+    if (readExitIdx >= 0) {
+        const raw = argv[readExitIdx + 1];
+        const parsed = raw === undefined ? Number.NaN : Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --read-exit-cell requires a positive integer byte count\n',
+            );
+            return 2;
+        }
+        if (gate || update || baselineIdx >= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --read-exit-cell is measurement-only — a padded payload must ' +
+                    "never write this tree's budget row or regression baseline\n",
+            );
+            return 2;
+        }
+        if (viaCli) {
+            process.stderr.write(
+                'bench_hook_latency: --read-exit-cell drives the bundle directly and does not use ' +
+                    'the --via-cli shim path — pick one\n',
+            );
+            return 2;
+        }
+        readExitBytes = parsed;
+    }
+
     const bundleIdx = argv.indexOf('--bundle');
     if (bundleIdx >= 0) {
         const raw = argv[bundleIdx + 1];
@@ -537,6 +721,26 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (budget === null) {
         process.stderr.write(`bench_hook_latency: budget file missing/invalid at ${BUDGET_PATH}\n`);
         return 2;
+    }
+
+    if (readExitBytes !== null) {
+        // Its own mode: the cell alternates two payload sizes internally, so
+        // running it alongside the ordinary sweep would report a padded number
+        // under an unpadded label.
+        const cellWorkspace = fs.mkdtempSync(path.join(os.tmpdir(), 'ac-hook-readexit-'));
+        try {
+            // `post_tool_use` only. That is where the large cell lives: a
+            // `tool_response` does not exist on a `PreToolUse` payload, which is
+            // the same objection `syntheticPayload` raises against padding `stop`.
+            const cell = benchReadExitCell('post_tool_use', runs, cellWorkspace, readExitBytes);
+            process.stdout.write(renderReadExitCell(cell));
+            process.stdout.write(
+                'ℹ️  measurement only (no gate) — this cell never writes a budget row\n',
+            );
+        } finally {
+            fs.rmSync(cellWorkspace, { recursive: true, force: true });
+        }
+        return 0;
     }
 
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'ac-hook-bench-'));
