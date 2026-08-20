@@ -30,6 +30,13 @@ export default defineConfig({
         // PR #1458 red on `macos-latest, shard 2/4` while green everywhere else.
         // Rationale and the deliberate narrowness live in the file itself.
         setupFiles: ['tests/_lib/hermetic-env.ts'],
+        // Runs ONCE, in the main process, before any worker spawns. Builds the
+        // gitignored `dist/` artefacts the four e2e suites spawn, but only when
+        // they are absent. On a fresh checkout those four files accounted for 31
+        // of 32 local failures purely because `dist/*` had never been built; in
+        // CI (`tests.yml` runs `npm run build` first) this is a no-op. Full
+        // rationale, and why building beats skipping, in the file itself.
+        globalSetup: ['tests/_lib/ensure-build-artefacts.ts'],
         // The python-free-env shim (tests/_lib/python-free-env.ts) is DISABLED:
         // the py2ts test-layer purge converted every live python↔tsx parity
         // block to tsx-only intent tests, so no test needs the python3 shadow.
