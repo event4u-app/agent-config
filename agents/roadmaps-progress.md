@@ -6,10 +6,10 @@
 
 ## Overall
 
-**292 / 582 steps done · 50%**
+**304 / 578 steps done · 53%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## ✅ Completed — pending archival
@@ -18,7 +18,10 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
+| [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
+| [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 36 | 36 |
 
 ## Open roadmaps
 
@@ -34,16 +37,16 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
 | 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 0 | 7 | 0 | 4 | 0 | ██████████ 100% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
 | 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 0 | 12 | 0 | 5 | 0 | ██████████ 100% |
-| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 0 | 36 | 0 | 1 | 0 | ██████████ 100% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -448,13 +451,13 @@ _1 blocker resolved._
 
 ### [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md)
 
-**Road to the hook-state follow-ups nobody owned** — 0 / 10 done (0%)
+**Road to the hook-state follow-ups nobody owned** — 10 / 10 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the two consumers that read what nobody writes | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | what the two lock primitives need before they converge | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | the local test reds nobody had disposed of | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | the two consumers that read what nobody writes | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | what the two lock primitives need before they converge | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | the local test reds nobody had disposed of | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
 
@@ -518,14 +521,14 @@ _1 blocker resolved._
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
-**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 11 done (64%)
+**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 7 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | CODEOWNERS + branch protection | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 1 | Dogfood the review machinery as a pre-merge gate | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 2 | CODEOWNERS + branch protection | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 3 | Make a release inheritable (the runbook) | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 4 | Lower bus-factor toward >1 (opportunistic, honest) | ✅ done | 0 | 1 | 0 | 1 | 100% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
@@ -774,7 +777,7 @@ _2 blockers resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 34 / 36 done (94%)
+**Road to request-scoped rule load — ship only what the request needs** — 36 / 36 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -783,8 +786,8 @@ _2 blockers resolved._
 | 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 1 | 12 | 0 | 1 | 92% |
+| 4 | EXECUTED 2026-08-20: rules-as-skills falsification probe (Claude Code) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | ✅ done | 0 | 13 | 0 | 1 | 100% |
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
