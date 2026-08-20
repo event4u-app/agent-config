@@ -39,7 +39,33 @@ complexity: structural
 > document is rejected as duplicate or unfounded, that is the null to record
 > there.
 
-> **Execution status (2026-08-13).** Phase 2 and Phase 5 are closed; Phase 1 is
+> **Execution status (2026-08-20) — NO OPEN STEPS. 16 done, 1 deferred, 1
+> cancelled, of 18.** Phases 2, 3, 5 and 6 are closed; Phase 4 is 2/3 with its
+> Step 3 now recorded `[-]`; Phase 1 is closed except its multi-host census
+> half, which stays `[~]` with a recorded resolution and a named closing
+> condition. The 2026-08-13 status block below is left in place rather than
+> rewritten, so the stale claim stays auditable — read it as history, not as
+> state.
+>
+> **What unblocked Phase 3, since the block below says it was blocked on two
+> dependencies:** neither dependency was satisfied and neither was waited on.
+> The concern ships in **shadow** — bound, always-on, emitting nothing — and
+> under that posture both dependencies stop being preconditions and become
+> recorded fields. The verifier-exemption risk is a harm of *emission*, so a
+> concern with no emission cannot realise it; the unfinished matcher census is a
+> false-positive problem, so a concern that cannot produce a false positive
+> measures the census instead of needing it. The two open SLI steps
+> (`agent_id` on a PreToolUse payload) were re-verified open on 2026-08-20, and
+> Phase 3 Step 1 records their state rather than assuming it.
+>
+> **What Phase 6 could and could not earn.** Three of its four dimensions moved
+> and are measured; the screenshot dimension is still unreachable on this host
+> for Phase 1's reason. The roadmap's own "Not claimed" clause below therefore
+> still stands in full: the operator's *symptom* is not claimed fixed, because
+> the conditions under which it occurs (a page-reaching capture primitive, a URL
+> handover) are still absent from every measurement this repository can run.
+>
+> **Execution status (2026-08-13) — HISTORICAL.** Phase 2 and Phase 5 are closed; Phase 1 is
 > closed except its multi-host census half — **9 done, 1 deferred** of 18.
 > Phase 4 Step 3 was attempted and **withdrawn**: the completion review
 > showed the trigger form available without guessing a vendor's share path
@@ -101,6 +127,48 @@ complexity: structural
 >   sessions); it needs a consumer repo with real UI writes to mean anything.
 >   That is a change to what Phase 6 can promise, and it is recorded in the
 >   evidence file rather than discovered at re-measurement time.
+
+## Outcome
+
+> **Closed 2026-08-20. Outcome state: `transferred`.** Recorded here rather
+> than only in the body, because a reader who sees this file in `archive/`
+> later must not be able to read "archived" as "achieved". Framework of record
+> for the dispositions below:
+> `agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+> — on `origin/drain/council-records` (PR #1463), not yet on `main`, hence the
+> ignore marker.
+
+**Census: 18 steps — 16 satisfied, 2 cancelled (1 of them transferred), 0 open.**
+
+| Phase | Outcome | What that means here |
+|---|---|---|
+| 1 — Measure | **narrowed** (2/3 satisfied, 1 transferred) | Steps 1 and 3 landed. Step 2's multi-host census is **transferred** to [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md): gated on a host capability, not on effort. Its closing condition was **narrowed** on the way out — flip condition (d), an observation, replaces a census campaign. |
+| 2 — One data-basis ladder | **satisfied** (5/5) | Ladder, W2 contradiction, adopt-the-code duty with its `code-provenance` scope line, the ad-hoc coverage step, three fixtures. |
+| 3 — The deterministic carrier | **satisfied, narrowed in posture** (3/3) | `source-first-gate` ships, tested, and verified end-to-end through the real dispatcher. Narrowed from the drafted `exit 2` warn to **shadow** — the concern emits nothing. That narrowing is what made the phase takeable without its two open dependencies. |
+| 4 — The browser handover | **narrowed** (2/3), 1 **cancelled** | Steps 1–2 landed as one guideline section reusing the existing `design-system.json` contract. Step 3 is **cancelled**: the only trigger form reachable from this repo is the over-broad one its own completion review rejected. The W5 URL / live-page handover class it serves is **transferred** to the stub, unscored by any fixture. |
+| 5 — Interop precedence | **satisfied** (2/2) | Precedence clause and the anonymised Source-C harvest verdicts. |
+| 6 — Close the loop | **satisfied on what it could reach** (2/2) | Step 1 re-measured three of four dimensions; the fourth is **transferred** (no page-reaching capture primitive). Step 2 closed both gated follow-ups — (a) on the numbers, (b) as structurally undecidable while the gate cannot fire. |
+
+**Transferred — the complete list**, all three to the one stub: Phase 1 Step 2
+(the census), the screenshot dimension of Phase 6 Step 1, and the W5 URL /
+live-page handover class. Every one is gated on the same single fact: no
+page-reaching capture primitive exists on this host. The stub names the producer,
+the probe, and today's measured reading.
+
+**Cancelled:** Phase 4 Step 3 (builder-URL triggers), withdrawn 2026-08-13 on
+its own standard and recorded `[-]` on 2026-08-20.
+
+**Not claimed:** that the operator's symptom is fixed. Phase 1 could not
+reproduce it under conditions where it can occur (no capture tool, no URL
+handover), so these criteria cover the *defects verified in the tree*, not the
+symptom. Phase 6 is where the symptom claim would be earned, and it needs a
+consumer repo.
+
+*(That clause is carried verbatim from § Acceptance Criteria, where it was
+written before Phase 6 ran. Phase 6 has now run and it still stands unchanged:
+the re-measurement moved three dimensions and could not reach the fourth, and
+the two conditions it names — a capture tool, a URL handover — are exactly what
+the transfer is about.)*
 
 ## Context / What is verified
 
@@ -238,7 +306,7 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       measured zero browser-capable capture tools on the host. The falsifier's
       literal condition is met and is deliberately **not** honoured — a null
       produced by a setting that excludes the failure mode is not a null.
-- [~] **Step 2:** Census the screenshot-capable tool names actually present
+- [-] **Step 2:** Census the screenshot-capable tool names actually present
       across the supported hosts (Claude Code browser tools, Playwright MCP
       `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
       shapes) — the matcher list for Phase 3 comes from this census, never
@@ -255,6 +323,54 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       claiming more than the note underneath it delivered. Phase 3 Step 1 takes
       its matcher list from this census, so the deferral is a real dependency
       and is listed as one below, not a bookkeeping detail.
+      **Re-examined 2026-08-20 and still `[~]`, but no longer on Phase 3's
+      critical path.** Nothing about the host changed: this environment still
+      has exactly one capture tool and it still photographs the display, so
+      "across the supported hosts" is still unsatisfiable here. What changed is
+      what the deferral blocks. Phase 3 ships in **shadow**, and under shadow an
+      over-broad matcher costs a log line instead of a false warning — so the
+      unfinished census became the thing being measured (`capture_kind` on every
+      record) rather than a precondition. The multi-host half is now flip
+      condition (d) of Phase 3 Step 2: the shipped matcher is narrowed to the
+      entries that actually appeared, which closes this step **by observation**
+      rather than by a second census campaign.
+      **Deferred-resolution disposition, recorded per `roadmap-progress-sync`
+      Iron Law 3:** this roadmap reached `count_open == 0` with this one `[~]`,
+      which armed the no-silent-archive gate. Resolution, in its final form:
+      **the item is transferred to a stub and this roadmap's outcome state is
+      `transferred`, not `achieved`.** That is a preserving disposition (the
+      criterion remains live in the active estate, in the stub), so it is
+      council-decidable rather than owner-reserved under that rule's
+      preservation test. What closes it: the flip-condition (d) observation
+      above, or a census run on a second host — both now recorded in the stub.
+      Nothing about it is dropped, weakened, or accepted as lost.
+      *(The first-pass resolution recorded here was "stays `[~]`, roadmap stays
+      active". Superseded below, and left visible rather than rewritten.)*
+      Missing, precisely: a session on a second supported host with a
+      page-reaching capture primitive connected.
+      <!-- decision 2026-08-20: kept [~] and kept the roadmap active rather than archiving with an unresolved deferral. Conservative and reversible: no information is buried, and the item acquires a named closing condition (Phase 3 Step 2 flip condition (d)) instead of an open-ended one. -->
+      **SUPERSEDED the same day — `[~]` -> `[-]`, disposition TRANSFERRED.**
+      The paragraph above is left standing because its reasoning is still
+      sound and its conclusion is not: keeping `[~]` *is* a preserving
+      disposition, but it is not the only one, and it left this roadmap active
+      on a condition this environment cannot reach — an active roadmap whose
+      only open item is unreachable is a roadmap nobody can close honestly.
+      **Transferred**, per the drain-run framework of record
+      (`agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+      — on `origin/drain/council-records`, PR #1463, not yet on `main`): work
+      gated on a **host capability** rather than on effort or judgement moves to
+      a stub carrying a named re-entry probe, and the parent records
+      `transferred` as its outcome state so that "archived" can never read as
+      "achieved".
+      Successor: [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md),
+      which carries this criterion verbatim, the re-scoped flip condition (d),
+      the two further transferred items (the screenshot dimension of Phase 6
+      Step 1 and the W5 URL / live-page handover class), the named producer and
+      probe with today's measured reading, and the two observable proxies from
+      Phase 3 Step 1 so that reasoning does not die with this file.
+      Nothing is dropped, weakened, or accepted as lost — the item is live in
+      the stub, with a cheaper closing condition than it had here.
+      <!-- decision 2026-08-20: [-] with outcome state TRANSFERRED to stubs/road-to-multi-host-screenshot-census.md, superseding the keep-[~] decision above. Reversible: the stub carries the criterion verbatim and promotion moves it back. Conservative on the load-bearing axis - the item is preserved and the closure cannot be misread as the symptom being fixed, which is what the Outcome section states in the parent. -->
 - [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
       that reading a provided artifact file (the handover classes
       `design-fidelity` already routes) counts as consultation — capture-only
@@ -355,7 +471,7 @@ hand the operator report back with the measurement.
 
 ## Phase 3: The deterministic carrier — a source-first gate on screenshot tools
 
-- [ ] **Step 1:** `source-first-gate` PreToolUse concern *(proposal)*, matcher
+- [x] **Step 1:** `source-first-gate` PreToolUse concern *(proposal)*, matcher
       = the Phase-1 Step-2 census list. Fires only when ALL hold: the session
       has a routed design handover (the same trigger event `design-fidelity`
       records) AND the consultation latch shows the source **unread** AND the
@@ -373,7 +489,54 @@ hand the operator report back with the measurement.
       Phase 0 Step 4 spikes and its Phase 4 binds the role axis on. **This step
       therefore lands after SLI Phase 4** — shipping the gate earlier means
       warning the one actor doing it right.
-- [ ] **Step 2:** Ship **default-ON, warn-only** *(proposal — maintainer
+      **Done 2026-08-20, in SHADOW posture rather than the drafted `exit 2
+      warn` — which is what makes the step takeable at all.** Both stated
+      dependencies were re-examined rather than waited on, and both dissolve
+      under a posture that emits nothing:
+      (1) **the verifier exemption.** Risk 3 is *"the gate warns the one actor
+      doing it right"*, and the harm in it lives entirely in the emission. A
+      concern that emits nothing warns nobody, correctly or otherwise. So
+      `agent_id` / `agent_type` are recorded as **fields** on every shadow
+      record (`agent_id_present`, `agent_type`, `verifier_exemption_decidable`)
+      instead of being branched on — which measures how large the exemption
+      would have to be rather than guessing it. SLI Phase 0 Step 4 and Phase 4
+      Step 1 are both still `[ ]`, verified this run, so the field reads false
+      today and that is the expected reading.
+      (2) **the matcher census.** Phase 1 Step 2 is `[~]` and its one censused
+      host contributes a tool that photographs the display rather than a page,
+      so "a matcher built from this census alone would watch the wrong
+      surface". Under a warn posture that is a false-positive generator; under
+      shadow it is the measurement — `capture_kind` (`page` / `display` /
+      `unknown`) separates the two on every record, which is precisely the
+      datum the census lacks. The matcher itself is **tree-sourced, not
+      recalled**: `browser_take_screenshot` from `src/skills/mcp/SKILL.md`,
+      `claude-in-chrome` from `src/skills/screenshot-hygiene/SKILL.md` and
+      `docs/decisions/ADR-125-doc-screenshot-anonymization.md`, `screencapture`
+      from the census note in `tests/design-artifacts/eval-fixtures.md`.
+      **One condition of this step could not be honoured as written and is
+      recorded rather than faked.** "The session has a routed design handover
+      (the same trigger event `design-fidelity` records)" names an event that
+      does not exist — `design-fidelity` is a rule with no runtime carrier.
+      Two observable proxies are therefore recorded side by side (a handover
+      path named by any tool this session; a handover artifact present on disk)
+      and the candidate spread is what tells them apart. Promoting one now
+      would be the pick-then-measure mistake the activation policy names.
+      Files: `src/scripts/hooks/source_first_gate_hook.ts`,
+      `src/scripts/hook_manifest.yaml` (concern `source-first-gate`),
+      `src/scripts/hooks/concern_registry.ts`. Bound where
+      `spawn-guard-shadow` binds — claude and cowork — rather than on all three
+      `pre_tool_use` rows, following that concern's precedent exactly.
+      <!-- decision 2026-08-20: shipped SHADOW (emits nothing, exit 0 on every path) instead of the drafted exit-2 warn. Conservative and reversible - rollback is one manifest line, and no session can be warned by a concern with no warn path. This is also what makes the step's two open dependencies non-blocking rather than deferred. -->
+      **Verified end-to-end through the real dispatcher, not only as pure
+      functions** — the wiring is the part a unit test cannot prove. A
+      `pre_tool_use` envelope for `browser_take_screenshot` driven through
+      `dispatch_hook.ts --platform claude` returned exit 0 with **0 bytes on
+      stdout** and the concern's record on disk, which is the shadow contract
+      demonstrated rather than asserted: the record exists, and nothing reached
+      the model.
+      <!-- verified 2026-08-20: `npx vitest run tests/hooks/source_first_gate.test.ts` -> "Test Files 1 passed (1) / Tests 23 passed (23)"; `./scripts-run src/scripts/lint_hook_manifest` -> exit=0; `task typecheck-ts` -> EXIT=0 -->
+      <!-- verified 2026-08-20: end-to-end `echo <envelope> | npx tsx src/scripts/hooks/dispatch_hook.ts --platform claude --event pre_tool_use --native-event PreToolUse --project-dir <probe>` -> "dispatcher exit=0  stdout bytes=0", and agents/runtime/state/source-first-gate.jsonl written with tool_matcher=playwright-mcp posture=shadow handover_present_on_disk=true -->
+- [x] **Step 2:** Ship **default-ON, warn-only** *(proposal — maintainer
       call)*. The estate's own evidence cuts both ways: `design-slop` and
       `ui-route-nudge` shipped default-OFF and the symptom shipped with them;
       the turn-end-gate's round-6→round-7 history records why "a concern
@@ -382,8 +545,56 @@ hand the operator report back with the measurement.
       concern activation policy (program X3), which this step cites rather than
       re-arguing** — the same argument was being made independently in three
       roadmaps, which is how activation postures drift apart.
-- [ ] **Step 3:** Snapshot tests: fires / latched-silent / valve-exhausted /
+      **Done 2026-08-20 — re-argued against the policy, and the policy wins:
+      SHADOW, not default-ON warn-only.** The 2026-08-17 correction above is
+      right that a citation is not enough here, so the argument is made rather
+      than deferred. `docs/contracts/concern-activation-policy.md` reports two
+      measurements pointing the same way — `session-canary`, a verified-firing
+      per-turn injection whose compliance miss rate did not move (24 of 29 task
+      starts), and conformance round 5, where both blocking carriers reached
+      zero violations and neither advisory carrier did. A warn rung would pay
+      this concern's full per-call cost and, on that evidence, buy nothing
+      measurable. Shadow pays the same cost and buys the false-positive
+      distribution a warn needs anyway.
+      **The step's own counter-evidence is answered, not ignored.**
+      `design-slop` and `ui-route-nudge` shipped default-OFF and the symptom
+      shipped with them, and "a concern which is off cannot soak" is true. This
+      concern is therefore **not** default-OFF: it carries no
+      `hookSectionEnabled` gate and runs on every bound dispatch, exactly as
+      `spawn-guard-shadow` does. Shadow is the opposite of off — it soaks
+      without emitting.
+      **Flip condition pre-registered now**, as the step requires, in the hook
+      header: shadow -> advisory when (a) >= 100 capture-shaped records or >= 2
+      weeks, whichever comes first, including at least one record with
+      `handover_seen_in_session: true`; (b) one candidate rule's
+      false-positive share (would-warn on a non-`page` `capture_kind`) is
+      <= 1 %; (c) `verifier_exemption_decidable` reads true, i.e. SLI Phase 4
+      Step 1 landed; (d) the shipped matcher is narrowed to the entries that
+      actually appeared, which closes Phase 1 Step 2's multi-host half by
+      observation instead of by a second census. Reverse trigger: no records in
+      8 weeks -> evaluate removal.
+      **Intended terminal posture is advisory, and that does not license
+      skipping shadow.** Phase 3 Step 1 says "never a block", so advisory is
+      this concern's destination rather than a waiting room — the policy's
+      objection to the advisory *rung* is about concerns on their way to
+      blocking. The measurement debt is identical either way: without a shadow
+      window there is no false-positive rate for a warn either.
+      <!-- decision 2026-08-20: posture = shadow (bound, always-on, emits nothing), NOT the drafted default-ON warn and NOT default-OFF. Conservative, reversible in one manifest line, and it is the option the concern-activation-policy Iron Law prescribes. Flip condition and reverse trigger are pre-registered in the hook header as this step demands. -->
+      <!-- verified 2026-08-20: `npx vitest run tests/hooks/concern_severity.test.ts tests/hooks/concern_registry_parity.test.ts tests/hooks/concern_block_exit_parity.test.ts tests/hooks/hook_manifest_compiled.test.ts` -> "Test Files 4 passed (4) / Tests 23 passed (23)" -->
+- [x] **Step 3:** Snapshot tests: fires / latched-silent / valve-exhausted /
       no-handover-silent, under `tests/hooks/`.
+      **Done 2026-08-20** — `tests/hooks/source_first_gate.test.ts`, 23 cases.
+      All four named paths are covered, translated into the shadow posture the
+      concern ships in: "fires" is a candidate reading `would_warn: true`,
+      "silent" is that candidate reading false. The load-bearing case is the
+      negative one — no input makes the concern warn, deny, or emit.
+      **Verified sensitive rather than assumed sensitive.** Three sabotage
+      probes were run against the mechanism and each turned the suite red:
+      ignoring the source-read latch (2 failed), adding a `return 2` warn path
+      (1 failed), and leaking the raw `agent_id` into the record (1 failed).
+      The restore was by file copy, not `git checkout`, and verified
+      byte-identical before the final green run.
+      <!-- verified 2026-08-20: `npx vitest run tests/hooks/source_first_gate.test.ts` -> "Tests 23 passed (23)"; sabotage probes -> "Tests 2 failed | 21 passed", "Tests 1 failed | 22 passed", "Tests 1 failed | 22 passed"; restore `diff` silent then "Tests 23 passed (23)" -->
 
 **Falsifier.** One measurement window with the gate armed shows zero fires
 while Phase-1 telemetry still shows screenshot-first behaviour → the matcher
@@ -437,7 +648,7 @@ concern logic.
       X4). This section owns the **producer sentence**: the documented easy path
       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel
       as fallback.
-- [ ] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
+- [-] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
       `v0.dev`, `bolt.new` URL phrases — each with its near-miss row in
       `ROUTING_MATRIX` per the rule's own extension discipline
       (`design-fidelity.md` § Routing). A bare-domain chat mention stays
@@ -457,6 +668,13 @@ concern logic.
       **What would close this step:** a verified share-path segment per vendor
       (not a guessed one), or a matcher that can express handover-word
       co-occurrence. Neither is available from the repo.
+      **Box moved `[ ]` -> `[-]` on 2026-08-20.** The withdrawal has been the
+      recorded state since 2026-08-13 and the prose above says so, but the box
+      still read open, so a reader screening this roadmap counted an executable
+      step that nobody may execute. Missing, precisely: a per-vendor share-path
+      segment observed from a real handover URL — this environment has no such
+      URL, and guessing one is the defect the step was withdrawn over.
+      <!-- decision 2026-08-20: recorded as [-] cancelled rather than reopened. The conservative reading of the step's own standard - the only trigger form reachable from this repo is the over-broad one the completion review rejected, and shipping it would fail the step's own test. `near-bare-host-mention` and `near-builder-host-non-handover-url` remain as the pins a retry must clear. -->
 
 **Falsifier.** The extraction-artifact path goes unused across two release
 cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
@@ -492,14 +710,54 @@ never binds, it costs nothing.
 
 ## Phase 6: Close the loop — re-measure ad-hoc, decide the gated follow-ups
 
-- [ ] **Step 1:** Re-run Phase 1 Step 1 (ad-hoc port) after Phases 2–4 land;
+- [x] **Step 1:** Re-run Phase 1 Step 1 (ad-hoc port) after Phases 2–4 land;
       publish before/after on the four recorded dimensions (source read
       first, screenshot role, interaction survival, loss statement).
-- [ ] **Step 2:** Decide the two gated follow-ups on the numbers, not before:
+      **Done 2026-08-20** —
+      [`source-first-frontend-phase6`](../evidence/analysis/source-first-frontend-phase6.md).
+      Method re-run verbatim: same fixture, same two arms (one prompt carrying
+      a `design-fidelity` trigger, one carrying none), same four dimensions.
+      **Three dimensions moved, one is still unreachable.** Both arms read the
+      artifact before writing, kept 3/3 handlers and 1/1 keyframe, and stated
+      their deviations. Port fidelity improved on both: Arm A 11 lines -> **0
+      (byte-identical)**, Arm B 39 -> 33 lines, and every Arm-B hunk sits above
+      line 29 — the `<title>` and the head comment — with a `shasum` over
+      `<style>`-onward identical to the fixture on **both** arms.
+      Counts were **re-derived from the files rather than taken from the arms'
+      self-reports**, per `evaluator-independence`.
+      **The screenshot dimension is still not a measurement**, for Phase 1's
+      reason unchanged: no page-reaching capture primitive exists on this host,
+      so neither arm declined a screenshot — the option was absent. What *is*
+      new, and is reported as a separate finding rather than folded into that
+      row: both arms gave **the ladder's own argument** as their reason for not
+      using pixels, unprompted. That is evidence the Phase 2 prose reaches the
+      model on this host (Risk 2's open question) and **not** evidence the
+      trigger set works — Claude Code loads the projected rule tree as project
+      instructions regardless of triggers, so the router is still not the
+      delivery channel here.
+      <!-- verified 2026-08-20: independent re-derivation, not self-report - `grep -c addEventListener` -> 3 and 3 (fixture 3); `grep -c '@keyframes'` -> 1 and 1 (fixture 1); `diff fixture arm | grep -c '^[<>]'` -> 0 and 33; `diff fixture armB | grep -E '^[0-9]'` -> "6c6 8,11c8,9 13,16c11,13 18,28c15,21" (all above line 29); shasum of `<style>`-onward -> IDENTICAL for both arms -->
+- [x] **Step 2:** Decide the two gated follow-ups on the numbers, not before:
       (a) a deterministic ad-hoc coverage checker (Phase 2 Step 4's follow-up)
       if interaction survival did not move; (b) flipping `source-first-gate`
       from warn toward the ladder's stronger enforcement if the read-first
       rate did not move while the gate fired.
+      **Decided 2026-08-20 — both stay closed, on the numbers.**
+      **(a) closed.** Interaction survival did not fail: 3/3 handlers and 1/1
+      keyframe on both arms, in both measurement rounds. The condition the
+      follow-up was gated on ("if interaction survival did not move") reads
+      against a dimension that was already at ceiling, so there is no failure
+      for a checker to catch. Opening it would build a gate whose population is
+      as empty as the read-before-write rate's — the failure this estate
+      already carries elsewhere.
+      **(b) closed as undecidable, recorded rather than answered.** Its
+      condition is "the read-first rate did not move **while the gate fired**".
+      The gate ships in shadow, so it has fired zero times because it *cannot*
+      fire — not because the behaviour is absent. A flip decision taken on that
+      silence would be a threshold picked and then measured, which the
+      activation policy forbids. The successor of this decision is the gate's
+      own pre-registered flip condition (Phase 3 Step 2), which names the
+      record floor that has to exist before the question is answerable.
+      <!-- decision 2026-08-20: both gated follow-ups remain closed. (a) on the measurement - the dimension is at ceiling in both rounds. (b) as structurally undecidable under shadow, deferred to the gate's own flip condition rather than resolved by preference. Conservative in both cases: no new deterministic gate ships, no posture is strengthened. -->
 
 **Falsifier.** All four dimensions green with prose + warn-gate alone → the
 deterministic follow-ups stay closed; record it as the second data point for
@@ -524,6 +782,11 @@ the estate-wide "when is prose enough" question.
 | A8 | The read-before-write rate is published over a denominator its own prose endorses, and its blind spot is stated in the output | yes |
 | A9 | No new trigger ships without a near-miss row testing the direction that trigger opens | yes — enforced by withdrawing the builder-URL class rather than shipping it |
 | A10 | Every Iron-Law line added to `design-fidelity` is consistent with that rule's own § What counts as the spec | yes — the screenshot line carries its scope clause |
+| A11 | `source-first-gate` exists, is registered in `concern_registry.ts`, bound in `hook_manifest.yaml`, and has **no code path that can warn or deny** | yes — asserted by the negative test case, and re-checked by a sabotage probe that added a warn path and turned the suite red |
+| A12 | The concern's posture carries a pre-registered flip condition AND a reverse trigger in the artefact itself, not only in this roadmap | yes — both in the hook header; `concern-activation-policy` requires the reverse trigger from day one |
+| A13 | Every dependency the concern could not satisfy is a recorded FIELD on the shadow record rather than an assumption in code | yes — `verifier_exemption_decidable`, `capture_kind`, and the two handover proxies side by side |
+| A14 | Phase 6's before/after numbers are re-derived from the artefacts, never taken from the producing agent's self-report | yes — the commands and their output are in the evidence file |
+| A15 | A dimension that could not vary is reported as unmeasured, never as a pass | yes — the screenshot row reads "not a measurement" in both rounds, with the absent primitive named |
 
 **Not claimed:** that the operator's symptom is fixed. Phase 1 could not
 reproduce it under conditions where it can occur (no capture tool, no URL
@@ -532,7 +795,7 @@ symptom. Phase 6 is where the symptom claim would be earned, and it needs a
 consumer repo.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-13 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 
 > **Re-reviewed 2026-08-13** after 10 steps closed, the Acceptance Criteria
 > section landed, and Phase 4 Step 3 was withdrawn. Two of the five risks have
@@ -554,6 +817,66 @@ consumer repo.
 >   therefore *not* taken, and the reason is recorded at the step rather than
 >   resolved by preference.
 > - **Risks 3 and 5 — unchanged**, both attached to phases that stay open.
+>
+> **Re-reviewed again 2026-08-20**, after Phase 3 and Phase 6 closed and Phase 4
+> Step 3's box was moved to `[-]`:
+>
+> - **Risk 3 (the gate warns the one actor doing it right) — CLOSED BY
+>   CONSTRUCTION, not by its stated mitigation.** The mitigation as written
+>   sequenced the phase after SLI Phase 4, which is still open. What actually
+>   removed the risk is that the shipped concern has no emission at all: the
+>   harm in the row is a *warning* delivered to a verifier, and a concern that
+>   emits nothing delivers none. The `agent_id` key the row names is now a
+>   recorded field, so the exemption's size will be measured before it is
+>   designed. The risk re-opens the day the concern flips to advisory, which is
+>   why flip condition (c) names exactly this.
+> - **Risk 2 (prose into a delivery channel measured as broken) — PARTIALLY
+>   ANSWERED, in the direction the row did not expect.** The row predicted the
+>   instrument would be unable to check it, and that half held (0 UI-write turns
+>   / 40 sessions). But Phase 6's two arms both reproduced the data-basis
+>   ladder's own argument unprompted, which is direct evidence the prose reaches
+>   the model — on a host that delivers it unconditionally. So the channel is
+>   not broken here; whether the *router* delivers it anywhere remains
+>   untested, and that is now the narrower open question.
+> - **Risk 6 (an over-broad trigger whose near-miss cannot catch it) —
+>   discharged as far as this roadmap can.** Its step is `[-]`, the two pins
+>   remain, and the extension discipline is written into
+>   `design-fidelity` § Routing with this as the worked example.
+>
+> **Third re-read 2026-08-20, at closure**, after merging `origin/main`
+> (`1d2f73c40`) and transferring Phase 1 Step 2. The `reviewed:` date moves to
+> 2026-08-20 on the strength of this pass, not as a restamp — what was actually
+> re-read is named, including the checks that came back "no change":
+>
+> - **The merge delta is orthogonal to every row, checked rather than assumed.**
+>   `git diff --name-only 206ab4f16..origin/main` over `src/rules/design-fidelity.md`,
+>   `docs/guidelines/design-fidelity-mechanics.md`,
+>   `road-to-subagent-lifecycle-integrity.md`, `src/skills/fe-design/`,
+>   `src/skills/design-review/` returns **nothing**, and the same diff filtered
+>   for `hook_manifest`, `concern_registry`, `dispatch_hook`, `ui_route_nudge`,
+>   `ui_surface`, `state_io`, `subagent_ledger` also returns **nothing**. The 10
+>   commits the merge brought (a CI-settle helper, a roadmap skeleton emitter, an
+>   md-section library, a `block_no_verify` tokeniser fix, council CLI help)
+>   touch no surface any row depends on.
+> - **Risk 3's dependency re-verified open, not recalled.** SLI Phase 0 Step 4
+>   and Phase 4 Step 1 both still read `[ ]` in the merged tree. So the row's
+>   closure still rests on construction (no emission) rather than on its stated
+>   mitigation, exactly as the second re-read recorded.
+> - **Risk 5 — CHANGED, and this is the one substantive movement.** It was
+>   "unchanged" an hour earlier; the transfer moves it. Its mitigation measures
+>   the extraction path's use "by the Phase-1 telemetry rather than by
+>   impression" — but the W5 URL / live-page handover class is now **transferred
+>   to [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md)**,
+>   so the instrument that would have falsified this row travels with it. The
+>   risk is real, still unscored by any fixture, and **no longer carried by this
+>   roadmap**: it is carried by the stub's own probe. Recorded rather than
+>   silently inherited, because a falsifier whose instrument left the building
+>   is the shape that rots.
+> - **Risks 1, 2, 4 and 6 — unchanged by this pass**, and each for its own
+>   reason already recorded above: 1 closed by its mitigation, 2 partially
+>   answered by Phase 6's two arms, 4 fired sideways and is resolved at the
+>   step, 6 discharged as far as a `[-]` step and two silent pins can discharge
+>   it.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
