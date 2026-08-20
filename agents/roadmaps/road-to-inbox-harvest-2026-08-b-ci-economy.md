@@ -13,6 +13,34 @@ parent_roadmap: road-to-inbox-harvest-2026-08-b.md
 > Source (consumed inbox): `agents/tmp.old/test-economy.txt` — part of the
 > 2026-08-10 batch triaged by [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
 
+## Outcome
+
+Closed 2026-08-20 by the autonomous drain run. **Closed does not mean achieved,
+and archived would not mean achieved either** — this roadmap's headline goal was
+half abandoned on its own measurement, and two of its steps left the repository
+without being done. Read the per-phase row, not the checkbox count.
+
+Against the goal statement at the top, measured in this worktree today:
+
+| Goal clause | State | Evidence |
+|---|---|---|
+| Cut the jobs running the full 6-target build from 13 to at most 5 | **abandoned** | `grep -c 'npm run build --silent' .github/workflows/tests.yml` = **4** steps, unchanged, still fanning out to the same 13 matrix-expanded jobs. Cancelled by step 2.1's own measurement: the build is 8 s of a 594 s job, and a producer/consumer split would make CI slower. |
+| Replace every stale `ci-cost-budget.md` row with a CI-recorded figure | **satisfied** | Step 0.4. The three dead rows survive only inside an explicitly historical section (`ci-cost-budget.md:107-109`, `:115`, `:122`) that states they describe no job that runs today. |
+| With no required check removed | **satisfied, trivially** | Ruleset `17749383` still requires exactly one check today — `Sync + Generate Tools Consistency`. Nothing in this programme touched the required set. |
+
+| Phase | State | What actually happened |
+|---|---|---|
+| 0 — Re-anchor the cost artefacts | **satisfied** | 0.2-0.5 shipped. 0.1 **abandoned**: the artefact it proposed to create already existed as `ci-cost-budget.md`; a second one would have been the defect. |
+| 1 — Free hygiene | **satisfied** | All seven shipped, with two divergences recorded rather than applied silently: 1.2 became a *repoint* (deleting would have discarded a live intent under a moved name) and 1.3 shipped *strict* rather than report-only, its corpus hand-classified empty first. |
+| 2 — The build fan-out | **abandoned** | 2.1 (measure first) and 2.5 (record the non-adoption) shipped; 2.2, 2.3 and 2.4 were cancelled **by 2.1's number**, which is the phase's own gate working as designed rather than a retreat. Council 2/2 concurred and added the argument the cost case missed: the 13 builds are already byte-identical behind the unchanged drift gate, so building once would buy no consistency. |
+| 3 — The subprocess lever | **narrowed** | 3.1 measured the spawning set as *not where the time is*, so 3.2 converted **no** spawns and fixed the one file actually over budget instead; 3.3 wrote the in-process rule into `docs/development.md` so it binds whenever a migration is attempted; 3.4 closed. The phase's premise was falsified and the register rows for it are marked dormant, not live. |
+| 4 — Required-check-set changes | **transferred** | 4.1 shipped: ADR-223 is `accepted` in the tree, and its decision is *not to demote* — the required set has one member, so there was nothing to demote. 4.2 and 4.3 are **transferred**, not done, to [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md). |
+
+Both blockers are `resolved` with outcome state **transferred**, not discharged.
+The repository is in the same state on both surfaces as when they were opened —
+one required check, no merge queue, zero `merge_group` triggers — and the stub
+carries the probes that make that measurable rather than asserted.
+
 ## Context / What is verified
 
 Re-derived in this worktree at `c073d5732` (v9.32.0):
@@ -500,12 +528,20 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
            sed -n '/^## Blockers/,$p' agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
            Step 4.1 itself mentions ADR-222 several times on purpose: it is the
            document that took the number, and naming it is the whole explanation. -->
-- [ ] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Open behind
-      `blocker: required-check-set-change`. Touches ruleset `17749383` plus
+- [-] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.**
+      **Transferred** (council disposition B, outcome `transferred`) to
+      [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md)
+      § Transfer 1 — the remaining content is a repo-admin ruleset write plus
+      its three policy-document syncs; not done, moved.
+      Touches ruleset `17749383` plus
       `docs/contracts/branch-protection-policy.md`, `ci-green-floor.md` and
       `release-pr-gating.md` in the same change.
-- [ ] **4.3 Enable a GitHub merge queue.** Open behind
-      `blocker: merge-queue-enablement`. `merge_group` appears zero times in
+- [-] **4.3 Enable a GitHub merge queue.**
+      **Transferred** (council disposition B, outcome `transferred`) to
+      [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md)
+      § Transfer 2 — enablement and the `merge_group` trigger additions both
+      move, since the queue cannot be validated without being enabled.
+      `merge_group` appears zero times in
       `.github/`, so nothing in-tree is wired for it either way.
 
 <!-- Glyph correction 2026-08-18, `[~]` → `[ ]` on both, applied as the Iron-Law-3
@@ -590,7 +626,7 @@ worse than none — it reads as a live control.
 ## Blockers
 
 ### blocker: required-check-set-change
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change
@@ -671,9 +707,33 @@ worse than none — it reads as a live control.
   and update the file in the same change, or the two drift apart with no gate
   to notice.
 
+- **Resolution (2026-08-20, autonomous drain run):** **transferred.** AI council
+  2/2 (anthropic + openai) returned disposition **B — transferred**, outcome
+  state `transferred`, under its categorical Rule 3 — a repository-administration
+  setting is externally visible and irreversible, so the work may only be moved
+  to a human, never recorded as decided-and-done. Record:
+  [`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  — on `main` since PR #1463 merged mid-transfer, so this is a resolved link
+  rather than the `ref-ignore`-suppressed forward reference it started as.
+  Destination:
+  [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md)
+  § Transfer 1, which carries the `Resolved when` above verbatim, the complete
+  list of the five dependent items moved (step 4.2, the ruleset write, and the
+  three policy-document syncs), and a named re-entry producer with a probe
+  measured on the live ruleset the same day.
+  **What did NOT move, because it is already discharged in the tree:** the ADR
+  leg. `ADR-223:3` reads `status: accepted`, so the criterion's first clause is
+  true today; only the ruleset write and its document syncs remain, and the
+  transfer is scoped to those. Nothing about the analysis in this entry changes
+  — the procedure, the rollback and both silent-failure traps stay here as the
+  executable record, and the stub points at them rather than copying them.
+  **Read this as moved, not achieved.** Ruleset `17749383` still requires
+  exactly one check on 2026-08-20 (`Sync + Generate Tools Consistency`), which
+  is the same state this blocker described when it was opened.
+
 
 ### blocker: merge-queue-enablement
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** step 4.3 only. Nothing else here depends on a merge queue.
@@ -717,3 +777,25 @@ worse than none — it reads as a live control.
   workflow change riding a 26-roadmap sweep branch is the blast-radius mixing
   `scope-control` refuses. It belongs in the same small PR as the enablement,
   authored by whoever performs step 2.
+
+- **Resolution (2026-08-20, autonomous drain run):** **transferred.** Same
+  council session, same disposition **B — transferred**, outcome state
+  `transferred`, same categorical Rule 3. Destination:
+  [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md)
+  § Transfer 2, carrying the `Resolved when` above verbatim, the four dependent
+  items moved (step 4.3, the `merge_group` trigger additions, the enablement
+  itself, and the in-queue live validation), and a named producer with a
+  two-reading probe.
+  **The in-tree half moved too, deliberately.** The council's disposition names
+  "workflow trigger addition" inside the transfer, and this entry's own closing
+  note already gave the reason: the trigger is inert until the queue exists and
+  must land in the same small PR so the ordering is verifiable in one diff. So
+  no workflow file is touched by this drain run — `merge_group` still appears
+  **0** times across `.github/` on 2026-08-20, unchanged.
+  **One stub, not two, and the reason is this entry's own ordering hazard.**
+  Both transfers write the same object (`17749383`) via the same producer,
+  gated on the same authority gap; splitting them would put the
+  triggers-before-queue constraint across a document boundary with nothing to
+  enforce it. The two remain independent decisions — either may be taken alone
+  — and only their order is fixed. Argument recorded in the stub's
+  § Why one stub and not two.
