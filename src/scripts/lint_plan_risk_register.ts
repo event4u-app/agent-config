@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
 import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
@@ -72,7 +73,7 @@ export interface PlanFeatures {
     phaseHeadings: string[];
     /** Total count of deliverable checkbox lines (state-insensitive). */
     checkboxCount: number;
-    /** sha256 of the `## Acceptance Criteria` section body (checkbox state normalized). */
+    /** sha256 of the acceptance-criteria section body (heading matched per `_lib/ac_heading`; checkbox state normalized). */
     acHash: string;
 }
 
@@ -115,7 +116,7 @@ export function extractFeatures(text: string): PlanFeatures {
         if (CHECKBOX_RE.test(entry.line)) {
             checkboxCount += 1;
         }
-        if (/^##\s+Acceptance Criteria\s*$/.test(entry.line)) {
+        if (isAcceptanceCriteriaHeading(entry.line)) {
             acStart = i;
         }
     }
