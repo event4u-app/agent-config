@@ -59,7 +59,7 @@ the next reader will run the grep.
 that "There are none: 0 of 288 skills carry a `triggers:` key" — stale on both
 numbers while the code above it prints the right ones. Left in place: it is the
 sibling roadmap's surface, and this drain edits no file another roadmap owns
-(6.9 below).
+(the last acceptance criterion).
 
 **(b) "6 of 288 ever invoked" is window-dependent, and its denominator is stale.**
 Today's reading is 5 distinct of 290 over 30 sessions. Two further censuses of
@@ -221,6 +221,37 @@ honest conclusion is that 4.3 needs a *computed* cap (a gate that reads the
 manifest at run time, as 3.5 requires for the kernel set) rather than a
 transcribed table, and that is a different piece of work from the one 4.3
 describes.
+
+## 4b — Step 4.1a's own end-rule predicts "inconclusive"
+
+Step 4.1a ends the CLI-verb window at the later of ≥ 4 weeks elapsed **and**
+≥ 1 recorded invocation for at least half the registry, "because four weeks of
+an idle machine is not a window, it is an absence." With the registry at 101
+verbs (§ 2) that second condition needs **≥ 51 distinct verbs invoked**.
+
+The closest available proxy for verb reach is distinct skill/command invocations
+in the local transcript store:
+
+```
+session files                                          127
+distinct Skill invocations (all sessions, all time)      11
+```
+
+Eleven distinct, over a window **four times longer** than the committed four
+weeks. This is a proxy and is labelled one — the registry counts
+`agent-config` CLI verbs and the transcript counts host skill/command calls, so
+the populations are related but not identical. What the proxy establishes is the
+*order of the gap*: 11 against a ≥ 51 floor, with more elapsed time than the
+window allows. Closing that by a factor of five on one maintainer's machine is
+not a plausible outcome of waiting longer.
+
+So 4.1a's own escape clause is the predicted result: "If the second condition is
+unmet at 8 weeks, the census publishes as inconclusive and no verb is sunset."
+A census that self-predicts inconclusive cannot produce 4.2's downward ratchet,
+and 4.2 is the only step the census exists to feed. Recorded as a measured
+prediction about the instrument, not as a licence to sunset anything — 4.1b's
+`no-data` ≠ `dead` rule is correct and is the reason this ends in no action
+rather than in a cut.
 
 ## 5 — Statements that verified true
 
