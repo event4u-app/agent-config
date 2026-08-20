@@ -227,15 +227,19 @@ The index is not wrong — it is organised for *browsing*, and the failure mode 
 *not browsing*. What is missing is the other axis: given that I am about to do
 X, what has already gone wrong here.
 
-- [ ] **5.1 Add a trigger-moment index.** A short section keyed by action —
+- [x] **5.1 Add a trigger-moment index.** A short section keyed by action —
       authoring a roadmap, running the council, waiting on CI, editing a budget
       JSON, working in a worktree — each naming the two or three files that
       apply. It is an addition to the existing index, not a replacement: the
       topic grouping stays.
       verify: each of this session's nine already-documented error classes is
       reachable from an action key in at most one hop.
+      **Done — and it lands OUTSIDE this repository.** The store is the user's
+      (`~/.claude/projects/<project>/memory/`), so the index itself is not part
+      of the PR; ten action keys were added there and every link verified to
+      resolve. What IS in the PR is 5.2, the rule that keeps the axis alive.
 
-- [ ] **5.2 Make the entry cost one line.** Adding a trigger-moment entry when a
+- [x] **5.2 Make the entry cost one line.** Adding a trigger-moment entry when a
       new memory lands is part of writing it, or the axis rots within a month
       the way any second index does.
       verify: the memory-writing guidance names the trigger key as a required
@@ -252,18 +256,18 @@ Three properties made it expensive and all three are generic: the anchor was a
 substring rather than a line, the edit was destructive rather than checked, and
 nothing verified the document's shape afterwards.
 
-- [ ] **6.1 A structural section-edit helper.** Replace or extract a markdown
+- [x] **6.1 A structural section-edit helper.** Replace or extract a markdown
       section by heading, matching **at line start**, and refusing when the
       heading matches more than once or zero times rather than silently taking
       the first.
       verify: a document containing the heading text inside a paragraph is
       edited at the real heading, and an ambiguous heading refuses.
 
-- [ ] **6.2 A shape assertion after a structured edit.** Section count and
+- [x] **6.2 A shape assertion after a structured edit.** Section count and
       heading list before and after; an unintended disappearance fails loudly.
       verify: an edit that drops a section fails the assertion.
 
-- [ ] **6.3 Record the pattern where the next agent will meet it.** The failure
+- [x] **6.3 Record the pattern where the next agent will meet it.** The failure
       is not "use a helper" but "an anchor that is also content is not an
       anchor". That sentence belongs with the two verify-annotation traps
       already recorded, which are the same shape.

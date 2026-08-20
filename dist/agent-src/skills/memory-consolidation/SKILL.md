@@ -187,6 +187,18 @@ Memory quality comes from what you write, not from a heavy store. Apply
 these at GATHER + CONSOLIDATE (adapted from MemSkill's memory-operation
 skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`):
 
+- **Name the moment it applies, not only the topic it belongs to.** A store
+  indexed by subject is an index for browsing, and browsing is not the failure
+  mode — an agent does not go looking for a trap it does not know exists.
+  Measured 2026-08-20 on one instrumented session: of eleven error classes,
+  **nine already had an entry** and all nine were read *after* the failure.
+  So every entry answers "what was I about to do when this would have helped"
+  — a verb and its object (`author a roadmap`, `wait on CI`, `push a branch`,
+  `edit a markdown section with a script`) — and the index carries a
+  trigger-moment section keyed on those verbs alongside the topic grouping.
+  Writing the key is part of writing the entry: a second index maintained
+  separately from the entries rots, and an index that rots is worse than none
+  because it still looks authoritative.
 - **Dedupe before insert.** Compare against retrieved entries; never add a
   fact already covered. Split distinct facts into separate entries.
 - **Threshold-tiered dedup decision** (enforced by `check_memory_similarity.ts`
