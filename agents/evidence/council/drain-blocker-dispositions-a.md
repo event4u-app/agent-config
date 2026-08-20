@@ -1,5 +1,7 @@
 # Council decisions — autonomous drain run, blocker dispositions (batch A)
 
+<!-- evidence-type: analysis -->
+
 Session: 2026-08-20. Members: anthropic (claude-sonnet-4-5), openai (codex-default).
 Quorum 2/2. Rounds: one framework round (3-round debate) + one disposition round.
 

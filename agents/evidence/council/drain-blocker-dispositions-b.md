@@ -1,5 +1,7 @@
 # Council decisions — autonomous drain run, blocker dispositions (batch B)
 
+<!-- evidence-type: analysis -->
+
 Session: 2026-08-20. Members: anthropic (claude-sonnet-4-5), openai (codex-default).
 Quorum 2/2. Framework: see `drain-blocker-dispositions-a.md` (adopted round 1,
 both seats convergent) — the five dispositions A/B/C/D/E, the four outcome
