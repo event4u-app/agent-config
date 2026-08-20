@@ -1197,6 +1197,32 @@ describe("council round-2 blockers", () => {
     expect(run(envelope("1", ""), { consumer_root: tmp })).toBe(0);
   });
 
+  it("blocker 2, under a locale: an id-less session emits a locale pin and STILL writes nothing", () => {
+    // THE HARD HALF, and until now untested. The assertion above runs with the
+    // ambient locale neutralised (`tests/_lib/hermetic-env.ts`), so the
+    // system-locale fallback never fires and the terse case reaches `0` without
+    // the fallback ever being consulted. That makes the test weaker than its own
+    // name: "no persistence at all" was only shown for the path where nothing
+    // wanted to persist.
+    //
+    // Pin an explicit locale instead. Now a terse, id-less prompt DOES produce a
+    // verdict — `und` classification, no previous pin, so the locale supplies
+    // one and the hook emits (exit 2). The obligation under test is that it
+    // emits WITHOUT writing: there is no sound file to write it to, and
+    // inventing one is the shared-bucket defect blocker 2 named.
+    //
+    // Found by a concurrent session while reviewing the hermeticity fix: making
+    // the three failing tests hermetic would have silently narrowed what they
+    // establish, and this is the branch that narrowing hides.
+    const exit = run(envelope("1", ""), {
+      consumer_root: tmp,
+      env: { LANG: "en_US.UTF-8" },
+    });
+    expect(exit).toBe(2); // the locale pin reached the model
+    expect(fs.existsSync(path.join(tmp, STATE_DIR))).toBe(false); // and nothing was persisted
+    expect(fs.existsSync(path.join(tmp, STATE_FILE))).toBe(false); // nor into the legacy path
+  });
+
   it("blocker 2: an id-less session never counts distance or restores a pin", () => {
     run(envelope("Bitte arbeite die Analyse ab.", ""), { consumer_root: tmp });
     for (let i = 0; i < REEMIT_AFTER_TOOL_CALLS + 2; i += 1) {
