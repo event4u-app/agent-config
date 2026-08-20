@@ -38,7 +38,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:near-miss` | `analyze/near-miss/command.md` | Post-mortem for a near-miss (same flow, lighter severity framing) |
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
 | `/analyze:reference-repo` | `analyze/reference-repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
-| `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification against the current tree + artefact mapping + roadmap |
+| `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 
 ## Dispatch

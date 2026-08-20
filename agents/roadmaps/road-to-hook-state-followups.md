@@ -1,6 +1,7 @@
 ---
 complexity: bounded
 status: ready
+estate_offset_exempt: "Every item was SEEN during PR #1458 and must end as a fix or a tracked item under fix-what-you-see, so dropping them is not available. The offset alternatives all cost more than this line: archiving needs a finished roadmap and the dashboard shows none at zero open steps; parking in later/ is what the estate register itself calls burial; and the only roadmaps I could terminate belong to two concurrent sessions, which is a judgement about their work rather than mine. Charged as one reviewable line, per this gate's own instruction."
 execution:
   mode: phase-checkpoints
 ---

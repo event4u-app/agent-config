@@ -130,11 +130,28 @@ export function readTurn(transcriptPath: string, pinned: 'de' | 'en' | null): Tu
     return { prompt, reply, toolCommands, pinnedLanguage: pinned };
 }
 
-/** The queue line injected at prompt time when records are waiting. */
-export function buildQueueLine(count: number, newest: string): string {
+/**
+ * The queue line injected at prompt time when records are waiting.
+ *
+ * `occurrences` is the newest record's own repeat counter, and it is in the line
+ * because the store has always counted while the model never saw the number: a
+ * recurring defect increments one record instead of adding a queue entry, so
+ * `count` stays flat and the recurrence is invisible. Above 1 it is the only
+ * deterministic "this came back" signal an agent gets, which is what makes
+ * `decision-revisit-gate` § Recurrence executable rather than aspirational.
+ * Omitted at 1 — a first sighting has nothing to say.
+ */
+export function buildQueueLine(count: number, newest: string, occurrences = 1): string {
+    const repeat =
+        occurrences > 1
+            ? ` The newest record has recurred ${occurrences} time(s): the earlier ` +
+              `disposition did not hold, so per decision-revisit-gate § Recurrence ` +
+              `reopen it and name which assumption broke — resolve on evidence, ` +
+              `never on the repetition count.`
+            : '';
     return (
         `<self-repair-queue>${count} open agent-config defect record(s) ` +
-        `(newest: ${newest}). These are defects in the AGENT CONFIG, not in this ` +
+        `(newest: ${newest}).${repeat} These are defects in the AGENT CONFIG, not in this ` +
         `project. Per the self-repair rule: analyse the newest record, author the ` +
         `fix against agent-config, and prepare the release — the outward step ` +
         `(push + PR, or an issue) still needs the user's word this turn. ` +
@@ -208,7 +225,11 @@ export function main(): number {
         `${JSON.stringify({
             decision: 'allow',
             reason: `self-repair: ${open.length} open record(s)`,
-            context: buildQueueLine(open.length, open[0]!.defect_class),
+            context: buildQueueLine(
+                open.length,
+                open[0]!.defect_class,
+                open[0]!.occurrences,
+            ),
         })}\n`,
     );
     return EXIT_ALLOW;

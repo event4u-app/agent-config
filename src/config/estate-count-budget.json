@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 31,
+    "active_roadmaps": 32,
     "later_roadmaps": 52,
     "open_blockers": 74
   },
@@ -174,6 +174,13 @@
       "later_roadmaps": 52,
       "open_blockers": 74,
       "why": "RE-MEASURED AT THE SECOND MERGE of this branch, same reason as the row above and worth the repetition: both sides had moved again. This branch measured against 33/50/74; the base parked two further roadmaps to later/ (31/52). Values read off the merged filesystem, not carried from either side. open_blockers stays 74 for the second time in a row, and for the second time that is CHECKED rather than assumed - a net zero is the shape a walk-down hides in, which is what the row three above records going wrong on this same branch. Verified against origin/main at 7be25cf07: 4 open before, 4 open after, and the SETS differ. Out: partition-requires-global-layer, overlap-check-binding-surface. In: warn-path-unreachable-without-version-marker, partition-current-layer-undecidable. Two out, two in - not one error cancelling another. That the identical net-zero has now appeared twice across two independent merges is corroboration, not a reason to stop checking it."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 74,
+      "why": "Raised 31 -> 32 for road-to-hook-state-followups.md, which carries the items PR #1458 saw and deliberately did not fix: two consumers reading paths nothing writes, the API shape the two lock primitives need before they converge, and 11 local test reds across 6 files that CI never reports and nobody owned. It is charged rather than offset because the offsets all cost more: no active roadmap sits at zero open steps, parking in later/ is what this register calls burial, and the only terminable candidates belong to two concurrent sessions. The roadmap also carries estate_offset_exempt with the same reasoning, so the exception is reviewable on both sides rather than being a number that moved."
     }
   ],
   "target": {
