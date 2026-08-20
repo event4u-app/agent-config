@@ -6,10 +6,10 @@
 
 ## Overall
 
-**290 / 587 steps done · 49%**
+**292 / 587 steps done · 50%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
@@ -34,7 +34,7 @@
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
 | 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 5 | 12 | 0 | 0 | 0 | ███████░░░ 71% |
 | 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -756,13 +756,13 @@ _2 blockers resolved._
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
-**Road to release-review P0** — 10 / 17 done (59%)
+**Road to release-review P0** — 12 / 17 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Host-aware skill projection | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Evidence artifact typing | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Provider qualification | 🟡 in progress | 3 | 6 | 0 | 0 | 67% |
+| 3 | Provider qualification | 🟡 in progress | 1 | 8 | 0 | 0 | 89% |
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
