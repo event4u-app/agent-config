@@ -197,7 +197,7 @@ owner; and every figure the parent reasoned from has moved.
 | local branches | 929 | **973** |
 | remote branches | 245 | **267** |
 | open pull requests | 0 | **18** |
-| stashes | 5 | **5**, oldest `On worktree-ruflo-bridge` preserved 2026-05-27 |
+| stashes | 5 | **5**, oldest preserved 2026-05-27 (branch name elided — it carried an external source name) |
 
 The open-PR count is the one that matters most for safety: the parent's Phase 7
 reasoned about "929 local branches against **zero** open PRs", and a branch with
