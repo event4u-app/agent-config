@@ -35,6 +35,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
+import { pristine_tree_for } from './bench_ab_pinned_repo.js';
 import { fileURLToPath } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -99,7 +101,14 @@ export function workspace_dir(task_id: string, arm: string, seed: number): strin
  * directory that is, never whether it is clean.
  */
 export function reset_fixture(task: Dict, arm: string, seed: number): [string, string] {
-    const fixture = path.join(FIXTURES_ROOT, String(task['fixture']));
+    // Delta #9: a task may pin an external repo at a SHA instead of naming an
+    // in-repo fixture. `pristine_tree_for` returns the tree either way, so the
+    // per-trial copy below — and every endpoint that diffs against the pristine
+    // tree — is unchanged by which kind of task this is.
+    const fixture = pristine_tree_for(task, { fixturesRoot: FIXTURES_ROOT });
+    if (fixture === null) {
+        throw new Error(`task ${String(task['id'])} declares neither a \`fixture\` nor a pinned \`repo\`/\`sha\``);
+    }
     const dest = workspace_dir(String(task['id']), arm, seed);
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true, force: true });
