@@ -4,8 +4,8 @@ Loaded by [`roadmap-process-loop § 3`](roadmap-process-loop.md) when the run's
 **derived** mode is `autonomous` or `phase-checkpoints`. The mode comes from the
 § 3a ladder — explicit invocation suffix, then frontmatter `execution.mode`,
 then the invocation form — so an ABSENT frontmatter field no longer keeps this
-context unloaded: under `process-full` / `/roadmap:next` it derives
-`autonomous`, under `process-phase` it derives `phase-checkpoints`. Only a
+context unloaded: under `process-full` it derives `autonomous`, and under
+`/roadmap:next` or `process-phase` it derives `phase-checkpoints`. Only a
 *derived* `interactive` (asked for explicitly, declared in frontmatter, or
 `process-step`) leaves this context unloaded and falls back to the legacy
 commit-step scan. Defines the run-start pre-scan,

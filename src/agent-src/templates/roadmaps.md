@@ -108,8 +108,8 @@ that was never a judgement call.
     - `interactive` — every gate fires as authored by its owning rule.
       **Not what an absent field means.** When the field is absent the mode is
       DERIVED from the invocation form (`roadmap-process-loop § 3a`):
-      `process-full` and `/roadmap:next` derive `autonomous`, `process-phase`
-      derives `phase-checkpoints`, `process-step` runs without a contract. The
+      `process-full` derives `autonomous`; `/roadmap:next` and `process-phase`
+      derive `phase-checkpoints`; `process-step` runs without a contract. The
       contract screen is still shown once and still carries "run interactive
       instead", so declaring nothing costs a keystroke, never control.
     - `phase-checkpoints` — the run halts at each phase boundary with a
@@ -129,6 +129,24 @@ that was never a judgement call.
     lint. Follow-up roadmaps (rule 17) inherit the parent's mode as the
     *suggested* option during creation but the question is always asked
     again.
+
+    **Companion field, same block — `depends:`.** Optional, and only
+    meaningful for a set run:
+
+    ```yaml
+    depends: [road-to-other-thing]   # slugs, not paths
+    ```
+
+    A declared edge is authoritative and is never overridden by the
+    file-overlap heuristic the set contract also computes
+    ([`roadmap-process-loop § 3d`](../contexts/execution/roadmap-process-loop.md)).
+    The union of declared and inferred edges feeds exactly two decisions —
+    the order members run in, and whether two members may share a lane —
+    and nothing else. Declaring an edge that is not real costs serial
+    execution; missing a real one costs a collision, so the heuristic
+    resolves toward serial and a declaration is the cheap way to be right.
+    Absent means no declared dependency, never “independent”: the overlap
+    heuristic still runs.
 19. **Source-derived roadmaps carry a gap-table + provenance; internally
     originated roadmaps carry neither.** This rule fires **only** when a
     roadmap originates from an external input (a suggestion, a competitive
