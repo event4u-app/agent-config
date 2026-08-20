@@ -234,7 +234,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 - **If you do nothing:** Nothing degrades and nothing is at risk. The shipped posture is unchanged, which is the whole content of the decision; consumers keep a default-OFF warn-only hook and an advisory lint. The only cost is that design-quality pressure stays at zero on every path — which is the baseline this roadmap recorded on purpose, not a regression it introduced.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
