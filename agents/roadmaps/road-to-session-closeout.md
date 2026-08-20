@@ -30,6 +30,103 @@ execution:
 > (a blind third round included), $0.0370. The verdicts and their falsifiers are
 > in § 0.4, and each one is a step below rather than a question above.
 
+## Outcome — the up-front classification (2026-08-20 drain run)
+
+Closed against explicit outcome states, per the framework of record in
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md) <!-- ref-ignore -->
+and its batch-B sibling. **Archived does not mean achieved.** The dashboard
+renders a file with no `[ ]` and no `[~]` at 100 %; that percentage describes
+whether every line reached a *decided* state, never whether the goal was
+reached. Most of this file did not reach its goal, and the rows below say which.
+
+**The classification was written and committed before any execution work**, so
+that a later reader can tell a disposition chosen on evidence from one chosen
+to make a box flip. Four states, and they are not interchangeable:
+
+- **satisfied** — landed work in this repository, citable by `file:line` or by
+  real command output quoted in this file.
+- **transferred** — the scope decision is made and the work is wanted; what is
+  missing is something no repository automation supplies here (a live session, a
+  host capability, a human observation, an owner's consent, or a destructive act
+  on a shared machine). Moved to a stub with the criterion verbatim, the
+  dependent steps, and a **named** producer plus a probe measured today.
+- **terminal null / closed by events** — the instrument ran and returned zero, or
+  the condition the step described no longer holds on this tree. An answer, not
+  a failure.
+- **abandoned** — a declared Non-goal with no committed producer.
+
+### What this run corrected in the roadmap's own claims
+
+Four of this file's premises are refuted by the tree it describes. Recording
+them is the point: a drain run that only flips boxes launders a stale finding.
+
+| This file said | Measured today | Consequence |
+|---|---|---|
+| 1.4b is "the half that genuinely has no gate" | `check_release_highlights.ts` exists, and on `--version 14.6.0` emits `⚠️ auto-derived head line(s) not yet rewritten for 14.6.0: Behaviour changes, Security and correctness, Honest nulls — advisory, not blocking.` | The gate sees the exact seven markers. It is **advisory by design**, with a documented reason. 1.4b is not "build a guard" but "promote a warn to a block" — a policy decision, not construction |
+| 5.1 — `lint_roadmap_complexity` is red on the trunk | `exit 0`, 35 roadmaps clean; `road-to-hook-state-followups.md:2` now reads `complexity: lightweight` | Closed by events by the concurrent session that owned the file. Half of 5.1 no longer exists |
+| Phase 3 — "91 rules in both layers, 91 duplicate and 0 divergent … zero divergent is the important half" | `overlap 110 rule(s) in both layers (0 duplicate, 110 divergent)` | The split is **inverted**, and I cannot tell from here whether that is a repo property or an artifact of this worktree's project layer being fresher than the global install. Recorded as seen; the conclusion is transferred rather than guessed |
+| 3.2 — the partition "is blocked on `partition-current-layer-undecidable`" | `archive/road-to-single-delivery.md:828` reads `**Status:** resolved`, and `check_single_delivery` states "the partition shipped (ADR-236 Phase 2)" | Closed by events. The blocker 3.2 exists to unblock is already resolved and its roadmap archived |
+
+A fifth number moved under my own hands and is worth stating because it is the
+cleanest evidence in the file for Phase 3's machine-dependence claim:
+`check_standing_rule_delivery` reported **115 781 tok (one layer, 105.3 %)** and
+then **209 767 tok (two layers, 190.7 %)** on the *same tree in the same session*,
+the difference being only which layers were installed where. The gate is
+measuring the machine, not the repository.
+
+### Phase-by-phase disposition of all 54 lines
+
+42 steps + 12 acceptance criteria. **satisfied 14 · transferred 34 · terminal
+null 4 · abandoned 2.**
+
+| Line | State | Basis |
+|---|---|---|
+| 1.1 repair both published heads | **satisfied** | Seven markers rewritten with content derived from the real spans |
+| 1.2 record `14.3.0` burned, machine-readably | **transferred** | No record surface exists (`grep -rl burned src/config/` → 0). Creating one *and* teaching `release.ts` to refuse is release-tooling design owned by the release runbook's owner |
+| 1.3 verify stale release branches | **satisfied** on its own verify line | Verify asks for a recorded per-branch finding, not a deletion. All five verified and quoted below. The **deletion** is a Hard-Floor remote act → transferred |
+| 1.4 decide the drift detection window | **transferred** | A policy decision about a cron window, owner: maintainer. Not an agent's to take and call landed |
+| 1.4b placeholder guard | **transferred**, premise corrected | The gate exists and warns by design (table above). Turning a documented warn into a block is the same decision class as 1.4 |
+| 1.5 why manual review failed twice | **transferred** | "Why did a human skip a step" is a human observation. No artefact in the tree answers it |
+| 2.1–2.4 injection scanner (5 lines) | **transferred** | `b-injection-scan-unwrap-security` is `Owner: user`, `Class: 2 — consent-once`, `Status: open` in `road-to-per-turn-hook-economy`. Consent has not been given. Measured today: `payloadOf` × **0** in `src/scripts/injection_scan_hook.ts` vs × **2** in the fixed sibling — the defect is exactly as described and still there |
+| 3.1 route the duplication measurement | **satisfied** | Filed once, with both of this session's layer readings and their machine-dependence |
+| 3.1b reconcile the two instruments | **satisfied** | Populations named from the two scripts; they count different things and the narrower one now says so |
+| 3.2 make the partition blocker decidable | **terminal null / closed by events** | `Status: resolved`; partition shipped under ADR-236 Phase 2 |
+| 3.3 state the CI-blindness disposition | **satisfied** | The check's header now states where it is meaningful |
+| 4.1 write the promised structure roadmap | **transferred** | Its verify demands an owner per question. Naming an owner who has not agreed is fabricating one |
+| 4.2 close the `always`-vs-`auto` pricing gap | **transferred** | A budget-policy decision across two gates |
+| 4.3 fix census staleness | **satisfied** | Re-measured; finding recorded below |
+| 4.4 stop condition for three ratchets | **transferred** | "What would make a raise refusable" is a policy statement with a named owner |
+| 5.1 fix the two live reds | **narrowed** — half terminal null, half transferred | Complexity: green, `exit 0`. Standing delivery: still `exit 1`, and its cause on this machine is two installed layers, which is Phase 3's subject and not a red anyone can fix in this file |
+| 5.2 classify the 165 unreached gates | **narrowed** — baseline half **satisfied** | The ratchet is walked 166 → 165 (down, measured). Classifying 165 gates one by one is per-gate judgement at a scale this run cannot honestly do → transferred |
+| 5.3 make a trunk red discoverable | **transferred** | Needs a scheduled workflow — a CI-surface decision, and the step itself forbids the migration shortcut |
+| 6.1 scope `task consistency`'s diff check | **satisfied** | `taskfiles/content.yml` no longer ends in an unscoped `git diff --quiet` |
+| 6.2 pathspec the commit flows | **transferred** | Changing agent-facing commit flows touches the flows every concurrent session is using right now |
+| 6.3 state what a shared checkout costs | **satisfied** | The collision text names the shared index, the shared stash stack and the pre-push consequence |
+| 7.1–7.10 (11 lines) | **transferred** | Three independent reasons, any one sufficient: the acts are Hard-Floor destructive on a machine with 18 open PRs and live peer sessions; `road-to-estate-drawdown` is **active** and carried an open PR during this run, so the work has a present owner; and every figure is stale — re-measured today **384** worktrees (was 346), **973** local branches (929), **267** remote (245), **18** open PRs (0), 5 stashes |
+| 8.1 decide `run_continuation_hook`'s shape | **transferred** | Split-or-keep is a design decision. Measured: **1 502** lines |
+| 8.2 make a findings re-bind derivable | **transferred** | A redesign of the R2 machinery, owned by the roadmap that ships it |
+| 8.3 decide the evidence-to-product ratio band | **abandoned** | The step asks for "a stated acceptable band" for a ratio; no producer is committed to owning a band, and its own escape hatch — "a dated note says the ratio is not a quantity worth bounding" — is the honest answer. Recorded as such rather than transferred to nobody |
+| 8.4 unreachable `triggers.json` | **satisfied** | Resolved in the direction the verify allows |
+| 8.5 `hook_manifest.json` classed AUTHORED | **satisfied** | Now `GENERATED`; `isGenerated` returns true |
+| 8.6 the AC extractor misses its corpus | **satisfied** | Fixed both halves; before **11** of **16**, after **16** of **16** |
+| AC-1 | **transferred** | Its first half is satisfied by 1.1; its second half ("cannot be merged or published") is 1.4b's transferred decision |
+| AC-2 | **transferred** | With 1.2 |
+| AC-3 | **satisfied** | Five branches, each with a quoted finding |
+| AC-4 | **transferred** | With 1.4 + 1.4b |
+| AC-5 | **transferred** | With Phase 2; consent-once, owner: user |
+| AC-6 | **narrowed** | Filed once (3.1) and the instruments reconciled (3.1b); the partition half is closed by events (3.2) |
+| AC-7 | **transferred** | With 4.1, 4.2, 4.4; the no-pre-merge-figure half is satisfied by 4.3 |
+| AC-8 | **transferred** | With 5.2's classification and 5.3 |
+| AC-9 | **satisfied** | With 6.1, proven both directions |
+| AC-10 | **transferred** | With Phase 7 |
+| AC-11 | **transferred** | With Phase 7 |
+| AC-12 | **narrowed** | Three of six Phase-8 items fixed; two transferred, one abandoned with a reason |
+
+Two lines are marked **abandoned** rather than transferred: 8.3 above, and
+Phase 7's implicit "storage target reached" state, which 7.10 already defines as
+*separately owned and scheduled* — this file may not carry it, and creating a
+stub for a state another roadmap owns would be filing the same work twice.
+
 ## 0.1 What the two reads found
 
 The failure pattern is not "a task went wrong". Almost every session ended with
