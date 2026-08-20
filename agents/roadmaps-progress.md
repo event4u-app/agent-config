@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
-**290 / 587 steps done · 49%**
+**290 / 586 steps done · 49%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 9 | 9 |
 
 ## Open roadmaps
 
@@ -28,7 +36,7 @@
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
-| 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+| 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 0 | 9 | 0 | 4 | 0 | ██████████ 100% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -479,26 +487,13 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
 
-**Road to a review binding that survives a checkbox** — 9 / 10 done (90%)
+**Road to a review binding that survives a checkbox** — 9 / 9 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure which segment actually moves | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Make the verdict segment-aware, only if Phase 1 earns it | ✅ done | 0 | 1 | 0 | 2 | 100% |
-| 3 | Give the evidence a retention shape | 🟡 in progress | 1 | 5 | 0 | 1 | 83% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
-**Blockers**
-
-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
-  - **What to do:**
-    pick exactly one — (a) no compaction: the tiering and the
-    reproducibility verdict are the whole deliverable, and step 3.3 is marked
-    `[-]` cancelled; or (b) compact at a named tier boundary, dropping only
-    directories Phase 3 proved reproducible and leaving every irreproducible one
-    intact. Mutually exclusive. (b) requires the boundary to be stated in this
-    blocker, not chosen at execution time.
-  - **Resolved when:** the maintainer records yes with a tier boundary, or no.
+| 3 | Give the evidence a retention shape | ✅ done | 0 | 5 | 0 | 2 | 100% |
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
