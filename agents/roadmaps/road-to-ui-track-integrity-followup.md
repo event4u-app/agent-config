@@ -11,6 +11,56 @@ parent_roadmap: road-to-ui-track-integrity
 > UI.** Two distinct measurements are parked here. Both findings are verified;
 > neither fix is, and one funded harness session answers both.
 
+## Outcome
+
+> **Closed 2026-08-20 with both measurements cancelled. Archived does not mean
+> achieved.** Neither question this roadmap was written to answer was answered.
+> Ten lines were open at the start; nine of them left completion accounting as
+> `abandoned` and one was satisfied. Reading a closed file as a delivered
+> measurement is the dishonest-100 % case this section exists to prevent.
+
+Dispositions come from the AI council recorded in
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
+(2026-08-20, quorum 2/2), which the maintainer delegated every open blocker to
+for that run. Both of this roadmap's blockers were decided **E — ABANDON**,
+outcome state `abandoned`.
+
+| Section | Outcome | Detail |
+|---|---|---|
+| Prerequisites (6 items) | **satisfied** | All six were already closed with cited evidence before this run: the scorer landed, the weights and fixture SHAs are pinned, the render epoch is recorded, the cost asymmetry was re-derived. None was touched. |
+| Phase 1 · Measurement A (2 steps) | **abandoned** | No per-arm builder-tier runner exists, and building one is this roadmap's own declared Non-goal. |
+| Phase 1 · Measurement B (3 steps) | **abandoned** | No lane pair satisfies the pre-registered conditions; neither exit has a committed producer. The third step (`Publish both results either way`) dies with its two subjects — there is no result to publish. |
+| Acceptance Criteria (5) | **4 abandoned, 1 satisfied** | The four measurement-bearing criteria left completion accounting; the quality-gate criterion was executed and evidenced. |
+
+**Acceptance criteria that left completion accounting entirely** — four of five,
+all removed rather than reinterpreted:
+
+1. **A:** tier allocation backed by a published measurement (including an
+   honest-null). No run happened, so there is no measurement and **no
+   honest-null** — an unrun measurement is not a null result.
+2. **A:** the two outliers (`accessibility-auditor` at medium,
+   `ui-component-architect` at high) ruled in or out. They stay unexplained.
+3. **B:** the generic lane's output compared against a framework lane, with the
+   corpus query's effect on the output reported. Never runnable in this epoch.
+4. Both measurements run from **one** harness session. No session ran. The
+   clause's second half survives anyway: neither question was answered by
+   argument either — no tier was flipped, no lane preference was recorded.
+
+**Cancelled, not deferred.** The distinction is the point of the `E`
+disposition. A deferral implies a producer and a re-entry probe; both blockers
+lacked one, and their owner lines named "any roadmap that needs it for its own
+reason", which names nobody. Left as deferrals they would have become a
+permanent parking lot while the completion percentage climbed.
+
+**What survives and is still true.** The verified finding is untouched: every
+UI builder skill runs `model_tier: medium` while `design-review` and
+`existing-ui-audit` run `high`, and the inversion is real but not total. The
+pre-registration (`internal/bench/corpora/ui-track-integrity-PREREG.md`, frozen
+weights, SHA-pinned fixtures) is retained as historical documentation. What was
+cancelled is the measurement of the remedy — never the finding, and never by
+flipping the tiers on argument, which the Non-goals forbid and this closure
+does not do.
+
 ## Context
 
 This roadmap collects the items deferred from
@@ -112,14 +162,22 @@ a release later.
 
 Holds the lane constant, varies the model tier.
 
-- [ ] Run the **port fixtures** with builders at `medium` and at `high`, lane
+- [-] Run the **port fixtures** with builders at `medium` and at `high`, lane
       held constant. Score = diff-distance to ground truth. Put the delta in
       diff-distance against the delta in cost.
       <!-- carried from road-to-ui-track-integrity Phase 5; reformulated 2026-08-01 as a fidelity task so it needs no rubric -->
-- [ ] Run the two outliers as their own arms — `accessibility-auditor` (medium
+      <!-- blocked-by: measurement-a-no-per-arm-builder-tier -->
+      Cancelled 2026-08-20 — disposition **E — ABANDON**, outcome state
+      `abandoned` (council `drain-blocker-dispositions-a.md`): no per-arm builder-tier
+      runner exists and building one here is this roadmap's declared Non-goal.
+- [-] Run the two outliers as their own arms — `accessibility-auditor` (medium
       reviewer) and `ui-component-architect` (high builder) — so a flip cannot
       silently erase a distinction that may be deliberate.
       <!-- carried from road-to-ui-track-integrity Phase 5; separate arms rather than a note, since the harness makes that nearly free -->
+      <!-- blocked-by: measurement-a-no-per-arm-builder-tier -->
+      Cancelled 2026-08-20 — disposition **E — ABANDON**, outcome state
+      `abandoned` (council `drain-blocker-dispositions-a.md`): these are per-skill tier
+      facts no session-level flag can express, so they die with Measurement A.
 
 **The verified finding.** Every skill that writes UI is `model_tier: medium` —
 `fe-design`, `blade-ui`, `react-shadcn-ui`, `flux`, `livewire`,
@@ -135,17 +193,29 @@ Holds the model tier constant, varies the lane. Introduced by
 `road-to-universal-stack-coverage` Phase 0, whose benchmark criterion could not
 be met for exactly the same reason.
 
-- [ ] Run the same fixtures on the two stacks where **both** lanes exist, tier
+- [-] Run the same fixtures on the two stacks where **both** lanes exist, tier
       held constant: once with the legacy full-match bundle, once with the
       generic lane forced. Thanks to the composition landed in
       `road-to-universal-stack-coverage`, that is a switch rather than a rebuild.
       Score = the same diff-distance.
       <!-- carried from road-to-universal-stack-coverage acceptance criteria -->
-- [ ] Report per stack whether the corpus query actually changed the output, not
+      <!-- blocked-by: measurement-b-no-renderable-lane-pair -->
+      Cancelled 2026-08-20 — disposition **E — ABANDON**, outcome state
+      `abandoned` (council `drain-blocker-dispositions-a.md`): no lane pair satisfies
+      the pre-registered conditions and no producer is committed to making one.
+- [-] Report per stack whether the corpus query actually changed the output, not
       only that it ran. A query whose rows never alter a decision is grounding
       theatre and should be measurable as such.
-- [ ] Publish both results either way.
+      <!-- blocked-by: measurement-b-no-renderable-lane-pair -->
+      Cancelled 2026-08-20 — disposition **E — ABANDON**, outcome state
+      `abandoned` (council `drain-blocker-dispositions-a.md`): there is no generated
+      output to compare, so the query's effect on it cannot be reported.
+- [-] Publish both results either way.
       <!-- covers A and B; a null on one is not a null on the other -->
+      Cancelled 2026-08-20 — disposition **E — ABANDON**, outcome state
+      `abandoned` (council `drain-blocker-dispositions-a.md`): both measurements are
+      cancelled, so no result exists to publish. What is published instead is the
+      cancellation itself — see § Outcome. A cancellation record is not a result.
 
 ### Pre-registered null paths (written before the run, on purpose)
 
@@ -218,25 +288,57 @@ step list.
   is. Flipping without the measurement is precisely what the parent's Phase 5
   existed to prevent.
 
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The tier inversion stays unmeasured and may be a real quality cost | product | Abandonment closes the file, not the question: UI builders keep running `medium` while their graders run `high`, and nobody knows whether that costs output fidelity. The finding was verified; only its remedy dies here. | Cancel the measurement, never the finding — § Outcome states the finding is unchanged and still true, and § Non-goals still forbids flipping the tiers on argument, so the untested allocation cannot be quietly "fixed" instead. | Outcome, Non-goals |
+| 2 | The retained pre-registration is misread as live work | implementation | `internal/bench/corpora/ui-track-integrity-PREREG.md` stays committed with frozen weights and SHA-pinned fixtures; a later reader can mistake an orphaned pre-registration for a measurement in flight. | Both blocker entries state that the retained material is historical documentation and explicitly not a re-entry promise, and that a future pickup needs a NEW roadmap rather than this one. | Blockers |
+| 3 | A closed file reads as a delivered measurement | product | Nine of sixteen boxes are `[-]`, so a completion-percentage reading of this roadmap reports success where nothing was measured. | § Outcome leads with "archived does not mean achieved", names all four acceptance criteria that left completion accounting, and separates cancelled from deferred. | Outcome, Acceptance Criteria |
+| 4 | The named exits get taken later as a cheap shortcut | implementation | The two rejected shortcuts — a session-level `--model` for Measurement A, a Docker split for Measurement B — remain the obvious cheap paths for whoever revisits this. | Both rejections are preserved verbatim with their evidence: per-skill tier facts no session flag can express, and a 0.40-weighted `pixel` component turned cross-epoch by containerising one arm. | Blockers |
+
 ## Acceptance Criteria
 
-- [ ] **A:** the tier allocation for UI builders and reviewers is backed by a
+- [-] **A:** the tier allocation for UI builders and reviewers is backed by a
       published measurement — including an honest-null if that is what the run
       shows.
-- [ ] **A:** the two outliers are explicitly ruled in or out rather than left
+      Left completion accounting 2026-08-20 — disposition **E — ABANDON**,
+      outcome state `abandoned` (council `drain-blocker-dispositions-a.md`): no run happened, so there is no
+      measurement and no honest-null; the allocation stays unmeasured and unchanged.
+- [-] **A:** the two outliers are explicitly ruled in or out rather than left
       unexplained.
-- [ ] **B:** the generic lane's output is compared against a framework lane at a
+      Left completion accounting 2026-08-20 — disposition **E — ABANDON**,
+      outcome state `abandoned` (council `drain-blocker-dispositions-a.md`): the outliers stay unexplained; that
+      is the cost of the cancellation, recorded rather than papered over.
+- [-] **B:** the generic lane's output is compared against a framework lane at a
       fixed tier, and the corpus query's effect on the output is reported —
       not merely that it ran.
-- [ ] Both measurements are run from **one** harness session; neither is
+      Left completion accounting 2026-08-20 — disposition **E — ABANDON**,
+      outcome state `abandoned` (council `drain-blocker-dispositions-a.md`): no qualifying lane pair exists, so the
+      comparison was never runnable in this tree's epoch.
+- [-] Both measurements are run from **one** harness session; neither is
       answered by argument.
-- [ ] All quality gates pass — see `quality-tools`.
+      Left completion accounting 2026-08-20 — disposition **E — ABANDON**,
+      outcome state `abandoned` (council `drain-blocker-dispositions-a.md`): no harness session ran. The second
+      clause survives the cancellation: neither measurement was answered by argument
+      either — the tiers and lanes are untouched, not flipped on reasoning.
+- [x] All quality gates pass — see `quality-tools`.
+      <!-- verified 2026-08-20 on branch drain/road-to-ui-track-integrity-followup: eleven gates run from the worktree root, all exit 0 — lint_roadmap_blockers (35 clean, decidability ratchet AT baseline 20, no slack), lint_roadmap_complexity (35 clean, this file [lightweight]), lint_roadmap_ci_steps, check_roadmap_trackable (32 active parseable), check_no_roadmap_refs (934 scanned), lint_empty_roadmaps, lint_roadmap_later_disposition, lint_plan_risk_register (35 ready scanned, clean after the register below was added), validate_frontmatter (440 artefacts, 0 failing), lint_evidence_artifacts, check_references (1436 scanned, 0 broken); plus `task build-ts` green. SCOPE LIMIT, stated so this is not read as more than it is: the full `task ci` pipeline was NOT run locally — per roadmap-ci-steps-policy the remote CI on the PR is the authoritative gate, and this change is markdown-only. -->
 
 ## Blockers
 
 ### blocker: measurement-a-no-per-arm-builder-tier
 
-- **Status:** open
+- **Status:** resolved — **abandoned** 2026-08-20. Disposition **E — ABANDON**,
+  outcome state `abandoned`, decided by the AI council recorded in [`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
+  (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2).
+  Council rationale, verbatim: "A faithful run requires a consumer-shaped
+  generation subsystem with validated per-skill tier dispatch, while building
+  that subsystem is this roadmap's declared Non-goal and nobody else is
+  committed to it." Not deferred — cancelled. `E` exists precisely so that
+  permanently-infeasible work is not parked in a stub that reports progress.
 - **Owner:** maintainer (scope decision) / any roadmap that needs a UI-generation
   runner for its own reason
 - **Class:** 2 — consent-once
@@ -282,15 +384,34 @@ step list.
   specific: Measurement A and its two acceptance criteria stay open, so this
   roadmap cannot archive, and every future sweep pays to re-read the same
   blocker to reach the same conclusion.
-- **Resolved when:** a UI-generation runner with per-skill tier control exists —
-  landed for its own reason, with its arm isolation validated (the port task
-  demonstrably dispatches the builder skill, and the tier demonstrably reaches
-  it) — at which point Measurement A runs against the committed pre-registration
-  unchanged, in the controls' epoch.
+- **Resolved when:** superseded by the abandonment. The original condition — "a
+  UI-generation runner with per-skill tier control exists, landed for its own
+  reason, with its arm isolation validated (the port task demonstrably dispatches
+  the builder skill, and the tier demonstrably reaches it), at which point
+  Measurement A runs against the committed pre-registration unchanged, in the
+  controls' epoch" — is retained verbatim as historical documentation, not as a
+  live re-entry promise. Nobody is committed to that runner; "any roadmap that
+  needs one for its own reason" names nobody, which is why this closed as `E`
+  rather than as a transfer. Should such a runner ever land, the committed
+  pre-registration in `internal/bench/corpora/ui-track-integrity-PREREG.md` is
+  intact and a **new** roadmap may pick the measurement up; this one will not.
+- **Cancellation rationale preserved:** the pre-registration
+  (`internal/bench/corpora/ui-track-integrity-PREREG.md`, committed 2026-08-05,
+  SHA-pinned fixtures, frozen weights) is retained as historical documentation
+  and is **removed from this roadmap's completion accounting**. The verified
+  finding it rests on — every UI builder at `model_tier: medium` while
+  `design-review` and `existing-ui-audit` are `high` — is unchanged and remains
+  true; what is cancelled is the measurement of its remedy, not the finding.
 
 ### blocker: measurement-b-no-renderable-lane-pair
 
-- **Status:** open
+- **Status:** resolved — **abandoned** 2026-08-20. Disposition **E — ABANDON**,
+  outcome state `abandoned`, decided by the AI council recorded in [`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
+  (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2).
+  Council rationale, verbatim: "No lane pair meets the pre-registered
+  conditions, and neither a host-renderable framework lane nor a supported
+  override has a committed producer. Waiting 'for its own reason' names nobody
+  and would create a permanent parking lot." Not deferred — cancelled.
 - **Owner:** maintainer (host capability) / any roadmap that lands a
   host-renderable framework lane or a generic-lane override for its own reason
 - **Class:** 2 — consent-once
@@ -327,9 +448,28 @@ step list.
   Measurement B and its two acceptance criteria stay open, so the roadmap
   cannot archive, and the pairing question gets re-derived from scratch by
   whoever screens it next.
-- **Resolved when:** either a host-renderable framework lane exists (a
-  build/serve step for the React lane, landed for its own reason) **or** a
-  supported generic-lane override exists — at which point the re-scope is
-  recorded as a dated amendment in
+- **Resolved when:** superseded by the abandonment. The original condition —
+  "either a host-renderable framework lane exists (a build/serve step for the
+  React lane, landed for its own reason) or a supported generic-lane override
+  exists, at which point the re-scope is recorded as a dated amendment in
   `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B
-  becomes executable.
+  becomes executable" — is retained verbatim as historical documentation, not as
+  a live re-entry promise. Neither exit has a committed producer, which is the
+  whole reason this closed as `E` rather than as a transfer: a transfer requires
+  a named re-entry producer and a detection probe, and there is no one to name.
+- **Cancellation rationale preserved:** two things are kept verbatim and are the
+  reason this is a cancellation rather than a re-scope. **(1)** The dated
+  pre-registration `internal/bench/corpora/ui-track-integrity-PREREG.md`
+  § Measurement B (committed 2026-08-05, `3a8b60179`), which records the
+  structural gap: PHP lanes have no `php`/`composer` on the measurement host,
+  the React lane needs a build/serve step the `file://`-only scorer does not
+  have, and `GENERIC_LANES` has no supported override. **(2)** The council's
+  rejection of the Docker substitution, marked council-convergent in that same
+  file (2026-08-05, anthropic/claude-sonnet-4-5 + openai/gpt-4o): "Rendering one
+  arm in a container and one on the host would make the 0.40-weighted `pixel`
+  component a cross-epoch comparison, i.e. 40 % of the weighted score would be
+  noise; rendering both in a container opens an epoch in which the existing
+  calibration anchors are void. A cheaper-looking path that invalidates the
+  instrument is not a path." Docker is available on this host and stays
+  unused — the cancellation is the honest outcome, not the container.
+  Both B acceptance criteria are **removed from completion accounting**.
