@@ -526,7 +526,15 @@ export function run(
   // `state` is captured for the verbose line below; the value that lands is the
   // one computed inside the lock, from state read inside the lock.
   let state: StateDict = {};
-  const written = update_json_under_lock<StateDict>(target, (loaded) => {
+  // Three-state result (state_io § Three states, not two). This mutator NEVER
+  // returns null, so `skipped` is unreachable here — but it is handled with
+  // `written` rather than lumped with `failed`, because the two have opposite
+  // meanings for this caller: a decline means the state needed no change, a
+  // failure means the state on disk is not what this run computed. Writing
+  // `!== "written"` would have made a future mutator that learns to decline
+  // silently stop recording, which is the failure this API change exists to
+  // make impossible to write by accident.
+  const outcome = update_json_under_lock<StateDict>(target, (loaded) => {
     // `_empty_state()` UNDER the loaded value, which is what the `_load_state`
     // this replaced did (`{ ..._empty_state(), ...decoded }`). Dropping it would
     // have been a silent regression that the suite could not see: `_asInt`
@@ -536,7 +544,7 @@ export function run(
     state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope);
     return state;
   });
-  if (!written) {
+  if (outcome === "failed") {
     if (verbose) {
       process.stderr.write("verify-before-complete-hook: state write failed\n");
     }
