@@ -1,4 +1,11 @@
 # Completion review — per-session hook state, and the consumers that went silently dead
+<!-- evidence-type: analysis -->
+<!-- An investigation, not a scope-bound review verdict: it records what two
+     council runs found and what was done about each. It is deliberately NOT a
+     `current-binding` artefact — that type needs the `completion-review` marker
+     and the dispatcher-produced manifest, and hand-writing one would be the
+     self-attestation the gate exists to refuse. `check_completion_review`
+     therefore reports `missing-artifact` for this scope, correctly. -->
 
 > **This is NOT a `check_completion_review` artefact, deliberately.** That gate
 > requires a `context-manifest: v1` block which only `dispatch_r2_reviewer`
@@ -9,7 +16,10 @@
 > `.findings.md` — the gate's glob does not see it, and it does not pretend to
 > be seen. The formal R2 pass over this scope has NOT run; what ran is the
 > two-run cross-model council recorded below. `check_completion_review` reports
-> `missing-artifact` for scope `ab0f2a51…` and that report is accurate.
+> `missing-artifact` for the scope of whatever HEAD it is run against — `ab0f2a51…`
+> when this was written, `4e651b75…` once the test and artefact commits landed. The
+> hash MOVES with every commit, which is exactly why no marker is pinned here: a
+> binding written before the branch is final is stale by the next commit.
 >
 > Prompt hash (both runs, `sha256` of the two question files, kept so the
 > verdicts can be read against what was actually asked, per
