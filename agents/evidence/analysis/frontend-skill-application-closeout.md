@@ -12,12 +12,26 @@ test, and the corrections are stated rather than absorbed.
 ## 0. Provenance of the disposition
 
 The closing dispositions for this repository's open blockers were decided by an AI
-council in one pass; the record is
-`agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->,
-which lives on `origin/drain/council-records` (PR #1463) and is **not on `main`**
-at the time of writing — hence the reference marker rather than a live link. This
-finding cites that record, tests the premise it carried (§ 2), and departs from it
-where the premise did not survive, which the record's own instruction requires.
+council in one pass. The record is
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../council/drain-blocker-dispositions-a.md),
+which **landed on `main` while this closeout was in progress** — it was absent when
+this finding was first written, so the `ref-ignore` marker it carried has been
+dropped and the citation is now a live link. Its verdict line for this roadmap
+reads, verbatim:
+
+> Treat the enforcement-projection null as terminal because it matches this
+> repository's population and epoch: only 3 UI-write turns occurred across 107
+> sessions, while the catalogue corpus independently records host truncation and
+> insufficient observation.
+
+This finding cites that record, tests the premise it carried (§ 2), and departs
+from it where the premise did not survive — which the record's own instruction
+requires. Worth noting that the companion document
+[`drain-blocker-dispositions-b.md`](../council/drain-blocker-dispositions-b.md)
+reaches the same doubt from the other side without having measured anything:
+*"You can't disposition enforcement-evidence until you know whether earlier
+phases produced the data it cites."* That is exactly the check § 2 and § 3
+perform, and it is why the outcome is kept while the premise is not.
 
 ## 1. The decision
 
@@ -203,17 +217,28 @@ answer a question the roadmap raised for a human."*
 (`src/agent-src/scripts/archive_completed_roadmaps.ts:338-354`).
 
 The CI backstop does not apply that carve-out. `agent-config roadmap:progress-check`
-counts steps only, and on this tree it exits **1** with
-`road-to-frontend-skill-application.md (24/24 done)` — a roadmap the sweep itself
-would decline to archive, because `ui-session-capture-window` is open.
-
+counts steps only and flags such a file as a violation regardless of blocker state.
 So a roadmap in the state the sweep deliberately protects is a state the backstop
-reports as a violation. Whichever is right, the two should agree: either the
-backstop learns the open-blocker carve-out, or the sweep's comment is describing a
-policy the pipeline does not hold. Not fixed here — it is outside this roadmap's
-scope and touching a shared gate to make one's own closeout green is the wrong
-order of operations.
+reports as broken. Whichever is right, the two should agree: either the backstop
+learns the open-blocker carve-out, or the sweep's comment describes a policy the
+pipeline does not hold.
+
+**Measured in both directions, because the instance has since gone.** While
+`ui-session-capture-window` was still open, the sweep printed
+`1 blocker(s) still open (ui-session-capture-window) — not archived` for this file
+and `progress-check` exited 1 on the same file — the contradiction, live. After the
+blocker was resolved as transferred, the sweep reports
+`Would archive: … road-to-frontend-skill-application.md`, so the two agree here
+now. The only other file `progress-check` flags,
+`road-to-release-review-p0.md` (12/12), carries **no blocker entries at all**, and
+the sweep omits it purely through `changed_only` branch scoping — `--all --dry-run`
+offers to archive both. So the defect is **latent**: the contracts still differ,
+and nothing in the tree instantiates the difference today.
+
+Not fixed here — touching a shared gate to make one's own closeout green is the
+wrong order of operations.
 
 **Consequence for this roadmap, stated plainly:** it is closed out and
-deliberately **not** archived, so `roadmap:progress-check` is red locally on this
-branch by construction. That red is the finding above, not a missed step.
+deliberately **not** archived per instruction, so `roadmap:progress-check` is red
+locally on this branch by construction. That red is the archival instruction, not
+a missed step and no longer the disagreement above.

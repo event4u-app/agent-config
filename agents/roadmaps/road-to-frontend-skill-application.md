@@ -44,9 +44,38 @@ literal floor (≥ 20 UI-write sessions in one store) is still 4 short in
 aggregate, which is why Phase 1 reads *satisfied* and Phase 4 reads *narrowed*
 rather than both reading done.
 
-**What remains open, in one place:** filling the catalogue-observation corpus
-(7 of 20 observations, 2 hosts) — genuinely human-only, and already owned by
-`road-to-catalogue-host-fit` Phase 1, which exists and is parked in `later/`.
+**Nothing remains open on this roadmap.** The one human-only item — filling the
+catalogue-observation corpus, 7 of 20 observations across 2 hosts — is resolved as
+**transferred**, in two halves, to destinations verified to carry it: the count
+half to `road-to-catalogue-host-fit` Phase 1, whose AC-1 references *"the parent
+blocker's threshold across at least two hosts"* explicitly, and the verdict half
+to `stubs/road-to-host-aware-skill-projection.md` precondition P1, which restates
+the condition on a field that can actually change. That restatement matters:
+this roadmap's own `Resolved when` was **unfalsifiable** on the truncation host,
+because `buildBudgetEventRecord` writes `insufficient-observation` unconditionally
+(`src/scripts/_lib/skill_catalogue.ts:595`). Detail in the blocker entry.
+
+**Known gate disagreement — a defect in one of two contracts, currently latent.**
+Two call sites hold different rules for the same question:
+`src/agent-src/scripts/archive_completed_roadmaps.ts:338-354` refuses to archive a
+roadmap whose steps are all closed while a blocker is still open, stating the
+principle *"An unresolved blocker outlives its steps"*; the CI backstop
+`agent-config roadmap:progress-check` counts steps only and flags such a file as a
+violation regardless of blocker state. So a roadmap in the state the sweep
+deliberately protects is a state the backstop reports as broken.
+
+**It was live on this file mid-closeout and is not live now** — recorded in both
+directions so nobody hunts a symptom that has gone. While the transferred blocker
+was still open the sweep printed `1 blocker(s) still open … not archived` for this
+file while `progress-check` exited 1 on it. After the transfer the sweep reports
+`Would archive`, so the two now agree here. The only other file `progress-check`
+flags, `road-to-release-review-p0.md`, carries **no blocker entries at all**
+(verified), and the sweep omits it purely through `changed_only` branch scoping —
+`--all --dry-run` offers to archive both. Nothing in the tree instantiates the
+contradiction today; the contracts still differ.
+
+Left unfixed on purpose — editing a shared gate to make one's own closeout green
+is the wrong order of operations.
 
 ## Prerequisites
 
@@ -179,7 +208,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 ## Blockers
 
 ### blocker: ui-session-capture-window
-- **Status:** open — **transferred** 2026-08-20 (outcome: `transferred`; destination `road-to-catalogue-host-fit` Phase 1 "Fill the observation corpus", which exists and is parked in `later/`)
+- **Status:** resolved — **transferred** 2026-08-20 (outcome: `transferred`). Destinations verified to carry the obligation rather than merely named: `agents/roadmaps/later/road-to-catalogue-host-fit.md` Phase 1 "Fill the observation corpus" holds the **count** half, and `agents/roadmaps/stubs/road-to-host-aware-skill-projection.md` precondition **P1** holds a **repaired** version of the verdict half. Resolved here rather than left open because the item is preserved there and a second live copy of one obligation is the duplication a merge is supposed to remove.
 - **Owner:** maintainer
 - **Class:** 3 — human-only (needs human-authored observation files that do not exist)
 - **Blocks:** Phase 1 — Measure · Phase 2 — Deliver
@@ -191,9 +220,14 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
   5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
   6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
 - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
-- **Recommendation:** (agent-drafted 2026-08-20) Do **not** hold this roadmap open for it — transfer, which is what happened. The destination `road-to-catalogue-host-fit` Phase 1 is literally titled "Fill the observation corpus", already automated the codex half in its own step 1.1, and is parked in `later/` for exactly this reason: an external trigger (elapsed human sessions on varied hosts) it cannot pull forward. Two facts make transfer the right call rather than a deferral in place. First, the count is the only outstanding half — the "≥ 2 hosts" condition is already met (claude ×1, codex ×6), so what remains is 13 more observations, not a design question. Second, the verdict is **not** the uniform `no-selector` this entry was written against: 6 of the 7 rows read `insufficient-observation`, meaning the instrument could not observe the split at all on that host, so "a `no-selector` that has stopped moving" cannot be evaluated from today's corpus no matter how it is read. Record an observation opportunistically when a session can honestly report its own catalogue — never by inferring one.
-- **If you do nothing:** Nothing degrades and nothing is lost. Phase 2 stays abandoned (no selector to act on), the 7 observations stay tracked, and the corpus keeps growing whenever someone runs the capture. The only cost is that the delivery hypothesis stays unresolved — which is already its published state, and the closeout finding records that estate reduction, its strongest candidate fix, was measured and did not restore descriptions. There is no deadline and no decay: `skill-catalogue.jsonl` is append-only and tracked.
-- **What closed it here:** nothing — this is the one item in the roadmap that a live human observation is genuinely required for, and fabricating a self-reported catalogue to reach 20 would be exactly the evidence this roadmap refuses to write. Carried, with both halves of its state corrected above.
+- **Recommendation:** (agent-drafted 2026-08-20) Transfer, which is what happened. The count is the only half that needs elapsed sessions — the "≥ 2 hosts" condition is already met (claude ×1, codex ×6), so what remains is **13 more observations**, not a design question. Record one opportunistically when a session can honestly report its own catalogue; never by inferring one.
+- **If you do nothing:** Nothing degrades and nothing is lost. Phase 2 stays abandoned (no selector to act on), the 7 observations stay tracked and `skill-catalogue.jsonl` is append-only, and the corpus keeps growing whenever someone runs the capture. The delivery hypothesis stays unresolved — already its published state, and the closeout finding records that estate reduction, its strongest candidate fix, was measured and did not restore descriptions.
+- **Probe baseline carried across:** **7 catalogue observations of the floor of 20, across 2 hosts — 13 short.** Stated because the count is easy to confuse with its sibling: the *16 of 20* figure this closeout also produced belongs to `ui-corpus-has-no-ui` and counts **UI-write sessions**, a different population that happens to carry a similar floor. Both are recorded so neither can be quoted for the other.
+- **Destination verification — the obligation is carried, in two halves, and one of them is repaired.** Checked rather than assumed, because a named destination that does not hold the obligation is a burial with a citation.
+  1. **Count half — `agents/roadmaps/later/road-to-catalogue-host-fit.md` Phase 1.** Titled "Fill the observation corpus" and opens "This phase unblocks everything else in the file, and it is repo work." Its step 1.1 already automated the codex capture and records projection scope per observation; step 1.2 shipped the pointable-bare join. Decisively, its **AC-1** reads: *"the observation count crosses **the parent blocker's threshold** across at least two hosts, or the capture cadence is published as failed with the reason."* That is this entry's own threshold, referenced explicitly — a genuine merge, not a name.
+  2. **Verdict half — `agents/roadmaps/stubs/road-to-host-aware-skill-projection.md` precondition P1.** Its probe is "at least 2 rows in `skill-catalogue.jsonl` sharing one `projection_mode` with differing `dropped_count`", measured FAIL (the only two rows carrying a mode carry *different* modes). It carries a **restated** resume condition on `dropped_count` / `projected_skill_count` under a fixed `projection_mode` — deliberately not on `verdict`.
+- **Why the verdict half needed repairing — a defect in THIS entry's own `Resolved when`, verified in code.** The condition above asks for "a `selector-found` verdict or a `no-selector` that has stopped moving". On the truncation host that is **unfalsifiable**: `buildBudgetEventRecord` writes `verdict: 'insufficient-observation'` unconditionally (`src/scripts/_lib/skill_catalogue.ts:595`), with its own comment explaining why — "there is nothing to separate: the host did not choose per entry, it stripped all of them". `buildNoTruncationRecord` writes `no-selector` equally unconditionally (`:643`). Only `analyzeSelector` computes a verdict from data (`:363-364`, `candidates.some((c) => c.separates)`), and only on the per-entry self-report path. So 6 of the 7 rows sit on a path where the verdict is a **constant**: reaching 20 by accumulating codex rows would satisfy the count half and leave the verdict half frozen forever. The stub's restatement is the fix, and it exists independently of this closeout — which is the strongest evidence the destination genuinely owns the question rather than inheriting it.
+- **What closed it here:** the transfer, not the work. No observation was fabricated to reach 20 — inferring a self-reported catalogue is precisely the evidence this roadmap refuses to write. Both halves are preserved at destinations that exist in this tree, and this entry's defective verdict condition is recorded above so the next reader does not re-adopt it.
 
 ### blocker: consultation-rate-instrument
 - **Status:** resolved
