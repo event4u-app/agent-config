@@ -1,10 +1,32 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
+status: later
 execution:
   mode: autonomous
 ---
 
 # Road to surface consolidation — collapse the proactive mental surface, remove don't add
+
+> **Parked 2026-08-19. Resume when BOTH hold** — the condition is conjunctive on
+> purpose, and the council corrected an earlier single-clause version of it:
+> (a) the pre-registered utilization window has elapsed (~2026-08-26), and
+> (b) enough loaded-versus-fired usage data has accumulated to actually run the
+> KEEP / MERGE / DEMOTE / REMOVE sweep. The date alone is necessary and not
+> sufficient — a window that elapsed with no usage evidence behind it would let
+> the sweep delete on a guess, which its own verify clause forbids.
+>
+> One open step remains (Phase 3's disposition sweep) against 12 done and 1
+> deferred. It is covered by `repo-admin-and-usage`, Class 3, whose `Blocks:`
+> field names that sweep directly.
+>
+> Parked rather than left active on the repository's own active-vs-later test:
+> every open item is gated outside this roadmap, and `/roadmap:process-full`
+> terminates on it at `blocked-preflight` with zero runnable open steps. Both
+> blockers are preserved unresolved and still counted; parking claims no
+> reduction. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 +
+> openai/codex-default, two rounds, blind peer review).
 
 > The 9.4.0 review's dominant verdict: the package is no longer
 > capability-limited but **complexity-limited** — "die Oberfläche wächst erneut

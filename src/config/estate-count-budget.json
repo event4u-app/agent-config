@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 33,
-    "later_roadmaps": 50,
+    "active_roadmaps": 31,
+    "later_roadmaps": 52,
     "open_blockers": 74
   },
   "baseline_history": [
@@ -139,6 +139,13 @@
       "later_roadmaps": 50,
       "open_blockers": 74,
       "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved -- the same reason the row above states, and the second time in one day that this file has had to say it. This branch parks road-to-run-continuation-observation to later/ (-1 active, +1 later); the base it merged had itself moved to 34/49/74. Carrying this branch's earlier 32/50/70 forward would have described neither tree. open_blockers: 74 is the base's number, untouched, and that it is untouched is the check that this is a park and not a burial: the metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Parked because every open item is gated on an external trigger this estate cannot supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition. The number walks back the moment it is un-parked. The unreconciled -1 this branch's earlier row recorded (commit 7d5114dbd walked open_blockers 71 -> 70 with no history row) is left where it is: the base has since re-measured to 74, so that gap is now historical rather than live, and inventing a reconstruction here would be a second unmeasured row."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 31,
+      "later_roadmaps": 52,
+      "open_blockers": 74,
+      "why": "RAISED by 2 later roadmaps and WALKED DOWN by 2 active ones, one transfer: road-to-carrier-layer-convergence and road-to-surface-consolidation are parked to later/. Total estate is unchanged at 83, and open_blockers is unchanged at 74 -- which is the check that this is a park and not a burial, since that metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved. All three blockers involved (b-convergence-machine, repo-admin-and-usage, benchmark-spend) stay open and stay counted. Both roadmaps were parked because every open item is gated outside the roadmap, which is the repository's own active-vs-later test: carrier's two remaining steps are both in Phase 3 behind a Class 3 maintainer-machine measurement, and surface-consolidation's one remaining step is a utilization sweep gated on a window that elapses ~2026-08-26 AND on usage evidence accumulating over it. `/roadmap:process-full` terminates on both at blocked-preflight with zero runnable open steps, so leaving them active would make the estate advertise work the command is required to refuse. This empties the ACTIVE AUTONOMOUS estate to zero, intentionally and as of 2026-08-19. The consequence is recorded at the three-phase-contract-run blocker of later/road-to-run-continuation-observation rather than smoothed over: its criterion is now CURRENTLY unreachable from the estate, which is not the same as impossible, and it is not weakened to match. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer review), which also made a visible parked-work inventory the condition of the disposition -- the same change adds one to the generated dashboard."
     }
   ],
   "target": {

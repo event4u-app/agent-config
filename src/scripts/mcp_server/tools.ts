@@ -669,7 +669,7 @@ async function _roadmapProgressHandler(
         };
     }
     const roadmaps = urp.collect(roadmapRoot);
-    const content = urp.render(roadmaps, urp.collect_bundles(root));
+    const content = urp.render(roadmaps, urp.collect_bundles(root), roadmapRoot);
     const stepsDone = roadmaps.reduce((s, r) => s + r.done, 0);
     const stepsTotal = roadmaps.reduce((s, r) => s + r.total_active, 0);
     if (!dryRun) {
@@ -719,7 +719,7 @@ async function _roadmapArchiveHandler(
             const roadmaps = urp.collect(roadmapRoot);
             fs.writeFileSync(
                 path.join(root, 'agents', 'roadmaps-progress.md'),
-                urp.render(roadmaps, urp.collect_bundles(root)),
+                urp.render(roadmaps, urp.collect_bundles(root), roadmapRoot),
                 'utf-8',
             );
             dashboardRegenerated = true;

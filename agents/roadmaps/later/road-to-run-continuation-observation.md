@@ -408,10 +408,35 @@ engages and leaves the event behind.
   against the self-referential observation, one size larger. The estate has
   several three-phase autonomous candidates already; the next one to be worked
   discharges this for free.
-- **If you do nothing:** step 0.1 stays open and this roadmap stays in the
-  active estate at 3 of 4 items. Nothing regresses and no evidence decays —
-  the ledger line from 0.0 is durable. The cost is one open roadmap carrying
-  one criterion, which is the shape its own risk 3 accepts by design.
+- **CONTINGENT AS OF 2026-08-19, and the criterion is NOT weakened.** The
+  sentence above about "several candidates already" was measured false the same
+  day it was written, and the estate has since gone further: both remaining
+  `execution.mode: autonomous` roadmaps — `road-to-carrier-layer-convergence` and
+  `road-to-surface-consolidation` — are parked in `later/`, each with zero
+  runnable open steps behind a Class 3 blocker. So the active autonomous estate is
+  **intentionally zero**, and no roadmap now in the estate can produce the
+  qualifying run.
+  **Currently unreachable is not impossible**, and the distinction is the whole
+  point of recording it this way: a genuine qualifying roadmap can enter the
+  estate at any time, at which point this discharges as a side effect exactly as
+  the recommendation intends. What must NOT happen is adjusting the three-phase
+  requirement because today's estate cannot exercise it — availability of test
+  material and validity of the test are separate questions, and only a maintainer
+  concluding that three-phase coverage is disproportionate should change it.
+  Equally, not every technically three-phase roadmap qualifies: the run has to
+  carry genuinely runnable autonomous work in three or more phases, or it produces
+  weak evidence for the behaviour 0.1 exists to validate.
+  AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 +
+  openai/codex-default, two rounds, blind peer review) — both seats reached this
+  independently, and both rejected weakening the criterion to match the estate.
+- **If you do nothing:** step 0.1 stays open at 3 of 4 items. Nothing regresses
+  and no evidence decays — the ledger line from 0.0 is durable. The cost is one
+  parked roadmap carrying one criterion, which is the shape its own risk 3 accepts
+  by design.
+  *Corrected 2026-08-19:* this read "stays in the active estate", which the same
+  change that parked this file made false, and the note above it says so two
+  bullets earlier. A blocker entry contradicting its own neighbour is worse than
+  either version alone, because a reader cannot tell which half is stale.
 - **Resolved when:** `interruption_report` shows one run id with `re=` non-zero,
   `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a
   PR — and that run id is recorded at step 0.1.
