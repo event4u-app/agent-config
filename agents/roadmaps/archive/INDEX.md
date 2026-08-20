@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**523 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 180 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**524 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 181 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -172,6 +172,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-corpus-expansion-evidence-based-cuts`](road-to-corpus-expansion-evidence-based-cuts.md) | Roadmap: Corpus expansion → evidence-based tier-1 cuts | archived-with-open-steps | 7 | 27/37 | _not extractable_ |
 | [`road-to-cost-aware-model-routing`](road-to-cost-aware-model-routing.md) | Road to Cost-Aware Model Routing | completed | 6 | 24/24 | _not extractable_ |
 | [`road-to-cost-parity-0-program`](road-to-cost-parity-0-program.md) | Road to cost parity — 0: the median session gets a measured target and the family gets its order | completed | 4 | 25/25 | _not extractable_ |
+| [`road-to-cost-parity-1-rule-payload-diet`](road-to-cost-parity-1-rule-payload-diet.md) | Road to cost parity — 1: the maintained estate shrinks where nothing else owns it | closed-with-cancellations | 6 | 14/51 | _not extractable_ |
 | [`road-to-cost-parity-3-handoff-envelope`](road-to-cost-parity-3-handoff-envelope.md) | Road to cost parity — 3: the handoff envelope carries what the successor actually needs | completed | 4 | 30/30 | _not extractable_ |
 | [`road-to-cost-profile-untangle`](road-to-cost-profile-untangle.md) | Roadmap: Untangle `cost_profile` | closed-with-cancellations | 8 | 41/45 | _not extractable_ |
 | [`road-to-council-api-fallback`](road-to-council-api-fallback.md) | Road to council api fallback — the contract promised a retry no path performed | closed-with-cancellations | 6 | 16/17 | _not extractable_ |

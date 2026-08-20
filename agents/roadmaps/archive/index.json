@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 523,
+  "count": 524,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2074,6 +2074,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-cost-parity-1-rule-payload-diet",
+      "title": "Road to cost parity — 1: the maintained estate shrinks where nothing else owns it",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 14,
+        "deferred": 0,
+        "cancelled": 37
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-cost-parity-3-handoff-envelope",

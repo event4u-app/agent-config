@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 52,
-    "open_blockers": 64
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -251,6 +251,13 @@
       "later_roadmaps": 52,
       "open_blockers": 64,
       "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 62,
+      "why": "WALKED DOWN by 1 active and 2 blockers, and the drop is EARNED rather than bookkeeping. road-to-cost-parity-1-rule-payload-diet reached zero open steps and archived, and the two blockers it carried open were both disposed against the council record (agents/evidence/council/drain-blocker-dispositions-a.md, disposition B, outcome transferred): skill-activation-window was MERGED with human-gated-live-trigger-eval into the one shared live-trigger-eval stub the pre-registration owner had already written, and utilization-sweep-window moved behind road-to-surface-consolidation Phase 3's scheduled sweep with a named producer and a detection probe. Both read Status: resolved because that is the only token lint_roadmap_blockers accepts as closed; each carries its real outcome state on its own field, so a resolved token is not readable as a satisfied criterion. NOTHING IN THE REPOSITORY GOT BETTER TO EARN THE ACTIVE DROP: the roadmap archived at 13 satisfied / 14 transferred / 23 abandoned of 50, its Goal paragraph delivered nothing, and its one carried-through step (3.5c) closed by STOPPING its own phase on a measurement. The estate is one roadmap smaller because a plan was honestly closed, not because the maintained surface shrank."
     }
   ],
   "target": {
