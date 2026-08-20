@@ -1031,28 +1031,45 @@ export function owns_session_state(state: unknown, session_id: string): boolean 
  * returns what to write. Returning `null` writes nothing and still counts as
  * success.
  *
- * Returns whether the write landed. Under `AGENT_CONFIG_REPLAY=1` this reports
- * `false` without touching the tree, the same contract the writers above carry.
+ * Returns `written` / `skipped` / `failed`, the same three-state contract
+ * `update_json_under_lock` carries since `bcbb0380b` — a boolean could not tell
+ * a deliberate decline from a failure, and every member of the union is a truthy
+ * string, so `if (!result)` is a silent no-op rather than a compile error. Under
+ * `AGENT_CONFIG_REPLAY=1` this reports `failed` without touching the tree.
  */
 export function update_text_under_lock(
   target: string,
   transform: (loaded: string | null) => string | null,
-): boolean {
-  if (is_replay_mode()) return false;
+  options: { blocking?: boolean } = {},
+): LockedUpdateResult {
+  if (is_replay_mode()) return "failed";
   const targetPath = path.resolve(target);
   const state_dir = path.dirname(targetPath);
   try {
     fs.mkdirSync(state_dir, { recursive: true });
   } catch {
-    return false;
+    return "failed";
   }
-  const lock_path = _lock_path(state_dir);
-  let fd: number;
+  // FILE-keyed, matching `update_json_under_lock` rather than
+  // `_atomic_write_text`. Converged onto the sibling deliberately after
+  // `bcbb0380b` landed the measured argument: a read-modify-write needs mutual
+  // exclusion against writers of THIS file and nothing else, and the shared
+  // directory lock was measured paying the full cost of exclusion for writes
+  // that require none (8 workers: slowest 138-267 ms shared vs 83-95 ms
+  // unshared). This function was written against the directory-keyed primitive
+  // one commit earlier; leaving it there would have made
+  // `dispatch-issues.jsonl` serialise against every unrelated
+  // `atomic_write_text` in the state dir.
+  const lock_path = _target_lock_path(targetPath);
+  let fd: number | null;
   try {
-    fd = _acquire_lock(lock_path);
+    fd = _acquire_lock(lock_path, { blocking: options.blocking ?? true });
   } catch {
-    return false;
+    return "failed";
   }
+  // FAIL CLOSED, for the same reason the JSON sibling does: an append without
+  // exclusion is the truncating write this function exists to prevent.
+  if (fd === null) return "failed";
   try {
     let loaded: string | null = null;
     try {
@@ -1063,11 +1080,11 @@ export function update_text_under_lock(
       // unreadable existing log must not be silently replaced by one line.
     }
     const next = transform(loaded);
-    if (next === null) return true; // deliberate no-write, not a failure
+    if (next === null) return "skipped"; // deliberate no-write, not a failure
     _publish_text_locked(targetPath, next);
-    return true;
+    return "written";
   } catch {
-    return false;
+    return "failed";
   } finally {
     _release_lock(fd, lock_path);
   }

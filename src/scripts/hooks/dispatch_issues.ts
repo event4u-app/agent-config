@@ -203,7 +203,7 @@ export function log_dispatch_issue(
     // Still best-effort: `update_text_under_lock` returns false rather than
     // throwing when the lock or the write fails, and observability never breaks
     // the agent loop.
-    const landed = update_text_under_lock(log, (loaded) => {
+    const outcome = update_text_under_lock(log, (loaded) => {
       const existing = loaded === null ? [] : loaded.split("\n");
       // Python str.splitlines() drops a trailing empty element from a
       // trailing newline; mirror that.
@@ -216,9 +216,12 @@ export function log_dispatch_issue(
         existing.length > LOG_CAP ? existing.slice(existing.length - LOG_CAP) : existing;
       return capped.join("\n") + "\n";
     });
-    if (!landed) {
+    // `!outcome` would be a silent no-op — every member of the union is a
+    // truthy string, which the primitive's own commit message names as the
+    // migration hazard. Compare the literal.
+    if (outcome !== "written") {
       process.stderr.write(
-        `dispatch_issues: could not append to ${log} (lock or write failed) — ` +
+        `dispatch_issues: could not append to ${log} (${outcome}) — ` +
           `the entry was dropped: ${entry.issue} on ${entry.hook}\n`,
       );
     }
