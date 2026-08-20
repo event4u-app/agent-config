@@ -207,13 +207,13 @@ verdict — are already in memory, in two separate files.
 A recipe removes the class: the exit condition is written once, correctly, by
 someone who is not mid-task.
 
-- [ ] **4.1 Ship a CI-settle helper.** Reuses `check_pr_ci_current`, treats an
+- [x] **4.1 Ship a CI-settle helper.** Reuses `check_pr_ci_current`, treats an
       API error as *not settled*, distinguishes settled-green from settled-red,
       and refuses to report a verdict it did not read.
       verify: injected API failure produces "not settled" and never a verdict;
       injected mixed results produce settled-red.
 
-- [ ] **4.2 Point the CI-waiting surfaces at it.** Anywhere the guidance today
+- [x] **4.2 Point the CI-waiting surfaces at it.** Anywhere the guidance today
       says "start a waiter", it names this helper instead of leaving the exit
       condition to be re-derived.
       verify: the CI-wait guidance names the helper.
