@@ -6,11 +6,17 @@
  * the one that justifies the whole design: same branch name in a different
  * repo or worktree must report drift, which branch+HEAD alone cannot see.
  */
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
+import { statePathFor } from '../../src/scripts/before_complete_hook.js';
 import {
     canonicalizeRepoIdentity,
     describeDrift,
+    readLastVerify,
     type RepoAnchor,
 } from '../../src/scripts/_lib/envelope_grounding.js';
 
@@ -84,5 +90,80 @@ describe('drift is silent on what it cannot know', () => {
     it('reports branch drift and commit drift independently', () => {
         const drift = describeDrift(envelope(), anchor({ branch: 'main', head: 'c'.repeat(40) }));
         expect(drift.map((d) => d.split(':')[0])).toEqual(['BRANCH DRIFT', 'COMMIT DRIFT']);
+    });
+});
+
+describe('readLastVerify — the reader now resolves the path the producer writes', () => {
+    /**
+     * The pre-fix reader resolved `agents/runtime/state/verify-before-complete.json`
+     * and the producer has never written it, so `null` was the ONLY answer this
+     * function could give. These two cases are therefore the sabotage probe as
+     * well as the contract: the non-null case fails against the old constant,
+     * which is what makes the green meaningful.
+     *
+     * The state file is written through the producer's own path builder rather
+     * than a literal digest — a hand-computed digest in a test is a second
+     * implementation of the thing under test.
+     */
+    function withRoot(body: (root: string) => void): void {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'envelope-grounding-'));
+        try {
+            body(root);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    }
+
+    it('returns the recorded command for a session whose producer state exists', () => {
+        withRoot((root) => {
+            const rel = statePathFor('session-alpha');
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            fs.writeFileSync(
+                path.join(root, rel),
+                JSON.stringify({
+                    session_id: 'session-alpha',
+                    last_verification: { command: 'task ci', tool: 'Bash', at: '2026-08-20T10:00:00Z' },
+                }),
+                'utf-8',
+            );
+            const line = readLastVerify(root, 'session-alpha');
+            expect(line).not.toBeNull();
+            expect(line).toContain('task ci');
+            expect(line).toContain('2026-08-20T10:00:00Z');
+        });
+    });
+
+    it('returns null for a session whose producer state does not exist', () => {
+        withRoot((root) => {
+            expect(readLastVerify(root, 'session-with-no-state')).toBeNull();
+        });
+    });
+
+    it('never reads a NEIGHBOURING session state — the digest paths are distinct', () => {
+        withRoot((root) => {
+            const rel = statePathFor('session-alpha');
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            fs.writeFileSync(
+                path.join(root, rel),
+                JSON.stringify({ last_verification: { command: 'task ci', at: 'x' } }),
+                'utf-8',
+            );
+            // A second session in the same tree must not inherit the first's line.
+            expect(readLastVerify(root, 'session-beta')).toBeNull();
+        });
+    });
+
+    it('an absent session id yields null rather than an arbitrary neighbour', () => {
+        withRoot((root) => {
+            const rel = statePathFor('session-alpha');
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            fs.writeFileSync(
+                path.join(root, rel),
+                JSON.stringify({ last_verification: { command: 'task ci', at: 'x' } }),
+                'utf-8',
+            );
+            expect(readLastVerify(root, null)).toBeNull();
+            expect(readLastVerify(root, '   ')).toBeNull();
+        });
     });
 });

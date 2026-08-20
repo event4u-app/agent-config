@@ -15,6 +15,33 @@ status: ready
 > roadmap does both, honestly bounded: an AI gate is not a human reviewer, and
 > the roadmap says so.
 
+## Outcome (2026-08-20)
+
+Closed against explicit outcome states, per the framework of record in
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md) <!-- ref-ignore -->
+(on `main` with PR #1463; today on `origin/drain/council-records`, so this is a
+deliberate forward reference). Four items took council disposition **B** and are
+**transferred** to
+[`stubs/road-to-bus-factor-external-actions.md`](stubs/road-to-bus-factor-external-actions.md),
+which carries each verbatim with a named producer, a detection probe and that
+probe's measured baseline.
+
+| Acceptance criterion | Outcome | What was satisfied | What is transferred |
+|---|---|---|---|
+| 1 · required, recorded dogfooded gate + proof page | **transferred** | Gate workflow, harness, and teeth (`classifyBlocking` / `gateVerdict`), plus the deterministic large-diff escalation | The live run and the proof-page claim — `ANTHROPIC_API_KEY` is absent, so no live review has ever run |
+| 2 · CODEOWNERS + branch protection | **transferred** | `.github/CODEOWNERS` over the sensitive surfaces; the CONTRIBUTING rationale | The ruleset write. Live ruleset 17749383 has `require_code_owner_review: false`, `required_approving_review_count: 0`, and one required check — solo merges bypass the gate |
+| 3 · inheritable release | **transferred** | `docs/release-runbook.md` + `docs/succession.md` | The cold dry-run by a human without prior runbook knowledge |
+| 4 · honest reviewer count | **satisfied** | Tracked and *corrected* this run: the figure was stale and its recompute command read 30 of 1228 PRs | — |
+
+**The bus factor is still 1.** The dashboard renders this roadmap at 100 %
+because zero `[ ]` and zero `[~]` remain and `[-]` reads as complete. That
+percentage describes who can do the residual work, not that the goal was
+reached — which is exactly why the outcome states above exist and why criterion 4
+is the only `satisfied` row. Distinct reviewers over the trailing 90 days is 1;
+the second account that can merge has only self-merged unreviewed, widening who
+can ship rather than who checks. Do not read the percentage as achievement, and
+do not archive on the strength of it.
+
 ## Goal
 
 Lower the bus-factor from 1 toward resilient: a required, dogfooded self-review
@@ -88,7 +115,7 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       RECORDED via `renderReview()` (advisory phrasing = "WOULD block"), not just
       printed. Shipped `enforce:false` (advisory); the `--enforce` flip that
       arms the teeth is the maintainer's act, one flag. -->
-- [ ] Record it honestly on the proof page: "PRs pass a dogfooded AI
+- [-] Record it honestly on the proof page: "PRs pass a dogfooded AI
       adversarial-review + security gate; this is a floor, not independent human
       review."
       <!-- OPEN 2026-07-10: the literal "PRs pass a dogfooded AI gate" proof-page
@@ -106,6 +133,22 @@ maintainer after a gap) ship a correct release without tribal knowledge.
            surviving copy keeps the fuller note, which names WHY the claim
            cannot be recorded yet (check_claims / no-invented-facts while the
            gate is inert without the secret). No obligation was dropped. -->
+      <!-- verified 2026-08-20: `gh secret list` returns exactly four repo
+           secrets — CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN,
+           CLOUDFLARE_WORKER_SUBDOMAIN, MCP_SMOKE_TOKEN. `ANTHROPIC_API_KEY` is
+           ABSENT, so `live-advisory` is still a logged no-op and no live
+           dogfooded review has ever run. The claim therefore remains FALSE and
+           unrecordable. -->
+      <!-- decision 2026-08-20: transferred to
+           stubs/road-to-bus-factor-external-actions.md (council disposition B,
+           outcome: transferred) — the stub carries this item verbatim with a
+           named producer, a detection probe and the probe's measured 2026-08-20
+           baseline. Marked [-] (not doable in this environment),
+           NOT cancelled. Missing: the ANTHROPIC_API_KEY repo secret plus one
+           live gate run. This step is still REQUIRED and stays maintainer-owned
+           — see docs/self-review-gate.md § Arming it, item 4 ("Record the floor
+           CLAIM on the proof page once it is live — not before"). Reversible:
+           restore to [ ] the moment the secret is armed. -->
 
 **Exit:** a required, recorded self-review gate runs on every non-trivial PR.
 **Rollback:** demote to advisory (one workflow flag) — but a governance package
@@ -120,12 +163,35 @@ that won't gate its own PRs undercuts its thesis; prefer keeping teeth.
       compiler, install, hooks, claims/proof generators, release pipeline,
       workflows, and schemas to @matze4u (real paths verified). Enabling branch
       protection to REQUIRE Code-Owner review is the repo-admin step below. -->
-- [ ] Turn on branch protection requiring: green CI, the Phase-1 self-review
+- [-] Turn on branch protection requiring: green CI, the Phase-1 self-review
       gate, and CODEOWNERS review on the sensitive surfaces — so even the solo
       maintainer merges through the gate, not around it.
       <!-- OPEN — repo-admin action (GitHub → Settings → Rules), not a code
       change. CODEOWNERS is in place; requiring it via branch protection is the
       maintainer's UI step (branch-protection-policy.md is the source of truth). -->
+      <!-- verified 2026-08-20: live ruleset READ (no write) via
+           `gh api repos/event4u-app/agent-config/rulesets/17749383` — id 17749383
+           "main protection", enforcement=active, updated_at 2026-06-16, applies to
+           ~DEFAULT_BRANCH. It blocks deletion and non-fast-forward and requires a
+           PR, but `require_code_owner_review: false`,
+           `required_approving_review_count: 0`, and the required-check list is
+           EXACTLY ONE context ("Sync + Generate Tools Consistency") — the
+           Phase-1 `Self-review gate` check is NOT in it. So all three things this
+           step asks for are measurably absent. The live state matches
+           docs/contracts/branch-protection-policy.md § What is actually enforced
+           byte-for-byte, so there is NO doc drift to fix (risk-register row 3
+           is currently clean). -->
+      <!-- decision 2026-08-20: transferred to
+           stubs/road-to-bus-factor-external-actions.md (council disposition B,
+           outcome: transferred) — the stub carries this item verbatim with a
+           named producer, a detection probe and the probe's measured 2026-08-20
+           baseline. Marked [-] (not doable in this environment),
+           NOT cancelled. Missing: an admin ruleset WRITE on the production trunk
+           — a Hard-Floor action under non-destructive-by-default that
+           branch-protection-policy.md § Enforce half reserves to the maintainer
+           and calls "deliberately NOT agent-executable". No human was reachable
+           to confirm, so the conservative reversible option is to leave
+           enforcement untouched and record the measurement. -->
 - [x] Document the "why" in CONTRIBUTING: the maintainer holds themselves to the
       same gate as a contributor (the point of a governance standard).
       <!-- done 2026-07-09: CONTRIBUTING.md § "Reviewability and the self-imposed
@@ -155,12 +221,24 @@ logged.
       <!-- done 2026-07-09: docs/succession.md — secret/token inventory (pointers
       only: RELEASE_PR_TOKEN, npm OIDC, Cloudflare/MCP, AI keys), operator-gated
       steps, a "healthy main" definition, and the minimal takeover checklist. -->
-- [ ] Dry-run the runbook with the maintainer deliberately following ONLY the
+- [-] Dry-run the runbook with the maintainer deliberately following ONLY the
       written steps (no tribal knowledge) on a no-op release; every gap found is
       a runbook fix.
       <!-- OPEN — maintainer-run: a written-steps-only no-op release dry-run is
       the real freshness test. Runbook § 7 gives a static staleness check; the
       live dry-run needs the maintainer. -->
+      <!-- decision 2026-08-20: transferred to
+           stubs/road-to-bus-factor-external-actions.md (council disposition B,
+           outcome: transferred) — the stub carries this item verbatim with a
+           named producer, a detection probe and the probe's measured 2026-08-20
+           baseline. Marked [-] (not doable in this environment),
+           NOT cancelled. Missing: a HUMAN who has not memorised the runbook,
+           following only its written steps through a real no-op release cycle.
+           An agent re-reading the document it can already see does not test
+           freshness — risk-register row 4 names exactly this ("A release runbook
+           read by the person who wrote it exercises their memory, not the
+           document"), so simulating a pass here would be the fabricated evidence
+           that row forbids. docs/release-runbook.md exists and is unchanged. -->
 
 **Exit:** a release can be cut by following the runbook alone; the succession
 doc names every operator-gated dependency.
@@ -168,18 +246,49 @@ doc names every operator-gated dependency.
 
 ## Phase 4 — Lower bus-factor toward >1 (opportunistic, honest)
 
-- [ ] Identify the smallest reviewable surfaces a second reviewer could own
+- [-] Identify the smallest reviewable surfaces a second reviewer could own
       (e.g. docs/claims, a single pack) and invite review there first — a
       realistic on-ramp, not "co-maintain the kernel on day one".
       <!-- OPEN — the on-ramp surfaces are IDENTIFIED (CONTRIBUTING names
       docs/claims or a single pack as the small first surface), but the actual
       INVITE needs a real external person — blocked on second-reviewer-availability. -->
+      <!-- verified 2026-08-20: the blocker's own reopen condition (">=1
+           non-maintainer has REVIEWED a merged PR") was re-measured, not assumed.
+           Over the full trailing-90-day window (2026-05-22..2026-08-20, 1228
+           merged PRs, counted in four sub-windows summing 266+211+297+454=1228 to
+           match `search/issues` total_count exactly) the distinct PR-REVIEWER set
+           is ["matze4u"] — the maintainer alone. No non-maintainer review exists,
+           so the blocker does NOT reopen and this step stays out of reach. -->
+      <!-- decision 2026-08-20: transferred to
+           stubs/road-to-bus-factor-external-actions.md (council disposition B,
+           outcome: transferred) — the stub carries this item verbatim with a
+           named producer, a detection probe and the probe's measured 2026-08-20
+           baseline. Marked [-] (not doable in this environment),
+           NOT cancelled and NOT achieved. Missing: a real second human. The >1
+           bus-factor target remains UNMET and parked pending adoption, exactly as
+           risk-register row 2 requires it be reported. Reopens automatically the
+           day a non-maintainer reviews a merged PR. -->
 - [x] Track the real number honestly: distinct humans who have reviewed/merged
       in the trailing 90 days. Report it as-is; a bus-factor of 1 stated plainly
       beats a bus-factor of 1 implied to be more.
       <!-- done 2026-07-09: docs/succession.md tracks the trailing-90-day
       distinct-reviewer count honestly (currently 1) + a gh recompute one-liner;
       bound by the backed CLAIMS entry `bus-factor-tracked`. -->
+      <!-- verified 2026-08-20: the tracking mechanism holds, but re-running it
+           found the tracked NUMBER stale and its recompute command incapable of
+           producing it. Two defects, both fixed in docs/succession.md this
+           change: (a) the doc reported a flat "reviewed/merged: 1", wrong under
+           its own wording — measured distinct REVIEWERS = 1 (["matze4u"]) but
+           distinct MERGERS = 2 (["matze4u","h3xa2"], the second having authored
+           and self-merged #765 and the 8.1.0 release #767 on 2026-07-07 with no
+           review); (b) the documented one-liner passed NO `--limit`, so it read
+           gh's default 30 of the window's 1228 merged PRs and silently
+           under-reported. Replaced with a sliced query that cross-checks its
+           slice sizes against `search/issues` total_count (266+211+297+454=1228).
+           The reviewer figure of 1 — which is what CLAIMS `bus-factor-tracked`
+           asserts — is unchanged and re-verified; the merger count is now
+           reported alongside it with an explicit warning not to read it as a
+           bus-factor of 2. -->
 
 **Exit:** at least one non-maintainer review path exists and is documented; the
 trailing-90-day reviewer count is tracked and reported truthfully.
@@ -196,26 +305,42 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 - The real trailing-90-day human-reviewer count is tracked and reported without
   inflation.
 
-> **Status (2026-07-09).** Criterion 4 is MET — the trailing-90-day reviewer
-> count is tracked honestly (1) in `docs/succession.md` + the backed
-> `bus-factor-tracked` CLAIMS entry. Criteria 2 and 3 are PARTIALLY met: the
-> code half is done (`.github/CODEOWNERS` + the runbook + succession doc all
-> exist), but the repo-admin half (enabling branch protection to require
-> Code-Owner review) and the written-steps-only live dry-run are maintainer
-> actions, left open. Criterion 1 (the dogfooded self-review gate) is OPEN —
-> its former blocker `self-review-gate-cost` is RESOLVED (2026-07-10, see
-> the blocker record below); what remains is the wiring work itself, not an
-> unblocking decision. The inheritability + honest-reporting
-> slice is complete; the gate + admin + human-dry-run remain. Roadmap stays open.
+> **Status (2026-08-20).** Every agent-executable item in this roadmap is done.
+> The four items that remain are marked `[-]` — **not cancelled, and not
+> achieved**: each needs a credential, a repo-admin write, or a second human
+> that no agent can supply. They stay maintainer-owned, and each carries the
+> measurement that proves it is still outstanding.
+>
+> - **Criterion 1 (dogfooded gate) — NOT met.** The gate exists and is wired
+>   (`self-review-gate.yml` + `self_review_gate.ts`, teeth defined via
+>   `classifyBlocking`/`gateVerdict`), but `ANTHROPIC_API_KEY` is absent from the
+>   repo secrets (verified 2026-08-20), so `live-advisory` is a logged no-op and
+>   no live review has ever run. The proof-page claim stays unrecordable.
+> - **Criterion 2 (CODEOWNERS + protection) — HALF met.** `.github/CODEOWNERS`
+>   exists. The live ruleset (id 17749383, read 2026-08-20) has
+>   `require_code_owner_review: false` and exactly ONE required check
+>   (`Sync + Generate Tools Consistency`), so solo merges do **not** pass through
+>   the gate. Arming it is a Hard-Floor admin write reserved to the maintainer.
+> - **Criterion 3 (inheritable release) — HALF met.** Runbook + succession doc
+>   exist; the written-steps-only cold dry-run needs a human and has not happened.
+> - **Criterion 4 (honest reporting) — MET, and corrected this pass.** Distinct
+>   trailing-90-day REVIEWERS = 1 (the maintainer); distinct MERGERS = 2. The
+>   previously tracked flat "1" was wrong under its own wording and its recompute
+>   command read 30 of 1228 PRs; both are fixed in `docs/succession.md`.
+>
+> **The bus-factor is still 1.** Two accounts can merge, but only one has ever
+> reviewed, and one of the second account's two merges was an unreviewed release
+> self-merge — which is a widening of who can ship, not of who checks. Roadmap
+> stays open on the four maintainer items; archival is deliberately NOT taken here.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-14 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The proof-page claim is recorded while the gate is inert | product | The Phase-1 step records "PRs pass a dogfooded AI adversarial-review + security gate". The gate ships `enforce:false` and is inert without its secret, so recording the claim before a live run states as fact something no run backs — a `check_claims` / no-invented-facts breach on the package's most consumer-visible page | The step stays `[ ]` with the reason inline, and the honest advisory status lives in `docs/self-review-gate.md` instead. The claim is the maintainer's to create the moment the gate goes live with the secret — the step is deliberately not closable by an agent | Phase 1 |
-| 2 | The `>1` bus-factor target is reported as achieved when it is parked | product | Phase 4's target needs a second human reviewer. An explicit defer can be misread downstream as "phase complete", which would overstate the package's actual bus factor — the precise number this roadmap exists to be honest about | `second-reviewer-availability` is resolved as **deferred pending adoption**, wording chosen so it cannot read as met; it reopens automatically when a non-maintainer reviews a merged PR. Phases 1-3 are solo-achievable and do not depend on it | Phase 4 |
-| 3 | Branch protection is armed in the UI and drifts from the documented matrix | implementation | The Phase-2 step is a GitHub Settings action outside the tree, so nothing in CI can observe whether the required-check set matches `branch-protection-policy.md` after it is armed | The step stays maintainer-owned and is never closed from a code change; the sibling `-ci-economy` roadmap owns the required-check matrix and carries its own blocker for the same surface, so the two cannot silently disagree | Phase 2 |
-| 4 | The runbook passes a dry-run only because its author ran it | implementation | A release runbook read by the person who wrote it exercises their memory, not the document. A gap only shows when someone follows the written steps literally from cold | The Phase-3 dry-run step requires the maintainer to follow ONLY the written steps; it is explicitly not agent-satisfiable, and the step says so rather than accepting a simulated pass | Phase 3 |
+| 1 | The proof-page claim is recorded while the gate is inert | product | The Phase-1 step records "PRs pass a dogfooded AI adversarial-review + security gate". The gate ships `enforce:false` and is inert without its secret, so recording the claim before a live run states as fact something no run backs — a `check_claims` / no-invented-facts breach on the package's most consumer-visible page | **Revised 2026-08-20.** The claim was never recorded, so the risk never fired. The step is no longer `[ ]`: it is `[-]` and **transferred** (disposition B) to `stubs/road-to-bus-factor-external-actions.md`, which holds the criterion verbatim plus the probe that gates re-entry — `ANTHROPIC_API_KEY` present AND a `live-advisory` run that did not take its skip path. That second clause is the mitigation's new teeth: the workflow already runs and succeeds on every PR with the job skipping, so a run-exists probe would have been a false green and could have licensed exactly this claim. Honest advisory status stays in `docs/self-review-gate.md`; the claim remains the maintainer's to create | Phase 1 |
+| 2 | The `>1` bus-factor target is reported as achieved when it is parked | product | Phase 4's target needs a second human reviewer. An explicit defer can be misread downstream as "phase complete", which would overstate the package's actual bus factor — the precise number this roadmap exists to be honest about | **Revised 2026-08-20 — this risk FIRED and is now structurally contained.** Marking the residue `[-]` left zero `[ ]` and zero `[~]`, so `roadmap:progress` rendered the roadmap at 100 % with all four phases `✅` while the bus factor was still 1: the overstatement this row predicted, arriving through the dashboard rather than through the blocker wording it was watching. Wording alone was the wrong control, because the dashboard does not read prose. Replaced with the outcome-state mechanism from the framework of record: every closure now records one of `satisfied` / `narrowed` / `transferred` / `abandoned`, this roadmap's `## Outcome` section states per criterion which applies (only criterion 4 is `satisfied`), and the >1 target is `transferred` to a stub whose probe is `distinct trailing-90-day reviewers > 1`, baseline 1. `second-reviewer-availability` stays deferred-pending-adoption and still reopens on the same measurement. Phases 1-3 remain solo-achievable | Phase 4 |
+| 3 | Branch protection is armed in the UI and drifts from the documented matrix | implementation | The Phase-2 step is a GitHub Settings action outside the tree, so nothing in CI can observe whether the required-check set matches `branch-protection-policy.md` after it is armed | **Revised 2026-08-20.** Drift was measured rather than assumed: ruleset 17749383 read live matches `branch-protection-policy.md` byte-for-byte (`require_code_owner_review: false`, 0 approvals, one required check), so there is no drift today and nothing to reconcile. The step stays maintainer-owned and is still never closed from a code change — now `[-]` and **transferred**, with the stub carrying the three-condition probe that doubles as the drift detector, since it names the exact field values enforcement must reach. The sibling `-ci-economy` roadmap still owns the required-check matrix, so the two cannot silently disagree. Unchanged in substance: nothing in CI observes the ruleset, so this remains a read-and-compare obligation | Phase 2 |
+| 4 | The runbook passes a dry-run only because its author ran it | implementation | A release runbook read by the person who wrote it exercises their memory, not the document. A gap only shows when someone follows the written steps literally from cold | **Revised 2026-08-20.** Substance unchanged and it held: no simulated pass was recorded this run. Now `[-]` and **transferred**, and the stub hardens the bar the prose only stated — the producer is named as a human who has *not* memorised the runbook (explicitly not its author), and the probe requires a dated cold-dry-run record naming executor and release, with an agent re-read stated as non-satisfying. Baseline: zero such records exist under `agents/evidence/` | Phase 3 |
 
 ## Blockers
 
