@@ -537,18 +537,109 @@ describe('_RELEASE_BRANCH_RE', () => {
     });
 });
 
-// ─── _detect_in_flight_target HEAD-on-release-branch fast path ────────────────
-// The package.json / tag-existence path reads module-level constants fixed to
-// the real repo; only the HEAD-on-release-branch branch is exercisable in
-// isolation here (it never returns the repo's real version because the repo is
-// not checked out on a release/* branch — this asserts the function does not
-// throw and returns a string-or-null). The full package.json+tag matrix is
-// covered by tests/test_release.py via monkeypatch (no TS-side seam exists).
+// ─── _detect_in_flight_target ─────────────────────────────────────────────────
+// The full HEAD x package.json x remote-tag matrix, through the InFlightProbes
+// seam. This block is also where the rationale for that probe lives: release.ts
+// sits over the 1500-line source-size ratchet, so the long form was condensed
+// there to a pointer at this comment rather than by raising a baseline, which
+// that gate calls a defect rather than a fix.
+//
+// WHAT THE PROBE ANSWERS. "Is this release already published?" — and the only
+// evidence that anything shipped is the tag ON THE REMOTE, because
+// publish-npm.yml triggers on `push: tags:`. A tag sitting in one checkout
+// published nothing.
+//
+// THE DEFECT, measured 2026-08-20 on 14.6.0. The completion check read
+// `_tag_exists_local(v) || _tag_exists_remote(v)`. Step 8 of release.ts had
+// created the annotated tag and then failed to push it, so main carried
+// package.json 14.6.0 with no remote tag, no GitHub Release, and npm still
+// serving 14.5.0 — a textbook in-flight release. The local arm answered true,
+// the probe returned null, and `--resume` fell through to bump_version() and
+// offered to open 14.7.0 while 14.6.0 had shipped nowhere. The probe reported
+// COMPLETE exactly the state step 8 exists to finish, and handles by name
+// ("tag exists locally — push only"), so the one documented recovery path
+// could not reach it. The release hung ~30 h.
+//
+// WHY IT SURVIVED. This block used to assert only "returns a string or null
+// without throwing", and pointed at tests/test_release.py for the real matrix —
+// a file removed with the Python twin. The matrix was covered by nothing.
+//
+// SCOPE. Deliberately narrower than the whole publish chain: a tag that IS on
+// the remote while the GitHub Release or the npm publish is missing still reads
+// as complete here. Steps 8 and 9 each re-probe and skip their own work, so a
+// hand-aimed `--version X.Y.Z --resume` still repairs that state — detection
+// just will not point there on its own. Widening the probe to `gh release view`
+// would put a network+auth call in the detection path, where an unauthenticated
+// shell would misreport every finished release as in-flight.
 
 describe('_detect_in_flight_target', () => {
     it('returns a string or null without throwing on the real repo', () => {
         const r = _detect_in_flight_target();
         expect(r === null || typeof r === 'string').toBe(true);
+    });
+
+    it('a HEAD on release/X.Y.Z wins over every other observation', () => {
+        const r = _detect_in_flight_target({
+            head_branch: () => 'release/9.9.9',
+            package_version: () => '1.0.0',
+            tag_published: () => true,
+        });
+        expect(r).toBe('9.9.9');
+    });
+
+    it('an unpublished package.json version IS the in-flight target', () => {
+        const r = _detect_in_flight_target({
+            head_branch: () => 'main',
+            package_version: () => '14.6.0',
+            tag_published: () => false,
+        });
+        expect(r).toBe('14.6.0');
+    });
+
+    it('a published (remote) tag means the release completed', () => {
+        const r = _detect_in_flight_target({
+            head_branch: () => 'main',
+            package_version: () => '14.6.0',
+            tag_published: () => true,
+        });
+        expect(r).toBeNull();
+    });
+
+    // The regression. `tag_published` is the REMOTE probe, so a tag that exists
+    // only locally cannot answer it — the release is still in flight and resume
+    // must aim at it, not at the next version.
+    it('a local-only tag does not count as published (14.6.0 regression)', () => {
+        const asked: string[] = [];
+        const r = _detect_in_flight_target({
+            head_branch: () => 'main',
+            package_version: () => '14.6.0',
+            tag_published: (tag) => {
+                asked.push(tag);
+                return false; // present locally, absent on the remote
+            },
+        });
+        expect(r).toBe('14.6.0');
+        expect(asked).toEqual(['14.6.0']);
+    });
+
+    it('an unreadable package.json yields null rather than throwing', () => {
+        const r = _detect_in_flight_target({
+            head_branch: () => 'main',
+            package_version: () => null,
+            tag_published: () => false,
+        });
+        expect(r).toBeNull();
+    });
+
+    it('a non-semver package.json version yields null', () => {
+        for (const bad of ['1.2', 'v1.2.3', '', 'nightly']) {
+            const r = _detect_in_flight_target({
+                head_branch: () => 'main',
+                package_version: () => bad,
+                tag_published: () => false,
+            });
+            expect(r).toBeNull();
+        }
     });
 });
 

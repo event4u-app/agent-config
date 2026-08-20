@@ -2475,55 +2475,54 @@ export function nothing_to_release_ci(
 
 const _RELEASE_BRANCH_RE = /^release\/(\d+\.\d+\.\d+)$/;
 
+/** `package.json`'s `version`, or null when unreadable, not JSON, or key-less. */
+function _package_version_or_null(): string | null {
+    try {
+        const data = JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf-8')) as Record<string, unknown>;
+        return 'version' in data ? (data['version'] as string) : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Observations `_detect_in_flight_target` reads; injected by its tests. */
+export interface InFlightProbes {
+    head_branch?: () => string;
+    package_version?: () => string | null;
+    /** True when the tag is ON THE REMOTE — never merely local. */
+    tag_published?: (tag: string) => boolean;
+}
+
 /**
- * Find the in-flight release target — the SOURCE OF TRUTH is package.json.
- *
- * An "in-flight" release is one whose version was already bumped into `main`'s
- * `package.json` (and possibly merged) but whose tag has not yet been pushed —
- * i.e. the publish step never completed. The canonical anchor is therefore
- * `package.json` version `V` **with no matching tag `V`**, NOT the set of
- * `release/X.Y.Z` branches.
- *
- * Why not the branch set: merged release branches are frequently left
- * undeleted on the remote, so "highest existing release/* branch" can resolve
- * to an OLD, already-published version (e.g. picking 5.4.0 while 5.8.0 is the
- * real in-flight target) and tag a downgrade. The package.json version cannot
- * lie that way — it is the version main currently claims to be, and an
- * untagged claim is exactly an incomplete release.
- *
- * Resolution order:
- *   1. If HEAD is on a `release/X.Y.Z` branch, that explicit checkout wins.
- *   2. Else: read `package.json` version `V`. If tag `V` does not exist
- *      (local or remote), `V` is the in-flight target. If it is already
- *      tagged, the release is complete → return null (regular bump path).
- *
- * Stale `release/*` branches are never used for version detection.
+ * In-flight release target: `package.json` claims `V` while no PUBLISHED tag
+ * `V` exists, so the publish step never completed. HEAD on `release/X.Y.Z`
+ * wins first; stale `release/*` branches are never consulted (a merged one
+ * left undeleted can tag a downgrade). PUBLISHED means on the REMOTE, because
+ * publish-npm.yml triggers on `push: tags:`. Why not a local tag, and the
+ * 14.6.0 release that stranded on the old form: see
+ * `tests/scripts/release.test.ts` § _detect_in_flight_target.
  */
-function _detect_in_flight_target(): string | null {
-    const head = git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true });
-    const m = _RELEASE_BRANCH_RE.exec(head);
+function _detect_in_flight_target(probes: InFlightProbes = {}): string | null {
+    const head_branch =
+        probes.head_branch ?? (() => git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }));
+    const package_version = probes.package_version ?? _package_version_or_null;
+    const tag_published = probes.tag_published ?? _tag_exists_remote;
+
+    const m = _RELEASE_BRANCH_RE.exec(head_branch());
     if (m) {
         return m[1] as string;
     }
-
-    let version: string;
-    try {
-        const data = JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf-8')) as Record<string, unknown>;
-        if (!('version' in data)) {
-            return null; // KeyError analogue.
-        }
-        version = data['version'] as string;
-    } catch {
-        return null; // OSError / JSONDecodeError analogue.
+    const version = package_version();
+    if (version === null) {
+        return null;
     }
     try {
         parse_version(version);
     } catch {
         return null;
     }
-
-    // An already-tagged version is a completed release, not in-flight.
-    if (_tag_exists_local(version) || _tag_exists_remote(version)) {
+    // A PUBLISHED tag is a completed release; a local-only tag is not.
+    if (tag_published(version)) {
         return null;
     }
     return version;
