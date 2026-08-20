@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: later
 parent_roadmap: road-to-plan-governance-gates
 ---
 
@@ -14,11 +14,56 @@ parent_roadmap: road-to-plan-governance-gates
 
 > **Trigger (flip to ready when):** `agents/evidence/metrics/gate-metrics.jsonl`
 > holds `r2_review` events for **10 gated PRs** (the Stage-A advisory
-> window is full). Until then this roadmap stays `status: draft` by design
-> — Stage B cannot be executed before the baseline exists (council
-> 2026-08-04, anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent:
-> split the now-work from the data-gated work; a draft follow-up carries
-> the future obligation instead of a deferred-item archival block).
+> window is full). Stage B cannot be executed before the baseline exists
+> (council 2026-08-04, anthropic/claude-sonnet-4-5 + openai/gpt-4o,
+> convergent: split the now-work from the data-gated work; a draft follow-up
+> carries the future obligation instead of a deferred-item archival block).
+> **Amended 2026-08-20:** this sentence used to read "until then this roadmap
+> stays `status: draft` by design". The disposition is now `status: later` and
+> the file is parked in `later/` — the same intent (do not execute before the
+> baseline) expressed through the repository's purpose-built home for work
+> gated on an external trigger, rather than through a draft that the dashboard
+> silently omits. The trigger itself is unchanged.
+
+> **Parked in `later/` (2026-08-20).** Parked **whole** — not executed, not
+> deleted, not cancelled. Every open `[ ]` item is intentionally kept open and
+> every phase is intact; the roadmap resumes unchanged when its trigger fires.
+> **Owner:** the plan-governance-gates track (parent roadmap:
+> `road-to-plan-governance-gates`).
+>
+> **Blocked until / Resume when:** `agents/evidence/metrics/gate-metrics.jsonl`
+> carries **at least 10 `r2_review` events** (Stage B); Phase 2 additionally
+> needs 20.
+> **Probe:** `grep --line-number 'r2_review' agents/evidence/metrics/gate-metrics.jsonl | wc -l`
+> — the bar is that count reaching 10. **Measured at parking time: 0**, over a
+> file that is one line long and whose single line is the
+> `gate_metrics_initialized` record of 2026-08-04.
+> **Why parked rather than executed:** the trigger is an external event count
+> that fires on its own as gated PRs merge — no decision, no human input and no
+> work inside this roadmap can advance it. Executing anything now would mean
+> deriving from zero observations; see § Outcome.
+
+## Outcome
+
+**Outcome state: `transferred`.** Nothing in this roadmap was satisfied. All
+five steps and both acceptance criteria are open, and the Ready-check table
+below records the measured trigger state (0 of 10) so a future reader can tell
+movement from noise rather than re-deriving it.
+
+Why nothing was executed, rather than partially executed: Phase 1 Step 2 commits
+to a threshold that is **set exactly once and never lowered**. Deriving that
+value from zero observations is precisely the failure this roadmap's own Risk 2
+names — "Stage B derives the threshold AFTER seeing the data — cherry-picking
+risk" — in its most extreme form, because a threshold fitted to an empty sample
+is fitted to nothing at all and yet becomes permanent. Steps 1, 3 and both
+Phase 2 steps are each downstream of that value or of the same empty event
+stream. A partial execution here would not be progress; it would be an
+irreversible commitment dressed as one.
+
+Framework of record for this disposition:
+`agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+(present on `origin/drain/council-records`, PR #1463; not yet on `main`, which is
+why the reference carries the marker).
 
 ## Context
 
@@ -132,7 +177,7 @@ substantial change, which contract § 3 lists under "Never substantial".
 
 ## Phase 1: Stage B — derive and freeze the threshold
 
-- [-] **Step 1:** Compute the observed critical/high catch rate over the
+- [ ] **Step 1:** Compute the observed critical/high catch rate over the
       10 advisory-window PRs from `agents/evidence/metrics/gate-metrics.jsonl`
       (`r2_critical_catch_rate` = share of gated PRs where R2 reported ≥1
       critical/high finding before merge).
@@ -142,7 +187,7 @@ substantial change, which contract § 3 lists under "Never substantial".
       of 2026-08-04; `grep --line-number 'r2_review'` over the file returns
       zero matches. Advisory window: 0 of 10 gated PRs. Not cancelled —
       awaiting the baseline named in this roadmap's own trigger. -->
-- [-] **Step 2:** Derive the enforced-mode success threshold from that
+- [ ] **Step 2:** Derive the enforced-mode success threshold from that
       baseline, commit it to `docs/CLAIMS.md` (update the
       `plan-gates-measurement-protocol` entry; regen `docs/proof.md` via
       `task build-proof`) — set exactly once, never lowered afterwards.
@@ -151,7 +196,7 @@ substantial change, which contract § 3 lists under "Never substantial".
       set-once-never-lowered; deriving a threshold from 0 observations is
       the cherry-picking Risk 2 of this roadmap names, and a set-once value
       cannot be corrected afterwards. -->
-- [-] **Step 3:** Flip R2 to enforced: remove `--advisory` from the
+- [ ] **Step 3:** Flip R2 to enforced: remove `--advisory` from the
       `check_completion_review` invocations (CI workflow + taskfile), per
       `docs/contracts/plan-review-gates.md` § Advisory window.
       <!-- verified 2026-08-20: DELIBERATELY NOT DONE. The edit is
@@ -163,10 +208,10 @@ substantial change, which contract § 3 lists under "Never substantial".
 
 ## Phase 2: 20-PR measurement report
 
-- [-] **Step 1:** After 20 gated PRs, write the measurement report
+- [ ] **Step 1:** After 20 gated PRs, write the measurement report
       (catch rate vs threshold, `gate_latency_p50/p95` vs the 5-min
       ceiling, `honest_null_rate`, `r2_skip_rate`, `gate_c_bypass_rate`)
-      to `agents/evidence/reports/plan-gates-measurement.md` — published
+      to `agents/evidence/reports/plan-gates-measurement.md` <!-- ref-ignore --> — published
       regardless of outcome; missed thresholds → honest-null publication
       and rework/rollback of the gates, never threshold-lowering.
       <!-- verified 2026-08-20: NOT DONE — needs 20 gated PRs; the metrics
@@ -174,7 +219,7 @@ substantial change, which contract § 3 lists under "Never substantial".
       reported quantities are functions of that empty event stream, so the
       report would have no denominator, which is not the same thing as a
       null result. -->
-- [-] **Step 2:** Run the first quarterly `annotate_r1_outcomes` pass and
+- [ ] **Step 2:** Run the first quarterly `annotate_r1_outcomes` pass and
       fold `r1_mitigation_hit_rate` into the report.
       <!-- verified 2026-08-20: NOT DONE — two independent blockers.
       (a) The pass is human judgement and refuses non-interactive use:
@@ -187,12 +232,12 @@ substantial change, which contract § 3 lists under "Never substantial".
 
 ## Acceptance Criteria
 
-- [-] The enforced-mode threshold is committed after the 10-PR baseline
+- [ ] The enforced-mode threshold is committed after the 10-PR baseline
       and before the enforced window; it is never lowered afterwards.
       <!-- verified 2026-08-20: NOT MET, and deliberately left unmet — the
       10-PR baseline does not exist (0 of 10), so committing a threshold
       now would violate the ordering this criterion states. -->
-- [-] The 20-PR report exists regardless of outcome.
+- [ ] The 20-PR report exists regardless of outcome.
       <!-- verified 2026-08-20: NOT MET — 0 of 20 gated PRs recorded.
       "Regardless of outcome" governs a measured window; it does not make a
       report over zero observations publishable. -->
@@ -207,13 +252,24 @@ substantial change, which contract § 3 lists under "Never substantial".
 | Lines in `gate-metrics.jsonl` | — | 1 (`gate_metrics_initialized`, 2026-08-04) | `wc -l agents/evidence/metrics/gate-metrics.jsonl` |
 | R2 mode in CI | `--advisory` until Phase 1 completes | still `--advisory` | Phase 1 Step 3, deliberately not flipped |
 
-<!-- decision 2026-08-20: `status:` stays `draft`, not `ready`. Every step above
-is gated on an event count measurably 0, and this roadmap's own trigger states it
-"stays `status: draft` by design" until the advisory window is full. Flipping to
-ready would also pull the file into the gate R1 corpus (`lint_plan_risk_register`
-reports it `draft-exempt` today) with no completed work to justify it.
-Conservative and reversible: one frontmatter word flips when the `r2_review`
-count reaches 10. -->
+<!-- decision 2026-08-20: `status:` is `later`, not `draft` and not `ready`.
+Superseded an earlier decision in this same run to keep it `draft`: that reading
+was correct that the work must not execute, but wrong about the disposition. Work
+gated on an external event count that fires on its own is parked, not drafted --
+`agents/roadmaps/later/README.md` defines exactly this case ("gated on an
+external trigger ... they resume when the trigger fires") and both dispositions
+are equally excluded from the dashboard, so `later/` costs nothing extra and
+carries a resume condition the contract enforces. `ready` remains wrong: no work
+completed, and it would pull the file into the gate R1 corpus, which reported it
+`draft-exempt` before the park. -->
+
+<!-- decision 2026-08-20: the seven boxes were reverted from `[-]` back to `[ ]`
+as part of the park. `[-]` reads as cancelled, and nothing here is cancelled --
+`later/README.md` requires open items be "kept open" and
+`road-to-contract-integrity` states the reason for the identical case ("parked
+whole, not dropped"). Every `verified 2026-08-20:` evidence comment is retained
+unchanged: the measurement of why each step could not run today stays true and
+is the thing a future reader needs. -->
 
 <!-- decision 2026-08-20: the R1 matcher defect recorded in Context was measured
 and reported, NOT fixed in this run. The one-line fix was written and its blast
