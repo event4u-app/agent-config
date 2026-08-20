@@ -46,8 +46,12 @@ execution:
 ## Outcome — closed 2026-08-20 (archived does NOT mean achieved)
 
 **Archived at 0 open steps. One phase of six was carried to a real result, and
-that result was a STOP.** Of 50 open lines: **13 satisfied**, **14 transferred**,
-**23 abandoned**. Nothing in this roadmap's Goal paragraph was delivered — the
+that result was a STOP.** Of 50 open lines: **13 satisfied**, **16 transferred**,
+**20 abandoned**, and **1 standing constraint** that is neither (2.1b, which the
+shared stub forbids closing). Counted off the markers themselves, not asserted —
+an earlier draft of this paragraph said 14 / 23 and was wrong, which is the same
+unverified-number failure the corrections below are about. Nothing in this
+roadmap's Goal paragraph was delivered — the
 maintained skill count did not drop, no rule gained a `norm:` line, and neither
 growth surface gained a cap. Read the per-step `**→**` notes for the reason on
 each line; the readings behind all of them are in
@@ -55,13 +59,14 @@ each line; the readings behind all of them are in
 
 | Phase | Outcome | Why, in one line |
 |---|---|---|
-| Prerequisites | `transferred` | The sweep this roadmap's census reuses is time-gated; blocker `utilization-sweep-window`. |
+| Prerequisites | `transferred` (1/1) | The sweep this roadmap's census reuses is time-gated; blocker `utilization-sweep-window`. Its producer roadmap is itself parked in `later/` — see that blocker's resolution. |
 | 1 — census | `transferred` (5/5) | The census reuses another roadmap's verdict vocabulary, which does not exist yet. Its two non-gated evidence columns were measured anyway and are on record. |
-| 2 — consolidation | `transferred` (8/8) | Permission was granted in 2026-08-14; an instrument and a clock still gate it. The bar-bearing steps move to the shared live-trigger-eval stub. |
-| 3 — norm-lines | **`abandoned`** (7 of 8) — 3.5c **`satisfied`** | 3.5c is the one step that closes as done, and it closes by **stopping its own phase**: the Claude rule emitter carries `paths:` and nothing else, so a `norm:` frontmatter field is never delivered to the host this family measures against, while 3.4's section markers would add 5,610 bytes of body carrying none of the norm. Net positive on every carrier → the step's stop-condition fires as written. |
+| 2 — consolidation | `transferred` (7/8) + 1 standing | Permission was granted in 2026-08-14; an instrument and a clock still gate it. The bar-bearing steps move to the shared live-trigger-eval stub. |
+| 3 — norm-lines | **`abandoned`** (7/8), 3.5c **`satisfied`** | 3.5c is the one step that closes as done, and it closes by **stopping its own phase**: the Claude rule emitter carries `paths:` and nothing else, so a `norm:` frontmatter field is never delivered to the host this family measures against, while 3.4's section markers would add 5,610 bytes of body carrying none of the norm. Net positive on every carrier → the step's stop-condition fires as written. |
 | 4 — two caps | `abandoned` (6/6) | 4.1a's end-rule needs ≥ 51 of 101 verbs observed; the proxy shows 11 over 127 sessions, so the census self-predicts inconclusive. 4.3's transcribed baseline went stale on 7 of 8 hosts in two days, which is an argument for a *computed* cap rather than for this step. |
-| 5 — promise + contexts | `abandoned` (3), `satisfied` (1) | 5.4's exclusion statement is verified and recorded; 5.1–5.3 are unblocked, unstarted, and stated as unstarted rather than dressed as anything else. |
+| 5 — promise + contexts | `abandoned` (3/4), `satisfied` (1/4) | 5.4's exclusion statement is verified and recorded; 5.1–5.3 are unblocked, unstarted, and stated as unstarted rather than dressed as anything else. |
 | 6 — non-goals | `satisfied` (8/8) | Every non-goal held, verified against the branch diff: `src/rules/` and `src/skills/` untouched, no rule deleted, **zero** new lints against a ceiling of four. |
+| Acceptance criteria | `satisfied` (3/10), `transferred` (3/10), `abandoned` (4/10) | The three that hold are the negative ones — `dist == rewrite(src)` (trivially: Phase 3 never ran), the new-lint ceiling (zero introduced), and the no-file-owned-by-a-sibling criterion. Not one of the seven substantive criteria was met. |
 
 ### What a successor should inherit, and what it should not
 
