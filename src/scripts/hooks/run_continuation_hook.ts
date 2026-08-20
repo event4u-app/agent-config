@@ -72,12 +72,15 @@
  *                                duplicate, whatever the counts say.
  *   scope complete (0 open,
  *   none blocked)              → allow            (event: complete; state cleared)
- *   runnable work exhausted
- *   (0 open, ≥1 blocked)       → allow  (event: blocked, ONCE per run, guarded by
+ *   remaining work externally
+ *   impossible (0 open, ≥1
+ *   blocked)                   → allow  (event: blocked, ONCE per run, guarded by
  *                                the LEDGER: the state is cleared like `complete`,
- *                                so no field there outlives the event. ADR-235's
- *                                terminal outcome — not a sixth halt, never in
- *                                `HALT_ACTIONS`, never stamped into `halted`)
+ *                                so no field there outlives the event. A terminal
+ *                                outcome — not a sixth halt, never in
+ *                                `HALT_ACTIONS`, never stamped into `halted`.
+ *                                ADR-237 narrows what may legally wear a
+ *                                `blocked-by:` marker; semantics unchanged.)
  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
  *   stall (3 engagements, no

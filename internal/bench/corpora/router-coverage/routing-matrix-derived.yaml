@@ -138,27 +138,6 @@ prompts:
     expected_skills: []
     intended_triggers: [autonomous-execution]
 
-  - id: rm-brand-consistency-01
-    category: router-coverage
-    language: en
-    prompt: "Is this landing page copy on-brand for us?"
-    expected_skills: []
-    intended_triggers: [brand-consistency]
-
-  - id: rm-brand-consistency-02
-    category: router-coverage
-    language: en
-    prompt: "Check the new banner against our brand tokens before it ships."
-    expected_skills: []
-    intended_triggers: [brand-consistency]
-
-  - id: rm-brand-consistency-03
-    category: router-coverage
-    language: en
-    prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
-    expected_skills: []
-    intended_triggers: [brand-consistency]
-
   - id: rm-brand-source-of-truth-01
     category: router-coverage
     language: en
@@ -177,6 +156,27 @@ prompts:
     category: router-coverage
     language: de
     prompt: "Unser Brand Profile definiert Blau als Primärfarbe - übernimm das bitte."
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-brand-source-of-truth-04
+    category: router-coverage
+    language: en
+    prompt: "Is this landing page copy on-brand for us?"
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-brand-source-of-truth-05
+    category: router-coverage
+    language: en
+    prompt: "Check the new banner against our brand tokens before it ships."
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-brand-source-of-truth-06
+    category: router-coverage
+    language: en
+    prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
     expected_skills: []
     intended_triggers: [brand-source-of-truth]
 
@@ -474,6 +474,38 @@ prompts:
     prompt: "Bau das nach, bitte exakt wie im Prototyp."
     expected_skills: []
     intended_triggers: [design-fidelity]
+
+  - id: rm-design-review-after-ui-write-01
+    category: router-coverage
+    language: en
+    prompt: "Add a stats tile to the events dashboard and wire it to the summary endpoint."
+    expected_skills: []
+    intended_triggers: [design-review-after-ui-write]
+    open_files: ["resources/js/dashboard/StatsTile.vue"]
+
+  - id: rm-design-review-after-ui-write-02
+    category: router-coverage
+    language: de
+    prompt: "Bitte überarbeite dieses Blade-Template für die mobile Ansicht."
+    expected_skills: []
+    intended_triggers: [design-review-after-ui-write]
+    open_files: ["resources/views/events/show.blade.php"]
+
+  - id: rm-design-review-after-ui-write-03
+    category: router-coverage
+    language: en
+    prompt: "Refactor the ticket picker into a reusable widget with its own props."
+    expected_skills: []
+    intended_triggers: [design-review-after-ui-write]
+    open_files: ["src/components/tickets/TicketPicker.tsx"]
+
+  - id: rm-design-review-after-ui-write-04
+    category: router-coverage
+    language: en
+    prompt: "Build a component for the seating plan legend."
+    expected_skills: []
+    intended_triggers: [design-review-after-ui-write]
+    open_files: ["resources/js/seating/SeatingLegend.vue"]
 
   - id: rm-devcontainer-routing-01
     category: router-coverage
@@ -1277,38 +1309,6 @@ prompts:
     expected_skills: []
     intended_triggers: [no-pr-progress-comments]
 
-  - id: rm-no-roadmap-references-01
-    category: router-coverage
-    language: en
-    prompt: "Can I link this roadmap phase from the skill's See-also section?"
-    expected_skills: []
-    intended_triggers: [no-roadmap-references]
-    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
-
-  - id: rm-no-roadmap-references-02
-    category: router-coverage
-    language: en
-    prompt: "Clean up the finished council session artifacts."
-    expected_skills: []
-    intended_triggers: [no-roadmap-references]
-    open_files: ["agents/runtime/council/sessions/2026-08-01-routing.json"]
-
-  - id: rm-no-roadmap-references-03
-    category: router-coverage
-    language: en
-    prompt: "Darf ich diese Roadmap aus einer Guideline heraus verlinken?"
-    expected_skills: []
-    intended_triggers: [no-roadmap-references]
-    open_files: ["agents/roadmaps/road-to-renewal-foundation.md"]
-
-  - id: rm-no-roadmap-references-04
-    category: router-coverage
-    language: en
-    prompt: "Summarize the open question for the next council run."
-    expected_skills: []
-    intended_triggers: [no-roadmap-references]
-    open_files: ["agents/runtime/council/questions/q-routing-eval.md"]
-
   - id: rm-notes-first-reasoning-01
     category: router-coverage
     language: en
@@ -1603,30 +1603,6 @@ prompts:
     expected_skills: []
     intended_triggers: [role-mode-adherence]
 
-  - id: rm-rule-type-governance-01
-    category: router-coverage
-    language: en
-    prompt: "Should this rule be always-on or trigger-based?"
-    expected_skills: []
-    intended_triggers: [rule-type-governance]
-    open_files: ["src/rules/token-efficiency.md"]
-
-  - id: rm-rule-type-governance-02
-    category: router-coverage
-    language: en
-    prompt: "Draft the trigger set for this new guard."
-    expected_skills: []
-    intended_triggers: [rule-type-governance]
-    open_files: ["src/rules/new-guard.md"]
-
-  - id: rm-rule-type-governance-03
-    category: router-coverage
-    language: de
-    prompt: "Passt der Typ dieser Regel noch, oder sollte sie auf auto wechseln?"
-    expected_skills: []
-    intended_triggers: [rule-type-governance]
-    open_files: ["src/rules/commit-policy.md"]
-
   - id: rm-runtime-safety-01
     category: router-coverage
     language: en
@@ -1753,6 +1729,35 @@ prompts:
     expected_skills: []
     intended_triggers: [session-canary]
 
+  - id: rm-settings-ask-protocol-01
+    category: router-coverage
+    language: en
+    prompt: "Run agent-config settings:set personal.canary_name for me."
+    expected_skills: []
+    intended_triggers: [settings-ask-protocol]
+
+  - id: rm-settings-ask-protocol-02
+    category: router-coverage
+    language: de
+    prompt: "Soll ich rich_skills für dieses Projekt aktivieren?"
+    expected_skills: []
+    intended_triggers: [settings-ask-protocol]
+
+  - id: rm-settings-ask-protocol-03
+    category: router-coverage
+    language: en
+    prompt: "I need to ask about a setting before I can finish this step."
+    expected_skills: []
+    intended_triggers: [settings-ask-protocol]
+
+  - id: rm-settings-ask-protocol-04
+    category: router-coverage
+    language: en
+    prompt: "Walk me through how the A/B/C classes decide where an answer goes."
+    expected_skills: []
+    intended_triggers: [settings-ask-protocol]
+    open_files: ["docs/contracts/settings-classes.md"]
+
   - id: rm-skill-improvement-trigger-01
     category: router-coverage
     language: en
@@ -1774,30 +1779,6 @@ prompts:
     expected_skills: []
     intended_triggers: [skill-improvement-trigger]
 
-  - id: rm-skill-quality-01
-    category: router-coverage
-    language: en
-    prompt: "Tighten the validation section of this skill."
-    expected_skills: []
-    intended_triggers: [skill-quality]
-    open_files: ["src/skills/laravel/SKILL.md"]
-
-  - id: rm-skill-quality-02
-    category: router-coverage
-    language: en
-    prompt: "Is the frontmatter on this skill schema-complete?"
-    expected_skills: []
-    intended_triggers: [skill-quality]
-    open_files: ["src/skills/docker/SKILL.md"]
-
-  - id: rm-skill-quality-03
-    category: router-coverage
-    language: de
-    prompt: "Kürze die Beschreibung dieses Skills auf unter 200 Zeichen."
-    expected_skills: []
-    intended_triggers: [skill-quality]
-    open_files: ["src/skills/php-coder/SKILL.md"]
-
   - id: rm-slash-command-routing-policy-01
     category: router-coverage
     language: en
@@ -1818,30 +1799,6 @@ prompts:
     prompt: "Bitte führe /commit:in-chunks für die offenen Änderungen aus."
     expected_skills: []
     intended_triggers: [slash-command-routing-policy]
-
-  - id: rm-source-confidentiality-01
-    category: router-coverage
-    language: en
-    prompt: "Add a note about where this harvest idea came from."
-    expected_skills: []
-    intended_triggers: [source-confidentiality]
-    open_files: ["agents/roadmaps/road-to-competitive-borrow.md"]
-
-  - id: rm-source-confidentiality-02
-    category: router-coverage
-    language: en
-    prompt: "Document the comparison against the reference suite we analyzed."
-    expected_skills: []
-    intended_triggers: [source-confidentiality]
-    open_files: ["docs/architecture.md"]
-
-  - id: rm-source-confidentiality-03
-    category: router-coverage
-    language: de
-    prompt: "Soll ich die Quelle dieses Patterns im Skill nennen?"
-    expected_skills: []
-    intended_triggers: [source-confidentiality]
-    open_files: ["src/skills/git-workflow/SKILL.md"]
 
   - id: rm-source-discovery-gate-01
     category: router-coverage
@@ -2062,6 +2019,7 @@ prompts:
     prompt: "Add a stats tile component to the dashboard."
     expected_skills: []
     intended_triggers: [ui-audit-gate]
+    open_files: ["resources/js/dashboard/StatsTile.vue"]
 
   - id: rm-ui-audit-gate-02
     category: router-coverage

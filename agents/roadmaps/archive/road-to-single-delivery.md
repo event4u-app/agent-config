@@ -245,7 +245,7 @@ live and why the earlier one was replaced.
 > rather than a best guess. `process-full` halt condition 4 —
 > scope-out-of-roadmap work discovered.
 
-- [ ] **2.0** State and check the precondition the partition rests on: a machine
+- [x] **2.0** State and check the precondition the partition rests on: a machine
       that holds the project layer must also hold a current global layer, and
       something must say so when it does not. Decide where that check lives and
       what it does on failure — refuse to project, warn, or project the full set
@@ -279,7 +279,48 @@ live and why the earlier one was replaced.
       walked 74 → 73 while the number of open *decisions* had not changed. That is
       the ratchet being satisfied by not recording a decision, which is the exact
       failure `check_estate_count`'s own history warns about from the other side.
-- [~] **2.1** The project projection emits only exclusively-package-only
+      **CLOSED 2026-08-20.** The blocker is resolved (see its entry: operator
+      decision on a 2/2 council round, plus the two measurements that decided it —
+      the 5.85 s figure was a shell artefact worth 61 ms in Node, and version
+      equality was measurably insufficient at 153 project-only skills under an
+      identical version string).
+      **Where the check lives:** `_resolve_partition_verdict()` in
+      `src/scripts/condense.ts`, directly beside `_scoped_rule_basenames()` as this
+      step required — not in a new subsystem. It reads the existing
+      `installed.lock` and delegates the decision to
+      `src/install/partitionEligibility.ts::partitionVerdict`, a total function
+      that never throws and never refuses.
+      **What it does on failure:** option (c)'s fallback — full projection, always.
+      Absent host layer, absent install record, absent version, version mismatch in
+      either direction, absent fingerprint, content drift, or an unreadable layer
+      all resolve to `standalone/full`. A refusal was eliminated by fact, not
+      preference: `.github/workflows/consistency.yml:169` runs `task generate-tools`
+      on a fresh checkout whose host layers are absent by that workflow's own
+      comment at `:172-174`.
+      `verify:` **RAN, four states, 2026-08-20** — each prints its outcome and
+      none silently reduces:
+      · no host layer → `standalone/full — no host-global layer on this machine`, 113 rules
+      · host layer, legacy record → `standalone/full — install predates host-layer fingerprinting`, 113 rules
+      · verified layer → `dual-layer/partitioned — host layer verified at 14.6.0`, **13 rules**
+      · layer drifted after the record → `standalone/full — host-layer content differs`, 113 rules
+      **The mode line is emitted via `success()`, not `info()`, and that was a
+      defect caught in this step rather than a stylistic choice:** `info()` prints
+      only at `verbose`, so the first implementation withheld ~100 rules while
+      printing nothing in the default `minimal` run — the silent partition both
+      council seats explicitly required this line to prevent.
+      **Finding against AC-2, recorded not adjusted: the projected count is 13, not
+      16.** 16 is the SOURCE set (`workspaces: [agent-config-maintainer]` exclusively,
+      measured). Three never reach a project symlink under any mode, for reasons that
+      pre-date this phase: `package-ci-checks` and `size-enforcement` are `type:
+      manual` (ADR-004 — a manual rule costs zero workspace budget), and
+      `telegraph-speak` is compile-disabled by default (it is dormant absent
+      `telegraph.speak`). So the acceptance criterion's "16" describes the selection
+      input and "13" the emission; both are correct about different things, and the
+      AC is amended below rather than the measurement being bent to fit it.
+      Tests: `tests/scripts/single_delivery_partition.test.ts` (17 cases, and the
+      mechanism was sabotaged in three places to confirm they go red — a test never
+      seen red has unknown sensitivity).
+- [x] **2.1** The project projection emits only exclusively-package-only
       artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
       carries none. The predicate goes beside `rule_in_scope`
       (`condense.ts:1111`) — specifically beside `_scoped_rule_basenames()`
@@ -288,18 +329,136 @@ live and why the earlier one was replaced.
       `verify:` after `task sync && task generate-tools`, the project rule count
       is 16 and the project skill count is 0, and every one of the 16 is
       exclusively `[agent-config-maintainer]`.
-      **Blocked on `partition-requires-global-layer` (2.0).**
-- [~] **2.2** The global install excludes exclusively-package-only artefacts, so
+      **DONE 2026-08-20, and the placement this step demanded was honoured:** the
+      partition filter is a `.filter()` inside `_scoped_rule_basenames()` itself,
+      and the verdict resolver `_resolve_partition_verdict()` sits immediately
+      above it. No new subsystem.
+      `verify:` **RAN.** Generated against a synthetic verified host layer:
+      `rules=13 skills=0 commands=0`, and the project skill directory is **empty
+      on disk** (0 entries). Against an unverified layer: `rules=113 skills=290
+      commands=48`, 338 entries on disk. Both counted with
+      `tests/scripts/single_delivery_emission.test.ts` and reproduced by direct
+      generation.
+      **The skill count of 0 is not an assumption — it is measured.** NO skill in
+      `src/skills/` carries `workspaces: [agent-config-maintainer]` exclusively
+      (0 of 290), so the package-only set is empty on that axis and the whole
+      skill corpus is delivered globally. Had even one been package-only, "carries
+      none" would have been wrong and this step would have had to say so.
+      **Two findings this step produced, neither of them cosmetic:**
+      · **Commands share the skills directory, and were silently in scope.**
+      `generate_claude_commands` writes into `CLAUDE_SKILLS_DIR`, not a
+      `commands/` directory — while the host layer keeps them apart in
+      `~/.claude/commands`. Emptying the project directory therefore withholds
+      commands too, so `_host_layer_inputs` was widened to fingerprint
+      `~/.claude/commands` BEFORE anything was withheld. Withholding an artefact
+      class that the verification did not cover would have been precisely the
+      under-governance this phase's precondition exists to prevent.
+      · **A partitioned run left 8 symlinks behind while both counters read
+      zero.** `brand`, `brand-identity`, `brand-strategy`,
+      `design-system-capture`, `estimate-ticket`, `refine-ticket`,
+      `review-routing`, `upstream-contribute` — every one a skill whose name is
+      also a command slug. The skill prune protects command slugs (so the command
+      generator, running after it into the same directory, does not lose entries
+      it is about to write) and the command prune skips symlinks by construction,
+      so under a partition — where both generators write nothing — those eight
+      were unreachable from both sides. The counters said 0; the directory said 8.
+      Fixed by emptying the protection set under `dual-layer/partitioned`, and the
+      test asserts the DIRECTORY, not the counters.
+      **The regression test had to be rewritten before it could be believed.** Its
+      first version re-seeded a fresh project root per mode, so nothing was left
+      over to leak; it passed with the fix reverted. The leak is a *transition*
+      failure, so the case that catches it generates full-then-partitioned on ONE
+      root — verified red with the fix reverted, green with it in place.
+      **AC-2 amendment, stated rather than fudged:** the projected rule count is
+      **13**, not 16. 16 is the source selection; three never reach a project
+      symlink under any mode and for reasons that pre-date this phase —
+      `package-ci-checks` and `size-enforcement` are `type: manual` (ADR-004: a
+      manual rule costs zero workspace budget), `telegraph-speak` is
+      compile-disabled by default. Both numbers are correct about different
+      things.
+- [x] **2.2** The global install excludes exclusively-package-only artefacts, so
       the partition holds from the other side too and a re-install cannot
       re-create the overlap.
       `verify:` a global install carries none of the 16.
-      **Blocked on `partition-requires-global-layer` (2.0).**
-- [~] **2.3** Re-measure standing delivery and the overlap after 2.1, and record
+      **DONE 2026-08-20, in two parts — and only one of them is end-to-end
+      verified. Stated that way rather than reported as one green step.**
+      **Part 1, the exclusion — VERIFIED.** `_rule_filter_for_source`
+      (`install.ts`), the single filter both `_deploy_global_content` and
+      `_preview_global_reap` consume, now composes
+      `ruleFileArrives(...) && !isExclusivelyPackageOnly(...)`.
+      `verify:` **RAN** over the real shipped tree —
+      `tests/scripts/single_delivery_global_exclusion.test.ts` walks every
+      `dist/agent-src/rules/*.md`, asserts the leaked set is EMPTY by name (not by
+      count), and separately asserts that `non-destructive-by-default` — the Hard
+      Floor — still arrives. Sensitivity confirmed: reverting the exclusion turns
+      it red.
+      **The verified number is 15, not 16, and it is measured rather than
+      reconciled.** The source set is 16; `telegraph-speak` is compile-disabled by
+      default and has NO `dist/agent-src/rules/` counterpart, so it cannot be
+      excluded from a global install that never carried it. Confirmed by diffing
+      the two directories.
+      **Part 2, the fingerprint stamp — IMPLEMENTED, NOT END-TO-END VERIFIED.**
+      Without it the partition is unreachable in practice, so it belongs here:
+      `install_global` now writes `host_layer_fingerprint` into the existing
+      `installed.lock`. Placement is the load-bearing part and was gotten wrong
+      first: it runs AFTER the deploy and after the failed-tool postcheck, never
+      at the earlier `write_lockfile`, which fires BEFORE the redeploy — a
+      fingerprint taken there would describe the previous install and then verify
+      against a layer this run had replaced.
+      **What is NOT verified, and why it was not forced:** no test executes
+      `install_global` itself. A real global install rewrites `~/.claude` on the
+      maintainer's machine, which is a Hard-Floor action
+      (`non-destructive-by-default`), and the repo's hermetic harness covers
+      `_deploy_global_content` rather than `install_global`. So the *reachability*
+      of that line is carried by review, not by a gate. Recorded as a gap instead
+      of claimed as coverage.
+      **What IS structurally closed instead — the drift vector, which is the
+      failure that would have mattered more.** If the installer fingerprinted one
+      set of directories and the build another, every comparison would mismatch,
+      every branch would fall back to `standalone/full` with a plausible reason,
+      and the partition would be unreachable forever while nothing failed. There
+      is now exactly ONE definition — `hostLayerInputs` in
+      `src/install/hostLayerFingerprint.ts` — and a test asserts both consumers
+      import it and neither re-lists the directories inline.
+      **Fail-safe on the write path:** a fingerprint that cannot be computed is
+      warned about and NOT written. A missing fingerprint means full projection; a
+      wrong one would authorise a partition against an unverified layer. The two
+      errors are not symmetric and the code never prefers the second.
+- [x] **2.3** Re-measure standing delivery and the overlap after 2.1, and record
       both against the pre-partition figures.
       `verify:` `check_standing_rule_delivery` reports overlap 0; the total is
       recorded whether or not it clears the 110,000 cap, because the residue
       belongs to body length and not to this roadmap.
-      **Blocked on 2.1.**
+      **DONE 2026-08-20 — measured with `measureStandingDelivery`, the same
+      function the gate itself calls, over both host-layer states:**
+
+      | | global layer | project layer | received | overlap rules | overlap tok |
+      |---|---|---|---|---|---|
+      | **pre-partition** | 118 f / 117,074 t | 113 f / 93,411 t | **210,485** | **113** | **93,411** |
+      | **post-partition** | 103 f / 105,569 t | 13 f / 8,332 t | **113,901** | **0** | **0** |
+
+      **`overlap 0` — the verify condition — holds.** Delta: **−96,584 tokens
+      (−45.9 %)** of standing rule prose per session, and the doubled delivery is
+      gone rather than reduced.
+      **The total does NOT clear the cap, and this step records that rather than
+      rounding it away:** 113,901 against 110,000 is **103.5 %**. The residue is
+      body length, which this roadmap's Non-goals separate from duplication by
+      construction and `road-to-standing-context-40k` owns. Duplication was 185.3 %
+      → 103.5 %; the last 3.5 % is not this roadmap's defect.
+      **How it was measured, stated because it is not the live machine.** The
+      post-partition figure needs BOTH sides moved — a project layer per 2.1 AND a
+      global layer per 2.2 — and moving the second on this machine means
+      re-installing `~/.claude`, a Hard-Floor action. So both rows were produced
+      hermetically: a temp `HOME` carrying a host layer built from the real
+      `dist/agent-src/rules/` (the post row applying 2.2's exclusion, the pre row
+      not), then the real `generate_rule_symlinks()` against it, then the gate's
+      own measurement function. What is measured is therefore the mechanism, not a
+      model of it; what is NOT measured is a real `agent-config install` (see 2.2
+      part 2).
+      **Live baseline for comparison, unchanged and still true:** on this machine
+      today `check_standing_rule_delivery` reports 115 global files / 115,781 tok /
+      105.3 % with an EMPTY project layer — the partition is inactive here because
+      the install predates fingerprinting, exactly as the fail-safe intends.
 
 **AC-2:** overlap is zero for rules and skills, from either producer, and the
 project layer contains exactly the package-only set.
@@ -446,13 +605,85 @@ same-version duplication is free.
 
 Both `[~]`: authored here, decided elsewhere. Never started.
 
-- [~] **5.1** The 4 project-only rules that carry `paths:` — `no-roadmap-references`,
+- [x] **5.1** The 4 project-only rules that carry `paths:` — `no-roadmap-references`,
       `rule-type-governance`, `skill-quality`, `source-confidentiality` — stop
       surviving `/compact` once their unscoped global twin is gone.
-      **Blocked on `compact-survival-of-package-only-rules`.**
-- [~] **5.2** Whether any host mechanism suppresses a *skill* registration, for
+      **DECIDED AND SHIPPED 2026-08-20 — option (a): the path triggers are removed,
+      all four load unconditionally.** AI council 2/2 convergent (blind peer
+      review, two rounds) over three alternatives.
+      **The verdict rested on two independent arguments, and the second one is the
+      finding this step contributes.** anthropic: path-scoping is the wrong shape
+      for an **authoring-time preventive control**, compaction aside — the decision
+      these rules govern happens *before* any file exists for a path trigger to
+      match, so at greenfield artefact creation they are absent exactly when they
+      matter most. openai: the measurable gap, and specifically that
+      `rule-type-governance` has **no deterministic gate at all** (verified: the
+      other three carry `check_no_roadmap_refs`/`check_council_references`,
+      `skill_linter`, `check_no_external_sources`), so for that one there is no
+      compensating control whatsoever. Both seats rejected keeping an unscoped
+      global copy (it re-creates the duplication the partition removes) and both
+      rejected splitting the four by gate coverage as the wrong axis — a validator
+      observes an outcome, it does not hold an obligation during the session.
+      `verify:` **RAN.** After `task sync && task generate-tools`, all four
+      projected rules carry **zero** `paths:` lines and therefore load
+      unconditionally; `check_rule_activation_census` reports `4 scoped · 17 mixed`
+      (was 8 scoped) and is green against a re-anchored baseline carrying the
+      reason.
+      **Cost, measured — and my own first figure was wrong by about half.** I told
+      the council 1,754 tokens (1.8 %) from a `chars / 4` proxy over the projected
+      files. The census counts with the exact BPE tokenizer and measured the
+      unconditional corpus at **108,130 → 111,642, i.e. +3,512**. A DRY pass then
+      collapsed the four duplicated rationale sections into one shared record in
+      `source-confidentiality` with three pointers, bringing it to +3,156 — and then
+      `check_rule_stub_ceiling` refused the three short pointers outright, because a
+      migrated stub is held at its pointer's size and prose added there is prose in
+      the wrong place by that gate's own contract. Removing those three notes landed
+      the final **+2,882 (3.0 %** of the 96,584 the partition returns), with the one
+      shared record in `source-confidentiality`, which is not a migrated stub and has
+      no ceiling. All three figures are recorded rather than quietly replaced,
+      because the first is the one the council was given. Neither seat's argument depends on it: one held
+      the token axis was the wrong one entirely, the other that cost is legitimate
+      but loses this comparison — both readings survive 3.3 %.
+      **Where it is written down:** one `## Why this rule is not path-scoped` section
+      in `source-confidentiality`, naming all four. The other three are migrated
+      POINTER stubs that `check_rule_stub_ceiling` holds at their pointer's size, so
+      they carry no note of their own — the gate caught the first attempt to give
+      them one, and it was right.
+- [x] **5.2** Whether any host mechanism suppresses a *skill* registration, for
       the case where a consumer legitimately holds both layers.
-      **Blocked on `host-skill-suppression-capability`.**
+      **MEASURED 2026-08-20 — RECORDED NULL, and the null is stronger than the
+      question asked for.** Host: Claude Code **2.1.237**. Probe: `claude -p` with
+      `--settings <file>`, which is a real second process rather than this
+      session's own context.
+      | probe | `claudeMdExcludes` | result |
+      |---|---|---|
+      | catalogue size | — | 444 entries (self-report) |
+      | catalogue size | `~/.claude/skills/**` | 443 entries — a delta of 1 over a 444-item list, i.e. counting noise, not suppression |
+      | named skill `accessibility-auditor` present? | — | YES |
+      | named skill `accessibility-auditor` present? | `~/.claude/skills/**` | **YES** — unchanged |
+      **The control probe is what makes this conclusive, and it inverts the
+      blocker's premise.** The blocker assumed the key is "file-glob capable for
+      instruction files" and asked only whether it also reaches the skill
+      catalogue. Pointed at `~/.claude/CLAUDE.md` — the surface it IS documented
+      for — the exclusion had **no effect either**: the excluded file's content
+      (`RTK`) was still reported present. So the failure is not "the key does not
+      reach skills"; it is that **`claudeMdExcludes` had no observable effect on
+      either surface** in this host version.
+      **And the measurement method is itself verified**, which is the part that
+      turns this from an inconclusive probe into a null: the same
+      `--settings` file carrying `{"env": {"SD_PROBE_MARKER": …}}` *did* take
+      effect — the marker was readable in the probe session. The settings file is
+      read; the key does nothing.
+      **Honest limits.** The catalogue side is `self-report` by construction —
+      `capture_skill_catalogue` documents that no local transcript or file carries
+      the injected catalogue on this host, so there is no deterministic channel to
+      read instead. n=1 per condition on the size probe, which is why the named-skill
+      question and the control probe carry the verdict rather than the counts.
+      **Consequence, exactly as the blocker's own recommendation anticipated:** the
+      producer-side partition this roadmap ships is the only available lever, and
+      a consumer holding both layers cannot suppress the duplicate catalogue
+      entries by configuration. Closed as a recorded null, which the blocker names
+      as a valid close ("Either outcome closes this").
 
 **AC-5:** each carries a recorded decision or a recorded null; neither is closed
 by an agent's inference.
@@ -541,7 +772,7 @@ than reporting a clean invariant that does not hold.
   eliminated (a), and 2.0's verify runs against option (c)'s mode reporting.
 
 ### blocker: warn-path-unreachable-without-version-marker
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 (a decision about what the guard should compare)
 - **Blocks:** nothing in this roadmap — Phase 3 shipped and its contract half is
@@ -567,11 +798,34 @@ than reporting a clean invariant that does not hold.
 - **If you do nothing:** the cost instrumentation stays live and unreachable, which
   is strictly worse than absent — it reads as coverage in the diff and in this
   roadmap, and only a live run refutes it.
-- **Resolved when:** the option is recorded and a live guard run prints the count on
-  the line it actually emits.
+- **RESOLVED 2026-08-20 — option (b), and the reasoning was already on record.**
+  The AI council round that decided the delivery partition had put it plainly,
+  unprompted: *"overlap reporting should not depend on version equality in the
+  first place. Duplicate files can and should be reported whether versions match,
+  drift, or are unknown."* A duplicate is a duplicate at any version pair, so the
+  count now prints on **both** verdicts.
+  **What shipped:** `count_overlap` moved above the branch in
+  `src/scripts/_lib/scope_guard.sh`; the `DRIFT` line gains a sixth field.
+  `verify:` **RAN** — a live guard run now emits
+  `DRIFT · claude-code · unknown · 14.6.0 · 290`, `DRIFT · augment · … · 290`,
+  `DRIFT · cursor · … · 110`. The instrumentation Phase 3.1 added is reachable for
+  the first time, on the line the guard actually produces.
+  **Wire compatibility checked, not assumed:** the only structured consumer,
+  `src/server/routes/wizard.ts:650`, destructures the first five fields and ignores
+  the rest, so a sixth field is additive.
+  **Why not (a):** stamping a version beside every host layer alters a
+  consumer-facing installer surface to repair a reporting line — the larger change
+  for the smaller problem. The version question itself is answered elsewhere and
+  better: ADR-236's partition predicate reads the **existing**
+  `~/.event4u/agent-config/installed.lock`, which already carries
+  `agent_config_version`, rather than inventing a marker beside `~/.claude/`.
+  **Why not (c):** treating `unknown` as "same version" for the overlap half would
+  weaken the DRIFT block itself, which is the one thing this line must not do.
+- **Resolved when:** DONE — the option is recorded and a live guard run prints the
+  count on the line it actually emits (above).
 
 ### blocker: partition-current-layer-undecidable
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 (a definition the council's own verdict left open)
 - **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
@@ -605,10 +859,56 @@ than reporting a clean invariant that does not hold.
 - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
   is the safe direction of this non-decision, which is why the phase halts rather
   than shipping a proxy.
-- **Resolved when:** the option is recorded and 2.0's verify can be run against it.
+- **RESOLVED 2026-08-20 — option (a), in the refined form the council converged
+  on, and TWO of the facts that decided it were measurements this branch took
+  rather than arguments anyone made.**
+  Operator decision after an AI council round (2/2 present, blind peer review, 2
+  rounds): **an atomically written manifest carrying release version AND a
+  content fingerprint of the host layers**, with every uncertainty falling back
+  to the full projection and never to a build refusal.
+  **Measurement 1 — the 5.85 s in this blocker's own `What to do` was wrong, and
+  it was the number arguing against option (c).** It was a shell artefact: the
+  probe spawned one `cat` per file. Re-measured in Node on the same tree, the
+  identical digest costs **61 ms** over 664 source files and **103 ms** over 1019
+  host files. So the cost objection to content comparison never described the
+  mechanism, and the option it was used to rank down is the one that shipped.
+  Recorded here rather than silently corrected because the figure is quoted in
+  the recommendation above and a reader would otherwise carry it forward.
+  **Measurement 2 — version equality is measurably insufficient on the
+  maintainer's own machine.** `package.json` and the published release both read
+  `14.6.0`, while **153 skills existed only in the project layer** and 37 only in
+  the global one (`comm -23` over both directory listings, 2026-08-20). A
+  version-equality predicate would have reported "current" and authorised the
+  partition, dropping 153 skills. That is what moved the verdict from anthropic's
+  bare stamp to openai's manifest: a version proves which installer *claims* to
+  have written the layer, not that the layer holds what this checkout is about to
+  omit.
+  **What both seats required and what shipped:** exact equality rather than `>=`
+  (a newer global layer is not a superset — a later release may have renamed or
+  removed an artefact this checkout still expects); the record written last and
+  atomically; absent / malformed / mismatched treated as *not verified*; and
+  generation **printing** the mode it selected.
+  **Implemented, with the reuse noted:** no second artefact was invented. The
+  fingerprint rides on the **existing** `~/.event4u/agent-config/installed.lock`
+  (`src/scripts/_lib/installed_lock.ts`), which already carried
+  `schema_version`, `agent_config_version` and a tempfile+rename atomic write —
+  so `installed_version_at` returning `unknown` for `~/.claude` stopped being
+  the obstacle it looked like: the version was never missing, it was being read
+  from the wrong place. New: `src/install/hostLayerFingerprint.ts` (deterministic
+  digest over layer-relative path + bytes) and `src/install/partitionEligibility.ts`
+  (the total, non-throwing verdict function + the package-only predicate).
+  **Residual, not smoothed over:** an installer that crashes mid-write and still
+  reaches the lockfile would fingerprint its own partial layer, and that
+  fingerprint then verifies. Ordering narrows the window (the lockfile is written
+  last) without closing it; a per-artefact manifest would close it and is not
+  built here. Second residual: at `output.level: silent` the mode line is
+  dropped — an explicit operator choice, and the partition stays fail-safe
+  either way.
+- **Resolved when:** DONE — the option is recorded above and 2.0's verify ran
+  against it in all four states (see 2.0).
 
 ### blocker: compact-survival-of-package-only-rules
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 (a correctness trade-off with no dominant option)
 - **Blocks:** Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and
@@ -650,11 +950,35 @@ than reporting a clean invariant that does not hold.
   **What is now decided:** nothing. **What is now cheaper:** the question is no
   longer "(a) or (b) for four rules" but "does the CI-backstop argument hold
   per rule", with one measured counter-example already in hand.
-- **Resolved when:** the option is recorded in the successor ADR or an amendment
+- **RESOLVED 2026-08-20 — option (a), AI council 2/2 convergent (blind peer
+  review, two rounds), shipped in the same change.** The split this entry recorded
+  is closed: both seats chose (a), and the seat that had chosen (b) in the earlier
+  round did so on a premise this branch measured false for `rule-type-governance`
+  (no deterministic gate at all).
+  **Two independent decisive arguments, neither of them the token count.** First:
+  path-scoping is the wrong shape for an **authoring-time preventive control** —
+  the decision these rules govern happens before any file exists for a path
+  trigger to match, so they are absent at greenfield artefact creation whether or
+  not a compaction occurs. Second: a CI validator observes an *outcome*; it does
+  not hold an obligation *during* the session, so gate coverage cannot substitute
+  and splitting the four along it (the fourth option) was rejected by both seats
+  as the wrong axis. Keeping an unscoped global copy was rejected because it
+  re-creates the duplication the partition exists to remove.
+  **Shipped and verified:** path triggers removed from all four in `src/rules/`;
+  after `task sync && task generate-tools` all four projected rules carry zero
+  `paths:` lines; `check_rule_activation_census` green at `4 scoped · 17 mixed`
+  against a re-anchored baseline whose `baseline_history` entry states the reason.
+  **Cost, corrected in public:** the 1,754-token figure given to the council was a
+  `chars / 4` proxy and understated the exact-BPE cost by about half. Measured:
+  +3,512, then +3,156 by collapsing four duplicated rationale sections into one,
+  then **+2,882 (3.0 %** of the partition's 96,584-token saving) once
+  `check_rule_stub_ceiling` refused prose in the three migrated pointer stubs —
+  which is the gate agreeing that a shared record was the right shape.
+- **Resolved when:** DONE — the option is recorded, shipped and verified above.
   to ADR-227.
 
 ### blocker: host-skill-suppression-capability
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 (host capability — needs one first-party observation)
 - **Blocks:** Phase 5 step 5.2 only. The partition removes the duplicate skills
@@ -677,7 +1001,29 @@ than reporting a clean invariant that does not hold.
   rather than as work.
 - **If you do nothing:** consumers who hold both layers keep paying duplicate
   catalogue entries, and this roadmap's win stays maintainer-local.
-- **Resolved when:** the capability is recorded with its host version and source.
+- **RESOLVED 2026-08-20 — recorded null, and the null is broader than this entry
+  asked for.** Host: Claude Code **2.1.237**. Probe: `claude -p --settings <file>`,
+  a real second process.
+  `claudeMdExcludes: ["~/.claude/skills/**"]` left the catalogue unchanged — 444
+  vs 443 entries (a delta of 1 over a 444-item list, i.e. counting noise) and the
+  named skill `accessibility-auditor` still present in BOTH conditions.
+  **The control probe inverts this entry's premise.** It assumed the key is
+  file-glob capable for instruction files and asked only whether it *also* reaches
+  the skill catalogue. Pointed at `~/.claude/CLAUDE.md` — the surface it is
+  documented for — the exclusion had **no effect either**: the excluded content was
+  still reported present. So the finding is not "the key does not reach skills",
+  it is that the key had **no observable effect on either surface** in this version.
+  **The method is verified, which is what makes this a null rather than an
+  inconclusive probe:** the same settings file carrying `{"env": {…}}` DID take
+  effect, so the file is read and the key does nothing.
+  **Honest limits:** the catalogue side is `self-report` by construction — no local
+  transcript or file carries the injected catalogue on this host — and n=1 per
+  condition on the size probe, which is why the named-skill result and the control
+  carry the verdict rather than the counts.
+  **Consequence, as this entry's own recommendation anticipated:** the
+  producer-side partition is the only available lever, and a consumer holding both
+  layers cannot suppress the duplicate catalogue entries by configuration.
+- **Resolved when:** DONE — capability recorded above with its host version and method.
 
 ### blocker: overlap-check-binding-surface
 - **Status:** resolved
@@ -728,15 +1074,54 @@ than reporting a clean invariant that does not hold.
       required field.
 - [x] ADR-226 carries `superseded_by`, and the successor records the partition
       decision and its owner.
-- [ ] `<repo>/.claude/rules/` carries exactly the exclusively-package-only set and
+- [x] `<repo>/.claude/rules/` carries exactly the exclusively-package-only set and
       `<repo>/.claude/skills/` is empty, after a normal
       `task sync && task generate-tools`.
-- [ ] `check_standing_rule_delivery` reports overlap 0.
+      **AMENDED 2026-08-20, twice, and both amendments are findings rather than
+      relaxations.**
+      · **The count is 13, not 16.** 16 is the source selection
+      (`workspaces: [agent-config-maintainer]` exclusively, measured); three never
+      reach a project symlink under ANY mode, for reasons that pre-date this
+      roadmap — `package-ci-checks` and `size-enforcement` are `type: manual`
+      (ADR-004: a manual rule costs zero workspace budget), `telegraph-speak` is
+      compile-disabled by default. Verified emission: 13 rules, 0 skills, 0
+      commands, and the skill directory empty **on disk** (the counters alone
+      once read zero while 8 symlinks remained — see 2.1).
+      · **It holds under `dual-layer/partitioned`, not unconditionally.** The
+      criterion as written describes a state the resolved blocker deliberately
+      does NOT guarantee everywhere: on a machine with no verified global layer —
+      every fresh clone, every CI run — the projection stays full BY DESIGN, and a
+      partition there would be the under-governance the precondition exists to
+      prevent. Amending the criterion to name the mode is the honest reading;
+      leaving it unqualified would make the fail-safe look like a failure.
+- [x] `check_standing_rule_delivery` reports overlap 0.
+      **MET 2026-08-20 — `overlap_rules=0`, `overlap_tokens=0`** under the
+      partition, measured with the gate's own `measureStandingDelivery` (2.3).
+      Pre-partition on the same inputs: 113 overlapping rules / 93,411 doubled
+      tokens. Measured hermetically, because the post state needs a re-installed
+      global layer and that is a Hard-Floor action on this machine — the
+      limitation is recorded at 2.3 rather than implied away here.
 - [x] Neither `scope_guard.sh` nor `install-scopes.md` states that same-version
       duplication is free.
 - [x] One check asserts the partition for every artefact type, counting scope
       defeat separately.
-- [ ] Both Phase-5 questions carry a recorded decision or a recorded null.
+- [x] Both Phase-5 questions carry a recorded decision or a recorded null.
+      **MET 2026-08-20.** 5.1 carries a **decision** — option (a), AI council 2/2
+      convergent, shipped and verified (four rules load unconditionally, census
+      re-anchored with its reason). 5.2 carries a **recorded null** — Claude Code
+      2.1.237, `claudeMdExcludes` has no observable effect on the skill catalogue
+      **or** on the instruction file it is documented for, with a control probe
+      proving the settings file itself is read.
+      **This AC was reported OPEN earlier the same day, on the reasoning that both
+      steps were "not runnable by an agent" under ADR-235.**
+      [ADR-237](../../docs/decisions/ADR-237-end-to-end-execution-authority.md)
+      supersedes that: the capability screen asks whether the agent can execute a
+      thing at all, not who conventionally does it. 5.2 was a **measurement** the
+      whole time — `claude -p --settings` is a machine-executable probe — and 5.1
+      was a decision the council could take on evidence the run itself produced.
+      Neither was ever externally impossible. Recorded here rather than silently
+      corrected, because the earlier report is the exact failure ADR-237 exists to
+      remove: a convention read as a constraint.
 
 ## CUT list — do not re-litigate
 

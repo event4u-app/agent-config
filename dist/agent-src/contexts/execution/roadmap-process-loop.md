@@ -180,82 +180,85 @@ change in § 3a.
   `commit-policy` § NEVER ask about committing holds regardless of
   autonomy).
 
-### 3c. Runnable-work precondition — refuse a run with nothing to do
+### 3c. Capability screen — can the agent do this at all?
 
 ```
-A RUN WITH NO RUNNABLE OPEN STEP DOES NOT START.
-NAME THE BLOCKERS. CREATE NO BRANCH. WRITE NOTHING.
-THIS IS A PRECONDITION, NEVER A HALT — IT CANNOT FIRE MID-RUN.
+A RUN ALWAYS STARTS. THERE IS NO PREFLIGHT REFUSAL.
+PER OPEN STEP, ASK ONE QUESTION: CAN THE AGENT EXECUTE THIS AT ALL?
+YES → IT IS WORK. NO → IT IS THE ONLY KIND OF BLOCKER LEFT.
+WHO CONVENTIONALLY DOES A THING IS NOT A PROPERTY OF THE THING.
 ```
 
-Run once, at the end of the pre-scan, before any grant is exercised.
+**Rewritten by [ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md),
+which supersedes ADR-235.** This section used to be a *preflight refusal*: a run
+with no "runnable" open step created no branch and wrote nothing. That is gone.
+The invocation is a delegation, so the question is no longer *is this step
+runnable under current governance* but *is this step possible for the agent at
+all.*
 
-**Runnable** is decided from the roadmap's own `## Blockers` section and nothing
-else. An open step is **not** runnable when a blocker satisfies all four:
+Run once at the end of the pre-scan, and again immediately before any `blocked`
+report.
 
-1. it exists in `## Blockers` **before this run started** — a blocker the run
-   itself authored does not count (see the gaming note below);
-2. its `Class:` is `2` (consent-once) or `3` (human-only) — classes `0` and `1`
-   are agent-runnable by construction and carry a `Run:` the agent executes,
-   per [`templates/roadmaps.md`](../../templates/roadmaps.md);
-3. its `Blocks:` field names this step, by phase-and-step identifier or by a
-   phase whose scope contains it;
-4. it names what would clear it.
+**The screen, in order:**
 
-Every other open step is runnable. **No blocker citation → runnable**, and the
-default direction is deliberate: the failure this precondition must not have is
-refusing work an agent could have done.
+1. **Can the agent execute it?** Through the filesystem, git, `gh`, an API, a
+   CLI, a tool, a model, a council — anything machine-executable. If yes, the
+   step is **work**. Stop here; no blocker citation changes that.
+2. **Is the authority already implied by the invocation?** For a `process-full`
+   run: branches, chunked commits, pushing that branch, opening and updating the
+   PR, reversible repository/branch settings, CI runs and re-runs, merge-base
+   updates, conflict resolution, project-local dependencies, and paid calls
+   inside the cumulative USD 25 ceiling. If yes → **run it**.
+3. **Is it on the EXCLUDED list?** Merging to a production trunk, deploying,
+   production data / secrets / IAM / DNS, bulk deletion outside the roadmap's
+   scope, an irreversible external action beyond the PR itself. Those keep their
+   own this-turn confirmation ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md))
+   and are a **halt**, not a blocker.
+4. **Otherwise it is externally impossible**, and only then is it a blocker: a
+   credential that does not exist and cannot be created · a purchase beyond the
+   budget · physical hardware access · another person or organisation must act ·
+   a wait that is factually mandatory and unverifiable.
 
-- **At least one runnable open step** → the run proceeds. It does *not* matter
-  how many steps are blocked; the blocked ones are skipped in place (never
-  flipped — see the terminal-outcomes section), and the run works the rest.
-- **Zero runnable open steps** → `blocked-preflight`. Report the roadmap, the
-  open-step count, and each blocker with its class and its clearing action.
-  Create no branch, write no state, take no grant.
+**A `## Blockers` entry is evidence, never a verdict.** A `Class: 3` label on an
+action the agent can perform is a **defect in the roadmap**, and the run repairs
+the label rather than obeying it — recording what it did and why. Class `0`/`1`
+entries carry a `Run:` the agent executes, exactly as before. Class `2`
+(consent-once) is pre-cleared for the duration of a `process-full` run when the
+consent it wants is one the invocation already gave; a `2` asking for something
+the invocation did NOT give (an EXCLUDED action, a spend crossing) still reaches
+the owner.
 
-**A step this precondition judges non-runnable carries a `blocked-by:` marker on
-its own line.** The obligation is here because two mechanisms read blockedness
-from two different places and only one of them reads this section: `run-continuation`,
-the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked
-from the inline `<!-- blocked-by: <id> -->` marker and never parses `## Blockers`
-at all. Without the marker a step that IS blocked per the four conditions above
-still counts as open work to the concern, which re-engages the agent into it every
-stop fire until the stall rung fires — the mechanism whose job is to detect a
-stall manufacturing one, which is the failure shape this file already records once
-for the roadmap-root split.
+**No citation → work**, and the default direction is unchanged: the failure this
+screen must not have is declining work an agent could have done.
 
-Round 8 finding 7 caught the two predicates as disjoint. The fix is this coupling
-sentence rather than teaching the concern to parse `## Blockers`: a second
-implementation of the four conditions is a second thing to keep in step, and the
-one-line marker is checkable by eye at the step it belongs to. **The residual is
-real and is not papered over:** nothing enforces the pairing, so a `## Blockers`
-entry authored without its marker is caught by review or not at all.
+**A step this screen judges externally impossible carries a `blocked-by:` marker
+on its own line.** The obligation is unchanged and its reason is unchanged: two
+mechanisms read blockedness from two different places and only one reads this
+section — `run-continuation`, the stop-slot concern that re-engages an autonomous
+run, decides open-vs-blocked from the inline `<!-- blocked-by: <id> -->` marker
+and never parses `## Blockers`. Without the marker a step that IS impossible
+still counts as open work to the concern, which re-engages the agent into it
+every stop fire until the stall rung fires — the mechanism whose job is to detect
+a stall manufacturing one. **The residual is real and is not papered over:**
+nothing enforces the pairing, so a `## Blockers` entry authored without its
+marker is caught by review or not at all.
 
-**Why a precondition and not a sixth halt.** The five halt conditions interrupt
-work that is still runnable; this decides whether any runnable work exists at
-all. Keeping them structurally separate is what preserves the forbidden-list's
-authority over mid-run stopping — an agent that may not stop for "this phase is
-large" also may not stop for "this feels human-gated". AI council 2026-08-19,
-2/2 convergent, explicitly on this point: *"keep this structurally separate from
-'five, and only five': the five are exceptional halts; `blocked` is an
-exhaustion-of-runnable-work terminal outcome."*
+**The gaming vector inverted, and both directions are now named.** Under ADR-235
+the vector was an agent writing itself a Class-3 blocker to stop early; the
+defence was that a qualifying blocker must **pre-date the run**, checkable from
+git. That defence is kept for the narrow blocker set that remains. ADR-237 adds
+the opposite vector — an agent that keeps going past a spend ceiling or into an
+EXCLUDED action under cover of "the roadmap needed it" — and its defences are
+step 3 above being an enumerated list rather than a characterisation, and the
+ceiling being cumulative per run rather than per action.
 
-**The gaming vector, named because it is the one thing that would make this
-worse than the gap it closes.** An agent meets a hard step, writes a `## Blockers`
-entry claiming Class 3, cites it, and stops — a comfort-stop wearing a citation.
-Condition 1 is the whole defence: a blocker must pre-date the run, which is
-checkable from git rather than from the agent's word. A blocker discovered
-mid-run is recorded (that is honest and useful) and does **not** make the step
-non-runnable in this run.
-
-**One imprecision, recorded rather than smoothed over.** The class taxonomy has
-four rows and none of them says *"waiting on time"* or *"waiting on another
-roadmap"*. A soak window and a cross-roadmap dependency are authored as `3`
-today, because absence of `Class:` already means `3` — so they are decidable but
-mislabelled as human-only. A fifth class is a taxonomy change with a linter
-behind it (`lint_roadmap_blockers`) and is not made here.
-*Revisit-if:* a run is refused on a blocker whose real content is "wait", and
-the report reads wrong to the person holding it.
+**One imprecision, inherited and now given a test.** The class taxonomy has no
+row for *"waiting on time"* or *"waiting on another roadmap"*; both are authored
+as `3` today because an absent `Class:` already means `3`. Under step 4 a wait is
+a blocker only when it is factually mandatory and unverifiable — a soak window a
+run can simply outlast, or a cross-roadmap dependency the run can satisfy itself,
+is work. The taxonomy still lacks the row; the mislabel now has a stated test
+instead of a default.
 
 ## 4. Resolve cadences — read once, cache for the run
 
@@ -507,51 +510,68 @@ artifact drafting, council enablement), not safety.
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
-### Terminal outcomes — `complete`, `blocked`, or a halt
+### Terminal outcomes — `complete`, or a genuine external impossibility
 
-The halt list above answers *"what interrupts runnable work"*. It does not answer
-*"what does the run report when there is no runnable work left and the roadmap is
-not finished"*, and until this section there was no answer: the wrapper's stop
-condition was `count_open == 0` or a halt, so a roadmap whose remaining steps all
-need a human had **no legal stopping point**.
+The halt list above answers *"what interrupts runnable work"*. This answers
+*"what does the run report when the roadmap is not finished and the remaining
+work is not the agent's to do"* — and under
+[ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md) that
+second set is much smaller than it looks.
 
-That is not a hypothetical. Measured 2026-08-19 across the twelve most nearly
-complete roadmaps in the estate: **zero** could reach `count_open == 0` in one
-PR. Every remaining open step needed a human action — flip branch protection,
-delete committed evidence, authorise paid spend, install an absent binary, wait
-out a soak window, use the maintainer's own machine, or edit a file an armed host
-hook denies.
+**The measurement that motivated the old answer, and the reading that replaced
+it.** Measured 2026-08-19 across the twelve most nearly complete roadmaps:
+**zero** could reach `count_open == 0` in one PR, because every remaining step
+needed "a human action" — flip branch protection, authorise paid spend, install a
+binary, wait out a soak window, edit a file a hook denies. The census was sound.
+The reading was not: it counted actions a human *conventionally* performs,
+without asking per action whether a human was **necessary**. Flipping a branch
+setting, pushing, opening a PR, re-running CI, updating a merge base, fixing a
+test, spending inside a budget — the agent can do all of it. That is remediation
+work, and a `process-full` invocation grants it.
 
 Three outcomes, and only one of them is success:
 
 | Outcome | When | What it reports |
 |---|---|---|
-| `complete` | `count_open == 0` | the roadmap is finished; archival check runs (§ 6) |
-| `blocked` | `count_open > 0` **and** no open step is runnable | the work that DID close, plus every blocker with its clearing action |
+| `complete` | `count_open == 0` and the PR is open | the roadmap is finished; archival check runs (§ 6) |
+| `blocked` | every remaining open step is **externally impossible** for the agent | the work that DID close, plus the specific impossibility |
 | a halt | one of the five conditions above fired | the halt, its evidence, and what remains |
+
+`blocked-preflight` **no longer exists** (ADR-237 § 4). A run always starts.
 
 ```
 `blocked` IS NEVER PRESENTED AS COMPLETION.
 count_open STAYS > 0. NO CHECKBOX IS FLIPPED TO [~] TO REACH IT.
 A PR OPENED ON A BLOCKED RUN IS LABELLED PARTIAL PROGRESS.
-REVALIDATE IMMEDIATELY BEFORE REPORTING IT — ONE RUNNABLE STEP LEFT REJECTS THE CLAIM.
+BEFORE REPORTING IT, ASK PER REMAINING STEP: CAN I DO THIS AT ALL?
+ONE STEP THE AGENT COULD HAVE EXECUTED REJECTS THE CLAIM.
 ```
+
+**Externally impossible — the whole list.** A required credential that does not
+exist and the agent cannot create · a purchase beyond the delegated budget ·
+physical hardware access · another person or organisation must act · a wait that
+is factually mandatory and cannot be simulated or verified.
+
+**Not externally impossible — every one of these is work.** An unprotected
+branch · a branch to create · a push · a PR to open · a repository or branch
+setting the agent can change · a workflow to start · CI to re-run · a merge base
+to update · conflicts · failing tests · local configuration · a paid call under
+the ceiling · "this could be risky" · "a maintainer should do this".
 
 The `[~]` prohibition is load-bearing and was the one point the council split on.
 Deferring a blocked step to `[~]` would let the run reach `count_open == 0` and
 report completion — laundering unfinished work through a glyph, which is exactly
 what Iron Law 3 of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
 exists to catch on the archival side. So the boxes stay open and the outcome
-carries the truth instead.
+carries the truth instead. **ADR-237 keeps this clause verbatim** — narrowing
+`blocked` makes it more important, not less, because a run with more authority
+has more ways to reach a clean-looking count.
 
-Revalidation is the second half of the same discipline: the runnable set is
-recomputed at the moment of reporting, because steps unblock during a run (a
-prerequisite closes, a `Run:` succeeds, a peer merges). If any open step is
-runnable, `blocked` is refused and the loop continues.
-
-**Runnability is decided by the § 3c test**, unchanged — the same four conditions,
-including that a qualifying blocker must pre-date the run. A blocker the run
-authored is recorded and does not make a step non-runnable in that run.
+Revalidation is the second half of the same discipline: the set is recomputed at
+the moment of reporting, because steps unblock during a run (a prerequisite
+closes, a `Run:` succeeds, a peer merges, a setting the run itself changed). If
+any remaining step is one the agent could execute, `blocked` is refused and the
+loop continues.
 
 ### Forbidden non-halt reasons — agent-invented cautions
 
@@ -570,14 +590,25 @@ a violation of the command and the user's will:
   the stop-and-wait reading of `phase-checkpoints` applies only to
   `process-phase`.
 - **"this step looks human-gated"** — the `blocked` outcome above is reached by
-  the § 3c test over blockers that pre-date the run, never by a judgement about
-  how a step feels. A step with no qualifying blocker citation is runnable, and
-  writing the citation yourself does not make it one. This entry exists because
-  the terminal outcome is the single most abusable thing on this page.
+  the § 3c test, never by a judgement about how a step feels. A step with no
+  qualifying blocker citation is runnable, and writing the citation yourself does
+  not make it one. This entry exists because the terminal outcome is the single
+  most abusable thing on this page.
+- **"the branch is not protected" / "a branch must be created" / "a PR must be
+  opened" / "a GitHub setting must change" / "CI must be re-run" / "the merge
+  base needs updating" / "there are conflicts" / "tests fail"** — every one is
+  remediation work the invocation authorised (ADR-237 § 1). Do it.
+- **"a paid service is needed"** — authorised up to a cumulative USD 25 per run
+  (§ Spend in the wrapper). Uncertainty about the exact cost is explicitly NOT a
+  reason to ask.
+- **"a maintainer should do this"** when the agent can perform the same action
+  through git, `gh`, an API or a CLI. **Capability before role**: the role of the
+  person who conventionally does a thing is not a property of the thing.
 
 If the work genuinely cannot continue, it will be because one of the five real
-halt conditions fired, or because the runnable set is empty by the § 3c test —
-surface THAT, with the blockers named, not a manufactured caution.
+halt conditions fired, or because every remaining step is externally impossible
+by the § 3c test — surface THAT, with the specific impossibility named, not a
+manufactured caution and not a convention mistaken for a constraint.
 
 ### Non-halt — gating notes, "optional" tags
 

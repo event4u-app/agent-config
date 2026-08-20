@@ -1,15 +1,11 @@
 {
-    "_comment": "Rule-activation ratchet baseline (road-to-mixed-trigger-activation-cost step 4.1). Two axes: the scoped/mixed ID SETS are pinned by identity, and the unconditional token total may only walk DOWN. Raising a number here to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a baseline_history entry whose reason is a real sentence. Regenerate with `check_rule_activation_census --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "5a49aa6a619e14604d4f5167e08af7a61f9e7b09",
+    "_comment": "Rule-activation ratchet baseline (road-to-mixed-trigger-activation-cost step 4.1). Two axes: the scoped/mixed ID SETS are pinned by identity, and the unconditional token total may only walk DOWN. Raising a number here to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a baseline_history entry whose reason is a real sentence. Regenerate with `check_rule_activation_census --write-baseline`; never hand-edit the counts.",
+    "measured_at_commit": "unrecorded",
     "tokens_exact": true,
-    "unconditional_tokens": 108130,
+    "unconditional_tokens": 111012,
     "scoped_ids": [
         "design-review-after-ui-write",
-        "no-roadmap-references",
         "roadmap-progress-sync",
-        "rule-type-governance",
-        "skill-quality",
-        "source-confidentiality",
         "source-of-truth",
         "ui-audit-gate"
     ],
@@ -34,12 +30,16 @@
     ],
     "baseline_history": [
         {
+            "date": "2026-08-20",
+            "reason": "Re-anchored WITH an authorized change, not to clear a red. road-to-single-delivery Phase 5.1: the four package-only rules that carried `paths:` -- no-roadmap-references, rule-type-governance, skill-quality, source-confidentiality -- had their path triggers REMOVED, so the emitter now writes no `paths:` and all four load unconditionally. Scoped 8 -> 4; unconditional corpus 108130 -> the value above, a RISE of 2882 exact-BPE tokens. The rise is the point, not a regression: ADR-236 partitions the two delivery layers, which removes each rule's unscoped global twin, and ADR-227:79-80 records that a path-scoped rule is not re-injected after `/compact` -- so leaving them scoped would let four obligations, three of them Iron Laws, vanish mid-session with nothing left to reload them. AI council 2026-08-20, 2/2 convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer review) on this option over keeping the scope, keeping an unscoped global copy, and splitting the four by CI-gate coverage. Two independent decisive arguments: the obligations govern AUTHORING decisions, which happen before any file exists for a path trigger to match (so path-scoping fails at greenfield creation, compaction aside), and rule-type-governance has NO deterministic gate at all, so for that one there is no compensating control whatsoever. Cost in context: the same change removes 96584 tokens of doubled standing prose per session (210485 -> 113901 received, overlap 113 rules / 93411 tokens -> 0), so this +2882 is 3.0 % of what the partition returns. The figure moved twice and both moves are recorded rather than smoothed: an early revision claimed 1754 tokens from a chars/4 proxy, which understated the true BPE cost by about half (measured +3512); collapsing four duplicated rationale sections into one brought it to +3156; and check_rule_stub_ceiling then refused the three short pointers outright -- a migrated stub is held at its pointer's size, so prose added there is prose in the wrong place by that gate's contract. Removing those three notes landed the final +2882, with the single shared record living in source-confidentiality, which is not a migrated stub and has no ceiling."
+        },
+        {
             "date": "2026-08-17",
             "reason": "Re-anchored WITH the authorized change, not to clear a red. road-to-mixed-trigger-activation-cost Phase 2, amendment option (b) narrowed to the two path-dominant per-edit rules: `design-review-after-ui-write` and `ui-audit-gate` had their `component` and `design token` keyword triggers removed as an authoring decision, so the emitter restores `paths:` for both. Scoped 6 -> 8, mixed 19 -> 17, unconditional corpus 107194 -> the value above. The direction is DOWN on the weight axis and the identity move is the authorized one; the maintainer asked for this entry in the same commit so the ratchet documents its own sanctioned change instead of reporting it as drift."
         },
         {
             "date": "2026-08-20",
-            "reason": "Re-anchored WITH an authorized addition, not to clear a red: the new `recurring-criticism` rule plus the reconciling edits to `self-repair-loop` and `decision-revisit-gate`. The cost is structural, not sloppy authoring — the rule fires on a recurrence phrase in the USER PROMPT, and on Claude the emitter writes no `paths:` at all once any non-path trigger is present, so a prompt-triggered rule is unconditional by construction. There is no scoped variant of this obligation to choose instead: a path-scoped version would never see the prompt that triggers it, which is the whole mechanism. The body was already cut once for this reason (~45 percent, depth moved to guideline:agent-infra/recurring-criticism-mechanics, which is read on demand and costs nothing at session start); what remains is the Iron Law, the three-outcome table that is the anti-sycophancy guard, and the honest-enforcement paragraph. Trimming further would remove the reasoning the rule itself marks as the clause most likely to be trimmed. Delta 3575 tokens against a 2000 allowance, standing cost per session, stated rather than hidden."
+            "reason": "Re-anchored WITH an authorized addition, not to clear a red: the new `recurring-criticism` rule plus the reconciling edits to `self-repair-loop` and `decision-revisit-gate`. The cost is structural, not sloppy authoring \u2014 the rule fires on a recurrence phrase in the USER PROMPT, and on Claude the emitter writes no `paths:` at all once any non-path trigger is present, so a prompt-triggered rule is unconditional by construction. There is no scoped variant of this obligation to choose instead: a path-scoped version would never see the prompt that triggers it, which is the whole mechanism. The body was already cut once for this reason (~45 percent, depth moved to guideline:agent-infra/recurring-criticism-mechanics, which is read on demand and costs nothing at session start); what remains is the Iron Law, the three-outcome table that is the anti-sycophancy guard, and the honest-enforcement paragraph. Trimming further would remove the reasoning the rule itself marks as the clause most likely to be trimmed. Delta 3575 tokens against a 2000 allowance, standing cost per session, stated rather than hidden."
         },
         {
             "date": "2026-08-20",

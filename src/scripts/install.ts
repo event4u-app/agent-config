@@ -96,6 +96,7 @@ import {
     ruleScopeFromSettings,
     type RuleScope,
 } from '../install/rule_scope.js';
+import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
@@ -3635,7 +3636,8 @@ function _rule_filter_for_source(
     scope: RuleScope,
 ): global_deploy_inventory.FileFilter | null {
     if (src_rel !== RULE_SOURCE_REL) return null;
-    return (srcFile: string): boolean => ruleFileArrives(srcFile, scope);
+    return (srcFile: string): boolean =>
+        ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
 }
 
 /**
@@ -3804,18 +3806,20 @@ function install_global(
             (tool_id) => (deploy_results[tool_id] as DeployResult)[2] === 'deploy_failed',
         ),
     );
-    if (failed_tools.size > 0) {
-        const corrected_tools = merged_tools.filter((t) => !failed_tools.has(t));
-        if (!arrayStrEqual(corrected_tools, merged_tools)) {
-            installed_lock.write_lockfile(installed_version, corrected_tools, { path: write_path });
-            if (!state.QUIET) {
-                warn(
-                    'Lockfile corrected after deploy postcheck — dropped ' +
-                        `${[...failed_tools].sort().join(', ')} (verification failed).`,
-                );
-            }
+    const corrected_tools =
+        failed_tools.size > 0 ? merged_tools.filter((t) => !failed_tools.has(t)) : merged_tools;
+    if (failed_tools.size > 0 && !arrayStrEqual(corrected_tools, merged_tools)) {
+        installed_lock.write_lockfile(installed_version, corrected_tools, { path: write_path });
+        if (!state.QUIET) {
+            warn(
+                'Lockfile corrected after deploy postcheck — dropped ' +
+                    `${[...failed_tools].sort().join(', ')} (verification failed).`,
+            );
         }
     }
+
+    stampHostLayerFingerprint(installed_version, corrected_tools, write_path,
+        failed_tools.has('claude-code'), (m) => { if (!state.QUIET) info(m); });
 
     if (state.PROGRESS_NDJSON) {
         const ordered = Object.keys(deploy_results).sort();
@@ -5457,5 +5461,6 @@ export {
     _copy_dir_dereferencing_symlinks,
     _preview_global_reap,
     _resolve_global_rule_scope,
+    _rule_filter_for_source,
 };
 export type { Options, PackRecord, DeployResult };

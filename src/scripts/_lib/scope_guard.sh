@@ -165,14 +165,37 @@ probe_tool() {
     local this_ver
     this_ver="$(this_version)"
 
+    # Field 6 is the duplicate-registration count, and it is printed on BOTH
+    # verdicts. It used to appear only on WARN, which required the two scopes to
+    # report the SAME version — and `installed_version_at` returns `unknown` for
+    # `~/.claude/…` because a host directory has no `package.json` beside it. So
+    # every real cross-scope install classified as DRIFT and the count never
+    # printed at all: the instrumentation was live and unreachable, which reads as
+    # coverage in a diff and is strictly worse than absent.
+    #
+    # Resolved 2026-08-20, road-to-single-delivery Phase 5, blocker
+    # `warn-path-unreachable-without-version-marker`, option (b). The council had
+    # already put the reasoning on record in the round that decided the partition:
+    # *"overlap reporting should not depend on version equality in the first
+    # place. Duplicate files can and should be reported whether versions match,
+    # drift, or are unknown."* A duplicate is a duplicate at any version pair.
+    #
+    # (a) — having the installer stamp a version beside every host layer — was the
+    # larger change and is NOT what shipped: it alters a consumer-facing surface to
+    # repair a reporting line. (c) — treating `unknown` as "same version" for the
+    # overlap half — was rejected because it weakens the DRIFT block itself.
+    #
+    # Wire compatibility: the DRIFT line gains a SIXTH field. The only structured
+    # consumer (`src/server/routes/wizard.ts`) destructures the first five and
+    # ignores the rest, so this is additive.
+    local overlap
+    overlap="$(count_overlap "$other_path" "$this_scope_path")"
     if [[ "$other_ver" == "unknown" ]] || [[ "$this_ver" == "unknown" ]] || [[ "$other_ver" != "$this_ver" ]]; then
-        printf 'DRIFT\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver"
+        printf 'DRIFT\t%s\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver" "$overlap"
     else
         # Same version, so no drift — but the duplicate registration is delivered
         # twice, and field 6 is what makes that cost visible at the moment of the
         # decision instead of only in a token census nobody runs.
-        local overlap
-        overlap="$(count_overlap "$other_path" "$this_scope_path")"
         printf 'WARN\t%s\t%s\t%s\t%s\t%s\n' "$tool" "$other_path" "$other_ver" "$this_ver" "$overlap"
     fi
 }
