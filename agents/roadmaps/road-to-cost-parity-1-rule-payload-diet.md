@@ -6,7 +6,9 @@ execution:
 
 # Road to cost parity — 1: the maintained estate shrinks where nothing else owns it
 
-> 289 skills and 116 rules must all stay true, reviewed and non-contradictory
+> 290 skills and 119 rules must all stay true, reviewed and non-contradictory
+> (re-measured 2026-08-20; the file was authored against 289 / 116 — see
+> [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 2)
 > regardless of what any session loads. This roadmap takes the part of that
 > problem no existing roadmap owns: skill-cluster consolidation, an authored
 > norm-line per surviving rule, and two small caps — and explicitly leaves
@@ -84,7 +86,7 @@ otherwise be re-proposed:
 - **The `201 KB` ownership matrix is already generated** — the file carries a
   *"Do not edit — regenerated"* header and `generate_ownership_matrix.ts`
   exists.
-- **The core/pack split is ~85 % built.** All 289 skills already declare
+- **The core/pack split is ~85 % built.** All 290 skills already declare
   `workspaces:`, `packs:` and `install.default`. Only the maintenance-promise
   marker is missing, and that is one frontmatter field (Phase 5).
 
@@ -104,7 +106,7 @@ Two facts shape how the rule work must be done:
 
 And one fact explains why the payload is worth attacking at all:
 `dist/router.json` has **no runtime host consumer**, so `type: auto` does not
-gate delivery — 110 of 116 rules reach a Claude session and all 115 reach an
+gate delivery — 110 of 116 rules reached a Claude session and all 115 reached an
 Augment session, regardless of the type field. The per-host numbers are in
 part 0's table.
 
@@ -122,7 +124,9 @@ part 0's table.
 - [ ] 1.3 Evidence columns cite real instruments and mark their own gaps:
       `report_skill_activation` for skill usage (with its window depth
       stated — see the blocker), `check_enforcement_coverage` for backstop
-      status (measured: 12.9 %, 15 of 116, 32 declared / 84 undeclared), and
+      status (**re-measured 2026-08-20: 12.6 %, 15 of 119, 34 declared /
+      85 undeclared** — the roadmap was authored against 12.9 %, 15 of 116,
+      32 / 84), and
       git churn for staleness. A column with no data reads `absent`, never a
       default.
       <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage --quiet -->
@@ -145,8 +149,19 @@ part 0's table.
       frontmatter bytes delta and lint pass.
       <!-- verify: task lint-skills -->
 - [ ] 2.1b **No trigger-accuracy bar is asserted until its instrument is
-      verified.** A bar needs a before, and there is no verified before: 6 of
-      288 skills have ever been invoked, 0 declare a trigger, the host
+      verified.** A bar needs a before, and there is no verified before.
+      **Two of the three facts this step was authored on are refuted, and the
+      conclusion survives both corrections** (re-measured 2026-08-20, see
+      [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 1):
+      the activation figure is **5 distinct of 290 over 30 sessions**, not 6 of
+      288, and it is window-dependent — two other censuses of the same
+      instrument record 6 of 288 over 59 sessions and 4 of 288 over 30; and
+      **four skills DO declare a machine-matchable trigger**, not zero
+      (`merge-conflicts` SKILL.md:10, `systematic-debugging` :11,
+      `threat-modeling` :13, `authz-review` :14). What holds unchanged is the
+      reason no bar may be asserted: the integer is not stable enough to anchor
+      one, single-digit distinct skills against a ~290 catalogue is the finding
+      in every reading, the host
       truncates the injected catalogue, and
       `road-to-skill-description-measurement.md` — which owns the live eval
       that would produce the baseline — is blocked on
@@ -242,7 +257,8 @@ part 0's table.
       later.
       <!-- verify: task check-token-regression -->
 - [ ] 3.6 Report the norm inventory in CI — the MUST/NEVER/ALWAYS total
-      across survivors (measured baseline: 171 across 116 rules). Report
+      across survivors (**re-measured 2026-08-20: 194 across 119 rules**;
+      authored against 171 across 116). Report
       only; a cap on this layer already exists as a pre-registered target in
       `road-to-rule-coherence-followup.md` and a second cap on the same
       surface is refused.
@@ -277,7 +293,11 @@ part 0's table.
       first.
 - [ ] 4.2 The registry budget ratchets **down** after the census, using the
       existing `check_cli_registry_budget_sync` machinery pointed the other
-      direction. Measured baseline: 97 verbs.
+      direction. **Re-measured 2026-08-20: 101 verbs** — authored against 97,
+      and the movement is upward while the census that was to precede the
+      ratchet has not been built. The gate is green because registry and
+      budget agree; agreement at a higher number is not what this step was
+      written to produce.
       <!-- verify: ./scripts-run src/scripts/check_cli_registry_budget_sync --quiet -->
 - [ ] 4.3 Hook chain-length cap as a manifest lint: a new concern on a
       capped slot must name the concern it replaces or merges into. Measured
@@ -290,14 +310,32 @@ part 0's table.
 
       | host | `user_prompt_submit` | `pre_tool_use` | `post_tool_use` | `stop` | `session_start` | `session_end` |
       |---|---:|---:|---:|---:|---:|---:|
-      | augment | — | 11 | 10 | 6 | 13 | 4 |
-      | claude | **10** | **12** | **11** | **11** | 13 | 4 |
-      | cowork | 8 | 12 | 10 | 6 | 13 | 4 |
-      | cursor | 8 | — | 10 | 6 | 13 | 4 |
-      | cline | 8 | — | 10 | 6 | 13 | 4 |
-      | windsurf | 7 | — | — | 5 | 12 | — |
-      | gemini | 8 | — | 10 | 6 | 13 | 4 |
+      | augment | — | 11 | 11 | 6 | 14 | 4 |
+      | claude | **10** | **13** | **12** | **12** | 14 | 4 |
+      | cowork | 8 | 13 | 11 | 6 | 14 | 4 |
+      | cursor | 8 | — | 11 | 6 | 14 | 4 |
+      | cline | 8 | — | 11 | 6 | 14 | 4 |
+      | windsurf | 7 | — | — | 5 | 13 | — |
+      | gemini | 8 | — | 11 | 6 | 14 | 4 |
       | copilot | — | — | — | — | — | — |
+
+      **Re-measured 2026-08-20 and stale AGAIN — this is the finding, not the
+      table.** The row above replaces the 2026-08-18 refresh, which had drifted
+      on **7 of the 8 hosts in two days**, every movement upward (augment
+      `post_tool_use` 10→11 and `session_start` 13→14; claude `pre_tool_use`
+      12→13, `post_tool_use` 11→12, `stop` 11→12, `session_start` 13→14; the
+      same `session_start` +1 on every other bound host). Full diff in
+      [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 4.
+
+      The 2026-08-18 note already said a stale census "ages in the one
+      direction that matters — upward, so the cap admits growth it was written
+      to refuse." Two refreshes and two stalings inside one drain run is
+      evidence about the **mechanism**: a cap whose baseline decays faster than
+      the cap can be authored is not a cap, it is a number that gets raised to
+      admit whatever landed since. What 4.3 needs is a **computed** cap — a gate
+      reading `hook_manifest.yaml` at run time, exactly as 3.5 requires for the
+      kernel set — not a transcribed table. That is different work from the step
+      as written, which is why this step closes `abandoned` rather than open.
 
       **Re-measured AFTER the flush bindings in the same PR, which the first pass
       got wrong.** The table originally read `stop` 5/10 and `session_end` 3 — a
@@ -380,7 +418,7 @@ part 0's table.
       criterion.
 - [ ] 6.8 **No payload growth from this roadmap's own governance — stated as a
       byte ceiling, not as a rule-type claim.** "No new always-loaded prose" is
-      ambiguous here: only 9 of 116 rules are `type: always`, yet 110 reach a
+      ambiguous here: only 9 of 119 rules are `type: always`, yet 110 reach a
       Claude session, so a norm-line is in the payload whatever its type says.
       The checkable form is part 0's registered per-host row: any norm-line or
       section-marker addition that would push `.claude/rules/` past its
@@ -399,8 +437,12 @@ part 0's table.
 - **What to do:** `road-to-skill-description-measurement.md` is blocked on
   `human-gated-live-trigger-eval` with the same gap under a different name —
   its pre-registration (≥ 100 requests, ≥ 3 shapes, no skill degrading
-  > 20 %) is the bar Phase 2 needs. Recorded independently: 6 of 288 skills
-  have ever been invoked and 0 declare a trigger, and the host truncates the
+  > 20 %) is the bar Phase 2 needs. Recorded independently and **corrected
+  2026-08-20**: 5 distinct of 290 skills invoked over 30 sessions (not 6 of
+  288, and the figure is window-dependent), and **four** skills declare a
+  machine-matchable trigger (not zero) — see
+  [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 1.
+  The host truncates the
   injected catalogue, which is not measurable from transcripts. So the
   activation instrument's depth on this store is unverified until that eval
   runs.
@@ -415,9 +457,10 @@ part 0's table.
   the first.
 - **If you do nothing:** 49 steps stay open behind an instrument whose depth
   on this store is unverified, and Phase 1.3's evidence column stays a column
-  with no evidence in it. The independently recorded facts — 6 of 288 skills
-  ever invoked, 0 declaring a trigger, a host that truncates the catalogue —
-  stay true and stay unmeasurable from transcripts.
+  with no evidence in it. Of the three facts originally recorded here, the
+  first two are refuted and re-measured (5 of 290; four triggers, not zero);
+  the third — a host that truncates the catalogue — stays true and stays
+  unmeasurable from transcripts.
 - **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**.
   Option (a) of `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
   accepts rendered defaults, but the council framework that option inherits
