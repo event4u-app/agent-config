@@ -37,7 +37,7 @@ correctly.
 | Phase | Outcome | What that means |
 |---|---|---|
 | **1 — blocker schema** | `satisfied` | `Class:` / `Run:` / `Budget:` parse, the lint enforces `Run:` on classes 0 and 1, the sweep table is committed with its share. Unchanged by this run. |
-| **2 — `gates --execute`** | `narrowed` + one `transferred` | The class-0 path, the render path AND now the class-1 budget path all ship and are fixture-covered. Step 2.3 is **transferred** to [`stubs/road-to-gate-preauth-authorization.md`](stubs/road-to-gate-preauth-authorization.md). AC-2's live-estate half is **abandoned**: measured, the population is empty. |
+| **2 — `gates --execute`** | `narrowed` + one `transferred` | The class-0 path, the render path AND now the class-1 budget path all ship and are fixture-covered. Step 2.3 is **transferred** to [`stubs/road-to-gate-preauth-authorization.md`](stubs/road-to-gate-preauth-authorization.md). AC-2's live-estate half is **abandoned**: measured at HEAD, 42 open blockers are `{2: 23, 3: 19}` — the class-0 and class-1 population is empty. |
 | **3 — delegate gate** | `narrowed` + `abandoned` | 3.1's decision exists and **declines** the delegate half (option (b)), so 3.2 is cancelled and AC-3 is abandoned. Nothing was written, because option (b) selects the value the template already ships. |
 | **4 — liveness** | `narrowed` | The resume probe ships and detects its fixture. The recurring delegated pass it was to run inside loses its carrier to 3.1's decision. |
 
@@ -354,8 +354,10 @@ safeguards.**
   `abandoned` for the live-estate half.** The earlier note said "not meetable
   *yet*", pinning the class-1 half on the missing ledger. The ledger exists as of
   2026-08-20 and the criterion is still unreachable, for a different and harder
-  reason: **the population is empty.** `agent-config gates --json --all` over the
-  44 open records returns `{2: 25, 3: 19}` — zero class 0, zero class 1 — and step
+  reason: **the population is empty.** `agent-config gates --json --all` returned
+  `{2: 25, 3: 19}` over 44 open records when this criterion was re-read, and
+  `{2: 23, 3: 19}` over 42 once this roadmap's own two entries resolved out of it
+  — zero class 0 and zero class 1 both times, which is the part that matters — and step
   1.3 already established why that is not a temporary state: all twelve entries
   the sweep classified 0 or 1 were read in full and none can carry an honest
   `Run:`, so they were reclassified to what their text supports. A criterion whose
