@@ -47,13 +47,11 @@ automation can supply: a live host session, a repo secret, a repo-admin write, a
 legal signature, another human, or a capability nobody is building. The parent
 roadmap closes against an explicit outcome state (`transferred`), so a completed
 roadmap can never be read as an achieved goal.
-
 Each entry carries the framework's three-point stub-integrity check — the
 original criterion **verbatim**, the complete list of dependent steps moved, and
 a **named producer with a detection probe** (never "when some subsystem exists",
 which names nobody) — plus the probe's measured baseline on the transfer date, so
 a later reader can tell real movement from noise.
-
 | Stub | Transferred from | Outcome state | Re-entry gates (baseline at transfer) |
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
@@ -68,7 +66,6 @@ on one external act — so demanding a funded audit before adding a repo secret 
 asking a second person to review would be a category error that parks the work
 permanently. **A drain-run transfer is gated only by its own per-item probe.**
 Promote per item, not per file, and delete the stub when its last item is gone.
-
 One qualification, because the shorter version of that sentence is false: a
 transfer crossing no *new* surface is not the same as a transfer crossing no Hard
 Floor. Some of these pending acts — a repo-admin ruleset write, a branch
@@ -88,11 +85,39 @@ customer and a funded security audit before a maintainer may edit their own
 repository settings would gate on nothing and make the stub unclosable.
 
 ## Promotion criteria (shared)
-
 Applies to the **org-mode stubs** in § Current stubs only — not to
 drain-run transfers, which name their own per-item probes. Such a stub
 may move from `stubs/` to `agents/roadmaps/` only when **all three** of
 these are true:
+A **drain-run transfer** is a different kind of stub, and it is registered
+separately because the shared criteria below would misgovern it.
+The stubs in the table above are **demand-gated**: the work is buildable today
+and the open question is whether it *should* be built. A drain-run transfer is
+**capability-gated**: the scope decision is already made, the work is wanted, and
+the only thing missing is an environment the run did not have. Applying a
+recruited customer or a funded security audit to that is a category error — there
+is no customer to recruit for a tool surface that simply is not connected, and no
+audit clears a missing capability.
+```
+THE SHARED PROMOTION CRITERIA BELOW — RECRUITED CUSTOMER, FUNDED SECURITY
+AUDIT, ADR SIGN-OFF — DO **NOT** GOVERN A DRAIN-RUN TRANSFER.
+A TRANSFER IS PROMOTED BY ITS OWN NAMED PROBE RETURNING TRUE. NOTHING ELSE.
+```
+Each transfer carries, per the drain-run stub-integrity check: the parent
+criterion **verbatim**, the complete list of what moved, a **named** producer and
+probe with the reading measured on the day of transfer, and any reasoning that
+would otherwise die with the parent. The parent records `transferred` as its
+outcome state so that "archived" can never read as "achieved".
+| Stub | Transferred from | Gate (its own probe) |
+|---|---|---|
+| [`road-to-multi-host-screenshot-census.md`](road-to-multi-host-screenshot-census.md) | [`road-to-source-first-frontend`](../road-to-source-first-frontend.md) — Phase 1 Step 2, the screenshot dimension of Phase 6 Step 1, and the W5 URL / live-page handover class | A **page-reaching** capture primitive on a second supported host. Measured 2026-08-20: this host has `screencapture` only, which photographs the display. Display-only capture on a second host changes nothing. |
+Framework of record for drain-run dispositions:
+`agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+(on `origin/drain/council-records`, PR #1463; not yet on `main`, hence the
+ignore marker).
+Governs the **demand-gated** stubs in `## Current stubs` only — never a
+drain-run transfer (above). Any such stub may move from `stubs/` to
+`agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.
