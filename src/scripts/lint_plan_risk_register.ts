@@ -52,7 +52,7 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
  */
 export const RISK_REGISTER_GATE_ACTIVATION = '2026-08-04';
 
-const MARKER_RE =
+export const MARKER_RE =
     /^<!--\s*risk-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*reviewer:\s*(.+?)\s*-->\s*$/;
 const HONEST_NULL_RE = /^\*\*Honest-null:\*\*(.*)$/;
 const CHECKBOX_RE = /^\s*- \[( |x|~|-)\]/;

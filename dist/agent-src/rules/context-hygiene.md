@@ -93,6 +93,8 @@ one shape the loop test above systematically misses, in both of its clauses.
   available were wait, or stop and report, and 34 licensed neither more than 31
   did. **The discriminator is the decision, not the digits.**
 
+For CI, do not hand-write the loop: `ci_settle <pr>` (mechanics below).
+
 So state it separately: pick **one** waiter for the condition and let it finish.
 Where the harness re-invokes on completion, waiting costs nothing and polling
 costs a turn per expiry — and every stacked waiter is a turn that arrives *after*

@@ -8,6 +8,23 @@ abstraction backed by `scripts/memory_lookup.ts` (TypeScript, run via
 tsx). It reads curated YAML under `agents/memory/<type>/` and the
 agent-written `agents/memory/intake/*.jsonl` signal log.
 
+## Index by the moment, not only by the topic
+
+Every entry answers **"what was I about to do when this would have helped"** — a
+verb and its object (`author a roadmap`, `wait on CI`, `push a branch`, `edit a
+markdown section with a script`) — and the index carries a trigger-moment
+section keyed on those verbs beside the topic grouping.
+
+A store indexed only by subject is an index for *browsing*, and browsing is not
+the failure mode: an agent does not go looking for a trap it does not know
+exists. Measured 2026-08-20 on one instrumented session — of eleven error
+classes, **nine already had an entry** and all nine were read *after* the
+failure. The deficit was delivery, not knowledge.
+
+Writing the trigger key is part of writing the entry. A second index maintained
+separately from the entries rots, and a rotted index is worse than none because
+it still looks authoritative.
+
 ## The contract
 
 Consumers reach it via the CLI (`agent-config memory:lookup`) or the
