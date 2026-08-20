@@ -1,17 +1,17 @@
 # Findings: hook-payload-unwrap
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab | diff: 830454529c885c64939365c2696533da3ec74b03 | reviewer: r2-fresh-subagent-hook-payload-unwrap | prompt_hash: f1aebfd6dad2237fce06ddcb860b540cd46ac86498b0befbc95ae81a9d396e25 -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
+<!-- completion-review: v1 | reviewed: 2026-08-20 | scope: 39d459fc667af82236979c0b29341d48e08840c907d702935d07b3a3243d560e | diff: bd16cbbe76b3fb5c3378ec70733b54d336eae498 | reviewer: r2-fresh-subagent-hook-payload-unwrap | prompt_hash: ac01668d01442a2d7f46c09dbbbfe1394f05d51f8e3d0aeee9086145e882fa26 -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-08-20 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 830454529c885c64939365c2696533da3ec74b03
-  scope_hash: 54c2a141abe2ac4807b5a0292f5c30f3cc177c00598e326848f692a9bdec20ab
+  diff_sha: bd16cbbe76b3fb5c3378ec70733b54d336eae498
+  scope_hash: 39d459fc667af82236979c0b29341d48e08840c907d702935d07b3a3243d560e
   roadmap: agents/roadmaps/road-to-per-turn-hook-economy.md
   roadmap_hash: 26d111490cd53ba022e9577fa5ffb6533a339155e18cf8ecf9cdea312b31723d
   ac_hash: 8b3d8200231b13c05e62f5b58611857c85c94ade33509e924fb0420f8e18c9ba
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-19T23:51:51Z
+dispatched: 2026-08-20T03:46:37Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
