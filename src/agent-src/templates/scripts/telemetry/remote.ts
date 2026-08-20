@@ -35,8 +35,14 @@ import { check_id_redaction, py_json_dumps_compact_sorted } from './engagement.j
 
 export const CLASS_A_SCHEMA_VERSION = 1;
 
-/** Usage classes. Phase 5 adds the self-repair class; Phase 1 emits one. */
-export const ALLOWED_RECORD_CLASSES = ['usage'] as const;
+/**
+ * Record classes. `usage` is Phase 1; `self-repair` is Phase 5 step 5.1.
+ *
+ * Both are Class A — structural fields only — and both travel the same log,
+ * spool and transport, discriminated by this field. `skill_usage_report`
+ * filters on it so a defect report can never be counted as an invocation.
+ */
+export const ALLOWED_RECORD_CLASSES = ['usage', 'self-repair'] as const;
 
 /**
  * Discipline-profile values, the knob that actually decides which rule
@@ -270,6 +276,122 @@ export function build_class_a_record(input: BuildClassAInput): ClassARecord {
         record_class,
         ts_bucket: hour_bucket(input.now ?? new Date()),
         skill,
+        host,
+        package_version,
+        discipline_profile,
+        org_id: input.org_id,
+        user_hash: derive_user_hash(input.salt, input.hostname, input.username),
+        session_hash: derive_session_hash(input.salt, input.session_id),
+    };
+}
+
+/**
+ * One Class-A SELF-REPAIR record (Phase 5, step 5.1).
+ *
+ * The shadow of a queued defect: it says a defect of a named class occurred,
+ * on which host, at which package version, under which declared profile, for
+ * which pseudonymous user. It says nothing about WHAT happened.
+ *
+ * A SEPARATE TYPE, NOT A WIDENED `ClassARecord`, AND THAT IS THE WHOLE POINT.
+ * `DefectFinding` carries `evidence` (a quoted span of the offending text) and
+ * `suggested_surface` (a free sentence). Those are the Class-B payload and
+ * they ship only on explicit per-case approval. Adding either to a
+ * telemetry record type — even optionally, even "sanitized" — would give this
+ * type a field capable of holding project content, and the privacy property
+ * this whole surface rests on is that no such field exists. There is then no
+ * scrubber to fail. Keeping the automatic class in its own interface is how
+ * that stays checkable by reading the type instead of auditing every writer.
+ *
+ * WHAT IS DELIBERATELY ABSENT: an enumerated active-rule / active-skill list.
+ * The roadmap Context asks Class A to carry "the active rule and skill
+ * snapshot" so that "this rule was loaded in six of seven reports of this
+ * class" localizes an artefact. No producer for that exists on a hook path:
+ * `match_prompt` needs the compiled router, which nothing in the hook surface
+ * loads today and which is not established as present in a consumer install.
+ * `discipline_profile` is recorded instead — the knob that decides which rule
+ * surfaces load at all — and it is a profile-level snapshot, NOT the
+ * per-artefact attribution key. That attribution claim stays unavailable, and
+ * saying so here is cheaper than a reader inferring it from a field name.
+ */
+export interface ClassADefectRecord {
+    schema_version: number;
+    record_class: string;
+    ts_bucket: string;
+    /** Detector / intake class — a closed vocabulary owned by the caller. */
+    defect_class: string;
+    /** Which intake produced it — also a closed vocabulary. */
+    defect_source: string;
+    /** How many times this fingerprint has been seen. A counter, not content. */
+    occurrences: number;
+    host: string | null;
+    package_version: string | null;
+    discipline_profile: string | null;
+    org_id: string;
+    user_hash: string;
+    session_hash: string | null;
+}
+
+export interface BuildClassADefectInput {
+    defect_class: string;
+    defect_source: string;
+    occurrences: number;
+    host: string | null;
+    org_id: string;
+    salt: string;
+    hostname: string;
+    username: string;
+    session_id: string;
+    package_version?: string | null;
+    discipline_profile?: string | null;
+    now?: Date;
+}
+
+/**
+ * Build one validated Class-A self-repair record. Pure, and throws rather
+ * than returning a partial record — same contract as its usage sibling.
+ *
+ * `defect_class` and `defect_source` go through the same id-redaction floor as
+ * every other id here, so a caller that ever passed a path, an extension or
+ * an over-long free string gets an exception instead of an egress.
+ */
+export function build_class_a_defect_record(
+    input: BuildClassADefectInput,
+): ClassADefectRecord {
+    check_id_redaction('defect_class', input.defect_class);
+    check_id_redaction('defect_source', input.defect_source);
+    check_id_redaction('org_id', input.org_id);
+
+    const host = input.host ?? null;
+    if (host !== null) {
+        check_id_redaction('host', host);
+    }
+
+    const discipline_profile = input.discipline_profile ?? null;
+    if (
+        discipline_profile !== null
+        && !(ALLOWED_DISCIPLINE_PROFILES as readonly string[]).includes(discipline_profile)
+    ) {
+        throw new ClassARecordError(
+            `discipline_profile must be one of ${ALLOWED_DISCIPLINE_PROFILES.join(', ')} or null`,
+        );
+    }
+
+    const package_version = input.package_version ?? null;
+    if (package_version !== null) {
+        check_id_redaction('package_version', package_version);
+    }
+
+    if (!Number.isInteger(input.occurrences) || input.occurrences < 1) {
+        throw new ClassARecordError('occurrences must be a positive integer');
+    }
+
+    return {
+        schema_version: CLASS_A_SCHEMA_VERSION,
+        record_class: 'self-repair',
+        ts_bucket: hour_bucket(input.now ?? new Date()),
+        defect_class: input.defect_class,
+        defect_source: input.defect_source,
+        occurrences: input.occurrences,
         host,
         package_version,
         discipline_profile,
@@ -589,7 +711,7 @@ function _append_and_bound(
  */
 export function append_class_a_record(
     log_path: string,
-    record: ClassARecord,
+    record: ClassARecord | ClassADefectRecord,
     policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
     now: Date = new Date(),
     spool_path: string | null = null,
