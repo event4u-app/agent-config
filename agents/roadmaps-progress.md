@@ -2,21 +2,29 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
-**290 / 587 steps done · 49%**
+**290 / 586 steps done · 49%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 35 | 35 |
+
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 0 | 35 | 0 | 1 | 0 | ██████████ 100% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
 | 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
@@ -118,7 +126,7 @@
 
 ### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
 
-**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 36 done (97%)
+**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 35 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -126,55 +134,9 @@
 | 2 | one judgment ladder instead of three scattered classifiers | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | CLI-first shipped as the default transport, quorum-resilient | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | verdict handoff + the wiring the resolved blocker was waiting for | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | team readiness: verify first, doctrine second | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 5 | team readiness: verify first, doctrine second | ✅ done | 0 | 3 | 0 | 1 | 100% |
 | 6 | the measurement that replaces the switch | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 7 | what this roadmap will not do | ✅ done | 0 | 12 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-always-on-orchestration"></a>
-**Blockers**
-
-- **gate-council-auto-dispatch** (owner: maintainer) — blocks auto-firing the council at the release-gate escalation
-  - **What to do:**
-    after Phase 3 has soaked (transport reconciliation
-    verified in real passes) and the F6/F4 + council-attendance telemetry has
-    a usable window, wire the gate escalation to dispatch the pass itself
-    (quorum rules from 3.3; inconclusive holds). Guards named by council:
-    loop protection, metered-fallback cap via `cost_budget`, latency budget,
-    unactioned-verdict kill criterion (6.2).
-  - **Resolved when:** the wiring lands citing the soak evidence, or the telemetry says auto-fire adds nothing and the gate stays recommend-only.
-- **point-of-action-carrier** (owner: maintainer) — blocks any pre-tool-use mid-session delegation carrier + escalation ladder (Sources E/H harvest)
-  - **What to do:**
-    run the main-vs-subagent discrimination spike (upstream
-    closed the identity request as NOT_PLANNED; the per-agent-permission fix
-    landed with unverified scope — probe a real host). No discriminator → the
-    carrier ships only with scope reduction (source-file writes above a size
-    threshold, generous exemptions) or not at all. Pre-registered null: "no
-    discriminator" is publishable and does not block this roadmap.
-  - **Resolved when:** the spike note exists and the build/no-build decision cites it plus the F3-lite adoption telemetry.
-- **f4-full-stop-block** (owner: maintainer) — blocks single-shot stop-block continuation for the end-review obligation
-  - **What to do:**
-    carried from the carriers roadmap, upgraded by two
-    verified facts: `additionalContext` on Stop IS documented at exit 0 (the
-    advisory path may already reach the model — verify live first), and
-    `stop_hook_active` is gone from the docs, so the loop guard must be a
-    self-built session-scoped marker (the end-review once-per-session state is
-    the template). Calibrate the threshold on `review_skipped` telemetry
-    (`exact` lines only).
-  - **Resolved when:** live delivery evidence exists and the block/advisory decision cites the telemetry distribution.
-- **team-telemetry-behind-flag** (owner: maintainer) — blocks Phase 5.4 (team telemetry concerns, TaskCompleted artifact-check)
-  - **What to do:**
-    when the experimental flag is on in a real environment,
-    run the 5.1 spike, then bind the concerns with the same fail-open
-    discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
-- **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
-  - **What to do:**
-    the drafts cited a direction-policy artefact that does not
-    exist; before any cross-vendor worker ships, write the direction policy
-    (which vendor may review which, what may be sent — extending the existing
-    egress discipline), then add the two resolver entries (report-only
-    workers).
-  - **Resolved when:** the policy artefact exists and the resolver entries cite it.
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
