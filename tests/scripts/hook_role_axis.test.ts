@@ -138,6 +138,56 @@ describe('role axis in the live manifest', () => {
         }
     });
 
+    /**
+     * Phase 4 Step 3 — the invariant, pinned where it can actually go red.
+     *
+     * The test above it walks the LIVE manifest, whose worker `drop` list
+     * happens to name no `pre_tool_use`-bound concern. So deleting the
+     * `event === 'pre_tool_use'` clause from `_role_drop_set` would drop
+     * nothing on that slot and the test would still pass — it has no
+     * sensitivity to the guard it is named after. This fixture gives it some:
+     * the drop list names a concern that IS bound on the slot, and the same
+     * list is proven live on a droppable slot in the same test, so a pass
+     * cannot come from an inert fixture.
+     *
+     * It also pins the property Phase 4 Step 1 needs and cannot yet supply.
+     * The refusal is keyed on the SLOT, never on where the role came from, so
+     * an `agent_id`-derived `worker` is refused by the same early return that
+     * refuses an env-derived one. There is no payload path to feed a test
+     * today — nothing in the tree reads `agent_id` off a tool event — so the
+     * arbitrary label below stands in for one: whatever channel eventually
+     * resolves a non-orchestrator role, `pre_tool_use` is unaffected.
+     */
+    it('refuses a pre_tool_use drop regardless of which channel resolved the role', () => {
+        const m: JsonObject = {
+            concerns: { 'block-no-verify': { script: 'x' }, 'chat-history': { script: 'y' } },
+            platforms: {
+                probe: {
+                    pre_tool_use: ['block-no-verify'],
+                    stop: ['block-no-verify', 'chat-history'],
+                },
+            },
+            roles: { worker: { drop: ['block-no-verify'] }, payloadworker: { drop: ['block-no-verify'] } },
+        };
+        // The fixture is live: on a droppable slot the same entry is dropped.
+        // Sensitivity here is DIFFERENTIAL rather than mutation-proved — one
+        // fixture, one role, two asserted outcomes separated only by the event
+        // argument. Deleting the slot clause would make the second assertion
+        // return the first's value.
+        expect([..._role_drop_set(m, 'worker', 'stop')]).toEqual(['block-no-verify']);
+        expect(_role_drop_set(m, 'worker', 'pre_tool_use').size).toBe(0);
+        expect(_resolve_concerns(m, 'probe', 'stop', 'worker').map((c) => c['name'])).toEqual([
+            'chat-history',
+        ]);
+        // On the guard slot it survives — for every role label, invented ones
+        // included, because the early return never looks at the role.
+        for (const role of ['worker', 'reviewer', 'payloadworker', 'agent-id-derived'] as const) {
+            expect(
+                _resolve_concerns(m, 'probe', 'pre_tool_use', role as never).map((c) => c['name']),
+            ).toEqual(['block-no-verify']);
+        }
+    });
+
     it('a role without a manifest entry resolves the full chain (fail-open, 2.4)', () => {
         const m = manifest();
         // `reviewer` has no roles.reviewer entry yet (Phase 3.2) — full chain.
