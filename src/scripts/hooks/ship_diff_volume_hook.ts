@@ -33,6 +33,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { readHookStdin } from './hook_stdin.js';
+import { isPayloadStub } from './payload_stub.js';
 import { atomic_write_json } from './state_io.js';
 
 export const STATE_FILE = path.join('agents', 'state', 'ship-diff-volume.json');
@@ -89,14 +90,88 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
     return { volume, excluded, files };
 }
 
-function extractCommand(envelope: Record<string, unknown>): string {
-    const ti = envelope['tool_input'];
-    if (ti !== null && typeof ti === 'object') {
-        const c = (ti as Record<string, unknown>)['command'];
+/**
+ * Tools that carry a shell command. Mirrors `block_unauthorized_git`'s set.
+ *
+ * `SHIP_PATTERNS` are unanchored, so without this gate a `grep` for the string
+ * `git push` spawns two `git` subprocesses on a blocking slot. ALLOW-list: a
+ * named tool outside it is declined, so an unlisted host shell goes dark until
+ * added — the trade that sibling already makes while BLOCKING. A payload naming
+ * no tool still reads; that is the bare-host shape, with nothing to gate on.
+ */
+const COMMAND_TOOLS: ReadonlySet<string> = new Set([
+    'launch-process',
+    'launch_process',
+    'Bash',
+    'BashTool',
+    'run-process',
+    'runProcess',
+    'shell',
+    'execute_shell',
+    'RunShellCommand',
+]);
+
+function isObj(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Descend to the platform payload.
+ *
+ * The dispatcher nests the host-shaped tool fields under `payload`
+ * (`_build_envelope`); a bare host invocation puts them at the top level. This
+ * concern shipped reading the top level ONLY, so under the real dispatcher it
+ * found nothing and returned `''` every time — it ran, cost a dispatch, and
+ * could never fire.
+ *
+ * Deliberately NOT `envelope.ts`'s shared `unwrap`, which descends only when all
+ * four `ENVELOPE_KEYS` are present: a partial envelope would return this concern
+ * to its pre-fix dead state with no test noticing. `design-slop` and
+ * `ui-route-nudge` each carry their own local descent for the same reason.
+ */
+function payloadOf(root: Record<string, unknown>): Record<string, unknown> {
+    const inner = root['payload'];
+    return isObj(inner) ? inner : root;
+}
+
+/** The ship command, or `''` when this payload does not carry one. */
+function shipCommandFrom(payload: Record<string, unknown>): string {
+    const toolRaw = payload['tool_name'] ?? payload['toolName'] ?? payload['tool'];
+    if (typeof toolRaw === 'string' && !COMMAND_TOOLS.has(toolRaw)) return '';
+
+    const ti = payload['tool_input'] ?? payload['toolInput'];
+    if (isPayloadStub(ti)) {
+        // Body omitted despite `needs_payload_bodies: [input]`. A bare '' here is
+        // indistinguishable from "no ship verb" — the silent death this file was
+        // fixed to remove — so say so instead of dying quietly again.
+        process.stderr.write(
+            'ship-diff-volume: tool_input arrived stubbed; the concern declares ' +
+                'needs_payload_bodies: [input] and cannot read a command without it.\n',
+        );
+        return '';
+    }
+    if (isObj(ti)) {
+        const c = ti['command'];
         if (typeof c === 'string') return c;
     }
-    const c = envelope['command'];
+    const c = payload['command'];
     return typeof c === 'string' ? c : '';
+}
+
+/**
+ * The stdin boundary: raw concern stdin → the ship command. Exported so a
+ * regression drives the boundary rather than the extractor. Never throws.
+ */
+export function commandFromStdin(raw: string): string {
+    if (!raw.trim()) return '';
+    let root: unknown;
+    try {
+        root = JSON.parse(raw);
+    } catch {
+        return '';
+    }
+    if (!isObj(root)) return '';
+    return shipCommandFrom(payloadOf(root));
 }
 
 export function main(argv?: string[]): number {
@@ -104,16 +179,7 @@ export function main(argv?: string[]): number {
     const idx = args.indexOf('--command');
     let cmd = idx >= 0 && args[idx + 1] !== undefined ? args[idx + 1]! : '';
     if (!cmd) {
-        const raw = readHookStdin();
-        let envelope: Record<string, unknown> = {};
-        if (raw.trim()) {
-            try {
-                envelope = JSON.parse(raw) as Record<string, unknown>;
-            } catch {
-                envelope = {};
-            }
-        }
-        cmd = extractCommand(envelope);
+        cmd = commandFromStdin(readHookStdin());
     }
     if (!isShipCommand(cmd)) return 0;
 

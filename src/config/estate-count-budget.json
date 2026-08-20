@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 33,
-    "later_roadmaps": 50,
+    "active_roadmaps": 31,
+    "later_roadmaps": 52,
     "open_blockers": 74
   },
   "baseline_history": [
@@ -160,6 +160,20 @@
       "later_roadmaps": 50,
       "open_blockers": 74,
       "why": "RE-MEASURED AT MERGE. Both sides had moved: this branch's rows above were measured against 34/49/74, and the base it merged had parked a roadmap to later/ (33/50). Carrying either side's number forward would have described neither tree, so the values here are read off the merged filesystem. open_blockers stays 74, and the reason it stays is CHECKED rather than assumed - a net zero is the shape a walk-down hides in, which is what the row two above records going wrong on this same branch. Verified against origin/main: 4 open before, 4 open after, and the SETS differ. Resolved: partition-requires-global-layer (option (c), on a measurement that eliminated (a)) and overlap-check-binding-surface (converged council verdict). Opened: warn-path-unreachable-without-version-marker (a finding against completed Phase 3 work) and partition-current-layer-undecidable (Phase 2's second halt, which R2 review caught being carried as prose). Two out, two in - not one error cancelling another."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 31,
+      "later_roadmaps": 52,
+      "open_blockers": 74,
+      "why": "RAISED by 2 later roadmaps and WALKED DOWN by 2 active ones, one transfer: road-to-carrier-layer-convergence and road-to-surface-consolidation are parked to later/. Total estate is unchanged at 83, and open_blockers is unchanged at 74 -- which is the check that this is a park and not a burial, since that metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved. All three blockers involved (b-convergence-machine, repo-admin-and-usage, benchmark-spend) stay open and stay counted. Both roadmaps were parked because every open item is gated outside the roadmap, which is the repository's own active-vs-later test: carrier's two remaining steps are both in Phase 3 behind a Class 3 maintainer-machine measurement, and surface-consolidation's one remaining step is a utilization sweep gated on a window that elapses ~2026-08-26 AND on usage evidence accumulating over it. `/roadmap:process-full` terminates on both at blocked-preflight with zero runnable open steps, so leaving them active would make the estate advertise work the command is required to refuse. This empties the ACTIVE AUTONOMOUS estate to zero, intentionally and as of 2026-08-19. The consequence is recorded at the three-phase-contract-run blocker of later/road-to-run-continuation-observation rather than smoothed over: its criterion is now CURRENTLY unreachable from the estate, which is not the same as impossible, and it is not weakened to match. AI council 2026-08-19, 2/2 convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer review), which also made a visible parked-work inventory the condition of the disposition -- the same change adds one to the generated dashboard."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 31,
+      "later_roadmaps": 52,
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT THE SECOND MERGE of this branch, same reason as the row above and worth the repetition: both sides had moved again. This branch measured against 33/50/74; the base parked two further roadmaps to later/ (31/52). Values read off the merged filesystem, not carried from either side. open_blockers stays 74 for the second time in a row, and for the second time that is CHECKED rather than assumed - a net zero is the shape a walk-down hides in, which is what the row three above records going wrong on this same branch. Verified against origin/main at 7be25cf07: 4 open before, 4 open after, and the SETS differ. Out: partition-requires-global-layer, overlap-check-binding-surface. In: warn-path-unreachable-without-version-marker, partition-current-layer-undecidable. Two out, two in - not one error cancelling another. That the identical net-zero has now appeared twice across two independent merges is corroboration, not a reason to stop checking it."
     }
   ],
   "target": {
