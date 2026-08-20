@@ -80,12 +80,18 @@ concerns:
     severity: advisory
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
   # observable evidence of verification commands (tests, quality tools,
-  # builds) into agents/state/verify-before-complete.json — the path the code
-  # actually writes (`before_complete_hook.STATE_FILE`); this comment said
-  # `agents/runtime/state/` until round 7, which is a directory it never used.
-  # The rule body cites that file as the source of truth for "verified this
-  # turn?". Since round 7 it also carries `ci_last`, the session-scoped CI-settle
-  # negative that `turn-end-gate` reads to refuse a premature completion claim.
+  # builds) into agents/state/verify-before-complete/<digest>.json — ONE FILE
+  # PER SESSION since 2026-08-20, addressed through
+  # `before_complete_hook.statePathFor`. Two earlier corrections are worth
+  # keeping visible, because this comment was wrong about the path twice: it
+  # said `agents/runtime/state/` until round 7 (a directory the code never
+  # used), and it named the single `STATE_FILE` until the split, which is the
+  # constant `prune_legacy_state_file` now DELETES. The rule body cites that
+  # state as the source of truth for "verified this turn?". Since round 7 it
+  # also carries `ci_last`, the session-scoped CI-settle negative that
+  # `turn-end-gate` reads to refuse a premature completion claim — and
+  # "session-scoped" is now a property of the layout rather than of a reset
+  # that fired when a foreign id showed up in a shared file.
   verify-before-complete:
     script: src/scripts/before_complete_hook.ts
     args: []

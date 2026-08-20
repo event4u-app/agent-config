@@ -16,7 +16,7 @@ import {
   isCiPoll,
   pendingCount,
   run,
-  STATE_FILE,
+  statePathFor,
 } from "../../src/scripts/before_complete_hook.js";
 
 let tmp: string;
@@ -42,8 +42,19 @@ function newTurn(): void {
   });
 }
 
+/**
+ * Read the state through the producer's OWN path builder.
+ *
+ * This used to join `STATE_FILE` by hand, which is why the per-session split
+ * could have landed with every assertion here still green against a file the
+ * hook no longer wrote — the same shape that turned two consumers into silent
+ * no-ops. A test that borrows the builder cannot drift from it.
+ */
 function state(): Record<string, unknown> {
-  return JSON.parse(fs.readFileSync(path.join(tmp, STATE_FILE), "utf8")) as Record<string, unknown>;
+  return JSON.parse(fs.readFileSync(path.join(tmp, statePathFor("s1")), "utf8")) as Record<
+    string,
+    unknown
+  >;
 }
 
 describe("isVacuousOutput", () => {

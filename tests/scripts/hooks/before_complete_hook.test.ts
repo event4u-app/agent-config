@@ -4,10 +4,17 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { run, STATE_FILE } from '../../../src/scripts/before_complete_hook.js';
+import { run, statePathFor } from '../../../src/scripts/before_complete_hook.js';
 
-function state(root: string): Record<string, unknown> {
-    return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
+/**
+ * Read one SESSION's state, through the producer's own path builder.
+ *
+ * The default matches `envelope`'s default id below: state is per-session
+ * now, so a reader that ignores the id would either read nothing or read a
+ * neighbour — which is the defect the split closed.
+ */
+function state(root: string, session_id = 's1'): Record<string, unknown> {
+    return JSON.parse(fs.readFileSync(path.join(root, statePathFor(session_id)), 'utf8'));
 }
 
 function envelope(
@@ -110,9 +117,13 @@ describe('verify_before_complete — tracker behaviour', () => {
         );
         expect(state(tmp)['verifications_this_session']).toBe(1);
         run(envelope('augment', 'session_start', {}, 's2'), { consumer_root: tmp });
-        const s = state(tmp);
+        const s = state(tmp, 's2');
         expect(s['session_id']).toBe('s2');
         expect(s['verifications_this_session']).toBe(0);
+        // And s1's own evidence SURVIVES — it is a different file now. Before
+        // the split this same sequence overwrote it, which is why two
+        // concurrent runs erased each other.
+        expect(state(tmp, 's1')['verifications_this_session']).toBe(1);
     });
 
     it.each([
@@ -130,7 +141,7 @@ describe('verify_before_complete — tracker behaviour', () => {
 
     it('malformed stdin is silent no-op', () => {
         expect(run('not json', { consumer_root: tmp })).toBe(0);
-        const target = path.join(tmp, STATE_FILE);
+        const target = path.join(tmp, statePathFor('s1'));
         if (fs.existsSync(target)) {
             JSON.parse(fs.readFileSync(target, 'utf8'));
         }
@@ -224,10 +235,16 @@ describe('verify_before_complete — ci_last (round 7)', () => {
         run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
         poll('build\tpending\t1m\n');
         expect((state(tmp)['ci_last'] as Record<string, unknown>)['settled']).toBe(false);
-        // A different session id on the same state file: session B never polled CI.
+        // Session B never polled CI. Since the per-session split this holds by
+        // CONSTRUCTION rather than by the in-file reset — B has its own file —
+        // and s1's unsettled witness stays where it belongs instead of being
+        // cleared out from under a live run.
         run(envelope('augment', 'session_start', {}, 's2'), { consumer_root: tmp });
-        expect(state(tmp)['ci_last']).toBe(null);
-        expect(state(tmp)['session_id']).toBe('s2');
+        expect(state(tmp, 's2')['ci_last']).toBe(null);
+        expect(state(tmp, 's2')['session_id']).toBe('s2');
+        expect((state(tmp, 's1')['ci_last'] as Record<string, unknown>)['settled']).toBe(
+            false,
+        );
     });
 
     // R2 finding 3 (medium) — the sharpest one: a stale all-pass table used to

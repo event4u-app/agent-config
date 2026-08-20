@@ -29,7 +29,14 @@
  *   - post_tool_use → inspect tool + command, record verifications
  *   - stop                                → record stop fired (claim-done window)
  *
- * Output: `agents/state/verify-before-complete.json`
+ * Output: `agents/state/verify-before-complete/<sha256(session_id)>.json`
+ *   — ONE FILE PER SESSION. It was one file per project root until 2026-08-20,
+ *   which under this repo's worktree workflow (`CLAUDE_PROJECT_DIR` resolves to
+ *   the PARENT checkout) meant one file across every concurrent run: a
+ *   neighbour's CI witness and verification counters became this run's, and the
+ *   in-file session-boundary reset in `_update` turned into the damage rather
+ *   than the defense, because two live runs then clear each other in a loop.
+ *   Consumers address it via `statePathFor`, never a path literal.
  *   {
  *     "schema_version": 1,
  *     "session_id": "<str>",
@@ -49,13 +56,78 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { atomic_write_json } from "./hooks/state_io.js";
+import {
+  has_stable_session_id,
+  prune_legacy_state_file,
+  prune_stale_session_states,
+  session_state_file,
+  update_json_under_lock,
+} from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
 // divergence in the retired Python implementation (ADR-200 § replicate latent bugs).
+//
+// PRE-SPLIT PATH. Nothing reads it after the per-session split below;
+// `prune_legacy_state_file` removes it once this version owns the tree. Kept
+// exported because `prune_legacy_state_file` needs to name the path it deletes,
+// and because a reader that still resolves it should get a compile-visible
+// symbol rather than a silently stale path literal. It is NOT kept for an
+// "older bundle still writing during an upgrade" — that phrasing was copied
+// here unchecked and is corrected at `state_io.prune_legacy_state_file`, which
+// carries the measured deployment shape and the one narrow window that remains.
 export const STATE_FILE = path.join("agents", "state", "verify-before-complete.json");
+
+/**
+ * Per-SESSION state, one file each.
+ *
+ * WHY, in one sentence: the single file above is shared by every concurrent
+ * session under one project root — which in this repo's worktree workflow is
+ * the PARENT checkout — so a neighbouring run's CI witness and verification
+ * counters became this run's.
+ *
+ * The in-file session-boundary reset in `_update` is NOT the fix and is the
+ * reason this was easy to miss. It is written for SEQUENTIAL sessions: notice a
+ * foreign `session_id`, clear the session-scoped counters, carry on. Under
+ * CONCURRENT sessions that same code is the damage — each run reads the other's
+ * id, resets, and writes, so two sessions erase each other's verification
+ * evidence in a loop. The direction of the loss is toward FORGETTING a
+ * verification that did happen, which then reads as "not verified this turn".
+ *
+ * The reset stays, but NOT for the reasons this comment first gave. It said the
+ * reset "still covers the id-less bucket and a legacy file", and a cross-model
+ * review (2026-08-20, both seats) showed neither is reachable: an id-less
+ * envelope returns from `run()` before `_update` is ever called, and the legacy
+ * file is never LOADED any more — only deleted. Writing an unreachable
+ * justification next to retained code is how dead logic survives review, so the
+ * real one is stated instead.
+ *
+ * Its one reachable case is a file at THIS session's digest path carrying
+ * somebody else's `session_id` — a copy, a restore, a hand-edit, or a buggy
+ * writer. That is integrity recovery on the producer side, and it pairs with the
+ * consumer side refusing the same file outright (`owns_session_state`). Both
+ * halves are needed: the producer cannot refuse to run, and the consumer cannot
+ * repair. `before_complete_session_isolation.test.ts` reaches it directly.
+ *
+ * Rationale, the digest-not-sanitiser property, and the claim-then-revalidate
+ * prune all live once in `hooks/state_io.ts` § Per-session concern state — this
+ * is the second concern to need them, which is what made sharing them right.
+ */
+export const STATE_DIR = path.join("agents", "state", "verify-before-complete");
+
+/**
+ * Days after which an untouched session's state is pruned.
+ *
+ * Matches the language hook and the council session-artefact window — a
+ * convention match, not a measurement, and stated as such.
+ */
+export const STATE_RETENTION_DAYS = 7;
+
+/** Path of one session's state file. */
+export function statePathFor(session_id: string): string {
+  return session_state_file(STATE_DIR, session_id);
+}
 
 // Tool names across platforms whose `command` / `tool_input.command` field
 // carries a shell command we can inspect. Edit tools are deliberately
@@ -125,26 +197,6 @@ function _empty_state(): StateDict {
   };
 }
 
-function _load_state(target: string): StateDict {
-  let isFile = false;
-  try {
-    isFile = fs.statSync(target).isFile();
-  } catch {
-    isFile = false;
-  }
-  if (!isFile) {
-    return _empty_state();
-  }
-  try {
-    const decoded = JSON.parse(fs.readFileSync(target, "utf-8")) as unknown;
-    if (typeof decoded === "object" && decoded !== null && !Array.isArray(decoded)) {
-      return { ..._empty_state(), ...(decoded as StateDict) };
-    }
-  } catch {
-    // fall through
-  }
-  return _empty_state();
-}
 
 /** Return [tool_name, command_text] from a tool-event payload. */
 function _extract_command(payload: StateDict): [string | null, string | null] {
@@ -424,17 +476,82 @@ export function run(
   }
 
   const event = (envelope["event"] || "") as string;
-  const target = path.join(consumer_root, STATE_FILE);
-  let state = _load_state(target);
-  state = _update(state, event, envelope);
+  const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
 
-  try {
-    atomic_write_json(target, state);
-  } catch {
+  // No stable identity → persist NOTHING. Sanitising an empty id into a shared
+  // literal is the original cross-session defect restored in the one case with
+  // no guard left (see `state_io` § has_stable_session_id).
+  //
+  // What that costs, and it is worse than the word this comment first used: on a
+  // host that sends no `session_id` this concern records no evidence at all, so
+  // `readCiSettled` returns "nothing observed" and the turn-end gate's completion
+  // detector never fires. The first version called that "the SAFE direction —
+  // under-refusing". A cross-model review (2026-08-20, both seats) rejected the
+  // word: for a BLOCKING gate, not refusing is fail-OPEN. A premature completion
+  // claim over unsettled CI passes unchallenged. This is DEGRADED ENFORCEMENT, and
+  // naming it "safe" hides the loss behind a reassuring adjective.
+  //
+  // It is still the right call among the options available, which is a different
+  // claim and the only one the evidence supports: the alternative is one shared
+  // file whose contents belong to whichever concurrent run wrote last, i.e. a
+  // gate that refuses or clears on somebody else's evidence. A gate that goes
+  // quiet is recoverable; a gate that acts on a foreign witness is not.
+  // Every host this suite binds `post_tool_use` on sends a `session_id`
+  // (`hook_manifest.yaml` platforms × `native_event_aliases`), so the degraded
+  // path is a fallback rather than a supported mode — but it is not verified per
+  // host, and this comment does not claim it is.
+  if (!has_stable_session_id(session_id)) {
+    if (verbose) {
+      process.stderr.write(
+        "verify-before-complete-hook: no session_id — running stateless, nothing recorded\n",
+      );
+    }
+    return 0;
+  }
+
+  const target = path.join(consumer_root, statePathFor(session_id));
+
+  // LOAD → UPDATE → PUBLISH under ONE lock, not three separate steps.
+  //
+  // This was `_load_state` / `_update` / `atomic_write_json`, which makes the
+  // publish atomic and leaves the transaction racy. A cross-model review
+  // (2026-08-20, both seats) named the interleaving, and this host runs tool
+  // calls in parallel, so it is reachable rather than theoretical: two
+  // `post_tool_use` invocations for the SAME session both load the counter at
+  // N, both compute N+1, both publish N+1, and one verification is lost. The
+  // per-session split does nothing about it — the two failures are independent,
+  // and closing the cross-session one made this one easier to mistake for
+  // solved.
+  //
+  // `state` is captured for the verbose line below; the value that lands is the
+  // one computed inside the lock, from state read inside the lock.
+  let state: StateDict = {};
+  const written = update_json_under_lock<StateDict>(target, (loaded) => {
+    // `_empty_state()` UNDER the loaded value, which is what the `_load_state`
+    // this replaced did (`{ ..._empty_state(), ...decoded }`). Dropping it would
+    // have been a silent regression that the suite could not see: `_asInt`
+    // treats a missing counter as 0 and the `=== true` guards treat a missing
+    // flag as false, so every assertion would still pass while `schema_version`
+    // and an explicit `ci_last: null` vanished from a freshly created file.
+    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope);
+    return state;
+  });
+  if (!written) {
     if (verbose) {
       process.stderr.write("verify-before-complete-hook: state write failed\n");
     }
     return 0;
+  }
+
+  // Housekeeping on the once-per-turn events only — never on `post_tool_use`,
+  // which fires many times per turn, and never before the write above.
+  if (event === "session_start" || event === "user_prompt_submit") {
+    prune_legacy_state_file(path.join(consumer_root, STATE_FILE));
+    prune_stale_session_states(
+      path.join(consumer_root, STATE_DIR),
+      Date.now(),
+      STATE_RETENTION_DAYS,
+    );
   }
 
   if (verbose) {

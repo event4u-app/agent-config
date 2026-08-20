@@ -37,9 +37,26 @@ import {
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
-import { STATE_FILE as CI_STATE_FILE } from '../../src/scripts/before_complete_hook.js';
+import {
+    run as beforeCompleteRun,
+    statePathFor as ciStatePathFor,
+} from '../../src/scripts/before_complete_hook.js';
+import {
+    run as languageMirrorRun,
+    STATE_FILE as LANGUAGE_LEGACY_STATE_FILE,
+    statePathFor as languageStatePathFor,
+} from '../../src/scripts/language_mirror_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+
+/**
+ * The session every spawned-hook test runs under.
+ *
+ * ONE constant, because the pin is now keyed on it: a workspace helper writing
+ * the pin under one id while `envelopeJson` sends another produces a silently
+ * pin-less gate, which is the exact failure this whole change is repairing.
+ */
+const GATE_SESSION_ID = 'sess-turn-end-gate';
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
 const TSX = path.join(
     REPO_ROOT,
@@ -302,26 +319,117 @@ function makeWorkspace(settings?: string): string {
     return dir;
 }
 
+/**
+ * Writes a pin the way the PRODUCER does — through `statePathFor`, never through
+ * a hand-built path.
+ *
+ * The three tests below used to write `agents/state/language-mirror.json`
+ * themselves, which is why they stayed green through the per-session split that
+ * killed the detector: the test supplied the file the consumer read, so both
+ * sides of a broken contract were inside the test. A helper that borrows the
+ * producer's own path builder cannot drift from it.
+ */
+function writePin(dir: string, session_id: string, body: string): void {
+    const target = path.join(dir, languageStatePathFor(session_id));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, body);
+}
+
+/**
+ * A pin body as the REAL producer writes it — with its `session_id` stamped.
+ *
+ * The consumer now refuses a file whose embedded owner does not match
+ * (`owns_session_state`), so a fixture without one is not a weaker fixture,
+ * it is an unowned file — a different test. Every case that means "this
+ * session's pin" goes through here; the cases that mean "somebody else's"
+ * stamp a foreign id on purpose.
+ */
+function ownedPin(session_id: string, fields: Record<string, unknown>): string {
+    return JSON.stringify({ session_id, ...fields });
+}
+
 describe('language pin', () => {
     it('absent pin ⇒ `und` ⇒ no obligation', () => {
-        expect(readLanguagePin(makeWorkspace())).toBe('und');
+        expect(readLanguagePin(makeWorkspace(), 'sess-1')).toBe('und');
     });
 
     it('reads the language the mirror hook wrote', () => {
         const dir = makeWorkspace();
-        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
-        fs.writeFileSync(
-            path.join(dir, 'agents', 'state', 'language-mirror.json'),
-            JSON.stringify({ language: 'de', source: 'prompt' }),
-        );
-        expect(readLanguagePin(dir)).toBe('de');
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('de');
     });
 
     it('a malformed pin is treated as absent, never as a default', () => {
         const dir = makeWorkspace();
-        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
-        fs.writeFileSync(path.join(dir, 'agents', 'state', 'language-mirror.json'), '{ not json');
-        expect(readLanguagePin(dir)).toBe('und');
+        writePin(dir, 'sess-1', '{ not json');
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    it('another session’s pin is not this session’s obligation', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'other-session', ownedPin('other-session', { language: 'en', source: 'prompt' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    it('no stable session id ⇒ `und`, since the producer persists nothing', () => {
+        const dir = makeWorkspace();
+        writePin(dir, '', ownedPin('', { language: 'de', source: 'prompt' }));
+        expect(readLanguagePin(dir, '')).toBe('und');
+        expect(readLanguagePin(dir, '   ')).toBe('und');
+    });
+
+    it('a file at OUR path carrying a foreign owner is refused, not consumed', () => {
+        const dir = makeWorkspace();
+        // The digest path is not the whole guarantee: a copy, a restore, or a
+        // buggy writer can land somebody else's state here, and it still says
+        // whose it is. Consuming it hands one session's pin to another.
+        writePin(dir, 'sess-1', ownedPin('somebody-else', { language: 'en', source: 'prompt' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    it('a pin with NO owner is foreign too — absent is not "mine"', () => {
+        const dir = makeWorkspace();
+        // Every writer into a digest path stamps `session_id`, and the layout
+        // has never shipped without one, so an unowned file is corruption
+        // rather than an older format to be tolerated.
+        writePin(dir, 'sess-1', JSON.stringify({ language: 'de', source: 'prompt' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    it('the legacy single file is NOT a fallback — it is shared across sessions', () => {
+        const dir = makeWorkspace();
+        fs.mkdirSync(path.join(dir, path.dirname(LANGUAGE_LEGACY_STATE_FILE)), {
+            recursive: true,
+        });
+        fs.writeFileSync(
+            path.join(dir, LANGUAGE_LEGACY_STATE_FILE),
+            JSON.stringify({ language: 'en', source: 'prompt' }),
+        );
+        // Reading it would hand a neighbouring session's pin to this one — the
+        // cross-talk the per-session split closed.
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    /**
+     * PRODUCER → CONSUMER, end to end, with no path literal in between.
+     *
+     * This is the test that was missing when `language_mirror_hook` moved its
+     * state: every assertion above could be satisfied by a consumer reading a
+     * path the producer had abandoned. Driving the real `run()` and then reading
+     * through `readLanguagePin` makes the two agree or fail.
+     */
+    it('a pin written by the real hook is readable by the gate', () => {
+        const dir = makeWorkspace();
+        const exit = languageMirrorRun(
+            JSON.stringify({
+                hook_event_name: 'UserPromptSubmit',
+                session_id: 'sess-parity',
+                prompt: 'Bitte prüfe die Übersetzung und melde dich danach bei mir zurück.',
+            }),
+            { consumer_root: dir, env: {} },
+        );
+        expect(exit).toBe(2); // the hook emitted a pin
+        expect(readLanguagePin(dir, 'sess-parity')).toBe('de');
     });
 });
 
@@ -335,9 +443,12 @@ describe('language pin', () => {
  */
 describe('detector D — completion claim over unsettled CI (round 7)', () => {
     function writeCi(dir: string, ci: unknown): void {
-        const target = path.join(dir, CI_STATE_FILE);
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, JSON.stringify({ schema_version: 1, ci_last: ci }));
+        fs.writeFileSync(
+            target,
+            JSON.stringify({ schema_version: 1, session_id: GATE_SESSION_ID, ci_last: ci }),
+        );
     }
 
     const UNSETTLED = { seen: true, settled: false };
@@ -417,33 +528,115 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
     // --- readCiSettled: absence is never a settle, and never a refusal ---
 
     it('no state file ⇒ not seen ⇒ the detector cannot fire', () => {
-        expect(readCiSettled(makeWorkspace())).toEqual(NEVER_SEEN);
+        expect(readCiSettled(makeWorkspace(), GATE_SESSION_ID)).toEqual(NEVER_SEEN);
     });
 
     it('a malformed state file is treated as not seen', () => {
         const dir = makeWorkspace();
-        const target = path.join(dir, CI_STATE_FILE);
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, '{ not json');
-        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
     });
 
     it('ci_last null ⇒ not seen', () => {
         const dir = makeWorkspace();
         writeCi(dir, null);
-        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
     });
 
     it('reads an unsettled record the producer wrote', () => {
         const dir = makeWorkspace();
         writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 3, settled: false });
-        expect(readCiSettled(dir)).toEqual(UNSETTLED);
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(UNSETTLED);
     });
 
     it('reads a settled record the producer wrote', () => {
         const dir = makeWorkspace();
         writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
-        expect(readCiSettled(dir)).toEqual(SETTLED);
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(SETTLED);
+    });
+
+    // --- cross-session isolation: a neighbour's CI witness is not ours ---
+
+    it('another session’s settle does not settle this session', () => {
+        const dir = makeWorkspace();
+        const foreign = path.join(dir, ciStatePathFor('some-other-worktree-run'));
+        fs.mkdirSync(path.dirname(foreign), { recursive: true });
+        fs.writeFileSync(
+            foreign,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true },
+            }),
+        );
+        // Before the split this was ONE shared file, so the neighbour's
+        // `settled: true` vouched for a run this session never made.
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
+    });
+
+    it('no stable session id ⇒ not seen, since the producer persists nothing', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
+        expect(readCiSettled(dir, '')).toEqual(NEVER_SEEN);
+        expect(readCiSettled(dir, '   ')).toEqual(NEVER_SEEN);
+    });
+
+    it('a CI witness at OUR path with a foreign owner is refused', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                session_id: 'somebody-else',
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true },
+            }),
+        );
+        // The sharpest case of the whole class: a foreign `settled: true` would
+        // vouch for a CI run this session never made, and detector D would go
+        // quiet in exactly the premature-claim case it exists for.
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
+    });
+
+    it('the legacy single file is NOT a fallback — it is shared across sessions', () => {
+        const dir = makeWorkspace();
+        const legacy = path.join(dir, 'agents', 'state', 'verify-before-complete.json');
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true },
+            }),
+        );
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
+    });
+
+    /**
+     * PRODUCER → CONSUMER, end to end, with no path literal in between.
+     *
+     * The twin of the language-pin parity test, and it exists for the same
+     * reason: every assertion above can be satisfied by a consumer reading a
+     * path the producer has abandoned, because the test supplies both sides.
+     * Driving the real producer closes that.
+     */
+    it('a CI witness written by the real producer is readable by the gate', () => {
+        const dir = makeWorkspace();
+        beforeCompleteRun(
+            JSON.stringify({
+                event: 'post_tool_use',
+                session_id: 'sess-ci-parity',
+                payload: {
+                    tool_name: 'Bash',
+                    tool_input: { command: 'gh pr checks 123' },
+                    tool_response: 'pending: 3\nfail: 0\n',
+                },
+            }),
+            { consumer_root: dir },
+        );
+        expect(readCiSettled(dir, 'sess-ci-parity').seen).toBe(true);
     });
 });
 
@@ -466,11 +659,7 @@ interface Run {
  */
 function makeGateWorkspace(): { dir: string; home: string } {
     const dir = makeWorkspace();
-    fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
-    fs.writeFileSync(
-        path.join(dir, 'agents', 'state', 'language-mirror.json'),
-        JSON.stringify({ language: 'de', source: 'prompt' }),
-    );
+    writePin(dir, GATE_SESSION_ID, ownedPin(GATE_SESSION_ID, { language: 'de', source: 'prompt' }));
     const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
     tmp_dirs.push(home);
     return { dir, home };
@@ -516,7 +705,7 @@ function envelopeJson(
         platform: 'claude',
         event: 'stop',
         native_event: 'Stop',
-        session_id: 'sess-turn-end-gate',
+        session_id: GATE_SESSION_ID,
         workspace_root: workspaceRoot,
         payload: { transcript_path: transcriptPath, ...extraPayload },
         settings: {},
@@ -628,11 +817,6 @@ describe('the gate, end to end', () => {
         // so detector B must still fire — the earlier version returned early
         // and silenced all four.
         const { dir, home } = makeGateWorkspace();
-        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
-        fs.writeFileSync(
-            path.join(dir, 'agents', 'state', 'language-mirror.json'),
-            JSON.stringify({ language: 'de', source: 'prompt' }),
-        );
         const t = writeTranscript(
             home,
             ['mach weiter'],
@@ -665,12 +849,13 @@ describe('the gate, end to end', () => {
     // is wired: a detector that is correct and unreachable is the shape this
     // repo's own memory calls "defined but not wired".
     function writeCiState(dir: string, settled: boolean): void {
-        const target = path.join(dir, CI_STATE_FILE);
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(
             target,
             JSON.stringify({
                 schema_version: 1,
+                session_id: GATE_SESSION_ID,
                 ci_last: { at: '2026-08-12T00:00:00+00:00', pending: settled ? 0 : 3, settled },
             }),
         );
@@ -1255,10 +1440,7 @@ describe('the refusal record counts what actually fired', () => {
     /** German pin + German promissory close would trip A only. Pin `en` to trip A AND B. */
     function makeMismatchedWorkspace(): { dir: string; home: string } {
         const { dir, home } = makeGateWorkspace();
-        fs.writeFileSync(
-            path.join(dir, 'agents', 'state', 'language-mirror.json'),
-            JSON.stringify({ language: 'en', source: 'prompt' }),
-        );
+        writePin(dir, GATE_SESSION_ID, ownedPin(GATE_SESSION_ID, { language: 'en', source: 'prompt' }));
         return { dir, home };
     }
 
