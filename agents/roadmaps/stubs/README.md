@@ -43,6 +43,7 @@ reads as "outcome achieved".
 | Stub | Transferred from | Outcome state | Re-entry gates |
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
+| [`road-to-compaction-survival-census.md`](road-to-compaction-survival-census.md) | `road-to-context-fidelity.md` Phase 0 (cf01) + all six Phase 1 steps, 2026-08-20 | `transferred` | Three gates in the stub, all measured failing on transfer day: cf01's finding is absent; manual-compaction detectability is unestablished (19 events / 591 sessions, `auto:19`, zero manual); and the session-eol capture directory is `UNOBSERVED`, so a Phase 1 delta is uncomputable. Establish detectability in ONE session before spending five |
 
 **The shared promotion criteria below do NOT apply to this group.** They are
 org-mode gates — recruited customer, funded security audit, ADR lifting a
