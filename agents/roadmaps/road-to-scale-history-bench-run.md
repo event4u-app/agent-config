@@ -15,6 +15,49 @@ status: ready
 > scorer `internal/bench/scale-history/` (`score.ts --dry` runs
 > end-to-end; artifact-root confinement + hardenedSpawnEnv + timeout).
 
+## Outcome (2026-08-20)
+
+Closed against an explicit outcome state, per the framework of record in
+[`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md) <!-- ref-ignore -->
+(blocker `manual-rubric-rater`, disposition **B** — outcome `transferred`).
+Council rationale, verbatim: *"Viewing automated scores first would irreversibly
+violate the preregistered anti-anchor ordering."* The transferred work lives in
+[`stubs/road-to-scale-history-primary-rating.md`](stubs/road-to-scale-history-primary-rating.md),
+which carries the original criterion verbatim, both dependent steps, and three
+named producers each with a detection probe and that probe's measured baseline.
+
+| Item | Outcome | What was satisfied | What is transferred |
+|---|---|---|---|
+| Step 1 · fire the run, rate blind | **transferred** | The instrument, in full and verified by running it: the runner completes all six arm × family cells in `--dry`, writes the manifest, and generates a genuine blind rating workbook (opaque ids, seeded shuffle, label-free copies, sealed key) | The paid sweep, and — irreducibly — the blind PRIMARY rating of its 96 artifacts by a human |
+| Step 2 · verdict + claims-ledger entry | **transferred** | Nothing; it was never startable | The whole verdict. It reads the PRIMARY count, which does not exist |
+| Blocker · `benchmark-spend-authorization` | **satisfied** | Budget granted in-session 2026-08-14 at the registered shape; cost sheet measured at \$22–50 / ~4.6 h | — |
+| Blocker · `codex-family-auth` | **satisfied** | Both required model families proven live end-to-end 2026-08-14 | — |
+
+**Archived does not mean achieved.** Both boxes are `[-]` cancelled-here, not
+`[x]`, and the dashboard reflects that rather than hiding it: after regeneration
+this roadmap renders as `0 / 0 done (0%)` with Phase 1 `⏭️ skipped` and two
+cancelled steps, and it is **not** listed among the completed-not-yet-archived
+files — the one open blocker keeps it out. Read that `0 %` as "nothing was
+achieved here and the work moved", not as a stalled build. The
+`manual-rubric-rater` blocker stays `transferred` rather than `resolved` on
+purpose: it keeps one open blocker on the dashboard and keeps the archival sweep
+refusing this file, because the honest state is unfinished work with a named
+owner elsewhere.
+
+**The primary rating is unmade, not negative.** No lift was measured and no null
+was measured; the instrument that would produce either was never pointed at a
+live sweep, and the rater who would read it has not been named. Nothing is being
+suppressed, because nothing exists to suppress. Whoever picks this up must not
+report the SECONDARY `lint_persistence` count as the result — the
+pre-registration explicitly does not accept it as the defect count
+(`internal/bench/corpora/scale-history-PREREG.md:63-69`).
+
+**What this run did do:** it established, by running it, that the missing half is
+the human and not the harness — recorded with the observed command output in
+[`agents/evidence/analysis/scale-history-harness-runnability.md`](../evidence/analysis/scale-history-harness-runnability.md).
+That distinction is the whole reason this is a `transferred` and not a stalled
+build.
+
 ## Goal
 
 Run the pre-registered scale-history bench (3 arms × ≥2 model families,
@@ -25,18 +68,25 @@ POST-bench copy, never pre-bench).
 
 ## Phase 1 — Run and publish
 
-- [ ] **Fire the paid run** once benchmark-spend-authorization clears:
+- [-] **Fire the paid run** once benchmark-spend-authorization clears:
   arms A/B/C per the prereg, artifacts written under
   `internal/bench/scale-history/artifacts/` (confinement root), manual
   rubric scored blind BEFORE `score.ts` output is viewed.
   *Verify:* per-family results in `internal/bench/reports/`; thresholds
   evaluated exactly as registered (no post-hoc α).
-- [ ] **Publish verdict + claims-ledger entry**: lift claim only if the
+  **Transferred** 2026-08-20 (disposition B, outcome `transferred`) to
+  [`stubs/road-to-scale-history-primary-rating.md`](stubs/road-to-scale-history-primary-rating.md):
+  the blind PRIMARY rating needs a human, and the harness — verified runnable
+  this run — is the only half that was buildable here.
+- [-] **Publish verdict + claims-ledger entry**: lift claim only if the
   registered thresholds clear; otherwise honest null in the house format,
   packs stay default-off, follow-up re-scope recorded.
   *Verify:* claims ledger entry matches the published report; R-A8
   over-application guardrail (>20% distractor queueing = pack design
   finding) reported either way.
+  **Transferred** 2026-08-20 (disposition B, outcome `transferred`) to the same
+  stub: the verdict reads the PRIMARY defect count, which does not exist, so
+  there is no lift claim and no honest null — the result is unmade, not negative.
 
 ## Blockers
 
@@ -128,10 +178,45 @@ POST-bench copy, never pre-bench).
 
 ### blocker: manual-rubric-rater
 
-- **Status:** open
+- **Status:** transferred
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Phase 1 step 1's scoring half, and thereby step 2's verdict
+- **Disposition (2026-08-20):** **B — outcome `transferred`**, per the drain-run
+  framework of record in
+  [`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md) <!-- ref-ignore -->.
+  Council rationale, verbatim: *"Viewing automated scores first would
+  irreversibly violate the preregistered anti-anchor ordering."* The blind
+  PRIMARY scoring and its ordering proof are moved to
+  [`stubs/road-to-scale-history-primary-rating.md`](stubs/road-to-scale-history-primary-rating.md),
+  with the criterion below carried verbatim, both dependent steps listed, and
+  three named producers each carrying a probe measured FAILING on the transfer
+  date.
+
+  **Deliberately NOT `resolved`.** This entry's Resolved-when has no defer
+  branch, so calling it resolved would assert a rating that does not exist.
+  `transferred` keeps one open blocker on the dashboard and keeps the archival
+  sweep refusing this file — the honest encoding of work that moved rather than
+  finished.
+
+  **What this run added, and it narrows the blocker rather than closing it:** the
+  harness was verified runnable end-to-end, so the missing half is provably the
+  human and not the instrument — `run.ts --dry --all --n 1` completes all six
+  cells and emits a genuine blind workbook, and `run.ts --score` refuses with
+  exit 2 while no workbook exists (`internal/bench/scale-history/run.ts:907-913`),
+  so the tooling cannot break the ordering by itself. Record with observed
+  output: [`agents/evidence/analysis/scale-history-harness-runnability.md`](../evidence/analysis/scale-history-harness-runnability.md).
+
+  **The demonstration is this run itself.** The dry sweep put six blind
+  artifacts and their sealed key on disk; producing rubric numbers from them was
+  mechanically available and would have been worthless, because the same agent
+  generated the arms. Being *able* to emit the ratings is evidence the
+  instrument works, never evidence the blocker cleared.
+
+  **Not spend-blocked and not auth-blocked.** Both sibling blockers are
+  resolved; do not re-ask either question. Firing the sweep still needs its own
+  this-turn approval as a paid external action — a standing roadmap grant is not
+  that approval.
 - **What to do:** score each produced artifact against
   `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
   `score.ts` output is viewed. The pre-registration makes this rubric the
@@ -155,6 +240,12 @@ POST-bench copy, never pre-bench).
   park this roadmap in `later/` with the rubric pass as its probe-able resume
   condition, rather than leaving it in the active tree reading as ordinary
   open work.
+  **Superseded in its second half (2026-08-20)** by the council disposition
+  above, and kept because the first half still binds. The one-sitting,
+  order-before-`score.ts` advice is exactly right and is carried into the stub's
+  promotion sequence. The `later/` parking recommendation is what the council
+  replaced: a `transferred` stub with three named producers and measured probes
+  is the same honesty with an addressable owner, where `later/` names nobody.
 - **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2
   has no verdict, so the bench run produces only the SECONDARY
   `lint_persistence` count — a number the pre-registration explicitly does not
