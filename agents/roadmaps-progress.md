@@ -12,13 +12,13 @@
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
-## ⚠️ Iron Law 3 — unresolved deferred items
+## ✅ Completed — pending archival
 
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
 
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 16 | 1 | 1 |
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 16 | 16 |
 
 ## Open roadmaps
 
@@ -50,7 +50,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 0 | 16 | 1 | 1 | 0 | ██████████ 100% |
+| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 0 | 16 | 0 | 2 | 0 | ██████████ 100% |
 | 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
 | 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
 | 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -990,7 +990,7 @@ _1 blocker resolved._
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 1 | 0 | 100% |
+| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | The deterministic carrier — a source-first gate on screenshot tools | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | The browser handover — extraction into files, inside the lock | ✅ done | 0 | 2 | 0 | 1 | 100% |

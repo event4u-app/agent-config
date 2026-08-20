@@ -128,6 +128,48 @@ complexity: structural
 >   That is a change to what Phase 6 can promise, and it is recorded in the
 >   evidence file rather than discovered at re-measurement time.
 
+## Outcome
+
+> **Closed 2026-08-20. Outcome state: `transferred`.** Recorded here rather
+> than only in the body, because a reader who sees this file in `archive/`
+> later must not be able to read "archived" as "achieved". Framework of record
+> for the dispositions below:
+> `agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+> — on `origin/drain/council-records` (PR #1463), not yet on `main`, hence the
+> ignore marker.
+
+**Census: 18 steps — 16 satisfied, 2 cancelled (1 of them transferred), 0 open.**
+
+| Phase | Outcome | What that means here |
+|---|---|---|
+| 1 — Measure | **narrowed** (2/3 satisfied, 1 transferred) | Steps 1 and 3 landed. Step 2's multi-host census is **transferred** to [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md): gated on a host capability, not on effort. Its closing condition was **narrowed** on the way out — flip condition (d), an observation, replaces a census campaign. |
+| 2 — One data-basis ladder | **satisfied** (5/5) | Ladder, W2 contradiction, adopt-the-code duty with its `code-provenance` scope line, the ad-hoc coverage step, three fixtures. |
+| 3 — The deterministic carrier | **satisfied, narrowed in posture** (3/3) | `source-first-gate` ships, tested, and verified end-to-end through the real dispatcher. Narrowed from the drafted `exit 2` warn to **shadow** — the concern emits nothing. That narrowing is what made the phase takeable without its two open dependencies. |
+| 4 — The browser handover | **narrowed** (2/3), 1 **cancelled** | Steps 1–2 landed as one guideline section reusing the existing `design-system.json` contract. Step 3 is **cancelled**: the only trigger form reachable from this repo is the over-broad one its own completion review rejected. The W5 URL / live-page handover class it serves is **transferred** to the stub, unscored by any fixture. |
+| 5 — Interop precedence | **satisfied** (2/2) | Precedence clause and the anonymised Source-C harvest verdicts. |
+| 6 — Close the loop | **satisfied on what it could reach** (2/2) | Step 1 re-measured three of four dimensions; the fourth is **transferred** (no page-reaching capture primitive). Step 2 closed both gated follow-ups — (a) on the numbers, (b) as structurally undecidable while the gate cannot fire. |
+
+**Transferred — the complete list**, all three to the one stub: Phase 1 Step 2
+(the census), the screenshot dimension of Phase 6 Step 1, and the W5 URL /
+live-page handover class. Every one is gated on the same single fact: no
+page-reaching capture primitive exists on this host. The stub names the producer,
+the probe, and today's measured reading.
+
+**Cancelled:** Phase 4 Step 3 (builder-URL triggers), withdrawn 2026-08-13 on
+its own standard and recorded `[-]` on 2026-08-20.
+
+**Not claimed:** that the operator's symptom is fixed. Phase 1 could not
+reproduce it under conditions where it can occur (no capture tool, no URL
+handover), so these criteria cover the *defects verified in the tree*, not the
+symptom. Phase 6 is where the symptom claim would be earned, and it needs a
+consumer repo.
+
+*(That clause is carried verbatim from § Acceptance Criteria, where it was
+written before Phase 6 ran. Phase 6 has now run and it still stands unchanged:
+the re-measurement moved three dimensions and could not reach the fourth, and
+the two conditions it names — a capture tool, a URL handover — are exactly what
+the transfer is about.)*
+
 ## Context / What is verified
 
 **W1 — The principle exists as prose, in one skill, with no carrier.**
@@ -264,7 +306,7 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       measured zero browser-capable capture tools on the host. The falsifier's
       literal condition is met and is deliberately **not** honoured — a null
       produced by a setting that excludes the failure mode is not a null.
-- [~] **Step 2:** Census the screenshot-capable tool names actually present
+- [-] **Step 2:** Census the screenshot-capable tool names actually present
       across the supported hosts (Claude Code browser tools, Playwright MCP
       `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
       shapes) — the matcher list for Phase 3 comes from this census, never
@@ -293,18 +335,42 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       entries that actually appeared, which closes this step **by observation**
       rather than by a second census campaign.
       **Deferred-resolution disposition, recorded per `roadmap-progress-sync`
-      Iron Law 3:** this roadmap reaches `count_open == 0` with this one `[~]`,
-      which arms the no-silent-archive gate. Resolution: **the item stays `[~]`
-      in this roadmap and this roadmap stays active — not archived.** That is a
-      preserving disposition (the criterion remains live in the active estate),
-      so it is council-decidable rather than owner-reserved under that rule's
+      Iron Law 3:** this roadmap reached `count_open == 0` with this one `[~]`,
+      which armed the no-silent-archive gate. Resolution, in its final form:
+      **the item is transferred to a stub and this roadmap's outcome state is
+      `transferred`, not `achieved`.** That is a preserving disposition (the
+      criterion remains live in the active estate, in the stub), so it is
+      council-decidable rather than owner-reserved under that rule's
       preservation test. What closes it: the flip-condition (d) observation
-      above, or a census run on a second host. Nothing about it is dropped,
-      weakened, or accepted as lost — an archival attempt must read this
-      resolution first.
+      above, or a census run on a second host — both now recorded in the stub.
+      Nothing about it is dropped, weakened, or accepted as lost.
+      *(The first-pass resolution recorded here was "stays `[~]`, roadmap stays
+      active". Superseded below, and left visible rather than rewritten.)*
       Missing, precisely: a session on a second supported host with a
       page-reaching capture primitive connected.
       <!-- decision 2026-08-20: kept [~] and kept the roadmap active rather than archiving with an unresolved deferral. Conservative and reversible: no information is buried, and the item acquires a named closing condition (Phase 3 Step 2 flip condition (d)) instead of an open-ended one. -->
+      **SUPERSEDED the same day — `[~]` -> `[-]`, disposition TRANSFERRED.**
+      The paragraph above is left standing because its reasoning is still
+      sound and its conclusion is not: keeping `[~]` *is* a preserving
+      disposition, but it is not the only one, and it left this roadmap active
+      on a condition this environment cannot reach — an active roadmap whose
+      only open item is unreachable is a roadmap nobody can close honestly.
+      **Transferred**, per the drain-run framework of record
+      (`agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+      — on `origin/drain/council-records`, PR #1463, not yet on `main`): work
+      gated on a **host capability** rather than on effort or judgement moves to
+      a stub carrying a named re-entry probe, and the parent records
+      `transferred` as its outcome state so that "archived" can never read as
+      "achieved".
+      Successor: [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md),
+      which carries this criterion verbatim, the re-scoped flip condition (d),
+      the two further transferred items (the screenshot dimension of Phase 6
+      Step 1 and the W5 URL / live-page handover class), the named producer and
+      probe with today's measured reading, and the two observable proxies from
+      Phase 3 Step 1 so that reasoning does not die with this file.
+      Nothing is dropped, weakened, or accepted as lost — the item is live in
+      the stub, with a cheaper closing condition than it had here.
+      <!-- decision 2026-08-20: [-] with outcome state TRANSFERRED to stubs/road-to-multi-host-screenshot-census.md, superseding the keep-[~] decision above. Reversible: the stub carries the criterion verbatim and promotion moves it back. Conservative on the load-bearing axis - the item is preserved and the closure cannot be misread as the symptom being fixed, which is what the Outcome section states in the parent. -->
 - [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
       that reading a provided artifact file (the handover classes
       `design-fidelity` already routes) counts as consultation — capture-only
@@ -729,7 +795,7 @@ symptom. Phase 6 is where the symptom claim would be earned, and it needs a
 consumer repo.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-13 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 
 > **Re-reviewed 2026-08-13** after 10 steps closed, the Acceptance Criteria
 > section landed, and Phase 4 Step 3 was withdrawn. Two of the five risks have
@@ -776,9 +842,41 @@ consumer repo.
 >   discharged as far as this roadmap can.** Its step is `[-]`, the two pins
 >   remain, and the extension discipline is written into
 >   `design-fidelity` § Routing with this as the worked example.
-> - **Risk 5 — unchanged.** Phase 4's extraction-artifact path is still unused
->   and still unscored by any fixture; its falsifier is measured over release
->   cycles, not over this branch.
+>
+> **Third re-read 2026-08-20, at closure**, after merging `origin/main`
+> (`1d2f73c40`) and transferring Phase 1 Step 2. The `reviewed:` date moves to
+> 2026-08-20 on the strength of this pass, not as a restamp — what was actually
+> re-read is named, including the checks that came back "no change":
+>
+> - **The merge delta is orthogonal to every row, checked rather than assumed.**
+>   `git diff --name-only 206ab4f16..origin/main` over `src/rules/design-fidelity.md`,
+>   `docs/guidelines/design-fidelity-mechanics.md`,
+>   `road-to-subagent-lifecycle-integrity.md`, `src/skills/fe-design/`,
+>   `src/skills/design-review/` returns **nothing**, and the same diff filtered
+>   for `hook_manifest`, `concern_registry`, `dispatch_hook`, `ui_route_nudge`,
+>   `ui_surface`, `state_io`, `subagent_ledger` also returns **nothing**. The 10
+>   commits the merge brought (a CI-settle helper, a roadmap skeleton emitter, an
+>   md-section library, a `block_no_verify` tokeniser fix, council CLI help)
+>   touch no surface any row depends on.
+> - **Risk 3's dependency re-verified open, not recalled.** SLI Phase 0 Step 4
+>   and Phase 4 Step 1 both still read `[ ]` in the merged tree. So the row's
+>   closure still rests on construction (no emission) rather than on its stated
+>   mitigation, exactly as the second re-read recorded.
+> - **Risk 5 — CHANGED, and this is the one substantive movement.** It was
+>   "unchanged" an hour earlier; the transfer moves it. Its mitigation measures
+>   the extraction path's use "by the Phase-1 telemetry rather than by
+>   impression" — but the W5 URL / live-page handover class is now **transferred
+>   to [`stubs/road-to-multi-host-screenshot-census`](stubs/road-to-multi-host-screenshot-census.md)**,
+>   so the instrument that would have falsified this row travels with it. The
+>   risk is real, still unscored by any fixture, and **no longer carried by this
+>   roadmap**: it is carried by the stub's own probe. Recorded rather than
+>   silently inherited, because a falsifier whose instrument left the building
+>   is the shape that rots.
+> - **Risks 1, 2, 4 and 6 — unchanged by this pass**, and each for its own
+>   reason already recorded above: 1 closed by its mitigation, 2 partially
+>   answered by Phase 6's two arms, 4 fired sideways and is resolved at the
+>   step, 6 discharged as far as a `[-]` step and two silent pins can discharge
+>   it.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
