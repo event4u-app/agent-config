@@ -12,7 +12,7 @@ parent_roadmap: road-to-gated-reach
 > **Gate retired 2026-08-20 — transferred, not cleared.** Execution needed
 > `yt-dlp` and a JavaScript runtime installed **by a human** on the machine that
 > runs this. That condition did not clear; it moved to
-> [`stubs/road-to-youtube-channel-exercise.md`](stubs/road-to-youtube-channel-exercise.md).
+> [`stubs/road-to-youtube-channel-exercise.md`](../stubs/road-to-youtube-channel-exercise.md).
 > The package never auto-installs — that is a contract
 > (`missing-tool-handling`), not a limitation to work around. This paragraph
 > deliberately no longer opens with the legacy blocked-until wording: that
@@ -25,7 +25,7 @@ parent_roadmap: road-to-gated-reach
 > rendered it with **no default at all** — there was nothing for an accept-all-defaults
 > answer to accept. Independently, installing `yt-dlp` and a JavaScript runtime is a
 > host-environment modification, which the council framework in
-> [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+> [drain-blocker-dispositions-a](../../evidence/council/drain-blocker-dispositions-a.md)
 > assigns categorically to `transferred`. Batch A dispositioned it there with the
 > three-point check: original criterion verbatim, "condition described above
 > clears"; the entire roadmap moved; re-entry producer the host owner, probe
@@ -56,7 +56,7 @@ frozen thresholds, and no claim was added for it.
   extraction: the install itself, the exercise, the Y1-Y6 run, the lifecycle
   flip, the verdict-conditional trigger change, and the four acceptance criteria
   that quote extraction output or a threshold-derived verdict. All nine move to
-  [`stubs/road-to-youtube-channel-exercise.md`](stubs/road-to-youtube-channel-exercise.md).
+  [`stubs/road-to-youtube-channel-exercise.md`](../stubs/road-to-youtube-channel-exercise.md).
 - **Divergence from the council record, stated rather than buried.** Batch A
   reads "Move the entire roadmap." Measured against the file, six of the fifteen
   lines have no dependency on the absent backend, so moving them would have
@@ -95,7 +95,7 @@ even though it reads like a local-logic task.
 ## Context
 
 This roadmap collects items deferred from
-[`agents/roadmaps/archive/road-to-gated-reach.md`](archive/road-to-gated-reach.md).
+[`agents/roadmaps/archive/road-to-gated-reach.md`](road-to-gated-reach.md).
 See the parent's archive entry for the original rationale.
 
 Why they were deferred rather than dropped: the parent's pre-registration carries
@@ -115,60 +115,160 @@ can supply.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and the parent archive entry.
-- [ ] Bench convention: `internal/bench/<name>/` with the registration committed
+- [x] Read `AGENTS.md` and the parent archive entry. Read 2026-08-20:
+  `AGENTS.md` (40 lines — Thin-Root pointers, `src/` as the only source of
+  truth, `task sync` then `task generate-tools`) and
+  [`archive/road-to-gated-reach.md`](road-to-gated-reach.md) in full,
+  including its `## Phase 2 — YouTube: close the readiness blind spot`
+  (lines 344-377), whose Steps 1, 4 and 5 are the three `[~]` items this
+  roadmap inherited.
+- [x] Bench convention: `internal/bench/<name>/` with the registration committed
   before the run, prototypes in gitignored scratch, arms judged independently on
-  pre-declared evidence.
-- [ ] The parent's pre-registration (`internal/bench/gated-reach/README.md`) is
+  pre-declared evidence. Satisfied by construction for the YouTube arm: the
+  registration is committed at `internal/bench/gated-reach/README.md`
+  (added in `8233aedd5`) and the YouTube run has **not** happened, so the
+  registration necessarily precedes it. Stated precisely because the commit
+  alone does not prove ordering for the *Reddit and Twitter* arms —
+  `README.md` and `results.md` landed in that same commit.
+- [x] The parent's pre-registration (`internal/bench/gated-reach/README.md`) is
   the authority for the Y1–Y6 task set and the ship/park/drop thresholds. Do
   **not** re-cut them after seeing results — that is the threshold shopping the
-  bands exist to prevent.
+  bands exist to prevent. Verified 2026-08-20: Y1–Y6 at
+  `internal/bench/gated-reach/README.md:173-178`, the frozen per-channel bands
+  (≥5/6 ship · 3–4/6 park · ≤2/6 drop) at `README.md:115-119`. Nothing in this
+  closure re-cuts either — the transfer carries them forward unchanged, and no
+  tally was scored against them.
 
 ## Phase 1: YouTube — exercise and score the channel
 
-- [ ] **Step 1** *(from parent Phase 2 Step 1)*: Operator installs the pinned
+- [-] **Step 1** *(from parent Phase 2 Step 1)*: Operator installs the pinned
   backend (`pipx install yt-dlp==<pin>` — pin re-looked-up against the real
   registry first and bumped in registry + intake in the same commit if it moved)
   plus a JavaScript runtime. Only Deno is enabled by default; with Node the
   yt-dlp user config needs `--js-runtimes node`, and the doctor prints the exact
   idempotent command.
-- [ ] **Step 2** *(from parent Phase 2 Step 4)*: Exercise the channel for real:
+  → **transferred** to [`stubs/road-to-youtube-channel-exercise.md`](../stubs/road-to-youtube-channel-exercise.md);
+  outcome state `transferred` — a host-environment install, and the act this
+  package contractually never performs.
+- [-] **Step 2** *(from parent Phase 2 Step 4)*: Exercise the channel for real:
   one subtitle pull, one metadata dump, one search. Document the auto-caption
   line-duplication and the dedup step — consecutive cues repeat their text as the
   caption rolls, so a summary double-counts without it.
-- [ ] **Step 3**: Run the pre-registered Y1–Y6 task set from the parent's
+  → **transferred**; outcome state `transferred` — every one of the three
+  operations runs through the absent backend.
+- [-] **Step 3**: Run the pre-registered Y1–Y6 task set from the parent's
   registration, both arms, and record the rows next to the parent's
   `internal/bench/gated-reach/results.md` — including the native control, which
   is expected to fail (a YouTube watch page answers 200 with metadata and no
   transcript) and must be measured rather than assumed.
-- [ ] **Step 4** *(from parent Phase 2 Step 5)*: Flip `lifecycle: experimental →
+  → **transferred**; outcome state `transferred` — the reach arm needs the
+  extractor, and a native-only half-run scores no channel.
+- [-] **Step 4** *(from parent Phase 2 Step 5)*: Flip `lifecycle: experimental →
   stable` **only** after a real run, per the registry's own vocabulary — and only
   if the tally clears the ship threshold. A park or drop verdict leaves
   `experimental` in place and is published like any other outcome.
-- [ ] **Step 5**: If the channel ships, add its intent to
+  → **transferred**; outcome state `transferred` — no tally exists.
+  `experimental` correctly stands in `src/config/reach-channels.yml`, which is
+  the no-op branch this step already prescribes.
+- [-] **Step 5**: If the channel ships, add its intent to
   `src/skills/gated-reach/SKILL.md` triggers **and** to
   `src/skills/gated-reach/evals/triggers.json` — moving the current
   should-NOT-trigger YouTube case to a should-trigger case. If it parks or drops,
   leave the negative case exactly where it is: the skill currently declines
   YouTube on purpose, and that is correct until the evidence changes.
-- [ ] **Step 6**: Publish the outcome in `docs/benchmark.md` § gated-reach — ship,
+  → **transferred**; outcome state `transferred`. The no-ship branch is a
+  deliberate no-op and holds today — the negative case sits untouched at
+  `src/skills/gated-reach/evals/triggers.json:42-44`. The step is still
+  transferred rather than satisfied because its *decision input* is the missing
+  verdict, so nothing here has been decided.
+- [x] **Step 6**: Publish the outcome in `docs/benchmark.md` § gated-reach — ship,
   park or drop alike — and amend the parent's per-channel verdict table rather
-  than writing a competing one.
+  than writing a competing one. Done 2026-08-20: the existing
+  `youtube-transcripts` row in the parent's table
+  (`docs/benchmark.md` § `{#ship-gated-reach}`) is amended in place — no
+  competing table — and the transfer plus both probe readings are recorded
+  under it. The published outcome is the null: **park — unexercised**,
+  now durably `transferred`.
 
 ## Acceptance Criteria
 
-- [ ] A YouTube transcript is extracted after the human install, and the doctor
+- [-] A YouTube transcript is extracted after the human install, and the doctor
   demonstrably distinguishes "installed" from "ready to extract" on the same
   machine (both states observed, not just the passing one).
-- [ ] The auto-caption duplication is documented **with the dedup applied** in the
+  → **transferred**; outcome state `transferred`. Measured today, only the
+  *third* state is observable: readiness `unknown`, because the backend is
+  absent. `not-ready` is unreachable until `yt-dlp` is installed, so
+  "both states observed" cannot be part-credited.
+- [-] The auto-caption duplication is documented **with the dedup applied** in the
   prescription, proven by running it — not described.
-- [ ] A per-channel verdict for `youtube-transcripts` exists against the parent's
+  → **transferred**; outcome state `transferred` — "proven by running it" is
+  exactly the evidence the absent backend withholds, and the criterion
+  explicitly refuses a description.
+- [-] A per-channel verdict for `youtube-transcripts` exists against the parent's
   frozen thresholds, with no aggregate band.
-- [ ] The skill's trigger set matches the verdict exactly, proven in both
+  → **transferred**; outcome state `transferred`. A *verdict* does exist —
+  **park — unexercised** — but it is reached by the pre-registration's
+  unexercised rule, **not** scored against the ≥5/6 · 3–4/6 · ≤2/6 bands this
+  criterion names. Recording it as satisfied would read a
+  no-run park as a threshold result.
+- [-] The skill's trigger set matches the verdict exactly, proven in both
   directions by the trigger eval.
-- [ ] If the channel does not ship, the null is published and
-  `docs/CLAIMS.md` gains **no** claim for it.
-- [ ] All quality gates pass — see `quality-tools`.
+  → **transferred**; outcome state `transferred`. The structural half holds
+  now — `check-trigger-evals` passes 69 sets fresh + valid, with YouTube as a
+  should-NOT-trigger case matching the park verdict. The *both-directions
+  proof* is not claimed: a real trigger-eval run needs a live model, and the
+  `--dry-run` router is a mock whose 14/14 is what the mock returns, not
+  evidence. The criterion also re-opens if the verdict changes, which is the
+  transferred half.
+- [x] If the channel does not ship, the null is published and
+  `docs/CLAIMS.md` gains **no** claim for it. Verified 2026-08-20: the channel
+  does not ship, so this branch is live. `docs/CLAIMS.md` carries **no** claim
+  for `youtube-transcripts` — its only mention is scope bound (c) on the
+  gated-reach claim (`docs/CLAIMS.md:353`), which states the opposite of a
+  claim: "youtube-transcripts is PARKED, not shipped — its backend is
+  human-installed by contract and was never exercised". The null is published
+  by Step 6.
+- [x] All quality gates pass — see `quality-tools`.
+
+## Blockers
+
+### blocker: legacy
+
+The id is the dashboard parser's own placeholder for a `> Blocked until …`
+note, kept verbatim so this entry maps one-to-one onto the `legacy` row in
+[drain-blocker-dispositions-a](../../evidence/council/drain-blocker-dispositions-a.md).
+Renaming it would break that mapping; the note it was synthesised from is
+retired in the head of this file.
+
+- **Status:** resolved
+- **Owner:** user
+- **Blocks:** Phase 1 Steps 1-5 and Acceptance Criteria 1-4 — nine of the
+  fifteen lines. Not the whole roadmap: the three prerequisites, Step 6, AC5
+  and AC6 have no dependency on the backend and are satisfied in this closure.
+- **What to do:** nothing further in this repository. The pending act is a
+  host-environment install by the host owner: `pipx install yt-dlp==2026.7.4`
+  (re-look the pin up against the real registry first and bump it in
+  `src/config/reach-channels.yml` plus the intake in the same commit if it
+  moved), then `agent-config reach:doctor --channel youtube` to confirm the
+  channel reports ready rather than `unknown`. No runtime install is needed —
+  `node v26.7.0` and the `--js-runtimes` config entry are already present.
+  Then promote [`stubs/road-to-youtube-channel-exercise.md`](../stubs/road-to-youtube-channel-exercise.md).
+- **Resolved when:** resolved as **transferred**, 2026-08-20, on the council
+  disposition in
+  [drain-blocker-dispositions-a](../../evidence/council/drain-blocker-dispositions-a.md)
+  (batch A, `legacy | B | transferred`, quorum 2/2). The original criterion —
+  "condition described above clears" — is carried verbatim into the stub with
+  its named producer and probe. `resolved` is the only closed token the
+  roadmap gates read; the **outcome state is `transferred`**, and the
+  distinction is the whole point: the condition did not clear, it moved.
+- **Recommendation:** transfer, which is what was done. Installing host tools
+  modifies the host environment and is categorically external, but the outcome
+  stays feasible once a human installs them — so `abandoned` would be wrong and
+  `satisfied` would be a fabrication.
+- **If you do nothing:** the nine transferred lines stay parked in the stub and
+  `youtube-transcripts` stays `experimental` and unscored. Nothing degrades and
+  no claim is at risk, because `docs/CLAIMS.md` never claimed the channel — the
+  cost is only the unmeasured capability, indefinitely.
 
 ## Notes
 
