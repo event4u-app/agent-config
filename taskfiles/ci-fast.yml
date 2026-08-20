@@ -285,8 +285,10 @@ tasks:
     desc: |
       Aggregate agents/runtime/metrics/skill-usage.jsonl into
       agents/runtime/metrics/skill-usage-report.md (per-skill 30-day rolling window
-      with active / exposed-only / dead status). Baseline only — Phase 2 does
-      the rationalization decisions.
+      with active / exposed-only / dead status), plus a second section over the
+      Class-A sink export at agents/runtime/metrics/telemetry-class-a.jsonl when
+      one is present (--sink). Baseline only — Phase 2 does the
+      rationalization decisions.
     cmd: ./scripts-run src/scripts/skill_usage_report {{.QUIET_FLAG}}
 
   skill-overlap:
