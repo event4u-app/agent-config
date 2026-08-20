@@ -9,10 +9,15 @@ complexity: lightweight
 > so cross-references from the deployment-posture document and the
 > archived `road-to-internal-ai-os-deployment.md` resolve.
 
-Each file in this directory is an **empty-named placeholder**. None
-of them is active work. Each enumerates the prerequisites a future
-maintainer (or external contributor with funding) must satisfy
-before the stub can be promoted to an active roadmap.
+This directory holds two classes of file, and **none of them is
+active work**. The **org-mode stubs** in § Current stubs are
+*empty-named placeholders*: each enumerates the prerequisites a
+future maintainer (or external contributor with funding) must
+satisfy before the stub can be promoted to an active roadmap. The
+**drain-run transfers** in § Drain-run transfers are the opposite
+shape — already-specified work moved out of an active roadmap
+because it needs an external act — and they are gated by their own
+per-item probes, not by the shared criteria below.
 
 The stubs live under `stubs/` (not `agents/roadmaps/*.md` directly)
 so they do not register with `task lint-roadmap-complexity` and do
@@ -33,25 +38,57 @@ frontmatter expected by the linter.
 
 ## Drain-run transfers
 
+A second, structurally different class of stub, with a different origin and
+different gates. These are **not** speculative future surfaces and they were not
+created by Phase 9 of the employee-product roadmap — they are work that was
+already planned and specified in an active roadmap, then transferred out when an
+autonomous drain run reached it and found it needed something no repository
+automation can supply: a live host session, a repo secret, a repo-admin write, a
+legal signature, another human, or a capability nobody is building. The parent
+roadmap closes against an explicit outcome state (`transferred`), so a completed
+roadmap can never be read as an achieved goal.
+Each entry carries the framework's three-point stub-integrity check — the
+original criterion **verbatim**, the complete list of dependent steps moved, and
+a **named producer with a detection probe** (never "when some subsystem exists",
+which names nobody) — plus the probe's measured baseline on the transfer date, so
+a later reader can tell real movement from noise.
+| Stub | Transferred from | Outcome state | Re-entry gates (baseline at transfer) |
+|---|---|---|---|
+| [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
+| [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
+**The shared promotion criteria below do NOT govern a drain-run transfer.** They
+were written for the org-mode stubs and require a recruited customer, a funded
+security audit, and an ADR lifting a Hard-Floor item. A drain-run transfer
+introduces no new product surface — it is existing, already-agreed work waiting
+on one external act — so demanding a funded audit before adding a repo secret or
+asking a second person to review would be a category error that parks the work
+permanently. **A drain-run transfer is gated only by its own per-item probe.**
+Promote per item, not per file, and delete the stub when its last item is gone.
+One qualification, because the shorter version of that sentence is false: a
+transfer crossing no *new* surface is not the same as a transfer crossing no Hard
+Floor. Some of these pending acts — a repo-admin ruleset write, a branch
+protection change — **are** Hard-Floor actions in their own right. Being exempt
+from the org-mode promotion gates does not exempt the act itself: when a human
+performs it, it needs its own this-turn approval under
+`non-destructive-by-default`, exactly as it would have inside the parent roadmap.
+## Promotion criteria (shared)
+Applies to the **org-mode stubs** in § Current stubs only — not to
+drain-run transfers, which name their own per-item probes. Such a stub
+may move from `stubs/` to `agents/roadmaps/` only when **all three** of
+these are true:
 A second, separate group with a **different origin and different gates**. These
 were not created by Phase 9 of the employee-product roadmap; they are work
 transferred out of an active roadmap during a drain run because it needs a live
 host session, a human observation, or a capability nobody is building. The
 transferring roadmap records outcome state `transferred` so its archival never
 reads as "outcome achieved".
-
 | Stub | Transferred from | Outcome state | Re-entry gates |
-|---|---|---|---|
 | [`road-to-kernel-cross-link-soak.md`](road-to-kernel-cross-link-soak.md) | `road-to-skill-ecosystem-gate-integrity.md` Phase 3 Steps 6-7 + the cross-link half of one AC, 2026-08-20 | `transferred` | P1-P3 in the stub: the merged PR diff carries both `../../docs/` links and the ease tripwire, `kernel-prefix.json` is clean after re-anchoring, and the kernel-rule merge spacing holds — P3 measured passing, P1 and P2 measured not-yet |
-
 **The shared promotion criteria below do NOT apply to this group.** They are
 org-mode gates — recruited customer, funded security audit, ADR lifting a
 Hard-Floor item — and a drain-run transfer of internal work crosses no Hard
 Floor and introduces no org surface. Each stub in this group carries its own
 gates and says so.
-
-## Promotion criteria (shared)
-
 Applies to the six org-mode stubs in **Current stubs** above, not to the
 drain-run transfers. Any of those stubs may move from `stubs/` to
 `agents/roadmaps/` only when **all three** of these are true:
