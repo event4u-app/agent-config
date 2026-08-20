@@ -9,7 +9,37 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
+/**
+ * Do directory mode bits actually deny a write for the user running this suite?
+ *
+ * They do not for root, which is why council round 3 flagged the two
+ * `chmod 0o500` tests below: for an elevated CI user the write SUCCEEDS, the
+ * fail-closed branch is never entered, and the test passes against any
+ * implementation — a false green, not a skip. The same policy now has
+ * deterministic coverage through the injected writer, so these two are gated
+ * rather than deleted: they exercise the real filesystem path where they can,
+ * and say so where they cannot.
+ */
+const MODE_BITS_DENY_WRITES = ((): boolean => {
+  const probe = fs.mkdtempSync(path.join(os.tmpdir(), "mode-probe-"));
+  try {
+    fs.chmodSync(probe, 0o500);
+    try {
+      fs.writeFileSync(path.join(probe, "x"), "x", "utf8");
+      return false;
+    } catch {
+      return true;
+    } finally {
+      fs.chmodSync(probe, 0o700);
+    }
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(probe, { recursive: true, force: true });
+  }
+})();
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   classify,
@@ -20,9 +50,19 @@ import {
   pinText,
   run,
   STATE_FILE,
+  STATE_DIR,
+  STATE_RETENTION_DAYS,
+  hasStableSessionId,
+  statePathFor,
   MIN_MARKERS,
+  REEMIT_AFTER_TOOL_CALLS,
+  LOCK_STALE_MS,
+  _writeDistance,
   systemLocaleVerdict,
+  _ownsPin,
   _pinLost,
+  _pruneLegacyState,
+  _pruneStaleSessions,
 } from "../../src/scripts/language_mirror_hook.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
@@ -39,16 +79,26 @@ describe("isSyntheticPrompt", () => {
 
   it("recognises the harness shapes that reach user_prompt_submit", () => {
     expect(isSyntheticPrompt(NOTIFICATION)).toBe(true);
-    expect(isSyntheticPrompt("<task-notification>\n<task-id>x</task-id>")).toBe(true);
-    expect(isSyntheticPrompt("<system-reminder>\nsomething\n</system-reminder>")).toBe(true);
-    expect(isSyntheticPrompt("<local-command-caveat>\nx\n</local-command-caveat>")).toBe(true);
+    expect(isSyntheticPrompt("<task-notification>\n<task-id>x</task-id>")).toBe(
+      true,
+    );
+    expect(
+      isSyntheticPrompt("<system-reminder>\nsomething\n</system-reminder>"),
+    ).toBe(true);
+    expect(
+      isSyntheticPrompt("<local-command-caveat>\nx\n</local-command-caveat>"),
+    ).toBe(true);
   });
 
   it("does not fire on a human prompt, including one that quotes a notification", () => {
-    expect(isSyntheticPrompt("analysiere unsere letzten 30 chats im detail")).toBe(false);
-    expect(isSyntheticPrompt("why did I get a [SYSTEM NOTIFICATION - NOT USER INPUT] here?")).toBe(
-      false,
-    );
+    expect(
+      isSyntheticPrompt("analysiere unsere letzten 30 chats im detail"),
+    ).toBe(false);
+    expect(
+      isSyntheticPrompt(
+        "why did I get a [SYSTEM NOTIFICATION - NOT USER INPUT] here?",
+      ),
+    ).toBe(false);
   });
 
   // Round 6, Phase 2.2 — the OTHER direction, which had no net on either side.
@@ -86,23 +136,33 @@ describe("isSyntheticPrompt", () => {
       // No document marker and no determinate lead: behaviour is unchanged from
       // before the net existed. That fallback is what keeps this conservative.
       expect(classify("ok").language).toBe("und");
-      expect(classify("bitte mach das nochmal und prüfe die Regeln").language).toBe("de");
+      expect(
+        classify("bitte mach das nochmal und prüfe die Regeln").language,
+      ).toBe("de");
     });
   });
 
   it("leaves a German pin untouched when a synthetic English turn arrives", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lang-mirror-synth-"));
-    const german = "Bitte prüfe die Roadmap und sage mir, welche Phase als nächste dran ist.";
+    const german =
+      "Bitte prüfe die Roadmap und sage mir, welche Phase als nächste dran ist.";
     run(JSON.stringify({ session_id: "s1", payload: { prompt: german } }), {
       consumer_root: dir,
     });
-    const afterHuman = JSON.parse(fs.readFileSync(path.join(dir, STATE_FILE), "utf8"));
+    const afterHuman = JSON.parse(
+      fs.readFileSync(path.join(dir, statePathFor("s1")), "utf8"),
+    );
     expect(afterHuman.language).toBe("de");
 
-    run(JSON.stringify({ session_id: "s1", payload: { prompt: NOTIFICATION } }), {
-      consumer_root: dir,
-    });
-    const afterSynthetic = JSON.parse(fs.readFileSync(path.join(dir, STATE_FILE), "utf8"));
+    run(
+      JSON.stringify({ session_id: "s1", payload: { prompt: NOTIFICATION } }),
+      {
+        consumer_root: dir,
+      },
+    );
+    const afterSynthetic = JSON.parse(
+      fs.readFileSync(path.join(dir, statePathFor("s1")), "utf8"),
+    );
     expect(afterSynthetic.language).toBe("de");
     expect(afterSynthetic.detected_at).toBe(afterHuman.detected_at);
   });
@@ -138,16 +198,25 @@ function envelope(prompt: string, session_id = "s1"): string {
   });
 }
 
-function statePath(): string {
-  return path.join(tmp, STATE_FILE);
+// Per-session state (road-to… 2026-08-20): one file per session id, so the
+// default here mirrors `envelope`'s default session rather than a shared path.
+function statePath(session_id = "s1"): string {
+  return path.join(tmp, statePathFor(session_id));
 }
 
-function readState(): Record<string, unknown> {
-  return JSON.parse(fs.readFileSync(statePath(), "utf8")) as Record<string, unknown>;
+function readState(session_id = "s1"): Record<string, unknown> {
+  return JSON.parse(fs.readFileSync(statePath(session_id), "utf8")) as Record<
+    string,
+    unknown
+  >;
 }
 
 beforeEach(() => {
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lang-mirror-"));
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("classify", () => {
@@ -184,7 +253,13 @@ describe("nextState", () => {
   });
 
   it("replaces the pin when this turn is determined", () => {
-    const next = nextState({ language: "de" }, classify(ENGLISH_SKILL_BODY), 10, "s1", "now");
+    const next = nextState(
+      { language: "de" },
+      classify(ENGLISH_SKILL_BODY),
+      10,
+      "s1",
+      "now",
+    );
     expect(next?.language).toBe("en");
   });
 });
@@ -201,15 +276,20 @@ describe("pinText", () => {
 describe("run", () => {
   it("pins de on a German prompt and emits the context block", () => {
     const rc = run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp });
-    expect(rc).toBe(2)  // WARN — the only severity the dispatcher delivers;
+    expect(rc).toBe(2); // WARN — the only severity the dispatcher delivers;
     expect(readState().language).toBe("de");
   });
 
   it("pins en on an English prompt", () => {
-    const rc = run(envelope("Please refactor the parser and make sure that these tests are green."), {
-      consumer_root: tmp,
-    });
-    expect(rc).toBe(2)  // WARN — the only severity the dispatcher delivers;
+    const rc = run(
+      envelope(
+        "Please refactor the parser and make sure that these tests are green.",
+      ),
+      {
+        consumer_root: tmp,
+      },
+    );
+    expect(rc).toBe(2); // WARN — the only severity the dispatcher delivers;
     expect(readState().language).toBe("en");
   });
 
@@ -219,7 +299,11 @@ describe("run", () => {
   });
 
   it("is a clean no-op when the payload carries no prompt", () => {
-    expect(run(JSON.stringify({ event: "user_prompt_submit", payload: {} }), { consumer_root: tmp })).toBe(0);
+    expect(
+      run(JSON.stringify({ event: "user_prompt_submit", payload: {} }), {
+        consumer_root: tmp,
+      }),
+    ).toBe(0);
     expect(fs.existsSync(statePath())).toBe(false);
   });
 
@@ -250,7 +334,8 @@ describe("run", () => {
   });
 
   it("a fenced English block does not flip a German prompt", () => {
-    const fenced = "hier der fehler, bitte behebe ihn:\n```\n" +
+    const fenced =
+      "hier der fehler, bitte behebe ihn:\n```\n" +
       "TypeError: cannot read the property of undefined and that is what the\n" +
       "handler was doing when these requests were dispatched from the queue\n```";
     expect(classify(fenced).language).toBe("de");
@@ -258,7 +343,9 @@ describe("run", () => {
 
   it("a genuinely English prompt is still classified English", () => {
     expect(
-      classify("Please refactor the parser and make sure that these tests are green.").language,
+      classify(
+        "Please refactor the parser and make sure that these tests are green.",
+      ).language,
     ).toBe("en");
   });
 
@@ -306,8 +393,16 @@ describe("systemLocaleVerdict", () => {
   });
 
   it("honours LC_ALL over LC_MESSAGES over LANG", () => {
-    expect(systemLocaleVerdict({ LC_ALL: "de_DE", LC_MESSAGES: "en_US", LANG: "en_US" })).toBe("de");
-    expect(systemLocaleVerdict({ LC_MESSAGES: "de_DE", LANG: "en_US" })).toBe("de");
+    expect(
+      systemLocaleVerdict({
+        LC_ALL: "de_DE",
+        LC_MESSAGES: "en_US",
+        LANG: "en_US",
+      }),
+    ).toBe("de");
+    expect(systemLocaleVerdict({ LC_MESSAGES: "de_DE", LANG: "en_US" })).toBe(
+      "de",
+    );
   });
 
   it("takes only the leading entry of a LANGUAGE preference list", () => {
@@ -351,26 +446,50 @@ describe("nextState — the locale fallback", () => {
   });
 
   it("writes no pin when there is nothing to keep and no usable locale", () => {
-    expect(nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "und")).toBeNull();
+    expect(
+      nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "und"),
+    ).toBeNull();
   });
 
   it("keeps an existing pin instead of overwriting it with the locale", () => {
     // The locale is a FLOOR for the first turn, not a competitor afterwards.
-    const previous = { language: "de" as const, source: "prompt" as const };
-    expect(nextState(previous, und, 1, "s1", "2026-08-06T00:00:00.000Z", "en")).toBeNull();
+    // The owner is part of the fixture because keeping a pin requires owning it
+    // (council round 3 tightened `_ownsPin` to exact equality); this test is
+    // about the floor, so it states the ownership rather than relying on a
+    // tolerance that no longer exists.
+    const previous = {
+      language: "de" as const,
+      source: "prompt" as const,
+      session_id: "s1",
+    };
+    expect(
+      nextState(previous, und, 1, "s1", "2026-08-06T00:00:00.000Z", "en"),
+    ).toBeNull();
   });
 
   it("a determined prompt outranks a locale pin — the override needs no second mechanism", () => {
-    const previous = { language: "en" as const, source: "system-locale" as const };
+    const previous = {
+      language: "en" as const,
+      source: "system-locale" as const,
+    };
     const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
-    const s = nextState(previous, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en");
+    const s = nextState(
+      previous,
+      de,
+      80,
+      "s1",
+      "2026-08-06T00:00:00.000Z",
+      "en",
+    );
     expect(s?.language).toBe("de");
     expect(s?.source).toBe("prompt");
   });
 
   it("stamps a prompt reading as source prompt, never as the locale", () => {
     const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
-    expect(nextState({}, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en")?.source).toBe("prompt");
+    expect(
+      nextState({}, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en")?.source,
+    ).toBe("prompt");
   });
 });
 
@@ -378,7 +497,9 @@ describe("noticeText / pinText provenance", () => {
   it("keeps the audited wording for a prompt-sourced pin", () => {
     // This line is the instrument the 30-session audit measured. Rewording it
     // silently changes what a future audit is comparing against.
-    expect(noticeText("de", "prompt")).toBe("Reply language for this turn: German (Deutsch).");
+    expect(noticeText("de", "prompt")).toBe(
+      "Reply language for this turn: German (Deutsch).",
+    );
   });
 
   it("says it fell back to the locale, and how to override it", () => {
@@ -401,7 +522,10 @@ describe("noticeText / pinText provenance", () => {
 
 describe("run — the locale fallback end to end", () => {
   it("pins from the locale on a terse FIRST prompt and says so", () => {
-    const rc = run(envelope("weiter"), { consumer_root: tmp, env: { LANG: "de_DE.UTF-8" } });
+    const rc = run(envelope("weiter"), {
+      consumer_root: tmp,
+      env: { LANG: "de_DE.UTF-8" },
+    });
     expect(rc).toBe(2);
     const state = readState();
     expect(state.language).toBe("de");
@@ -416,7 +540,10 @@ describe("run — the locale fallback end to end", () => {
   it("a later real prompt replaces the locale pin with a prompt pin", () => {
     run(envelope("ok"), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
     expect(readState().source).toBe("system-locale");
-    run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
+    run(envelope(REAL_GERMAN_PROMPT), {
+      consumer_root: tmp,
+      env: { LANG: "en_US.UTF-8" },
+    });
     const state = readState();
     expect(state.language).toBe("de");
     expect(state.source).toBe("prompt");
@@ -429,10 +556,20 @@ describe("run — the locale fallback end to end", () => {
     fs.mkdirSync(path.dirname(statePath()), { recursive: true });
     fs.writeFileSync(
       statePath(),
-      JSON.stringify({ language: "de", detected_at: "2026-08-01T00:00:00.000Z" }),
+      // Owner present, `source` absent: the subject here is the source
+      // derivation, and an ownerless file is a separate case with its own test
+      // below ("refuses a pin with no owner").
+      JSON.stringify({
+        language: "de",
+        session_id: "s1",
+        detected_at: "2026-08-01T00:00:00.000Z",
+      }),
       "utf8",
     );
-    const rc = run(envelope("1"), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
+    const rc = run(envelope("1"), {
+      consumer_root: tmp,
+      env: { LANG: "en_US.UTF-8" },
+    });
     expect(rc).toBe(2);
     // The pin is kept, not overwritten, and the locale does not leak in.
     expect(readState().language).toBe("de");
@@ -449,11 +586,21 @@ describe("run — the locale fallback end to end", () => {
 // ---------------------------------------------------------------------------
 
 function compactEnvelope(session_id = "s1"): string {
-  return JSON.stringify({ event: "pre_compact", session_id, platform: "claude", payload: {} });
+  return JSON.stringify({
+    event: "pre_compact",
+    session_id,
+    platform: "claude",
+    payload: {},
+  });
 }
 
 function toolEnvelope(session_id = "s1"): string {
-  return JSON.stringify({ event: "post_tool_use", session_id, platform: "claude", payload: {} });
+  return JSON.stringify({
+    event: "post_tool_use",
+    session_id,
+    platform: "claude",
+    payload: {},
+  });
 }
 
 describe("the compaction boundary (6.1)", () => {
@@ -463,7 +610,9 @@ describe("the compaction boundary (6.1)", () => {
   });
 
   it("post_tool_use re-emits the pin ONCE, then goes quiet", () => {
-    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), {
+      consumer_root: tmp,
+    });
     run(compactEnvelope(), { consumer_root: tmp });
 
     // First tool call after compaction — the pin comes back.
@@ -477,7 +626,9 @@ describe("the compaction boundary (6.1)", () => {
   });
 
   it("post_tool_use is silent when no compaction happened — the common path", () => {
-    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), {
+      consumer_root: tmp,
+    });
     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
   });
 
@@ -493,7 +644,16 @@ describe("the compaction boundary (6.1)", () => {
     // A single shared marker made this cross-talk between concurrent sessions —
     // the normal shape for this repo's worktree workflow. Session B used to
     // consume the marker A's compaction set, so A never got its one re-emit.
-    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    // The prompt is sent BY session-A: a session that compacts is a session
+    // that had a turn, and the pin it restores has to be its own (the
+    // ownership guard below). The earlier setup pinned as "s1" and compacted as
+    // "session-A", i.e. it restored a pin belonging to neither party.
+    run(
+      envelope("Bitte mach weiter mit der Analyse und den Tests.", "session-A"),
+      {
+        consumer_root: tmp,
+      },
+    );
     run(compactEnvelope("session-A"), { consumer_root: tmp });
 
     // B has had no compaction, so B stays silent and must not clear A's marker.
@@ -504,9 +664,675 @@ describe("the compaction boundary (6.1)", () => {
   });
 
   it("pre_compact does not disturb the pin it is protecting", () => {
-    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), {
+      consumer_root: tmp,
+    });
     const before = readState();
     run(compactEnvelope(), { consumer_root: tmp });
     expect(readState()).toEqual(before);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Cross-session ownership of the pin.
+//
+// MEASURED DEFECT (2026-08-20, session 15b9ac52): seven `language-pin` lines
+// read German, then one read `Reply language for this turn: English.`, then
+// German resumed. The prompt behind the English one was the single character
+// `1`. That session never sent an English prompt and the machine's `LANG` is
+// empty, so the locale fallback cannot explain it either — the `en` came from
+// a CONCURRENT session writing the one shared state file, which in this repo's
+// worktree workflow is the normal shape rather than the exception.
+//
+// The failure is worse than a missing pin: it injects the OPPOSITE instruction
+// into a German conversation, i.e. the rule inverted.
+// ---------------------------------------------------------------------------
+
+describe("cross-session pin ownership", () => {
+  const TERSE = "3";
+
+  it("a terse prompt does NOT inherit another session's pin", () => {
+    run(envelope("Fix bitte die CI und pruefe die Tests.", "session-A"), {
+      consumer_root: tmp,
+    });
+    expect(readState("session-A")["language"]).toBe("de");
+
+    // Session B answers an options block with "3" — no markers of its own.
+    // Before the guard this returned session-A's pin as if it were B's.
+    expect(run(envelope(TERSE, "session-B"), { consumer_root: tmp })).toBe(0);
+  });
+
+  it("the inverted-instruction case specifically: en pin, de session, terse prompt", () => {
+    run(
+      envelope(
+        "Please rebase this branch and rerun the failing checks.",
+        "session-A",
+      ),
+      {
+        consumer_root: tmp,
+      },
+    );
+    expect(readState("session-A")["language"]).toBe("en");
+
+    // This is line 2155 of the measured transcript. It must not emit `en`.
+    expect(run(envelope("1", "session-B"), { consumer_root: tmp })).toBe(0);
+  });
+
+  it("still keeps the pin for a terse prompt in the SAME session", () => {
+    run(envelope("Bitte nimm dir die Analyse und mach weiter.", "session-A"), {
+      consumer_root: tmp,
+    });
+    // The keep-previous rule is the whole reason this hook survives "weiter" —
+    // the ownership guard must not cost it.
+    expect(run(envelope(TERSE, "session-A"), { consumer_root: tmp })).toBe(2);
+    expect(readState("session-A")["language"]).toBe("de");
+  });
+
+  it("a foreign terse prompt leaves the stored pin intact for its owner", () => {
+    run(envelope("Bitte pruefe die Regeln und die Tests.", "session-A"), {
+      consumer_root: tmp,
+    });
+    const before = readState("session-A");
+    run(envelope(TERSE, "session-B"), { consumer_root: tmp });
+    // B writes nothing into A's file — with per-session state it cannot even
+    // address it, and the ownership check inside the file is the second layer.
+    expect(readState("session-A")).toEqual(before);
+    expect(run(envelope(TERSE, "session-A"), { consumer_root: tmp })).toBe(2);
+  });
+
+  it("refuses a pin with no owner — exact ownership, no legacy tolerance", () => {
+    // INVERTED by council round 3. This test previously asserted the opposite,
+    // and the seats' argument against it is the hashed layout's own: the
+    // pre-split shared file is deleted rather than migrated, and every writer
+    // into a hashed path stamps `session_id` — so an ownerless hashed file is
+    // corruption or a hand-copy, which is precisely what this check exists to
+    // catch. Accepting it made the guard's own doc comment false.
+    expect(_ownsPin({ language: "de" }, "session-A")).toBe(false);
+    expect(_ownsPin({ language: "de", session_id: "" }, "session-A")).toBe(
+      false,
+    );
+    expect(
+      _ownsPin({ language: "de", session_id: "session-A" }, "session-A"),
+    ).toBe(true);
+    expect(
+      _ownsPin({ language: "de", session_id: "session-B" }, "session-A"),
+    ).toBe(false);
+  });
+
+  it("a foreign owner at this session's OWN path is refused", () => {
+    // Council round 3, seat 2: the existing "does not restore a foreign pin"
+    // test put A's state at A's path and ran as B, so B read its own MISSING
+    // file and returned through the absent-pin branch — `_ownsPin(...) === false`
+    // was never reached at all. This puts A's state at B's hashed path, which is
+    // the only way that branch runs end to end: corruption, a hand-copied file,
+    // or a digest collision.
+    fs.mkdirSync(path.dirname(statePath("session-B")), { recursive: true });
+    fs.writeFileSync(
+      statePath("session-B"),
+      JSON.stringify({
+        language: "de",
+        source: "prompt",
+        session_id: "session-A",
+      }),
+      "utf8",
+    );
+    run(envelope(TERSE, "session-B"), {
+      consumer_root: tmp,
+      env: { LANG: "en_US.UTF-8" },
+    });
+    // Not inherited: the locale floor decides instead of A's German pin.
+    expect(readState("session-B").language).toBe("en");
+  });
+
+  it("an ownerless pin is not inherited end to end", () => {
+    // The consequence of the tightening, at the boundary rather than on the
+    // helper: an ownerless German file is foreign, so a terse turn must not
+    // come out German. Asserted through the WRITTEN language with an explicit
+    // locale rather than through the exit code — a verdict that depends on the
+    // developer's `LANG` is a test that passes here and fails in CI, which the
+    // locale seam exists to prevent.
+    fs.mkdirSync(path.dirname(statePath("session-A")), { recursive: true });
+    fs.writeFileSync(
+      statePath("session-A"),
+      JSON.stringify({ language: "de" }),
+      "utf8",
+    );
+    run(envelope(TERSE, "session-A"), {
+      consumer_root: tmp,
+      env: { LANG: "en_US.UTF-8" },
+    });
+    expect(readState("session-A").language).toBe("en");
+  });
+
+  it("nextState keeps a same-session pin and refuses a foreign one", () => {
+    const und = classify("1");
+    expect(
+      nextState({ language: "de", session_id: "s1" }, und, 1, "s1", "now"),
+    ).toBeNull();
+    const foreign = nextState(
+      { language: "en", session_id: "other" },
+      und,
+      1,
+      "s1",
+      "now",
+      "und",
+    );
+    expect(foreign).toBeNull(); // nothing written — the owner's state survives
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The distance trigger.
+//
+// MEASURED (2026-08-20, 10 most recent transcripts, 447 assistant turns after a
+// German prompt): 11 of 12 English replies sat 179–200 tool calls past the pin;
+// compliant turns had p90 = 122. Zero violations below 179. The pin was only
+// ever re-stated on a new prompt or once after a compaction, so a long
+// autonomous block (max observed: 82 assistant turns on ONE prompt) ran ~200
+// tool calls with the pin far outside the attention window while the rest of
+// the context — 198k tokens of delivered rules — is entirely English.
+//
+// This is not the re-pin § 6.2 refuses. That was unbounded, once per tool call,
+// and rested on a baseline the 2026-07-06 pilot found at ceiling (Δ=0, 12/12).
+// The pilot's own revisit clause reopens on "a real red baseline … telemetry
+// showing tier-2 obligations missed in production"; the numbers above are it.
+// ---------------------------------------------------------------------------
+
+describe("the distance trigger", () => {
+  function pinDe(session = "s1"): void {
+    run(
+      envelope("Bitte arbeite die Analyse ab und pruefe die Tests.", session),
+      {
+        consumer_root: tmp,
+      },
+    );
+  }
+  /** Fire n tool calls, returning the exit code of the last one. */
+  function toolCalls(n: number, session = "s1"): number {
+    let last = 0;
+    for (let i = 0; i < n; i += 1) {
+      last = run(toolEnvelope(session), { consumer_root: tmp });
+    }
+    return last;
+  }
+
+  it("stays silent below the threshold and counts", () => {
+    pinDe();
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS - 1)).toBe(0);
+    expect(readState()["tool_calls_since_pin"]).toBe(
+      REEMIT_AFTER_TOOL_CALLS - 1,
+    );
+  });
+
+  it("re-states the pin exactly at the threshold and resets", () => {
+    pinDe();
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS - 1)).toBe(0);
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
+    expect(readState()["tool_calls_since_pin"]).toBe(0);
+  });
+
+  it("does not fire again on the next call — one re-emit per block", () => {
+    pinDe();
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS)).toBe(2);
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS - 2)).toBe(0);
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
+  });
+
+  it("a new prompt resets the distance", () => {
+    pinDe();
+    toolCalls(REEMIT_AFTER_TOOL_CALLS - 1);
+    pinDe();
+    expect(readState()["tool_calls_since_pin"]).toBe(0);
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS - 1)).toBe(0);
+  });
+
+  // OWN FINDING — the round-3 council artefact does not contain it, and saying
+  // so matters: an attribution to a reviewer who never made the claim is the
+  // failure mode this file's own history documents. The tool write was a
+  // read-decide-write over a snapshot taken at the top of the hook run, with
+  // nothing serialising two of them. These four are counter-probes — remove the
+  // corresponding half of the fix and the matching one turns red.
+  it("stale-snapshot protection: a tool write whose expected pin is no longer live does not land", () => {
+    pinDe();
+    const stale = readState();
+    // A substantive prompt lands between the tool hook's snapshot and its
+    // write, pinning English. No mock stages this: the file simply changes,
+    // which is exactly what the concurrent prompt path does.
+    fs.writeFileSync(
+      statePath(),
+      JSON.stringify({
+        ...stale,
+        language: "en",
+        detected_at: "2099-01-01T00:00:00.000Z",
+      }),
+      "utf8",
+    );
+    // The tool hook still holds the stale snapshot and decides against it.
+    // `readState` is deliberately untyped (it reads whatever is on disk), and
+    // the cast is written against the signature rather than against `PinState`
+    // so a future parameter change breaks here instead of silently widening.
+    const expected = stale as Parameters<typeof _writeDistance>[1];
+    expect(_writeDistance(tmp, expected, "s1", 42)).toBe(false);
+    // Spreading the snapshot back is the defect: it would restore "de" over a
+    // live English pin, with no hash collision and no lost update involved.
+    expect(readState()["language"]).toBe("en");
+    expect(readState()["tool_calls_since_pin"]).not.toBe(42);
+  });
+
+  it("stale-snapshot protection: a peer holding the lock makes the tool write silent", () => {
+    pinDe();
+    toolCalls(REEMIT_AFTER_TOOL_CALLS - 1);
+    fs.writeFileSync(`${statePath()}.lock`, "", "utf8");
+    // Would be EXIT_WARN with the counter reset to 0 if the lock were ignored,
+    // which is the both-emit-at-the-threshold case the seat named.
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+    expect(readState()["tool_calls_since_pin"]).toBe(
+      REEMIT_AFTER_TOOL_CALLS - 1,
+    );
+  });
+
+  it("stale-snapshot protection: an abandoned lock is broken once, never waited on forever", () => {
+    pinDe();
+    toolCalls(REEMIT_AFTER_TOOL_CALLS - 1);
+    const lock = `${statePath()}.lock`;
+    fs.writeFileSync(lock, "", "utf8");
+    const abandoned = Date.now() - LOCK_STALE_MS - 1_000;
+    fs.utimesSync(lock, new Date(abandoned), new Date(abandoned));
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
+    expect(readState()["tool_calls_since_pin"]).toBe(0);
+  });
+
+  it("stale-snapshot protection: the lock is released, not leaked", () => {
+    pinDe();
+    expect(toolCalls(1)).toBe(0);
+    expect(fs.existsSync(`${statePath()}.lock`)).toBe(false);
+  });
+
+  it("never fires when no pin exists", () => {
+    // No prompt at all — an absent pin is not an obligation to invent one.
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS + 5)).toBe(0);
+  });
+
+  it("never counts or fires for a foreign session's pin", () => {
+    pinDe("session-A");
+    expect(toolCalls(REEMIT_AFTER_TOOL_CALLS + 5, "session-B")).toBe(0);
+    // A's counter was untouched by B's tool calls.
+    expect(readState("session-A")["tool_calls_since_pin"]).toBe(0);
+  });
+
+  it("compaction wins over distance and resets the counter", () => {
+    pinDe();
+    toolCalls(REEMIT_AFTER_TOOL_CALLS - 1);
+    run(compactEnvelope(), { consumer_root: tmp });
+    // The compaction re-emit fires, and the distance path must not add a second.
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
+    expect(readState()["tool_calls_since_pin"]).toBe(0);
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-session state files.
+//
+// The shared single file was the mechanism behind the inverted pin above. A
+// map inside one file was the smaller diff and was rejected: two sessions
+// writing concurrently through `atomic_write_json` (write + rename) drop each
+// other's entry, so the cross-talk returns as a lost update. Filenames are
+// digests of the full session id, so two ids cannot address one file — the
+// first cut used a character sanitiser and both council seats showed that
+// `a/b` and `a_b` destroyed each other's state. `_ownsPin` stays as an in-file
+// integrity check against a stale or hand-copied file, not a collision guard.
+// ---------------------------------------------------------------------------
+
+describe("per-session state files", () => {
+  it("two sessions write to different files and neither sees the other", () => {
+    run(envelope("Bitte fixe die Tests und pruefe die Regeln.", "session-A"), {
+      consumer_root: tmp,
+    });
+    run(envelope("Please rebase and rerun the checks.", "session-B"), {
+      consumer_root: tmp,
+    });
+
+    expect(statePath("session-A")).not.toBe(statePath("session-B"));
+    expect(readState("session-A")["language"]).toBe("de");
+    expect(readState("session-B")["language"]).toBe("en");
+  });
+
+  it("a concurrent write cannot drop the other session's pin", () => {
+    // The lost-update failure a map-in-one-file would have. Interleaved on
+    // purpose: A, B, then A again.
+    run(envelope("Bitte arbeite die Analyse ab.", "session-A"), {
+      consumer_root: tmp,
+    });
+    run(envelope("Please open the pull request.", "session-B"), {
+      consumer_root: tmp,
+    });
+    run(envelope("3", "session-A"), { consumer_root: tmp });
+    expect(readState("session-A")["language"]).toBe("de");
+    expect(readState("session-B")["language"]).toBe("en");
+  });
+
+  it("the terse-prompt keep still works per session after the split", () => {
+    run(envelope("Bitte nimm die Regeln und mach weiter.", "session-A"), {
+      consumer_root: tmp,
+    });
+    run(envelope("Please rerun the failing check.", "session-B"), {
+      consumer_root: tmp,
+    });
+    // A's "weiter" must find de, not B's en.
+    expect(run(envelope("weiter", "session-A"), { consumer_root: tmp })).toBe(
+      2,
+    );
+    expect(readState("session-A")["language"]).toBe("de");
+  });
+
+  it("ids that used to collide now BOTH keep their own state", () => {
+    // Council round 2, blocker 1. `a/b` and `a_b` both sanitised to `a_b.json`,
+    // and `_ownsPin` caught that only AFTER the damage: it refused to inherit,
+    // but a substantive prompt still replaced the other session's file, losing
+    // that session's pin permanently. The seat asked for the test to prove
+    // retention rather than refusal — this is that test, and it could not pass
+    // under the sanitiser.
+    expect(statePathFor("a/b")).not.toBe(statePathFor("a_b"));
+
+    run(envelope("Please rebase this branch and rerun the checks.", "a/b"), {
+      consumer_root: tmp,
+    });
+    run(envelope("Bitte pruefe die Regeln und die Tests.", "a_b"), {
+      consumer_root: tmp,
+    });
+
+    expect(readState("a/b")["language"]).toBe("en");
+    expect(readState("a_b")["language"]).toBe("de");
+    // …and each terse continuation gets its OWN language back.
+    expect(run(envelope("1", "a/b"), { consumer_root: tmp })).toBe(2);
+    expect(readState("a/b")["language"]).toBe("en");
+    expect(run(envelope("3", "a_b"), { consumer_root: tmp })).toBe(2);
+    expect(readState("a_b")["language"]).toBe("de");
+  });
+
+  it("a very long session id still produces a usable filename", () => {
+    // The digest also removes the filename-length failure the sanitiser had.
+    const long = "s".repeat(4096);
+    expect(path.basename(statePathFor(long)).length).toBeLessThan(64);
+    run(envelope("Bitte arbeite die Analyse ab.", long), {
+      consumer_root: tmp,
+    });
+    expect(readState(long)["language"]).toBe("de");
+  });
+
+  it("prunes the pre-split single file once this version writes", () => {
+    const legacy = path.join(tmp, STATE_FILE);
+    fs.mkdirSync(path.dirname(legacy), { recursive: true });
+    fs.writeFileSync(
+      legacy,
+      JSON.stringify({ language: "en", session_id: "old" }),
+      "utf8",
+    );
+    run(envelope("Bitte pruefe die Tests und die Regeln.", "session-A"), {
+      consumer_root: tmp,
+    });
+    expect(fs.existsSync(legacy)).toBe(false);
+    // …and the real pin landed in the per-session file.
+    expect(readState("session-A")["language"]).toBe("de");
+  });
+
+  it("prunes stale session files and keeps fresh ones", () => {
+    run(envelope("Bitte arbeite die Analyse ab.", "fresh"), {
+      consumer_root: tmp,
+    });
+    const stale = path.join(tmp, statePathFor("stale"));
+    fs.mkdirSync(path.dirname(stale), { recursive: true });
+    fs.writeFileSync(
+      stale,
+      JSON.stringify({ language: "de", session_id: "stale" }),
+      "utf8",
+    );
+    const old = Date.now() - (STATE_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000;
+    fs.utimesSync(stale, new Date(old), new Date(old));
+
+    expect(_pruneStaleSessions(tmp, Date.now())).toBe(1);
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(fs.existsSync(path.join(tmp, statePathFor("fresh")))).toBe(true);
+  });
+
+  it("pruning is silent when there is nothing to prune", () => {
+    expect(_pruneStaleSessions(tmp, Date.now())).toBe(0);
+    expect(() => _pruneLegacyState(tmp)).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Council review 2026-08-20 — the findings that survived the per-session split.
+//
+// Both seats returned REQUEST_CHANGES on the pre-split diff. The shared-state
+// read-modify-write race (the OpenAI seat's blocker) is gone by construction
+// now that each session owns a file. These two are the remainder, and neither
+// was covered before the review asked for them.
+// ---------------------------------------------------------------------------
+
+describe("council-review remainder", () => {
+  it("compaction does not restore a foreign session's pin", () => {
+    // The ownership branch in `_reEmitAfterCompaction` was untested — named by
+    // both seats. With per-session files B also has no file of its own, so the
+    // absent-pin path and the foreign-pin path both have to stay silent.
+    run(
+      envelope(
+        "Bitte arbeite die Analyse ab und pruefe die Tests.",
+        "session-A",
+      ),
+      {
+        consumer_root: tmp,
+      },
+    );
+    run(compactEnvelope("session-B"), { consumer_root: tmp });
+    expect(run(toolEnvelope("session-B"), { consumer_root: tmp })).toBe(0);
+    // A's own pin is untouched by B's compaction.
+    expect(readState("session-A")["language"]).toBe("de");
+  });
+
+  it.skipIf(!MODE_BITS_DENY_WRITES)(
+    "a failed threshold reset stays silent instead of re-firing forever",
+    () => {
+      // The false guarantee the review caught: a failed INCREMENT costs one late
+      // reminder, a failed RESET leaves the counter at the threshold and re-fires
+      // on every later tool call. Policy is fail-closed.
+      run(envelope("Bitte nimm die Regeln und mach weiter.", "session-A"), {
+        consumer_root: tmp,
+      });
+      for (let i = 0; i < REEMIT_AFTER_TOOL_CALLS - 1; i += 1) {
+        run(toolEnvelope("session-A"), { consumer_root: tmp });
+      }
+      // The state must stay READABLE while the write fails, or the test proves
+      // nothing: an unreadable state returns early on "no pin" and never reaches
+      // the write policy at all. So make the DIRECTORY read-only —
+      // `atomic_write_json` writes a temp file beside the target and renames, and
+      // the temp create is what fails.
+      const dir = path.dirname(path.join(tmp, statePathFor("session-A")));
+      fs.chmodSync(dir, 0o500);
+      try {
+        expect(readState("session-A")["language"]).toBe("de"); // still readable
+
+        // The threshold call must NOT emit, and must not emit on any later call
+        // either — the unbounded-loop shape.
+        expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
+        expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
+        expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
+      } finally {
+        fs.chmodSync(dir, 0o700);
+      }
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Council review round 2 — the four merge blockers, one test each.
+//
+// Round 2 reviewed the per-session split itself and both seats returned
+// REQUEST_CHANGES again. Blocker 1 (sanitiser collisions) is covered above by
+// the retention test that replaced the old refusal test. These are the rest.
+// ---------------------------------------------------------------------------
+
+describe("council round-2 blockers", () => {
+  it("blocker 2: no stable session id means no persistence at all", () => {
+    // `statePathFor("")` used to bucket every id-less invocation into
+    // `unknown-session.json`, and `_ownsPin` treats an empty stored owner as
+    // owned — the original shared-file defect, in the one case with no guard
+    // left. There is no sound local way to tell two id-less sessions apart, so
+    // the honest behaviour is stateless.
+    expect(hasStableSessionId("")).toBe(false);
+    expect(hasStableSessionId("   ")).toBe(false);
+    expect(hasStableSessionId("s1")).toBe(true);
+
+    // A marked prompt still pins — that needs no state.
+    expect(
+      run(envelope("Bitte pruefe die Tests und die Regeln.", ""), {
+        consumer_root: tmp,
+      }),
+    ).toBe(2);
+    // …but nothing was written, so nothing can be inherited or shared.
+    expect(fs.existsSync(path.join(tmp, STATE_DIR))).toBe(false);
+    // A terse prompt from another id-less invocation inherits nothing.
+    expect(run(envelope("1", ""), { consumer_root: tmp })).toBe(0);
+  });
+
+  it("blocker 2: an id-less session never counts distance or restores a pin", () => {
+    run(envelope("Bitte arbeite die Analyse ab.", ""), { consumer_root: tmp });
+    for (let i = 0; i < REEMIT_AFTER_TOOL_CALLS + 2; i += 1) {
+      expect(run(toolEnvelope(""), { consumer_root: tmp })).toBe(0);
+    }
+    run(compactEnvelope(""), { consumer_root: tmp });
+    expect(run(toolEnvelope(""), { consumer_root: tmp })).toBe(0);
+  });
+
+  it("blocker 3: pruning does not delete a file refreshed after the stat", () => {
+    // The interleaving the seat spelled out: the pruner sees a stale mtime, the
+    // owner resumes and replaces the path, the delete eats the NEW state.
+    //
+    // A cutoff-only test cannot reach this: if the file reads fresh, the first
+    // check skips it and the claim path is never entered — the test would pass
+    // against ANY implementation. So the race is produced directly: the FIRST
+    // stat (the candidate check) reports stale, the SECOND (the revalidation
+    // after the claim) reports fresh, which is exactly a writer landing in
+    // between.
+    const p = path.join(tmp, statePathFor("resumed"));
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(
+      p,
+      JSON.stringify({ language: "de", session_id: "resumed" }),
+      "utf8",
+    );
+
+    let call = 0;
+    const raced = (): number => {
+      call += 1;
+      // 1st = candidate check → stale; 2nd = post-claim revalidation → fresh,
+      // i.e. the owner wrote between the two.
+      return call === 1 ? 0 : Date.now();
+    };
+    expect(_pruneStaleSessions(tmp, Date.now(), raced)).toBe(0);
+
+    // The refreshed file is back at its live path, with its content intact…
+    expect(fs.existsSync(p)).toBe(true);
+    expect(JSON.parse(fs.readFileSync(p, "utf8")).session_id).toBe("resumed");
+    // …and no tombstone was left behind.
+    expect(
+      fs.readdirSync(path.dirname(p)).filter((n) => n.endsWith(".tomb")),
+    ).toHaveLength(0);
+    // The claim really was exercised — both stats ran.
+    expect(call).toBeGreaterThanOrEqual(2);
+  });
+
+  it("blocker 3: a genuinely stale file is still removed, tombstone-free", () => {
+    const p = path.join(tmp, statePathFor("gone"));
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(
+      p,
+      JSON.stringify({ language: "de", session_id: "gone" }),
+      "utf8",
+    );
+    const old = Date.now() - (STATE_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000;
+    fs.utimesSync(p, new Date(old), new Date(old));
+
+    expect(_pruneStaleSessions(tmp, Date.now())).toBe(1);
+    expect(fs.existsSync(p)).toBe(false);
+    expect(
+      fs.readdirSync(path.dirname(p)).filter((n) => n.endsWith(".tomb")),
+    ).toHaveLength(0);
+  });
+
+  it("a failed threshold reset stays silent — deterministically, no chmod", () => {
+    // The `chmod 0o500` sibling above cannot force a failure for an elevated
+    // user: root ignores the mode bits, the write succeeds, and the test goes
+    // green against ANY implementation. Council round 3 asked for the same
+    // determinism the pruner's age reader already has, so the failure comes
+    // from the injected writer instead of from the filesystem.
+    run(envelope("Bitte nimm die Regeln und mach weiter.", "session-A"), {
+      consumer_root: tmp,
+    });
+    for (let i = 0; i < REEMIT_AFTER_TOOL_CALLS - 1; i += 1) {
+      run(toolEnvelope("session-A"), { consumer_root: tmp });
+    }
+    const refuse = () => {
+      throw new Error("EACCES");
+    };
+    // The threshold call, and every later one: silence, never an unbounded loop.
+    expect(
+      run(toolEnvelope("session-A"), {
+        consumer_root: tmp,
+        write_json: refuse,
+      }),
+    ).toBe(0);
+    expect(
+      run(toolEnvelope("session-A"), {
+        consumer_root: tmp,
+        write_json: refuse,
+      }),
+    ).toBe(0);
+    expect(
+      run(toolEnvelope("session-A"), {
+        consumer_root: tmp,
+        write_json: refuse,
+      }),
+    ).toBe(0);
+  });
+
+  it("a failed compaction reset stays silent — deterministically, no chmod", () => {
+    run(envelope("Bitte nimm die Regeln und mach weiter.", "session-A"), {
+      consumer_root: tmp,
+    });
+    run(compactEnvelope("session-A"), { consumer_root: tmp });
+    const refuse = () => {
+      throw new Error("EACCES");
+    };
+    expect(
+      run(toolEnvelope("session-A"), {
+        consumer_root: tmp,
+        write_json: refuse,
+      }),
+    ).toBe(0);
+  });
+
+  it.skipIf(!MODE_BITS_DENY_WRITES)(
+    "blocker 4: compaction stays silent when its reset cannot be persisted",
+    () => {
+      // It used to ignore the reset result and emit anyway. A reset stuck at 149
+      // means the next successful tool write reaches 150 and emits a SECOND
+      // reminder — contradicting the "compaction wins" invariant.
+      run(envelope("Bitte nimm die Regeln und mach weiter.", "session-A"), {
+        consumer_root: tmp,
+      });
+      run(compactEnvelope("session-A"), { consumer_root: tmp });
+
+      const dir = path.dirname(path.join(tmp, statePathFor("session-A")));
+      fs.chmodSync(dir, 0o500);
+      try {
+        expect(readState("session-A")["language"]).toBe("de"); // still readable
+        expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
+      } finally {
+        fs.chmodSync(dir, 0o700);
+      }
+    },
+  );
 });
