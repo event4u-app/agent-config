@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **712 artefacts** in this package.
+Maintainer-facing index of all **714 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -302,7 +302,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (116)
+## Rules (117)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -387,6 +387,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`preservation-guard`](../src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
 | rule | [`question-not-instruction`](../src/rules/question-not-instruction.md) | auto | A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute |
+| rule | [`recurring-criticism`](../src/rules/recurring-criticism.md) | auto | The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count |
 | rule | [`reviewer-awareness`](../src/rules/reviewer-awareness.md) | auto | Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary |
 | rule | [`roadmap-ci-steps-policy`](../src/rules/roadmap-ci-steps-policy.md) | auto | Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline |
 | rule | [`roadmap-progress-sync`](../src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open |
@@ -446,7 +447,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, or inbox-artifact analysis. |
 | command | [`analyze-conformance`](../src/domains/analysis-workbench/analyze/conformance/command.md) | cluster: analyze | Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable. |
 | command | [`analyze-decision`](../src/domains/analysis-workbench/analyze/decision/command.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
-| command | [`analyze-inbox`](../src/domains/analysis-workbench/analyze/inbox/command.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each. |
+| command | [`analyze-inbox`](../src/domains/analysis-workbench/analyze/inbox/command.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each. |
 | command | [`analyze-incident`](../src/domains/analysis-workbench/analyze/incident/command.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../src/domains/analysis-workbench/analyze/near-miss/command.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
@@ -628,7 +629,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (106)
+## Guidelines (107)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -674,6 +675,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`model-recommendation`](../docs/guidelines/agent-infra/model-recommendation.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
+| guideline | [`recurring-criticism-mechanics`](../docs/guidelines/agent-infra/recurring-criticism-mechanics.md) | agent-infra |  |
 | guideline | [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md) | agent-infra |  |
 | guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |
 | guideline | [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md) | agent-infra |  |

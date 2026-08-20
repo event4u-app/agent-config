@@ -129,6 +129,9 @@ precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../doc
 
 ## See also
 
+- [`recurring-criticism`](recurring-criticism.md) — the **other entrance**: this
+  rule fires when a lock blocks a change, that one when the same criticism arrives
+  again. It reuses the five steps and the owner-reserved table below.
 - [`decision-review`](../skills/decision-review/SKILL.md) — the backward-audit
   procedure + the migrated gate mechanics.
 - [`ai-council`](../skills/ai-council/SKILL.md) — the re-evaluation mechanism;

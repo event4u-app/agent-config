@@ -86,6 +86,32 @@ describe('self-repair — user-report intake', () => {
         expect(detectUserReport(prompt)).toBeNull();
     });
 
+    // Recurrence phrasings carry no fault word at all, so before these patterns
+    // the SECOND and THIRD report of a defect were silently not records —
+    // precisely when the occurrences counter carries the most signal.
+    it.each([
+        'das habe ich dir jetzt schon dreimal gesagt',
+        'ich sage dir das zum dritten mal',
+        'wie oft soll ich das noch sagen',
+        "I've already told you this",
+        'told you this three times',
+        'how many times do i have to repeat it',
+    ])('fires on a recurrence phrasing: %s', (prompt) => {
+        expect(detectUserReport(prompt)?.defect_class).toBe('user-reported');
+    });
+
+    // The near-miss half: a bare repetition word must NOT fire, or the detector
+    // becomes noise on ordinary prompts and every spurious record is a spurious PR.
+    it.each([
+        'mach das nochmal',
+        'lauf den test wieder',
+        'run it again please',
+        'schon wieder ein neuer Task',
+        'say that again for the docs',
+    ])('stays silent on a bare repetition word: %s', (prompt) => {
+        expect(detectUserReport(prompt)).toBeNull();
+    });
+
     it('marks the record as user-reported, not self-detected', () => {
         const f = detectUserReport('du hast die Sprache ignoriert')!;
         expect(f.source).toBe('user-reported');
@@ -818,5 +844,21 @@ describe('self-repair — hook', () => {
         const line = buildQueueLine(3, 'user-reported');
         expect(line).toContain('3 open');
         expect(line).toContain('agents/runtime/self-repair/');
+    });
+
+    // The store has always counted repeats; the line never carried the number,
+    // so a recurring defect was indistinguishable from a first sighting.
+    it('surfaces the recurrence count and routes it once the record repeats', () => {
+        const line = buildQueueLine(1, 'user-reported', 3);
+        expect(line).toContain('recurred 3 time(s)');
+        expect(line).toContain('decision-revisit-gate');
+        expect(line).toContain('never on the repetition count');
+    });
+
+    it('says nothing about recurrence on a first sighting', () => {
+        for (const line of [buildQueueLine(2, 'user-reported'), buildQueueLine(2, 'user-reported', 1)]) {
+            expect(line).not.toContain('recurred');
+            expect(line).toContain('2 open');
+        }
     });
 });

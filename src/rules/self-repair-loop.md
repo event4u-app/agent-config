@@ -52,6 +52,16 @@ work, not a notification:
    the user's call, per
    [`non-destructive-by-default`](non-destructive-by-default.md).
 
+**When the line says the record has recurred, step 2 changes target.** The store
+keeps one record per fingerprint and increments it, so a repeat does not raise
+`count` — the line now carries the newest record's `occurrences` instead, and
+above 1 it is the only deterministic "this came back" signal in the session. A
+recurrence means the *earlier* fix or dismissal did not hold, so the surface that
+failed is the one that let it be closed prematurely, not only the one that let the
+behaviour happen. Resolve it through
+[`recurring-criticism`](recurring-criticism.md) — which also states the part that
+matters most here: resolve on evidence, never on the repetition count.
+
 ## Correct openly, never silently
 
 Reported by the user → redo the task properly in the same turn, visibly, saying
@@ -83,6 +93,13 @@ as [`domain-safety-pii`](domain-safety-pii.md) § Surface 2.
 The user is criticising the **code**, not the agent's conduct; the fingerprint
 is already an open record (the hook increments it); or a one-off caused by
 information the agent could not have had — note it, do not queue it.
+
+**The already-an-open-record case suppresses a duplicate QUEUE ENTRY, never the
+response.** Read on its own the clause above inverts into "it came back, so do
+nothing new", which is the opposite of what a repeat means. The counter exists
+precisely so a recurrence is visible without a second entry: no new record, and a
+**stronger** obligation — [`recurring-criticism`](recurring-criticism.md) fires,
+because the earlier disposition demonstrably did not hold.
 
 ## Enforcement
 

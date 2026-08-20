@@ -41,11 +41,26 @@ import { scan_contexts, scan_guidelines, scan_rules } from './mcp_server/resourc
 
 const SCHEMA_VERSION = 1;
 const PACKER_VERSION = '1.0.0';
-// Worker bundle is the compact JSON; gzipped copy lives in R2. Cloudflare's
-// condensed-bundle limit is 3 MB (free) / 10 MB (paid); 778 KB gz today
-// (438 entries) leaves ample headroom. Hard-fail at 5 MB uncondensed so
-// the build dies before the Worker upload does.
-const MAX_UNCONDENSED_BYTES = 5 * 1024 * 1024;
+// Worker bundle is the compact JSON; gzipped copy lives in R2. This constant is
+// a PROXY for Cloudflare's condensed-bundle limit (3 MB free / 10 MB paid) — it
+// hard-fails early so the build dies before the Worker upload does. Because it is
+// a proxy, the number that matters is the gz one, and both are restated here as
+// MEASURED values rather than remembered ones.
+//
+// Measured 2026-08-20 on origin/main (770 entries): uncondensed 5,230,537 B,
+// gz 1,793,879 B. So the real constraint sits at 57 % of the free tier with
+// ~1.2 MB of room, while the old 5 MiB proxy had 12,343 B of headroom — a 0.24 %
+// margin on trunk, which made ANY addition above ~12 KB to rules, guidelines or
+// contexts fail here regardless of merit. Raised to 6 MiB, deliberately well
+// above the measurement: a cap pinned just over the current figure reds on the
+// next commit and teaches people to raise it again.
+//
+// The prior comment claimed "778 KB gz today (438 entries)". That was stale by
+// 2.3x on size and 332 entries — the reason the proxy drifted into a blocker
+// without anyone noticing was that its own justification was never re-measured.
+// If this needs raising again, re-measure BOTH numbers and replace them here;
+// the gz figure against 3 MB is the one that decides whether there is a problem.
+const MAX_UNCONDENSED_BYTES = 6 * 1024 * 1024;
 
 /** Sentinel for the early-exit paths (`raise SystemExit(n)` in Python). */
 class SystemExit extends Error {

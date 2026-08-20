@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 297
+- **artefacts**: 298
 
 ## Commands (153)
 
@@ -25,7 +25,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 - **`analyze-conformance`** — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
-- **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each.
+- **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (69)
+## Rules (70)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -213,6 +213,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
 - **`question-not-instruction`** — A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute
+- **`recurring-criticism`** — The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open
