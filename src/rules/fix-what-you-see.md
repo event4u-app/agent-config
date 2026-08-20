@@ -1,12 +1,22 @@
 ---
-type: "always"
-tier: "1"
-alwaysApply: true
+type: "auto"
+tier: "2a"
+alwaysApply: false
 description: "Saw a red check or a real defect — fix it, whoever wrote it; if you cannot, ship a tracked follow-up roadmap in the same change. Ownership is never a disposition"
-# The obligation comes due when a defect is OBSERVED, not on a clock: a turn
-# that sees nothing owes nothing, and a turn that sees a red check owes a
-# disposition regardless of how many turns preceded it.
+# Due when a defect is OBSERVED, not on a clock: a turn that sees nothing owes
+# nothing; a turn that sees a red check owes a disposition.
 obligation_frequency: "per-event"
+triggers:
+  - keyword: "failing"
+  - keyword: "fails"
+  - keyword: "red"
+  - keyword: "broken"
+  - keyword: "regression"
+  - keyword: "CI"
+  - phrase: "not my"
+  - phrase: "nicht mein"
+  - phrase: "someone else's"
+  - phrase: "whose test"
 workspaces: [engineering]
 packs: [core]
 enforced_by:
@@ -20,74 +30,59 @@ enforced_by:
 ```
 YOU SAW IT, YOU FIX IT — WHOEVER WROTE IT.
 "NOT MY CODE" / "NOT MY TEST" / "ANOTHER SESSION OWNS THAT FILE" IS NOT A
-DISPOSITION. IT IS THE EXCUSE THIS RULE EXISTS TO DELETE.
-CANNOT FIX IT NOW → A TRACKED FOLLOW-UP ROADMAP SHIPS IN THE SAME CHANGE.
-A CHAT MENTION IS NOT A DISPOSITION EITHER. NEITHER IS A COMMENT IN A PR BODY.
-A RED CHECK IS NEVER HANDED BACK WITH ITS CAUSE IDENTIFIED AND UNFIXED.
+DISPOSITION. CANNOT FIX IT NOW → A TRACKED FOLLOW-UP ROADMAP SHIPS IN THE
+SAME CHANGE. A CHAT MENTION IS NOT ONE EITHER, NOR A "KNOWN-OPEN" LINE IN A
+PR BODY. A RED CHECK IS NEVER HANDED BACK WITH ITS CAUSE NAMED AND UNFIXED.
 ```
 
-## What counts as "saw it"
+**Saw it** = a red check already in front of you (test, lint, type, CI), or a
+defect you pass while working — in your diff, a neighbouring file, a file
+another agent or a parallel session wrote. The author is irrelevant.
 
-- A **red check** — failing test, lint error, type error, failing CI job — whose
-  output is already in front of you. You do not have to go looking; you have to
-  act on what you already have.
-- A defect you pass while working: in your diff, in a neighbouring file, in a
-  file another agent or person wrote, in a file a *parallel session* holds.
-- A claim in a comment or doc that the code contradicts.
+**Two dispositions, and only two:** fix it with its verification, or land a
+roadmap under `agents/roadmaps/` in the SAME change naming the defect, its
+evidence, and what closes it.
 
-The author is irrelevant. So is which session, worktree, or branch produced it.
+## Bounds
 
-## The two dispositions — and there are only two
-
-1. **Fix it.** Default. Includes the verification the fix needs, in the same
-   change.
-2. **Ship a tracked follow-up.** Only when fixing now is genuinely wrong — the
-   fix is a different concern, needs a decision you do not have, or would rewrite
-   a file a live review is reading. Then a **roadmap under `agents/roadmaps/`**
-   lands in the SAME change, naming the defect, its evidence, and what closes it.
-
-Everything else is the failure mode: mentioning it in a reply, listing it as
-"known-open" and moving on, filing it in a PR body only, or reporting the cause
-of a red check and stopping there.
-
-## Not a licence to sprawl
-
-This rule removes *ownership* as an excuse. It does not remove
-[`minimal-safe-diff`](minimal-safe-diff.md): a fix stays the smallest change that
-resolves what you saw. A defect too large for that is exactly the case for
-disposition 2 — the roadmap, not a sprawling diff.
-
-Nor does it lift a floor. A fix that would cross
+Removes *ownership* as an excuse, not the diff limit:
+[`minimal-safe-diff`](minimal-safe-diff.md) still caps the change — too large
+IS the roadmap case. A fix crossing
 [`non-destructive-by-default`](non-destructive-by-default.md) still stops and
-asks; the *ask* is then the work, and the finding still ends in one of the two
-dispositions.
+asks; the ask becomes the work, not the exit.
 
-## When NOT to fire
+**Does NOT fire:** user fenced the scope this turn · no falsifiable break (a
+preference, not a red) · already decided by the user.
 
-- The user fenced the scope this turn ("just this one line", "plan only").
-- The "defect" is a preference, not a falsifiable break — no red check, no
-  contradicted claim, no failing invariant.
-- It is already fixed, or the user already decided to leave it (an explicit
-  "leave it" is terminal, per [`scope-control`](scope-control.md)).
+## Why separate from `active-remediation`
 
-## Why this is its own rule
+That rule forbids ignoring a spotted issue and its ladder permits **note + ask**.
+Two properties made it insufficient, both measured 2026-08-20: it is `type: auto`
+on `refactor`/`legacy`/`cleanup` triggers — **none of which a failing CI job
+matches**, so it does not load when the obligation matters most — and its
+note-and-ask tier is what let a session name a red check's cause, name the
+file's author, and hand it back still red.
 
-[`active-remediation`](active-remediation.md) already says never to ignore a
-spotted issue, and its ladder permits **note + ask** as a tier. Two gaps made
-that insufficient in practice, both measured on 2026-08-20:
+Mechanics (fix-now size criteria, follow-up shape) stay there; this rule only
+deletes the two escapes.
 
-- It is `type: auto` on triggers like `refactor`, `legacy`, `cleanup` — **none of
-  which a red CI check matches**, so the one moment the obligation matters most
-  is the moment the rule does not load. This rule is `always` for exactly that
-  reason.
-- Its note-and-ask tier let a session identify the cause of a red check, name the
-  file's author, and hand the decision back — with the check still red. The
-  maintainer's correction was blunt and is the sentence this rule encodes: *"Du
-  siehst einen Fehler, DU behebst ihn."*
+## Honest activation gap — this rule is `auto`, and it wanted to be `always`
 
-## See also
+It shipped `auto` for a budget reason, not a design one, and the gap that leaves
+is exactly the one it was written to close: **a red check the agent sees in tool
+output triggers nothing.** Keyword triggers match the PROMPT. So the rule loads
+when a human says "CI is red" or "not my test", and does NOT load when a test
+run comes back red and nobody has said a word.
 
-- [`active-remediation`](active-remediation.md) — the fix-now / follow-up ladder and its size criteria; this rule removes ownership and note-only from its escape hatches.
-- [`minimal-safe-diff`](minimal-safe-diff.md) — the fix stays small; too large means disposition 2.
-- [`verify-before-complete`](verify-before-complete.md) — a fix is not done without fresh evidence.
-- [`roadmap-writing`](../skills/roadmap-writing/SKILL.md) — the shape disposition 2 takes.
+`check_always_budget` is the reason: the extended always-budget sat at
+60,252 / 60,254 chars — **two characters of headroom** — and the cap is a
+ratchet that may only move down. The other nine always-rules are the kernel,
+which `block_kernel_rule_writes` denies agent writes to, so no room can be made
+from this side. A 2,332-char rule puts the total at 103.9 %.
+
+Closing the gap needs one of: the ext-cap ratchet opened deliberately (a
+maintainer decision, recorded), a kernel rule shortened to make room, or a
+`post_tool_use` carrier that notices a non-zero verification exit — the only
+option that would fire on tool output rather than on wording. Until then, `auto`
+plus this paragraph is the honest state: the obligation is real, its delivery is
+partial, and the partiality is named rather than implied away.
