@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers in the active tree, **20** need you → `agent-config gates`
 
 ## Overall
 
-**292 / 578 steps done · 51%**
+**302 / 572 steps done · 53%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## ✅ Completed — pending archival
@@ -18,7 +18,9 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
+| [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 4 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
 
 ## Open roadmaps
@@ -40,7 +42,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 0 | 7 | 0 | 4 | 0 | ██████████ 100% |
-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 0 | 4 | 0 | 6 | 0 | ██████████ 100% |
 | 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
 | 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 0 | 12 | 0 | 5 | 0 | ██████████ 100% |
@@ -530,59 +532,14 @@ _1 blocker resolved._
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
-**Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)
+**Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 4 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Pre-commit the falsifiable minimal claim | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Accumulate real telemetry (inherits parent followup) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 3 | Gate the claim: prove or drop | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Position the minimalism (only after Phase 3 resolves) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-orchestration-scope-decision"></a>
-**Blockers**
-
-- **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run the payload probe FIRST and treat its answer as the decision, rather than accumulating more usage. The entry's own re-measurement is decisive on this: at 367 orchestration lines the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so more of the same telemetry cannot populate the columns PROVE needs. If no hook slot sees the task-completion payload, Phase 3's verdict is an **honest null** and this roadmap terminates on that finding instead of waiting; only if a slot does see it is the ≥ 20-populated-line window worth opening.
-  - **If you do nothing:** 6 steps wait on a window that the entry's own numbers suggest may never fill, and the roadmap keeps reading as resumable to every feasibility screen — the exact misreading the 2026-08-17 rewrite of the Resolved-when was written to stop. A blocker whose condition cannot be reached is a park or a null, not a wait.
-  - **What to do:**
-    the build work is done; only real delegable work produces the
-    telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
-    the post-ADR-117 default (`subagents.auto: on`), then check
-    `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
-    **Measured 2026-08-10 — the literal condition is MET (99 orchestration lines
-    in `2026-08.jsonl`) and Phase 3 is still not decidable.** The count moved
-    because the `orchestration-record` `post_tool_use` concern now emits per
-    dispatch; it did not move because usage habits changed. But all 99 lines
-    carry `token_delta: 0` / `estimated` and `null` for `dispatch_tokens`,
-    `first_pass_success`, `escalated` and `task_class`, which is correct at that
-    layer for a **background** dispatch (the host attaches usage only to a sync
-    completion) — so "at held quality" has no input and PROVE cannot be
-    evaluated. The full field-level measurement and why this is a live-host probe
-    rather than an emitter bug is recorded once, in the sibling's
-    `telemetry-sample-size` blocker; this roadmap's Phase 2 inherits it per the
-    Notes section there.
-    Two consequences worth stating before anyone reads the cleared count as a
-    green light. **(1)** Feeding today's telemetry through `gateVerdict()` yields
-    a null-or-worse reading assembled from one July line, not a verdict — the
-    aggregate currently reports a net of tokens *added* at a 1 % measured share.
-    **(2)** The DROP branch below is premise-stale in its first clause and
-    maintainer-owned in its second, so a DROP is not an agent-executable
-    outcome either.
-    **Correction (2026-08-17) — two of the numbers above have moved, and one of
-    them falsifies the mechanism claim rather than just the count.** Re-measured
-    against `2026-08.jsonl` at 368 lines / **367 orchestration** (July still holds
-    1): `token_delta: 0` and provenance `estimated` remain **367/367**, and
-    `first_pass_success`, `escalated`, `task_class` and `dispatch_mode` remain
-    `null` **367/367** — so the "at held quality has no input" conclusion stands
-    unchanged and PROVE is still not evaluable. What does **not** hold is the
-    parenthetical reason: `dispatch_tokens` is **numeric on 40 of 367** (327 null),
-    i.e. the sync completions the clause said we have none of are now landing, and
-    `wall_clock_ms` is numeric on **367/367**. The absolute-cost side therefore
-    exists; what is still missing is the counterfactual and the quality columns,
-    which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
-    still **0 of 367**, so the corpus has never produced a fan-out.
-  - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
+| 2 | Accumulate real telemetry (inherits parent followup) | ✅ done | 0 | 1 | 0 | 1 | 100% |
+| 3 | Gate the claim: prove or drop | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
+| 4 | Position the minimalism (only after Phase 3 resolves) | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 
 ### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
 
