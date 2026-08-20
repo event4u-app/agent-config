@@ -41,6 +41,7 @@ import {
   atomic_write_json,
   feedback_dir,
   is_replay_mode,
+  update_json_under_lock,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
 import { shapeAndRecord, type ConcernMessage } from "./injection_budget.js";
@@ -1020,12 +1021,53 @@ function _write_feedback(
     }),
   };
   try {
-    atomic_write_json(path.join(fb_dir, "summary.json"), summary);
+    // P3 of `b-stop-async-split-prerequisites` (council 2026-08-20, option (a)).
+    //
+    // WAS: one `summary.json` per session, published by `atomic_write_json`.
+    // The publish is atomic and that was never the problem — the PATH is one,
+    // so two dispatches in the same session (parallel tool calls on this host,
+    // or two platforms installed into one workspace) both wrote it and the later
+    // rename discarded the earlier rollup entirely. Evidence loss, silent.
+    //
+    // The fix is the per-invocation discriminator the blocker names, held INSIDE
+    // one file rather than fanned out across per-invocation filenames. Both
+    // were considered and the file-per-invocation form was refused on growth:
+    // the feedback tree is not pruned, so a 200-tool-call session would leave
+    // 200 rollups per session dir, and capping THAT needs a directory scan on
+    // the hot path. A capped list needs one locked read-modify-write, which is
+    // the same primitive `rule-trips.json` now uses for the same reason.
+    //
+    // `invocation` is pid + monotonic clock: unique per dispatch without a
+    // shared counter, and ordered within one process.
+    const invocation = `${String(process.pid)}-${process.hrtime.bigint().toString()}`;
+    update_json_under_lock<JsonObject>(path.join(fb_dir, "summary.json"), (loaded) => {
+      const priorRaw = (loaded as JsonObject)["invocations"];
+      const prior = Array.isArray(priorRaw) ? priorRaw : [];
+      const next = [...prior, { invocation, ...summary }];
+      return {
+        schema_version: 2,
+        session_id,
+        // Newest last, oldest dropped — the same rotation direction
+        // `dispatch-issues.jsonl` uses, so a reader learns one convention.
+        invocations: next.slice(Math.max(0, next.length - SUMMARY_INVOCATION_CAP)),
+      };
+    });
   } catch (exc) {
     const msg = exc instanceof Error ? exc.message : String(exc);
     process.stderr.write(`dispatch_hook: summary write failed: ${msg}\n`);
   }
 }
+
+/**
+ * How many invocation rollups one session's `summary.json` retains.
+ *
+ * 20, matching nothing in particular and stated as such: the file is a human
+ * debugging surface, twenty dispatches is more than a reader scrolls, and the
+ * value exists to bound growth rather than to preserve a measured window.
+ * `dispatch-issues.jsonl` caps at 200 because it holds FAILURES, which are rare;
+ * this holds every dispatch, which is not.
+ */
+export const SUMMARY_INVOCATION_CAP = 20;
 
 /**
  * Checkable-rule trip counting (road-to-credible-install Phase 6, scoped P3
@@ -1051,28 +1093,38 @@ function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): voi
     const workspace = String(envelope["workspace_root"] || process.cwd());
     const state_dir = path.join(workspace, "agents", "runtime", "state");
     const target = path.join(state_dir, "rule-trips.json");
-    fs.mkdirSync(state_dir, { recursive: true });
-    let doc: JsonObject = { schema_version: 1, concerns: {} };
-    try {
-      const parsed = JSON.parse(fs.readFileSync(target, "utf-8")) as JsonObject;
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) doc = parsed;
-    } catch {
-      /* absent or corrupt → fresh counter file */
-    }
-    const concerns = (doc["concerns"] ?? {}) as Record<string, JsonObject>;
     const today = _now_iso().slice(0, 10);
-    for (const e of tripped) {
-      const name = String(e["concern"]);
-      const prev = (concerns[name] ?? { block: 0, warn: 0 }) as JsonObject;
-      concerns[name] = {
-        block: (Number(prev["block"]) || 0) + (e["exit_code"] === EXIT_BLOCK ? 1 : 0),
-        warn: (Number(prev["warn"]) || 0) + (e["exit_code"] === EXIT_WARN ? 1 : 0),
-        last_trip: today,
-      };
-    }
-    doc["schema_version"] = 1;
-    doc["concerns"] = concerns;
-    atomic_write_json(target, doc);
+    // P3 of `b-stop-async-split-prerequisites` (council 2026-08-20, option (a)).
+    // The read used to sit OUTSIDE the lock: `readFileSync` here,
+    // `atomic_write_json` there. `atomic_write_json` makes the PUBLISH atomic
+    // and says nothing about load → increment → publish, so two concurrent
+    // dispatchers both loaded `block: 3`, both computed 4, and one trip
+    // vanished. `update_json_under_lock` holds all three steps under one lock,
+    // which is the primitive that already exists for exactly this shape.
+    //
+    // The worse form is a lost FIELD, not a lost increment: this mutator
+    // republishes the whole `concerns` map, so a counter another dispatcher
+    // wrote in between would be reverted rather than merely missed.
+    update_json_under_lock<JsonObject>(target, (loaded) => {
+      const doc: JsonObject = { schema_version: 1, concerns: {}, ...(loaded as JsonObject) };
+      const concernsRaw = doc["concerns"];
+      const concerns = (
+        _isObject(concernsRaw) ? concernsRaw : {}
+      ) as Record<string, JsonObject>;
+      for (const e of tripped) {
+        const name = String(e["concern"]);
+        const prevRaw = concerns[name];
+        const prev = (_isObject(prevRaw) ? prevRaw : { block: 0, warn: 0 }) as JsonObject;
+        concerns[name] = {
+          block: (Number(prev["block"]) || 0) + (e["exit_code"] === EXIT_BLOCK ? 1 : 0),
+          warn: (Number(prev["warn"]) || 0) + (e["exit_code"] === EXIT_WARN ? 1 : 0),
+          last_trip: today,
+        };
+      }
+      doc["schema_version"] = 1;
+      doc["concerns"] = concerns;
+      return doc;
+    });
   } catch {
     /* fail-open — counters are observability, never dispatch-critical */
   }

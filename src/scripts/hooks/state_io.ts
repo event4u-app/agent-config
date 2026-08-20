@@ -291,7 +291,9 @@ function _atomic_write_text(target: string, text: string): void {
  * Layout:
  *     <state_root>/.dispatcher/<session_id>/
  *         <concern>.json     — one per concern that ran
- *         summary.json       — rollup written by the dispatcher
+ *         summary.json       — capped list of per-invocation rollups
+ *                              (schema 2; see hook-architecture-v1 for why
+ *                              a single rollup object lost one per overlap)
  *
  * Per Council Round 2 (2026-05-04): exit-code reduction collapses
  * multiple concern signals into a single platform-native code; the
@@ -663,6 +665,74 @@ export function owns_session_state(state: unknown, session_id: string): boolean 
  * fail-closed callers stay silent instead of acting on a write that never
  * happened.
  */
+/**
+ * Read a TEXT file, transform it, and write it back — the WHOLE sequence under
+ * one lock.
+ *
+ * The text sibling of {@link update_json_under_lock}, added for P3 of
+ * `b-stop-async-split-prerequisites` (council 2026-08-20, option (a),
+ * "P3 before anything else"). The concrete case is
+ * `agents/runtime/state/dispatch-issues.jsonl`, which had NO lock and NO
+ * tmp+rename: `log_dispatch_issue` read the whole capped log, appended a line,
+ * and `writeFileSync`'d the target directly.
+ *
+ * That is corruption-capable rather than merely lossy, and the distinction is
+ * why this needed its own primitive instead of a comment. `writeFileSync`
+ * truncates and then writes, so a concurrent reader can observe a half-written
+ * log and a concurrent writer can interleave into one — and the file is written
+ * precisely when something has ALREADY gone wrong, so the evidence destroyed is
+ * the evidence of the failure being reported. Two concurrent dispatchers in one
+ * workspace is a supported configuration (two platforms installed side by side),
+ * and a host that runs tool calls in parallel produces it without any second
+ * platform at all.
+ *
+ * `transform` receives the file's content as read INSIDE the lock — `null` when
+ * the file does not exist, so a caller can tell "absent" from "empty" — and
+ * returns what to write. Returning `null` writes nothing and still counts as
+ * success.
+ *
+ * Returns whether the write landed. Under `AGENT_CONFIG_REPLAY=1` this reports
+ * `false` without touching the tree, the same contract the writers above carry.
+ */
+export function update_text_under_lock(
+  target: string,
+  transform: (loaded: string | null) => string | null,
+): boolean {
+  if (is_replay_mode()) return false;
+  const targetPath = path.resolve(target);
+  const state_dir = path.dirname(targetPath);
+  try {
+    fs.mkdirSync(state_dir, { recursive: true });
+  } catch {
+    return false;
+  }
+  const lock_path = _lock_path(state_dir);
+  let fd: number;
+  try {
+    fd = _acquire_lock(lock_path);
+  } catch {
+    return false;
+  }
+  try {
+    let loaded: string | null = null;
+    try {
+      loaded = fs.readFileSync(targetPath, "utf-8");
+    } catch {
+      // Absent or unreadable. `null` lets the transform distinguish the two
+      // from an empty file, which matters for an append-only log: an
+      // unreadable existing log must not be silently replaced by one line.
+    }
+    const next = transform(loaded);
+    if (next === null) return true; // deliberate no-write, not a failure
+    _publish_text_locked(targetPath, next);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    _release_lock(fd, lock_path);
+  }
+}
+
 export function update_json_under_lock<T>(
   target: string,
   mutate: (loaded: Partial<T>) => T | null,

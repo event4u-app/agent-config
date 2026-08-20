@@ -288,7 +288,7 @@ directory per invocation:
 ```
 agents/runtime/state/.dispatcher/<session_id>/
   <concern>.json     — one file per concern that ran
-  summary.json       — rollup written after the last concern
+  summary.json       — capped LIST of per-invocation rollups (schema 2)
 ```
 
 Each `<concern>.json` carries:
@@ -308,11 +308,30 @@ Each `<concern>.json` carries:
 }
 ```
 
-`summary.json` carries the platform / event tuple, the reduced
-`final_exit_code` + `final_severity`, and a trimmed list of all
-concern entries. `session_id` falls back to
+`summary.json` is **schema 2**: `{ schema_version: 2, session_id,
+invocations: [...] }`, where each entry carries a per-dispatch
+`invocation` discriminator plus the platform / event tuple, the reduced
+`final_exit_code` + `final_severity`, and a trimmed list of all concern
+entries. Newest last; the oldest is dropped past
+`SUMMARY_INVOCATION_CAP` (20). `session_id` falls back to
 `dispatch-<unix_ts>-<pid>` when the envelope omits one. Path
 traversal in `session_id` is collapsed (`/`, `\`, `..` → `_`).
+
+Schema 1 was a single rollup object at this path, and it lost one
+whenever two dispatches overlapped in a session — parallel tool calls
+on one host, or two platforms installed into one workspace. The publish
+was already atomic; the PATH was singular, so the later rename discarded
+the earlier rollup. Changed by P3 of `b-stop-async-split-prerequisites`
+(council 2026-08-20, option (a)), together with the lock on
+`rule-trips.json` and on `dispatch-issues.jsonl`.
+
+**The per-concern `<concern>.json` files still carry the schema-1
+shape and the schema-1 defect**, and that is scope rather than an
+oversight: `hooks_doctor._latest_feedback` resolves them by that exact
+path and picks the newest mtime, so a name change there is a
+consumer-visible change this pass did not take. Two overlapping
+dispatches in one session still overwrite each other's per-concern
+entry.
 
 Feedback writes are non-fatal — IO errors log to stderr but never
 change the dispatcher's exit code. The directory is gitignored and
