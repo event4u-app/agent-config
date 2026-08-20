@@ -68,6 +68,20 @@ permission … in a standing instruction not yet revoked" for
 `scope-control § git-ops` — **for that run, and for exactly four
 operations**:
 
+> **`/roadmap:process-full`: the invocation itself is the acceptance**
+> ([ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md)).
+> No separate confirmation round, and no `execution.mode` declaration required —
+> the user asked for the finished PR, which is a this-turn instruction naming one
+> concrete deliverable. The four operations below are joined, for that wrapper
+> only, by: updating the PR after opening it · reversible repository/branch
+> settings the agent can change · starting, re-running and fixing CI · updating
+> the merge base and resolving conflicts · project-local dependency installs ·
+> any tool / CLI / API / model / council under a cumulative **USD 25** of
+> variable spend per run. **The boundaries below are unchanged and unreachable by
+> any invocation** — that is what keeps the wider grant safe, since a PR is
+> reviewable before it merges and merging stays out.
+
+
 1. Create the run's feature branch (`feat/<roadmap-slug>`, or reuse
    the current worktree branch).
 2. Chunked commits on that branch (Hard-Floor per-commit diff gate

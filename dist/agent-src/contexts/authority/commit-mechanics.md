@@ -21,6 +21,12 @@ Outside the four below, no commit is allowed and no commit ask is allowed.
    Floor still applies).
 4. **Roadmap authorization** — roadmap lists explicit commit steps and
    the user invoked roadmap execution; each commit matches a step.
+   **`/roadmap:process-full` does not require the roadmap to list commit
+   steps** ([ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md)):
+   the invocation delegates delivery of a finished PR, and a PR without
+   commits is not a deliverable. Chunked commits on the run's own branch
+   are authorised by the invocation; the per-commit Hard-Floor diff gate
+   below still fires on every one of them.
 
 ## Always split into logical chunks — default mandate
 

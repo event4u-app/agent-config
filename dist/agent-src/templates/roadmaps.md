@@ -203,16 +203,40 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     | `0` | auto-run — deterministic, free, reversible | the agent runs `Run:`; the output IS the unblock |
     | `1` | budget-preauthorized — billable but reversible | the agent runs `Run:` under a standing budget and logs a receipt |
     | `2` | consent-once — a real preference call, reversible | one line with the recommendation and a default |
-    | `3` | human-only — irreversible, legal, or Hard Floor | unchanged: the human IS the content |
+    | `3` | human-only — the human IS the content: externally impossible for the agent, or an explicitly excluded action | a person, because nobody else can |
+
+    **CAPABILITY BEFORE ROLE (ADR-237).** `3` means *a human is the
+    content of this gate*, never *a human usually does this*. Before
+    authoring `3`, ask one question: **can the agent execute this at all**
+    — through the filesystem, git, `gh`, an API, a CLI, a tool, a model, a
+    council? If yes, it is **not** class 3, whoever conventionally
+    performs it. A branch to create, a push, a PR to open, a repository or
+    branch setting the agent can change, a workflow to start, CI to
+    re-run, a merge base to update, conflicts, failing tests, local
+    configuration, a paid call inside the run's budget — all of these are
+    **work**, and authoring `3` on any of them is a defect a
+    `process-full` run repairs rather than obeys.
+
+    What legitimately remains `3`: a credential that does not exist and
+    the agent cannot create · a purchase beyond the delegated budget ·
+    physical hardware access · another person or organisation must act · a
+    wait that is factually mandatory and cannot be simulated or verified ·
+    an action on the Hard Floor's EXCLUDED list (production-trunk merge,
+    deploy, prod data / secrets / IAM / DNS, an irreversible external
+    action).
 
     Three properties are load-bearing. **`Class:` is optional and its
     absence means 3**, so nothing becomes executable because an author
-    forgot a field. **A class-0 or class-1 entry MUST carry `Run:`** —
+    forgot a field — but an absent class is a *default*, not a finding,
+    and the capability question above still decides whether the step is
+    really blocked. **A class-0 or class-1 entry MUST carry `Run:`** —
     `lint_roadmap_blockers` fails otherwise, because a gate that claims
     to be runnable without naming the command reads as actionable and is
     not. And **class is authored, never inferred**: promoting a gate is
     a reviewed edit, which is what keeps a Hard-Floor gate
     (`non-destructive-by-default`) out of reach of a runtime judgment.
+    Repairing a `3` that fails the capability test is such an edit — it is
+    recorded at the blocker with the reason, not applied silently.
 
     Only the leading token of `Class:` is read, so
     `- **Class:** 1 — budget-preauthorized` is valid; the taxonomy name

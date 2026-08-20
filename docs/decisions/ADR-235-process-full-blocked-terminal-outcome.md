@@ -1,10 +1,10 @@
 ---
 adr: 235
-status: accepted
+status: superseded
 date: 2026-08-19
 decision: process-full-blocked-terminal-outcome
 supersedes: —
-superseded_by: —
+superseded_by: ADR-237
 phase: —
 type: structural
 review_trigger: >-
@@ -22,7 +22,27 @@ review_trigger: >-
 
 ## Status
 
-Accepted.
+**Superseded** · 2026-08-20 · by
+[ADR-237](ADR-237-end-to-end-execution-authority.md).
+
+The operating model this record assumed was replaced by an owner decision:
+`/roadmap:process-full` is an end-to-end delegation whose normal user-visible
+outcome is the final PR, and repository-local prerequisites — a branch, a push, a
+PR, a settings flip, a CI re-run, a merge base, a failing test — are remediation
+work rather than blockers.
+
+**What that changes here.** `blocked-preflight` (Decision 1) is removed;
+`blocked` (Decision 2) narrows to genuine external impossibility; the Decision-3
+separation from the five halts stands but has far less to separate. The census in
+§ Context remains sound as a measurement — what changed is the reading of it: it
+counted actions a human conventionally performs without asking, per action,
+whether a human was *necessary*. Under ADR-237 most of that list is
+machine-executable and therefore not a blocker at all.
+
+**What survives unchanged, and is still binding via ADR-237:** `blocked` is never
+reported as completion; `count_open` stays above zero while work remains; and a
+blocked step is never laundered to `[~]` to reach a clean count. The
+`[~]`-prohibition argument below was correct and is carried forward verbatim.
 
 ## Context
 
