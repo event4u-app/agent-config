@@ -97,6 +97,25 @@ in the estate?**
   [`no-cheap-questions`](no-cheap-questions.md) forbids. The gate protects the
   item, not the maintainer's attention.
 
+### `deferred_policy` — a declared contract removes the round, never the route
+
+An accepted execution contract may declare `deferred_policy`
+([`roadmap-execution-contract § 2b`](../contexts/execution/roadmap-execution-contract.md)).
+It changes **when the round happens**, never **who decides**:
+
+| Declared | Effect on the gate |
+|---|---|
+| absent / `wait` | Unchanged — the synchronous menu runs. |
+| `spawn-follow-up-draft` | The council-routed carry disposition runs **automatically** at closure, with no options round. Legal only because the table above already routes it to the council and Accept pre-authorized the run. |
+| `cancel-with-memo` | The run writes the memo and the recommendation; the `[-]` conversion stays **user**. A declared field never moves a row from user to council. |
+
+Recorded-or-it-did-not-happen applies unchanged to an automatic spawn, and
+fail-closed binds hardest here: a spawn naming a follow-up that does not exist
+yet reaches the user, because a contract cannot pre-authorize a promise.
+Reversible — `wait` is the default, so removing the field restores always-wait
+(`decision 2026-08-20`, AI council 2/2; record
+`agents/evidence/council/drain-blocker-dispositions-a.md`).
+
 ## Later disposition — blocked-for-later roadmaps are parked, never left active
 
 ```

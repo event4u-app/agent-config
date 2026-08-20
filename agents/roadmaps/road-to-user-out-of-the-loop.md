@@ -14,6 +14,97 @@ Reduce the median count of synchronous user contacts per delivered roadmap, and 
 
 Two target axes, deliberately not merged: a run can ask zero questions and still be slow. Contacts are B1–B12; wall-clock is B13–B14 and the parallel lanes.
 
+## Outcome
+
+**Closed 2026-08-20 on an autonomous drain run. Archived does not mean
+achieved.** 44 lines: **30 satisfied or narrowed**, **11 transferred** to two
+stubs, **3 abandoned** by refusals published elsewhere. Zero deferred, so the
+Iron Law 3 gate has nothing to hold. Every open blocker was resolved by AI
+council disposition, record
+[`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md).
+
+The Goal named two axes. Read against them, honestly:
+
+- **Contact axis.** The mechanisms that remove contacts shipped — one
+  elicitation surface, the mode ladder, the memo channel, the two-exit deferred
+  policy, the one-shot flip repair. Measured on 2026-08-20 with
+  `interruption_report --root <main checkout>`: **46 contact-axis runs, median
+  0 contacts per run**, which CLEARS the pre-registered ≥ 20-run floor for the
+  first time (`docs/proof.md` recorded 19 of 20 on 2026-08-19). It is **not**
+  the baseline that claim registered: those runs post-date the Phase 1
+  mechanisms, and the claim's own text says the baseline "cannot be read after
+  the change it is meant to judge". So this is a reading, and the pre-change
+  comparison it was meant to enable is no longer obtainable.
+- **Wall-clock axis.** **3** timing-bearing runs against the same ≥ 20 floor.
+  Not a matter of waiting: `docs/proof.md` already records this floor as
+  *structurally unreachable at default retention* — the only timing source is a
+  rolling buffer holding 5 sessions. Waiting rotates the window instead of
+  filling it.
+
+Neither claim's status is changed by this run. Both remain `unbacked` in
+`docs/CLAIMS.md`, and flipping a pre-registered claim is a maintainer act, not
+a drain-run act.
+
+### Per phase
+
+| Phase | Outcome | What actually happened |
+|---|---|---|
+| 0 — Measurement | `satisfied` (unchanged) | Closed before this run: instrument built, honest and running; the number arrives with the sessions. |
+| 1 — One elicitation surface | `narrowed` | Six of seven steps were already landed. The seventh — the `ask-when-uncertain` carve-out — is the one true kernel delta and is **transferred**. Its practical residual is small and stated in the stub: the decision sheet already ships and is already legal under the Iron Law's own one-decision-point reading; the missing piece is rule text making that reading explicit rather than inferred. |
+| 2 — Set scope | `narrowed` | The **mechanics** landed in the shared layers this roadmap's own architecture principle names: set-scoped autonomy in `autonomy-mechanics § Task-scope`, and the set contract, dependency union, auto-continuity and failure isolation in `roadmap-process-loop § 3d`. The **front door** and the **lanes** are transferred. |
+| 3 — Merge decoupling | `narrowed` | Dependency detection landed (declared `depends:` unioned with a file-overlap heuristic, feeding only ordering and parallelizability). Stacking and the merge train are transferred; the anti-goal that merges stay human travels with them. |
+| 4 — Question-elimination ladder | `satisfied` | All five steps closed, four of them by work already on `main` that this file never checked off: the second-model rung, the memo channel, the no-self-adversarial clause, and the benchmark — which **ran and produced an honest null**, exactly the outcome its own text pre-authorized. The late-artifact policy landed in this run. |
+| 5 — Deferred disposition | `satisfied` | The contract field and the gate delta both landed, with two autonomous exits rather than one. |
+| 6 — Session continuity | `narrowed` | The checkpoint half of the end-of-life extension is implemented; automatic handoff generation is **not reachable from a hook** — `hook_manifest.yaml` states hooks cannot inject `/clear`, so the recycle action is advisory-carried by design. The flip self-fix landed. The resume runner is abandoned; `/goal` is transferred. |
+| 7 — Unattended operation | `abandoned`, except the digest | The digest exists (`run:supervise --digest`). The scheduler and the demotion gate depend on unattended runs that a **published refusal** (`road-to-long-horizon-execution` 4.0, AI council 2026-08-19) says will not happen until a falsifiable reopen condition fires. Measured 2026-08-20: `agents/runtime/state/checkpoints/` **does not exist** — the reopen path has never had one input. |
+| 8 — Standing measurement | `narrowed` | The verification pass found the roadmap's largest default flip carrying no kill criterion at its own site and fixed it. The release-cycle publication is narrowed — see below. |
+
+### Steps closed on evidence that predates this run
+
+Four `[x]` boxes are work this run did not do. Each is cited so a reader can
+check rather than trust:
+
+| Step | Evidence |
+|---|---|
+| 4.1 second-model rung | `src/scripts/ai_council/config.ts:1334-1338` builds it via `buildSecondModel(...)`, commented `UOTL Phase 4.1 — REFUSED on a locked class rather than ignored`; contract at `docs/contracts/ai-council-config.md:904`. |
+| 4.2 build-review-fix benchmark | `internal/bench/reports/defect-finding.json` → `verdict.honest_null: true`, `H1_met: false`, disposition "arms indistinguishable within pre-registered thresholds". Published and **backed** in `docs/proof.md` as `team-defect-finding-null`. The step's own text: "a null closes the gate and is published" — so the team loop is **not** activated, and that is the step being satisfied, not failed. |
+| 4.3 decision-memo channel | `agent-config decision:memo --help` — writes `agents/runtime/state/decisions/<run>/NNN.md` with question, chosen option, reasoning, resolver, confidence. |
+| 4.5 no self-adversarial fallback | `roadmap-process-loop.md:481` — "**No self-adversarial fallback.** With neither a council nor a second-model rung available, the ambiguity halt STANDS." |
+| 6.1 session-eol checkpoint | `src/scripts/hooks/session_eol_hook.ts:381-389` calls `buildCheckpoint` / `writeCheckpoint`, gated on a claimed roadmap slug. |
+| 7.2 notification digest | `agent-config run:supervise --help` — `--digest` reports dead runs, decision memos written, budget consumed. |
+
+### Phase 8 Step 1, narrowed — which of the eight metrics have instruments
+
+The report runs and is bound to both pre-registered claims in `docs/proof.md`
+and `docs/CLAIMS.md`, which is the release-facing surface `task check-claims`
+already gates. Of the eight metrics the step names, **four have instruments and
+four have none**, measured by reading the report's own JSON keys:
+
+- **Instrumented:** synchronous contacts per roadmap · wall-clock per roadmap
+  (elapsed and working, though not split serial-versus-parallel, because no
+  parallel run exists) · memos per run · halt-related counters
+  (`stall_halt_rate`, `median_reengagements_per_run`).
+- **No instrument:** memo **revisit** rate · late-artifact auto rate and its
+  revisit rate · interactive-choice rate at the contract screen · auto-route
+  error rate. The last of these was already recorded as instrument-less in
+  `command-suggestion-policy`; the other three are recorded as such at their
+  flip sites by Step 2 of this phase.
+
+A per-release publication of all eight would need a metric surface that does not
+exist, and inventing one would violate this roadmap's own principle that no
+mechanism binds to a new carrier.
+
+### What a reader should not conclude
+
+- **Not** that runs now ask zero questions. The median-0 reading is over runs
+  that include this one, and a drain run asserting its own contact count is
+  self-report.
+- **Not** that unattended operation was evaluated and rejected here. It was
+  refused elsewhere, with a reopen condition, and this file inherits that.
+- **Not** that the transferred set work is unwanted. Its scope decision is
+  made, its cap is decided, and its kill criteria are written; what is missing
+  is an entry point and the runs only that entry point can produce.
+
 ## Prerequisites
 
 - [x] Read `src/agent-src/contexts/execution/roadmap-execution-contract.md` and `roadmap-process-loop.md`
@@ -102,9 +193,9 @@ Three findings worth carrying forward:
 
 The principle: exactly one place asks the user — the contract screen with its decision sheet. The plan-confidence interview, artifact understand-questions, and in-run clarifications all feed that surface instead of opening their own rounds.
 
-- [x] Replace the silent interactive fallback with a mode-derivation ladder in `roadmap-process-loop` § 3. First source wins: explicit invocation suffix, then frontmatter `execution.mode`, then invocation-form default — `process-full` and `/roadmap:next` always offer the contract with `autonomous` preselected, `process-phase` derives `phase-checkpoints`, `process-step` runs without a contract. Still exactly one confirmation; the "run interactive instead" option stays. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
+- [x] Replace the silent interactive fallback with a mode-derivation ladder in `roadmap-process-loop` § 3. First source wins: explicit invocation suffix, then frontmatter `execution.mode`, then invocation-form default — `process-full` offers the contract with `autonomous` preselected, `/roadmap:next` and `process-phase` derive `phase-checkpoints`, `process-step` runs without a contract. Still exactly one confirmation; the "run interactive instead" option stays. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
 - [x] Add `contexts/execution/contract-decision-sheet.md`, loaded by the contract derivation itself so every consumer inherits it: the pre-scan collects all open questions and renders them as one numbered block with a default per question and an "accept all defaults" path. <!-- verify: grep -q contract-decision-sheet src/agent-src/contexts/execution/roadmap-execution-contract.md -->
-- [ ] Draft the `ask-when-uncertain` carve-out "contract-time batch elicitation": one structured decision sheet per contract display counts as one question under the Iron Law; outside contract time the one-question-per-turn law holds verbatim. Kernel-adjacent — ships as its own PR with the required soak window. <!-- blocked-by: kernel-soak-window -->
+- [-] **Transferred** to [`stubs/road-to-batch-elicitation-kernel-delta.md`](stubs/road-to-batch-elicitation-kernel-delta.md) — the one true kernel delta; outcome state `transferred`. Draft the `ask-when-uncertain` carve-out "contract-time batch elicitation": one structured decision sheet per contract display counts as one question under the Iron Law; outside contract time the one-question-per-turn law holds verbatim. Kernel-adjacent — ships as its own PR with the required soak window. <!-- blocked-by: kernel-soak-window -->
 - [x] Add a batch branch to the plan-confidence gate's inline degrade protocol: all load-bearing branches known at seed time as one sheet, at most two rounds, round two only for branches created by round-one answers. Remaining ambiguity resolves to a conservative default plus a decision memo. The C-to-R1 state file is unchanged, so no plan is ever interviewed twice. <!-- verify: ./scripts-run src/scripts/check_references -->
 - [x] Make `/work` consume the same contract derivation rather than carrying a second mechanism. <!-- verify: grep -q roadmap-execution-contract src/domains/engineering-base/work/command.md -->
 - [x] Extend the non-interactive contract's tier matrix onto the suggestion layer: a HIGH-tier match (a deterministic signal names the command uniquely — the roadmap file exists, the phrase matches a trigger description exactly, no second candidate above the floor) routes directly with a one-line basis statement instead of an options block. MEDIUM and LOW keep the block. <!-- verify: ./scripts-run src/scripts/lint_command_routing -->
@@ -156,11 +247,11 @@ that actually run; a step whose probe cannot execute is a step nobody can check.
 
 ## Phase 2 — Set scope, serial then parallel
 
-- [ ] Add `/roadmap:process-backlog [--limit N] [--filter …]`: selection like `/roadmap:next` but over an ordered set, with one contract for the whole set — candidates, branch names, dependency graph, artifact counts, and one decision sheet across all of them. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
-- [ ] Add auto-continuity in the loop layer: when a roadmap closes green under a set contract, the loop pulls the next independent one without a new contact. Applies to `/roadmap:next` when the set option was chosen in its sheet; the default stays conservative (this one only). <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Draft the third autonomy form "set-scoped" in `autonomy-mechanics § Task-scope`. `NEW TASK → FRESH CONFIRMATION` stays verbatim for everything outside a declared set. Kernel-adjacent — own PR and soak. <!-- blocked-by: kernel-soak-window -->
-- [ ] Add failure isolation: a quality regression halts only its own roadmap; the set continues with the next independent member. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Wire parallel lanes for independent set members (no declared dependency, disjoint owned paths), staged only after ten clean serial set runs. Isolation via the existing worktree scope lock, coordination via session-register branch claims, dispatch via the existing worktree orchestration mode, delivery one branch and one PR per lane. Cap at two lanes in the first iteration. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [-] **Transferred** to [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md) — a command front door; outcome state `transferred`. Add `/roadmap:process-backlog [--limit N] [--filter …]`: selection like `/roadmap:next` but over an ordered set, with one contract for the whole set — candidates, branch names, dependency graph, artifact counts, and one decision sheet across all of them. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
+- [x] Add auto-continuity in the loop layer: when a roadmap closes green under a set contract, the loop pulls the next independent one without a new contact. Applies to `/roadmap:next` when the set option was chosen in its sheet; the default stays conservative (this one only). <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [x] Draft the third autonomy form "set-scoped" in `autonomy-mechanics § Task-scope`. `NEW TASK → FRESH CONFIRMATION` stays verbatim for everything outside a declared set. Kernel-adjacent — own PR and soak. <!-- blocked-by: kernel-soak-window -->
+- [x] Add failure isolation: a quality regression halts only its own roadmap; the set continues with the next independent member. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [-] **Transferred** to [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md) — observation-gated on ten clean serial set runs, measured 0 and unobtainable until the set entry point exists; the lane shape and the decided cap of two are recorded in `src/agent-src/contexts/execution/roadmap-process-loop.md` § 3d. Outcome state `transferred`. Wire parallel lanes for independent set members (no declared dependency, disjoint owned paths), staged only after ten clean serial set runs. Isolation via the existing worktree scope lock, coordination via session-register branch claims, dispatch via the existing worktree orchestration mode, delivery one branch and one PR per lane. Cap at two lanes in the first iteration. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
 
 **Exit criteria:** one set run closes at least two roadmaps with exactly one contract; the interruption ledger records zero contacts between them.
 
@@ -170,9 +261,9 @@ that actually run; a step whose probe cannot execute is a step nobody can check.
 
 ## Phase 3 — Merge decoupling
 
-- [ ] Add dependency detection to the set contract: a file-overlap heuristic plus an optional `depends:` frontmatter field. One graph feeds both the parallelizability decision and the stacking decision. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
-- [ ] Support stacked branches: a dependent roadmap branches from its parent's branch and its PR targets that branch. Pushes stay restricted to the run's own branches. Execution never waits for a merge. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
-- [ ] Add `/roadmap:merge-train`: a single conversational surface presenting the whole stack at once, where each merge instruction issued in that session is followed by the agent retargeting and rebasing the dependent PRs — an executed per-PR instruction, never an agent decision. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
+- [x] Add dependency detection to the set contract: a file-overlap heuristic plus an optional `depends:` frontmatter field. One graph feeds both the parallelizability decision and the stacking decision. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
+- [-] **Transferred** to [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md) — needs a set run with two members to stack; outcome state `transferred`. Support stacked branches: a dependent roadmap branches from its parent's branch and its PR targets that branch. Pushes stay restricted to the run's own branches. Execution never waits for a merge. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
+- [-] **Transferred** to [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md) — a command front door over a stack no run can currently produce; outcome state `transferred`. Add `/roadmap:merge-train`: a single conversational surface presenting the whole stack at once, where each merge instruction issued in that session is followed by the agent retargeting and rebasing the dependent PRs — an executed per-PR instruction, never an agent decision. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
 
 **Exit criteria:** two dependent roadmaps reach open PRs without any merge occurring between their executions.
 
@@ -184,11 +275,11 @@ that actually run; a step whose probe cannot execute is a step nobody can check.
 
 The resolution order for an open question becomes: decision sheet at contract time, then the agent, then the local second-model rung, then the council, then a decision memo, then the user.
 
-- [ ] Extend the `ai-council-config` schema with an optional class route to a locally installed second-model CLI for `medium_impact`, quota-bounded and USD-neutral. `high_impact` and `user_required` remain schema-rejected for anything but `user`. This also softens the council-as-single-halt problem without a council configured. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Run the pre-registered build-review-fix benchmark that the team loop has been gated on since it was written. Positive result activates the loop; a null closes the gate and is published. This runs before any further team autonomy. <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] Add the decision-memo channel: resolutions below the locked classes write `agents/runtime/state/decisions/<run>/NNN.md` with question, chosen option, reasoning, resolver, and confidence. The roadmap report and PR description link the directory; a revisit marker creates a follow-up step instead of a live halt. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Add the late-artifact policy as a contract field: `auto-research` re-runs the research and overlap pass mid-run against current artifact state — the identical procedure already accepted as non-interactive at contract time, only later — with an extend verdict extending silently, a create verdict deriving understand-answers from the step text and sheet answers, and only a genuine overlap conflict halting. Cap at three late artifacts per run, then halt: a run that keeps discovering artifacts has a planning problem, not an autonomy problem. Kernel-adjacent rule delta in `artifact-drafting-protocol`. <!-- blocked-by: kernel-soak-window -->
-- [ ] Confirm in the ladder text that no self-adversarial fallback exists: without both a council and a second-model rung, the ambiguity halt stands. The gap is not filled with a monologue. <!-- verify: grep -q "self-adversarial" src/agent-src/contexts/execution/roadmap-process-loop.md -->
+- [x] Extend the `ai-council-config` schema with an optional class route to a locally installed second-model CLI for `medium_impact`, quota-bounded and USD-neutral. `high_impact` and `user_required` remain schema-rejected for anything but `user`. This also softens the council-as-single-halt problem without a council configured. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+- [x] Run the pre-registered build-review-fix benchmark that the team loop has been gated on since it was written. Positive result activates the loop; a null closes the gate and is published. This runs before any further team autonomy. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Add the decision-memo channel: resolutions below the locked classes write `agents/runtime/state/decisions/<run>/NNN.md` with question, chosen option, reasoning, resolver, and confidence. The roadmap report and PR description link the directory; a revisit marker creates a follow-up step instead of a live halt. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [x] Add the late-artifact policy as a contract field: `auto-research` re-runs the research and overlap pass mid-run against current artifact state — the identical procedure already accepted as non-interactive at contract time, only later — with an extend verdict extending silently, a create verdict deriving understand-answers from the step text and sheet answers, and only a genuine overlap conflict halting. Cap at three late artifacts per run, then halt: a run that keeps discovering artifacts has a planning problem, not an autonomy problem. Kernel-adjacent rule delta in `artifact-drafting-protocol`. <!-- blocked-by: kernel-soak-window -->
+- [x] Confirm in the ladder text that no self-adversarial fallback exists: without both a council and a second-model rung, the ambiguity halt stands. The gap is not filled with a monologue. <!-- verify: grep -q "self-adversarial" src/agent-src/contexts/execution/roadmap-process-loop.md -->
 
 **Exit criteria:** one run resolves at least one medium-impact question through a memo rather than a contact, and the memo is reviewable after the fact.
 
@@ -198,8 +289,8 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ## Phase 5 — Asynchronous disposition of deferred items
 
-- [ ] Add the contract field `deferred_policy: spawn-follow-up-draft` as the single autonomous option: accepting the contract selects it, and a roadmap closing with deferred items spawns the follow-up draft automatically. Information is preserved; the synchronous wait disappears. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
-- [ ] Draft the corresponding delta to the deferred-item gate in `roadmap-progress-sync`: the synchronous halt stands unless the accepted contract declares a policy, in which case the follow-up spawn runs automatically and every other disposition stays conversational. Kernel-suspect — own PR and soak. <!-- blocked-by: kernel-soak-window -->
+- [x] Add the contract field `deferred_policy: spawn-follow-up-draft` as the single autonomous option: accepting the contract selects it, and a roadmap closing with deferred items spawns the follow-up draft automatically. Information is preserved; the synchronous wait disappears. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
+- [x] Draft the corresponding delta to the deferred-item gate in `roadmap-progress-sync`: the synchronous halt stands unless the accepted contract declares a policy, in which case the follow-up spawn runs automatically and every other disposition stays conversational. Kernel-suspect — own PR and soak. <!-- blocked-by: kernel-soak-window -->
 
 **Exit criteria:** a roadmap with deferred items closes under an accepted contract, produces a follow-up draft, and archives without a synchronous prompt.
 
@@ -209,10 +300,10 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ## Phase 6 — Session continuity
 
-- [ ] Extend the session-end-of-life concern: above the recycle threshold and inside a running contract, write a deterministic checkpoint and generate the handoff automatically. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] Add a resume runner outside the session: a watcher starts a fresh headless session on a handoff-plus-resume-requested marker, using the existing one-shot handoff injection. Budgets: at most three relaunches per run, a daily token cap, and the emergency orchestration halt stopping the watcher too. The watcher respects session-register claims so two sessions never share a branch. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] Allow exactly one deterministic self-fix attempt for the checkbox-flip halt inside contract mode, then halt. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Add `/goal <objective>` as a thin front door: intake, live screen, batched confidence gate, roadmap authoring, contract plus sheet, then execution. No mechanics of its own. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
+- [x] Extend the session-end-of-life concern: above the recycle threshold and inside a running contract, write a deterministic checkpoint and generate the handoff automatically. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [-] **Abandoned** by a published refusal, not by this run: the headless spawn is a decision with a falsifiable reopen condition (`road-to-long-horizon-execution` 4.0, AI council 2026-08-19), and `run:supervise --relaunch` names that decision instead of a missing feature. Outcome state `abandoned`. Add a resume runner outside the session: a watcher starts a fresh headless session on a handoff-plus-resume-requested marker, using the existing one-shot handoff injection. Budgets: at most three relaunches per run, a daily token cap, and the emergency orchestration halt stopping the watcher too. The watcher respects session-register claims so two sessions never share a branch. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [x] Allow exactly one deterministic self-fix attempt for the checkbox-flip halt inside contract mode, then halt. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [-] **Transferred** to [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md) — a thin front door by this step's own text; outcome state `transferred`. Add `/goal <objective>` as a thin front door: intake, live screen, batched confidence gate, roadmap authoring, contract plus sheet, then execution. No mechanics of its own. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
 
 **Exit criteria:** one run survives a session boundary and continues without a user-typed resume.
 
@@ -222,9 +313,9 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ## Phase 7 — Unattended backlog operation
 
-- [ ] Add a local scheduler entry running a single-roadmap backlog pass in a dedicated worktree with a dedicated profile and no production remotes in that worktree's git configuration. A credentialed CI runner is explicitly out of scope for this phase. <!-- verify: test -f agents/runtime/state/scheduler.json -->
-- [ ] Add a notification digest rather than a permission prompt: overnight PRs, memos, and halts land in one channel the user reads in the morning. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Add a demotion gate: over a fourteen-day window, a rework rate for unattended PRs above a pre-registered threshold relative to attended PRs returns the scheduler default to off. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [-] **Abandoned** by the same published refusal as Phase 6 Step 2 — a scheduler with nothing to start schedules nothing. Outcome state `abandoned`. Add a local scheduler entry running a single-roadmap backlog pass in a dedicated worktree with a dedicated profile and no production remotes in that worktree's git configuration. A credentialed CI runner is explicitly out of scope for this phase. <!-- verify: test -f agents/runtime/state/scheduler.json -->
+- [x] Add a notification digest rather than a permission prompt: overnight PRs, memos, and halts land in one channel the user reads in the morning. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [-] **Abandoned** — already closed as `resolved-null` in `docs/proof.md` (`unattended-demotion-gate`), whose honest-null path was taken 2026-08-19 with zero unattended PRs against a 10-vs-10 power floor. Outcome state `abandoned`. Add a demotion gate: over a fourteen-day window, a rework rate for unattended PRs above a pre-registered threshold relative to attended PRs returns the scheduler default to off. <!-- verify: ./scripts-run src/scripts/check_claims -->
 
 **Exit criteria:** one unattended pass produces a reviewable PR and a digest entry, with the demotion gate armed.
 
@@ -232,8 +323,8 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ## Phase 8 — Standing measurement
 
-- [ ] Add the interruption report to the release cycle: synchronous contacts per roadmap, wall-clock per roadmap split serial versus parallel, memo revisit rate, late-artifact auto rate and its revisit rate, interactive-choice rate at the contract screen, auto-route error rate, and the distribution of halt reasons. <!-- verify: ./scripts-run src/scripts/interruption_report --help -->
-- [ ] Verify that every default flipped in Phases 1 through 7 carries its kill criterion in the same document as the flip. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
+- [x] **Narrowed.** Add the interruption report to the release cycle: synchronous contacts per roadmap, wall-clock per roadmap split serial versus parallel, memo revisit rate, late-artifact auto rate and its revisit rate, interactive-choice rate at the contract screen, auto-route error rate, and the distribution of halt reasons. <!-- verify: ./scripts-run src/scripts/interruption_report --help -->
+- [x] Verify that every default flipped in Phases 1 through 7 carries its kill criterion in the same document as the flip. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
 
 **Exit criteria:** one release cycle publishes both axes against the pre-registered baselines.
 
@@ -243,7 +334,32 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ### blocker: kernel-soak-window
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome state:** `transferred` — the arm that crosses the locked-kernel
+  boundary moved to [`stubs/road-to-batch-elicitation-kernel-delta.md`](stubs/road-to-batch-elicitation-kernel-delta.md); the three
+  non-kernel deltas proceeded and landed. Nothing was discharged by decree.
+- **Resolved:** 2026-08-20, AI council 2/2 (anthropic + openai), disposition
+  **B — transfer**. Record:
+  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md). The council's wording:
+  *"Only `ask-when-uncertain` crosses the locked-kernel boundary; coupling the
+  other deltas to its soak is unsupported."* Ordering, also from the record:
+  the set-scoped autonomy form first, then late-artifact policy, then the
+  deferred-policy delta — all three proceeding independently.
+- **Split verified independently before acting on it**, against
+  `docs/contracts/kernel-membership.md § 4` and the tree:
+  - `ask-when-uncertain` — row 2 of the locked nine. **Kernel. Transferred.**
+    The write is additionally refused at tool-call time by
+    `block-kernel-rule-writes` (`hook_manifest.yaml:924`, `severity: blocking`,
+    `fail_closed: true`), so no agent path existed regardless.
+  - `autonomy-mechanics` — **not a rule.** The path
+    `src/rules/autonomy-mechanics.md` does not exist, which IS the finding. <!-- ref-ignore -->
+    The marker sits on that line because the path is deliberately unresolvable.
+    The file is a context at
+    `src/agent-src/contexts/execution/autonomy-mechanics.md`. Landed.
+  - `artifact-drafting-protocol` — a rule at `src/rules/`, **absent from the
+    locked nine.** Landed.
+  - `roadmap-progress-sync` — a rule at `src/rules/`, **absent from the locked
+    nine.** Landed.
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
@@ -258,7 +374,43 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ### blocker: autonomy-defaults-sheet
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome state:** `satisfied` — all four values named, and each recorded at
+  the site that implements it with its reasoning **and** its reversibility
+  argument, per the record's disposition **D — decide**.
+- **Resolved:** 2026-08-20, AI council 2/2 (anthropic + openai). Record:
+  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md). Both seats converged,
+  and one reached these values after rejecting this blocker's own
+  Recommendation below — so where that text still says `autonomous` and
+  `auto-research`, the council is deliberately overriding it. The
+  Recommendation is left unedited: a resolved blocker is history, and rewriting
+  the option that lost would hide that a choice was made.
+- **The four values, and where each one lives:**
+  1. **Preselection for `/roadmap:next` — `phase-checkpoints`.** Implemented at
+     `src/agent-src/contexts/execution/roadmap-process-loop.md § 3a`, which now
+     splits the wrapper row: `process-full` keeps `autonomous`, because it names
+     a roadmap the user chose, while `/roadmap:next` *selects* the target as
+     well as the scope. Scoped to `/roadmap:next` only — that is the wrapper
+     this blocker's question named, and widening it would have silently
+     reversed Phase 1 Step 1.
+  2. **Lane cap — 2.** Recorded at `roadmap-process-loop § 3d`, where the lane
+     shape lives. Not implemented, because lanes are not on: they are staged
+     behind ten clean serial set runs, measured 0.
+  3. **Late-artifact default — `halt`.** Implemented as a contract field at
+     `roadmap-execution-contract § 2a`, with the five-step `auto-research`
+     opt-in and its cap of three in
+     `docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md`
+     § Late artifacts.
+  4. **Deferred policy — both exits.** Implemented at
+     `roadmap-execution-contract § 2b` and in the gate delta at
+     `src/rules/roadmap-progress-sync.md`: `spawn-follow-up-draft` runs
+     automatically, `cancel-with-memo` writes the memo and leaves the drop with
+     the user.
+- **Why these four were council-decidable at all:** each is reversible inside
+  the authorised envelope and none lowers a recorded floor. Three of the four
+  chose the conservative side, and the fourth (both deferral exits) *widens the
+  option set* while leaving the owner-reserved row exactly where the
+  preservation test put it.
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
@@ -288,12 +440,12 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 ## Acceptance Criteria
 
-- [ ] Both pre-registered claims carry a baseline number and at least one post-change measurement.
-- [ ] A `process-full` run on a roadmap without `execution.mode` presents exactly one contract screen and asks no further question before a halt class fires.
-- [ ] A set run closes at least two roadmaps with one contract and zero contacts between them.
-- [ ] Two dependent roadmaps reach open PRs without a merge occurring between their executions.
-- [ ] Every default flipped in this roadmap has its kill criterion in the same phase text as the flip.
-- [ ] The locked decision classes still reach the user, verified by an eval that puts a `high_impact` question into a run and asserts it does not appear in the sheet.
+- [-] **Not satisfiable with this instrument.** Both pre-registered claims carry a baseline number and at least one post-change measurement. `roadmap-wall-clock-baseline` is structurally unreachable at default retention — `docs/proof.md` records the timing source as a rolling buffer with `DEFAULT_MAX_SESSIONS = 5`, and this run measured 3 timing-bearing runs against the >= 20 floor. `user-out-of-loop-baseline` now CLEARS its floor (46 contact-axis runs, median 0 contacts, measured 2026-08-20) but those runs post-date the Phase 1 mechanisms, so they are a reading, not the clean pre-change baseline the claim registered. See § Outcome.
+- [-] **Mechanism shipped; the observation needs a run this one cannot witness.** A `process-full` run on a roadmap without `execution.mode` presents exactly one contract screen and asks no further question before a halt class fires. The ladder, the single Accept and the decision sheet are all in place; a run asserting its own zero-contact property is the self-report `evaluator-independence` forbids, and the instrument that would settle it (the interruption ledger) attributes contacts per run rather than per contract screen.
+- [-] **Transferred** with the set front door — see [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md). A set run closes at least two roadmaps with one contract and zero contacts between them.
+- [-] **Transferred** with stacking — see [`stubs/road-to-roadmap-set-front-doors.md`](stubs/road-to-roadmap-set-front-doors.md). Two dependent roadmaps reach open PRs without a merge occurring between their executions.
+- [x] Every default flipped in this roadmap has its kill criterion in the same phase text as the flip — **and, after this run, at the implementing site too**, which is the stronger property and the one that survives this file being archived.
+- [-] **Narrowed to what is checkable.** The locked decision classes still reach the user, verified by an eval that puts a `high_impact` question into a run and asserts it does not appear in the sheet. The REFUSAL is machine-checked at the config schema — `buildSecondModel` refuses `second_model` on `high_impact` / `user_required` rather than dropping it, and `contract-decision-sheet` excludes those classes by definition. The RUN-LEVEL eval has no executable home: `src/agent-src/commands/evals/` is a routing corpus (`prompt` -> `expected command`), as this roadmap's own Phase 1 exit status already recorded.
 
 ## Provenance
 
