@@ -6,7 +6,7 @@
 
 ## Overall
 
-**309 / 576 steps done · 54%**
+**309 / 574 steps done · 54%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   54%
@@ -19,6 +19,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | Roadmap | Done | Total |
 |---|---:|---:|
 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
+| [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 18 | 18 |
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 36 | 36 |
