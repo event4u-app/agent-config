@@ -6,6 +6,8 @@ description: "Saw a red check or a real defect — fix it, whoever wrote it; if 
 # Due when a defect is OBSERVED, not on a clock: a turn that sees nothing owes
 # nothing; a turn that sees a red check owes a disposition.
 obligation_frequency: "per-event"
+routes_to:
+  - "guideline:agent-infra/active-remediation-mechanics"
 triggers:
   - keyword: "failing"
   - keyword: "fails"
@@ -42,6 +44,23 @@ another agent or a parallel session wrote. The author is irrelevant.
 **Two dispositions, and only two:** fix it with its verification, or land a
 roadmap under `agents/roadmaps/` in the SAME change naming the defect, its
 evidence, and what closes it.
+
+**Read the red before fixing it, with the narrowest tool.** A CI job:
+`gh run view --job <id> --log-failed | grep -E '×|FAIL|Error'` — never the whole
+log into context, and never `--watch`'s exit code, which is 0 even on a failure.
+A local red: the test runner with a filter on the one failing name, `tsc
+--noEmit` for a type error, the linter scoped to the changed files. **Reproduce
+it before you believe your diagnosis** — an environment-dependent red reproduces
+under the condition, not on your machine's defaults.
+
+Match the probe to the surface, because a passing unit test is not evidence for
+a broken surface: an HTTP red is proven with `curl` against the running
+endpoint, a UI red with a Playwright spec, a runtime red with the debugger
+(`xdebug`, breakpoints) rather than by reading the diff again.
+
+**Prove the fix with the same tool that showed the red**, in the same change.
+For a guard or a concurrency fix, prove SENSITIVITY too: neutralise the mechanism,
+watch the test fail, restore it. A test never seen red has unknown sensitivity.
 
 ## Bounds
 
