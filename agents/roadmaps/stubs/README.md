@@ -56,6 +56,8 @@ a later reader can tell real movement from noise.
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
 | [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
+| [`road-to-main-protection-ruleset-changes.md`](road-to-main-protection-ruleset-changes.md) | `road-to-inbox-harvest-2026-08-b-ci-economy.md` Phase 4, blockers `required-check-set-change` + `merge-queue-enablement`, 2026-08-20 | `transferred` | One gate, in the stub: a repo-admin write on ruleset `17749383` by the named producer. Two probes, both measured at transfer time: required checks **1**, `merge_queue` entries **0**, `merge_group` files **0** |
+
 **The shared promotion criteria below do NOT govern a drain-run transfer.** They
 were written for the org-mode stubs and require a recruited customer, a funded
 security audit, and an ADR lifting a Hard-Floor item. A drain-run transfer
@@ -71,6 +73,17 @@ protection change — **are** Hard-Floor actions in their own right. Being exemp
 from the org-mode promotion gates does not exempt the act itself: when a human
 performs it, it needs its own this-turn approval under
 `non-destructive-by-default`, exactly as it would have inside the parent roadmap.
+
+**One qualification the paragraph above deliberately scopes out.** It says a
+drain-run transfer *of internal work* crosses no Hard Floor, which is true of
+that class and not of the second row: a repository-administration setting is a
+`non-destructive-by-default` Hard-Floor trigger, and that is precisely why the
+council could only transfer it. Its gate is therefore neither an org-mode
+criterion nor a measurement — it is the authority itself, exercised by a named
+human with a this-turn approval naming the exact object. Requiring a recruited
+customer and a funded security audit before a maintainer may edit their own
+repository settings would gate on nothing and make the stub unclosable.
+
 ## Promotion criteria (shared)
 Applies to the **org-mode stubs** in § Current stubs only — not to
 drain-run transfers, which name their own per-item probes. Such a stub

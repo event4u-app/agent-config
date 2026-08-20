@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
@@ -38,7 +38,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
-| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
+| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 0 | 18 | 0 | 6 | 0 | ██████████ 100% |
 | 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 0 | 7 | 0 | 4 | 0 | ██████████ 100% |
@@ -461,7 +461,7 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
 
-**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 18 / 20 done (90%)
+**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 18 / 18 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -469,24 +469,7 @@ _1 blocker resolved._
 | 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ✅ done | 0 | 2 | 0 | 3 | 100% |
 | 3 | The subprocess lever: extend in-process running, do not add a skill | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Required-check-set changes (authored here, applied by the maintainer) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
-**Blockers**
-
-- **required-check-set-change** (owner: maintainer) — blocks step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change no required check, and ADR-223 is a proposal, not an enforcement change.
-  - **What to do:**
-    decide whether the macOS leg and the `npm audit` PR gate stay in
-    the required set, then apply the ruleset edit. Ruleset `17749383` currently
-    requires exactly one check, `Sync + Generate Tools Consistency`
-    (`docs/contracts/branch-protection-policy.md:59`); the write path is documented
-    at `branch-protection-policy.md:158`.
-  - **Resolved when:** ADR-223 is accepted and the ruleset's `required_status_checks` list matches the matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and `release-pr-gating.md` updated in the same change. (Number corrected 222→223 on 2026-08-13; the acceptance leg stands — see 4.1.)
-- **merge-queue-enablement** (owner: maintainer) — blocks step 4.3 only. Nothing else here depends on a merge queue.
-  - **What to do:**
-    decide whether to enable a GitHub merge queue for `main` — a
-    repo-admin setting that cannot be turned on from the tree.
-  - **Resolved when:** the merge queue is enabled on `main` and at least one workflow declares a `merge_group` trigger (currently zero across `.github/`).
+| 4 | Required-check-set changes (authored here, applied by the maintainer) | ✅ done | 0 | 1 | 0 | 2 | 100% |
 
 ### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
 
