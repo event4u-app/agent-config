@@ -165,24 +165,35 @@ Four independent ergonomic defects, all measured in one attempt:
    the seats were skipped; with live seats it is the "bills before validating"
    shape already recorded in memory.
 
-- [ ] **3.1 Make `--help` list the flags.** Every flag the parser accepts,
+- [x] **3.1 Make `--help` list the flags.** Every flag the parser accepts,
       printed, including `--confirm`, `--output`, `--depth` and `--input-mode`.
       verify: `council run --help` names at least the four flags a first run
       needs, asserted by test.
 
-- [ ] **3.2 Validate `--output` before contacting any seat.** Path checks are
-      free and irreversible spend is not.
-      verify: an invalid `--output` refuses without a provider call, proven by a
-      test that fails if the check moves back after the dispatch.
+- [-] **3.2 Validate `--output` before contacting any seat.** <!-- cancelled: already true, and the source says so with its own measurement -->
+      **Cancelled — the premise was wrong, and the code refutes it in writing.**
+      `council_cli.ts` validates the path immediately after the `--confirm`
+      gate, above every billable call, with a comment recording exactly why:
+      the check used to sit before the WRITE, i.e. after every member had been
+      paid, and that cost roughly \$1.30 across three sessions before it was
+      moved. What this session saw was OUTPUT ORDER — the attendance lines are
+      printed before the path error — not spend order. No fix; the finding was
+      a misreading and is recorded as one rather than deleted.
 
-- [ ] **3.3 Stop reporting reachable seats as unavailable in the free probe.**
-      Either the probe reports availability it can actually determine, or it
-      states plainly that it does not probe and that its seat line is not a
-      prediction. The second is cheaper and is the honest one.
-      verify: the estimate output does not assert unavailability it has not
-      measured, asserted on the output text.
+- [-] **3.3 Stop reporting reachable seats as unavailable in the free probe.** <!-- cancelled: a documented design choice, not a defect -->
+      **Cancelled — a deliberate, documented choice rather than a defect.** The
+      underlying check returns `unknown` with the honest detail "no exchange
+      with this provider has ever been recorded". `absenceReasonFor` then maps
+      BOTH `unknown` and `unavailable` onto the `unavailable` enum member, and
+      its docstring gives the reason: the `QuorumAbsentReason` enum is closed
+      and other instruments parse it, so minting an `unqualified` member would
+      be a contract change to express a distinction the `detail` field already
+      carries losslessly on the same row. The human-readable line is the part
+      that reads oddly — `unavailable` beside `unknown` — but changing that word
+      would either lie about a genuinely unavailable seat or fork the enum.
+      Recorded, not fixed. **3.4 covers the misreading this actually caused.**
 
-- [ ] **3.4 Say that an unconfirmed run is a dry pass, at the start.**
+- [x] **3.4 Say that an unconfirmed run is a dry pass, at the start.**
       verify: the first line of an unconfirmed `run` says so.
 
 ## Phase 4 — one waiter recipe, because the hand-written one lied
