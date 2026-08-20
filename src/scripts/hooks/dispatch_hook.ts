@@ -51,7 +51,7 @@ import {
   clearHookStdinOverride,
   readFd0ToEnd,
 } from "./hook_stdin.js";
-import { emitFor, type Severity } from "./host_semantics.js";
+import { emitFor, isBlockCapable, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
@@ -1260,7 +1260,9 @@ export function main(argv?: string[]): number {
   // below throws EAGAIN on any payload above the pipe buffer and silently
   // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
   // see readFd0ToEnd's header in hooks/hook_stdin.ts.
-  const payload_text = tty.isatty(0) ? "" : _readStdin();
+  const read = tty.isatty(0) ? { text: "", failure: null } : stdinReadFailure();
+  const payload_text = read.text;
+  _stdin_read_failed = read.failure;
   if (_stdin_read_failed !== null) {
     // NEVER silent: an empty envelope reached from a failed read means every
     // guard on this event evaluated nothing. The exit code is unchanged (see
@@ -1304,6 +1306,21 @@ export function main(argv?: string[]): number {
 
   if (concerns.length === 0) {
     return EXIT_ALLOW; // platform unsupported / fallback-only / empty slot
+  }
+
+  // `b-stdin-read-failure-policy` option (c). Placed HERE, not at the read:
+  // the decision needs the resolved concern list, because the whole question is
+  // whether a fail-closed blocking guard was among the ones that just ran
+  // blind. Before the dry-run branch it would turn a plan printer into a
+  // refusal; after the chain it would spend the chain first.
+  if (_stdin_read_failed !== null) {
+    const deny = denyOnStdinFailure(args.platform, args.event, concerns, _stdin_read_failed);
+    if (deny !== null) {
+      const emission = emitFor(args.platform, args.event, "block", [deny.reason], EXIT_BLOCK);
+      if (emission.stdout) process.stdout.write(emission.stdout);
+      if (emission.stderr) process.stderr.write(emission.stderr);
+      return emission.exit;
+    }
   }
 
   const envelope = _build_envelope(args, payload_text);
@@ -1499,23 +1516,94 @@ function _sortedRepr(s: ReadonlySet<string>): string {
  * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
  * is an allow, emitted silently. Found by the R2 review.
  *
- * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
- * decision is unchanged. Turning a failed read into a DENY is a policy change on
- * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
- * improvised here: an unreadable payload on a block-capable event arguably must
- * refuse, and that call is the maintainer's.
+ * The failure is LOUD (stderr + a dispatch issue) on every slot, and since
+ * `b-stdin-read-failure-policy` was decided (council 2026-08-20, option (c)) it
+ * also DENIES — but only where a deny is honoured and a fail-closed blocking
+ * concern was among the ones that ran blind. See `denyOnStdinFailure` for the
+ * policy and for why the two broader options were refused.
  */
 let _stdin_read_failed: string | null = null;
 
-function _readStdin(): string {
+/**
+ * The seam where a FAILED read becomes an empty string — isolated so the three
+ * failure classes the policy names can be driven with real errno values.
+ *
+ * Returns the failure message, or `null` when the read succeeded. The read
+ * itself is injectable for exactly one reason: `EAGAIN` exhaustion, `EIO` and
+ * `EBADF` cannot be staged against a live fd 0 portably, and a policy whose
+ * trigger is untestable is a policy nobody can show works. What the injection
+ * does NOT buy is proof that the production path reaches here — that is the
+ * wiring, pinned separately by driving `main()`.
+ */
+export function stdinReadFailure(read: () => string = readFd0ToEnd): {
+  text: string;
+  failure: string | null;
+} {
   try {
     // Reads to EOF and retries on EAGAIN rather than treating it as empty
     // input; shared with the concern-side reader so both paths cannot drift.
-    return readFd0ToEnd();
+    return { text: read(), failure: null };
   } catch (exc) {
-    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
-    return "";
+    return { text: "", failure: exc instanceof Error ? exc.message : String(exc) };
   }
+}
+
+/**
+ * Is this concern one whose verdict a failed read silently converted into an
+ * allow?
+ *
+ * Both halves are required and neither is redundant. `fail_closed: true` is the
+ * manifest's declaration that this concern's own crash must not become a pass;
+ * `severity: blocking` is the declaration that it can refuse at all. An
+ * advisory concern that happens to be `fail_closed` has no verdict to lose, and
+ * a blocking concern that is not `fail_closed` has already declared the opposite
+ * intent.
+ */
+export function _is_fail_closed_blocking(concern: JsonObject): boolean {
+  const severity = String(concern["severity"] ?? "").trim().toLowerCase();
+  return concern["fail_closed"] === true && severity === "blocking";
+}
+
+/**
+ * `b-stdin-read-failure-policy`, option (c) — deny a failed read ONLY where a
+ * deny is honoured AND something was actually silenced.
+ *
+ * Decided by council 2026-08-20, 2/2 quorum, both seats on option (c):
+ * "on a read failure, deny only when the slot is block-capable and at least one
+ * selected concern is both blocking and `fail_closed: true`".
+ *
+ * The two rejected options are worth keeping visible, because each is the
+ * obvious move. Denying on EVERY slot (option (a)) refuses nothing on
+ * `post_tool_use` — the tool already ran — and on `stop` it breaks a turn end
+ * to protect a guard that was never there; it buys availability risk for no
+ * enforcement. Keeping the allow (option (b), the status quo) leaves a
+ * documented allow-on-failure on a security path: F-1 measured a
+ * `git commit --no-verify` DENIED at small payload size and ALLOWED at 300 KB,
+ * and the loud stderr line that now ships makes that visible without making it
+ * stop.
+ *
+ * The cost is stated rather than hidden: a transient I/O error on
+ * `pre_tool_use` now refuses a tool call the user must retry. The retry budget
+ * already survived ~10 s of `EAGAIN` before this point, so the class of error
+ * that reaches here is not "the writer was slow".
+ *
+ * Returns `null` when the dispatch proceeds normally.
+ */
+export function denyOnStdinFailure(
+  platform: string,
+  event: string,
+  concerns: readonly JsonObject[],
+  failure: string,
+): { reason: string } | null {
+  if (!isBlockCapable(platform, event)) return null;
+  const silenced = concerns.filter(_is_fail_closed_blocking).map((c) => String(c["name"]));
+  if (silenced.length === 0) return null;
+  return {
+    reason:
+      `agent-config: refusing this action — the hook payload could not be read ` +
+      `(${failure}), so ${silenced.join(", ")} evaluated nothing. ` +
+      `A fail-closed guard on a block-capable slot must not pass by default. Retry.`,
+  };
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where

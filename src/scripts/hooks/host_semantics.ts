@@ -78,6 +78,27 @@ const CLAUDE_BLOCK_CAPABLE_EVENTS: ReadonlySet<string> = new Set([
     "stop",
 ]);
 
+/**
+ * Does this (platform, event) pair let a hook actually REFUSE the action?
+ *
+ * Exported because a second consumer now needs the same fact and must not
+ * re-derive it: `dispatch_hook`'s stdin-read-failure policy denies only where a
+ * deny is honoured (`b-stdin-read-failure-policy`, option (c)). A copy of
+ * `CLAUDE_BLOCK_CAPABLE_EVENTS` one module away is a copy that drifts, and the
+ * drift direction here is the dangerous one: a stale copy would deny on a slot
+ * where the deny is discarded, refusing nothing while looking like enforcement.
+ *
+ * An unverified platform is NOT block-capable by this predicate, and that is
+ * deliberate rather than incidental: `emitFor` hands such a platform its legacy
+ * exit code verbatim, so this tree has no evidence its host honours a deny at
+ * all. Claiming capability without evidence is the over-claim the hook-coverage
+ * corrections in this estate exist to remove.
+ */
+export function isBlockCapable(platform: string, event: string): boolean {
+    if (!VERIFIED_PLATFORMS.has(platform)) return false;
+    return CLAUDE_BLOCK_CAPABLE_EVENTS.has(event);
+}
+
 function _joinReasons(reasons: readonly string[]): string {
     return reasons.map((r) => r.trim()).filter((r) => r.length > 0).join(" · ");
 }
