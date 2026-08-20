@@ -146,17 +146,25 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     classify,
+    hasStableSessionId,
     isSyntheticPrompt,
-    STATE_FILE as LANGUAGE_STATE_FILE,
+    statePathFor as languageStatePathFor,
     type Verdict,
 } from '../language_mirror_hook.js';
-// Round 7 § Phase 1 — the CI-settle producer. Imported for its STATE_FILE only,
-// so the consumer cannot read a path the producer does not write.
-import { STATE_FILE as CI_STATE_FILE } from '../before_complete_hook.js';
+// Round 7 § Phase 1 — the CI-settle producer. Imported for its path BUILDER, not
+// for a path constant: "the consumer cannot read a path the producer does not
+// write" is only true while the two agree, and importing a constant made that
+// agreement invisible when the producer's layout moved. A builder makes the move
+// a type error.
+import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
-import { atomic_write_json, is_replay_mode } from './state_io.js';
+import {
+    atomic_write_json,
+    is_replay_mode,
+    owns_session_state as ownsSessionState,
+} from './state_io.js';
 import { openRecordStats } from './subagent_ledger_hook.js';
 import {
     deriveSessionKey,
@@ -400,7 +408,17 @@ export interface LanguagePin {
  *
  * So the producer is `before_complete_hook`, which already sees tool output on
  * `post_tool_use` and already owns the `pendingCount` predicate. It writes
- * `ci_last` into `agents/state/verify-before-complete.json` and this reads it.
+ * `ci_last` into its own per-session state file under
+ * `agents/state/verify-before-complete/` and this reads it — via the producer's
+ * `statePathFor`, never a path literal, so the next move of that layout is a
+ * compile error instead of a detector that silently reads nothing. (That is not
+ * hypothetical: the sibling language pin moved exactly this way and its
+ * consumer here kept importing the abandoned constant, which turned a blocking
+ * detector off without a single failing test.)
+ *
+ * KEYED ON `session_id`, because the CI witness is a fact about ONE run.
+ * A no-id envelope reads as "no CI observed" — the producer persists nothing in
+ * that case, and the refusal direction that follows is the safe one.
  *
  * NO network call, deliberately. Asking `gh pr checks` here would put a network
  * round-trip on every turn-end; `road-to-hook-latency-repair` exists because that
@@ -412,10 +430,20 @@ export interface LanguagePin {
  * never saw. A stale NEGATIVE ("CI was not settled") only ever refuses more often.
  * Same freshness invariant, opposite failure direction.
  */
-export function readCiSettled(workspaceRoot: string): { seen: boolean; settled: boolean } {
+export function readCiSettled(
+    workspaceRoot: string,
+    session_id: string,
+): { seen: boolean; settled: boolean } {
+    if (!hasStableSessionId(session_id)) return { seen: false, settled: false };
     try {
-        const raw = fs.readFileSync(path.join(workspaceRoot, CI_STATE_FILE), 'utf-8');
+        const raw = fs.readFileSync(path.join(workspaceRoot, ciStatePathFor(session_id)), 'utf-8');
         const decoded: unknown = JSON.parse(raw);
+        // Same ownership check as the pin, and here it is the sharper of the two:
+        // a FOREIGN `ci_last: {settled: true}` vouches for a CI run this session
+        // never made, which is exactly the premature completion claim detector D
+        // exists to refuse. Refusing an unowned file returns "no CI observed",
+        // which never refuses a session for someone else's run.
+        if (!ownsSessionState(decoded, session_id)) return { seen: false, settled: false };
         if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
             const ci = (decoded as Record<string, unknown>)['ci_last'];
             if (typeof ci === 'object' && ci !== null && !Array.isArray(ci)) {
@@ -496,11 +524,43 @@ export function detectCompletionClaim(
  *
  * (R2 finding 8: this line was left 73 lines above, where inserting `readCiSettled`
  * had stranded it — so it documented the wrong function and this one had none.)
+ *
+ * KEYED ON `session_id`, because the producer is. The import above says
+ * "imported for its STATE_FILE only, so the consumer cannot read a path the
+ * producer does not write" — and that discipline failed the moment the producer
+ * MOVED: `language_mirror_hook` split its state per session
+ * (`agents/state/language-mirror/<digest>.json`) and `_pruneLegacyState` now
+ * deletes the single file this function used to read. Importing the old symbol
+ * still compiled, so nothing broke loudly: `readLanguagePin` returned `und` for
+ * every turn, `detectLanguage` returned `null` for every turn, and detector B of
+ * a blocking gate stopped checking anything. Importing the path-BUILDER instead
+ * of a path constant is what makes the next such move a type error rather than a
+ * silent dead detector.
+ *
+ * NO LEGACY FALLBACK, deliberately. Reading `STATE_FILE` when the per-session
+ * file is absent would restore exactly the cross-session read the split closed:
+ * that file is shared by every session under one project root, so a neighbouring
+ * English session's pin would become this German session's obligation. A missing
+ * pin is the safe answer; a foreign pin is the defect.
+ *
+ * No stable id ⇒ `und`. The producer runs stateless in that case and persists
+ * nothing, so there is no pin to read — not "no obligation by accident", but the
+ * same degradation the producer documents, in the same direction (under-refuse).
  */
-export function readLanguagePin(workspaceRoot: string): Verdict {
+export function readLanguagePin(workspaceRoot: string, session_id: string): Verdict {
+    if (!hasStableSessionId(session_id)) return 'und';
     try {
-        const raw = fs.readFileSync(path.join(workspaceRoot, LANGUAGE_STATE_FILE), 'utf-8');
+        const raw = fs.readFileSync(
+            path.join(workspaceRoot, languageStatePathFor(session_id)),
+            'utf-8',
+        );
         const decoded: unknown = JSON.parse(raw);
+        // The digest path is not the whole guarantee — see `owns_session_state`.
+        // A file that reached this pathname by a copy, a restore, or a buggy
+        // writer still carries its real owner, and consuming it hands one
+        // session's pin to another. Refusing it costs a turn's obligation;
+        // accepting it is the cross-session read the split closed.
+        if (!ownsSessionState(decoded, session_id)) return 'und';
         if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
             const lang = (decoded as Record<string, unknown>)['language'];
             if (lang === 'de' || lang === 'en') return lang;
@@ -1019,9 +1079,13 @@ export function main(): number {
     // than colliding, and this one collides. It is named here rather than
     // papered over — the degradation is toward UNDER-refusing, which is the safe
     // direction, and layer 1 still covers the host that sends the flag.
-    const sessionKey = deriveSessionKey(
-        str(envelope['session_id'] as JsonValue | undefined) || 'unknown-session',
-    );
+    // RAW id, kept beside the derived key rather than replaced by it:
+    // `readLanguagePin` addresses the producer's own per-session file, and the
+    // producer keys that on the raw `session_id`. Passing `sessionKey` here would
+    // read a path nothing writes — the same shape as the STATE_FILE break this
+    // parameter exists to close.
+    const rawSessionId = str(envelope['session_id'] as JsonValue | undefined) || '';
+    const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
     // B and C run on every turn-end; A and D run only when no dispatch is open
@@ -1042,7 +1106,7 @@ export function main(): number {
         // (Phase 3 Step 2, narrowed by R2 round 2 finding 2). B and C are not
         // excused by anything about a dispatch and run unchanged.
         dispatchOpen ? null : detectPromissory(lastAssistant),
-        detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
+        detectLanguage(lastAssistant, readLanguagePin(workspaceRoot, rawSessionId)),
         detectUnverifiedEdit(toolCalls),
         // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
         // comment said it was while sitting one line above the `dispatchOpen`
@@ -1054,7 +1118,9 @@ export function main(): number {
         // gating is where the comment above says gating belongs — inside the
         // detector: no CI observed, or a settled read, or no completion claim
         // ⇒ no finding.
-        dispatchOpen ? null : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
+        dispatchOpen
+            ? null
+            : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot, rawSessionId)),
     ]) {
         if (f) findings.push(f);
     }

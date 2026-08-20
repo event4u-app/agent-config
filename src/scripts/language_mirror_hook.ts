@@ -72,7 +72,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { atomic_write_json, atomic_write_text, is_replay_mode } from "./hooks/state_io.js";
+import {
+  atomic_write_json,
+  atomic_write_text,
+  has_stable_session_id,
+  is_replay_mode,
+  owns_session_state,
+  prune_legacy_state_file,
+  prune_stale_session_states,
+  session_state_file,
+} from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 import { humanAuthoredLead, isSyntheticPrompt } from "./_lib/prompt_shape.js";
 
@@ -85,7 +94,96 @@ const EXIT_ALLOW = 0;
 // by tracing the delivery rather than re-reading the unit tests.
 const EXIT_WARN = 2;
 
+/**
+ * The pre-split single-file state. ONE file per project root — and in this
+ * repo's worktree workflow `CLAUDE_PROJECT_DIR` resolves to the parent
+ * checkout, so every concurrent session shared it. Measured consequence
+ * (2026-08-20, session 15b9ac52): a terse German "1" read a neighbouring
+ * English session's pin and injected `Reply language for this turn: English.`
+ * into a German conversation.
+ *
+ * Nothing reads it after the per-session split. It is kept exported because
+ * `_pruneLegacyState` needs to name the path it deletes, and because a reader
+ * that still resolves it should get a compile-visible symbol rather than a
+ * silently stale literal.
+ *
+ * It used to say this "names the path an older bundle may still be writing
+ * during an upgrade". That was written without checking and a cross-model review
+ * (2026-08-20) built a finding on it: every session under one project root runs
+ * ONE dispatcher bundle, resolved through `CLAUDE_PROJECT_DIR` — the parent
+ * checkout even in a worktree — so there is no steady mixed-version state. The
+ * real, narrow window and its bound are stated once, at
+ * `state_io.prune_legacy_state_file`.
+ */
 export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
+
+/**
+ * Per-SESSION state, one file each — the same layout R2 finding 10 gave the
+ * pin-lost markers, and for the same reason.
+ *
+ * A map-in-one-file was the smaller diff and was rejected: two sessions writing
+ * concurrently through `atomic_write_json` (write + rename) drop one another's
+ * entry, so the cross-talk would return as a lost update instead of a wrong
+ * read.
+ *
+ * This comment used to end "separate files cannot collide by construction", and
+ * both council seats named that sentence as false: the first cut derived the
+ * filename with a character sanitiser, so `a/b` and `a_b` addressed one file and
+ * a substantive prompt from either destroyed the other's state. It is true now
+ * only because `statePathFor` keys on a digest of the full id — the property
+ * comes from the digest, not from the directory layout, and stating it the other
+ * way is how the defect survived a round of review.
+ */
+export const STATE_DIR = path.join("agents", "state", "language-mirror");
+
+/**
+ * Days after which an untouched session's state is pruned.
+ *
+ * One file per session grows without bound otherwise. 7 matches the retention
+ * window this repo already uses for council session artefacts — a convention
+ * match, not a measurement, and stated as such.
+ */
+export const STATE_RETENTION_DAYS = 7;
+
+/**
+ * Is there a stable identity to key state on at all?
+ *
+ * BLOCKER 2, council round 2 (both seats): a sanitised empty id bucketed every
+ * id-less invocation into `unknown-session.json`, and `_ownsPin` at the time
+ * ACCEPTED an empty stored owner as its own — so id-less sessions shared one
+ * file with NO secondary defense. That is the original defect restored, in the
+ * one case that had no guard left. (Round 3 closed the second half too:
+ * `_ownsPin` now requires exact ownership, so an empty owner is foreign. Stated
+ * in the past tense on purpose — describing a fixed defect in the present is
+ * how a comment ends up contradicting its own code, which is a round-2 finding
+ * against an earlier version of this very file.) There is no sound local way to tell two id-less sessions apart
+ * (a fresh UUID per invocation would give one session a new file per hook call,
+ * which destroys continuity rather than providing it), so the honest answer is
+ * to run stateless: classify the prompt, pin from it, persist nothing.
+ */
+export function hasStableSessionId(session_id: string): boolean {
+  return has_stable_session_id(session_id);
+}
+
+/**
+ * Path for one session's pin, keyed by a digest of the FULL id.
+ *
+ * BLOCKER 1, council round 2: the previous sanitiser mapped `a/b` and `a_b` onto
+ * one filename, and `_ownsPin` catches that only AFTER the collision — it
+ * refuses to inherit, but it cannot stop a substantive prompt from replacing the
+ * other session's file, which loses that session's pin and counter permanently.
+ * The seat had already asked for a hashed identifier in round 1 and this code
+ * answered with the guard instead; the guard was the wrong answer.
+ *
+ * A digest also removes the filename-length failure mode for unusually long ids.
+ * `_ownsPin` stays as an in-file integrity check — cheap, and it guards against
+ * a stale or hand-copied file rather than against a hash collision. Round 3
+ * tightened it to exact equality for that role: an ownerless file at a hashed
+ * path can only be corruption, since every writer here stamps the owner.
+ */
+export function statePathFor(session_id: string): string {
+  return session_state_file(STATE_DIR, session_id);
+}
 
 /**
  * Marker written at `pre_compact` and cleared by the single `post_tool_use`
@@ -337,6 +435,11 @@ export interface PinState extends JsonObject {
   de_markers: number;
   en_markers: number;
   session_id: string;
+  /**
+   * Tool calls seen since the pin last reached the model. Optional because
+   * every state written before this field existed is still a valid pin.
+   */
+  tool_calls_since_pin?: number;
 }
 
 function _loadState(target: string): Partial<PinState> {
@@ -348,6 +451,55 @@ function _loadState(target: string): Partial<PinState> {
     return {};
   }
 }
+
+/**
+ * Is a stored pin this session's to inherit? Exact ownership, nothing weaker.
+ *
+ * This used to accept an absent or empty owner as "legacy state, therefore
+ * mine". Council round 3 refuted that for the hashed layout, and the argument
+ * is the layout's own: the pre-split shared file is deleted rather than
+ * migrated, and every writer into a hashed path sets `session_id` — so a
+ * hashed file WITHOUT an owner is corruption or a hand-copy, i.e. exactly the
+ * condition this check claims to catch. The permissive branch was dead code
+ * that weakened the guarantee in its own doc comment.
+ *
+ * No compatibility window is owed: the digest path has never shipped, so no
+ * deployed version ever wrote an ownerless hashed file.
+ *
+ * Absent state (`{}`) returns false and that changes nothing at any call site
+ * — each one already returns early on a missing `language`, which absent state
+ * cannot carry.
+ */
+export function _ownsPin(previous: Partial<PinState>, session_id: string): boolean {
+  return owns_session_state(previous, session_id);
+}
+
+/**
+ * Tool calls after which `post_tool_use` re-states the pin once.
+ *
+ * MEASURED, not chosen (2026-08-20, 10 most recent transcripts, 447 assistant
+ * turns following a German prompt): 11 of the 12 English replies sat at
+ * 179–200 tool calls since the pin, while compliant turns had p90 = 122 and
+ * p99 = 184.
+ *
+ * 150 lies between compliant p90 (122) and the EARLIEST observed violation
+ * (179) — deliberately NOT between the two distributions, because they overlap:
+ * compliant p99 = 184 is past the violation floor, so some compliant traffic
+ * does cross 150 and will be reminded. That is the accepted cost of margin, and
+ * saying otherwise was an overclaim both council seats caught (2026-08-20): the
+ * earlier wording here read "never inside the band where compliance is already
+ * 100 %", which the p99 refutes. A block of 200 tool calls costs ONE re-emit.
+ *
+ * HONEST BASIS: n = 11, and they cluster in a single long autonomous session.
+ * The distance signal is sharp (0 violations below 179) but the corpus is one
+ * session wide, so this is "the number the observed failure sits behind", not
+ * a fitted optimum.
+ *
+ * Revisit-if: a violation is recorded BELOW this distance (the threshold is
+ * too high), or a session shows the re-emit firing without any violation
+ * having been plausible at that distance across ≥ 5 sessions (too low).
+ */
+export const REEMIT_AFTER_TOOL_CALLS = 150;
 
 /**
  * Decide the next state from the previous one and this turn's classification.
@@ -362,8 +514,32 @@ export function nextState(
   locale: Verdict = "und",
 ): PinState | null {
   if (classification.language === "und") {
-    // Terse continuation ("1", "ok", "weiter") — keep whatever was pinned.
-    if (previous.language === "de" || previous.language === "en") {
+    // Terse continuation ("1", "ok", "weiter") — keep whatever was pinned,
+    // but ONLY when the pin is this session's own.
+    //
+    // The state file is ONE file per project root, and in this repo's worktree
+    // workflow `CLAUDE_PROJECT_DIR` resolves to the parent checkout — so every
+    // concurrent session shares it. Without this check a terse German "3" read
+    // a neighbouring English session's pin and injected
+    // `Reply language for this turn: English.` into a German conversation
+    // (observed 2026-08-20, session 15b9ac52 line 2155). That is the rule
+    // inverted, not merely absent, and it is the same cross-session cross-talk
+    // R2 finding 10 closed for the pin-lost markers while leaving the language
+    // state itself open.
+    //
+    // An ABSENT `session_id` is FOREIGN, not owned. This comment said the
+    // opposite — "treated as owned … only a DIFFERENT id is" — describing the
+    // permissive `_ownsPin` that round 3 replaced, and a concurrent session
+    // caught it still standing after `owns_session_state` made exact ownership
+    // shared. The reasoning it gave (a pre-field state cannot be evidence of
+    // another session) no longer applies: every writer into a digest path stamps
+    // the owner and that layout never shipped without one, so an unowned file is
+    // corruption or a hand-copy, which is precisely what the check is for.
+    //
+    // Unreachable in practice, and that is why it survived: nothing in the
+    // digest layout produces an ownerless file. A comment asserting the inverse
+    // of its own code is still a defect — the next reader trusts the prose.
+    if (_ownsPin(previous, session_id) && (previous.language === "de" || previous.language === "en")) {
       return null;
     }
     // FIRST turn and nothing to keep: the locale is better than no pin at all.
@@ -378,6 +554,7 @@ export function nextState(
       de_markers: classification.de_markers,
       en_markers: classification.en_markers,
       session_id,
+      tool_calls_since_pin: 0,
     };
   }
   return {
@@ -388,6 +565,7 @@ export function nextState(
     de_markers: classification.de_markers,
     en_markers: classification.en_markers,
     session_id,
+    tool_calls_since_pin: 0,
   };
 }
 
@@ -475,32 +653,375 @@ function _clearPinLost(consumer_root: string, session_id: string): void {
  * and only when a pin actually exists — an absent or undetermined pin is not
  * an obligation, and inventing one here would be worse than the gap.
  */
-export function _reEmitAfterCompaction(consumer_root: string, session_id: string): number {
+export function _reEmitAfterCompaction(
+  consumer_root: string,
+  session_id: string,
+  write_json: StateWriter = atomic_write_json,
+): number {
+  if (!hasStableSessionId(session_id)) {
+    return EXIT_ALLOW; // BLOCKER 2 — nothing was persisted, so nothing to restore.
+  }
   if (!_pinLost(consumer_root, session_id)) {
     return EXIT_ALLOW;
   }
-  const previous = _loadState(path.join(consumer_root, STATE_FILE));
-  const language = previous.language as Verdict | undefined;
-  const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
-  // Clear FIRST: if the write below throws, the marker must not survive to
-  // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
-  _clearPinLost(consumer_root, session_id);
-  if (language !== "de" && language !== "en") {
+
+  // Serialised against any peer tool write for this session, and silent when
+  // one holds the lock. Everything below reads,
+  // decides and writes inside the lock, so two overlapping post_tool_use calls
+  // cannot both advance past the same counter value nor both emit at the
+  // threshold.
+  return _withToolWriteLock(consumer_root, session_id, EXIT_ALLOW, () => {    const previous = _loadState(path.join(consumer_root, statePathFor(session_id)));
+    const language = previous.language as Verdict | undefined;
+    const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
+    // Clear FIRST: if the write below throws, the marker must not survive to
+    // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
+    _clearPinLost(consumer_root, session_id);
+    if (language !== "de" && language !== "en") {
+      return EXIT_ALLOW;
+    }
+    // A foreign session's pin is not this session's to restore — same reading as
+    // `nextState`, for the same shared-state reason.
+    if (!_ownsPin(previous, session_id)) {
+      return EXIT_ALLOW;
+    }
+    // The pin is about to be fresh in context again, so the distance counter
+    // starts over. Without this the two re-emit triggers would drift apart and
+    // a post-compaction session could re-state the pin twice in a row.
+    //
+    // BLOCKER 4, council round 2: this used to ignore the result and emit anyway.
+    // A reset that does not land leaves the counter at 149, so the next successful
+    // tool-hook write reaches 150 and emits a SECOND reminder — which contradicts
+    // the "compaction wins" invariant this file documents. Same fail-closed policy
+    // as the distance path: no durable reset, no emit.
+    if (!_resetDistance(consumer_root, previous, session_id, write_json)) {
+      return EXIT_ALLOW;
+    }
+    process.stdout.write(
+      `${JSON.stringify({
+        decision: "warn",
+        reason: noticeText(language, source),
+        additional_context: pinText(language, source),
+      })}\n`,
+    );
+    return EXIT_WARN;
+  });
+}
+
+/**
+ * Remove the pre-split single file once this version owns the tree.
+ *
+ * Not a migration: a new session has no pin to inherit anyway, so there is
+ * nothing in the old file worth carrying across. Leaving it would leave dead
+ * state that looks live to anyone reading the directory.
+ */
+export function _pruneLegacyState(consumer_root: string): void {
+  prune_legacy_state_file(path.join(consumer_root, STATE_FILE));
+}
+
+/**
+ * Drop session states untouched for longer than the retention window.
+ *
+ * One file per session is unbounded growth otherwise. Called on the prompt
+ * path only — once per turn, never per tool call.
+ */
+export function _pruneStaleSessions(
+  consumer_root: string,
+  now_ms: number,
+  /**
+   * How a file's age is read. Injectable so the claim-then-revalidate race in
+   * the shared pruner is reachable from a test — the branch only runs when the
+   * candidate check and the post-claim check DISAGREE, which no cutoff-only
+   * test can stage.
+   */
+  mtimeOf: (target: string) => number = (target) => fs.statSync(target).mtimeMs,
+): number {
+  return prune_stale_session_states(
+    path.join(consumer_root, STATE_DIR),
+    now_ms,
+    STATE_RETENTION_DAYS,
+    mtimeOf,
+  );
+}
+
+/**
+ * Persist a counter value. Returns whether it landed; never raises into the turn.
+ *
+ * The boolean is load-bearing, and the comment it replaces was a false
+ * guarantee (council review 2026-08-20, both seats): "a failed write costs at
+ * most one late re-emit" is true for a failed INCREMENT and false for a failed
+ * RESET. A reset that does not land leaves the counter at the threshold, so
+ * every subsequent tool call re-fires — unbounded repeated reminders, which is
+ * exactly the shape § 6.2 refuses. The caller must therefore know.
+ */
+/**
+ * How long a lock file may sit before it is treated as abandoned.
+ *
+ * A whole hook run is milliseconds, so anything this old belongs to a process
+ * that died holding it. Deliberately NOT retried after a break: a retry loop
+ * re-opens exactly the window the lock exists to close.
+ */
+export const LOCK_STALE_MS = 30_000;
+
+/**
+ * Serialise the TOOL-side state update for one session.
+ *
+ * OWN FINDING, not a council one — stated that way on purpose. Round 3 asked
+ * both seats about this file and NEITHER named it: the artefact covers the
+ * pruner TOCTOU, the crash-stranded tombstones, `_ownsPin`, the foreign-owner
+ * test gap and the `chmod` portability, and nothing else. It was first written
+ * here as "council round 3 (OpenAI seat)", a peer checked the artefact and
+ * refuted that, and the attribution is corrected rather than quietly dropped —
+ * a comment claiming a reviewer found something is exactly the kind of false
+ * line that let a real blocker survive round 2 of this same file.
+ *
+ * The defect is real regardless of who found it, and the counter-probe is the
+ * evidence: the counter path was a read-decide-write over a snapshot taken at
+ * the start of the hook run, with nothing serialising two of them. Two overlapping `post_tool_use` calls both
+ * read the same counter and both wrote the same increment (one tool call lost),
+ * and at the threshold both read 149, both reset to zero and both emitted —
+ * which breaks the one-re-emit-per-block invariant this mechanism is bounded to.
+ *
+ * The protocol is deliberately ASYMMETRIC, and that is the whole reason it can
+ * be this small:
+ *
+ *   - the PROMPT write is authoritative. A new prompt pin is meant to replace
+ *     the state, counter included, so it takes no lock and always wins.
+ *   - the TOOL write is defensive. It never replaces a pin, only advances a
+ *     counter, so it serialises against other tool writes here and re-reads
+ *     the pin inside `_writeDistance` before touching anything.
+ *
+ * A lock that cannot be taken means a peer is mid-update: return the caller's
+ * silent value. A lost reminder is recoverable, a double reminder is the shape
+ * § 6.2 refuses.
+ */
+function _withToolWriteLock<T>(
+  consumer_root: string,
+  session_id: string,
+  when_busy: T,
+  body: () => T,
+  now_ms: number = Date.now(),
+): T {
+  const lock = `${path.join(consumer_root, statePathFor(session_id))}.lock`;
+  let fd: number;
+  const acquire = (): number | null => {
+    try {
+      fs.mkdirSync(path.dirname(lock), { recursive: true });
+      return fs.openSync(lock, "wx");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") return null;
+      let age: number;
+      try {
+        age = now_ms - fs.statSync(lock).mtimeMs;
+      } catch {
+        return null; // vanished under us — a peer is actively working
+      }
+      if (age < LOCK_STALE_MS) return null;
+      try {
+        fs.rmSync(lock, { force: true });
+        return fs.openSync(lock, "wx");
+      } catch {
+        return null; // a peer broke it first and now holds it
+      }
+    }
+  };
+  const held = acquire();
+  if (held === null) return when_busy;
+  fd = held;
+  try {
+    return body();
+  } finally {
+    try {
+      fs.closeSync(fd);
+    } catch {
+      /* already closed */
+    }
+    try {
+      fs.rmSync(lock, { force: true });
+    } catch {
+      /* a peer broke a stale lock and owns the path now */
+    }
+  }
+}
+
+export function _writeDistance(
+  consumer_root: string,
+  /**
+   * The pin the CALLER decided against. Used only to detect that the decision
+   * has since been overtaken — never as the object that gets written. Passing a
+   * snapshot here and writing it back is the defect itself.
+   */
+  expected: Partial<PinState>,
+  session_id: string,
+  value: number,
+  /**
+   * How the counter is persisted. Injectable for the same reason the pruner
+   * injects its age reader, and council round 3 asked for exactly this parity:
+   * the fail-closed policy is only observable when the write FAILS, and the
+   * `chmod 0o500` that used to stage that is silently ineffective for an
+   * elevated user — a root CI ran those tests green against any
+   * implementation. A thrown error from here reaches the same catch a real
+   * ENOSPC or EACCES would.
+   */
+  write_json: StateWriter = atomic_write_json,
+): boolean {
+  if (is_replay_mode()) return false;
+  // No stable identity → nothing may be persisted (BLOCKER 2). Reported as a
+  // failed write so every fail-closed caller stays silent rather than emitting
+  // against a counter that cannot be reset.
+  if (!hasStableSessionId(session_id)) return false;
+  const target = path.join(consumer_root, statePathFor(session_id));
+  // Re-read HERE, and build the write from the fresh object — never from the
+  // caller's snapshot.
+  //
+  // This used to spread `previous`, loaded at the top of the hook run. A substantive prompt landing in between
+  // writes a NEW pin, and the tool hook then replaced that whole object with
+  // the stale one — language, source, timestamp and all. The wrong language
+  // came back with no hash collision and no lost update involved, which is the
+  // very defect this file exists to close. `atomic_write_json` prevents a torn
+  // file; it cannot prevent a stale whole-object replacement.
+  const current = _loadState(target);
+  // Nothing to advance: no pin, or a pin this session does not own.
+  if (!_ownsPin(current, session_id)) return false;
+  // The decision was made against a pin that is no longer the live one, so the
+  // counter it computed does not describe this state. Report a failed write so
+  // every fail-closed caller stays silent; the next tool call re-decides
+  // against the new pin. `detected_at` alone would catch a replacement, and
+  // language/source are compared as well so a same-millisecond re-pin in a
+  // different language cannot slip through.
+  if (
+    current.detected_at !== expected.detected_at ||
+    current.language !== expected.language ||
+    current.source !== expected.source
+  ) {
+    return false;
+  }
+  try {
+    write_json(target, {
+      ...current,
+      session_id: typeof current.session_id === "string" && current.session_id !== ""
+        ? current.session_id
+        : session_id,
+      tool_calls_since_pin: value,
+    } as PinState);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export type StateWriter = (target: string, state: PinState) => void;
+
+function _resetDistance(
+  consumer_root: string,
+  expected: Partial<PinState>,
+  session_id: string,
+  write_json: StateWriter = atomic_write_json,
+): boolean {
+  return _writeDistance(consumer_root, expected, session_id, 0, write_json);
+}
+
+/**
+ * The distance trigger — the second of the two re-emit paths.
+ *
+ * WHY THIS IS NOT "the same failed mechanism running more often" (§ 6.2, and
+ * the 2026-07-06 reminder-injection null this repo settled at Δ=0): that pilot
+ * could not produce a red baseline — kernel-only complied 12/12 — and its own
+ * revisit clause reopens the question the moment one is found: *"a real red
+ * baseline — e.g. genuine >3K-token distance in a live multi-turn session, or
+ * telemetry showing tier-2 obligations missed in production"*. Production
+ * transcripts now supply exactly that: 11 English replies to a German user,
+ * every one of them 179+ tool calls past the pin, none below it. So this is a
+ * measured-gap fix in the regime the null explicitly excluded, not a re-run of
+ * the refused shape — which was a re-pin on EVERY tool call, unbounded. This
+ * one fires once per `REEMIT_AFTER_TOOL_CALLS` — once per ~200-call block. It
+ * does reach some compliant traffic (compliant p99 = 184 > 150); the claim is
+ * bounded frequency against a measured red baseline, never zero false fires.
+ */
+export function _reEmitAfterDistance(
+  consumer_root: string,
+  session_id: string,
+  write_json: StateWriter = atomic_write_json,
+): number {
+  if (is_replay_mode()) {
     return EXIT_ALLOW;
   }
-  process.stdout.write(
-    `${JSON.stringify({
-      decision: "warn",
-      reason: noticeText(language, source),
-      additional_context: pinText(language, source),
-    })}\n`,
-  );
-  return EXIT_WARN;
+  // Stateless without an id: no counter to advance, so no distance to measure
+  // (BLOCKER 2). The prompt path still pins from a marked prompt.
+  if (!hasStableSessionId(session_id)) {
+    return EXIT_ALLOW;
+  }
+
+  // Serialised against any peer tool write for this session, and silent when
+  // one holds the lock. Everything below reads,
+  // decides and writes inside the lock, so two overlapping post_tool_use calls
+  // cannot both advance past the same counter value nor both emit at the
+  // threshold.
+  return _withToolWriteLock(consumer_root, session_id, EXIT_ALLOW, () => {    const previous = _loadState(path.join(consumer_root, statePathFor(session_id)));
+    const language = previous.language as Verdict | undefined;
+    if (language !== "de" && language !== "en") {
+      return EXIT_ALLOW;
+    }
+    if (!_ownsPin(previous, session_id)) {
+      return EXIT_ALLOW;
+    }
+    const seen =
+      typeof previous.tool_calls_since_pin === "number" && previous.tool_calls_since_pin >= 0
+        ? previous.tool_calls_since_pin
+        : 0;
+    const advanced = seen + 1;
+    const due = advanced >= REEMIT_AFTER_TOOL_CALLS;
+    // Write BEFORE emitting, and reset on the same call that emits: if the
+    // stdout write throws, the counter must not stay at the threshold and fire
+    // on every subsequent tool call.
+    const written = _writeDistance(
+      consumer_root,
+      previous,
+      session_id,
+      due ? 0 : advanced,
+      write_json,
+    );
+    if (!due) {
+      return EXIT_ALLOW;
+    }
+    // FAIL-CLOSED, stated as a policy rather than left to the catch: if the reset
+    // did not land, staying silent loses at most one reminder, while emitting
+    // anyway re-fires on every later tool call because the counter is still at
+    // the threshold. A lost reminder is recoverable; an unbounded loop is the
+    // failure this whole mechanism is bounded to avoid.
+    if (!written) {
+      return EXIT_ALLOW;
+    }
+    const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
+    process.stdout.write(
+      `${JSON.stringify({
+        decision: "warn",
+        reason: noticeText(language, source),
+        additional_context: pinText(language, source),
+      })}\n`,
+    );
+    return EXIT_WARN;
+  });
+}
+
+/**
+ * `post_tool_use` carries both re-emit triggers. Compaction wins when both are
+ * live: it already re-states the pin and resets the distance counter, so
+ * running the distance path after it would emit twice for one event.
+ */
+export function _onToolUse(
+  consumer_root: string,
+  session_id: string,
+  write_json: StateWriter = atomic_write_json,
+): number {
+  if (_pinLost(consumer_root, session_id)) {
+    return _reEmitAfterCompaction(consumer_root, session_id, write_json);
+  }
+  return _reEmitAfterDistance(consumer_root, session_id, write_json);
 }
 
 export function run(
   stdin_text: string,
-  options: { consumer_root: string; env?: NodeJS.ProcessEnv },
+  options: { consumer_root: string; env?: NodeJS.ProcessEnv; write_json?: StateWriter },
 ): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
@@ -536,7 +1057,7 @@ export function run(
     return EXIT_ALLOW;
   }
   if (event === "post_tool_use") {
-    return _reEmitAfterCompaction(options.consumer_root, _sessionId(envelope));
+    return _onToolUse(options.consumer_root, _sessionId(envelope), options.write_json);
   }
 
   const prompt = _extractPrompt(payload);
@@ -551,8 +1072,13 @@ export function run(
   }
 
   const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
-  const target = path.join(options.consumer_root, STATE_FILE);
-  const previous = _loadState(target);
+  const stateful = hasStableSessionId(session_id);
+  // BLOCKER 2: with no stable id there is no file to read or write. The pin for
+  // THIS turn still comes from this turn's prompt — that needs no state — but
+  // terse-continuation inheritance and the distance counter are both off, since
+  // both would have to share one bucket with every other id-less invocation.
+  const target = stateful ? path.join(options.consumer_root, statePathFor(session_id)) : "";
+  const previous = stateful ? _loadState(target) : {};
   const classification = classify(prompt);
   const next = nextState(
     previous,
@@ -566,16 +1092,26 @@ export function run(
     systemLocaleVerdict(options.env ?? process.env),
   );
 
-  const effective = next?.language ?? (previous.language as Verdict | undefined);
+  // A foreign session's pin is never inherited — see `nextState`. Without this,
+  // the `null` "keep" return and a cross-session read are indistinguishable
+  // here, which is the path by which an English pin reached a German turn.
+  const inherited = _ownsPin(previous, session_id)
+    ? (previous.language as Verdict | undefined)
+    : undefined;
+  const effective = next?.language ?? inherited;
   // A state file written before `source` existed carries only what the old
   // version could produce — a prompt reading. Absent is therefore `prompt`,
   // never "unknown": treating it as unknown would reword the audited notice
   // for every pre-existing session.
   const effectiveSource: PinSource =
     next?.source ?? (previous.source === "system-locale" ? "system-locale" : "prompt");
-  if (next) {
+  if (next && stateful) {
     try {
       atomic_write_json(target, next);
+      // Housekeeping runs on the prompt path only — once per turn, not once
+      // per tool call — and never before the write it is cleaning up after.
+      _pruneLegacyState(options.consumer_root);
+      _pruneStaleSessions(options.consumer_root, Date.now());
     } catch {
       // Observability only — a failed state write never blocks the turn.
     }

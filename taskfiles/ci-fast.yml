@@ -149,6 +149,25 @@ tasks:
       # so in its own comment. Same 2026-08-06 PR reddened CI twice on the same
       # one-line change: once for the cap, once for this drift. 0.69s measured.
       - task: check-index
+      # The discovery scanner in STRICT mode, and it belongs here for the same
+      # reason `check-index` does: a new artefact's `packs:` value is a
+      # vocabulary question this change answers, and nothing else in preflight
+      # asks it. `validate_frontmatter` checks the SHAPE of the key, not whether
+      # the value names a pack that exists.
+      #
+      # Measured 2026-08-20: a new rule shipped `packs: [core]` — a real
+      # directory under src/packs/, so it read as plausible, and not a member of
+      # the discovery vocabulary. Every gate in this preflight passed. CI then
+      # failed FIFTEEN checks in 18-31s each, because `consumer-matrix.yml` runs
+      # this scanner with `--strict` and it aborts the job before the suite even
+      # starts. `consistency.yml` runs the same scanner WITHOUT `--strict` and
+      # says nothing, which is why the non-strict form here would have been
+      # theatre.
+      #
+      # ~1s, and the value is the failure mode it removes: a vocabulary typo
+      # currently costs a full red CI matrix and a fixup push, and it is
+      # invisible locally right up to that point.
+      - ./scripts-run src/scripts/build_discovery_manifest --write --strict {{.QUIET_FLAG}}
       # Gate R1 + R2 (plan-governance) — pre-push layer; CI is authoritative.
       # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
       - task: lint-plan-risk-register

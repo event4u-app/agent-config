@@ -24,6 +24,12 @@ export default defineConfig({
             ['src/ui/**', 'happy-dom'],
         ],
         environment: 'node',
+        // Runs before every test file. Strips the ambient locale variables the
+        // hook layer reads through `process.env`, so a suite cannot pass on one
+        // machine's `LANG` and fail on another's — the exact failure that made
+        // PR #1458 red on `macos-latest, shard 2/4` while green everywhere else.
+        // Rationale and the deliberate narrowness live in the file itself.
+        setupFiles: ['tests/_lib/hermetic-env.ts'],
         // The python-free-env shim (tests/_lib/python-free-env.ts) is DISABLED:
         // the py2ts test-layer purge converted every live python↔tsx parity
         // block to tsx-only intent tests, so no test needs the python3 shadow.

@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **713 public artefacts** shipped by
+Consumer-facing catalog of all **714 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -318,7 +318,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (116)
+## Rules (117)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -365,6 +365,7 @@ are excluded.
 | rule | [`external-reference-deep-dive`](../dist/agent-src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../dist/agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |
 | rule | [`finance-safety-floor`](../dist/agent-src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer |
+| rule | [`fix-what-you-see`](../dist/agent-src/rules/fix-what-you-see.md) | auto | Saw a red check or a real defect — fix it, whoever wrote it; if you cannot, ship a tracked follow-up roadmap in the same change. Ownership is never a disposition |
 | rule | [`framework-neutrality-in-generic-skills`](../dist/agent-src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead |
 | rule | [`git-history-discipline`](../dist/agent-src/rules/git-history-discipline.md) | auto | Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn |
 | rule | [`guidelines`](../dist/agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
