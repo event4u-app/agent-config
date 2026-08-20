@@ -35,37 +35,8 @@
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --archive    # rewrite + archive completed
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check      # CI: exit 1 if stale
  *
- * `--archive` (opt-in; wired into `task roadmap-progress` and
- * `agent-config roadmap:progress`) runs the archival sweep before rendering
- * instead of printing "Completed roadmaps not yet archived" and leaving the
- * work to a human who has been ignoring the line for weeks. It is a flag rather
- * than the default because the PostToolUse hook re-runs the WRITE path once per
- * turn on every roadmap edit, and a hook that silently `git mv`s files mid-work
- * is a bigger problem than the warning it would remove. `--check` never
- * archives — see `_run_archival_sweep`.
- *
- * WHY the warning existed at all, since this is the one place a reader of the
- * flag will look: the sweep's own default is `--changed-only`, so a PR archives
- * exactly the roadmaps it completed. A roadmap completed by a PR whose sweep did
- * not run is then complete, on the trunk, and OUTSIDE every later branch's
- * history — no `--changed-only` sweep finds it again. Measured 2026-08-20: six
- * such roadmaps, with every regen reprinting the warning at whoever ran it.
- * `/create-pr` § 1c keeps `--changed-only`; repo-wide reconciliation is this
- * flag's job and nothing else's.
- *
- * This layout is deliberate rather than convenient: the prose homes for it are
- * both at their ceilings (`roadmap-progress-mechanics.md` sits 122 chars under
- * the 16,000-char depth ceiling, and `roadmap-management/SKILL.md` tips
- * `skill_too_large` on any prose block), so the contract lives with the code it
- * governs. Moving it out means making room first.
- *
- * AI council 2026-08-20 (anthropic + openai, blind peer review): both seats
- * converged on explicit opt-in + `--all` scope + hook archival-free, and both
- * independently required the `--check` exclusion, the archive-before-render
- * order, and that a failed sweep must not render. RECORDED DISSENT: one seat
- * argued for flipping the sweep's own default to `--all` instead. Rejected —
- * that makes every PR a potential estate-wide cleanup, which is exactly what
- * `--changed-only` exists to prevent.
+ * `--archive` is opt-in and `--check` refuses it; the full contract, the
+ * council record and the sweep spawner live in `archival_sweep.ts`.
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -92,6 +63,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { run_archival_sweep } from './archival_sweep.js';
 import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1322,65 +1294,6 @@ function _fallback_git_toplevel(repo_root: string): string {
     return repo_root;
 }
 
-/**
- * Run the archival sweep for every complete roadmap, in-place.
- *
- * Spawned rather than imported: `archive_completed_roadmaps.ts` imports
- * `collect` from THIS module, so a static import back would close a cycle, and
- * `main()` is synchronous so a dynamic `await import()` is not available either.
- * The sweep is the same twin `_regen_dashboard` already spawns in the other
- * direction, so the spawn shape is the established one in this pair.
- *
- * No recursion: the sweep re-runs this script with NO flags, so its inner
- * dashboard pass has archival off and terminates at depth 2.
- *
- * `--all`, not the sweep's `--changed-only` default. The default exists so a PR
- * archives exactly the roadmaps it completed; here the caller asked the
- * repo-wide dashboard to reconcile the estate, and the roadmaps that leak are
- * by construction the ones NOT in this branch's history — six had accumulated
- * on the trunk while the warning printed every regen. A roadmap the sweep
- * refuses (open blockers) stays put and is still reported below.
- */
-function _run_archival_sweep(root: string): SweepResult {
-    const script = path.join(path.dirname(_HERE), 'archive_completed_roadmaps.ts');
-    if (!_isFile(script)) {
-        // A consumer install without the sweep script: nothing to run, and that
-        // is a normal state — the warning below still reports the roadmaps.
-        return { ran: false, ok: true, stdout: '', stderr: '' };
-    }
-    const argv = [script, '--all', '--repo-root', root];
-    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
-    let dir = path.dirname(_HERE);
-    for (;;) {
-        const candidate = path.join(dir, 'node_modules', '.bin', binName);
-        if (fs.existsSync(candidate)) {
-            return _sweepResult(spawnSync(candidate, argv, { cwd: root, encoding: 'utf-8' }));
-        }
-        const parent = path.dirname(dir);
-        if (parent === dir) {
-            break;
-        }
-        dir = parent;
-    }
-    return _sweepResult(spawnSync('npx', ['tsx', ...argv], { cwd: root, encoding: 'utf-8' }));
-}
-
-interface SweepResult {
-    ran: boolean;
-    ok: boolean;
-    stdout: string;
-    stderr: string;
-}
-
-function _sweepResult(r: ReturnType<typeof spawnSync>): SweepResult {
-    return {
-        ran: true,
-        ok: r.status === 0,
-        stdout: String(r.stdout ?? ''),
-        stderr: String(r.stderr ?? ''),
-    };
-}
-
 function main(argv?: readonly string[]): number {
     const args = _parseArgs(argv ?? process.argv.slice(2));
     let repo_root = args.repo_root;
@@ -1401,7 +1314,7 @@ function main(argv?: readonly string[]): number {
     // gate that mutates the tree it is checking cannot be trusted by CI.
     let sweep_out = '';
     if (!args.check && args.archive && unarchived_complete(collect(roadmap_root)).length > 0) {
-        const swept = _run_archival_sweep(repo_root);
+        const swept = run_archival_sweep(repo_root);
         sweep_out = swept.stdout;
         if (swept.stderr) {
             process.stderr.write(swept.stderr);
