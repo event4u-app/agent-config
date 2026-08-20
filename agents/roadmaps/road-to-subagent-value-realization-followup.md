@@ -10,6 +10,110 @@ parent_roadmap: subagent-value-realization
 >      bounded-downside basis; this roadmap was written pre-flip) via
 >      road-to-opt-portfolio-consolidation Phase 1. -->
 
+## Outcome — closed 2026-08-20, and closed is not achieved
+
+```
+ARCHIVED DOES NOT MEAN ACHIEVED. NEITHER PHASE OF THIS ROADMAP WAS SATISFIED.
+THE ADR-117 `auto: on` DEFAULT IS STILL UNEXAMINED BY MEASUREMENT, NOT CONFIRMED
+AND NOT DEMOTED.
+```
+
+Six items were open when this run started. **One is `[x]`** — Phase 2 Step 3, the
+flip-verdict evidence pass, and what it records is a measured null, not a win.
+**Five are `[-]` transferred.** Disposition **B**, outcome `transferred`, per
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md),
+which found this roadmap's `telemetry-sample-size` and
+`road-to-orchestration-scope-decision`'s `real-orchestration-usage` to be **one
+evidence gap wearing two names** and merged them into a single shared stub:
+[`stubs/road-to-task-completion-observability.md`](stubs/road-to-task-completion-observability.md). <!-- ref-ignore -->
+
+The `ref-ignore` marker on that link is deliberate and temporary. The stub was
+written by the agent closing the sibling roadmap and is not on `main` yet — it
+lives on `drain/road-to-orchestration-scope-decision`
+(`git show origin/drain/road-to-orchestration-scope-decision:agents/roadmaps/stubs/road-to-task-completion-observability.md`,
+commit `b2f1119da`). The marker keeps `check_references` green on a forward
+reference that resolves the moment that branch merges; remove it then. Writing a
+second stub instead would have split one evidence gap back into two files, which
+is exactly what the council merged away — the stub already names **both** parents
+in its own header, including this roadmap.
+
+| Phase | State | One-line honest reading |
+|---|---|---|
+| Phase 1 — seed real telemetry | 2 satisfied (pre-run), 1 **transferred** | Steps 1 and 3 were `[x]` before this run. Step 2 is transferred and is **doubly** unexecutable: the two arms it names are `subagents.enabled` / `subagents.auto` settings states, and both keys were deleted; and the ≥ 20 count it gates on is met many times over while every quality column is `null`. |
+| Phase 1 exit criteria | **not met** | The line count and the classifier recall halves are met; the `first_pass_success` / `escalated` half is `0` of 582 and is not reachable from any hook slot. Cost and quality are a pair by contract, so a met count is not a met criterion. |
+| Phase 2 — confirm or demote ADR-117 | 1 **satisfied**, 2 **transferred** | Step 3 (record the evidence pass) is executed and `[x]`. Steps 1-2 are transferred: `gateVerdict()` takes `{net_win, quality_held}` and the corpus supplies neither, and the DEMOTE branch is premise-stale — `subagents.auto` no longer exists to demote. |
+| Acceptance criteria | 1 of 3 met | AC2 (classifier recall) was already met. AC1 and AC3 are transferred; **neither was re-scoped**, because re-scoping a pre-registered criterion is a maintainer act under `evaluator-independence` and the criterion's own END-STATE NOTE says so. |
+
+### Re-measured corpus — 2026-08-20, this run's own reading
+
+Measured directly over `agents/runtime/state/audit/` (gitignored host state, read
+from the parent checkout — a worktree carries no runtime state), not quoted from
+the sibling:
+
+| | 2026-07 | 2026-08 |
+|---|---:|---:|
+| total lines / orchestration rows | 1 / 1 | 591 / **582** |
+| `first_pass_success` non-null | 1 | **0** |
+| `escalated` non-null | 1 | **0** |
+| `task_class` non-null | 1 | **0** |
+| `dispatch_mode` non-null | 0 | 0 |
+| `dispatch_tokens` numeric | 0 | **40** (range 321-506234) |
+| `wall_clock_ms` numeric / of those `> 0` | 1 / 0 | 582 / **40** |
+| `token_delta_provenance: measured` | 1 | **0** (`estimated` 582) |
+| `spawn_count >= 2` | 1 (=3) | **0** (`1` in 581, `0` in 1) |
+
+`orchestration_savings_report --dir <parent>/agents/runtime/state/audit`:
+`dispatches: 582 (total spawns: 584)`, net `token_delta: 1087078` — tokens
+**added**, `first_pass_success_rate: n/a (n=1)`, `escalation_rate: n/a (n=1)`,
+`measured share: 0%`, `MODELED cost reduction: n/a`. The entire non-zero net is
+the single July line.
+
+**Did it move?** The line count did; nothing else did. The shared stub's
+transfer-date baseline was **570** orchestration rows earlier the same day, and
+this reading is **582** — the corpus grew while this roadmap was being closed,
+because this session's own dispatches append to it. Every field verdict is
+byte-identical to the transfer baseline: quality columns still `0`, provenance
+still `estimated` on all, fan-out still `0`. That is the stub's own movement test
+answered against itself — a few hundred more lines is noise; one row with three
+non-null quality columns would be signal.
+
+**Two refinements this reading adds beyond the transfer baseline.**
+
+1. `wall_clock_ms` is numeric on 582 of 582 but **`> 0` on only 40** — the same
+   40 rows that carry `dispatch_tokens`. The stub's table records it as "numeric
+   570", which is true and overstates latency coverage: 542 rows carry a
+   placeholder zero, not a measured duration.
+2. Those 40 sync completions are all dated **2026-08-09 to 2026-08-13** — none
+   since. The sync subset has been flat for a week while background spawn acks
+   accumulated from 367 to 582, which is the sharpest available statement of why
+   volume cannot move this criterion.
+
+**One unreconciled discrepancy, recorded rather than silently corrected.** The
+2026-08-17 correction in the blocker below reports `dispatch_tokens` values
+"from 315 to 194330" over the same **40** rows; this reading gets **321 to
+506234** over 40. The audit log is append-only and the count is identical, so the
+two ranges cannot both be readings of this field over these rows. The
+discrepancy is noted, not resolved — nothing in this closure depends on it, and
+the count (40) is what the argument uses.
+
+### What must not be read out of this closure
+
+- **The default was not evaluated.** ADR-117's `auto: on` still rests on the
+  2026-07-09 bounded-downside basis. This run recorded that a third evidence pass
+  found no usable evidence; it did not confirm the default, and it did not demote
+  it. "Unexamined by measurement" is the honest state.
+- **`0` here is not a measured loss.** The net figure the aggregate prints is
+  tokens *added*, assembled entirely from one July line at `measured share: 0%`.
+  Quoted without that provenance it reads as evidence that orchestration loses,
+  which is Risk-Register row 4 and is not what the corpus says.
+- **Nothing was fixed by writing a value.** `token_delta: 0` and the `null`
+  quality columns are documented behaviour of the emitting slot, not a defect —
+  Risk-Register row 2. No row was appended, no emitter was edited, no criterion
+  was lowered to fit the data.
+- **The fan-out arm has no population at all.** Across 582 recorded dispatches
+  the corpus has never produced `spawn_count >= 2`. Any future verdict read off
+  this corpus is a verdict about single-spawn dispatch, whatever the columns say.
+
 ## Context
 
 This roadmap collects items deferred from
@@ -41,7 +145,7 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
       not a win), n=1. This line is explicitly NOT a measured data point and does
       NOT count toward Step 2's ≥20-measured gate or the pre-registered
       `orchestration-dispatch-net-win` claim (orch-02/03, provenance measured). -->
-- [ ] **Step 2:** Run the full delegable-task corpus (`orch-01`, `orch-02`, `orch-03`) under both arms (`agent-settings.orchestrated.yml` and `agent-settings.baseline.yml`) across enough sessions to reach ≥ 20 orchestrated dispatches.
+- [-] **Step 2:** Run the full delegable-task corpus (`orch-01`, `orch-02`, `orch-03`) under both arms (`agent-settings.orchestrated.yml` and `agent-settings.baseline.yml`) across enough sessions to reach ≥ 20 orchestrated dispatches.
       <!-- PREMISE-STALE as written, 2026-08-10. The two arms are settings
       states of `subagents.enabled` / `subagents.auto`, and always-on
       orchestration (road-to-always-on-orchestration Phase 1) DELETED both keys
@@ -54,6 +158,10 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
       emergency brake rather than an experimental arm, and using it as one would
       make the baseline arm indistinguishable from an incident. Recorded as an
       option to reject, not a plan. -->
+      <!-- TRANSFERRED 2026-08-20 (disposition B, outcome `transferred`) to
+      stubs/road-to-task-completion-observability.md: both arms name deleted
+      settings keys, and the count half is met at 582 with 0 usable quality
+      columns — not satisfied, not abandoned, moved with its criterion. -->
 - [x] **Step 3:** Measure `parallelizable:` classifier recall on the corpus — confirm the deterministic classifier fires `do-in-parallel` / `do-in-steps` on the corpus tasks as expected; record actual hit/miss counts.
       <!-- done 2026-07-11: deterministic measurement (no spend/agents) via the
       new regression test src/scripts/_lib/auto_dispatch.corpus.test.ts (8 tests,
@@ -69,8 +177,16 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 
 ## Phase 2: Confirm or demote the ADR-117 `auto: on` default
 
-- [ ] **Step 1:** Feed the accumulated real orchestration telemetry through the existing `gateVerdict()` / `resolveShippedDefault()`.
-- [ ] **Step 2:** If the data shows a net token-or-time win at held quality, record the ADR-117 `on` default as evidence-CONFIRMED (bounded-downside basis upgrades to measured); otherwise record the renewed honest-null and demote the default back to `ask` via ADR-117's retained demotion gate — a maintainer decision either way.
+- [-] **Step 1:** Feed the accumulated real orchestration telemetry through the existing `gateVerdict()` / `resolveShippedDefault()`.
+      <!-- TRANSFERRED 2026-08-20 (disposition B, outcome `transferred`) to
+      stubs/road-to-task-completion-observability.md. Verified this run rather
+      than assumed: `gateVerdict` (src/scripts/_lib/orchestration_gate.ts:38)
+      is a pure function of `{net_win, quality_held}`. The corpus supplies
+      neither — `token_delta_provenance` is `estimated` on 582 of 582 so there
+      is no measured net, and `first_pass_success` is null on 582 of 582 so
+      there is no held-quality input. There is nothing to feed it; running it on
+      invented inputs would manufacture a verdict. -->
+- [-] **Step 2:** If the data shows a net token-or-time win at held quality, record the ADR-117 `on` default as evidence-CONFIRMED (bounded-downside basis upgrades to measured); otherwise record the renewed honest-null and demote the default back to `ask` via ADR-117's retained demotion gate — a maintainer decision either way.
       <!-- PREMISE-STALE on its DEMOTE branch, 2026-08-10: `subagents.auto` no
       longer exists to demote (deleted with `subagents.enabled` by
       road-to-always-on-orchestration Phase 1), so "back to `ask`" has no target.
@@ -79,7 +195,24 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
       honest null is recorded without a demotion, is the maintainer decision the
       step already reserves — it is now a decision about a deleted mechanism,
       which is worth knowing before anyone re-opens this step. -->
-- [ ] **Step 3:** Update `agents/settings/contexts/orchestration-default-flip-verdict.md` with the new evidence pass (date + outcome), per `no-roadmap-references` (inline, no session path).
+      <!-- TRANSFERRED 2026-08-20 (disposition B, outcome `transferred`) to
+      stubs/road-to-task-completion-observability.md. Both branches are
+      unreachable here: CONFIRM has no evidence (Step 1), and DEMOTE has no
+      target key. Which mechanism the demotion gate re-cuts against — or whether
+      the null is recorded without a demotion at all — is the maintainer decision
+      this step already reserved. -->
+- [x] **Step 3:** Update `agents/settings/contexts/orchestration-default-flip-verdict.md` with the new evidence pass (date + outcome), per `no-roadmap-references` (inline, no session path).
+      <!-- done 2026-08-20: added `## Evidence pass (2026-08-20) — no usable
+      evidence; the default is unexamined, not confirmed` to
+      agents/settings/contexts/orchestration-default-flip-verdict.md. Records
+      this run's own re-measurement (582 orchestration rows, quality columns 0 of
+      582, provenance `estimated` 582 of 582, `spawn_count >= 2` 0 of 582, the 40
+      sync completions all dated 2026-08-09..13) and states plainly that the
+      demotion trigger is NOT met — a measured net loss or a quality regression
+      is required, and neither exists; an unmeasurable corpus is not a regression.
+      No default changed: recording an evidence pass is documentation, flipping a
+      shipped default is a maintainer release act. Inline convergence, no session
+      path, per `no-roadmap-references`. -->
 
 **Exit criteria:** `gateVerdict()` run on real telemetry; flip decision recorded with evidence either way.
 **Rollback:** none (decision is evidence-gated; `ask` is the safe default if evidence is insufficient).
@@ -114,7 +247,7 @@ stands is exactly the shape that invites a wrong resume.
 
 ## Acceptance Criteria
 
-- [ ] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
+- [-] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
       <!-- OPEN, and NOT a small fix — measured 2026-08-10 over 99 hook-emitted
       August lines: `token_delta` 0 / `estimated` in all 99, `dispatch_tokens`
       null in all 99. Both are correct at that layer per the hook's own header
@@ -135,18 +268,82 @@ stands is exactly the shape that invites a wrong resume.
       and explicitly not a data point. That was accurate and is not the gap —
       the gap is that the *measured* provenance is unreachable for background
       dispatches, which the Step 1 note could not have known.
+
+      TRANSFERRED 2026-08-20 (disposition B, outcome `transferred`) to
+      stubs/road-to-task-completion-observability.md — **not** re-scoped. The
+      END-STATE NOTE above reserves re-scoping to a maintainer, and this run
+      honours that: the net-delta claim is carried forward intact rather than
+      trimmed to what the data can support. What this run added is the
+      measurement that makes the re-scope decidable when a maintainer takes it.
 - [x] `parallelizable:` classifier recall measured on the corpus.
       <!-- met 2026-07-11: recall 2/2 (v1-covered modes) + FP 0, via
       src/scripts/_lib/auto_dispatch.corpus.test.ts. -->
-- [ ] The ADR-117 `auto: on` default is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — confirmed if evidenced, demoted to `ask` if not.
+- [-] The ADR-117 `auto: on` default is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — confirmed if evidenced, demoted to `ask` if not.
+      <!-- TRANSFERRED 2026-08-20 (disposition B, outcome `transferred`) to
+      stubs/road-to-task-completion-observability.md. The "outcome recorded" half
+      IS done (Phase 2 Step 3): the flip-verdict context now carries a dated
+      third evidence pass. The re-evaluation half is not, and cannot be — the
+      gate has no inputs. Recorded as transferred rather than met, because a
+      recorded null is not a re-evaluation. -->
 
 ## Blockers
 
 ### blocker: telemetry-sample-size
-- **Status:** open
+- **Status:** resolved — transferred 2026-08-20 (disposition B, outcome `transferred`)
 - **Owner:** user
 - **Class:** 3 — human-only (only real parallel work fills the columns; no command synthesises usage)
 - **Blocks:** Phase 1 — Seed real telemetry
+- **Merged pair — this entry is ONE HALF of two.** Its sibling is
+  `real-orchestration-usage` in
+  [`road-to-orchestration-scope-decision.md`](road-to-orchestration-scope-decision.md),
+  and the two were found to be **one evidence gap wearing two names** by
+  [`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md):
+  "Line count is already satisfied and no longer diagnostic; the shared gap is
+  whether a hook can observe task completion and populate quality fields." Both
+  halves were rewritten off the count and onto the quality columns (this one
+  2026-08-16, the sibling 2026-08-17) and both point at **one** shared stub. That
+  sibling roadmap's own checkboxes are owned by the agent that closed it and were
+  **not** touched here; only this half is closed by this run.
+- **Resolution (2026-08-20) — transferred to
+  [`stubs/road-to-task-completion-observability.md`](stubs/road-to-task-completion-observability.md), <!-- ref-ignore -->
+  outcome state `transferred`.** The stub already exists, already names this
+  roadmap as a second parent, and already carries the probe result — it was
+  written by the agent closing the sibling and deliberately shaped to serve both.
+  It is not on `main` yet (branch `drain/road-to-orchestration-scope-decision`,
+  commit `b2f1119da`), which is why the link above carries `ref-ignore`; drop the
+  marker when that branch merges. No second stub was written: duplicating it
+  would re-split the gap the council merged.
+
+  **Why this is a transfer and not a wait.** The criterion's two clauses are not
+  one chain. Clause 1 (does a hook slot see the task-completion payload) has a
+  live-host path and is **partly answered already** — cost and latency are read
+  today on a **sync** completion at `orchestration_record_hook.ts:193-199`, which
+  is why 40 rows carry numeric `dispatch_tokens`. Clause 2 (≥ 20 rows with
+  populated quality columns) has **no** hook path at any slot: `first_pass_success`
+  and `escalated` are defined over the parent's *subsequent* rework and
+  re-dispatch, events that have not happened at task completion. A perfect
+  payload capture therefore fills cost and leaves the quality columns exactly as
+  `null` as they are now. That asymmetry — not a missing probe run — is what
+  moves this out of the roadmap.
+
+  **Re-measured this run, 2026-08-20, independently of the sibling's reading.**
+  `2026-08.jsonl`: 591 lines, **582 orchestration**. `first_pass_success` /
+  `escalated` / `task_class` / `dispatch_mode` non-null on **0 of 582**.
+  `token_delta_provenance` `estimated` on **582 of 582**. `dispatch_tokens`
+  numeric on **40 of 582**, and all 40 are dated **2026-08-09 to 2026-08-13** —
+  none since, so the sync subset has been flat for a week while background acks
+  grew from 367 to 582. `wall_clock_ms` numeric on 582 but **`> 0` on only those
+  same 40**. `spawn_count >= 2` on **0 of 582**. `2026-07.jsonl` still holds the
+  single hand-emitted line that is the entire quality corpus.
+  `orchestration_savings_report` over the same dir: `dispatches: 582`,
+  `first_pass_success_rate: n/a (n=1)`, `escalation_rate: n/a (n=1)`,
+  `measured share: 0%`, `MODELED cost reduction: n/a`. Full table and the two
+  refinements over the transfer baseline: § Outcome above.
+
+  **Count-met / value-not, stated once more because that is the shape that
+  invites a wrong resume** (Risk-Register row 1): the `≥ 20 lines` condition this
+  field carried until 2026-08-16 is satisfied roughly 29× over and the blocker
+  was open the whole time. Raising the count further moves nothing.
 - **What to do:**
   1. Use the agent with `subagents.enabled: true` under the post-ADR-117
      default (`subagents.auto: on`) during real work, long enough to
