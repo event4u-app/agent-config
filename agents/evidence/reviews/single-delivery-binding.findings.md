@@ -1,11 +1,11 @@
 # Findings: single-delivery-binding
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: d3eeb0f3b0ab1f48731270290a5863916a58df67f8c07929473d15e8ccf15948 | diff: bd00405f695d101627f433d8216ebf5473de5212 | reviewer: r2-fresh-subagent-single-delivery-binding | prompt_hash: bd27f18a28f803344f25fd3e08e05b3f00860770c5a5303d9fabded739b40be0 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 22d194489d45d80fe7a99057b59fbda04b6ea998e3fc3ce4a9405a131c366d68 | diff: 38b2e9ee141079acbd21985a390e4c5c602a161e | reviewer: r2-fresh-subagent-single-delivery-binding | prompt_hash: bd27f18a28f803344f25fd3e08e05b3f00860770c5a5303d9fabded739b40be0 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: bd00405f695d101627f433d8216ebf5473de5212
-  scope_hash: d3eeb0f3b0ab1f48731270290a5863916a58df67f8c07929473d15e8ccf15948
+  diff_sha: 38b2e9ee141079acbd21985a390e4c5c602a161e
+  scope_hash: 22d194489d45d80fe7a99057b59fbda04b6ea998e3fc3ce4a9405a131c366d68
   roadmap: agents/roadmaps/road-to-single-delivery.md
   roadmap_hash: 1845d0fd641401ec4cfbe33dbbeb1b5a8b7e0ec2ece2f5969bb7ef357fc1088d
   ac_hash: 508e3882142046224dd1cb4c555b8792f1858c690aab57cec4a19d071e68a95f
@@ -14,7 +14,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-19T21:31:29Z
 -->
 
-> **Re-bound 2026-08-19** to scope `d3eeb0f3` / diff `bd00405f`. The reviewed
+> **Re-bound 2026-08-19** to scope `22d19448` / diff `38b2e9ee`. The reviewed
 > content moved under this artefact for the ordinary reason: the ten findings were
 > committed BEFORE their fixes (contract §2.5), so every fix, plus a merge of
 > `origin/main` and the regeneration it forced, changed the diff the review binds to.
