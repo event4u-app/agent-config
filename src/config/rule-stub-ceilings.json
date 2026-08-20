@@ -1,6 +1,6 @@
 {
     "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "99e7d82eb",
+    "measured_at_commit": "ffa75c5ae",
     "tokens_exact": true,
     "ceilings": {
         "active-remediation": 1601,
@@ -37,7 +37,7 @@
         "provider-lifecycle-discipline": 472,
         "reviewer-awareness": 131,
         "roadmap-ci-steps-policy": 564,
-        "roadmap-progress-sync": 2117,
+        "roadmap-progress-sync": 2411,
         "rule-type-governance": 87,
         "skill-improvement-trigger": 81,
         "skill-quality": 78,
@@ -68,6 +68,13 @@
             "from": 611,
             "to": 680,
             "reason": "Three lines plus a pointer extension, +69 tokens, for a new contract field that governs what a run may author without asking: an artifact discovered AFTER an accepted execution contract halts by default, and `late_artifacts: auto-research` is the only declared value that continues, capped at three per run. The five-step auto-research procedure, the reasoning for the default and its reversibility argument all went to the pointer target (artifact-drafting-protocol-mechanics gains a Late artifacts section) rather than here, which is what held the growth to a bullet. The residue is obligation surface and cannot live in the guideline: this rule's own batch-mode bullet already tells the reader that a mid-run artifact triggers the full interactive protocol, so a reader who never opens the guideline would conclude that a declared value cannot change it. Named default rather than described behaviour, because the default direction is the decision -- AI council 2/2 (anthropic + openai) chose `halt` over `auto-research` on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
+        },
+        {
+            "date": "2026-08-20",
+            "rule": "roadmap-progress-sync",
+            "from": 2117,
+            "to": 2411,
+            "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
         }
     ]
 }
