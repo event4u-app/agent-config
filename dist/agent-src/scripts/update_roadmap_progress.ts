@@ -281,12 +281,9 @@ function is_draft(fm: Record<string, string>): boolean {
 }
 
 /**
- * The NAME half of the candidate test: is this filename a roadmap at all.
- *
- * Split out because one caller needs it WITHOUT the directory half.
- * `is_roadmap_candidate` rejects any path carrying an excluded component, and
- * `later` is one of them, so the parked inventory -- which reads that directory on
- * purpose -- cannot reuse the full predicate. Sharing the name half is what keeps
+ * The NAME half of the candidate test. Split out because the parked inventory
+ * reads `later/` on purpose and `is_roadmap_candidate` rejects any path carrying
+ * an excluded component — `later` included. Sharing this half keeps
  * `later/README.md` excluded from both sides by one rule rather than two.
  */
 function is_roadmap_name(name: string): boolean {
@@ -766,40 +763,28 @@ interface ParkedRoadmap {
 }
 
 /**
- * A line that STATES when the roadmap comes back.
- *
- * `lint_roadmap_later_disposition` accepts a bare `trigger` as a resume
- * condition, and that word is too loose to extract a sentence with: measured over
- * the live `later/` tree it matched a `Source:` path containing
- * `mixed-trigger-cleanup` and several mid-sentence fragments, i.e. it produced
- * table cells that were wrong rather than short. So the extraction is TWO tiers
- * and the render distinguishes them, instead of one loose pattern pretending to
- * be precise.
+ * A line that STATES when the roadmap comes back. Two tiers exist because
+ * `lint_roadmap_later_disposition` accepts a bare `trigger`, which is too loose to
+ * quote from — measured over the live tree it matched a `Source:` path containing
+ * `mixed-trigger-cleanup`, producing cells that were wrong rather than short.
  */
 const RESUME_STATEMENT = /\b(blocked until|resume when|resume-when|blocked-until)\b/i;
 
 /**
  * The linter's looser vocabulary. A file matching only this DOES carry a resume
- * condition as far as CI is concerned, so the inventory must not report it as
- * missing — it reports it as unlabelled and sends the reader to the file. Without
- * this tier the dashboard would contradict a gate that had already passed.
+ * condition as far as CI is concerned, so reporting it as missing would make the
+ * dashboard contradict a gate that already passed.
  */
 const RESUME_LOOSE = /\btrigger\b/i;
 
 /**
  * Parked roadmaps, with the resume condition each one records.
  *
- * `later/` is excluded from `collect()` and from `/roadmap:process-*` by design —
- * parked work is not active backlog. That exclusion had no counterweight: the
- * header linked the directory and nothing listed what was in it, so a roadmap
- * moved there left the dashboard entirely and its resume condition was visible
- * only to someone who opened the file. Both AI council seats (2026-08-19, 2/2)
- * made a visible parked-work inventory the CONDITION of parking two roadmaps that
- * were 6-of-8 and 12-of-14 resolved, on the argument that metric honesty bought
- * with operational amnesia is a bad trade.
- *
- * This is a view over data that already exists, not a new governance mechanism:
- * nothing here gates, counts toward a ratchet, or changes what `collect()` scans.
+ * A view over existing data, NOT a new governance mechanism: nothing here gates,
+ * counts toward a ratchet, or changes what `collect()` scans. It exists because
+ * `later/` is excluded from `collect()` and from `/roadmap:process-*` — correct,
+ * parked work is not backlog — and that exclusion had no counterweight, so a
+ * roadmap moved there left the dashboard entirely.
  */
 function collect_parked(roadmap_root: string): ParkedRoadmap[] {
     const dir = path.join(roadmap_root, 'later');
@@ -826,8 +811,8 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
             continue;
         }
         const cell = resume_cell(text);
-        // Parked blockers are still open blockers. Counting them here is what stops
-        // this section from being the surface where a park reads as a resolution.
+        // Parked blockers are still open blockers — counting them here is what stops
+        // this section becoming the surface where a park reads as a resolution.
         const open = parse_blockers(text).filter((b) => !blocker_is_resolved(b));
         out.push({
             rel: name,
@@ -841,21 +826,17 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
 }
 
 /**
- * What brings a parked roadmap back, as one table cell.
+ * What brings a parked roadmap back, as one table cell. Both fields false means the
+ * file records nothing — said outright, because an empty cell reads as "nothing to
+ * wait for".
  *
- * `stated` carries the statement when the file makes one explicitly; `unlabelled`
- * means only the linter's looser marker is present. Both false means the file
- * records nothing — reported as such rather than left blank, because an empty cell
- * reads as "nothing to wait for".
+ * The PARAGRAPH is joined, not the matched line: roadmap prose wraps at ~80
+ * columns, and quoting one line ended 39 of 52 cells mid-clause. A cell stopping at
+ * "the pair for" is not a shorter sentence, it is a different claim.
  *
- * The whole PARAGRAPH is joined, not the matched line. Roadmap prose is hard
- * wrapped at roughly 80 columns, so a single line ended 39 of 52 cells mid-clause
- * on the first measurement — a cell that stops at "the before/after delivered-token
- * pair for" is not shorter than the sentence, it is a different claim.
- *
- * The two tiers are tested over the SAME lines. Testing the loose marker against
- * the whole document while the strict one ran per line made `unlabelled` fire on
- * any file that used the word "trigger" anywhere, which is most of them.
+ * Both tiers are tested over the SAME lines. Testing the loose one whole-file while
+ * the strict one ran per line made `unlabelled` fire on any file using the word
+ * "trigger" anywhere.
  */
 function resume_cell(text: string): { stated: string | null; unlabelled: boolean } {
     const lines = text.split('\n');
@@ -884,13 +865,10 @@ function resume_cell(text: string): { stated: string | null; unlabelled: boolean
 }
 
 /**
- * One roadmap sentence, safe to put between two pipes.
- *
- * Order is load-bearing and was wrong once: truncation runs BEFORE pipe-escaping,
- * because cutting an already-escaped string can sever a `\|` and leave a dangling
- * backslash. HTML comments are removed rather than escaped — a `<!--` reaching a
- * cell comments out the remainder of the generated document, and one already did
- * (`<!-- ref-ignore -->`, carried in a roadmap's own prose).
+ * One roadmap sentence, safe between two pipes. ORDER IS LOAD-BEARING: truncate
+ * before escaping, because cutting an escaped string severs a `\|` and leaves a
+ * dangling backslash. HTML comments are removed, not escaped — a `<!--` reaching a
+ * cell comments out the rest of the document, and one already did.
  */
 function cell_text(raw: string): string {
     let out = raw
@@ -1106,9 +1084,8 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
     lines.push('');
     lines.push('---\n');
 
-    // Parked work, listed right under the active table so the two are read
-    // together. A parked roadmap is not backlog and carries no counts here — the
-    // one thing a reader needs is what brings it back.
+    // Listed under the active table so the two are read together. Parked work
+    // carries no counts here; what a reader needs is what brings it back.
     const parked = collect_parked(roadmap_root);
     if (parked.length > 0) {
         lines.push(
@@ -1143,18 +1120,12 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                 r.open_blockers === 0
                     ? '0'
                     : `${r.open_blockers}${r.needs_user > 0 ? ` (${r.needs_user} you)` : ''}`;
-            // `<!-- ref-ignore -->` per row, and it is a correctness fix rather than a
-            // suppression. A resume condition is BY NATURE a reference to something
-            // that does not exist yet — "when `x.md` exists" is the commonest shape
-            // in `later/` — so checking these quoted paths as live references fires
-            // the gate on correct content. It fired immediately: one parked roadmap
-            // carries its own `ref-ignore` for exactly this reason ("this path is a
-            // condition, not a reference"), and stripping HTML comments out of the
-            // cell (the previous round's finding 4) removed the marker that had been
-            // exempting it. The authoritative copy of every path here is the roadmap
-            // file, which is where a reference belongs; this table is a quotation of
-            // it, and no coverage is lost because `later/` is not walked by that
-            // gate either way.
+            // `<!-- ref-ignore -->` per row — a correctness fix, not a suppression. A
+            // resume condition NAMES WHAT DOES NOT EXIST YET ("when `x.md` exists" is
+            // the commonest shape in `later/`), so checking these quoted paths as live
+            // references fires the gate on correct content. It fired immediately. The
+            // authoritative copy of each path is the roadmap file; this table quotes
+            // it, and that gate does not walk `later/` either way.
             lines.push(
                 `| [${r.rel}](roadmaps/later/${r.rel}) | ${blockers} | ${cell} |` +
                     ' <!-- ref-ignore -->',
