@@ -293,7 +293,7 @@ describe('update_json_under_lock — the whole transaction, not just the publish
                 seen = loaded;
                 return { n: 1 };
             }),
-        ).toBe(true);
+        ).toBe('written');
         expect(seen).toEqual({});
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(1);
     });
@@ -331,10 +331,49 @@ describe('update_json_under_lock — the whole transaction, not just the publish
         expect(s).toEqual({ a: 2, b: 'keep' });
     });
 
-    it('a null return writes nothing and still reports success', () => {
+    it("a null return writes nothing and reports 'skipped', never 'written'", () => {
         update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 7 }));
-        expect(update_json_under_lock<Record<string, unknown>>(target(), () => null)).toBe(true);
+        // The distinction this API change exists for. Under the old boolean this
+        // was `true` — indistinguishable from a landed write, so a fail-closed
+        // caller could not tell a decline from success and had to smuggle the
+        // difference out of the mutator through a closure flag.
+        expect(update_json_under_lock<Record<string, unknown>>(target(), () => null)).toBe(
+            'skipped',
+        );
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(7);
+    });
+
+    it('a fail-closed caller that treats a decline as no-emit emits nothing', () => {
+        // The second half of the roadmap's verify: the API must let a caller
+        // whose emit depends on a write having LANDED stay silent on a decline.
+        // Under the old boolean it could not — a decline reported `true`, so the
+        // fail-closed caller emitted on an outcome where nothing was persisted.
+        const emitted: string[] = [];
+        const emitOnlyIfPersisted = (mutate: () => Record<string, unknown> | null): void => {
+            const outcome = update_json_under_lock<Record<string, unknown>>(target(), mutate);
+            if (outcome !== 'written') return; // fail-closed: decline AND failure are silent
+            emitted.push('reminder');
+        };
+        emitOnlyIfPersisted(() => ({ counter: 0 })); // landed
+        emitOnlyIfPersisted(() => null); // declined
+        emitOnlyIfPersisted(() => {
+            throw new Error('boom'); // failed
+        });
+        expect(emitted).toEqual(['reminder']);
+    });
+
+    it("distinguishes 'skipped' from 'failed' — a decline is not an error", () => {
+        // Both were `false`-vs-`true` collapsed onto the wrong side before: a
+        // decline reported success and a failure reported failure, so the two
+        // outcomes a fail-closed caller must separate sat on opposite sides of
+        // the ONE bit available. Asserting them together is the point.
+        const declined = update_json_under_lock<Record<string, unknown>>(target(), () => null);
+        const failed = update_json_under_lock<Record<string, unknown>>(target(), () => {
+            throw new Error('boom');
+        });
+        expect(declined).toBe('skipped');
+        expect(failed).toBe('failed');
+        expect(declined).not.toBe(failed);
     });
 
     it('a malformed file is an empty load, never an abandoned write', () => {
@@ -345,7 +384,7 @@ describe('update_json_under_lock — the whole transaction, not just the publish
                 expect(loaded).toEqual({});
                 return { recovered: true };
             }),
-        ).toBe(true);
+        ).toBe('written');
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['recovered']).toBe(true);
     });
 
@@ -355,7 +394,7 @@ describe('update_json_under_lock — the whole transaction, not just the publish
             update_json_under_lock<Record<string, unknown>>(target(), () => {
                 throw new Error('mutator blew up');
             }),
-        ).toBe(false);
+        ).toBe('failed');
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(3);
     });
 
@@ -376,7 +415,7 @@ describe('update_json_under_lock — the whole transaction, not just the publish
         });
         const t0 = Date.now();
         expect(update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 9 }))).toBe(
-            true,
+            'written',
         );
         expect(Date.now() - t0).toBeLessThan(2000);
     });
