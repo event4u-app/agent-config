@@ -12,6 +12,71 @@ execution:
 
 Replace the zero-activation reading in the usage report with a number that is either non-zero and sink-backed, or a published null establishing that real activation is genuinely near zero — and gate every byte of it behind recorded human consent.
 
+## Outcome
+
+> **Archived does not mean achieved.** This roadmap set out to replace a
+> zero-activation reading with a measured number. It did not do that, and it
+> could not: the number requires a sink and an enablement decision, and both
+> are external acts. What it did do is remove every repository-side reason the
+> number is unavailable, so that when the two external acts happen there is
+> nothing left to build first.
+
+Per phase, with the outcome vocabulary the drain-run framework requires
+(`satisfied` · `narrowed` · `transferred` · `abandoned`). Nothing here is
+`abandoned`.
+
+| Phase | Outcome | What that means |
+|---|---|---|
+| **0 — Falsification spikes** | `satisfied` | Closed before this run. Three spikes, three written results, one of them a pre-registered FAIL that redirected the transport design. |
+| **1 — Emission** | `satisfied` | Closed before this run. |
+| **2 — Transport** | `narrowed` | The transport shipped and both properties Phase 0 deferred here are measured. The sink stand-up is `transferred`, so the phase exit criterion is half met: an outage is invisible to the session (tested against a blackhole), records appearing on a second machine is not claimed. |
+| **3 — Consent** | `narrowed` | Its ADR, its disclosure concern and its security documentation were closed before this run. Routing the design through the data-protection process is `transferred` — and it gates enablement only, never the code, which is why steps 1-3 could close while step 4 could not. |
+| **4 — Report** | `narrowed` | The second source shipped, and with it the path repair Phase 0 named a prerequisite: both scripts had been reading a retired directory, so the first source read nothing. The measurement steps are `transferred` — they need fourteen days of enablement. |
+| **5 — Self-repair intake** | `narrowed` | The automatic Class-A shadow and the Class-B render-and-approve gate shipped. Two narrowings, both recorded at their step: the enumerated active-rule snapshot has no producer on a hook path, so the per-artefact attribution claim is unavailable; and the Class-B *store* is `transferred` while its repository-side half landed. |
+| **6 — Aggregation** | `transferred` | The only phase where nothing shipped, which is the correct outcome rather than a shortfall: every step in it is defined over a record set that does not exist. |
+
+**Acceptance criteria: three satisfied, two transferred.** AC1 (zero operations
+when inactive) and AC2 (no Class-B content without a human reading the exact
+text) are verified rather than asserted — thirteen not-opted-in shapes across
+three writers, and a digest-bound approval. AC4 (a clone cannot phone home) is
+measured against the shipped template, by a stricter mechanism than its own
+wording names. AC5 (the undercount published as a number) was satisfied in
+Phase 0 and this run repaired the collector's output path rather than retiring
+it. AC3 is `transferred`: both of its branches need records to exist.
+
+**The two transfers, and why neither is a parking lot.** Each carries the
+three-point integrity check — the original criterion verbatim, the complete
+list of moved steps, and a **named** producer with a probe measured failing on
+the transfer date — plus something this run added because a telemetry sink is a
+**standing egress** rather than a feature: a monitoring owner, a review date, a
+rollback trigger set and a rollback procedure. The dissenting council seat
+asked for exactly that (*"who operates it? SLA? monitoring?"*) and the
+framework's output format had no slot for it. An egress with no named
+off-switch would have been the wrong thing to leave behind.
+
+- [`stubs/road-to-org-telemetry-sink.md`](stubs/road-to-org-telemetry-sink.md)
+  — 1 gate, 4 moved items. Producer: the org repository administrator. **The
+  pending act is itself Hard-Floor**, and the stub says so rather than
+  inheriting the README's "crosses no Hard Floor" reading of a drain transfer.
+- [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md)
+  — 1 gate, 6 moved items. Producer: the named internal data-protection
+  reviewer. Four of its items need the sink as well; both gates must clear.
+
+**Twelve, now, is the count of steps in this roadmap whose `verify:`
+annotation named a path that does not exist.** Phase 1 recorded the seventh,
+Phase 3 the eighth and ninth and explicitly left Phase 5 step 2 for this run to
+fix. This run found three more (`test_telemetry_transport`,
+`test_self_repair_privacy`, and the `validate_evals` reference Phase 3 named),
+re-pointed each at a suite that exists, and left `test_sink_clustering`
+untouched on a transferred step. Twelve instances in one roadmap is a finding
+about how these annotations are written, not about this roadmap.
+
+**What a reader should NOT conclude from this file being closed.** That skill
+activation has been measured. It has not. The usage report still reads zero
+active, the second source still renders "no sink data", and the honest reading
+of both is *no instrument* — which is what the report now says in as many
+words, instead of rendering a zero.
+
 ## Prerequisites
 
 - [x] Read `docs/contracts/hook-architecture-v1.md` and `src/rules/self-repair-loop.md`
@@ -128,11 +193,11 @@ Recorded here so nobody re-derives it from the findings files.
 
 ## Phase 2 — Transport
 
-- [ ] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. <!-- verify: ./scripts-run src/scripts/test_telemetry_transport -->
+- [x] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. **Landed as enqueue-at-write plus a detached sender** — `transport.ts` (spool derivation, spawn), `flush_sender.mjs` (the only outbound call in the tree), and the `telemetry-flush` `session_end` concern bound on the six platforms carrying that slot. The spike's result resolved this step to enqueue-only, and the spool is written by `append_class_a_record` in the same call that logs the record: a flush that worked out for itself which records were unsent would need a byte watermark into a log `enforce_retention` rewrites in place, and a watermark over a compacting file is a silent-corruption pair. **Both properties Phase 0 deferred to Phase 2 are now measured** (`org-telemetry-p2-transport.md`): a detached child survives `SIGKILL` of the spawning process group, and the queue is bounded because it shares the log's growth budget — at the observed 6.6 events/day a 90-day outage leaves ≈ 160 KiB. The sender is plain node so a detached child needs no `tsx` resolution at teardown, and it holds the only copy of the drain algorithm. Claim-by-rename, not read-then-truncate: the naive design reds three tests. **Step-text correction:** the `verify:` named `src/scripts/test_telemetry_transport`, which **does not exist** — tenth recorded instance of a step naming a measurement path that does not exist. Re-pointed at the real suite. <!-- verify: npx vitest run tests/scripts/telemetry_transport.test.ts -->
 - [x] Declare a retention policy for the local record log and enforce it. Phase 1 ships an append-only file with no cap and no pruning, and `flush: never` endorses that as an indefinite steady state — one line per skill invocation, forever. The R2 review of Phase 1 raised it; it is a `scale-discipline` R-A7 growth-budget obligation and it is owed before the namespace is enabled anywhere broadly. **Landed as a TTL plus a byte backstop, enforced by the only writer** — `retention_due` / `enforce_retention` in `telemetry/remote.ts`, called from `append_class_a_record`, so there is no sweep a caller can forget to run. Defaults 90 days / 2 MiB, both measured rather than picked: `tool-result-census.jsonl` carries 24 `Skill` events over 3.62 days (6.6/day) and a Class-A line serialises to 248–286 bytes, so 90 days is ≈ 600 records ≈ 160 KiB and is the cap that actually binds; 2 MiB is the backstop for an unobserved rate. The hook passes the install's declared policy rather than the module defaults, and a test proves it fails when that wiring is dropped. <!-- verify: grep -q retention src/agent-src/templates/scripts/telemetry/remote.ts -->
-- [ ] Stand up the sink as a minimal append-only ingest with no read API in this phase. <!-- blocked-by: sink-choice -->
+- [-] Stand up the sink as a minimal append-only ingest with no read API in this phase. **Transferred** to [`stubs/road-to-org-telemetry-sink.md`](stubs/road-to-org-telemetry-sink.md) — disposition B, outcome `transferred`. Creating a repository is an org-admin act and a Hard-Floor action; the council's preference (a private repository) is recorded in the stub, and the parent may not record the creation as done. <!-- blocked-by: sink-choice -->
 
-**Exit criteria:** records written on a second machine appear in the sink, and an endpoint outage is invisible to the session.
+**Exit criteria:** records written on a second machine appear in the sink, and an endpoint outage is invisible to the session. **Second half MET** — an outage is invisible by construction and by test: the session spawns and returns, and a blackhole sink (the 1002 ms shape from spike 2) costs it nothing. **First half TRANSFERRED with the sink** — there is no sink for a second machine to reach, and this run does not claim otherwise.
 
 **Rollback:** disable the flush flag; emission continues locally and nothing is lost.
 
@@ -141,7 +206,7 @@ Recorded here so nobody re-derives it from the findings files.
 - [x] Record an ADR introducing an org-pack provenance class alongside the existing human-chosen and auto-detected classes. It counts as recorded consent because a human org administrator made the choice; the machine still never grants itself permission, so the existing doctrine is preserved rather than bent. Auto-detected remains never-consent, verbatim. **Landed as ADR-233.** The mechanism that keeps the doctrine intact is a type asymmetry, not a check: the reader's `ConsentSource` gains `org-pack`, the CLI writer's `ProvenanceSource` deliberately does not, so `--source org-pack` is rejected like a typo and no agent-reachable path can stamp its own permission — asserted by a test that reads both unions off their sources. The grant is scoped to `telemetry.remote.*` rather than general, per Risk 6. **Two step-text corrections.** (1) The `verify:` below is a SILENT NO-OP as written: `regenerate_index` defaults to `--dir docs/adr/`, this repo keeps ADRs in `docs/decisions/`, and the script prints `adr-dir not found` and exits **0**. Re-pointed to the real directory; eighth recorded instance of a step naming a measurement path that does not exist. (2) The ADR does NOT classify the `telemetry.remote` keys, and cannot: `lint_settings_classes` check 2 requires every contract row to name a key the shipped template has, and Phase 1 deliberately keeps the namespace out of the template so a clone carries names without values. ADR-233 § D6 records the intended classification and the constraint instead — which leaves the org-pack branch reachable-by-design and unreached until those keys ship. <!-- verify: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions/ -->
 - [x] Surface one visible disclosure line at first session start under an org-pack-enabled install, stating that the install reports pseudonymous usage data and to whom. **Landed as the `telemetry-disclosure` `session_start` concern**, bound on all seven platforms carrying the slot. "First session start" is implemented as once per `(org_id, endpoint)` pair with the note in `agents/runtime/state/telemetry-disclosure.json`, and it re-discloses when either changes — a new sink is a new fact, and a design that showed the line once and then silently followed the data elsewhere would be worse than one that never showed it. An unreadable state file reads as not-yet-disclosed, so the failure mode is a repeated line rather than a suppressed one. The line carries the org, the endpoint HOST only (never the full URL, which can hold a token), what is sent, what cannot be sent, and the local read path; it never carries the salt. Emission is asserted under the 1024-byte per-concern default, so no `hook-token-budget.json` row is owed, and `session_start_chain` runs the real dispatcher on all seven platforms at exit 0 under the composed context budget. **Step-text correction:** the `verify:` named `src/scripts/validate_evals`, which **does not exist** — `validate_evals_json` is a function inside `skill_linter.ts`, not a runnable script, so the check exits non-zero for the wrong reason. Ninth recorded instance of a step naming a measurement path that does not exist; Phase 5 step 2 carries the identical broken reference and is left for that phase to fix. Re-pointed to the concern's own suite. <!-- verify: npx vitest run tests/scripts/telemetry_disclosure_hook.test.ts -->
 - [x] Add a security-documentation paragraph covering what ships, what never ships, the local inspection path for the emitted records, and that the default is off for everyone outside an org pack. **Landed as `SECURITY.md` § Telemetry**, covering all four required elements plus the consent provenance. The what-never-ships half is stated as the structural property it is — the record type has no field able to hold free-form content, so there is no scrubber to fail — rather than as a promise about filtering. The zero-file-operations claim is not asserted on trust: `tests/hooks/telemetry_usage_hook.test.ts` § "inactive installs write nothing" covers all four not-opted-in shapes including no settings file at all. <!-- verify: grep -q "telemetry" SECURITY.md -->
-- [ ] Route the design through the company data-protection process before any org-wide enablement. <!-- blocked-by: dpo-signoff -->
+- [-] Route the design through the company data-protection process before any org-wide enablement. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md) — disposition B, outcome `transferred`. A written internal data-protection signature is categorically external; an agent may draft the submission but cannot be the reviewer. The two artefacts to review both exist in the tree and are named in the stub. <!-- blocked-by: dpo-signoff -->
 
 **Exit criteria:** the ADR is indexed, and an enabled flag without a consent-bearing provenance record is treated as disabled by the dispatcher.
 
@@ -149,31 +214,31 @@ Recorded here so nobody re-derives it from the findings files.
 
 ## Phase 4 — Report and the rationalization unblock
 
-- [ ] Add the sink as a second source to the usage report, with per-skill distinct-user counts wired to the existing threshold constant. <!-- verify: ./scripts-run src/scripts/skill_usage_report --help -->
-- [ ] Re-run the report after fourteen days of org enablement. Falsification criterion: at least three distinct users with at least one activation each. Below that, the hypothesis that colleagues actively use the package is examined before the pipeline is — and the null is published either way. <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] Only after that criterion passes, hand the data to the rationalization sweep as its deciding input; that sweep already names usage data as its verdict source. <!-- verify: grep -q "distinct_users" agents/evidence/metrics/skill-usage-report.md -->
+- [x] Add the sink as a second source to the usage report, with per-skill distinct-user counts wired to the existing threshold constant. **Landed, together with the path repair Phase 0 named a prerequisite.** Both scripts read and wrote `agents/metrics/`, a directory the agents/ taxonomy consolidation retired — the collector and the report agreed with each other and with nothing else. Repaired to `agents/runtime/metrics/`, which is where the data actually is and what `taskfiles/ci-fast.yml`'s own task descriptions already claimed. The sink lands as a separate SECTION rather than extra columns, because the two sources count different things over different populations; merging them would produce a row whose numbers come from two populations. Distinct users come from `user_hash` and the bar is imported from `DEFAULT_TIER_USAGE_RETIER.min_distinct_users` rather than restated, so the section and the re-tier cannot drift. Non-usage record classes are excluded so a Phase 5 defect report can never read as adoption. An absent sink renders a paragraph naming the path and the reason instead of nothing — a reader must be able to tell no instrument from a sink that answered zero, which is this roadmap's whole subject. **One hazard found and closed while doing it:** pointing the output at the tracked `agents/evidence/metrics/` baseline made every run in a checkout WITHOUT the gitignored record set overwrite that baseline with zeros — measured at 297 insertions / 339 deletions, every row reclassified `dead`. Output is the runtime copy; promotion to `evidence/` stays a deliberate act. <!-- verify: ./scripts-run src/scripts/skill_usage_report --help -->
+- [-] Re-run the report after fourteen days of org enablement. Falsification criterion: at least three distinct users with at least one activation each. Below that, the hypothesis that colleagues actively use the package is examined before the pipeline is — and the null is published either way. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md); gated by the sink stub as well, since it needs records to exist. A null published without the sign-off would be an artefact of the missing approval rather than a finding about adoption — the blocker says so and it must not be published as an adoption result. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [-] Only after that criterion passes, hand the data to the rationalization sweep as its deciding input; that sweep already names usage data as its verdict source. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md) — it depends on the step above, which is itself transferred. The rationalization sweep therefore stays blocked on usage data, as it has been for the whole window. <!-- verify: grep -q "distinct_users" agents/evidence/metrics/skill-usage-report.md -->
 
-**Exit criteria:** an estate decision cites sink-backed distinct-user numbers with provenance, or the null is published.
+**Exit criteria:** an estate decision cites sink-backed distinct-user numbers with provenance, or the null is published. **NEITHER — transferred.** No estate decision is claimed and no null is published: with no sink there is nothing to publish a null *about*, and a zero rendered from an absent instrument is the blind zero this roadmap exists to remove. The report says exactly that in its own second-source section.
 
 **Rollback:** the report keeps its local source; the sink source is purely additive.
 
 ## Phase 5 — Self-repair intake over the wire
 
-- [ ] Emit the Class-A shadow automatically under org consent when the self-repair loop queues a record: failure class, active-context snapshot, host, version. No content. <!-- verify: ./scripts-run src/scripts/test_self_repair_privacy -->
-- [ ] Add the Class-B path: on queue creation, render the case into the existing symptom format, strip paths, identifiers, and code, show the result to the user, and ask for send approval in that turn — the Iron Law's "user's word this turn" becomes the anonymization review. Silent shipping of case content is permanently out of scope, not deferred. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Transport and store Class-B text as quoted, typed data, never concatenated into a downstream prompt as instruction. <!-- verify: ./scripts-run src/scripts/lint_agent_security -->
+- [x] Emit the Class-A shadow automatically under org consent when the self-repair loop queues a record: failure class, active-context snapshot, host, version. No content. **Landed as `emitDefectShadow`**, called at the seam where `upsertFinding` has just returned a record, so nothing re-runs the detectors to learn whether anything was queued. `ClassADefectRecord` is a SEPARATE type rather than a widened `ClassARecord`, and that is the whole privacy argument: `DefectFinding` carries `evidence` (a quoted span of the offending text) and `suggested_surface` (a free sentence), those are the Class-B payload, and they are not passed to the builder at all — not sanitized, not truncated, not optional. The type therefore has no field able to hold project content and there is no scrubber to fail; the test asserts it over the written BYTES so a later field addition cannot slip content past an object-shaped assertion. A defect class outside the vocabulary pinned in `self_repair.ts` is dropped rather than recorded. **NARROWED, and the narrowing is the interesting part:** the enumerated active-rule / active-skill snapshot has **no producer on a hook path**. `match_prompt` needs the compiled router, which no hook in this tree loads and which is not established as present in a consumer install. `discipline_profile` is recorded instead — the knob that decides which rule surfaces load — and it is a profile-level snapshot, **not** the per-artefact attribution key. So the Context's stated use ("this rule was loaded in six of seven reports of this class" localizing an artefact) is **not** available from what ships, and the code says so rather than letting a field name imply it. **Step-text correction:** the `verify:` named `src/scripts/test_self_repair_privacy`, which **does not exist** — eleventh recorded instance. <!-- verify: npx vitest run tests/hooks/telemetry_self_repair.test.ts -->
+- [x] Add the Class-B path: on queue creation, render the case into the existing symptom format, strip paths, identifiers, and code, show the result to the user, and ask for send approval in that turn — the Iron Law's "user's word this turn" becomes the anonymization review. Silent shipping of case content is permanently out of scope, not deferred. **Landed as `self_repair_class_b.ts`, built on the two primitives that already existed** rather than on new ones: `renderReport` IS the existing symptom format the step names, and `egressBlockedReason` IS the audited privacy floor — the same one the local corpus write already passes through. That floor **refuses rather than rewriting**, which is what makes it a gate; a module that silently scrubbed and shipped would be a soft gate wearing a hard gate's name. The approval is **digest-bound**: `approve` takes a SHA-256 of the rendered text, so an approval cannot carry over to a re-render — a third occurrence folding in changes the text and the old approval stops matching, which is the difference between approving a case and approving a category. No auto-approve, no safe-class allow-list, no timeout that approves by default. **Step-text correction:** the `verify:` named `src/scripts/validate_evals`, which **does not exist** — the identical broken reference Phase 3 recorded as its ninth instance and explicitly left for this phase to fix. Twelfth instance overall; fixed here as Phase 3 asked. <!-- verify: npx vitest run tests/scripts/self_repair_class_b.test.ts -->
+- [-] Transport and store Class-B text as quoted, typed data, never concatenated into a downstream prompt as instruction. **Transferred** to [`stubs/road-to-org-telemetry-sink.md`](stubs/road-to-org-telemetry-sink.md) — the **store** half only, because there is nowhere to store it. Marked transferred rather than done deliberately: the repository-side half DID land with the step above (`case_text` is a named typed member, `serialiseCase` emits one JSON object so newlines survive as escapes rather than as line breaks that would let one case look like several records, and `assertNeverInterpolated` throws on a prompt-shaped use so the Phase 6 "taxonomy fields only" rule is a check rather than a convention), but the step says *store* and a box that claimed it would be overselling a sink that does not exist. <!-- verify: ./scripts-run src/scripts/lint_agent_security -->
 
-**Exit criteria:** a provoked defect in a consumer session produces a Class-A record automatically and a Class-B record only after visible approval of the exact outbound text.
+**Exit criteria:** a provoked defect in a consumer session produces a Class-A record automatically and a Class-B record only after visible approval of the exact outbound text. **MET for the mechanism, NOT for the consumer session.** Both halves are asserted over real writes in tests — the automatic Class-A record and the refusal of a Class-B record whose digest was not approved. What is not claimed is the end-to-end provocation in a live consumer session: that needs an enabled install, which needs both transferred gates.
 
 **Rollback:** the Class-B path sits behind the same setting; Class A reverts with Phase 1.
 
 ## Phase 6 — Aggregation and issues
 
-- [ ] Cluster sink-side on artefact and failure class, with a threshold of at least three distinct sessions aligned to the existing constant. At threshold, generate one deduplicated issue carrying Class-A statistics in the header and approved Class-B examples quoted as data blocks. <!-- verify: ./scripts-run src/scripts/test_sink_clustering -->
-- [ ] Apply a thirty-day falsification gate: if no cluster reaches threshold after thirty days of active telemetry, record the finding — detection too blunt, or a genuinely low defect rate, both of which are results — and do not build the generation step below. <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] Only after that gate passes, generate draft changes from a thresholded issue in maintainer context, reading the structured taxonomy fields and never Class-B free text, through neutral review and the standing quality floor. Automatic merging stays permanently out of scope: the change fixes a hypothesis, and the user-text-to-issue-to-change chain into a public repository is an injection channel that keeps a human on the final gate. <!-- verify: ./scripts-run src/scripts/lint_agent_security -->
+- [-] Cluster sink-side on artefact and failure class, with a threshold of at least three distinct sessions aligned to the existing constant. At threshold, generate one deduplicated issue carrying Class-A statistics in the header and approved Class-B examples quoted as data blocks. **Transferred** to [`stubs/road-to-org-telemetry-sink.md`](stubs/road-to-org-telemetry-sink.md) — the step says sink-side and there is no sink. Building the clusterer here would produce a component whose only input is an empty file, and whose threshold could never be observed firing. <!-- verify: ./scripts-run src/scripts/test_sink_clustering -->
+- [-] Apply a thirty-day falsification gate: if no cluster reaches threshold after thirty days of active telemetry, record the finding — detection too blunt, or a genuinely low defect rate, both of which are results — and do not build the generation step below. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md); needs the sink too. "Thirty days of active telemetry" is the clause that cannot be simulated: zero clusters from zero records is not a finding about the defect rate. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [-] Only after that gate passes, generate draft changes from a thresholded issue in maintainer context, reading the structured taxonomy fields and never Class-B free text, through neutral review and the standing quality floor. Automatic merging stays permanently out of scope: the change fixes a hypothesis, and the user-text-to-issue-to-change chain into a public repository is an injection channel that keeps a human on the final gate. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md) — the step's own first clause forbids building it before the gate above passes, and that gate is transferred. The one piece that could be built early was: `assertNeverInterpolated` exists so the "taxonomy fields only" constraint has a callable check when the generation step arrives. <!-- verify: ./scripts-run src/scripts/lint_agent_security -->
 
-**Exit criteria:** one real cluster produces one issue with correct deduplication, and the falsification gate has a recorded outcome.
+**Exit criteria:** one real cluster produces one issue with correct deduplication, and the falsification gate has a recorded outcome. **NEITHER — transferred in full.** Phase 6 is the only phase where nothing shipped, and that is the correct outcome rather than a shortfall: every step in it is defined over a record set that does not exist.
 
 **Rollback:** the clustering is sink-side only; disabling it loses no data.
 
@@ -181,7 +246,8 @@ Recorded here so nobody re-derives it from the findings files.
 
 ### blocker: sink-choice
 
-- **Status:** open
+- **Status:** resolved
+- **Resolution (2026-08-20):** **transferred** — disposition B by AI council, quorum 2/2, recorded in [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md). The council's *preference* is the private repository and it is recorded in the stub; creating it is an org-admin act and a Hard-Floor action, so the parent roadmap does not record it as done. Successor: [`stubs/road-to-org-telemetry-sink.md`](stubs/road-to-org-telemetry-sink.md), carrying the criterion verbatim, four moved items, a named producer (the org repository administrator) with a detection probe measured FAIL on every clause, and — because a telemetry sink is a standing egress — a monitoring owner, a 2026-11-20 review date, four rollback triggers and a two-step rollback procedure whose first step alone stops the egress.
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 2 (sink stand-up)
@@ -196,7 +262,8 @@ Recorded here so nobody re-derives it from the findings files.
 
 ### blocker: dpo-signoff
 
-- **Status:** open
+- **Status:** resolved
+- **Resolution (2026-08-20):** **transferred** — disposition B by AI council, quorum 2/2, recorded in [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md). A written internal data-protection signature is categorically external: an agent may draft the submission and cannot be the reviewer. Successor: [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md), carrying the criterion verbatim, six moved items, a named producer (the internal data-protection reviewer) with a probe measured FAIL, both artefacts-to-review located in the tree, and the same monitoring / review-date / rollback fields. It also names a real coverage gap rather than implying it is covered: no gate fails a build when a member is added to `ClassARecord` after a sign-off.
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Phase 3 (org-wide enablement onward)
@@ -227,11 +294,11 @@ Recorded here so nobody re-derives it from the findings files.
 
 ## Acceptance Criteria
 
-- [ ] A disabled or consent-less install performs zero telemetry file operations and zero network calls, verified rather than assumed.
-- [ ] No Class-B content leaves a machine without the reporter having seen the exact outbound text.
-- [ ] The usage report either cites one estate decision made on sink-backed distinct-user data, or publishes the null from the fourteen-day criterion.
-- [ ] An external clone cannot phone home under any setting combination lacking a consent-bearing provenance record.
-- [ ] The regex collector's undercount is published as a number before any decision retires it.
+- [x] A disabled or consent-less install performs zero telemetry file operations and zero network calls, verified rather than assumed. **Verified across all three writers, on thirteen not-opted-in shapes**: the usage hook (4 shapes, each asserting the log does not exist), the flush concern (5 shapes, each asserting no process was started — a marker-file sender proves the negative rather than a mock), and the self-repair shadow (4 shapes, asserting no telemetry file appears in the project at all). The network half is structural: the only outbound call in the tree is `flush_sender.mjs`, and the only thing that spawns it short-circuits on `active`.
+- [x] No Class-B content leaves a machine without the reporter having seen the exact outbound text. **Held two ways, and the weaker one is the one to distrust.** Strongly: `approve` is digest-bound, so a release refuses unless the approval names the exact bytes rendered, and the privacy floor refuses outright rather than scrubbing. Trivially: nothing leaves at all, since no sink exists. The second reading would make this criterion vacuous, so it is the first that is claimed — and it is the one asserted by test, including that no code path approves by default.
+- [-] The usage report either cites one estate decision made on sink-backed distinct-user data, or publishes the null from the fourteen-day criterion. **Transferred** to [`stubs/road-to-org-telemetry-enablement.md`](stubs/road-to-org-telemetry-enablement.md), gated by the sink stub as well. Both branches need records: an estate decision needs data, and a null needs an instrument that ran and answered zero. This run has neither, and rendering the absence as a zero would reproduce the exact defect the roadmap was written to remove.
+- [x] An external clone cannot phone home under any setting combination lacking a consent-bearing provenance record. **Measured against the shipped template, not reasoned about:** `read_remote_settings('src/config/agent-settings.template.yml')` returns `active: false` with `missing: [endpoint, org_id, salt]`, and the template carries **zero** `telemetry:` keys — that absence IS the mechanism. A nonexistent settings path returns the same verdict. **One honest qualification:** the enforcing mechanism is the four-field requirement, not a provenance-record check. ADR-233 § D6 already records why the org-pack provenance branch is reachable-by-design and unreached — `lint_settings_classes` requires a contract row to name a key the shipped template has, and the namespace is deliberately kept out of it. So the criterion holds, by a stricter mechanism than the one its wording names.
+- [x] The regex collector's undercount is published as a number before any decision retires it. **Published in Phase 0 and unchanged: 0 of 89** invocations detected on the set the collector reads, against 163 of 164 across every worktree slug (`org-telemetry-s03.md`). No decision has retired the collector; this run repaired its dead output path instead, which is the opposite of retiring it.
 
 ## Provenance
 
