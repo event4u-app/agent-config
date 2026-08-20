@@ -1,6 +1,6 @@
 ---
 status: later
-complexity: moderate
+complexity: lightweight
 ---
 
 # Road to a Thin Flip Under Anchor-Scoring

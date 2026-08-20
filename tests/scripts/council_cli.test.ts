@@ -648,3 +648,26 @@ describe('council_cli run — post-run quorum on stdout (injected failing member
         }
     });
 });
+
+// road-to-agent-velocity Phase 3. Measured 2026-08-20: a first council run
+// cost six calls end to end, and two of them were spent discovering --confirm
+// and --output by grepping the CLI source, because sub-help printed only
+// `usage: agent-config council run [-h] ...`.
+describe('council CLI first-run ergonomics', () => {
+    it('sub-help lists the flags the parser accepts', () => {
+        const r = spawnSync(TSX_BIN, [path.join(REPO_ROOT, 'src/scripts/council_cli.ts'), 'run', '--help'], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: { ...process.env },
+        });
+        const out = r.stdout ?? '';
+        // Rendered from _specsFor rather than hand-listed, so a flag added to
+        // the parser cannot drift out of the help text.
+        for (const flag of ['--confirm', '--output', '--depth', '--input-mode']) {
+            expect(out).toContain(flag);
+        }
+        // --output is required and the old help did not say so anywhere.
+        expect(out).toContain('required');
+        expect(out.split('\n')[0]).toBe('usage: agent-config council run [-h] ...');
+    });
+});
