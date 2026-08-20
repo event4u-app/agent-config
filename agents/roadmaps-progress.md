@@ -6,10 +6,10 @@
 
 ## Overall
 
-**292 / 578 steps done · 51%**
+**302 / 578 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## ✅ Completed — pending archival
@@ -18,6 +18,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
 
