@@ -48,7 +48,17 @@ function newTurn(): void {
  * This used to join `STATE_FILE` by hand, which is why the per-session split
  * could have landed with every assertion here still green against a file the
  * hook no longer wrote — the same shape that turned two consumers into silent
- * no-ops. A test that borrows the builder cannot drift from it.
+ * no-ops.
+ *
+ * Borrowing the builder does NOT validate the builder, and the first version of
+ * this comment claimed it did ("a test that borrows the builder cannot drift
+ * from it") — logically backwards, as a cross-model review pointed out: a test
+ * that asks the producer where its state lives follows the producer wherever it
+ * goes, including somewhere wrong. What it buys is that these content
+ * assertions stop silently testing an abandoned path. The PATH CONTRACT is
+ * checked by the producer→consumer parity tests in
+ * `turn_end_gate_hook.test.ts`, which run the real producer and read through
+ * the gate's independently written reader.
  */
 function state(): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(path.join(tmp, statePathFor("s1")), "utf8")) as Record<

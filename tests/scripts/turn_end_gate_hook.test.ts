@@ -353,7 +353,7 @@ describe('language pin', () => {
         expect(readLanguagePin(makeWorkspace(), 'sess-1')).toBe('und');
     });
 
-    it('reads the language the mirror hook wrote', () => {
+    it('reads a valid owned language fixture', () => {
         const dir = makeWorkspace();
         writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
         expect(readLanguagePin(dir, 'sess-1')).toBe('de');
@@ -365,9 +365,14 @@ describe('language pin', () => {
         expect(readLanguagePin(dir, 'sess-1')).toBe('und');
     });
 
-    it('another session’s pin is not this session’s obligation', () => {
+    it('a pin at ANOTHER session’s digest is never looked up', () => {
         const dir = makeWorkspace();
         writePin(dir, 'other-session', ownedPin('other-session', { language: 'en', source: 'prompt' }));
+        // LOOKUP separation, not the ownership guard: our digest simply has no
+        // file. Removing `owns_session_state` would leave this green — the
+        // own-path cases below are the ones that exercise it. Named so the two
+        // properties are not conflated (a cross-model review conflated them
+        // reading an earlier version of this block).
         expect(readLanguagePin(dir, 'sess-1')).toBe('und');
     });
 
@@ -559,7 +564,7 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
 
     // --- cross-session isolation: a neighbour's CI witness is not ours ---
 
-    it('another session’s settle does not settle this session', () => {
+    it('a CI witness at ANOTHER session’s digest is never looked up', () => {
         const dir = makeWorkspace();
         const foreign = path.join(dir, ciStatePathFor('some-other-worktree-run'));
         fs.mkdirSync(path.dirname(foreign), { recursive: true });
@@ -600,6 +605,23 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
         expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
     });
 
+    it('a CI witness with NO owner is foreign too — absent is not "mine"', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        // The gap a cross-model review found: the language reader had this case,
+        // the CI reader did not — so a `readCiSettled` that never consulted
+        // `owns_session_state` at all could pass every other CI test here.
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true },
+            }),
+        );
+        expect(readCiSettled(dir, GATE_SESSION_ID)).toEqual(NEVER_SEEN);
+    });
+
     it('the legacy single file is NOT a fallback — it is shared across sessions', () => {
         const dir = makeWorkspace();
         const legacy = path.join(dir, 'agents', 'state', 'verify-before-complete.json');
@@ -636,7 +658,11 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
             }),
             { consumer_root: dir },
         );
-        expect(readCiSettled(dir, 'sess-ci-parity').seen).toBe(true);
+        // The FULL value, not just `.seen`: one poll showing pending work is
+        // an unsettled witness, and asserting only `seen` would pass against a
+        // consumer that read the producer's pending record as settled — which
+        // is the exact misreading detector D exists to refuse.
+        expect(readCiSettled(dir, 'sess-ci-parity')).toEqual(UNSETTLED);
     });
 });
 

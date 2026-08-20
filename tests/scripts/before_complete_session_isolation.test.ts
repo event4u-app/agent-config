@@ -15,6 +15,7 @@
  * was looking at it.
  */
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -231,10 +232,18 @@ describe('prune_stale_session_states — the resume race', () => {
      * the branch would pass against an implementation that does not have it.
      *
      * Staged here by answering stale for the live path and fresh for the
-     * claimed tombstone, which is exactly what a concurrent resume looks like
-     * from inside the pruner.
+     * claimed tombstone.
+     *
+     * WHAT THIS DOES AND DOES NOT ESTABLISH, because the first version of this
+     * comment said "exactly what a concurrent resume looks like" and a
+     * cross-model review trimmed that back. No file is actually replaced during
+     * this run: the injection reproduces the pruner's OBSERVATION (a
+     * stale/fresh disagreement) and proves the revalidation branch restores the
+     * claimed bytes rather than defaults. It does not stage a real writer. The
+     * NEXT test does — it writes through the live path while the claim is held —
+     * and is the sharper of the two.
      */
-    it('restores a file whose owner resumed between the stat and the claim', () => {
+    it('restores the claimed file when the post-claim check disagrees', () => {
         const target = seed('resumed', '{"language":"de"}');
         const now = Date.now();
         let calls = 0;
@@ -289,25 +298,36 @@ describe('update_json_under_lock — the whole transaction, not just the publish
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(1);
     });
 
-    it('reads INSIDE the lock, so an increment sees the freshest value', () => {
+    it('the mutator receives fresh on-disk state, not a caller snapshot', () => {
         update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 41 }));
         // A caller that captured a snapshot earlier would write 1 here. The
         // mutator gets what is on disk at lock time instead.
+        //
+        // This does NOT prove the read happens under the lock — there is no
+        // concurrent writer to race, and the old name ("reads INSIDE the lock")
+        // claimed more than the test can see. Exclusion is established by the
+        // four-process test at the end of this block, which is the only one here
+        // that fails when the lock is removed.
         update_json_under_lock<Record<string, unknown>>(target(), (loaded) => ({
             n: (loaded['n'] as number) + 1,
         }));
         expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(42);
     });
 
-    it('does not republish fields the mutator did not look at', () => {
+    it('a spread of the freshly loaded state carries fields forward', () => {
         update_json_under_lock<Record<string, unknown>>(target(), () => ({ a: 1, b: 'keep' }));
         update_json_under_lock<Record<string, unknown>>(target(), (loaded) => ({
             ...loaded,
             a: 2,
         }));
         const s = JSON.parse(fs.readFileSync(target(), 'utf8'));
-        // The lost-FIELD shape: a stale snapshot spread into the write would
-        // revert `b` to whatever it was when the snapshot was taken.
+        // The name first said "does not republish fields the mutator did not
+        // look at", which a cross-model review called misleading and it was:
+        // the mutator spreads `loaded` explicitly, so nothing here is implicit.
+        // What IS load-bearing is WHICH object is spread — the one read inside
+        // the lock. A caller spreading a snapshot taken at the start of a hook
+        // run would revert `b` to its value at snapshot time, which is the
+        // lost-FIELD shape and strictly worse than a lost increment.
         expect(s).toEqual({ a: 2, b: 'keep' });
     });
 
@@ -438,6 +458,21 @@ describe('the shared helpers', () => {
         expect(session_state_file('d', 'x')).toBe(session_state_file('d', 'x'));
         expect(session_state_file('d', 'x')).not.toBe(session_state_file('e', 'x'));
         expect(path.basename(session_state_file('d', 'x'))).toMatch(/^[0-9a-f]{32}\.json$/);
+    });
+
+    it('the digest is sha256 TRUNCATED to 32 chars — pinned, not inferred', () => {
+        // A cross-model review asked the right question about the assertion
+        // above: sha256 is 64 hex characters, so a 32-char match neither states
+        // which hash is used nor that truncation is intentional. Both are
+        // contractual — the filename length matters on every filesystem — so a
+        // known vector pins them. If this fails, the derivation changed and
+        // every existing session's state has silently moved.
+        const expected = createHash('sha256')
+            .update('known-vector', 'utf8')
+            .digest('hex')
+            .slice(0, 32);
+        expect(path.basename(session_state_file('d', 'known-vector'))).toBe(`${expected}.json`);
+        expect(expected).toHaveLength(32);
     });
 
     it('an unusually long id still yields a usable filename', () => {
