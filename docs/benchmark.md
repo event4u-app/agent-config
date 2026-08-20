@@ -764,7 +764,7 @@ Pre-registration: `internal/bench/gated-reach/README.md`; rows and evidence:
 | `reddit` tier 1 — Atom text | **6/6** | 0/6 | **ship** |
 | `reddit` tier 2 — ranking + thread structure | **6/6** | 0/6 | **ship** — time-bounded |
 | `twitter-oembed` — single tweet | **6/6** | 2/6 | **ship** — narrowed gap, below |
-| `youtube-transcripts` | not run | — | **park** — unexercised (backend absent by design) |
+| `youtube-transcripts` | not run | — | **park** — unexercised (backend absent by design); **transferred** 2026-08-20 |
 
 **Reddit is a real, unambiguous capability.** Post text, comment text with authors
 (147 feed entries on the test thread, 135 author-bearing), and — via server-rendered
@@ -805,6 +805,25 @@ links, search — selects for tweets that *were* discussed publicly, which is ex
 population native search recovers. Sourcing an undiscussed tweet requires the access
 this bench exists because we lack. The 6/6 stands on the frozen threshold; the caveat
 is recorded here so nobody later reads it as "six things only this channel can do".
+
+**The YouTube park is now a transfer, and the two are not the same.** Re-measured
+2026-08-20 in the execution environment: `command -v yt-dlp` still fails, so the
+channel is still unexercised and still `experimental`. The follow-up roadmap that
+was to score it closed the same day with outcome state **transferred**, not
+satisfied — the nine of its fifteen lines that need a real extraction moved to
+`agents/roadmaps/stubs/road-to-youtube-channel-exercise.md` behind a named
+producer (the host owner) and a two-part probe. This is the published null for
+the channel, recorded here rather than in a competing table, and `docs/CLAIMS.md`
+still carries no claim for it.
+
+Two readings that narrow the gate rather than restate it. The **runtime half is
+already satisfied** — `node v26.7.0` is on `PATH` and the yt-dlp user config
+already carries the `--js-runtimes` entry — so the pending act is one
+`pipx install`, not the two installs plus config edit the original note implied.
+And the doctor's readiness state today is **`unknown`**, not `not-ready`: with the
+backend absent, readiness is never evaluated. That matters for the one criterion
+that asked for *both* states on one machine — only the third is observable, so
+nothing about it could be part-credited.
 
 **YouTube is parked, not scored.** `yt-dlp` is absent and the package never
 auto-installs. Per the pre-registered unexercised rule, a channel that cannot be
