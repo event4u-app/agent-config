@@ -2475,86 +2475,32 @@ export function nothing_to_release_ci(
 
 const _RELEASE_BRANCH_RE = /^release\/(\d+\.\d+\.\d+)$/;
 
-/**
- * `package.json`'s `version`, or null when the file is unreadable, is not JSON,
- * or carries no `version` key — the OSError / JSONDecodeError / KeyError
- * analogues the Python original returned null for.
- */
+/** `package.json`'s `version`, or null when unreadable, not JSON, or key-less. */
 function _package_version_or_null(): string | null {
     try {
         const data = JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf-8')) as Record<string, unknown>;
-        if (!('version' in data)) {
-            return null;
-        }
-        return data['version'] as string;
+        return 'version' in data ? (data['version'] as string) : null;
     } catch {
         return null;
     }
 }
 
-/**
- * The three observations {@link _detect_in_flight_target} reads, injectable so
- * the package.json x remote-tag matrix is exercisable in-process. Production
- * passes nothing and gets the real git / filesystem probes; the alternative —
- * reaching the branches only by mutating the checkout's tags and package.json —
- * is what left this matrix covered by a test file that no longer exists
- * (`tests/test_release.py`, removed with the Python twin), which is how the
- * local-tag defect below survived.
- */
+/** Observations `_detect_in_flight_target` reads; injected by its tests. */
 export interface InFlightProbes {
-    /** Current branch name, e.g. `main` or `release/1.2.3`. */
     head_branch?: () => string;
-    /** Declared version of the working tree, or null when unreadable. */
     package_version?: () => string | null;
-    /** True when the tag exists ON THE REMOTE — never merely locally. */
+    /** True when the tag is ON THE REMOTE — never merely local. */
     tag_published?: (tag: string) => boolean;
 }
 
 /**
- * Find the in-flight release target — the SOURCE OF TRUTH is package.json.
- *
- * An "in-flight" release is one whose version was already bumped into `main`'s
- * `package.json` (and possibly merged) but whose tag has not yet been pushed —
- * i.e. the publish step never completed. The canonical anchor is therefore
- * `package.json` version `V` **with no matching PUBLISHED tag `V`**, NOT the
- * set of `release/X.Y.Z` branches.
- *
- * Why not the branch set: merged release branches are frequently left
- * undeleted on the remote, so "highest existing release/* branch" can resolve
- * to an OLD, already-published version (e.g. picking 5.4.0 while 5.8.0 is the
- * real in-flight target) and tag a downgrade. The package.json version cannot
- * lie that way — it is the version main currently claims to be, and an
- * untagged claim is exactly an incomplete release.
- *
- * Resolution order:
- *   1. If HEAD is on a `release/X.Y.Z` branch, that explicit checkout wins.
- *   2. Else: read `package.json` version `V`. If tag `V` is not on the REMOTE,
- *      `V` is the in-flight target. A remote tag means the release completed →
- *      return null (regular bump path).
- *
- * Why the remote tag and not a local one, measured 2026-08-20 on 14.6.0: that
- * run created the annotated tag in step 8 and then never pushed it. main
- * carried `package.json` 14.6.0 with no remote tag, no GitHub Release, and npm
- * still serving 14.5.0 — a textbook in-flight release. This probe used to read
- * the LOCAL tag as well, concluded "already tagged, therefore complete",
- * returned null, and `--resume` fell through to `bump_version()` and offered to
- * open 14.7.0 while 14.6.0 had shipped nowhere. That contradicted step 8 of
- * this same file, which handles the state by name ("tag exists locally — push
- * only"): the probe reported complete exactly the state that step exists to
- * finish, so the one documented recovery path could not reach it. Publish is
- * triggered by the tag ON THE REMOTE (publish-npm.yml `push: tags:`), so a
- * remote tag is the only evidence that anything shipped; a local tag is
- * evidence that a push is still owed.
- *
- * Deliberately narrower than the full chain: a tag that IS on the remote while
- * the GitHub Release or the npm publish is missing still reads as complete
- * here. Steps 8 and 9 each re-probe and skip their own work, so a resume
- * pointed at that version by hand (`--version X.Y.Z --resume`) still repairs
- * it — detection just will not point there on its own. Widening this probe to
- * `gh release view` would put a network+auth call in the detection path, where
- * an unauthenticated shell would misreport every finished release as in-flight.
- *
- * Stale `release/*` branches are never used for version detection.
+ * In-flight release target: `package.json` claims `V` while no PUBLISHED tag
+ * `V` exists, so the publish step never completed. HEAD on `release/X.Y.Z`
+ * wins first; stale `release/*` branches are never consulted (a merged one
+ * left undeleted can tag a downgrade). PUBLISHED means on the REMOTE, because
+ * publish-npm.yml triggers on `push: tags:`. Why not a local tag, and the
+ * 14.6.0 release that stranded on the old form: see
+ * `tests/scripts/release.test.ts` § _detect_in_flight_target.
  */
 function _detect_in_flight_target(probes: InFlightProbes = {}): string | null {
     const head_branch =
@@ -2566,7 +2512,6 @@ function _detect_in_flight_target(probes: InFlightProbes = {}): string | null {
     if (m) {
         return m[1] as string;
     }
-
     const version = package_version();
     if (version === null) {
         return null;
@@ -2576,7 +2521,6 @@ function _detect_in_flight_target(probes: InFlightProbes = {}): string | null {
     } catch {
         return null;
     }
-
     // A PUBLISHED tag is a completed release; a local-only tag is not.
     if (tag_published(version)) {
         return null;

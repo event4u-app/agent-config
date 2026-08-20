@@ -539,13 +539,38 @@ describe('_RELEASE_BRANCH_RE', () => {
 
 // ─── _detect_in_flight_target ─────────────────────────────────────────────────
 // The full HEAD x package.json x remote-tag matrix, through the InFlightProbes
-// seam. Before that seam existed this block asserted only "returns a string or
-// null without throwing", and pointed at tests/test_release.py for the real
-// matrix — a file removed with the Python twin. The matrix was therefore
-// covered by nothing, which is how the local-tag defect below shipped: on
-// 2026-08-20 the 14.6.0 tag existed only locally (its push had failed), the
-// probe read a local tag as proof of completion, and `--resume` offered 14.7.0
-// while 14.6.0 was on no remote, no GitHub Release, and no registry.
+// seam. This block is also where the rationale for that probe lives: release.ts
+// sits over the 1500-line source-size ratchet, so the long form was condensed
+// there to a pointer at this comment rather than by raising a baseline, which
+// that gate calls a defect rather than a fix.
+//
+// WHAT THE PROBE ANSWERS. "Is this release already published?" — and the only
+// evidence that anything shipped is the tag ON THE REMOTE, because
+// publish-npm.yml triggers on `push: tags:`. A tag sitting in one checkout
+// published nothing.
+//
+// THE DEFECT, measured 2026-08-20 on 14.6.0. The completion check read
+// `_tag_exists_local(v) || _tag_exists_remote(v)`. Step 8 of release.ts had
+// created the annotated tag and then failed to push it, so main carried
+// package.json 14.6.0 with no remote tag, no GitHub Release, and npm still
+// serving 14.5.0 — a textbook in-flight release. The local arm answered true,
+// the probe returned null, and `--resume` fell through to bump_version() and
+// offered to open 14.7.0 while 14.6.0 had shipped nowhere. The probe reported
+// COMPLETE exactly the state step 8 exists to finish, and handles by name
+// ("tag exists locally — push only"), so the one documented recovery path
+// could not reach it. The release hung ~30 h.
+//
+// WHY IT SURVIVED. This block used to assert only "returns a string or null
+// without throwing", and pointed at tests/test_release.py for the real matrix —
+// a file removed with the Python twin. The matrix was covered by nothing.
+//
+// SCOPE. Deliberately narrower than the whole publish chain: a tag that IS on
+// the remote while the GitHub Release or the npm publish is missing still reads
+// as complete here. Steps 8 and 9 each re-probe and skip their own work, so a
+// hand-aimed `--version X.Y.Z --resume` still repairs that state — detection
+// just will not point there on its own. Widening the probe to `gh release view`
+// would put a network+auth call in the detection path, where an unauthenticated
+// shell would misreport every finished release as in-flight.
 
 describe('_detect_in_flight_target', () => {
     it('returns a string or null without throwing on the real repo', () => {
