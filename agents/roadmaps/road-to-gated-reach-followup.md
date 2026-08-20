@@ -9,15 +9,20 @@ parent_roadmap: road-to-gated-reach
 > Turn `youtube-transcripts` from **parked-unexercised** into a scored channel:
 > one real extraction, then a lifecycle decision made on evidence.
 
-> Blocked until `yt-dlp` and a JavaScript runtime are installed **by a human** on
-> the machine that runs this. Execution starts when the condition clears. The
-> package never auto-installs — that is a contract (`missing-tool-handling`), not
-> a limitation to work around.
+> **Gate retired 2026-08-20 — transferred, not cleared.** Execution needed
+> `yt-dlp` and a JavaScript runtime installed **by a human** on the machine that
+> runs this. That condition did not clear; it moved to
+> [`stubs/road-to-youtube-channel-exercise.md`](stubs/road-to-youtube-channel-exercise.md).
+> The package never auto-installs — that is a contract
+> (`missing-tool-handling`), not a limitation to work around. This paragraph
+> deliberately no longer opens with the legacy blocked-until wording: that
+> phrasing is what the dashboard parser synthesises a placeholder `legacy`
+> blocker from, and the blocker is now a real entry under `## Blockers` below.
 
 > **Answer (consolidated decision sheet, 2026-08-20) — NOT COVERED by option (a);
-> disposition `transferred`.** This gate is a legacy `> Blocked until …` note rather
-> than a `### blocker:` entry, so it has no `Recommendation:` field and the sheet
-> renders it with **no default at all** — there is nothing for an accept-all-defaults
+> disposition `transferred`.** This gate was a legacy `> Blocked until …` note rather
+> than a `### blocker:` entry, so it had no `Recommendation:` field and the sheet
+> rendered it with **no default at all** — there was nothing for an accept-all-defaults
 > answer to accept. Independently, installing `yt-dlp` and a JavaScript runtime is a
 > host-environment modification, which the council framework in
 > [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
@@ -27,7 +32,65 @@ parent_roadmap: road-to-gated-reach
 > `command -v yt-dlp` plus this roadmap's JavaScript-runtime version probe both
 > succeeding in the execution environment. Converting the note into a real blocker
 > entry is what would give it a default, and that conversion belongs to this
-> roadmap's own closure, not to the decision-sheet run.
+> roadmap's own closure, not to the decision-sheet run. That conversion is done
+> below, and this closure is it.
+
+## Outcome
+
+**Archived does not mean achieved.** The channel is still unexercised and still
+`experimental`. Nothing here scored `youtube-transcripts` against the parent's
+frozen thresholds, and no claim was added for it.
+
+| Phase | Satisfied | Narrowed | Transferred | Abandoned |
+|---|---|---|---|---|
+| Prerequisites | 3 | — | — | — |
+| Phase 1 | 1 (Step 6) | — | 5 (Steps 1-5) | — |
+| Acceptance Criteria | 2 (AC5, AC6) | — | 4 (AC1-AC4) | — |
+
+- **Satisfied (6 of 15).** The three prerequisites are reading and
+  registration-existence checks that never depended on the backend. Step 6
+  publishes the outcome, which for a non-shipping channel is the null — and a
+  null is publishable today. AC5 is the non-ship branch of a conditional whose
+  condition holds now. AC6 is the gate run.
+- **Transferred (9 of 15).** Everything whose evidence requires a real
+  extraction: the install itself, the exercise, the Y1-Y6 run, the lifecycle
+  flip, the verdict-conditional trigger change, and the four acceptance criteria
+  that quote extraction output or a threshold-derived verdict. All nine move to
+  [`stubs/road-to-youtube-channel-exercise.md`](stubs/road-to-youtube-channel-exercise.md).
+- **Divergence from the council record, stated rather than buried.** Batch A
+  reads "Move the entire roadmap." Measured against the file, six of the fifteen
+  lines have no dependency on the absent backend, so moving them would have
+  transferred work that was already doable and inflated the stub. The
+  *disposition* is the council's and is unchanged: `transferred`, because the
+  producer is the host owner. Only its scope is narrower, and narrower in the
+  direction that leaves less parked.
+
+### Probe baseline, measured 2026-08-20 in the execution environment
+
+Recorded so a later reader can tell real movement from noise. The re-entry probe
+is two readings, and **they do not agree** — which is the finding, because the
+blocker's own wording ("`yt-dlp` **and** a JavaScript runtime") reads as one
+condition and is two.
+
+| Probe | Command | Reading 2026-08-20 |
+|---|---|---|
+| Backend | `command -v yt-dlp` | **fails** — exit 1, does not resolve on PATH |
+| Runtime | `command -v deno` | fails — exit 1 |
+| Runtime | `command -v node` | **succeeds** — `/opt/homebrew/bin/node`, `v26.7.0` |
+| Config | `reach:doctor --channel youtube` | config `~/.config/yt-dlp/config` **present**, `--js-runtimes` **yes**, runtimes on PATH `node`, version **not confirmed** |
+| Readiness | `reach:doctor --channel youtube` | `unknown` — the backend is missing, so extraction readiness is not evaluated |
+
+**The runtime half of the gate is already satisfied.** A human has installed
+`node` and written the `--js-runtimes` entry the extractor needs; only the
+backend is absent. So the remaining act is narrower than the original note
+implies — one `pipx install`, not two installs plus a config edit.
+
+**The readiness state is `unknown`, not `not-ready`.** That distinction is why
+AC1 cannot be part-credited: it asks for **both** states observed on one
+machine, and while the backend is missing the doctor never reaches `not-ready`.
+Only the third state is observable today. For the same reason the pre-registered
+task **Y6** ("readiness detection with a JS runtime unconfigured") is gated too,
+even though it reads like a local-logic task.
 
 ## Context
 
