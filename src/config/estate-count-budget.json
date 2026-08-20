@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 25,
     "later_roadmaps": 52,
-    "open_blockers": 65
+    "open_blockers": 64
   },
   "baseline_history": [
     {
@@ -244,6 +244,13 @@
       "later_roadmaps": 52,
       "open_blockers": 65,
       "why": "WALKED DOWN by 1 active and 2 blockers: road-to-gate-autonomy reached zero open steps and archived, and the two blockers it carried open \u2014 b-gate-budget-preauth on option (a) and b-delegate-gate-maintainer-profile on option (b), both against the council record \u2014 moved to RESOLVED in this change. Its third blocker, b-estate-prose-pass-from-1-3, was already resolved on 2026-08-17 and is not part of the delta. later_roadmaps is UNCHANGED at 52, which is the check that says this is a closure and not a park: nothing was relocated to buy the number, and the one item the roadmap could not finish went to a STUB with its own named probe (stubs/road-to-gate-preauth-authorization.md) rather than to later/, so the open work is still counted somewhere a reader can find it. The archive move was performed by `task roadmap-progress` itself rather than by hand \u2014 this is the first walk-down taken under the --archive default that PR #1493 put on the regen, so the number and the file move come from the same run."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
     }
   ],
   "target": {
