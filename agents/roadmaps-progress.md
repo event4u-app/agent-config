@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
-**290 / 587 steps done · 49%**
+**292 / 580 steps done · 50%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 24 | 24 |
 
 ## Open roadmaps
 
@@ -23,7 +31,7 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
-| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 0 | 24 | 0 | 7 | [1](#blockers-road-to-frontend-skill-application) | ██████████ 100% |
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -342,20 +350,22 @@ _1 blocker resolved._
 
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
-**Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)
+**Frontend skills stop being loaded shelfware** — 24 / 24 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure — capture the catalogue, publish the baseline | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Deliver — design surfaces reach the model with a description | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 2 | Deliver — design surfaces reach the model with a description | ✅ done | 0 | 1 | 0 | 3 | 100% |
 | 3 | Own the prompt — an ad-hoc lane for UI work | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Route — a runtime signal that is framework-agnostic | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 5 | Reach and enforcement — only where a mechanism exists | 🟡 in progress | 5 | 7 | 0 | 0 | 58% |
+| 4 | Route — a runtime signal that is framework-agnostic | ✅ done | 0 | 4 | 0 | 1 | 100% |
+| 5 | Reach and enforcement — only where a mechanism exists | ✅ done | 0 | 9 | 0 | 3 | 100% |
 
 <a id="blockers-road-to-frontend-skill-application"></a>
 **Blockers**
 
 - **ui-session-capture-window** (owner: maintainer) — blocks Phase 1 — Measure · Phase 2 — Deliver
+  - **Recommendation:** (agent-drafted 2026-08-20) Do **not** hold this roadmap open for it — transfer, which is what happened. The destination `road-to-catalogue-host-fit` Phase 1 is literally titled "Fill the observation corpus", already automated the codex half in its own step 1.1, and is parked in `later/` for exactly this reason: an external trigger (elapsed human sessions on varied hosts) it cannot pull forward. Two facts make transfer the right call rather than a deferral in place. First, the count is the only outstanding half — the "≥ 2 hosts" condition is already met (claude ×1, codex ×6), so what remains is 13 more observations, not a design question. Second, the verdict is **not** the uniform `no-selector` this entry was written against: 6 of the 7 rows read `insufficient-observation`, meaning the instrument could not observe the split at all on that host, so "a `no-selector` that has stopped moving" cannot be evaluated from today's corpus no matter how it is read. Record an observation opportunistically when a session can honestly report its own catalogue — never by inferring one.
+  - **If you do nothing:** Nothing degrades and nothing is lost. Phase 2 stays abandoned (no selector to act on), the 7 observations stay tracked, and the corpus keeps growing whenever someone runs the capture. The only cost is that the delivery hypothesis stays unresolved — which is already its published state, and the closeout finding records that estate reduction, its strongest candidate fix, was measured and did not restore descriptions. There is no deadline and no decay: `skill-catalogue.jsonl` is append-only and tracked.
   - **What to do:**
     1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
     2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
@@ -364,19 +374,8 @@ _1 blocker resolved._
     5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
     6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
-- **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
-    2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
-    3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
-  - **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
-- **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
-    2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
-  - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
 
-_1 blocker resolved._
+_3 blockers resolved._
 
 ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
 
