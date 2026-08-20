@@ -113,9 +113,14 @@ demand**, and market demand is a meaningful quantity only where a market is
 intended. Who the project is built for is `project.audience` — resolve it with
 `agent-config settings:get project.audience`, which reports the value and the
 file it came from, rather than opening one file. An absent value resolves to
-`public`: this package has no defaults layer that supplies one at read time, so
-absent means *nobody said*, and the conservative reading of that is the shipped
-default.
+`public`, and mechanically so: the template-defaults layer supplies the shipped
+value beneath every file layer (`src/scripts/_lib/agent_settings.ts:873`) and
+`project.audience` is not in the `settingsCarveOut` set, so absent and an
+explicit `public` are the same behaviour. (This sentence used to explain the
+same conclusion with "this package has no defaults layer" — true of the retired
+`_DEFAULTS`, false since that layer shipped. The conclusion never moved; the
+reason did, and it is the reason that decides how far a change to the shipped
+default would reach.)
 
 | `project.audience` | What 8-pre does |
 |---|---|
