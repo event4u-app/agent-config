@@ -29,14 +29,20 @@ as one gap under two names.
 | No lift is claimed anywhere without both numbers present | **satisfied** | Held throughout, and re-checked this run: no lift claim exists in the tree. This is the one criterion a drain run can honestly close | — |
 | If the outcome is `revert`, the 9 descriptions are restored | **transferred** | — | Contingent on a verdict that does not exist. The 9 rewrites stand, untouched and unmeasured |
 
-**Archived does not mean achieved.** The dashboard will render this roadmap at
-100 % because zero `[ ]` and zero `[~]` remain and `[-]` reads as complete. The
-number describes who can do the residual work, not that the goal was reached:
-**the description rewrite is still unmeasured, and no baseline exists.** Three of
-four criteria are `transferred`; only the no-unbacked-claim criterion is
-`satisfied`, and it is satisfied by the absence of a claim rather than by the
-presence of a measurement. Do not read the percentage as a result, and do not
-cite this roadmap as evidence that the rewrite worked.
+**Archived does not mean achieved, and neither does the dashboard reading.**
+Measured after regeneration rather than assumed: `roadmap:progress` renders this
+roadmap as **`0 / 0 done (0%)`** with Phase 1 marked **⏭️ skipped** — 4 steps,
+0 open, 0 done, 4 cancelled — and it does **not** appear in the sweep's
+"completed roadmaps not yet archived" list. So the failure mode here is the
+opposite of the 100 %-reads-as-success one: `[-]` renders as *cancelled*, and a
+reader skimming the dashboard would conclude this work was dropped on a
+judgement call. It was not. It is **transferred** — the criterion is unchanged,
+unmet, and owed, with four failing probes standing behind it in the stub. Three
+of four success criteria are `transferred`; only the no-unbacked-claim criterion
+is `satisfied`, and it is satisfied by the absence of a claim rather than by the
+presence of a measurement. **The description rewrite is still unmeasured and no
+baseline exists.** Do not cite this roadmap as evidence that the rewrite worked,
+and do not read `skipped` as decided-against.
 
 **Nothing here was executable.** All four Phase 1 steps are measurement,
 verdict, or publication of a verdict — none is instrument-building, so the drain
@@ -201,4 +207,4 @@ renegotiated by the outcome.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The baseline is taken against the wrong tree state | implementation | The pre-rewrite state must exclude the 9 rewrites but include the scorer repoint, or the two runs differ in more than the variable under test | **Revised 2026-08-20.** Unfired — neither run happened, so no wrong-state baseline exists. 1.1/1.2 are `[-]` and **transferred**; the stub keeps the parity obligation as probes P1/P2, which require both JSONs to share protocol metadata (same scorer version, same fixture file, same harness mode) rather than leaving parity to prose | Phase 1 |
 | 2 | A single-number target invites Goodharting | implementation | A selector is probabilistic; one pre-registered floor would invite tuning the fixtures instead of the descriptions | **Revised 2026-08-20 — this risk now has teeth it lacked.** Verification found the corpus is **34** fixtures against criterion (iii)'s ≥ 100-request floor, so the pressure to widen the fixture set is real and immediate. The drain run refused it: growing the corpus is stub probe **P3**, explicitly a reviewed maintainer decision, because an agent that authored the fixtures would then be grading its own paper. The three-criteria structure is preserved verbatim in the stub and was not renegotiated by the transfer | Phase 1 |
-| 3 | The null is quietly dropped | implementation | A rewrite that did not move the instrument is the least satisfying outcome and the easiest to leave unpublished | **Revised 2026-08-20 — this risk FIRED, in a form the mitigation did not cover.** 1.4 is `[-]`, so the roadmap renders at 100 % with no null published — because there is no null to publish; the instrument never ran. A step with a verify clause cannot mitigate the absence of the measurement it was going to verify. Replaced with the outcome-state mechanism: `## Outcome` records three `transferred` criteria against one `satisfied`, states in plain words that archived does not mean achieved, and the stub's four failing probes are the standing record that the reading is still owed | Phase 1 |
+| 3 | The null is quietly dropped | implementation | A rewrite that did not move the instrument is the least satisfying outcome and the easiest to leave unpublished | **Revised 2026-08-20 — this risk FIRED, in a form the mitigation did not cover.** 1.4 is `[-]` and no null was published — because there is no null to publish; the instrument never ran. The dashboard renders the roadmap `0 / 0 done (0%)` with Phase 1 `⏭️ skipped`, which mis-signals in the other direction: transferred work reads as cancelled. A step with a verify clause cannot mitigate the absence of the measurement it was going to verify. Replaced with the outcome-state mechanism: `## Outcome` records three `transferred` criteria against one `satisfied`, states in plain words that archived does not mean achieved, and the stub's four failing probes are the standing record that the reading is still owed | Phase 1 |
