@@ -31,10 +31,30 @@ frontmatter expected by the linter.
 | [`road-to-worktree-lifecycle.md`](road-to-worktree-lifecycle.md) | Governed `/worktree:*` command cluster | ≥3 real demand signals + overlap check vs existing skills |
 | [`road-to-council-visibility.md`](road-to-council-visibility.md) | `--council` in-flow verdicts + report format | Orchestration prove-or-drop resolved + ≥2 usage asks |
 
+## Drain-run transfers
+
+A second, separate group with a **different origin and different gates**. These
+were not created by Phase 9 of the employee-product roadmap; they are work
+transferred out of an active roadmap during a drain run because it needs a live
+host session, a human observation, or a capability nobody is building. The
+transferring roadmap records outcome state `transferred` so its archival never
+reads as "outcome achieved".
+
+| Stub | Transferred from | Outcome state | Re-entry gates |
+|---|---|---|---|
+| [`road-to-kernel-cross-link-soak.md`](road-to-kernel-cross-link-soak.md) | `road-to-skill-ecosystem-gate-integrity.md` Phase 3 Steps 6-7 + the cross-link half of one AC, 2026-08-20 | `transferred` | P1-P3 in the stub: the merged PR diff carries both `../../docs/` links and the ease tripwire, `kernel-prefix.json` is clean after re-anchoring, and the kernel-rule merge spacing holds — P3 measured passing, P1 and P2 measured not-yet |
+
+**The shared promotion criteria below do NOT apply to this group.** They are
+org-mode gates — recruited customer, funded security audit, ADR lifting a
+Hard-Floor item — and a drain-run transfer of internal work crosses no Hard
+Floor and introduces no org surface. Each stub in this group carries its own
+gates and says so.
+
 ## Promotion criteria (shared)
 
-Any stub may move from `stubs/` to `agents/roadmaps/` only when **all
-three** of these are true:
+Applies to the six org-mode stubs in **Current stubs** above, not to the
+drain-run transfers. Any of those stubs may move from `stubs/` to
+`agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.
