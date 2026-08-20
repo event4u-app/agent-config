@@ -13,10 +13,13 @@ execution:
 
 ## Outcome
 
-Closed 2026-08-20 with **42 of 45 steps satisfied, 2 transferred, and one
-acceptance criterion split**. Recorded here rather than in a commit message
-because a reader who finds this file in `archive/` needs it: **archived does not
-mean achieved.**
+Closed 2026-08-20 with **43 of 46 checkboxes satisfied, 3 transferred, 0 open**
+— the dashboard reports the same state as 41 of 44 because its denominator omits
+the two prerequisites. The three transferred boxes are Phase 3 Steps 6 and 7 plus
+the cross-link half of one acceptance criterion, which was split into two boxes
+rather than force-closed (so the total moved 45 → 46). Recorded here rather than
+in a commit message because a reader who finds this file in `archive/` needs it:
+**archived does not mean achieved.**
 
 **Satisfied — the mechanism this roadmap set out to build exists.** Completeness
 accounting (`_lib/gate_ledger.ts`), shrink-only base-ref enforcement
