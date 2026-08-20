@@ -33,11 +33,13 @@ parent_roadmap: road-to-rule-coherence
 ## Outcome
 
 **Closed 2026-08-20 by an autonomous drain run. Archived does not mean
-achieved.** Nine of eleven boxes were open at the start; **none of them was
-executed**, because every one is a shipped-default flip, a paid human-judged
-measurement, work owned by another roadmap, or a decision behind a date that has
-not arrived. Two boxes closed on evidence produced during the run, and the run's
-real product is a census the flip decision needed and did not have.
+achieved.** Eleven boxes, nine of them open at the start. Two of those nine —
+the prerequisites — closed on verification against the tree. The other **seven
+were not executable by any agent**, and not for want of effort: four are a
+shipped-default flip, one is a paid measurement whose method requires two
+independent human judges, one is owned by another roadmap, and one waits on a
+date in November. All seven are marked `[-]` and transferred. The run's real
+product is the census the flip decision needed and did not have.
 
 | Phase | State | What actually happened |
 |---|---|---|
