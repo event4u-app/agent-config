@@ -3,9 +3,6 @@ type: "auto"
 tier: "2b"
 description: "The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count"
 alwaysApply: false
-# Triggers are phrases, not keywords: a bare "again" / "wieder" fires on a large
-# share of ordinary prompts, and an over-broad trigger is worse than the gap it
-# closes. The recurrence marker has to sit next to a saying-verb or a count.
 triggers:
   - phrase: "schon mehrfach"
   - phrase: "schon wieder"
@@ -18,8 +15,8 @@ triggers:
   - phrase: "how many times"
   - phrase: "as i mentioned before"
 routes_to:
+  - "guideline:agent-infra/recurring-criticism-mechanics"
   - "skill:skill-improvement-pipeline"
-  - "skill:decision-review"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
@@ -30,9 +27,8 @@ obligation_frequency: "per-task"
 # Recurring Criticism
 
 [`decision-revisit-gate`](decision-revisit-gate.md) has one entrance: the agent
-wants to do something and a lock is in the way. This is the other one, and until
-now nothing owned it — **the same criticism arrives again.** Same subject, second
-or third time, from the user or from a re-arrived artifact.
+wants to act and a lock is in the way. This is the other — **the same criticism
+arrives again**, from the user or from a re-arrived artifact.
 
 ## The Iron Law
 
@@ -47,105 +43,68 @@ A LEARNING THAT DOES NOT CONSTRAIN THE NEXT RUN IS NOT A LEARNING.
 NEVER BUY A HARDENING BY WEAKENING A SAFETY FLOOR.
 ```
 
-## The repetition reverses the burden of proof
+**The repetition reverses the burden of proof.** The standing rule is: same
+mechanism, no new evidence → the lock applies. Recurrence *is* the new evidence —
+not that the item is right, that the disposition did not hold. Whoever keeps the
+lock now carries the argument. **Mechanism-match still runs first**: a complaint
+resembling the old one but testing a different mechanism is a new finding.
 
-The standing rule is: same mechanism, no new evidence → the lock applies and
-nothing is surfaced. Recurrence **is** the new evidence — not that the item is
-right, that the disposition did not hold. Whoever wants to keep the lock now
-carries the argument.
-
-**Mechanism-match still runs first**, borrowed unchanged from the sibling rule: a
-new complaint that resembles the old one but tests a different mechanism is not a
-recurrence, and saying so is the answer.
-
-## Resolve on evidence, never on the count
-
-This is the load-bearing clause and the one a later editor is most likely to trim
-as hedging. Challenging a model's answer — **including a correct one** — reliably
-makes it capitulate and revise toward the perceived expectation rather than toward
-truth <!-- harvest:reflection-sycophancy-flipflop -->. A rule that treated "said
-twice" as proof of error would be that failure mode with a procedure attached. The
+**Resolve on evidence, never on the count.** Challenging a model's answer —
+including a correct one — reliably makes it capitulate and revise toward the
+perceived expectation rather than toward truth
+<!-- harvest:reflection-sycophancy-flipflop -->, so a rule reading "said twice" as
+proof of error would be that failure mode with a procedure attached. The
 repetition opens the question; it never answers it.
 
 ## Exactly three outcomes
 
-The repetition proves the **system** failed <!-- harvest:recurrence-indicts-the-system -->.
-It does not by itself prove the **decision** was wrong. Own analysis, derived from
-that split:
+The repetition proves the **system** failed <!-- harvest:recurrence-indicts-the-system -->;
+it does not prove the **decision** was wrong. Own analysis, from that split:
 
-| Outcome | What actually broke | What hardening means |
+| Outcome | What actually broke | Hardening means |
 |---|---|---|
-| The disposition was **wrong** | the decision | reverse it, and record what would have caught it sooner |
-| **Right, but never recorded** | the record | make it durable and citable, with scope + `revisit-if` |
-| **Right and recorded, but unreachable** | reachability | move it onto a surface the next run actually reads |
+| The disposition was **wrong** | the decision | reverse it, record what would have caught it |
+| **Right, never recorded** | the record | make it durable + citable, with `revisit-if` |
+| **Right, recorded, unreachable** | reachability | move it onto a surface the next run reads |
 
 In all three the system failed — only in the first was the decision wrong. A
-resolution naming none of the three is an unresolved recurrence.
+resolution naming none of them is an unresolved recurrence.
 
-## Look it up before re-deriving it
-
-Without a forced lookup of the earlier disposition, every recurrence becomes a
-fresh investigation even where the answer already exists
-<!-- harvest:forced-lookup-of-past-root-causes -->. Name which store you checked:
-`docs/decisions/` + `INDEX.md` (via `adr_cite_check`), `agents/decisions/*.yml`,
-`agents/roadmaps/{archive,skipped,later}/`, the curated memory YAML under
-`agents/memory/`, `agents/evidence/analysis/`.
-
-**Rejections are the weak spot, by design.** `provenance/README.md` records that a
-`reject` verdict lives in the analysis document rather than a ledger — so "I found
-nothing" here means *unstructured prose was grepped*, not *nothing was decided*.
-Say which of the two you mean.
-
-## The mechanism is the candidate defect, not the item
-
-Classify what was missing before choosing an artefact
-([`skill-improvement-pipeline`](../skills/skill-improvement-pipeline/SKILL.md)
-§ Classify the missing component), and land the learning where it constrains the
-next run ([`learning-to-rule-or-skill`](../skills/learning-to-rule-or-skill/SKILL.md)).
-A lesson that does not narrow the next attempt produces thrashing rather than
-convergence <!-- harvest:unconstraining-lesson-thrashes -->; a learning that lives
-only in a reply is not one. **Third recurrence of the same class escalates to
-structure** ([`decision-review`](../skills/decision-review/SKILL.md) § Escalation)
-— a louder restatement of a rule the agent keeps missing is the one response
-already known not to work.
-
-## No hardening buys itself with a safety floor
-
-Self-improvement loops can regress the thing they improve
-<!-- harvest:self-improvement-can-self-regress -->, so a hardening change carries
-the same evidence bar as any other change, and never arrives as a weakened gate, a
-widened allowlist, a lifted Hard Floor, or a loosened ratchet. "We learned
-something" is not a licence.
+**Look up the earlier disposition before re-deriving anything, and name the store
+you checked** — addresses, the mechanism-is-the-defect classification, the
+hardening floor and the failure modes are in
+[`recurring-criticism-mechanics`](../../docs/guidelines/agent-infra/recurring-criticism-mechanics.md).
+One line does not migrate, because acting on it wrong is silent: rejections live in
+analysis prose by design, so "I found nothing" means *prose was grepped*, never
+*nothing was decided*.
 
 ## When NOT to fire
 
-- **A repeated task instruction**, not a criticism. That is an instruction; do it.
+- **A repeated task instruction**, not a criticism — that is an instruction, do it.
 - **Mechanism-match fails** — a resemblance is not a recurrence.
-- **The agent is the one repeating** — asking again what was already answered is
-  [`no-cheap-questions`](no-cheap-questions.md), not this.
+- **The agent is the one repeating** — that is [`no-cheap-questions`](no-cheap-questions.md).
 - **Already resolved this task.** Once decided, it is decided.
 
 ## Honest enforcement — `enforced_by: none`
 
-One deterministic signal exists and it is narrow. `src/scripts/_lib/self_repair.ts`
-keeps one record per defect fingerprint with an `occurrences` counter and reopens a
-released record when the user re-reports it — literally this rule's trigger state —
-and the injected queue line now carries that number, so above 1 an agent sees it.
-Three limits: `agents/runtime/` is gitignored, so the store is one machine's and
-empty on a fresh checkout; it only covers defects the complaint detector matched,
-where a recurrence phrasing outside the added patterns is a paraphrase away from
-silence; and it is hook-carried, so on a host without the slot nothing fires.
+One narrow deterministic signal exists. `src/scripts/_lib/self_repair.ts` keeps one
+record per defect fingerprint with an `occurrences` counter and reopens a released
+record when the user re-reports it — literally this rule's trigger state — and the
+injected queue line now carries that number, so above 1 an agent sees it. Three
+limits: `agents/runtime/` is gitignored, so the store is one machine's and empty on
+a fresh checkout; it covers only defects the complaint detector matched, where a
+phrasing outside the added patterns is a paraphrase away from silence; and it is
+hook-carried, so on a host without the slot nothing fires.
 
-The rest is model-carried, and the gaps are named rather than implied: **nothing**
-observes whether the earlier disposition was opened, for rejections there is
-nothing structured to open, and no gate can tell a resolution that named one of the
-three outcomes from one that asserted it. Claiming the fingerprint counter as
-coverage for any of that would inflate it, so it is not claimed — skipping this
-rule is caught by nothing.
+The rest is model-carried, named rather than implied: **nothing** observes whether
+the earlier disposition was opened, for rejections there is nothing structured to
+open, and no gate can tell a resolution that named one of the three outcomes from
+one that asserted it. Claiming the counter as coverage for any of that would
+inflate it, so it is not claimed — skipping this rule is caught by nothing.
 
 ## See also
 
-- [`decision-revisit-gate`](decision-revisit-gate.md) — the lock-blocking entrance, the five steps, and the owner-reserved routing this rule reuses instead of restating.
+- [`decision-revisit-gate`](decision-revisit-gate.md) — the other entrance; owns the five steps and the owner-reserved routing this rule reuses instead of restating. Separate file only because that one sits four lines under the 200-line cap.
 - [`self-repair-loop`](self-repair-loop.md) — the single-occurrence intake; this rule is what its `occurrences` counter is for.
-- [`active-remediation`](active-remediation.md) — the terminal "leave it" this rule deliberately does not override (see `collision_ok`).
+- [`active-remediation`](active-remediation.md) — the terminal "leave it" this rule does not override (see `collision_ok`).
 - [`/analyze:inbox`](../domains/analysis-workbench/analyze/inbox/command.md) § Phase 4c — the artifact-side detection that routes here.
