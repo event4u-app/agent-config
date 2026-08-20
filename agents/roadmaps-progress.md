@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers in the active tree, **19** need you → `agent-config gates`
 
 ## Overall
 
-**304 / 578 steps done · 53%**
+**305 / 578 steps done · 53%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   53%
@@ -18,6 +18,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 7 | 7 |
 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
@@ -35,7 +36,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+| 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 0 | 7 | 0 | 2 | 0 | ██████████ 100% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
 | 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
@@ -391,47 +392,14 @@ _1 blocker resolved._
 
 ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
 
-**Road to gate autonomy — human gates only where a human is the point** — 6 / 7 done (86%)
+**Road to gate autonomy — human gates only where a human is the point** — 7 / 7 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Blocker schema: class and command become fields | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | `gates --execute` (the acting half) | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+| 2 | `gates --execute` (the acting half) | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ✅ done | 0 | 1 | 0 | 1 | 100% |
 | 4 | Liveness: gates that open must be seen | ✅ done | 0 | 1 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-gate-autonomy"></a>
-**Blockers**
-
-- **b-gate-budget-preauth** (owner: user) — blocks Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it. Also blocks the over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a budget to compare against, and this entry is where that budget is decided.
-  - **Recommendation:** **option (a) — per-run and per-week caps with the receipt ledger.** It is the only option that actually removes the couriering while keeping a real spend bound: a per-run cap alone bounds one mistake, not a week of them. Option (b) preserves today's friction for every billable gate, which leaves the defect in place while adding a ledger. Option (c) collapses class 1 into class 2 and makes the four-class taxonomy a three-class one — defensible, but it gives up the class where the mechanism has the most to offer.
-  - **If you do nothing:** every billable gate keeps needing a keystroke, the live trigger eval keeps blocking three roadmaps, and class 1 exists on paper with no mechanism behind it. Phase 2 still ships the class-0 path, so the estate gets the free half of the acting layer and none of the paid half.
-  - **What to do:**
-    decide the standing budget shape for class-1 gates. Options:
-    (a) register a per-run and a per-week cap as settings keys, with the append-only
-    receipt ledger as the audit surface — the recommended shape, because a per-run cap
-    alone is not a spend bound; (b) require a fresh named budget per gate, which keeps
-    today's friction but makes the receipt trail explicit; (c) decline
-    pre-authorisation entirely, in which case class 1 collapses into class 2 and every
-    billable gate keeps needing a keystroke. Note what must not change either way: the
-    terminal abort's threat model is unconsented billable automation, so any bypass
-    must be ledger-bound, single-use and blocker-scoped.
-  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — the settings keys and the ledger path exist.
-- **b-delegate-gate-maintainer-profile** (owner: user) — blocks Phase 3 step 3.1 and therefore 3.2.
-  - **Recommendation:** **option (a) — enable both in the maintainer profile.** The blast-radius controls already exist and are unchanged by this: the per-day call cap, the code gate as the enforcement point, and the orchestration ledger as the audit trail. Option (b) permits consultation but not delegated writes, which leaves "a particular agent run" a human task — the exact class Phase 3 exists to remove. Note what makes (a) low-risk here specifically: it moves one profile's setting, not a shipped default, so no consumer install changes.
-  - **If you do nothing:** class-1 entries whose `run:` is an agent run stay human-typed, so the acting half of the gate layer is missing precisely where the work is largest. `road-to-estate-drawdown`'s recurring pass (its Phase 4) has no delegate path to run on and cannot exist.
-  - **What to do:**
-    decide whether to enable the team surface and `allow_delegate` in
-    the maintainer profile only. Options: (a) enable both in the maintainer profile,
-    keeping `max_calls_per_day` as the blast-radius cap and the code gate as
-    enforcement; (b) enable the team surface but leave `allow_delegate` false, which
-    permits consultation but no delegated writes; (c) leave both off, in which case
-    Phase 3 closes and class-1 agent runs stay human-typed. Consumer defaults are not
-    in scope for any option — the settings schema's own describe text states the
-    two-gate contract, and this decision moves one profile, not a default.
-  - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
-
-_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 

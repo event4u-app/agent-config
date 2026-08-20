@@ -58,6 +58,7 @@ a later reader can tell real movement from noise.
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
 | [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
+| [`road-to-gate-preauth-authorization.md`](road-to-gate-preauth-authorization.md) | [`road-to-gate-autonomy.md`](../road-to-gate-autonomy.md) step 2.3, 2026-08-20 | `transferred` | 1 item, both probe halves required: an authorisation artefact `lint_settings_classes` reports as class **C** and naming a blocker id (none of today's 107 C keys is one) · the abort intact, `grep -c 'Refusing to run under automation' src/scripts/skill_trigger_eval.ts` still `1` (`1`) |
 
 **The shared promotion criteria below do NOT govern a drain-run transfer.** They
 were written for the org-mode stubs and require a recruited customer, a funded
