@@ -75,7 +75,9 @@ listed there under **Non-goals**; both are copied here verbatim so the plan
 survives.
 
 This roadmap is `status: draft` — it is hidden from the dashboard and is not
-executable until a human decides the two questions below.
+executable until a human decides the question below. It carried **two** until
+the 2026-08-20 drain run; Item 2 is abandoned with its reason recorded, so Item 1
+is the only live one.
 
 ## Item 1 — Flip the shipped default from `public` to `internal`
 
@@ -154,4 +156,5 @@ What would have to be decided:
 ## Prerequisites
 
 - `agents/roadmaps/archive/road-to-demand-gate-audience.md` is complete (or archived).
-- A human decision on Item 1 and/or Item 2. Until then this roadmap stays `draft`.
+- A maintainer judgement on **Item 1** — the one line still open. Until then this
+  roadmap stays `draft`. Item 2 needs nothing: it is abandoned, not waiting.
