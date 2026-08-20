@@ -11,10 +11,11 @@ routes_to:
 triggers:
   - keyword: "failing"
   - keyword: "fails"
-  - keyword: "red"
   - keyword: "broken"
   - keyword: "regression"
-  - keyword: "CI"
+  - phrase: "is red"
+  - phrase: "ci failed"
+  - phrase: "ci is"
   - phrase: "not my"
   - phrase: "nicht mein"
   - phrase: "someone else's"
