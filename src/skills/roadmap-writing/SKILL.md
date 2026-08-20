@@ -57,19 +57,6 @@ plan/roadmap" is a gated surface, so run
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
 before drafting (95%-conditions, marker, interview-or-degrade, C→R1 handoff).
 
-### 0b. Emit the skeleton
-
-```bash
-./scripts-run src/scripts/new_roadmap <slug>
-```
-
-Green as emitted, against every roadmap gate. It settles the four conventions
-that are enforced mechanically and documented in prose — complexity enum,
-acceptance-heading form, risk-review marker, risk-type enum — so the drafting
-effort goes to the content. Do not hand-copy a skeleton from a neighbouring
-roadmap: that is how six invented `complexity:` values and ten unmatchable
-acceptance headings got into the tree.
-
 ### 1. Read the canonical template first
 
 The structure, frontmatter, lifecycle, and complexity-tier rules live

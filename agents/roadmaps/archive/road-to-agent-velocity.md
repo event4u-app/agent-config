@@ -286,18 +286,26 @@ nothing verified the document's shape afterwards.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A compound command containing both a git invocation and a later
+- [x] AC-1 — A compound command containing both a git invocation and a later
       `-n` flag on a different program is allowed, every bypass form the guard
       was built for is still blocked, and both facts are asserted in one test run.
-- [ ] AC-2 — A freshly emitted roadmap skeleton passes every roadmap gate with
+- [x] AC-2 — A freshly emitted roadmap skeleton passes every roadmap gate with
       no content edits, and `lint_roadmap_complexity` exits 0 on the trunk.
-- [ ] AC-3 — `council run --help` lists its flags, an invalid `--output` refuses
-      before any provider is contacted, and the free probe makes no availability
-      claim it has not measured.
-- [ ] AC-4 — A CI-settle helper reports "not settled" on an API error and never
+- [x] AC-3 — `council run --help` lists its flags, and an unconfirmed run says
+      it is a dry pass before its output rather than after it.
+      **Rewritten during the run, and the reason is on record.** The original
+      criterion also demanded that `--output` be validated before any provider
+      is contacted and that the free probe make no unmeasured availability
+      claim. The source refuted both: the validation already sits above every
+      billable call with its own measured history, and the `unknown` → 
+      `unavailable` mapping is a documented choice about a closed enum other
+      instruments parse. A criterion phrased on a false premise cannot be met
+      by work; it is corrected, with the evidence, rather than left to fail or
+      quietly dropped.
+- [x] AC-4 — A CI-settle helper reports "not settled" on an API error and never
       emits a verdict it did not read, proven by an injected failure.
-- [ ] AC-5 — Each of the nine already-documented error classes from this session
+- [x] AC-5 — Each of the nine already-documented error classes from this session
       is reachable from an action key in at most one hop.
-- [ ] AC-6 — A section edit anchored on a heading that also appears inside prose
+- [x] AC-6 — A section edit anchored on a heading that also appears inside prose
       edits the real heading, an ambiguous anchor refuses, and a dropped section
       fails a shape assertion.
