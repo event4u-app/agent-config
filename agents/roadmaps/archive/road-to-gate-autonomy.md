@@ -576,6 +576,18 @@ safeguards.**
   trigger eval keeps blocking three roadmaps, and class 1 exists on paper with no
   mechanism behind it. Phase 2 still ships the class-0 path, so the estate gets the
   free half of the acting layer and none of the paid half.
+- **Answer:** ACCEPTED 2026-08-20 — **option (a), per-run and per-week caps with the
+  receipt ledger**, via option (a) of `road-to-estate-drawdown` blocker
+  `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)),
+  which sets the caps at USD 5 per run and USD 25 per rolling seven days. Audited and
+  accepted with the reason stated, because this is the most consequential accepted
+  default on the sheet: it removes a per-action human keystroke on billable gates. What
+  makes it acceptable rather than a Hard-Floor waiver is that it is BOUNDED and audited
+  — a named per-run cap, a named rolling-week cap and a receipt ledger — and reversible
+  by lowering either number to zero. A per-run cap alone would bound one mistake and not
+  a week of them, which is why (a) beats (b). No spend is authorised until the settings
+  keys and the ledger path exist.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
   the settings keys and the ledger path exist. **Both discharged**, see Status.
 
@@ -647,6 +659,23 @@ safeguards.**
   human-typed, so the acting half of the gate layer is missing precisely where the
   work is largest. `road-to-estate-drawdown`'s recurring pass (its Phase 4) has no
   delegate path to run on and cannot exist.
+- **Answer:** PULLED OUT of option (a) — 2026-08-20, disposition **transferred**. This
+  is the one rendered default on the consolidated sheet that fails the
+  conservative-and-reversible audit on its own content, not merely on Rule 3. Default
+  (a) enables `allow_delegate`, a STANDING grant of delegated write authority to an
+  agent path; a standing authority expansion is not self-reversing and is not what a
+  blanket accept-all was authorising, so option (a) does not reach it. The council's own
+  batch-B row in
+  [drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)
+  independently narrows this entry to **option (b)** — enable the team surface for
+  consultation, keep `allow_delegate: false` — and that is the preferred choice recorded
+  inside this transfer. Three-point check: original criterion verbatim, `one option is
+  recorded at this blocker, and for (a) or (b) the profile carries the setting with the
+  cap named`; dependent steps moved, Phase 3 step 3.1 and through it 3.2, and with them
+  `road-to-estate-drawdown` step 4.1, which has no delegate path to run on; re-entry
+  producer, the gate-autonomy maintainer writing the profile, probe: the maintainer
+  profile carries the team surface enabled with `allow_delegate: false` and the per-day
+  call cap named. The stub belongs to this roadmap's own closure.
 - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the
   profile carries the setting with the cap named. **Option recorded and cap named
   (`ai_team.max_calls_per_day: 50`); the profile half is unsatisfiable as
