@@ -486,6 +486,25 @@ export function prune_stale_session_states(
   // needs. A tombstone another pruner is holding right now is judged on exactly
   // the same evidence its holder will use, and both orders end at the same
   // place — the loser's `link` hits EEXIST or its `rm` is a no-op.
+  //
+  // WHY THIS IS NOT THE STALE-BREAKER DEFECT that a sibling lock primitive hit
+  // in round 4 (two breakers each judge one fixed-name lock stale; the second
+  // deletes the first one FRESH lock and both believe they hold it). The
+  // question is worth answering here rather than leaving to a reviewer, because
+  // the shapes look alike: both delete an object another live process is using.
+  //
+  // Two properties separate them, and neither is incidental. The tombstone name
+  // carries `pid` and a per-run counter, so no peer can ever create the name
+  // this run holds — there is no second claimant to confuse, which is exactly
+  // what a fixed name provides. And the delete/restore decision reads the
+  // CONTENT mtime, which `rename` does not touch, so a peer resolving this
+  // tombstone reaches the same verdict its holder would; the holder then finds
+  // ENOENT and skips. The lock case has neither: one name, and a decision made
+  // on how long THIS caller waited rather than on a property of the object.
+  //
+  // What this does NOT claim: that a peer never touches a live tombstone. It
+  // does, and that is intended — the alternative (waiting out a holder that may
+  // have crashed) is the leak this pass exists to close.
   for (const name of entries) {
     const orphan = /^(.+\.json)\.\d+\.\d+\.tomb$/.exec(name);
     const live_name = orphan?.[1];
