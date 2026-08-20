@@ -1,10 +1,14 @@
----
-name: recurring-criticism-mechanics
-description: "Mechanics for the recurring-criticism rule — the past-disposition store list, the mechanism-is-the-defect classification, the hardening floor, and the failure-mode catalog"
-domain: agent-infra
----
-
 # Recurring-criticism mechanics
+
+> Depth for the `recurring-criticism` rule — the past-disposition store list, the mechanism-is-the-defect classification, the hardening floor, and the failure-mode catalog.
+
+_No YAML frontmatter, deliberately: every other guideline under `docs/guidelines/`
+is frontmatter-less, and a `name:` key here makes the two MCP resource loaders
+derive different URIs for the same file — one from the key
+(`guideline://recurring-criticism-mechanics`), one from the path
+(`guideline://agent-infra/recurring-criticism-mechanics`). That is a
+`mcp_parity_smoke` drift, and it only surfaces once `dist/cli/agent-config.js`
+is built, so the local suite passes and CI does not._
 
 Depth for [`recurring-criticism`](../../../src/rules/recurring-criticism.md). The
 rule carries the obligation; this carries the lookup addresses and the reasoning
