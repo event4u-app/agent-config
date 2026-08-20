@@ -8,7 +8,7 @@ execution:
 
 > 290 skills and 119 rules must all stay true, reviewed and non-contradictory
 > (re-measured 2026-08-20; the file was authored against 289 / 116 — see
-> [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 2)
+> [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) § 2)
 > regardless of what any session loads. This roadmap takes the part of that
 > problem no existing roadmap owns: skill-cluster consolidation, an authored
 > norm-line per surviving rule, and two small caps — and explicitly leaves
@@ -51,7 +51,7 @@ that result was a STOP.** Of 50 open lines: **13 satisfied**, **14 transferred**
 maintained skill count did not drop, no rule gained a `norm:` line, and neither
 growth surface gained a cap. Read the per-step `**→**` notes for the reason on
 each line; the readings behind all of them are in
-[`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md).
+[`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md).
 
 | Phase | Outcome | Why, in one line |
 |---|---|---|
@@ -173,7 +173,7 @@ part 0's table.
       git churn for staleness. A column with no data reads `absent`, never a
       default.
       <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage --quiet -->
-      **→** transferred — `utilization-sweep-window` (**B**, `transferred`) for the manifest, and the skill-usage column additionally to the shared live-trigger-eval stub. The two non-gated columns were measured anyway and are on record: enforcement coverage **12.6 % (15/119)** and activation **5 of 290** — [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) §§ 1–2.
+      **→** transferred — `utilization-sweep-window` (**B**, `transferred`) for the manifest, and the skill-usage column additionally to the shared live-trigger-eval stub. The two non-gated columns were measured anyway and are on record: enforcement coverage **12.6 % (15/119)** and activation **5 of 290** — [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) §§ 1–2.
 - [-] 1.4 A cheap-tier pass may draft verdicts and cluster mappings as
       PR-reviewable proposals. Nothing model-drafted reaches a carrier
       without a decided verdict in the census PR — drafting is an authoring
@@ -199,7 +199,7 @@ part 0's table.
       verified.** A bar needs a before, and there is no verified before.
       **Two of the three facts this step was authored on are refuted, and the
       conclusion survives both corrections** (re-measured 2026-08-20, see
-      [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 1):
+      [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) § 1):
       the activation figure is **5 distinct of 290 over 30 sessions**, not 6 of
       288, and it is window-dependent — two other censuses of the same
       instrument record 6 of 288 over 59 sessions and 4 of 288 over 30; and
@@ -391,7 +391,7 @@ part 0's table.
       `post_tool_use` 10→11 and `session_start` 13→14; claude `pre_tool_use`
       12→13, `post_tool_use` 11→12, `stop` 11→12, `session_start` 13→14; the
       same `session_start` +1 on every other bound host). Full diff in
-      [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 4.
+      [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) § 4.
 
       The 2026-08-18 note already said a stale census "ages in the one
       direction that matters — upward, so the cap admits growth it was written
@@ -416,7 +416,7 @@ part 0's table.
       chain — copilot is `fallback_only` and carries no hook surface at all,
       while cursor / cline / windsurf / gemini alias a native pre-tool event that
       nothing binds (the four states are tabulated in
-      [`hook-architecture-v1`](../../docs/contracts/hook-architecture-v1.md)).
+      [`hook-architecture-v1`](../../../docs/contracts/hook-architecture-v1.md)).
       The cap must not read a dash as headroom.
       **claude is the binding host on every slot**, so a per-host cap set from
       any other row is set from the wrong row.
@@ -512,7 +512,7 @@ part 0's table.
 - **Status:** resolved
 - **Outcome state:** `transferred` — **MERGED** with
   `human-gated-live-trigger-eval` from
-  [`road-to-skill-description-measurement.md`](road-to-skill-description-measurement.md)
+  [`road-to-skill-description-measurement.md`](../road-to-skill-description-measurement.md)
   into ONE shared stub. `Status:` reads `resolved` because that is the only token
   `lint_roadmap_blockers` accepts as closed; the honest state is *transferred*,
   and it is recorded on this line rather than in the status token.
@@ -527,7 +527,7 @@ part 0's table.
   2026-08-20**: 5 distinct of 290 skills invoked over 30 sessions (not 6 of
   288, and the figure is window-dependent), and **four** skills declare a
   machine-matchable trigger (not zero) — see
-  [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 1.
+  [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) § 1.
   The host truncates the
   injected catalogue, which is not measurable from transcripts. So the
   activation instrument's depth on this store is unverified until that eval
@@ -550,7 +550,7 @@ part 0's table.
 - **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**.
   Option (a) of `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
   accepts rendered defaults, but the council framework that option inherits
-  ([drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md),
+  ([drain-blocker-dispositions-a](../../evidence/council/drain-blocker-dispositions-a.md),
   Rule 3) is categorical: a host-controlled, human-gated evaluation cannot be recorded
   as agent-completed. Batch A already dispositioned this entry `B | transferred`, merged
   with `human-gated-live-trigger-eval` into ONE live-trigger-eval stub, and its
@@ -564,7 +564,7 @@ part 0's table.
   the window it was measured over.
 - **Resolution (2026-08-20) — transferred, merged with its twin.** The AI-council
   drain-run disposition framework
-  ([`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md))
+  ([`agents/evidence/council/drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md))
   gives this entry disposition **B**, outcome `transferred`, and orders **one**
   stub shared with `human-gated-live-trigger-eval`: *"Create one
   live-trigger-eval stub shared with human-gated-live-trigger-eval"* and
@@ -573,7 +573,7 @@ part 0's table.
   answer is the pre-registration owner, i.e. the sibling.
 
   **The shared stub already exists and was written to accept this transfer
-  as-is:** [`agents/roadmaps/stubs/road-to-live-trigger-eval.md`](stubs/road-to-live-trigger-eval.md) <!-- ref-ignore -->. It carries both
+  as-is:** [`agents/roadmaps/stubs/road-to-live-trigger-eval.md`](../stubs/road-to-live-trigger-eval.md) <!-- ref-ignore -->. It carries both
   `Resolved when:` criteria verbatim, enumerates the three places this roadmap
   transfers (1.3's skill-usage column, 2.1c in full, 2.5's bar-gated half), and
   states in terms that *"the cost-parity roadmap has not been drained yet; when
@@ -593,7 +593,7 @@ part 0's table.
   censuses of the same instrument; and **four** skills declare a
   machine-matchable trigger, not zero. What survives untouched is the reason the
   eval is human-gated and the reason no bar may be anchored on the integer.
-  Readings: [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) § 1.
+  Readings: [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) § 1.
 
   **Step 2.1b did NOT transfer and is not closed as done.** The stub instructs
   that it "must not be closed" while the instrument is unverified. It is marked
@@ -663,7 +663,7 @@ part 0's table.
   reuse.
 - **Resolution (2026-08-20) — transferred.** Disposition **B**, outcome
   `transferred`, per
-  [`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md):
+  [`agents/evidence/council/drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md):
   *"Move the utilization-dependent census behind the scheduled
   surface-consolidation sweep."* The council's rationale is that the census
   depends on a time-gated sweep carrying its own repo-admin dependency, and that
@@ -675,8 +675,14 @@ part 0's table.
     vocabulary-dependent half of Phase 2's pilot (2.1). Each carries a `[-]` and
     a per-step reason naming this blocker.
   - **Re-entry producer:** the owner of
-    [`road-to-surface-consolidation.md`](road-to-surface-consolidation.md)
-    Phase 3 — a named producer, not "when some subsystem exists".
+    [`road-to-surface-consolidation.md`](../later/road-to-surface-consolidation.md)
+    Phase 3 — a named producer, not "when some subsystem exists". **Qualified
+    2026-08-20 at close: that roadmap is itself PARKED in `later/`** (`status:
+    later`, parked 2026-08-19 on a conjunctive resume condition), so the producer
+    is named but not currently active. The probe below is unaffected — it tests
+    for sweep evidence, not for the producer's mood — but a reader should not
+    infer from "named producer" that anyone is working on it. This is a
+    two-hop wait: the sweep resumes when that roadmap does.
   - **Detection probe:** dated sweep evidence exists **and** exports the
     reusable KEEP / MERGE / DEMOTE / REMOVE vocabulary.
 
@@ -690,7 +696,7 @@ part 0's table.
   two non-gated evidence columns did not need the sweep and were taken:
   enforcement coverage **12.6 % (15 of 119)** and skill activation **5 of 290**.
   Both are recorded with their commands in
-  [`cost-parity-1-drain-readings`](../evidence/analysis/cost-parity-1-drain-readings.md) §§ 1–2.
+  [`cost-parity-1-drain-readings`](../../evidence/analysis/cost-parity-1-drain-readings.md) §§ 1–2.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
