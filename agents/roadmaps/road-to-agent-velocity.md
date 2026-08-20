@@ -121,7 +121,7 @@ a dangling anchor. The convention is real, the gate is right, and knowing about
 it did not help — the anchor was written from the shape the other roadmaps use,
 not from this file's own headings.
 
-- [ ] **2.1 Emit a gate-clean skeleton.** One command produces a roadmap file
+- [x] **2.1 Emit a gate-clean skeleton.** One command produces a roadmap file
       that passes every roadmap gate with zero content edits: valid complexity,
       the acceptance heading in the form the extractor actually matches, the
       risk-review marker with today's date, a risk row with a legal type, and a
@@ -130,18 +130,24 @@ not from this file's own headings.
       `lint_plan_risk_register`, `lint_roadmap_blockers`,
       `check_roadmap_trackable` and `lint_empty_roadmaps` unedited.
 
-- [ ] **2.2 Make the skeleton the documented starting point.** The authoring
+- [x] **2.2 Make the skeleton the documented starting point.** The authoring
       surface points at the command rather than describing the conventions in
       prose that has to be found first.
       verify: the authoring surface names the command, and the four conventions
       are stated where the command emits them rather than only in prose.
 
-- [ ] **2.3 Fix the trunk roadmap that declares an invalid complexity value.**
+- [x] **2.3 Fix the trunk roadmap that declares an invalid complexity value.**
       It reds `lint_roadmap_complexity` for every branch, and the gate runs in no
       workflow, so it is invisible until someone runs the chain by hand. One
       word — but the roadmap that found it deliberately did not sweep it, and it
       is still there.
       verify: `lint_roadmap_complexity` exits 0 on the trunk.
+      **Done, and the sibling search found seven more.** The active one declared
+      `bounded`. Searching the exact construct across all 88 roadmaps surfaced
+      `medium` ×3, `moderate`, `small` ×2 and `standard` — all in `later/`,
+      which the gate's glob does not scan, so each is a red that arrives on the
+      day its roadmap is reactivated. All seven repaired by measuring lines and
+      phases against the gate's own caps rather than by guessing a value.
 
 ## Phase 3 — the council CLI, which cost six calls for one run
 

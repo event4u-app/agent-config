@@ -6,7 +6,7 @@
 
 ## Overall
 
-**306 / 627 steps done · 49%**
+**309 / 627 steps done · 49%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
@@ -16,7 +16,7 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-agent-velocity.md](roadmaps/road-to-agent-velocity.md) | 6 | 24 | 20 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 17% |
+| 1 | [road-to-agent-velocity.md](roadmaps/road-to-agent-velocity.md) | 6 | 24 | 17 | 7 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 | 2 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
@@ -120,12 +120,12 @@
 
 ### [road-to-agent-velocity.md](roadmaps/road-to-agent-velocity.md)
 
-**Road to agent velocity — the 21 % of a session that was self-inflicted** — 4 / 24 done (17%)
+**Road to agent velocity — the 21 % of a session that was self-inflicted** — 7 / 24 done (29%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the guard that blocks legitimate commands | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | a roadmap skeleton nobody can get wrong | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | a roadmap skeleton nobody can get wrong | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | the council CLI, which cost six calls for one run | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | one waiter recipe, because the hand-written one lied | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 5 | memory that arrives before the mistake | ⬜ not started | 2 | 0 | 0 | 0 | 0% |

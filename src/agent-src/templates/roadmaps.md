@@ -4,6 +4,25 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
 
 ---
 
+## Start from the skeleton, not from this page
+
+```bash
+./scripts-run src/scripts/new_roadmap <slug>            # lightweight
+./scripts-run src/scripts/new_roadmap <slug> --structural
+./scripts-run src/scripts/new_roadmap <slug> --stdout   # print, do not write
+```
+
+It emits a file that passes every roadmap gate **unedited** — the complexity
+enum, the acceptance heading in the exact form the extractor matches, the
+risk-review marker, a legal risk type, and an anchor that resolves. Those four
+conventions live in four different gates, and each one costs a full gate round
+to discover by failing it. Measured 2026-08-20 across 88 roadmaps: **six
+different invented `complexity:` values** were in the tree, and **10 of 22**
+roadmaps wrote an acceptance heading the extractor cannot see.
+
+The rules below still govern the content. The skeleton only removes the part
+that was never a judgement call.
+
 ## Rules for Roadmaps
 
 1. **Be precise and concise.** Lightweight default: ≤ 600 lines (see rule 15). Only a declared `complexity: structural` roadmap may exceed that, capped at 1000 lines — if larger, split into multiple files.

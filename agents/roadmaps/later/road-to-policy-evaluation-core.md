@@ -1,6 +1,6 @@
 ---
 status: blocked-for-later
-complexity: medium
+complexity: lightweight
 ---
 
 # Road to policy-evaluation core — deterministic Class-A slice of the rejected resident enforcement plane
