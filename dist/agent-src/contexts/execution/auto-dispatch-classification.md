@@ -127,6 +127,40 @@ Criteria are independent and additive in the obvious way (a slice matching
 two rows takes the higher of the two tiers); this table never lowers a
 tier `inferSliceTier` (§ below) already raised.
 
+## Cross-vendor worker direction (two entries — declared, not implemented)
+
+Two entries, and the enumeration IS the policy: cross-vendor worker routing is
+deny-by-default, so a direction not listed here is denied. Both cite
+[`cross-vendor-worker-direction`](../../../../docs/contracts/cross-vendor-worker-direction.md),
+which is where the payload allow/deny lists, the no-recursion clause and the
+human egress gate live — this table declares *which* directions exist, never
+*what may be sent*.
+
+| # | Direction (role pair, never a vendor name) | Resolves to | Cites |
+|---|---|---|---|
+| CV-1 | rung-1/2 slice whose value is independence: a worker on the **non-authoring** vendor reviews output produced by the **authoring** vendor | report-only worker — findings returned, no write / commit / action / onward dispatch | [`cross-vendor-worker-direction`](../../../../docs/contracts/cross-vendor-worker-direction.md) |
+| CV-2 | the mirror of CV-1: the vendor that authored the previous review is itself reviewed by a worker on the other vendor | report-only worker — same posture; one hop only, never a chain | [`cross-vendor-worker-direction`](../../../../docs/contracts/cross-vendor-worker-direction.md) |
+
+```
+A LISTED DIRECTION IS A NECESSARY CONDITION, NEVER A SUFFICIENT ONE.
+DIRECTION PERMITTED + PAYLOAD ALLOWED + HUMAN APPROVED = MAY SEND.
+ANY ONE MISSING = MAY NOT. A CROSS-VENDOR WORKER NEVER IMPLEMENTS.
+```
+
+**Role pairs, not vendor names** — per
+[`subagent-routing`](subagent-routing.md) § Why vendor-neutral. `classifyLadder`
+carries no vendor identity (`LadderResult` is a rung plus a `DispatchMode`), and
+that is deliberate rather than an omission to fix: the concrete vendor set lives
+in the council config, and a routing rule naming one would encode a capability
+ranking that is a fact about one host at one time.
+
+**Honest state:** these two entries are a **contract surface a future
+implementation must satisfy**. No cross-vendor worker dispatch path exists in
+this repository — nothing reads CV-1/CV-2 at runtime, and the policy's own
+enforcement section says so rather than implying a gate. The entries exist so
+the next implementation has an enumerated permitted set to satisfy instead of
+the phantom artefact the original survey cited.
+
 ## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
 
 Once a slice is classified **delegable**, a second deterministic table infers
