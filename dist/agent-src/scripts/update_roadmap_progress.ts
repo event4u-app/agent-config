@@ -32,7 +32,17 @@
  *
  * Invocation (from project root):
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts              # rewrite
+ *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --archive    # rewrite + archive completed
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check      # CI: exit 1 if stale
+ *
+ * `--archive` (opt-in; wired into `task roadmap-progress` and
+ * `agent-config roadmap:progress`) runs the archival sweep before rendering
+ * instead of printing "Completed roadmaps not yet archived" and leaving the
+ * work to a human who has been ignoring the line for weeks. It is a flag rather
+ * than the default because the PostToolUse hook re-runs the WRITE path once per
+ * turn on every roadmap edit, and a hook that silently `git mv`s files mid-work
+ * is a bigger problem than the warning it would remove. `--check` never
+ * archives — see `_run_archival_sweep`.
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -1209,16 +1219,18 @@ class ArgparseExit extends Error {
 const _PROG = 'update_roadmap_progress.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--check] [--repo-root REPO_ROOT]\n`;
+    return `usage: ${_PROG} [-h] [--check] [--archive | --no-archive] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
     check: boolean;
+    archive: boolean;
     repo_root: string;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
+    let archive = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -1234,6 +1246,12 @@ function _parseArgs(argv: readonly string[]): Args {
         } else if (tok === '--check') {
             check = true;
             i += 1;
+        } else if (tok === '--archive') {
+            archive = true;
+            i += 1;
+        } else if (tok === '--no-archive') {
+            archive = false;
+            i += 1;
         } else if (tok === '--repo-root') {
             const val = argv[i + 1];
             if (val === undefined) {
@@ -1248,7 +1266,13 @@ function _parseArgs(argv: readonly string[]): Args {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { check, repo_root };
+    if (check && archive) {
+        // A gate that mutates the tree it is checking cannot be trusted by CI
+        // (council 2026-08-20, both seats). Refuse the combination outright
+        // rather than silently letting one win.
+        emitError('argument --archive: not allowed with --check');
+    }
+    return { check, archive, repo_root };
 }
 
 /**
@@ -1275,6 +1299,65 @@ function _fallback_git_toplevel(repo_root: string): string {
     return repo_root;
 }
 
+/**
+ * Run the archival sweep for every complete roadmap, in-place.
+ *
+ * Spawned rather than imported: `archive_completed_roadmaps.ts` imports
+ * `collect` from THIS module, so a static import back would close a cycle, and
+ * `main()` is synchronous so a dynamic `await import()` is not available either.
+ * The sweep is the same twin `_regen_dashboard` already spawns in the other
+ * direction, so the spawn shape is the established one in this pair.
+ *
+ * No recursion: the sweep re-runs this script with NO flags, so its inner
+ * dashboard pass has archival off and terminates at depth 2.
+ *
+ * `--all`, not the sweep's `--changed-only` default. The default exists so a PR
+ * archives exactly the roadmaps it completed; here the caller asked the
+ * repo-wide dashboard to reconcile the estate, and the roadmaps that leak are
+ * by construction the ones NOT in this branch's history — six had accumulated
+ * on the trunk while the warning printed every regen. A roadmap the sweep
+ * refuses (open blockers) stays put and is still reported below.
+ */
+function _run_archival_sweep(root: string): SweepResult {
+    const script = path.join(path.dirname(_HERE), 'archive_completed_roadmaps.ts');
+    if (!_isFile(script)) {
+        // A consumer install without the sweep script: nothing to run, and that
+        // is a normal state — the warning below still reports the roadmaps.
+        return { ran: false, ok: true, stdout: '', stderr: '' };
+    }
+    const argv = [script, '--all', '--repo-root', root];
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let dir = path.dirname(_HERE);
+    for (;;) {
+        const candidate = path.join(dir, 'node_modules', '.bin', binName);
+        if (fs.existsSync(candidate)) {
+            return _sweepResult(spawnSync(candidate, argv, { cwd: root, encoding: 'utf-8' }));
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) {
+            break;
+        }
+        dir = parent;
+    }
+    return _sweepResult(spawnSync('npx', ['tsx', ...argv], { cwd: root, encoding: 'utf-8' }));
+}
+
+interface SweepResult {
+    ran: boolean;
+    ok: boolean;
+    stdout: string;
+    stderr: string;
+}
+
+function _sweepResult(r: ReturnType<typeof spawnSync>): SweepResult {
+    return {
+        ran: true,
+        ok: r.status === 0,
+        stdout: String(r.stdout ?? ''),
+        stderr: String(r.stderr ?? ''),
+    };
+}
+
 function main(argv?: readonly string[]): number {
     const args = _parseArgs(argv ?? process.argv.slice(2));
     let repo_root = args.repo_root;
@@ -1289,6 +1372,29 @@ function main(argv?: readonly string[]): number {
         }
         process.stdout.write(`ℹ️  No roadmaps directory at ${roadmap_root} — nothing to do.\n`);
         return 0;
+    }
+    // Archive before rendering, so the dashboard describes the tree the sweep
+    // leaves behind rather than the one it found. `--check` never archives: a
+    // gate that mutates the tree it is checking cannot be trusted by CI.
+    let sweep_out = '';
+    if (!args.check && args.archive && unarchived_complete(collect(roadmap_root)).length > 0) {
+        const swept = _run_archival_sweep(repo_root);
+        sweep_out = swept.stdout;
+        if (swept.stderr) {
+            process.stderr.write(swept.stderr);
+        }
+        if (!swept.ok) {
+            // A half-finished sweep leaves the tree in a shape the dashboard
+            // would describe as if it were intentional. Report and stop before
+            // writing (council 2026-08-20: "archival failures must prevent
+            // dashboard rendering so partially updated state is not presented
+            // as current").
+            process.stderr.write(
+                '❌  The archival sweep failed — dashboard NOT regenerated. ' +
+                    'Fix the tree, then re-run.\n',
+            );
+            return 1;
+        }
     }
     const roadmaps = collect(roadmap_root);
     const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
@@ -1362,7 +1468,13 @@ function main(argv?: readonly string[]): number {
             `${roadmaps.length} roadmap(s) · ` +
             `${roadmaps.reduce((s, r) => s + r.done, 0)}/${roadmaps.reduce((s, r) => s + r.total_active, 0)} steps done.\n`,
     );
+    if (sweep_out) {
+        process.stdout.write(sweep_out);
+    }
     if (complete.length) {
+        // Whatever survived the sweep is complete but NOT archivable — the
+        // sweep already said why on stderr (an open blocker outlives its
+        // steps). Without `--archive` this is every complete roadmap.
         process.stderr.write(
             '⚠️   Completed roadmaps not yet archived — move to ' +
                 '`agents/roadmaps/archive/`:\n',
