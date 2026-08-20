@@ -44,7 +44,7 @@ read as declarations, not defects.
 Cross-checks that came back clean: the review-scope hash is computed by exactly
 one exported `computeReviewScope`, imported by the validator; `splitMarkdownRow`
 and `completionReviewDisabled` are single definitions shared by both layers;
-`agents/roadmaps/road-to-kernel-question-triangle.md` and
+`agents/roadmaps/road-to-kernel-question-triangle.md` and <!-- ref-ignore -->
 `agents/roadmaps/road-to-plan-gates-measurement.md` both carry registers whose
 `Anchored under` values resolve in-document (`## Phase 1 — apply through the
 kernel process`, `## The amendment (drafted, ready to apply)`, `Phase 1 Step 1`
