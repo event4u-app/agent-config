@@ -155,14 +155,19 @@ export function classify(command: string): Eligibility {
 
   let tokens: string[];
   try {
-    tokens = shlexSplit(cmd);
+    tokens = shlexSplit(cmd, true);
   } catch (e) {
     if (e instanceof ShlexError) return { eligible: false, reason_skip: "parse-error" };
     throw e;
   }
 
   // Compound / piped → don't wrap (rtk wraps a single command). `_split_subcommands`
-  // splits on && || ; | — more than one group means a pipeline/chain.
+  // splits on && || ; | & — more than one group means a pipeline/chain.
+  // `splitOperators` is REQUIRED here: POSIX shlex leaves a separator attached
+  // to the preceding word, so `foo; bar` tokenised to one group and read as a
+  // single command. Same construct as the block_no_verify defect measured
+  // 2026-08-20; found by the sibling search for that fix, 2 call sites, both
+  // in this file.
   const groups = _split_subcommands(tokens);
   if (groups.length !== 1) return { eligible: false, reason_skip: "compound-or-piped" };
 
@@ -256,7 +261,7 @@ export function classifyCap(
   if (!cmd) return null;
   let tokens: string[];
   try {
-    tokens = shlexSplit(cmd);
+    tokens = shlexSplit(cmd, true);
   } catch (e) {
     if (e instanceof ShlexError) return null;
     throw e;

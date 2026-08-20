@@ -220,3 +220,87 @@ describe('block_no_verify — _extract_command', () => {
 
 // --- Golden parity (python3 vs tsx) -----------------------------------------
 
+
+// road-to-agent-velocity Phase 1. Measured 2026-08-20 in an instrumented
+// session: `git status; sed -n 1,5p f` was REFUSED by this guard while
+// `sed -n 1,5p f` alone was allowed. Cause, from the tokeniser itself:
+// POSIX shlex does not treat `;` as an operator, so `git status; sed` yields
+// the token `status;` and `_SHELL_SEPARATORS.has('status;')` is false — the
+// whole line stays one group, `_git_base` accepts it because it starts with
+// `git`, and `_is_blocked` reads the `-n` belonging to `sed`.
+//
+// The module docstring asserted the opposite ("they survive as embedded tokens
+// ... the separator split below matches them as whole tokens"), which is true
+// only when the separator is surrounded by whitespace.
+describe('separator-attached tokens do not leak a later -n into the git scan', () => {
+    const ALLOWED = [
+        'git status; sed -n 1,5p file.md',
+        'git status --porcelain; grep -n needle file.md',
+        'git log --oneline -1; head -n 20 file.md',
+        'git diff --stat; sort -n numbers.txt',
+        'git rev-parse HEAD; tail -n 5 log.txt',
+        // `&&` and `|` attach the same way
+        'git status --porcelain&& grep -n x f',
+        'git log -1 --format=%H| head -n 1',
+    ];
+    for (const cmd of ALLOWED) {
+        it(`allows: ${cmd}`, () => {
+            expect(_check_command(cmd)[0]).toBe(false);
+        });
+    }
+
+    // The same shapes with the separator spaced out already worked; they are
+    // pinned so a fix cannot regress the path that was correct.
+    it('still allows the spaced form', () => {
+        expect(_check_command('git status ; sed -n 1,5p file.md')[0]).toBe(false);
+    });
+
+    // Quote and escape safety: a separator INSIDE a quoted or escaped word is
+    // not an operator, so it must not split the group. If it did, the tail
+    // would start with something other than `git` and the scan would be
+    // skipped — turning the false-positive fix into a new bypass.
+    it('does not split a quoted separator out of a git command', () => {
+        expect(_check_command('git commit -m "a;b" --no-verify')[0]).toBe(true);
+        expect(_check_command("git commit -m 'a && b' --no-verify")[0]).toBe(true);
+        expect(_check_command('git commit -m a\\;b --no-verify')[0]).toBe(true);
+    });
+
+    // Redirections carry `&` but are not separators in the sense that matters:
+    // the git command must stay in its own group and stay scanned.
+    it('keeps a redirection from hiding the git command', () => {
+        expect(_check_command('git commit --no-verify -m x 2>&1')[0]).toBe(true);
+    });
+
+    // 1.4 — a refusal that names no alternative teaches only that something is
+    // forbidden. Asserted rather than eyeballed so the sentence cannot be lost.
+    it('names the alternative in the refusal', () => {
+        for (const cmd of ['git commit --no-verify -m x', 'git commit -n -m x', 'git commit -nm x']) {
+            const [blocked, reason] = _check_command(cmd);
+            expect(blocked).toBe(true);
+            expect(reason).toContain('Let the hooks run');
+        }
+    });
+
+    // Guard integrity: every bypass form this file exists to refuse stays
+    // refused. A segmentation fix that silences the false positive by no
+    // longer scanning would pass the block above and fail here.
+    const BLOCKED: readonly [string, string][] = [
+        ['long flag', 'git commit --no-verify -m x'],
+        ['short flag', 'git commit -n -m x'],
+        ['bundled short flag', 'git commit -nm x'],
+        ['after a separator, attached', 'sed -n 1,5p f; git commit --no-verify -m x'],
+        ['after a separator, spaced', 'echo hi ; git push --no-verify'],
+        ['hooksPath override', 'git config core.hooksPath /dev/null'],
+        ['inside a command substitution', 'echo $(git commit --no-verify -m x)'],
+        // `&` was absent from _SHELL_SEPARATORS entirely, so a backgrounded
+        // predecessor hid the git command even WITH surrounding whitespace.
+        // Measured allowed through the real dispatcher on 2026-08-20.
+        ['after a background operator', 'echo hi & git commit --no-verify -m x'],
+        ['after a bare separator with no predecessor word', '; git commit --no-verify -m x'],
+    ];
+    for (const [label, cmd] of BLOCKED) {
+        it(`still blocks (${label}): ${cmd}`, () => {
+            expect(_check_command(cmd)[0]).toBe(true);
+        });
+    }
+});
