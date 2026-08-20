@@ -13,6 +13,41 @@ execution:
 
 ---
 
+## Outcome — checkpoint closed 2026-08-20, outcome state `narrowed`
+
+**Archived does not mean achieved, and this roadmap is not archived.** The
+registered destination — 40k median standing context — is **not reached and is
+not claimed**. What closed on 2026-08-20 is one blocker checkpoint. Of the nine
+lines: three done, **four still open**, one deferred (`3.1`, the fork), one
+cancelled as a tracking line (`1.2`). Six were open when this run started and
+**no line moved to done** — the run's product is a corrected disposition and four
+preconditions **re-verified against the tree today** rather than inherited from
+an earlier note.
+
+| Phase | Outcome | Where it stands |
+|---|---|---|
+| 0 — rule out double delivery | **transferred** | 0.1 names hardware an agent cannot reach plus a per-machine settings write. Unchanged, stays `[ ]`. |
+| 1 — pull the lever that exists | **narrowed** | 1.1 landed. 1.2's owner closed 2026-08-20 with its machinery `satisfied` **opt-in**; the default flip is transferred to the release maintainer, so the tracking line is discharged here. AC-1 is *not* met — below. |
+| 2 — shrink the structural payload | **transferred** | 2.1 and 2.2 share one unmet sequencing precondition, re-verified today: the `norm:` pin does not exist in schema, script, or any rule. |
+| 3 — runtime carrier or retire the triggers | **narrowed** | 3.0's host premise stays refuted. 3.1's fork stays open, re-dated to 2026-09-17, on a **corrected** ground: an absent producer, not an unfilled window. |
+| 4 — per-turn injection aggregate | **satisfied** | Both steps landed 2026-08-19; AC-4 met and evidenced at the step. |
+
+**AC-1 is narrowed, not met, and the number in circulation is the wrong one.**
+AC-1 asks for the census on a scoped consumer install "measured with the
+exact-BPE path and recorded". What exists is the owning roadmap's Phase-1 exit:
+an **estimated** delta on a *fixture* install
+([`road-to-request-scoped-rule-load.md`](road-to-request-scoped-rule-load.md)
+§ Phase 1 Exit, "est. −50k tok eager"). That roadmap's own step-level done-note
+corrects the headline: *"16 rules ≈ 13.9k tok eager (external '63 ≈ 50k' was a
+naive tag read)"* — a ~3.6× overstatement — while its Outcome table still reads
+"the ~50k lever". The larger figure is therefore **not** repeated here as fact.
+Independently, no consumer install is scoped **by default**, so the population
+AC-1 measures does not yet exist.
+
+**AC-3 forbids a third state, and the third state is what holds.** The fork is
+neither (a) nor (b). That is recorded openly with a date and a named producer
+rather than resolved by picking a side the evidence does not support.
+
 ## 0. The defect, stated first
 
 **The standing context is too large by the repo's own instruments, and the gate
@@ -101,6 +136,10 @@ colleague's report on its own.
       hardware an agent cannot reach, and the remedy is a settings write per
       machine. This is a `/roadmap:next` disqualifier (a blocker whose resolution
       is a human ACTION), recorded here so the next screen does not re-derive it.
+      **Re-verified 2026-08-20 — unchanged, and no council disposition covers
+      it.** The drain-run dispositions transferred several host- and
+      machine-bound items, but none of them is this one, so it is not silently
+      absorbed elsewhere. Stays `[ ]`: an agent cannot read a colleague's machine.
 - **AC-0:** every machine in the team reports under the governed cap on that gate,
   or carries a dated exemption note saying why it does not.
 
@@ -112,6 +151,15 @@ colleague's report on its own.
 > resumed it. This roadmap does not rebuild that; its contribution is the
 > resumption evidence note. Steps 1.1 and 1.2 stay below as a description of what
 > the resumption delivers, not as work to duplicate.
+>
+> **Update 2026-08-20 — the two facts above are now stale, in the good
+> direction.** That roadmap is no longer in `later/` and no longer at 34/36: it
+> is in the active tree and **closed 2026-08-20 at 36/36**, outcome state
+> `narrowed`, with its Phase 4 recorded as a terminal honest null. Its Phase 1
+> ("consumer-scoped rule projection") and Phase 1b ("the lever reaches actual
+> consumer installs") both read **satisfied** — but satisfied as **opt-in**, not
+> as a default flip. That distinction is what discharges 1.2 below; the stale
+> counts are corrected here rather than left to mislead the next screen.
 
 - [x] **1.1** Write the resumption evidence note into that roadmap's park block:
       the resume condition, the date it was satisfied, the artefact that satisfied
@@ -136,10 +184,28 @@ colleague's report on its own.
       cross-metric offset, so without it an un-park is unrecordable and `later/`
       becomes a one-way door), and `lint_roadmap_family_cap` is unaffected — the
       file is a `road-to-request-*` singleton.
-- [ ] **1.2** (Owned by that roadmap, tracked here for the interlock only.) The
+- [-] **1.2** (Owned by that roadmap, tracked here for the interlock only.) The
       machinery is built and tested; only the human gate is unpulled. Consumer
       installs default to workspace-derived scope, `legacy-all` becomes the
       explicit opt-out, and the install prints the delta warn-first for one release.
+      **Cancelled AS A TRACKING LINE 2026-08-20 — and read the next sentence
+      before reading that as a scope drop.** Cancelling this line does **not**
+      cancel the default flip. The flip is *transferred*, and it now has two
+      independent owners of record, neither of them this roadmap. (1) The owning
+      roadmap **closed 2026-08-20** with its scoping machinery `satisfied` and
+      shipped **opt-in**, so the half this line tracked as "built and tested" is
+      done and the half it tracked as "unpulled" is no longer its to pull.
+      (2) The council disposition `default-flip-release-gate` — **B,
+      transferred** — moves "the shipped-default decision and merge action to the
+      maintainer release gate", with the preferred choice recorded as *keep the
+      current default and ship opt-in until the human benchmark passes*, and a
+      re-entry probe: *"merged settings diff plus attached census, or a dated
+      opt-in decision in the release record"*
+      ([`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)).
+      A shipped-default flip is also a Hard-Floor action under
+      `non-destructive-by-default`, so it could never have closed here autonomously
+      regardless of the disposition. There is no interlock left to carry: `[-]`
+      records that this roadmap has nothing to do, not that nobody does.
 - **AC-1:** the census on a scoped consumer install of the default pack set reports
   a materially lower standing total, measured with the exact-BPE path and recorded.
 
@@ -164,6 +230,13 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       `norm`-pinning script exists under `src/scripts/`. Condensing first would
       shrink prose with nothing holding the obligation — precisely the ordering
       this step was written to prevent.
+      **Re-verified 2026-08-20 — precondition still unmet, checked three ways
+      rather than re-read from the note above.** (1) `road-to-cost-parity-1-rule-payload-diet`
+      steps 3.1 *and* 3.2 (the drift lint) are both still `[ ]`. (2) `src/scripts/`
+      contains no script whose name matches `norm`. (3) The field does not exist
+      where it would have to: `src/scripts/schemas/rule.schema.json` declares no
+      `norm` property, and **zero** files in `src/rules/` carry a `norm:`
+      frontmatter key. Stays `[ ]`.
 
   > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
   > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
@@ -223,6 +296,8 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       rather than a checkable field, and `preservation-guard`'s every-passage-stays
       rule cannot distinguish a legitimate move from a quiet softening. Sequence
       it behind 2.1, not beside it.
+      **Re-verified 2026-08-20 alongside 2.1 — same three checks, same verdict.**
+      Stays `[ ]`.
 - **AC-2:** the unconditional-corpus token count falls against the committed
   census bucket; routing matrix green; zero trigger edits in the diff.
 
@@ -258,6 +333,14 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       evidence that justified those two rows), *then* the vocabulary + alias +
       platform-row change, *then* the concern. Until the first exists the rest is
       speculative wiring.
+      **Re-verified 2026-08-20, and PRESERVED per the council disposition.**
+      `EVENT_VOCABULARY` in `src/scripts/hooks/dispatch_hook.ts` still lists ten
+      events and `InstructionsLoaded` is not among them; the only mentions of the
+      name in `src/` are `check_standing_rule_delivery.ts` and `routing_doctor.ts`,
+      both of which document it as *unbound* and print a filesystem-projection
+      caveat in its absence. The disposition's instruction to "preserve Step 3.0's
+      observer" is discharged by leaving this step and its analysis intact —
+      nothing here is deleted or downgraded. Stays `[ ]`.
       **Consequence for the blocker below:** its Recommendation says to land this
       observer first and re-date the fork against it. That recommendation is not
       actionable as written, so the fork stays open on a *different* ground than
@@ -269,6 +352,59 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       **delete the trigger frontmatter from rules instead** — a compile-time field
       nothing consumes is documentation pretending to be mechanism. Blocked on
       `b-rules-efficiency-signal`.
+      <!-- decision 2026-08-20: council disposition C (outcome `narrowed`) applied
+      from agents/evidence/council/drain-blocker-dispositions-a.md:138-140 —
+      "Record the current rules_efficiency window as unfilled, preserve Step 3.0's
+      observer, and re-date the fork to 2026-09-17; do not start the retriever
+      before the registered lexical-index comparison." All four instructions are
+      applied: the window is recorded unfilled (blocker entry below), step 3.0 is
+      preserved verbatim and still [ ], the fork is re-dated to 2026-09-17, and no
+      retriever work starts — the pre-registered comparison against
+      src/scripts/_lib/lexical_index.ts remains the first deliverable of
+      later/road-to-deferred-rule-retriever.
+
+      PREMISE CHECK ON THE RESOLUTION CLAUSE — HOLDS. The clause reads: "the
+      metric reads against its bar and the fork resolves to (a) or (b), OR the
+      window is recorded as unfilled with a new date." The second arm licenses
+      exactly this recording, so this is not a null the instrument was never
+      allowed to return.
+
+      EMITTER CHECK — AND IT CORRECTS THE DISPOSITION'S GROUND. The disposition's
+      Rationale calls the emptiness a "measured absence". It is not: it is an
+      ABSENT PRODUCER. Four checks, all re-run 2026-08-20 on this tree:
+        1. The instrument declines to read it as a value. dispatch_economy_report
+           prints "envelopes with pair=0 · median quota=— · low-quota signal
+           (< 0.2): no data" — "no data", never "0.00". The registered threshold
+           is a median "below 0.2"; a median of nothing cannot be below 0.2, so
+           the clause's FIRST arm is unsatisfiABLE, not merely unsatisfied.
+        2. The schema itself calls null a non-measurement. Both rows in
+           src/agent-src/contexts/execution/orchestration-telemetry.md:67-68 read
+           "`null` = not measured". So the nulls are non-measurements, not
+           measurements of zero.
+        3. The automatic producer cannot ever populate the pair. The concern that
+           fires per dispatch, src/scripts/hooks/orchestration_record_hook.ts,
+           contains ZERO occurrences of `rules_carried` or `rules_used` in any
+           branch of buildRecordInput. Tree-wide, the only assignment sites are
+           the manual CLI reading argv (src/scripts/orchestration_record.ts:146)
+           and the builder's `?? null` default
+           (src/scripts/_lib/orchestration_record.ts:370).
+        4. Nothing ever passes the flags. The only hits for `--rules-carried`
+           outside its own definition are a usage docblock and an archived
+           roadmap noting the flag exists.
+      THE DISCRIMINATOR: dispatch activity was abundant. The audit log holds 579
+      orchestration lines for 2026-08, and `rules_carried` is null on 579 of 579
+      with zero numeric values. Had the emptiness been "nothing happened" there
+      would be no lines, or lines carrying the pair with a low reading. A full
+      month of dispatches with the field absent on every one is a fact about the
+      CODE, not about the sessions.
+      CONSEQUENCE, recorded rather than silently absorbed: by the council's own
+      framework rule 4 ("instrument broken -> B"), this is a TRANSFER, not a
+      measured null. The recording half of C is still correct and still applied,
+      because the clause licenses it and the window genuinely is unfilled. What
+      changes is the trajectory: waiting cannot fill this window, so the
+      2026-09-17 date is a checkpoint re-date and NOT a prediction that data will
+      arrive. The fork's real gate is a producer for the pair — see the blocker's
+      Correction B and its re-entry probe. -->
 - **AC-3:** either (a) ships behind the registered gate with a pre-registered
   adoption metric, or (b) a dated null closes the fork. No third state.
 
@@ -381,7 +517,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   itself progress, per the same discipline the telemetry-count gates use. Do not
   build a retriever before the comparison against `src/scripts/_lib/lexical_index.ts`
   that `later/road-to-deferred-rule-retriever` pre-registered.
-- **Correction 2026-08-19:** the Recommendation below is **not actionable as
+- **Correction A, 2026-08-19:** the Recommendation below is **not actionable as
   written**, and the reason is checkable rather than a judgement — step 3.0's
   observer cannot be landed today because `InstructionsLoaded` is in no event
   vocabulary and no alias table in this tree, and the one module that names it
@@ -401,6 +537,47 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   `triggers:` blocks that no runtime consumer reads on this host — documentation
   presenting itself as mechanism — and the fork stays open indefinitely, which is
   the third state AC-3 explicitly forbids.
+- **Correction B, 2026-08-20 — the window is unfilled because NOTHING PRODUCES
+  THE FIELD, not because no sessions occurred.** Kept alongside Correction A
+  rather than replacing it: A found step 3.0's named filler unavailable, B finds
+  that no *other* filler exists either, so the two together are why this cannot
+  converge by waiting. Evidence, all re-run today and cited at step 3.1's
+  `decision 2026-08-20:` comment: `dispatch_economy_report` prints **`no data`**
+  for `rules_efficiency`, never `0.00`; the telemetry contract states `null` =
+  *not measured* for both fields; `orchestration_record_hook.ts` — the concern
+  that fires per dispatch — contains **zero** occurrences of either field name in
+  any branch; and the audit log holds **579 orchestration lines for 2026-08 with
+  `rules_carried` null on 579 of 579, zero numeric**. Abundant dispatch with the
+  field absent on every line is a property of the code, not of the sessions.
+  **By the disposition framework's own rule 4 ("instrument broken → `B`") this is
+  a TRANSFER, not a measured null**, and it is recorded as one here even though
+  the recorded disposition was `C`. The recording half of `C` still stands and is
+  still applied: the clause licenses it and the window genuinely is unfilled.
+- **Recorded resolution 2026-08-20 (checkpoint only — this blocker stays OPEN).**
+  Council disposition `C`, outcome `narrowed`, from
+  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md).
+  The `rules_efficiency` window is hereby recorded **unfilled**: 0 envelopes
+  carrying the pair, median quota unreadable, low-quota bar (< 0.2) not evaluable.
+  Step 3.0's observer is **preserved** (still `[ ]`, premise unchanged). The fork
+  is **re-dated to 2026-09-17**. No retriever work starts before the
+  pre-registered comparison against `src/scripts/_lib/lexical_index.ts`.
+  **The new date is a checkpoint, not a forecast** — per Correction B nothing in
+  the tree will fill this window by 2026-09-17 or any later date without a
+  producer, so a bare re-date on that day would be the parking-lot failure the
+  framework's rule 1 names. No metric file was edited and no line was appended to
+  fill the window; the emptiness is reported as found.
+- **Re-entry producer + probe (the transfer half, per framework rule 6).**
+  Producer: whatever first writes a numeric `rules_carried`/`rules_used` pair —
+  either the worker thin projection of `road-to-token-economy-dispatch` Phase 3
+  (whose own `projection_quality.status` still reads
+  `armed-awaiting-projection`), or an explicit extension of
+  `orchestration_record_hook.buildRecordInput` to emit the pair. Probe, one
+  command and mechanically decidable: `./scripts-run
+  src/scripts/dispatch_economy_report` reports `envelopes with pair` **> 0** for
+  `rules_efficiency`. Until that reads non-zero, neither fork arm has evidence:
+  (a) has no demand signal, and (b) would delete trigger frontmatter on an
+  absence-of-measurement rather than a measured null — the unbacked-claim failure
+  this repository gates against.
 - **Resolved when:** the metric reads against its bar and the fork resolves to (a)
   or (b), or the window is recorded as unfilled with a new date.
 
