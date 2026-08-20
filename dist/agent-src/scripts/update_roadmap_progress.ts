@@ -44,6 +44,29 @@
  * is a bigger problem than the warning it would remove. `--check` never
  * archives — see `_run_archival_sweep`.
  *
+ * WHY the warning existed at all, since this is the one place a reader of the
+ * flag will look: the sweep's own default is `--changed-only`, so a PR archives
+ * exactly the roadmaps it completed. A roadmap completed by a PR whose sweep did
+ * not run is then complete, on the trunk, and OUTSIDE every later branch's
+ * history — no `--changed-only` sweep finds it again. Measured 2026-08-20: six
+ * such roadmaps, with every regen reprinting the warning at whoever ran it.
+ * `/create-pr` § 1c keeps `--changed-only`; repo-wide reconciliation is this
+ * flag's job and nothing else's.
+ *
+ * This layout is deliberate rather than convenient: the prose homes for it are
+ * both at their ceilings (`roadmap-progress-mechanics.md` sits 122 chars under
+ * the 16,000-char depth ceiling, and `roadmap-management/SKILL.md` tips
+ * `skill_too_large` on any prose block), so the contract lives with the code it
+ * governs. Moving it out means making room first.
+ *
+ * AI council 2026-08-20 (anthropic + openai, blind peer review): both seats
+ * converged on explicit opt-in + `--all` scope + hook archival-free, and both
+ * independently required the `--check` exclusion, the archive-before-render
+ * order, and that a failed sweep must not render. RECORDED DISSENT: one seat
+ * argued for flipping the sweep's own default to `--all` instead. Rejected —
+ * that makes every PR a potential estate-wide cleanup, which is exactly what
+ * `--changed-only` exists to prevent.
+ *
  * --- Parity notes (ADR-200) ---
  *
  * - Python `round()` is banker's rounding (round-half-to-even). Percentages and
