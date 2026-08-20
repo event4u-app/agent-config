@@ -53,6 +53,23 @@ Once a git command appears anywhere in the same shell string, **every later
 `sort -n`, `tail -n` — all of them, in any compound command that also touches
 git. That is most inspection commands an agent writes.
 
+**The same defect has a second face, found while fixing the first, and it is
+the serious one.** The cause is that POSIX shlex leaves a separator attached to
+the preceding word: `git status; sed` tokenises as `['git','status;','sed',…]`,
+so the line never splits into groups. When git comes SECOND, the single group
+starts with something else, `_git_base` returns null — and the git command is
+**never scanned at all**. Measured through the real dispatcher on 2026-08-20:
+
+```
+echo hi; git commit --no-verify -m x    → ALLOWED   (bypass)
+echo hi & git commit --no-verify -m x   → ALLOWED   (bypass: `&` was not in
+                                                     the separator set either)
+echo hi ; git commit --no-verify -m x   → blocked   (spaced form worked)
+```
+
+A guard that a stray missing space disables is not a guard. This phase is
+therefore a security fix with an ergonomic side effect, not the reverse.
+
 Three things make this worth fixing before anything else in this file. It is a
 **false positive on a security guard**, which is the class that trains people to
 look for bypasses. Its message names no alternative, so the reader learns only
@@ -60,18 +77,18 @@ that something is forbidden. And it is cheap: the segmentation logic already
 exists for `&&`, `||`, `;` and `|` — it is simply not applied before the
 git-token scan.
 
-- [ ] **1.1 Pin the defect with a failing test first.** The four probes above,
+- [x] **1.1 Pin the defect with a failing test first.** The four probes above,
       as a test that fails on today's code. A guard fix without a red-first test
       is indistinguishable from a guard weakening.
       verify: the test fails against `HEAD` before the fix and passes after.
 
-- [ ] **1.2 Segment before scanning.** Only the tokens of a segment whose
+- [x] **1.2 Segment before scanning.** Only the tokens of a segment whose
       command word is `git` reach `_is_blocked`. The existing separator set is
       reused rather than a second one written.
       verify: `git status; grep -n foo` is allowed and `git commit --no-verify`
       is still blocked, both in the same test run.
 
-- [ ] **1.3 Prove the guard still guards.** The bypass forms it was built for —
+- [x] **1.3 Prove the guard still guards.** The bypass forms it was built for —
       `--no-verify`, `-n`, bundled short flags, `core.hooksPath`, command
       substitution — each keep a test that fails when the segmentation change is
       reverted to allow-everything. The risk of this phase is a guard that
@@ -79,7 +96,7 @@ git-token scan.
       verify: reverting `_is_blocked` to a permissive stub reds at least one
       test per bypass form.
 
-- [ ] **1.4 Name the alternative in the refusal.** When the guard blocks, the
+- [x] **1.4 Name the alternative in the refusal.** When the guard blocks, the
       message says what to do instead — for the genuine case, and for the
       compound-command case if any survives.
       verify: the refusal text names a concrete alternative, asserted by test.
