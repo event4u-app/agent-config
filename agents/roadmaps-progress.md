@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers in the active tree, **20** need you → `agent-config gates`
 
 ## Overall
 
-**304 / 578 steps done · 53%**
+**305 / 573 steps done · 53%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   53%
@@ -22,6 +22,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 36 | 36 |
+| [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 4 | 4 |
 
 ## Open roadmaps
 
@@ -56,7 +57,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
 | 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 0 | 4 | 0 | 5 | 0 | ██████████ 100% |
 | 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
@@ -1066,70 +1067,12 @@ _1 blocker resolved._
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
-**Follow-up to Subagent value realization** — 3 / 9 done (33%)
+**Follow-up to Subagent value realization** — 4 / 4 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Seed real telemetry | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | Confirm or demote the ADR-117 `auto: on` default | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
-
-<a id="blockers-road-to-subagent-value-realization-followup"></a>
-**Blockers**
-
-- **telemetry-sample-size** (owner: user) — blocks Phase 1 — Seed real telemetry
-  - **Recommendation:** stop treating this as a usage-volume blocker and run the live-host semantics probe instead — does **any** hook slot receive the task-completion notification payload, and does that payload carry the usage fields a background dispatch withholds at `post_tool_use`? Same shape as `background-continuation-probe`, not a code fix. It is the recommended option because it is the only one that can move the exit criterion: the line count is already met at 99, and the missing columns are documented behaviour of the slot, so more usage produces more of the same nulls.
-  - **If you do nothing:** the log keeps growing and Phase 1 stays open forever — `≥ 20 **usable** dispatches` is unreachable at this slot regardless of volume, so the roadmap's last acceptance criterion (re-evaluating the ADR-117 `auto: on` default on real telemetry) never gets the evidence it names, and the default stands unexamined by default rather than by decision.
-  - **What to do:**
-    1. Use the agent with `subagents.enabled: true` under the post-ADR-117
-    default (`subagents.auto: on`) during real work, long enough to
-    accumulate real orchestrated dispatches — the build work is done;
-    only real usage produces this.
-    2. Check the current-month audit log line count:
-    `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
-    3. Once the count reaches ≥ 20, resume this roadmap
-    (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
-    **Measured 2026-08-10 — the count condition is MET and the blocker still
-    stands, because the count was never the hard part.** `2026-08.jsonl` holds
-    **100 lines, 99 of them orchestration** (`2026-07.jsonl` holds 1 — the
-    pipeline-verification line from Step 1), and
-    `orchestration_savings_report` agrees: `dispatches: 99 (total spawns: 101)`.
-    The move is not usage discipline: the `orchestration-record` `post_tool_use`
-    concern now emits the line deterministically per dispatch, replacing the
-    model-carried capture that had reached 1 of 370.
-    What the 99 lines do **not** carry is the whole remaining gap: `token_delta`
-    is `0` and `token_delta_provenance` `estimated` in all 99; `dispatch_tokens`,
-    `wall_clock_ms`-as-measured, `first_pass_success`, `escalated`, `task_class`
-    and `dispatch_mode` are `null` in all 99; `spawn_count` is 1 in 98 of 99, so
-    the corpus never produced a fan-out ≥ 2. That is **documented behaviour, not
-    a defect** — the hook's own header states that `token_delta` has no honest
-    value at its layer (it is a net against a not-delegating baseline that does
-    not exist post-hoc) and that the absolute cost rides `dispatch_tokens`, which
-    the host populates only on a **sync** completion. All 99 were background
-    dispatches, i.e. spawn acks with no usage fields, so the null is correct
-    rather than lossy.
-    **Correction (2026-08-17) — the count moved and two of the field claims are
-    now false, one of them load-bearing.** `2026-08.jsonl` holds **368 lines,
-    367 orchestration** (July still 1). Unchanged and still true: `token_delta`
-    `0` with provenance `estimated` in **367/367**, and `first_pass_success`,
-    `escalated`, `task_class`, `dispatch_mode` `null` in **367/367** — the
-    quality columns really are absent, so the exit criterion below is untouched.
-    Now false: `dispatch_tokens` is **numeric on 40 of 367** (327 null, values
-    from 315 to 194330), and `wall_clock_ms` is numeric on **367/367** (0 to
-    955883), not null. That matters beyond bookkeeping, because the sentence
-    above explains the nulls by "all were background dispatches, and the host
-    populates usage only on a sync completion" — 40 sync completions have since
-    landed, so the absolute-cost half of the argument no longer applies. It does
-    **not** unblock the roadmap: there is still no counterfactual and no quality
-    column, and n=40 carries no family labels. `spawn_count` is **1 in 366 of
-    367** (one `0`, none ≥ 2), so the fan-out finding is unchanged.
-    Consequence for the exit criterion: a hook at `post_tool_use` cannot supply
-    the quality columns for a background dispatch at all. The usage does surface
-    later, on the task-completion notification, so the open question is whether
-    any hook slot sees that payload — a live-host semantics probe of the same
-    shape as `background-continuation-probe`, not a code fix. Until that is
-    answered, `≥ 20 usable dispatches` is unreachable regardless of how many
-    lines accumulate, and raising the line count further will not move it.
-  - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
+| 1 | Seed real telemetry | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 2 | Confirm or demote the ADR-117 `auto: on` default | ✅ done | 0 | 2 | 0 | 4 | 100% |
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
