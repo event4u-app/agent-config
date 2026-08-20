@@ -247,8 +247,11 @@ tasks:
 
   roadmap-progress:
     silent: true
-    desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
-    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts
+    desc: Regenerate agents/roadmaps-progress.md, archiving any completed roadmap
+    # `--archive`: a completed roadmap is moved to agents/roadmaps/archive/ here
+    # rather than reported as a warning nobody acts on. `roadmap-progress-check`
+    # deliberately does NOT pass it — a CI gate must not mutate its own subject.
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --archive
 
   roadmap-progress-check:
     silent: true
