@@ -266,3 +266,42 @@ bypasses the sweep red-flags in CI — the forcing function that makes
 `merge-gated` annotations are archived by the next `/create-pr` like any other
 completed roadmap; the dashboard still surfaces any stranded
 complete-but-unarchived roadmap so it can never hide inside a partial progress bar.
+
+### Reconciling the estate — the regen archives, it does not nag
+
+The PR-gate is branch-scoped by design, and that leaves one hole: a roadmap
+completed by a PR whose sweep did not run (or ran before the last box was
+flipped) is complete, on the trunk, and **outside every later branch's
+history** — so no `--changed-only` sweep will ever find it again. Measured
+2026-08-20: six such roadmaps had accumulated on the trunk while every
+dashboard regen printed `⚠️  Completed roadmaps not yet archived` at whoever
+ran it. A warning that repeats for weeks is not a gate, it is a habit.
+
+So the repo-wide regen reconciles instead of reporting:
+`./agent-config roadmap:progress` and `task roadmap-progress` pass
+`--archive`, which runs the sweep with `--all` (every complete roadmap, not
+just this branch's) **before** rendering, so the dashboard describes the tree
+the sweep leaves behind. What survives the sweep is complete but not
+archivable — an open blocker outlives its steps — and is still named on
+stderr, with the blocker id.
+
+Three boundaries, each load-bearing:
+
+- **`--check` never archives.** `--check` and `--archive` are mutually
+  exclusive (exit 2). A gate that mutates the tree it is checking cannot be
+  trusted by CI, so `roadmap:progress-check` keeps its warn-and-fail contract.
+- **The PostToolUse hook never archives.** It re-runs the write path once per
+  turn on every roadmap edit, with no flags — a hook that silently `git mv`s
+  files and rewrites references mid-work is a worse problem than the line it
+  would remove. `--archive` is opt-in for exactly this reason.
+- **A failed sweep blocks the render.** Half a move plus a fresh dashboard
+  presents partially-updated state as current, so the regen reports the
+  failure and writes nothing (exit 1).
+
+`/create-pr` § 1c keeps its `--changed-only` default: a PR should archive the
+roadmaps it completed and no others. The repo-wide reconciliation is a
+deliberate, separately-invoked act, not a side effect of opening a PR.
+(AI council 2026-08-20: both seats converged on "explicit opt-in, `--all`
+scope, hook archival-free"; one seat argued for flipping the sweep's own
+default to `--all` instead — rejected here because it would make every PR a
+potential estate-wide cleanup.)

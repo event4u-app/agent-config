@@ -29,7 +29,7 @@ ANY ROADMAP TOUCH → REGENERATE THE DASHBOARD, SAME RESPONSE.
 NO EXCEPTIONS. NO "I'LL DO IT AT THE END". NO BATCHING ACROSS TURNS.
 ```
 
-Roadmap touch = create / rename / delete / move file, add/rename/remove a phase, OR flip any checkbox (`[ ]` ↔ `[x]` ↔ `[~]` ↔ `[-]`). Regen command: `./agent-config roadmap:progress`. Archive (`git mv` → `archive/`) the moment `count_open == 0` — same response.
+Roadmap touch = create / rename / delete / move file, add/rename/remove a phase, OR flip any checkbox (`[ ]` ↔ `[x]` ↔ `[~]` ↔ `[-]`). Regen command: `./agent-config roadmap:progress` — it passes `--archive`, so a roadmap at `count_open == 0` with no deferred item and no open blocker is `git mv`'d to `archive/` by the same run, not reported for someone to do later. `--check` never archives, and the PostToolUse hook never archives ([`roadmap-progress-mechanics § Reconciling the estate`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md)).
 
 ## Iron Law 2 — real-time checkbox cadence (autonomous execution)
 
