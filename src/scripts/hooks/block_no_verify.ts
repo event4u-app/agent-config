@@ -38,7 +38,9 @@ import { substitutionPayloads } from './block_unauthorized_git.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
-const _SHELL_SEPARATORS: ReadonlySet<string> = new Set(['&&', '||', ';', '|']);
+const _SHELL_SEPARATORS: ReadonlySet<string> = new Set(['&&', '||', ';', '|', '&']);
+/** Characters that begin a shell separator, for `shlexSplit(s, true)`. */
+const _OPERATOR_CHARS = ';|&';
 const _NO_VERIFY_FLAGS: ReadonlySet<string> = new Set(['--no-verify']);
 const _NO_VERIFY_SHORT: ReadonlySet<string> = new Set(['-n']);
 const _HOOKS_PATH_RE = /^core\.hooksPath\s*=/i;
@@ -78,14 +80,36 @@ type JsonObject = { [k: string]: JsonValue };
  * Faithful port of `shlex.split(s, comments=False, posix=True)` for the
  * subset block_no_verify needs: whitespace tokenisation, single + double
  * quotes, backslash escaping (POSIX), and a `ValueError("No closing
- * quotation")` on an unterminated quote. `&&` / `|` / `;` are ordinary word
- * characters here (no `punctuation_chars`), so they survive as embedded
- * tokens exactly as CPython's shlex returns them — the separator split below
- * matches them as whole tokens.
+ * quotation")` on an unterminated quote.
+ *
+ * `splitOperators` (default OFF, so the port stays faithful for
+ * `rtk_wrap_hook`, its other caller) additionally emits an UNQUOTED shell
+ * separator as its own token, maximal-munch for `&&` and `||`.
+ *
+ * WHY IT EXISTS. Without it, POSIX shlex leaves a separator attached to the
+ * preceding word — `git status; sed -n 1,5p f` tokenises as
+ * `['git','status;','sed','-n',...]`, one token, no separator. This docstring
+ * previously asserted the opposite ("they survive as embedded tokens ... the
+ * separator split below matches them as whole tokens"); that holds only when
+ * the separator is surrounded by whitespace, and the guard's segmentation is
+ * built on it. Measured 2026-08-20, the mistake had TWO faces and the second
+ * is the serious one:
+ *
+ *   git status; sed -n 1,5p f          → REFUSED  (false positive: the `-n`
+ *                                        of `sed` is read as git's)
+ *   echo hi; git commit --no-verify    → ALLOWED  (BYPASS: the group starts
+ *                                        with `echo`, so `_git_base` returns
+ *                                        null and the git command is never
+ *                                        scanned at all)
+ *
+ * Quote- and escape-safe by construction: the operator check lives in the
+ * unquoted word path only, so `git commit -m "a;b"` and `git commit -m a\;b`
+ * keep their semicolon inside one token and cannot be split into a group that
+ * no longer starts with `git`.
  */
 class ShlexError extends Error {}
 
-function shlexSplit(s: string): string[] {
+function shlexSplit(s: string, splitOperators = false): string[] {
     const whitespace = ' \t\r\n\f\v';
     const quotes = '\'"';
     const escape = '\\';
@@ -157,6 +181,25 @@ function shlexSplit(s: string): string[] {
             if (!closed) {
                 throw new ShlexError('No closing quotation');
             }
+            continue;
+        }
+        if (splitOperators && _OPERATOR_CHARS.includes(c)) {
+            // Unquoted separator: close the word in progress, then emit the
+            // operator as its own token. Maximal munch so `&&` and `||` stay
+            // one token rather than two, matching _SHELL_SEPARATORS.
+            if (token !== null) {
+                tokens.push(token);
+                token = null;
+            }
+            const nxt = i + 1 < n ? (s[i + 1] as string) : null;
+            if (nxt === c && (c === '&' || c === '|')) {
+                tokens.push(c + c);
+                i += 2;
+            } else {
+                tokens.push(c);
+                i += 1;
+            }
+            state = 'ws';
             continue;
         }
         if (escape.includes(c)) {
@@ -293,19 +336,22 @@ function _is_blocked(git_tokens: string[]): [boolean, string] {
     while (i < git_tokens.length) {
         const tok = git_tokens[i] as string;
         if (_NO_VERIFY_FLAGS.has(tok)) {
-            return [true, `'${tok}' bypasses git hooks (git-history-discipline)`];
+            return [true, `'${tok}' bypasses git hooks (git-history-discipline).`
+                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.'];
         }
         if (_NO_VERIFY_SHORT.has(tok)) {
             return [
                 true,
-                `'${tok}' is short for --no-verify and bypasses git hooks (git-history-discipline)`,
+                `'${tok}' is short for --no-verify and bypasses git hooks (git-history-discipline).`
+                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.',
             ];
         }
         // Short flag bundles containing 'n': -nm, -mn, etc.
         if (/^-[a-zA-Z]*n[a-zA-Z]*$/.test(tok) && !tok.startsWith('--')) {
             return [
                 true,
-                `'${tok}' contains -n (--no-verify) and bypasses git hooks (git-history-discipline)`,
+                `'${tok}' contains -n (--no-verify) and bypasses git hooks (git-history-discipline).`
+                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.',
             ];
         }
         if (tok === '-c') {
@@ -492,7 +538,12 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
     let tokens: string[];
     try {
-        tokens = shlexSplit(stripped);
+        // splitOperators: an unquoted `;` / `&&` / `||` / `|` / `&` becomes its
+        // own token, so _split_subcommands can see it. Without it a separator
+        // attached to the preceding word (`status;`) kept the whole line in one
+        // group — refusing `git status; sed -n 1,5p f` and, in the other
+        // direction, never scanning `echo hi; git commit --no-verify` at all.
+        tokens = shlexSplit(stripped, true);
     } catch (e) {
         if (e instanceof ShlexError) {
             // Tested against the string that actually failed to parse. Round 7

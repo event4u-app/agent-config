@@ -1,5 +1,5 @@
 ---
-complexity: small
+complexity: lightweight
 status: later
 ---
 
