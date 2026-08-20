@@ -239,6 +239,15 @@ one.
   the proof of reproducibility; the removal itself is a bulk deletion of
   committed evidence and is not an agent's call.
 - **Resolved when:** the maintainer records yes with a tier boundary, or no.
+  → Satisfied by a recorded **no**. One qualification the field itself asks
+  for and does not get: the decider was the AI council under delegated
+  authority for this drain run, not the maintainer in person. The field says
+  "the maintainer records", so the substitution is named rather than glossed.
+  It is the weaker of the two on the axis the field cared about — an agent may
+  not delete committed evidence — and the decision taken was the one that
+  deletes nothing, so the delegation cannot have licensed the act the blocker
+  was guarding against. Had the answer been (b), this substitution would not
+  have been sufficient.
 - **Blocks:** step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2
   proceed either way.
 - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the
