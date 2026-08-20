@@ -6,7 +6,7 @@ complexity: lightweight
 
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > stub. Created 2026-08-20 when
-> [`road-to-user-out-of-the-loop.md`](../road-to-user-out-of-the-loop.md) was
+> [`road-to-user-out-of-the-loop.md`](../archive/road-to-user-out-of-the-loop.md) was
 > drained. One item in that roadmap edits a **locked kernel rule**, which
 > carries an own-PR plus soak guarantee no autonomous run can self-authorize,
 > and which the `block-kernel-rule-writes` PreToolUse guard refuses at

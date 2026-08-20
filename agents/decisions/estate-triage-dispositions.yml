@@ -211,7 +211,7 @@ batches:
           separate field on purpose, so the resume line stays a single conjunct.
         probe_verdict_at_parking: undecidable
 
-      - file: agents/roadmaps/road-to-gate-autonomy.md
+      - file: agents/roadmaps/archive/road-to-gate-autonomy.md
         verdict: DECISION-SHEET
         moved_to: null
         reason: >-

@@ -1,6 +1,6 @@
 {
     "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "ffa75c5ae",
+    "measured_at_commit": "05eeb5ca3",
     "tokens_exact": true,
     "ceilings": {
         "active-remediation": 1601,
@@ -37,7 +37,7 @@
         "provider-lifecycle-discipline": 472,
         "reviewer-awareness": 131,
         "roadmap-ci-steps-policy": 564,
-        "roadmap-progress-sync": 2411,
+        "roadmap-progress-sync": 2479,
         "rule-type-governance": 87,
         "skill-improvement-trigger": 81,
         "skill-quality": 78,
@@ -64,6 +64,13 @@
         },
         {
             "date": "2026-08-20",
+            "rule": "roadmap-progress-sync",
+            "from": 2117,
+            "to": 2185,
+            "reason": "One sentence in Iron Law 1, +68 tokens, and it is obligation surface rather than explanation: `roadmap:progress` now passes `--archive`, so the law's operational meaning changed \u2014 a complete roadmap is moved by the same run instead of reported to a human, and the two exclusions a reader must know before trusting that (`--check` never archives, the PostToolUse hook never archives) are exactly the part that cannot be deferred to a pointer. The prose was NOT moved to docs/guidelines/agent-infra/roadmap-progress-mechanics.md, which is where this rule's migration note sends its mechanics, because that file has roughly a hundred characters of headroom under the 16,000-char depth ceiling and check_depth_budget is shrink-only with four files already over it \u2014 a FIFTH over-ceiling file reds, so moving 400 characters there would have traded this gate for that one. The full contract, the council record and its recorded dissent live with the code in src/agent-src/scripts/archival_sweep.ts, which is the third home and the one with room."
+        },
+        {
+            "date": "2026-08-20",
             "rule": "artifact-drafting-protocol",
             "from": 611,
             "to": 680,
@@ -72,9 +79,9 @@
         {
             "date": "2026-08-20",
             "rule": "roadmap-progress-sync",
-            "from": 2117,
-            "to": 2411,
-            "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
+            "from": 2185,
+            "to": 2479,
+            "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md. RE-BASED on merge with origin/main, 2026-08-20: this entry was authored against a base of 2117 and raised to 2411. main had independently raised the same ceiling 2117 -> 2185 for its own reason, so the merged tree measures 2479 and the honest arithmetic for THIS raise is 2185 -> 2479 -- the same +294 for the same subsection, re-based rather than re-argued. Recorded rather than silently regenerated because the gate's own failure text names a history-versus-ceilings disagreement as the signature of a hand-edited count, and a merge that quietly adopted one side's numbers would produce exactly that signature with nothing saying why."
         }
     ]
 }

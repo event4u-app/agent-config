@@ -6,7 +6,7 @@ complexity: lightweight
 
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > stub. Created 2026-08-20 when
-> [`road-to-user-out-of-the-loop.md`](../road-to-user-out-of-the-loop.md) was
+> [`road-to-user-out-of-the-loop.md`](../archive/road-to-user-out-of-the-loop.md) was
 > drained. The parent's **mechanics** for multi-roadmap execution landed; its
 > four **entry points** did not, and one of them is gated on observations that
 > only those entry points can produce. Framework of record:
