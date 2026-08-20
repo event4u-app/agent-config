@@ -6,10 +6,10 @@
 
 ## Overall
 
-**302 / 578 steps done · 52%**
+**304 / 578 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## ✅ Completed — pending archival
@@ -21,6 +21,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
+| [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 36 | 36 |
 
 ## Open roadmaps
 
@@ -45,7 +46,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
 | 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 0 | 12 | 0 | 5 | 0 | ██████████ 100% |
-| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 0 | 36 | 0 | 1 | 0 | ██████████ 100% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -777,7 +778,7 @@ _2 blockers resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 34 / 36 done (94%)
+**Road to request-scoped rule load — ship only what the request needs** — 36 / 36 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -786,8 +787,8 @@ _2 blockers resolved._
 | 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 1 | 12 | 0 | 1 | 92% |
+| 4 | EXECUTED 2026-08-20: rules-as-skills falsification probe (Claude Code) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | ✅ done | 0 | 13 | 0 | 1 | 100% |
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
