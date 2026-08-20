@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 25,
     "later_roadmaps": 52,
-    "open_blockers": 68
+    "open_blockers": 64
   },
   "baseline_history": [
     {
@@ -209,6 +209,48 @@
       "later_roadmaps": 52,
       "open_blockers": 68,
       "why": "open_blockers 70 -> 68: the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy resolved on the autonomous drain run, both with outcome state TRANSFERRED rather than discharged. required-check-set-change and merge-queue-enablement moved to agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md under the AI council disposition B (2/2, anthropic + openai), whose categorical Rule 3 assigns every repository-administration change to a human: such work may only be transferred, never recorded as decided-and-done.\n\nRead this walk-down honestly. Two blockers left the ratchet's numerator and NOTHING changed in the repository -- ruleset 17749383 still requires exactly one check (Sync + Generate Tools Consistency), carries no merge_queue entry, and merge_group still appears zero times across .github/, all three read live on 2026-08-20. The metric counts open blocker ENTRIES, so a transfer to a stub lowers it by construction; the stub carries each original Resolved-when criterion verbatim, the complete list of dependent steps moved, and a named re-entry producer with a probe pinned to those three readings, so the movement stays detectable rather than dissolving into the count.\n\nactive_roadmaps unchanged at 32 and later_roadmaps unchanged at 52 is deliberate and is what separates this from a disposal: the source roadmap reached 18/18 with count_deferred 0 and was NOT archived, because archiving was out of scope for the run that closed it. It stays in the active tree, which is why roadmap:progress-check exits 1 on it and why the active count did not move."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "active_roadmaps 32 -> 26: six completed roadmaps that had been sitting unarchived on the trunk were archived by the regen that now does it. They were complete (open==0, deferred==0, no open blocker) and OUTSIDE every later branch's history, so the branch-scoped `--changed-only` PR-gate could never find them again -- each dashboard regen just reprinted the warning. `agent-config roadmap:progress` and `task roadmap-progress` now pass `--archive` and run the sweep with `--all` before rendering.\n\nRead this walk-down for what it is: a bookkeeping correction, not a drawdown. No work was terminated and no scope was cut -- these six were already finished, and the number was wrong by six for as long as the warning went unactioned. The honest drawdown signal is unchanged by it."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "WALK DOWN on open_blockers only, 70 -> 69, earned in the change that closed road-to-estate-drawdown's b-consolidated-decision-sheet. The consolidated decision sheet was answered in full (option (a), AI council) and that closed exactly ONE blocker, which is the finding rather than a disappointment: of the 21 user-owned blockers on the sheet, 12 are dispositioned transferred because a signature, a repository, a host session, a human rating or an authority grant cannot be produced by recording an answer, and the two agent-executable classes (0 and 1) hold zero blockers between them. Active and later/ are unchanged at 32/52 -- no roadmap was added, archived or parked, so one_in_one_out has nothing to offset. Walked here rather than left as headroom because a tightening that is not re-registered becomes a ceiling nobody is held to, and this gate fails rather than warns on that state by design."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION, not a third walk-down. The two entries above are independent walk-downs of different work that landed on the same day: 70 -> 68 for the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy, and 70 -> 69 for road-to-estate-drawdown's b-consolidated-decision-sheet. Both are real and neither corrects the other, so both rows are kept and the baseline is the composition: 70 - 2 - 1 = 67, which is what check_estate_count measures on the merged tree. Recorded because a reader meeting rows that say 68 and 69 above a baseline of 67 would otherwise read a raise. Taking either side of the merge conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION on the active dimension, mirroring the open_blockers reconciliation directly above. Three independent walk-downs landed the same day and none corrects another: active 32 -> 26 (six completed roadmaps archived by the regen that now archives instead of warning), and the two blocker walk-downs whose composition the entry above records as 67. All rows are kept and the baseline is the composition, 26 / 52 / 67, which is what check_estate_count measures on the merged tree.\n\nStated plainly because a reader meeting a row that says 68 above a baseline of 67 would otherwise read a raise: my own row's open_blockers figure was correct when it was written and was superseded by the merge, not by a change of mine. Taking either side of the conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 65,
+      "why": "WALKED DOWN by 1 active and 2 blockers: road-to-gate-autonomy reached zero open steps and archived, and the two blockers it carried open \u2014 b-gate-budget-preauth on option (a) and b-delegate-gate-maintainer-profile on option (b), both against the council record \u2014 moved to RESOLVED in this change. Its third blocker, b-estate-prose-pass-from-1-3, was already resolved on 2026-08-17 and is not part of the delta. later_roadmaps is UNCHANGED at 52, which is the check that says this is a closure and not a park: nothing was relocated to buy the number, and the one item the roadmap could not finish went to a STUB with its own named probe (stubs/road-to-gate-preauth-authorization.md) rather than to later/, so the open work is still counted somewhere a reader can find it. The archive move was performed by `task roadmap-progress` itself rather than by hand \u2014 this is the first walk-down taken under the --archive default that PR #1493 put on the regen, so the number and the file move come from the same run."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
     }
   ],
   "target": {

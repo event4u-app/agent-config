@@ -441,6 +441,113 @@ describe('update_roadmap_progress — intent', () => {
         expect(result.stderr).toContain('road-to-complete.md');
     });
 
+    // --- `--archive`: act instead of warning -----------------------------
+    //
+    // The warning above is the DEFAULT, and the reason it stays the default is
+    // the PostToolUse hook: it re-runs this write path once per turn on every
+    // roadmap edit, and a hook that silently `git mv`s files mid-work is worse
+    // than a line nobody reads. `--archive` is the opt-in the two explicit call
+    // sites (`task roadmap-progress`, `agent-config roadmap:progress`) pass.
+
+    it('--archive: a complete roadmap is moved to archive/ and reported, not warned about', () => {
+        mkRoadmap('road-to-complete.md', ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n'));
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        expect(
+            fs.existsSync(path.join(roadmaps, 'road-to-complete.md')),
+            'left the active tree',
+        ).toBe(false);
+        expect(
+            fs.existsSync(path.join(roadmaps, 'archive', 'road-to-complete.md')),
+            'landed in archive/',
+        ).toBe(true);
+        expect(result.stdout, 'reports the move').toContain('road-to-complete.md');
+        expect(result.stderr, 'no warning left to print').not.toContain(
+            'Completed roadmaps not yet archived',
+        );
+    });
+
+    it('--archive: the dashboard describes the tree AFTER the sweep', () => {
+        mkRoadmap('road-to-complete.md', ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n'));
+        mkRoadmap(
+            'road-to-active.md',
+            ['# Active', '', '## Phase 1 — Go', '- [x] done', '- [ ] todo', ''].join('\n'),
+        );
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        const dashboard = fs.readFileSync(path.join(root, DASH), 'utf-8');
+        expect(dashboard).toContain('road-to-active.md');
+        // Archived roadmaps are excluded from the dashboard — if the render ran
+        // before the sweep this row would still be here.
+        expect(dashboard).not.toContain('road-to-complete.md');
+        expect(dashboard).toContain('1 open roadmap');
+    });
+
+    it('--archive: an open roadmap is never touched', () => {
+        mkRoadmap(
+            'road-to-active.md',
+            ['# Active', '', '## Phase 1 — Go', '- [x] done', '- [ ] todo', ''].join('\n'),
+        );
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        expect(fs.existsSync(path.join(roadmaps, 'road-to-active.md'))).toBe(true);
+        expect(fs.existsSync(path.join(roadmaps, 'archive', 'road-to-active.md'))).toBe(false);
+    });
+
+    it('--archive: a deferred `[~]` item blocks the archive (Iron Law 3)', () => {
+        mkRoadmap(
+            'road-to-deferred.md',
+            ['# Deferred', '', '## Phase 1 — Wait', '- [x] done', '- [~] later', ''].join('\n'),
+        );
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        expect(fs.existsSync(path.join(roadmaps, 'road-to-deferred.md')), 'stays put').toBe(true);
+        expect(result.stderr).toContain('Iron Law 3');
+    });
+
+    it('--archive: a complete roadmap with an OPEN blocker stays put and is still reported', () => {
+        mkRoadmap(
+            'road-to-blocked.md',
+            [
+                '# Blocked',
+                '',
+                '## Phase 1 — All',
+                '- [x] all done',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: needs-a-decision',
+                '- **Status:** open',
+                '- **Owner:** user',
+                '- **Blocks:** Phase 1',
+                '- **What to do:**',
+                '    1. Decide.',
+                '- **Resolved when:** decided',
+                '',
+            ].join('\n'),
+        );
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        expect(fs.existsSync(path.join(roadmaps, 'road-to-blocked.md')), 'stays put').toBe(true);
+        // The sweep says why, and the dashboard still names it as unarchived.
+        expect(result.stderr).toContain('blocker(s) still open');
+        expect(result.stderr).toContain('Completed roadmaps not yet archived');
+    });
+
+    it('--check --archive → exit 2: a gate must not mutate its own subject', () => {
+        const result = runTs(['--repo-root', root, '--check', '--archive'], tmp);
+        expect(result.status, 'exit').toBe(2);
+        expect(result.stderr).toContain('not allowed with --check');
+    });
+
+    it('--no-archive after --archive wins: the roadmap is only warned about', () => {
+        mkRoadmap('road-to-complete.md', ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n'));
+        const result = runTs(['--repo-root', root, '--archive', '--no-archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
+        expect(fs.existsSync(path.join(roadmaps, 'road-to-complete.md'))).toBe(true);
+        expect(result.stderr).toContain('Completed roadmaps not yet archived');
+    });
+
     it('--check: stale (no dashboard yet) + complete + deferred → exit 1 with the markers', () => {
         mkRoadmap('road-to-complete.md', ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n'));
         mkRoadmap(
@@ -491,7 +598,8 @@ describe('update_roadmap_progress — intent', () => {
         const ts = runTs(['--bogus'], tmp);
         expect(ts.status, 'exit').toBe(2);
         expect(ts.stderr.split('\n')[0]).toBe(
-            'usage: update_roadmap_progress.py [-h] [--check] [--repo-root REPO_ROOT]',
+            'usage: update_roadmap_progress.py [-h] [--check] [--archive | --no-archive] ' +
+                '[--repo-root REPO_ROOT]',
         );
         expect(ts.stderr).toContain('unrecognized arguments: --bogus');
     });

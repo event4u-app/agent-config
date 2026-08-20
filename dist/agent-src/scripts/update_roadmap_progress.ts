@@ -32,7 +32,11 @@
  *
  * Invocation (from project root):
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts              # rewrite
+ *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --archive    # rewrite + archive completed
  *   node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check      # CI: exit 1 if stale
+ *
+ * `--archive` is opt-in and `--check` refuses it; the full contract, the
+ * council record and the sweep spawner live in `archival_sweep.ts`.
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -59,6 +63,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { run_archival_sweep } from './archival_sweep.js';
 import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1209,16 +1214,18 @@ class ArgparseExit extends Error {
 const _PROG = 'update_roadmap_progress.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--check] [--repo-root REPO_ROOT]\n`;
+    return `usage: ${_PROG} [-h] [--check] [--archive | --no-archive] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
     check: boolean;
+    archive: boolean;
     repo_root: string;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
+    let archive = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -1234,6 +1241,12 @@ function _parseArgs(argv: readonly string[]): Args {
         } else if (tok === '--check') {
             check = true;
             i += 1;
+        } else if (tok === '--archive') {
+            archive = true;
+            i += 1;
+        } else if (tok === '--no-archive') {
+            archive = false;
+            i += 1;
         } else if (tok === '--repo-root') {
             const val = argv[i + 1];
             if (val === undefined) {
@@ -1248,7 +1261,13 @@ function _parseArgs(argv: readonly string[]): Args {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { check, repo_root };
+    if (check && archive) {
+        // A gate that mutates the tree it is checking cannot be trusted by CI
+        // (council 2026-08-20, both seats). Refuse the combination outright
+        // rather than silently letting one win.
+        emitError('argument --archive: not allowed with --check');
+    }
+    return { check, archive, repo_root };
 }
 
 /**
@@ -1289,6 +1308,29 @@ function main(argv?: readonly string[]): number {
         }
         process.stdout.write(`ℹ️  No roadmaps directory at ${roadmap_root} — nothing to do.\n`);
         return 0;
+    }
+    // Archive before rendering, so the dashboard describes the tree the sweep
+    // leaves behind rather than the one it found. `--check` never archives: a
+    // gate that mutates the tree it is checking cannot be trusted by CI.
+    let sweep_out = '';
+    if (!args.check && args.archive && unarchived_complete(collect(roadmap_root)).length > 0) {
+        const swept = run_archival_sweep(repo_root);
+        sweep_out = swept.stdout;
+        if (swept.stderr) {
+            process.stderr.write(swept.stderr);
+        }
+        if (!swept.ok) {
+            // A half-finished sweep leaves the tree in a shape the dashboard
+            // would describe as if it were intentional. Report and stop before
+            // writing (council 2026-08-20: "archival failures must prevent
+            // dashboard rendering so partially updated state is not presented
+            // as current").
+            process.stderr.write(
+                '❌  The archival sweep failed — dashboard NOT regenerated. ' +
+                    'Fix the tree, then re-run.\n',
+            );
+            return 1;
+        }
     }
     const roadmaps = collect(roadmap_root);
     const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
@@ -1362,7 +1404,13 @@ function main(argv?: readonly string[]): number {
             `${roadmaps.length} roadmap(s) · ` +
             `${roadmaps.reduce((s, r) => s + r.done, 0)}/${roadmaps.reduce((s, r) => s + r.total_active, 0)} steps done.\n`,
     );
+    if (sweep_out) {
+        process.stdout.write(sweep_out);
+    }
     if (complete.length) {
+        // Whatever survived the sweep is complete but NOT archivable — the
+        // sweep already said why on stderr (an open blocker outlives its
+        // steps). Without `--archive` this is every complete roadmap.
         process.stderr.write(
             '⚠️   Completed roadmaps not yet archived — move to ' +
                 '`agents/roadmaps/archive/`:\n',
