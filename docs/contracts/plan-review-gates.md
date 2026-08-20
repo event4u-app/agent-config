@@ -594,7 +594,14 @@ A plan diff is **substantial** when at least one of:
    removed, or renamed;
 2. deliverable checkbox lines (`- [ ]` / `- [x]` / `- [~]` / `- [-]`) are
    added or removed (count change, not state change);
-3. content inside the `## Acceptance Criteria` section changes.
+3. content inside the `## Acceptance criteria` section changes. The heading is
+   matched **case-insensitively and without an end anchor**, the same way § 4's
+   dispatcher reads it — one shared predicate, `src/scripts/_lib/ac_heading.ts`.
+   Corrected 2026-08-20: the R1 validator carried its own case-sensitive,
+   end-anchored copy, so for 8 of the 32 ready roadmaps it hashed the empty
+   string and no acceptance-criteria edit could read as substantial. The gate
+   still exited 0 throughout, which is why a third copy of one regex is recorded
+   here as a contract fact rather than left to each call site.
 
 **Never substantial:** checkbox state flips (`[ ]`→`[x]` etc.), typo /
 prose-only edits outside the blocks above, dashboard regen, archival

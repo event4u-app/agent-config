@@ -192,6 +192,15 @@ Recorded here so nobody re-derives it from the findings files.
   1. Pick one: a private repository (name it), or an ingest endpoint (name where it would run).
   2. For the repository option, create it and record its identifier in the org pack settings — no public repository, and no repository this package's CI can reach.
   3. For the endpoint option, name the runtime and who operates it; the operational burden is the deciding factor, not the code.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. The
+  rendered default (the private repository) is the conservative choice and is recorded
+  as the PREFERRED CHOICE, but *creating* that repository is repository creation — the
+  first item in Rule 3's categorical list
+  ([drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)),
+  so it takes `B`, never `D`. Batch A carries the three-point check verbatim: original
+  criterion, Phase 2 sink stand-up and all sink-dependent steps moved, re-entry producer
+  the org repository administrator, probe a private package-CI-inaccessible identifier
+  resolving in org-pack settings.
 - **Resolved when:** the sink and its location are named, and the identifier exists in the org pack rather than in this repository.
 
 ### blocker: dpo-signoff
@@ -207,6 +216,16 @@ Recorded here so nobody re-derives it from the findings files.
   1. Take the Class-A field list from the Phase 1 step and the disclosure line from Phase 3.
   2. Submit both through the internal data-protection review, noting explicitly that no project content, path, identifier, or prompt text is transmitted in that class.
   3. Record the written outcome; the agent can draft the submission text on request.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. A
+  written internal data-protection signature is categorically external, so Rule 3 in
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  assigns it `B` and forbids the parent recording the action as done. The rendered
+  default — run the review over exactly two artefacts rather than the whole roadmap —
+  narrows the ASK and stands as the preferred choice inside the transfer; it does not
+  supply the signature. Batch A carries the three-point check verbatim: original
+  criterion, Phase 3 org-wide enablement and every downstream rollout step moved,
+  re-entry producer the named internal DPO reviewer with the ADR link as the probe.
+  Nothing here lowers the privacy floor: the sign-off is still required.
 - **Resolved when:** a written internal sign-off exists and is referenced from the ADR.
 
 ## Risk Register
