@@ -252,6 +252,13 @@ function _stripChars(s: string, chars: string): string {
 // in-repo consumers import it from `condense.js`.
 export { rule_in_scope } from '../install/ruleInScope.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
+import { fingerprintLayers, hostLayerInputs } from '../install/hostLayerFingerprint.js';
+import {
+    isExclusivelyPackageOnly,
+    partitionVerdict,
+    type PartitionVerdict,
+} from '../install/partitionEligibility.js';
+import * as installed_lock from './_lib/installed_lock.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
 const _DEFAULT_PROJECT_ROOT = path.resolve(_HERE, '..', '..');
@@ -1103,6 +1110,78 @@ function _is_manual_rule(rule_path: string): boolean {
     return false;
 }
 
+/**
+ * Per-process partition verdict. Memoised because `_scoped_rule_basenames` has
+ * three call sites in this file and the fingerprint costs ~100 ms; recomputing
+ * it per call would triple that for an answer that cannot change mid-run.
+ */
+let _PARTITION_VERDICT: PartitionVerdict | null = null;
+
+/**
+ * Test seam — drop the memoised verdict so a single process can exercise both
+ * delivery modes. Without it a test file could only ever observe whichever mode
+ * its first call happened to resolve, which is the shape of a test that cannot
+ * go red for the branch it claims to cover.
+ */
+export function _resetPartitionVerdictForTest(): void {
+    _PARTITION_VERDICT = null;
+}
+
+/**
+ * Select the delivery mode for this generation, and say so once.
+ *
+ * Both council seats (2026-08-20, 2/2) required that generation PRINT the mode
+ * it selected rather than partition silently — a withheld artefact that nobody
+ * announced is exactly the silent under-governance the partition exists to
+ * remove. The line is emitted on the first resolution only.
+ *
+ * The fingerprint compares the host layer against **what the installer recorded
+ * when it wrote that layer**, not against a re-derivation from source. That
+ * avoids guessing the installer's byte representation — a mismatch there would
+ * make the partition permanently unreachable rather than merely inactive — and
+ * it is the property the partition actually needs: the omitted artefacts are
+ * still present, in the form this version's installer left them.
+ *
+ * **Known residual, recorded rather than smoothed over:** an installer that
+ * crashes mid-write and still reaches the lockfile would fingerprint its own
+ * partial layer, and that fingerprint would then verify. The mitigation is
+ * ordering — the lockfile is written last, after the layers — which narrows the
+ * window without closing it. A per-artefact manifest would close it and is not
+ * built here.
+ */
+function _resolve_partition_verdict(): PartitionVerdict {
+    if (_PARTITION_VERDICT !== null) {
+        return _PARTITION_VERDICT;
+    }
+    const user_home = process.env['HOME'] ?? os.homedir();
+    const layers = hostLayerInputs(user_home);
+    const present = layers.some((l) => _isDir(l.root));
+    let lock: installed_lock.LockfileData | null = null;
+    try {
+        lock = installed_lock.read_lockfile();
+    } catch {
+        lock = null; // unreadable record → fail safe below
+    }
+    const verdict = partitionVerdict({
+        projectVersion: installed_lock.current_package_version(MODULE_STATE.PROJECT_ROOT),
+        lockfile: lock,
+        hostLayerPresent: present,
+        expectedFingerprint: () => fingerprintLayers(layers),
+    });
+    _PARTITION_VERDICT = verdict;
+    // `success`, not `info`: `info` prints ONLY at `verbose`, so the mode line
+    // would have been invisible in the default `minimal` run — a partition that
+    // withheld 100 rules without saying so, which is exactly what both council
+    // seats (2026-08-20, 2/2) required this line to prevent. `success` prints
+    // immediately at verbose and lands in the end-of-run summary at minimal.
+    //
+    // Residual, stated: at `output.level: silent` the line is dropped. That is
+    // an explicit operator choice, not a default, and the partition stays
+    // fail-safe either way.
+    success(`projection mode: ${verdict.mode} — ${verdict.reason}`);
+    return verdict;
+}
+
 function _scoped_rule_basenames(): string[] {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
@@ -1118,6 +1197,18 @@ function _scoped_rule_basenames(): string[] {
         // is its fourth consumer, after the router compiler, the dist writer, and
         // check_sync. Same predicate in all four; that is the point.
         .filter((p) => !skip_compile_disabled_rule(`rules/${path.basename(p)}`))
+        // ADR-236 single delivery. Under `dual-layer/partitioned` the project
+        // layer emits ONLY artefacts that exist for this package alone (16
+        // rules, measured 2026-08-20); everything else is delivered by the
+        // verified host layer and withheld here, so no rule arrives twice.
+        // Under `standalone/full` this filter is the identity — which is every
+        // fresh checkout, every CI run, and every machine without a verified
+        // global install.
+        .filter((p) =>
+            _resolve_partition_verdict().mode === 'dual-layer/partitioned'
+                ? isExclusivelyPackageOnly(p)
+                : true,
+        )
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
@@ -1823,6 +1914,17 @@ function _render_native_model_md(src_md: string, tier: string): string {
 }
 
 export function generate_claude_skills(active_skill_names: ReadonlySet<string> | null = null): number {
+    // ADR-236 single delivery, step 2.1. Under `dual-layer/partitioned` the
+    // project layer emits ZERO skills: measured 2026-08-20, **no** skill in
+    // `src/skills/` is tagged `workspaces: [agent-config-maintainer]`
+    // exclusively, so the package-only set is empty on this axis and the whole
+    // corpus is delivered by the verified host layer. `active_skill_names` is
+    // narrowed to the empty set rather than returning early, so the existing
+    // prune below still removes the previous run's symlinks — leaving them would
+    // deliver every skill twice while claiming a partition.
+    if (_resolve_partition_verdict().mode === 'dual-layer/partitioned') {
+        active_skill_names = new Set<string>();
+    }
     if (!_exists(MODULE_STATE.SKILLS_SOURCE)) {
         process.stderr.write('  ⚠️  dist/agent-src/skills/ not found — skipping skills\n');
         return 0;
@@ -1836,7 +1938,22 @@ export function generate_claude_skills(active_skill_names: ReadonlySet<string> |
         skills = skills.filter((s) => active_skill_names.has(s));
     }
     const skill_set = new Set(skills);
-    const command_slugs = new Set([...iterCommands()].map(([, slug]) => slug));
+    // The command-slug set exists to stop THIS prune from deleting entries that
+    // `generate_claude_commands` (which runs after it, into the same directory)
+    // is about to write. Under `dual-layer/partitioned` that generator writes
+    // nothing, so the protection has nothing to protect and becomes a leak:
+    // measured 2026-08-20, 8 skill symlinks whose names are also command slugs
+    // survived a partitioned run — `brand`, `brand-identity`, `brand-strategy`,
+    // `design-system-capture`, `estimate-ticket`, `refine-ticket`,
+    // `review-routing`, `upstream-contribute`. The command prune could not clear
+    // them either: it skips symlinks by construction
+    // (`!_isDirNoFollow(item) || _isSymlink(item)` → continue), so those eight
+    // were unreachable from both sides and step 2.1's "carries none" was false
+    // while every count read zero.
+    const command_slugs =
+        _resolve_partition_verdict().mode === 'dual-layer/partitioned'
+            ? new Set<string>()
+            : new Set([...iterCommands()].map(([, slug]) => slug));
 
     _mkdirp(MODULE_STATE.CLAUDE_SKILLS_DIR);
     const auto = _read_model_auto_switch() === 'auto';
@@ -1997,6 +2114,15 @@ export function generate_claude_project_commands(
 }
 
 export function generate_claude_commands(active_command_slugs: ReadonlySet<string> | null = null): number {
+    // ADR-236 single delivery, step 2.1 — the half that is easy to miss, because
+    // commands do not live in a `commands/` directory here: this function writes
+    // into `CLAUDE_SKILLS_DIR`, the same directory the skills generator uses. The
+    // host layer keeps them separate (`~/.claude/commands`), which is why
+    // `hostLayerInputs` fingerprints that directory too — a command withheld
+    // here must be verified there first.
+    if (_resolve_partition_verdict().mode === 'dual-layer/partitioned') {
+        active_command_slugs = new Set<string>();
+    }
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         process.stderr.write('  ⚠️  src/domains/ not found — skipping commands\n');
         return 0;
