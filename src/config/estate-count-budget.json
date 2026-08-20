@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 52,
-    "open_blockers": 64
+    "open_blockers": 63
   },
   "baseline_history": [
     {
@@ -251,6 +251,13 @@
       "later_roadmaps": 52,
       "open_blockers": 64,
       "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 63,
+      "why": "LOWERED by 1 on active_roadmaps (25 -> 24) and 1 on open_blockers (64 -> 63), and NOTHING IN THE REPOSITORY EARNED THE DROP. road-to-gated-reach-followup reached zero open steps and zero deferred items and was archived, and its `legacy` blocker was resolved -- but resolved with outcome state `transferred`, not `satisfied`: the condition it named (a human installing yt-dlp plus a JavaScript runtime) did not clear. It moved to stubs/road-to-youtube-channel-exercise.md behind a named producer (the host owner) and a two-part probe measured on the transfer date. Nine of the roadmap's fifteen lines went with it; the six that had no dependency on the absent backend were completed in place. So the estate is one roadmap and one blocker smaller while the underlying capability is exactly as unmeasured as before, and that is the honest reading of these two numbers. Walked down anyway, for the reason the 2026-08-19 entry gives from the other side: a baseline left above a lower measurement is headroom a later change can spend with no gate objecting, and the count half compares the live tree against this file irrespective of the diff, so leaving it high would hand free growth to whoever comes next. later_roadmaps is unchanged at 52, which is the check that distinguishes a terminal disposition from a park -- a stub under stubs/ is explicitly not counted as estate by this metric's own not_gated note, so the honest caveat is that this drawdown moves work into a surface the ratchet cannot see. Recorded here rather than left implicit, because a reader comparing only the numbers would read a transfer as a completion."
     }
   ],
   "target": {
