@@ -1,5 +1,7 @@
 # Rules-as-skills falsification probe — terminal honest null
 
+<!-- evidence-type: analysis -->
+
 > **Produced by:** Phase 4 of `road-to-request-scoped-rule-load`, executed after
 > its resume trigger fired.
 > **Observed:** 2026-08-20 (reading), over first-party measurements dated
