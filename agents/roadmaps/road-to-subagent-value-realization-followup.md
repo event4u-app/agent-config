@@ -213,6 +213,15 @@ stands is exactly the shape that invites a wrong resume.
   so the roadmap's last acceptance criterion (re-evaluating the ADR-117
   `auto: on` default on real telemetry) never gets the evidence it names, and
   the default stands unexamined by default rather than by decision.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**,
+  merged into the same task-completion observability stub as `real-orchestration-usage`
+  per
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md).
+  The rendered default is accepted as the REFRAMING — stop treating this as a
+  usage-volume blocker and ask instead whether any hook slot sees the task-completion
+  payload — and batch A adopts exactly that reasoning. Running the probe is a live-host
+  observation, so Rule 3 assigns it `B`. Batch A carries the three-point check verbatim,
+  including the >=20 non-null quality-column rows as the detection probe.
 - **Resolved when:** a probe result records whether any hook slot sees the
   task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl`
   carries ≥ 20 orchestration lines whose quality columns are populated rather
