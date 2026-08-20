@@ -93,16 +93,7 @@ one shape the loop test above systematically misses, in both of its clauses.
   available were wait, or stop and report, and 34 licensed neither more than 31
   did. **The discriminator is the decision, not the digits.**
 
-**For CI specifically, do not write the loop.** `./scripts-run src/scripts/ci_settle <pr>`
-is one waiter with the exit condition already correct: an API error classifies
-as *could not read* rather than as settled, zero registered checks classify as
-pending rather than as green, and it exits 2 — never a verdict — when it did not
-settle. Measured 2026-08-20, the hand-written form
-`until ! gh pr checks N | grep -q pending` exited on
-`error connecting to api.github.com`, because that text contains no `pending`,
-and the session reported a settle that had not happened and had to retract it in
-the next reply. The exit condition is the part that is easy to get wrong, so it
-lives in one place rather than in every agent's head.
+For CI, do not hand-write the loop: `ci_settle <pr>` (mechanics below).
 
 So state it separately: pick **one** waiter for the condition and let it finish.
 Where the harness re-invokes on completion, waiting costs nothing and polling
