@@ -125,6 +125,15 @@ the late-artifact revisit rate — attributable to the runs that chose it.
 Reverting is one word in each of the two tables; no mechanism depends on the
 default's direction.
 
+**Kill criterion for `auto-research`, at the site rather than in a roadmap:**
+a late-artifact revisit rate above 20 % — an auto-authored or auto-extended
+artifact later reworked or reverted — removes the value and returns every
+late discovery to `halt`. **No instrument today:** nothing counts late
+artifacts or their revisits, so the rate is unmeasured rather than low, and
+the cap of three is the only live bound. Recorded here because a criterion
+that lives only in the roadmap that flipped the default becomes unreachable
+the moment that roadmap is archived.
+
 
 ## Complexity budget — the six questions before a new artefact
 

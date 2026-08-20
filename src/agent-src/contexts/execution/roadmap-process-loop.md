@@ -152,6 +152,23 @@ path *under the wrapper built for the opposite*, and silently — the user saw a
 A default that contradicts the wrapper the user just typed is a wrong answer,
 not a safe one.
 
+**Kill criteria — carried here, at the flip, not only in the roadmap that
+made it.** A default flip whose reversal condition lives in a roadmap is a
+flip nobody can reverse once that roadmap is archived, which is why both
+conditions below sit next to the table they govern:
+
+- **The ladder itself** (absent `execution.mode` derives a mode instead of
+  falling back to interactive): `3. Run interactive instead` chosen at the
+  contract screen in **more than 40 % of 20 runs** reverts rung 3, leaving
+  the ladder at explicit-suffix-then-frontmatter only. **No instrument
+  today** — nothing records which contract option was chosen, so the rate is
+  unmeasured rather than low. Stated so the gap is visible at the flip.
+- **The `/roadmap:next` row** (`phase-checkpoints` rather than
+  `autonomous`): reverted if checkpoint-mode runs on that wrapper are
+  observed to stop at a phase boundary the user then waves through without
+  a change — that is a contact the preselection bought nothing for. Same
+  missing instrument, same honesty: this is a condition, not a reading.
+
 **What this does NOT change.** A derived mode grants nothing on its own:
 authorization is still the single Accept on the contract screen, per
 [`roadmap-execution-contract § Principle`](roadmap-execution-contract.md). The
@@ -517,7 +534,39 @@ For each open step in the working set (scope-bound — see wrapper):
    Empty output → Iron Law 2 was violated this iteration: the step
    landed work but no checkbox flipped. **Halt loudly**, surface
    "step <N> landed without checkbox flip — flip then resume", and
-   stop the run. Do not auto-fix; the user resumes on the next turn.
+   stop the run. Outside an accepted contract: do not auto-fix; the user
+   resumes on the next turn. Inside one: exactly one self-fix attempt, under
+   the four preconditions below.
+
+   **One deterministic self-fix, contract mode only.** A forgotten flip is the
+   one halt class whose repair is mechanical — the work is on disk, the step is
+   named, and the glyph follows from the outcome. Halting a contract run on it
+   spends a user contact to retype something the run can derive. So inside an
+   accepted contract the run may attempt the flip **once**, and only when all
+   four hold:
+
+   1. **The work is citable.** The step's landed change is identifiable in this
+      iteration's own output — a diff, a file path, a command result. No
+      evidence, no flip: that is a genuine halt, not a forgotten one.
+   2. **The glyph is unambiguous.** `[x]` only for a step whose evidence is
+      present and, where the step carries a `verify:` field, whose fresh green
+      run is in this reply. Anything that would be `[~]` or `[-]` is a
+      *disposition*, never a repair — those halt exactly as before, because a
+      deferral and a cancellation are decisions.
+   3. **Exactly one attempt, per run.** Not per step. A second forgotten flip
+      in the same run halts: one is a slip, two is a broken loop, and the
+      difference is the whole justification for allowing the first.
+   4. **The attempt is verified, then re-guarded.** Re-run the
+      `git status --porcelain` probe above after the flip. Still empty → halt
+      loudly as before. A self-fix that cannot prove itself is
+      indistinguishable from the failure it was repairing.
+
+   The attempt is recorded as a decision memo (§ 4 handling), so an auto-flip is
+   reviewable after the fact rather than invisible. **Kill criterion, from the
+   originating roadmap and repeated here because a flip is a write to the source
+   of truth: one wrong auto-flip removes this allowance** and returns the guard
+   to halt-always. Reversibility is the deletion of this block — the guard
+   underneath it never changed.
 
    This guard is the deterministic counterpart to the rule's
    pre-send self-check — it catches a forgotten flip per step, not
