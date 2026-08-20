@@ -35,7 +35,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
 | 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -449,13 +449,13 @@ _1 blocker resolved._
 
 ### [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md)
 
-**Road to the hook-state follow-ups nobody owned** — 0 / 10 done (0%)
+**Road to the hook-state follow-ups nobody owned** — 10 / 10 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the two consumers that read what nobody writes | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | what the two lock primitives need before they converge | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | the local test reds nobody had disposed of | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | the two consumers that read what nobody writes | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | what the two lock primitives need before they converge | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | the local test reds nobody had disposed of | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
 
