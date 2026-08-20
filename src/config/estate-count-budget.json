@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 26,
     "later_roadmaps": 52,
     "open_blockers": 68
   },
@@ -209,6 +209,13 @@
       "later_roadmaps": 52,
       "open_blockers": 68,
       "why": "open_blockers 70 -> 68: the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy resolved on the autonomous drain run, both with outcome state TRANSFERRED rather than discharged. required-check-set-change and merge-queue-enablement moved to agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md under the AI council disposition B (2/2, anthropic + openai), whose categorical Rule 3 assigns every repository-administration change to a human: such work may only be transferred, never recorded as decided-and-done.\n\nRead this walk-down honestly. Two blockers left the ratchet's numerator and NOTHING changed in the repository -- ruleset 17749383 still requires exactly one check (Sync + Generate Tools Consistency), carries no merge_queue entry, and merge_group still appears zero times across .github/, all three read live on 2026-08-20. The metric counts open blocker ENTRIES, so a transfer to a stub lowers it by construction; the stub carries each original Resolved-when criterion verbatim, the complete list of dependent steps moved, and a named re-entry producer with a probe pinned to those three readings, so the movement stays detectable rather than dissolving into the count.\n\nactive_roadmaps unchanged at 32 and later_roadmaps unchanged at 52 is deliberate and is what separates this from a disposal: the source roadmap reached 18/18 with count_deferred 0 and was NOT archived, because archiving was out of scope for the run that closed it. It stays in the active tree, which is why roadmap:progress-check exits 1 on it and why the active count did not move."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "active_roadmaps 32 -> 26: six completed roadmaps that had been sitting unarchived on the trunk were archived by the regen that now does it. They were complete (open==0, deferred==0, no open blocker) and OUTSIDE every later branch's history, so the branch-scoped `--changed-only` PR-gate could never find them again -- each dashboard regen just reprinted the warning. `agent-config roadmap:progress` and `task roadmap-progress` now pass `--archive` and run the sweep with `--all` before rendering.\n\nRead this walk-down for what it is: a bookkeeping correction, not a drawdown. No work was terminated and no scope was cut -- these six were already finished, and the number was wrong by six for as long as the warning went unactioned. The honest drawdown signal is unchanged by it."
     }
   ],
   "target": {

@@ -525,7 +525,7 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       <!-- verify: grep -n '^status:' docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md docs/decisions/ADR-222-blocker-handover-at-reply-close.md  # both: proposed -->
       <!-- verify: ls docs/decisions/ | grep ADR-223 -->
       <!-- verify: the `## Blockers` section carries no ADR-222 —
-           sed -n '/^## Blockers/,$p' agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
+           sed -n '/^## Blockers/,$p' agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
            Step 4.1 itself mentions ADR-222 several times on purpose: it is the
            document that took the number, and naming it is the whole explanation. -->
 - [-] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.**
