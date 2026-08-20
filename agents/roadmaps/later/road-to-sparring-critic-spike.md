@@ -1,6 +1,6 @@
 ---
 status: blocked-for-later
-complexity: medium
+complexity: lightweight
 ---
 
 # Road to sparring-critic spike — one falsification run decides whether the critic exists

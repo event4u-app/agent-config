@@ -63,6 +63,7 @@ import {
     plan_advisor_swap,
 } from './ai_council/advisors.js';
 import { format_install_hints } from './ai_council/cli_hints.js';
+import { renderSubHelp } from './ai_council/cli_help.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
@@ -2507,6 +2508,7 @@ function cmd_run(
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
     const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
+    if (!args.confirm) _stdout('council:run · DRY PASS — estimate only, no seat is contacted. Add --confirm to run.\n');
     _stdout(
         `council:run · mode=${question.mode} · members=${members.length} ` +
             `(billable=${billable.length})\n`,
@@ -3728,10 +3730,8 @@ function _parseArgs(argv: string[]): Args {
     const rest = argv.slice(1);
     const usage = _usageFor(first);
     const { positionals, opts, requiredOpts } = _specsFor(first);
-
-    // Sub-help.
     if (rest.includes('-h') || rest.includes('--help')) {
-        _stdout(usage);
+        _stdout(renderSubHelp(first, usage, { positionals, opts, requiredOpts }));
         process.exitCode = 0;
         throw new _ArgExit();
     }
