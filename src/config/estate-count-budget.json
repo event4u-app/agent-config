@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 26,
     "later_roadmaps": 52,
     "open_blockers": 67
   },
@@ -212,6 +212,13 @@
     },
     {
       "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "active_roadmaps 32 -> 26: six completed roadmaps that had been sitting unarchived on the trunk were archived by the regen that now does it. They were complete (open==0, deferred==0, no open blocker) and OUTSIDE every later branch's history, so the branch-scoped `--changed-only` PR-gate could never find them again -- each dashboard regen just reprinted the warning. `agent-config roadmap:progress` and `task roadmap-progress` now pass `--archive` and run the sweep with `--all` before rendering.\n\nRead this walk-down for what it is: a bookkeeping correction, not a drawdown. No work was terminated and no scope was cut -- these six were already finished, and the number was wrong by six for as long as the warning went unactioned. The honest drawdown signal is unchanged by it."
+    },
+    {
+      "at": "2026-08-20",
       "active_roadmaps": 32,
       "later_roadmaps": 52,
       "open_blockers": 69,
@@ -223,6 +230,13 @@
       "later_roadmaps": 52,
       "open_blockers": 67,
       "why": "MERGE RECONCILIATION, not a third walk-down. The two entries above are independent walk-downs of different work that landed on the same day: 70 -> 68 for the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy, and 70 -> 69 for road-to-estate-drawdown's b-consolidated-decision-sheet. Both are real and neither corrects the other, so both rows are kept and the baseline is the composition: 70 - 2 - 1 = 67, which is what check_estate_count measures on the merged tree. Recorded because a reader meeting rows that say 68 and 69 above a baseline of 67 would otherwise read a raise. Taking either side of the merge conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION on the active dimension, mirroring the open_blockers reconciliation directly above. Three independent walk-downs landed the same day and none corrects another: active 32 -> 26 (six completed roadmaps archived by the regen that now archives instead of warning), and the two blocker walk-downs whose composition the entry above records as 67. All rows are kept and the baseline is the composition, 26 / 52 / 67, which is what check_estate_count measures on the merged tree.\n\nStated plainly because a reader meeting a row that says 68 above a baseline of 67 would otherwise read a raise: my own row's open_blockers figure was correct when it was written and was superseded by the merge, not by a change of mine. Taking either side of the conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
     }
   ],
   "target": {

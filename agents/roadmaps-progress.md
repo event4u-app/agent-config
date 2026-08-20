@@ -2,28 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers in the active tree, **20** need you → `agent-config gates`
+> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers in the active tree, **20** need you → `agent-config gates`
 
 ## Overall
 
-**310 / 575 steps done · 54%**
+**211 / 476 steps done · 44%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
-
-## ✅ Completed — pending archival
-
-These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
-
-| Roadmap | Done | Total |
-|---|---:|---:|
-| [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 10 | 10 |
-| [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 18 | 18 |
-| [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 7 | 7 |
-| [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
-| [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 36 | 36 |
-| [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 16 | 16 |
 
 ## Open roadmaps
 
@@ -39,28 +26,22 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md) | 3 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
-| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 0 | 18 | 0 | 6 | 0 | ██████████ 100% |
-| 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 0 | 7 | 0 | 4 | 0 | ██████████ 100% |
-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
-| 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 0 | 12 | 0 | 5 | 0 | ██████████ 100% |
-| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 0 | 36 | 0 | 1 | 0 | ██████████ 100% |
-| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 0 | 16 | 0 | 2 | 0 | ██████████ 100% |
-| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 11 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+| 12 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 14 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
+| 15 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 21 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 22 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 23 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+| 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 25 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 26 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -434,28 +415,6 @@ _1 blocker resolved._
     `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
   - **Resolved when:** condition described above clears
 
-### [road-to-hook-state-followups.md](roadmaps/road-to-hook-state-followups.md)
-
-**Road to the hook-state follow-ups nobody owned** — 10 / 10 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | the two consumers that read what nobody writes | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | what the two lock primitives need before they converge | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | the local test reds nobody had disposed of | ✅ done | 0 | 3 | 0 | 0 | 100% |
-
-### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
-
-**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 18 / 18 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ✅ done | 0 | 4 | 0 | 1 | 100% |
-| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ✅ done | 0 | 2 | 0 | 3 | 100% |
-| 3 | The subprocess lever: extend in-process running, do not add a skill | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Required-check-set changes (authored here, applied by the maintainer) | ✅ done | 0 | 1 | 0 | 2 | 100% |
-
 ### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
 
 **Road to a review binding that survives a checkbox** — 9 / 10 done (90%)
@@ -486,17 +445,6 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | apply through the kernel process | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
-### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
-
-**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 7 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Dogfood the review machinery as a pre-merge gate | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 2 | CODEOWNERS + branch protection | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 3 | Make a release inheritable (the runbook) | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 4 | Lower bus-factor toward >1 (opportunistic, honest) | ✅ done | 0 | 1 | 0 | 1 | 100% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
@@ -733,30 +681,6 @@ _1 blocker resolved._
 
 _2 blockers resolved._
 
-### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
-
-**Road to release-review P0** — 12 / 12 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Host-aware skill projection | ⏭️ skipped | 0 | 0 | 0 | 4 | 0% |
-| 2 | Evidence artifact typing | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Provider qualification | ✅ done | 0 | 8 | 0 | 1 | 100% |
-
-### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
-
-**Road to request-scoped rule load — ship only what the request needs** — 36 / 36 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Consumer-scoped rule projection (the ~50k lever) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | EXECUTED 2026-08-20: rules-as-skills falsification probe (Claude Code) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | ✅ done | 0 | 13 | 0 | 1 | 100% |
-
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
 **Follow-up to road-to-rule-coherence** — 2 / 9 done (22%)
@@ -954,19 +878,6 @@ _2 blockers resolved._
   - **Resolved when:** deltas #9 and #10 are in the tree and the corpus carries at least one task pinned to an external repo at a SHA.
 
 _1 blocker resolved._
-
-### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
-
-**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 16 / 16 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | The deterministic carrier — a source-first gate on screenshot tools | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | The browser handover — extraction into files, inside the lock | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 5 | Interop precedence — a provided artifact outranks generative tooling | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
 
