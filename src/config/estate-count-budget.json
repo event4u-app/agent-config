@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 25,
     "later_roadmaps": 52,
-    "open_blockers": 59
+    "open_blockers": 58
   },
   "baseline_history": [
     {
@@ -249,8 +249,22 @@
       "at": "2026-08-20",
       "active_roadmaps": 25,
       "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
       "open_blockers": 59,
       "why": "open_blockers 65 -> 59: all SIX open blockers of road-to-per-turn-hook-economy resolved on the autonomous drain run, every one under AI-council disposition D (decide now; 2/2 quorum, anthropic + openai; record agents/evidence/council/drain-blocker-dispositions-b.md). Four of the six were SPLIT verdicts and each dissent is recorded at its blocker and inline at the step it touches. The trunk recorded the same six answers independently via road-to-estate-drawdown's consolidated decision sheet, and the merge kept both records: the sheet's `Answer: ACCEPTED` line states the choice, this branch's `Resolution` paragraph states what shipped for it. They agree because they read the same council record.\\n\\nRead the -6 honestly, because it hides three different kinds of movement. FOUR were discharged by shipped code: b-stdin-read-failure-policy (a failed payload read now DENIES on a block-capable slot carrying a fail-closed blocking concern, where it previously allowed silently), b-injection-scan-unwrap-security (output contract written first, then the unwrap narrowed against 14 fixtures; restoring the pre-fix extraction fails 11 of them), b-payload-read-parse-dominates (a read-and-exit bench cell that produced the number the roadmap had been assuming: ~70 percent of the large-payload delta is the dispatcher's own read plus parse, 69 and 74 percent over two rounds at --runs 50), and b-stop-async-split-prerequisites' P3 (three state files made safe under concurrent dispatch; pre-fix survival measured against 8 real processes at 3 of 96 log lines, 3 of 24 increments, 1 of 8 rollups). ONE is a decline with no code by design (b-guard-tool-partition, option (c): the zero-dispatch goal is abandoned, the Phase 4 measurement and the in-process tools: filter retained). ONE is a decision to NOT set a number for one release (b-per-turn-composite-bar, option (b)): the composite row stays observe-only and now carries its arming procedure and precondition, so there is still no ceiling on the per-turn cost and that is deliberate rather than forgotten.\\n\\nactive_roadmaps unchanged at 25 and later_roadmaps unchanged at 52, and both are load-bearing rather than incidental. The parent was NOT archived (out of scope for this run) even though its count_open reached 0, so it stays in the active tree. And its three Phase-0 steps were TRANSFERRED rather than cancelled -- to agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md, which sits under stubs/ and is therefore counted by neither metric. That is the honest shape of a capability-gated transfer: it moves no number, which is exactly why the stub carries the three criteria verbatim, the complete moved list, and a named producer (the reporter of the original slowdown, on their own machine at the version installed when they reported it) with three probes measured on the transfer date as the wrong-machine control -- AGENT_CONFIG_HOOKS_ISOLATED unset, installed 14.6.0, and zero turn-end-gate refusal records against a schema that carries no refusal counter at all."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 58,
+      "why": "open_blockers 64 -> 58, RE-ANCHORED AT MERGE. Measured at the merged tree rather than taken from either side: main had walked to 64 for its own closures while this branch walked to 59 for the six per-turn-hook-economy decisions, and 58 is what the merged tree actually reads. Adopting one side's number would have claimed a figure describing no tree. Every history entry from both sides is preserved; none was collapsed. The -6 on this branch mixes three kinds of movement and is not six pieces of finished work: four blockers were discharged by shipped code, one was a decline (the guard-tool partition, where the decision is that nothing ships), and one was a decision NOT to set a number (the composite bar, marked observe-only for a release). The transfer of steps 0.1-0.3 moves NO metric at all, because agents/roadmaps/stubs/ is counted by neither active_roadmaps nor open_blockers. Also worth recording rather than deduplicating: the trunk reached the SAME six decisions independently through road-to-estate-drawdown's consolidated decision sheet, because both read the same council record. The merge kept both, so each blocker now carries the sheet's choice and this branch's account of what shipped for it."
     }
   ],
   "target": {
