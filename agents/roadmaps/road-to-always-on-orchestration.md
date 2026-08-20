@@ -75,7 +75,7 @@ seven acceptance criteria, and the 100 % says nothing about the goal — see
 § Against the goal, honestly.
 
 Closed by the autonomous drain run of 2026-08-20 under the council record
-`agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
+[`drain-blocker-dispositions-b`](../evidence/council/drain-blocker-dispositions-b.md)
 (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2).
 Outcome states are the four that record defines: `satisfied`, `narrowed`,
 `transferred`, `abandoned`.
@@ -414,10 +414,10 @@ statement of what is still owed.
 > **All five entries below are RESOLVED by the autonomous drain run of
 > 2026-08-20** — four by transfer to a stub, one by shipping the artefact it
 > was waiting for. The resolving mechanism is the council record
-> `agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
-> (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2;
-> the record lands on a separate branch, so the citation is marked
-> reference-exempt rather than left to dangle). Each entry keeps its original
+> [`drain-blocker-dispositions-b`](../evidence/council/drain-blocker-dispositions-b.md)
+> (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2 —
+> merged to main via PR #1463, so the citation resolves and no longer needs the
+> reference-exemption marker it carried while it was branch-local). Each entry keeps its original
 > `What to do` and `Resolved when` text unedited — those are the history a
 > future reader needs — and records the resolution beneath them.
 >

@@ -18,9 +18,9 @@ artefact, written first, so the routing entries have something to cite.
 > direction policy to exist before any worker ships. The adopted disposition is
 > the conjunction — *write the policy first, then approve report-only workers
 > under it* — recorded in
-> `agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
-> (that record lands on a separate branch; the citation is marked
-> reference-exempt rather than left to dangle).
+> [`drain-blocker-dispositions-b`](../../agents/evidence/council/drain-blocker-dispositions-b.md)
+> (merged to main via PR #1463, so the citation resolves and no longer needs the
+> reference-exemption marker it carried while it was branch-local).
 
 ## The Iron Law
 
