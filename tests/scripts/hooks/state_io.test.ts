@@ -18,7 +18,10 @@ import {
     feedback_dir,
     is_replay_mode,
     LOCK_BASENAME,
+    prune_stale_session_states,
     REPLAY_ENV_VAR,
+    restore_claimed_state,
+    session_state_file,
 } from '../../../src/scripts/hooks/state_io.js';
 
 
@@ -133,3 +136,235 @@ describe('state_io — feedback_dir', () => {
     });
 });
 
+
+// ---------------------------------------------------------------------------
+// The pruner's destructive edges (council round 3, both seats).
+//
+// Round 2 introduced claim-then-revalidate and round 3 found it still
+// destructive: the restore step decided with `existsSync` and acted with
+// `rename`, so a writer arriving between the two lost its file to the pruner's
+// older copy. Both cases below stage a real concurrent write through the
+// injected age reader — the one callback that runs at exactly the contested
+// moment — rather than staging timings that merely reach the branch.
+describe('state_io — prune_stale_session_states, concurrent writers', () => {
+    let dir: string;
+    const DAY = 24 * 60 * 60 * 1000;
+    const now = 1_000 * DAY;
+
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'prune-race-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a write landing before restoration survives', () => {
+        const live = session_state_file(dir, 'session-A');
+        fs.writeFileSync(live, JSON.stringify({ language: 'de', generation: 'stale' }), 'utf8');
+
+        // HONEST SCOPE, and the counter-probe is what established it: this test
+        // stays GREEN against the `existsSync`-then-`rename` code it replaces,
+        // because the injected callback runs BEFORE that existence check and the
+        // old code then took its safe branch. It covers the restore path with a
+        // concurrent writer; it does NOT prove the race is closed. The window
+        // sits between the old decision and the old action, and no
+        // single-threaded seam can open it — the next test asserts the property
+        // that replaced the decision instead.
+        const mtime_of = (target: string): number => {
+            if (target.endsWith('.tomb')) {
+                fs.writeFileSync(
+                    live,
+                    JSON.stringify({ language: 'de', generation: 'fresh' }),
+                    'utf8',
+                );
+                return now; // fresh → restoration path
+            }
+            return now - 90 * DAY; // stale → becomes a candidate
+        };
+
+        const removed = prune_stale_session_states(dir, now, 30, mtime_of);
+
+        expect(removed).toBe(0);
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).generation).toBe('fresh');
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tomb'))).toEqual([]);
+    });
+
+    it('a restore never changes a live file that already exists', () => {
+        // THE POST-CONDITION, asserted on the helper directly. Scope, stated
+        // because the counter-probe measured it: this is green against the
+        // `existsSync`-then-`rename` code too — that code reached the same
+        // outcome whenever the check and the action agreed, and they disagree
+        // only under real concurrency, which no single-threaded seam reaches.
+        // What it DOES catch is the regression that matters going forward: a
+        // future restore that renames onto the live path without a check.
+        const live = path.join(dir, 'live.json');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(live, JSON.stringify({ gen: 'live' }), 'utf8');
+        fs.writeFileSync(tomb, JSON.stringify({ gen: 'claim' }), 'utf8');
+
+        restore_claimed_state(tomb, live);
+
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('live');
+        expect(fs.existsSync(tomb)).toBe(false);
+    });
+
+    it('falls back to a rename where the filesystem cannot hard-link', () => {
+        // The peer-review condition on accepting `link` at all: `linkSync` is
+        // this tree's first, `engines` pins only Node, and Windows is a named
+        // target — so EPERM / ENOSYS / EXDEV / EOPNOTSUPP / EMLINK are real
+        // answers. Throwing there would strand the tombstone and lose a FRESH
+        // pin, which is worse than the narrow window the fallback reopens.
+        const live = path.join(dir, 'nolink.json');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(tomb, JSON.stringify({ gen: 'claim' }), 'utf8');
+        const refuse = (): never => {
+            const err = new Error('operation not permitted') as NodeJS.ErrnoException;
+            err.code = 'EPERM';
+            throw err;
+        };
+
+        restore_claimed_state(tomb, live, refuse);
+
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('claim');
+        expect(fs.existsSync(tomb)).toBe(false);
+    });
+
+    it('the fallback still refuses to overwrite a live file', () => {
+        // The degraded path must keep the property that matters even though it
+        // cannot keep the atomicity.
+        const live = path.join(dir, 'nolink-live.json');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(live, JSON.stringify({ gen: 'live' }), 'utf8');
+        fs.writeFileSync(tomb, JSON.stringify({ gen: 'claim' }), 'utf8');
+        const refuse = (): never => {
+            const err = new Error('not supported') as NodeJS.ErrnoException;
+            err.code = 'ENOSYS';
+            throw err;
+        };
+
+        restore_claimed_state(tomb, live, refuse);
+
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('live');
+        expect(fs.existsSync(tomb)).toBe(false);
+    });
+
+    it('a genuine link error is not swallowed as a missing feature', () => {
+        // The fallback is scoped to "this filesystem cannot link", never to
+        // "the link failed". An EIO must still surface.
+        const live = path.join(dir, 'eio.json');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(tomb, JSON.stringify({ gen: 'claim' }), 'utf8');
+        const fail = (): never => {
+            const err = new Error('io error') as NodeJS.ErrnoException;
+            err.code = 'EIO';
+            throw err;
+        };
+
+        expect(() => restore_claimed_state(tomb, live, fail)).toThrow(/io error/);
+    });
+
+    it('a crash between link and unlink leaves a tombstone the sweep resolves', () => {
+        // The peer round's crash-window case: `link` succeeded, the process
+        // died before `rm`, so both names point at one inode. The recovery pass
+        // is what closes it — the live file exists, so the duplicate name is
+        // dropped and the content stays reachable exactly once.
+        const live = session_state_file(dir, 'session-crash');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(live, JSON.stringify({ gen: 'linked' }), 'utf8');
+        fs.linkSync(live, tomb); // the duplicate a crash would leave
+
+        prune_stale_session_states(dir, now, 30, () => now);
+
+        expect(fs.existsSync(tomb)).toBe(false);
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('linked');
+    });
+
+    it('a restore recreates a live file that is absent', () => {
+        const live = path.join(dir, 'gone.json');
+        const tomb = `${live}.4242.1.tomb`;
+        fs.writeFileSync(tomb, JSON.stringify({ gen: 'claim' }), 'utf8');
+
+        restore_claimed_state(tomb, live);
+
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('claim');
+        expect(fs.existsSync(tomb)).toBe(false);
+    });
+
+    it('restoration puts the claim back when no writer arrived', () => {
+        const live = session_state_file(dir, 'session-B');
+        fs.writeFileSync(live, JSON.stringify({ language: 'de', generation: 'kept' }), 'utf8');
+        const mtime_of = (target: string): number =>
+            target.endsWith('.tomb') ? now : now - 90 * DAY;
+
+        expect(prune_stale_session_states(dir, now, 30, mtime_of)).toBe(0);
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).generation).toBe('kept');
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tomb'))).toEqual([]);
+    });
+
+    it('a genuinely stale file is still removed', () => {
+        const live = session_state_file(dir, 'session-C');
+        fs.writeFileSync(live, JSON.stringify({ language: 'de' }), 'utf8');
+
+        expect(prune_stale_session_states(dir, now, 30, () => now - 90 * DAY)).toBe(1);
+        expect(fs.existsSync(live)).toBe(false);
+    });
+});
+
+// A crash between the claim rename and the restore left the file under a name
+// nothing reads and nothing pruned — and when the candidate had been refreshed
+// under the pruner, that name held the CURRENT state while the live path was
+// gone for good. Recovery is judged on the tombstone's own mtime, which
+// `rename` preserves, so it is the age of the content rather than of the claim.
+describe('state_io — prune_stale_session_states, orphaned tombstones', () => {
+    let dir: string;
+    const DAY = 24 * 60 * 60 * 1000;
+    const now = 1_000 * DAY;
+    const tombFor = (live: string): string => `${live}.4242.1.tomb`;
+
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'prune-tomb-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a fresh orphan is restored to its live path', () => {
+        const live = session_state_file(dir, 'session-A');
+        fs.writeFileSync(tombFor(live), JSON.stringify({ language: 'de', gen: 'rescued' }), 'utf8');
+
+        expect(prune_stale_session_states(dir, now, 30, () => now)).toBe(0);
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('rescued');
+        expect(fs.existsSync(tombFor(live))).toBe(false);
+    });
+
+    it('a stale orphan is deleted', () => {
+        const live = session_state_file(dir, 'session-B');
+        fs.writeFileSync(tombFor(live), JSON.stringify({ language: 'de' }), 'utf8');
+
+        expect(prune_stale_session_states(dir, now, 30, () => now - 90 * DAY)).toBe(1);
+        expect(fs.existsSync(tombFor(live))).toBe(false);
+        expect(fs.existsSync(live)).toBe(false);
+    });
+
+    it('an orphan never overwrites a live file that already exists', () => {
+        const live = session_state_file(dir, 'session-C');
+        fs.writeFileSync(live, JSON.stringify({ language: 'de', gen: 'live' }), 'utf8');
+        fs.writeFileSync(tombFor(live), JSON.stringify({ language: 'en', gen: 'orphan' }), 'utf8');
+
+        // Both are fresh: the orphan is dropped, the live file is untouched.
+        prune_stale_session_states(dir, now, 30, () => now);
+
+        expect(JSON.parse(fs.readFileSync(live, 'utf8')).gen).toBe('live');
+        expect(fs.existsSync(tombFor(live))).toBe(false);
+    });
+
+    it('a tombstone is not mistaken for state — only the live name is read', () => {
+        // The suffix must stay outside the `.json` enumeration, or a tombstone
+        // would be claimed as a candidate and tombstoned again.
+        const live = session_state_file(dir, 'session-D');
+        fs.writeFileSync(tombFor(live), JSON.stringify({ language: 'de' }), 'utf8');
+        prune_stale_session_states(dir, now, 30, () => now);
+
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tomb.4242.1.tomb'))).toEqual([]);
+    });
+});
