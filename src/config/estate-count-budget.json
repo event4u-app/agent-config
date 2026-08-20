@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 32,
     "later_roadmaps": 52,
-    "open_blockers": 68
+    "open_blockers": 67
   },
   "baseline_history": [
     {
@@ -209,6 +209,20 @@
       "later_roadmaps": 52,
       "open_blockers": 68,
       "why": "open_blockers 70 -> 68: the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy resolved on the autonomous drain run, both with outcome state TRANSFERRED rather than discharged. required-check-set-change and merge-queue-enablement moved to agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md under the AI council disposition B (2/2, anthropic + openai), whose categorical Rule 3 assigns every repository-administration change to a human: such work may only be transferred, never recorded as decided-and-done.\n\nRead this walk-down honestly. Two blockers left the ratchet's numerator and NOTHING changed in the repository -- ruleset 17749383 still requires exactly one check (Sync + Generate Tools Consistency), carries no merge_queue entry, and merge_group still appears zero times across .github/, all three read live on 2026-08-20. The metric counts open blocker ENTRIES, so a transfer to a stub lowers it by construction; the stub carries each original Resolved-when criterion verbatim, the complete list of dependent steps moved, and a named re-entry producer with a probe pinned to those three readings, so the movement stays detectable rather than dissolving into the count.\n\nactive_roadmaps unchanged at 32 and later_roadmaps unchanged at 52 is deliberate and is what separates this from a disposal: the source roadmap reached 18/18 with count_deferred 0 and was NOT archived, because archiving was out of scope for the run that closed it. It stays in the active tree, which is why roadmap:progress-check exits 1 on it and why the active count did not move."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "WALK DOWN on open_blockers only, 70 -> 69, earned in the change that closed road-to-estate-drawdown's b-consolidated-decision-sheet. The consolidated decision sheet was answered in full (option (a), AI council) and that closed exactly ONE blocker, which is the finding rather than a disappointment: of the 21 user-owned blockers on the sheet, 12 are dispositioned transferred because a signature, a repository, a host session, a human rating or an authority grant cannot be produced by recording an answer, and the two agent-executable classes (0 and 1) hold zero blockers between them. Active and later/ are unchanged at 32/52 -- no roadmap was added, archived or parked, so one_in_one_out has nothing to offset. Walked here rather than left as headroom because a tightening that is not re-registered becomes a ceiling nobody is held to, and this gate fails rather than warns on that state by design."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION, not a third walk-down. The two entries above are independent walk-downs of different work that landed on the same day: 70 -> 68 for the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy, and 70 -> 69 for road-to-estate-drawdown's b-consolidated-decision-sheet. Both are real and neither corrects the other, so both rows are kept and the baseline is the composition: 70 - 2 - 1 = 67, which is what check_estate_count measures on the merged tree. Recorded because a reader meeting rows that say 68 and 69 above a baseline of 67 would otherwise read a raise. Taking either side of the merge conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
     }
   ],
   "target": {

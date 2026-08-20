@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers in the active tree, **20** need you → `agent-config gates`
 
 ## Overall
 
-**309 / 574 steps done · 54%**
+**310 / 575 steps done · 54%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   54%
@@ -35,7 +35,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
+| 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -326,32 +326,15 @@ _1 blocker resolved._
 
 ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
 
-**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 2 / 5 done (40%)
+**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 3 / 6 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | One sitting, thirteen answers | ✅ done | 0 | 1 | 1 | 0 | 100% |
+| 0 | One sitting, thirteen answers | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 1 | Execute everything runnable | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
-
-<a id="blockers-road-to-estate-drawdown"></a>
-**Blockers**
-
-- **b-consolidated-decision-sheet** (owner: user) — blocks Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1 generates the sheet without it, and Phase 2's triage sweep proceeds independently.
-  - **Recommendation:** **option (c) — answer the two largest-unblock items, defer the rest.** It discharges most of the blocked step count for a fraction of the reading, which is the whole point of sorting the sheet by unblock count. Option (a) is faster still but accept-all-defaults over thirteen items includes the agent-drafted defaults, and those are the ones risk 2 flags as least examined. Option (b) is the most careful and the most likely not to happen — this blocker exists because thirteen reading assignments already did not happen once.
-  - **If you do nothing:** thirteen user-owned blockers stay open, the two largest unblocks keep holding their step counts, and the campaign starts from a count that rose rather than fell — 44 active after this cohort. Phase 2's triage sweep still runs, so verdicts land, but every DECISION-SHEET verdict routes back to this same unanswered sheet.
-  - **What to do:**
-    answer the consolidated decision sheet that step 0.1 produces —
-    thirteen user-owned blockers, sorted by unblock count, each with a one-line
-    question, a rendered or agent-drafted recommendation, and a default. Options:
-    (a) accept all defaults, which is an explicitly valid answer and the fastest path;
-    (b) answer item by item, overriding where the default is wrong; (c) answer only
-    the two largest-unblock items and defer the rest to a later sitting, which still
-    discharges most of the blocked step count. Whichever path, the agent writes the
-    answers back into each roadmap at its blocker — that is not maintainer work.
-  - **Resolved when:** each of the thirteen carries either an answer or an explicit deferral recorded at its own blocker, and the sheet records which option was used.
 
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
