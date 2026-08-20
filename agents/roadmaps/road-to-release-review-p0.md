@@ -8,6 +8,34 @@ execution:
 
 > The three priority findings from the last release review that no existing roadmap owns: skill projection that reacts to measured host limits, evidence artifacts that declare what kind of evidence they are, and a provider qualification result the council actually consumes.
 
+## Outcome — closed 2026-08-20, outcome state `transferred`
+
+**Archived does not mean achieved here, and this section exists so the two are
+never read as the same thing.** Two of the three P0 findings were closed by
+building the thing; the third was closed by transferring it, unbuilt, to a stub
+with named re-entry probes.
+
+| P0 | Outcome | Where it stands |
+|---|---|---|
+| Evidence artifact typing (Phase 2) | **satisfied, narrowed** | Shipped, with one recorded deviation: four types are declared on the artifact and the fifth (re-bind) is derived from git rather than typed, because re-binding is an in-place edit with no separate object to carry a type. Narrowing is stated in `docs/contracts/evidence-artifact-types.md`. |
+| Provider qualification (Phase 3) | **satisfied** | Four-value verdict consumed before dispatch; quorum reported against qualified seats only. |
+| Host-aware skill projection (Phase 1) | **transferred** | Never started. Steps 1.1-1.4 and AC1 moved to `stubs/road-to-host-aware-skill-projection.md` with all three measured blockers and three named re-entry probes (P1-P3), each of which was measured FAILING at `206ab4f16`. |
+| Rule estate reduction | **redirected at authoring time** | Cut to `road-to-cost-parity-1-rule-payload-diet` step 1.1; never in scope here. |
+| Context loss accounting (P1) | **redirected at authoring time** | Folded into `road-to-context-fidelity` Phase 0. |
+
+Criteria tally: 3 of 5 acceptance criteria satisfied, 1 transferred (AC1), and
+the two traceability criteria closed on 2026-08-20 by naming the absorbing files
+by slug — before that edit the estate pointer read "the estate-diet roadmap" and
+no file carried that name.
+
+**Framework of record:** `agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+(disposition B, outcome `transferred`). Recorded as instructed and **flagged
+honestly**: that document is not present in this tree at `206ab4f16`
+(`git log --all` over the path returns nothing), so it is cited as the framework
+this run was given, not as an artifact anyone can currently read. Every
+*technical* claim above is cited to this repository by `file:line` and does not
+depend on it.
+
 ## Goal
 
 Close the three unowned P0 findings from the release review with a measured trigger each — a host truncation measurement that gates projection, an artifact type recorded at write time, and a qualification verdict the council reads before it dispatches.
@@ -106,10 +134,10 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 > drawdown campaign are both working to lower. The block is recorded here, where
 > the phase is.
 
-- [ ] Add a host capability profile that records measured catalogue behaviour per host — how many skills survive the host's own catalogue handling — rather than deriving the limit from the package's model of the host. <!-- verify: ./scripts-run src/scripts/routing_doctor --help -->
-- [ ] Compose the projected skill set from three inputs: the host capability profile, the measured catalogue behaviour, and the workspace profile. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
-- [ ] Gate the aggressive path on measurement sufficiency: only hosts with an adequate measurement base project a reduced set. An unknown host receives no aggressive scoping — the safe direction is the full catalogue, because under-projecting a skill is a worse failure than paying for one that is never used. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
-- [ ] Leave the primary host unchanged in this phase; it has no measured truncation pressure and changing it would move two variables at once. <!-- verify: ./scripts-run src/scripts/routing_doctor -->
+- [-] Add a host capability profile that records measured catalogue behaviour per host — how many skills survive the host's own catalogue handling — rather than deriving the limit from the package's model of the host. <!-- verify: ./scripts-run src/scripts/routing_doctor --help --> <!-- [-] transferred to stubs/road-to-host-aware-skill-projection.md (council disposition B, outcome: transferred) — no home in the all-boolean HostCapabilityManifest; a new profile surface, blocker 3 -->
+- [-] Compose the projected skill set from three inputs: the host capability profile, the measured catalogue behaviour, and the workspace profile. <!-- verify: ./scripts-run src/scripts/lint_featured_skills --> <!-- [-] transferred to stubs/road-to-host-aware-skill-projection.md (council disposition B, outcome: transferred) — no scoped path to compose into; condense.ts:1646 raises, blocker 2 -->
+- [-] Gate the aggressive path on measurement sufficiency: only hosts with an adequate measurement base project a reduced set. An unknown host receives no aggressive scoping — the safe direction is the full catalogue, because under-projecting a skill is a worse failure than paying for one that is never used. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage --> <!-- [-] transferred to stubs/road-to-host-aware-skill-projection.md (council disposition B, outcome: transferred) — no same-projection_mode observation pair exists to read a bar off, blocker 1 -->
+- [-] Leave the primary host unchanged in this phase; it has no measured truncation pressure and changing it would move two variables at once. <!-- verify: ./scripts-run src/scripts/routing_doctor --> <!-- [-] transferred to stubs/road-to-host-aware-skill-projection.md (council disposition B, outcome: transferred) — a constraint on an implementation that was never started, not standalone work -->
 
 **Exit criteria:** one host projects a measured-reduced set, another projects unchanged, and the difference traces to a recorded measurement rather than a constant.
 
@@ -167,7 +195,7 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Acceptance Criteria
 
-- [ ] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement.
+- [-] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement. <!-- [-] transferred to stubs/road-to-host-aware-skill-projection.md (council disposition B, outcome: transferred) — depends on Phase 1 steps 1.1-1.3, all transferred -->
 - [x] A typeless evidence artifact fails its check.
 - [x] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
 - [x] No step in this roadmap duplicates a step in the estate-diet roadmap (`road-to-cost-parity-1-rule-payload-diet`). <!-- verified 2026-08-20: three greps over that file return 0 — `grep -icE "host-aware|host capability profile|skill projection|catalogue truncation"` = 0, `grep -icE "evidence artifact typ|artifact type"` = 0, `grep -icE "qualification|quorum|council seat"` = 0. Its six phases are census, skill-cluster consolidation, norm-lines, uncapped growth surfaces, the maintenance promise, and an explicit will-not-do list; none of the three subjects here appears in any of them. -->
