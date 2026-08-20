@@ -63,7 +63,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 | 6 | Stop binds the largest chain on claude | **still-true** | `src/scripts/hook_manifest.yaml` claude block |
 | 7 | A large transcript read cap per Stop | **still-true** | the read cap in `turn_end_gate_hook.ts` |
 | 8 | Measured origin: language violations survived a fresh pin, and advisory carriers hit zero effect | **still-true** | the round-5 audit citation in the hook header. This is the strongest single result in the enforcement estate and is why this roadmap tunes rather than repeals |
-| 9 | The team operates German-language sessions, so detector-B exposure is real rather than hypothetical | **still-true** | `agents/roadmaps/road-to-conformance-round7-followup.md` corpus quotes |
+| 9 | The team operates German-language sessions, so detector-B exposure is real rather than hypothetical | **still-true** | `agents/roadmaps/later/road-to-conformance-round7-followup.md` corpus quotes |
 | 10 | Refusal rates are expected to correlate with the local 12.1 install date | **prediction, not a claim** | derived from `road-to-mixed-trigger-activation-cost` § 0 — per-edit obligations multiplied by detector C. Phase 1 tests it; nothing downstream assumes it |
 
 ## Phases

@@ -550,7 +550,8 @@ Every enforcement claim this audit falsified.
   remote-state case explicitly, in either direction, and the round-7 finding is
   cited in the change.
 - **Carried forward, so archiving this roadmap does not bury it:**
-  `road-to-conformance-round7-followup.md` (`status: draft`) holds this decision
+  `agents/roadmaps/later/road-to-conformance-round7-followup.md`
+  (`status: later`, parked 2026-08-20) holds this decision
   with its four measured sessions. A Blockers entry is not a `[~]` step, so Iron
   Law 3's mechanical check would not have caught the loss — the promotion is
   deliberate, not automatic.
