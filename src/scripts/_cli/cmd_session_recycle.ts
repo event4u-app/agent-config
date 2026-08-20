@@ -41,6 +41,7 @@ import {
 } from '../_lib/subagent_capsule.js';
 import { collectGrounding } from '../_lib/envelope_grounding.js';
 import { atomic_write_json } from '../hooks/state_io.js';
+import { env_session_id } from '../sessions_cli.js';
 
 export interface RecycleResult {
     code: 0 | 1 | 2;
@@ -185,7 +186,14 @@ export function runSessionRecycle(
     // composed. A model-written branch is a claim; this is a reading. The
     // composer cannot override them — a "next_task" it got wrong is a
     // proposal, a "head" it got wrong is a silent stale resume.
-    const grounding = collectGrounding(projectRoot);
+    // The session id is the ONLY channel to this session's verify state, which
+    // the producer keys per session. `env_session_id` is the canonical resolver
+    // (package variable first, then the host's `CLAUDE_CODE_SESSION_ID`) and is
+    // imported rather than re-implemented — a second copy of that precedence
+    // order would drift from the one a test covers. A host that exports neither
+    // yields `null`, and `last_verify` is then simply absent from the envelope
+    // (the delete-then-set below already treats an unreadable fact as absent).
+    const grounding = collectGrounding(projectRoot, env_session_id());
     // Drop the composer's factual keys UNCONDITIONALLY first. Guarding each
     // assignment on `!== null` would leave a model-composed branch or head
     // standing whenever the git read fails — the consumer would then compare
