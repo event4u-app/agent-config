@@ -634,15 +634,21 @@ Both `[~]`: authored here, decided elsewhere. Never started.
       files. The census counts with the exact BPE tokenizer and measured the
       unconditional corpus at **108,130 → 111,642, i.e. +3,512**. A DRY pass then
       collapsed the four duplicated rationale sections into one shared record in
-      `source-confidentiality` with three pointers, bringing it to **+3,156
-      (3.3 %** of the 96,584 the partition returns). The correction is recorded in
-      the rule itself rather than quietly replaced, because the wrong number is the
-      one the council was given. Neither seat's argument depends on it: one held
+      `source-confidentiality` with three pointers, bringing it to +3,156 — and then
+      `check_rule_stub_ceiling` refused the three short pointers outright, because a
+      migrated stub is held at its pointer's size and prose added there is prose in
+      the wrong place by that gate's own contract. Removing those three notes landed
+      the final **+2,882 (3.0 %** of the 96,584 the partition returns), with the one
+      shared record in `source-confidentiality`, which is not a migrated stub and has
+      no ceiling. All three figures are recorded rather than quietly replaced,
+      because the first is the one the council was given. Neither seat's argument depends on it: one held
       the token axis was the wrong one entirely, the other that cost is legitimate
       but loses this comparison — both readings survive 3.3 %.
-      **Where it is written down:** each of the four carries a
-      `## Why this rule is not path-scoped` section — the full record in
-      `source-confidentiality`, a three-line pointer in the others.
+      **Where it is written down:** one `## Why this rule is not path-scoped` section
+      in `source-confidentiality`, naming all four. The other three are migrated
+      POINTER stubs that `check_rule_stub_ceiling` holds at their pointer's size, so
+      they carry no note of their own — the gate caught the first attempt to give
+      them one, and it was right.
 - [x] **5.2** Whether any host mechanism suppresses a *skill* registration, for
       the case where a consumer legitimately holds both layers.
       **MEASURED 2026-08-20 — RECORDED NULL, and the null is stronger than the
@@ -964,8 +970,10 @@ than reporting a clean invariant that does not hold.
   against a re-anchored baseline whose `baseline_history` entry states the reason.
   **Cost, corrected in public:** the 1,754-token figure given to the council was a
   `chars / 4` proxy and understated the exact-BPE cost by about half. Measured:
-  +3,512, reduced to **+3,156 (3.3 %** of the partition's 96,584-token saving) by
-  collapsing four duplicated rationale sections into one shared record.
+  +3,512, then +3,156 by collapsing four duplicated rationale sections into one,
+  then **+2,882 (3.0 %** of the partition's 96,584-token saving) once
+  `check_rule_stub_ceiling` refused prose in the three migrated pointer stubs —
+  which is the gate agreeing that a shared record was the right shape.
 - **Resolved when:** DONE — the option is recorded, shipped and verified above.
   to ADR-227.
 

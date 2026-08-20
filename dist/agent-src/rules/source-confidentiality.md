@@ -98,10 +98,13 @@ global layer no longer carries an unscoped twin of it. A `paths:`-scoped rule is
 obligation silently disappears mid-session with nothing left to reload it.
 
 It is therefore delivered unconditionally, and the path triggers were removed
-rather than worked around. **This paragraph is the shared record for all four such
-rules** — `no-roadmap-references`, `rule-type-governance`, `skill-quality` and this
-one point here rather than repeating it, because four copies of the rationale cost
-more standing context than the decision they explain.
+rather than worked around. **This section is the shared record for all four such
+rules** — `no-roadmap-references`, `rule-type-governance` and `skill-quality` carry
+the same change and no note of their own. Two reasons: four copies of the rationale
+cost more standing context than the decision they explain, and the other three are
+migrated POINTER stubs held at their pointer's size by
+`check_rule_stub_ceiling` — prose added there is prose in the wrong place by that
+gate's own contract, which is what caught the first attempt to duplicate it.
 
 AI council 2026-08-20, 2/2 convergent on this option over three alternatives, with
 two independent decisive arguments. First: the obligation governs an **authoring

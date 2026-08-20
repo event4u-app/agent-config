@@ -61,14 +61,6 @@ build on any new violation.
 Body migrated to [`skill:agent-docs-writing` § Transient-reference discipline](../skills/agent-docs-writing/SKILL.md) (per P4 of `road-to-kernel-and-router.md`) — forbidden/allowed pattern catalog, structural carve-outs table (evaluation-context → council-question, contract → session-synthesis), promote-then-link procedure, failure modes.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
-## Why this rule is not path-scoped
-
-Delivered by the project layer only (ADR-236) and therefore **unconditionally**:
-a `paths:`-scoped rule is not re-injected after `/compact` (ADR-227), so scoping
-it would let the obligation disappear mid-session with nothing left to reload it.
-Reasoning, the council verdict and the measured cost:
-[`source-confidentiality` § Why this rule is not path-scoped](source-confidentiality.md#why-this-rule-is-not-path-scoped).
-
 ## See also
 
 - [`skill:agent-docs-writing`](../skills/agent-docs-writing/SKILL.md) —
