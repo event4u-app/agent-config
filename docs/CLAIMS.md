@@ -165,11 +165,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-11
 
 ### claim: bus-factor-tracked
-- claim: The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more.
+- claim: The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. The doc separately reports the distinct MERGER count (2, one of them an unreviewed self-merge) so the reviewer figure cannot be inflated by conflating the two.
 - kind: qual
 - evidence: docs/succession.md#trailing 90 days
 - status: backed
-- last_verified: 2026-07-09
+- last_verified: 2026-08-20
 
 ### claim: second-brain-recall-lift
 - claim: On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store.

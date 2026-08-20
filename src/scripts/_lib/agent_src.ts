@@ -278,9 +278,48 @@ export function _domains_command_logical(p: string): string | null {
 }
 
 /**
+ * Is this domains path inside a `__`-prefixed SCRATCH pack?
+ *
+ * ## Why this exists — a measured cross-test contamination
+ *
+ * A pack id is a lowercase slug (`slug_prefix` is validated against
+ * `^[a-z][a-z0-9-]*$`), so a directory whose name starts with `__` is not a
+ * pack that can ship. It is a test scratch marker, and the walkers must not
+ * count it.
+ *
+ * The defect this closes, measured 2026-08-20 on a full local suite run:
+ * `check_artefact_count_messaging`'s "live gate — real repo surfaces" test
+ * PASSED in isolation and FAILED in the suite, reporting
+ * `commands says 200, expected 207`. The +7 is exact and traceable:
+ * `lint_originality.test.ts` writes seven `command.md` files into the REAL tree
+ * at `src/domains/__origtest_batch/c1..c7/` (it must — that gate classifies an
+ * artefact by its PATH, so a tmpdir would not be a "command" at all), and
+ * removes them in `afterEach`. Vitest runs test files in parallel workers, so
+ * while those seven exist a concurrent worker counting the live tree sees 207.
+ *
+ * This is a SCOPE defect, not a flaky test: a gate asserting over the developer's
+ * live tree is not hermetic, and the remedy is a fixture boundary rather than a
+ * relaxed expectation. The boundary is placed here, at the point where a path
+ * becomes a counted artefact, because that is the one place that fixes it for
+ * every counter at once — and it weakens nothing: the count of real artefacts is
+ * still asserted exactly.
+ *
+ * Checked before shipping: no pack under `src/domains/` uses a `__` prefix, and
+ * `lint_originality` does not consume these walkers (it reads its corpus from
+ * the `--changed` paths it is handed), so its own batch test is unaffected.
+ */
+function _isScratchPack(domains_root: string, full: string): boolean {
+    const rel = path.relative(domains_root, full);
+    const first = rel.split(path.sep)[0];
+    return first !== undefined && first.startsWith('__');
+}
+
+/**
  * Yield `[physical_path, logical_relpath]` for every domains command, in
  * deterministic order. Naturally inert until `src/domains/*\/**\/command.md`
  * files exist. Mirrors `_iter_domains_commands`.
+ *
+ * Skips `__`-prefixed scratch packs — see `_isScratchPack`.
  */
 export function* _iter_domains_commands(): Generator<[string, string]> {
     const dom = _roots.SRC_DOMAINS;
@@ -289,6 +328,9 @@ export function* _iter_domains_commands(): Generator<[string, string]> {
     }
     for (const p of _rglobSorted(dom, 'command.md')) {
         if (!_isFile(p)) {
+            continue;
+        }
+        if (_isScratchPack(dom, p)) {
             continue;
         }
         const logical = _domains_command_logical(p);
