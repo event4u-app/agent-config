@@ -18,6 +18,7 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { statePathFor } from '../before_complete_hook.js';
 import { git_common_dir } from './git_common_dir.js';
 import { gitEnv } from './git_env.js';
 
@@ -114,10 +115,9 @@ export interface Grounding extends RepoAnchor {
     last_verify: string | null;
 }
 
-const VERIFY_STATE_REL = path.join('agents', 'runtime', 'state', 'verify-before-complete.json');
 
 /**
- * The last verification this workspace recorded, as one line.
+ * The last verification THIS SESSION recorded, as one line.
  *
  * **What this is not:** an exit code. The roadmap step asked for "last verify
  * exit", and nothing in the tree records one — `before_complete_hook` stores
@@ -125,10 +125,34 @@ const VERIFY_STATE_REL = path.join('agents', 'runtime', 'state', 'verify-before-
  * worse than emitting less, so the field carries the command and its
  * timestamp and says so, rather than implying a pass/fail the source never
  * held.
+ *
+ * **Why the session id is a required parameter, not an optional one.** This
+ * function resolved `agents/runtime/state/verify-before-complete.json` for its
+ * whole life and returned `null` every time: the producer never wrote that
+ * path — pre-split it wrote `agents/state/verify-before-complete.json`, and
+ * after the per-session split it writes
+ * `agents/state/verify-before-complete/<digest>.json`. The `runtime/` segment
+ * was never a directory this state used, so the reader was dead on arrival
+ * rather than made dead by the split.
+ *
+ * The producer's state is now per-session, so a reader without a session id
+ * cannot address it — and there is no defensible fallback. Reading "whatever
+ * file is newest in the directory" would attribute a NEIGHBOURING session's
+ * verification to this envelope, which is the exact cross-session read the
+ * split exists to stop, and it would do it on the field a successor session
+ * uses to decide whether work was verified. So an absent id yields `null`, and
+ * the parameter is required so no caller can reach the dead behaviour by
+ * omission.
+ *
+ * The path comes from the producer's own builder (`statePathFor`), never from
+ * a literal repeated here: a copied path constant is what went stale, and
+ * copying it again with the correct value would only reset the clock on the
+ * same failure.
  */
-export function readLastVerify(root: string): string | null {
+export function readLastVerify(root: string, session_id: string | null): string | null {
+    if (typeof session_id !== 'string' || session_id.trim() === '') return null;
     try {
-        const raw = fs.readFileSync(path.join(root, VERIFY_STATE_REL), 'utf-8');
+        const raw = fs.readFileSync(path.join(root, statePathFor(session_id)), 'utf-8');
         const state = JSON.parse(raw) as Record<string, unknown>;
         const lv = state['last_verification'];
         if (typeof lv !== 'object' || lv === null || Array.isArray(lv)) return null;
@@ -142,8 +166,14 @@ export function readLastVerify(root: string): string | null {
     }
 }
 
-/** Collect every scripted field. Never throws — an unreadable fact is `null`. */
-export function collectGrounding(root: string): Grounding {
+/**
+ * Collect every scripted field. Never throws — an unreadable fact is `null`.
+ *
+ * `session_id` is required and forwarded to `readLastVerify` — see the reason
+ * stated there. A caller with no id in hand passes `null` and gets a `null`
+ * `last_verify`, which is the honest answer rather than a neighbour's.
+ */
+export function collectGrounding(root: string, session_id: string | null): Grounding {
     const anchor = collectRepoAnchor(root);
     const porcelain = git(root, ['status', '--porcelain']);
     if (porcelain === null) {
@@ -151,7 +181,7 @@ export function collectGrounding(root: string): Grounding {
         // this the one field in the module that asserts something it never
         // read — and it would assert it exactly when every sibling field is
         // null, so `describeDrift` is silent and nothing challenges it.
-        return { ...anchor, uncommitted_paths: [], status_summary: null, last_verify: readLastVerify(root) };
+        return { ...anchor, uncommitted_paths: [], status_summary: null, last_verify: readLastVerify(root, session_id) };
     }
     const lines = porcelain.split('\n').filter((l) => l.trim().length > 0);
     const paths = lines
@@ -165,7 +195,7 @@ export function collectGrounding(root: string): Grounding {
             lines.length === 0
                 ? 'clean working tree'
                 : `${lines.length} uncommitted path(s)${lines.length > MAX_PATHS ? `, first ${MAX_PATHS} listed` : ''}`,
-        last_verify: readLastVerify(root),
+        last_verify: readLastVerify(root, session_id),
     };
 }
 

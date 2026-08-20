@@ -27,10 +27,16 @@ if (!target || !Number.isFinite(iterations)) {
 
 let failed = 0;
 for (let i = 0; i < iterations; i += 1) {
-    const ok = update_json_under_lock<{ n: number }>(target, (loaded) => ({
+    // Compared against the union member, never coerced. `if (!ok)` was correct
+    // against the old boolean and is a silent no-op against the union — every
+    // member is a truthy string, so the failure counter would read 0 forever
+    // and this worker would report a clean run through a broken lock. That is
+    // the migration hazard named at `update_json_under_lock`; this fixture is
+    // where it would have landed unnoticed.
+    const outcome = update_json_under_lock<{ n: number }>(target, (loaded) => ({
         n: (typeof loaded.n === 'number' ? loaded.n : 0) + 1,
     }));
-    if (!ok) failed += 1;
+    if (outcome !== 'written') failed += 1;
 }
 
 // Report failed writes so the test can distinguish "the lock lost an update"
