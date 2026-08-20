@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**516 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 174 · completed 251 · completed-with-deferrals 25 · not-extractable 34
+**519 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 176 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -272,6 +272,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-harvest-small-enhancements`](road-to-harvest-small-enhancements.md) | Roadmap: Competitive-harvest small enhancements + file-first pattern library | closed-with-cancellations | 6 | 15/17 | _not extractable_ |
 | [`road-to-honesty-bench`](road-to-honesty-bench.md) | Road to honesty bench — measure the shipped honesty kernel, park the rest | completed | 2 | 7/7 | _not extractable_ |
 | [`road-to-hook-latency-repair`](road-to-hook-latency-repair.md) | Road to hook latency repair — pay for the bundle, not the CLI | completed | 3 | 9/9 | _not extractable_ |
+| [`road-to-hook-state-followups`](road-to-hook-state-followups.md) | Road to the hook-state follow-ups nobody owned | completed | 3 | 10/10 | _not extractable_ |
 | [`road-to-hooks-actually-fire-in-consumers`](road-to-hooks-actually-fire-in-consumers.md) | Roadmap: Hooks actually fire in consumer projects — close the marketplace-install gap | closed-with-cancellations | 7 | 33/40 | _not extractable_ |
 | [`road-to-humanized-writing`](road-to-humanized-writing.md) | Road to humanized writing — pattern-audited drafts across the write engine | closed-with-cancellations | 6 | 35/36 | _not extractable_ |
 | [`road-to-humanizer-hardening`](road-to-humanizer-hardening.md) | Road to humanizer hardening — close the follow-up findings | completed | 4 | 24/24 | _not extractable_ |
@@ -321,6 +322,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-local-only-gate-reds`](road-to-local-only-gate-reds.md) | Road to local-only gate reds — four red gates nobody sees | completed | 4 | 10/10 | _not extractable_ |
 | [`road-to-long-horizon-execution`](road-to-long-horizon-execution.md) | Road to long-horizon execution — the agent stops when the roadmap doesn't | closed-with-cancellations | 6 | 20/24 | _not extractable_ |
 | [`road-to-loop-engineering`](road-to-loop-engineering.md) | Road to Loop-Engineering Discipline | completed | 2 | 10/10 | _not extractable_ |
+| [`road-to-maintainer-bus-factor`](road-to-maintainer-bus-factor.md) | Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery | closed-with-cancellations | 4 | 9/13 | _not extractable_ |
 | [`road-to-mcp-discovery-helper`](road-to-mcp-discovery-helper.md) | Roadmap: Read-only cross-agent MCP discovery helper | closed-with-cancellations | 4 | 4/14 | _not extractable_ |
 | [`road-to-mcp-distribution`](road-to-mcp-distribution.md) | Road to MCP Distribution | closed-with-cancellations | 0 | 0/5 | _not extractable_ |
 | [`road-to-mcp-full-coverage`](road-to-mcp-full-coverage.md) | Road to MCP Full Coverage | closed-with-cancellations | 6 | 15/29 | _not extractable_ |
@@ -402,6 +404,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-recursive-verification`](road-to-recursive-verification.md) | Road to recursive self-verification — the one retraining-free Fugu mechanism, measured capability-axis-first | closed-with-cancellations | 8 | 22/28 | _not extractable_ |
 | [`road-to-refine-ticket-hardening`](road-to-refine-ticket-hardening.md) | Roadmap: `/refine-ticket` hardening (v2 follow-ups) | completed-with-deferrals | 7 | 29/31 | _not extractable_ |
 | [`road-to-release-gate-hardening`](road-to-release-gate-hardening.md) | Road to release-gate hardening — turn reactive catches into pre-merge gates | completed | 3 | 11/11 | _not extractable_ |
+| [`road-to-release-review-p0`](road-to-release-review-p0.md) | Road to release-review P0 | closed-with-cancellations | 3 | 16/21 | _not extractable_ |
 | [`road-to-release-shape-honesty`](road-to-release-shape-honesty.md) | Road to release-shape honesty — lint the release that shipped, and describe it truthfully | completed | 3 | 8/8 | _not extractable_ |
 | [`road-to-release-truth`](road-to-release-truth.md) | Road to release truth — one final source, findings with dispositions, bounded autonomy | completed | 4 | 10/10 | _not extractable_ |
 | [`road-to-renewal-adr-hygiene`](road-to-renewal-adr-hygiene.md) | Road to renewal — ADR hygiene (chip-mode) | closed-with-cancellations | 3 | 9/10 | _not extractable_ |
