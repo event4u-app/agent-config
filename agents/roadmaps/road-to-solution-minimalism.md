@@ -28,7 +28,7 @@ its six open items closed; one is open and transferred. Per phase:
 | Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
 | Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
 | Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** (B, below). Phase 3 has never reported and does not report now. |
-| Acceptance criteria | **4 of 6 satisfied, 1 transferred, 1 satisfied by this pass** | The full-tier criterion is transferred; the quality-gates criterion closes with this change's gate run. |
+| Acceptance criteria | **4 of 6 satisfied, 2 still open** | The full-tier criterion is transferred (B). The quality-gates criterion stays open and is NOT claimed: see its own note for what actually ran. |
 
 ### The blocker disposition (A — re-scope, narrowed)
 
@@ -1128,6 +1128,25 @@ twenty-nine steps that already landed.
       fixtures makes the verdict vacuous, and a verdict that ignores the metric
       makes the fixtures decorative.
 - [ ] All quality gates pass — see `quality-tools`.
+      **Open, and deliberately not closed on a green local run (2026-08-20).**
+      What ran, and passed: `task preflight` (exit 0, 22 gates), `task lint-ts`,
+      `task check-source-size-budget` (at baseline, no growth — the two new
+      modules sit under the ceiling), `lint_plan_risk_register`,
+      `lint_roadmap_blockers`, `lint_roadmap_complexity`, `lint_roadmap_ci_steps`,
+      `check_roadmap_trackable`, `check_no_roadmap_refs`, `lint_empty_roadmaps`,
+      `lint_roadmap_later_disposition`, `lint_bench_ab`, `validate_frontmatter`
+      (440 artefacts), `check_references` (1,436 scanned), `lint_evidence_artifacts
+      --all`, and 251 vitest assertions across the eight suites this change
+      touches. One advisory, non-blocking: no completion-review artefact for the
+      branch scope.
+      **Why that is still not this criterion.** `task preflight` documents its own
+      scope in as many words — it reaches 22 gates while 209 CI-enforced gates run
+      neither there nor anywhere else a local push reaches, and it says a green
+      preflight is never a prediction that CI will be green. The authoritative
+      gate is the remote CI on a pull request, and no pull request exists for this
+      branch. Marking this `[x]` on a local subset would be precisely the
+      claim-without-its-evidence that F7 and § Risk Register rank 1 exist to
+      forbid, in the roadmap that argues for it.
 
 ## Blockers
 
