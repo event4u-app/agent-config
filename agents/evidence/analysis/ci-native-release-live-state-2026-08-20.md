@@ -13,20 +13,25 @@ produced.
 
 ## 1 · Entry points: which one has actually fired
 
-`gh run list --workflow=release.yml --limit 200 --json event,conclusion`,
-aggregated by `event / conclusion`:
+`gh run list --workflow=release.yml --limit 300 --event <e> --json conclusion`,
+one scan per event type:
 
 | Event | Conclusion | Runs |
 |---|---|---|
-| `pull_request` | `skipped` | **197** |
+| `pull_request` | `skipped` | **300 of 300 scanned** |
+| `pull_request` | anything else | **0** |
 | `workflow_dispatch` | `success` | 2 |
 | `workflow_dispatch` | `cancelled` | 1 |
-| `workflow_dispatch` | `failure` | 2 (2026-07-08, 2026-07-21) |
+| `workflow_dispatch` | `failure` | 2 |
 
-**The label path has never fired — not once in 197 opportunities.** Every
-`pull_request` run evaluated `release.yml`'s `if:` at line 92 to false, i.e. no
-merged PR has ever carried `release` / `release:major` / `release:minor` /
-`release:patch`.
+The dispatch column is complete — 5 runs, the earliest 2026-07-08, the day
+`release.yml` reached `main`. The `pull_request` column is a floor, not a total:
+300 is the scan limit, and the non-skipped count within it is zero.
+
+**The label path has never fired — not once in the 300 most recent
+opportunities.** Every `pull_request` run evaluated `release.yml`'s `if:` at
+line 92 to false, i.e. no merged PR has ever carried `release` /
+`release:major` / `release:minor` / `release:patch`.
 
 This is not a missing-label problem. All four labels exist on the repository
 today (`gh label list`):
@@ -120,7 +125,7 @@ Three independent reasons that cannot happen:
    guards it: `if (!args.dry_run) { preflight(target, …) }`. A dry-run reaches
    `print_preview` and returns 0 at `:2712` without ever entering preflight.
 2. **`preflight()` contains no open-release-PR probe.** Its complete check set
-   (`release.ts:1738-1812`) is: `git`/`gh` on PATH · token auth · current branch
+   (`release.ts:1738-1814`) is: `git`/`gh` on PATH · token auth · current branch
    is `main` (or `release/X.Y.Z` under resume) · clean working tree · fetch tags
    · local `main` in sync with `origin/main` · target tag does not already
    exist. Nothing reads open pull requests.
@@ -158,7 +163,7 @@ output diff would settle it:
   `taskfiles/release.yml:21` → `./scripts-run src/scripts/release {{.CLI_ARGS}}`;
   `.github/workflows/release.yml:187` → `./scripts-run src/scripts/release "${args[@]}"`.
 - Under `--dry-run`, **`--ci` cannot alter the printed plan.** Every input to
-  the `Plan` constructed at `release.ts:2707` is computed before any
+  the `Plan` constructed at `release.ts:2706` is computed before any
   `ci`-conditional branch. The only `ci`-conditional code above the preview is
   `nothing_to_release_ci` (`:2467`, called `:2626`), which decides whether to
   exit cleanly when there is nothing to release rather than changing a plan, and
@@ -198,7 +203,7 @@ the live set was ever safe to attempt.
 | Has `workflow_dispatch --dry-run` been verified post-merge? | Yes — run 32083648970 |
 | Do the CI and local plans agree? | Yes, by shared code path; the same-HEAD diff is unobtainable |
 | Has a release shipped through the **dispatch** entry point? | Yes — 14.0.0, run 32118914154 |
-| Has a release shipped through the **label** entry point? | **No** — 197 skipped `pull_request` runs |
+| Has a release shipped through the **label** entry point? | **No** — 0 non-skipped across 300 scanned `pull_request` runs |
 | Failure drill (b) + (c)? | Converged live, run 32118914154 |
 | Failure drill (a), pre-merge crash? | Not drilled; documented as unsupported |
 | Double-fire on a second labeled PR? | Never exercised — the label path has never fired once |
