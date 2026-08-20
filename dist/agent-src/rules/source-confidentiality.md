@@ -3,13 +3,6 @@ type: "auto"
 tier: "mechanical-already"
 description: "Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous"
 alwaysApply: false
-triggers:
-  - path_prefix: "src/skills/"
-  - path_prefix: "src/rules/"
-  - path_prefix: "src/domains/"
-  - path_prefix: "docs/"
-  - path_prefix: "agents/evidence/"
-  - path_prefix: "agents/roadmaps/"
 validator_ignore:
   - type: "substring"
     pattern: "external_sources_denylist"
@@ -95,6 +88,40 @@ The `check-no-external-sources` CI gate
 runs in the package CI pipeline and fails the build on any denied source token
 in a non-carve-out tracked file. The linter is a deterministic net, not a
 substitute for not writing the attribution in the first place.
+
+## Why this rule is not path-scoped
+
+Under [ADR-236](../docs/decisions/ADR-236-one-artefact-one-layer.md) this rule is
+delivered by the PROJECT layer only — it exists to maintain this package, so the
+global layer no longer carries an unscoped twin of it. A `paths:`-scoped rule is
+**not re-injected after `/compact`** (ADR-227:79-80), so scoping it would mean the
+obligation silently disappears mid-session with nothing left to reload it.
+
+It is therefore delivered unconditionally, and the path triggers were removed
+rather than worked around. **This paragraph is the shared record for all four such
+rules** — `no-roadmap-references`, `rule-type-governance`, `skill-quality` and this
+one point here rather than repeating it, because four copies of the rationale cost
+more standing context than the decision they explain.
+
+AI council 2026-08-20, 2/2 convergent on this option over three alternatives, with
+two independent decisive arguments. First: the obligation governs an **authoring
+decision**, which happens before any file exists for a path trigger to match — so
+path-scoping fails at greenfield creation whether or not a compaction ever occurs.
+Second: the measured cost is small against what the partition returns. Keeping an
+unscoped global copy was rejected because it re-creates the duplication the
+partition exists to remove; splitting the four by "has a CI gate" was rejected by
+both seats as the wrong axis — a validator observes an outcome, it does not hold an
+obligation during the session, and `rule-type-governance` has no gate at all.
+
+**Cost, measured and corrected.** An earlier revision of this note claimed 1,754
+tokens (1.8 % of the partition's 96,584-token saving). That figure was a
+`chars / 4` proxy over the projected files and **understated the real cost by about
+half**: `check_rule_activation_census`, which counts with the exact BPE tokenizer,
+measures the unconditional corpus growing **108,130 → 111,642, i.e. +3,512 tokens
+(3.6 %)** — and that number includes this rationale, which is why it lives in one
+place instead of four. The verdict does not depend on the figure: one seat argued
+the token axis was the wrong one entirely, the other that cost is a legitimate axis
+which simply loses this particular comparison. Both readings survive 3.6 %.
 
 ## See also
 
