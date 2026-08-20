@@ -88,3 +88,29 @@ Exit code is always 0 — hooks must never block the agent loop.
 
 - `context-hygiene` (rule) — thresholds, 3-failure rule, tool-loop cap, read-loop Iron Law.
 - `systematic-debugging` § Debug micro-loop — the one-test-one-fix-one-rerun procedure.
+
+## The CI waiter — use the helper, never the hand-written loop
+
+`./scripts-run src/scripts/ci_settle <pr> [--timeout-min N] [--interval-sec N]`
+
+Exit codes: **0** settled green · **1** settled red, with the failing checks
+named · **2** did not settle, or the API could not be read — never a verdict.
+
+Four states classify as *not settled*, and each one is a way the hand-written
+form goes wrong: an API error, a non-zero `gh` exit, unparseable output, and
+**zero registered checks** (a run that has not registered its checks yet looks
+exactly like a finished one with nothing to report).
+
+**Why it exists.** Measured 2026-08-20:
+
+```bash
+until ! gh pr checks 1459 | grep -q "pending"; do sleep 60; done
+```
+
+The API then failed. Its error text — `error connecting to api.github.com` —
+contains no `pending`, so the loop exited, the session reported a settle that
+had not happened, and the claim had to be retracted to the user in the next
+reply. The bug is not the sleep or the grep: **absence of the word `pending`
+was treated as evidence of completion**, and an error is neither settled nor
+pending. The exit condition is the part that is easy to get wrong, so it lives
+in one place rather than in every agent's head.

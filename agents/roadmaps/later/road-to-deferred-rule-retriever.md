@@ -1,6 +1,6 @@
 ---
 status: blocked-for-later
-complexity: medium
+complexity: lightweight
 ---
 
 # Road to deferred-rule retriever — command-invoked Class-A variant of the rejected MCP retrieval server

@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 515,
+  "count": 516,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1262,6 +1262,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-agent-velocity",
+      "title": "Road to agent velocity — the 21 % of a session that was self-inflicted",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 22,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-agentic-headroom-benchmark",
