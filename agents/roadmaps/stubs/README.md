@@ -40,38 +40,51 @@ frontmatter expected by the linter.
 | [`road-to-worktree-lifecycle.md`](road-to-worktree-lifecycle.md) | Governed `/worktree:*` command cluster | ≥3 real demand signals + overlap check vs existing skills |
 | [`road-to-council-visibility.md`](road-to-council-visibility.md) | `--council` in-flow verdicts + report format | Orchestration prove-or-drop resolved + ≥2 usage asks |
 
-## Drain-transfer stubs (2026-08-20 — `road-to-always-on-orchestration`)
+## Drain-run transfers
 
-Transferred under council disposition **B — transferred**, 2026-08-20
-(anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2). Each
-carries the three-point integrity check that disposition requires: the
-original `Resolved when` criterion **verbatim**, the complete list of
-dependent steps moved, and a **named** re-entry producer with a
-detection probe — never "when some subsystem exists for its own
-reason", which names nobody.
+A second, separate group with a **different origin and different gates**. These
+were not created by Phase 9 of the employee-product roadmap; they are work
+transferred out of an active roadmap during a drain run because it needs a live
+host session, a human observation, or a capability nobody is building. The
+transferring roadmap records outcome state `transferred` so its archival never
+reads as "outcome achieved".
 
-| Stub | Evidence gap that blocks it | Re-entry producer | Probe reading today |
+Each carries the three-point integrity check that disposition requires: the
+original `Resolved when` criterion **verbatim**, the complete list of dependent
+steps moved, and a **named** re-entry producer with a detection probe — never
+"when some subsystem exists for its own reason", which names nobody. Where a
+probe was measurable on the transfer date its reading is recorded, so a future
+reader can tell movement from noise.
+
+Council disposition **B — transferred**, 2026-08-20
+(anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2).
+
+| Stub | Transferred from | Re-entry producer | Probe reading on transfer |
 |---|---|---|---|
-| [`road-to-team-telemetry-behind-flag.md`](road-to-team-telemetry-behind-flag.md) | Team payloads unobservable while the experimental host flag is unset | Maintainer of a flag-enabled environment | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` **unset** (3rd dated reading) |
-| [`road-to-f4-full-stop-block.md`](road-to-f4-full-stop-block.md) | Live Stop-slot `additionalContext` delivery unverified; threshold needs a distribution | Maintainer running the supported host | 9 `review_skipped` lines, all `exact`; canary **not captured** |
-| [`road-to-gate-council-auto-dispatch.md`](road-to-gate-council-auto-dispatch.md) | Transport soak unverified; pre-registered minima unwritten | Gate-autonomy maintainer | 121 `quorum_result` events; 553 dispatch lines — **window has opened** |
-| [`road-to-point-of-action-carrier.md`](road-to-point-of-action-carrier.md) | Main-vs-subagent identity not establishable from this repository | Maintainer with a real multi-agent host session | **not locally measurable** — no lineage field in the hook envelope |
+| [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1 | Skill-projection maintainer | P1-P3 all measured **failing**: no same-`projection_mode` observation pair, `condense.ts` still throws on the scoped path, no published projected-away-skill finding |
+| [`road-to-team-telemetry-behind-flag.md`](road-to-team-telemetry-behind-flag.md) | `road-to-always-on-orchestration.md` 5.4 | Maintainer of a flag-enabled environment | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` **unset** (3rd dated reading) |
+| [`road-to-f4-full-stop-block.md`](road-to-f4-full-stop-block.md) | `road-to-always-on-orchestration.md` | Maintainer running the supported host | 9 `review_skipped` lines, all `exact`; canary **not captured** |
+| [`road-to-gate-council-auto-dispatch.md`](road-to-gate-council-auto-dispatch.md) | `road-to-always-on-orchestration.md` | Gate-autonomy maintainer | 121 `quorum_result` events; 553 dispatch lines — **window has opened** |
+| [`road-to-point-of-action-carrier.md`](road-to-point-of-action-carrier.md) | `road-to-always-on-orchestration.md` | Maintainer with a real multi-agent host session | **not locally measurable** — no lineage field in the hook envelope |
 
-Four stubs for four blockers. Merging was considered and refused: the
-two host-probe cases look adjacent but probe different mechanisms
-(Stop-slot delivery vs PreToolUse agent identity) against different
-telemetry streams (`review_skipped` vs F3-lite adoption), and the
-council assigned them separate re-entry producers. One stub per
-distinct evidence gap; a merged stub would have one probe standing in
-for two facts.
+Four of these are one stub per blocker from the same roadmap, and merging them
+was considered and refused: the two host-probe cases look adjacent but probe
+different mechanisms (Stop-slot delivery versus PreToolUse agent identity)
+against different telemetry streams (`review_skipped` versus F3-lite adoption),
+and the council assigned them separate re-entry producers. One stub per distinct
+evidence gap; a merged stub would have one probe standing in for two facts.
 
-## Promotion criteria — scoped by stub kind
+**The shared promotion criteria below do NOT apply to this group.** They are
+org-mode gates — recruited customer, funded security audit, ADR lifting a
+Hard-Floor item — and a drain-run transfer of internal work crosses no Hard
+Floor and introduces no org surface. Each stub in this group carries its own
+gates and says so.
 
-### The original six (org-mode surfaces)
+## Promotion criteria (shared)
 
-Any of the six stubs above the drain-transfer table may move from
-`stubs/` to `agents/roadmaps/` only when **all three** of these are
-true:
+Applies to the six org-mode stubs in **Current stubs** above, not to the
+drain-run transfers. Any of those stubs may move from `stubs/` to
+`agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.
