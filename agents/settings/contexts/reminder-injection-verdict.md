@@ -166,3 +166,141 @@ sycophancy ratchet or persona degradation (the agent drifting agreeable/off-bran
 over a long session). That observation reopens the question; absent it, the
 disposition stands. Settled-by-decision (council), cheaper to reopen than a
 settled-by-evidence null.
+
+## Revisit condition MET (2026-08-20) — a red baseline was produced, and one bounded re-emit shipped
+
+The clause in § Scope + revisit-if above reopens this question on "a real red
+baseline — e.g. genuine >3K-token distance in a live multi-turn session, or
+telemetry showing tier-2 obligations missed in production". Production
+transcripts supplied one, so the disposition changes for exactly that regime and
+nowhere else.
+
+**Measured** (10 most recent transcripts, all projects, 447 assistant turns
+following a German prompt, classified with the hook's own `classify` so the
+instrument cannot disagree with the gate):
+
+| distance from pin (assistant turns) | n | English replies |
+|---|---|---|
+| 1 | 22 | 1 |
+| 2–25 | 321 | 0 |
+| > 25 | 99 | 11 |
+
+In tool calls — the unit `post_tool_use` can actually count — 11 of the 12
+violations sat at **179–200 calls since the pin**, none below 179, while
+compliant turns had p90 = 122 and p99 = 184. The largest observed block was 82
+assistant turns on ONE prompt, and the pin was re-stated only on a new prompt or
+once after a compaction. The surrounding context is ~198k tokens of delivered
+rules, entirely English, so the drift runs *with* the context rather than
+against it.
+
+**What shipped:** `REEMIT_AFTER_TOOL_CALLS = 150` in `language_mirror_hook`, one
+re-emit per 150 tool calls, reset by any new prompt and by the compaction
+re-emit. A 200-call block therefore costs ONE extra injection, and the
+per-fire payload is unchanged (`language-mirror` budget row, 2048 bytes, not
+touched).
+
+**Why this is not the refused shape.** § 6.2 refuses "the same failed mechanism
+running more often" — an unbounded re-pin on EVERY tool call, resting on a
+baseline the 2026-07-06 pilot found at ceiling (12/12, Δ=0). Two things differ,
+and both matter: the baseline here is red and measured in production rather than
+at ceiling in a pilot corpus, and the trigger is bounded — once per 150 tool
+calls instead of once per call.
+
+**Corrected the same day, before this entry was a day old.** The sentence here
+first read "staying silent for the ~90 % of turns that never reach it", and both
+council seats refuted it from the numbers in this very entry: compliant p99 =
+184 is PAST the 179 violation floor, so the two distributions overlap and some
+compliant traffic does cross 150. 150 sits between compliant p90 (122) and the
+earliest observed violation (179), which buys margin at the price of reminding
+some turns that did not need it. The honest claim is bounded frequency against a
+red baseline, never zero false fires.
+
+**Honest basis, stated because the corpus is narrow:** n = 11, and they cluster
+in a single long autonomous session. The distance signal is sharp — zero
+violations below 179 — but one session wide. 150 is "the number the observed
+failure sits behind", not a fitted optimum.
+
+**Revisit-if:** a violation is recorded BELOW 150 tool calls (threshold too
+high), or the re-emit fires across ≥ 5 sessions with no violation plausible at
+that distance (too low). Either falsifies the number, not the mechanism.
+
+**Unchanged by this entry:** the naive/blocking rule-restatement injection stays
+torn down, the drift-audit disposition above stays rejected-now, and nothing here
+licenses a reminder for any other obligation. A second obligation wanting the
+same treatment needs its own red baseline.
+
+## Council round 3 (2026-08-20) — three of four round-2 fixes held, the fourth did not
+
+Round 2's four fixes were roughly 400 new lines and went out for a third blind
+peer review. Both seats returned REQUEST_CHANGES, deckungsgleich: blockers 1, 2
+and 4 closed, **blocker 3 not** — the pruner's claim-then-revalidate was still
+destructive. Recorded because the pattern is the point: each round's FIX carried
+the next round's defect, and stopping at "the reviewer asked for X, X shipped"
+would have merged a state-destroying race twice.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | Restoration decided with `existsSync(live)` and acted with `renameSync(tomb, live)`. A writer arriving between the two lost its file to the pruner's older copy — a live pin destroyed by the component that exists to protect it | `linkSync`: atomic, refuses to clobber. Success = nothing was there; `EEXIST` = the owner won and its file is newer by construction |
+| 2 | A crash between the claim rename and the restore stranded the file under a name nothing reads (no longer `.json`) and nothing prunes. When the candidate had been refreshed under the pruner, that name held the CURRENT state while the live path was gone for good | A recovery pass over `*.tomb` before the main loop. No grace period: `rename` preserves mtime, so a tombstone carries the age of its CONTENT — which is the property this needs |
+| 3 | `_ownsPin` accepted an absent or empty owner as "legacy, therefore mine", contradicting its own newly-stated role as an integrity check. The pre-split file is deleted rather than migrated and every writer stamps the owner, so an ownerless hashed file can only be corruption | Exact equality. No compatibility window is owed — the digest path has never shipped |
+| 4 | The test named as foreign-ownership coverage put A's state at A's path and ran as B, so B read its own MISSING file and returned through the absent-pin branch. `_ownsPin(...) === false` was never reached | A's state written at B's OWN hashed path — the only way that branch runs end to end |
+| 5 | Both fail-closed tests forced their write failure with `chmod 0o500`, which root ignores: under an elevated CI user the write succeeds and the tests pass against any implementation | An injected writer, parallel to the age reader both seats had accepted. The `chmod` pair is kept but gated behind a probe, so it skips rather than passing vacuously |
+
+**One of my own tests was worthless, and the counter-probe is what said so.**
+The test written for finding 1 stayed GREEN against the code it was meant to
+refute: its injected callback fires before the old existence check, so the old
+code took its safe branch. The race window sits between the old decision and
+the old action, and no single-threaded seam reaches it. What replaced it: the
+post-condition asserted on the extracted helper (a restore never changes an
+existing live file), which catches the forward regression — a future restore
+that renames onto the live path without a check — and the honest scope is
+stated at the test instead of implied by its name. Removing the fix reds three
+tests; removing the recovery pass reds three; loosening `_ownsPin` reds three;
+dropping fail-closed reds five.
+
+**Sibling search for the defect itself:** four `existsSync`-then-`renameSync`
+sites in `src/`, **zero** further instances. `txlog` checks the source and
+renames to a fresh timestamped name; both `code_graph` sites check the source
+and replace the destination deliberately; the fourth match is this fix's own doc
+comment. The shape is unique to the pruner because only the pruner checks a
+destination a foreign process may create concurrently.
+
+**Not addressed, and named rather than closed:** both seats flagged reviewer
+fatigue — 45 % of the file is comment, and the critical section was easy to
+rubber-stamp inside a long block. Extracting `restore_claimed_state` as a named,
+documented function answers the concrete complaint. A general comment diet does
+not follow: the surviving blocks carry measurements, revisit conditions, and
+refused-alternative rationale, and cutting them is a separate change with its
+own risk.
+
+### The blind peer round attached three conditions to the `link` fix
+
+The peer pass did not accept the hard-link proposal as it stood. It named a
+real error in the proposing seat's own reasoning — the claim that `link`
+"naturally handles the tombstone-orphan case" is false, because the main loop
+only enumerates `.json` and would never see a `.tomb` at all — plus two gaps.
+All three are now met:
+
+1. **Explicit `.tomb` discovery** — the recovery pass, not an assumption that
+   orphans age out through a loop that cannot see them.
+2. **The crash window between `link` and `unlink`** — a crash there leaves two
+   names on one inode. Covered by a test that stages exactly that pair and
+   asserts the sweep drops the duplicate while the content stays reachable once.
+3. **Platform compatibility, which was the condition NOT already met.**
+   `linkSync` is this tree's first use, `engines` pins only Node >= 20.11, and
+   `installation.md` names Windows — so a share, a FUSE mount, or a restricted
+   container can answer `EPERM` / `ENOSYS` / `EXDEV` / `EOPNOTSUPP` / `EMLINK`.
+   Throwing there would be swallowed by the pruner's outer handler and strand
+   the tombstone, losing a FRESH pin outright. So those five codes fall back to
+   check-then-act, which reopens exactly the window this fix closes elsewhere —
+   strictly better than a guaranteed loss, and the honest ceiling where the
+   atomic primitive does not exist. Any other code (`EIO`) still surfaces, and a
+   test pins that boundary so the fallback cannot widen into a catch-all.
+
+**Attribution, because it changes who found what:** a second session working the
+same review artefact independently raised a finding this entry does not cover —
+`_writeDistance` persists `{...previous}` from a snapshot taken at hook start, so
+a `post_tool_use` write can clobber a NEWER prompt pin with no hash collision
+involved. It is not in the round-3 artefact; that session found it on its own and
+owns the fix. Recorded here so the round-3 ledger does not read as complete when
+it is not.
