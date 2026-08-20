@@ -16,7 +16,7 @@ so a reader can re-check rather than trust this note.
 This is the load-bearing finding, and it contradicts what three artefacts in
 this tree currently say about themselves.
 
-§ 8-pre `:115-118`, the template comment `:398-399`, and
+§ 8-pre `:115-123`, the template comment `:398-400`, and
 `docs/contracts/settings-classes.md:113-120` all justify "absent resolves to
 `public`" with the same reason: *this package has no defaults layer, so absent
 means nobody said*. **That reason is stale.** `_DEFAULTS` no longer exists —
@@ -75,15 +75,15 @@ are corrected in the same change as this note, since they describe this key.
 
 ## What changes, behaviourally, for a repo that never sets the key
 
-From the § 8-pre branch table (`:120-125`):
+From the § 8-pre branch table (`:125-130`):
 
 | | `public` (today) | `internal` (after the flip) |
 |---|---|---|
-| Demand questions asked | all three (`:129-131`) | question 2 only — *what breaks if you don't build it?* |
-| The L0–L4 ladder | full ladder, `Build` only at L-self / L3 / L4 (`:144-145`) | not reached; the requester is taken as known |
-| Recommendation for an internal hunch | **Defer** (L0, `:138`) | no deferral on demand grounds |
+| Demand questions asked | all three (`:134-136`) | question 2 only — *what breaks if you don't build it?* |
+| The L0–L4 ladder | full ladder, `Build` only at L-self / L3 / L4 (`:149-150`) | not reached; the requester is taken as known |
+| Recommendation for an internal hunch | **Defer** (L0, `:143`) | no deferral on demand grounds |
 
-**The material one is not in that table.** § 8-pre `:154-157` reads: *"At
+**The material one is not in that table.** § 8-pre `:159-162` reads: *"At
 `L-self`, or at `audience: self` / `internal`, never write a roadmap gate, exit
 criterion, or opening condition that names an external user population, a
 market, or an external measurement."* Flipping the default to `internal` makes
@@ -99,9 +99,9 @@ ways, and both directions belong in the decision:
 
 ## What does NOT change under either value
 
-- The `L-self` row and the honest scoping sentence (`:137`, `:111-118`) — Phase 1
+- The `L-self` row and the honest scoping sentence (`:142`, `:111-120`) — Phase 1
   of the parent roadmap fixed the acute damage with **no** settings change.
-- The L3 / L4 market rows (`:141-142`) and `Build now`. The ladder is extended,
+- The L3 / L4 market rows (`:146-147`) and `Build now`. The ladder is extended,
   never flattened.
 - Any install that sets `audience:` explicitly, at any value.
 - Every safety floor. `project.audience` governs a demand *recommendation*; it
@@ -128,18 +128,18 @@ already this cheap in the other direction.
 
 ## Mechanical steps the flip would require
 
-1. **The mechanism** — template `:400` and schema `:144`
+1. **The mechanism** — template `:401` and schema `:144`
    (`z.enum(...).default('internal')`). This one edit is the behaviour change,
    for new and absent-key installs alike; the rest of this list is documentation
    catching up to it.
-2. The § 8-pre absent-value sentence `:115-118` — and while it is being touched,
+2. The § 8-pre absent-value sentence `:115-123` — and while it is being touched,
    drop the falsified "no defaults layer" clause rather than re-pointing it at
    the new value.
-3. Update the template's own comment block `:397-399`, which currently explains
+3. Update the template's own comment block `:397-400`, which currently explains
    `public` as *"the behaviour every install had before this key existed"* — a
    sentence that stops being the default's justification the moment it is not
    the default.
-4. `docs/contracts/settings-classes.md:434` — the class-C row records the
+4. `docs/contracts/settings-classes.md:439` — the class-C row records the
    default and the reason *"the default is today's behaviour, so an install that
    never sets it is unchanged"*. That clause becomes false.
 5. Rebuild the committed install bundle (`npm run build:install-bundle`) — the
@@ -151,7 +151,7 @@ already this cheap in the other direction.
 ## Enforcement, honestly
 
 Nothing reads `project.audience` to change what § 8-pre does; the branch table
-is **model-carried** and says so in its own text (`:167-172`). This note
+is **model-carried** and says so in its own text (`:172-177`). This note
 therefore describes a change in what the agent is *told*, not in what any gate
 *enforces*. A consumer who flips the default and observes no behaviour change
 has not found a bug — they have found the honesty boundary the section already
