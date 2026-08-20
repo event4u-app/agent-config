@@ -17,9 +17,12 @@ execution:
 
 **Archived does not mean achieved, and this roadmap is not archived.** The
 registered destination — 40k median standing context — is **not reached and is
-not claimed**. What closed on 2026-08-20 is one blocker checkpoint. Six of the
-nine lines stay open on preconditions that are named, dated, and **re-verified
-against the tree today** rather than inherited from an earlier note.
+not claimed**. What closed on 2026-08-20 is one blocker checkpoint. Of the nine
+lines: three done, **four still open**, one deferred (`3.1`, the fork), one
+cancelled as a tracking line (`1.2`). Six were open when this run started and
+**no line moved to done** — the run's product is a corrected disposition and four
+preconditions **re-verified against the tree today** rather than inherited from
+an earlier note.
 
 | Phase | Outcome | Where it stands |
 |---|---|---|
