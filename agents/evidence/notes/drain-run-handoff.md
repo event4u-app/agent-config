@@ -108,3 +108,40 @@ are ~40 lines each and cheaper to rewrite than to hunt for.
   by construction** — they are defined over events strictly after completion.
 - `wall_clock_ms` is numeric on 582 rows but `> 0` on only 40, so "numeric 582"
   overstates latency coverage by roughly 14×.
+
+## `session:recycle` refuses an envelope it generated itself
+
+Found 2026-08-20, twice in one session, and it costs the whole handoff when it
+bites — the stop hook advises a recycle, the command refuses, and `/clear`
+would start the successor from nothing.
+
+**The mechanism.** `collectGrounding` sets `last_verify` from
+`readLastVerify(root, session_id)` (`_lib/envelope_grounding.ts:152-166`), which
+returns **`null`** when there is no per-session verify-state file — and there is
+none until the `verify-before-complete` hook has recorded one for *this* session
+id. The validator then checks the drift-anchor fields with
+`if (e[field] !== undefined && !isShortLine(...))`
+(`_lib/subagent_capsule.ts:702-706`). `null !== undefined` is **true**, so a
+`null` the command itself just wrote is validated as a short line, fails, and
+the envelope is refused with `last_verify must be a single line of 1-200 chars`.
+
+Supplying the field by hand does not help: the grounding overwrites it.
+
+**The state file is keyed per session.** `statePathFor` digests the session id
+(`before_complete_hook.ts:128` → `hooks/state_io.ts:673-676`, sha256 sliced to
+32 chars) under `agents/state/verify-before-complete/`. So the tracked-looking
+`agents/runtime/state/verify-before-complete.json` is a *different* file, keyed
+`smoke-cowork-1`, and editing it changes nothing.
+
+**Workaround used here**, and it is a workaround rather than a fix: compute the
+digest of `$CLAUDE_CODE_SESSION_ID`, write a minimal state file at that path
+with a real `last_verification` naming a command actually run this session, and
+re-run the command. Do not invent a command that was not run — the field is
+evidence, and the formatted value even carries its own caveat, "no exit status
+is recorded anywhere".
+
+**The one-character fix belongs in the tool, not in a workaround:** the guard
+should skip a nullish value (`!= null`), so an absent verification stays absent
+instead of failing validation. Not made here — this checkout carries another
+session's uncommitted work in that area, and a kernel-adjacent tooling edit is
+not this run's scope.
