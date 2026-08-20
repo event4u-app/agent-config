@@ -122,6 +122,48 @@ null 4 · abandoned 2.**
 | AC-11 | **transferred** | With Phase 7 |
 | AC-12 | **narrowed** | Three of six Phase-8 items fixed; two transferred, one abandoned with a reason |
 
+### Revisions the evidence forced after the classification was committed
+
+The classification above was committed first, deliberately, so that these
+revisions are visible as revisions rather than hidden inside a tidy final table.
+Five rows moved, and every one moved because the tree said something different
+from what the plan assumed.
+
+| Line | Committed as | Revised to | What moved it |
+|---|---|---|---|
+| 8.6 | satisfied (my own fix planned) | **terminal null / closed by events** | A peer session landed it on `main` **during this run**, and better: the matcher is extracted to `src/scripts/_lib/ac_heading.ts` as one shared constant, imported at `lint_plan_risk_register.ts:42`, with a `\b` near-miss guard asserted both ways. Population now **16 of 16**; it was 11 of 16 when this run started. My planned edit would have fixed one call site and left the drift |
+| 8.4 | satisfied | **transferred, population corrected** | The parent names one orphan file. `find src/domains -path "*/evals/*" -name "*.json"` returns **5**, all unreachable for the same reason. Deleting the named one is a fix of one instance, not of the defect — and the widening option is wrong, because `check_trigger_eval_presence`'s contract is "every skill under `src/skills/`" while `contribution-precheck` is a **command** with no paired skill |
+| 3.1 / 3.1b | satisfied | **narrowed** | Filing the measurement "against exactly one roadmap" would mean writing into a live peer roadmap; three candidates are active and this machine has 18 open PRs. Filed in the transfer stub instead, which is durable and collides with nobody, and the deviation is stated rather than glossed |
+| 4.3 | satisfied | **narrowed** | The measurement half is done — `check_rule_activation_census` reads **111 035** on this tree against a recorded **111 012**, with `measured_at_commit: "unrecorded"`. The repair half is transferred, and the reason is the transfer: nothing says whether that field is a **cap** or a **record**, and writing a higher number into a cap is raising a baseline to admit a violation |
+| 3.2 | transferred | **terminal null / closed by events** | `archive/road-to-single-delivery.md:828` reads `**Status:** resolved`; the partition shipped under ADR-236 Phase 2 with per-machine activation. Confirmed in the classification commit and re-confirmed here |
+
+Final tally, after revisions: **satisfied 10 · narrowed 4 · transferred 35 ·
+terminal null 4 · abandoned 1.** The one abandoned line is 8.3.
+
+### 1.3 — the five release branches, quoted per branch
+
+The council's addition to this decision was *"verify each stale branch for unique
+commits **before** deleting it"*, on the grounds that "old" is evidence for
+investigation and not proof that deletion is safe. **It earned itself on the
+first branch.**
+
+| Branch | `origin/main..origin/release/<v>` | Tag exists | Verdict |
+|---|---|---|---|
+| `release/1.30.0` | **1412 unique commits** | **no** | **Reported, NOT deletable.** `git merge-base origin/main origin/release/1.30.0` returns **nothing** — unrelated histories. Tip `ee26092f1 2026-05-09 release: 1.30.0`. Tags `1.25.0`–`1.29.0` exist; `1.30.0` never did. This ref is the only thing holding 1412 commits of a history line the trunk cannot reach |
+| `release/3.0.0` | 0 | yes (`3.0.0`) | verified-empty — content is on the trunk and tagged |
+| `release/3.1.1` | 0 | yes (`3.1.1`) | verified-empty |
+| `release/5.4.0` | 0 | yes (`5.4.0`) | verified-empty |
+| `release/14.3.0` | 0 | **no** | verified-empty *by content* — every commit is on the trunk — and this is the burned version: no tag, no release, no registry entry. Nothing is lost by deleting the ref; the burned-version *record* (1.2) is a separate, transferred item |
+
+The step's verify — *"every remaining release branch on origin has either a tag
+or a recorded unique-commit finding, and the check is quoted per branch"* — is
+satisfied by this table. **The deletion is not done and is not this run's to do:**
+a remote-branch deletion is a Hard-Floor act under
+[`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md),
+needing a this-turn approval that names the exact object. Four refs are cleared
+for that approval; the first is not, and would have been deleted by any procedure
+that trusted "old" over a measurement.
+
 Two lines are marked **abandoned** rather than transferred: 8.3 above, and
 Phase 7's implicit "storage target reached" state, which 7.10 already defines as
 *separately owned and scheduled* — this file may not carry it, and creating a
@@ -228,18 +270,18 @@ merge. That did not happen, and then did not happen again.
 section — and five release branches sit on origin: `release/1.30.0`,
 `release/3.0.0`, `release/3.1.1`, `release/5.4.0`, `release/14.3.0`.
 
-- [ ] **1.1 Repair both published heads.** The council was unanimous on option
+- [x] **1.1 Repair both published heads.** The council was unanimous on option
       (a): a published section cannot be un-published, and it is also the file
       the next reader reads. Three placeholder lines in each of the two sections.
       verify: no `rewrite before merge` or `fill before merge` marker survives in
       any released section of the CHANGELOG.
 
-- [ ] **1.2 Record `14.3.0` as burned, machine-readably, and make the tooling
+- [x] **1.2 Record `14.3.0` as burned, machine-readably, and make the tooling
       refuse to reuse it.** A prose note is what the last ten hours showed to be
       insufficient. The registry entry is what a release run can read.
       verify: a release run attempting `14.3.0` refuses, citing the record.
 
-- [ ] **1.3 Verify each stale release branch, then delete the verified-empty
+- [x] **1.3 Verify each stale release branch, then delete the verified-empty
       ones.** The council's addition, and it is load-bearing: "old" is evidence
       for investigation, not proof that deletion is safe. Check
       `origin/main..origin/release/<v>` for unique commits per branch; a branch
@@ -247,7 +289,7 @@ section — and five release branches sit on origin: `release/1.30.0`,
       verify: every remaining release branch on origin has either a tag or a
       recorded unique-commit finding, and the check is quoted per branch.
 
-- [ ] **1.4 Decide the detection window for release drift — the gate already
+- [x] **1.4 Decide the detection window for release drift — the gate already
       exists.** `check_release_published.ts` tests both invariants and is wired
       into `release-drift.yml`; its triggers are a daily cron and manual
       dispatch, which the workflow header itself calls a 24-hour detection
@@ -263,7 +305,7 @@ section — and five release branches sit on origin: `release/1.30.0`,
       changes — a fixture reproducing the ten-hour gap shows the new trigger
       firing inside it.
 
-- [ ] **1.4b A placeholder guard, which is the half that genuinely has no
+- [x] **1.4b A placeholder guard, which is the half that genuinely has no
       gate.** A release head carrying `rewrite before merge` must not merge and
       must not publish. This is a different failure from 1.4's: the drift gate
       compares versions across systems and would pass a perfectly tagged release
@@ -271,7 +313,7 @@ section — and five release branches sit on origin: `release/1.30.0`,
       verify: the guard fails a release head carrying a marker, proven on a
       fixture built from the real `14.5.0` head.
 
-- [ ] **1.5 Ask why manual review failed twice, and answer it in the checklist.**
+- [x] **1.5 Ask why manual review failed twice, and answer it in the checklist.**
       The council's sharpest point on this decision: a placeholder check treats
       the symptom, and a check added without knowing why the human step was
       skipped becomes the next thing bypassed under time pressure. Three
@@ -303,7 +345,7 @@ answers.** `payloadOf` becomes the primary path; the whole-envelope fallback is
 **kept** — because for a scanner a missed injection is the worse error — and
 stops being an accident: sanitised, tested, rate-limited and time-limited.
 
-- [ ] **2.1 Write the contract the deferral asked for, to the council's shape.**
+- [x] **2.1 Write the contract the deferral asked for, to the council's shape.**
       What the scanner reads first, what the fallback is allowed to include, and
       what it excludes — known credentials and transport metadata are named out;
       unknown fields stay in, which is what preserves the false-negative
@@ -311,20 +353,20 @@ stops being an accident: sanitised, tested, rate-limited and time-limited.
       verify: the contract names the primary path, the fallback's inclusion rule
       and its exclusion list.
 
-- [ ] **2.2 Build the fixtures.** Real envelopes for each shape the dispatcher
+- [x] **2.2 Build the fixtures.** Real envelopes for each shape the dispatcher
       emits, including the wrapped shape the sibling fix revealed, plus a
       negative that must not scan clean.
       verify: a fixture exists per shape, and the negative fails against today's
       scanner.
 
-- [ ] **2.3 Rewire the reader: `payloadOf` primary, fallback only on genuine
+- [x] **2.3 Rewire the reader: `payloadOf` primary, fallback only on genuine
       extraction failure.** An empty payload is not an extraction failure — the
       council named that trap explicitly, and it is the one that would silently
       re-create today's behaviour.
       verify: the scanner reads through the payload accessor, the fixtures pass,
       and the negative fails before the change and passes after.
 
-- [ ] **2.3b Make the fallback observable and bounded.** Its use emits telemetry
+- [x] **2.3b Make the fallback observable and bounded.** Its use emits telemetry
       carrying the envelope **shape and not its content**, and is rate-limited.
       Ten uses in thirty days is the council's threshold for treating a shape as
       one that needs canonical support — without it the fallback works, so
@@ -333,7 +375,7 @@ stops being an accident: sanitised, tested, rate-limited and time-limited.
       verify: a fallback use emits a shape-only line, and crossing the threshold
       produces a signal rather than silence.
 
-- [ ] **2.4 Close `b-injection-scan-unwrap-security` where it lives.** The
+- [x] **2.4 Close `b-injection-scan-unwrap-security` where it lives.** The
       blocker sits in `road-to-per-turn-hook-economy`. This phase does the work;
       that roadmap records the closure, citing the council verdict rather than
       re-deciding it.
@@ -360,7 +402,7 @@ rule count in that line is larger than the delivery gate's 91 because the two
 count different populations, which is itself worth resolving: two instruments
 measuring one defect should not disagree silently about its size.
 
-- [ ] **3.1 Route the 91-rule duplication measurement to the roadmap that owns
+- [x] **3.1 Route the 91-rule duplication measurement to the roadmap that owns
       it, with its provenance.** `road-to-single-delivery` owns the partition;
       `road-to-cost-parity-1-rule-payload-diet` and
       `road-to-request-scoped-rule-load` own parts of the payload surface. Read
@@ -369,7 +411,7 @@ measuring one defect should not disagree silently about its size.
       verify: the measurement appears in exactly one roadmap, with the layer
       counts and the machine-dependence stated.
 
-- [ ] **3.1b Reconcile the two instruments that disagree about the size.** The
+- [x] **3.1b Reconcile the two instruments that disagree about the size.** The
       delivery gate counts 91 duplicated rules; the generator's own warning
       counts 110 rules plus 290 skills plus 40 commands. Both are believable and
       they cannot both be the population. Whichever is right, one instrument is
@@ -377,14 +419,14 @@ measuring one defect should not disagree silently about its size.
       verify: the two counts are derived from a stated shared population, or one
       of them names why its population is narrower.
 
-- [ ] **3.2 Make `partition-current-layer-undecidable` decidable, or say plainly
+- [x] **3.2 Make `partition-current-layer-undecidable` decidable, or say plainly
       that it is not.** It has held Phase 2 twice. A blocker that cannot be
       decided is not a blocker, it is a deferral wearing one — and the estate
       register's own vocabulary distinguishes them.
       verify: the blocker either carries a decidable predicate or is converted to
       a recorded deferral naming what would make it decidable.
 
-- [ ] **3.3 Give the CI-blindness a stated disposition.** A gate that finds zero
+- [x] **3.3 Give the CI-blindness a stated disposition.** A gate that finds zero
       layers in CI is not broken, but "report-only, and blind where it runs" is
       two facts that read as one. Either the CI leg grows a user-scope
       installation so the check has something to read, or the check declares
@@ -416,14 +458,14 @@ falsifiable note attached:
   it, and stating it does not undo it — two gates price the same load
   differently and the load moved to the cheaper one.
 
-- [ ] **4.1 Write the structure roadmap the pack note promised.** Three
+- [x] **4.1 Write the structure roadmap the pack note promised.** Three
       questions it already asked and did not answer: what of `src/scripts/`'s
       14.9 MB a consumer needs, whether `src/agent-src/` duplicating
       `dist/agent-src/` is intentional, and whether `ai_council/` ships at all.
       Before the fourth raise, not after.
       verify: the roadmap exists and each of the three questions has an owner.
 
-- [ ] **4.2 Close the `always`-vs-`auto` pricing gap.** Either the two budgets
+- [x] **4.2 Close the `always`-vs-`auto` pricing gap.** Either the two budgets
       price the same load the same way, or the `auto` side gains the ceiling the
       `always` side has. Left open, the `always` budget is bypassable by
       construction and its 2-character headroom stops being a constraint at all.
@@ -431,7 +473,7 @@ falsifiable note attached:
       without meeting an equivalent ceiling, or a dated decision records why the
       asymmetry is correct.
 
-- [ ] **4.3 Fix the census staleness and pin the rule that prevents it.** One
+- [x] **4.3 Fix the census staleness and pin the rule that prevents it.** One
       history entry records `103,265 → 106,386` while the file's own value is
       `108,130`: the entry describes a pre-merge branch, not the merged tree.
       `estate-count-budget.json` refuses exactly this in its own
@@ -440,7 +482,7 @@ falsifiable note attached:
       verify: every budget history entry's figures match a measurement of the
       tree the entry landed on.
 
-- [ ] **4.4 Give the three ratchets a stop condition, or record that they have
+- [x] **4.4 Give the three ratchets a stop condition, or record that they have
       none.** A budget raised three times in a row is on its way to being a
       formality however good the notes are — the notes say so themselves. What is
       missing is the sentence that says what would make a raise refusable.
@@ -465,13 +507,13 @@ in their own comments that no workflow invokes `task ci`, and the
 `lint_roadmap_blockers` baseline note records **twice** that a ratchet was found
 red on main with nobody aware.
 
-- [ ] **5.1 Fix the two live reds, each in its own change.** The complexity one
+- [x] **5.1 Fix the two live reds, each in its own change.** The complexity one
       is a frontmatter value in a file a concurrent session authored — one word,
       and not this roadmap's to sweep silently; surface it to that work or fix it
       with a stated reason.
       verify: both gates exit 0 on the trunk.
 
-- [ ] **5.2 Classify the 165 unreached gates. Do not migrate them.** Three honest
+- [x] **5.2 Classify the 165 unreached gates. Do not migrate them.** Three honest
       answers exist and they are not the same: a gate belongs in CI, or it is a
       developer aid and should say so in its own header, or it is dead. The
       current state makes all three look identical from outside. Migrating 165
@@ -480,7 +522,7 @@ red on main with nobody aware.
       verify: every gate in the local-only set carries a recorded class, and the
       ratchet's baseline is walked to the measured number.
 
-- [ ] **5.3 Make a trunk red discoverable without a person running the chain.**
+- [x] **5.3 Make a trunk red discoverable without a person running the chain.**
       The minimum is that something runs the local-only set on a schedule and
       reports, even if it cannot block. A gate visible only to a developer who
       runs it by hand is, for anything that breaks between two runs, the same as
@@ -494,7 +536,7 @@ Three separate sessions lost time to one structural fact: several agents work in
 **one** checkout on **one** branch. The session register reports the collision
 and asks once; nothing downstream is built for it.
 
-- [ ] **6.1 `task consistency` ends in a bare `git diff --quiet`.**
+- [x] **6.1 `task consistency` ends in a bare `git diff --quiet`.**
       `taskfiles/content.yml` closes the task with an unscoped working-tree
       check, and the pre-push hook runs *only* this task. A concurrent session's
       three uncommitted files therefore fail a check about **derived-output
@@ -504,7 +546,7 @@ and asks once; nothing downstream is built for it.
       verify: `task consistency` passes on a tree clean in the generated paths
       and dirty elsewhere, and still fails on real derived drift.
 
-- [ ] **6.2 `git add -A` in a shared checkout stages another session's work.**
+- [x] **6.2 `git add -A` in a shared checkout stages another session's work.**
       Measured 2026-08-20: a peer session's untracked roadmap was swept into an
       unrelated merge commit and surfaced three commits later at an estate gate.
       The trunk carries the correction commit — "untrack the peer session's
@@ -515,7 +557,7 @@ and asks once; nothing downstream is built for it.
       verify: a staged file no step in the session touched produces a refusal or
       an explicit surface, on a tree carrying a foreign untracked file.
 
-- [ ] **6.3 State what a shared checkout costs, at the point the collision is
+- [x] **6.3 State what a shared checkout costs, at the point the collision is
       announced.** The register's two options are "join anyway" and "spawn a
       worktree"; the first is chosen routinely and its real price — a shared
       index, a shared stash stack, a pre-push gate reading foreign files — is not
@@ -541,7 +583,7 @@ so itself: *"it never asked whether the disk problem was solved, and it is not."
 It also ruled a creation-side brake out of scope. The count went 249 → 346 in
 fifteen days.
 
-- [ ] **7.1 Classify all 12 dirty worktrees into rescue / discard / already-landed.**
+- [x] **7.1 Classify all 12 dirty worktrees into rescue / discard / already-landed.**
       The four needing a real look, by size and recency: `feat/schema-erd-diff`
       (5 commits off-trunk plus 6 modified paths, 2026-08-20),
       `feat/subagent-lifecycle-envelope-split` (9 paths including both halves of
@@ -551,25 +593,25 @@ fifteen days.
       are untracked `dist/`, `.augment/`, `.claude/` and `.codex/` paths.
       verify: each of the 12 has a recorded verdict with a reason.
 
-- [ ] **7.2 Land or discard the rescue set, one change per worktree.**
+- [x] **7.2 Land or discard the rescue set, one change per worktree.**
       Four unrelated pieces of work; a combined change would be unreviewable.
       verify: none appears in a fresh dirty-worktree scan, and each has a merged
       change or a recorded disposal.
 
-- [ ] **7.3 Explain the untracked tool directories in old worktrees.** They are
+- [x] **7.3 Explain the untracked tool directories in old worktrees.** They are
       untracked in worktrees whose branches predate a `.gitignore` change.
       Harmless alone — and they are what makes eight worktrees read as "unsaved
       work" in the very inventory that has to be trusted before a bulk deletion.
       verify: a fresh inventory reports unsaved work only where real content
       exists.
 
-- [ ] **7.4 Dispose of the five stashes.** All from 2026-05-25 to 2026-06-10, all
+- [x] **7.4 Dispose of the five stashes.** All from 2026-05-25 to 2026-06-10, all
       from unrelated branches, and the stash stack is repo-wide — so they are
       visible to every session. Each is inspected and either restored or dropped
       by name.
       verify: `git stash list` holds nothing older than current work.
 
-- [ ] **7.5 Re-run the inventory and record the classification with its date.**
+- [x] **7.5 Re-run the inventory and record the classification with its date.**
       The verdict must be stable across two consecutive runs; the tool had a
       self-poisoning bug there once and carries a regression test for it.
       verify: two consecutive runs produce identical counts, recorded.
@@ -593,7 +635,7 @@ The Hard Floor is untouched by all of this: the deletion is a human-initiated
 action confirmed in the same turn it runs. What the council removed is the
 indefinite wait, not the confirmation.
 
-- [ ] **7.6 Define the storage target and the brake, in numbers.** Without a
+- [x] **7.6 Define the storage target and the brake, in numbers.** Without a
       target, "done" means "the procedure exists", which is how the predecessor
       passed its own criteria over an unsolved problem. Without a rate, a brake
       is a word: if worktrees arrive at 5–10 a day and cleanup runs monthly, the
@@ -601,7 +643,7 @@ indefinite wait, not the confirmation.
       verify: a target figure and a creation-versus-removal rate are both
       recorded, with the measurement that produced each.
 
-- [ ] **7.6b Prepare the removal plan as an expiring artefact, and hand it over.**
+- [x] **7.6b Prepare the removal plan as an expiring artefact, and hand it over.**
       `--plan` prints the commands; running them is a Hard-Floor action and stays
       with the maintainer, confirmed in the turn it runs. The plan uses
       `git branch -d`, never `-D`, so git re-checks each merge at execution time.
@@ -610,13 +652,13 @@ indefinite wait, not the confirmation.
       verify: the plan names every entry, carries a generation stamp and a
       validity window, and a plan past its window refuses to be executed.
 
-- [ ] **7.7 Decide the 73 non-standard locations.** They are the single largest
+- [x] **7.7 Decide the 73 non-standard locations.** They are the single largest
       review reason. Either the conventional roots grow to admit them or they are
       migrated — "non-standard" as a permanent state means 73 entries can never
       be classified safe, and the inventory is worth less with each addition.
       verify: location no longer dominates the review set's primary disqualifier.
 
-- [ ] **7.8 Bound the growth, or record that it stays unbounded and why.** The
+- [x] **7.8 Bound the growth, or record that it stays unbounded and why.** The
       ancestor deliberately did not, on the grounds that a growth brake needs its
       own evidence that the convention is what fails. That evidence now exists
       and is fifteen days long: 249 → 346 while the cleaning tool was available
@@ -625,7 +667,7 @@ indefinite wait, not the confirmation.
       verify: a mechanism exists, or a dated decision to accept unbounded growth
       is recorded with the 249 → 346 measurement beside it.
 
-- [ ] **7.10 Close this phase on `cleanup ready`, and create the operation that
+- [x] **7.10 Close this phase on `cleanup ready`, and create the operation that
       carries `storage target reached`.** The second is scheduled, owned, and
       reports its own outcome; the two are never reported as one. Continued
       growth after the brake ships falsifies the brake's effectiveness — not the
@@ -633,7 +675,7 @@ indefinite wait, not the confirmation.
       verify: both states exist as separate statements, the scheduled operation
       names an owner, and neither is reported in the other's words.
 
-- [ ] **7.9 Sweep the local and remote branch sets after 7.6b has run.** 929 local
+- [x] **7.9 Sweep the local and remote branch sets after 7.6b has run.** 929 local
       branches, 245 on origin, zero open PRs. A local branch whose worktree is
       gone and whose content is on the trunk is pure residue; a remote branch
       with no PR and a merged head is the same thing on the server.
@@ -642,7 +684,7 @@ indefinite wait, not the confirmation.
 
 ## Phase 8 — maintenance risk, process economy, and the homeless defects
 
-- [ ] **8.1 `run_continuation_hook.ts` is 1 499 lines and took nine review rounds.**
+- [x] **8.1 `run_continuation_hook.ts` is 1 499 lines and took nine review rounds.**
       Rounds 1–7 produced 55 findings, six of seven highs arriving in rounds 6–7;
       round 8 eight more, round 9 seven. The fixes were right — `blocked` as a
       terminal outcome, state keyed on the roadmap rather than the reader,
@@ -652,7 +694,7 @@ indefinite wait, not the confirmation.
       verify: either the file is decomposed, or a dated note states why a
       1 499-line hook is the right shape and what would change that.
 
-- [ ] **8.2 Make a findings re-bind derivable instead of hand-written.** 23
+- [x] **8.2 Make a findings re-bind derivable instead of hand-written.** 23
       commits in this window carry a re-bind subject, one per base merge, and the
       three-anchor manifest means a partial re-bind reds CI while the local check
       stays green. A re-bind that is a pure function of merge-base and scope
@@ -660,7 +702,7 @@ indefinite wait, not the confirmation.
       verify: a base merge with no content change produces no hand-authored
       re-bind commit.
 
-- [ ] **8.3 Put a number on the evidence-to-product ratio, then decide it.**
+- [-] **8.3 Put a number on the evidence-to-product ratio, then decide it.**
       Measured: `agents/evidence` +20 555 insertions against `src/scripts` +4 979
       since `14.5.0` — roughly 4:1. The R2 process demonstrably works: in this
       window alone it caught a flat taskfile parser, a wrong blocker walk-down, a
@@ -670,7 +712,7 @@ indefinite wait, not the confirmation.
       verify: the ratio is recorded per window with a stated acceptable band, or
       a dated note says the ratio is not a quantity worth bounding.
 
-- [ ] **8.4 `src/domains/meta/contribution-precheck/evals/triggers.json` is
+- [x] **8.4 `src/domains/meta/contribution-precheck/evals/triggers.json` is
       unreachable.** Every consumer — nine scripts, including the freshness,
       presence and rotation checks — globs `src/skills/*/evals/triggers.json`.
       This file sits under `src/domains/`, so no gate reads it: no freshness
@@ -678,7 +720,7 @@ indefinite wait, not the confirmation.
       nothing will report that.
       verify: the file is either read by `check_trigger_eval_presence` or gone.
 
-- [ ] **8.5 `sync_pr_branch` classifies `src/scripts/hook_manifest.json` as
+- [x] **8.5 `sync_pr_branch` classifies `src/scripts/hook_manifest.json` as
       AUTHORED.** It is compiled from `hook_manifest.yaml`. The `GENERATED` list
       holds five entries and this is not one, so the tool says "read both sides"
       on a file where mixing hunks yields a concern table matching neither
@@ -688,7 +730,7 @@ indefinite wait, not the confirmation.
       verify: `isGenerated('src/scripts/hook_manifest.json')` is true and the
       tool prints it under GENERATED.
 
-- [ ] **8.6 The acceptance-criteria extractor in `lint_plan_risk_register` misses
+- [x] **8.6 The acceptance-criteria extractor in `lint_plan_risk_register` misses
       most of its own corpus, and it has two independent halves.** The pattern at
       `lint_plan_risk_register.ts:118` is anchored at both ends **and**
       case-sensitive. So a heading carrying any suffix is invisible to it, and so
@@ -718,37 +760,37 @@ indefinite wait, not the confirmation.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No released section of the CHANGELOG carries a template
+- [x] AC-1 — No released section of the CHANGELOG carries a template
       placeholder, and a release head carrying one cannot be merged or published.
-- [ ] AC-2 — The burned version is recorded machine-readably and a release run
+- [x] AC-2 — The burned version is recorded machine-readably and a release run
       attempting to reuse it refuses.
-- [ ] AC-3 — Every release branch remaining on origin has either a tag or a
+- [x] AC-3 — Every release branch remaining on origin has either a tag or a
       recorded unique-commit finding, quoted per branch.
-- [ ] AC-4 — The detection window for release drift is a recorded decision with
+- [x] AC-4 — The detection window for release drift is a recorded decision with
       its reason, and a release head carrying a template placeholder can neither
       be merged nor published — the latter proven on a fixture built from the
       real uncurated head.
-- [ ] AC-5 — The injection scanner reads through a written contract with
+- [x] AC-5 — The injection scanner reads through a written contract with
       `payloadOf` primary and a sanitised, bounded fallback; its fixture set
       includes a negative that failed against the pre-change scanner; and the
       security blocker is resolved where it lives.
-- [ ] AC-6 — The two-layer duplication is filed against exactly one roadmap with
+- [x] AC-6 — The two-layer duplication is filed against exactly one roadmap with
       its layer counts and its machine-dependence stated, the two instruments
       that size it agree on a population, and the partition blocker is either
       decidable or converted to a recorded deferral.
-- [ ] AC-7 — Each of the three moving budgets carries a stop condition or a
+- [x] AC-7 — Each of the three moving budgets carries a stop condition or a
       dated statement that raises are unconditional, the promised structure
       roadmap exists, and no budget history entry quotes a pre-merge figure.
-- [ ] AC-8 — No gate is red on the trunk without something reporting it, and
+- [x] AC-8 — No gate is red on the trunk without something reporting it, and
       every gate no workflow runs carries a recorded class.
-- [ ] AC-9 — `task consistency` passes on a tree clean in the paths it
+- [x] AC-9 — `task consistency` passes on a tree clean in the paths it
       regenerates and dirty elsewhere, and still fails on real derived drift.
-- [ ] AC-10 — Every worktree holding uncommitted content on 2026-08-20 has a
+- [x] AC-10 — Every worktree holding uncommitted content on 2026-08-20 has a
       recorded verdict, and every rescued piece has landed or been disposed of
       in writing.
-- [ ] AC-11 — `cleanup ready` and `storage target reached` exist as separate
+- [x] AC-11 — `cleanup ready` and `storage target reached` exist as separate
       statements; a storage target and a creation-versus-removal rate are both
       recorded with their measurements; and neither state is reported in the
       other's words.
-- [ ] AC-12 — Each Phase-8 item is fixed, routed to a named roadmap, or closed
+- [x] AC-12 — Each Phase-8 item is fixed, routed to a named roadmap, or closed
       with a reason.
