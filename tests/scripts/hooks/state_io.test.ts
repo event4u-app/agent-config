@@ -17,11 +17,14 @@ import {
     FEEDBACK_DIRNAME,
     feedback_dir,
     is_replay_mode,
+    LOCK_ACQUIRE_DEADLINE_MS,
     LOCK_BASENAME,
+    LOCK_STALE_MS,
     prune_stale_session_states,
     REPLAY_ENV_VAR,
     restore_claimed_state,
     session_state_file,
+    update_json_under_lock,
 } from '../../../src/scripts/hooks/state_io.js';
 
 
@@ -120,19 +123,47 @@ describe('state_io — replay mode', () => {
 });
 
 describe('state_io — feedback_dir', () => {
-    it('builds the per-session slot', () => {
-        expect(feedback_dir('/root', 'sess-1')).toBe(path.join('/root', '.dispatcher', 'sess-1'));
+    // The literal-equality assertions these replace pinned the SANITISED name
+    // (`sess-1`, `a_b`, `__etc_passwd`). Those literals were the collision:
+    // asserting them is asserting the defect. What is pinned now is the
+    // property — one legible segment under `.dispatcher`, distinct per id.
+    const slot = (id: string): string => path.basename(feedback_dir('/root', id));
+
+    it('builds one legible segment under the .dispatcher root', () => {
+        const dir = feedback_dir('/root', 'sess-1');
+        expect(path.dirname(dir)).toBe(path.join('/root', '.dispatcher'));
+        expect(slot('sess-1')).toMatch(/^sess-1\.[0-9a-f]{12}$/);
     });
-    it('empty session id falls back to unknown-session', () => {
-        expect(feedback_dir('/root', '')).toBe(path.join('/root', '.dispatcher', 'unknown-session'));
+
+    it('empty session id still falls back to one shared unknown-session bucket', () => {
+        // Deliberate, and documented at the function: the dispatcher cannot
+        // decline to write, and a merged per-concern VIEW is recoverable.
+        expect(slot('')).toMatch(/^unknown-session\.[0-9a-f]{12}$/);
+        expect(slot('')).toBe(slot(''));
     });
+
+    it('two ids the sanitiser merges address DIFFERENT directories', () => {
+        // The regression this fix exists for. Pre-fix both sides were `a_b`.
+        expect(slot('a/b')).not.toBe(slot('a_b'));
+        expect(slot('a\\b')).not.toBe(slot('a_b'));
+        expect(slot('a/b')).not.toBe(slot('a\\b'));
+        // ...and each is still a single sanitised segment.
+        for (const id of ['a/b', 'a_b', 'a\\b']) {
+            expect(slot(id)).not.toContain('/');
+            expect(slot(id)).not.toContain('\\');
+            expect(slot(id).split(path.sep)).toHaveLength(1);
+        }
+    });
+
     it('neutralises path traversal', () => {
         const out = feedback_dir('/root', '../etc/passwd');
         expect(out).not.toContain('..');
-        expect(out).toBe(path.join('/root', '.dispatcher', '__etc_passwd'));
+        expect(path.dirname(out)).toBe(path.join('/root', '.dispatcher'));
+        expect(slot('../etc/passwd')).toMatch(/^__etc_passwd\.[0-9a-f]{12}$/);
     });
-    it('neutralises backslashes', () => {
-        expect(feedback_dir('/root', 'a\\b')).toBe(path.join('/root', '.dispatcher', 'a_b'));
+
+    it('is stable for one id across calls — the dir is addressable, not random', () => {
+        expect(feedback_dir('/root', 'sess-1')).toBe(feedback_dir('/root', 'sess-1'));
     });
 });
 
@@ -366,5 +397,177 @@ describe('state_io — prune_stale_session_states, orphaned tombstones', () => {
         prune_stale_session_states(dir, now, 30, () => now);
 
         expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tomb.4242.1.tomb'))).toEqual([]);
+    });
+});
+
+
+// ---------------------------------------------------------------------------
+// `_acquire_lock` — the staleness check, and the non-blocking acquire.
+//
+// The branch under test used to fire on `Date.now() - start > deadlineMs` and
+// examine the companion in no way at all: a patience check named as a staleness
+// check. These tests pin the difference from the OUTSIDE — through
+// `update_json_under_lock`, since `_acquire_lock` is module-private — because
+// the observable that matters is what happens to the OTHER holder's companion.
+describe('state_io — lock acquisition is decided by the companion, not by patience', () => {
+    const target = (): string => path.join(tmp, 'lockstate', 'rmw.json');
+    // FILE-keyed, matching `_target_lock_path`. This used to build
+    // `<dir>/${LOCK_BASENAME}.held` — the directory lock — and updating it is
+    // the point of the granularity change rather than an accommodation of it:
+    // the whole reason two sessions no longer block is that the companion is
+    // now per state file.
+    const companion = (): string => `${target()}.lock.held`;
+
+    /** Stage a companion held by a peer, with a chosen age. */
+    function holdLock(age_ms: number): void {
+        fs.mkdirSync(path.dirname(target()), { recursive: true });
+        fs.writeFileSync(companion(), '', 'utf8');
+        const when = new Date(Date.now() - age_ms);
+        fs.utimesSync(companion(), when, when);
+    }
+
+    it('blocking: a FRESH companion is never removed by a caller that merely waited', () => {
+        holdLock(0);
+        const t0 = Date.now();
+        const outcome = update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 1 }));
+        const elapsed = Date.now() - t0;
+
+        // THE REGRESSION. Pre-fix: the caller spun to its deadline, deleted the
+        // peer's live companion as "stale", acquired, and wrote — so the
+        // companion was gone and the state file existed. Both assertions below
+        // fail against that code, which is what makes this green meaningful.
+        expect(fs.existsSync(companion())).toBe(true);
+        expect(outcome).toBe('failed');
+        expect(fs.existsSync(target())).toBe(false);
+
+        // It DID wait, i.e. this is not passing for the trivial reason that the
+        // caller declined immediately.
+        expect(elapsed).toBeGreaterThanOrEqual(LOCK_ACQUIRE_DEADLINE_MS);
+        // ...and the wait stayed bounded: the pre-fix end state after the first
+        // timeout was a pauseless spin, because the deadline test sat before the
+        // sleep and `start` was never reset.
+        expect(elapsed).toBeLessThan(LOCK_ACQUIRE_DEADLINE_MS * 3);
+    }, 30_000);
+
+    it('blocking: a genuinely ABANDONED companion is reclaimed and the write lands', () => {
+        holdLock(LOCK_STALE_MS + 5_000);
+        const t0 = Date.now();
+        const outcome = update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 2 }));
+        expect(outcome).toBe('written');
+        expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(2);
+        // Reclamation is immediate — it never waits out the acquire deadline
+        // first, because age, not patience, is what decides.
+        expect(Date.now() - t0).toBeLessThan(LOCK_ACQUIRE_DEADLINE_MS);
+    }, 30_000);
+
+    it('non-blocking: a held lock declines IMMEDIATELY, never after a spin', () => {
+        holdLock(0);
+        const t0 = Date.now();
+        const outcome = update_json_under_lock<Record<string, unknown>>(
+            target(),
+            () => ({ n: 3 }),
+            { blocking: false },
+        );
+        const elapsed = Date.now() - t0;
+        expect(outcome).toBe('failed');
+        // The hot-path contract: `post_tool_use` runs on every tool call and
+        // must never wait. A spin to the 5s deadline is the failure.
+        expect(elapsed).toBeLessThan(1_000);
+        // And it did not evict the live peer on the way out.
+        expect(fs.existsSync(companion())).toBe(true);
+        expect(fs.existsSync(target())).toBe(false);
+    });
+
+    it('non-blocking: still reclaims an ABANDONED companion rather than wedging', () => {
+        // Skipping reclamation on the hot path would let one crashed process
+        // wedge every tool call for LOCK_STALE_MS.
+        holdLock(LOCK_STALE_MS + 5_000);
+        const outcome = update_json_under_lock<Record<string, unknown>>(
+            target(),
+            () => ({ n: 4 }),
+            { blocking: false },
+        );
+        expect(outcome).toBe('written');
+        expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(4);
+    });
+
+    it('an uncontended lock is unaffected by either mode', () => {
+        expect(
+            update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 5 })),
+        ).toBe('written');
+        expect(
+            update_json_under_lock<Record<string, unknown>>(target(), () => ({ n: 6 }), {
+                blocking: false,
+            }),
+        ).toBe('written');
+        expect(JSON.parse(fs.readFileSync(target(), 'utf8'))['n']).toBe(6);
+    });
+});
+
+
+// ---------------------------------------------------------------------------
+// Lock GRANULARITY — the scope of the lock follows the scope of the state.
+//
+// `_lock_path` is directory-keyed and always was. Before the per-session split
+// the directory held ONE file, so that was effectively a file lock; after it,
+// the directory holds N per-session files and a directory lock re-serialises
+// exactly the sessions the split exists to decouple. `update_json_under_lock`
+// is therefore file-keyed (`_target_lock_path`); `_atomic_write_text` keeps the
+// shared directory lock the hook contract mandates for concerns.
+describe('state_io — the RMW lock is scoped to the state file, not the directory', () => {
+    const dir = (): string => path.join(tmp, 'granularity');
+    const fileFor = (id: string): string => path.join(dir(), `${id}.json`);
+
+    it('a lock held on ONE session file does not block a write to ANOTHER', () => {
+        fs.mkdirSync(dir(), { recursive: true });
+        // Peer holds session A's lock, fresh, so it can never be reclaimed.
+        fs.writeFileSync(`${fileFor('sessA')}.lock.held`, '', 'utf8');
+
+        const t0 = Date.now();
+        const outcome = update_json_under_lock<Record<string, unknown>>(fileFor('sessB'), () => ({
+            n: 1,
+        }));
+        const elapsed = Date.now() - t0;
+
+        // THE REGRESSION. Under the directory-keyed lock this call waited out
+        // the full 5s acquire deadline and then reported `failed`, because
+        // session A's companion sat at the shared directory path. Session B's
+        // write is unrelated to session A's file and must simply land.
+        expect(outcome).toBe('written');
+        expect(elapsed).toBeLessThan(1_000);
+        expect(JSON.parse(fs.readFileSync(fileFor('sessB'), 'utf8'))['n']).toBe(1);
+        // A's lock is untouched — B never had any business with it.
+        expect(fs.existsSync(`${fileFor('sessA')}.lock.held`)).toBe(true);
+    }, 30_000);
+
+    it('a lock held on the SAME session file still excludes — exclusion is not lost', () => {
+        fs.mkdirSync(dir(), { recursive: true });
+        fs.writeFileSync(`${fileFor('sessC')}.lock.held`, '', 'utf8');
+        const outcome = update_json_under_lock<Record<string, unknown>>(
+            fileFor('sessC'),
+            () => ({ n: 2 }),
+            { blocking: false },
+        );
+        expect(outcome).toBe('failed');
+        expect(fs.existsSync(fileFor('sessC'))).toBe(false);
+    });
+
+    it('the pruner removes a retired session lock, so sentinels are bounded', () => {
+        // Neither `.lock` nor `.lock.held` ends in `.json`, so the pruner's own
+        // filter skips them; without the explicit cleanup one sentinel per
+        // retired session would accumulate forever.
+        fs.mkdirSync(dir(), { recursive: true });
+        const stale = fileFor('retired');
+        fs.writeFileSync(stale, '{}', 'utf8');
+        fs.writeFileSync(`${stale}.lock`, '', 'utf8');
+        fs.writeFileSync(`${stale}.lock.held`, '', 'utf8');
+        const old = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        fs.utimesSync(stale, old, old);
+
+        const removed = prune_stale_session_states(dir(), Date.now(), 7);
+        expect(removed).toBe(1);
+        expect(fs.existsSync(stale)).toBe(false);
+        expect(fs.existsSync(`${stale}.lock`)).toBe(false);
+        expect(fs.existsSync(`${stale}.lock.held`)).toBe(false);
     });
 });
