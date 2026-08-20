@@ -571,6 +571,15 @@ Neither `<file>.lock` nor `<file>.lock.held` ends in `.json`, so
 removes them alongside the state file it prunes, so per-file locking does
 not trade a serialised write path for an unbounded sentinel count.
 
+`state_io.update_text_under_lock` — the text sibling, used for the
+append-only `dispatch-issues.jsonl` — keys its lock the same way, for the
+same measured reason: an append needs exclusion against writers of THAT
+file and nothing else, and the directory lock would have serialised it
+against every unrelated `atomic_write_text` in the state dir. Its
+sentinel pair is bounded by construction rather than by the pruner (one
+fixed filename, so exactly one `.lock` / `.lock.held`), which is why it
+sits outside the per-session sweep described above.
+
 Phase 7.4 ships a regression test that spawns two concurrent
 dispatcher invocations against the same event and asserts no torn
 writes (file ends with valid JSON, last-writer-wins).
