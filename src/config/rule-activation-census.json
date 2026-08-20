@@ -1,8 +1,8 @@
 {
     "_comment": "Rule-activation ratchet baseline (road-to-mixed-trigger-activation-cost step 4.1). Two axes: the scoped/mixed ID SETS are pinned by identity, and the unconditional token total may only walk DOWN. Raising a number here to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a baseline_history entry whose reason is a real sentence. Regenerate with `check_rule_activation_census --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "097ab6549",
+    "measured_at_commit": "ded6c208fa65f276398ce72814838c310424dc3f",
     "tokens_exact": true,
-    "unconditional_tokens": 103265,
+    "unconditional_tokens": 106386,
     "scoped_ids": [
         "design-review-after-ui-write",
         "no-roadmap-references",
@@ -36,6 +36,10 @@
         {
             "date": "2026-08-17",
             "reason": "Re-anchored WITH the authorized change, not to clear a red. road-to-mixed-trigger-activation-cost Phase 2, amendment option (b) narrowed to the two path-dominant per-edit rules: `design-review-after-ui-write` and `ui-audit-gate` had their `component` and `design token` keyword triggers removed as an authoring decision, so the emitter restores `paths:` for both. Scoped 6 -> 8, mixed 19 -> 17, unconditional corpus 107194 -> the value above. The direction is DOWN on the weight axis and the identity move is the authorized one; the maintainer asked for this entry in the same commit so the ratchet documents its own sanctioned change instead of reporting it as drift."
+        },
+        {
+            "date": "2026-08-20",
+            "reason": "Raised 103,265 -> 106,386 (+3,121) for one new rule, fix-what-you-see, added on maintainer instruction after a session identified a red check's cause, named the file's author, and handed it back unfixed. The rule permits exactly two dispositions -- fix it, or ship a tracked follow-up roadmap in the same change -- and removes ownership and note-only as escapes from active-remediation's ladder. WHAT THIS RE-ANCHOR EXPOSES, and it is the reason the entry is this long: the rule ships type auto rather than always because check_always_budget has two characters of headroom and its cap may only move down. That switch cleared the always gate and did NOT reduce the cost, because this census counts a rule as standing payload unless it is path-SCOPED, and a red CI check has no file pattern to scope on. So the two gates disagree about what a keyword-triggered rule costs, and the auto downgrade moved the same 3,121 tokens from a budget that refuses them into one that only asks for a sentence. Stated rather than exploited: the honest reading is that this rule costs standing payload whatever its type says, and the always-vs-auto choice bought delivery breadth, not weight."
         }
     ]
 }
