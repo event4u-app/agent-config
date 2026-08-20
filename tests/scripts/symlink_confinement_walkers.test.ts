@@ -172,3 +172,37 @@ describe('iter_commands — commands walk (_lib/agent_src._rglobSorted)', () => 
         expect(found.some((p) => p.includes('dangling'))).toBe(false);
     });
 });
+
+describe('_iter_domains_commands — `__`-prefixed scratch packs are not artefacts', () => {
+    /**
+     * REGRESSION PIN for a measured cross-test contamination, 2026-08-20.
+     *
+     * `check_artefact_count_messaging`'s live-tree gate passed in isolation and
+     * failed in a full suite run with `commands says 200, expected 207`. The +7
+     * came from `lint_originality.test.ts`, which writes seven `command.md`
+     * files into the REAL tree under `src/domains/__origtest_batch/` because
+     * that gate classifies an artefact by its path. Vitest runs files in
+     * parallel workers, so a concurrent counter saw them.
+     *
+     * Hermetic here by construction: the roots are pointed at a tmpdir, so this
+     * test cannot become the thing it is pinning.
+     */
+    it('a scratch pack contributes no commands, while real packs still do', () => {
+        write('repo/src/domains/realpack/ship/command.md');
+        write('repo/src/domains/__origtest_batch/c1/command.md');
+        write('repo/src/domains/__origtest_batch/c2/command.md');
+        write('repo/src/domains/__scratch/deep/nested/command.md');
+
+        const found = [...iter_commands()].map((p) => path.relative(path.join(tmp, 'repo'), p));
+        expect(found).toEqual(['src/domains/realpack/ship/command.md']);
+    });
+
+    it('the prefix is checked on the PACK segment, not anywhere in the path', () => {
+        // A real pack containing a `__`-named subpath is still a real command —
+        // the scratch marker is a pack-level convention, and widening it to any
+        // path segment would silently drop shippable artefacts.
+        write('repo/src/domains/realpack/__weird/command.md');
+        const found = [...iter_commands()].map((p) => path.relative(path.join(tmp, 'repo'), p));
+        expect(found).toEqual(['src/domains/realpack/__weird/command.md']);
+    });
+});

@@ -532,6 +532,45 @@ writes across concerns is cheaper than per-file locks, and concerns
 already run sequentially within one dispatcher invocation. The lock
 file is gitignored.
 
+### One exception — per-session read-modify-write
+
+The rationale above is about CONCERNS inside one dispatcher invocation,
+and for them it still holds. It does not reach concurrent SESSIONS, and
+the per-session state split gave the directory a second population: it
+used to hold one state file per concern, so a directory lock was
+effectively a file lock; it now holds N per-session files, and a
+directory lock there re-serialises the sessions the split exists to
+decouple.
+
+So `state_io.update_json_under_lock` — the read-modify-write helper, used
+only for per-session concern state — keys its lock on the STATE FILE
+(`<file>.lock`, with the `O_EXCL` companion `<file>.lock.held`) rather
+than on the directory. `atomic_write_json` / `atomic_write_text`, the
+path steps 1–4 above describe and the one concerns share, are unchanged.
+
+Two writers to the same session file still take the same lock, so mutual
+exclusion is unchanged where it is needed; two sessions writing different
+files no longer block each other.
+
+**Measured before choosing**, because the previous basis for the
+directory lock at this granularity was "probably unmeasurable at
+millisecond writes", which was a guess. 4 and 8 concurrent processes, 60
+read-modify-writes each, every process writing its OWN per-session file
+(macOS/APFS): slowest worker 68 ms under the shared directory lock vs
+27 ms with no shared lock at 4 processes, and 138–267 ms vs 83–95 ms at
+8. The guess was wrong in direction — it is measurable, and it grows with
+the number of concurrent sessions — and roughly right in magnitude
+(sub-millisecond to a few milliseconds per write). The decisive reading
+is not the absolute number but the comparison: writes to DISTINCT files
+under the shared lock came out at or above writes to the SAME file, i.e.
+the directory lock was paying the full cost of mutual exclusion for
+writes that require none.
+
+Neither `<file>.lock` nor `<file>.lock.held` ends in `.json`, so
+`prune_stale_session_states` skips both by its existing filter; it
+removes them alongside the state file it prunes, so per-file locking does
+not trade a serialised write path for an unbounded sentinel count.
+
 Phase 7.4 ships a regression test that spawns two concurrent
 dispatcher invocations against the same event and asserts no torn
 writes (file ends with valid JSON, last-writer-wins).

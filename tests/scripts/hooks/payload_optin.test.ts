@@ -44,6 +44,7 @@ import {
   type JsonObject,
 } from "../../../src/scripts/hooks/payload_stub.js";
 import { _resultBytes } from "../../../src/scripts/hooks/tool_result_bytes_hook.js";
+import { feedback_dir } from "../../../src/scripts/hooks/state_io.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
 const TS_SCRIPT = path.join(REPO_ROOT, "src", "scripts", "hooks", "dispatch_hook.ts");
@@ -356,7 +357,17 @@ describe("payload opt-in — end to end through the dispatcher", () => {
     );
     expect(r.status).toBe(EXIT_ALLOW);
 
-    const dispatcherDir = path.join(ws, "agents", "runtime", "state", ".dispatcher", "e2e");
+    // DERIVED, never hand-spelled. This was
+    // `path.join(ws, "agents", "runtime", "state", ".dispatcher", "e2e")` — the
+    // session id as a literal directory name. `feedback_dir` now keys the
+    // directory on a digest of the full id (with the legible label as a prefix),
+    // so a hand-spelled path is stale by construction. Asking the producer for
+    // the path is also the right shape regardless of this change: the layout is
+    // that function's business, not this test's.
+    const dispatcherDir = feedback_dir(
+      path.join(ws, "agents", "runtime", "state"),
+      "e2e",
+    );
     const undeclared = JSON.parse(
       fs.readFileSync(path.join(dispatcherDir, "reports_undeclared.json"), "utf8"),
     ) as Record<string, unknown>;
