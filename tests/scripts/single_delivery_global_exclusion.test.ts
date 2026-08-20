@@ -84,37 +84,55 @@ describe('the global install excludes exclusively-package-only rules', () => {
 });
 
 describe('installer and build fingerprint the SAME layers', () => {
-    // The failure this guards is silent and total: if the installer fingerprints
-    // one set of directories and the build another, every comparison mismatches,
-    // every branch falls back to `standalone/full` with a plausible-sounding
-    // reason, and the partition is unreachable forever while nothing fails. A
-    // shared definition is the only way to make that impossible rather than
-    // merely unlikely — so the test is that both sides IMPORT it and neither
-    // re-lists the directories inline.
-    const SOURCES = [
-        path.join(REPO, 'src', 'scripts', 'condense.ts'),
-        path.join(REPO, 'src', 'scripts', 'install.ts'),
-    ];
+    // The failure this guards is silent and total: if the installer fingerprinted
+    // one set of directories and the build another, every comparison would
+    // mismatch, every branch would fall back to `standalone/full` with a
+    // plausible-sounding reason, and the partition would be unreachable forever
+    // while nothing failed.
+    //
+    // The invariant got STRONGER than its first form. That version asserted both
+    // `condense.ts` and `install.ts` import `hostLayerInputs`. They no longer do:
+    // the resolver and the stamp both moved into `partitionEligibility.ts`, which
+    // is the ONLY module that names the layers, so neither generator can see them
+    // to get them wrong. So the assertion is now about that exclusivity, which is
+    // what actually makes the drift impossible rather than merely unlikely.
+    const LAYER_OWNER = path.join(REPO, 'src', 'install', 'hostLayerFingerprint.ts');
+    const SOLE_CONSUMER = path.join(REPO, 'src', 'install', 'partitionEligibility.ts');
 
-    it('both consumers import hostLayerInputs', () => {
-        for (const file of SOURCES) {
-            const text = fs.readFileSync(file, 'utf-8');
-            expect(text, `${path.basename(file)} must import hostLayerInputs`).toContain(
-                'hostLayerInputs',
-            );
-        }
+    /** Every `src/**` TS file except the definition and its one legal consumer. */
+    function otherSources(): string[] {
+        const out: string[] = [];
+        const walk = (dir: string): void => {
+            for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+                const p = path.join(dir, e.name);
+                if (e.isDirectory()) {
+                    if (e.name === 'node_modules' || e.name === 'ui') continue;
+                    walk(p);
+                } else if (e.isFile() && p.endsWith('.ts') && p !== LAYER_OWNER && p !== SOLE_CONSUMER) {
+                    out.push(p);
+                }
+            }
+        };
+        walk(path.join(REPO, 'src'));
+        return out;
+    }
+
+    it('the layer list is defined once and consumed by exactly one module', () => {
+        expect(fs.readFileSync(LAYER_OWNER, 'utf-8')).toContain('export function hostLayerInputs');
+        expect(fs.readFileSync(SOLE_CONSUMER, 'utf-8')).toContain('hostLayerInputs');
+
+        const leaks = otherSources().filter((f) =>
+            fs.readFileSync(f, 'utf-8').includes('hostLayerInputs'),
+        );
+        expect(leaks.map((f) => path.relative(REPO, f))).toEqual([]);
     });
 
-    it('neither consumer re-lists the host layer directories inline', () => {
-        // `.claude/commands` / `.claude/skills` as a joined path pair is the shape
-        // an inline re-listing takes. The single definition lives in
-        // `hostLayerFingerprint.ts`; a second one here is the drift.
-        for (const file of SOURCES) {
-            const text = fs.readFileSync(file, 'utf-8');
-            const inlineLayerList = /label:\s*'(rules|skills|commands)'/.test(text);
-            expect(inlineLayerList, `${path.basename(file)} re-lists host layers inline`).toBe(
-                false,
-            );
-        }
+    it('no source outside the definition re-lists the host layer directories inline', () => {
+        // `label: 'rules' | 'skills' | 'commands'` is the shape an inline
+        // re-listing takes. One definition, or the two sides can drift.
+        const inline = otherSources().filter((f) =>
+            /label:\s*'(rules|skills|commands)'/.test(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(inline.map((f) => path.relative(REPO, f))).toEqual([]);
     });
 });

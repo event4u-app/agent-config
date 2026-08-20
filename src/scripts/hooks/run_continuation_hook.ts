@@ -72,21 +72,15 @@
  *                                duplicate, whatever the counts say.
  *   scope complete (0 open,
  *   none blocked)              → allow            (event: complete; state cleared)
- *   remaining work is
- *   externally impossible
- *   (0 open, ≥1 blocked)       → allow  (event: blocked, ONCE per run, guarded by
+ *   remaining work externally
+ *   impossible (0 open, ≥1
+ *   blocked)                   → allow  (event: blocked, ONCE per run, guarded by
  *                                the LEDGER: the state is cleared like `complete`,
  *                                so no field there outlives the event. A terminal
  *                                outcome — not a sixth halt, never in
  *                                `HALT_ACTIONS`, never stamped into `halted`.
- *                                ADR-237 supersedes ADR-235 and NARROWS what may
- *                                carry a `blocked-by:` marker at all: a
- *                                repository-local prerequisite the agent can
- *                                perform — a branch, a push, a PR, a settings
- *                                flip, a CI re-run, a failing test — is work, not
- *                                a blocker. The marker semantics this hook reads
- *                                are unchanged; the set of steps that may legally
- *                                wear one is smaller.)
+ *                                ADR-237 narrows what may legally wear a
+ *                                `blocked-by:` marker; semantics unchanged.)
  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
  *   stall (3 engagements, no

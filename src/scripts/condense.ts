@@ -251,14 +251,20 @@ function _stripChars(s: string, chars: string): string {
 // module-level CLI self-invoke into its bundle. Re-exported here because four
 // in-repo consumers import it from `condense.js`.
 export { rule_in_scope } from '../install/ruleInScope.js';
+// Re-exported for in-repo consumers; definitions moved beside emit_host_rules_cli.ts (Phase 5).
+export {
+    CLAUDE_PATHS_PATTERN_BUDGET,
+    _claude_paths_plan,
+    _escape_claude_bracket,
+    _expanded_pattern_count,
+    _has_non_path_trigger,
+    _is_unresolved_placeholder,
+    derive_trigger_globs,
+    type ClaudePathsPlan,
+} from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
-import { fingerprintLayers, hostLayerInputs } from '../install/hostLayerFingerprint.js';
-import {
-    isExclusivelyPackageOnly,
-    partitionVerdict,
-    type PartitionVerdict,
-} from '../install/partitionEligibility.js';
-import * as installed_lock from './_lib/installed_lock.js';
+import { isExclusivelyPackageOnly, partitionActive, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
 const _DEFAULT_PROJECT_ROOT = path.resolve(_HERE, '..', '..');
@@ -311,6 +317,7 @@ function _deriveState(root: string): ModuleState {
 }
 
 export const MODULE_STATE: ModuleState = _deriveState(_DEFAULT_PROJECT_ROOT);
+setPartitionAnnounce(success); // ADR-236: the mode line must be visible at the default level
 
 /**
  * Test seam — reassign one or more module-state fields, mirroring the pytest
@@ -1110,78 +1117,6 @@ function _is_manual_rule(rule_path: string): boolean {
     return false;
 }
 
-/**
- * Per-process partition verdict. Memoised because `_scoped_rule_basenames` has
- * three call sites in this file and the fingerprint costs ~100 ms; recomputing
- * it per call would triple that for an answer that cannot change mid-run.
- */
-let _PARTITION_VERDICT: PartitionVerdict | null = null;
-
-/**
- * Test seam — drop the memoised verdict so a single process can exercise both
- * delivery modes. Without it a test file could only ever observe whichever mode
- * its first call happened to resolve, which is the shape of a test that cannot
- * go red for the branch it claims to cover.
- */
-export function _resetPartitionVerdictForTest(): void {
-    _PARTITION_VERDICT = null;
-}
-
-/**
- * Select the delivery mode for this generation, and say so once.
- *
- * Both council seats (2026-08-20, 2/2) required that generation PRINT the mode
- * it selected rather than partition silently — a withheld artefact that nobody
- * announced is exactly the silent under-governance the partition exists to
- * remove. The line is emitted on the first resolution only.
- *
- * The fingerprint compares the host layer against **what the installer recorded
- * when it wrote that layer**, not against a re-derivation from source. That
- * avoids guessing the installer's byte representation — a mismatch there would
- * make the partition permanently unreachable rather than merely inactive — and
- * it is the property the partition actually needs: the omitted artefacts are
- * still present, in the form this version's installer left them.
- *
- * **Known residual, recorded rather than smoothed over:** an installer that
- * crashes mid-write and still reaches the lockfile would fingerprint its own
- * partial layer, and that fingerprint would then verify. The mitigation is
- * ordering — the lockfile is written last, after the layers — which narrows the
- * window without closing it. A per-artefact manifest would close it and is not
- * built here.
- */
-function _resolve_partition_verdict(): PartitionVerdict {
-    if (_PARTITION_VERDICT !== null) {
-        return _PARTITION_VERDICT;
-    }
-    const user_home = process.env['HOME'] ?? os.homedir();
-    const layers = hostLayerInputs(user_home);
-    const present = layers.some((l) => _isDir(l.root));
-    let lock: installed_lock.LockfileData | null = null;
-    try {
-        lock = installed_lock.read_lockfile();
-    } catch {
-        lock = null; // unreadable record → fail safe below
-    }
-    const verdict = partitionVerdict({
-        projectVersion: installed_lock.current_package_version(MODULE_STATE.PROJECT_ROOT),
-        lockfile: lock,
-        hostLayerPresent: present,
-        expectedFingerprint: () => fingerprintLayers(layers),
-    });
-    _PARTITION_VERDICT = verdict;
-    // `success`, not `info`: `info` prints ONLY at `verbose`, so the mode line
-    // would have been invisible in the default `minimal` run — a partition that
-    // withheld 100 rules without saying so, which is exactly what both council
-    // seats (2026-08-20, 2/2) required this line to prevent. `success` prints
-    // immediately at verbose and lands in the end-of-run summary at minimal.
-    //
-    // Residual, stated: at `output.level: silent` the line is dropped. That is
-    // an explicit operator choice, not a default, and the partition stays
-    // fail-safe either way.
-    success(`projection mode: ${verdict.mode} — ${verdict.reason}`);
-    return verdict;
-}
-
 function _scoped_rule_basenames(): string[] {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
@@ -1197,18 +1132,7 @@ function _scoped_rule_basenames(): string[] {
         // is its fourth consumer, after the router compiler, the dist writer, and
         // check_sync. Same predicate in all four; that is the point.
         .filter((p) => !skip_compile_disabled_rule(`rules/${path.basename(p)}`))
-        // ADR-236 single delivery. Under `dual-layer/partitioned` the project
-        // layer emits ONLY artefacts that exist for this package alone (16
-        // rules, measured 2026-08-20); everything else is delivered by the
-        // verified host layer and withheld here, so no rule arrives twice.
-        // Under `standalone/full` this filter is the identity — which is every
-        // fresh checkout, every CI run, and every machine without a verified
-        // global install.
-        .filter((p) =>
-            _resolve_partition_verdict().mode === 'dual-layer/partitioned'
-                ? isExclusivelyPackageOnly(p)
-                : true,
-        )
+        .filter((p) => !partitionActive(MODULE_STATE.PROJECT_ROOT) || isExclusivelyPackageOnly(p))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
@@ -1413,32 +1337,6 @@ function _yaml_scalar(value: string): string {
     return JSON.stringify(value);
 }
 
-/**
- * Derive host-native activation globs from a rule's `triggers:` frontmatter
- * (road-to-request-scoped-rule-load Phase 2). `file_pattern` triggers map
- * verbatim; `path_prefix` triggers map to `<prefix>**`. Keyword / phrase /
- * command triggers produce no glob — those rules stay
- * description-activated (Cursor Agent-Requested / Windsurf model_decision).
- */
-export function derive_trigger_globs(meta: Record<string, unknown>): string[] {
-    const triggers = meta['triggers'];
-    if (!Array.isArray(triggers)) {
-        return [];
-    }
-    const globs: string[] = [];
-    for (const t of triggers) {
-        if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
-        const obj = t as Record<string, unknown>;
-        if (typeof obj['file_pattern'] === 'string' && obj['file_pattern']) {
-            globs.push(obj['file_pattern']);
-        } else if (typeof obj['path_prefix'] === 'string' && obj['path_prefix']) {
-            const prefix = obj['path_prefix'] as string;
-            globs.push(prefix.endsWith('/') ? `${prefix}**` : `${prefix}**`);
-        }
-    }
-    // De-dup, keep declaration order (deterministic output).
-    return [...new Set(globs)];
-}
 
 export function _emit_cursor_mdc(source: string, target: string): void {
     const [meta, body] = _parse_frontmatter(_readText(source));
@@ -1481,151 +1379,8 @@ export function _emit_windsurf_rule(source: string, target: string): void {
     _writeText(target, lines.join('\n'));
 }
 
-/**
- * A brace group the host expands, versus an agent-config placeholder that only
- * LOOKS like one.
- *
- * `path_prefix: "{module_root}/"` in `roadmap-ci-steps-policy` is resolved by
- * this suite from `modules.root_paths`. Emitted verbatim into a host `paths:`
- * list it is a brace group with no comma, which the host expands to the literal
- * string `{module_root}` — a pattern that matches no file. The rule would then
- * reach the model **never** instead of on-demand, and nothing would say so: the
- * probed contract records this exact degradation as silent
- * (`claude-code-rules-dir-contract.md` § constraints).
- *
- * Dropping the pattern is fail-safe in the one direction that matters. A rule
- * left with no pattern at all carries no `paths:` key and loads
- * unconditionally — the status quo, not a regression. A rule carrying a
- * no-op pattern is invisible.
- *
- * The discriminator is the comma, not a placeholder allowlist: `{ts,tsx}` is a
- * real alternation, `{module_root}` cannot be one.
- */
-export function _is_unresolved_placeholder(pattern: string): boolean {
-    for (const m of pattern.matchAll(/\{([^}]*)\}/g)) {
-        if (!(m[1] as string).includes(',')) {
-            return true;
-        }
-    }
-    return false;
-}
 
-/**
- * `[` opens a bracket expression for the host. An unparseable one makes that
- * pattern match nothing while the rule's other patterns keep working — so a
- * literal `[` in a trigger is escaped rather than trusted.
- */
-export function _escape_claude_bracket(pattern: string): string {
-    return pattern.replace(/\[/g, '\\[');
-}
 
-/**
- * Expanded-pattern cost of one glob: the product of its brace alternations.
- * The host budgets a rule's whole `paths:` list at 1,000 expanded patterns and
- * 4 MiB, and a list over budget is used UNEXPANDED — braces then match
- * literally, i.e. nothing. Counting keeps the emitter under the cliff instead
- * of discovering it as a silent no-op.
- */
-export function _expanded_pattern_count(pattern: string): number {
-    let n = 1;
-    for (const m of pattern.matchAll(/\{([^}]*)\}/g)) {
-        n *= (m[1] as string).split(',').length;
-    }
-    return n;
-}
-
-/** Host-documented budget for one rule's whole `paths:` list. */
-export const CLAUDE_PATHS_PATTERN_BUDGET = 1000;
-
-export interface ClaudePathsPlan {
-    /** Patterns to emit under `paths:`, in declaration order. */
-    globs: string[];
-    /** Patterns deliberately not emitted, with the reason a reader can act on. */
-    dropped: { pattern: string; reason: 'unresolved-placeholder' | 'over-budget' | 'mixed-triggers' }[];
-}
-
-/**
- * Does this rule declare any trigger that is NOT path-shaped?
- *
- * Load-bearing for `_claude_paths_plan` below, because one `triggers:` list
- * means two different things on two hosts. Cursor and Windsurf treat globs as
- * ADDITIVE — a rule with empty globs still reaches the agent through its
- * description (see `_emit_cursor_mdc`'s own comment). Claude Code treats
- * `paths:` as EXCLUSIVE: with it the rule loads on a path match; without it the
- * rule loads unconditionally. The emitter fed both semantics from one list, so
- * a rule that declared keywords *and* one path glob silently became
- * path-gated-only on Claude.
- */
-export function _has_non_path_trigger(meta: Record<string, unknown>): boolean {
-    const triggers = meta['triggers'];
-    if (!Array.isArray(triggers)) return false;
-    for (const t of triggers) {
-        if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
-        const obj = t as Record<string, unknown>;
-        if (typeof obj['keyword'] === 'string' && obj['keyword']) return true;
-        if (typeof obj['phrase'] === 'string' && obj['phrase']) return true;
-    }
-    return false;
-}
-
-/**
- * Derive the host's `paths:` list for one rule, with every drop recorded.
- *
- * Kernel / always-apply rules get an EMPTY list on purpose: absent `paths:` is
- * how this host says "load unconditionally", which is exactly what an Iron-Law
- * rule needs. Scoping one would be a correctness regression dressed as a byte
- * saving — and the same contract notes path-scoped rules are not re-injected
- * after `/compact`, so an obligation that must survive compaction cannot be
- * path-scoped at all.
- */
-export function _claude_paths_plan(meta: Record<string, unknown>): ClaudePathsPlan {
-    const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
-    if (always_apply) {
-        return { globs: [], dropped: [] };
-    }
-    const globs: string[] = [];
-    const dropped: ClaudePathsPlan['dropped'] = [];
-
-    // A rule that ALSO declares keyword / phrase triggers gets no `paths:` at
-    // all, and therefore keeps loading unconditionally on Claude Code.
-    //
-    // Emitting `paths:` here would narrow the rule to a path match and discard
-    // every keyword the author wrote, because this host reads the list as the
-    // whole gate rather than as one way in. Measured before this guard: 25 of
-    // 110 projected rules carried `paths:` and 19 of them also carried keyword
-    // triggers — `design-fidelity` lost 21 of them, in exactly the pasted-
-    // screenshot and capability-URL handovers its own routing section names as
-    // the classes it exists to catch. Nothing in the tree recorded a decision
-    // to make that trade, which is why it is treated as a defect.
-    //
-    // The drop is REPORTED rather than silent, so a rule whose obligation
-    // really is path-bound is visible as a candidate for removing its keyword
-    // triggers — the narrowing then becomes an authoring decision instead of an
-    // emitter side effect. Cursor and Windsurf are untouched: globs are
-    // additive there, so the same rule keeps both routes.
-    if (_has_non_path_trigger(meta)) {
-        for (const raw of derive_trigger_globs(meta)) {
-            dropped.push({ pattern: raw, reason: 'mixed-triggers' });
-        }
-        return { globs, dropped };
-    }
-
-    let spent = 0;
-    for (const raw of derive_trigger_globs(meta)) {
-        if (_is_unresolved_placeholder(raw)) {
-            dropped.push({ pattern: raw, reason: 'unresolved-placeholder' });
-            continue;
-        }
-        const cost = _expanded_pattern_count(raw);
-        if (spent + cost > CLAUDE_PATHS_PATTERN_BUDGET) {
-            dropped.push({ pattern: raw, reason: 'over-budget' });
-            continue;
-        }
-        spent += cost;
-        globs.push(_escape_claude_bracket(raw));
-    }
-    return { globs, dropped };
-}
 
 /**
  * Emit a Claude Code rule carrying the host's OWN activation key.
@@ -1914,17 +1669,7 @@ function _render_native_model_md(src_md: string, tier: string): string {
 }
 
 export function generate_claude_skills(active_skill_names: ReadonlySet<string> | null = null): number {
-    // ADR-236 single delivery, step 2.1. Under `dual-layer/partitioned` the
-    // project layer emits ZERO skills: measured 2026-08-20, **no** skill in
-    // `src/skills/` is tagged `workspaces: [agent-config-maintainer]`
-    // exclusively, so the package-only set is empty on this axis and the whole
-    // corpus is delivered by the verified host layer. `active_skill_names` is
-    // narrowed to the empty set rather than returning early, so the existing
-    // prune below still removes the previous run's symlinks — leaving them would
-    // deliver every skill twice while claiming a partition.
-    if (_resolve_partition_verdict().mode === 'dual-layer/partitioned') {
-        active_skill_names = new Set<string>();
-    }
+    if (partitionActive(MODULE_STATE.PROJECT_ROOT)) active_skill_names = new Set<string>();
     if (!_exists(MODULE_STATE.SKILLS_SOURCE)) {
         process.stderr.write('  ⚠️  dist/agent-src/skills/ not found — skipping skills\n');
         return 0;
@@ -1938,22 +1683,9 @@ export function generate_claude_skills(active_skill_names: ReadonlySet<string> |
         skills = skills.filter((s) => active_skill_names.has(s));
     }
     const skill_set = new Set(skills);
-    // The command-slug set exists to stop THIS prune from deleting entries that
-    // `generate_claude_commands` (which runs after it, into the same directory)
-    // is about to write. Under `dual-layer/partitioned` that generator writes
-    // nothing, so the protection has nothing to protect and becomes a leak:
-    // measured 2026-08-20, 8 skill symlinks whose names are also command slugs
-    // survived a partitioned run — `brand`, `brand-identity`, `brand-strategy`,
-    // `design-system-capture`, `estimate-ticket`, `refine-ticket`,
-    // `review-routing`, `upstream-contribute`. The command prune could not clear
-    // them either: it skips symlinks by construction
-    // (`!_isDirNoFollow(item) || _isSymlink(item)` → continue), so those eight
-    // were unreachable from both sides and step 2.1's "carries none" was false
-    // while every count read zero.
-    const command_slugs =
-        _resolve_partition_verdict().mode === 'dual-layer/partitioned'
-            ? new Set<string>()
-            : new Set([...iterCommands()].map(([, slug]) => slug));
+    const command_slugs = partitionActive(MODULE_STATE.PROJECT_ROOT)
+        ? new Set<string>()
+        : new Set([...iterCommands()].map(([, slug]) => slug));
 
     _mkdirp(MODULE_STATE.CLAUDE_SKILLS_DIR);
     const auto = _read_model_auto_switch() === 'auto';
@@ -2114,15 +1846,7 @@ export function generate_claude_project_commands(
 }
 
 export function generate_claude_commands(active_command_slugs: ReadonlySet<string> | null = null): number {
-    // ADR-236 single delivery, step 2.1 — the half that is easy to miss, because
-    // commands do not live in a `commands/` directory here: this function writes
-    // into `CLAUDE_SKILLS_DIR`, the same directory the skills generator uses. The
-    // host layer keeps them separate (`~/.claude/commands`), which is why
-    // `hostLayerInputs` fingerprints that directory too — a command withheld
-    // here must be verified there first.
-    if (_resolve_partition_verdict().mode === 'dual-layer/partitioned') {
-        active_command_slugs = new Set<string>();
-    }
+    if (partitionActive(MODULE_STATE.PROJECT_ROOT)) active_command_slugs = new Set<string>();
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         process.stderr.write('  ⚠️  src/domains/ not found — skipping commands\n');
         return 0;

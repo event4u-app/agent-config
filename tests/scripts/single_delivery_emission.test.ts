@@ -29,10 +29,12 @@ import {
     MODULE_STATE,
     _getStateForTest,
     _resetStateForTest,
-    _resetPartitionVerdictForTest,
     generate_claude_commands,
     generate_claude_skills,
 } from '../../src/scripts/condense.js';
+// The memo lives with the predicate, not with the generator — see
+// partitionEligibility.ts on why the wiring in condense.ts is one line per site.
+import { _resetPartitionVerdictForTest } from '../../src/install/partitionEligibility.js';
 
 const SKILL_WITH_COMMAND_NAME = 'estimate-ticket';
 /**

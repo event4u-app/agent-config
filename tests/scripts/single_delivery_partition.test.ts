@@ -19,7 +19,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { fingerprintLayers } from '../../src/install/hostLayerFingerprint.js';
+import { fingerprintLayers, hostLayerInputs } from '../../src/install/hostLayerFingerprint.js';
 import {
     isExclusivelyPackageOnly,
     partitionVerdict,
@@ -85,6 +85,31 @@ describe('fingerprintLayers', () => {
         const forward = fingerprintLayers([a, b]);
         const swapped = fingerprintLayers([b, a]);
         expect(forward).not.toBe(swapped);
+    });
+});
+
+describe('hostLayerInputs — the layer list the whole partition rests on', () => {
+    // A sabotage probe caught this gap: deleting `commands` from the list left
+    // every other test green. The list is the ONE place that decides what must be
+    // verified before an artefact is withheld, and the project layer writes skills
+    // AND commands into one directory while the host keeps them apart — so a
+    // missing entry means withholding something nobody checked, which is the exact
+    // under-governance the partition exists to remove.
+    it('covers rules, skills AND commands, under the host directory', () => {
+        const layers = hostLayerInputs('/home/probe');
+        expect(layers.map((l) => l.label)).toEqual(['rules', 'skills', 'commands']);
+        for (const l of layers) {
+            expect(l.root).toBe(path.join('/home/probe', '.claude', l.label));
+        }
+    });
+
+    it('the order is fixed, because the digest folds layers in sequence', () => {
+        // Two runs on the same machine must produce the same digest; a reordered
+        // list would silently invalidate every recorded fingerprint.
+        expect(hostLayerInputs('/x').map((l) => l.label)).toEqual(
+            hostLayerInputs('/x').map((l) => l.label),
+        );
+        expect(hostLayerInputs('/x')).toHaveLength(3);
     });
 });
 

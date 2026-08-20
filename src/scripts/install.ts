@@ -96,8 +96,7 @@ import {
     ruleScopeFromSettings,
     type RuleScope,
 } from '../install/rule_scope.js';
-import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
-import { fingerprintLayers, hostLayerInputs } from '../install/hostLayerFingerprint.js';
+import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
@@ -3637,19 +3636,6 @@ function _rule_filter_for_source(
     scope: RuleScope,
 ): global_deploy_inventory.FileFilter | null {
     if (src_rel !== RULE_SOURCE_REL) return null;
-    // ADR-236 single delivery, step 2.2 — the partition from the OTHER side.
-    // 2.1 stops the project layer from emitting anything but the package-only
-    // set; without this line a global install would still carry that same set,
-    // so a re-install would re-create the overlap the projection just removed
-    // and the invariant would hold in one direction only.
-    //
-    // Measured 2026-08-20: 16 rules in `src/rules/` are tagged
-    // `workspaces: [agent-config-maintainer]` exclusively. They exist to
-    // maintain THIS package and are meaningless in a consumer's home directory.
-    //
-    // The predicate reads the shipped `dist/agent-src/rules/` copy, and that is
-    // safe because ADR-201 made the projection byte-exact — the `workspaces:`
-    // key survives condensation verbatim.
     return (srcFile: string): boolean =>
         ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
 }
@@ -3832,46 +3818,8 @@ function install_global(
         }
     }
 
-    // ADR-236 single delivery — stamp the host-layer content fingerprint.
-    //
-    // This is what makes the partition reachable at all: `condense.ts` withholds
-    // artefacts from the project layer ONLY when this fingerprint matches what it
-    // finds on disk. No fingerprint → `standalone/full` → today's behaviour.
-    //
-    // **Placement is the load-bearing part.** It runs AFTER the deploy and after
-    // the failed-tool postcheck, never at the earlier `write_lockfile` above —
-    // that one fires before the redeploy, so a fingerprint taken there would
-    // describe the PREVIOUS install and then verify against a layer this run
-    // replaced. Both council seats (2026-08-20) required the record be written
-    // last, and this is where "last" actually is.
-    //
-    // On failure: warn and write no fingerprint. A missing fingerprint is a
-    // fail-safe (full projection); a wrong one would authorise a partition
-    // against a layer nobody verified, so the two errors are not symmetric and
-    // the code must never prefer the second.
-    //
-    // Residual, stated: a deploy that dies mid-write and still reaches this line
-    // fingerprints its own partial layer, which then verifies. Ordering narrows
-    // the window without closing it; per-artefact verification would close it.
-    if (!failed_tools.has('claude-code')) {
-        try {
-            const fingerprint = fingerprintLayers(hostLayerInputs(os.homedir()));
-            installed_lock.write_lockfile(installed_version, corrected_tools, {
-                path: write_path,
-                host_layer_fingerprint: fingerprint,
-            });
-            if (!state.QUIET) {
-                info(`Host-layer fingerprint recorded: ${fingerprint.slice(0, 12)} (enables single delivery)`);
-            }
-        } catch (e) {
-            if (!state.QUIET) {
-                warn(
-                    `Host-layer fingerprint not recorded (${String(e)}) — the project layer keeps `
-                        + 'the full projection. Re-run the install to enable single delivery.',
-                );
-            }
-        }
-    }
+    stampHostLayerFingerprint(installed_version, corrected_tools, write_path,
+        failed_tools.has('claude-code'), (m) => { if (!state.QUIET) info(m); });
 
     if (state.PROGRESS_NDJSON) {
         const ordered = Object.keys(deploy_results).sort();
