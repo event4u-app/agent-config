@@ -1,12 +1,12 @@
 {
     "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "4fae6e5b7",
+    "measured_at_commit": "99e7d82eb",
     "tokens_exact": true,
     "ceilings": {
         "active-remediation": 1601,
         "analysis-skill-routing": 76,
         "architecture": 955,
-        "artifact-drafting-protocol": 611,
+        "artifact-drafting-protocol": 680,
         "augment-edit-discipline": 137,
         "autonomous-execution": 1633,
         "brand-consistency": 133,
@@ -16,7 +16,6 @@
         "commit-conventions": 136,
         "context-hygiene": 2470,
         "copilot-routing": 128,
-        "decision-revisit-gate": 545,
         "design-fidelity": 2245,
         "devcontainer-routing": 128,
         "docker-commands": 79,
@@ -62,6 +61,13 @@
             "from": 2447,
             "to": 2470,
             "reason": "One sentence, +23 tokens, and it is obligation surface rather than explanation: for CI, do not hand-write the wait loop. The mechanics went to the pointer target where this rule's own migration note already sends them (context-hygiene-mechanics gains the exit codes, the four not-settled states and the measured incident) \u2014 that move is what took the growth from +179 to +23, and the residue is the pointer itself, which cannot live in the guideline because a rule that does not name the helper is a rule nobody follows to it. The incident it encodes: a hand-written `until ! gh pr checks N | grep -q pending` exited when the API failed, because the error text contains no `pending`, and the session reported a settle that had not happened and retracted it in the next reply. The rule's neighbouring waiter law already says one waiter per condition; what it did not say is that the exit condition is the part that gets written wrong, which is why the helper is named here rather than described."
+        },
+        {
+            "date": "2026-08-20",
+            "rule": "artifact-drafting-protocol",
+            "from": 611,
+            "to": 680,
+            "reason": "Three lines plus a pointer extension, +69 tokens, for a new contract field that governs what a run may author without asking: an artifact discovered AFTER an accepted execution contract halts by default, and `late_artifacts: auto-research` is the only declared value that continues, capped at three per run. The five-step auto-research procedure, the reasoning for the default and its reversibility argument all went to the pointer target (artifact-drafting-protocol-mechanics gains a Late artifacts section) rather than here, which is what held the growth to a bullet. The residue is obligation surface and cannot live in the guideline: this rule's own batch-mode bullet already tells the reader that a mid-run artifact triggers the full interactive protocol, so a reader who never opens the guideline would conclude that a declared value cannot change it. Named default rather than described behaviour, because the default direction is the decision -- AI council 2/2 (anthropic + openai) chose `halt` over `auto-research` on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
         }
     ]
 }

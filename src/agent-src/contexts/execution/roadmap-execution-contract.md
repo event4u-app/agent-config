@@ -78,6 +78,8 @@ Artifacts: <N> planned (skills/rules/commands/guidelines) —
 Open questions: <N> → decision sheet below (<M> rows); the rest via AI
      council (<members | "none configured — will halt on ambiguity">)
 Quality: <cadence> · Dashboard: <cadence>
+Late artifacts: <halt | auto-research> (default halt; cap 3 then halt)
+Deferred items: <wait | spawn-follow-up-draft | cancel-with-memo> (default wait)
 
 <decision sheet, per contract-decision-sheet — omitted entirely when M = 0>
 
@@ -96,6 +98,66 @@ Accept = the ONE authorization of the run. Cache all grants; never
 re-ask inside the run. Adjust → apply, re-show once. The contract is
 re-derived on every invocation — it always reflects the roadmap's and
 repo's current state.
+
+### 2a. `late_artifacts` — what happens to an artifact the plan did not name
+
+An artifact discovered **after** Accept was outside the batched overlap check,
+so the research the contract summary reported does not cover it. Two policies,
+and the field is on the screen because the choice changes what the run may do
+without asking:
+
+| Value | Behaviour |
+|---|---|
+| `halt` (**default**) | The run stops at the discovery with the scope-out-of-roadmap halt. The artifact is reported, not authored. |
+| `auto-research` | The run re-runs Phase B (Research) and the overlap pass mid-run against the *current* artifact state — the identical procedure already accepted as non-interactive at contract time, only later. An **extend** verdict extends silently; a **create** verdict derives its understand-answers from the step text and the sheet answers; only a genuine overlap conflict halts. Capped at **three** late artifacts per run, then halt regardless. |
+
+<!-- decision 2026-08-20: the shipped default is `halt`, not `auto-research`.
+     AI council 2/2 (anthropic + openai) on the `autonomy-defaults-sheet` fork
+     of road-to-user-out-of-the-loop, record
+     agents/evidence/council/drain-blocker-dispositions-a.md. Reasoning: the
+     roadmap's own Risk 7 is that auto-research drifts the run's scope, and its
+     stated mitigation is the cap — but a cap of three is a bound on how far the
+     drift goes, not a check on whether it should happen at all. `halt` is also
+     the behaviour the tree already had, so shipping it as the default means
+     this field is purely additive: nothing that worked before changes, and the
+     aggressive path becomes a thing a run declares rather than a thing it
+     inherits. Reversibility: flipping the default is one word in this table
+     plus one word in the mechanics guideline, with no dependent mechanism to
+     unwind, and the roadmap's own kill criterion (late-artifact revisit rate)
+     only becomes measurable once some runs declare `auto-research` — which an
+     opt-in still permits and a silent default would have made unattributable. -->
+
+The cap is not negotiable by the field: a run that keeps discovering artifacts
+has a planning problem, not an autonomy problem, and the third discovery is the
+signal to say so.
+
+### 2b. `deferred_policy` — the two autonomous exits for a `[~]` item
+
+[`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) Iron Law 3
+forbids a silent archive with unresolved deferred items. That gate is
+unchanged. What this field changes is which dispositions a run may reach
+**without a synchronous prompt**, and there are exactly two, because the
+preservation test in that rule already splits them the same way:
+
+| Value | Behaviour |
+|---|---|
+| `wait` (**default**) | The synchronous halt stands. Every disposition stays conversational. |
+| `spawn-follow-up-draft` | A roadmap closing with `[~]` items spawns the follow-up draft automatically, carrying each item **and** its blocker. The item stays alive in the active estate, which is what makes this council-decidable rather than owner-reserved. |
+| `cancel-with-memo` | An item the run can show is no longer wanted is recorded `[-]` with a reasoning memo naming what changed. This is a **drop**, so it is owner-reserved by the preservation test: the run WRITES the memo and the recommendation, and the archive still waits for the user on that item. |
+
+<!-- decision 2026-08-20: the policy offers BOTH exits — a follow-up draft and
+     an explicit cancellation with a reasoning memo — not the follow-up draft
+     alone. AI council 2/2 (anthropic + openai), same record as above.
+     Reasoning: follow-up-draft-only means every deferred item must be carried,
+     and a carried item nobody wants becomes the parking lot the roadmap's own
+     Risk 5 describes for memos. Offering cancellation makes "this is no longer
+     wanted" a statable outcome with a written reason instead of an indefinite
+     deferral wearing a follow-up roadmap. Reversibility, and it is the load-
+     bearing half: the cancellation exit does NOT lower the gate, because a
+     drop stays owner-reserved — the run produces the memo, the user still
+     decides. Removing the value later removes an option nobody was obliged to
+     use; the default stays `wait` either way. -->
+
 
 ## 3. Grants activated by acceptance
 
