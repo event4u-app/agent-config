@@ -712,9 +712,10 @@ worse than none — it reads as a live control.
   state `transferred`, under its categorical Rule 3 — a repository-administration
   setting is externally visible and irreversible, so the work may only be moved
   to a human, never recorded as decided-and-done. Record:
-  `agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
-  (on `origin/drain/council-records`, PR #1463; not yet on `main`, hence cited
-  without a link). Destination:
+  [`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  — on `main` since PR #1463 merged mid-transfer, so this is a resolved link
+  rather than the `ref-ignore`-suppressed forward reference it started as.
+  Destination:
   [`stubs/road-to-main-protection-ruleset-changes.md`](stubs/road-to-main-protection-ruleset-changes.md)
   § Transfer 1, which carries the `Resolved when` above verbatim, the complete
   list of the five dependent items moved (step 4.2, the ruleset write, and the

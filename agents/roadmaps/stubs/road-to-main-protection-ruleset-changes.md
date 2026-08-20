@@ -11,9 +11,10 @@ complexity: lightweight
 > categorical Rule 3: a repository-administration setting is externally
 > visible and irreversible, so such work may only be transferred, never
 > recorded as decided-and-done. Record:
-> `agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
-> (present on `origin/drain/council-records`, PR #1463; not yet on `main`, so
-> the path is deliberately cited without a link).
+> [`agents/evidence/council/drain-blocker-dispositions-b.md`](../../evidence/council/drain-blocker-dispositions-b.md).
+> Cited as a resolved link, not a forward reference: PR #1463 merged while this
+> transfer was being written, so the record is on `main` and the `ref-ignore`
+> marker this line briefly carried would now suppress a check that passes.
 
 ## Why one stub and not two
 

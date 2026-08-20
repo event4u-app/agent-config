@@ -33,34 +33,39 @@ frontmatter expected by the linter.
 
 ## Drain-run transfers
 
-A second, structurally different class of stub also lives here. The autonomous
-drain run of 2026-08-20 resolved every open blocker in this estate; where the
-AI council returned disposition **B — transferred**, the work moved into a stub
-rather than being recorded as decided-and-done. The council's categorical rule:
-a repository-administration setting is externally visible and irreversible, so
-it may only be transferred.
+A second, separate group with a **different origin and different gates**. These
+were not created by Phase 9 of the employee-product roadmap; they are work
+transferred out of an active roadmap during a drain run because it needs a live
+host session, a human observation, or a capability nobody is building. The
+transferring roadmap records outcome state `transferred` so its archival never
+reads as "outcome achieved".
 
-| Stub | Transfers | Producer gate |
-|---|---|---|
-| [`road-to-main-protection-ruleset-changes.md`](road-to-main-protection-ruleset-changes.md) | `required-check-set-change` + `merge-queue-enablement`, out of `road-to-inbox-harvest-2026-08-b-ci-economy.md` Phase 4 | repo-admin write on ruleset `17749383` |
+| Stub | Transferred from | Outcome state | Re-entry gates |
+|---|---|---|---|
+| [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
+| [`road-to-main-protection-ruleset-changes.md`](road-to-main-protection-ruleset-changes.md) | `road-to-inbox-harvest-2026-08-b-ci-economy.md` Phase 4, blockers `required-check-set-change` + `merge-queue-enablement`, 2026-08-20 | `transferred` | One gate, in the stub: a repo-admin write on ruleset `17749383` by the named producer. Two probes, both measured at transfer time: required checks **1**, `merge_queue` entries **0**, `merge_group` files **0** |
 
-**The shared promotion criteria below do NOT govern a drain-run transfer.** A
-recruited first customer and a funded security audit gate the org-mode surface
-stubs, which introduce new product capability for an external tenant. A
-drain-run transfer introduces no capability — it is already-decided work whose
-only missing input is a human authority the tree cannot supply. Requiring a
-customer and an audit before a maintainer may edit their own repository
-settings would be a gate on nothing, and would make the stub unclosable.
+**The shared promotion criteria below do NOT apply to this group.** They are
+org-mode gates — recruited customer, funded security audit, ADR lifting a
+Hard-Floor item — and a drain-run transfer of internal work crosses no Hard
+Floor and introduces no org surface. Each stub in this group carries its own
+gates and says so.
 
-Each drain-run transfer instead carries the council's three-point integrity
-check: the original `Resolved when` criterion verbatim, the complete list of
-dependent steps moved, and a named re-entry producer with a detection probe
-measured at transfer time.
+**One qualification the paragraph above deliberately scopes out.** It says a
+drain-run transfer *of internal work* crosses no Hard Floor, which is true of
+that class and not of the second row: a repository-administration setting is a
+`non-destructive-by-default` Hard-Floor trigger, and that is precisely why the
+council could only transfer it. Its gate is therefore neither an org-mode
+criterion nor a measurement — it is the authority itself, exercised by a named
+human with a this-turn approval naming the exact object. Requiring a recruited
+customer and a funded security audit before a maintainer may edit their own
+repository settings would gate on nothing and make the stub unclosable.
 
 ## Promotion criteria (shared)
 
-Any stub may move from `stubs/` to `agents/roadmaps/` only when **all
-three** of these are true:
+Applies to the six org-mode stubs in **Current stubs** above, not to the
+drain-run transfers. Any of those stubs may move from `stubs/` to
+`agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.
