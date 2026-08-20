@@ -112,7 +112,8 @@ Rung 3, by wrapper:
 
 | Wrapper | Derived mode | Contract |
 |---|---|---|
-| `/roadmap:process-full`, `/roadmap:next` | `autonomous`, **preselected** | offered |
+| `/roadmap:process-full` | `autonomous`, **preselected** | offered |
+| `/roadmap:next` | `phase-checkpoints`, **preselected** | offered |
 | `/roadmap:process-phase` | `phase-checkpoints` | offered |
 | `/roadmap:process-step` | — | none (one step needs no run contract) |
 
@@ -121,6 +122,25 @@ contract screen arrives preselected on, never whether the screen is shown. The
 screen's `3. Run interactive instead` option
 ([`roadmap-execution-contract § 2`](roadmap-execution-contract.md)) stays on it
 in every case, so a derived mode is always one keystroke from being refused.
+
+<!-- decision 2026-08-20: /roadmap:next preselects `phase-checkpoints`, not
+     `autonomous`. AI council 2/2 (anthropic + openai) on the
+     `autonomy-defaults-sheet` fork of road-to-user-out-of-the-loop, record
+     agents/evidence/council/drain-blocker-dispositions-a.md. Reasoning: the two
+     wrappers differ in what the user has actually seen at Accept time.
+     `process-full` names one roadmap the user chose, so `autonomous` is a
+     preselection over a scope they read. `/roadmap:next` SELECTS the roadmap
+     itself, so `autonomous` there preselects full autonomy over a target the
+     user has not seen — the one rung where the derivation picks the object and
+     the scope in the same keystroke. Reversibility: this is a preselected
+     option on a screen that still offers `1. Go — start processing
+     autonomously`, so the aggressive path costs one keystroke and no rebuild;
+     flipping the row back is a one-line edit with no dependent mechanism.
+     Deliberately scoped to `/roadmap:next` only — the blocker's question named
+     that wrapper, and Phase 1 Step 1 of the parent roadmap landed with
+     `process-full` → `autonomous` explicitly, so widening the change would
+     silently reverse an already-shipped step nobody asked to revisit. -->
+
 
 **Why the old fallback was a defect and not a conservative default.** Absent
 `execution.mode` used to mean the legacy commit-step scan, which derives no
@@ -259,6 +279,89 @@ a blocker only when it is factually mandatory and unverifiable — a soak window
 run can simply outlast, or a cross-roadmap dependency the run can satisfy itself,
 is work. The taxonomy still lacks the row; the mislabel now has a stated test
 instead of a default.
+
+### 3d. Set contract — one contract over an enumerated set
+
+A **set contract** is the ordinary contract screen rendered over a closed,
+ordered list of roadmaps instead of one. It grants
+[`autonomy-mechanics § Task-scope`](autonomy-mechanics.md)'s **set-scoped**
+shape, whose four conditions (enumerated before Accept · closed · ordered with
+independence declared · one Accept) are the authorization contract — this
+section is only the loop's side of it.
+
+**What the screen must print, per member.** Roadmap path, derived branch name,
+open-step count, artifact count from the pre-scan, and its dependency edges.
+One decision sheet spans the whole set: a question that applies to several
+members appears once, and its answer applies to all of them.
+
+**Dependency edges come from two sources, unioned.**
+
+| Source | Shape | Trust |
+|---|---|---|
+| Declared | `depends:` in the dependent roadmap's frontmatter — a list of roadmap slugs | authoritative; a declared edge is never overridden by the heuristic |
+| Inferred | **file overlap**: the intersection of the owned-path sets the two pre-scans derived | advisory; an inferred edge orders the members and marks them non-parallelizable, and is printed as inferred so the user can see why |
+
+The union feeds exactly two decisions and nothing else: **ordering** (a
+dependent member runs after its parent) and **parallelizability** (only members
+with no edge between them and disjoint owned paths are lane candidates). An
+inferred edge is deliberately allowed to be wrong in the conservative
+direction — a false edge costs serial execution, a missed edge costs a
+collision, so overlap resolves toward *serial*.
+
+#### Auto-continuity — the next member needs no new contact
+
+Under an accepted set contract, when a member closes **green** the loop pulls
+the next member whose dependencies are all satisfied and starts it without a
+new contact. Green means: its own final report ran, its quality cadence passed,
+and no halt class fired. Anything else is not green and does not continue —
+see failure isolation below.
+
+The default stays **this one only**: auto-continuity applies to
+`/roadmap:next` and to any wrapper reaching this section **only when the set
+option was chosen on the sheet**. A single-roadmap invocation is never widened
+into a set because more roadmaps happened to be open, which is condition 4 of
+the set-scoped shape read from the loop's side.
+
+#### Failure isolation — a regression halts its own member, not the set
+
+A quality regression, a failed verify probe, or a halt class firing inside one
+member terminates **that member** and leaves the rest of the set running:
+
+1. Record the member's outcome as halted, with the halt class and the evidence.
+2. Skip every member that declares a dependency on it — transitively. A
+   dependent member of a halted parent is *blocked*, not failed, and is
+   reported as such.
+3. Continue with the next independent member.
+4. Report every member's outcome in one final report at the end of the set.
+
+Two carve-outs, and they are the reason this is isolation rather than
+tolerance. A **Hard-Floor** stop and a **locked decision class** stop the whole
+set, not one member: both are about the user's authority rather than about the
+member's code, and continuing past them under a set contract would be exactly
+the "several authorizations from one Accept" failure the enumeration guards
+against. Likewise the **N=3 validation budget** is per validation target and is
+not reset by moving to the next member.
+
+#### Parallel lanes — the shape, and why they are not on yet
+
+Lanes are **staged**, not shipped: the gate is ten clean serial set runs, and
+that gate has not been reached because no set run has happened. Recorded here
+so the shape is settled before the runs rather than designed under pressure:
+
+- **Cap: two lanes** in the first iteration — a recorded decision
+  (`decision 2026-08-20`, AI council 2/2 on the `autonomy-defaults-sheet`
+  fork), chosen over the configured `subagents.max_parallel` because a
+  collision at two lanes is diagnosable and one at N is not. Reversible: the
+  cap is one number in the set contract, and raising it after the first ten
+  clean parallel runs is strictly cheaper than recovering from a lost branch.
+- **Candidate test:** no dependency edge in either direction, and disjoint
+  owned paths.
+- **Isolation:** the existing worktree scope lock
+  ([`worktree-lifecycle`](../../skills/worktree-lifecycle/SKILL.md)).
+- **Coordination:** session-register branch claims, so two sessions never share
+  a branch.
+- **Delivery:** one branch and one PR per lane.
+- **Immediate removal:** a single scope-lock collision with data loss.
 
 ## 4. Resolve cadences — read once, cache for the run
 
