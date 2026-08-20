@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**515 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 251 · completed-with-deferrals 25 · not-extractable 34
+**516 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 174 · completed 251 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -114,6 +114,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-agent-memory-integration`](road-to-agent-memory-integration.md) | Roadmap: agent-memory integration (agent-config side) | completed | 5 | 20/20 | _not extractable_ |
 | [`road-to-agent-memory-removal`](road-to-agent-memory-removal.md) | Road to agent-memory removal | archived-with-open-steps | 6 | 26/28 | _not extractable_ |
 | [`road-to-agent-outcomes`](road-to-agent-outcomes.md) | Roadmap: Engineering OS for Agents — the master frame | completed | 0 | 5/5 | _not extractable_ |
+| [`road-to-agent-velocity`](road-to-agent-velocity.md) | Road to agent velocity — the 21 % of a session that was self-inflicted | closed-with-cancellations | 6 | 22/24 | _not extractable_ |
 | [`road-to-agentic-headroom-benchmark`](road-to-agentic-headroom-benchmark.md) | Roadmap: agentic-headroom benchmark (v4) — long-horizon, does governance finally show? | closed-with-cancellations | 4 | 4/7 | _not extractable_ |
 | [`road-to-agents-dir-and-gitignore-hygiene`](road-to-agents-dir-and-gitignore-hygiene.md) | Road to agents/-dir and gitignore hygiene | closed-with-cancellations | 9 | 36/37 | _not extractable_ |
 | [`road-to-ai-council`](road-to-ai-council.md) | Road to AI Council | completed | 4 | 38/38 | _not extractable_ |
