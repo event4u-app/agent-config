@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 31,
     "later_roadmaps": 52,
-    "open_blockers": 74
+    "open_blockers": 70
   },
   "baseline_history": [
     {
@@ -181,6 +181,13 @@
       "later_roadmaps": 52,
       "open_blockers": 74,
       "why": "Raised 31 -> 32 for road-to-hook-state-followups.md, which carries the items PR #1458 saw and deliberately did not fix: two consumers reading paths nothing writes, the API shape the two lock primitives need before they converge, and 11 local test reds across 6 files that CI never reports and nobody owned. It is charged rather than offset because the offsets all cost more: no active roadmap sits at zero open steps, parking in later/ is what this register calls burial, and the only terminable candidates belong to two concurrent sessions. The roadmap also carries estate_offset_exempt with the same reasoning, so the exception is reviewable on both sides rather than being a number that moved."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 31,
+      "later_roadmaps": 52,
+      "open_blockers": 70,
+      "why": "WALKED DOWN on both axes by road-to-single-delivery reaching complete, and both moves are earned rather than accounting. active 32 -> 31: the roadmap closed all 21 steps with count_deferred 0 and the archival sweep moved it in the same change that finished it -- a real completion, not a park, which is the distinction later_roadmaps staying at 52 records. open_blockers 74 -> 70: FOUR blockers resolved on this branch, each with its decision and its verification at the blocker itself. partition-current-layer-undecidable (option (a), operator decision on a 2/2 council round, plus two measurements that decided it -- the 5.85 s cost figure was a shell artefact worth 61 ms in Node, and version equality was measurably insufficient at 153 project-only skills under an identical version string). compact-survival-of-package-only-rules (option (a), 2/2 convergent, shipped and verified: four rules now load unconditionally, census re-anchored with its reason). host-skill-suppression-capability (recorded null, and broader than the question asked -- claudeMdExcludes had no observable effect on the skill catalogue OR on the instruction file it is documented for in Claude Code 2.1.237, with a control probe proving the same settings file IS read). warn-path-unreachable-without-version-marker (option (b): the overlap count now prints on DRIFT rather than only on the unreachable WARN; live run shows 290/290/110). Nothing was deferred to [~] to reach the count, which is the shape a false drawdown takes: count_deferred was 0 at closure and every one of the four blockers carries its resolution in the archived file. Two of the four were reported as human-only earlier the same day under ADR-235; ADR-237 supersedes that reading (capability before role) and they were closed on evidence this run produced -- so this walk-down is also the first measurement of that ADR's effect on the estate."
     }
   ],
   "target": {
