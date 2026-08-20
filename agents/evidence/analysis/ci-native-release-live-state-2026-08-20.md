@@ -3,8 +3,8 @@
 # CI-native release: live state of the label path and the drills
 
 Measured 2026-08-20 on `drain/road-to-ci-native-release-first-run`, based on
-`origin/main` @ `74a29ed20`, while closing
-`agents/roadmaps/road-to-ci-native-release-first-run.md`.
+`origin/main` @ `b593d8c00`, while closing
+`agents/roadmaps/archive/road-to-ci-native-release-first-run.md` (archived by this run).
 
 Every figure below is a read of live GitHub / npm state or a line citation, not
 a description of intent. The roadmap being closed asked for verification against

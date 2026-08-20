@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**523 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 180 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**524 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 181 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -151,6 +151,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-chat-history-hook-only`](road-to-chat-history-hook-only.md) | Road to Chat-History Hook-Only | completed | 6 | 27/27 | _not extractable_ |
 | [`road-to-chat-history-session-isolation`](road-to-chat-history-session-isolation.md) | Roadmap: Per-Session Isolation in Chat-History | completed | 7 | 38/38 | _not extractable_ |
 | [`road-to-chat-history-sidecar-shrink`](road-to-chat-history-sidecar-shrink.md) | Roadmap: Chat-History Sidecar Shrink | archived-with-open-steps | 6 | 30/31 | _not extractable_ |
+| [`road-to-ci-native-release-first-run`](road-to-ci-native-release-first-run.md) | Roadmap: Follow-up to CI-native release — first live run + drills | closed-with-cancellations | 2 | 2/8 | _not extractable_ |
 | [`road-to-ci-native-release`](road-to-ci-native-release.md) | Roadmap: CI-native release path alongside `task release` | closed-with-cancellations | 6 | 27/32 | _not extractable_ |
 | [`road-to-claude-code-global-distribution`](road-to-claude-code-global-distribution.md) | Roadmap: Claude Code Global Distribution — close the four-defect chain | closed-with-cancellations | 5 | 34/37 | _not extractable_ |
 | [`road-to-claude-code-single-surface`](road-to-claude-code-single-surface.md) | Roadmap: Claude Code single distribution surface — retire the dual npx/marketplace overlap | closed-with-cancellations | 5 | 21/22 | _not extractable_ |

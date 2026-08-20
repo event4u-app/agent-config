@@ -311,4 +311,4 @@ script gets a non-interactive CI entry point (`--ci`) that the workflow calls.
   release PR) and the Phase 7 collision drill. Residual risk is a benign
   refused run, never a double release.
 
-<!-- Deferred items migrated to agents/roadmaps/road-to-ci-native-release-first-run.md on 2026-07-08 -->
+<!-- Deferred items migrated to agents/roadmaps/archive/road-to-ci-native-release-first-run.md on 2026-07-08 -->

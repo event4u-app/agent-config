@@ -13,7 +13,7 @@ parent_roadmap: road-to-ci-native-release
 ## Context
 
 This roadmap collects items deferred from
-[`agents/roadmaps/archive/road-to-ci-native-release.md`](archive/road-to-ci-native-release.md).
+[`agents/roadmaps/archive/road-to-ci-native-release.md`](road-to-ci-native-release.md).
 All build work (Phases 1–6, plus everything in Phase 7 buildable without a
 live authorized run) is done and shipped in PR #780. What remains is purely
 verification against live GitHub state — one item unblocks mechanically on
@@ -30,7 +30,7 @@ not constitute that authorization).
 
 Closed by an autonomous drain run against **live** GitHub / npm state, not
 against intent. Full read, with every figure and line citation:
-[`agents/evidence/analysis/ci-native-release-live-state-2026-08-20.md`](../evidence/analysis/ci-native-release-live-state-2026-08-20.md).
+[`agents/evidence/analysis/ci-native-release-live-state-2026-08-20.md`](../../evidence/analysis/ci-native-release-live-state-2026-08-20.md).
 
 **Archived does not mean achieved.** No release has ever shipped through the
 label path this roadmap was written to verify — 0 non-skipped runs across the
@@ -57,7 +57,7 @@ machinery is repository work and was done; firing it is not.
 | AC3 | **transferred, partly discharged** | The failure-drill third is discharged for (b)+(c); the offline harness `task release:drill` is green 7/7 | The double-fire and collision thirds, and drill case (a) |
 
 All four transfers live in
-[`stubs/road-to-ci-native-release-live-label-path.md`](stubs/road-to-ci-native-release-live-label-path.md),
+[`stubs/road-to-ci-native-release-live-label-path.md`](../stubs/road-to-ci-native-release-live-label-path.md),
 each carrying its criterion verbatim, the complete list of moved steps, and a
 named producer (`matze4u`, verified `admin: true` today) with a detection probe
 measured at transfer.
