@@ -890,7 +890,7 @@ shape check stand on their own and are unaffected.
 
 ### blocker: raw-capture-needs-host-env
 
-- **Status:** transferred
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half — plus
@@ -929,7 +929,16 @@ shape check stand on their own and are unaffected.
   `PreToolUse` payload exist as captured files, and their field lists are
   recorded in
   `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
-- **Resolution (2026-08-20) — transferred, and narrower than it was.** Council
+- **Resolution (2026-08-20) — transferred, and narrower than it was.**
+  **`Status:` reads `resolved` deliberately, and the outcome state is
+  `transferred`.** They are different fields: `lint_roadmap_blockers` recognises
+  exactly one closed token (`/Status:[ \t]*resolved/`, `:193`) and treats every
+  other word — `transferred` included — as still open, which also keeps the entry
+  counted in `check_estate_count`'s `open_blockers`. Writing the outcome state
+  into the status field would have left a blocker that reads closed to a human
+  and open to every gate. The outcome state lives here, in the stub, and in the
+  stubs README table, exactly as the two sibling drain-run transfers of
+  2026-08-20 record theirs. Council
   disposition **B**, outcome state `transferred`, per
   [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
   § `raw-capture-needs-host-env`. The criterion above moves **verbatim** to
