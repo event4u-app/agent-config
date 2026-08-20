@@ -20,7 +20,7 @@ triggers:
   - phrase: "someone else's"
   - phrase: "whose test"
 workspaces: [engineering]
-packs: [core]
+packs: [engineering-base]
 enforced_by:
   - "none"
 ---
