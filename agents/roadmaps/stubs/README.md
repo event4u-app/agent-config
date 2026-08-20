@@ -43,6 +43,7 @@ reads as "outcome achieved".
 | Stub | Transferred from | Outcome state | Re-entry gates |
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
+| [`road-to-council-blind-ratings.md`](road-to-council-blind-ratings.md) | `road-to-council-blind-review.md` Phase 2 + Phase 3 (Ü2/Ü3 half), 2026-08-20 | `transferred` | P1-P2 in the stub: a named maintainer blind rater fills R1 and R2 in the prepared packet, timestamped before arm disclosure, each with an adopt-or-null verdict — both measured failing (10 of 10 slots unfilled). No agent and no council pass may substitute |
 
 **The shared promotion criteria below do NOT apply to this group.** They are
 org-mode gates — recruited customer, funded security audit, ADR lifting a
