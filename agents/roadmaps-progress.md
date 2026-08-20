@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers in the active tree, **20** need you → `agent-config gates`
 
 ## Overall
 
-**292 / 582 steps done · 50%**
+**292 / 580 steps done · 50%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
@@ -18,6 +18,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 3 |
 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 12 | 12 |
 
 ## Open roadmaps
@@ -28,7 +29,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
 | 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 0 | 3 | 0 | 3 | 0 | ██████████ 100% |
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
@@ -269,28 +270,13 @@ _1 blocker resolved._
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
-**Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)
+**Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 3 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
-
-<a id="blockers-road-to-council-blind-review"></a>
-**Blockers**
-
-- **maintainer-blind-ratings** (owner: user) — blocks Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against the prepared packet, and accept an **honest null** as a full outcome for either — the entry's own Resolved-when asks for adopt-or-honest-null and explicitly refuses a deferral, so "the preference was not majority" closes Ü2 exactly as cleanly as adoption does. The sitting is bounded: the packet is already prepared, Ü1 is already adopted and out of scope, and the two readings have pre-registered decision rules rather than open-ended judgement.
-  - **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null cannot be written at all, so the roadmap cannot terminate in either direction. Ü1's shipped behaviour is unaffected, which is what makes this the cheapest kind of blocker to leave open and the easiest to forget.
-  - **What to do:**
-    rate the prepared blind packet at
-    `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
-    Two independent readings: **R1** for Ü2 — majority preference across the 9
-    substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
-    field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
-    "insufficient testing discussion" does not count).
-  - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
+| 2 | Re-run test on existing artifacts (minimal spend) | ✅ done | 0 | 1 | 0 | 1 | 100% |
+| 3 | Landing & close | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 
 ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
 
