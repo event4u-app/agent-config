@@ -220,6 +220,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
+                             (archives completed roadmaps; --no-archive to skip)
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview)
@@ -717,10 +718,14 @@ cmd_brand_status() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
 }
 
+# `--archive`: a completed roadmap is archived here rather than reported as a
+# warning the caller has to act on. `roadmap:progress-check` never passes it —
+# a CI gate must not mutate the tree it is checking. Pass `--no-archive` to get
+# the dashboard-only behaviour back.
 cmd_roadmap_progress() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
-  exec_ts "$script" "$@"
+  exec_ts "$script" --archive "$@"
 }
 
 cmd_roadmap_progress_check() {
