@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 26,
+    "active_roadmaps": 25,
     "later_roadmaps": 52,
-    "open_blockers": 67
+    "open_blockers": 65
   },
   "baseline_history": [
     {
@@ -237,6 +237,13 @@
       "later_roadmaps": 52,
       "open_blockers": 67,
       "why": "MERGE RECONCILIATION on the active dimension, mirroring the open_blockers reconciliation directly above. Three independent walk-downs landed the same day and none corrects another: active 32 -> 26 (six completed roadmaps archived by the regen that now archives instead of warning), and the two blocker walk-downs whose composition the entry above records as 67. All rows are kept and the baseline is the composition, 26 / 52 / 67, which is what check_estate_count measures on the merged tree.\n\nStated plainly because a reader meeting a row that says 68 above a baseline of 67 would otherwise read a raise: my own row's open_blockers figure was correct when it was written and was superseded by the merge, not by a change of mine. Taking either side of the conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 65,
+      "why": "WALKED DOWN by 1 active and 2 blockers: road-to-gate-autonomy reached zero open steps and archived, and the two blockers it carried open \u2014 b-gate-budget-preauth on option (a) and b-delegate-gate-maintainer-profile on option (b), both against the council record \u2014 moved to RESOLVED in this change. Its third blocker, b-estate-prose-pass-from-1-3, was already resolved on 2026-08-17 and is not part of the delta. later_roadmaps is UNCHANGED at 52, which is the check that says this is a closure and not a park: nothing was relocated to buy the number, and the one item the roadmap could not finish went to a STUB with its own named probe (stubs/road-to-gate-preauth-authorization.md) rather than to later/, so the open work is still counted somewhere a reader can find it. The archive move was performed by `task roadmap-progress` itself rather than by hand \u2014 this is the first walk-down taken under the --archive default that PR #1493 put on the regen, so the number and the file move come from the same run."
     }
   ],
   "target": {

@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**522 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 179 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**523 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 180 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -254,6 +254,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-frontier-grade-reasoning`](road-to-frontier-grade-reasoning.md) | Roadmap: Reasoning Discipline Protocol — make every host model think like a pro | completed-with-deferrals | 9 | 24/31 | _not extractable_ |
 | [`road-to-frontier-quality-operating-system`](road-to-frontier-quality-operating-system.md) | Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage | completed | 9 | 49/49 | _not extractable_ |
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |
+| [`road-to-gate-autonomy`](road-to-gate-autonomy.md) | Road to gate autonomy — human gates only where a human is the point | closed-with-cancellations | 4 | 7/9 | _not extractable_ |
 | [`road-to-gate-hardening-adoption`](road-to-gate-hardening-adoption.md) | Road to gate-hardening adoption — take the unhardened-gate count to zero | closed-with-cancellations | 3 | 12/13 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |

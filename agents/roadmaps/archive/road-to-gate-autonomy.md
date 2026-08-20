@@ -20,6 +20,48 @@ execution:
 
 ---
 
+## Outcome
+
+Closed 2026-08-20 by an autonomous drain run. **Archived does not mean achieved.**
+Every phase below carries one of the four outcome states the drain framework
+requires — `satisfied`, `narrowed`, `transferred`, `abandoned` — because a
+progress dashboard renders a percentage and a percentage cannot tell "the work
+was done" from "nobody here could do the work". Two of the three blocker entries
+were decided by the AI council, whose record is
+[`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+against the framework in
+[`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md);
+the third was already resolved on 2026-08-17 and appears in neither record,
+correctly.
+
+| Phase | Outcome | What that means |
+|---|---|---|
+| **1 — blocker schema** | `satisfied` | `Class:` / `Run:` / `Budget:` parse, the lint enforces `Run:` on classes 0 and 1, the sweep table is committed with its share. Unchanged by this run. |
+| **2 — `gates --execute`** | `narrowed` + one `transferred` | The class-0 path, the render path AND now the class-1 budget path all ship and are fixture-covered. Step 2.3 is **transferred** to [`stubs/road-to-gate-preauth-authorization.md`](stubs/road-to-gate-preauth-authorization.md). AC-2's live-estate half is **abandoned**: measured at HEAD, 42 open blockers are `{2: 23, 3: 19}` — the class-0 and class-1 population is empty. |
+| **3 — delegate gate** | `narrowed` + `abandoned` | 3.1's decision exists and **declines** the delegate half (option (b)), so 3.2 is cancelled and AC-3 is abandoned. Nothing was written, because option (b) selects the value the template already ships. |
+| **4 — liveness** | `narrowed` | The resume probe ships and detects its fixture. The recurring delegated pass it was to run inside loses its carrier to 3.1's decision. |
+
+**What this roadmap actually changed in the estate, stated plainly.** § 0 opened
+on 38 open blockers, 13 user-owned, and the claim that a large share were
+couriered commands rather than decisions. That claim was **falsified by this
+roadmap's own Phase 1** (24.5 % against a pre-registered 40 %), and Phase 2 then
+found the auto-runnable share is not 24.5 % but **zero**: no live entry can carry
+an honest `Run:`. So the acting layer exists, is safe, and has **no live
+targets** — the taxonomy is real and the estate it was built for is
+decision-heavy. The honest-null consequence this roadmap wrote for itself is
+therefore the one that applies: the couriered-commands framing is retired, Phase 2
+ships as a thin convenience, and the drawdown campaign leans on the consolidated
+decision sheet instead.
+
+**What is genuinely new today.** Class 1 has a mechanism where it previously had
+a paper class: two class-C caps, an append-only receipt ledger, and an execution
+path that runs under them and refuses over them. And the one thing it
+deliberately does **not** do is the thing § 0 wanted most — it removes no
+consent. Every billable gate still needs a keystroke, which is why the last piece
+is a stub rather than a checkbox.
+
+---
+
 ## 0. The defect, stated first
 
 **The estate carries 38 open blockers — 13 owned by `user`, 25 by
@@ -284,32 +326,100 @@ safeguards.**
       **The threshold (156 chars) is a stated default, not a measured optimum** —
       two lines at the 78 columns this command already wraps to. *Revisit-if* a
       real decision sheet lands with a different width.
-- [~] **2.3** The live-trigger-eval hard-abort gains a preauthorised-budget flag
+- [-] **2.3** The live-trigger-eval hard-abort gains a preauthorised-budget flag
       that refuses without a valid unspent ledger entry and spends it on run. The
       abort's threat model — unconsented billable automation — is **preserved**:
       consent moves from a keystroke to a signed budget line, it is not removed.
-      Blocked on `b-gate-budget-preauth`.
+      **Transferred 2026-08-20** to
+      [`stubs/road-to-gate-preauth-authorization.md`](stubs/road-to-gate-preauth-authorization.md)
+      — outcome state `transferred`, not done.
+      `b-gate-budget-preauth` resolving does **not** unblock this step, and the
+      gap it leaves is the load-bearing word in the step's own text: **signed**.
+      The abort's threat model is unconsented billable automation, so the
+      authorisation it accepts has to come from someone other than the process
+      about to spend. This tree has exactly one human-only write fence — the
+      class-C settings route, where `settings:set` and every agent write path
+      refuse and only the GUI `PUT` or a hand-edit succeeds. The receipt ledger
+      is **not** that fence: `agents/runtime/state/` is ordinary agent-writable
+      runtime state, so a flag reading an "authorisation" out of it would be the
+      agent consenting on the user's behalf — the exact thing the abort exists
+      to prevent, rebuilt as a feature. Closing this needs a decision the
+      council did not take (*where does a signed authorisation live*) and then a
+      human to sign one; both are in the stub with a two-half probe and its
+      measured baseline. **No bypass was built**: the abort is byte-for-byte
+      what it was, and `grep -rci preauthoriz` over both eval scripts returns 0.
 - **AC-2:** `gates --execute` resolves at least one real class-0 and one real
   class-1 blocker end to end, with evidence appended and, for class 1, a receipt in
-  the ledger. **Not met, and not meetable yet** (recorded by R2 finding 7): no live
-  blocker carries `Class: 0` until step 1.3 lands, and the class-1 half needs the
-  ledger `b-gate-budget-preauth` still owns. The fixtures discharge each step's own
-  `verify:` clause; this criterion is a phase-level claim about the live estate and
-  stays open.
+  the ledger. **Not met, and now measured as not meetable at all — outcome state
+  `abandoned` for the live-estate half.** The earlier note said "not meetable
+  *yet*", pinning the class-1 half on the missing ledger. The ledger exists as of
+  2026-08-20 and the criterion is still unreachable, for a different and harder
+  reason: **the population is empty.** `agent-config gates --json --all` returned
+  `{2: 25, 3: 19}` over 44 open records when this criterion was re-read, and
+  `{2: 23, 3: 19}` over 42 once this roadmap's own two entries resolved out of it
+  — zero class 0 and zero class 1 both times, which is the part that matters — and step
+  1.3 already established why that is not a temporary state: all twelve entries
+  the sweep classified 0 or 1 were read in full and none can carry an honest
+  `Run:`, so they were reclassified to what their text supports. A criterion whose
+  subject does not exist cannot be met by writing more code, and inventing a
+  class-0 entry to tick it is the fabrication step 1.3 refused. **What IS
+  discharged, and it is the mechanism half:** both execution paths exist and are
+  fixture-covered end to end — 23 tests in `tests/scripts/gate_execute.test.ts`
+  (7 of them the class-1 budget paths) plus 17 in
+  `tests/scripts/gate_budget.test.ts`. The over-budget half of step 2.1's
+  `verify:` clause, recorded as unsatisfied there, is satisfied now.
 
 ### Phase 3 — Agent runs via CLI: open the delegate gate for the maintainer profile
 
-- [~] **3.1** Maintainer decision, one line with its recommendation attached: enable
+- [x] **3.1** Maintainer decision, one line with its recommendation attached: enable
       the team surface and the delegate permission in the **maintainer profile
       only**, keeping the per-day call cap as the blast-radius bound and the existing
       code gate as the enforcement point. Consumer defaults stay off — **this is not
-      a default flip, it is one profile's setting.** Blocked on
-      `b-delegate-gate-maintainer-profile`.
-- [ ] **3.2** Wire class-1 entries whose `run:` is an agent run through the delegate
+      a default flip, it is one profile's setting.**
+      **Decided 2026-08-20 — option (b), which DECLINES the delegate half.** The
+      step's deliverable is a decision, and the decision exists; what it does
+      **not** say is that delegation was enabled. Recorded at
+      `b-delegate-gate-maintainer-profile`; outcome state `narrowed`.
+      **Nothing was written, and three structural facts are why** — each read out
+      of the tree rather than assumed, because the step's premise turned out to
+      describe a surface that no longer exists in the shape it names.
+      (i) `ai_team.allow_delegate` is already `false`
+      (`src/config/agent-settings.template.yml`, `src/server/schemas/settings.ts`),
+      so option (b) is the shipped state and asks for no change — and it is
+      **class C** in `docs/contracts/settings-classes.md`, so an agent may not
+      write it in either direction anyway. (ii) There is no settings key that
+      "enables the team surface": `ai_team.enabled` was **deleted** by
+      road-to-always-on-orchestration Phase 1, and every dispatch entry point is
+      now fail-closed on `emergency.orchestration_halt` plus
+      `checkCodexAvailability()` — "codex CLI installed and authenticated",
+      explicitly "never a settings flag"
+      (`src/scripts/ai_team/team_dispatch.ts`). Enablement is therefore a host
+      fact about this machine, not a repository value, and it is already true
+      wherever that CLI is present. (iii) There is no maintainer **profile**: the
+      six seeds under `src/agent-src/profiles/` carry packs, audience, defaults
+      and surface — never settings values — and a seventh seed requires an ADR.
+      So the cap the clause asks to name is named here instead:
+      `ai_team.max_calls_per_day: 50`, class C, unchanged, read against the shared
+      machine-wide `cli_call_budget` openai bucket.
+- [-] **3.2** Wire class-1 entries whose `run:` is an agent run through the delegate
       path, so "a particular agent run" stops being a human task.
       `verify:` the orchestration line for such a run carries the blocker id.
+      **Cancelled 2026-08-20 by 3.1's decision.** Option (b) keeps
+      `allow_delegate: false`, and `assert_delegate_allowed` refuses on exactly
+      that value, so the delegate path is closed by design and there is nothing
+      to wire through it. This is a cancellation, not a deferral: reopening it
+      needs the delegate decision itself reopened, which is a class-C write and
+      a maintainer act, not a follow-up step. A second reason it would be empty
+      even if the path were open — AC-2's finding above — is that no live blocker
+      is class 1, so there is no `run:` to route.
 - **AC-3:** one estate blocker is resolved by a delegated agent run whose
-  orchestration record carries the blocker id.
+  orchestration record carries the blocker id. **Not met — outcome state
+  `abandoned`.** 3.1 decided against the permission this criterion is built on,
+  so no delegated run can occur; and per AC-2 no live blocker is class 1, so
+  there would be no candidate even if it could. Abandoned rather than transferred
+  on purpose: a transfer implies a producer who will later satisfy it, and the
+  thing standing in the way is a **recorded decision**, not a missing capability.
+  Reopening the decision reopens this criterion.
 
 ### Phase 4 — Liveness: gates that open must be seen
 
@@ -360,18 +470,92 @@ safeguards.**
       so the analysis reads the bolded span and treats the paragraph after it as
       commentary. Both directions are now fixtures.
 - **AC-4:** the probe runs in the recurring pass owned by
-  `road-to-estate-drawdown` Phase 4, and the fixture case is detected.
+  `road-to-estate-drawdown` Phase 4, and the fixture case is detected. **Second
+  half met, first half `abandoned` — outcome state `narrowed`.** The probe exists,
+  ships in `agent-config gates`, and detects the fixture case (step 4.1's live
+  result: 1 fired, the `request-scoped-rule-load` note). The recurring pass it was
+  to run inside is `road-to-estate-drawdown` 4.1, whose own text is "a scheduled
+  agent run **over the delegate path**" and which is blocked on this roadmap's
+  delegate blocker — so 3.1's option (b) closes it. **Consequence for a roadmap
+  this branch does not own, stated rather than acted on:** that step is now
+  blocked by a decision rather than by a pending one, and the sibling should
+  re-cut it against a non-delegated carrier or cancel it. Editing another
+  roadmap's step from here would be a judgement on someone else's plan — the same
+  line step 1.3 drew when it refused to reclassify twelve entries in eight other
+  files.
 
 ## Blockers
 
 ### blocker: b-gate-budget-preauth
-- **Status:** open
+- **Status:** RESOLVED 2026-08-20 — option (a), per the council record in
+  [`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  (2/2 quorum, both seats convergent on (a); disposition `D`, outcome state
+  `satisfied`). The caps are **USD 5 per run** and **USD 25 per rolling seven
+  days**, with an append-only receipt ledger. Both halves of the "Resolved when"
+  clause below are discharged in the tree, not only recorded: the two keys exist
+  on all three settings surfaces —
+  `roadmap.gate_budget.max_cost_per_run_usd: 5` and
+  `roadmap.gate_budget.max_cost_per_rolling_7d_usd: 25` in
+  `src/config/agent-settings.template.yml`, in `src/server/schemas/settings.ts`,
+  and as **class C** rows in `docs/contracts/settings-classes.md` (the contract's
+  own counts move C 105 → 107, total 134 → 136, disposition `consent` 37 → 39,
+  and `lint_settings_classes` is green at `A=26 B=3 C=107`) — and the ledger path
+  `agents/runtime/state/gate-budget-ledger.jsonl` is now a real reader/writer in
+  `src/agent-src/scripts/gate_budget.ts` rather than the placeholder string
+  `gate_execute.ts` used to report. `gates --execute` runs class 1 under the caps
+  and refuses over them.
+  <!-- decision 2026-08-20: option (a), per drain-blocker-dispositions-b.md.
+       REASONING. A per-run cap alone bounds one mistake, not a week of them —
+       both seats said this in their own words, which is why the adopted shape
+       carries two numbers rather than one. Option (b) (a fresh named budget per
+       gate) keeps today's keystroke on every billable gate, so it adds a ledger
+       without removing the defect § 0 names. Option (c) collapses class 1 into
+       class 2 and gives up the class where the mechanism has most to offer.
+       The values 5 / 25 are the openai seat's, adopted verbatim; the anthropic
+       seat named the same shape with different key paths
+       (`gate_budget.per_run_cap` / `per_week_cap`) and a ledger at
+       `agents/state/gate-budget-receipts.jsonl`. TWO MERGES were needed and are
+       named so a reader can audit them: the LEAF names are the adopted seat's
+       (`max_cost_per_run_usd`, `max_cost_per_rolling_7d_usd`, which that seat
+       stated and the dissent did not), the PARENT block is the dissent's
+       (`gate_budget`), nested under the existing `roadmap:` top-level key so no
+       new top-level settings key is introduced; and the ledger keeps the path
+       ALREADY PRESENT in `gate_execute.ts` as its absent-ledger placeholder,
+       because `agents/runtime/state/` is this tree's state convention
+       (`run_checkpoint`, `unattended_guard`, `recycle_envelope_paths`) while a
+       bare `agents/state/` is not, and because a class-1 entry has been
+       REPORTING that path since Phase 2.
+       WHAT THIS DELIBERATELY DOES NOT DO. It does not touch consent.
+       `gates --execute` still requires `--confirm` on every class-1 run, so the
+       caps bound the SIZE of an authorised spend and never supply the
+       authorisation. The receipt records CONSUMPTION only: the ledger lives in
+       agent-writable runtime state, so reading an "authorisation" out of it
+       would be the agent consenting for the user. That is why step 2.3 is
+       transferred rather than built on top of this.
+       REVERSIBILITY. High, in three independent directions. (1) The numbers:
+       both caps are ordinary class-C settings values a human edits in one line;
+       lowering them takes effect on the next invocation. (2) The mechanism: set
+       either key absent and `readGateBudgetCaps` returns null, which routes
+       every class-1 entry back to the render-instead-of-run path this blocker
+       prescribed while it was open — i.e. the pre-decision behaviour is one
+       deletion away and is also the fail-closed default, since there is no
+       defaults layer and the reader does not fall back to the template. (3) The
+       ledger is append-only and inert: nothing reads it except the rolling sum,
+       and deleting the file resets that sum to zero without breaking any path.
+       No consumer default changes, no shipped behaviour changes for an install
+       that never configures the caps. -->
 - **Owner:** user
 - **Class:** 2 — consent-once
-- **Blocks:** Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1
-  and 2.2 ship the class-0 path and the render path without it. Also blocks the
-  over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a
-  budget to compare against, and this entry is where that budget is decided.
+- **Blocks:** nothing any more. It blocked Phase 2 step 2.3, and therefore every
+  class-1 execution; steps 2.1 and 2.2 shipped the class-0 path and the render
+  path without it. It also blocked the over-budget half of 2.1's `verify:` clause
+  and AC-2's class-1 half. **The `verify:` half is now satisfied** — three of the
+  seven new class-1 fixtures exercise a refusal that renders rather than runs
+  (over per-run cap, over rolling cap, no USD estimate). **AC-2's half is not, and
+  no longer for this reason:** the ledger exists and the population is empty, per
+  the amended criterion. **Step 2.3 is NOT unblocked by this resolution** — see
+  its transfer note; the missing piece there is an authorisation the agent cannot
+  sign, which is a different question from what the budget is.
 - **What to do:** decide the standing budget shape for class-1 gates. Options:
   (a) register a per-run and a per-week cap as settings keys, with the append-only
   receipt ledger as the audit surface — the recommended shape, because a per-run cap
@@ -405,13 +589,57 @@ safeguards.**
   a week of them, which is why (a) beats (b). No spend is authorised until the settings
   keys and the ledger path exist.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
-  the settings keys and the ledger path exist.
+  the settings keys and the ledger path exist. **Both discharged**, see Status.
 
 ### blocker: b-delegate-gate-maintainer-profile
-- **Status:** open
+- **Status:** RESOLVED 2026-08-20 — option (b), per the council record in
+  [`agents/evidence/council/drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  (2/2 quorum, both seats convergent on (b); disposition `D`, adopted outcome
+  state `narrowed`). Team surface available for consultation,
+  `ai_team.allow_delegate` stays **false**, `ai_team.max_calls_per_day: 50`
+  retained as the blast-radius cap. **Recorded, not written — and the "Resolved
+  when" clause below is mis-authored rather than failed**, the same correction
+  step 1.3 made to its own clause two phases earlier. It asks that "the profile
+  carries the setting with the cap named", and no such surface exists: the six
+  seed profiles under `src/agent-src/profiles/` carry packs, audience, defaults
+  and surface but never settings values (a seventh seed needs an ADR);
+  `ai_team.enabled` was deleted by road-to-always-on-orchestration Phase 1, so
+  team availability is `checkCodexAvailability()` — a host fact, "never a settings
+  flag" in `team_dispatch.ts`'s own words; and `ai_team.allow_delegate` is both
+  already `false` and **class C**, which an agent may not write in either
+  direction. The checkable claim is therefore the one written here: the option is
+  recorded, the value it selects is the shipped value, and the cap is named.
+  <!-- decision 2026-08-20: option (b), per drain-blocker-dispositions-b.md.
+       REASONING. Both seats reached (b) independently and for the same reason:
+       consultation is useful now, delegated WRITE access is a blast radius
+       nobody has evidence to size yet. `max_calls_per_day` bounds call volume,
+       not what a delegated write can do to the tree, so the cap the
+       recommendation leaned on is not the control the recommendation needed.
+       Option (a) was this roadmap's own recommendation and is declined on that
+       basis — a recommendation is a draft, not a verdict, and the council is the
+       resolving mechanism this blocker names.
+       WHY THIS IS NOT A RULE-3 CASE. The framework's Rule 3 sends a
+       shipped-default flip or a repo-admin setting to `B`, never `D`. Option (b)
+       is neither: it selects the value the template already ships, so no
+       consumer install changes and no default moves. That is also precisely why
+       there is nothing to write.
+       WHAT IT COSTS, STATED. It closes Phase 3: step 3.2 is cancelled, AC-3 is
+       abandoned, and `road-to-estate-drawdown` 4.1 — a scheduled pass over the
+       delegate path — loses its carrier. Those are recorded at each site rather
+       than absorbed silently.
+       REVERSIBILITY. High but human-gated, and the gate is the point.
+       `allow_delegate` is one class-C boolean; a maintainer flipping it to true
+       via the GUI write route or a hand-edit reopens 3.2 and AC-3 with no code
+       change, because `assert_delegate_allowed` reads the value at dispatch
+       time. What an agent cannot do is flip it, which is the asymmetry the class
+       fence exists for and the reason this decision is safe to take now: the
+       permissive direction stays behind a human. -->
 - **Owner:** user
 - **Class:** 2 — consent-once
-- **Blocks:** Phase 3 step 3.1 and therefore 3.2.
+- **Blocks:** nothing any more. It blocked Phase 3 step 3.1 (now decided) and
+  therefore 3.2 (now cancelled by that decision). It also blocked
+  `road-to-estate-drawdown` Phase 4 step 4.1, which this branch does not own —
+  see AC-4 for the consequence, stated there rather than edited into the sibling.
 - **What to do:** decide whether to enable the team surface and `allow_delegate` in
   the maintainer profile only. Options: (a) enable both in the maintainer profile,
   keeping `max_calls_per_day` as the blast-radius cap and the code gate as
@@ -449,7 +677,10 @@ safeguards.**
   profile carries the team surface enabled with `allow_delegate: false` and the per-day
   call cap named. The stub belongs to this roadmap's own closure.
 - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the
-  profile carries the setting with the cap named.
+  profile carries the setting with the cap named. **Option recorded and cap named
+  (`ai_team.max_calls_per_day: 50`); the profile half is unsatisfiable as
+  written** — see Status for the three structural facts and the clause
+  correction.
 
 ### blocker: b-estate-prose-pass-from-1-3
 - **Status:** RESOLVED 2026-08-17 — all three carry a recorded decision, which is
@@ -476,6 +707,22 @@ safeguards.**
   entries, not 21 (R2 findings 3–5). Per-entry table, the taxonomy gap
   `utilization-sweep-window` exposes, and the measured effects:
   `agents/evidence/analysis/gate-class-sweep-2026-08-17.md` § 4d.
+  **Re-checked 2026-08-20 during the drain run: still resolved, nothing to
+  disposition.** This entry appears in the council record under **neither** name
+  — `grep` over both
+  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
+  and [`drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  returns zero hits for `estate-prose` — and that is the correct outcome rather
+  than an omission: it was already closed on 2026-08-17, so it was not in the
+  open population the council was handed. `agent-config gates --json --all`
+  confirms it, listing exactly two open records for this roadmap. Run against the
+  framework anyway, since a resolved entry can still be resolved *wrongly*: it is
+  disposition **D**, outcome state **satisfied**, and it is none of the other
+  three — not `transferred` (no live measurement or absent host capability is
+  named), not a terminal null (no instrument ran), not `abandoned` (no declared
+  Non-goal). Sub-claim (a) re-verified at this HEAD: the spend-cap passthrough is
+  in the tree (`6efb8a708`), and both paid `bench:ab:*` live targets forward
+  `{{.CLI_ARGS}}` (`taskfiles/bench-ab.yml:106`, `:129`).
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap — every step here is closed or spend-gated.

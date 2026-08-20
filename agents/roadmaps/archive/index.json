@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 522,
+  "count": 523,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3219,6 +3219,20 @@
         "done": 25,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-gate-autonomy",
+      "title": "Road to gate autonomy — human gates only where a human is the point",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 7,
+        "deferred": 0,
+        "cancelled": 2
       },
       "verdict": null,
       "status": null
