@@ -154,15 +154,16 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Host-aware projection hides a skill the session needed | product | A measured-reduced set drops something the host would have used, and the loss is invisible because nothing reports a skill that was never offered. | Reduction requires an adequate measurement base per host; unknown hosts receive no scoping; a single real miss reverts that host and is published as a case. | Phase 1 |
 | 2 | Qualification adds latency to every council run | implementation | Seven checks before dispatch turn a cheap call into a slow one. | The verdict is cached per session rather than probed per call; a free status probe already exists as the caching surface. | Phase 3 |
 | 3 | Artifact typing becomes a field nobody reads | implementation | The type ships and consumers keep inferring from location. | The contract document defines one type set, and the check fails a typeless artifact at write time rather than warning after the fact. | Phase 2 |
-| 4 | The estate finding is silently dropped | product | Cutting the rule-reduction P0 from this roadmap reads as deciding against it. | The cut names the roadmap that owns it and why duplication would fork the verdict list; the finding is redirected, not discarded. | Context |
+| 4 | The estate finding is silently dropped | product | Cutting the rule-reduction P0 from this roadmap reads as deciding against it. | The cut names the owning file and step by slug — `road-to-cost-parity-1-rule-payload-diet` step 1.1 — and why duplication would fork the verdict list; the finding is redirected, not discarded. Re-reviewed 2026-08-20: the mitigation was a prose reference to "the estate-diet roadmap" and no file carries that name, so the redirect pointed nowhere. | Context |
 | 5 | Degraded is treated as available | implementation | A four-value verdict collapses back to a boolean at the first consumer that does not handle the middle. | The quorum step reads qualified seats only, so a degraded seat cannot contribute to a quorum by default. | Phase 3 |
+| 6 | The restated Phase 1 resume condition stalls the same way the first one did | implementation | The corrected condition needs repeated same-mode observations, and nothing in the tree schedules a capture — so the phase can sit blocked indefinitely while the block reads as resolved-in-principle. | The condition names the two fields and the fixed mode, so any reader can settle it with one pass over `agents/evidence/metrics/skill-catalogue.jsonl`; the phase note records the row count at correction time (7) so a later reader can measure whether the base grew at all rather than re-deriving it. | Phase 1 |
 
 ## Acceptance Criteria
 
