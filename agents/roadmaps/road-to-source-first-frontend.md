@@ -461,7 +461,15 @@ hand the operator report back with the measurement.
       `spawn-guard-shadow` binds — claude and cowork — rather than on all three
       `pre_tool_use` rows, following that concern's precedent exactly.
       <!-- decision 2026-08-20: shipped SHADOW (emits nothing, exit 0 on every path) instead of the drafted exit-2 warn. Conservative and reversible - rollback is one manifest line, and no session can be warned by a concern with no warn path. This is also what makes the step's two open dependencies non-blocking rather than deferred. -->
+      **Verified end-to-end through the real dispatcher, not only as pure
+      functions** — the wiring is the part a unit test cannot prove. A
+      `pre_tool_use` envelope for `browser_take_screenshot` driven through
+      `dispatch_hook.ts --platform claude` returned exit 0 with **0 bytes on
+      stdout** and the concern's record on disk, which is the shadow contract
+      demonstrated rather than asserted: the record exists, and nothing reached
+      the model.
       <!-- verified 2026-08-20: `npx vitest run tests/hooks/source_first_gate.test.ts` -> "Test Files 1 passed (1) / Tests 23 passed (23)"; `./scripts-run src/scripts/lint_hook_manifest` -> exit=0; `task typecheck-ts` -> EXIT=0 -->
+      <!-- verified 2026-08-20: end-to-end `echo <envelope> | npx tsx src/scripts/hooks/dispatch_hook.ts --platform claude --event pre_tool_use --native-event PreToolUse --project-dir <probe>` -> "dispatcher exit=0  stdout bytes=0", and agents/runtime/state/source-first-gate.jsonl written with tool_matcher=playwright-mcp posture=shadow handover_present_on_disk=true -->
 - [x] **Step 2:** Ship **default-ON, warn-only** *(proposal — maintainer
       call)*. The estate's own evidence cuts both ways: `design-slop` and
       `ui-route-nudge` shipped default-OFF and the symptom shipped with them;
