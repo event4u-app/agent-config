@@ -13,8 +13,9 @@
  * matching git tag, and npm's `latest` therefore lags behind main.
  *
  * Two independent invariants:
- *   1. Tag invariant (always checkable, no network): the version in
- *      `package.json` MUST have a matching git tag (local or remote).
+ *   1. Tag invariant: the version in `package.json` MUST have a matching git
+ *      tag ON THE REMOTE. A local-only tag published nothing — `publish-npm.yml`
+ *      triggers on `push: tags:` — so the probe asks `origin` (one `ls-remote`).
  *   2. npm invariant (`--check-npm`, network): `npm view <pkg>
  *      dist-tags.latest` MUST equal the `package.json` version.
  *
@@ -51,13 +52,32 @@ function _package_name(): string {
     return String(data['name']);
 }
 
-function _tag_exists(tag: string): boolean {
-    const [rc, out] = _git('tag', '-l', tag);
-    if (rc === 0 && out.split('\n').includes(tag)) {
-        return true;
-    }
-    const [rc2] = _git('ls-remote', '--exit-code', '--tags', 'origin', tag);
-    return rc2 === 0;
+/**
+ * True when the tag is PUBLISHED — present on `origin`, never merely local.
+ *
+ * This probe used to answer local-OR-remote, and that made the gate reply
+ * "tagged, therefore published" to the exact state it exists to detect. A tag
+ * created by `release.ts` step 8 whose push then failed sits in the local
+ * repository while nothing has shipped: `publish-npm.yml` triggers on
+ * `push: tags:`, so a tag that never reached the remote published nothing.
+ * Measured 2026-08-20 on 14.6.0 — main carried `package.json` 14.6.0, the tag
+ * existed only in the maintainer's checkout, and npm still served 14.5.0.
+ *
+ * In CI the old form happened to be harmless: `actions/checkout` brings no
+ * unpushed local tag, so the remote arm decided. The hole was LOCAL — a
+ * maintainer running `task check-release-published` (or `task preflight`) on
+ * the machine that minted the tag got a green for an unpublished release, on
+ * the one machine where the stuck state is visible. The sibling defect in
+ * `release.ts::_detect_in_flight_target` is the same construct.
+ *
+ * @param git Seam for the probe. Production passes nothing and gets the real
+ * `_git`; tests inject a stub, because the alternative — reaching the branches
+ * only by creating and deleting tags in the checkout — is why neither arm of
+ * this function had a test while both were wrong.
+ */
+function _tag_exists(tag: string, git: (...args: string[]) => [number, string] = _git): boolean {
+    const [rc] = git('ls-remote', '--exit-code', '--tags', 'origin', tag);
+    return rc === 0;
 }
 
 function _on_main(): boolean {
@@ -179,8 +199,9 @@ function main(argv: readonly string[] = [], hooks: Hooks = _hooks): number {
     if (!hooks._tag_exists(version)) {
         problems.push(
             `package.json is ${version} but no git tag ${version} exists ` +
-                `(local or origin) — the release was bumped/merged but never ` +
-                `tagged. Complete it: tag the release-merge commit and push ` +
+                `on origin — the release was bumped/merged but never tagged, ` +
+                `or the tag push never landed. Complete it: tag the ` +
+                `release-merge commit and push ` +
                 `(triggers publish-npm.yml), e.g. \`git tag ${version} && git ` +
                 `push origin ${version}\`.`,
         );

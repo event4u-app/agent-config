@@ -30,6 +30,32 @@ function stub(opts: {
     };
 }
 
+// ─── _tag_exists — published means ON THE REMOTE ──────────────────────────────
+// Neither arm of this probe had a test while it answered local-OR-remote, which
+// is how it came to report "tagged, therefore published" for the 14.6.0 tag that
+// existed only in the maintainer's checkout (2026-08-20). The seam exists so the
+// branches are reachable without minting and deleting tags in the checkout.
+
+describe('_tag_exists', () => {
+    it('asks origin, not the local tag list', () => {
+        const calls: string[][] = [];
+        c._tag_exists('14.6.0', (...args) => {
+            calls.push(args);
+            return [0, ''];
+        });
+        expect(calls).toHaveLength(1);
+        expect(calls[0]).toEqual(['ls-remote', '--exit-code', '--tags', 'origin', '14.6.0']);
+    });
+
+    it('true when origin carries the tag', () => {
+        expect(c._tag_exists('14.6.0', () => [0, 'deadbeef\trefs/tags/14.6.0'])).toBe(true);
+    });
+
+    it('false when origin does not — a local-only tag published nothing', () => {
+        expect(c._tag_exists('14.6.0', () => [2, ''])).toBe(false);
+    });
+});
+
 describe('check_release_published.main — exit codes (1:1 port)', () => {
     it('pass when tagged', () => {
         expect(c.main(['--strict'], stub({ version: '5.8.0', tagged: true }))).toBe(0);
