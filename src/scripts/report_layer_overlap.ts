@@ -26,6 +26,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { warnLayerOverlap } from './_lib/layer_overlap_notice.js';
 
+// ledger-exempt: this is a REPORTER, not a gate — it always exits 0 by construction
+// (see the docstring above), so there is no verdict for a per-target ledger to
+// account for. `_lib/gate_ledger` records why a gate passed over a target; a script
+// that cannot fail passes over nothing. The advisory-only property is asserted by the
+// task step that calls it, not by this marker.
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 

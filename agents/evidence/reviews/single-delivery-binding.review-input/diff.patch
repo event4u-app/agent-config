@@ -1,0 +1,471 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index b9829acd59cc3d186f08e6d32a472a044edc554b..839f94059947c1ec36544d43f89ec59f796f3969 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,11 +2,11 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **52** open blockers, **23** need you → `agent-config gates`
++> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**318 / 560 steps done · 57%**
++**319 / 560 steps done · 57%**
+ 
+ ```text
+ ███████████████████████░░░░░░░░░░░░░░░░░   57%
+@@ -39,7 +39,7 @@
+ | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+ | 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
+ | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
++| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [3](#blockers-road-to-single-delivery) | ████████░░ 75% |
+ | 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+ | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+ | 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+@@ -812,7 +812,7 @@ _2 blockers resolved._
+ 
+ ### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
+ 
+-**Road to single delivery — one artefact, one layer, no duplicates** — 11 / 16 done (69%)
++**Road to single delivery — one artefact, one layer, no duplicates** — 12 / 16 done (75%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+@@ -820,28 +820,26 @@ _2 blockers resolved._
+ | 1 | Replace ADR-226 | ✅ done | 0 | 1 | 0 | 0 | 100% |
+ | 2 | Make the producers write disjoint layers | ⬜ not started | 1 | 0 | 3 | 0 | 0% |
+ | 3 | Stop the two surfaces that call duplication free | ✅ done | 0 | 2 | 0 | 0 | 100% |
+-| 4 | One producer-agnostic invariant check | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
++| 4 | One producer-agnostic invariant check | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 5 | The residue the partition does not resolve | 🟡 in progress | 3 | 4 | 2 | 0 | 57% |
+ 
+ <a id="blockers-road-to-single-delivery"></a>
+ **Blockers**
+ 
+-- **partition-requires-global-layer** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two cost-classification surfaces and the invariant check all land while the partition itself waits.
+-  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (c). It makes the partition a *property of a machine that has both layers* rather than a global behaviour change, so no checkout can lose governance by omission, and the duplication it leaves behind on a single-layer machine is not duplication at all — there is only one layer there. (a) turns a missing optional install into a hard failure of the normal build; (b) is the silent under-governance itself.
+-  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this particular non-decision, which is why the phase halts rather than shipping a default.
++- **warn-path-unreachable-without-version-marker** (owner: maintainer) — blocks nothing in this roadmap — Phase 3 shipped and its contract half is unconditional. It is recorded here because it falsifies part of a completed phase's claim, and a finding against done work has nowhere else to live.
++  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (b). It is the smallest change that puts the number in front of the person deciding, it needs no new artefact on disk, and it does not weaken the DRIFT block the way (c) would. (a) is the principled fix and a larger one — it changes what the installer writes, which is a consumer-facing surface.
++  - **If you do nothing:** the cost instrumentation stays live and unreachable, which is strictly worse than absent — it reads as coverage in the diff and in this roadmap, and only a live run refutes it.
+   - **What to do:**
+-    pick one of three enumerated options and record it.
+-    **(a)** `task generate-tools` refuses to write a partitioned project layer when
+-    `~/.claude/rules/` is absent or older than the installed release, pointing at
+-    `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
+-    back to projecting the full set, so a machine without the global layer keeps
+-    today's behaviour and only a machine with both gets the partition. Probe the
+-    current state with
+-    `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
+-  - **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and 2.0's verify can be run against it.
++    pick one. **(a)** have the installer write a version stamp beside
++    each host layer it writes, so `unknown` stops being the normal answer;
++    **(b)** report the overlap count on the `DRIFT` line too, since that is the line
++    operators actually see; **(c)** treat `unknown` as "same version" for the overlap
++    half only, keeping DRIFT's block but printing the cost. Probe first with
++    `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
++  - **Resolved when:** the option is recorded and a live guard run prints the count on the line it actually emits.
+ - **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
+   - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
+-  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.
++  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose. - **STILL OPEN, and the council SPLIT — but one side's premise is now measured false, which narrows the question rather than answering it.** anthropic chose **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are semantically path-specific AND have CI gates"*; openai chose **(a)** (remove `paths:`) on the ground that a CI backstop cannot substitute for an obligation the model must hold *during* the session — naming `source-confidentiality` as a rule whose harm precedes CI. **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class gates present · `skill-quality` → present · `source-confidentiality` → `check_no_external_sources` present · **`rule-type-governance` → NO gate found.** So anthropic's premise holds for three of four and fails for one, and the failing one is the case openai's argument generalises to. That does **not** select an option for the other three, and a per-rule split is a fourth option neither seat proposed — which is precisely the kind of call this entry reserves. **What is now decided:** nothing. **What is now cheaper:** the question is no longer "(a) or (b) for four rules" but "does the CI-backstop argument hold per rule", with one measured counter-example already in hand.
+   - **What to do:**
+     run
+     `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
+@@ -862,15 +860,8 @@ _2 blockers resolved._
+     excluded entries are absent from the delivered catalogue. Record the host
+     version with the result. Either outcome closes this.
+   - **Resolved when:** the capability is recorded with its host version and source.
+-- **overlap-check-binding-surface** (owner: maintainer) — blocks Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
+-  - **Recommendation:** **(agent-drafted 2026-08-19.)** Preflight. The overlap is a property of the developer machine rather than of the branch, so CI would measure a topology no contributor has while every local session pays. **Corrected on R2 review:** an earlier revision predicted CI would "be green" there; measured, the gate returned **1** in a CI-shaped run, because `.claude/` is gitignored and no leg installs at user scope. That was a defect in the gate (finding 1, fixed) rather than an argument for CI — the reason to prefer preflight is the topology, not the colour. Two gates in this area are already unreachable where it matters, so a third unbound one would read as coverage while adding none.
+-  - **If you do nothing:** Phase 4 ships a check with the same reach as the two that already exist, and a re-created overlap goes unnoticed.
+-  - **What to do:**
+-    pick one and register the check there — `task preflight` via
+-    `taskfiles/`, a `session_start` concern in `src/scripts/hook_manifest.yaml`, or
+-    a workflow under `.github/workflows/`. Then confirm a deliberately-created
+-    overlap surfaces on the chosen one.
+-  - **Resolved when:** the surface is named and 4.3's verify runs against it.
++
++_2 blockers resolved._
+ 
+ ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
+ 
+diff --git a/agents/roadmaps/road-to-single-delivery.md b/agents/roadmaps/road-to-single-delivery.md
+index b4ae7a32f0b025ae03de41ab586bf815c8c81e22..42dc2d300a6c3746bc7e8483387eadf90680c325 100644
+--- a/agents/roadmaps/road-to-single-delivery.md
++++ b/agents/roadmaps/road-to-single-delivery.md
+@@ -250,9 +250,27 @@ live and why the earlier one was replaced.
+       something must say so when it does not. Decide where that check lives and
+       what it does on failure — refuse to project, warn, or project the full set
+       as a fallback.
+-      **Blocked on `partition-requires-global-layer`.**
+       `verify:` a checkout with no global rules layer produces a stated outcome
+       rather than a silently reduced one.
++      **UNBLOCKED 2026-08-19 (option (c) recorded) and then HALTED AGAIN, one level
++      deeper — `process-full` halt condition 4, discovered while implementing it.**
++      Option (c) partitions only where a **current** global layer exists, and both
++      council seats attached that same word: openai's condition reads *"absent or
++      older than the installed release"*. **Measured: "older than" has no data
++      source.** There is **no `package.json` beside `~/.claude/`** — it is a host
++      directory, not an install root — so `installed_version_at` returns `unknown`
++      for the global layer, verified directly. Present-vs-absent is decidable;
++      **stale-vs-current is not**, and ADR-226 already recorded why a
++      refresh-until-they-agree definition has no fixed point in a repository that
++      is ahead of its own release by construction.
++      **What closes it:** either a version marker the global layer actually carries
++      (an installer-written stamp beside it), or a redefinition of the predicate to
++      the half that is decidable — present/absent — with the staleness half
++      explicitly dropped and its cost stated. Both are decisions, not measurements,
++      and the second is a narrowing of a verdict the council just gave.
++      **Not attempted on a guess:** building the partition on an undecidable
++      predicate is how a mechanism ships against an assumption, which is the failure
++      this roadmap's own Phase 0 exists to prevent.
+ - [~] **2.1** The project projection emits only exclusively-package-only
+       artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
+       carries none. The predicate goes beside `rule_in_scope`
+@@ -312,6 +330,29 @@ project layer contains exactly the package-only set.
+ **AC-3:** neither the guard nor the contract can be read as saying that
+ same-version duplication is free.
+ 
++> **DEFECT FOUND IN THIS PHASE AFTER IT WAS MARKED DONE, by the Phase 2
++> investigation — recorded rather than quietly repaired.** 3.1 instruments the
++> `WARN` verdict with a per-type overlap count, and `install.sh` now states the
++> doubling. **Measured 2026-08-19: that branch never executes on this machine.**
++> `probe_tool` reaches `WARN` only when `other_ver == this_ver`, and
++> `installed_version_at` returns **`unknown`** for `~/.claude/…` because there is
++> no `package.json` beside it — so a live guard run reports
++> `DRIFT · claude-code · unknown · 14.5.0` for every tool, and the cost message,
++> field 6 and `count_overlap` all sit on a path that does not fire.
++>
++> **What survives:** the contract correction (3.2) is unconditional prose and
++> stands; the header docstring stating the measured cost stands; `count_overlap`
++> and its `-1` semantics are correct and tested-by-hand. **What does not:** the
++> claim that a two-scope consumer install now *sees* the cost. On a machine whose
++> global layer carries no version marker it sees `DRIFT` instead — which does block,
++> so the operator is not left uninformed, but the number this phase added is not
++> what they read.
++>
++> This is the same shape as the unreachable-`-1` case R2 found in `count_overlap`'s
++> own docstring: a path documented as the important one, which the control flow
++> never reaches. It is a **new** finding against completed work, so it gets a
++> blocker rather than a silent edit — `warn-path-unreachable-without-version-marker`.
++
+ ## Phase 4 — One producer-agnostic invariant check
+ 
+ - [x] **4.1** Ship a check that asserts the partition for **all** artefact types
+@@ -362,9 +403,27 @@ same-version duplication is free.
+       can refuse is `check_single_delivery --enforce`.
+       It skips silently when one layer is absent — nothing is doubled there, and a
+       warning would be noise on exactly the topology this roadmap wants.
+-- [ ] **4.3** Bind the check where the person who can act on it sees it.
+-      **Blocked on `overlap-check-binding-surface`.**
++- [x] **4.3** Bind the check where the person who can act on it sees it.
+       `verify:` the binding is named and a deliberate overlap surfaces there.
++      **DONE 2026-08-19 — preflight, on a CONVERGED council verdict (2/2), with both
++      seats' refinements adopted rather than just the bare option.** Registered in
++      `taskfiles/ci-fast.yml` beside `check_detector_corpus`, with the measured
++      reason written at the call site: `.claude/` is gitignored and no CI leg
++      installs at user scope, so a CI run of this check finds ZERO layers and
++      measures a topology no contributor has.
++      **REPORT MODE, deliberately.** The invariant is not true until Phase 2 ships,
++      so `--enforce` here would red every preflight on a defect nobody can currently
++      fix — which is how a gate teaches people to skip it. The flip lands with
++      Phase 2, and a test asserts the absence of `--enforce` so an early flip has to
++      be argued rather than slipped in.
++      **The binding is PROVEN live, which is the condition both seats attached** —
++      `tests/scripts/preflight_single_delivery_binding.test.ts`, 5 tests,
++      mutation-checked: removing the registration line fails 2 of them. Two gates in
++      this exact area already report to nobody, and that is the failure this test
++      exists to prevent a third time. Honest bound: it proves the registration
++      exists and that the binary refuses on a real overlap; **no test can prove
++      anyone runs preflight**, so the gap closed is "registered where nothing reads
++      it", not "a human skipped the step".
+ 
+ **AC-4:** the invariant is machine-checked, not maintained by hand.
+ 
+@@ -407,7 +466,7 @@ than reporting a clean invariant that does not hold.
+ ## Blockers
+ 
+ ### blocker: partition-requires-global-layer
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** maintainer
+ - **Class:** 2 (a design decision with an under-governance failure mode)
+ - **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
+@@ -443,8 +502,58 @@ than reporting a clean invariant that does not hold.
+ - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
+   is the safe direction of this particular non-decision, which is why the phase
+   halts rather than shipping a default.
+-- **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and
+-  2.0's verify can be run against it.
++- **RESOLVED 2026-08-19 — option (c), and the measurement is what decided it, not
++  a vote.** AI council, 2/2 seats present, **split**: anthropic chose (a), openai
++  chose (c). Both seats independently named the same unresolved fact — *is the
++  generated projection contractually machine-local, or a reproducible repository
++  output?* — and anthropic's own answer carried its own kill condition: *"if
++  `task generate-tools` is contractually required to work on a fresh clone, then
++  none of these options work"*.
++  **Measured, and it fires that condition:** `.github/workflows/consistency.yml:169`
++  runs `task generate-tools` on a fresh checkout, and the workflow's own comment at
++  `:172-174` states *"on a fresh checkout the host rule trees are gitignored and
++  absent"*. So **(a) would break the Consistency pipeline** — it is eliminated by
++  fact, not by preference. And `.claude/` is machine-local by measurement: **0
++  tracked files**, `.gitignore:123`, which is exactly the condition openai attached
++  to (c) (*"tolerable only if `.claude/` is explicitly a machine-local, gitignored
++  projection and generation clearly reports which mode it selected"*).
++  **Therefore (c), with the refinement BOTH seats required rather than the bare
++  option:** generation must print the mode it selected — `standalone/full` or
++  `dual-layer/partitioned` — and that mode must be covered by fixtures for absent,
++  stale and current global installs. Recorded here rather than in the ADR because
++  it is an implementation choice inside ADR-236, not a change to it.
++- **Resolved when:** DONE — the option is recorded above with the measurement that
++  eliminated (a), and 2.0's verify runs against option (c)'s mode reporting.
++
++### blocker: warn-path-unreachable-without-version-marker
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 2 (a decision about what the guard should compare)
++- **Blocks:** nothing in this roadmap — Phase 3 shipped and its contract half is
++  unconditional. It is recorded here because it falsifies part of a completed
++  phase's claim, and a finding against done work has nowhere else to live.
++- **The question:** `scope_guard.sh` reaches its `WARN` verdict only when the two
++  scopes report the SAME version, and `installed_version_at` returns `unknown` for
++  `~/.claude/…` — there is no `package.json` beside the host layer. So every real
++  cross-scope install classifies as `DRIFT`, and the per-type overlap count Phase
++  3.1 added to `WARN` never prints. Verified: a live run reports
++  `DRIFT · claude-code · unknown · 14.5.0`.
++- **What to do:** pick one. **(a)** have the installer write a version stamp beside
++  each host layer it writes, so `unknown` stops being the normal answer;
++  **(b)** report the overlap count on the `DRIFT` line too, since that is the line
++  operators actually see; **(c)** treat `unknown` as "same version" for the overlap
++  half only, keeping DRIFT's block but printing the cost. Probe first with
++  `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
++- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (b).
++  It is the smallest change that puts the number in front of the person deciding,
++  it needs no new artefact on disk, and it does not weaken the DRIFT block the way
++  (c) would. (a) is the principled fix and a larger one — it changes what the
++  installer writes, which is a consumer-facing surface.
++- **If you do nothing:** the cost instrumentation stays live and unreachable, which
++  is strictly worse than absent — it reads as coverage in the diff and in this
++  roadmap, and only a live run refutes it.
++- **Resolved when:** the option is recorded and a live guard run prints the count on
++  the line it actually emits.
+ 
+ ### blocker: compact-survival-of-package-only-rules
+ - **Status:** open
+@@ -472,6 +581,23 @@ than reporting a clean invariant that does not hold.
+   where (c) puts a permanent exception into an invariant Phase 4 has to check.
+ - **If you do nothing:** Phase 2 ships and those four silently lose compaction
+   survival — the worst of the three outcomes, because it is the one nobody chose.
++- **STILL OPEN, and the council SPLIT — but one side's premise is now measured
++  false, which narrows the question rather than answering it.** anthropic chose
++  **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are
++  semantically path-specific AND have CI gates"*; openai chose **(a)** (remove
++  `paths:`) on the ground that a CI backstop cannot substitute for an obligation
++  the model must hold *during* the session — naming `source-confidentiality` as a
++  rule whose harm precedes CI.
++  **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class
++  gates present · `skill-quality` → present · `source-confidentiality` →
++  `check_no_external_sources` present · **`rule-type-governance` → NO gate found.**
++  So anthropic's premise holds for three of four and fails for one, and the failing
++  one is the case openai's argument generalises to. That does **not** select an
++  option for the other three, and a per-rule split is a fourth option neither seat
++  proposed — which is precisely the kind of call this entry reserves.
++  **What is now decided:** nothing. **What is now cheaper:** the question is no
++  longer "(a) or (b) for four rules" but "does the CI-backstop argument hold
++  per rule", with one measured counter-example already in hand.
+ - **Resolved when:** the option is recorded in the successor ADR or an amendment
+   to ADR-227.
+ 
+@@ -502,7 +628,7 @@ than reporting a clean invariant that does not hold.
+ - **Resolved when:** the capability is recorded with its host version and source.
+ 
+ ### blocker: overlap-check-binding-surface
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** maintainer
+ - **Class:** 2 (a decision whose consequence the operator owns)
+ - **Blocks:** Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
+@@ -522,7 +648,17 @@ than reporting a clean invariant that does not hold.
+   one would read as coverage while adding none.
+ - **If you do nothing:** Phase 4 ships a check with the same reach as the two that
+   already exist, and a re-created overlap goes unnoticed.
+-- **Resolved when:** the surface is named and 4.3's verify runs against it.
++- **RESOLVED 2026-08-19 — preflight, and the council CONVERGED on it (2/2).**
++  Both seats added the same two refinements the bare option did not carry, and both
++  are adopted: **(i)** bind the check so it is reached by the path that can actually
++  introduce the defect — `task generate-tools` — rather than as a standalone check
++  someone must remember; **(ii)** add a test proving the binding is live and fails
++  on a real overlap, *"so it can't silently degrade the way the prior gates did"*.
++  That second point is the whole reason this was a blocker: two gates in this area
++  already report to nobody, and a third would have been the same mistake a third
++  time.
++- **Resolved when:** DONE — the surface is named (preflight, reached via
++  `task generate-tools`) and 4.3's verify runs against it.
+ 
+ ## Acceptance criteria
+ 
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index 16c221de8f1198e8b3c73090905e9870c7aab19d..13623994d0d12335a02f36d658f1877b32447c2c 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -18,7 +18,7 @@
+   "baseline": {
+     "active_roadmaps": 34,
+     "later_roadmaps": 49,
+-    "open_blockers": 74
++    "open_blockers": 73
+   },
+   "baseline_history": [
+     {
+@@ -132,6 +132,13 @@
+       "later_roadmaps": 49,
+       "open_blockers": 74,
+       "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved. This branch adopts road-to-single-delivery (+1 active) and opens four blockers on it (+4); the trunk meanwhile WALKED DOWN by archiving road-to-inbox-harvest-2026-08-b-dispatch-safety. Taking this branch authored numbers through the merge would have silently pocketed that archival as headroom, which is the loose-ratchet failure two earlier entries in this file record from the other direction. So the trunk file was taken whole and these numbers are the measurement on the merged tree: 33 + 1 = 34 active, 49 later unchanged, 70 + 4 = 74 blockers. WHAT THE +4 BUYS, since it is the larger half: partition-requires-global-layer HALTED Phase 2 mid-implementation - the partition leaves the project layer with 16 rules and zero skills, so a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0, which is an under-governed session rather than a token cost. compact-survival-of-package-only-rules carries four rules that stop surviving /compact once their unscoped global twin is gone, three of them Iron-Law bearing. overlap-check-binding-surface exists because two gates in this area already report to nobody. host-skill-suppression-capability is a host probe whose negative answer closes it. Each carries enumerated options and a recommendation rather than a flag. later_roadmaps unchanged at 49 is the check that nothing was parked to pay for any of this."
++    },
++    {
++      "at": "2026-08-19",
++      "active_roadmaps": 34,
++      "later_roadmaps": 49,
++      "open_blockers": 73,
++      "why": "WALKED DOWN by 1 blocker, net of two resolutions and one new finding, which is why the delta is -1 rather than -2. RESOLVED: overlap-check-binding-surface, on a CONVERGED AI council verdict (2/2) - preflight, with both seats requiring the binding be provably live, which it now is. And partition-requires-global-layer, resolved to option (c) not by a vote but by a MEASUREMENT that eliminated option (a): consistency.yml runs task generate-tools on a fresh checkout, so refusing without a global layer would break the pipeline - the exact counter-case one seat had named against its own choice. OPENED: warn-path-unreachable-without-version-marker, and it is a finding against work this same branch marked DONE. Phase 3 instrumented the scope guard WARN verdict with an overlap count; measured, that branch never executes, because installed_version_at returns unknown for ~/.claude (no package.json beside a host directory) so every real cross-scope install classifies as DRIFT. The instrumentation is live and unreachable, which reads as coverage in the diff. Recording it as a blocker rather than silently repairing it is the point: it falsifies part of a completed phase. active and later unchanged, which says nothing was created or parked to absorb any of this."
+     }
+   ],
+   "target": {
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index d2ef6a149e131a38aea299ccd187cb0b0c0837f1..f3226cb0200773b740bdb64ad93d79a2950a254b 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -86,6 +86,21 @@ tasks:
+       # classes AND every fixture behaves as its class says. Cheap (pure
+       # functions over a 22-entry YAML corpus, no I/O beyond the one read).
+       - ./scripts-run src/scripts/check_detector_corpus
++      # One artefact, one layer (ADR-236). Binds HERE and not in CI on a measured
++      # fact rather than a preference: .claude/ is gitignored and no CI leg installs
++      # at user scope, so a CI run of this check finds ZERO layers and reports on a
++      # topology no contributor has. The overlap is a property of the developer
++      # machine. AI council 2/2 converged on preflight, and both seats attached the
++      # same condition — the binding must be provably live, because two gates in this
++      # exact area already report to nobody (check_standing_rule_delivery sits in
++      # taskfiles/dev.yml and nothing runs it; check_rule_projection_integrity is
++      # inert when .agent-tools.yml selects zero tools). That proof is
++      # tests/scripts/preflight_single_delivery_binding.test.ts.
++      # REPORT MODE, deliberately: the invariant is not true yet — Phase 2 of
++      # road-to-single-delivery ships the partition — so --enforce here would red
++      # every preflight on a defect nobody can currently fix, which is how a gate
++      # teaches people to skip it. The --enforce flip lands WITH Phase 2.
++      - ./scripts-run src/scripts/check_single_delivery
+       # No shipped artefact may DIRECT a silent re-run — the mechanism was
+       # benchmarked and falsified (recursive-verification, TERMINAL 2026-07-28).
+       - ./scripts-run src/scripts/lint_never_silent
+diff --git a/tests/scripts/preflight_single_delivery_binding.test.ts b/tests/scripts/preflight_single_delivery_binding.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b8c5d09526182cde589b490cf43631b183028ef
+--- /dev/null
++++ b/tests/scripts/preflight_single_delivery_binding.test.ts
+@@ -0,0 +1,102 @@
++// Proves the single-delivery invariant check is BOUND, and that it can refuse.
++//
++// This test exists because the AI council (2/2, 2026-08-19) converged on preflight
++// as the binding surface and both seats attached the same condition: the binding
++// must be provably live, "so it can't silently degrade the way the prior gates
++// did". That is not a hypothetical failure mode in this repository — it is the
++// measured state of the two nearest gates:
++//
++//   - check_standing_rule_delivery measures this exact defect (185.3 % of the
++//     standing cap) and is registered in taskfiles/dev.yml, which nothing runs
++//     automatically. It has been reporting to nobody.
++//   - check_rule_projection_integrity exists for "stale tree on a developer's
++//     checkout" and is INERT when agents/.agent-tools.yml selects zero tools,
++//     which is the maintainer's normal local state.
++//
++// WHAT THIS TEST CAN AND CANNOT PROVE, stated because the distinction is the whole
++// point. It proves (1) the registration is present in the preflight recipe and
++// (2) the binary genuinely refuses on a real overlap under --enforce. It CANNOT
++// prove anyone runs preflight — no test can — so the gap it closes is
++// "registered somewhere nothing reads", not "a human skipped the step".
++
++import { execFileSync } from 'node:child_process';
++import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { dirname, join, resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
++
++describe('preflight binding for check_single_delivery', () => {
++    const recipe = readFileSync(join(REPO, 'taskfiles', 'ci-fast.yml'), 'utf8');
++
++    it('is registered in the preflight recipe', () => {
++        expect(recipe).toContain('src/scripts/check_single_delivery');
++    });
++
++    it('is registered in REPORT mode, not --enforce, while Phase 2 is open', () => {
++        // --enforce here would red every preflight run on a defect nobody can
++        // currently fix, which is how a gate teaches people to skip it. The flip
++        // lands with the partition; if someone flips it earlier, this fails and
++        // they have to say why.
++        const line = recipe
++            .split('\n')
++            .find((l) => l.includes('src/scripts/check_single_delivery'));
++        expect(line).toBeDefined();
++        expect(line).not.toContain('--enforce');
++    });
++
++    it('states why it binds to preflight rather than CI', () => {
++        // The reason is a measured fact (CI has no .claude/ layers), and a binding
++        // whose reason is not written down is the one a later cleanup deletes.
++        const idx = recipe.indexOf('src/scripts/check_single_delivery');
++        const preamble = recipe.slice(Math.max(0, idx - 1200), idx);
++        expect(preamble).toMatch(/gitignored|no CI leg|developer\s*\n?\s*#?\s*machine/i);
++    });
++});
++
++describe('the bound binary actually refuses', () => {
++    let root: string;
++    beforeEach(() => {
++        root = mkdtempSync(join(tmpdir(), 'psd-'));
++    });
++    afterEach(() => {
++        rmSync(root, { recursive: true, force: true });
++    });
++
++    const run = (args: string[]): { status: number; out: string } => {
++        try {
++            const out = execFileSync('./scripts-run', ['src/scripts/check_single_delivery', ...args], {
++                cwd: REPO,
++                encoding: 'utf8',
++                stdio: ['ignore', 'pipe', 'pipe'],
++            });
++            return { status: 0, out };
++        } catch (e) {
++            const err = e as { status?: number; stdout?: string; stderr?: string };
++            return { status: err.status ?? 1, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
++        }
++    };
++
++    it('exits 1 on a real overlap under --enforce', () => {
++        for (const scope of ['g', 'p']) {
++            const d = join(root, scope, 'rules');
++            mkdirSync(d, { recursive: true });
++            writeFileSync(join(d, 'shared.md'), '---\ntype: auto\n---\nbody\n', 'utf8');
++        }
++        const r = run(['--global', join(root, 'g'), '--project', join(root, 'p'), '--enforce']);
++        expect(r.status).toBe(1);
++        expect(r.out).toContain('delivered twice');
++    });
++
++    it('exits 0 on disjoint layers under --enforce', () => {
++        mkdirSync(join(root, 'g', 'rules'), { recursive: true });
++        mkdirSync(join(root, 'p', 'rules'), { recursive: true });
++        writeFileSync(join(root, 'g', 'rules', 'only-g.md'), '---\n---\nx\n', 'utf8');
++        writeFileSync(join(root, 'p', 'rules', 'only-p.md'), '---\n---\ny\n', 'utf8');
++        const r = run(['--global', join(root, 'g'), '--project', join(root, 'p'), '--enforce']);
++        expect(r.status).toBe(0);
++    });
++});

@@ -6,7 +6,7 @@
 
 ## Overall
 
-**301 / 539 steps done · 56%**
+**302 / 539 steps done · 56%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   56%
@@ -37,7 +37,7 @@
 | 19 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
 | 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
+| 22 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████████░░ 75% |
 | 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
@@ -825,7 +825,7 @@ _2 blockers resolved._
 
 ### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
 
-**Road to single delivery — one artefact, one layer, no duplicates** — 11 / 16 done (69%)
+**Road to single delivery — one artefact, one layer, no duplicates** — 12 / 16 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -833,28 +833,40 @@ _2 blockers resolved._
 | 1 | Replace ADR-226 | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 2 | Make the producers write disjoint layers | ⬜ not started | 1 | 0 | 3 | 0 | 0% |
 | 3 | Stop the two surfaces that call duplication free | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | One producer-agnostic invariant check | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 4 | One producer-agnostic invariant check | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | The residue the partition does not resolve | 🟡 in progress | 3 | 4 | 2 | 0 | 57% |
 
 <a id="blockers-road-to-single-delivery"></a>
 **Blockers**
 
-- **partition-requires-global-layer** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 do not depend on it: the census, the ADR, the two cost-classification surfaces and the invariant check all land while the partition itself waits.
-  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (c). It makes the partition a *property of a machine that has both layers* rather than a global behaviour change, so no checkout can lose governance by omission, and the duplication it leaves behind on a single-layer machine is not duplication at all — there is only one layer there. (a) turns a missing optional install into a hard failure of the normal build; (b) is the silent under-governance itself.
-  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this particular non-decision, which is why the phase halts rather than shipping a default.
+- **warn-path-unreachable-without-version-marker** (owner: maintainer) — blocks nothing in this roadmap — Phase 3 shipped and its contract half is unconditional. It is recorded here because it falsifies part of a completed phase's claim, and a finding against done work has nowhere else to live.
+  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (b). It is the smallest change that puts the number in front of the person deciding, it needs no new artefact on disk, and it does not weaken the DRIFT block the way (c) would. (a) is the principled fix and a larger one — it changes what the installer writes, which is a consumer-facing surface.
+  - **If you do nothing:** the cost instrumentation stays live and unreachable, which is strictly worse than absent — it reads as coverage in the diff and in this roadmap, and only a live run refutes it.
   - **What to do:**
-    pick one of three enumerated options and record it.
-    **(a)** `task generate-tools` refuses to write a partitioned project layer when
-    `~/.claude/rules/` is absent or older than the installed release, pointing at
-    `agent-config install`; **(b)** it warns and partitions anyway; **(c)** it falls
-    back to projecting the full set, so a machine without the global layer keeps
-    today's behaviour and only a machine with both gets the partition. Probe the
-    current state with
-    `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
-  - **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and 2.0's verify can be run against it.
+    pick one. **(a)** have the installer write a version stamp beside
+    each host layer it writes, so `unknown` stops being the normal answer;
+    **(b)** report the overlap count on the `DRIFT` line too, since that is the line
+    operators actually see; **(c)** treat `unknown` as "same version" for the overlap
+    half only, keeping DRIFT's block but printing the cost. Probe first with
+    `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
+  - **Resolved when:** the option is recorded and a live guard run prints the count on the line it actually emits.
+- **partition-current-layer-undecidable** (owner: maintainer) — blocks Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3. Phases 0, 1, 3 and 4 are landed and do not depend on it.
+  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (a), because it is the one option that closes two blockers with one change and turns an absent fact into a present one rather than working around it. (b) ships a partition that can silently prefer an outdated global rule over a fresh local one — the same class of silent wrongness this roadmap exists to remove. (c) is correct but pays on every build for a question (a) answers once.
+  - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That is the safe direction of this non-decision, which is why the phase halts rather than shipping a proxy.
+  - **What to do:**
+    pick one. **(a)** have the installer write a version stamp beside
+    each host layer it writes (`~/.claude/.agent-config-version` or equivalent), which
+    makes `unknown` stop being the normal answer and also fixes
+    `warn-path-unreachable-without-version-marker`; **(b)** redefine the predicate to
+    the decidable half — present/absent — and drop staleness explicitly, stating the
+    cost (a stale global layer would partition against outdated rules); **(c)** compare
+    content instead of versions (hash the shared set), which is decidable but pays a
+    read of both layers on every generation. Probe with
+    `bash -c 'source src/scripts/_lib/scope_guard.sh project . .; installed_version_at "$HOME/.claude"'`.
+  - **Resolved when:** the option is recorded and 2.0's verify can be run against it.
 - **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
   - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
-  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.
+  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose. - **STILL OPEN, and the council SPLIT — but one side's premise is now measured false, which narrows the question rather than answering it.** anthropic chose **(b)** (keep `paths:`, rely on CI gates) on the premise that *"all four rules are semantically path-specific AND have CI gates"*; openai chose **(a)** (remove `paths:`) on the ground that a CI backstop cannot substitute for an obligation the model must hold *during* the session — naming `source-confidentiality` as a rule whose harm precedes CI. **Measured 2026-08-19:** `no-roadmap-references` → `check_no_roadmap_refs`-class gates present · `skill-quality` → present · `source-confidentiality` → `check_no_external_sources` present · **`rule-type-governance` → NO gate found.** So anthropic's premise holds for three of four and fails for one, and the failing one is the case openai's argument generalises to. That does **not** select an option for the other three, and a per-rule split is a fourth option neither seat proposed — which is precisely the kind of call this entry reserves. **What is now decided:** nothing. **What is now cheaper:** the question is no longer "(a) or (b) for four rules" but "does the CI-backstop argument hold per rule", with one measured counter-example already in hand.
   - **What to do:**
     run
     `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
@@ -875,15 +887,8 @@ _2 blockers resolved._
     excluded entries are absent from the delivered catalogue. Record the host
     version with the result. Either outcome closes this.
   - **Resolved when:** the capability is recorded with its host version and source.
-- **overlap-check-binding-surface** (owner: maintainer) — blocks Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
-  - **Recommendation:** **(agent-drafted 2026-08-19.)** Preflight. The overlap is a property of the developer machine rather than of the branch, so CI would measure a topology no contributor has while every local session pays. **Corrected on R2 review:** an earlier revision predicted CI would "be green" there; measured, the gate returned **1** in a CI-shaped run, because `.claude/` is gitignored and no leg installs at user scope. That was a defect in the gate (finding 1, fixed) rather than an argument for CI — the reason to prefer preflight is the topology, not the colour. Two gates in this area are already unreachable where it matters, so a third unbound one would read as coverage while adding none.
-  - **If you do nothing:** Phase 4 ships a check with the same reach as the two that already exist, and a re-created overlap goes unnoticed.
-  - **What to do:**
-    pick one and register the check there — `task preflight` via
-    `taskfiles/`, a `session_start` concern in `src/scripts/hook_manifest.yaml`, or
-    a workflow under `.github/workflows/`. Then confirm a deliberately-created
-    overlap surfaces on the chosen one.
-  - **Resolved when:** the surface is named and 4.3's verify runs against it.
+
+_2 blockers resolved._
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 

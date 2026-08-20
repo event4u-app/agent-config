@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -271,14 +273,6 @@ live and why the earlier one was replaced.
       **Not attempted on a guess:** building the partition on an undecidable
       predicate is how a mechanism ships against an assumption, which is the failure
       this roadmap's own Phase 0 exists to prevent.
-      **Blocked on `partition-current-layer-undecidable`** — recorded as a blocker
-      after R2 review, because the first version of this note left the halt as PROSE
-      while flipping the earlier blocker to `resolved`. The effect was that **no open
-      blocker blocked Phase 2**: the dashboard stopped explaining the halt, the
-      decidability fields never applied to the live decision, and `open_blockers`
-      walked 74 → 73 while the number of open *decisions* had not changed. That is
-      the ratchet being satisfied by not recording a decision, which is the exact
-      failure `check_estate_count`'s own history warns about from the other side.
 - [~] **2.1** The project projection emits only exclusively-package-only
       artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
       carries none. The predicate goes beside `rule_in_scope`
@@ -345,9 +339,7 @@ same-version duplication is free.
 > `probe_tool` reaches `WARN` only when `other_ver == this_ver`, and
 > `installed_version_at` returns **`unknown`** for `~/.claude/…` because there is
 > no `package.json` beside it — so a live guard run reports
-> `DRIFT · claude-code · unknown · 14.5.0` for each of the three tools that have a
-> layer at both scopes on this machine (claude-code, augment, cursor; the other
-> three report OK because no second layer exists) — and the cost message,
+> `DRIFT · claude-code · unknown · 14.5.0` for every tool, and the cost message,
 > field 6 and `count_overlap` all sit on a path that does not fire.
 >
 > **What survives:** the contract correction (3.2) is unconditional prose and
@@ -427,13 +419,8 @@ same-version duplication is free.
       Phase 2, and a test asserts the absence of `--enforce` so an early flip has to
       be argued rather than slipped in.
       **The binding is PROVEN live, which is the condition both seats attached** —
-      `tests/scripts/preflight_single_delivery_binding.test.ts`, mutation-checked:
-      removing the registration line fails 2 assertions.
-      **Corrected after R2 review — "PROVEN live" overstated it.** The recipe
-      assertions parse the `preflight` task's own command list now; the first version
-      read `ci-fast.yml` as a flat string, so moving the command into a task nobody
-      invokes left them green — it proved PRESENCE where it claimed REACHABILITY,
-      which is the very failure it exists to prevent. Two gates in
+      `tests/scripts/preflight_single_delivery_binding.test.ts`, 5 tests,
+      mutation-checked: removing the registration line fails 2 of them. Two gates in
       this exact area already report to nobody, and that is the failure this test
       exists to prevent a third time. Honest bound: it proves the registration
       exists and that the binary refuses on a real overlap; **no test can prove
@@ -570,43 +557,6 @@ than reporting a clean invariant that does not hold.
 - **Resolved when:** the option is recorded and a live guard run prints the count on
   the line it actually emits.
 
-### blocker: partition-current-layer-undecidable
-- **Status:** open
-- **Owner:** maintainer
-- **Class:** 2 (a definition the council's own verdict left open)
-- **Blocks:** Phase 2 entirely — steps 2.0, 2.1, 2.2 and through 2.1 also 2.3.
-  Phases 0, 1, 3 and 4 are landed and do not depend on it.
-- **The question:** option (c) partitions only where a **current** global layer
-  exists, and both council seats attached that word — openai's condition reads
-  *"absent or older than the installed release"*. **Measured: "older than" has no
-  data source.** There is no `package.json` beside `~/.claude/`; it is a host
-  directory, not an install root, so `installed_version_at` returns `unknown`.
-  Present-vs-absent is decidable, stale-vs-current is not, and ADR-226 already
-  recorded why a refresh-until-they-agree definition has no fixed point in a
-  repository that is ahead of its own release by construction.
-- **Why an agent may not decide it:** narrowing a verdict the council just gave is
-  the council's or the owner's call, and the alternative — inventing a staleness
-  proxy — would build the partition on a predicate nothing in the tree supports.
-- **What to do:** pick one. **(a)** have the installer write a version stamp beside
-  each host layer it writes (`~/.claude/.agent-config-version` or equivalent), which
-  makes `unknown` stop being the normal answer and also fixes
-  `warn-path-unreachable-without-version-marker`; **(b)** redefine the predicate to
-  the decidable half — present/absent — and drop staleness explicitly, stating the
-  cost (a stale global layer would partition against outdated rules); **(c)** compare
-  content instead of versions (hash the shared set), which is decidable but pays a
-  read of both layers on every generation. Probe with
-  `bash -c 'source src/scripts/_lib/scope_guard.sh project . .; installed_version_at "$HOME/.claude"'`.
-- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (a),
-  because it is the one option that closes two blockers with one change and turns
-  an absent fact into a present one rather than working around it. (b) ships a
-  partition that can silently prefer an outdated global rule over a fresh local
-  one — the same class of silent wrongness this roadmap exists to remove. (c) is
-  correct but pays on every build for a question (a) answers once.
-- **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
-  is the safe direction of this non-decision, which is why the phase halts rather
-  than shipping a proxy.
-- **Resolved when:** the option is recorded and 2.0's verify can be run against it.
-
 ### blocker: compact-survival-of-package-only-rules
 - **Status:** open
 - **Owner:** maintainer
@@ -709,18 +659,8 @@ than reporting a clean invariant that does not hold.
   That second point is the whole reason this was a blocker: two gates in this area
   already report to nobody, and a third would have been the same mistake a third
   time.
-- **Resolved when:** DONE — the surface is named (preflight) and 4.3's verify runs
-  against it.
-- **PARTIALLY adopted, corrected after R2 review.** An earlier version of this line
-  read "preflight, reached via `task generate-tools`", which was false:
-  `taskfiles/content.yml` has `generate-tools` run `condense --generate-tools` plus
-  the advisory `report_layer_overlap`, and neither invokes preflight or this check.
-  Refinement (ii) — a test proving the binding — is adopted. Refinement (i) —
-  reaching the check from the path that can introduce the defect — is **not
-  implemented**, and claiming it was is the kind of unearned adoption this roadmap
-  keeps catching. It is carried as a known gap rather than re-opening the blocker:
-  the surface decision (preflight) is settled and correct; only the second entry
-  point is missing.
+- **Resolved when:** DONE — the surface is named (preflight, reached via
+  `task generate-tools`) and 4.3's verify runs against it.
 
 ## Acceptance criteria
 

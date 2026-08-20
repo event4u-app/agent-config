@@ -86,6 +86,25 @@ tasks:
       # classes AND every fixture behaves as its class says. Cheap (pure
       # functions over a 22-entry YAML corpus, no I/O beyond the one read).
       - ./scripts-run src/scripts/check_detector_corpus
+      # One artefact, one layer (ADR-236). Binds HERE and not in CI on a measured
+      # fact rather than a preference: .claude/ is gitignored and no CI leg installs
+      # at user scope, so a CI run of this check finds ZERO layers and reports on a
+      # topology no contributor has. The overlap is a property of the developer
+      # machine. AI council 2/2 converged on preflight, and both seats attached the
+      # same condition — the binding must be provably live, because two gates in this
+      # exact area are weaker than they look: check_standing_rule_delivery sits in
+      # taskfiles/dev.yml and nothing runs it automatically, and
+      # check_rule_projection_integrity — which DOES run, here and in CI — is inert
+      # when .agent-tools.yml selects zero tools, so it passes without auditing.
+      # (An earlier version of this comment said both "report to nobody", which
+      # overstated the second: it reports, it just has nothing to report on.)
+      # That proof is
+      # tests/scripts/preflight_single_delivery_binding.test.ts.
+      # REPORT MODE, deliberately: the invariant is not true yet — Phase 2 of
+      # road-to-single-delivery ships the partition — so --enforce here would red
+      # every preflight on a defect nobody can currently fix, which is how a gate
+      # teaches people to skip it. The --enforce flip lands WITH Phase 2.
+      - ./scripts-run src/scripts/check_single_delivery --quiet
       # No shipped artefact may DIRECT a silent re-run — the mechanism was
       # benchmarked and falsified (recursive-verification, TERMINAL 2026-07-28).
       - ./scripts-run src/scripts/lint_never_silent
