@@ -63,6 +63,7 @@ import {
     plan_advisor_swap,
 } from './ai_council/advisors.js';
 import { format_install_hints } from './ai_council/cli_hints.js';
+import { renderSubHelp } from './ai_council/cli_help.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
@@ -2507,13 +2508,7 @@ function cmd_run(
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
     const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
-    // 3.4 — an unconfirmed run is a DRY PASS, and it says so here rather than
-    // only in the closing line. Measured 2026-08-20: a first council run read
-    // the trailing "No --confirm flag" notice as a failure report, because
-    // everything above it looked like a run that had happened.
-    if (!args.confirm) {
-        _stdout('council:run · DRY PASS — estimate only, no seat is contacted. Add --confirm to run.\n');
-    }
+    if (!args.confirm) _stdout('council:run · DRY PASS — estimate only, no seat is contacted. Add --confirm to run.\n');
     _stdout(
         `council:run · mode=${question.mode} · members=${members.length} ` +
             `(billable=${billable.length})\n`,
@@ -3581,44 +3576,6 @@ function _usageFor(cmd: string): string {
     return `usage: ${_PROG} ${cmd} [-h] ...\n`;
 }
 
-/**
- * Full sub-help: the usage line, then every positional and flag the parser
- * actually accepts, rendered from the SAME specs the parser reads.
- *
- * Before this, `council run --help` printed `usage: ... run [-h] ...` and
- * nothing else. Measured 2026-08-20: a first council run cost six calls, and
- * two of them were spent discovering `--confirm` and `--output` by grepping
- * this file's source. The information was always available at runtime —
- * `_specsFor` returns it — it simply was not printed.
- *
- * Rendered rather than hand-listed on purpose: a hand-written flag list is a
- * second source of truth that drifts the first time a flag is added.
- */
-function _helpFor(cmd: string): string {
-    const { positionals, opts, requiredOpts } = _specsFor(cmd);
-    const lines: string[] = [_usageFor(cmd).trimEnd()];
-    if (positionals.length) {
-        lines.push('', 'positional arguments:');
-        for (const p of positionals) {
-            lines.push(`  ${p}`);
-        }
-    }
-    if (opts.length) {
-        lines.push('', 'options:');
-        const required = new Set(requiredOpts);
-        for (const o of opts) {
-            const value = o.takesValue ? (o.choices && o.choices.length ? ` {${o.choices.join(',')}}` : ' VALUE') : '';
-            const marks: string[] = [];
-            if (required.has(o.flag)) {
-                marks.push('required');
-            }
-            lines.push(`  ${o.flag}${value}${marks.length ? '   [' + marks.join(', ') + ']' : ''}`);
-        }
-    }
-    lines.push('');
-    return lines.join('\n');
-}
-
 interface OptSpec {
     flag: string;
     takesValue: boolean;
@@ -3773,10 +3730,8 @@ function _parseArgs(argv: string[]): Args {
     const rest = argv.slice(1);
     const usage = _usageFor(first);
     const { positionals, opts, requiredOpts } = _specsFor(first);
-
-    // Sub-help. Prints every accepted flag, not just the usage line.
     if (rest.includes('-h') || rest.includes('--help')) {
-        _stdout(_helpFor(first));
+        _stdout(renderSubHelp(first, usage, { positionals, opts, requiredOpts }));
         process.exitCode = 0;
         throw new _ArgExit();
     }
