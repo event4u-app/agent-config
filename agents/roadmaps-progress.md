@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers in the active tree, **21** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers in the active tree, **21** need you → `agent-config gates`
 
 ## Overall
 
@@ -55,7 +55,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
 | 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ████████░░ 76% |
+| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 | 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
@@ -1042,27 +1042,6 @@ _1 blocker resolved._
 | 5 | Tier routing has a caller — measure whether it moved the distribution | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 | 7 | The `do_not_touch` write-guard — relocated, and deliberately its own phase | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-subagent-lifecycle-integrity"></a>
-**Blockers**
-
-- **raw-capture-needs-host-env** (owner: maintainer) — blocks Phase 0 Steps 2 and 4 — and only their raw-payload half — plus Phase 4 Step 1, which is gated on Step 4. Step 3 is closed; **both** of Step 2's assertions and Step 4's derivable half are answered without it (§ B2-B4).
-  - **Recommendation:** run the four steps. The capture facility is shipped and verified, so this is a one-session errand, not a build — and step 4 bounds the only real cost, since the standing egress surface exists solely while the `env` entry is present. The alternative on the table is reading the field lists out of the hook source instead of a captured payload, which is precisely the build-against-documentation failure Phase 0 exists to stop.
-  - **If you do nothing:** Phases 2 and 4 keep resting on payload fields documented for a host version that is not the installed one — Risk 4 states that dependency, and Phase 4 is cancelled outright if `agent_id` turns out to be absent. So the cost of not deciding is not a delay; it is that the later phases stay buildable-on-paper against a shape nobody has seen, and the falsifier that would re-scope them cannot run.
-  - **What to do:**
-    the capture facility is shipped and verified
-    (`_maybe_capture_payload`, `dispatch_hook.ts:486`, called unconditionally at
-    `:1082`); the variable just has to reach the process environment the host
-    spawns hooks from, which a command issued inside a session cannot do.
-    1. Add to `~/.claude/settings.json`:
-    `"env": { "AGENT_HOOK_CAPTURE_DIR": "~/.agent-hook-capture" }`
-    2. Start a **fresh** session — env and hooks are read at session start.
-    3. Dispatch one subagent, then read
-    `~/.agent-hook-capture/claude__SubagentStop__*.json` and the
-    `claude__PreToolUse__*.json` files written from inside it.
-    4. Remove the `env` entry afterwards — the capture writes every payload
-    verbatim, which is a standing egress surface, not a setting to leave on.
-  - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`. - **Resolution (2026-08-20) — transferred, and narrower than it was.** Council disposition **B**, outcome state `transferred`, per [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md) § `raw-capture-needs-host-env`. The criterion above moves **verbatim** to [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md), which carries the named producer (the host owner), four read-only probes with their baselines measured on the transfer date, and the seven containment requirements adopted from the dissenting seat — a dedicated empty owner-only-permission directory, one time-boxed session, field-NAME extraction then deletion, removal of the setting, verification that it is gone, **a fresh-session negative probe proving capture stopped**, and an abort on secrets or an unexpected content class. "Remove it afterwards" was the whole bound before and is not a kill switch: it survives neither an interruption nor a cleanup failure, and the capture is fail-silent by design. - **What the transfer no longer blocks, because it was answered instead.** Both of Step 2's assertions (§ B2, § B3 of [`subagent-lifecycle-drain-close.md`](../evidence/investigations/subagent-lifecycle-drain-close.md)) and Step 4's derivable negative space (§ B4). The residue is the verbatim field list, the key spelling `last_assistant_message` vs `lastAssistantMessage`, and the in-subagent tool-event payload — nothing else.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
