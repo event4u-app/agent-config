@@ -31,6 +31,7 @@
  *     ./scripts-run src/scripts/archive_completed_roadmaps            # --changed-only (default)
  *     ./scripts-run src/scripts/archive_completed_roadmaps --all
  *     ./scripts-run src/scripts/archive_completed_roadmaps --base origin/main --dry-run
+ *     ./scripts-run src/scripts/archive_completed_roadmaps --repo-root /path/to/proj
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -462,19 +463,21 @@ function _runTwin(root: string, script: string): void {
 const _PROG = 'archive_completed_roadmaps.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run]\n`;
+    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
     all: boolean;
     base: string;
     dry_run: boolean;
+    repo_root: string | null;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let all = false;
     let base = 'origin/main';
     let dry_run = false;
+    let repo_root: string | null = null;
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
         process.stderr.write(`${_PROG}: error: ${msg}\n`);
@@ -502,17 +505,30 @@ function _parseArgs(argv: readonly string[]): Args {
         } else if (tok.startsWith('--base=')) {
             base = tok.slice('--base='.length);
             i += 1;
+        } else if (tok === '--repo-root') {
+            const val = argv[i + 1];
+            if (val === undefined) {
+                emitError('argument --repo-root: expected one argument');
+            }
+            repo_root = val as string;
+            i += 2;
+        } else if (tok.startsWith('--repo-root=')) {
+            repo_root = tok.slice('--repo-root='.length);
+            i += 1;
         } else {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { all, base, dry_run };
+    return { all, base, dry_run, repo_root };
 }
 
 function main(argv?: readonly string[]): number {
     const ns = _parseArgs(argv ?? process.argv.slice(2));
 
-    const root = _repo_root();
+    // An explicit `--repo-root` wins over the `git rev-parse` resolution. The
+    // dashboard generator passes it so a monorepo sub-project sweep cannot walk
+    // up to the enclosing repo and archive the PARENT's roadmaps.
+    const root = ns.repo_root ?? _repo_root();
     const archived = archive_completed(root, {
         changed_only: !ns.all,
         base: ns.base,

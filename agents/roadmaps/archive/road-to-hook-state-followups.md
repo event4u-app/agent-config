@@ -337,7 +337,7 @@ ignore. That is the state this phase ends.
             `feedback_dir` instead of spelling it, which is the right shape
             independently of this change.
         (b) `witness/reach_doctor_readonly.test.ts` reported
-            `tracked: mutated: agents/roadmaps/road-to-hook-state-followups.md` —
+            `tracked: mutated: agents/roadmaps/archive/road-to-hook-state-followups.md` —
             a FALSE red with a real cause: that witness watches the whole
             worktree for mutations, and this roadmap file was being edited while
             the run was in flight. Green on a stable tree (6 passed), re-verified

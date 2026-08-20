@@ -473,6 +473,57 @@ function _extract_personas_frontmatter(text: string): Array<[number, string]> {
     return results;
 }
 
+/**
+ * Paths this checker must not call broken because nothing is allowed to fix them.
+ *
+ * `archive_completed_roadmaps` treats `agents/evidence/**` and every `*.patch` as
+ * a FROZEN RECORD and deliberately does not rewrite path strings there — a review
+ * artefact is a record of what a reviewer was shown, and editing it retroactively
+ * makes it claim something that did not happen (measured 2026-08-11: one archival
+ * rewrote four frozen artefacts including a `diff.patch` header, and reported it
+ * as "4 ref(s) migrated"). So when a roadmap is archived, a record naming its old
+ * path keeps naming it — correctly.
+ *
+ * Without this carve-out the two gates contradict each other: the sweep forbids
+ * the rewrite and this checker reds the un-rewritten path, so EVERY archival of a
+ * roadmap a review artefact mentions turns CI red with no compliant fix available.
+ * Measured on the change that made archival automatic: 2 such references.
+ *
+ * Deliberately narrow — three conditions, all required. The source is a frozen
+ * record; the reference is a top-level roadmap path; and the file is still
+ * findable under a terminal disposition. A frozen record pointing at a roadmap
+ * that exists NOWHERE is still broken and still reds, which is the part a blanket
+ * `agents/evidence/reviews` exclusion would have lost: that directory holds live
+ * `*.findings.md` work alongside archived records, so excluding it wholesale would
+ * stop checking documents that are still being acted on.
+ *
+ * The frozen-record predicate is duplicated from `_is_frozen_record` in
+ * `src/agent-src/scripts/archive_completed_roadmaps.ts` rather than imported: that
+ * module is projected into consumer installs and pulls the dashboard generator in
+ * with it, so a package-internal gate importing it would drag the projection layer
+ * into CI's gate path. `tests/scripts/check_references.test.ts` holds the two
+ * copies against one table so the duplication cannot drift silently.
+ */
+const _FROZEN_RECORD_PREFIXES = ['agents/evidence/'];
+const _TERMINAL_ROADMAP_DIRS = ['archive', 'skipped', 'later'];
+
+export function _is_frozen_record_source(rel: string): boolean {
+    const norm = rel.split(path.sep).join('/');
+    return _FROZEN_RECORD_PREFIXES.some((p) => norm.startsWith(p)) || norm.endsWith('.patch');
+}
+
+/** Does `ref` name a top-level roadmap that now lives under a terminal disposition? */
+export function _resolves_under_terminal_disposition(ref: string, root: string): boolean {
+    const norm = ref.split(path.sep).join('/');
+    const m = /^agents\/roadmaps\/([^/]+\.md)$/.exec(norm);
+    if (m === null) {
+        return false;
+    }
+    return _TERMINAL_ROADMAP_DIRS.some((d) =>
+        _exists(path.join(root, 'agents', 'roadmaps', d, m[1] as string)),
+    );
+}
+
 function _find_suggestion(p: string, root: string): string {
     const name = path.basename(p);
     // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1): the middle entry
@@ -663,6 +714,15 @@ function check_file(
                 // is the runtime-bootstrapped pricing cache. The SKIP_DIRS
                 // check above already swallows refs into `agents/runtime/`,
                 // so no extra carve-out is needed.
+            }
+            if (
+                !resolved &&
+                _is_frozen_record_source(_relPosix(root, filepath)) &&
+                _resolves_under_terminal_disposition(rawRef, root)
+            ) {
+                // A record naming the pre-archival path of a roadmap that is
+                // still findable. Nothing may rewrite it — see above.
+                resolved = true;
             }
             if (!resolved) {
                 broken.push(
