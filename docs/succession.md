@@ -7,21 +7,52 @@
 
 ## Honest bus-factor (tracked, not inflated)
 
-- **Distinct humans who have reviewed/merged in the trailing 90 days: 1** (the
-  maintainer, `@matze4u`). The project is a single-maintainer repo; an AI
-  self-review gate (deferred — see the roadmap Phase 1) raises the floor but is
-  **not** independent human review.
-- Recompute this number honestly at any time:
+Two different numbers get conflated under one label here, so both are stated
+with the query that produces them. Window: the trailing 90 days.
+
+- **Distinct humans who have REVIEWED a merged PR: 1** — `@matze4u`, the
+  maintainer. No non-maintainer has reviewed a merged PR, so the project has
+  **no independent human review**. An AI self-review gate (advisory, and inert
+  without its secret — see [`self-review-gate.md`](self-review-gate.md)) raises
+  the floor but is **not** independent human review.
+- **Distinct humans who have MERGED to `main`: 2** — `@matze4u` and `@h3xa2`.
+  The second authored *and* self-merged #765 and the 8.1.0 release #767 on
+  2026-07-07, neither carrying a review. Two accounts hold effective merge
+  rights on the trunk. **That is not two reviewers and must not be read as a
+  bus-factor of 2** — an unreviewed self-merge adds a person who can ship, not
+  a second pair of eyes.
+
+Re-measured 2026-08-20 over 1228 merged PRs. The previously recorded figure was
+a flat "reviewed/merged: 1", which was wrong under its own wording: the merger
+set has held two accounts since 2026-07-07.
+
+- Recompute honestly at any time. **The population exceeds `gh pr list`'s
+  1000-row cap, so measure in slices and prove the slices are complete** — the
+  command this file used to carry passed no `--limit` at all, so it silently
+  read 30 of 1228 PRs and could not reproduce even its own number:
 
   ```bash
-  # merged PRs in the last 90 days + who reviewed them
-  gh pr list --state merged --search "merged:>=$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)" \
-    --json number,author,reviews \
-    --jq '[.[] | .reviews[]?.author.login] | unique'
+  SINCE=$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)
+
+  # 1. the population, so truncation is detectable
+  gh api -X GET search/issues \
+    --raw-field q="repo:event4u-app/agent-config is:pr is:merged merged:>=$SINCE" \
+    --jq '.total_count'
+
+  # 2. walk the window in slices of <1000 PRs (re-cut these for today's window)
+  for r in 2026-05-22..2026-06-11 2026-06-12..2026-07-02 \
+           2026-07-03..2026-07-23 2026-07-24..2026-08-20; do
+    gh pr list --state merged --search "merged:$r" --limit 1000 \
+      --json number,mergedBy,reviews \
+      --jq '{n: length,
+             reviewers: ([.[] | .reviews[]?.author.login] | unique),
+             mergers:   ([.[] | .mergedBy.login]          | unique)}'
+  done
   ```
 
-  Report the count as-is. A bus-factor of 1 stated plainly beats a bus-factor of
-  1 implied to be more.
+  The slice `n` values **must** sum to `total_count`; if they do not, a slice
+  exceeded the cap and a login can hide behind it. Report both counts as-is. A
+  bus-factor of 1 stated plainly beats a bus-factor of 1 implied to be more.
 
 ## Secrets / tokens — where they live, what they gate
 
