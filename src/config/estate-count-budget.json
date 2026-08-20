@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 32,
     "later_roadmaps": 52,
-    "open_blockers": 70
+    "open_blockers": 69
   },
   "baseline_history": [
     {
@@ -202,6 +202,13 @@
       "later_roadmaps": 52,
       "open_blockers": 74,
       "why": "NET ZERO on every metric, and the shape is the point: road-to-agent-velocity was added and CLOSED in the same change, so it arrives and leaves without the estate carrying it. Recorded as 33 rather than as a raise-then-walk-down pair because a baseline that briefly reads 34 is headroom a later change could spend. The roadmap was: road-to-agent-velocity carries ZERO blockers, so open_blockers is unchanged at 74 and later_roadmaps at 52 \u2014 the pair of numbers that distinguishes a real addition from work relocated or from a question parked as an owner-blocker. The roadmap files six defects measured in one instrumented session whose task was 'create one roadmap and open a PR': it cost 140 tool calls, of which roughly 30 (21 percent) were corrections of the agent's own errors rather than analysis or work. The defects are a security guard that blocks legitimate commands (reproduced: any '-n' flag after a git invocation in the same shell string is read as --no-verify, so 'git status; grep -n foo' is refused), four roadmap authoring conventions learnable only by failing a gate, four ergonomic defects in the council CLI that cost six calls for one run, a hand-written CI waiter whose exit condition reported a settle that had not happened, a text edit anchored on a heading that also appeared as a quotation, and a memory store of 369 files behind an 87-line topic index \u2014 nine of the eleven error classes were ALREADY documented there and all nine were read after the failure. The estate grew because six measured defects had nowhere to live, not because scope was added. NOT offset deliberately: the only offset available would be archiving or parking an unrelated roadmap to buy room, which bundles an unreviewed disposition into a defect-fixing PR. The roadmap carries estate_offset_exempt with that reason, and every one of its steps is agent-executable, so it walks back down by being finished rather than by being decided. CLOSED in the same change: all 22 steps done, two of them cancelled with the source quoted as the reason, and the file archived by the sweep. The estate is back where it started, which is the disposition this ratchet exists to reward \u2014 the walk-down is the work being finished rather than a park. RE-ANCHORED AT MERGE: this entry recorded 33/52/74 against the tree it was written on. The base moved underneath it \u2014 PR #1459 added a roadmap and the trunk then disposed of others \u2014 so the merged filesystem measures 32/52/70 and `baseline` above carries that, read off the merged tree rather than carried from either side. Both same-day entries are kept because they describe different changes: the row above is the base's, this one is this branch's, and collapsing them would erase which change moved which number."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "WALK DOWN on open_blockers only, 70 -> 69, earned in the change that closed road-to-estate-drawdown's b-consolidated-decision-sheet. The consolidated decision sheet was answered in full (option (a), AI council) and that closed exactly ONE blocker, which is the finding rather than a disappointment: of the 21 user-owned blockers on the sheet, 12 are dispositioned transferred because a signature, a repository, a host session, a human rating or an authority grant cannot be produced by recording an answer, and the two agent-executable classes (0 and 1) hold zero blockers between them. Active and later/ are unchanged at 32/52 -- no roadmap was added, archived or parked, so one_in_one_out has nothing to offset. Walked here rather than left as headroom because a tightening that is not re-registered becomes a ceiling nobody is held to, and this gate fails rather than warns on that state by design."
     }
   ],
   "target": {
