@@ -88,9 +88,9 @@
       "reason": "Quoted anti-example ('❌ Describing how Laravel middleware works') — the line teaches what NOT to write."
     },
     {
-      "file": "src/skills/skill-writing/SKILL.md",
+      "file": "src/skills/skill-writing/references/procedure.md",
       "anchor": "Use when creating Laravel middleware for request filtering",
-      "reason": "Quoted description examples + the 'too-broad skill (Laravel skill)' anti-pattern — meta content."
+      "reason": "Quoted description examples + the 'too-broad skill (Laravel skill)' anti-pattern — meta content. Repointed 2026-08-20: the K6 router-head retrofit moved the quoted description examples out of the head into references/procedure.md, so the anchor no longer matched its file and the entry exempted nothing. The content is unchanged and still meta."
     },
     {
       "file": "src/skills/supply-chain-intake/SKILL.md",

@@ -395,8 +395,9 @@ project:
   #   public   -> a product with an intended market. Full three-question gate
   #               and the full ladder.
   # Default `public` = the behaviour every install had before this key existed.
-  # Absent resolves to `public` for the same reason: this package has no
-  # defaults layer, so absent means nobody said.
+  # Absent resolves to `public` too, mechanically: the template-defaults layer
+  # supplies this value beneath every file layer (agent_settings.ts:873) and
+  # this is not a settingsCarveOut key, so absent == an explicit `public`.
   audience: public
 
 # --- GitHub integration ---
