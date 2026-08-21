@@ -6,10 +6,10 @@
 
 ## Overall
 
-**135 / 210 steps done · 64%**
+**136 / 210 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 9 | 28 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 76% |
+| 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
 | 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
@@ -161,7 +161,7 @@
 
 ### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
 
-**Road to drain commands** — 28 / 37 done (76%)
+**Road to drain commands** — 29 / 37 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -170,7 +170,7 @@
 | 3 | `/pr:merge` — prepare one PR or drain the queue | ✅ done | 0 | 10 | 0 | 0 | 100% |
 | 4 | `/roadmap:process-full --all [--merge]` | ✅ done | 0 | 6 | 2 | 0 | 100% |
 | 5 | Governance record | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 6 | Gates, evals, delivery | 🟡 in progress | 9 | 4 | 0 | 0 | 31% |
+| 6 | Gates, evals, delivery | 🟡 in progress | 8 | 5 | 0 | 0 | 38% |
 
 <a id="blockers-road-to-drain-commands"></a>
 **Blockers**

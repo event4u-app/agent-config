@@ -3,7 +3,6 @@ artefact_count: 5
 dependencies:
   rules: []
   skills:
-  - ai-council
   - git-workflow
   - github-ci
 description: Git workflow — commit, pull requests, branch sync.

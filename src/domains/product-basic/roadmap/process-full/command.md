@@ -87,7 +87,7 @@ with the **scope delta below**.
 `--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
 iterated over the whole active estate. It is a flag rather than a
 `/roadmap:process-all` command because
-[`command-clusters`](../../../../docs/contracts/command-clusters.md) says
+[`command-clusters`](../../../../../docs/contracts/command-clusters.md) says
 sibling variants become a flag, and a drain is a count of the thing this
 command already does.
 
@@ -103,15 +103,29 @@ command already does.
    checkbox count.
 3. **Loop.** Per roadmap: branch from the updated default, run this command's
    normal single-roadmap loop, deliver per § Delivery, then take the next
-   roadmap **against the new default** — every merged PR moves it. One roadmap
-   = one branch = one PR, which is the existing invariant iterated, not a new
-   one.
+   roadmap against the default **as it stands at that moment** — re-fetched,
+   never assumed. One roadmap = one branch = one PR, the existing invariant
+   iterated, not a new one.
+
+**What `--all` can and cannot promise while `--merge` is gated, stated plainly
+because the honest version is weaker than the obvious one.** Nothing in the run
+merges, so the default does not advance because of this run, and every PR after
+the first is mergeable *against the base recorded when it was prepared* rather
+than against the base after its predecessors land. In a repository where every
+roadmap PR touches the same generated files, that means an `--all` hand-off is
+**one immediately-mergeable PR plus N−1 prepared ones**, each needing a
+re-sync at merge time. That is still the expensive half — conflicts classified,
+CI green once, superseded PRs closed — but it is not "N mergeable PRs", and the
+run reports it in those words.
 
 **A blocked roadmap never stalls the estate queue.** Inside a roadmap the five
 halt conditions and the terminal outcomes keep full authority. Between
-roadmaps, only queue exhaustion, authorization-window expiry, or a
+roadmaps, only queue exhaustion or a
 [`/pr:merge` § 8](../../../git/pr/merge/command.md) kill-switch stops the run:
 a `blocked` roadmap is recorded and the loop continues to the next one.
+Authorization-window expiry joins that list only once `--merge` is active —
+while the merge step is gated the run performs no `BLOCK_OPS` operation at all
+(`push` and `commit` are `WARN_OPS`), so the window has nothing to close.
 
 ### `--merge` — NOT YET ACTIVE: deliver mergeable, merging is owner-gated
 
@@ -187,7 +201,12 @@ AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
 The **five — and only five — halt conditions** (exhaustive; nothing else
-stops the run):
+stops the run). They are *intra-roadmap*: under `--all` they stop the roadmap
+being worked, and the estate loop records it and takes the next one. The two
+additional conditions the Iron Law names above — estate-queue exhaustion and
+authorization-window expiry — end the *loop*, never a roadmap, and exist only
+under `--all`. Nothing here is widened: a run without `--all` still has exactly
+these five.
 
 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
 2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
@@ -206,7 +225,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
     runnable test over PRE-EXISTING blockers, never by how a step feels
   · "the branch is not protected" / "a branch must be created"
   · "a PR must be opened" / "a GitHub setting must change"
-  · "CI must be re-run" / "the merge base needs updating" / "there are conflicts"
+  · "CI must be re-run" / "the merge base needs updating" / "there are
+    conflicts" — resolving these IS the work. The one exception, and it is a
+    kill switch rather than a halt reason: a conflict **outside** the four
+    enumerated classes of [`/pr:merge` § 3](../../../git/pr/merge/command.md)
+    stops the delivery loop, because that is a case nobody has decided yet and
+    deciding it silently is how work disappears. An enumerated conflict is
+    never a stop.
   · "a paid service is needed" — authorised under the ceiling below
   · "a maintainer should do this" when the agent can perform the same action
   · any agent-invented caution not in the five halt conditions above.

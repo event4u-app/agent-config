@@ -25,7 +25,7 @@ review_trigger: >-
 **Accepted** · 2026-08-21. Authored from `road-to-drain-commands`, which
 promoted three hand-proven operator prompts into command surface. Builds on
 [`ADR-237`](ADR-237-end-to-end-execution-authority.md) (the invocation is the
-grant, and merging is outside it), [`ADR-044`](ADR-044-pack-prefixed-command-slugs.md)
+grant, and merging is outside it), [`ADR-044`](ADR-044-command-naming-scheme-hyphenated.md)
 (path-derived slugs), and the locked cluster registry
 ([`command-clusters`](../contracts/command-clusters.md)).
 

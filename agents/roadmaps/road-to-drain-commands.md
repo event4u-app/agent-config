@@ -348,18 +348,27 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       verify: `lint_command_routing` reports no missing-eval violation for the
       new command.
 - [x] **6.2 Extend the roadmap cluster's routing eval** —
-      `src/agent-src/commands/evals/roadmap.json` gains prompts that must route
-      to `roadmap-process-full` for the estate-drain phrasings ("drain every
-      roadmap", "arbeite alle Roadmaps ab"), so the flag is reachable by
-      intent and not only by flag literal. Its `intent` line is already stale
-      (it omits `next`) — fix it in the same edit.
-      verify: `lint_command_routing` passes and the fixture still has at least
-      five cases.
+      `src/agent-src/commands/evals/roadmap.json` gains estate-drain phrasings
+      ("drain every roadmap", "arbeite alle Roadmaps ab") plus one negative
+      case that must route to `git-pr-merge`, and its stale `intent` (it
+      omitted `next`) is corrected in the same edit.
+      **Corrected after R2 (finding 11):** this step was written claiming the
+      fixture would prove `--all` "reachable by intent and not only by flag
+      literal". It cannot. These fixtures assert which *command* a prompt
+      routes to, and every roadmap prompt correctly routes to the cluster head
+      `roadmap` — there is no assertion surface for a flag on a sub. What the
+      added cases actually prove is that drain phrasings reach the roadmap
+      dispatcher rather than `feature` or `git-pr-merge`, which is worth having
+      and is less than was claimed. Flag-level reachability has no fixture in
+      this repo and this roadmap does not add one.
+      verify: `lint_command_routing` passes; the fixture has at least five
+      cases; the drain cases assert `roadmap` and the merge case asserts
+      `git-pr-merge`.
 - [x] **6.3 New-gate verification: run the Phase 2 content check and both
       fixtures once locally.** <!-- carve-out: new-gate-verification -->
       verify: exit codes recorded in the PR body, including the deliberate red
       from 2.1.
-- [ ] **6.4 Run the command, cluster, frontmatter and roadmap gates on the
+- [x] **6.4 Run the command, cluster, frontmatter and roadmap gates on the
       changed files** and fix every failure at the root.
       verify: each named gate reports 0 for this branch.
 - [x] **6.5 Update `docs/CLAIMS.md` only if a claim above turns out measurable
@@ -427,11 +436,15 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       target manifest, the enumerated conflict classes, the bounded CI-repair
       halt list, the kill-switch set, the no-rollback rule, and the closed
       disposition set of its summary artifact.
-- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree` and
-      delivers a **mergeable** PR per roadmap; `--merge` is specified, marked
-      inert, and points at the `merge-authority` blocker rather than merging.
-      Mergeability is expressed per-PR against a recorded base SHA, never as a
-      queue property.
+- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree`.
+      **Weakened after R2 (finding 8), because the original wording was not
+      satisfiable:** an `--all` hand-off is one immediately-mergeable PR plus
+      N−1 *prepared* ones, each needing a re-sync at merge time — while
+      `--merge` is gated nothing merges, so the base never advances and every
+      PR after the first is mergeable only against the base recorded when it
+      was prepared. The command says this in those words rather than promising
+      "N mergeable PRs". `--merge` is specified, marked inert, and points at
+      the `merge-authority` blocker.
 - [ ] AC-5 — No new command named `process-all` exists anywhere in the tree,
       and no new authorization store exists in `src/scripts/hooks/`. No shipped
       path merges anything while the `merge-authority` blocker is open: both

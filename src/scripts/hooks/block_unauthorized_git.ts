@@ -489,12 +489,16 @@ export function commandOp(command: string): GitOp | null {
  * A ledger older than this is not "this turn" under any reading.
  *
  * **Widening this constant for a long run is forbidden practice.** On
- * 2026-08-21 it was sed-patched to `6 * 60 * 60 * 1000` with a
- * a "temporary, revert after" marker so an autonomous PR-drain
- * could merge past the 30-minute bound — and the widening was committed to
- * the trunk and left there. It is a twelvefold expansion of the
- * authorization lifetime on the guard that gates `pr-merge`, which is a
- * `BLOCK_OPS` member precisely because it is irreversible.
+ * 2026-08-21 it was sed-patched to twelve times this value — six hours —
+ * behind a "temporary, revert after" marker, so an autonomous PR-drain could
+ * merge past the 30-minute bound. The widening was committed to the trunk and
+ * left there. It is a twelvefold expansion of the authorization lifetime on
+ * the guard that gates `pr-merge`, which is a `BLOCK_OPS` member precisely
+ * because it is irreversible.
+ *
+ * The widened expression is deliberately NOT written out here: the obvious
+ * regression check is a grep for it, and a comment reciting the literal makes
+ * that grep match the guard's own prose.
  *
  * The supported answer to "my run is longer than the window" is that the run
  * STOPS and REPORTS at expiry and the user re-authorizes — never that the

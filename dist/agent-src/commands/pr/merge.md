@@ -9,7 +9,7 @@ routes_to: [git-workflow, github-ci]
 replaces: []
 visibility: advanced
 cluster: git-pr-merge
-skills: [git-workflow, github-ci, ai-council]
+skills: [git-workflow, github-ci]
 description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
 suggestion:
   eligible: false
@@ -55,18 +55,22 @@ of it today.
 *(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
 an argument rather than a second command — the locked registry's rule that
 "sibling variants become a flag, never a second command"
-([`command-clusters`](../../../../docs/contracts/command-clusters.md)) applied
+([`command-clusters`](../../../../../docs/contracts/command-clusters.md)) applied
 to this cluster. A future sub belongs here only if it has a materially
 different lifecycle, not a different count.
 
 ## Dispatch
 
-| Invocation | Behaviour |
-|---|---|
-| `/pr:merge <N>` | Prepare and merge exactly PR N. |
-| `/pr:merge` | Auto-select ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number. |
-| `/pr:merge all` | Drain the open-PR list under § 6's cutoff. |
-| `… --no-merge` | Run the whole preparation and stop before merging. Consumes no merge authorization. This is the entry point [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) delegates to for its delivery loop. |
+Every row below **prepares** — the merge step is gated (see the banner above),
+so today every row ends at mergeable-and-open. The column says what each row
+selects, not that it merges.
+
+| Invocation | Selects | Prepares | Merges |
+|---|---|---|---|
+| `/pr:merge <N>` | exactly PR N | yes | only once the gate opens |
+| `/pr:merge` | ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number | yes | only once the gate opens |
+| `/pr:merge all` | the whole open-PR list, under § 6's cutoff | yes | only once the gate opens |
+| `… --no-merge` | as above | yes | **never** — explicit, and the entry point [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) delegates to |
 
 **Bare invocation** (`/pr:merge` with no argument) is a **documented default
 flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
@@ -83,8 +87,18 @@ Compute the queue ONCE at invocation and record it as a manifest of
 
 ```bash
 gh pr list --state open --limit 100 \
-  --json number,title,headRefName,headRefOid,additions,deletions,changedFiles,mergeable,updatedAt
+  --json number,title,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,mergeable,updatedAt
+gh api repos/:owner/:repo/git/ref/heads/<baseRefName> --jq .object.sha   # per distinct base
 ```
+
+`baseRefName` and the base SHA are part of the record, not incidental: § 2 and
+§ 4 both consume `<base>`, and § 8's kill switch "the base advanced by an actor
+other than this run" is undetectable without a base SHA to compare against.
+
+`--limit 100` caps the manifest. A queue above 100 open PRs is drained
+**partially**, and the run must say so rather than reporting completion — the
+§ 6 bound reads "initial manifest + one batch", and the manifest is what the
+cap truncated.
 
 The manifest is the authorization's target set and is **never silently
 refreshed**. Before every merge, re-read the PR and refuse when either field
@@ -225,7 +239,15 @@ HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
 gh pr merge <N> --<detected-method> --delete-branch
 ```
 
-Use the method the repository already uses; never invent one mid-queue. Never
+Detect the method once, at invocation, and reuse it for the whole queue:
+
+```bash
+gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed
+```
+
+Exactly one allowed → that is the method. More than one → the repository's
+existing convention decides, read from the last merges on the base
+(`git log --first-parent origin/<base> -20`). Never invent one mid-queue, never
 force-merge past a failing required check, never admin-bypass.
 
 On queue empty or terminal-only, `all` writes
@@ -239,8 +261,9 @@ conflict resolution. The disposition set is closed:
 
 ## Rules
 
-- **Never merge without the invocation's word.** `--no-merge` and an absent
-  merge argument both stop at mergeable-and-open.
+- **Never merge while the gate is closed.** Until the `merge-authority`
+  blocker resolves, every invocation stops at mergeable-and-open, `--no-merge`
+  or not. Once it opens, `--no-merge` is still the explicit way to say stop.
 - **Never widen, patch, or rebuild-around the git guard.** Verification of the
   authorization window is read-only.
 - **Never rebase a pushed branch**; the base is merged in.

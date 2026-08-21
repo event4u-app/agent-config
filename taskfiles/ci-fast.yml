@@ -143,6 +143,11 @@ tasks:
       # bundle to compare and declares a no-op. A green CI says nothing about
       # the bundle a maintainer is actually executing — which is precisely the
       # blind spot that cost the 2026-08-21 drain run its first hour.
+      # Cost, measured rather than assumed like its neighbours here: 0.27s /
+      # 0.27s / 0.26s over three consecutive runs (esbuild bundles this tree in
+      # ~22ms; the rest is process start). It runs unconditionally rather than
+      # only when the healer reports staleness, because staleness is exactly
+      # the mtime inference this gate exists to distrust.
       - ./scripts-run src/scripts/check_hook_bundle_content
       - ./scripts-run src/scripts/lint_regression
       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both

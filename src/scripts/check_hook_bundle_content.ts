@@ -109,7 +109,19 @@ function main(): number {
 
   const probe = path.join(REPO_ROOT, PROBE_REL);
   try {
-    const built = spawnSync(rewritten, { cwd: REPO_ROOT, shell: true, encoding: "utf8" });
+    // PATH is injected exactly as `rebuild_hook_bundle` does it, and for the
+    // same reason: `build:hooks` starts with a bare `esbuild`, so inheriting an
+    // ambient PATH without `node_modules/.bin` makes this gate report "rebuild
+    // failed" on a bundle that is in fact correct — a false red on a pre-push
+    // gate, which is how a pre-push gate teaches people to skip it.
+    const built = spawnSync("sh", ["-c", rewritten], {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${path.join(REPO_ROOT, "node_modules", ".bin")}:${process.env["PATH"] ?? ""}`,
+      },
+    });
     if (built.status !== 0 || !fs.existsSync(probe)) {
       process.stderr.write(
         `check_hook_bundle_content: rebuild failed (exit ${String(built.status)})\n${built.stderr ?? ""}\nscanned: 0\n`,
@@ -144,7 +156,24 @@ function main(): number {
   }
 }
 
-if (process.argv[1] !== undefined && import.meta.url === `file://${path.resolve(process.argv[1])}`) {
+// Resolved on BOTH sides with `realpathSync`, mirroring `rebuild_hook_bundle`.
+// A string compare against `import.meta.url` is false under a symlinked
+// checkout, and under any repo path containing a space or a non-ASCII
+// character, which `import.meta.url` percent-encodes and `path.resolve` does
+// not. The failure is silent: `main()` never runs, the process exits 0, and
+// the gate reports nothing — a green on an invariant it never evaluated,
+// which is the exact class this gate exists to remove.
+const invokedDirectly = ((): boolean => {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return fs.realpathSync(path.resolve(entry)) === fs.realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+})();
+
+if (invokedDirectly) {
   process.exit(main());
 }
 

@@ -1,6 +1,6 @@
 {
   "command": "roadmap",
-  "intent": "Roadmap dispatcher \u2014 create, materialize, process-step, process-phase, process-full (incl. --all estate drain), next, ai-council",
+  "intent": "Roadmap dispatcher — create, materialize, process-step, process-phase, process-full (incl. --all estate drain), next, ai-council",
   "cases": [
     {
       "prompt": "create a roadmap for this initiative",
