@@ -18,8 +18,11 @@ complexity: lightweight
 
 Step 2.1 caps a triage batch at *"at most ten roadmaps, one PR each"*. One batch
 landed — 2026-08-19, ten verdict rows, `agents/decisions/estate-triage-dispositions.yml`.
-Measured on the transfer date, **71 of 80 files** in the active tree and `later/`
-carry no verdict row. At the step's own ceiling that is **eight further pull
+Measured at `52cfb4bb8`, the commit the council decided against, **71 of 80
+files** in the active tree and `later/` carry no verdict row (**70 of 78** on the
+merged tree — two files were archived out of the population and only one of them
+was untriaged, which is why the numerator moved by one and the denominator by
+two; see § Probe). At the step's own ceiling that is **eight further pull
 requests**, and the parent roadmap closed in one.
 
 The alternative the council rejected was narrowing AC-2 — *"every file in the
@@ -106,8 +109,19 @@ un  = (act | lat) - seen
 print(f'untriaged={len(un)} (active {len(act-seen)}, later {len(lat-seen)})')
 ```
 
-**Measured 2026-08-21 at `origin/main` @ `52cfb4bb8`: `untriaged=71 (active 24,
-later 47)`.** Re-entry completes when this reaches **0** — plus the ceiling clause
+**Measured 2026-08-21 at `52cfb4bb8`, the commit the council decided against:
+`untriaged=71 (active 24, later 47)`.**
+
+**Re-measured on the merged tree this stub actually ships in: `untriaged=70
+(active 23, later 47)`.** The decision-time figure is kept rather than
+overwritten — the council decided against 71 at a named commit, and rewriting a
+scope-bound number falsifies what was decided — but **70 is the live baseline a
+future reader should measure against.**
+
+The one-file drop is the warning below firing inside this very change:
+`origin/main` archived `road-to-session-closeout`, a file that carried **no
+verdict row**, so it left the denominator without any batch running. Nothing was
+triaged. Re-entry completes when this reaches **0** — plus the ceiling clause
 above, which no batch can discharge.
 
 The probe reads current paths on both sides, so a file archived by some other
@@ -119,7 +133,9 @@ terminated. It also means **the count can fall without a single batch running**,
 which is the honest reading of what is happening — roughly 25 concurrent
 per-roadmap drain PRs were open against `main` on the transfer date, each
 archiving one roadmap. A future reader must not read a falling number as batch
-progress.
+progress — and this is not a hypothetical: the baseline above moved 71 → 70
+between the council's decision commit and the merge that shipped this stub,
+entirely from one such PR.
 
 ### Collision and snapshot policy — required before a batch runs
 

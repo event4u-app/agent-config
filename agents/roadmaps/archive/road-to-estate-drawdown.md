@@ -430,6 +430,12 @@ sibling roadmap — it is runnable with today's tooling.**
         about it.** Roughly 25 concurrent per-roadmap drain PRs were open against
         `main` on the transfer date, each archiving one roadmap out of the
         denominator. A falling count is not batch progress.
+      - **That warning fired inside this change.** The probe read **71** at
+        `52cfb4bb8`, the commit the council decided against, and **70** on the
+        merged tree this closure ships in — `origin/main` archived
+        `road-to-session-closeout`, which carried no verdict row, so it left the
+        denominator untriaged. Both readings are recorded in the stub: 71 as the
+        decision-time figure, 70 as the live baseline. Nothing was triaged.
       - **Untouched by this run, deliberately — 2026-08-20.** 2.1 caps a batch at ten
         roadmaps and one PR, and this change is not a triage batch: it answers a
         decision sheet. Adding a second batch on top would break 2.1's own one-PR
