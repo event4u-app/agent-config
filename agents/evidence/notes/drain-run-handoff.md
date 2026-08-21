@@ -59,10 +59,13 @@ applies — a stub would be a copy of it under another name.
   adopt one side's number. Parking a `draft` roadmap is an *accounting* change —
   the file was counted by neither metric before — and needs its own entry, or
   `draft` becomes a permanent hiding place.
-- `agents/roadmaps/stubs/README.md` is **one** table with four columns after the
-  repair PR. Add a row, never a second section; on conflict keep `main`'s version
-  and append only your own row. Six parallel union merges had produced two
-  competing tables and non-rendering markdown.
+- `agents/roadmaps/stubs/README.md` **no longer carries an index table** (deleted
+  2026-08-21). Do not add a row and do not restore one: the stub files in that
+  directory ARE the inventory, and the table was an authored append surface that
+  conflicted in every open CONFLICTING PR. The history is why the rule was
+  needed — six parallel union merges once produced two competing tables and
+  non-rendering markdown, and the index had drifted stale within a day of its
+  last repair. Add the stub file; that is the whole procedure now.
 - A **scope-bound** completion-review or `original-review` artefact citing a
   moved roadmap path gets a per-line `ref-ignore` marker, never a rewrite —
   rewriting falsifies what was reviewed at that scope.
