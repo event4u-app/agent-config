@@ -40,11 +40,11 @@
 
 ---
 
-## Parked — `later/` (53 roadmaps, not active backlog)
+## Parked — `later/` (54 roadmaps, not active backlog)
 
 > Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
 
-> Carrying **28** open blockers, **12** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
+> Carrying **29** open blockers, **13** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
 
 | Roadmap | Open blockers | Resume when |
 |---|---:|---|
@@ -53,6 +53,7 @@
 | [road-to-carrier-layer-convergence.md](roadmaps/later/road-to-carrier-layer-convergence.md) | 1 (1 you) | Parked 2026-08-19. Resume when the before/after delivered-token pair for Phase 3 exists: both readings taken on the maintainer's own installed topology, either side of `install --layer`, recorded a... | <!-- ref-ignore -->
 | [road-to-catalogue-host-fit.md](roadmaps/later/road-to-catalogue-host-fit.md) | 1 (1 you) | Blocked until: `agents/evidence/metrics/skill-catalogue.jsonl` holds at least 20 observations spanning at least 2 distinct `host` values. Probe: `capture_skill_catalogue --cadence` prints progress... | <!-- ref-ignore -->
 | [road-to-command-structure-followup.md](roadmaps/later/road-to-command-structure-followup.md) | 0 | Blocked until: the per-item triggers below fire. | <!-- ref-ignore -->
+| [road-to-conformance-round7-followup.md](roadmaps/later/road-to-conformance-round7-followup.md) | 1 (1 you) | Resume when: the maintainer states a position on whether `src/rules/commit-policy.md` § One-shot authorization names the remote-state case — that is, when a `grep -niE 'remote.state\|deliverable' sr... | <!-- ref-ignore -->
 | [road-to-contract-integrity.md](roadmaps/later/road-to-contract-integrity.md) | 0 | only open work — Phase 2 family-first presentation — is blocked until the leanness / pruning track (`road-to-tier-removal` + command-surface-leanness) prunes against the Phase-0 census; documenting... | <!-- ref-ignore -->
 | [road-to-corpus-knowledge-skills.md](roadmaps/later/road-to-corpus-knowledge-skills.md) | 2 | Blocked until the maintainer names the first two corpora (Phase 0.2) or archives this plan as demand-not-shown. Parked rather than active because every remaining open item is gated on that one deci... | <!-- ref-ignore -->
 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md) | 2 (1 you) | Resume when EITHER: (a) the orchestration claim queue is free and the ≥ 20-audit-line bar is met, or (b) the maintainer authorizes Phase 1 alone — the resolver plus the record-only soak change no v... | <!-- ref-ignore -->

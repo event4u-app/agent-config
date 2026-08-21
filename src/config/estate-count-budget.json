@@ -17,7 +17,7 @@
   },
   "baseline": {
     "active_roadmaps": 21,
-    "later_roadmaps": 53,
+    "later_roadmaps": 54,
     "open_blockers": 59
   },
   "baseline_history": [
@@ -328,6 +328,20 @@
       "later_roadmaps": 53,
       "open_blockers": 59,
       "why": "A PARK, recorded in both directions rather than netted to zero: road-to-kernel-question-triangle moves from agents/roadmaps/ to agents/roadmaps/later/, so active_roadmaps 22 -> 21 is WALKED DOWN and later_roadmaps 52 -> 53 is RAISED by the same file. The raise is taken rather than hidden because this ratchet's own history says parking is not closing, and a drawdown that moved a file into later/ and reported only the lower active count is the burial the metric exists to expose. It qualifies as a park rather than a drop on the later/ definition: the file keeps its open steps and carries a testable resume condition \u2014 'Resume when src/rules/ask-when-uncertain.md carries the band-4 qualifier' \u2014 which is an existence-and-content predicate over a named file rather than a vague trigger. open_blockers unchanged at 59: no blocker was opened, closed, or relocated by this change."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 53,
+      "open_blockers": 70,
+      "why": "later_roadmaps 52 -> 53, and it is an ACCOUNTING change rather than estate growth. road-to-conformance-round7-followup shipped as status: draft, which collect() excludes, so the file existed on disk and was counted by neither metric. Parking it in later/ is what makes it visible for the first time: active_roadmaps is unchanged at 32 because a draft was never in that count, and later_roadmaps rises by one because the parked table does count it. Nothing was added to the estate by this change and nothing was buried by it - the opposite, a file that no metric watched is now on the parked table with its resume trigger rendered. Recorded rather than offset because the ratchet gates the two metrics separately and has no cross-metric offset; without this entry a draft could never be parked, which would make draft a permanent hiding place and exactly the burial the estate-drawdown quality anchor exists to prevent. open_blockers is unchanged at 70: the roadmap's one blocker was open before the move and is open after it, which is the pair of numbers that distinguishes a disposition change from a real addition."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 21,
+      "later_roadmaps": 54,
+      "open_blockers": 59,
+      "why": "A PARK with the draft asymmetry, recorded rather than netted: road-to-conformance-round7-followup moves from agents/roadmaps/ to agents/roadmaps/later/, so later_roadmaps 53 -> 54 is RAISED, and active_roadmaps stays at 21 because the file carried status: draft on the trunk and collect() therefore never counted it as active. That is the same asymmetry this ratchet's own history records from the blocker side \u2014 a draft's numbers only become visible when the file is parked \u2014 and it is stated here so the +1 with no matching -1 does not read as drift. It qualifies as a park rather than a drop: the file keeps its open steps and carries a stated Resume-when condition. The condition names the maintainer stating a position, which is a human trigger rather than a probeable predicate, so it is honestly weaker than an existence check and is called out here rather than dressed up. open_blockers unchanged at 59."
     }
   ],
   "target": {
