@@ -23,6 +23,8 @@ import { fingerprintLayers, hostLayerInputs } from '../../src/install/hostLayerF
 import {
     isExclusivelyPackageOnly,
     partitionVerdict,
+    personaPartition,
+    personaWithheldFor,
     MAINTAINER_WORKSPACE,
 } from '../../src/install/partitionEligibility.js';
 import { read_lockfile, write_lockfile } from '../../src/scripts/_lib/installed_lock.js';
@@ -262,5 +264,46 @@ describe('installed.lock carries the fingerprint across a round trip', () => {
         const back = read_lockfile(target);
         expect(back?.host_layer_fingerprint).toBeUndefined();
         expect(back?.agent_config_version).toBe('14.6.0');
+    });
+});
+
+describe('personaWithheldFor — the family the partition never reached until 2026-08-21', () => {
+    // `.claude/personas` was written unconditionally while `~/.claude/personas` was
+    // installed from `_CLAUDE_SKILL_BUNDLE`: 29 shared names on a freshly
+    // regenerated tree, measured by neither delivery surface because `personas` was
+    // in neither's TYPES.
+    it('withholds a Claude tool directory when the partition is active', () => {
+        expect(personaWithheldFor('.claude/personas', true)).toBe(true);
+    });
+
+    it('withholds NOTHING when the partition is inactive', () => {
+        // The fail-safe direction: no verified host layer means the project layer
+        // is the only one, so withholding would deliver the persona nowhere.
+        expect(personaWithheldFor('.claude/personas', false)).toBe(false);
+        expect(personaWithheldFor('.cursor/personas', false)).toBe(false);
+    });
+
+    it('never withholds a non-Claude tool directory, even when active', () => {
+        // `partitionActive` verifies the CLAUDE host layer against installed.lock.
+        // It says nothing about ~/.cursor, so withholding a cursor persona on the
+        // strength of a claude fingerprint is the one outcome that loses an
+        // artefact outright.
+        expect(personaWithheldFor('.cursor/personas', true)).toBe(false);
+        expect(personaWithheldFor('.windsurf/personas', true)).toBe(false);
+    });
+
+    it('exposes the full list unchanged, so the caller can still report the count', () => {
+        expect(personaPartition(process.cwd(), ['a.md', 'b.md']).all).toEqual(['a.md', 'b.md']);
+    });
+
+    it('a withheld directory yields an EMPTY ARRAY, which is what reconciles a stale tree', () => {
+        // Reconciliation is the empty list, not a second code path: the caller's
+        // stale-symlink sweep removes any link absent from the list it was given.
+        // A helper returning `null` or the full list for a withheld directory would
+        // stop new duplication and leave the existing 29 symlinks standing.
+        const listFor = (active: boolean): readonly string[] =>
+            personaWithheldFor('.claude/personas', active) ? [] : ['a.md'];
+        expect(listFor(true)).toEqual([]);
+        expect(listFor(false)).toEqual(['a.md']);
     });
 });

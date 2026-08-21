@@ -166,6 +166,23 @@ export function partitionVerdict(inputs: PartitionInputs): PartitionVerdict {
  * artefact is NOT package-only, so it is delivered globally and withheld from
  * the project layer. Both defaults resolve toward "the artefact is generally
  * useful"; only one of them is about withholding.
+ *
+ * ## The state space, MEASURED rather than enumerated defensively (2026-08-21)
+ *
+ * Three of this function's branches — unreadable file, absent `workspaces:`,
+ * empty list — all resolve to `false`, and the closure review asked whether one
+ * of them was resolving by accident. Counted over all 119 files in `src/rules/`:
+ *
+ *     absent=0 · empty=0 · maintainer-only=16 · mixed=103 · scalar-or-other=0
+ *
+ * So exactly TWO states occur, both deliberate, and the 16 is the figure ADR-236
+ * partitions on. The other branches are unreachable in this tree, and the input
+ * is always THIS package's own `src/rules/` — never a consumer's — so the state
+ * space is closed by that count rather than merely unobserved. Fixtures for the
+ * absent and malformed cases were considered and NOT written: they would pin
+ * behaviour on inputs the only caller cannot produce, which is a test asserting
+ * a hypothetical. Should a rule ever ship with a bare or malformed
+ * `workspaces:`, that count moves and this note is the thing that dates.
  */
 export function isExclusivelyPackageOnly(source_path: string): boolean {
     let meta: Record<string, unknown>;
@@ -322,4 +339,107 @@ export function stampHostLayerFingerprint(
         );
         return null;
     }
+}
+
+/**
+ * Per-tool-directory persona list under the partition — ADR-236's closure for the
+ * one family it never reached.
+ *
+ * The partition shipped for rules and skills and stopped there, so
+ * `<repo>/.claude/personas` kept being written while `~/.claude/personas` was
+ * installed from `_CLAUDE_SKILL_BUNDLE` (`install.ts:1916-1921`). Measured
+ * 2026-08-21 on a freshly regenerated tree with the partition ACTIVE: **29 shared
+ * names**, and neither `check_single_delivery` nor `_lib/layer_overlap_notice`
+ * looked, because `personas` was in neither's `TYPES`.
+ *
+ * ## Two properties the caller depends on
+ *
+ * **Scoped to `.claude/` only.** {@link partitionActive} verifies the CLAUDE host
+ * layer against `installed.lock`. It says nothing about `~/.cursor`, so
+ * withholding a cursor persona on the strength of a claude fingerprint would
+ * deliver it nowhere — the one failure the fail-safe design exists to prevent.
+ * Every other tool directory keeps the full projection.
+ *
+ * **Reconciliation is the empty list, not a second code path.** The caller's
+ * stale-symlink sweep removes any link whose name is absent from the list it was
+ * given for that directory, so returning `[]` empties a directory an earlier
+ * version populated. A gate that only declined to WRITE would leave the existing
+ * duplicate standing — a partition that stops new duplication and keeps the old
+ * is not a partition.
+ *
+ * Verified before shipping: every one of the 29 project personas is present in
+ * the global layer (32 there, a strict superset). The partition is a removal and
+ * has no repair path, so withholding is only safe once the surviving layer is
+ * known to carry what is withheld.
+ */
+export function personaPartition(
+    projectRoot: string,
+    all: readonly string[],
+): { readonly all: readonly string[]; listFor: (toolDir: string) => readonly string[]; readonly note: string } {
+    const active = partitionActive(projectRoot);
+    return {
+        all,
+        listFor: (toolDir) => (personaWithheldFor(toolDir, active) ? [] : all),
+        note: active ? ' — .claude/ withheld: ADR-236 partition, personas arrive from ~/.claude' : '',
+    };
+}
+
+/**
+ * The pure half of {@link personaPartition}: withhold iff the partition is active
+ * AND this is a Claude tool directory.
+ *
+ * Split out so the decision is testable in BOTH directions. `personaPartition`
+ * reads `installed.lock` through a memoized `partitionActive`, so a test over it
+ * can only assert whatever this machine happens to be — which is a test that
+ * passes either way and therefore proves nothing. The two properties worth
+ * pinning are exactly the two this signature exposes: `.claude/` is withheld when
+ * active, and NOTHING else ever is.
+ */
+export function personaWithheldFor(toolDir: string, active: boolean): boolean {
+    return active && toolDir.startsWith('.claude/');
+}
+
+/**
+ * Does the project layer withhold the colon-form `/cluster:sub` commands?
+ *
+ * ## The claim this replaces, and the measurement that revised it
+ *
+ * `generate_claude_project_commands` was written on the reasoning that "Claude
+ * Code dedupes project and user scope by name, so the two copies of
+ * `/cluster:sub` collapse" — a host-behaviour claim with no first-party
+ * observation behind it. Its sibling claim about skills WAS probed under
+ * ADR-236's roadmap (Phase 5.2, `claudeMdExcludes`) and came back negative, so
+ * an unprobed host assumption in the same area was not a safe default.
+ *
+ * **MEASURED 2026-08-21, Claude Code 2.1.238.** Fixture: `/analyze:inbox`
+ * present in BOTH `~/.claude/commands/analyze/` and a temp project's
+ * `.claude/commands/analyze/`. The session reports `COUNT=1`. A control second
+ * entry (`/analyze:inboxctl`, project-only) makes the same probe report
+ * `COUNT=2` — so the 1 is an observation, not a probe that can only say one.
+ *
+ * **The half nobody had checked: the surviving copy is the GLOBAL one.** Asked
+ * for the command's description, the session returned the global body, not the
+ * project fixture's. So the dedup claim holds and its unstated corollary
+ * inverts the value of the project-layer copy: where a verified global layer
+ * exists, those 40 symlinks are written, deduped away, and LOSE. They are dead
+ * weight there — not a second listing, and not a reachability guarantee either.
+ *
+ * ## Why `partitionActive` is the right predicate rather than a new one
+ *
+ * It is true exactly when a global layer is present and verified against
+ * `installed.lock`, which is exactly the case where the project copy loses; and
+ * false on a fresh checkout, an unverified install, or a version mismatch —
+ * every case where the project copy is the only reachable one. So the
+ * fail-safe direction the whole module is built around already matches the
+ * measurement, and withholding needs no separate switch.
+ *
+ * ## Honest limits
+ *
+ * Self-report, n=1 per condition, one host version, one machine. What is NOT
+ * claimed: that older or newer hosts dedupe the same way, or that precedence is
+ * stable across them. A host that stopped deduping would show up as a
+ * double-listing, and `check_single_delivery` reports the overlap either way.
+ */
+export function commandsWithheld(projectRoot: string): boolean {
+    return partitionActive(projectRoot);
 }
