@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 21,
     "later_roadmaps": 54,
-    "open_blockers": 59
+    "open_blockers": 58
   },
   "baseline_history": [
     {
@@ -342,6 +342,20 @@
       "later_roadmaps": 54,
       "open_blockers": 59,
       "why": "A PARK with the draft asymmetry, recorded rather than netted: road-to-conformance-round7-followup moves from agents/roadmaps/ to agents/roadmaps/later/, so later_roadmaps 53 -> 54 is RAISED, and active_roadmaps stays at 21 because the file carried status: draft on the trunk and collect() therefore never counted it as active. That is the same asymmetry this ratchet's own history records from the blocker side \u2014 a draft's numbers only become visible when the file is parked \u2014 and it is stated here so the +1 with no matching -1 does not read as drift. It qualifies as a park rather than a drop: the file keeps its open steps and carries a stated Resume-when condition. The condition names the maintainer stating a position, which is a human trigger rather than a probeable predicate, so it is honestly weaker than an existence check and is called out here rather than dressed up. open_blockers unchanged at 59."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "open_blockers walks 70 -> 69; active_roadmaps and later_roadmaps unchanged. NOTHING IN THE REPOSITORY CHANGED to earn this: no blocker was answered, no question was decided, and no work was finished. The single -1 is a re-encoding. road-to-scale-history-bench-run's manual-rubric-rater blocker was closed by council disposition B (outcome `transferred`, framework agents/evidence/council/drain-blocker-dispositions-b.md) and first written as `Status: transferred`, which reads as closed to a human and as OPEN to every gate -- lint_roadmap_blockers:193 matches exactly /^-\\s*\\*\\*Status:\\*\\*\\s*resolved/im and blocker_is_resolved in update_roadmap_progress applies the same /^resolved\\b/ test, so the entry was counted in open_blockers while a reader saw it as done. Corrected to `Status: resolved` with the outcome state `transferred` kept in the resolution prose, the stub and the stubs README row: the Status token answers 'does this still block THIS roadmap' -- resolved, by the transfer -- and the outcome state answers 'was the result achieved' -- no. The blind PRIMARY rubric rating is unmade rather than negative and now lives in agents/roadmaps/stubs/road-to-scale-history-primary-rating.md with three named producers, each carrying a probe measured FAILING on the transfer date. WHY A TRANSFER LOWERS THIS NUMBER BY CONSTRUCTION, not as headroom: a transferred blocker leaves the active estate's blocker count and reappears as a stub gate, which this metric does not scan -- so the drawdown is real for what the metric measures (blockers gating active roadmaps) and is not a claim that less work is outstanding. Walked down in the same change that earned it, per this file's own rule that a lower measurement is the new ceiling. A sibling transfer of the same day (road-to-subagent-lifecycle-integrity) hit the identical encoding trap and corrected the same way; recorded here so the third one does not re-derive it. RE-ANCHORED AT MERGE: this entry was written as 70 -> 69 against the tree it was authored on. The base moved underneath it -- origin/main landed the two resolved Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy (70 -> 68) while this branch was open -- so the merged filesystem measures 67 and `baseline` above carries that, read off the merged tree rather than carried from either side. Both same-day entries are kept: the row above is the base's walk, this one is this branch's, and collapsing them would erase which change moved which number. The -1 attributable here is still exactly one re-encoded blocker and still earns nothing; the -2 is not this branch's."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 21,
+      "later_roadmaps": 54,
+      "open_blockers": 58,
+      "why": "WALKED DOWN by 1 blocker: road-to-scale-history-bench-run resolved manual-rubric-rater, which is open on origin/main and resolved here \u2014 the roadmap's other two blockers (benchmark-spend-authorization, codex-family-auth) were already resolved on the trunk and are excluded from the delta, checked per blocker rather than by counting status lines. active_roadmaps stays 21: the roadmap keeps open steps and the regen did not archive it. later_roadmaps stays 54: nothing parked. The part the blocker could not carry went to stubs/road-to-scale-history-primary-rating.md with its own probe, so the open work remains counted in the stub."
     }
   ],
   "target": {
