@@ -174,7 +174,26 @@ tasks:
       - task: generate-tools
       - task: compile-router
       - task: compile-corpus
-      - git diff --quiet
+      # SCOPED to the paths the four regen tasks above actually write AND that
+      # git can see (road-to-session-closeout 6.1). It was a bare
+      # `git diff --quiet` until 2026-08-20, and the pre-push hook runs ONLY
+      # this task — so in a shared checkout a PEER SESSION's unrelated
+      # uncommitted file failed a check about DERIVED-OUTPUT DRIFT. That is what
+      # blocked the 14.6.0 tag push, where the agent correctly refused
+      # `--no-verify` and went to a clean clone instead. The pathspec is the
+      # fix; "be careful" is not one.
+      #
+      # THREE paths, not ten, and the difference is a finding rather than an
+      # oversight. `generate-tools` also writes .augment/, .cursor/,
+      # .clinerules/, .windsurfrules and GEMINI.md, and `compile-router` also
+      # writes dist/router.pretty.json — every one of them is GITIGNORED
+      # (`git check-ignore`, measured 2026-08-20), so the bare form never
+      # watched them either and listing them here would claim coverage that
+      # cannot exist. What this check guarantees before a push is byte-exactness
+      # of dist/agent-src/ (1154 tracked files), dist/router.json and the
+      # decisions lock. The per-tool roots are outside any `git diff`'s reach
+      # and need a different mechanism if they are ever to be guarded.
+      - git diff --quiet -- dist/agent-src/ dist/router.json agents/decisions/low-impact-decisions.lock.yaml
 
   consistency-fix:
     silent: true
