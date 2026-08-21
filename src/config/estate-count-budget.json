@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 13,
+    "active_roadmaps": 12,
     "later_roadmaps": 55,
-    "open_blockers": 46
+    "open_blockers": 45
   },
   "baseline_history": [
     {
@@ -489,6 +489,20 @@
       "later_roadmaps": 55,
       "open_blockers": 46,
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-orchestration-scope-decision archived (under agents/roadmaps/ on main, under archive/ here) and its single blocker real-orchestration-usage, open on the trunk, is closed here as 'resolved -- transferred' on disposition B, with the obligation carried by stubs/road-to-task-completion-observability.md created in this same change. Transferred rather than completed: the blocker wanted evidence of real orchestration usage, which no change-set can manufacture, so the honest close is a stub with a probe rather than a claim that the evidence arrived. later_roadmaps unchanged at 55 -- a stub is not a park."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 22,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-skill-ecosystem-gate-integrity merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 22, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 12,
+      "later_roadmaps": 55,
+      "open_blockers": 45,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-skill-ecosystem-gate-integrity archived (under agents/roadmaps/ on main, under archive/ here) and its single blocker kernel-cross-link-soak, open on the trunk, is closed here as 'resolved -- transferred, not done' -- the branch's own wording, which is the honest one: a soak needs elapsed time, so no change-set can finish it. The obligation is carried by stubs/road-to-kernel-cross-link-soak.md created in this same change. later_roadmaps unchanged at 55: a stub is not a park, and the soak stays counted where a probe can decide it."
     }
   ],
   "target": {

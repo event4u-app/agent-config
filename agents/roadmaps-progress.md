@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **20** open blockers in the active tree, **10** need you → `agent-config gates`
+> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **19** open blockers in the active tree, **10** need you → `agent-config gates`
 
 ## Overall
 
-**158 / 239 steps done · 66%**
+**118 / 196 steps done · 60%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -24,11 +24,10 @@
 | 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
 | 8 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 11 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 12 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 13 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 10 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 11 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 12 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -413,81 +412,6 @@ _2 blockers resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Run the instrument | ⏭️ skipped | 0 | 0 | 0 | 4 | 0% |
-
-### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
-
-**Road to gate integrity — a gate that scanned nothing must never exit green** — 40 / 43 done (93%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Completeness accounting | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Make shrink-only mechanical | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 3 | Gate authoring discipline | 🟡 in progress | 2 | 5 | 0 | 0 | 71% |
-| 4 | Second-order guards | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 5 | Honest reporting surfaces | 🟡 in progress | 1 | 15 | 0 | 0 | 94% |
-
-<a id="blockers-road-to-skill-ecosystem-gate-integrity"></a>
-**Blockers**
-
-- **kernel-cross-link-soak** (owner: maintainer) — blocks Phase 3 Step 6 and Step 7, and the acceptance criterion that both new guidelines are cross-linked from `verify-before-complete`.
-  - **What to do:**
-    apply the two edits below to
-    `src/rules/verify-before-complete.md` in their OWN pull request.
-    `verify-before-complete` is one of the nine kernel rules
-    (`docs/contracts/kernel-membership.md`), and `scope-control § Kernel-rule
-    edits` requires one rule per PR — a guarantee no autonomous mandate lifts.
-    Commit the re-anchored `internal/bench/reports/kernel-prefix.json` from
-    `./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline`
-    in the same PR; the byte-stability gate stays red without it and local
-    preflight does not catch that.
-    **This is maintainer-applied end to end — an agent cannot author it**
-    (measured 2026-08-10, on the attempt). The `block-kernel-rule-writes`
-    PreToolUse guard in `src/scripts/hook_manifest.yaml` refuses every agent
-    write to a kernel rule outright: *"kernel rule verify-before-complete is
-    immutable — tighten-only via the override exception registry"*. Its own
-    message names the only legitimate bypass, and both branches are human acts
-    outside the session: go through the override exception registry, or disable
-    the guard entry. Same shape as `road-to-kernel-question-triangle`, whose
-    one-line kernel amendment is maintainer-owned for exactly this reason.
-    So the residual gate here is the **write guard**, not a waiting period —
-    which is worth stating because the ≥24 h is a *spacing* constraint between
-    merges of consecutive kernel-rule PRs, and it is already satisfied: the last
-    merge touching any of the nine kernel rules was 2026-07-31 (`d74f1238a`).
-    A screen that reads the 24 h as an unstarted soak will wrongly conclude this
-    roadmap is one merge away from closing.
-    1. **Step 6 — the ease tripwire.** Add to the `## Red flags — STOP
-    immediately` list:
-    > - A verification that was **far easier than expected** — check the path
-    >   before believing the result, per [`false-green`](../../docs/guidelines/agent-infra/false-green.md)
-    The existing red flags track confidence *wording* ("should pass", "seems
-    fine") and not *ease*; every false green catalogued in `false-green.md`
-    felt like a pass at the moment it happened.
-    2. **Step 7 — the cross-links.** Add to `## Verification commands`:
-    > Authoring a new gate → [`gate-authoring`](../../docs/guidelines/agent-infra/gate-authoring.md).
-    > Ways a green result can be false, with detection commands →
-    > [`false-green`](../../docs/guidelines/agent-infra/false-green.md).
-    **Link depth corrected 2026-08-10.** Both drafts above originally said
-    `../docs/…`. From a source file under `src/rules/` that resolves to
-    `src/docs/`, which **does not exist**; `../../docs/` reaches the real
-    repo-root `docs/`. The two-level form is also what the majority of
-    `src/rules/` uses when it links a guideline, `direct-answers` (the other
-    kernel rule in that set) included — though three rules do carry the
-    one-level form, so the tree is not unanimous and the filesystem is the
-    deciding evidence, not the count.
-    **No gate catches this, which is why the source form has to be right.**
-    Probed by canary the same day: a deliberately nonexistent
-    `../../docs/guidelines/agent-infra/<bogus>.md` appended to a roadmap left
-    `check_references` at rc=0 over 1118 scanned references — it did not
-    resolve the path at all. So "the reference checker is green" is not
-    evidence that either form works, in either direction.
-    **No `token-optimizer` edit rides along** — this instruction previously
-    said to update the `verify-before-complete` row in
-    `src/skills/token-optimizer/SKILL.md` per `token-optimizer-maintenance`.
-    There is no such row: the catalog does not carry `verify-before-complete`,
-    and that rule's cited-asset list does not name this file, so the
-    maintenance obligation never fires. Do not invent a row to satisfy it —
-    that would add a catalog entry nobody asked for.
-  - **Resolved when:** both edits are merged and the soak has elapsed. Everything else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and the inline suppression key — landed in this change and does not wait on it.
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 

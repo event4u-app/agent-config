@@ -92,7 +92,7 @@ any time.
 The two slots opened by this record are, in the order the council named them
 mandatory-first and mandatory-second:
 
-1. [`road-to-skill-ecosystem-gate-integrity`](../../agents/roadmaps/road-to-skill-ecosystem-gate-integrity.md)
+1. [`road-to-skill-ecosystem-gate-integrity`](../../agents/roadmaps/archive/road-to-skill-ecosystem-gate-integrity.md)
    — generalizes into a checkable invariant the failure class this package has
    recorded four separate times from its own history and fixed four times
    individually.
