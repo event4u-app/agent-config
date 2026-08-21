@@ -278,6 +278,31 @@ describe('lint_plan_risk_register — substantial-change heuristic', () => {
         const after = BASE_PLAN.replace('- the thing ships', '- the thing ships to every host');
         expect(mod.isSubstantialChange(BASE_PLAN, after)).toBe(true);
     });
+
+    // The AC heading is recognised case-insensitively and tolerates a trailing
+    // qualifier. Both misses were LIVE: `road-to-solution-minimalism.md` and
+    // seven sibling roadmaps head their section `## Acceptance criteria`, so an
+    // end-anchored case-sensitive match hashed the empty string for every one of
+    // them and no edit to their criteria could ever read as substantial.
+    it('lowercase Acceptance criteria content edit is substantial', () => {
+        const before = BASE_PLAN.replace('## Acceptance Criteria', '## Acceptance criteria');
+        const after = before.replace('- the thing ships', '- the thing ships to every host');
+        expect(mod.isSubstantialChange(before, after)).toBe(true);
+    });
+
+    it('Acceptance criteria heading with a trailing qualifier is still read', () => {
+        const before = BASE_PLAN.replace('## Acceptance Criteria', '## Acceptance criteria (per phase)');
+        const after = before.replace('- the thing ships', '- the thing ships to every host');
+        expect(mod.isSubstantialChange(before, after)).toBe(true);
+    });
+
+    // Near-miss in the direction the loosened matcher opens: `\\b` must not let a
+    // heading that merely STARTS with the phrase through.
+    it('a heading that only prefixes the phrase is not the AC section', () => {
+        const before = BASE_PLAN.replace('## Acceptance Criteria', '## Acceptance criteriaXYZ');
+        const after = before.replace('- the thing ships', '- the thing ships to every host');
+        expect(mod.isSubstantialChange(before, after)).toBe(false);
+    });
 });
 
 // ---------------------------------------------------------------------------

@@ -418,6 +418,19 @@ part 0's table.
   with no evidence in it. The independently recorded facts — 6 of 288 skills
   ever invoked, 0 declaring a trigger, a host that truncates the catalogue —
   stay true and stay unmeasurable from transcripts.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**.
+  Option (a) of `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
+  accepts rendered defaults, but the council framework that option inherits
+  ([drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md),
+  Rule 3) is categorical: a host-controlled, human-gated evaluation cannot be recorded
+  as agent-completed. Batch A already dispositioned this entry `B | transferred`, merged
+  with `human-gated-live-trigger-eval` into ONE live-trigger-eval stub, and its
+  three-point check is recorded there verbatim — original criterion, the dependent steps
+  moved (Phase 1.1-1.2, Phase 1.3's skill-usage column, Phase 2's trigger-accuracy
+  bars), and a named re-entry producer with a probe. The rendered default (do not
+  commission a second eval) stands as the PREFERRED CHOICE inside that transfer, not as
+  an accepted-and-done answer. The stub belongs to this roadmap's own closure, not to
+  the decision-sheet run.
 - **Resolved when:** the pilot tranche PR cites its activation baseline and
   the window it was measured over.
 
