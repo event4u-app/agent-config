@@ -86,7 +86,7 @@ authorization and nothing else; when it expires the run stops and reports
 
 ## Phase 1 — Security hotfix: the guard window
 
-- [ ] **1.1 Restore the intended authorization window.** Set
+- [x] **1.1 Restore the intended authorization window.** Set
       `LEDGER_MAX_AGE_MS` back to `30 * 60 * 1000` at
       `src/scripts/hooks/block_unauthorized_git.ts:489` and delete the
       `// TEMP: PR-drain run, revert after` marker. Rebuild the hook bundle so
@@ -95,7 +95,7 @@ authorization and nothing else; when it expires the run stops and reports
       verify: `grep -n 'LEDGER_MAX_AGE_MS = ' src/scripts/hooks/block_unauthorized_git.ts`
       shows `30 * 60 * 1000` and no `TEMP` marker; `grep -c '6 \* 60 \* 60 \* 1e3' dist/hooks/dispatch.js`
       returns 0.
-- [ ] **1.2 Record the one-PR deviation.** The council asked for this as its
+- [x] **1.2 Record the one-PR deviation.** The council asked for this as its
       own PR blocking the roadmap. It ships as the first commit of this branch
       instead, because this branch merges in the same session — a separate PR
       would add a round-trip without shortening the exposure. State that
@@ -106,20 +106,31 @@ authorization and nothing else; when it expires the run stops and reports
 
 ## Phase 2 — The bundle is verified by content, not by timestamp
 
-- [ ] **2.1 Add a content-equivalence check for the hook bundle.** A gate that
-      rebuilds `dist/hooks/dispatch.js` into a temporary location using the
-      same esbuild flags `package.json` `build:hooks` uses, and compares a
-      digest of the rebuilt bytes against the committed artifact. Keep
-      `check_hook_bundle_freshness.ts` as the fast local mtime diagnostic;
-      the content check is the authority.
-      verify: the new script exits 0 on a clean tree, and exits non-zero after
-      an mtime-preserving edit to a bundled hook source that the existing mtime
-      check passes — demonstrate both, since a check never seen red has unknown
-      sensitivity.
-- [ ] **2.2 Wire it into the same task the mtime check runs in**, after the
-      healer, so a stale bundle is rebuilt before it is judged.
+- [ ] **2.1 Add a content-equivalence check for the hook bundle — against the
+      LOCAL bundle, not a committed one.** Measured 2026-08-21:
+      `git ls-files dist/hooks/` returns **zero** files, so the council's
+      framing ("compare against the committed artifact") has nothing to compare
+      against and is re-scoped here rather than implemented as stated. The
+      bundle is a local build artefact, which is exactly why the live-run
+      divergence was invisible: the executing copy is machine-local and no gate
+      reads it. The check therefore rebuilds with the same esbuild flags
+      `package.json` `build:hooks` uses, into a temporary location, and
+      compares a digest against the bundle **present on this machine**. Keep
+      `check_hook_bundle_freshness.ts` as the fast mtime diagnostic; the
+      content check is the authority.
+      verify: the new script exits 0 on a freshly built tree, and exits
+      non-zero after an mtime-preserving edit to a bundled hook source that the
+      existing mtime check passes — demonstrate both, since a check never seen
+      red has unknown sensitivity.
+- [ ] **2.2 Wire it into the same local task the mtime check runs in**, after
+      the healer, so a stale bundle is rebuilt before it is judged. State
+      plainly that this gate is **local-only and cannot be a CI gate**: a fresh
+      CI checkout has no `dist/hooks/` at all, so CI has nothing to verify and
+      a green CI says nothing about the bundle a maintainer is actually
+      running. That asymmetry is the finding, not a gap to paper over.
       verify: the task target invokes the new script; a deliberately corrupted
-      `dist/hooks/dispatch.js` makes that target fail.
+      local `dist/hooks/dispatch.js` makes that target fail; the script's
+      header states the CI limitation.
 - [ ] **2.3 Handle non-determinism honestly.** If the rebuild is not
       byte-reproducible, that is a release-integrity defect, not a reason to
       fall back to mtime — record it as a finding with the exact difference and narrow
@@ -360,12 +371,15 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `LEDGER_MAX_AGE_MS` is `30 * 60 * 1000` in the guard source and in
-      `dist/hooks/dispatch.js`, and no `// TEMP` marker remains anywhere in the
-      guard.
+- [ ] AC-1 — `LEDGER_MAX_AGE_MS` is `30 * 60 * 1000` in the guard source, no
+      temporary-widening marker remains anywhere in the guard, and a rebuild of
+      the hook bundle from that source carries the restored value. The bundle
+      itself is untracked, so the source and the rebuild are the checkable
+      surface — not a committed artefact.
 - [ ] AC-2 — An mtime-preserving edit to a bundled hook source fails the
       content-equivalence gate while passing the mtime check; both outcomes are
-      demonstrated, not asserted.
+      demonstrated, not asserted. The gate's header states that it is
+      local-only because `dist/hooks/` is untracked.
 - [ ] AC-3 — `/pr:merge` exists at `src/domains/git/pr/merge/command.md`, is
       registered in the locked cluster registry, and specifies the immutable
       target manifest, the enumerated conflict classes, the bounded CI-repair
