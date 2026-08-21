@@ -22,7 +22,18 @@ Three tracked statements that claim a mechanism is effective are made honest,
 each at the layer that actually owns the claim: **documentation** (an evidence
 record asserting an unwired module is implemented), **publication** (a release
 cannot ship an unrewritten auto-derived placeholder), and **manifest linting**
-(a `nudge_rank` collision becomes detectable). None of the three adds a new
+(a `nudge_rank` collision becomes detectable).
+
+> **Outcome: two of the three shipped; publication transferred.** Phase 2 is
+> `[~]`, carried to [`stubs/road-to-release-placeholder-guard.md`](../stubs/road-to-release-placeholder-guard.md)
+> in this same change — two implementations were refused by gates that were both
+> right, and the design that survives is a god-file extraction plus a
+> drill-fixture decision. **This discharges Iron Law 3** of
+> `roadmap-progress-sync`: the item is not dropped, weakened, or cancelled; it is
+> carried, alive, into a named successor created in the same change and outside
+> the estate count — the preservation-test disposition that routes to the council
+> rather than to the owner. The verdict, its rationale, every option considered,
+> the destination and what closes it are recorded at the item in Phase 2. None of the three adds a new
 rule, a new hook concern, a new settings axis, or a new governance surface —
 each closes a gap that the tree itself already names in prose.
 
@@ -84,72 +95,59 @@ document corrects it. The claim has stood through six releases.
 > which preserves the pressure without creating a roadmap the estate ratchet
 > would have to absorb.
 
-## Phase 2 — A release cannot ship an unrewritten placeholder
+## Phase 2 — A release cannot ship an unrewritten placeholder — TRANSFERRED
 
 `src/scripts/_lib/release_highlights.ts:48` exports
 `DERIVED_MARKER = '_auto-derived, rewrite before merge:_'`.
 `check_release_highlights.ts:187-201` detects a surviving marker and prints
 `⚠️ … advisory, not blocking`; the exit code is owned solely by the
-`_none_`-vs-evidence check. The job runs on every `release/*` PR
-(`.github/workflows/release-validation.yml:259`) and is structurally incapable
-of failing on the marker. The marker has shipped into published changelogs.
-The review has raised this since v12.1.0 — it is recurring, not new.
+`_none_`-vs-evidence check. The job runs on every `release/*` PR and is
+structurally incapable of failing on the marker. **`CHANGELOG.md:392-395` — the
+published 14.7.0 section carries four unrewritten marker lines**, so the defect
+is live, not historical. The review has raised it since v12.1.0.
 
-> **A recorded decision governs the PR gate, and this phase does not touch it.**
-> `check_release_highlights.ts:203-206` states the rationale for the advisory
-> posture: *"keep the exit code owned solely by the `_none_` check — a warning
-> that reds the build is the guaranteed-red failure mode this whole change
-> exists to remove."* Highlights are auto-derived first and curated later, so a
-> blocking check on the release PR would be red on the first run of every
-> release branch by construction. **Mechanism-match: that lock governs the
-> release-PR gate. The publication boundary is a different mechanism.** Both
-> council seats reached the same distinction independently and both declined to
-> make the PR gate blocking. The advisory warning stays exactly as it is.
+- [~] **2.1–2.2 Refuse the marker at the publication boundary.** **Transferred
+      2026-08-21 to [`stubs/road-to-release-placeholder-guard.md`](../stubs/road-to-release-placeholder-guard.md),
+      with the finding, both refused implementations and the council's design
+      recorded there.** The finding is verified and unchanged; only the
+      implementation moved, and it moved because two attempts were refused and
+      the design that survives does not fit a one-PR change.
+      verify: the stub exists, carries the invariant, the two refusals and the
+      four implementation constraints, and `check_references` resolves it.
 
-- [x] **2.1 Refuse to render shipping text that carries the marker.** Guard the
-      two renderers in `_lib/release_material.ts` that produce the text a
-      release actually ships — `tag_message_from_section` (the annotated tag)
-      and `release_notes_from_section` (the GitHub Release notes) — using the
-      exported `DERIVED_MARKER` via a new `derived_marker_lines` predicate in
-      `_lib/release_highlights.ts`. Throw with the offending line(s) and the
-      action named, because there is no rendered value that would be correct to
-      return when the caller is about to tag or publish.
-      verify: `npx vitest run tests/scripts/release_placeholder_guard.test.ts`
-- [x] **2.2 Guard the render path, not call sites — the `--resume` bypass is why.**
-      `release.ts` step 8 reads the changelog only in its tag-creation branch,
-      so `--resume` over a created-but-unpushed tag skips that branch entirely
-      and reaches step 9 with no tag message rendered at all. Hand-placed call
-      sites therefore have to enumerate paths correctly and a future one
-      inherits nothing; the renderers cover every path that produces shipping
-      text by construction. `pr_body_from_section` is deliberately NOT guarded —
-      the marker legitimately exists on a release PR, and guarding it would
-      re-introduce the guaranteed-red posture the recorded decision avoids.
-      verify: the test asserts each renderer refuses **independently**, and pins
-      `pr_body_from_section` as non-refusing so a later "guard all three" edit
-      cannot silently reverse the recorded decision. Sensitivity proven by
-      sabotage: neutralising either guard reds two cases.
-
-> **Why this landed on the renderers rather than in `release.ts` — a gate
-> changed the design, and the gate was right.** The first implementation put a
-> helper plus three call sites in `release.ts`. That file is already 2,818 lines,
-> over the 1,500-line ceiling `check_source_size_budget` ratchets, so the 60
-> added lines were a straight regression the gate refused — and it says in as
-> many words that raising the baseline is a defect, not a fix. Moving the whole
-> guard onto the render path took `release.ts` back to net zero AND produced the
-> stronger invariant, which is the outcome worth recording: the ratchet did not
-> merely cost a detour, it found the better placement.
-
-> **The named net-negative.** Both council seats independently named the same
-> way this phase could make the repo worse: *"a nominal publication check
-> attached to only one release path while another tag or publish path bypasses
-> it — stronger-looking governance without stronger protection, the exact
-> declared ≠ effective failure this PR is meant to eliminate."* Step 2.2 exists
-> because of that, and the surface was enumerated rather than assumed:
-> `release-guard.yml` compares `package.json.version` to the tag and reads no
-> changelog; `publish-npm.yml` triggers on the tag, which 2.1 gates; the three
-> surfaces that can carry the marker (tag message, GitHub Release notes,
-> `CHANGELOG.md` on main) all render from the same changelog section the two
-> guards read.
+> **Why it moved, and what each refusal taught — the useful half of this phase.**
+> Attempt 1 guarded three call sites in `release.ts`. Coverage was right,
+> including the real `--resume` bypass. `check_source_size_budget` refused it:
+> `release.ts` is 2,818 lines against a 1,500-line ceiling, +60 lines is a
+> straight regression, and the gate states in as many words that raising the
+> baseline is a defect rather than a fix. **Any** net growth there is refused, so
+> even a four-line version fails.
+>
+> Attempt 2 moved the guard into the two renderers, which took `release.ts` back
+> to byte-identical with main and looked strictly better — coverage by
+> construction instead of by enumeration. CI refused it, and the refusal is the
+> finding: four `release_drill.test.ts` scenarios that assert step **sequencing**
+> broke, because the drill feeds the real `execute()` the live `CHANGELOG.md` and
+> the guard correctly refused the live 14.7.0 section. **A guard on a pure
+> formatter has no notion of whether it is actually publishing.** Decoupling the
+> drill is blocked by the same ratchet.
+>
+> The second council session (2/2 present) converged on extraction: move
+> publication orchestration out of `release.ts` so the file **shrinks**, and
+> enforce the check at each independently resumable irreversible transition
+> there. One seat then refuted the framing of the question itself — the
+> conjunction this phase was chasing (ratchet-clean · fires only on real
+> publication · no call-site enumeration) has **no** solution, because the state
+> machine has no single dominating checkpoint. That is worth more than the option
+> it rejected, and it is why this is a refactor of a god-file plus a drill-fixture
+> decision rather than a step in this roadmap.
+>
+> **Curating the four live 14.7.0 lines is NOT carried either**, and both
+> sessions agree: it is maintainer editorial work, it cannot repair the
+> already-published annotated tag message, and an agent paraphrasing the
+> generator's own derivation reason into prose to satisfy a gate is the
+> *"truthfully documented uselessness"* failure one seat named in the first
+> session about a different artefact.
 
 ## Phase 3 — A `nudge_rank` collision becomes detectable
 
@@ -244,16 +242,16 @@ needs a machine-parseable roadmap frontmatter convention defined first.
       what was wrong — an assertion and a citation of an assertion are not the
       same thing, and a criterion that forbade both would forbid this roadmap
       from stating its own finding.
-- [x] AC-2 — Neither the annotated tag message nor the GitHub Release notes can
-      be rendered for a version whose CHANGELOG section still contains
-      `DERIVED_MARKER`. Both refusals hold independently — the test covers each
-      renderer on its own, so neither alone satisfies this — and `release.ts`
-      gained no lines, so the guard cannot be bypassed by a release path that
-      forgot to call it.
-- [x] AC-3 — The release-PR advisory posture is unchanged. The `⚠️ advisory,
-      not blocking` path in `check_release_highlights.ts` still runs and still
-      does not own the exit code, so the recorded guaranteed-red decision is
-      honoured rather than reversed.
+- [~] AC-2 — TRANSFERRED. The publication-boundary refusal is specified,
+      twice-refused-with-reasons, and carried to
+      [`stubs/road-to-release-placeholder-guard.md`](../stubs/road-to-release-placeholder-guard.md)
+      together with the council's extraction design and its four implementation
+      constraints. Nothing about the finding was weakened: `CHANGELOG.md:392-395`
+      still carries four marker lines and the stub says so.
+- [x] AC-3 — The release-PR advisory posture is unchanged, and now demonstrably
+      so: `check_release_highlights.ts` is byte-identical with `main`, so the
+      recorded guaranteed-red decision was neither reversed nor leaned on. Both
+      council sessions declined to touch it.
 - [x] AC-4 — `lint_hook_manifest` rejects a manifest in which two concerns
       declare the same `nudge_rank`, naming the rank and every declaring
       concern, and stays green on the real manifest. `injection_budget.ts` no
