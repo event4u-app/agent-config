@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**516 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 174 · completed 251 · completed-with-deferrals 25 · not-extractable 34
+**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -251,9 +251,11 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-flow-learnings`](road-to-flow-learnings.md) | Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater | completed | 4 | 19/19 | _not extractable_ |
 | [`road-to-frictionless-employee-workspace`](road-to-frictionless-employee-workspace.md) | Frictionless Employee Workspace — close the 3.1.1 → 3.3.0 feedback gaps without lifting Hard-Floor | closed-with-cancellations | 4 | 30/33 | _not extractable_ |
 | [`road-to-frontend-design-intelligence`](road-to-frontend-design-intelligence.md) | Road to Frontend Design Intelligence — absorb an external design suite into our orchestrated UI suite | closed-with-cancellations | 10 | 48/53 | _not extractable_ |
+| [`road-to-frontend-skill-application`](road-to-frontend-skill-application.md) | Roadmap: Frontend skills stop being loaded shelfware | closed-with-cancellations | 5 | 26/33 | _not extractable_ |
 | [`road-to-frontier-grade-reasoning`](road-to-frontier-grade-reasoning.md) | Roadmap: Reasoning Discipline Protocol — make every host model think like a pro | completed-with-deferrals | 9 | 24/31 | _not extractable_ |
 | [`road-to-frontier-quality-operating-system`](road-to-frontier-quality-operating-system.md) | Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage | completed | 9 | 49/49 | _not extractable_ |
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |
+| [`road-to-gate-autonomy`](road-to-gate-autonomy.md) | Road to gate autonomy — human gates only where a human is the point | closed-with-cancellations | 4 | 7/9 | _not extractable_ |
 | [`road-to-gate-hardening-adoption`](road-to-gate-hardening-adoption.md) | Road to gate-hardening adoption — take the unhardened-gate count to zero | closed-with-cancellations | 3 | 12/13 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |
@@ -272,6 +274,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-harvest-small-enhancements`](road-to-harvest-small-enhancements.md) | Roadmap: Competitive-harvest small enhancements + file-first pattern library | closed-with-cancellations | 6 | 15/17 | _not extractable_ |
 | [`road-to-honesty-bench`](road-to-honesty-bench.md) | Road to honesty bench — measure the shipped honesty kernel, park the rest | completed | 2 | 7/7 | _not extractable_ |
 | [`road-to-hook-latency-repair`](road-to-hook-latency-repair.md) | Road to hook latency repair — pay for the bundle, not the CLI | completed | 3 | 9/9 | _not extractable_ |
+| [`road-to-hook-state-followups`](road-to-hook-state-followups.md) | Road to the hook-state follow-ups nobody owned | completed | 3 | 10/10 | _not extractable_ |
 | [`road-to-hooks-actually-fire-in-consumers`](road-to-hooks-actually-fire-in-consumers.md) | Roadmap: Hooks actually fire in consumer projects — close the marketplace-install gap | closed-with-cancellations | 7 | 33/40 | _not extractable_ |
 | [`road-to-humanized-writing`](road-to-humanized-writing.md) | Road to humanized writing — pattern-audited drafts across the write engine | closed-with-cancellations | 6 | 35/36 | _not extractable_ |
 | [`road-to-humanizer-hardening`](road-to-humanizer-hardening.md) | Road to humanizer hardening — close the follow-up findings | completed | 4 | 24/24 | _not extractable_ |
@@ -279,6 +282,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-image-brand-typography`](road-to-image-brand-typography.md) | Roadmap: image generation, brand, and typography/iconography | completed-with-deferrals | 4 | 40/48 | _not extractable_ |
 | [`road-to-implement-ticket`](road-to-implement-ticket.md) | Road to Implement-Ticket — from governed agent to delivery engine | closed-with-cancellations | 5 | 33/35 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-authoring-contract`](road-to-inbox-harvest-2026-08-b-authoring-contract.md) | Road to an enforced authoring contract | closed-with-cancellations | 6 | 16/25 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-b-ci-economy`](road-to-inbox-harvest-2026-08-b-ci-economy.md) | Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data | closed-with-cancellations | 5 | 18/24 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-council-integrity-followup`](road-to-inbox-harvest-2026-08-b-council-integrity-followup.md) | Roadmap: Follow-up to council-pass integrity | closed-with-cancellations | 1 | 6/7 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | Road to council-pass integrity | closed-with-cancellations | 3 | 8/16 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-dispatch-safety`](road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | Road to inbox harvest 2026-08-b — dispatch safety | closed-with-cancellations | 4 | 15/21 | _not extractable_ |
@@ -321,6 +325,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-local-only-gate-reds`](road-to-local-only-gate-reds.md) | Road to local-only gate reds — four red gates nobody sees | completed | 4 | 10/10 | _not extractable_ |
 | [`road-to-long-horizon-execution`](road-to-long-horizon-execution.md) | Road to long-horizon execution — the agent stops when the roadmap doesn't | closed-with-cancellations | 6 | 20/24 | _not extractable_ |
 | [`road-to-loop-engineering`](road-to-loop-engineering.md) | Road to Loop-Engineering Discipline | completed | 2 | 10/10 | _not extractable_ |
+| [`road-to-maintainer-bus-factor`](road-to-maintainer-bus-factor.md) | Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery | closed-with-cancellations | 4 | 9/13 | _not extractable_ |
 | [`road-to-mcp-discovery-helper`](road-to-mcp-discovery-helper.md) | Roadmap: Read-only cross-agent MCP discovery helper | closed-with-cancellations | 4 | 4/14 | _not extractable_ |
 | [`road-to-mcp-distribution`](road-to-mcp-distribution.md) | Road to MCP Distribution | closed-with-cancellations | 0 | 0/5 | _not extractable_ |
 | [`road-to-mcp-full-coverage`](road-to-mcp-full-coverage.md) | Road to MCP Full Coverage | closed-with-cancellations | 6 | 15/29 | _not extractable_ |
@@ -359,6 +364,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-orchestration-and-memory-harvest`](road-to-orchestration-and-memory-harvest.md) | Road to orchestration-and-memory harvest | completed | 5 | 17/17 | _not extractable_ |
 | [`road-to-orchestrator-discipline-carriers`](road-to-orchestrator-discipline-carriers.md) | Road to orchestrator discipline carriers — the delegation obligation and the end-review obligation get mechanisms that reach real sessions | completed | 7 | 37/37 | _not extractable_ |
 | [`road-to-orchestrator-first-execution`](road-to-orchestrator-first-execution.md) | Road to orchestrator-first execution — make the gate clear, measure what already happened, then decide whether "orchestrate everything" survives contact with the numbers | closed-with-cancellations | 5 | 17/29 | _not extractable_ |
+| [`road-to-org-telemetry`](road-to-org-telemetry.md) | Road to org telemetry | closed-with-cancellations | 7 | 21/30 | _not extractable_ |
 | [`road-to-overlap-truth-and-skill-cut`](road-to-overlap-truth-and-skill-cut.md) | Road to overlap truth — repair the instrument, then cut the skills it was supposed to find | closed-with-cancellations | 6 | 13/14 | _not extractable_ |
 | [`road-to-package-impact-benchmark`](road-to-package-impact-benchmark.md) | Roadmap: Package-Impact Benchmark (with vs. without agent-config) | completed-with-deferrals | 5 | 31/32 | _not extractable_ |
 | [`road-to-package-optimization`](road-to-package-optimization.md) | Road to Package Optimization | closed-with-cancellations | 3 | 1/8 | _not extractable_ |
@@ -402,12 +408,14 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-recursive-verification`](road-to-recursive-verification.md) | Road to recursive self-verification — the one retraining-free Fugu mechanism, measured capability-axis-first | closed-with-cancellations | 8 | 22/28 | _not extractable_ |
 | [`road-to-refine-ticket-hardening`](road-to-refine-ticket-hardening.md) | Roadmap: `/refine-ticket` hardening (v2 follow-ups) | completed-with-deferrals | 7 | 29/31 | _not extractable_ |
 | [`road-to-release-gate-hardening`](road-to-release-gate-hardening.md) | Road to release-gate hardening — turn reactive catches into pre-merge gates | completed | 3 | 11/11 | _not extractable_ |
+| [`road-to-release-review-p0`](road-to-release-review-p0.md) | Road to release-review P0 | closed-with-cancellations | 3 | 16/21 | _not extractable_ |
 | [`road-to-release-shape-honesty`](road-to-release-shape-honesty.md) | Road to release-shape honesty — lint the release that shipped, and describe it truthfully | completed | 3 | 8/8 | _not extractable_ |
 | [`road-to-release-truth`](road-to-release-truth.md) | Road to release truth — one final source, findings with dispositions, bounded autonomy | completed | 4 | 10/10 | _not extractable_ |
 | [`road-to-renewal-adr-hygiene`](road-to-renewal-adr-hygiene.md) | Road to renewal — ADR hygiene (chip-mode) | closed-with-cancellations | 3 | 9/10 | _not extractable_ |
 | [`road-to-renewal-foundation`](road-to-renewal-foundation.md) | Road to renewal — Foundation (CI oracle, dead tree, token quick wins) | closed-with-cancellations | 3 | 17/21 | _not extractable_ |
 | [`road-to-renewal-leverage`](road-to-renewal-leverage.md) | Road to renewal — Leverage (execution flows + documented-failure fixes) | closed-with-cancellations | 3 | 7/12 | _not extractable_ |
 | [`road-to-reproducible-artefact-counts`](road-to-reproducible-artefact-counts.md) | Road to reproducible artefact counts — a number a second counter cannot derive | completed | 0 | 4/4 | _not extractable_ |
+| [`road-to-request-scoped-rule-load`](road-to-request-scoped-rule-load.md) | Road to request-scoped rule load — ship only what the request needs | closed-with-cancellations | 7 | 36/37 | _not extractable_ |
 | [`road-to-retire-stale-authoring-pointers`](road-to-retire-stale-authoring-pointers.md) | Road to retire stale authoring-source pointers (`.agent-src.uncondensed/` → `src/`) | completed | 4 | 13/13 | _not extractable_ |
 | [`road-to-retrieval-contract-consumer`](road-to-retrieval-contract-consumer.md) | Roadmap: Retrieval-contract consumer implementation | completed | 2 | 10/10 | _not extractable_ |
 | [`road-to-retrieval-substrate-hardening`](road-to-retrieval-substrate-hardening.md) | Road to retrieval-substrate hardening | closed-with-cancellations | 8 | 17/18 | _not extractable_ |
@@ -448,6 +456,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-skill-ecosystem-authoring-discipline`](road-to-skill-ecosystem-authoring-discipline.md) | Road to authoring discipline — forced artifacts, named biases, and a removal signal | closed-with-cancellations | 6 | 53/54 | _not extractable_ |
 | [`road-to-skill-eval-coverage`](road-to-skill-eval-coverage.md) | Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted | completed | 4 | 14/14 | _not extractable_ |
 | [`road-to-slot-scoped-concern-loading`](road-to-slot-scoped-concern-loading.md) | Road to slot-scoped concern loading — stop every concern taxing every slot | closed-with-cancellations | 4 | 2/8 | _not extractable_ |
+| [`road-to-source-first-frontend`](road-to-source-first-frontend.md) | Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation | closed-with-cancellations | 6 | 16/18 | _not extractable_ |
 | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
 | [`road-to-starlight-project-docs`](road-to-starlight-project-docs.md) | Roadmap: Starlight project documentation | archived-with-open-steps | 9 | 31/38 | _not extractable_ |

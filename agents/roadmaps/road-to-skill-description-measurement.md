@@ -117,6 +117,15 @@ renegotiated by the outcome.
 - **If you do nothing:** all of Phase 1 stays open, and the description
   rewrite ships with no before/after activation reading — the claim it exists
   to test stays unmeasured while reading as ordinary open work.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**,
+  merged into `skill-activation-window`'s single live-trigger-eval stub per
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md).
+  The rendered default (run both tree states in ONE sitting under the same protocol, or
+  park with exactly that as the resume condition) is accepted as the PROTOCOL and is
+  what makes the merge sound — one human sitting discharges both entries. The sitting is
+  human-gated and host-controlled, so Rule 3 assigns it `B`. Batch A's probe is the
+  concrete one: both predictions JSON files exist, share protocol metadata, and cover
+  >=100 requests, >=3 shapes and the <=20% degradation bar.
 - **Resolved when:** a predictions JSON exists for the pre-rewrite and the
   post-rewrite tree state, produced by the same protocol.
 

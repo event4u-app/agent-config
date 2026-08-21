@@ -21,6 +21,7 @@ import {
     renderPendingJson,
     renderReply,
     renderSheet,
+    readSheetAnswer,
     isAgentDrafted,
     sheetQuestion,
     type Entry,
@@ -594,6 +595,75 @@ describe('--sheet — the consolidated decision sheet', () => {
         const out = renderSheet([entry('maintainer'), entry('external')], NOW);
         expect(out).toContain('nothing owned by you');
         expect(out).toContain('Nothing to answer');
+    });
+
+    // road-to-estate-drawdown blocker `b-consolidated-decision-sheet` resolves
+    // only when "the sheet records which option was used". The sheet is derived,
+    // so the option lives in a non-derived sibling and is READ — these four cases
+    // pin that the read is optional, strict, and reaches BOTH render branches.
+    describe('the recorded answer', () => {
+        const ANSWER_REL = path.join(
+            'agents',
+            'decisions',
+            'consolidated-decision-sheet-answer.md',
+        );
+
+        function withAnswerFile(body: string): string {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sheet-answer-'));
+            fs.mkdirSync(path.join(root, 'agents', 'decisions'), { recursive: true });
+            fs.writeFileSync(path.join(root, ANSWER_REL), body, 'utf8');
+            return root;
+        }
+
+        it('reads a complete marker and renders it into the populated sheet', () => {
+            const root = withAnswerFile(
+                '# x\n\n<!-- sheet-answer: option (a) — accept all | answered: 2026-08-20 |' +
+                    ' authority: agents/evidence/council/x.md -->\n',
+            );
+            const answer = readSheetAnswer(root);
+            expect(answer).toEqual({
+                option: 'option (a) — accept all',
+                answered: '2026-08-20',
+                authority: 'agents/evidence/council/x.md',
+            });
+            const out = renderSheet([entry('user')], NOW, answer);
+            expect(out).toContain('**ANSWERED 2026-08-20 — option (a) — accept all.**');
+            expect(out).toContain(ANSWER_REL);
+        });
+
+        it('records the option on the EMPTY branch too', () => {
+            // The branch the sheet reaches once every row closes. Losing the
+            // option record exactly there would be the worst place to lose it:
+            // a reader would see "nothing to answer" with no trace of what was
+            // answered, which is indistinguishable from never having answered.
+            const answer = readSheetAnswer(
+                withAnswerFile(
+                    '<!-- sheet-answer: option (c) | answered: 2026-01-02 | authority: a/b.md -->',
+                ),
+            );
+            const out = renderSheet([entry('maintainer')], NOW, answer);
+            expect(out).toContain('nothing owned by you');
+            expect(out).toContain('**ANSWERED 2026-01-02 — option (c).**');
+        });
+
+        it('treats a missing file and a partial marker as absent, not as half an answer', () => {
+            expect(readSheetAnswer(fs.mkdtempSync(path.join(os.tmpdir(), 'no-answer-')))).toBeNull();
+            // No `authority:` — a header naming an option with no provenance is
+            // less honest than one that says nothing, so it is rejected whole.
+            expect(
+                readSheetAnswer(withAnswerFile('<!-- sheet-answer: option (a) | answered: 2026-08-20 -->')),
+            ).toBeNull();
+            // No `answered:` date.
+            expect(
+                readSheetAnswer(withAnswerFile('<!-- sheet-answer: option (a) | authority: a/b.md -->')),
+            ).toBeNull();
+        });
+
+        it('renders byte-identically to the pre-answer sheet when none is recorded', () => {
+            // The read is additive: every existing caller passes two arguments.
+            expect(renderSheet([entry('user')], NOW, null)).toBe(renderSheet([entry('user')], NOW));
+            expect(renderSheet([entry('user')], NOW)).not.toContain('ANSWERED');
+        });
     });
 
     it('sheetQuestion falls back in a fixed order and never returns a whole paragraph', () => {
