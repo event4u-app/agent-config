@@ -1,10 +1,10 @@
 # R2 completion review — evidence-based-adr-governance (round 2)
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
-  scope_hash: deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9
+  scope_hash: b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
   roadmap_hash: a9bd1750025021d4e29b0aec4235e8c217b8dcd3d8634b035e747027fed9a3cd
   ac_hash: 327efd58479ca26ce9d509ee580e6d433a34250fe5a7ab40dbf30d17c9b679ee
@@ -13,7 +13,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
 -->
 
-Scope `deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9`, reviewed 2026-08-21.
+Scope `b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7`, reviewed 2026-08-21.
 Blind review: findings below were formed from the diff, the tree and executed probes only.
 
 Verification actually run: `check_adr_frontmatter` (0 errors, 186 scanned) · `lint_provenance_vocabulary`
@@ -24,6 +24,14 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**Re-bound a third time.** `deb847a3…` → `b8cc9867…`, for one path correction the merge
+forced: the trunk archived `road-to-user-out-of-the-loop.md` mid-review and
+`check_references` caught the now-broken citation. One line, in a roadmap note whose
+cited fact (that roadmap names zero ADRs as blockers) is independent of where the file
+lives. Recorded rather than folded into the merge re-bind above, because a re-bind that
+quietly absorbs a later edit is how an artefact ends up bound to a scope nobody
+measured.
 
 **Re-bound a second time, after merging `origin/main` (contract §2.7).** `381b602e…`
 → `deb847a3…`. The scope is a merge-BASE diff, so it moves when the trunk moves even
