@@ -106,7 +106,7 @@ authorization and nothing else; when it expires the run stops and reports
 
 ## Phase 2 — The bundle is verified by content, not by timestamp
 
-- [ ] **2.1 Add a content-equivalence check for the hook bundle — against the
+- [x] **2.1 Add a content-equivalence check for the hook bundle — against the
       LOCAL bundle, not a committed one.** Measured 2026-08-21:
       `git ls-files dist/hooks/` returns **zero** files, so the council's
       framing ("compare against the committed artifact") has nothing to compare
@@ -122,7 +122,7 @@ authorization and nothing else; when it expires the run stops and reports
       non-zero after an mtime-preserving edit to a bundled hook source that the
       existing mtime check passes — demonstrate both, since a check never seen
       red has unknown sensitivity.
-- [ ] **2.2 Wire it into the same local task the mtime check runs in**, after
+- [x] **2.2 Wire it into the same local task the mtime check runs in**, after
       the healer, so a stale bundle is rebuilt before it is judged. State
       plainly that this gate is **local-only and cannot be a CI gate**: a fresh
       CI checkout has no `dist/hooks/` at all, so CI has nothing to verify and
@@ -131,7 +131,7 @@ authorization and nothing else; when it expires the run stops and reports
       verify: the task target invokes the new script; a deliberately corrupted
       local `dist/hooks/dispatch.js` makes that target fail; the script's
       header states the CI limitation.
-- [ ] **2.3 Handle non-determinism honestly.** If the rebuild is not
+- [x] **2.3 Handle non-determinism honestly.** If the rebuild is not
       byte-reproducible, that is a release-integrity defect, not a reason to
       fall back to mtime — record it as a finding with the exact difference and narrow
       the comparison to a canonical form only if the residue is provably

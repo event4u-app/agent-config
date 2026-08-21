@@ -6,10 +6,10 @@
 
 ## Overall
 
-**160 / 278 steps done · 58%**
+**163 / 278 steps done · 59%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 37 | 2 | 0 | 0 | 0 | ░░░░░░░░░░ 5% |
+| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 34 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 13% |
 | 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
@@ -198,12 +198,12 @@ _1 blocker resolved._
 
 ### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
 
-**Road to drain commands** — 2 / 39 done (5%)
+**Road to drain commands** — 5 / 39 done (13%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Security hotfix: the guard window | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | The bundle is verified by content, not by timestamp | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | The bundle is verified by content, not by timestamp | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | `/pr:merge` — prepare one PR or drain the queue | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 | 4 | `/roadmap:process-full --all [--merge]` | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 | 5 | Governance record | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
