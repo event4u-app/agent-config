@@ -29,26 +29,26 @@ Use this skill when:
 
 A `CONFLICTING` PR is not a signal to open the web editor. **The web editor
 cannot tell generated from authored**, so it presents a mechanical regeneration
-and a real human decision as the same three-way merge — which is how a
-generated file gets hand-merged into a state matching neither branch. Run the
-classifier first, locally:
+and a real human decision as the same three-way merge — which is how a generated
+file gets hand-merged into a state matching neither branch.
 
-```bash
-./scripts-run src/scripts/sync_pr_branch          # add --dry-run to look first
-```
+So classify locally first, before resolving anything. Sort every conflicted path
+into three classes, because the correct resolution differs per class and only one
+of them is a judgement call:
 
-It resolves the base from the open PR, merges it in when the branch is behind,
-and on a conflict STOPS and splits the paths into three classes, because the
-correct resolution differs per class and only the first is mechanical:
+| Class | What it is | Resolution |
+|---|---|---|
+| **generated** | a build output, an index, a compiled manifest — anything a generator writes from a source in the tree | re-run the generator. **Never mix hunks**, and note that a *clean* auto-merge of a generated file is still wrong: it can produce a file matching neither branch |
+| **measured** | a baseline, budget, or ratchet number a CI gate compares against | re-run the measurement on the merged tree and record what it says. Two branches legitimately measured two different trees, so there is no side to take — and picking one is how a ratchet silently loosens |
+| **authored** | prose, source, config a human wrote | a human decision — read both sides. This is what the rest of this skill is about |
 
-| Class | Resolution |
-|---|---|
-| **generated** | regenerate — never mix hunks. A clean auto-merge of a generated file is still wrong |
-| **remeasured** | re-run the measurement on the merged tree. A ratchet baseline records what a tree measured; picking a side is how the ratchet silently loosens, and the tool deliberately never re-measures for you |
-| **authored** | a human decision — read both sides. This is the rest of this skill |
+Getting the class wrong is the expensive direction: hand-merging a generated
+file, or picking a side on a measured one, both produce a plausible-looking file
+that no branch ever had. If the project ships a tool that does this
+classification, run it before touching the conflict; where it does not, the
+three-way sort above is still the first step.
 
-Adoption of this step is not measurable without telemetry this repository has
-ruled out; it is a checklist item, not a gate
+This is a checklist item, not a gate — nothing enforces it
 (road-to-merge-hotspot-drawdown 4.3).
 
 ### 1. Understand the situation
