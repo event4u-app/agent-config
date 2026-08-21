@@ -27,12 +27,25 @@ in, its conflicts resolved by class rather than by taste, its required checks
 green on the head that will actually be merged — and then merge it, if and only
 if the invocation authorised that.
 
+```
+THE MERGE STEP (§ 9) IS SPECIFIED AND NOT YET ACTIVE. `--no-merge` IS THE
+OPERATIVE PATH TODAY, AND A BARE INVOCATION BEHAVES AS IF IT CARRIED IT.
+ACTIVATION NEEDS THE OWNER DECISION IN THE `merge-authority` BLOCKER OF
+`road-to-drain-commands` — NEVER A COMMAND EDIT, AND NEVER A GUARD EDIT.
+```
+
 **The invocation is the authorization, and nothing else is.** `pr-merge` is a
 `BLOCK_OPS` member in `block_unauthorized_git.ts` because it is irreversible.
-This command consumes the authorization the user's own prompt text already
+This command would consume the authorization the user's own prompt text already
 wrote to the per-session ledger on `UserPromptSubmit`; it introduces no second
 authorization store, and it never writes one. When that window closes the run
 stops and reports (§ 7) — the window never grows.
+
+Why it ships inert rather than not at all: everything before § 9 — the target
+manifest, the four conflict classes, the superseded check, the bounded CI
+repair, the cutoff — is the expensive, error-prone half, it is what the live
+runs actually proved, and none of it merges anything. `--no-merge` delivers all
+of it today.
 
 ## Sub-commands
 

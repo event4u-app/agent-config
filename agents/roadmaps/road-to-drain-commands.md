@@ -242,11 +242,11 @@ allowlist — no new verb ADR is needed.
 
 Council Q2: a flag on the existing sub, not a new `process-all` command.
 
-- [ ] **4.1 Extend the argument surface** to
+- [x] **4.1 Extend the argument surface** to
       `argument-hint: "[roadmap] [--all] [--merge] [--worktree]"` and document
       each flag's scope in the Scope-delta section.
       verify: the frontmatter line matches and each flag has a paragraph.
-- [ ] **4.2 `--all` semantics — the estate loop.** Recompute the live active
+- [x] **4.2 `--all` semantics — the estate loop.** Recompute the live active
       roadmap inventory (never memory, never the dashboard count — the
       live-screen rule `next` § 1 already carries), build the queue, then per
       roadmap: branch from the updated default, run the existing single-roadmap
@@ -258,14 +258,14 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       `archive/` and `stubs/` are out of scope.
       verify: the ordering rule is stated exactly once and is computable from
       the files alone; the section names the live-screen obligation.
-- [ ] **4.3 A blocked roadmap never stalls the estate queue.** Within a
+- [x] **4.3 A blocked roadmap never stalls the estate queue.** Within a
       roadmap the existing terminal outcomes and halt conditions keep full
       authority. Between roadmaps, only queue exhaustion, window expiry, or a
       kill-switch condition stops the run — a `blocked` roadmap is recorded and
       the loop continues.
       verify: the distinction between intra-roadmap halts and inter-roadmap
       continuation is explicit.
-- [ ] **4.4 `--merge` semantics.** Delivery: on outcome `complete`, open the PR
+- [~] **4.4 `--merge` semantics.** <!-- blocked-by: merge-authority --> Delivery: on outcome `complete`, open the PR
       as today, then run the Phase 3 preparation loop on it so the deliverable
       is a **mergeable** PR rather than merely an open one. With `--merge`,
       merge it via the Phase 3 merge step, under the Phase 3 target-manifest,
@@ -274,17 +274,17 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       **ignored**: a partial-progress PR is never auto-merged.
       verify: the ignore-on-blocked rule is stated as an invariant, not a
       default.
-- [ ] **4.5 Mergeability is per-PR against a recorded base, not a queue
+- [x] **4.5 Mergeability is per-PR against a recorded base, not a queue
       property.** With every PR touching the same two generated files, making
       PR *n* mergeable against base SHA `M` says nothing about its state after
       PR *n−1* advances main. The command reports "mergeable against base
       `<SHA>`", never "the queue is mergeable".
       verify: the wording appears in the command and in the summary schema.
-- [ ] **4.6 `--worktree` semantics.** Route workspace creation through
+- [x] **4.6 `--worktree` semantics.** Route workspace creation through
       `/worktree:create` in full, including its § 4b seeding allow/deny list;
       one worktree, re-branched per roadmap; `/worktree:cleanup` at end of run.
       verify: the section delegates rather than restating the list.
-- [ ] **4.7 Amend the canonical loop's merge sentence.**
+- [~] **4.7 Amend the canonical loop's merge sentence.** <!-- blocked-by: merge-authority -->
       `src/agent-src/contexts/execution/roadmap-process-loop.md:642` reads
       "**Merge is out of scope in every mode — always conversational.**" That
       is a second load-bearing text `--merge` contradicts, and overriding it
@@ -295,7 +295,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       row for `process-full` in the same edit.
       verify: the sentence names the single exception and cites the ADR from
       5.1; the scope-delta row mentions `--all`.
-- [ ] **4.8 Update the Iron-Law and forbidden-non-halt blocks.** Waiting on
+- [x] **4.8 Update the Iron-Law and forbidden-non-halt blocks.** Waiting on
       remote CI for the delivery loop is part of the run, not a boundary stop.
       verify: the existing Iron-Law block is amended, not duplicated.
 
@@ -358,6 +358,40 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       in CI**; otherwise record an honest null in the PR body.
       verify: either a ledger entry exists or the PR body states the null.
 
+## Blockers
+
+### blocker: merge-authority
+
+- **Status:** open
+- **Owner:** user
+- **Class:** 3 — owner-reserved governance amendment
+- **Blocks:** steps 4.4 and 4.7 — activating `--merge` on
+  `/roadmap:process-full` and amending the canonical loop's
+  "merge is out of scope in every mode" sentence. Everything else in this
+  roadmap, including all of `/pr:merge` except its § 9 merge step, ships
+  without it.
+- **What to do:** decide whether an explicit `--merge` typed by the user in
+  the invocation may serve as the per-turn confirmation
+  `non-destructive-by-default` requires for a production-branch merge, and
+  therefore as an amendment to ADR-237 § 4, whose current words are "no
+  invocation extends it". This is owner-reserved rather than council-decidable
+  because it lowers a recorded safety floor
+  ([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+  § owner-reserved set), and three independent reviews reached the same
+  answer without it: the AI council's Q1 verdict (2026-08-21, mergeability-only
+  until authorization is target-bound and tamper-resistant), the committed
+  `road-to-gate-preauth-authorization` stub (an authorization the agent can
+  write is not an authorization), and the runtime classifier, which refused
+  this roadmap's own attempt to edit the loop contract. The design the decision
+  would activate is already written and inert: no new grant store, the existing
+  prompt-derived per-session ledger only, an immutable `(PR number, head SHA)`
+  manifest, and a clean stop-and-report at window expiry.
+- **Resolved when:** either the owner accepts the amendment and an ADR records
+  it — after which 4.4 and 4.7 land and `--merge` becomes active — or the owner
+  declines, in which case 4.4 and 4.7 are cancelled, the flag is removed from
+  the `argument-hint`, and both command files keep only their
+  mergeability-delivery half.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-21 | reviewer: claude/host -->
 
@@ -385,13 +419,15 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       target manifest, the enumerated conflict classes, the bounded CI-repair
       halt list, the kill-switch set, the no-rollback rule, and the closed
       disposition set of its summary artifact.
-- [ ] AC-4 — `/roadmap:process-full` accepts `--all`, `--merge` and
-      `--worktree`; `--merge` is documented as ignored on outcome `blocked`;
-      mergeability is expressed per-PR against a recorded base SHA rather than
-      as a queue property.
+- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree` and
+      delivers a **mergeable** PR per roadmap; `--merge` is specified, marked
+      inert, and points at the `merge-authority` blocker rather than merging.
+      Mergeability is expressed per-PR against a recorded base SHA, never as a
+      queue property.
 - [ ] AC-5 — No new command named `process-all` exists anywhere in the tree,
-      and no new authorization store exists in `src/scripts/hooks/` — the
-      merge path consumes the existing prompt-derived ledger only.
+      and no new authorization store exists in `src/scripts/hooks/`. No shipped
+      path merges anything while the `merge-authority` blocker is open: both
+      command files state the gate in a block a reader cannot miss.
 - [ ] AC-6 — `/roadmap:next` is byte-identical: it still never merges.
 - [ ] AC-7 — An accepted ADR records the merge-authority decision, cites
       ADR-237 § 4 and the `road-to-gate-preauth-authorization` stub, and names

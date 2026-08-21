@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap]"
+argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -80,6 +80,98 @@ with the **scope delta below**.
   archival check from
   [`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival).
 
+## The three flags
+
+### `--all` — the estate, one roadmap at a time
+
+`--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
+iterated over the whole active estate. It is a flag rather than a
+`/roadmap:process-all` command because
+[`command-clusters`](../../../../docs/contracts/command-clusters.md) says
+sibling variants become a flag, and a drain is a count of the thing this
+command already does.
+
+1. **Recompute the inventory live.** Never from memory, never from the
+   dashboard count — the same live-screen rule
+   [`/roadmap:next` § 1](../next/command.md) already carries. The corpus is the
+   non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
+   `archive/` and `stubs/` are out of scope.
+2. **Order the queue.** Roadmaps at or above 10 % checkbox progress first, in
+   **descending** progress — nearly-done first, because they convert soonest.
+   Roadmaps below 10 % are appended after, ascending by declared `complexity:`
+   tier (lightweight → bounded → structural), tiebreak ascending total
+   checkbox count.
+3. **Loop.** Per roadmap: branch from the updated default, run this command's
+   normal single-roadmap loop, deliver per § Delivery, then take the next
+   roadmap **against the new default** — every merged PR moves it. One roadmap
+   = one branch = one PR, which is the existing invariant iterated, not a new
+   one.
+
+**A blocked roadmap never stalls the estate queue.** Inside a roadmap the five
+halt conditions and the terminal outcomes keep full authority. Between
+roadmaps, only queue exhaustion, authorization-window expiry, or a
+[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill-switch stops the run:
+a `blocked` roadmap is recorded and the loop continues to the next one.
+
+### `--merge` — NOT YET ACTIVE: deliver mergeable, merging is owner-gated
+
+**Delivery.** On outcome `complete`, open the PR as today, then run
+[`/pr:merge <N> --no-merge`](../../../git/pr/merge/command.md) on it: sync the
+base in, resolve conflicts by that command's four enumerated classes, drive the
+required checks green on the pushed head. The deliverable is a **mergeable** PR
+rather than merely an open one — with or without the flag.
+
+```
+`--merge` IS SPECIFIED HERE AND IS NOT ACTIVE. THE RUN STOPS AT
+MERGEABLE-AND-OPEN WHETHER OR NOT THE FLAG IS PASSED, AND SAYS SO.
+ACTIVATING IT NEEDS THE OWNER DECISION RECORDED IN THE `merge-authority`
+BLOCKER OF `road-to-drain-commands` — NOT A COMMAND EDIT.
+```
+
+Why it is specified but inert: the canonical loop states "**merge is out of
+scope in every mode — always conversational**"
+([`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival)),
+and ADR-237 § 4 excludes merging from the invocation grant with the words "no
+invocation extends it". A command cannot reinterpret either from below. Three
+independent reviews reached the same verdict: the AI council (Q1, 2026-08-21),
+the committed `road-to-gate-preauth-authorization` stub, and the runtime guard
+that refused the contract edit when this roadmap first attempted it.
+
+When the blocker resolves, `--merge` merges via
+[`/pr:merge`](../../../git/pr/merge/command.md)'s merge step, under its
+immutable target manifest, its head-SHA check, and its kill-switch list. Until
+then the flag is accepted, reported as inert, and changes nothing.
+
+```
+AND WHEN IT DOES ACTIVATE: ON OUTCOME `blocked`, `--merge` IS IGNORED.
+AN INVARIANT, NOT A DEFAULT — A PARTIAL-PROGRESS PR SAYS SO IN ITS FIRST
+LINE (ADR-237) AND IS NEVER AUTO-MERGED, HOWEVER THE RUN WAS INVOKED.
+```
+
+**Mergeability is per-PR against a recorded base, never a queue property.**
+When every PR in the estate touches the same generated files — in this
+repository `agents/roadmaps-progress.md` and
+`src/config/estate-count-budget.json` — making PR *n* mergeable against base
+SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
+Report "mergeable against base `<SHA>`", never "the queue is mergeable".
+
+**The design the blocker decides on, stated so the decision is concrete.** The
+flag would authorise the merge without *storing* an authorization: it consumes
+the per-session ledger entry the user's own prompt text already wrote on
+`UserPromptSubmit` — a signal the agent cannot forge — and creates no grant
+store. When that window closes with work left, the run stops and reports per
+[`/pr:merge` § 7](../../../git/pr/merge/command.md). Widening
+`LEDGER_MAX_AGE_MS` is forbidden practice either way.
+
+### `--worktree` — isolate the workspace
+
+Route workspace creation through [`/worktree:create`](../../../engineering-base/worktree/create/command.md)
+in full, including its
+[§ 4b seeding allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list) —
+dependencies symlinked or installed **fully**, `.agent-settings.yml` **never**
+copied, because absent is the CI shape. Under `--all` the worktree is created
+once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
+
 ## Iron Law — Full is Full
 
 ```
@@ -87,6 +179,11 @@ with the **scope delta below**.
 TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
 PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
 NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
+UNDER `--all`, A ROADMAP BOUNDARY IS NOT A STOP EITHER: ONLY ESTATE-QUEUE
+EXHAUSTION, WINDOW EXPIRY, OR A KILL-SWITCH ENDS THE RUN.
+WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
+RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
+AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
 The **five — and only five — halt conditions** (exhaustive; nothing else

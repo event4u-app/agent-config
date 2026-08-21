@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **20** open blockers in the active tree, **10** need you → `agent-config gates`
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers in the active tree, **11** need you → `agent-config gates`
 
 ## Overall
 
-**175 / 278 steps done · 63%**
+**181 / 276 steps done · 66%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 22 | 17 | 0 | 0 | 0 | ████░░░░░░ 44% |
+| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 14 | 23 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ██████░░░░ 62% |
 | 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
@@ -198,16 +198,39 @@ _1 blocker resolved._
 
 ### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
 
-**Road to drain commands** — 17 / 39 done (44%)
+**Road to drain commands** — 23 / 37 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Security hotfix: the guard window | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | The bundle is verified by content, not by timestamp | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | `/pr:merge` — prepare one PR or drain the queue | ✅ done | 0 | 10 | 0 | 0 | 100% |
-| 4 | `/roadmap:process-full --all [--merge]` | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 4 | `/roadmap:process-full --all [--merge]` | ✅ done | 0 | 6 | 2 | 0 | 100% |
 | 5 | Governance record | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 6 | Gates, evals, delivery | 🟡 in progress | 12 | 1 | 0 | 0 | 8% |
+
+<a id="blockers-road-to-drain-commands"></a>
+**Blockers**
+
+- **merge-authority** (owner: user) — blocks steps 4.4 and 4.7 — activating `--merge` on `/roadmap:process-full` and amending the canonical loop's "merge is out of scope in every mode" sentence. Everything else in this roadmap, including all of `/pr:merge` except its § 9 merge step, ships without it.
+  - **What to do:**
+    decide whether an explicit `--merge` typed by the user in
+    the invocation may serve as the per-turn confirmation
+    `non-destructive-by-default` requires for a production-branch merge, and
+    therefore as an amendment to ADR-237 § 4, whose current words are "no
+    invocation extends it". This is owner-reserved rather than council-decidable
+    because it lowers a recorded safety floor
+    ([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+    § owner-reserved set), and three independent reviews reached the same
+    answer without it: the AI council's Q1 verdict (2026-08-21, mergeability-only
+    until authorization is target-bound and tamper-resistant), the committed
+    `road-to-gate-preauth-authorization` stub (an authorization the agent can
+    write is not an authorization), and the runtime classifier, which refused
+    this roadmap's own attempt to edit the loop contract. The design the decision
+    would activate is already written and inert: no new grant store, the existing
+    prompt-derived per-session ledger only, an immutable `(PR number, head SHA)`
+    manifest, and a clean stop-and-report at window expiry.
+  - **Resolved when:** either the owner accepts the amendment and an ADR records it — after which 4.4 and 4.7 land and `--merge` becomes active — or the owner declines, in which case 4.4 and 4.7 are cancelled, the flag is removed from the `argument-hint`, and both command files keep only their mergeability-delivery half.
 
 ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
 
