@@ -135,6 +135,7 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
     return new Set();
   }
   const names = new Set<string>();
+  const nudgeRanks = new Map<number, string[]>();
   for (const [name, spec] of Object.entries(concernsRaw)) {
     if (!isObject(spec)) {
       errors.push(
@@ -213,7 +214,55 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
         }
       }
     }
+    // `nudge_rank:` — the nudge-exclusivity ordering `injection_budget`
+    // arbitrates on. Validated here because `injection_budget._selectNudge`
+    // says so in as many words: "a tie is a manifest defect rather than a
+    // runtime one, and `lint_hook_manifest` is where it should eventually be
+    // caught — that check does not exist yet and this comment is the honest
+    // statement of the gap". This is that check.
+    //
+    // A tie is not a crash. `_selectNudge` keeps the lowest rank and breaks
+    // ties on concern name, so a collision resolves stably and arbitrarily:
+    // one nudge silently wins forever, and the author who added the second one
+    // gets no signal that their concern can never emit. That is the failure
+    // mode — silent, not loud.
+    if ("nudge_rank" in spec) {
+      const rank = spec["nudge_rank"];
+      if (typeof rank !== "number" || !Number.isInteger(rank) || rank < 1) {
+        errors.push(
+          `concerns.${name}: 'nudge_rank' must be a positive integer ` +
+            `(got ${pyTypeName(rank)}) — the dispatcher keeps the LOWEST rank, ` +
+            `so a malformed value reads as "never wins" rather than as an error`,
+        );
+      } else {
+        const seen = nudgeRanks.get(rank);
+        if (seen) {
+          seen.push(name);
+        } else {
+          nudgeRanks.set(rank, [name]);
+        }
+      }
+    }
     names.add(name);
+  }
+  // Uniqueness is enforced GLOBALLY, not per event, and that is a deliberate
+  // choice rather than an accident of what is easy to compute. `_selectNudge`
+  // compares candidates within one dispatch, so two concerns bound to disjoint
+  // events could share a rank harmlessly and the accurate invariant is
+  // per-event. Global uniqueness is the strictly-safe superset: it costs
+  // nothing at today's two declared ranks, and an author reusing a rank across
+  // events is exactly the confusion worth refusing. If a legitimate design
+  // ever needs the same rank on two events, NARROW this to concerns sharing at
+  // least one bound event — do not delete it.
+  for (const [rank, holders] of nudgeRanks) {
+    if (holders.length > 1) {
+      errors.push(
+        `concerns: nudge_rank ${rank} is declared by ${holders.length} concerns ` +
+          `(${holders.slice().sort().join(", ")}) — ranks must be unique, because ` +
+          `the dispatcher breaks a tie on concern name and the loser can then ` +
+          `never emit`,
+      );
+    }
   }
   return names;
 }
