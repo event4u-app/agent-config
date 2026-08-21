@@ -161,6 +161,16 @@ POST-bench copy, never pre-bench).
   accept as the defect count. The roadmap then reads as spend-blocked when it
   is in fact rater-blocked, which is the misreading its own Surfaced note
   records.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. The
+  rendered default (score in ONE sitting, before any `score.ts` output is on screen) is
+  accepted as the ORDERING and it is the binding half: viewing automated scores first
+  would irreversibly violate the preregistered anti-anchor ordering, which is why this
+  is not agent-completable. Rule 3 assigns it `B`; the batch-B row in
+  [drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)
+  carries the three-point check verbatim: original criterion, Phase 1 Step 1's scoring
+  half and Step 2's verdict moved, re-entry producer a named independent human rater,
+  probe immutable timestamps showing every rubric score predates its `score.ts` /
+  `lint_persistence` output.
 - **Resolved when:** a human rubric score exists per artifact, recorded before
   the secondary `lint_persistence` pass for that artifact.
 - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was
