@@ -97,6 +97,13 @@ const FILE_SKIP_MARKER = '<!-- check-refs: skip -->';
 // fully-checked documents.
 const LINE_IGNORE_MARKER = '<!-- ref-ignore -->';
 
+/**
+ * The one generated artefact this repository intentionally does not track, so
+ * no clone carries it and an existence check cannot answer for it. Referencing
+ * it in prose is legitimate; the path simply is not a file in CI.
+ */
+const UNTRACKED_GENERATED_DASHBOARD = 'agents/roadmaps-progress.md';
+
 // YAML memory files (engineering-memory layer) live under `agents/memory/`.
 // Each entry may reference skills, ADR paths, or local files via
 // `source:` / `enforcement:` / `skill:`. We validate those paths so a
@@ -715,6 +722,16 @@ function check_file(
                 // check above already swallows refs into `agents/runtime/`,
                 // so no extra carve-out is needed.
             }
+            if (!resolved && rawRef === UNTRACKED_GENERATED_DASHBOARD) {
+                // A generated LOCAL artefact this repository deliberately does
+                // not commit (2026-08-21: it was the #1 merge-conflict path).
+                // It exists on a developer's disk and in no clone, so an
+                // existence check is the wrong question for it — same shape as
+                // the gitignored `agents/runtime/` carve-out above. Exactly one
+                // path, never a prefix: a sibling like `<path>.bak` is still a
+                // real broken reference.
+                resolved = true;
+            }
             if (
                 !resolved &&
                 _is_frozen_record_source(_relPosix(root, filepath)) &&
@@ -1168,6 +1185,7 @@ export {
     SKIP_NAMES,
     EXAMPLE_PATH_PATTERNS,
     ALLOWLIST_PATTERNS,
+    UNTRACKED_GENERATED_DASHBOARD,
     type AllowlistPattern,
     _is_allowlisted,
     collect_artifacts,
