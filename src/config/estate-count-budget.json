@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
-    "open_blockers": 70
+    "open_blockers": 60
   },
   "baseline_history": [
     {
@@ -202,6 +202,97 @@
       "later_roadmaps": 52,
       "open_blockers": 74,
       "why": "NET ZERO on every metric, and the shape is the point: road-to-agent-velocity was added and CLOSED in the same change, so it arrives and leaves without the estate carrying it. Recorded as 33 rather than as a raise-then-walk-down pair because a baseline that briefly reads 34 is headroom a later change could spend. The roadmap was: road-to-agent-velocity carries ZERO blockers, so open_blockers is unchanged at 74 and later_roadmaps at 52 \u2014 the pair of numbers that distinguishes a real addition from work relocated or from a question parked as an owner-blocker. The roadmap files six defects measured in one instrumented session whose task was 'create one roadmap and open a PR': it cost 140 tool calls, of which roughly 30 (21 percent) were corrections of the agent's own errors rather than analysis or work. The defects are a security guard that blocks legitimate commands (reproduced: any '-n' flag after a git invocation in the same shell string is read as --no-verify, so 'git status; grep -n foo' is refused), four roadmap authoring conventions learnable only by failing a gate, four ergonomic defects in the council CLI that cost six calls for one run, a hand-written CI waiter whose exit condition reported a settle that had not happened, a text edit anchored on a heading that also appeared as a quotation, and a memory store of 369 files behind an 87-line topic index \u2014 nine of the eleven error classes were ALREADY documented there and all nine were read after the failure. The estate grew because six measured defects had nowhere to live, not because scope was added. NOT offset deliberately: the only offset available would be archiving or parking an unrelated roadmap to buy room, which bundles an unreviewed disposition into a defect-fixing PR. The roadmap carries estate_offset_exempt with that reason, and every one of its steps is agent-executable, so it walks back down by being finished rather than by being decided. CLOSED in the same change: all 22 steps done, two of them cancelled with the source quoted as the reason, and the file archived by the sweep. The estate is back where it started, which is the disposition this ratchet exists to reward \u2014 the walk-down is the work being finished rather than a park. RE-ANCHORED AT MERGE: this entry recorded 33/52/74 against the tree it was written on. The base moved underneath it \u2014 PR #1459 added a roadmap and the trunk then disposed of others \u2014 so the merged filesystem measures 32/52/70 and `baseline` above carries that, read off the merged tree rather than carried from either side. Both same-day entries are kept because they describe different changes: the row above is the base's, this one is this branch's, and collapsing them would erase which change moved which number."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "open_blockers 70 -> 68: the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy resolved on the autonomous drain run, both with outcome state TRANSFERRED rather than discharged. required-check-set-change and merge-queue-enablement moved to agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md under the AI council disposition B (2/2, anthropic + openai), whose categorical Rule 3 assigns every repository-administration change to a human: such work may only be transferred, never recorded as decided-and-done.\n\nRead this walk-down honestly. Two blockers left the ratchet's numerator and NOTHING changed in the repository -- ruleset 17749383 still requires exactly one check (Sync + Generate Tools Consistency), carries no merge_queue entry, and merge_group still appears zero times across .github/, all three read live on 2026-08-20. The metric counts open blocker ENTRIES, so a transfer to a stub lowers it by construction; the stub carries each original Resolved-when criterion verbatim, the complete list of dependent steps moved, and a named re-entry producer with a probe pinned to those three readings, so the movement stays detectable rather than dissolving into the count.\n\nactive_roadmaps unchanged at 32 and later_roadmaps unchanged at 52 is deliberate and is what separates this from a disposal: the source roadmap reached 18/18 with count_deferred 0 and was NOT archived, because archiving was out of scope for the run that closed it. It stays in the active tree, which is why roadmap:progress-check exits 1 on it and why the active count did not move."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "active_roadmaps 32 -> 26: six completed roadmaps that had been sitting unarchived on the trunk were archived by the regen that now does it. They were complete (open==0, deferred==0, no open blocker) and OUTSIDE every later branch's history, so the branch-scoped `--changed-only` PR-gate could never find them again -- each dashboard regen just reprinted the warning. `agent-config roadmap:progress` and `task roadmap-progress` now pass `--archive` and run the sweep with `--all` before rendering.\n\nRead this walk-down for what it is: a bookkeeping correction, not a drawdown. No work was terminated and no scope was cut -- these six were already finished, and the number was wrong by six for as long as the warning went unactioned. The honest drawdown signal is unchanged by it."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "WALK DOWN on open_blockers only, 70 -> 69, earned in the change that closed road-to-estate-drawdown's b-consolidated-decision-sheet. The consolidated decision sheet was answered in full (option (a), AI council) and that closed exactly ONE blocker, which is the finding rather than a disappointment: of the 21 user-owned blockers on the sheet, 12 are dispositioned transferred because a signature, a repository, a host session, a human rating or an authority grant cannot be produced by recording an answer, and the two agent-executable classes (0 and 1) hold zero blockers between them. Active and later/ are unchanged at 32/52 -- no roadmap was added, archived or parked, so one_in_one_out has nothing to offset. Walked here rather than left as headroom because a tightening that is not re-registered becomes a ceiling nobody is held to, and this gate fails rather than warns on that state by design."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION, not a third walk-down. The two entries above are independent walk-downs of different work that landed on the same day: 70 -> 68 for the two Phase-4 blockers of road-to-inbox-harvest-2026-08-b-ci-economy, and 70 -> 69 for road-to-estate-drawdown's b-consolidated-decision-sheet. Both are real and neither corrects the other, so both rows are kept and the baseline is the composition: 70 - 2 - 1 = 67, which is what check_estate_count measures on the merged tree. Recorded because a reader meeting rows that say 68 and 69 above a baseline of 67 would otherwise read a raise. Taking either side of the merge conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 26,
+      "later_roadmaps": 52,
+      "open_blockers": 67,
+      "why": "MERGE RECONCILIATION on the active dimension, mirroring the open_blockers reconciliation directly above. Three independent walk-downs landed the same day and none corrects another: active 32 -> 26 (six completed roadmaps archived by the regen that now archives instead of warning), and the two blocker walk-downs whose composition the entry above records as 67. All rows are kept and the baseline is the composition, 26 / 52 / 67, which is what check_estate_count measures on the merged tree.\n\nStated plainly because a reader meeting a row that says 68 above a baseline of 67 would otherwise read a raise: my own row's open_blockers figure was correct when it was written and was superseded by the merge, not by a change of mine. Taking either side of the conflict alone would have left an un-walked tightening, which this gate fails on by design; no baseline was raised."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 65,
+      "why": "WALKED DOWN by 1 active and 2 blockers: road-to-gate-autonomy reached zero open steps and archived, and the two blockers it carried open \u2014 b-gate-budget-preauth on option (a) and b-delegate-gate-maintainer-profile on option (b), both against the council record \u2014 moved to RESOLVED in this change. Its third blocker, b-estate-prose-pass-from-1-3, was already resolved on 2026-08-17 and is not part of the delta. later_roadmaps is UNCHANGED at 52, which is the check that says this is a closure and not a park: nothing was relocated to buy the number, and the one item the roadmap could not finish went to a STUB with its own named probe (stubs/road-to-gate-preauth-authorization.md) rather than to later/, so the open work is still counted somewhere a reader can find it. The archive move was performed by `task roadmap-progress` itself rather than by hand \u2014 this is the first walk-down taken under the --archive default that PR #1493 put on the regen, so the number and the file move come from the same run."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 blocker and nothing else. road-to-solution-minimalism disposed of phase3-harness-deltas-9-10, which was open on the trunk: the council verdict (drain-blocker-dispositions-a, option A \u2014 re-scope, narrowed) found the entry was converting *large* into *unavailable* and had held five steps for four days on that conversion. Delta #9 is done and the remainder transferred to stubs/road-to-solution-minimalism-full-tier-run.md with a named producer and a probe, so the section was removed rather than re-annotated to a fresh blocker \u2014 the open work is counted in the stub, not vanished. active_roadmaps is UNCHANGED at 25 and this is the honest part: the roadmap does NOT archive, because one acceptance step (all quality gates pass) is still open, and that step was left open rather than flipped to make the number move. later_roadmaps unchanged at 52 \u2014 nothing was parked. The roadmap's other blocker, benchmark-spend-authorization, was already resolved on the trunk and is not part of this delta; it was checked before this entry was written, because attributing a pre-existing drawdown to this change is how a ratchet silently loosens."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "WALK-DOWN, earned rather than banked: open_blockers 70 to 68 because road-to-org-telemetry resolved both of its blockers in one drain run. sink-choice and dpo-signoff are both disposition B, outcome transferred, per the council record drain-blocker-dispositions-a.md, with successors stubs/road-to-org-telemetry-sink.md and stubs/road-to-org-telemetry-enablement.md. active_roadmaps is unchanged at 32 and later_roadmaps at 52, which is the pair that distinguishes a real resolution from work relocated into the estate: the two stubs live under stubs/, which neither counter walks, and that is the same treatment every earlier drain-run transfer received. The parent roadmap is NOT archived in this change, by instruction, so the active count does not move even though every one of its 30 boxes is now terminal - 21 done and 9 transferred. Walked in the change that earned it rather than left as headroom, because a baseline of 70 over a measurement of 68 is two blockers a later change could add without any gate objecting. The sibling ratchet lint_roadmap_blockers:decidability moved for the same reason and is walked in the same commit."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 66,
+      "why": "open_blockers 68 -> 66, RE-ANCHORED AT MERGE. This branch resolved two blockers by transfer (sink-choice, dpo-signoff), which lowers the count by construction: the blocker leaves the active estate and reappears as a stub gate this metric does not scan. Nothing in the repository earned the drop - no question was answered and no work finished. The baseline was MEASURED against the merged tree rather than taken from either side: main had independently walked 70 -> 68 for two genuinely resolved Phase-4 blockers, this branch walked 70 -> 68 for its own two transfers, and 66 = 70 - 2 - 2 is what the merged tree actually reads. Taking one side would have claimed a number that describes no tree. Both sides' history entries are preserved; none was collapsed. For whoever merges next: main is moving fast and this file collides the same way each time. The correct resolution is to keep every history entry from both sides and re-measure the baseline against the merged tree - never to adopt one side's number."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 62,
+      "why": "MERGE RECONCILIATION plus the walk-down this branch earned, stated as one entry because the arithmetic only makes sense together. The history array itself was conflicted: the trunk had moved four entries ahead while this branch carried two of its own, so main's file was taken as the base (authoritative trunk baseline and order) and the branch's two entries appended rather than dropped \u2014 append-only means both sides survive. Those two entries quote 70 -> 68 -> 66 against a trunk that has since measured 64, so their NUMBERS are superseded and only their reasons still stand; that is why this entry re-states the delta instead of trusting them. open_blockers 64 -> 62 is verified against the diff, not against that prose: sink-choice and dpo-signoff are both open on origin/main and both resolved on this branch. active_roadmaps 25 -> 24: road-to-org-telemetry reached zero open steps and the regen archived it, migrating its one inbound reference. This entry was written before the regen ran and said the roadmap would NOT archive; the number is corrected here rather than by appending a second entry, because one change earns one entry and two would read as two independent walk-downs and later_roadmaps unchanged at 52 \u2014 nothing parked, nothing relocated."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "One blocker closed, and the -1 is the whole change to this file: road-to-subagent-lifecycle-integrity's raw-capture-needs-host-env moved to Status resolved with outcome state transferred, its criterion carried verbatim to stubs/road-to-subagent-payload-capture.md under council disposition B. active_roadmaps and later_roadmaps are unchanged because a stub under stubs/ registers with neither this gate nor the dashboard, which is the point of the drain-run transfer shape: the work leaves the active estate without a roadmap being archived as if it were achieved. Walked here rather than banked because the gate reported the tightening un-walked and a baseline above the measurement is headroom a later change can spend with nothing objecting. Worth recording for WHY the number moved at all, because the first attempt did not move it: Status was written as transferred, matching the outcome-state vocabulary of the stubs README, and lint_roadmap_blockers recognises exactly one closed token (Status: resolved, at :193) while treating every other word as still open. So the entry read closed to a human and open to every gate, and this ratchet correctly reported +0. The two fields are different: Status carries the token the tooling reads, the outcome state lives in the resolution prose, in the stub, and in the stubs README table, which is what the two sibling drain-run transfers of the same day already do."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 blocker: road-to-subagent-lifecycle-integrity resolved raw-capture-needs-host-env, which is open on origin/main and resolved here \u2014 checked against the diff rather than taken from the branch's own prose. The item that could not be finished went to stubs/road-to-subagent-payload-capture.md with its own probe, so the open work is counted in the stub rather than dropped. active_roadmaps unchanged at 24: the roadmap keeps open steps and the regen did not archive it. later_roadmaps unchanged at 52 \u2014 nothing parked. The history array was conflicted at merge (trunk ahead, branch carrying its own entries); main was taken as the base and the branch entries appended, because the array is append-only and a dropped entry is a lost reason."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-council-blind-review merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
     }
   ],
   "target": {

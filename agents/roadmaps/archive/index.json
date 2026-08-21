@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 516,
+  "count": 525,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2118,6 +2118,20 @@
       "status": null
     },
     {
+      "slug": "road-to-council-blind-review",
+      "title": "Roadmap: Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 3,
+        "deferred": 0,
+        "cancelled": 3
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-council-modes",
       "title": "Road to Council Modes",
       "disposition": "closed-with-cancellations",
@@ -3224,6 +3238,20 @@
       "status": null
     },
     {
+      "slug": "road-to-gate-autonomy",
+      "title": "Road to gate autonomy — human gates only where a human is the point",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 7,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-gate-hardening-adoption",
       "title": "Road to gate-hardening adoption — take the unhardened-gate count to zero",
       "disposition": "closed-with-cancellations",
@@ -3476,6 +3504,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-hook-state-followups",
+      "title": "Road to the hook-state follow-ups nobody owned",
+      "disposition": "completed",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 10,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-hooks-actually-fire-in-consumers",
       "title": "Roadmap: Hooks actually fire in consumer projects — close the marketplace-install gap",
       "disposition": "closed-with-cancellations",
@@ -3569,6 +3611,20 @@
         "done": 16,
         "deferred": 0,
         "cancelled": 9
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-b-ci-economy",
+      "title": "Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 18,
+        "deferred": 0,
+        "cancelled": 6
       },
       "verdict": null,
       "status": null
@@ -4162,6 +4218,20 @@
       "status": null
     },
     {
+      "slug": "road-to-maintainer-bus-factor",
+      "title": "Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 9,
+        "deferred": 0,
+        "cancelled": 4
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-mcp-discovery-helper",
       "title": "Roadmap: Read-only cross-agent MCP discovery helper",
       "disposition": "closed-with-cancellations",
@@ -4692,6 +4762,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-org-telemetry",
+      "title": "Road to org telemetry",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 21,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-overlap-truth-and-skill-cut",
@@ -5296,6 +5380,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-release-review-p0",
+      "title": "Road to release-review P0",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 5
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-release-shape-honesty",
       "title": "Road to release-shape honesty — lint the release that shipped, and describe it truthfully",
       "disposition": "completed",
@@ -5375,6 +5473,20 @@
         "done": 4,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-request-scoped-rule-load",
+      "title": "Road to request-scoped rule load — ship only what the request needs",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 36,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"
@@ -5938,6 +6050,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-source-first-frontend",
+      "title": "Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-spawn-env-completion",

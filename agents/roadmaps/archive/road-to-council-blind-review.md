@@ -283,6 +283,18 @@ production host mode; method in `internal/bench/council-blind-review/`.
   cannot be written at all, so the roadmap cannot terminate in either
   direction. Ü1's shipped behaviour is unaffected, which is what makes this
   the cheapest kind of blocker to leave open and the easiest to forget.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. The
+  rendered default (do R1 and R2 in one sitting against the prepared packet, and accept
+  an honest null as a full outcome for either) is accepted as the PROTOCOL and the
+  honest-null permission is preserved. The readings themselves are blind human
+  judgments, which Rule 3 in
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  assigns `B` — they cannot be substituted by an architectural choice or inferred from
+  an existing null. The batch-B row in
+  [drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)
+  carries the three-point check verbatim: original criterion, the U2 R1 / U3 R2 / Phase
+  3 merge-or-null work moved, re-entry producer a named maintainer blind rater, probe
+  timestamped records existing before arm disclosure.
 - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an
   adopt-or-honest-null verdict rather than a deferral.
 - **Resolution (2026-08-20):** **disposition B — transferred**, outcome state

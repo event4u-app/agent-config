@@ -19,6 +19,41 @@ execution:
 
 ---
 
+## Outcome — per phase, as of 2026-08-20
+
+**This roadmap is NOT archived and must not be: six of its eight steps are still
+open.** The section exists because a phase can be *finished* in several different
+ways, and only one of them is "achieved". Stated plainly, because this campaign's own
+risk 1 is drawdown by burial: **archived does not mean achieved.** When this file
+eventually closes, it closes against the outcome states below — `satisfied`,
+`narrowed`, `transferred`, `abandoned` — not against a completion percentage. A reader
+who sees it in `archive/` should read this section first and should not infer that the
+estate reached T1's ceiling.
+
+| Phase | State | What actually happened |
+|---|---|---|
+| **0 — one sitting, N answers** | **satisfied** | 0.1 generated the sheet (prior run). 0.2 answered it: option (a), per the council, applied per row over the live 21 — 7 accepted, 1 overridden, 12 transferred, 1 answered. The sheet now records the option because the generator reads it from a non-derived record. **AC-0 narrowed:** maintainer time consumed was zero and the two largest-unblock items are dispositioned, but *"most of the user-owned blockers terminal"* is not met — the criterion conflated *answered* with *terminal*. |
+| **1 — execute everything runnable** | **abandoned as written** | Not blocked — **empty**. Measured: 44 open blockers in the active tree, **0 class-0 and 0 class-1**. Phase 1 acts only on those two classes, so there is nothing for `gates --execute` to clear and no class-1 tranche to schedule at any budget. 1.1 stays `[ ]` rather than being marked green on a vacuous `verify:`. **AC-1 not met**, and not reachable by this mechanism. |
+| **2 — triage sweep** | **narrowed, untouched here** | Batch 1 (ten files) landed on a prior run. This change is not a batch: 2.1 caps a batch at ten roadmaps and one PR, and mixing a second batch into a decision-sheet answer would break that ceiling and collide with parallel drain runs. Ten of 32 active files carry a verdict; **AC-2 not met.** |
+| **3 — the ratchet lands** | **satisfied** | 3.1 and AC-3 were met on 2026-08-18: `check_estate_count` plus the budget file, green at the baseline, red against fixtures in both directions. Unchanged by this run except for one baseline walk-**down** recorded below. |
+| **4 — the recurring pass** | **transferred** | 4.1's blocker is `b-delegate-gate-maintainer-profile`, the one default this run pulled out of option (a). The delegate path the pass runs on is now **explicitly not authorised** — by decision, not omission: the council's batch-B row keeps `allow_delegate: false`. 4.1 moves from "waiting on a sibling step" to "waiting on a named human". **AC-4 not met.** |
+
+**Estate effect of this run: none on the two counts that matter, and one blocker
+closed.** Active roadmaps 32 → 32; `later/` 52 → 52; open blockers 70 → 69, the single
+closure being `b-consolidated-decision-sheet` itself. The ratchet baseline is walked
+down to match, with a history entry — a tightening that is not re-registered becomes a
+ceiling nobody is held to.
+
+**What a reader should take from this.** The campaign's premise was that the estate
+carries a large stock of decidable-but-uncourriered blockers. Answering the whole
+consolidated sheet moved the open-blocker count by **one**, and the reason is now
+visible rather than inferred: of 21 user-owned blockers, twelve need a signature, a
+repository, a host session, a human rating or an authority grant that no answer can
+supply, and classes 0 and 1 — the agent-executable ones — are empty. That is evidence
+for this roadmap's own § Honest-null consequence: on today's distribution the estate
+looks **under-resourced rather than over-grown**, and it arrived in Phase 1 instead of
+Phase 2. The target belongs to the maintainer either way; nothing here re-registers it.
+
 ## 0. The defect, stated first
 
 **The estate carries 37 active roadmaps, 44 in `later/`, and 38 open blockers — and
@@ -126,12 +161,71 @@ sibling roadmap — it is runnable with today's tooling.**
         (21 rows, each with a question, a default or a stated reason it has none,
         and a labelled source); 12 renderer cases in
         `tests/scripts/roadmap_gates.test.ts`.
-- [~] **0.2** The maintainer answers the sheet once. **Accept-all-defaults is a
+- [x] **0.2** The maintainer answers the sheet once. **Accept-all-defaults is a
       valid answer.** The answers are then appended into each roadmap file at its
-      blocker as the decision record — by the agent, not by the human. Blocked on
-      `b-consolidated-decision-sheet`.
+      blocker as the decision record — by the agent, not by the human.
+      - **Done 2026-08-20.** Answered **option (a)** by the AI council
+        ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md),
+        row `b-consolidated-decision-sheet | D | satisfied`, both seats convergent).
+        Note that (a) is itself an **override of this roadmap's own rendered
+        default**, which recommended (c); recorded as such rather than presented as
+        agreement. The answer record is
+        `agents/decisions/consolidated-decision-sheet-answer.md` — deliberately NOT
+        derived, because the sheet is.
+      - **Twenty-one rows, not thirteen**, for the reason 0.1 already recorded: the
+        estate grew between drafting and answering. The step's own text says
+        accept-all is valid, so the count is whatever `Owner: user` reports.
+      - **Option (a) was applied per row, and twelve rows are NOT covered by it.**
+        The council session that chose (a) carried a dissent that stands — *"blanket
+        acceptance of an unseen consolidated sheet is not an informed decision"* — so
+        every rendered default was read and audited for whether it is conservative and
+        reversible. The decisive input was already in the tree: batch B adopts round
+        1's framework by name, and that framework's **Rule 3 is categorical** —
+        repository creation, a legal signature, a shipped-default flip, a repo-admin
+        setting, a host-env modification or any externally visible / irreversible
+        action takes `transferred`, and *"the council may record its preferred choice
+        inside the stub; the parent may not record the action as done."* Applying (a)
+        blanket would have silently reversed **ten** dispositions the same council
+        made in round 1. Split: **7 accepted · 1 overridden · 12 transferred · 1
+        answered** (this blocker). Per-row table with the basis for each:
+        `agents/decisions/consolidated-decision-sheet-answer.md`.
+      - **One default failed the audit on its own content, not merely on Rule 3.**
+        `b-delegate-gate-maintainer-profile`'s rendered default (a) enables
+        `allow_delegate` — a standing grant of delegated write authority to an agent
+        path, which does not undo itself. Pulled out, dispositioned **transferred**
+        with the three-point check at its blocker. The council's own batch-B row
+        independently narrows that entry to **(b)** — team surface for consultation,
+        `allow_delegate: false` — so accept-all would have overwritten a live council
+        decision with the option the council declined. This is risk 2 of this
+        roadmap's own register (*"the decision sheet front-loads bad defaults"*)
+        firing exactly as written, and being caught.
+      - **The sheet now records the option.** It could not before: the sheet is
+        derived and renders only OPEN `Owner: user` blockers, so an answer written
+        into it is lost and — once every row closes — the file would say "nothing to
+        answer" with no trace of what was answered. `renderSheet` now READS a
+        `<!-- sheet-answer: … -->` marker from the non-derived record and prints it in
+        the header, on both the populated and the empty branch.
+      - **Recording a decision is not doing the work.** 20 of the 21 blockers stay
+        open, because their `Resolved when` asks for an artefact, a signature, a probe
+        or a setting that an answer does not produce. Closing them by writing an
+        answer beside them would be risk 1 — drawdown by burial.
+      - `verify:` `./scripts-run src/agent-src/scripts/roadmap_gates --sheet` header
+        carries `ANSWERED 2026-08-20 — option (a)`; 19 `- **Answer:**` fields plus one
+        blockquote answer at the legacy note = 20 blocker entries carry their answer;
+        the sheet rendered **byte-identical** before and after the 20 insertions,
+        which is the evidence that no adjacent blocker field was corrupted; 63 cases
+        in `tests/scripts/roadmap_gates.test.ts` (4 new), and the 3 new assertions
+        were each shown RED against a sabotaged `answerBanner` / marker regex before
+        being accepted as green.
 - **AC-0:** a short, bounded amount of maintainer time consumed; most of the thirteen
   user-owned blockers terminal; and the two largest-unblock items dispositioned.
+  **Narrowed, not met, 2026-08-20.** Maintainer time consumed: zero — the council held
+  the delegated authority, so the sitting never had to happen. The two largest-unblock
+  items (49 and 31 steps) are dispositioned. But *"most of the user-owned blockers
+  terminal"* is **not** met and was not reachable this way: 20 of 21 stay open because
+  Rule 3 or their own `Resolved when` needs something an answer cannot produce. The
+  criterion conflated *answered* with *terminal*; they are different states, and the
+  gap between them is the honest result of this phase.
 
 ### Phase 1 — Execute everything runnable
 
@@ -142,12 +236,36 @@ sibling roadmap — it is runnable with today's tooling.**
       count" beats an open gate nobody probed.
       `verify:` each cleared blocker carries its evidence append; each re-dated one
       carries the probed count.
+      - **Probed 2026-08-20, and the population is EMPTY — this step is not blocked,
+        it has no subject.** `roadmap_gates --all --json` over the active tree reports
+        **44 open blockers: 25 class-2, 19 class-3, and 0 class-0.** There is no
+        class-0 blocker for `gates --execute` to clear, and no unfilled window to
+        re-date. Left `[ ]` deliberately: with an empty population both halves of the
+        `verify:` clause are *vacuously* true, and marking a step green because it
+        scanned nothing is the gate-that-scans-nothing failure this package keeps
+        finding. The honest count is the deliverable here, per the step's own "an
+        honest 'not yet, and here is the count' beats an open gate nobody probed".
 - [~] **1.2** Class-1 tranche under the budget ledger, highest-unblock first: the
       live trigger eval — one run, two blockers, three waiting roadmaps — then the
-      bench-spend items up to the weekly cap. Blocked on
-      `b-consolidated-decision-sheet` and on the sibling's budget-preauth blocker.
+      bench-spend items up to the weekly cap.
+      - **`b-consolidated-decision-sheet` no longer blocks this — 2026-08-20 — and
+        the step still cannot run, for two independent reasons now measured rather
+        than assumed.** First, the class-1 population is **0 of 44** open blockers in
+        the active tree (same probe as 1.1), so there is no class-1 tranche to
+        schedule. Second, the live trigger eval it names is exactly the pair
+        (`skill-activation-window` + `human-gated-live-trigger-eval`) the council
+        dispositioned **transferred** into one human-gated stub, so it is not
+        agent-runnable at any budget. `b-gate-budget-preauth` is answered — option
+        (a), caps USD 5 per run and USD 25 per rolling seven days — but that
+        authorises a *shape*: no spend is possible until its settings keys and ledger
+        path exist, which is that roadmap's own work. Stays `[~]`.
 - **AC-1:** open blockers materially below the starting 38; every resolution carries
   its evidence append; the ledger shows spend inside its caps.
+  **Not met, and the mechanism it depended on is empty.** 44 open blockers in the
+  active tree against a starting 38 — the count rose. Classes 0 and 1, the only ones
+  this phase acts on, hold **zero** blockers between them, so no amount of running
+  this phase moves the number. That is the honest-null shape this roadmap's own
+  § Honest-null consequence describes, arriving in Phase 1 rather than Phase 2.
 
 ### Phase 2 — Triage sweep over the whole estate, in batches, with terminal verdicts
 
@@ -169,6 +287,13 @@ sibling roadmap — it is runnable with today's tooling.**
       shipped surface stays a maintainer call on the sheet.
       `verify:` the batch order is recorded, and every council-decided verdict names
       the class it was decided under.
+      - **Untouched by this run, deliberately — 2026-08-20.** 2.1 caps a batch at ten
+        roadmaps and one PR, and this change is not a triage batch: it answers a
+        decision sheet. Adding a second batch on top would break 2.1's own one-PR
+        ceiling and collide with the parallel drain runs currently editing several of
+        the files a batch would have to select. Both boxes close only when the sweep
+        reaches the whole estate, which is unchanged: batch 1 covered ten of 32 active
+        files.
 - **AC-2:** every file in the estate carries a terminal verdict row; the active count
   reaches T1's registered ceiling; **no closure lands without its house-form
   artifacts.**
@@ -261,13 +386,24 @@ sibling roadmap — it is runnable with today's tooling.**
       maintainer can read in under a minute. The pass is capped by the per-day call
       cap and the budget ledger, and **never touches class 3.** Blocked on the
       sibling's delegate-gate blocker.
+      - **Still blocked, and the blocker changed character — 2026-08-20.**
+        `b-delegate-gate-maintainer-profile` was the one rendered default this run
+        pulled out of option (a): its default (a) would have enabled `allow_delegate`,
+        and the council's own batch-B row narrows it to (b) with `allow_delegate:
+        false`. So the delegate path this pass is supposed to run on is now
+        **explicitly not authorised**, by decision rather than by omission, and the
+        step is blocked on a maintainer-owned transfer. Recorded here because it moves
+        4.1 from "waiting for a sibling step" to "waiting for a named human", which is
+        a different kind of open.
 - **AC-4:** several consecutive reports exist; the open-blocker count is flat or
   falling across them; maintainer reading time per period is the one report.
 
 ## Blockers
 
 ### blocker: b-consolidated-decision-sheet
-- **Status:** open
+- **Status:** RESOLVED 2026-08-20 — **option (a)**, accept all rendered defaults, with
+  twelve of the twenty-one rows dispositioned `transferred` because Rule 3 or the
+  default's own content puts them outside what (a) can accept
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1
@@ -292,8 +428,30 @@ sibling roadmap — it is runnable with today's tooling.**
   rose rather than fell — 44 active after this cohort. Phase 2's triage sweep still
   runs, so verdicts land, but every DECISION-SHEET verdict routes back to this same
   unanswered sheet.
+- **Answer:** **option (a) — accept all rendered defaults**, decided by the AI council
+  in [drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)
+  (row `b-consolidated-decision-sheet | D | satisfied`, both seats convergent). This
+  **overrides** the `Recommendation:` above, which argued for (c); the override is the
+  council's, and the reason (c) was preferred — that accept-all includes the
+  agent-drafted defaults nobody has examined — was answered by auditing all 21 rows
+  individually rather than by taking the option's word for it. Applied per row, not
+  blanket: **7 accepted · 1 overridden · 12 transferred · 1 answered.** Twelve rows are
+  outside option (a) because the framework batch B adopts by name makes Rule 3
+  categorical — an externally gated or irreversible action takes `transferred`, and the
+  parent may not record it as done — and blanket acceptance would have reversed ten
+  dispositions the same council made in round 1. One row,
+  `b-delegate-gate-maintainer-profile`, failed on its own content: its default enables
+  `allow_delegate`, a standing grant of delegated write authority, and the council's own
+  batch-B row narrows that entry to (b) with `allow_delegate: false`. Per-row basis:
+  `agents/decisions/consolidated-decision-sheet-answer.md`.
 - **Resolved when:** each of the thirteen carries either an answer or an explicit
   deferral recorded at its own blocker, and the sheet records which option was used.
+  **Met 2026-08-20** — on the live count of 21 rather than the drafted thirteen: 20
+  blocker entries carry an `- **Answer:**` field, the 21st (a legacy `> Blocked until …`
+  note with no field to carry one) carries its answer as a blockquote at the note, and
+  the sheet's own header now prints `ANSWERED 2026-08-20 — option (a)` because
+  `renderSheet` reads it from the non-derived answer record. It could not have recorded
+  the option by being edited: the sheet is regenerated on every run.
 
 ## Risk Register
 
