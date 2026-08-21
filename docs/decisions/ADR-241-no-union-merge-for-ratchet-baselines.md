@@ -7,6 +7,18 @@ supersedes: —
 superseded_by: —
 phase: —
 type: structural
+provenance:
+  kind: agentic
+  decision_makers: [anthropic/claude, openai/codex]
+  human_directed: false
+  agentic_mode: council
+evidence:
+  strength: E2
+  basis:
+    - agents/evidence/analysis/merge-hotspot-cadence.md
+    - src/scripts/_lib/gate_baseline.ts:42
+    - .gitattributes:62-66
+    - .gitattributes:68-75
 review_trigger: >-
   Reopen on any one of the six preconditions in § Decision being satisfied and
   shown, in code, in the same change that proposes the driver — not on a calendar
@@ -158,6 +170,28 @@ measured and the per-gate split stays the leading design, gated as above.
 **Gitignore both files.** Rejected: it deletes the ratchet. Recorded because it
 was the maintainer's original question and the answer is unambiguous — the
 committed number *is* the mechanism.
+
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| These two files are the repository's most-conflicted non-generated paths | `git merge-tree --write-tree origin/main origin/<branch>` over all 7 open PRs GitHub reported `CONFLICTING` on 2026-08-21 — both appear in 7 of 7 (`agents/evidence/analysis/merge-hotspot-cadence.md`) |
+| The churn on the budget file is NOT append-shaped, contrary to the first measurement | Re-measured by parsing the JSON on both sides of all 43 non-merge commits in the window: 1 pure append, 4 pure baseline walks, 35 both, **39 of 43 moving the baseline**. The first pass used a `-U0` hunk regex and the `baseline` object carries the same key names as a history entry, so a walk was counted as an append (`agents/evidence/analysis/merge-hotspot-cadence.md` § 3.2) |
+| A committed number a PR diff compares against is the whole ratchet mechanism, so untracking is not an alternative | `src/scripts/_lib/gate_baseline.ts:42` (`BASELINE_REL`) is read by ~20 gate scripts; the estate check asserts the committed budget matches the live tree |
+| Union-merge and per-record identity are different mechanisms, eight lines apart in one config | `.gitattributes:62-66` is the flat memory layout carrying `merge=union`, and its own comment calls itself a best-effort net "not a guarantee — the directory layout below has no such caveat"; `.gitattributes:68-75` is the per-entry layout where "filename collisions are content-identity, so normal (non-union) merge is fine here" |
+| The same-date contradictory-record failure is unhandled, not merely unlikely | The proposal specified no record identity, no reduction, no duplicate detection and no monotonicity check — enumerated in § Decision; each candidate reduction fails differently |
+
+The grade is **E2 — repeated and comparative**, and deliberately not higher.
+Two independent measurements of the same corpus disagreed and the second
+corrected the first, which is what E2 describes; there is no pre-registered
+benchmark and no external authority here. It is also not E1: the conflict
+population was measured across seven branches rather than one, and the anatomy
+across 43 commits rather than an incident.
+
+Nothing in it is a *demonstration* that a union driver corrupts this corpus —
+that would need a driver, which is the thing being refused. The block rests on
+an enumerated failure the design does not answer, plus the measurement that the
+mode it would have fixed fires once in 60 days.
 
 ## References
 
