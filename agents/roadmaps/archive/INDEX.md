@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**524 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 181 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
