@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 543,
+  "count": 545,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3364,6 +3364,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-gated-reach-followup",
+      "title": "Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-gated-reach",
       "title": "Roadmap: Road to gated reach — read the resources the host cannot fetch",
       "disposition": "closed-with-cancellations",
@@ -6257,6 +6271,20 @@
         "done": 2,
         "deferred": 0,
         "cancelled": 6
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-solution-minimalism",
+      "title": "Road to solution minimalism — a first-class discipline against over-building",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 32,
+        "deferred": 0,
+        "cancelled": 4
       },
       "verdict": null,
       "status": "ready"

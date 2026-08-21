@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**543 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 197 · completed 254 · completed-with-deferrals 25 · not-extractable 34
+**545 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 199 · completed 254 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -264,6 +264,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |
 | [`road-to-gate-autonomy`](road-to-gate-autonomy.md) | Road to gate autonomy — human gates only where a human is the point | closed-with-cancellations | 4 | 7/9 | _not extractable_ |
 | [`road-to-gate-hardening-adoption`](road-to-gate-hardening-adoption.md) | Road to gate-hardening adoption — take the unhardened-gate count to zero | closed-with-cancellations | 3 | 12/13 | _not extractable_ |
+| [`road-to-gated-reach-followup`](road-to-gated-reach-followup.md) | Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel | closed-with-cancellations | 1 | 6/15 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |
 | [`road-to-glama-registry-listing`](road-to-glama-registry-listing.md) | Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more | completed | 5 | 11/11 | _not extractable_ |
@@ -471,6 +472,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-skill-ecosystem-gate-integrity`](road-to-skill-ecosystem-gate-integrity.md) | Road to gate integrity — a gate that scanned nothing must never exit green | closed-with-cancellations | 5 | 43/46 | _not extractable_ |
 | [`road-to-skill-eval-coverage`](road-to-skill-eval-coverage.md) | Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted | completed | 4 | 14/14 | _not extractable_ |
 | [`road-to-slot-scoped-concern-loading`](road-to-slot-scoped-concern-loading.md) | Road to slot-scoped concern loading — stop every concern taxing every slot | closed-with-cancellations | 4 | 2/8 | _not extractable_ |
+| [`road-to-solution-minimalism`](road-to-solution-minimalism.md) | Road to solution minimalism — a first-class discipline against over-building | closed-with-cancellations | 4 | 32/36 | _not extractable_ |
 | [`road-to-source-first-frontend`](road-to-source-first-frontend.md) | Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation | closed-with-cancellations | 6 | 16/18 | _not extractable_ |
 | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
