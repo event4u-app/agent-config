@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**539 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 194 · completed 253 · completed-with-deferrals 25 · not-extractable 34
+**540 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 194 · completed 254 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -518,6 +518,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-visual-review-loop`](road-to-visual-review-loop.md) | Roadmap: Visual Review Loop + A11y | completed | 7 | 45/45 | _not extractable_ |
 | [`road-to-webfont-delivery-ownership`](road-to-webfont-delivery-ownership.md) | Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids | completed | 3 | 12/12 | _not extractable_ |
 | [`road-to-weighted-decision-matrix`](road-to-weighted-decision-matrix.md) | Road to weighted decision matrix — quantitative mode for `decision-record` | completed | 4 | 18/18 | _not extractable_ |
+| [`road-to-wiring-truth-corrections`](road-to-wiring-truth-corrections.md) | Road to wiring truth corrections — three places where declared and effective diverge | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-wiring-truth`](road-to-wiring-truth.md) | Road to Wiring Truth | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-wizard-sse-hardening`](road-to-wizard-sse-hardening.md) | Roadmap: Wizard SSE hardening — edge-case test coverage, severity-phased | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-wizard-ux-improvements`](road-to-wizard-ux-improvements.md) | Roadmap: Wizard UX — first-run detection, fresh-start, tool-list cleanup | completed | 8 | 21/21 | _not extractable_ |
