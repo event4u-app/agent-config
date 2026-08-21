@@ -137,14 +137,22 @@ export function partitionVerdict(inputs) {
  *
  *     absent=0 · empty=0 · maintainer-only=16 · mixed=103 · scalar-or-other=0
  *
- * So exactly TWO states occur, both deliberate, and the 16 is the figure ADR-236
- * partitions on. The other branches are unreachable in this tree, and the input
- * is always THIS package's own `src/rules/` — never a consumer's — so the state
- * space is closed by that count rather than merely unobserved. Fixtures for the
- * absent and malformed cases were considered and NOT written: they would pin
- * behaviour on inputs the only caller cannot produce, which is a test asserting
- * a hypothetical. Should a rule ever ship with a bare or malformed
- * `workspaces:`, that count moves and this note is the thing that dates.
+ * So exactly TWO states occur today, both deliberate, and the 16 is the figure
+ * ADR-236 partitions on.
+ *
+ * **The other three branches are CURRENTLY ABSENT from the generated tree, not
+ * unreachable** — an earlier revision of this note said "the state space is
+ * closed by that count", and a neutral review was right to refuse it. A file can
+ * become unreadable at runtime (permissions, a partial write, a truncated
+ * checkout) and a rule can acquire a malformed `workspaces:` on any commit. The
+ * count is a current inventory, never a proof of impossibility.
+ *
+ * What the count DOES buy is a bound on the defensive work worth doing now:
+ * fixtures for the absent and malformed cases would pin behaviour on inputs no
+ * committed rule produces, so they were not written. All three branches already
+ * resolve to `false` — deliver globally, withhold from the project layer — which
+ * is the over-delivery direction rather than the losing one, so the untested
+ * branches fail safe. Should that count move, this note is the thing that dates.
  */
 export function isExclusivelyPackageOnly(source_path) {
     let meta;
@@ -327,6 +335,7 @@ export function personaPartition(projectRoot, all) {
         all,
         listFor: (toolDir) => (personaWithheldFor(toolDir, active) ? [] : all),
         note: active ? ' — .claude/ withheld: ADR-236 partition, personas arrive from ~/.claude' : '',
+        countFor: (toolDir) => (personaWithheldFor(toolDir, active) ? 0 : all.length),
     };
 }
 /**
@@ -381,10 +390,43 @@ export function personaWithheldFor(toolDir, active) {
  *
  * Self-report, n=1 per condition, one host version, one machine. What is NOT
  * claimed: that older or newer hosts dedupe the same way, or that precedence is
- * stable across them. A host that stopped deduping would show up as a
- * double-listing, and `check_single_delivery` reports the overlap either way.
+ * stable across them.
+ *
+ * **And a claim that WAS made here has been withdrawn as false** (neutral review,
+ * 2026-08-21). It read: *"A host that stopped deduping would show up as a
+ * double-listing, and `check_single_delivery` reports the overlap either way."*
+ * It cannot. When this predicate returns true the project copy is never written,
+ * so there is no second copy for the host to double-list or for the gate to
+ * count — it would report zero overlap while the assumption underneath had
+ * failed. Worse, `partitionActive` verifies the INSTALL (version + content
+ * fingerprint), never the HOST version whose behaviour was measured, so a host
+ * upgrade changes the premise and moves nothing this code reads.
+ *
+ * What actually holds: reachability survives a dedup change either way, because
+ * the global copy is delivered regardless. What is lost is only the project
+ * copy's redundancy, and nothing detects that. A real detector would have to
+ * pin the host version this measurement was taken against and re-probe when it
+ * moves — not built here, and named as absent rather than implied away.
  */
 export function commandsWithheld(projectRoot) {
     return partitionActive(projectRoot);
 }
+/**
+ * ## The caller's early return, flagged by review and kept
+ *
+ * `generate_claude_project_commands` applies this predicate and then returns
+ * early when `src/domains/` is absent — BEFORE its stale-link sweep. So a tree
+ * with no `src/domains` keeps whatever `.claude/commands` it already had, even
+ * when the commands are now withheld.
+ *
+ * Invariant rather than oversight: this package always ships `src/domains/`, the
+ * generator only runs from a checkout that has it, and a consumer never reaches
+ * this path. Documented rather than reordered, because hoisting the sweep above
+ * the guard would make a non-package tree lose a directory this code did not
+ * write — a worse failure than the one being avoided, and on a tree we do not own.
+ *
+ * The transition that DOES occur is covered: `partition_delivery_topology.test.ts`
+ * runs inactive→active over a fixture that has `src/domains`, and asserts both
+ * the links and the empty cluster directories are gone after one run.
+ */
 //# sourceMappingURL=partitionEligibility.js.map

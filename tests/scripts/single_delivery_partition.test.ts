@@ -296,14 +296,33 @@ describe('personaWithheldFor — the family the partition never reached until 20
         expect(personaPartition(process.cwd(), ['a.md', 'b.md']).all).toEqual(['a.md', 'b.md']);
     });
 
-    it('a withheld directory yields an EMPTY ARRAY, which is what reconciles a stale tree', () => {
-        // Reconciliation is the empty list, not a second code path: the caller's
-        // stale-symlink sweep removes any link absent from the list it was given.
-        // A helper returning `null` or the full list for a withheld directory would
-        // stop new duplication and leave the existing 29 symlinks standing.
-        const listFor = (active: boolean): readonly string[] =>
-            personaWithheldFor('.claude/personas', active) ? [] : ['a.md'];
-        expect(listFor(true)).toEqual([]);
-        expect(listFor(false)).toEqual(['a.md']);
+    it('listFor returns an EMPTY ARRAY for a withheld directory, not null', () => {
+        // The shape the caller's stale-symlink sweep depends on: it removes any
+        // link absent from the list it was given, so `[]` is what empties a
+        // populated tree. `null` or the full list would stop new duplication and
+        // leave the existing symlinks standing.
+        //
+        // This asserts the CONTRACT only. An earlier version of this test
+        // reimplemented `personaWithheldFor(...) ? [] : ['a.md']` and called that
+        // a reconciliation test — both seats of a neutral review named it: it
+        // would stay green if the generator stopped applying the partition. The
+        // reconciliation itself is exercised through the real generators in
+        // `partition_delivery_topology.test.ts`, which reds when the gating is
+        // removed.
+        const p = personaPartition(process.cwd(), ['a.md', 'b.md']);
+        for (const dir of ['.claude/personas', '.cursor/personas']) {
+            const got = p.listFor(dir);
+            // Shape only, deliberately: which of the two values comes back is a
+            // property of THIS machine's install state, so asserting it here
+            // would pass either way. The value is asserted where it can be
+            // forced — the topology test above.
+            expect(Array.isArray(got)).toBe(true);
+            expect(got.length === 0 || got.length === 2).toBe(true);
+            expect(p.countFor(dir)).toBe(got.length);
+        }
+        // `.cursor/` is never withheld, whatever the install state — this one IS
+        // machine-independent and is the assertion that would catch a helper
+        // withholding everywhere.
+        expect(p.listFor('.cursor/personas')).toEqual(['a.md', 'b.md']);
     });
 });

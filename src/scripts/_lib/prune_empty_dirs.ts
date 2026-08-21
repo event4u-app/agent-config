@@ -20,6 +20,27 @@
  *
  * Best-effort by construction: a race or a permission error on one directory is
  * swallowed, matching the inline original. Pruning is cleanup, never a gate.
+ *
+ * ## Symlinks: MEASURED, because a neutral review split on it
+ *
+ * One seat called an unguarded recursion a merge blocker (a directory symlink
+ * pointing at an ancestor would loop forever); the other called the finding
+ * false, on the grounds that `Dirent.isDirectory()` does not follow the target.
+ * A vote cannot settle that, so it was probed — `readdirSync(dir, {withFileTypes:
+ * true})` over a real symlink-to-directory on darwin, Node 26:
+ *
+ *     link  isDirectory=false  isSymbolicLink=true
+ *     real  isDirectory=true   isSymbolicLink=false
+ *
+ * `Dirent` carries `lstat` semantics, so the walk below cannot descend into a
+ * symlink at all and no loop is reachable — and no inode set is needed. The
+ * second seat was right. Recorded rather than fixed, so the next reader does not
+ * re-raise it: a defensive `!e.isSymbolicLink()` here would be dead code
+ * asserting something the type already guarantees.
+ *
+ * The same property is why this is safe on a tree of symlinks: `.claude/commands`
+ * holds symlinks into `src/domains/**`, and pruning must not follow one out of
+ * the tree it was pointed at.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

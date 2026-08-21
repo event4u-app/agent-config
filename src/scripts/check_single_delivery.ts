@@ -535,21 +535,35 @@ export function main(argv?: readonly string[]): number {
             ' case (layers present but never paired) is refused separately.',
     });
 
-    // Refuses in BOTH modes, unlike every other branch here, and the asymmetry is
-    // the argument for it: every other verdict this gate produces is a property of
-    // ONE MACHINE's two layers, which is why `--enforce` is opt-in. An unknown
-    // family directory is not — `<repo>/.claude/` is generator-owned, so the
-    // finding is "this repository emits a family no measurer names", which is true
-    // on every checkout and fixable in one line. Gating it behind `--enforce`
-    // would put the one topology-independent check behind the flag that exists
-    // for topology-dependent ones.
+    // Refuses in both modes, unlike every other branch here — but ONLY over this
+    // repository's own generated tree, and that qualification was added by a
+    // neutral review (2026-08-21) rather than being there from the start.
+    //
+    // The asymmetry is the argument for the refusal: every other verdict here is
+    // a property of ONE MACHINE's two layers, which is why `--enforce` is opt-in.
+    // "this repository emits a family no measurer names" is true on every checkout
+    // and fixable in one line, so gating it behind `--enforce` would put the one
+    // topology-independent check behind the flag meant for topology-dependent
+    // ones.
+    //
+    // The qualification is the review's, and it is right: an unrecognised
+    // DIRECTORY does not by itself establish generator ownership. It does under
+    // `<repo>/.claude/`, which `condense.ts` writes and nothing else does. It does
+    // NOT under an arbitrary `--project` path, which may be a consumer tree with
+    // a host-native or project-only family that legitimately cannot overlap — and
+    // refusing there would make a nominal report exit 1 on a correct topology.
+    // So a repointed root REPORTS and does not refuse.
     if (v.unknownFamilies.length > 0) {
+        const own = projectRoot === path.join(REPO_ROOT, '.claude');
         process.stdout.write(
-            `❌  check_single_delivery: unknown family in the project layer:` +
-                ` ${v.unknownFamilies.join(', ')}. Add measurement before it can ship —` +
-                ' TYPES in this gate and in _lib/layer_overlap_notice.ts.\n',
+            `${own ? '❌' : '⚠️ '}  check_single_delivery: unknown family in the project` +
+                ` layer: ${v.unknownFamilies.join(', ')}. Add measurement before it can ship` +
+                ' — TYPES in this gate and in _lib/layer_overlap_notice.ts.' +
+                (own ? '' : ' Reported, not enforced: --project is repointed, so generator' +
+                    ' ownership of this tree is not established.') +
+                '\n',
         );
-        return 1;
+        if (own) return 1;
     }
 
     if (v.readNothing) {

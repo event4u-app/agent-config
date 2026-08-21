@@ -59,9 +59,17 @@ describe('delivery remediation currency', () => {
             expect(body).not.toMatch(/\\?`agent-config install --layer=<global\|project>\\?` suppresses/);
         });
 
-        it(`${s.file} points at the partition instead`, () => {
-            expect(body).toMatch(/ADR-236/);
-            expect(body).toMatch(/installed\.lock|fingerprint/);
+        it(`${s.file} points at the partition IN the remediation message itself`, () => {
+            // Scoped to a window around the anchor, not the whole file. Review
+            // 2026-08-21 was right that a file-wide `toMatch(/ADR-236/)` passes on
+            // any mention anywhere — including a docblock — while the message a
+            // maintainer actually reads still says nothing useful.
+            const at = body.indexOf(s.anchor);
+            expect(at).toBeGreaterThan(-1);
+            const message = body.slice(at, at + 1600);
+            expect(message).toMatch(/ADR-236/);
+            expect(message).toMatch(/installed\.lock|fingerprint/);
+            expect(message).toMatch(/agent-config install/);
         });
     }
 });

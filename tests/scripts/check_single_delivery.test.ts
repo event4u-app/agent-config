@@ -177,21 +177,34 @@ describe('unknown family in the project layer', () => {
         ...extra,
     ];
 
-    it('refuses, and names the family, without --enforce', () => {
+    it('REPORTS but does not refuse when --project is repointed', () => {
+        // The refusal is scoped to `<repo>/.claude`, which `condense.ts` writes and
+        // nothing else does. Under an arbitrary `--project` path an unrecognised
+        // directory does not establish generator ownership — it may be a consumer
+        // tree with a host-native or project-only family that legitimately cannot
+        // overlap, and refusing there would make a nominal report exit 1 on a
+        // correct topology. (Neutral review, 2026-08-21.) The refusal over the real
+        // repo root is verified end-to-end, not here: `mkdir .claude/widgets` in the
+        // checkout exits 1, removing it exits 0.
         rule(layer('g', 'rules'), 'a.md');
         rule(layer('p', 'rules'), 'b.md');
         mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
-        // Refuses in report mode too, unlike every other verdict here: an unknown
-        // family is a property of THIS REPOSITORY's generator output, true on every
-        // checkout, not of one machine's two layers.
-        expect(main(args())).toBe(1);
-        expect(main(args('--enforce'))).toBe(1);
+        expect(main(args())).toBe(0);
+        expect(main(args('--enforce'))).toBe(0);
     });
 
-    it('passes on the same tree once the family is gone (mutation control)', () => {
-        // Without this the assertion above could be passing for any reason at all.
+    it('still DETECTS the family under a repointed root — reporting, not blindness', () => {
+        // The scoping above must not have turned detection off, only the exit code.
+        rule(layer('g', 'rules'), 'a.md');
+        mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['widgets']);
+    });
+
+    it('reports nothing on the same tree once the family is gone (mutation control)', () => {
+        // Without this the assertions above could be passing for any reason at all.
         rule(layer('g', 'rules'), 'a.md');
         rule(layer('p', 'rules'), 'b.md');
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual([]);
         expect(main(args())).toBe(0);
     });
 

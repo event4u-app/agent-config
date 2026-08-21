@@ -1800,6 +1800,7 @@ export function generate_claude_project_commands(
     active_command_slugs: ReadonlySet<string> | null = null,
 ): number {
     if (commandsWithheld(MODULE_STATE.PROJECT_ROOT)) active_command_slugs = new Set<string>();
+    // Returns before the stale sweep — invariant, see `commandsWithheld`.
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
     }
@@ -2319,9 +2320,8 @@ export function generate_persona_symlinks(): number {
             total += 1;
         }
     }
-    info(
-        `  ✅  Created ${total} persona symlinks across ${Object.keys(tool_dirs).length} tool directories (${partition.all.length} personas each)${partition.note}`,
-    );
+    const per_dir = Object.keys(tool_dirs).map((d) => `${d}=${partition.countFor(d)}`);
+    info(`  ✅  Created ${total} persona symlinks — ${per_dir.join(' · ')}${partition.note}`);
     return total;
 }
 
