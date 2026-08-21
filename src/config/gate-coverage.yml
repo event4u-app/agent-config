@@ -555,14 +555,50 @@ gates:
 
   - id: lint_plan_risk_register
     argv: []
-    min_scanned: 12
+    min_scanned: 5
     corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
     note: >
       Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
-      reported, never silently skipped, so a collapse below the floor means
-      the roadmaps root moved, not that the corpus went clean.
+      reported, never silently skipped.
+
+      Lowered 12 → 5 on 2026-08-21, and the SHAPE of the change matters more
+      than the number. The previous note asserted that "a collapse below the
+      floor means the roadmaps root moved, not that the corpus went clean."
+      That premise is falsified: archiving roadmaps at zero open and zero
+      deferred steps dropped the top-level count from 12 to 10 with the root
+      untouched — the corpus really did go cleaner, which is what
+      road-to-estate-drawdown exists to achieve. A floor pinned to the exact
+      corpus size fails on the drawdown succeeding, which is the wrong thing
+      to detect.
+
+      So the replacement is deliberately NOT today's count. Re-pinning at 10
+      would repeat the defect one archival later and force this note to be
+      rewritten every time a roadmap closes. 5 sits structurally below any
+      plausible active set while still catching the two failures this floor is
+      for: the roadmaps root moving, and the scanner silently reading nothing.
+      It is not a target for how many roadmaps ought to exist.
+
+      Count reconciliation, since two numbers move in this change and they
+      count different populations: this gate counts READY files at the top
+      level of agents/roadmaps/ (12 → 10 here), while
+      estate-count-budget.json::active_roadmaps counts NON-DRAFT candidates as
+      collect() sees them (11 → 10). The gap is the draft-status file each
+      population treats differently; neither number is derivable from the
+      other.
+
+      Revisit-if the active set is deliberately grown past ~15, at which point
+      5 is uninformatively low, or if a drop is ever traced to a scanner
+      defect rather than to archival — either falsifies the number, not the
+      obligation.
+
+      Lowered again 10 → 5 on 2026-08-21, during the PR drain that produced the
+      paragraph above. 10 was measured against 12 and the drain had already
+      taken the corpus to 11 — one file of headroom, so the next archival would
+      have reddened CI for the exact reason this entry says is the wrong thing to
+      detect. 5 keeps the root-moved / scanner-blind signal (both scan 0) and
+      stops the number from needing a commit per archived roadmap.
 
   - id: check_estate_count
     argv: []
@@ -695,6 +731,18 @@ gates:
     note: >
       Emits on stderr, not stdout: `--format json` owns this gate's stdout and a
       count written there would corrupt the payload. The guard reads both streams.
+      Corpus boundary, decided 2026-08-20 (council, `leave-unscanned`): `src/skills`
+      is deliberately OUT of this gate's corpus. Pointed at it the gate reports 13
+      findings (11 `buried_iron_law`, 2 `deep_iron_law`) that nobody currently sees.
+      Extending the corpus was declined on three grounds — the gate has no warn
+      level, so a staged extension would mean adding a warning mode to an enforced
+      blocking gate; the reverted `lint_skill_top_position` attempt showed two gates
+      defining one construct incompatibly, and the disputed `deep_iron_law` class is
+      still live in those 13; and the premise for scanning skills at all
+      (post-compaction truncation keeps the file start) is unverified, the tree's one
+      measured truncation fact being ENTRY-level. Re-opening this needs a measured
+      reason plus the reported-and-baselined ratchet, not a path added to `argv`.
+      See `agents/roadmaps/archive/road-to-context-fidelity.md` § Phase 3.
 
   - id: check_cli_registry_budget_sync
     argv: []

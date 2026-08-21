@@ -89,14 +89,11 @@ evaluation-order accident.
 
 **Recursive-dispatch guard (2.3) — honest scope.** No verified host
 discriminator exists for "is this classification running inside a
-subagent/teammate session" — this roadmap's own `point-of-action-carrier`
-blocker records the upstream PreToolUse agent-identity request as closed
-NOT_PLANNED, and no field in this repo's hook envelope carries session
-lineage. The guard is therefore a CALLER-SUPPLIED fact
+subagent/teammate session", and no field in this repo's hook envelope carries
+session lineage. The guard is therefore a CALLER-SUPPLIED fact
 (`insideSubagentSession`), never a `process.env` probe for an unverified
-variable name — the same "no discriminator is publishable" null the
-`point-of-action-carrier` blocker already names. When set, it resolves ∅
-(in-session) for rungs 1-4; rung 0 is exempt (it never spawns).
+variable name. When set, it resolves ∅ (in-session) for rungs 1-4; rung 0 is
+exempt (it never spawns).
 
 **Relationship to the council's own necessity gate.** Rung 4's three
 signals (design decision / security downgrade / release-gate escalation)
@@ -126,6 +123,32 @@ that lists them side by side.
 Criteria are independent and additive in the obvious way (a slice matching
 two rows takes the higher of the two tiers); this table never lowers a
 tier `inferSliceTier` (§ below) already raised.
+
+## Cross-vendor worker direction (declared, not implemented)
+
+Deny-by-default — a direction not listed here is denied. Direction rules,
+payload allow/deny lists, the report-only boundary, the no-recursion clause and
+the human egress gate:
+[`cross-vendor-worker-direction`](../../../../docs/contracts/cross-vendor-worker-direction.md).
+Role pairs, never vendor names — `classifyLadder` carries no vendor identity
+([`subagent-routing`](subagent-routing.md) § Why vendor-neutral).
+
+Rung-1/2 slices only.
+
+| # | Direction (role pair) | Resolves to |
+|---|---|---|
+| CV-1 | a worker on the **non-authoring** vendor reviews the **authoring** vendor's output | report-only worker |
+| CV-2 | the mirror of CV-1 | report-only worker |
+
+```
+DIRECTION PERMITTED + PAYLOAD ALLOWED + HUMAN APPROVED = MAY SEND.
+ANY ONE MISSING = MAY NOT.
+A CROSS-VENDOR WORKER NEVER IMPLEMENTS, WRITES, COMMITS, ACTS,
+OR DISPATCHES ONWARD.
+```
+
+Nothing reads CV-1/CV-2 at runtime: a contract surface a future implementation
+must satisfy, replacing the phantom artefact the original survey cited.
 
 ## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
 
@@ -206,15 +229,11 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 | "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
 | "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
 
-**Why rg-first for definition/references** (council debate 2026-07-28,
-claude-sonnet-4-5 + gpt-4o, 2 rounds): the pre-registered benchmark behind the
-`code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured native-graph
-recall 0.365 vs grep 0.797 on graph-shaped questions, root cause an **indexing
-gap** (TS arrow-function exports produce no symbol nodes) that hits structured
-lookups exactly as it hits NL retrieval — and the recorded consequence bound
-keeps `code_graph.enabled` false permanently. The accelerant clause is the
-escape hatch that bound names ("unless external evidence appears"); today it
-is inert.
+**Why rg-first** (council 2026-07-28, 2 rounds): the pre-registered benchmark
+behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
+native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
+indexing gap that keeps `code_graph.enabled` false permanently. The accelerant
+clause in the table above is that bound's escape hatch and is inert today.
 
 **Escalation, not degradation:** a primitive that returns nothing (index miss,
 pattern too ambiguous, report script absent) — **or an unusable result**
@@ -238,26 +257,17 @@ budgeted (consume part of the N=3 autonomous budget) and opt-in. Not in v1.
 
 ## Reference implementation
 
-The deterministic rules are encoded in
-[`src/scripts/_lib/auto_dispatch.ts`](../../../../src/scripts/_lib/auto_dispatch.ts)
-(`classifyTask`, `classifyLookup` for the lookup-class rung), covered by
-[`tests/scripts/_lib_auto_dispatch.test.ts`](../../../../tests/scripts/_lib_auto_dispatch.test.ts)
-and the lookup corpus in
-[`src/scripts/_lib/auto_dispatch.corpus.test.ts`](../../../../src/scripts/_lib/auto_dispatch.corpus.test.ts)
-(`LOOKUP_CORPUS` — the four live-observed shapes + negative controls).
+- `classifyTask` / `classifyLookup` —
+  [`auto_dispatch.ts`](../../../../src/scripts/_lib/auto_dispatch.ts)
+- `classifyLadder` + the rung-0/1/3/4 signal detectors —
+  [`judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
+- First production caller —
+  [`delegation_nudge_hook.ts`](../../../../src/scripts/hooks/delegation_nudge_hook.ts):
+  its injected line cites the resolved rung, scoped to the dispatch rungs
+  (1/2); a rung-0/3/4 verdict stays silent on this carrier.
 
-The judgment ladder (§ above) is encoded in
-[`src/scripts/_lib/judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
-(`classifyLadder`, plus the rung-0/1/3/4 signal-detection functions), covered
-by
-[`tests/scripts/_lib_judgment_ladder.test.ts`](../../../../tests/scripts/_lib_judgment_ladder.test.ts)
-(every rung, the rung-3 degrade path, the recursive-dispatch guard, and every
-∅ case). The delegation-nudge hook
-([`delegation_nudge_hook.ts`](../../../../src/scripts/hooks/delegation_nudge_hook.ts))
-is its first production caller — its injected line cites the resolved rung
-(`rung-2: dispatch do-in-parallel …`), scoped to the subagent dispatch rungs
-(1/2); a rung-0/3/4 verdict stays silent on this carrier until Phase 3/4 give
-team/council their own.
+Each has a sibling `*.test.ts` under `tests/scripts/` covering every rung, the
+rung-3 degrade path, the recursive-dispatch guard and every ∅ case.
 
 ## Related
 

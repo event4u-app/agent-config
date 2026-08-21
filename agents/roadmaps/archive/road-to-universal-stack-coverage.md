@@ -265,7 +265,7 @@ byte-identical to `main`. ✅
 - [-] Benchmark or published honest-null from Phase 0.
       <!-- migrated, not dropped: the blocker is word-for-word the tier follow-up's, so this became Measurement B in road-to-ui-track-integrity-followup rather than a second blocked roadmap for the same missing harness. Kept visible as [-] so the trail is grep-able. The DETECTION half IS measured here (the Phase-0 and Phase-1 tables); what moved is only the question of whether the generic lane's OUTPUT is good. One funded harness session now answers both questions -->
 
-<!-- Deferred item migrated to agents/roadmaps/road-to-ui-track-integrity-followup.md
+<!-- Deferred item migrated to agents/roadmaps/archive/road-to-ui-track-integrity-followup.md
      (Measurement B) on 2026-07-31. Resolution: option 1 — merge into the existing
      follow-up rather than spawn a second one, because the blocker is identical.
      The two questions stay separate sub-sections there: A varies the model tier at
