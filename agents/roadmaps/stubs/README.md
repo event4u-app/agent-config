@@ -61,6 +61,28 @@ which names nobody) — plus the probe's measured baseline on the transfer date,
 a later reader can tell real movement from noise, and any reasoning that would
 otherwise die with the parent.
 
+Council disposition **B — transferred**, 2026-08-20
+(anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2) for the
+always-on-orchestration set; see each parent roadmap for the others.
+
+
+The producer column is carried in addition to the gate column on purpose: the
+three-point check names a producer AND a probe, and a table with only the probe
+records what to watch for without recording who can act on it.
+
+Four of the six are one stub per blocker from the same roadmap, and merging them
+was considered and refused: the two host-probe cases look adjacent but probe
+different mechanisms (Stop-slot delivery versus PreToolUse agent identity)
+against different telemetry streams (`review_skipped` versus F3-lite adoption),
+and the council assigned them separate re-entry producers. One stub per distinct
+evidence gap; a merged stub would have one probe standing in for two facts.
+
+The producer is carried INLINE at the front of the gate cell rather than
+in its own column: this table reached 20 rows on the trunk while the column
+was being added here, and back-filling a producer for those 20 would mean
+inventing 20 facts. The information above is kept verbatim; promoting it to a
+real column is a schema migration that belongs in its own change.
+
 | Stub | Transferred from | Outcome state | Re-entry gate (its own probe, baseline at transfer) |
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
@@ -83,6 +105,10 @@ otherwise die with the parent.
 | [`road-to-compaction-survival-census.md`](road-to-compaction-survival-census.md) | `road-to-context-fidelity.md` Phase 0 (cf01) + all six Phase 1 steps, 2026-08-20 | `transferred` | Three gates in the stub, all measured failing on transfer day: cf01's finding is absent; manual-compaction detectability is unestablished (19 events / 591 sessions, `auto:19`, zero manual); and the session-eol capture directory is `UNOBSERVED`, so a Phase 1 delta is uncomputable. Establish detectability in ONE session before spending five |
 | [`road-to-declared-protocol-cap.md`](road-to-declared-protocol-cap.md) | [`road-to-rule-coherence-followup.md`](../archive/road-to-rule-coherence-followup.md) Phase 5 F5.1, 2026-08-20 | `transferred` | One dated gate plus a broken instrument. The 90-day branch of the cap's own trigger fires **2026-11-04** (14 days elapsed at transfer); the session-counting branch has **no counter** (`grep -rn 'declared_protocol' src/scripts/hooks/ src/scripts/_lib/` → 0) and the transcript grep that stands in for one matches the rule's own prose. Provisional note still in place (`LOWER BOUND` → 1 hit). |
 | [`road-to-discipline-default-flip.md`](road-to-discipline-default-flip.md) | [`road-to-rule-coherence-followup.md`](../archive/road-to-rule-coherence-followup.md) Phases 1-2, blockers `default-flip-release-gate` + `bench-spend-and-methodology`, 2026-08-20 | `transferred` | Two gates. **T1** a release-maintainer default flip: measured at transfer `discipline_profile: __DISCIPLINE_PROFILE__` (unflipped), `rule_packs: []`, `scope_dedup` absent from the template. **T2** the A/B run — method pre-registered, `essential-plus` occurs **0** times in `docs/benchmark.md` and **0** files under `agents/evidence/`. The two independent human judges are the gap. |
+|  [`road-to-team-telemetry-behind-flag.md`](road-to-team-telemetry-behind-flag.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md) 5.4, 2026-08-20 | `transferred` | producer: Maintainer of a flag-enabled environment — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` **unset** (3rd dated reading: 08-09, 08-13, 08-20)  |
+|  [`road-to-f4-full-stop-block.md`](road-to-f4-full-stop-block.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Maintainer running the supported host — 9 `review_skipped` lines, all `exact` (`diff_lines` 243-1770); model-visible canary **not captured**  |
+|  [`road-to-gate-council-auto-dispatch.md`](road-to-gate-council-auto-dispatch.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Gate-autonomy maintainer — 121 `quorum_result` events (17 solo-concluded) + 553 dispatch lines — **window has opened**; soak unverified, minima unwritten  |
+|  [`road-to-point-of-action-carrier.md`](road-to-point-of-action-carrier.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Maintainer with a real multi-agent host session — **not locally measurable** — no session-lineage field in the hook envelope  |
 
 
 
@@ -132,3 +158,15 @@ to `agents/roadmaps/` only when **all three** of these are true:
 
 Until then, the answer to "team X when?" is the cancelled-with-reason
 matrix in [`docs/deploy/team-deployment-posture.md`](../../../docs/deploy/team-deployment-posture.md).
+
+### Closing a drain-run transfer — either direction counts
+
+A drain-run transfer is promoted when **its own probe reads positive**, and
+**closed when its criterion is satisfied in either direction** — including the
+honest-null direction, where one is registered. Two of the six carry such a null
+already: the point-of-action carrier's "no discriminator is publishable", and the
+auto-dispatch gate's "telemetry says auto-fire adds nothing and the gate stays
+recommend-only". **A measured null closes a stub as legitimately as shipped work
+does**, and saying so is what keeps a probe-gated stub from becoming the parking
+lot the disposition framework's fifth disposition (`E — abandon`) exists to
+avoid.

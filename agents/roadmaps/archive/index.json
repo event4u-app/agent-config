@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 541,
+  "count": 542,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1371,6 +1371,20 @@
         "done": 13,
         "deferred": 0,
         "cancelled": 6
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-always-on-orchestration",
+      "title": "Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 37,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"
@@ -6936,12 +6950,12 @@
     {
       "slug": "road-to-wiring-truth-corrections",
       "title": "Road to wiring truth corrections — three places where declared and effective diverge",
-      "disposition": "completed",
+      "disposition": "completed-with-deferrals",
       "phases": 3,
       "steps": {
         "open": 0,
-        "done": 11,
-        "deferred": 0,
+        "done": 8,
+        "deferred": 2,
         "cancelled": 0
       },
       "verdict": null,

@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**541 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 195 · completed 254 · completed-with-deferrals 25 · not-extractable 34
+**542 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 196 · completed 253 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -122,6 +122,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-ai-os-product-ui`](road-to-ai-os-product-ui.md) | Roadmap: AI OS Product UI — beyond the installer shell | closed-with-cancellations | 5 | 32/37 | _not extractable_ |
 | [`road-to-always-budget-relief`](road-to-always-budget-relief.md) | Road to Always-Budget Relief | closed-with-cancellations | 4 | 10/14 | _not extractable_ |
 | [`road-to-always-loaded-corpus-scoping`](road-to-always-loaded-corpus-scoping.md) | Roadmap: Scope the always-loaded rule corpus | closed-with-cancellations | 4 | 13/19 | _not extractable_ |
+| [`road-to-always-on-orchestration`](road-to-always-on-orchestration.md) | Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works | closed-with-cancellations | 7 | 37/38 | _not extractable_ |
 | [`road-to-analysis-workbench`](road-to-analysis-workbench.md) | Roadmap: Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump) | closed-with-cancellations | 6 | 28/33 | _not extractable_ |
 | [`road-to-anti-slop-detector`](road-to-anti-slop-detector.md) | Road to an Anti-Slop Detector (deterministic aesthetic-tell layer) | completed | 5 | 16/16 | _not extractable_ |
 | [`road-to-api-cost-optimization`](road-to-api-cost-optimization.md) | Road to API-cost optimization — cut the dollar bill of paid LLM calls | completed | 5 | 18/18 | _not extractable_ |
@@ -519,7 +520,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-visual-review-loop`](road-to-visual-review-loop.md) | Roadmap: Visual Review Loop + A11y | completed | 7 | 45/45 | _not extractable_ |
 | [`road-to-webfont-delivery-ownership`](road-to-webfont-delivery-ownership.md) | Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids | completed | 3 | 12/12 | _not extractable_ |
 | [`road-to-weighted-decision-matrix`](road-to-weighted-decision-matrix.md) | Road to weighted decision matrix — quantitative mode for `decision-record` | completed | 4 | 18/18 | _not extractable_ |
-| [`road-to-wiring-truth-corrections`](road-to-wiring-truth-corrections.md) | Road to wiring truth corrections — three places where declared and effective diverge | completed | 3 | 11/11 | _not extractable_ |
+| [`road-to-wiring-truth-corrections`](road-to-wiring-truth-corrections.md) | Road to wiring truth corrections — three places where declared and effective diverge | completed-with-deferrals | 3 | 8/10 | _not extractable_ |
 | [`road-to-wiring-truth`](road-to-wiring-truth.md) | Road to Wiring Truth | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-wizard-sse-hardening`](road-to-wizard-sse-hardening.md) | Roadmap: Wizard SSE hardening — edge-case test coverage, severity-phased | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-wizard-ux-improvements`](road-to-wizard-ux-improvements.md) | Roadmap: Wizard UX — first-run detection, fresh-start, tool-list cleanup | completed | 8 | 21/21 | _not extractable_ |
