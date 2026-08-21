@@ -998,8 +998,9 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
         // script name covers the rest.
         '> Auto-generated — do not edit. Regenerate with `task roadmap-progress` ' +
             'or by running the `update_roadmap_progress` script for your install; ' +
-            'rewritten on every roadmap create / execute / completion change ' +
-            '(timestamp lives in git history).\n>\n' +
+            'rewritten on every roadmap create / execute / completion change. ' +
+            'A repository that does not commit this file has no git history for ' +
+            'it — regenerate to see the current state.\n>\n' +
             header_meta,
     );
     lines.push('## Overall\n');
@@ -1214,17 +1215,56 @@ class ArgparseExit extends Error {
 const _PROG = 'update_roadmap_progress.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--check] [--archive | --no-archive] [--repo-root REPO_ROOT]\n`;
+    return (
+        `usage: ${_PROG} [-h] [--check] [--tracked-mode | --untracked-mode]\n` +
+        `       [--archive | --no-archive] [--repo-root REPO_ROOT]\n`
+    );
 }
+
+/**
+ * Whether the dashboard is expected to be a committed artefact.
+ *
+ * `tracked` is the default and the historical behaviour: the file must exist
+ * and must be current. `untracked` is for a repository that deliberately does
+ * not commit the dashboard — there absence is the correct state, but a file
+ * that IS present is still checked for freshness, and a file still in the git
+ * index is a failure naming the `git rm --cached` that fixes it.
+ *
+ * The mode is explicit rather than inferred, on the AI council's insistence
+ * (2026-08-21, both seats): an unconditional "absent means pass" cannot tell a
+ * correctly-untracked repository from a generator that silently stopped
+ * producing output, and inferring the mode from mutable git state makes the
+ * gate's meaning depend on the index rather than on declared intent.
+ */
+type DashboardMode = 'tracked' | 'untracked';
 
 interface Args {
     check: boolean;
+    mode: DashboardMode;
     archive: boolean;
     repo_root: string;
 }
 
+/**
+ * Is `abs` in the git index of the repository that contains it?
+ *
+ * Used only by `--check --untracked-mode`, to tell "correctly absent" from
+ * "still committed and therefore still a conflict hotspot". A repository with
+ * no git at all answers `false`, which is the right answer for the question
+ * being asked: nothing is tracked there.
+ */
+function _isTrackedInGit(abs: string, repo_root: string): boolean {
+    const r = spawnSync('git', ['ls-files', '--error-unmatch', '--', abs], {
+        cwd: repo_root,
+        encoding: 'utf-8',
+        timeout: 10_000,
+    });
+    return r.status === 0;
+}
+
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
+    let mode: DashboardMode = 'tracked';
     let archive = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
@@ -1240,6 +1280,12 @@ function _parseArgs(argv: readonly string[]): Args {
             throw new ArgparseExit(0);
         } else if (tok === '--check') {
             check = true;
+            i += 1;
+        } else if (tok === '--tracked-mode') {
+            mode = 'tracked';
+            i += 1;
+        } else if (tok === '--untracked-mode') {
+            mode = 'untracked';
             i += 1;
         } else if (tok === '--archive') {
             archive = true;
@@ -1267,7 +1313,7 @@ function _parseArgs(argv: readonly string[]): Args {
         // rather than silently letting one win.
         emitError('argument --archive: not allowed with --check');
     }
-    return { check, archive, repo_root };
+    return { check, mode, archive, repo_root };
 }
 
 /**
@@ -1357,8 +1403,41 @@ function main(argv?: readonly string[]): number {
     };
 
     if (args.check) {
-        const stale = current !== new_text;
-        if (stale) {
+        // The mode table, per the AI council 2026-08-21 (both seats). Absence is
+        // a distinguished case ONLY in untracked mode; a present file is
+        // freshness-checked in both, so untracked never means unchecked.
+        //
+        //   tracked:    absent -> fail | present+stale -> fail | present+current -> pass
+        //   untracked:  in-index -> fail | absent -> pass | present+stale -> fail
+        //               | present+current -> pass
+        const present = fs.existsSync(target);
+        let stale = false;
+        if (args.mode === 'untracked' && _isTrackedInGit(target, repo_root)) {
+            // The migration is incomplete: the repository declares the dashboard
+            // untracked but git still carries it, so every branch keeps
+            // conflicting on it. Print the fix; never run it — git-index
+            // operations are the user's (`/sync-gitignore:fix`).
+            stale = true;
+            process.stderr.write(
+                `❌  ${_relToRepo(target)} is still tracked by git, but this ` +
+                    'repository runs `--untracked-mode`. Untrack it, keeping the ' +
+                    'working-tree file:\n' +
+                    `      git rm --cached ${_relToRepo(target)}\n`,
+            );
+        } else if (!present) {
+            if (args.mode === 'tracked') {
+                stale = true;
+                process.stderr.write(
+                    `❌  ${_relToRepo(target)} is missing. Run ` +
+                        '`node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts` ' +
+                        'to generate it (or `task roadmap-progress` in Taskfile ' +
+                        'projects). If this repository deliberately does not commit ' +
+                        'the dashboard, pass `--untracked-mode`.\n',
+                );
+            }
+            // untracked + absent: the declared state. Nothing to compare.
+        } else if (current !== new_text) {
+            stale = true;
             process.stderr.write(
                 `❌  ${_relToRepo(target)} is stale. ` +
                     'Run `node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts` ' +
@@ -1395,7 +1474,16 @@ function main(argv?: readonly string[]): number {
         if (stale || complete.length || pending.length) {
             return 1;
         }
-        process.stdout.write(`✅  ${_relToRepo(target)} is up to date.\n`);
+        if (!present) {
+            // untracked + absent. Saying "up to date" about a file that does not
+            // exist would be the misleading half of an honest pass.
+            process.stdout.write(
+                `✅  ${_relToRepo(target)} is not committed here (--untracked-mode) ` +
+                    'and no stale copy is on disk.\n',
+            );
+        } else {
+            process.stdout.write(`✅  ${_relToRepo(target)} is up to date.\n`);
+        }
         return 0;
     }
     fs.writeFileSync(target, new_text, { encoding: 'utf-8' });

@@ -548,7 +548,7 @@ describe('update_roadmap_progress — intent', () => {
         expect(result.stderr).toContain('Completed roadmaps not yet archived');
     });
 
-    it('--check: stale (no dashboard yet) + complete + deferred → exit 1 with the markers', () => {
+    it('--check: absent dashboard + complete + deferred → exit 1 with the markers', () => {
         mkRoadmap('road-to-complete.md', ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n'));
         mkRoadmap(
             'road-to-deferred.md',
@@ -557,7 +557,9 @@ describe('update_roadmap_progress — intent', () => {
         const ts = runTs(['--repo-root', root, '--check'], tmp);
         expect(ts.status, 'check exit').toBe(1);
         // `--check` diagnostics are written to stderr.
-        expect(ts.stderr, 'stale marker').toContain('is stale');
+        // "no dashboard yet" is ABSENT, not stale — the two were one message
+        // until the tracked/untracked modes separated them.
+        expect(ts.stderr, 'missing marker').toContain('is missing');
         expect(ts.stderr, 'complete-unarchived marker').toContain(
             'Completed roadmaps are still in `agents/roadmaps/`',
         );
@@ -597,10 +599,12 @@ describe('update_roadmap_progress — intent', () => {
     it('unknown arg → exit 2, usage banner on stderr', () => {
         const ts = runTs(['--bogus'], tmp);
         expect(ts.status, 'exit').toBe(2);
-        expect(ts.stderr.split('\n')[0]).toBe(
-            'usage: update_roadmap_progress.py [-h] [--check] [--archive | --no-archive] ' +
-                '[--repo-root REPO_ROOT]',
-        );
+        // The banner wraps onto two lines since the tracked/untracked modes
+        // joined it, so pin both lines rather than only the first.
+        expect(ts.stderr.split('\n').slice(0, 2)).toEqual([
+            'usage: update_roadmap_progress.py [-h] [--check] [--tracked-mode | --untracked-mode]',
+            '       [--archive | --no-archive] [--repo-root REPO_ROOT]',
+        ]);
         expect(ts.stderr).toContain('unrecognized arguments: --bogus');
     });
 
@@ -1057,5 +1061,157 @@ describe('blocker class — the absent-field default is the safe end', () => {
         );
         expect(b!.run).toBe('`task bench:ab:live -- --budget 50`');
         expect(b!.budget).toBe('~50 USD per run');
+    });
+});
+
+// The tracked/untracked mode matrix for `--check`.
+//
+// `--check` used to treat an absent dashboard as stale, because
+// `current = exists ? read : ''` and `stale = current !== new_text`. That made
+// absence indistinguishable from staleness, so a repository that deliberately
+// does not commit the dashboard could not run the gate at all. The fix is an
+// explicit mode rather than an inferred one — the AI council (2026-08-21, both
+// seats) refused an unconditional "absent means pass" because it cannot tell a
+// correctly-untracked repository from a generator that silently stopped
+// producing output.
+//
+// Every cell of the table is pinned here, including the two that would pass
+// vacuously if the mode branch were deleted (tracked+absent, untracked+absent):
+// each assertion below was observed RED against the pre-change script.
+describe('update_roadmap_progress — --check tracked/untracked mode', () => {
+    let tmp: string;
+    let root: string;
+    let roadmaps: string;
+
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'urp-mode-'));
+        root = path.join(tmp, 'proj');
+        roadmaps = path.join(root, 'agents', 'roadmaps');
+        fs.mkdirSync(roadmaps, { recursive: true });
+        fs.writeFileSync(
+            path.join(roadmaps, 'road-to-active.md'),
+            ['# Active', '', '## Phase 1 — Go', '- [x] done', '- [ ] todo', ''].join('\n'),
+            'utf-8',
+        );
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    const DASH_REL = path.join('agents', 'roadmaps-progress.md');
+    const dashAbs = (): string => path.join(root, DASH_REL);
+
+    /** Generate a current dashboard into the fixture. */
+    function generate(): void {
+        const r = runTs(['--repo-root', root], tmp);
+        expect(r.status, 'fixture regen').toBe(0);
+        expect(fs.existsSync(dashAbs()), 'fixture dashboard written').toBe(true);
+    }
+
+    function check(...extra: string[]): SpawnSyncReturns<string> {
+        return runTs(['--repo-root', root, '--check', ...extra], tmp);
+    }
+
+    /** A real git repo, because the untracked-mode probe asks the git index. */
+    function gitInit(): void {
+        for (const args of [
+            ['init', '--quiet'],
+            ['config', 'user.email', 't@example.com'],
+            ['config', 'user.name', 'T'],
+        ]) {
+            const r = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+            expect(r.status, `git ${args[0]}`).toBe(0);
+        }
+    }
+
+    function gitAdd(rel: string): void {
+        const r = spawnSync('git', ['add', '--', rel], { cwd: root, encoding: 'utf8' });
+        expect(r.status, 'git add').toBe(0);
+    }
+
+    it('tracked mode is the DEFAULT — no flag behaves exactly like --tracked-mode', () => {
+        generate();
+        expect(check().status, 'default, current').toBe(0);
+        expect(check('--tracked-mode').status, 'explicit, current').toBe(0);
+        fs.rmSync(dashAbs());
+        expect(check().status, 'default, absent').toBe(1);
+        expect(check('--tracked-mode').status, 'explicit, absent').toBe(1);
+    });
+
+    it('tracked + absent → exit 1, and the message says MISSING, not stale', () => {
+        // Pre-change this said "is stale" for a file that was never there, which
+        // is the wording defect that hid the whole distinction.
+        expect(fs.existsSync(dashAbs())).toBe(false);
+        const r = check('--tracked-mode');
+        expect(r.status, 'exit').toBe(1);
+        expect(r.stderr, 'missing marker').toContain('is missing');
+        expect(r.stderr, 'points at the escape hatch').toContain('--untracked-mode');
+    });
+
+    it('tracked + present + stale → exit 1', () => {
+        generate();
+        fs.appendFileSync(dashAbs(), '\nDRIFT\n', 'utf-8');
+        const r = check('--tracked-mode');
+        expect(r.status, 'exit').toBe(1);
+        expect(r.stderr, 'stale marker').toContain('is stale');
+    });
+
+    it('untracked + absent + not in the index → exit 0, and it does NOT claim to be up to date', () => {
+        gitInit();
+        expect(fs.existsSync(dashAbs())).toBe(false);
+        const r = check('--untracked-mode');
+        expect(r.status, 'exit').toBe(0);
+        expect(r.stdout, 'honest wording').toContain('is not committed here');
+        expect(r.stdout, 'never claims freshness for a file that is absent').not.toContain(
+            'is up to date',
+        );
+    });
+
+    it('untracked + absent + NO git repo at all → exit 0 (nothing is tracked there)', () => {
+        expect(fs.existsSync(path.join(root, '.git')), 'no git in fixture').toBe(false);
+        expect(check('--untracked-mode').status, 'exit').toBe(0);
+    });
+
+    it('untracked + still in the git index → exit 1 naming `git rm --cached`', () => {
+        // The migration-incomplete cell: the repository declares the dashboard
+        // untracked while git still carries it, so every branch keeps
+        // conflicting on it. The gate prints the fix and never runs it.
+        gitInit();
+        generate();
+        gitAdd(DASH_REL);
+        const r = check('--untracked-mode');
+        expect(r.status, 'exit').toBe(1);
+        expect(r.stderr, 'names the state').toContain('still tracked by git');
+        expect(r.stderr, 'names the fix').toContain('git rm --cached');
+    });
+
+    it('untracked + present + stale → exit 1 (untracked never means unchecked)', () => {
+        gitInit();
+        generate();
+        fs.appendFileSync(dashAbs(), '\nDRIFT\n', 'utf-8');
+        const r = check('--untracked-mode');
+        expect(r.status, 'exit').toBe(1);
+        expect(r.stderr, 'stale marker').toContain('is stale');
+    });
+
+    it('untracked + present + current → exit 0', () => {
+        gitInit();
+        generate();
+        const r = check('--untracked-mode');
+        expect(r.status, 'exit').toBe(0);
+        expect(r.stdout, 'freshness wording is correct here').toContain('is up to date');
+    });
+
+    it('--untracked-mode is refused together with --archive, like every other check flag', () => {
+        const r = runTs(['--repo-root', root, '--check', '--untracked-mode', '--archive'], tmp);
+        expect(r.status, 'argparse exit').toBe(2);
+        expect(r.stderr).toContain('not allowed with --check');
+    });
+
+    it('the usage banner names both modes', () => {
+        const r = runTs(['--help'], tmp);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('--tracked-mode');
+        expect(r.stdout).toContain('--untracked-mode');
     });
 });
