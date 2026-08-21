@@ -1,10 +1,10 @@
 # R2 completion review — evidence-based-adr-governance (round 2)
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: 2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
-  scope_hash: b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7
+  scope_hash: 2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
   roadmap_hash: 800a9818d2d9b9d49a3aba039efd66f0b832e10b2de77b1d3fe18e48691ad9a3
   ac_hash: 8242b18b255db39bda653ae3500a284986007aa38a6e4976fdfb69048f710552
@@ -13,7 +13,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
 -->
 
-Scope `b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7`, reviewed 2026-08-21.
+Scope `2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1`, reviewed 2026-08-21.
 Blind review: findings below were formed from the diff, the tree and executed probes only.
 
 Verification actually run: `check_adr_frontmatter` (0 errors, 186 scanned) · `lint_provenance_vocabulary`
@@ -24,6 +24,13 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**Re-bound a fourth time, second trunk merge (contract §2.7).** `b8cc9867…` →
+`2ba1f6c6…`. main moved again while CI was running on this branch. Same measurement,
+same answer: changed-file SET identical in both directions, whole content delta one
+file (`estate-count-budget.json`, +24/-3 — the conflict resolution, main having walked
+5/55/33 and this branch re-measuring +1/+2 on top for 6/55/35). And this time all four
+manifest fields were checked before the commit, not three.
 
 **`roadmap_hash` and `ac_hash` re-derived with it — and this is the step I missed.**
 The manifest pins four inputs, not one: `scope_hash`, `diff_sha`, `roadmap_hash` and
