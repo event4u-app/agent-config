@@ -60,6 +60,10 @@ amends: — | ADR-MMM                    # optional; this ADR amends that one
 amended_by: — | ADR-MMM                # optional; reciprocal of `amends`
 phase: <roadmap-stem> · <phase-id>     # optional but recommended
 type: <free-form label>                # NOT an enum — see the note below
+review_trigger: >-                     # required on an accepted record
+  <the observable condition under which this decision is reopened>
+  # `unclassified` is legal on a PRE-EXISTING record during the migration.
+  # `terminal`, `none`, `never` and empty are rejected at every stage.
 protected_dimensions: [...]            # optional — see § Reopen authority
 reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
 
@@ -99,6 +103,24 @@ until someone reads both.
 
 `status:` also gains `rejected`, which the validator has always accepted and
 this block omitted.
+
+A fourth omission, found in the same review and worth naming separately because
+it is the most load-bearing: **`review_trigger` was absent from this block
+entirely** while being required on every accepted record by § Reopen authority
+and checked by `check_adr_frontmatter`. The field half of this amendment turns
+on it, and the schema reference did not mention it. Now it does.
+
+**Scope note on the bulk mandate.** The owner mandate above permits bulk
+classification for `provenance` and `evidence` only, with `reopen_policy`
+staying classify-on-desk. `review_trigger` falls in neither category and is made
+universal by this amendment, so its scope is stated here rather than left to
+inference: retrofitting a trigger is **not** a classification of authority or of
+evidence — it records a falsifiable condition that either holds or does not, and
+a wrong one is refuted by the world rather than argued about. It is therefore
+in scope for a bulk pass on the same footing as the descriptive axes. What is
+NOT in scope is *inventing* a condition a record does not support: the honest
+value there is the transitional `unclassified`, and the sweep records the reason
+rather than manufacturing compliance.
 
 ## Provenance and evidence
 
@@ -193,6 +215,21 @@ ADR transition. Moving *away from* `owner_intent` takes the owner-reserved
 path — it removes an owner's claim on the decision. Moving *to* `owner_intent`
 is a strengthening and needs only the standard record. A census may **propose**
 a value; it never writes one.
+
+**This policy is review-carried, not validator-enforced, and the distinction
+matters because this is the one field that touches authority.**
+`check_adr_frontmatter` reads one file at a time and has no repository history
+(`grep -E 'execSync|spawnSync'` over it returns nothing), so it can see that a
+value IS `evidence` and cannot see that it WAS `owner_intent`. It validates the
+value; it cannot validate the transition. An earlier draft of this amendment
+implied the validator rejects an unrecorded move away from `owner_intent` — it
+does not, and claiming so would have been the same over-claim of enforcement
+this contract corrects elsewhere on this page.
+
+What actually catches it: the field is in the diff, so the change is visible to
+review, and the owner-reserved path is a human decision either way. A
+deterministic check would need a two-ref diff — buildable, not built, and named
+here so nobody relies on a gate that does not exist.
 
 ## Reopen authority
 

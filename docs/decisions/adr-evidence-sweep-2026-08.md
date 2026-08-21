@@ -547,6 +547,40 @@ still on disk — both under gitignored `agents/runtime/`, so neither exists in 
 clone. The deliberation survived and the evidence did not. That finding is what
 put the `evidence.basis` reachability rule into the contract.
 
+### Mechanical evaluation — ADR-133's freeze, executed rather than debated
+
+ADR-133 lifts "when **ALL** of the following are true — each is a yes/no check
+against a named artifact". So it is evaluated, not reopened. Run at the head of
+this branch, with the command output rather than a reading:
+
+| Condition | State | Evidence |
+|---|---|---|
+| (a) code-graph benchmark decided, CLAIMS-bound | **met** | `claim: code-graph-retrieval-null` present in `docs/CLAIMS.md` |
+| (b) backstop debt ≤ 25 | **met** | `internal/reports/rule-backstop-debt.json` total = **0** |
+| (c) release install E2E green in the release path | **met**, all three sub-checks | job at `release-validation.yml:372` · named in `branch-protection-policy.md:75` · **14 of 16** release-shaped runs succeeded |
+| (d) one real external usage session, OR ADR-134 defers unexpired | **met via the OR arm only** | ADR-134 expiry `2026-09-15`, unexpired at 2026-08-21 |
+
+**Verdict: the freeze lifts by ADR-133's own terms.**
+
+Two things about that verdict are worth more than the verdict.
+
+**Sub-check (c2) was first read as UNMET, by grepping for the job id.** The
+policy names the check as `Release install E2E (pack → install → upgrade →
+boot)`, not as `release-install-e2e`. The record's own wording uses the job id in
+sub-check (c1) and says only "is named in … the release-PR row" in (c2), and
+branch protection matches on **check names** rather than job ids — so the
+check-name reading is the operative one and the condition is met. An id-grep is
+the natural probe and it produced the wrong answer; recorded because the next
+person will reach for the same grep.
+
+**(d) is met only through ADR-134, which expires in 25 days.** So this freeze
+lifts today and **re-arms on 2026-09-15** unless ADR-134 is resolved first —
+ADR-133's exit depends on ADR-134 staying unexpired, while ADR-134's own
+Consequences name satisfying ADR-133(d) as a benefit. That is a circular
+dependency between two accepted records, and it is why ADR-134 is the
+time-bounded row in the blocker lane rather than a routine one. Lifting the
+freeze without disarming that anchor buys 25 days.
+
 ### Autonomy blockers
 
 Every candidate was tested against ADR-237's capability-before-role doctrine,

@@ -197,16 +197,23 @@ self-amendment — owner-reserved by that contract's own row 6. It is
 **discharged by the source instruction rather than re-asked**, because the
 owner directed exactly this change in the owner's own words:
 
-> "Vielleicht können wir auch ein ADR-Level einführen, dass Agent ADR's (oder
-> auch human) mit einem Level kennzeichnet, wie leicht es gekippt werden
-> kann" · "Adrs Kennzeichen ob human oder agentic" · "Ich will, dass wir ALLE
-> hinterfragen."
+DE (verbatim owner instruction, quoted because the mandate is what it
+discharges) · EN (translation follows):
+
+> "Vielleicht können wir auch ein ADR-Level einführen, dass Agent ADR's (oder <!-- md-language-check: ignore -->
+> auch human) mit einem Level kennzeichnet, wie leicht es gekippt werden <!-- md-language-check: ignore -->
+> kann" · "Adrs Kennzeichen ob human oder agentic" · "Ich will, dass wir ALLE <!-- md-language-check: ignore -->
+> hinterfragen." <!-- md-language-check: ignore -->
+
+EN: "Perhaps we can also introduce an ADR level that marks agent ADRs (or human
+ones) with a level for how easily they can be overturned" · "Mark ADRs as human
+or agentic" · "I want us to question ALL of them."
 
 What that discharges, precisely: introducing the two descriptive axes, and
 permitting a bulk census under an owner mandate. What it does **not**
 discharge is anything in Phase 0B, or the Phase 7 authority question.
 
-- [ ] **0A.1 Amend the `No bulk classification` clause and record the mandate.**
+- [x] **0A.1 Amend the `No bulk classification` clause and record the mandate.**
       Replacement wording: *"Classify an ADR when reopened, cited as a
       blocker, on the desk, or when executing an owner-mandated evidence
       census. Bulk classification requires an explicit owner mandate naming
@@ -252,7 +259,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
 
 ## Phase 1 — Schema: two descriptive axes, staged so the tree stays valid
 
-- [ ] **1.1 Add `provenance` to the shared frontmatter (`adr-layout.md`
+- [x] **1.1 Add `provenance` to the shared frontmatter (`adr-layout.md`
       § Frontmatter, `:46-68`).**
 
       ```yaml
@@ -274,7 +281,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       verify: schema merged; `check_adr_frontmatter` accepts a fixture per
       kind, rejects an unknown value, and rejects a missing `kind` on a
       *newly added* accepted ADR only.
-- [ ] **1.2 Add `evidence` + `authority_basis`, with a discovery qualifier.**
+- [x] **1.2 Add `evidence` + `authority_basis`, with a discovery qualifier.**
 
       ```yaml
       evidence:
@@ -329,7 +336,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       verify: schema merged; `check_adr_frontmatter` rejects an E0 record
       without `discovery`, and rejects an `authority_basis` change away from
       `owner_intent` that carries no owner record.
-- [ ] **1.3 Require a substantive `review_trigger` — staged, not day-one
+- [x] **1.3 Require a substantive `review_trigger` — staged, not day-one
       fatal.** 88 of the 147 accepted records carry no trigger at all
       (`492873f09`), so an immediate hard requirement would make the tree
       invalid on the day the schema lands, and would force S and B into one
@@ -357,7 +364,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       verify: lint accepts `unclassified` on an existing record, rejects it
       on a newly added one, rejects `terminal`/`none`/empty everywhere; the
       exception count is emitted as a number the ratchet can hold.
-- [ ] **1.4 Permanence-language lint — extend, do not add a script.**
+- [x] **1.4 Permanence-language lint — extend, do not add a script.**
       `forever`, `permanently`, `never revisit`, `never reconsider`, `settled
       forever` are forbidden in new mechanism ADRs; allowed only when scoped
       to a genuine external invariant *and* accompanied by the condition
@@ -378,7 +385,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       verify: lint fires on an ADR-208-shaped fixture and stays silent on an
       externally-scoped invariant with its stop-condition; the five live hits
       are listed in the Phase 3 artifact with a disposition each.
-- [ ] **1.5 Convert the 7 per-area records to YAML frontmatter.** Per-area
+- [x] **1.5 Convert the 7 per-area records to YAML frontmatter.** Per-area
       ADRs (`docs/adrs/<area>/NNNN-*.md`) carry no YAML frontmatter at all —
       metadata lives in a blockquote line (`> Area: … · Status: accepted ·
       Date: …`). `adr_cite_check` already declares them `PARTIAL_COVERAGE`
@@ -401,7 +408,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
 
 ## Phase 2 — Tooling (surfacing only; no authority)
 
-- [ ] **2.0 Extract one shared ADR frontmatter reader into
+- [x] **2.0 Extract one shared ADR frontmatter reader into
       `src/scripts/_lib/`.** Three parsers exist and diverge:
       `check_adr_frontmatter.ts:155`, `adr_cite_check.ts:182` (the only one
       handling a bare `>-` fold marker), `adr/regenerate_index.ts:110`
@@ -410,7 +417,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       and `regenerate_index` would silently read them as empty.
       verify: all three call sites use the shared reader; a nested-plus-list
       fixture round-trips identically through each; existing tests green.
-- [ ] **2.1 `src/scripts/adr/evidence_census.ts` — proposal-only pre-grader.**
+- [x] **2.1 `src/scripts/adr/evidence_census.ts` — proposal-only pre-grader.**
       Scans each record for markers (CLAIMS.md links, benchmark ids,
       pre-registration refs, dated measured numbers, external-standard
       citations, council-disposition lines, "owner decision") and emits a
@@ -448,7 +455,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       verify: `adr:effective ADR-020` reports the marker clauses as
       superseded; `adr-layout.md:198-200` corrected in the same change; CI
       fixture red on a planted current-vs-amendment contradiction.
-- [ ] **2.3 Cite-time surfacing — shadow mode, and wired.** `adr_cite_check`
+- [x] **2.3 Cite-time surfacing — shadow mode, and wired.** `adr_cite_check`
       prints provenance kind, grade, discovery state and authority basis, and
       for an accepted agentic E0/E1 record emits:
 
@@ -479,7 +486,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       READMEs ship in the same commit.
       verify: `regenerate_index --check` and `audit_adr_coverage --check`
       both green after the regen commit.
-- [ ] **2.5 ADR admission gate — fewer ADRs.** `decision-record` and
+- [x] **2.5 ADR admission gate — fewer ADRs.** `decision-record` and
       `adr-create` classify before creating: architecturally significant?
       hard or costly to reverse, or broadly constraining? consumer / API /
       security / structural impact? Otherwise → decision note, config,
@@ -545,7 +552,7 @@ blocking still proportional; (10) would ac accept this decision again on
 today's facts; (11) disposition; (12) if blocking, the minimum sufficient
 authority for the change.
 
-- [ ] **3.0 Calibration before grading.** A shared anchor set of 12–15
+- [x] **3.0 Calibration before grading.** A shared anchor set of 12–15
       records graded by every reviewer before it grades its tranche; random
       assignment rather than grouping similar ADRs under one reviewer; a
       blinded overlap of ≥10 % of each tranche graded twice without either
@@ -556,30 +563,32 @@ authority for the change.
       verify: anchor grades recorded per reviewer; overlap sample ≥10 % with
       a published disagreement count; adjudicated gold grades named
       separately from reviewer grades.
-- [ ] **3.1 Tranche A — ADR-200–237 + per-area (45: 38 flat + 7 per-area).**
-      Newest first: their `review_trigger`s are mechanically evaluable and
-      they set the grading precedents.
-      verify: 45 rows, each with provenance, grade, discovery, disposition
-      and per-row basis refs.
-- [ ] **3.2 Tranche B — ADR-100–138 (39).** The council-era block (ADR-104
-      carries 46 `council` occurrences across 42 lines; ADR-120, ADR-122) —
-      the highest concentration of the owner's stated concern. Expected
-      pattern, falsified per row: council-heavy plus zero measurement →
-      agentic / E0.
-      verify: 39 rows, same shape.
-- [ ] **3.3 Tranche C — ADR-001–099 + `ADR-rule-kernel-and-router` (100).**
-      88 of the accepted records carry no `review_trigger`; each gets a
-      proposed substantive trigger or the transitional `unclassified` per
-      1.3. **No record receives a "terminal decision" line** — that escape
-      is deleted. Round 5's addition: the census first classifies whether a
-      record genuinely lacks an observable trigger or merely has an
-      unarticulated one, so batch-adding does not manufacture meaningless
-      compliance. ADR-001 is the standing case: its own text made the swap
-      re-evaluation "mandatory before P4.1" (`:84-86`), the follow-up was
-      never written, and it is still `accepted` / `superseded_by: —`.
-      verify: zero accepted records left with no trigger field at all;
-      trigger-absence reason recorded per record; ADR-001 disposition landed.
-- [ ] **3.4 Central adjudication, tally, and dated follow-ups.** One
+- [x] **3.1 Sweep all 185 records under randomised assignment.** Coverage
+      landed: 13 records adjudicated as the anchor set, then 165 further flat
+      records and 7 per-area records across eight reviewers, with 189 rows in
+      `docs/decisions/adr-evidence-sweep-2026-08.md`.
+
+      **The partition changed, and the substitution is recorded rather than
+      ticked over.** An earlier draft of this phase specified three tranches by
+      era — ADR-200–237, ADR-100–138, ADR-001–099. That grouping was inherited
+      before Phase 3.0's controls existed, and the two contradict each other:
+      grouping similar records under one reviewer is exactly what makes
+      tranche-local drift invisible from inside a tranche, which is why 3.0
+      requires random assignment. Random assignment won, the era tranches were
+      dropped, and the assignment is reproducible from a fixed seed.
+
+      What the era framing was FOR is preserved rather than lost: it wanted the
+      newest records first (their triggers are mechanically evaluable) and the
+      council-era block covered deliberately (ADR-104 carries 46 `council`
+      occurrences). Both are satisfied — every ADR-200+ record and every
+      ADR-100–138 record has a row, and ADR-104 is in the anchor set. What is
+      NOT preserved is a per-era progress signal, which is the cost of the
+      control and is stated rather than implied.
+      verify: 185 records, each with exactly one adjudicated disposition; the
+      assignment reproducible from `agents/runtime/tmp/adr-sweep-assignment.md`
+      (seed 20260821); zero records without a row.
+
+- [x] **3.4 Central adjudication, tally, and dated follow-ups.** One
       normalization pass across all 184 rows after the tranches — required
       because cross-record citations must cohere ("X is E3 because it rests
       on Y's E4 claim" needs both grades adjudicated together) and because
@@ -623,7 +632,7 @@ The v4 row 13 — "any blocker cited by `road-to-user-out-of-the-loop`" — is
 census-discovered record forcing human interaction for a repo-local reversible
 action joins the lane under the ADR-237 test.
 
-- [ ] **4.1 Mechanical rows first (5, 7).** Row 5 is a two-step remediation
+- [x] **4.1 Mechanical rows first (5, 7).** Row 5 is a two-step remediation
       (the policy-doc naming line, then one confirmed release-shaped pass);
       row 7 is a calendar watch to 2026-09-15 with its early trigger
       monitored.
@@ -641,14 +650,22 @@ action joins the lane under the ADR-237 test.
       merely a different model — round 5, seat 2: a different tier fed the
       same curated evidence and the same rubric is not independent.
       verify: per-row route with the deriving reason stated; reopen records
-      at the burden 1.2 prices; one reviewer argues retention on E2+ rows.
+      at the burden 1.2 prices; one reviewer argues the strongest case for
+      KEEPING the decision — on every row, at every grade. `adr-layout:347`
+      states that duty unconditionally ("ONE SEAT MUST ARGUE THE STRONGEST CASE
+      FOR KEEPING THE DECISION"), and an earlier draft of this step qualified it
+      with "on E2+ rows". That qualifier was a leak in this roadmap's own
+      central claim, caught in neutral review: it let a grade decide whether a
+      MANDATORY REVIEW ROLE is dropped, which is the forbidden shape — a grade
+      deciding what may be skipped. Removed rather than fenced, because the duty
+      is cheapest exactly where the grade is lowest.
 - [ ] **4.4 Structural rows (9, 10, 11).**
       verify: classifications landed; the ADR-002/114 numeric-policy
       migration carries its own PR.
 
 ## Phase 5 — Doctrine, proposed not accepted
 
-- [ ] **5.1 Draft ADR-238 `evidence-based-decision-floor` as
+- [x] **5.1 Draft ADR-238 `evidence-based-decision-floor` as
       `status: proposed`.** Round 5, both seats: the doctrine record is not
       "later documentation" — it is the decision that would activate a new
       authorization regime, so it must be separately reviewable and
@@ -717,12 +734,12 @@ The metrics run **before** any authority consequence exists, which is what
 makes Phase 7 a decision rather than a hope. Pre-registered in
 `docs/CLAIMS.md` per its entry schema (`:31-40`).
 
-- [ ] **6.1 Pre-register the baseline.** ADR-caused user interruptions per 20
+- [x] **6.1 Pre-register the baseline.** ADR-caused user interruptions per 20
       roadmap runs; work items parked solely by an ADR; ADRs cited without
       fresh validation; time from a fired review trigger to disposition; ADRs
       created per release; proposed ADRs redirected to notes/config/evidence.
       verify: baseline entries bound in CLAIMS.md before 5.2 merges.
-- [ ] **6.2 Pre-register the grading-integrity metrics.** Round 5's controls,
+- [x] **6.2 Pre-register the grading-integrity metrics.** Round 5's controls,
       because these are what Phase 7 must actually decide on:
       - **grade-accuracy-vs-gold** — reviewer grades against the externally
         adjudicated anchor sample, reported with a disagreement count and
