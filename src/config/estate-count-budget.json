@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 22,
-    "later_roadmaps": 52,
+    "active_roadmaps": 21,
+    "later_roadmaps": 53,
     "open_blockers": 59
   },
   "baseline_history": [
@@ -314,6 +314,20 @@
       "later_roadmaps": 52,
       "open_blockers": 59,
       "why": "WALKED DOWN by 1 active and 2 blockers, all earned by this change and each checked against origin/main rather than read off the branch's prose. road-to-distillation-followups is archived by this branch (present under agents/roadmaps/ on main, added under agents/roadmaps/archive/ here) and its two blockers, router-head-retrofit-instrument and first-contract-true-analysis-run, are open on main and resolved here. later_roadmaps is UNCHANGED at 52, which is the check that this is a closure and not a park: the item the roadmap could not finish went to stubs/road-to-first-reference-analysis-run.md with its own probe, so the open work stays counted in the stub rather than being relocated into later/ to make a number fall."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 31,
+      "later_roadmaps": 53,
+      "open_blockers": 70,
+      "why": "active_roadmaps 32 -> 31 and later_roadmaps 52 -> 53 in the same change: one file moved from the active tree into later/. This is a DISPOSITION change, not growth on one side and a free tightening on the other, and both halves are recorded together because the ratchet gates the two metrics separately and has no cross-metric offset - so an un-parked file can never be parked without an entry like this one, which would make the active tree a one-way door. road-to-kernel-question-triangle is parked whole: nothing executed, nothing deleted, the drafted one-line amendment preserved verbatim. It is parked rather than blocked because all three of its steps are maintainer acts end to end - a write to a locked kernel rule that block-kernel-rule-writes refuses at tool-call time, self-modification of the kernel's own ask-policy surface, and a >= 24 h soak window, which is elapsed time rather than a capability. Its resume probe is grep -c 'Band-4 scope' src/rules/ask-when-uncertain.md returning non-zero, measured 0 on the park date. open_blockers is unchanged at 70 because its one blocker was open before the move and is open after it - deliberately not closed, since marking it resolved would assert an act that has not happened. That unchanged pair is what distinguishes a disposition change from a burial. NOTE for whoever merges second: two sibling drain branches raise later_roadmaps for their own parks on the same day. All are legitimate and the merge is additive - keeping one side would silently drop a park."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 21,
+      "later_roadmaps": 53,
+      "open_blockers": 59,
+      "why": "A PARK, recorded in both directions rather than netted to zero: road-to-kernel-question-triangle moves from agents/roadmaps/ to agents/roadmaps/later/, so active_roadmaps 22 -> 21 is WALKED DOWN and later_roadmaps 52 -> 53 is RAISED by the same file. The raise is taken rather than hidden because this ratchet's own history says parking is not closing, and a drawdown that moved a file into later/ and reported only the lower active count is the burial the metric exists to expose. It qualifies as a park rather than a drop on the later/ definition: the file keeps its open steps and carries a testable resume condition \u2014 'Resume when src/rules/ask-when-uncertain.md carries the band-4 qualifier' \u2014 which is an existence-and-content predicate over a named file rather than a vague trigger. open_blockers unchanged at 59: no blocker was opened, closed, or relocated by this change."
     }
   ],
   "target": {
