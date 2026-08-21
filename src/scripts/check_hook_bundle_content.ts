@@ -96,7 +96,7 @@ function main(): number {
       units: "bundle(s)",
       roots: [LIVE_REL],
       allowEmpty:
-        "dist/hooks/ is UNTRACKED (`git ls-files dist/hooks/` returns zero), so a fresh " +
+        "OPTIONAL_INPUT: dist/hooks/ is UNTRACKED (`git ls-files dist/hooks/` returns zero), so a fresh " +
         "checkout or a CI runner has no bundle by construction. An empty scope here is the " +
         "correct reading of the environment, not a dead scan root — the artefact this gate " +
         "guards is a local build output and exists only where the hooks actually run.",

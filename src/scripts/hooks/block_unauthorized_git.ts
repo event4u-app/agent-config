@@ -490,15 +490,15 @@ export function commandOp(command: string): GitOp | null {
  *
  * **Widening this constant for a long run is forbidden practice.** On
  * 2026-08-21 it was sed-patched to twelve times this value — six hours —
- * behind a "temporary, revert after" marker, so an autonomous PR-drain could
+ * behind a marker promising a revert that never came, so an autonomous PR-drain could
  * merge past the 30-minute bound. The widening was committed to the trunk and
  * left there. It is a twelvefold expansion of the authorization lifetime on
  * the guard that gates `pr-merge`, which is a `BLOCK_OPS` member precisely
  * because it is irreversible.
  *
- * The widened expression is deliberately NOT written out here: the obvious
- * regression check is a grep for it, and a comment reciting the literal makes
- * that grep match the guard's own prose.
+ * Neither the widened expression nor the marker text is written out here: the
+ * obvious regression check for either is a grep, and a comment reciting the
+ * literal makes that grep match the guard's own prose on a clean tree.
  *
  * The supported answer to "my run is longer than the window" is that the run
  * STOPS and REPORTS at expiry and the user re-authorizes — never that the

@@ -2,7 +2,7 @@
 complexity: structural
 status: ready
 estate_offset_exempt: >-
-  Ships 27 of 29 steps closed in the change that adds it; the two open steps
+  Ships 29 of 31 steps closed in the change that adds it; the two open steps
   are held by one owner-reserved blocker (merge-authority) and nothing else.
   Offsetting it would mean parking an unrelated roadmap that is not blocked,
   which moves the count without drawing the estate down — the accounting move
@@ -28,7 +28,9 @@ execution:
 A maintainer can drain the roadmap estate and the open-PR queue with two
 invocations instead of two pasted prompts: `/roadmap:process-full --all
 [--merge]` iterates every active roadmap to one PR each, and `/pr:merge
-[all|<N>] [--no-merge]` prepares open PRs to mergeable and merges them. Both
+[all|<N>] [--no-merge]` prepares open PRs to mergeable. **Merging itself ships
+specified and inert**, gated on the `merge-authority` blocker below — the
+preparation is the expensive half and it is what lands here. Both
 terminate provably against a concurrently-producing session, both stop and
 report instead of stalling when their authorization window closes, and neither
 adds a new authorization store the agent could write on the user's behalf. The
@@ -67,18 +69,25 @@ deliverable and a later reader needs to see why.
 |---|---|---|
 | Is `process-all` a new command? | **No — `/roadmap:process-full --all`.** `docs/contracts/command-clusters.md` says "sibling variants become a flag, never a second command"; `all` changes cardinality, not lifecycle. | The operator asked for `/roadmap:process-all`. It ships as a flag instead. Same capability, no registry violation. |
 | `/prs:merge` or `/pr:merge`? | **`/pr:merge`**, path-derived per ADR-044, `all` as an argument. | Naming settled without a second command. |
-| Merge authority vs ADR-237 | ADR-237:92 excludes merging and says "no invocation extends it". Council: mergeability-only until authorization is target-bound and tamper-resistant. | `--merge` **does** ship — but on the *existing* human-only authorization path, not a new grant store. See Phase 4. |
+| Merge authority vs ADR-237 | ADR-237:92 excludes merging and says "no invocation extends it". Council: mergeability-only until authorization is target-bound and tamper-resistant. | Verdict adopted. `--merge` ships **inert**, gated on the `merge-authority` blocker; only the mergeability half is live. See Phase 4. |
 | The committed `// TEMP` weakening | **Immediate hotfix, blocks the rest.** | Phase 1, first commit of this branch. Deviation from "own PR" is recorded in that phase. |
 | Bundle freshness | mtime proves ordering, not equivalence. Content check is a prerequisite. | Phase 2. |
 
-**Why `--merge` ships despite the Q1/Q3 verdict, stated openly.** The council's
-blocker was a *new* agent-writable grant store. This roadmap adds none. The
-guard already classifies `pr-merge` as `BLOCK_OPS` and already derives its
-authorization from the user's own prompt text on the `UserPromptSubmit` path
-(`src/scripts/git_authorization_hook.ts:466`, from `classifyAuthorization`) —
-a signal the agent cannot forge. `--merge` consumes that existing
-authorization and nothing else; when it expires the run stops and reports
-(Phase 3, E3), which is the periodic re-authorization the council asked for.
+**Why `--merge` does NOT ship active, and what the owner is being asked to
+decide.** An earlier draft of this roadmap argued the opposite here — that the
+flag could ship because it adds no new grant store, consuming only the existing
+prompt-derived authorization the agent cannot forge. That argument is still the
+design, and it is written down in ADR-239 § 4 and in both command files, inert.
+What changed is who gets to accept it: activating the flag lowers a floor
+ADR-237 § 4 records with the words "no invocation extends it", and
+[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) reserves
+that transition to the owner. Three independent reviews said so before this
+paragraph was rewritten — the council's Q1, the committed
+`road-to-gate-preauth-authorization` stub, and the runtime classifier, which
+refused this branch's own attempt to edit the prohibition out of the canonical
+loop. An agent that wants a capability and also authors its authorisation is
+the exact shape that reservation exists for, so the decision sits in the
+`merge-authority` blocker instead of in this paragraph.
 
 ## Prerequisites
 
@@ -309,17 +318,20 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ## Phase 5 — Governance record
 
-- [x] **5.1 Write the merge-authority ADR.** It records: that `--merge` / `all`
-      typed by the user in the invocation is the per-turn confirmation the
-      Hard Floor requires; that it consumes the **existing** prompt-derived
-      authorization and introduces no new grant store; that `/roadmap:next`'s
-      "No merge, ever" is unchanged; that the agent never modifies the guard,
-      its source, or its bundles; and the hard floor — never force-merge past
-      failing required checks, never admin-bypass, never weaken a gate to go
-      green. It also records the council's Q1/Q3 reservation and the two
-      properties whose absence would make a future *persistent* grant unsafe
-      (agent-unforgeable storage, immutable target manifest), so a later
-      attempt starts from the objection rather than rediscovering it.
+- [x] **5.1 Write the merge-authority ADR.** It records that merge authority is
+      **not extended** here — the flag ships inert, gated on the
+      `merge-authority` blocker — together with the three independent reviews
+      that reached that verdict, so a later reader sees the reasoning and not
+      only the outcome. It states conditionally, as the design the owner would
+      be accepting, that an activated flag would consume the **existing**
+      prompt-derived authorization and introduce no new grant store, and it
+      names the two properties whose absence would make a *persistent* grant
+      unsafe (agent-unforgeable storage, an immutable target manifest) so a
+      later attempt starts from the objection rather than rediscovering it. It
+      also records what does not change: `/roadmap:next`'s "No merge, ever",
+      the agent never touching the guard or its bundles, and the hard floor —
+      never force-merge past failing required checks, never admin-bypass,
+      never weaken a gate to go green.
       verify: the ADR exists with a number, is indexed, and cites ADR-237 § 4
       and the `road-to-gate-preauth-authorization` stub by name.
 - [x] **5.2 Register the new sub in the locked cluster registry.** A
@@ -329,9 +341,13 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       verify: the cluster linter passes and the row's column count matches the
       table header.
 - [x] **5.3 Sync the cluster head, and regenerate the catalog.** The `roadmap`
-      cluster head's `argument-hint` reflects the new flags (no new
-      sub-command row — `--all` is a flag, which is the point of the Q2
-      verdict). `docs/catalog.md` is auto-generated: run the index generator
+      cluster head's sub-command row names the new flags (no new sub-command
+      row — `--all` is a flag, which is the point of the Q2 verdict). The
+      head's `argument-hint` lists SUB-COMMANDS, not their flags, and is left
+      alone deliberately: `[create|…|next] [args]` is the shape, and `[args]`
+      is where a sub's flags live. An earlier wording of this step claimed the
+      hint itself was edited — it was not, and no gate inspects it, so the
+      closed box would have certified an edit nobody made. `docs/catalog.md` is auto-generated: run the index generator
       rather than hand-editing it, so the merge command's row and the artefact
       count are both produced by the same pass.
       verify: the documented-commands linter passes and the catalog diff is

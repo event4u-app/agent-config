@@ -55,7 +55,7 @@ of it today.
 *(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
 an argument rather than a second command — the locked registry's rule that
 "sibling variants become a flag, never a second command"
-([`command-clusters`](../../../docs/contracts/command-clusters.md)) applied
+([`command-clusters`](../../../../../docs/contracts/command-clusters.md)) applied
 to this cluster. A future sub belongs here only if it has a materially
 different lifecycle, not a different count.
 
@@ -129,7 +129,7 @@ git merge origin/<base> --no-edit
 ```
 
 Merge the base **into** the branch. Never rebase a branch that is already
-pushed ([`git-history-discipline`](../../../rules/git-history-discipline.md)).
+pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
 
 ## 3. Resolve conflicts by class, never by taste
 
@@ -194,7 +194,7 @@ run, never an earlier commit ([`/git-pr-create` § 4d](../create/command.md)).
   red counts as real.
 - **N=3 per validation target, six touches per PR per pass — two different
   units, and the smaller one binds first.** The always-loaded
-  [`autonomous-execution`](../../../rules/autonomous-execution.md) cap is
+  [`autonomous-execution`](../../../../rules/autonomous-execution.md) cap is
   three consecutive failed attempts on ONE target (a named failing test, a lint
   rule id, one CI job) and it is not lifted here. The six is a per-PR ceiling
   across *distinct* targets: a PR whose CI peels one failure to reveal a
@@ -283,7 +283,10 @@ and the widening reached the trunk.
 
 ## 8. Kill switches, and what happens after a merge
 
-Stop **before** the next merge on any of:
+**Armed during preparation, not only before a merge** — otherwise every switch
+below is unreachable while the merge step is gated, and a preparation sweep has
+no way to stop at all. Each one aborts the current PR and ends the run on any
+of:
 
 - target number or head SHA differs from the manifest;
 - the base advanced by an actor other than this run;
@@ -355,5 +358,5 @@ conflict resolution. The disposition set is closed:
 
 - [`/git-pr-create`](../create/command.md) — opens the PR this command finishes.
 - [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates here for its delivery loop.
-- [`git-history-discipline`](../../../rules/git-history-discipline.md) — never rewrite pushed history.
-- [`non-destructive-by-default`](../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.
+- [`git-history-discipline`](../../../../rules/git-history-discipline.md) — never rewrite pushed history.
+- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.

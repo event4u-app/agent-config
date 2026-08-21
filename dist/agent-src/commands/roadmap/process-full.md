@@ -231,7 +231,9 @@ roadmap:
 
 **And the conditions that end the loop without ending a roadmap:**
 estate-queue exhaustion (always), a
-[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill switch (always), and
+[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill switch (always — that
+section arms its checks during **preparation**, not only before a merge, which
+is what keeps them reachable while the merge step is gated), and
 authorization-window expiry — which is **unreachable while `--merge` is
 gated**, because the run then performs no `BLOCK_OPS` operation for the
 window to govern. Three conditions, one of them currently inert, and this
