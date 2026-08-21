@@ -20,10 +20,6 @@ import { readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
 
 // ^ADR-(\d{3})-([a-z0-9-]+)\.md$
 const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
-// ^---\n(.*?)\n---  (DOTALL)
-const FM = /^---\n([\s\S]*?)\n---/;
-// ^([a-z_]+):\s*(.+?)\s*$  (MULTILINE)
-const FIELD = /^([a-z_]+):[ \t]*(.+?)[ \t]*$/gm;
 /**
  * The index used to render `| # | Title | Status | Date | Supersedes |`, which
  * is forward-only: a dead ADR showed `superseded | —` and the reader learned it
