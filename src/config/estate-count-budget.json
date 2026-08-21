@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
     "open_blockers": 62
   },
@@ -272,6 +272,13 @@
       "later_roadmaps": 52,
       "open_blockers": 62,
       "why": "MERGE RECONCILIATION plus the walk-down this branch earned, stated as one entry because the arithmetic only makes sense together. The history array itself was conflicted: the trunk had moved four entries ahead while this branch carried two of its own, so main's file was taken as the base (authoritative trunk baseline and order) and the branch's two entries appended rather than dropped \u2014 append-only means both sides survive. Those two entries quote 70 -> 68 -> 66 against a trunk that has since measured 64, so their NUMBERS are superseded and only their reasons still stand; that is why this entry re-states the delta instead of trusting them. open_blockers 64 -> 62 is verified against the diff, not against that prose: sink-choice and dpo-signoff are both open on origin/main and both resolved on this branch. active_roadmaps 25 -> 24: road-to-org-telemetry reached zero open steps and the regen archived it, migrating its one inbound reference. This entry was written before the regen ran and said the roadmap would NOT archive; the number is corrected here rather than by appending a second entry, because one change earns one entry and two would read as two independent walk-downs and later_roadmaps unchanged at 52 \u2014 nothing parked, nothing relocated."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 62,
+      "why": "WALK-DOWN, earned by one archival and nothing else. road-to-solution-minimalism reached 0 open / 0 deferred / 0 open blockers and `roadmap:progress` archived it, so the measured active estate is 23 where the ceiling read 24. The one point of drawdown is a real termination, not an accounting move: no roadmap was parked, re-classified `draft`, or split, and `later_roadmaps` and `open_blockers` are unchanged at 52 and 62 -- which is the check that this is a genuine close rather than a transfer wearing an archive's clothes. Its own residue did move to a stub (the ~30 oracles and the full-tier run, transferred 2026-08-20 in PR #1480), but that transfer was already counted then; this entry adds nothing for it. Lower measurement is the new ceiling, never headroom."
     }
   ],
   "target": {

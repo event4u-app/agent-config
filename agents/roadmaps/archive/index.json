@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 524,
+  "count": 525,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6033,6 +6033,20 @@
         "done": 2,
         "deferred": 0,
         "cancelled": 6
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-solution-minimalism",
+      "title": "Road to solution minimalism — a first-class discipline against over-building",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 32,
+        "deferred": 0,
+        "cancelled": 4
       },
       "verdict": null,
       "status": "ready"

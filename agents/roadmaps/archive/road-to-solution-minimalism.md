@@ -15,7 +15,7 @@ status: ready
 > independent run also measured three ways the naive copy fails.
 >
 > Source + council cut:
-> [`elder-ponytail-harvest-cut`](../settings/contexts/elder-ponytail-harvest-cut.md).
+> [`elder-ponytail-harvest-cut`](../../settings/contexts/elder-ponytail-harvest-cut.md).
 
 ## Outcome
 
@@ -32,7 +32,7 @@ is stated here next to the figure rather than left for a reader to reconstruct:
 **Phase 3 has never reported.** The figure moved from 97 % to 100 % because the
 last open item was an *acceptance criterion about the gates*, closed on the
 authoritative gate (§ the criterion, and
-[`solmin-quality-gates-disposition`](../evidence/council/solmin-quality-gates-disposition.md));
+[`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md));
 no benchmark ran, and none of the transferred work came back. Per phase:
 
 | Phase | Disposition | What that means |
@@ -40,7 +40,7 @@ no benchmark ran, and none of the transferred work came back. Per phase:
 | Phase 0 — spikes | **satisfied** | S0.1/S0.2/S0.3 all closed on evidence, unchanged by this pass. |
 | Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
 | Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
-| Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
+| Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
 | Acceptance criteria | **5 of 6 satisfied, 1 transferred** | The full-tier criterion is transferred to the stub. The quality-gates criterion is now **satisfied** — closed 2026-08-21 on PR #1480's remote CI (43 `SUCCESS` / 0 failure) plus 7/7 push-to-main runs on merge commit `b593d8c0`, by AI-council disposition **1, decide-now**, 2/2 convergent. It never moved to the stub because it was never gated on the run; what it *was* gated on was the existence of a pull request, and one now exists and reported green. |
 
 ### The blocker disposition (A — re-scope, narrowed)
@@ -48,7 +48,7 @@ no benchmark ran, and none of the transferred work came back. Per phase:
 `phase3-harness-deltas-9-10` is **removed**, not resolved: an AI council found it
 was never a blocker. Deltas #9-#10 are ordinary repository implementation, and
 the entry had converted "large" into "unavailable" for five steps. Record:
-[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
+[`drain-blocker-dispositions-a`](../../evidence/council/drain-blocker-dispositions-a.md).
 Its substitute criterion, verbatim:
 
 > Implement `repo` and `sha` corpus keys, add approximately 30 hand-written
@@ -63,9 +63,9 @@ directions against the real pinned tree (§ Phase 3, Repo).
 ### Transferred (B) — the ~30 oracles and the full-tier run
 
 **The transfer has a home, and that is the point.** It lives in
-[`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md),
+[`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md),
 alongside the estate's other drain-run transfers and registered in their
-[`README`](stubs/README.md) table with its baselines. The three items below carry
+[`README`](../stubs/README.md) table with its baselines. The three items below carry
 `[-]` here with a one-line pointer each. A transfer recorded only as prose in a
 roadmap that stays open is indistinguishable from work nobody started — the stub
 is what makes it a moved obligation rather than a note.
@@ -240,7 +240,7 @@ Each one is a measured fact about how this borrow fails when copied naively.
       fewest-lines-vs-least-load · profiler-gate vs the `scale-discipline` R-A2
       floor). The routing-collision gate **did not exist** and ships with this
       change as `lint_rule_trigger_collisions`. Table + citations:
-      [`solution-minimalism-phase0-spikes § S0.1`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
+      [`solution-minimalism-phase0-spikes § S0.1`](../../evidence/investigations/solution-minimalism-phase0-spikes.md).
 - [x] **S0.2 Subagent rule-propagation probe.** Two questions, in order: does the
       host expose a subagent-start event at all, and do this package's rules
       reach a subagent's context today? One live probe with transcript evidence.
@@ -255,8 +255,8 @@ Each one is a measured fact about how this borrow fails when copied naively.
       zero-tool-call probe had a subagent reproduce two Iron Laws verbatim from
       its own context. The escape clause therefore does **not** fire — there is
       no propagation gap to hand back, and F1 needs no new hook. Evidence:
-      [`solution-minimalism-phase0-spikes`](../evidence/investigations/solution-minimalism-phase0-spikes.md)
-      + [committed transcript](../evidence/investigations/solution-minimalism-s02-subagent-probe.md).
+      [`solution-minimalism-phase0-spikes`](../../evidence/investigations/solution-minimalism-phase0-spikes.md)
+      + [committed transcript](../../evidence/investigations/solution-minimalism-s02-subagent-probe.md).
 - [x] **S0.3 Harness feasibility + cost sheet.** Can `internal/bench/ab` run
       arm-isolated headless sessions against a pinned public repo with a
       per-trial injection audit in **both** directions (treatment trials prove
@@ -270,7 +270,7 @@ Each one is a measured fact about how this borrow fails when copied naively.
       four medium, two large). Working estimate for 30 tasks x 4 arms x 3 seeds
       on sonnet: 360 runs, ~180M tokens, **$150-250 as a floor**. Cost sheet +
       delta table:
-      [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
+      [`solution-minimalism-phase0-spikes § S0.3`](../../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
 **Exit:** the authoring decision is evidence-backed and the benchmark cost is
 known. **Rollback:** nothing shipped.
@@ -430,7 +430,7 @@ file is the inflation the repo's own complexity budget forbids.
       *Verify:* every collision from S0.1 appears with its resolution.
       **Re-scoped: there is no new rule to write the section *in*.** Its content
       is the S0.1 table plus a resolution column, and it lives in
-      [`solution-minimalism-phase0-spikes § S0.1`](../evidence/investigations/solution-minimalism-phase0-spikes.md)
+      [`solution-minimalism-phase0-spikes § S0.1`](../../evidence/investigations/solution-minimalism-phase0-spikes.md)
       — all 14 clauses, each with its colliding artefact, and each with the
       outcome recorded on the Phase-1 step above (landed where / already stated /
       not adopted).
@@ -550,7 +550,7 @@ AI council reviewed every open blocker in the estate and disposed of this one
 implementation*, not an external dependency and not a decision anyone owed this
 roadmap. Large is not the same as unavailable, and the entry had converted the
 second into the first for four days. Record:
-[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
+[`drain-blocker-dispositions-a`](../../evidence/council/drain-blocker-dispositions-a.md).
 Delta #9 landed with that disposition — see § Outcome for what of the substitute
 criterion is satisfied here and what is transferred, and why the split falls
 where it does. This is the same defect the § Blockers
@@ -577,7 +577,7 @@ blocker as standing overstates its own gating.
 >    repo. `benchmark-spend-authorization` is the grant this cost sheet exists to
 >    be granted against, and it is the user's to give. Firing a paid external
 >    run autonomously is a Hard-Floor action
->    ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
+>    ([`non-destructive-by-default`](../../../src/rules/non-destructive-by-default.md));
 >    no autonomy setting or roadmap step lifts it.
 > 2. **The harness does not support the phase yet, at any price.** S0.3's
 >    deltas #9 (pinned external repo), #10 (~30 hand-written capability /
@@ -607,7 +607,7 @@ blocker as standing overstates its own gating.
 >
 > Nothing from this phase is cancelled or reinterpreted; the steps stand as
 > written. Full evidence, delta table, and price inputs:
-> [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
+> [`solution-minimalism-phase0-spikes § S0.3`](../../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
 - [x] **Repo:** one public OSS repo pinned at a SHA. A second repo on this
       package's home stack is optional and cost-gated.
@@ -638,7 +638,7 @@ blocker as standing overstates its own gating.
       CRUD **and** this package's own discipline family — so the report can show
       where the effect lives and where it is honestly zero.
       *Verify:* the per-task table shows both.
-      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 1 — council disposition A on
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md) item 1 — council disposition A on
       the parent blocker, outcome state `transferred`; probe: ≥ 30 tasks declaring
       `repo` + `sha`, at 1 today. One pinned task exists
       (`trapA-pinned-click-01`); the substitute criterion asks for ~30. Authoring
@@ -703,7 +703,7 @@ blocker as standing overstates its own gating.
       **Partially delivered, and staying open on purpose — the named *Verify* is
       satisfied but it is necessary, not sufficient.** Search-adherence and the
       safety tier are now defined and pre-registered as T5 and T4 in
-      [`ab-v2-phase3-PREREG.md`](../../internal/bench/ab-v2-phase3-PREREG.md), which
+      [`ab-v2-phase3-PREREG.md`](../../../internal/bench/ab-v2-phase3-PREREG.md), which
       is exactly what this step's Verify asks for. Four of the seven endpoints are
       live: added lines and wall-clock were already there, tokens-as-**sum** landed
       with delta #2, and **cost landed here** (delta #6) — `cost_by_arm` prices the
@@ -759,7 +759,7 @@ blocker as standing overstates its own gating.
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
-      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 2 — council disposition A on
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md) item 2 — council disposition A on
       the parent blocker, outcome state `transferred`; probe: a `Gate verdict:` in
       `docs/benchmark.md` from a pinned report with a non-empty `sha`, none today. The ladder and the statistics
       are implemented; what is missing is a run. This is the one part of the
@@ -770,7 +770,7 @@ blocker as standing overstates its own gating.
       are all unset), and firing a paid sweep is a Hard-Floor action needing
       confirmation **on the turn it fires** — the 2026-08-14 pre-authorisation
       records the *decision*, and a recorded decision is not a live confirmation
-      ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)).
+      ([`non-destructive-by-default`](../../../src/rules/non-destructive-by-default.md)).
 - [x] **Reproducibility deliverables, first-class not afterthoughts:** a no-API
       `--selftest` entry point, the pinned SHA, preserved per-run workspaces for
       offline re-scoring, and a one-page reproduce doc. The record shows the
@@ -787,7 +787,7 @@ blocker as standing overstates its own gating.
       (delta #8). Preserved per-run workspaces landed with it (delta #7): keyed
       `task|arm|seed`, path recorded on each trial, 20 trials → 20 distinct
       workspaces where the old task-only key left one. The one-page reproduce doc
-      is [`internal/bench/REPRODUCE-ab-v2.md`](../../internal/bench/REPRODUCE-ab-v2.md).
+      is [`internal/bench/REPRODUCE-ab-v2.md`](../../../internal/bench/REPRODUCE-ab-v2.md).
       **The pinned SHA cannot be delivered here, and marking it done would be the
       false claim F7 exists to forbid.** There is nothing to pin: the corpus has no
       `repo`/`sha` keys and every fixture is a self-contained in-repo tree, so a
@@ -862,7 +862,7 @@ blocker as standing overstates its own gating.
       default-on. Miss any one → it stays opt-in and the null is published with
       the same honesty labels the existing nulls carry.
       *Verify:* thresholds are committed before the full run.
-      Committed as [`internal/bench/ab-v2-phase3-PREREG.md`](../../internal/bench/ab-v2-phase3-PREREG.md),
+      Committed as [`internal/bench/ab-v2-phase3-PREREG.md`](../../../internal/bench/ab-v2-phase3-PREREG.md),
       in the shape the tree's four existing `*-PREREG.md` records use (binding
       threshold table with a per-row "why this number", plus reopen terms).
       **Registered while the run is impossible, which is the strongest form of the
@@ -1000,13 +1000,13 @@ it. None is a step in this roadmap.
   delegates, dead flag) rank below it, not above.
 - **Adoption exhibit.** Un-parks on Phase 3 passing. It does **not** get its own
   roadmap — the transcript pair and the rendered artefact belong to
-  [`road-to-adoption-without-narrative-debt`](road-to-adoption-without-narrative-debt.md),
+  [`road-to-adoption-without-narrative-debt`](../skipped/road-to-adoption-without-narrative-debt.md),
   whose distribution steps are already open. The framing recorded from the
   sources: the ecosystem's second-most-upvoted unanswered question is "how are
   you testing skills / ensuring quality?", and this package is the answer by
   existing — so the percentage is supporting evidence, never the headline.
 - **Benchmark-obsolescence lifecycle** —
-  [`later/road-to-benchmark-obsolescence-lifecycle`](later/road-to-benchmark-obsolescence-lifecycle.md).
+  [`later/road-to-benchmark-obsolescence-lifecycle`](../later/road-to-benchmark-obsolescence-lifecycle.md).
 
 ## Non-goals (decided, with reasons)
 
@@ -1109,7 +1109,7 @@ twenty-nine steps that already landed.
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
-      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 3 — council disposition A on
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md) item 3 — council disposition A on
       the parent blocker, outcome state `transferred`; probe: item 2's, plus every
       pre-registered endpoint present in the rendered report. All four endpoints
       are implemented; reports rendered from them: 0.
@@ -1131,7 +1131,7 @@ twenty-nine steps that already landed.
       The criterion stays open on the one thing left: a run. It is **transferred**
       (B) — original text, moved steps, producer and probe in § Outcome. No
       re-annotation to a blocker, because the council found there was none:
-      [`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
+      [`drain-blocker-dispositions-a`](../../evidence/council/drain-blocker-dispositions-a.md).
 - [x] The scorer demonstrably refuses a size win that came with a complexity
       regression (proven on a golfed fixture, not asserted).
       ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
@@ -1161,7 +1161,7 @@ twenty-nine steps that already landed.
       **Closed 2026-08-21 on the authoritative gate, and the evidence is stated as
       a split because one run cannot cover both halves.** AI council disposition
       **1 — decide-now, `satisfied`**, 2/2 convergent, quorum concluded:
-      [`solmin-quality-gates-disposition`](../evidence/council/solmin-quality-gates-disposition.md).
+      [`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md).
       **Half one — the substantive tree.** PR
       [#1480](https://github.com/event4u-app/agent-config/pull/1480) carried every
       artefact this roadmap produced to `main` at head `8ca8e001e`:
@@ -1238,7 +1238,7 @@ which is exactly the reader that must not be misled.
 - **Blocks:** Phase 3 — Pinned public-repo benchmark (the proof exhibit)
 - **What to do:**
   1. Read the cost sheet in
-     [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md):
+     [`solution-minimalism-phase0-spikes § S0.3`](../../evidence/investigations/solution-minimalism-phase0-spikes.md):
      30 tasks × 4 arms × 3 seeds on sonnet ≈ 360 runs ≈ 180M tokens ≈
      **$150–250 as a floor**, higher on a real OSS repo.
   2. Decide the grant, and state the ceiling you are granting. The sweep enforces
@@ -1265,7 +1265,7 @@ entry that stood here recorded deltas #9 and #10 as a gate on Phase 3. An AI
 council disposed of it **A — re-scope, narrowed**: both deltas are ordinary
 repository implementation, so the entry was converting *large* into
 *unavailable*, and it held five steps for four days on that conversion.
-[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md)
+[`drain-blocker-dispositions-a`](../../evidence/council/drain-blocker-dispositions-a.md)
 carries the verdict and the substitute criterion verbatim. Delta #9 is done; the
 remainder is transferred with a producer and a probe (§ Outcome), not
 re-annotated to a fresh blocker.
@@ -1287,7 +1287,7 @@ removed harness entry, where "that grant" had no antecedent; with that entry gon
 it reads under the entry it has always qualified.
 
 Firing a paid external run **without a grant** is a Hard-Floor action
-([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
+([`non-destructive-by-default`](../../../src/rules/non-destructive-by-default.md));
 no autonomy setting, execution contract, or roadmap step lifts it. For *this*
 sweep the grant exists (2026-08-14, $250 ceiling, pre-authorised), so the floor is
 cleared for it and for nothing else — any other paid run starts from the floor
