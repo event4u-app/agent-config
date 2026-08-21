@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 540,
+  "count": 541,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -5739,6 +5739,20 @@
         "done": 21,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-rule-coherence-followup",
+      "title": "Roadmap: Follow-up to road-to-rule-coherence",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 4,
+        "deferred": 0,
+        "cancelled": 7
       },
       "verdict": null,
       "status": "ready"

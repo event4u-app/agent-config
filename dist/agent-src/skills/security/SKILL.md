@@ -64,11 +64,11 @@ Focus on: attack surface, trusting user input, authorization gaps.
 
 ### Crypto, password storage, certificates — route, do not guess
 
-This skill carries no algorithm choice, key size, work factor, cipher suite, or
-TLS version floor: such a value is authoritative-looking long after it stops
+This skill carries no cryptographic parameter, key size, work factor, cipher
+suite, or TLS version floor: such a value is authoritative-looking long after it stops
 being true. Take it from <https://cheatsheetseries.owasp.org/> at the moment you
 need it — never from memory, never from this file. Rationale and reopening
-condition: [ADR-238](../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
+condition: [ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
 
 ### Validate
 
