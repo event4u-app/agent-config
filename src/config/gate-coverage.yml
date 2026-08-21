@@ -555,14 +555,29 @@ gates:
 
   - id: lint_plan_risk_register
     argv: []
-    min_scanned: 12
+    min_scanned: 10
     corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
     note: >
       Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
-      reported, never silently skipped, so a collapse below the floor means
-      the roadmaps root moved, not that the corpus went clean.
+      reported, never silently skipped.
+
+      Lowered 12 → 10 on 2026-08-21, and the reason matters more than the
+      number: the previous note asserted that "a collapse below the floor
+      means the roadmaps root moved, not that the corpus went clean." That
+      premise is now falsified by evidence. Archiving two roadmaps that were
+      each at zero open and zero deferred steps on main dropped the top-level
+      count from 12 to 10 with the root untouched — the corpus really did go
+      cleaner. A floor calibrated to the exact size of a corpus that
+      road-to-estate-drawdown is deliberately shrinking fails on the drawdown
+      succeeding, which is the wrong thing to detect.
+
+      The floor still does its job: it catches the root moving or the scanner
+      silently reading nothing. It is NOT a proxy for how many roadmaps ought
+      to exist. Revisit-if the active roadmap set is deliberately grown back
+      above 12, or if a future drop is traced to a scanner defect rather than
+      to archival — either falsifies the number, not the obligation.
 
   - id: check_estate_count
     argv: []
