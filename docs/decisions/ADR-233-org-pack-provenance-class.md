@@ -186,4 +186,4 @@ and are the parts a future reader should challenge first.
   record shape.
 - `src/rules/settings-ask-protocol.md` — the ask discipline the B
   classification in D6 places these keys under.
-- `agents/roadmaps/road-to-org-telemetry.md` — Phase 3, and Risk 6.
+- `agents/roadmaps/archive/road-to-org-telemetry.md` — Phase 3, and Risk 6.

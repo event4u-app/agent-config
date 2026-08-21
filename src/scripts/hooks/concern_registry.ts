@@ -59,6 +59,7 @@ import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
 import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
 import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
 import { main as telemetryUsageMain } from './telemetry_usage_hook.js';
+import { main as telemetryFlushMain } from './telemetry_flush_hook.js';
 import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
 import { main as skillRouteMain } from './skill_route_hook.js';
 import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
@@ -69,6 +70,7 @@ import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
 import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
 import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
+import { main as sourceFirstGateMain } from './source_first_gate_hook.js';
 import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as runContinuationMain } from './run_continuation_hook.js';
 
@@ -112,6 +114,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,
     'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
     'src/scripts/hooks/telemetry_usage_hook.ts': telemetryUsageMain as ConcernMain,
+    'src/scripts/hooks/telemetry_flush_hook.ts': telemetryFlushMain as ConcernMain,
     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
@@ -122,6 +125,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
     'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,
     'src/scripts/hooks/spawn_guard_shadow_hook.ts': spawnGuardShadowMain as ConcernMain,
+    'src/scripts/hooks/source_first_gate_hook.ts': sourceFirstGateMain as ConcernMain,
     'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
     'src/scripts/hooks/run_continuation_hook.ts': runContinuationMain as ConcernMain,
 };

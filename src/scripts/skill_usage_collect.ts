@@ -31,7 +31,17 @@ const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/skill_usage_collect.ts → parents[2] of the .py file is repo root.
 export const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-const OUT = path.join(REPO, 'agents', 'metrics', 'skill-usage.jsonl');
+// `agents/metrics/` was retired by the agents/ taxonomy consolidation (the
+// same finding `skill_overlap.ts` records), so this collector was appending to
+// a directory that does not exist while the real record set sat untouched at
+// `agents/runtime/metrics/skill-usage.jsonl` — last written 2026-05-16. The
+// report script read the same dead path, so the pair agreed with each other
+// and with nothing else. road-to-org-telemetry Phase 0 measured the
+// consequence (spike 3: 0 of 89 invocations detected on the set the collector
+// reads) and named the repair a Phase 4 prerequisite. `runtime/` is the typed,
+// gitignored home for a record set nothing tracks, per the agents/ layout
+// contract.
+const OUT = path.join(REPO, 'agents', 'runtime', 'metrics', 'skill-usage.jsonl');
 
 // LISTING_LINE_RE = re.compile(r"^-\s+([a-z0-9][a-z0-9_-]+):\s", re.MULTILINE)
 const LISTING_LINE_RE = /^-\s+([a-z0-9][a-z0-9_-]+):\s/gm;

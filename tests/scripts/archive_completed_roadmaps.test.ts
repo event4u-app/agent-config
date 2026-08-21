@@ -214,6 +214,35 @@ describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only
         ).toBe(false);
     });
 
+    // `--repo-root` exists so a caller that already resolved the project root
+    // cannot have it re-derived from `git rev-parse` and land on an ANCESTOR —
+    // in a monorepo sub-project that would archive the parent's roadmaps. The
+    // dashboard generator passes it for exactly this reason.
+    it('--repo-root wins over the git-toplevel resolution', () => {
+        const outer = path.join(tmp, 'outer');
+        // The enclosing repo carries its own complete roadmap; the sub-project
+        // is a plain directory inside it. Sweeping the sub-project must leave
+        // the outer roadmap alone.
+        initUncommitted(outer, {
+            'agents/roadmaps/road-to-outer.md': COMPLETE,
+            'sub/agents/roadmaps/road-to-inner.md': COMPLETE,
+        });
+        const sub = path.join(outer, 'sub');
+
+        // cwd is the OUTER repo — only --repo-root points at the sub-project.
+        const ts = runTs(['--all', '--repo-root', sub], outer);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(
+            fs.existsSync(path.join(sub, 'agents/roadmaps/archive/road-to-inner.md')),
+            'sub-project roadmap archived',
+        ).toBe(true);
+        expect(
+            fs.existsSync(path.join(outer, 'agents/roadmaps/road-to-outer.md')),
+            'parent roadmap untouched',
+        ).toBe(true);
+    });
+
     it('--all still archives a complete roadmap whose blocker is resolved', () => {
         const repo = path.join(tmp, 'resolved-blocker');
         initUncommitted(repo, {
