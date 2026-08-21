@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **27** open blockers in the active tree, **14** need you → `agent-config gates`
+> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **25** open blockers in the active tree, **14** need you → `agent-config gates`
 
 ## Overall
 
-**168 / 330 steps done · 51%**
+**168 / 320 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -33,8 +33,7 @@
 | 15 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
 | 16 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 | 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 18 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -743,70 +742,6 @@ _2 blockers resolved._
     answered, `≥ 20 usable dispatches` is unreachable regardless of how many
     lines accumulate, and raising the line count further will not move it.
   - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
-
-### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
-
-**Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-ui-track-integrity-followup"></a>
-**Blockers**
-
-- **measurement-a-no-per-arm-builder-tier** (owner: maintainer (scope decision) / any roadmap that needs a UI-generation runner for its own reason) — blocks Measurement A (both steps) and the two A acceptance criteria. It does **not** block the pre-registration, which is committed and complete.
-  - **Recommendation:** hold, and do **not** build the runner here. The owner line already names the exit — "any roadmap that needs a UI-generation runner for its own reason" — and building it inside this roadmap is what its own Non-goal forbids. The alternative that keeps surfacing is weakening Measurement A to something the current harness can run (a session-level `--model` instead of per-skill tiers); that is rejected on the evidence above, because the two outlier arms are per-skill tier facts no session flag can express, so the weakened measurement would answer a different question under the same name.
-  - **If you do nothing:** nothing degrades — the pre-registration is committed and complete, and holding is the intended state. The cost is bounded and specific: Measurement A and its two acceptance criteria stay open, so this roadmap cannot archive, and every future sweep pays to re-read the same blocker to reach the same conclusion.
-  - **What to do:**
-    Measurement A varies exactly one thing — the model tier the **builder skill**
-    runs on — and nothing in the tree can set it per arm. Verified 2026-08-05,
-    against the tree rather than against the argument:
-    - `bench:ui` (`internal/bench/ui/run.ts`) scores `config.candidates`, a list of
-    **committed static files**. Its whole CLI surface is `--json` and
-    `--update-lock`: no arm, no tier, no model call, nothing that produces a
-    candidate.
-    - The tier → native `model:` rewrite happens **only** in
-    `install.ts::finalize_claude_model_tiers`, and only on a consumer install
-    whose `model.auto_switch` is `auto`. This checkout has **zero** entries under
-    `.claude/skills/` and no projected skill pins a `model:` at all, so a session
-    `--model` flag sets the whole session, never one skill.
-    - The machinery the scope ruling assumed could be reused does not carry the
-    variable: `bench_ab_clone` copies the maintainer's `.claude/` surface
-    verbatim — no `auto_switch` handling, no per-skill tier rewrite — and
-    `bench_ab_task_runner` scores **transcripts**, not written UI artifacts.
-    So a faithful arm needs a materialised consumer-shaped install with
-    `auto_switch: auto`, a per-arm rewrite of the target skill's tier, an
-    artifact-extraction step, and — before any of it can be trusted — a validation
-    that the port task actually dispatches the UI builder skill. That is a
-    generation subsystem, which is what this roadmap's own Non-goal forbids
-    building here, and its arm isolation is itself unvalidated.
-    The two outlier arms make it sharper: `accessibility-auditor` at medium and
-    `ui-component-architect` at high are **per-skill** tier facts. No session-level
-    `--model` can express them, so they cannot be measured without exactly the
-    per-skill control that is missing.
-  - **Resolved when:** a UI-generation runner with per-skill tier control exists — landed for its own reason, with its arm isolation validated (the port task demonstrably dispatches the builder skill, and the tier demonstrably reaches it) — at which point Measurement A runs against the committed pre-registration unchanged, in the controls' epoch.
-- **measurement-b-no-renderable-lane-pair** (owner: maintainer (host capability) / any roadmap that lands a host-renderable framework lane or a generic-lane override for its own reason) — blocks Measurement B (both steps) and the two B acceptance criteria. Measurement A is **not** blocked by it — a null on one is not a null on the other, which is why they were authored as separate sub-sections.
-  - **Recommendation:** hold, and if either exit is taken, take the **supported generic-lane override** rather than the React build/serve step. The override is a bounded change to how `GENERIC_LANES` is derived; a build/serve step is a new subsystem in the scorer's capture path, and the scorer captures `file://` HTML today. Docker stays rejected on the council's reasoning above, not re-opened: one arm containerised and one on the host makes the 0.40-weighted `pixel` component a cross-epoch comparison, and containerising both voids the calibration anchors.
-  - **If you do nothing:** nothing degrades — as with Measurement A, holding is the intended state and the pre-registration stays intact. The cost is that Measurement B and its two acceptance criteria stay open, so the roadmap cannot archive, and the pairing question gets re-derived from scratch by whoever screens it next.
-  - **What to do:**
-    Measurement B needs two stacks where **both** lanes exist. Framework bundles
-    are `blade-livewire-flux`, `blade-livewire`, `filament` (PHP/Blade) and
-    `react-shadcn`, `react`; the generic-routing lanes (`vue`, `plain`, `unknown`)
-    have no framework lane to be compared against. Today **no** pair satisfies all
-    three of: both lanes defined · both host-renderable · framework lane needs no
-    build step that has not been built. Concretely — no `php`/`composer` on the
-    host (a human install), the scorer captures `file://` HTML so a React
-    candidate needs a build/serve step that does not exist, and `GENERIC_LANES` is
-    derived from detected stack state with no supported override.
-    Docker **is** available on the host and is deliberately not used: one arm in a
-    container and one on the host makes the 0.40-weighted `pixel` component a
-    cross-epoch comparison — 40 % of the weighted score would be noise — and both
-    in a container voids the existing calibration anchors. Council 2026-08-05
-    (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent) rejected that path
-    and chose the named blocker over a re-scope that changes a pre-registered
-    input.
-  - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
 
 ### [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md)
 

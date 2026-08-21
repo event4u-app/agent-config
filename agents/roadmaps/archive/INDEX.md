@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**528 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 185 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**529 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 186 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -491,6 +491,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-trim-frugality-canon`](road-to-trim-frugality-canon.md) | Road to Trim Frugality Canon | completed | 5 | 14/14 | _not extractable_ |
 | [`road-to-truth-and-reference-hygiene`](road-to-truth-and-reference-hygiene.md) | Road to truth-and-reference hygiene — make the "machine-checked" headline true of its own artefacts | completed | 3 | 21/21 | _not extractable_ |
 | [`road-to-typescript-only-scripts`](road-to-typescript-only-scripts.md) | Roadmap: TypeScript-only scripts — full Python → TypeScript migration | completed | 12 | 71/71 | _not extractable_ |
+| [`road-to-ui-track-integrity-followup`](road-to-ui-track-integrity-followup.md) | Road to UI-track integrity — follow-up: two measurements, one missing harness | closed-with-cancellations | 1 | 7/16 | _not extractable_ |
 | [`road-to-ui-track-integrity`](road-to-ui-track-integrity.md) | Road to UI-track integrity — the lanes the dispatcher names do not exist | completed-with-deferrals | 7 | 36/39 | _not extractable_ |
 | [`road-to-ultimate`](road-to-ultimate.md) | Roadmap: Road to Ultimate — Ecosystem & Interop | archived-with-open-steps | 6 | 0/40 | _not extractable_ |
 | [`road-to-unified-senior-roles`](road-to-unified-senior-roles.md) | Road to Unified Senior Roles | completed | 1 | 19/19 | _not extractable_ |
