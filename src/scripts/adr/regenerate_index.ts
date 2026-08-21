@@ -16,6 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
 
 // ^ADR-(\d{3})-([a-z0-9-]+)\.md$
 const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
@@ -106,22 +107,18 @@ function _pyPathJoin(d: string, child: string): string {
     return base === '.' ? child : `${base}/${child}`;
 }
 
-/** Mirror `fm(t)` — parse the leading `---` frontmatter block into a dict. */
+/**
+ * Parse the leading `---` frontmatter block into a dict.
+ *
+ * Delegates to the shared reader (`_lib/adr_frontmatter.ts`). This was the
+ * weakest of the three parsers it replaces — a scalar-only regex that matched
+ * neither a key with an empty value nor an indented line, so `provenance:` and
+ * `evidence:` would have read as ABSENT here while the other two readers folded
+ * them into a string. Silently absent on the surface that renders the public
+ * index is the failure mode the extraction exists to prevent.
+ */
 function fm(t: string): Meta {
-    const m = FM.exec(t);
-    if (!m) {
-        return {};
-    }
-    const out: Meta = {};
-    const body = m[1] as string;
-    FIELD.lastIndex = 0;
-    let f: RegExpExecArray | null;
-    while ((f = FIELD.exec(body)) !== null) {
-        const k = f[1] as string;
-        const v = f[2] as string;
-        out[k] = _stripChars(v, ' "\'');
-    }
-    return out;
+    return (readAdrFrontmatterScalars(t) ?? {}) as Meta;
 }
 
 /** `sorted(d.glob("ADR-*.md"))` — flat children matching ADR-*.md, lexically sorted. */

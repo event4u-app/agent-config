@@ -37,6 +37,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import {
+    type AdrFrontmatter,
+    AUTHORITY_BASES,
+    AGENTIC_MODES,
+    DISCOVERY_STATES,
+    EVIDENCE_STRENGTHS,
+    PROVENANCE_KINDS,
+    evidenceOf,
+    provenanceOf,
+    readAdrFrontmatter,
+    readAdrFrontmatterScalars,
+} from './_lib/adr_frontmatter.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -152,29 +164,17 @@ export interface AdrFinding {
     message: string;
 }
 
+/**
+ * Read the leading `---` block.
+ *
+ * Delegates to the shared reader (`_lib/adr_frontmatter.ts`) rather than
+ * carrying a fourth copy: the nested `provenance` / `evidence` axes cannot be
+ * read by the scalar-only parser this function used to be, and a corpus
+ * equivalence test holds the shared reader to this one's exact scalar output
+ * for every ADR in the tree. Re-exported because the test suite imports it.
+ */
 export function parse_frontmatter(text: string): Record<string, string> | null {
-    if (!text.startsWith('---\n')) return null;
-    const end = text.indexOf('\n---\n', 4);
-    if (end === -1) return null;
-    const out: Record<string, string> = {};
-    let key: string | null = null;
-    for (const raw of text.slice(4, end).split('\n')) {
-        const line = raw.replace(/\s+$/, '');
-        if (!line || line.trimStart().startsWith('#')) continue;
-        // Continuation of a folded/indented value.
-        if (/^\s/.test(line) && key) {
-            out[key] = `${out[key]} ${line.trim()}`.trim();
-            continue;
-        }
-        const idx = line.indexOf(':');
-        if (idx === -1) continue;
-        key = line.slice(0, idx).trim();
-        out[key] = line
-            .slice(idx + 1)
-            .trim()
-            .replace(/^["'](.*)["']$/, '$1');
-    }
-    return out;
+    return readAdrFrontmatterScalars(text);
 }
 
 /** A trigger must name a condition. A bare cadence is the failure mode. */
@@ -229,6 +229,174 @@ export function check_one(rel: string, text: string): AdrFinding[] {
     }
     check_reopen_authority(rel, fm, findings);
     check_amendment_shape(rel, fm, findings);
+    const parsed = readAdrFrontmatter(text);
+    if (parsed !== null) check_descriptive_axes(rel, parsed, findings);
+    return findings;
+}
+
+/**
+ * The permanence vocabulary, checked on the `decision` slug and on the value of
+ * any frontmatter key.
+ *
+ * ADR-208 is why this is a frontmatter check and not only a prose one: its
+ * `decision:` slug is literally `dist-agent-src-keep-forever`, so the
+ * permanence claim is in the metadata a tool reads, not only in the body a
+ * human reads.
+ */
+const PERMANENCE_RE = /\b(forever|permanently|permanent|never revisit|never reconsider|settled forever)\b/i;
+
+/** `terminal`, `none` and their kin are permanence wearing a field name. */
+const INVALID_TRIGGER_VALUES = new Set(['terminal', 'none', 'n/a', 'na', '-', '—', 'never']);
+
+/**
+ * Validate `provenance`, `evidence`, `authority_basis` and the trigger's
+ * transitional vocabulary.
+ *
+ * Staged on purpose (`adr-layout § Provenance and evidence`): a NEW record must
+ * carry the axes, an existing one may not. 88 of the 147 accepted records
+ * carry no `review_trigger` at all, so a same-day hard requirement would have
+ * made the tree invalid on the day this landed and forced the schema and the
+ * backfill into one unreviewable change. What is rejected at every stage is a
+ * value that asserts permanence — `terminal` is not a migration state, it is
+ * the thing the staging exists to avoid becoming permanent.
+ *
+ * Everything here is shape validation. Nothing in this function grants an
+ * agent authority over anything, and `authority_basis` is checked precisely so
+ * it cannot be used to route around the owner.
+ */
+export function check_descriptive_axes(
+    rel: string,
+    fm: AdrFrontmatter,
+    findings: AdrFinding[],
+): AdrFinding[] {
+    const status = fm.scalars['status'] ?? '';
+    const historical = status === 'superseded' || status === 'rejected' || status === 'deprecated';
+
+    // --- review_trigger vocabulary: invalid values are invalid at every stage.
+    const trigger = (fm.scalars['review_trigger'] ?? '').trim();
+    if (trigger !== '' && !historical) {
+        if (INVALID_TRIGGER_VALUES.has(trigger.toLowerCase())) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `\`review_trigger: ${trigger}\` is permanence under a field name. Every accepted decision has a conceivable reopening condition — write a narrow one, or \`unclassified\` while the migration runs.`,
+            });
+        } else if (trigger.toLowerCase() !== 'unclassified' && PERMANENCE_RE.test(trigger)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `\`review_trigger\` asserts permanence ("${trigger.slice(0, 60)}…"). A trigger names the condition under which the decision stops holding.`,
+            });
+        }
+    }
+
+    // --- provenance
+    const provenance = provenanceOf(fm);
+    if (fm.scalars['provenance'] !== undefined && provenance === null) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: '`provenance` must be a map with a `kind:` key, not a scalar',
+        });
+    }
+    if (provenance !== null) {
+        if (provenance.kind === null) {
+            findings.push({ file: rel, level: 'error', message: '`provenance` is present but carries no `kind`' });
+        } else if (!(PROVENANCE_KINDS as readonly string[]).includes(provenance.kind)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `provenance.kind \`${provenance.kind}\` is not one of: ${PROVENANCE_KINDS.join(', ')}. A council is \`agentic\` with \`agentic_mode: council\` — it is not its own kind.`,
+            });
+        }
+        if (
+            provenance.agenticMode !== null &&
+            !(AGENTIC_MODES as readonly string[]).includes(provenance.agenticMode)
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `provenance.agentic_mode \`${provenance.agenticMode}\` is not one of: ${AGENTIC_MODES.join(', ')}`,
+            });
+        }
+    }
+
+    // --- evidence
+    const evidence = evidenceOf(fm);
+    if (fm.scalars['evidence'] !== undefined && evidence === null) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: '`evidence` must be a map with a `strength:` key, not a scalar',
+        });
+    }
+    if (evidence !== null) {
+        if (evidence.strength === null) {
+            findings.push({ file: rel, level: 'error', message: '`evidence` is present but carries no `strength`' });
+        } else if (!(EVIDENCE_STRENGTHS as readonly string[]).includes(evidence.strength)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.strength \`${evidence.strength}\` is not one of: ${EVIDENCE_STRENGTHS.join(', ')}`,
+            });
+        }
+        // `discovery` is required on E0 and only on E0. A bare E0 cannot
+        // distinguish "no evidence exists" from "nobody looked", and the
+        // second reading is the cheap way to manufacture a reopenable lock.
+        if (evidence.strength === 'E0' && evidence.discovery === null) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: '`evidence.strength: E0` requires `discovery: complete | incomplete` — an unsearched absence is not an established one',
+            });
+        }
+        if (
+            evidence.discovery !== null &&
+            !(DISCOVERY_STATES as readonly string[]).includes(evidence.discovery)
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.discovery \`${evidence.discovery}\` is not one of: ${DISCOVERY_STATES.join(', ')}`,
+            });
+        }
+        // A grade above E1 asserts a source. Saying so without naming one is
+        // the evidence-theater failure the contract names.
+        if (
+            evidence.strength !== null &&
+            ['E2', 'E3', 'E4'].includes(evidence.strength) &&
+            evidence.basis.length === 0
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.strength \`${evidence.strength}\` cites no \`basis\`. A grade above E1 asserts a source; name it or grade it lower.`,
+            });
+        }
+    }
+
+    // --- authority_basis
+    const basis = fm.scalars['authority_basis'];
+    if (basis !== undefined && !(AUTHORITY_BASES as readonly string[]).includes(basis)) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: `authority_basis \`${basis}\` is not one of: ${AUTHORITY_BASES.join(', ')}`,
+        });
+    }
+    // `owner_intent` is the honest form for a purpose decision, and it pairs
+    // with E0 by design — the authority comes from owning the purpose, not
+    // from pretending the preference is empirical.
+    if (basis === 'owner_intent' && evidence !== null && evidence.strength !== null) {
+        if (['E2', 'E3', 'E4'].includes(evidence.strength) && evidence.basis.length === 0) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: 'an `owner_intent` record claims an empirical grade with no basis — record it as `E0` + `owner_intent` instead of dressing intent as measurement',
+            });
+        }
+    }
+
     return findings;
 }
 

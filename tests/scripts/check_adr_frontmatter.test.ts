@@ -160,3 +160,158 @@ describe('check_amendment_links — the reciprocal half `supersedes` never had',
         expect(check_amendment_links(corpus([{ adr: '1' }, { adr: '2' }]))).toEqual([]);
     });
 });
+
+/**
+ * The two descriptive axes (`provenance`, `evidence`) and the transitional
+ * `review_trigger` vocabulary.
+ *
+ * Every case here plants a violation and asserts the check fires. The validator
+ * runs green over all 177 real ADRs, which proves it does not false-positive
+ * and proves nothing at all about whether it can fire — hence a negative case
+ * per rule rather than a happy path per rule.
+ */
+describe('descriptive axes — provenance', () => {
+    function withProvenance(lines: string[], extra = ''): string {
+        return fm(
+            ['adr: 300', 'status: accepted', 'date: 2026-08-21', 'decision: probe', 'review_trigger: unclassified', 'provenance:', ...lines.map((l) => `  ${l}`), extra]
+                .filter((l) => l !== '')
+                .join('\n'),
+        );
+    }
+
+    it('accepts each valid kind', () => {
+        for (const kind of ['human', 'agentic', 'mixed', 'unknown']) {
+            const f = check_one('a.md', withProvenance([`kind: ${kind}`]));
+            expect(f.filter((x) => x.message.includes('provenance'))).toEqual([]);
+        }
+    });
+
+    it('rejects `council` as a kind — a council is agentic with a mode', () => {
+        const f = check_one('a.md', withProvenance(['kind: council']));
+        expect(f.some((x) => x.message.includes('is not one of') && x.message.includes('agentic_mode: council'))).toBe(true);
+    });
+
+    it('rejects a provenance map with no kind', () => {
+        const f = check_one('a.md', withProvenance(['decision_makers: [owner]']));
+        expect(f.some((x) => x.message.includes('carries no `kind`'))).toBe(true);
+    });
+
+    it('rejects a scalar where a map belongs', () => {
+        const f = check_one(
+            'a.md',
+            fm('adr: 300\nstatus: accepted\ndate: 2026-08-21\ndecision: probe\nreview_trigger: unclassified\nprovenance: agentic'),
+        );
+        expect(f.some((x) => x.message.includes('must be a map'))).toBe(true);
+    });
+
+    it('rejects an unknown agentic_mode', () => {
+        const f = check_one('a.md', withProvenance(['kind: agentic', 'agentic_mode: quorum']));
+        expect(f.some((x) => x.message.includes('agentic_mode `quorum`'))).toBe(true);
+    });
+});
+
+describe('descriptive axes — evidence', () => {
+    function withEvidence(lines: string[]): string {
+        return fm(
+            ['adr: 301', 'status: accepted', 'date: 2026-08-21', 'decision: probe', 'review_trigger: unclassified', 'evidence:', ...lines.map((l) => `  ${l}`)].join('\n'),
+        );
+    }
+
+    it('accepts E0 with an explicit discovery state', () => {
+        const f = check_one('a.md', withEvidence(['strength: E0', 'discovery: incomplete']));
+        expect(f.filter((x) => x.message.includes('evidence'))).toEqual([]);
+    });
+
+    it('rejects E0 without a discovery state — an unsearched absence is not an established one', () => {
+        const f = check_one('a.md', withEvidence(['strength: E0']));
+        expect(f.some((x) => x.message.includes('unsearched absence is not an established one'))).toBe(true);
+    });
+
+    it('rejects an unknown strength', () => {
+        const f = check_one('a.md', withEvidence(['strength: E5', 'discovery: complete']));
+        expect(f.some((x) => x.message.includes('strength `E5`'))).toBe(true);
+    });
+
+    it('rejects an unknown discovery state', () => {
+        const f = check_one('a.md', withEvidence(['strength: E0', 'discovery: partial']));
+        expect(f.some((x) => x.message.includes('discovery `partial`'))).toBe(true);
+    });
+
+    it.each(['E2', 'E3', 'E4'])('rejects %s with no basis — a grade above E1 asserts a source', (grade) => {
+        const f = check_one('a.md', withEvidence([`strength: ${grade}`]));
+        expect(f.some((x) => x.message.includes('cites no `basis`'))).toBe(true);
+    });
+
+    it('accepts E3 with a basis list', () => {
+        const f = check_one('a.md', withEvidence(['strength: E3', 'basis:', '  - docs/CLAIMS.md#code-graph-retrieval-null']));
+        expect(f.filter((x) => x.message.includes('evidence'))).toEqual([]);
+    });
+
+    it('does not require a basis for E1 — one local observation may be the record itself', () => {
+        const f = check_one('a.md', withEvidence(['strength: E1']));
+        expect(f.filter((x) => x.message.includes('basis'))).toEqual([]);
+    });
+});
+
+describe('descriptive axes — authority_basis', () => {
+    function withBasis(value: string, evidence: string[] = []): string {
+        const lines = ['adr: 302', 'status: accepted', 'date: 2026-08-21', 'decision: probe', 'review_trigger: unclassified', `authority_basis: ${value}`];
+        if (evidence.length > 0) lines.push('evidence:', ...evidence.map((l) => `  ${l}`));
+        return fm(lines.join('\n'));
+    }
+
+    it('accepts the two legal values', () => {
+        for (const v of ['evidence', 'owner_intent']) {
+            expect(check_one('a.md', withBasis(v)).filter((x) => x.message.includes('authority_basis'))).toEqual([]);
+        }
+    });
+
+    it('rejects an invented value', () => {
+        const f = check_one('a.md', withBasis('council_intent'));
+        expect(f.some((x) => x.message.includes('authority_basis `council_intent`'))).toBe(true);
+    });
+
+    it('rejects owner_intent dressed as an empirical grade with no basis', () => {
+        const f = check_one('a.md', withBasis('owner_intent', ['strength: E3']));
+        expect(f.some((x) => x.message.includes('dressing intent as measurement'))).toBe(true);
+    });
+
+    it('accepts owner_intent at E0 — the honest form for a purpose decision', () => {
+        const f = check_one('a.md', withBasis('owner_intent', ['strength: E0', 'discovery: complete']));
+        expect(f.filter((x) => x.message.includes('intent'))).toEqual([]);
+    });
+});
+
+describe('review_trigger vocabulary — permanence is invalid at every stage', () => {
+    function withTrigger(value: string, status = 'accepted'): string {
+        return fm(`adr: 303\nstatus: ${status}\ndate: 2026-08-21\ndecision: probe\nreview_trigger: ${value}`);
+    }
+
+    it.each(['terminal', 'none', 'never', 'n/a', '-'])('rejects `%s`', (value) => {
+        const f = check_one('a.md', withTrigger(value));
+        expect(f.some((x) => x.message.includes('permanence under a field name'))).toBe(true);
+    });
+
+    it('accepts the transitional `unclassified`', () => {
+        const f = check_one('a.md', withTrigger('unclassified'));
+        expect(f.filter((x) => x.message.includes('permanence'))).toEqual([]);
+    });
+
+    it('rejects a trigger whose prose asserts permanence', () => {
+        const f = check_one('a.md', withTrigger('This decision holds forever and is never revisited'));
+        expect(f.some((x) => x.message.includes('asserts permanence'))).toBe(true);
+    });
+
+    it('says nothing on a superseded record — historical records need no active path', () => {
+        const f = check_one('a.md', withTrigger('terminal', 'superseded'));
+        expect(f.filter((x) => x.message.includes('permanence'))).toEqual([]);
+    });
+
+    it('accepts a real condition', () => {
+        const f = check_one(
+            'a.md',
+            withTrigger('Reopen when PHP-FIG withdraws PSR-12 or the interface stops requiring it'),
+        );
+        expect(f.filter((x) => x.message.includes('permanence'))).toEqual([]);
+    });
+});
