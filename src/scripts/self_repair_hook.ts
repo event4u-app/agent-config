@@ -38,6 +38,7 @@ import {
 } from './_lib/self_repair.js';
 import { openRecords, upsertFinding } from './_lib/self_repair_store.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
+import { emitDefectShadow } from './hooks/telemetry_self_repair.js';
 
 const EXIT_ALLOW = 0;
 
@@ -202,7 +203,17 @@ export function main(): number {
 
     for (const f of findings) {
         try {
-            upsertFinding(root, f, now);
+            const rec = upsertFinding(root, f, now);
+            // The Class-A shadow (road-to-org-telemetry Phase 5, step 5.1).
+            // Structural fields only — the record type has no member able to
+            // hold `f.evidence` or `f.suggested_surface`, which are the
+            // Class-B payload and ship only on per-case approval. Inert unless
+            // the org pack activated telemetry; a refused record (`null` from
+            // the creation cap) emits nothing, because there is no queued
+            // defect to shadow.
+            if (rec !== null) {
+                emitDefectShadow(root, rec, env);
+            }
         } catch {
             // an unwritable store must never cost the user their turn
         }
