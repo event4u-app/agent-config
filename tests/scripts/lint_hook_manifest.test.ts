@@ -57,6 +57,90 @@ platforms:
     session_start: [session-canary]
 `;
 
+// A two-concern skeleton, both bound on `claude`, used by the nudge_rank
+// cases below. Two concerns are the minimum a collision needs, and both
+// scripts must exist on disk because `_check_concerns` resolves them.
+const TWO_CONCERNS = `schema_version: 1
+concerns:
+  session-canary:
+    script: src/scripts/session_canary_hook.ts
+    args: []
+    fail_closed: false
+  delegation-nudge:
+    script: src/scripts/hooks/delegation_nudge_hook.ts
+    args: []
+    fail_closed: false
+platforms:
+  claude:
+    session_start: [session-canary]
+    user_prompt_submit: [delegation-nudge]
+  augment:
+    session_start: [session-canary]
+  cline:
+    session_start: [session-canary]
+  cowork:
+    session_start: [session-canary]
+  cursor:
+    session_start: [session-canary]
+  gemini:
+    session_start: [session-canary]
+  windsurf:
+    session_start: [session-canary]
+`;
+
+/**
+ * `nudge_rank` uniqueness (road-to-wiring-truth-corrections Phase 3).
+ *
+ * `injection_budget._selectNudge` stated the gap itself: "a tie is a manifest
+ * defect rather than a runtime one, and `lint_hook_manifest` is where it should
+ * eventually be caught — that check does not exist yet". These are the cases
+ * for the check that closes it.
+ *
+ * The failure being prevented is silent, not loud: on a tie `_selectNudge`
+ * keeps the lowest rank and breaks ties on concern name, so one nudge wins
+ * stably and arbitrarily forever while the other can never emit — with no
+ * error anywhere.
+ */
+describe("lint_hook_manifest — nudge_rank uniqueness", () => {
+  function withRanks(a: string, b: string): string {
+    return TWO_CONCERNS.replace(
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n",
+      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n${a}`,
+    ).replace(
+      "  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n",
+      `  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n${b}`,
+    );
+  }
+
+  it("accepts absent ranks — most concerns declare none, and that stays legal", () => {
+    expect(lint(fixtureManifest(TWO_CONCERNS), false)).toBe(0);
+  });
+
+  it("accepts distinct ranks", () => {
+    const p = fixtureManifest(withRanks("    nudge_rank: 1\n", "    nudge_rank: 2\n"));
+    expect(lint(p, false)).toBe(0);
+  });
+
+  it("rejects two concerns declaring the same rank", () => {
+    const p = fixtureManifest(withRanks("    nudge_rank: 1\n", "    nudge_rank: 1\n"));
+    expect(lint(p, false)).toBe(1);
+  });
+
+  it("rejects a malformed rank rather than coercing it", () => {
+    // The dispatcher keeps the LOWEST rank, so a non-integer resolves to
+    // "never wins" — a typo would look like a working ordering while ordering
+    // nothing. Same polarity argument the `tools:` check already makes.
+    for (const bad of ["    nudge_rank: first\n", "    nudge_rank: 0\n", "    nudge_rank: 1.5\n"]) {
+      const p = fixtureManifest(withRanks(bad, "    nudge_rank: 2\n"));
+      expect(lint(p, false), `expected rejection for ${bad.trim()}`).toBe(1);
+    }
+  });
+
+  it("the real manifest declares no colliding rank", () => {
+    expect(lint(REAL_MANIFEST, false)).toBe(0);
+  });
+});
+
 describe("lint_hook_manifest — red fixtures", () => {
   it("returns 2 for a missing file", () => {
     expect(lint("/nonexistent/hook_manifest.yaml", false)).toBe(2);
