@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: schema
+status: accepted
+date: 2026-05-16
+decision: json-schema-frontmatter
+supersedes: —
+superseded_by: —
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — JSON Schema as the frontmatter source of truth
 
 > Area: `schema` · Status: accepted · Date: 2026-05-16 · Type: retrospective

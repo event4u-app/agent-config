@@ -16,12 +16,19 @@
  *   --regen-area-readme <area>  rewrite docs/adrs/<area>/README.md. Idempotent.
  *
  * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
+ *
+ * Record metadata is read by `read_adr_meta`: the shared frontmatter reader
+ * (`_lib/adr_frontmatter`) when a `---` block is present, the transitional
+ * blockquote header otherwise. The seven per-area records carried only the
+ * blockquote until 2026-08-21, so both paths have to work while the two
+ * surfaces overlap.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { readAdrFrontmatterScalars } from './_lib/adr_frontmatter.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -89,10 +96,26 @@ export function unlistedAreaDirs(adrsRoot: string): string[] {
 
 // ^(\d{4})-([a-z0-9-]+)\.md$
 const NAMED = /^(\d{4})-([a-z0-9-]+)\.md$/;
-// ^---\n(.*?)\n---  (DOTALL)
-const FM = /^---\n([\s\S]*?)\n---/;
-// ^([a-z_]+):\s*(.+?)\s*$  (MULTILINE)
-const FIELD = /^([a-z_]+):[ \t]*(.+?)[ \t]*$/gm;
+
+/**
+ * Metadata keys this script recognises in the transitional blockquote header.
+ *
+ * An allowlist rather than "every `Key: value` pair in a blockquote", because
+ * the blockquote block also carries prose that happens to contain colons — the
+ * `Roadmap:` pointer, a `Contract:` link, and (on `memory/0001`) a whole
+ * supersession banner. Harvesting those would put link markup into the README
+ * table. Keys are matched case-insensitively with spaces folded to `_`.
+ */
+const BLOCKQUOTE_KEYS = new Set([
+    'adr',
+    'area',
+    'status',
+    'date',
+    'decision',
+    'supersedes',
+    'superseded_by',
+    'type',
+]);
 
 interface AdrEntry {
     num: string;
@@ -129,22 +152,74 @@ function _globMdSorted(dir: string): string[] {
     return out;
 }
 
+/**
+ * Read the leading `---` frontmatter block, `{}` when there is none.
+ *
+ * Delegates to the one shared reader (`_lib/adr_frontmatter`) rather than
+ * keeping this script's own regex: the tree carried three divergent ADR
+ * frontmatter parsers plus this one, and the two nested axes (`provenance`,
+ * `evidence`) are exactly the shape a `^([a-z_]+):\s*(.+?)$` regex reads as
+ * absent. The `{}`-on-absent return and the quote/space stripping are the
+ * pinned part of the contract and are preserved.
+ */
 export function parse_fm(text: string): Record<string, string> {
-    const m = FM.exec(text);
-    if (!m) {
-        return {};
-    }
+    return readAdrFrontmatterScalars(text) ?? {};
+}
+
+/**
+ * Read the transitional blockquote metadata header.
+ *
+ * The seven per-area records predate the frontmatter contract and carry their
+ * metadata as a blockquote line instead:
+ *
+ * ```
+ * > Area: `router` · Status: accepted · Date: 2026-05-16 · Type: retrospective
+ * ```
+ *
+ * Two shapes have to be handled and both occur in the tree. Several fields
+ * share one line separated by `·`, so the split is on the separator first and
+ * the first `:` second. And the value is often wrapped in backticks
+ * (`` `router` ``), which are stripped — a table cell showing `` `accepted` ``
+ * would not match what the frontmatter path produces for the same record.
+ *
+ * Scanning stops at the first `## ` heading: everything above it is the
+ * metadata header, everything below is body prose whose blockquotes are
+ * quotations, not metadata.
+ */
+export function parse_blockquote_meta(text: string): Record<string, string> {
     const out: Record<string, string> = {};
-    const body = m[1] as string;
-    FIELD.lastIndex = 0;
-    let fm: RegExpExecArray | null;
-    while ((fm = FIELD.exec(body)) !== null) {
-        const k = fm[1] as string;
-        const v = fm[2] as string;
-        // v.strip(" \"'") — strip leading/trailing space, double- and single-quote.
-        out[k] = _stripChars(v, ' "\'');
+    for (const raw of text.split('\n')) {
+        const line = raw.trim();
+        if (line.startsWith('## ')) break;
+        if (!line.startsWith('>')) continue;
+        for (const part of line.replace(/^>\s*/, '').split('·')) {
+            const idx = part.indexOf(':');
+            if (idx <= 0) continue;
+            const key = part.slice(0, idx).trim().toLowerCase().replace(/\s+/g, '_');
+            if (!BLOCKQUOTE_KEYS.has(key)) continue;
+            const value = _stripChars(part.slice(idx + 1), ' "\'`');
+            if (value === '') continue;
+            // First occurrence wins — a later body line never overwrites the header.
+            if (!(key in out)) out[key] = value;
+        }
     }
     return out;
+}
+
+/**
+ * One record's metadata: frontmatter when present, the blockquote header
+ * otherwise.
+ *
+ * Frontmatter wins outright rather than merging. During the transition a record
+ * carries both, and the blockquote is explicitly the human-readable duplicate —
+ * merging would make the authoritative surface depend on which of the two
+ * happened to mention a field, and a stale duplicate would then be able to
+ * contribute a value the frontmatter had already corrected.
+ */
+export function read_adr_meta(text: string): Record<string, string> {
+    const fm = readAdrFrontmatterScalars(text);
+    if (fm !== null && Object.keys(fm).length > 0) return fm;
+    return parse_blockquote_meta(text);
 }
 
 /** Mirror Python `str.strip(chars)`. */
@@ -193,7 +268,7 @@ export function scan_area(area: string): [AdrEntry[], string[]] {
             errs.push(`${area}/${base}: filename does not match NNNN-<slug>.md`);
             continue;
         }
-        const fm = parse_fm(fs.readFileSync(p, 'utf-8'));
+        const fm = read_adr_meta(fs.readFileSync(p, 'utf-8'));
         adrs.push({ num: m[1] as string, slug: m[2] as string, path: base, ...fm });
     }
     // Gap check.

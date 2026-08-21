@@ -1,3 +1,15 @@
+---
+adr: 0002
+area: telegraph
+status: accepted
+date: 2026-07-29
+decision: dormant-by-default-removal-authorized
+supersedes: —
+superseded_by: —
+type: structural
+review_trigger: unclassified
+---
+
 # ADR 0002 — telegraph-speak: dormant by default (zero-cost), removal authorized but not executed
 
 > Area: `telegraph` · Status: accepted · Date: 2026-07-29 · Type: structural
