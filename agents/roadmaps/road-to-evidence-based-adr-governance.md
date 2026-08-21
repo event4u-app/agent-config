@@ -194,7 +194,8 @@ without a dated follow-up is a parking spot. Enforcement must be mechanical
   imports it. Every "enforced at cite time" claim in this roadmap is therefore
   model-carried until 2.3 wires it, and is stated that way rather than
   implied.
-- `agents/roadmaps/road-to-user-out-of-the-loop.md` — verified: it cites
+- `agents/roadmaps/archive/road-to-user-out-of-the-loop.md` (archived by the
+  trunk while this branch was in review) — verified: it cites
   **zero** ADRs as blockers (its only ADR reference, ADR-115 at `:120`, is a
   factual note; its two `## Blockers` name a kernel soak window and a defaults
   sheet). The v4 blocker-lane row built on it was a phantom and is deleted.
