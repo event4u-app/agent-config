@@ -5,7 +5,7 @@ complexity: lightweight
 # Stub: road to the solution-minimalism full-tier run
 
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
-> [`road-to-solution-minimalism.md`](../road-to-solution-minimalism.md).
+> [`road-to-solution-minimalism.md`](../archive/road-to-solution-minimalism.md).
 > Council disposition **A** on the parent's blocker, outcome state
 > **transferred** for the residue, per the framework of record in
 > [`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md).
@@ -86,9 +86,17 @@ path's fourth deliverable — a pinned SHA — became deliverable with delta #9.
 are named explicitly because a transfer that quietly widens its own scope is the
 failure the complete-list requirement exists to catch.
 
-Also not moved: the parent's **"All quality gates pass"** criterion, which stays
-open there on its own terms. It is not gated on this run and this stub does not
-carry it.
+Also not moved: the parent's **"All quality gates pass"** criterion. It was never
+gated on this run and this stub does not carry it — and on 2026-08-21 it closed
+in the parent on its own terms, on PR #1480's remote CI, by AI-council decision
+recorded as disposition **2** / outcome state **`narrowed`**
+([`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md)
+— `narrowed` describes the closure's own diff, which had to walk a CI ratchet
+down, and says nothing about the criterion's substance).
+**That closure archived the parent and changed nothing here.** Its three items
+are still transferred, still un-run, and both halves of the re-entry probe below
+are still false. A reader arriving from an archived parent should read this
+paragraph as the reason the archive is not a completion claim.
 
 ## Transferred items — verbatim, with producer, probe and baseline
 
