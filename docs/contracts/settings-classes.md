@@ -325,7 +325,6 @@ surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: five keys carry
 a project fact the tree could hold instead.
 
-<<<<<<< HEAD
 ## The floor — the nine keys no mechanism can derive
 
 This is the residual set: not "what is left over today", but what stays after the

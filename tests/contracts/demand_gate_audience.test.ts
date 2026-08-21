@@ -69,9 +69,42 @@ describe('demand gate — the addressee', () => {
         // L0–L2 still defer/validate — the ladder was extended, not flattened.
         expect(section).toMatch(/L0–L2 get a defer\/validate\s+recommendation/);
 
-        // And `public` is documented as the unchanged behaviour, so "the
-        // default changed silently" is a failing test rather than a surprise.
-        expect(section).toMatch(/`public`[\s\S]{0,120}unchanged/i);
+        // The market path is asserted against the `audience: public` BRANCH,
+        // never against the shipped default. What "the market path survives"
+        // means is that the `public` row still grants the whole gate — all
+        // three questions and the full ladder.
+        //
+        // Re-pointed (road-to-demand-gate-audience-followup, Item 1): this
+        // assertion used to match /`public`.{0,120}unchanged/, which coupled
+        // the market-path check to `public` being the default. "Unchanged" is
+        // a claim relative to the pre-key baseline, so a maintainer flipping
+        // the default to `internal` would legitimately reword that row and
+        // redden this test for a reason that has nothing to do with the market
+        // path. The branch semantics hold under either default; the default
+        // itself is pinned by its own test below, against the template.
+        expect(section).toMatch(/\|\s*`public`\s*\|[^|]*all three questions[^|]*full ladder/i);
+    });
+
+    it('documents whichever default the template actually ships', () => {
+        // The pair this test completes: the counter-test above no longer
+        // notices a default flip, so the flip needs a check of its own —
+        // otherwise flipping the template and forgetting the prose would be
+        // silent in both directions. Read from the template rather than
+        // hard-coded, so this stays green on a deliberate flip and red on a
+        // half-done one.
+        const template = fs.readFileSync(
+            path.join(__dirname, '../../src/config/agent-settings.template.yml'),
+            'utf-8',
+        );
+        const hits = [...template.matchAll(/^[ \t]*audience:[ \t]*(\w+)[ \t]*$/gm)];
+        expect(hits.length, 'project.audience must be a unique anchor in the template').toBe(1);
+        const shipped = hits[0][1];
+
+        const section = demandGateSection();
+        expect(
+            section,
+            `§ 8-pre must name \`${shipped}\` as what an absent value resolves to`,
+        ).toMatch(new RegExp(`absent value resolves to\\s+\`${shipped}\``, 'i'));
     });
 
     it('every audience value the schema accepts has documented behaviour', () => {
