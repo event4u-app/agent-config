@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 532,
+  "count": 533,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1780,6 +1780,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-ci-native-release-first-run",
+      "title": "Roadmap: Follow-up to CI-native release — first live run + drills",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 2,
+        "deferred": 0,
+        "cancelled": 6
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-ci-native-release",

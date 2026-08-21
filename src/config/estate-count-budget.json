@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 15,
+    "active_roadmaps": 14,
     "later_roadmaps": 55,
     "open_blockers": 47
   },
@@ -461,6 +461,20 @@
       "later_roadmaps": 55,
       "open_blockers": 47,
       "why": "A PARK with the draft asymmetry, recorded in the direction it actually moves: road-to-plan-gates-measurement goes from agents/roadmaps/ to agents/roadmaps/later/, so later_roadmaps 54 -> 55 is RAISED, and active_roadmaps stays 15 because the file carried status: draft on the trunk and collect() never counted it as active. The raise is taken rather than netted because parking is not closing. It qualifies as a park: the file keeps its open steps and its resume condition is an existence predicate over a named file, agents/evidence/metrics/gate-metrics.jsonl, which a probe can decide -- stronger than the maintainer-statement triggers some of the other parks in this run carry. open_blockers unchanged at 47."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 active roadmap and nothing else. road-to-ci-native-release-first-run archived: 2 of its 8 items were satisfied on live evidence and 6 transferred to stubs/road-to-ci-native-release-live-label-path.md with a named producer (matze4u, admin verified) and per-item probes measured at transfer. open_blockers is UNCHANGED at 64 and that is deliberate: the roadmap had no blocker section, and none was filed to leave a note, because a new blocker entry would have reddened this same ratchet in the opposite direction while recording nothing a stub row does not already carry. later_roadmaps unchanged at 52 - nothing was parked; the residual work is release-gated, not deferred, so it belongs in stubs/ rather than later/. The transferred work is counted in the stub, not vanished: the label path has never fired (0 non-skipped release.yml runs on pull_request across 300 scanned), so what moved is verification that needs a Hard-Floor act, and the drawdown is the roadmap terminating rather than its goal being reached."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 14,
+      "later_roadmaps": 55,
+      "open_blockers": 47,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-ci-native-release-first-run is archived by this branch (present under agents/roadmaps/ on main, added under agents/roadmaps/archive/ here). open_blockers is UNCHANGED at 47, which is the check that says this closure bought nothing by relocating an open decision -- the roadmap carried no blocker that moved, and the part it could not finish went to stubs/road-to-ci-native-release-live-label-path.md with its own probe. later_roadmaps unchanged at 55: a stub is not a park, so the open work stays counted where a probe can decide it rather than in later/."
     }
   ],
   "target": {
