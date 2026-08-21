@@ -242,8 +242,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 105 |
-| **Total** | **134** |
+| C — guarded | 107 |
+| **Total** | **136** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -251,6 +251,11 @@ deleted, minus the one held open (§ The six unread keys, below): one A
 ADR-229 deleted `worktrees.mode` — a fifth C, and the first deletion in this
 series of a key that WAS read: the doctrine there is that the decision was never
 the agent's to make, not that nothing consulted it.
+
+It rose to 136 on 2026-08-20 when `road-to-gate-autonomy`'s
+`b-gate-budget-preauth` was decided: the two class-1 gate-budget caps are the
+first keys added to this contract since the deletions above, and both are C on
+test 1 (money).
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -300,9 +305,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 37 |
+| consent | 39 |
 | policy | 5 |
-| **Total** | **134** |
+| **Total** | **136** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -320,7 +325,6 @@ surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: five keys carry
 a project fact the tree could hold instead.
 
-<<<<<<< HEAD
 ## The floor — the nine keys no mechanism can derive
 
 This is the residual set: not "what is left over today", but what stays after the
@@ -457,6 +461,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
+| `roadmap.gate_budget.max_cost_per_run_usd` | C | `5` | per-run spend ceiling on class-1 gate execution | consent |
+| `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `25` | rolling spend ceiling on class-1 gate execution | consent |
 | `planning.challenge_on_create` | C | `true` | disables the plan-confidence gate | derivable — the gate's own confidence conditions; a confident plan passes straight through |
 | `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
@@ -607,7 +613,7 @@ moves into the project surface.
 | `subagents.judge_model` | Same, for the judge role — and here a wrong default is worse than an empty one, because it would silently judge with the model under test. |
 | `ai_team.model` | Same, for the team surface. `auto` is a resolution *strategy*, not a derivation: it still needs the endpoint list this key supplies. |
 
-The `consent` class (38) is deliberately NOT part of this floor. Those keys are
+The `consent` class (39) is deliberately NOT part of this floor. Those keys are
 kept for now but sit under the Phase-3 re-examination that asks whether the
 ACTION needs authorising at all — a consent gate on something the package should
 not be doing is two problems wearing one flag, and the repair may remove the

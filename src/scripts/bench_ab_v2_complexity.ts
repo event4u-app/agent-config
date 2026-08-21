@@ -35,6 +35,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { PinnedRepoError, pristine_tree_for } from './_lib/bench_ab_pinned_repo.js';
 import { medianComplexityPerChangedFunction } from './_lib/bench_ab_complexity.js';
 import { changed_files, diff_line_counts } from './_lib/bench_ab_scoring_v2.js';
 
@@ -63,15 +64,15 @@ function _dictOr(v: unknown): Dict {
  * trial to `skipped_reason: 'task id not in the corpus'`, which is a reportable
  * state, rather than aborting a re-score that may still cover most of the report.
  */
-function loadCorpusFixtures(corpusPath: string | null): Map<string, string> {
-    const byId = new Map<string, string>();
+function loadCorpusFixtures(corpusPath: string | null): Map<string, Dict> {
+    const byId = new Map<string, Dict>();
     if (!corpusPath || !fs.existsSync(corpusPath)) return byId;
     try {
         const corpus = _dictOr(parseYaml(fs.readFileSync(corpusPath, 'utf8'), { version: '1.1' }));
         const tasks = Array.isArray(corpus['tasks']) ? (corpus['tasks'] as Dict[]) : [];
         for (const t of tasks) {
-            if (t['id'] !== undefined && t['fixture'] !== undefined) {
-                byId.set(String(t['id']), String(t['fixture']));
+            if (t['id'] !== undefined && (t['fixture'] !== undefined || t['repo'] !== undefined)) {
+                byId.set(String(t['id']), t);
             }
         }
     } catch {
@@ -109,7 +110,7 @@ export async function rescoreReport(
 
     for (const rec of records) {
         const taskId = String(rec['id'] ?? '<unknown>');
-        const fixtureRel = byId.get(taskId) ?? null;
+        const corpusTask = byId.get(taskId) ?? null;
         const arms = _dictOr(rec['arms']);
         for (const [arm, runsRaw] of Object.entries(arms)) {
             const runs = Array.isArray(runsRaw) ? (runsRaw as Dict[]) : [];
@@ -134,12 +135,31 @@ export async function rescoreReport(
                     out.push(row);
                     continue;
                 }
-                if (fixtureRel === null) {
+                if (corpusTask === null) {
                     row.skipped_reason = 'task id not in the corpus';
                     out.push(row);
                     continue;
                 }
-                const fixture = path.join(fixturesRoot, fixtureRel);
+                // Delta #9: a pinned task's pristine tree is a local cache entry, and
+                // this re-scorer is `offlineOnly` on purpose — a cold cache reports
+                // "not materialised" rather than fetching a repository during what is
+                // meant to be an offline re-score of a finished sweep. A malformed pin
+                // is reported per trial, never thrown: one bad corpus entry must not
+                // abort a re-score that still covers every other trial.
+                let fixture: string | null;
+                try {
+                    fixture = pristine_tree_for(corpusTask, { fixturesRoot, offlineOnly: true });
+                } catch (err) {
+                    row.skipped_reason =
+                        err instanceof PinnedRepoError ? `invalid pin: ${err.message}` : 'invalid corpus task';
+                    out.push(row);
+                    continue;
+                }
+                if (fixture === null) {
+                    row.skipped_reason = 'pinned repo not materialised locally';
+                    out.push(row);
+                    continue;
+                }
                 if (!fs.existsSync(fixture)) {
                     row.skipped_reason = 'fixture missing on disk';
                     out.push(row);
