@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 531,
+  "count": 532,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2130,6 +2130,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-council-blind-review",
+      "title": "Roadmap: Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 3,
+        "deferred": 0,
+        "cancelled": 3
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-council-modes",

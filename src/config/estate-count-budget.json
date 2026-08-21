@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 16,
+    "active_roadmaps": 15,
     "later_roadmaps": 54,
-    "open_blockers": 48
+    "open_blockers": 47
   },
   "baseline_history": [
     {
@@ -440,6 +440,20 @@
       "later_roadmaps": 54,
       "open_blockers": 48,
       "why": "WALKED DOWN by 1 active and 2 blockers. road-to-cost-parity-1-rule-payload-diet archived (under agents/roadmaps/ on main, under archive/ here). Two of its three blockers, skill-activation-window and utilization-sweep-window, are open on the trunk and resolved here; the third, consolidation-breaking-change-permission, was already resolved on the trunk and is excluded -- checked per blocker rather than by counting status lines, which is the step that keeps a pre-existing closure from being banked as this change's drawdown. later_roadmaps unchanged at 54: a closure, nothing parked."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-council-blind-review merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 15,
+      "later_roadmaps": 54,
+      "open_blockers": 47,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-council-blind-review archived (under agents/roadmaps/ on main, under archive/ here) and its single blocker maintainer-blind-ratings, open on the trunk, is closed here as 'resolved -- transferred'. The destination is stubs/road-to-council-blind-ratings.md, created in this same change, which is what makes the transfer legitimate rather than a disposal: the obligation names a maintainer rating pass, so it could not be completed by an agent, and it is now carried by a stub with its own probe instead of sitting open on an archived roadmap. later_roadmaps unchanged at 54 -- transferred to a stub, not parked into later/."
     }
   ],
   "target": {

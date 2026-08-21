@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**531 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 188 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**532 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 189 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -176,6 +176,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-cost-parity-3-handoff-envelope`](road-to-cost-parity-3-handoff-envelope.md) | Road to cost parity — 3: the handoff envelope carries what the successor actually needs | completed | 4 | 30/30 | _not extractable_ |
 | [`road-to-cost-profile-untangle`](road-to-cost-profile-untangle.md) | Roadmap: Untangle `cost_profile` | closed-with-cancellations | 8 | 41/45 | _not extractable_ |
 | [`road-to-council-api-fallback`](road-to-council-api-fallback.md) | Road to council api fallback — the contract promised a retry no path performed | closed-with-cancellations | 6 | 16/17 | _not extractable_ |
+| [`road-to-council-blind-review`](road-to-council-blind-review.md) | Roadmap: Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern | closed-with-cancellations | 3 | 3/6 | _not extractable_ |
 | [`road-to-council-modes`](road-to-council-modes.md) | Road to Council Modes | closed-with-cancellations | 3 | 14/24 | _not extractable_ |
 | [`road-to-council-quota-accounting-truth`](road-to-council-quota-accounting-truth.md) | Roadmap: Council quota accounting truth | completed | 4 | 26/26 | _not extractable_ |
 | [`road-to-council-solo-floor-implementation`](road-to-council-solo-floor-implementation.md) | Road to the gate-scoped solo-attendance floor | closed-with-cancellations | 3 | 15/16 | _not extractable_ |
