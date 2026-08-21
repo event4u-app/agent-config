@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
-    "open_blockers": 62
+    "open_blockers": 60
   },
   "baseline_history": [
     {
@@ -254,10 +254,31 @@
     },
     {
       "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 68,
+      "why": "WALK-DOWN, earned rather than banked: open_blockers 70 to 68 because road-to-org-telemetry resolved both of its blockers in one drain run. sink-choice and dpo-signoff are both disposition B, outcome transferred, per the council record drain-blocker-dispositions-a.md, with successors stubs/road-to-org-telemetry-sink.md and stubs/road-to-org-telemetry-enablement.md. active_roadmaps is unchanged at 32 and later_roadmaps at 52, which is the pair that distinguishes a real resolution from work relocated into the estate: the two stubs live under stubs/, which neither counter walks, and that is the same treatment every earlier drain-run transfer received. The parent roadmap is NOT archived in this change, by instruction, so the active count does not move even though every one of its 30 boxes is now terminal - 21 done and 9 transferred. Walked in the change that earned it rather than left as headroom, because a baseline of 70 over a measurement of 68 is two blockers a later change could add without any gate objecting. The sibling ratchet lint_roadmap_blockers:decidability moved for the same reason and is walked in the same commit."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 66,
+      "why": "open_blockers 68 -> 66, RE-ANCHORED AT MERGE. This branch resolved two blockers by transfer (sink-choice, dpo-signoff), which lowers the count by construction: the blocker leaves the active estate and reappears as a stub gate this metric does not scan. Nothing in the repository earned the drop - no question was answered and no work finished. The baseline was MEASURED against the merged tree rather than taken from either side: main had independently walked 70 -> 68 for two genuinely resolved Phase-4 blockers, this branch walked 70 -> 68 for its own two transfers, and 66 = 70 - 2 - 2 is what the merged tree actually reads. Taking one side would have claimed a number that describes no tree. Both sides' history entries are preserved; none was collapsed. For whoever merges next: main is moving fast and this file collides the same way each time. The correct resolution is to keep every history entry from both sides and re-measure the baseline against the merged tree - never to adopt one side's number."
+    },
+    {
+      "at": "2026-08-20",
       "active_roadmaps": 24,
       "later_roadmaps": 52,
       "open_blockers": 62,
-      "why": "WALKED DOWN by 2 blockers, and NOTHING IN THE REPOSITORY EARNED THE DROP - a transfer lowers this number by construction, which is the one case where a falling measurement is not progress. The drain run that closed road-to-rule-coherence-followup resolved its two entries (default-flip-release-gate, bench-spend-and-methodology) under the council's B and D dispositions: the shipped-default flip and the human-judged A/B run both left for stubs/road-to-discipline-default-flip.md with verbatim criteria, complete moved-step lists, a named producer and probes measured at transfer. The work is not done and is not gone; it is counted in the stub instead of here, exactly as the 2026-08-20 phase3-harness-deltas-9-10 entry above records for its own transfer. Written as `resolved` because that is the ONLY closed token lint_roadmap_blockers reads - `transferred` scans as open to every gate - so the outcome state lives in the resolution prose, the stub and the stubs/README row rather than in the status token. Anyone reading this series as a drawdown curve should discount these 2 the way they discount the parking entries: the estate got smaller, the obligation did not. Re-measured over the merged tree after merging origin/main, not carried over from before the merge. Active roadmaps also fall 25 -> 24 in the same change, and that half IS earned in the ordinary way: road-to-rule-coherence-followup reached zero open steps and `agent-config roadmap:progress` archived it. The two halves of this entry are therefore different kinds of movement and are recorded separately on purpose - the roadmap genuinely left the active tree, while the 2 blockers only changed which file counts them."
+      "why": "MERGE RECONCILIATION plus the walk-down this branch earned, stated as one entry because the arithmetic only makes sense together. The history array itself was conflicted: the trunk had moved four entries ahead while this branch carried two of its own, so main's file was taken as the base (authoritative trunk baseline and order) and the branch's two entries appended rather than dropped \u2014 append-only means both sides survive. Those two entries quote 70 -> 68 -> 66 against a trunk that has since measured 64, so their NUMBERS are superseded and only their reasons still stand; that is why this entry re-states the delta instead of trusting them. open_blockers 64 -> 62 is verified against the diff, not against that prose: sink-choice and dpo-signoff are both open on origin/main and both resolved on this branch. active_roadmaps 25 -> 24: road-to-org-telemetry reached zero open steps and the regen archived it, migrating its one inbound reference. This entry was written before the regen ran and said the roadmap would NOT archive; the number is corrected here rather than by appending a second entry, because one change earns one entry and two would read as two independent walk-downs and later_roadmaps unchanged at 52 \u2014 nothing parked, nothing relocated."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "WALKED DOWN by 2 blockers, and NOTHING IN THE REPOSITORY EARNED THE DROP - a transfer lowers this number by construction, which is the one case where a falling measurement is not progress. The drain run that closed road-to-rule-coherence-followup resolved its two entries (default-flip-release-gate, bench-spend-and-methodology) under the council's B and D dispositions: the shipped-default flip and the human-judged A/B run both left for stubs/road-to-discipline-default-flip.md with verbatim criteria, complete moved-step lists, a named producer and probes measured at transfer. The work is not done and is not gone; it is counted in the stub instead of here, exactly as the 2026-08-20 phase3-harness-deltas-9-10 entry above records for its own transfer. Written as `resolved` because that is the ONLY closed token lint_roadmap_blockers reads - `transferred` scans as open to every gate - so the outcome state lives in the resolution prose, the stub and the stubs/README row rather than in the status token. Anyone reading this series as a drawdown curve should discount these 2 the way they discount the parking entries: the estate got smaller, the obligation did not. Re-measured over the merged tree after merging origin/main, not carried over from before the merge. Active roadmaps also fall 25 -> 24 in the same change, and that half IS earned in the ordinary way: road-to-rule-coherence-followup reached zero open steps and `agent-config roadmap:progress` archived it. The two halves of this entry are therefore different kinds of movement and are recorded separately on purpose - the roadmap genuinely left the active tree, while the 2 blockers only changed which file counts them. RE-BASED ON MERGE with origin/main, 2026-08-21. Authored against a different base; the trunk moved in parallel, so neither side's number describes the merged tree and the gate MEASURED it at 23 active / 60 open_blockers. What THIS branch earned is -1 active (road-to-rule-coherence-followup reached 0 open and was archived by the roadmap:progress sweep) and -2 open_blockers (both of its entries closed, each with outcome state transferred rather than satisfied). The blocker half of that is a RELOCATION, not a discharge: the criteria moved into stubs/road-to-discipline-default-flip.md and stubs/road-to-declared-protocol-cap.md, and the metric counts entries, so it falls whether or not a line of the transferred work exists. Any remaining delta came from the trunk and is banked rather than attributed."
     }
   ],
   "target": {
