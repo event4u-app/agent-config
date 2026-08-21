@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers in the active tree, **15** need you → `agent-config gates`
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers in the active tree, **11** need you → `agent-config gates`
 
 ## Overall
 
-**196 / 431 steps done · 45%**
+**162 / 257 steps done · 63%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -19,34 +19,26 @@
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
-| 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 10 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 13 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md) | 8 | 54 | 54 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 16 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 17 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 18 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 19 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 20 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 21 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
+| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 7 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 8 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 12 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 13 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 14 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 15 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
-## Parked — `later/` (52 roadmaps, not active backlog)
+## Parked — `later/` (54 roadmaps, not active backlog)
 
 > Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
 
-> Carrying **28** open blockers, **12** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
+> Carrying **29** open blockers, **13** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
 
 | Roadmap | Open blockers | Resume when |
 |---|---:|---|
@@ -55,6 +47,7 @@
 | [road-to-carrier-layer-convergence.md](roadmaps/later/road-to-carrier-layer-convergence.md) | 1 (1 you) | Parked 2026-08-19. Resume when the before/after delivered-token pair for Phase 3 exists: both readings taken on the maintainer's own installed topology, either side of `install --layer`, recorded a... | <!-- ref-ignore -->
 | [road-to-catalogue-host-fit.md](roadmaps/later/road-to-catalogue-host-fit.md) | 1 (1 you) | Blocked until: `agents/evidence/metrics/skill-catalogue.jsonl` holds at least 20 observations spanning at least 2 distinct `host` values. Probe: `capture_skill_catalogue --cadence` prints progress... | <!-- ref-ignore -->
 | [road-to-command-structure-followup.md](roadmaps/later/road-to-command-structure-followup.md) | 0 | Blocked until: the per-item triggers below fire. | <!-- ref-ignore -->
+| [road-to-conformance-round7-followup.md](roadmaps/later/road-to-conformance-round7-followup.md) | 1 (1 you) | Resume when: the maintainer states a position on whether `src/rules/commit-policy.md` § One-shot authorization names the remote-state case — that is, when a `grep -niE 'remote.state\|deliverable' sr... | <!-- ref-ignore -->
 | [road-to-contract-integrity.md](roadmaps/later/road-to-contract-integrity.md) | 0 | only open work — Phase 2 family-first presentation — is blocked until the leanness / pruning track (`road-to-tier-removal` + command-surface-leanness) prunes against the Phase-0 census; documenting... | <!-- ref-ignore -->
 | [road-to-corpus-knowledge-skills.md](roadmaps/later/road-to-corpus-knowledge-skills.md) | 2 | Blocked until the maintainer names the first two corpora (Phase 0.2) or archives this plan as demand-not-shown. Parked rather than active because every remaining open item is gated on that one deci... | <!-- ref-ignore -->
 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md) | 2 (1 you) | Resume when EITHER: (a) the orchestration claim queue is free and the ≥ 20-audit-line bar is met, or (b) the maintainer authorizes Phase 1 alone — the resolver plus the record-only soak change no v... | <!-- ref-ignore -->
@@ -70,6 +63,7 @@
 | [road-to-harvest-second-sweep-proposals.md](roadmaps/later/road-to-harvest-second-sweep-proposals.md) | 0 | they are tracked, not lost — neither is auto-applied. Resume when the maintainer decides to adopt either; each then lands as its own small PR against the named target. | <!-- ref-ignore -->
 | [road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md](roadmaps/later/road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md) | 0 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-install-path-convergence-followup.md](roadmaps/later/road-to-install-path-convergence-followup.md) | 1 (1 you) | Blocked until the bootstrap shim has shipped and a monitoring window (suggested: ~4 weeks post-merge) has elapsed. Execution starts when the maintainer opens the checkpoint — this is a maintainer c... | <!-- ref-ignore -->
+| [road-to-kernel-question-triangle.md](roadmaps/later/road-to-kernel-question-triangle.md) | 0 | Resume when `src/rules/ask-when-uncertain.md` carries the band-4 qualifier below, i.e. when `grep -c 'Band-4 scope' src/rules/ask-when-uncertain.md` returns non-zero. It returns 0 today — re-measur... | <!-- ref-ignore -->
 | [road-to-live-app-verdict.md](roadmaps/later/road-to-live-app-verdict.md) | 0 | Blocked until: a consumer repo's live-app CI run of the `playwright-testing` skill is recorded under `agents/evidence/`. Why that half and not the other: the trigger below is a conjunction whose fi... | <!-- ref-ignore -->
 | [road-to-mcp-full-power.md](roadmaps/later/road-to-mcp-full-power.md) | 1 (1 you) | Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left z... | <!-- ref-ignore -->
 | [road-to-mission-catalogue.md](roadmaps/later/road-to-mission-catalogue.md) | 0 | Status: later (parked). Blocked until the `/mission:upgrade` infrastructure is operationally validated on a live Laravel repo (the Phase 2B trigger). Every item below is gated on an unmet external... | <!-- ref-ignore -->
@@ -211,72 +205,6 @@
 
 _1 blocker resolved._
 
-### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
-
-**Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 49 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | census with decided verdicts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | skill-cluster consolidation, pilot first | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 3 | authored norm-lines and sectioning, kernel carved out | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 4 | the two uncapped growth surfaces | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | the maintenance promise and the contexts surface | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | what this roadmap will not do | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-cost-parity-1-rule-payload-diet"></a>
-**Blockers**
-
-- **skill-activation-window** (owner: user) — blocks Phase 1.3's skill-usage evidence column; Phase 2's trigger-accuracy bars
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do NOT commission a second eval. This entry is a pointer, and its own text says the sibling's pre-registration IS the bar Phase 2 needs — so adopt that pre-registration as this roadmap's window and resume when the sibling's predictions JSON exists. One human sitting then discharges two blockers instead of one, and a parallel window would produce a second number nobody can reconcile with the first.
-  - **If you do nothing:** 49 steps stay open behind an instrument whose depth on this store is unverified, and Phase 1.3's evidence column stays a column with no evidence in it. The independently recorded facts — 6 of 288 skills ever invoked, 0 declaring a trigger, a host that truncates the catalogue — stay true and stay unmeasurable from transcripts.
-  - **What to do:**
-    `road-to-skill-description-measurement.md` is blocked on
-    `human-gated-live-trigger-eval` with the same gap under a different name —
-    its pre-registration (≥ 100 requests, ≥ 3 shapes, no skill degrading
-    > 20 %) is the bar Phase 2 needs. Recorded independently: 6 of 288 skills
-    have ever been invoked and 0 declare a trigger, and the host truncates the
-    injected catalogue, which is not measurable from transcripts. So the
-    activation instrument's depth on this store is unverified until that eval
-    runs.
-  - **Resolved when:** the pilot tranche PR cites its activation baseline and the window it was measured over.
-- **utilization-sweep-window** (owner: maintainer) — blocks Phase 1 census starting with real utilization data
-  - **What to do:**
-    `road-to-surface-consolidation.md` Phase 3's sweep is
-    time-gated to ~2026-08-26 and carries its own `repo-admin-and-usage`
-    blocker. The census reuses its mechanic, so it waits rather than building
-    a parallel one.
-  - **Resolved when:** that sweep has run and its vocabulary is available to reuse.
-
-_1 blocker resolved._
-
-### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
-
-**Road to the distillation follow-ups — two maintainer-gated items, relocated intact** — 0 / 2 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The router-head retrofit | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 2 | The untested contract path | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-distillation-followups"></a>
-**Blockers**
-
-- **router-head-retrofit-instrument** (owner: maintainer) — blocks Phase 1 Step 1 only.
-  - **What to do:**
-    either supply an instrument that observes what the host
-    actually loads on skill trigger (no such observation exists in this tree
-    today), or decide explicitly that the published K6 cap is reason enough to
-    restructure the three offenders without a token claim.
-  - **Resolved when:** an instrument exists and has produced a before/after reading on one skill, **or** a maintainer decision is recorded that the contract alone justifies the retrofit.
-- **first-contract-true-analysis-run** (owner: maintainer) — blocks Phase 2 Step 1 only.
-  - **What to do:**
-    run the command against a small reference and land the
-    evidence artefact. Two things make this a maintainer call rather than an
-    autonomous step: it spends on external fetches, and its output is raw named
-    evidence, which `source-confidentiality` keeps local-only unless anonymised.
-  - **Resolved when:** one evidence artefact exists that was produced by the command rather than by an ad-hoc pass.
-
 ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
 
 **Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 3 / 6 done (50%)
@@ -288,44 +216,6 @@ _1 blocker resolved._
 | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
-
-### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
-
-**Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — capture the catalogue, publish the baseline | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Deliver — design surfaces reach the model with a description | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
-| 3 | Own the prompt — an ad-hoc lane for UI work | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Route — a runtime signal that is framework-agnostic | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 5 | Reach and enforcement — only where a mechanism exists | 🟡 in progress | 5 | 7 | 0 | 0 | 58% |
-
-<a id="blockers-road-to-frontend-skill-application"></a>
-**Blockers**
-
-- **ui-session-capture-window** (owner: maintainer) — blocks Phase 1 — Measure · Phase 2 — Deliver
-  - **What to do:**
-    1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
-    2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
-    3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
-    4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
-    5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
-    6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
-  - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
-- **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
-    2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
-    3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
-  - **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
-- **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
-    2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
-  - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
-
-_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
@@ -342,37 +232,6 @@ _1 blocker resolved._
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
   - **Resolved when:** condition described above clears
-
-### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
-
-**Road to a review binding that survives a checkbox** — 9 / 10 done (90%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure which segment actually moves | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Make the verdict segment-aware, only if Phase 1 earns it | ✅ done | 0 | 1 | 0 | 2 | 100% |
-| 3 | Give the evidence a retention shape | 🟡 in progress | 1 | 5 | 0 | 1 | 83% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
-**Blockers**
-
-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
-  - **What to do:**
-    pick exactly one — (a) no compaction: the tiering and the
-    reproducibility verdict are the whole deliverable, and step 3.3 is marked
-    `[-]` cancelled; or (b) compact at a named tier boundary, dropping only
-    directories Phase 3 proved reproducible and leaving every irreproducible one
-    intact. Mutually exclusive. (b) requires the boundary to be stated in this
-    blocker, not chosen at execution time.
-  - **Resolved when:** the maintainer records yes with a tier boundary, or no.
-
-### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
-
-**Road to the kernel question-triangle amendment — one line, human-applied** — 0 / 3 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | apply through the kernel process | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
@@ -607,67 +466,19 @@ _2 blockers resolved._
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
-**Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
+**Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 0 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Run and publish | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-scale-history-bench-run"></a>
-**Blockers**
-
-- **manual-rubric-rater** (owner: user) — blocks Phase 1 step 1's scoring half, and thereby step 2's verdict
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting and do it before any `score.ts` output is on screen — the anti-anchor ordering is binding per the rubric's own first line, so a sitting split across days is the likeliest way to void the result without noticing. If that sitting is not going to happen in the near term, the honest move is to park this roadmap in `later/` with the rubric pass as its probe-able resume condition, rather than leaving it in the active tree reading as ordinary open work.
-  - **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2 has no verdict, so the bench run produces only the SECONDARY `lint_persistence` count — a number the pre-registration explicitly does not accept as the defect count. The roadmap then reads as spend-blocked when it is in fact rater-blocked, which is the misreading its own Surfaced note records.
-  - **What to do:**
-    score each produced artifact against
-    `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
-    `score.ts` output is viewed. The pre-registration makes this rubric the
-    PRIMARY defect count and `lint_persistence` merely SECONDARY
-    (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
-    own first line makes the anti-anchor ordering binding
-    (`internal/bench/scale-history/rubric.md:4-5`).
-  - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
-
-_2 blockers resolved._
-
-### [road-to-session-closeout.md](roadmaps/road-to-session-closeout.md)
-
-**Road to closing what fifty sessions left open** — 0 / 54 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | release integrity: what the completed release left behind | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | the half of the payload defect that was left unfixed | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | double delivery: measured, gated, and still happening | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | budgets that document deterioration instead of preventing it | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | the gates nobody sees run | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | the shared checkout, which is a cause and not a symptom | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | rescue, then deletion | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
-| 8 | maintenance risk, process economy, and the homeless defects | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
+| 1 | Run and publish | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
-**Measure the de-collided skill descriptions** — 0 / 4 done (0%)
+**Measure the de-collided skill descriptions** — 0 / 0 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Run the instrument | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-skill-description-measurement"></a>
-**Blockers**
-
-- **human-gated-live-trigger-eval** (owner: user) — blocks all of Phase 1 — 1.1 and 1.2 both need a live model run
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run both tree states in ONE sitting under the same protocol, or park the roadmap in `later/` with exactly that as its resume condition. Two sittings is the failure mode to avoid: the entry's Resolved-when requires both JSONs to come from the *same* protocol, and a protocol that drifted between runs produces two files that look comparable and are not. This blocker also gates `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one sitting discharges two entries — which is why it outranks its own step count.
-  - **If you do nothing:** all of Phase 1 stays open, and the description rewrite ships with no before/after activation reading — the claim it exists to test stays unmeasured while reading as ordinary open work.
-  - **What to do:**
-    run the live trigger-eval to produce the predictions JSON for
-    both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the
-    maintainer machine, once per tree state, same protocol both times. It
-    hard-aborts under automation on purpose, so an agent cannot supply it and
-    must not simulate it. Substituting an AI rater would break the
-    pre-registration.
-  - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
+| 1 | Run the instrument | ⏭️ skipped | 0 | 0 | 0 | 4 | 0% |
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
@@ -797,137 +608,6 @@ _2 blockers resolved._
 | 5 | Tier routing has a caller — measure whether it moved the distribution | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 | 7 | The `do_not_touch` write-guard — relocated, and deliberately its own phase | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
-
-**Follow-up to Subagent value realization** — 3 / 9 done (33%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Seed real telemetry | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | Confirm or demote the ADR-117 `auto: on` default | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
-
-<a id="blockers-road-to-subagent-value-realization-followup"></a>
-**Blockers**
-
-- **telemetry-sample-size** (owner: user) — blocks Phase 1 — Seed real telemetry
-  - **Recommendation:** stop treating this as a usage-volume blocker and run the live-host semantics probe instead — does **any** hook slot receive the task-completion notification payload, and does that payload carry the usage fields a background dispatch withholds at `post_tool_use`? Same shape as `background-continuation-probe`, not a code fix. It is the recommended option because it is the only one that can move the exit criterion: the line count is already met at 99, and the missing columns are documented behaviour of the slot, so more usage produces more of the same nulls.
-  - **If you do nothing:** the log keeps growing and Phase 1 stays open forever — `≥ 20 **usable** dispatches` is unreachable at this slot regardless of volume, so the roadmap's last acceptance criterion (re-evaluating the ADR-117 `auto: on` default on real telemetry) never gets the evidence it names, and the default stands unexamined by default rather than by decision.
-  - **What to do:**
-    1. Use the agent with `subagents.enabled: true` under the post-ADR-117
-    default (`subagents.auto: on`) during real work, long enough to
-    accumulate real orchestrated dispatches — the build work is done;
-    only real usage produces this.
-    2. Check the current-month audit log line count:
-    `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
-    3. Once the count reaches ≥ 20, resume this roadmap
-    (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
-    **Measured 2026-08-10 — the count condition is MET and the blocker still
-    stands, because the count was never the hard part.** `2026-08.jsonl` holds
-    **100 lines, 99 of them orchestration** (`2026-07.jsonl` holds 1 — the
-    pipeline-verification line from Step 1), and
-    `orchestration_savings_report` agrees: `dispatches: 99 (total spawns: 101)`.
-    The move is not usage discipline: the `orchestration-record` `post_tool_use`
-    concern now emits the line deterministically per dispatch, replacing the
-    model-carried capture that had reached 1 of 370.
-    What the 99 lines do **not** carry is the whole remaining gap: `token_delta`
-    is `0` and `token_delta_provenance` `estimated` in all 99; `dispatch_tokens`,
-    `wall_clock_ms`-as-measured, `first_pass_success`, `escalated`, `task_class`
-    and `dispatch_mode` are `null` in all 99; `spawn_count` is 1 in 98 of 99, so
-    the corpus never produced a fan-out ≥ 2. That is **documented behaviour, not
-    a defect** — the hook's own header states that `token_delta` has no honest
-    value at its layer (it is a net against a not-delegating baseline that does
-    not exist post-hoc) and that the absolute cost rides `dispatch_tokens`, which
-    the host populates only on a **sync** completion. All 99 were background
-    dispatches, i.e. spawn acks with no usage fields, so the null is correct
-    rather than lossy.
-    **Correction (2026-08-17) — the count moved and two of the field claims are
-    now false, one of them load-bearing.** `2026-08.jsonl` holds **368 lines,
-    367 orchestration** (July still 1). Unchanged and still true: `token_delta`
-    `0` with provenance `estimated` in **367/367**, and `first_pass_success`,
-    `escalated`, `task_class`, `dispatch_mode` `null` in **367/367** — the
-    quality columns really are absent, so the exit criterion below is untouched.
-    Now false: `dispatch_tokens` is **numeric on 40 of 367** (327 null, values
-    from 315 to 194330), and `wall_clock_ms` is numeric on **367/367** (0 to
-    955883), not null. That matters beyond bookkeeping, because the sentence
-    above explains the nulls by "all were background dispatches, and the host
-    populates usage only on a sync completion" — 40 sync completions have since
-    landed, so the absolute-cost half of the argument no longer applies. It does
-    **not** unblock the roadmap: there is still no counterfactual and no quality
-    column, and n=40 carries no family labels. `spawn_count` is **1 in 366 of
-    367** (one `0`, none ≥ 2), so the fan-out finding is unchanged.
-    Consequence for the exit criterion: a hook at `post_tool_use` cannot supply
-    the quality columns for a background dispatch at all. The usage does surface
-    later, on the task-completion notification, so the open question is whether
-    any hook slot sees that payload — a live-host semantics probe of the same
-    shape as `background-continuation-probe`, not a code fix. Until that is
-    answered, `≥ 20 usable dispatches` is unreachable regardless of how many
-    lines accumulate, and raising the line count further will not move it.
-  - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
-
-### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
-
-**Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-ui-track-integrity-followup"></a>
-**Blockers**
-
-- **measurement-a-no-per-arm-builder-tier** (owner: maintainer (scope decision) / any roadmap that needs a UI-generation runner for its own reason) — blocks Measurement A (both steps) and the two A acceptance criteria. It does **not** block the pre-registration, which is committed and complete.
-  - **Recommendation:** hold, and do **not** build the runner here. The owner line already names the exit — "any roadmap that needs a UI-generation runner for its own reason" — and building it inside this roadmap is what its own Non-goal forbids. The alternative that keeps surfacing is weakening Measurement A to something the current harness can run (a session-level `--model` instead of per-skill tiers); that is rejected on the evidence above, because the two outlier arms are per-skill tier facts no session flag can express, so the weakened measurement would answer a different question under the same name.
-  - **If you do nothing:** nothing degrades — the pre-registration is committed and complete, and holding is the intended state. The cost is bounded and specific: Measurement A and its two acceptance criteria stay open, so this roadmap cannot archive, and every future sweep pays to re-read the same blocker to reach the same conclusion.
-  - **What to do:**
-    Measurement A varies exactly one thing — the model tier the **builder skill**
-    runs on — and nothing in the tree can set it per arm. Verified 2026-08-05,
-    against the tree rather than against the argument:
-    - `bench:ui` (`internal/bench/ui/run.ts`) scores `config.candidates`, a list of
-    **committed static files**. Its whole CLI surface is `--json` and
-    `--update-lock`: no arm, no tier, no model call, nothing that produces a
-    candidate.
-    - The tier → native `model:` rewrite happens **only** in
-    `install.ts::finalize_claude_model_tiers`, and only on a consumer install
-    whose `model.auto_switch` is `auto`. This checkout has **zero** entries under
-    `.claude/skills/` and no projected skill pins a `model:` at all, so a session
-    `--model` flag sets the whole session, never one skill.
-    - The machinery the scope ruling assumed could be reused does not carry the
-    variable: `bench_ab_clone` copies the maintainer's `.claude/` surface
-    verbatim — no `auto_switch` handling, no per-skill tier rewrite — and
-    `bench_ab_task_runner` scores **transcripts**, not written UI artifacts.
-    So a faithful arm needs a materialised consumer-shaped install with
-    `auto_switch: auto`, a per-arm rewrite of the target skill's tier, an
-    artifact-extraction step, and — before any of it can be trusted — a validation
-    that the port task actually dispatches the UI builder skill. That is a
-    generation subsystem, which is what this roadmap's own Non-goal forbids
-    building here, and its arm isolation is itself unvalidated.
-    The two outlier arms make it sharper: `accessibility-auditor` at medium and
-    `ui-component-architect` at high are **per-skill** tier facts. No session-level
-    `--model` can express them, so they cannot be measured without exactly the
-    per-skill control that is missing.
-  - **Resolved when:** a UI-generation runner with per-skill tier control exists — landed for its own reason, with its arm isolation validated (the port task demonstrably dispatches the builder skill, and the tier demonstrably reaches it) — at which point Measurement A runs against the committed pre-registration unchanged, in the controls' epoch.
-- **measurement-b-no-renderable-lane-pair** (owner: maintainer (host capability) / any roadmap that lands a host-renderable framework lane or a generic-lane override for its own reason) — blocks Measurement B (both steps) and the two B acceptance criteria. Measurement A is **not** blocked by it — a null on one is not a null on the other, which is why they were authored as separate sub-sections.
-  - **Recommendation:** hold, and if either exit is taken, take the **supported generic-lane override** rather than the React build/serve step. The override is a bounded change to how `GENERIC_LANES` is derived; a build/serve step is a new subsystem in the scorer's capture path, and the scorer captures `file://` HTML today. Docker stays rejected on the council's reasoning above, not re-opened: one arm containerised and one on the host makes the 0.40-weighted `pixel` component a cross-epoch comparison, and containerising both voids the calibration anchors.
-  - **If you do nothing:** nothing degrades — as with Measurement A, holding is the intended state and the pre-registration stays intact. The cost is that Measurement B and its two acceptance criteria stay open, so the roadmap cannot archive, and the pairing question gets re-derived from scratch by whoever screens it next.
-  - **What to do:**
-    Measurement B needs two stacks where **both** lanes exist. Framework bundles
-    are `blade-livewire-flux`, `blade-livewire`, `filament` (PHP/Blade) and
-    `react-shadcn`, `react`; the generic-routing lanes (`vue`, `plain`, `unknown`)
-    have no framework lane to be compared against. Today **no** pair satisfies all
-    three of: both lanes defined · both host-renderable · framework lane needs no
-    build step that has not been built. Concretely — no `php`/`composer` on the
-    host (a human install), the scorer captures `file://` HTML so a React
-    candidate needs a build/serve step that does not exist, and `GENERIC_LANES` is
-    derived from detected stack state with no supported override.
-    Docker **is** available on the host and is deliberately not used: one arm in a
-    container and one on the host makes the 0.40-weighted `pixel` component a
-    cross-epoch comparison — 40 % of the weighted score would be noise — and both
-    in a container voids the existing calibration anchors. Council 2026-08-05
-    (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent) rejected that path
-    and chose the named blocker over a re-scope that changes a pre-registered
-    input.
-  - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
 
 ### [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md)
 
