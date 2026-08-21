@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**530 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 187 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -199,6 +199,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-discipline-axis-meso-pilot`](road-to-discipline-axis-meso-pilot.md) | Roadmap: discipline-axis benchmark — complexity-stratified pilot (meso/multi + weak host) | closed-with-cancellations | 7 | 14/17 | _not extractable_ |
 | [`road-to-discipline-lift-significance`](road-to-discipline-lift-significance.md) | Roadmap: discipline-lift to significance (clean harness) | completed | 3 | 5/5 | _not extractable_ |
 | [`road-to-discipline-profile-tiering`](road-to-discipline-profile-tiering.md) | Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated | completed-with-deferrals | 5 | 16/18 | _not extractable_ |
+| [`road-to-distillation-followups`](road-to-distillation-followups.md) | Road to the distillation follow-ups — two maintainer-gated items, relocated intact | closed-with-cancellations | 2 | 1/2 | _not extractable_ |
 | [`road-to-distribution-and-adoption`](road-to-distribution-and-adoption.md) | Road to Distribution and Adoption | closed-with-cancellations | 6 | 5/14 | _not extractable_ |
 | [`road-to-distribution-identity`](road-to-distribution-identity.md) | Roadmap: Distribution identity — make npm-primary explicit, retire the stale registry | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-distribution-maturity`](road-to-distribution-maturity.md) | Road to distribution maturity (post-2.2.2 evaluation follow-ups) | completed | 12 | 49/49 | _not extractable_ |
@@ -251,6 +252,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-flow-learnings`](road-to-flow-learnings.md) | Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater | completed | 4 | 19/19 | _not extractable_ |
 | [`road-to-frictionless-employee-workspace`](road-to-frictionless-employee-workspace.md) | Frictionless Employee Workspace — close the 3.1.1 → 3.3.0 feedback gaps without lifting Hard-Floor | closed-with-cancellations | 4 | 30/33 | _not extractable_ |
 | [`road-to-frontend-design-intelligence`](road-to-frontend-design-intelligence.md) | Road to Frontend Design Intelligence — absorb an external design suite into our orchestrated UI suite | closed-with-cancellations | 10 | 48/53 | _not extractable_ |
+| [`road-to-frontend-skill-application`](road-to-frontend-skill-application.md) | Roadmap: Frontend skills stop being loaded shelfware | closed-with-cancellations | 5 | 26/33 | _not extractable_ |
 | [`road-to-frontier-grade-reasoning`](road-to-frontier-grade-reasoning.md) | Roadmap: Reasoning Discipline Protocol — make every host model think like a pro | completed-with-deferrals | 9 | 24/31 | _not extractable_ |
 | [`road-to-frontier-quality-operating-system`](road-to-frontier-quality-operating-system.md) | Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage | completed | 9 | 49/49 | _not extractable_ |
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |
@@ -290,6 +292,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-b-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | Road to cost-ledger truth | closed-with-cancellations | 3 | 13/19 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-release-integrity`](road-to-inbox-harvest-2026-08-b-release-integrity.md) | Road to release-surface integrity | closed-with-cancellations | 5 | 12/25 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b`](road-to-inbox-harvest-2026-08-b.md) | Road to inbox harvest 2026-08-b | closed-with-cancellations | 3 | 3/6 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-c-evidence-lifecycle`](road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | Road to a review binding that survives a checkbox | closed-with-cancellations | 3 | 9/13 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-prompt-deinflation`](road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | Road to a prompt optimizer that deflates before it polishes | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-release-head-truth`](road-to-inbox-harvest-2026-08-c-release-head-truth.md) | Road to a release head that can be contradicted | closed-with-cancellations | 3 | 10/11 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-workspace-identity`](road-to-inbox-harvest-2026-08-c-workspace-identity.md) | Road to one answer for "where am I" | closed-with-cancellations | 3 | 11/12 | _not extractable_ |
@@ -442,6 +445,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-self-critical`](road-to-self-critical.md) | Road to self-critical — structural review honesty instead of rule #108 | completed | 3 | 10/10 | _not extractable_ |
 | [`road-to-self-update-and-global-hook-resolution`](road-to-self-update-and-global-hook-resolution.md) | Road to Self-Update + Global Hook Resolution | completed | 6 | 35/35 | _not extractable_ |
 | [`road-to-session-analytics`](road-to-session-analytics.md) | Road to session analytics — a post-session cost/turn/churn report | completed | 1 | 2/2 | _not extractable_ |
+| [`road-to-session-closeout`](road-to-session-closeout.md) | Road to closing what fifty sessions left open | closed-with-cancellations | 9 | 53/54 | _not extractable_ |
 | [`road-to-session-profile-activation`](road-to-session-profile-activation.md) | Road to Session-Profile Activation | closed-with-cancellations | 4 | 12/16 | _not extractable_ |
 | [`road-to-session-profile-observability`](road-to-session-profile-observability.md) | Roadmap: Session-Profile Observability for Employees — make "which profile, what changed, why" legible without a CLI | completed | 3 | 20/20 | _not extractable_ |
 | [`road-to-setup-experience`](road-to-setup-experience.md) | Road to Setup Experience | completed | 6 | 25/25 | _not extractable_ |
@@ -488,6 +492,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-trim-frugality-canon`](road-to-trim-frugality-canon.md) | Road to Trim Frugality Canon | completed | 5 | 14/14 | _not extractable_ |
 | [`road-to-truth-and-reference-hygiene`](road-to-truth-and-reference-hygiene.md) | Road to truth-and-reference hygiene — make the "machine-checked" headline true of its own artefacts | completed | 3 | 21/21 | _not extractable_ |
 | [`road-to-typescript-only-scripts`](road-to-typescript-only-scripts.md) | Roadmap: TypeScript-only scripts — full Python → TypeScript migration | completed | 12 | 71/71 | _not extractable_ |
+| [`road-to-ui-track-integrity-followup`](road-to-ui-track-integrity-followup.md) | Road to UI-track integrity — follow-up: two measurements, one missing harness | closed-with-cancellations | 1 | 7/16 | _not extractable_ |
 | [`road-to-ui-track-integrity`](road-to-ui-track-integrity.md) | Road to UI-track integrity — the lanes the dispatcher names do not exist | completed-with-deferrals | 7 | 36/39 | _not extractable_ |
 | [`road-to-ultimate`](road-to-ultimate.md) | Roadmap: Road to Ultimate — Ecosystem & Interop | archived-with-open-steps | 6 | 0/40 | _not extractable_ |
 | [`road-to-unified-senior-roles`](road-to-unified-senior-roles.md) | Road to Unified Senior Roles | completed | 1 | 19/19 | _not extractable_ |

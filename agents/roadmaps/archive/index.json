@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 525,
+  "count": 530,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2454,6 +2454,20 @@
       "status": null
     },
     {
+      "slug": "road-to-distillation-followups",
+      "title": "Road to the distillation follow-ups — two maintainer-gated items, relocated intact",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 1,
+        "deferred": 0,
+        "cancelled": 1
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-distribution-and-adoption",
       "title": "Road to Distribution and Adoption",
       "disposition": "closed-with-cancellations",
@@ -3182,6 +3196,20 @@
       "status": "active"
     },
     {
+      "slug": "road-to-frontend-skill-application",
+      "title": "Roadmap: Frontend skills stop being loaded shelfware",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 26,
+        "deferred": 0,
+        "cancelled": 7
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-frontier-grade-reasoning",
       "title": "Roadmap: Reasoning Discipline Protocol — make every host model think like a pro",
       "disposition": "completed-with-deferrals",
@@ -3726,6 +3754,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-c-evidence-lifecycle",
+      "title": "Road to a review binding that survives a checkbox",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 9,
+        "deferred": 0,
+        "cancelled": 4
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-inbox-harvest-2026-08-c-prompt-deinflation",
@@ -5856,6 +5898,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-session-closeout",
+      "title": "Road to closing what fifty sessions left open",
+      "disposition": "closed-with-cancellations",
+      "phases": 9,
+      "steps": {
+        "open": 0,
+        "done": 53,
+        "deferred": 0,
+        "cancelled": 1
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-session-profile-activation",
       "title": "Road to Session-Profile Activation",
       "disposition": "closed-with-cancellations",
@@ -6498,6 +6554,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-ui-track-integrity-followup",
+      "title": "Road to UI-track integrity — follow-up: two measurements, one missing harness",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 7,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-ui-track-integrity",
