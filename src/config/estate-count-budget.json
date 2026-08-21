@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
-    "open_blockers": 62
+    "open_blockers": 61
   },
   "baseline_history": [
     {
@@ -272,6 +272,13 @@
       "later_roadmaps": 52,
       "open_blockers": 62,
       "why": "MERGE RECONCILIATION plus the walk-down this branch earned, stated as one entry because the arithmetic only makes sense together. The history array itself was conflicted: the trunk had moved four entries ahead while this branch carried two of its own, so main's file was taken as the base (authoritative trunk baseline and order) and the branch's two entries appended rather than dropped \u2014 append-only means both sides survive. Those two entries quote 70 -> 68 -> 66 against a trunk that has since measured 64, so their NUMBERS are superseded and only their reasons still stand; that is why this entry re-states the delta instead of trusting them. open_blockers 64 -> 62 is verified against the diff, not against that prose: sink-choice and dpo-signoff are both open on origin/main and both resolved on this branch. active_roadmaps 25 -> 24: road-to-org-telemetry reached zero open steps and the regen archived it, migrating its one inbound reference. This entry was written before the regen ran and said the roadmap would NOT archive; the number is corrected here rather than by appending a second entry, because one change earns one entry and two would read as two independent walk-downs and later_roadmaps unchanged at 52 \u2014 nothing parked, nothing relocated."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "active_roadmaps 24 -> 23 and open_blockers 62 -> 61, both walked down by the close of road-to-standing-context-40k. NOTHING IN THE REPOSITORY EARNED EITHER DROP, and the two are one accounting event rather than two: the roadmap left the active tree for archive/ and its one blocker (b-rules-efficiency-signal) left the active estate with it, reappearing as an item in stubs/road-to-instructions-loaded-observer.md that this metric does not scan. No question was answered and no work finished -- the roadmap closed with outcome state `transferred`, five of its nine lines moved to two stubs and one sibling roadmap, and the registered 40k destination is not reached. The blocker's own Correction B had already concluded it was a transfer under the framework's rule 4; PR #1484 held the `Status: open` token only because the roadmap was still active, so writing `resolved` here applies a recorded disposition rather than making a new one. later_roadmaps is unchanged at 52 on purpose: the council explicitly rejected parking this roadmap in later/, on the ground that its four open lines shared no producer and three unrelated resume triggers in one parked file is the ownerless queue the framework warns against. For whoever merges next: main is moving fast and this file collides the same way every time. Keep every history entry from both sides and RE-MEASURE the baseline against the merged tree -- never adopt one side's number. Measured on this branch against d0fad2ccd."
     }
   ],
   "target": {

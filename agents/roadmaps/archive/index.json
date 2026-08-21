@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 524,
+  "count": 525,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6075,6 +6075,20 @@
         "done": 28,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-standing-context-40k",
+      "title": "Road to standing context 40k — the registered destination, given a route",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 3,
+        "deferred": 0,
+        "cancelled": 6
       },
       "verdict": null,
       "status": null

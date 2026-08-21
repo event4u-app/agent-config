@@ -3,7 +3,7 @@
 <!-- evidence-type: analysis -->
 
 > Read-only evidence for the four open steps of
-> [`road-to-standing-context-40k`](../../roadmaps/road-to-standing-context-40k.md).
+> [`road-to-standing-context-40k`](../../roadmaps/archive/road-to-standing-context-40k.md).
 > Measured 2026-08-21 against `origin/main` @ `d0fad2ccd`. Every number below
 > carries the command that produced it. Nothing is carried over from an earlier
 > note; where a figure supersedes one already in the roadmap, both are shown.
