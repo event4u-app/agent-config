@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
     "open_blockers": 55
   },
@@ -289,6 +289,20 @@
     },
     {
       "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 active roadmap and nothing else. road-to-session-closeout was closed against explicit outcome states and archived by `roadmap:progress`, which now performs the archival itself rather than warning. Measured on the merged tree AFTER the archival, not on a branch: active_roadmaps 24, later_roadmaps 52, open_blockers 64. No blocker moved -- that file shipped with none by maintainer instruction, its three decisions having been taken by the council instead, so there was never an entry here to dispose of. The lower measurement is the new ceiling, not headroom: the gate refused a silent tightening and asked for exactly this edit in the change that earned it. Honest note on what the archival means, because a count cannot carry it: 35 of that roadmap's 54 lines are TRANSFERRED to stubs/road-to-session-closeout-gated.md with named producers and probes, not done. The estate is one file smaller; the work is not one file's worth smaller."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-session-closeout is at agents/roadmaps/ on origin/main and at agents/roadmaps/archive/ on this branch, so the archival is this change's own work \u2014 confirmed with git ls-tree against both refs rather than inferred from the regen output, which also reported the unrelated org-telemetry move arriving from the trunk. open_blockers unchanged at 61 and later_roadmaps unchanged at 52: nothing was parked and no open decision was relocated to make the active count fall."
+    },
+    {
+      "at": "2026-08-20",
       "active_roadmaps": 25,
       "later_roadmaps": 52,
       "open_blockers": 59,
@@ -307,6 +321,13 @@
       "later_roadmaps": 52,
       "open_blockers": 55,
       "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-per-turn-hook-economy merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 55}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 55,
+      "why": "WALKED DOWN by 6 blockers, all on road-to-per-turn-hook-economy and each verified open on origin/main and resolved on this branch rather than taken from the branch's prose: b-per-turn-composite-bar, b-stdin-read-failure-policy, b-guard-tool-partition, b-payload-read-parse-dominates, b-injection-scan-unwrap-security, b-stop-async-split-prerequisites. Two further blockers on the same roadmap (b-payload-mis-nested-readers, b-concern-load-taxes-every-slot) were already resolved on the trunk and are deliberately excluded from the delta. active_roadmaps stays 23 and later_roadmaps 52 on purpose: the roadmap reaches 11/11 done but carries 2 unresolved [~] deferred items, so Iron Law 3 refuses the archive and the regen correctly left it in the active tree. One of those items (4.2) states in its own text that the bar is the maintainer's to pre-register, so resolving them is not an agent call and they were NOT flipped to make the count fall."
     }
   ],
   "target": {
