@@ -1,10 +1,10 @@
 # R2 completion review — evidence-based-adr-governance (round 2)
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: 2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: 9b4067df6a2433266fb4d1800d59bd56019e4b59278ad538b630fadadf21799d | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
-  scope_hash: 2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1
+  scope_hash: 9b4067df6a2433266fb4d1800d59bd56019e4b59278ad538b630fadadf21799d
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
   roadmap_hash: 800a9818d2d9b9d49a3aba039efd66f0b832e10b2de77b1d3fe18e48691ad9a3
   ac_hash: 8242b18b255db39bda653ae3500a284986007aa38a6e4976fdfb69048f710552
@@ -13,7 +13,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
 -->
 
-Scope `2ba1f6c6b3a2a165089546b44a57a65e9125d61c23c6b37caea9c190f8504db1`, reviewed 2026-08-21.
+Scope `9b4067df6a2433266fb4d1800d59bd56019e4b59278ad538b630fadadf21799d`, reviewed 2026-08-21.
 Blind review: findings below were formed from the diff, the tree and executed probes only.
 
 Verification actually run: `check_adr_frontmatter` (0 errors, 186 scanned) · `lint_provenance_vocabulary`
@@ -24,6 +24,16 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**Re-bound a fifth time — token baseline re-anchored.** `2ba1f6c6…` → `9b4067df…`,
+for a 3-line change to `internal/bench/reports/token-baseline.json`. CI's second red
+was `eager_rule_load: 118428 vs baseline 112694 (+5.1%)`, and the split was measured
+rather than assumed: substituting main's version of the one always-loaded rule
+projection this branch changes reports 117992 (+4.7%), so main alone had already spent
+most of the 5% allowance and this branch's 436 tokens tipped it. Re-anchored itemised,
+which is what main's own two most recent anchors did. Shrinking the prose to fit the
+number was rejected on the sibling ratchet's own recorded convention, and extraction
+had nowhere to land — both candidate targets are at their line caps.
 
 **Re-bound a fourth time, second trunk merge (contract §2.7).** `b8cc9867…` →
 `2ba1f6c6…`. main moved again while CI was running on this branch. Same measurement,
