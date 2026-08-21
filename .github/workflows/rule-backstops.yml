@@ -257,6 +257,16 @@ jobs:
       - name: ADR index freshness
         run: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check
 
+      # Same class again, and the roadmap that added the provenance/evidence axes
+      # said so before this step existed: `adr_cite_check` had no CI gate at all
+      # — no workflow invoked it, only a test imported it — so every
+      # "enforced at cite time" claim about ADR citations was model-carried.
+      # `--cited` resolves every ADR reference in src/rules, src/skills,
+      # src/domains and docs against the decision corpus and reds when one points
+      # nowhere. Registered in gate-coverage.yml with this exact argv.
+      - name: ADR citations resolve
+        run: ./scripts-run src/scripts/adr_cite_check --cited
+
       - name: Subagent safety-floor freshness
         run: ./scripts-run src/scripts/generate_subagent_floor --check
 

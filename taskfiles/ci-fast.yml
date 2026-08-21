@@ -664,6 +664,11 @@ tasks:
     desc: "ADR frontmatter gate — required fields, valid status, and a named `review_trigger` CONDITION (not a cadence) on every ADR dated 2026-07-25 or later. Earlier ADRs warn; grandfathering is by date, not an allowlist (road-to-enforcement-proof P4.1-P4.4)"
     cmd: ./scripts-run src/scripts/check_adr_frontmatter
 
+  check-adr-citations:
+    silent: true
+    desc: "ADR citation gate — every `ADR-NNN` named in src/rules, src/skills, src/domains or docs resolves to a real decision record; an unresolvable citation FAILS. Registered in gate-coverage.yml with this exact argv (road-to-evidence-based-adr-governance 2.3, which is where the finding that no workflow ran this tool at all is recorded)"
+    cmd: ./scripts-run src/scripts/adr_cite_check --cited
+
   check-subagent-floor:
     silent: true
     desc: "Subagent safety-floor freshness — every dispatch prompt carries the generated floor derived from the kernel rules; drift FAILS (not WARN, unlike the reference implementation we took the idea from) (road-to-enforcement-proof P3.3)"

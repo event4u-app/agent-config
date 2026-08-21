@@ -42,12 +42,32 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 267 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
-# (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **42 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 41 of those 42 are listed below.** The manifest is
+# 268 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
+# re-run 2026-08-21 and it returns 268).
+# **44 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 43 of those 44 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~15 % of the population.
+# carry a floor, and covers ~16 % of the population.
+#
+# Both halves were RE-DERIVED on 2026-08-21, not incremented, and the previous
+# reading was off by one in a way worth recording: it said "42 … and 41 of those
+# 42 are listed" while the file carried 42 rows AND named one deliberately
+# unlisted emitter (`lint_evidence_artifacts`, below). Those three facts cannot
+# all hold — 42 listed rows plus 1 unlisted emitter is 43 emitters, not 42. It
+# is the same drift this section documents three times: an entry was added and
+# the prose was adjusted by one instead of recounted.
+#
+# The derivation now, so the next reader can check it rather than trust it:
+# `grep -c '^  - id:'` returns 43 (computable, and computed); every listed row
+# is an emitter, because a row that did not emit could carry no floor and the
+# guard would report it `failing`; exactly one emitter is deliberately unlisted;
+# 43 + 1 = 44. The population figure comes from the function.
+#
+# A shape-grep over `src/scripts/` (`reportScanned(` or a literal `scanned: ${`)
+# returns 63 files. That is a DIFFERENT population — any file carrying an emit
+# shape, including gates that emit only in a non-CI mode — so it is not a
+# recount of this sentence and must not be substituted for one.
 #
 # The one emitter deliberately NOT listed is `lint_evidence_artifacts`, for the
 # same reason `check_rule_projection_integrity` is not (see the paragraph
@@ -955,3 +975,27 @@ gates:
     # an already-listed file that GREW while the file COUNT stayed at one. That
     # last case is what pins the metric as excess lines rather than a file count;
     # a count-based ratchet passes it, and this gate must not.
+
+  - id: adr_cite_check
+    argv: ["--cited"]
+    min_scanned: 140
+    corpus: "distinct ADR references cited across src/rules, src/skills, src/domains and docs (178 at baseline)"
+    status: enforced
+    note: >
+      The count is references RESOLVED AGAINST the corpus, not the subset that
+      resolved successfully — the same number the gate's own ledger reports, so
+      two values cannot drift under one word. Floor set well below the live 178
+      because the citation population moves with ordinary work (a retired rule
+      or a merged skill legitimately drops citations), while a collapse of
+      either root cannot pass: an emptied citation root drops the count to 0 and
+      the gate's `reportScanned` assertion reds, and a moved decision surface
+      makes every reference unresolved, which reds on exit 1 with 178 ledger
+      failures. Before this row no workflow invoked this gate at all — only a
+      test imported it — so every "enforced at cite time" claim about ADR
+      citations was model-carried.
+      No `canary:` recipe is needed to prove discrimination and one is also
+      possible here (a created file citing a non-existent ADR), but the gate
+      carries a `--self-test` instead: three cases, two rejecting, covering an
+      unresolvable citation AND the dead-scope shape a single plant cannot
+      express — a citation root that names no ADR at all, which must red rather
+      than report a green scan over nothing.
