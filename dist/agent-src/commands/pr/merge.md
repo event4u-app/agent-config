@@ -55,7 +55,7 @@ of it today.
 *(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
 an argument rather than a second command — the locked registry's rule that
 "sibling variants become a flag, never a second command"
-([`command-clusters`](../../../../../docs/contracts/command-clusters.md)) applied
+([`command-clusters`](../../../docs/contracts/command-clusters.md)) applied
 to this cluster. A future sub belongs here only if it has a materially
 different lifecycle, not a different count.
 
@@ -70,7 +70,7 @@ selects, not that it merges.
 | `/pr:merge <N>` | exactly PR N | yes | only once the gate opens |
 | `/pr:merge` | ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number | yes | only once the gate opens |
 | `/pr:merge all` | the whole open-PR list, under § 6's cutoff | yes | only once the gate opens |
-| `… --no-merge` | as above | yes | **never** — explicit, and the entry point [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) delegates to |
+| `… --no-merge` | as above | yes | **never**, explicitly. This is the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls for its delivery loop. |
 
 **Bare invocation** (`/pr:merge` with no argument) is a **documented default
 flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
@@ -101,11 +101,24 @@ other than this run" is undetectable without a base SHA to compare against.
 cap truncated.
 
 The manifest is the authorization's target set and is **never silently
-refreshed**. Before every merge, re-read the PR and refuse when either field
-moved: the number prevents branch substitution, the head SHA prevents a
-force-push swapping the content after the user authorised it. A PR that
-appeared after the snapshot is not in scope for this run — § 6 says what
-happens to it.
+refreshed by a third party's push**. It is, by design, advanced by *this run's
+own* commits — § 2 merges the base in and § 5 pushes, so a prepared PR's head
+is never the snapshot head, and a naive "refuse when the SHA moved" check would
+fire on every PR the run touches.
+
+So the record carries **two** SHAs per PR and they mean different things:
+
+| Field | Set at | Meaning |
+|---|---|---|
+| `pr_number` | snapshot | Immutable. A change is branch substitution — refuse. |
+| `observed_head` | snapshot, then **updated by this run after each of its own pushes** | The head this run last produced. |
+| `base_ref` + `base_sha` | snapshot | The base the PR was prepared against; § 8's "base advanced by another actor" compares against it. |
+
+Before every merge, re-read the PR and refuse when the live head is **neither**
+the snapshot head **nor** the head this run last pushed. That is the
+force-push-after-authorization case, and it is the only one the check exists
+for. A PR that appeared after the snapshot is not in scope for this run — § 6
+says what happens to it.
 
 ## 2. Sync with the base
 
@@ -116,7 +129,7 @@ git merge origin/<base> --no-edit
 ```
 
 Merge the base **into** the branch. Never rebase a branch that is already
-pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+pushed ([`git-history-discipline`](../../../rules/git-history-discipline.md)).
 
 ## 3. Resolve conflicts by class, never by taste
 
@@ -128,8 +141,8 @@ remaining PR. Resolve semantically, by these enumerated classes:
 | Class | Files | Resolution |
 |---|---|---|
 | Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
-| Generated artefacts | progress dashboard, estate-count budget, catalogs, census, any file whose header says auto-generated | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
-| Archive move vs. edit | a file one side moved to `archive/` | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
+| Generated artefacts | `agents/roadmaps-progress.md` · `src/config/estate-count-budget.json` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
+| Archive move vs. edit | `agents/roadmaps/{archive,later,skipped}/**` — one side renamed or deleted, the other edited | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
 | Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
 
 ```
@@ -148,12 +161,27 @@ already landed elsewhere. Distinguish genuinely empty from generated-artefact
 churn that regeneration on the base would produce anyway — the latter is not
 emptiness.
 
+The probe is **not** a bare diff: taken literally, a bare diff closes every
+roadmap PR in this repository, because after a base sync and a regenerate the
+only remaining hunks are exactly the generated-artefact churn § 3 tells you to
+regenerate. Exclude those paths before deciding:
+
 ```bash
-git diff origin/<base>...HEAD --stat
+git diff origin/<base>...HEAD --stat -- . \
+  ':(exclude)agents/roadmaps-progress.md' \
+  ':(exclude)src/config/estate-count-budget.json' \
+  ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
 ```
 
-Empty ⇒ close it with `Superseded: landed via <PRs>` and record it. **Never
-merge an empty PR to make the queue count fall.**
+Empty **after that exclusion** ⇒ superseded. **Never merge an empty PR to make
+the queue count fall — and never close one on a bare diff.**
+
+```
+CLOSING SOMEONE ELSE'S PR IS IRREVERSIBLE TO ITS AUTHOR AND IS NOT IN
+`BLOCK_OPS`, SO NO GUARD WILL STOP IT. THE RUN CLOSES A PR ONLY WHEN THE
+EXCLUDED DIFF IS EMPTY *AND* IT CAN NAME THE PRs THE CONTENT LANDED VIA.
+IT CANNOT NAME THEM → LEAVE THE PR OPEN AND RECORD IT AS `blocked-external`.
+```
 
 ## 5. Drive CI green — bounded
 
@@ -164,9 +192,16 @@ run, never an earlier commit ([`/git-pr-create` § 4d](../create/command.md)).
 - **Root-cause fixes only**, inside the PR's own scope.
 - **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
   red counts as real.
-- **Six fix iterations per PR per pass.** Exhaustion posts a diagnosis comment
-  and moves the PR to the end of the queue once; a second exhaustion is
-  terminal.
+- **N=3 per validation target, six touches per PR per pass — two different
+  units, and the smaller one binds first.** The always-loaded
+  [`autonomous-execution`](../../../rules/autonomous-execution.md) cap is
+  three consecutive failed attempts on ONE target (a named failing test, a lint
+  rule id, one CI job) and it is not lifted here. The six is a per-PR ceiling
+  across *distinct* targets: a PR whose CI peels one failure to reveal a
+  different one may be worked six times, never one target four times. Hitting
+  N=3 on a single target ends the PR's pass immediately, whatever the six says.
+  Exhaustion of either posts a diagnosis comment and moves the PR to the end of
+  the queue once; a second exhaustion is terminal.
 
 ```
 THESE ARE HALTS, NOT OPTIONS OF LAST RESORT:
@@ -179,9 +214,21 @@ THAT WOULD HAVE CAUGHT THE PROBLEM.
 
 ## 6. `all` — the queue, and the cutoff that ends it
 
-Process the manifest in order. After each merge the base has moved, so the next
-PR is re-synced against the NEW base — that is the loop, and it is why
-pre-greening several PRs ahead of their merges is wasted work.
+Process the manifest in the order § 1 recorded it — the queue-order rule in the
+Dispatch table's second row is the traversal for `all` too, not only for
+single-PR selection, so two runs over the same queue agree.
+
+After each merge the base has moved, so the next PR is re-synced against the
+NEW base — that is the loop, and it is why pre-greening several PRs ahead of
+their merges is wasted work.
+
+**While the merge step is gated, that loop does not turn**, and the section
+below is written for when it does. Nothing merges, so the base does not
+advance, no PR leaves the open list, and an `all` run is a **preparation
+sweep**: it syncs, classifies, greens and reports each PR once, then stops. It
+does not re-prepare a PR its own predecessor invalidated, because it has no
+predecessor that landed. The cutoff below still bounds it; the window below
+still cannot close it, for the reason § 7 gives.
 
 **Cutoff.** When the manifest is exhausted, recompute the open-PR list
 **exactly once**. PRs that appeared during the run are drained as ONE final
@@ -202,6 +249,20 @@ exceeds the remaining window, stop entering CI-fix loops and merge everything
 already green first. Pre-greening several PRs ahead of their merge is forbidden
 under window pressure.
 
+**The signal, named — otherwise neither this rule nor § 7 is actionable.** The
+window is the per-session authorization ledger's own freshness bound. Read it,
+never write it:
+
+```bash
+cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
+```
+
+Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`, with the constant
+read from `src/scripts/hooks/block_unauthorized_git.ts`. Under pressure means
+the remaining window is shorter than one CI cycle on this repository. The read
+is the whole interaction: the run never edits that file, the constant, or the
+built bundle.
+
 ## 7. Expiry is a reported state, never a stall
 
 ```
@@ -209,6 +270,11 @@ WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN STOPS CLEANLY
 AND REPORTS. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS THE GUARD,
 ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
 ```
+
+**Unreachable while the merge step is gated**, and stated rather than left for
+a reader to discover: with nothing merging, the run performs no `BLOCK_OPS`
+operation (`push` and `commit` are `WARN_OPS`), so the window governs nothing
+it does. This section is the contract for when the gate opens.
 
 Write the summary as-is with a `window-expired` disposition per unprocessed PR
 and name the exact re-authorization needed. Widening `LEDGER_MAX_AGE_MS` is
@@ -245,14 +311,24 @@ Detect the method once, at invocation, and reuse it for the whole queue:
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed
 ```
 
-Exactly one allowed → that is the method. More than one → the repository's
-existing convention decides, read from the last merges on the base
-(`git log --first-parent origin/<base> -20`). Never invent one mid-queue, never
-force-merge past a failing required check, never admin-bypass.
+The mapping is explicit, because `<detected-method>` has to be derivable from
+the text: `mergeCommitAllowed` → `--merge`, `squashMergeAllowed` → `--squash`,
+`rebaseMergeAllowed` → `--rebase`.
+
+Exactly one allowed → that is the method. More than one → read the last twenty
+merges on the base (`git log --first-parent origin/<base> -20 --format=%s`) and
+take the shape they overwhelmingly share. **A mixed history with no clear
+majority is not a tie to break — it is a stop:** report it and let the operator
+name the method. Inventing one is what the next sentence forbids, and a wrong
+merge shape is not revertible by this command (§ 8). Never force-merge past a
+failing required check, never admin-bypass.
 
 On queue empty or terminal-only, `all` writes
 `agents/evidence/pr-drain-run-summary.md` <!-- ref-ignore --> (created by the
-run, so it does not exist until one has happened): one row per PR with queue position,
+run, so it does not exist until one has happened): one row per PR with queue
+position, the `base_ref@base_sha` it was prepared against — without it a
+"prepared" row records nothing checkable, since mergeability is a fact about a
+base and not about a queue —
 conflict classes hit, CI iterations used, disposition, and any edits dropped in
 conflict resolution. The disposition set is closed:
 
@@ -279,5 +355,5 @@ conflict resolution. The disposition set is closed:
 
 - [`/git-pr-create`](../create/command.md) — opens the PR this command finishes.
 - [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates here for its delivery loop.
-- [`git-history-discipline`](../../../../rules/git-history-discipline.md) — never rewrite pushed history.
-- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.
+- [`git-history-discipline`](../../../rules/git-history-discipline.md) — never rewrite pushed history.
+- [`non-destructive-by-default`](../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.

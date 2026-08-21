@@ -100,7 +100,10 @@ command already does.
    **descending** progress — nearly-done first, because they convert soonest.
    Roadmaps below 10 % are appended after, ascending by declared `complexity:`
    tier (lightweight → bounded → structural), tiebreak ascending total
-   checkbox count.
+   checkbox count. Both buckets need a **total** order or two runs over the
+   same estate disagree: within the first, ties on progress break by ascending
+   total checkbox count and then by ascending filename; within the second, by
+   ascending filename after the checkbox count.
 3. **Loop.** Per roadmap: branch from the updated default, run this command's
    normal single-roadmap loop, deliver per § Delivery, then take the next
    roadmap against the default **as it stands at that moment** — re-fetched,
@@ -120,20 +123,23 @@ run reports it in those words.
 
 **A blocked roadmap never stalls the estate queue.** Inside a roadmap the five
 halt conditions and the terminal outcomes keep full authority. Between
-roadmaps, only queue exhaustion or a
-[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill-switch stops the run:
-a `blocked` roadmap is recorded and the loop continues to the next one.
-Authorization-window expiry joins that list only once `--merge` is active —
-while the merge step is gated the run performs no `BLOCK_OPS` operation at all
-(`push` and `commit` are `WARN_OPS`), so the window has nothing to close.
+roadmaps, the § Halt-conditions table below is the single statement of what
+ends the roadmap and what ends the loop — including the two halts that are
+safety floors and therefore end the run. A `blocked` roadmap is recorded and
+the loop continues to the next one.
 
-### `--merge` — NOT YET ACTIVE: deliver mergeable, merging is owner-gated
+### Delivery — every run, flag or not
 
-**Delivery.** On outcome `complete`, open the PR as today, then run
+On outcome `complete`, open the PR as today, then run
 [`/pr:merge <N> --no-merge`](../../../git/pr/merge/command.md) on it: sync the
 base in, resolve conflicts by that command's four enumerated classes, drive the
-required checks green on the pushed head. The deliverable is a **mergeable** PR
-rather than merely an open one — with or without the flag.
+required checks green on the pushed head. **This is unconditional** — a bare
+`/roadmap:process-full` delivers a mergeable PR, not merely an open one, and
+waiting on that remote CI is part of the run per the Iron Law below. It is
+stated here rather than under `--merge` because a reader who never passes the
+flag still gets it.
+
+### `--merge` — NOT YET ACTIVE: merging is owner-gated
 
 ```
 `--merge` IS SPECIFIED HERE AND IS NOT ACTIVE. THE RUN STOPS AT
@@ -181,9 +187,10 @@ store. When that window closes with work left, the run stops and reports per
 
 Route workspace creation through [`/worktree:create`](../../../engineering-base/worktree/create/command.md)
 in full, including its
-[§ 4b seeding allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list) —
-dependencies symlinked or installed **fully**, `.agent-settings.yml` **never**
-copied, because absent is the CI shape. Under `--all` the worktree is created
+[§ 4b seeding allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list),
+which is the authority on what may be copied and what must never be — not
+restated here, because a second copy of a safety list is a copy that can
+drift. Under `--all` the worktree is created
 once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
 
 ## Iron Law — Full is Full
@@ -193,26 +200,45 @@ once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
 TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
 PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
 NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
-UNDER `--all`, A ROADMAP BOUNDARY IS NOT A STOP EITHER: ONLY ESTATE-QUEUE
-EXHAUSTION, WINDOW EXPIRY, OR A KILL-SWITCH ENDS THE RUN.
+UNDER `--all`, A ROADMAP BOUNDARY IS NOT A STOP EITHER — BUT A HARD-FLOOR OR
+SECURITY-SENSITIVE HALT ENDS THE WHOLE RUN, NOT JUST THE ROADMAP. THE TABLE
+UNDER THE HALT CONDITIONS IS THE ONLY STATEMENT OF WHICH ENDS WHICH.
 WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
 RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
 The **five — and only five — halt conditions** (exhaustive; nothing else
-stops the run). They are *intra-roadmap*: under `--all` they stop the roadmap
-being worked, and the estate loop records it and takes the next one. The two
-additional conditions the Iron Law names above — estate-queue exhaustion and
-authorization-window expiry — end the *loop*, never a roadmap, and exist only
-under `--all`. Nothing here is widened: a run without `--all` still has exactly
-these five.
+stops the run):
 
 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
 2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
 5. **Test / quality red** that cannot be cleared within the N=3 budget.
+
+**Under `--all`, which of these end the roadmap and which end the loop.** Two
+of the five are safety floors and they end the **whole run**, not the current
+roadmap:
+
+| Halt | Under `--all` |
+|---|---|
+| 1. Hard-Floor trigger | **Ends the run.** Stop and obtain this-turn confirmation. [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) states that no roadmap authorization lifts the floor, and "record it and take the next roadmap" is exactly the roadmap-as-authorization bypass it names. |
+| 3. Security-sensitive surface | **Ends the run**, same reasoning. |
+| 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
+| 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
+| 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
+
+**And the conditions that end the loop without ending a roadmap:**
+estate-queue exhaustion (always), a
+[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill switch (always), and
+authorization-window expiry — which is **unreachable while `--merge` is
+gated**, because the run then performs no `BLOCK_OPS` operation for the
+window to govern. Three conditions, one of them currently inert, and this
+table is the only place the set is stated.
+
+Nothing here widens a run without `--all`: it still has exactly the five
+above, all of them ending the run because there is no loop to continue.
 
 ```
 FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
