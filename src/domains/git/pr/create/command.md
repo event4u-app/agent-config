@@ -153,8 +153,18 @@ merge into instead of against the repo default.
 `./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
 (so a stacked or release-line PR is measured against what it actually merges
 into), fetches, and merges it in when the branch is behind. On a conflict it
-STOPS and splits the conflicted paths into generated and authored — the first has
-one correct resolution (regenerate), the second has none a script may choose.
+STOPS and splits the conflicted paths into generated, remeasured and authored —
+the first has one correct resolution (regenerate), the second's is to re-run the
+measurement on the merged tree (a ratchet baseline, where picking a side is how
+the ratchet silently loosens), and the third has none a script may choose.
+
+**On `CONFLICTING`, run this before touching the GitHub web editor.** The web
+editor cannot tell generated from authored, so it presents a mechanical
+regenerate and a real human decision as the same three-way merge — which is the
+exact failure path observed on a branch 11 commits behind base
+(road-to-merge-hotspot-drawdown § 0). Adoption of this line is not measurable
+without telemetry this repository has ruled out; it is a checklist item, not a
+gate.
 Deliberately not in the pre-push hook: it mutates the tree, and a hook that
 rewrites the tree mid-push turns one rejected push into an unreviewed commit.
 Detection belongs in the hook and is already there; resolution is a step you run

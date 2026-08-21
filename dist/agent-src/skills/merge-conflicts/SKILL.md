@@ -25,6 +25,32 @@ Use this skill when:
 
 ## Procedure: Resolve merge conflicts
 
+### 0. Classify before resolving — and never start in the GitHub web editor
+
+A `CONFLICTING` PR is not a signal to open the web editor. **The web editor
+cannot tell generated from authored**, so it presents a mechanical regeneration
+and a real human decision as the same three-way merge — which is how a
+generated file gets hand-merged into a state matching neither branch. Run the
+classifier first, locally:
+
+```bash
+./scripts-run src/scripts/sync_pr_branch          # add --dry-run to look first
+```
+
+It resolves the base from the open PR, merges it in when the branch is behind,
+and on a conflict STOPS and splits the paths into three classes, because the
+correct resolution differs per class and only the first is mechanical:
+
+| Class | Resolution |
+|---|---|
+| **generated** | regenerate — never mix hunks. A clean auto-merge of a generated file is still wrong |
+| **remeasured** | re-run the measurement on the merged tree. A ratchet baseline records what a tree measured; picking a side is how the ratchet silently loosens, and the tool deliberately never re-measures for you |
+| **authored** | a human decision — read both sides. This is the rest of this skill |
+
+Adoption of this step is not measurable without telemetry this repository has
+ruled out; it is a checklist item, not a gate
+(road-to-merge-hotspot-drawdown 4.3).
+
 ### 1. Understand the situation
 
 Before touching any conflict:
