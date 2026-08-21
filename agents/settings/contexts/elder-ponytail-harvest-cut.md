@@ -324,6 +324,6 @@ rounds violate the first rung. Folded in directly, recorded here:
 
 ## See also
 
-- [`road-to-runtime-encoding-hardening`](../../roadmaps/road-to-runtime-encoding-hardening.md)
-- [`road-to-governance-invariants`](../../roadmaps/road-to-governance-invariants.md)
+- [`road-to-runtime-encoding-hardening`](../../roadmaps/archive/road-to-runtime-encoding-hardening.md)
+- [`road-to-governance-invariants`](../../roadmaps/archive/road-to-governance-invariants.md)
 - [`road-to-solution-minimalism`](../../roadmaps/archive/road-to-solution-minimalism.md)
