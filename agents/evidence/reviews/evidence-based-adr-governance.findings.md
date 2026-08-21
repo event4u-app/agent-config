@@ -1,10 +1,10 @@
 # R2 completion review — evidence-based-adr-governance (round 2)
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: eec4363da0b41af9d45fa6f5574ed76a0d122fef0a0df785274ee91356b32fdb | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: 2660e612a33b64a1f49aa2ad254970aaf495aa2db6aa12b6be64145b89abf737 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
-  scope_hash: eec4363da0b41af9d45fa6f5574ed76a0d122fef0a0df785274ee91356b32fdb
+  scope_hash: 2660e612a33b64a1f49aa2ad254970aaf495aa2db6aa12b6be64145b89abf737
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
   roadmap_hash: c90d642674ac29a27d21ce0b99a46412611b2c9946c01f617763876d2444459a
   ac_hash: c88dafc6f33488f152b89c93714886ee0c071d7f7b1310d08449fff3a9a878eb
@@ -13,7 +13,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
 -->
 
-Scope `eec4363da0b41af9d45fa6f5574ed76a0d122fef0a0df785274ee91356b32fdb`, reviewed 2026-08-21.
+Scope `2660e612a33b64a1f49aa2ad254970aaf495aa2db6aa12b6be64145b89abf737`, reviewed 2026-08-21.
 Blind review: findings below were formed from the diff, the tree and executed probes only.
 
 Verification actually run: `check_adr_frontmatter` (0 errors, 186 scanned) · `lint_provenance_vocabulary`
@@ -24,6 +24,13 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**Re-bound a seventh time — `docs/proof.md` regenerated.** `eec4363d…` → `2660e612…`, two
+lines. Three CI checks had failed on it: proof.md is derived from CLAIMS.md, whose claim
+bodies the renumber touched. The census drift gate this branch added fired on its own
+artefact immediately, and the derived router corpus was regenerated — but proof.md's
+generator sits in a different chain, so nothing locally reported it stale. A derived
+artefact with no drift gate is only as fresh as whoever remembered it.
 
 **All four manifest fields moved this time**, and the roadmap pair was caught BEFORE
 the push rather than by CI: `roadmap_hash` and `ac_hash` diverged again because step
