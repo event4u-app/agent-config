@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 21,
     "later_roadmaps": 54,
-    "open_blockers": 58
+    "open_blockers": 57
   },
   "baseline_history": [
     {
@@ -356,6 +356,20 @@
       "later_roadmaps": 54,
       "open_blockers": 58,
       "why": "WALKED DOWN by 1 blocker: road-to-scale-history-bench-run resolved manual-rubric-rater, which is open on origin/main and resolved here \u2014 the roadmap's other two blockers (benchmark-spend-authorization, codex-family-auth) were already resolved on the trunk and are excluded from the delta, checked per blocker rather than by counting status lines. active_roadmaps stays 21: the roadmap keeps open steps and the regen did not archive it. later_roadmaps stays 54: nothing parked. The part the blocker could not carry went to stubs/road-to-scale-history-primary-rating.md with its own probe, so the open work remains counted in the stub."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-skill-description-measurement merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 21,
+      "later_roadmaps": 54,
+      "open_blockers": 57,
+      "why": "WALKED DOWN by 1 blocker: human-gated-live-trigger-eval is open on origin/main and closed here on council disposition B with the outcome state transferred. The token matters and is worth stating: the Status line reads 'resolved -- transferred', and it is the leading 'resolved' that every gate keys on, so the count moves while the prose carries the real outcome. The transferred work is not lost \u2014 it sits in stubs/road-to-live-trigger-eval.md with its own probe, which is why later_roadmaps stays 54 and nothing was parked. active_roadmaps stays 21: the roadmap keeps open steps and the regen did not archive it."
     }
   ],
   "target": {
