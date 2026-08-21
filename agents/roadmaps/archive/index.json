@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 544,
+  "count": 545,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6988,6 +6988,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-wiring-truth-corrections",
+      "title": "Road to wiring truth corrections — three places where declared and effective diverge",
+      "disposition": "completed-with-deferrals",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 8,
+        "deferred": 2,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-wiring-truth",

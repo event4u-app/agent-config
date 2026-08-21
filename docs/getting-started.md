@@ -176,7 +176,7 @@ Your agent now understands slash commands:
 | `/fix quality` | Run and fix all quality checks |
 | `/chat-history import` | Pull a prior session into the current chat (resume) |
 
-→ [Browse all 200 active commands](../dist/agent-src/commands/)
+→ [Browse all 201 active commands](../dist/agent-src/commands/)
 
 ---
 
