@@ -435,6 +435,16 @@ proof surface.
   feasibility screen — the exact misreading the 2026-08-17 rewrite of the
   Resolved-when was written to stop. A blocker whose condition cannot be
   reached is a park or a null, not a wait.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. The
+  rendered default (run the payload probe FIRST, rather than accumulating more usage) is
+  accepted as the ORDERING and is what batch A's rationale rests on: line count is
+  already satisfied and no longer diagnostic. The probe itself is a named live-host
+  task-completion observation, so Rule 3 in
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  assigns it `B`, merged with `telemetry-sample-size` into ONE task-completion
+  observability stub. Batch A carries the three-point check verbatim: original criterion
+  for both entries, Phase 1 telemetry seeding / Phase 2 evaluation / Phase 3's dependent
+  decision moved, re-entry producer the subagent-observability maintainer.
 - **Resolved when:** a probe result records whether any hook slot sees the
   task-completion payload, and — if one does — the current-month audit log
   carries ≥ 20 orchestration lines whose **quality** columns are populated

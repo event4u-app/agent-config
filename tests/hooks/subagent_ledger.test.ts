@@ -6,10 +6,12 @@
  *
  * The behaviour tests pin what the ledger records: correlation across the two
  * separate hook invocations that bracket one dispatch, depth resolved from the
- * open-record set rather than asserted, and the three-way envelope verdict
- * whose middle value (`fail`) is the whole reason the measurement exists — a
- * baseline that cannot separate "no envelope returned" from "a malformed one
- * returned" cannot tell two different defects apart.
+ * open-record set rather than asserted, and the four-way envelope verdict
+ * whose boundaries are the whole reason the measurement exists — a baseline
+ * that cannot separate "no message arrived", "prose arrived", and "a malformed
+ * envelope arrived" cannot tell three different defects apart. The
+ * `no_message` / `no_envelope` boundary is the newest of the three and the one
+ * a disk fallback keys on.
  *
  * The privacy test pins something the file's prose alone cannot: that no
  * host `agent_id` and no line of the subagent's final message reaches disk.
@@ -33,6 +35,7 @@ import {
     reapStaleOpenRecords,
     refFor,
     resolveDepth,
+    RETIRED_ENVELOPE_PARSE,
     type OpenRecord,
 } from '../../src/scripts/hooks/subagent_ledger_hook.js';
 
@@ -337,10 +340,32 @@ describe('subagent-ledger — envelope classification', () => {
         expect(verdict.error_count).toBeGreaterThan(0);
     });
 
-    it('separates absent from fail', () => {
-        expect(classifyEnvelope(null).verdict).toBe('absent');
-        expect(classifyEnvelope('   ').verdict).toBe('absent');
-        expect(classifyEnvelope('I finished the task, no structured output.').verdict).toBe('absent');
+    it('separates a missing message from a message carrying no envelope', () => {
+        // The F2 defect verbatim: both of these used to be `absent`, so 25 of
+        // 25 records in the first window read the same verdict — including a
+        // control arm that returned a complete report. The split IS the
+        // instrument: only `no_message` may key a disk fallback, because
+        // `no_envelope` is what nearly every prose answer produces.
+        expect(classifyEnvelope(null).verdict).toBe('no_message');
+        expect(classifyEnvelope('   ').verdict).toBe('no_message');
+        expect(classifyEnvelope('I finished the task, no structured output.').verdict).toBe('no_envelope');
+    });
+
+    it('never emits the retired collapsed verdict', () => {
+        // A regression fence, not a tautology: the collapse is cheap to
+        // reintroduce by editing one return, nothing downstream reads the
+        // field back, and no other test would notice.
+        const inputs: (string | null)[] = [
+            null,
+            '   ',
+            'prose only',
+            '{"summary":"s"}',
+            JSON.stringify(valid),
+            'preamble {"summary":"s"} trailing }',
+        ];
+        for (const input of inputs) {
+            expect(classifyEnvelope(input).verdict).not.toBe(RETIRED_ENVELOPE_PARSE);
+        }
     });
 
     it('finds a valid envelope followed by later prose braces (R2 finding 4)', () => {

@@ -202,7 +202,7 @@ clean.
 
 ## Phase 4 — stale-prose reconciliation (post-ADR-117 and post-py2ts)
 
-- [x] `agents/roadmaps/road-to-orchestration-scope-decision.md` (~line 42)
+- [x] `agents/roadmaps/archive/road-to-orchestration-scope-decision.md` (~line 42)
       and `agents/roadmaps/road-to-flow-learnings.md` (~line 191) still
       assert `subagents.auto` default = `ask`; reconcile both with ADR-117
       (default `on` since 2026-07-09).
