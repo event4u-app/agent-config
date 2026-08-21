@@ -29,7 +29,7 @@ import {
  * Keys the shared reader parses as NESTED, where equivalence with the legacy
  * parsers was never the promise.
  *
- * The legacy fold produced a meaningless string for these — ADR-238's evidence
+ * The legacy fold produced a meaningless string for these — ADR-239's evidence
  * block came back as `"strength: E3 discovery: complete basis: - url1 - url2"`,
  * a value nothing read and nothing could use. The equivalence contract is about
  * SCALAR keys, which is where the three parsers actually diverged in ways a

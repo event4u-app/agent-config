@@ -389,7 +389,7 @@ export function authorityBasisOf(fm: AdrFrontmatter): string | null {
  * carried no owner claim at all.
  *
  * The name says `lowEvidence` rather than `provisionalAuthority` for a second
- * reason from the same review: ADR-238 and the roadmap both explicitly REJECT
+ * reason from the same review: ADR-239 and the roadmap both explicitly REJECT
  * the word "provisional" for this output, because it asserts a permission that
  * does not exist. Identifiers carrying the rejected vocabulary would have been
  * the doctrine contradicted in its own implementation.

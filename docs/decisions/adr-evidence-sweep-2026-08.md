@@ -9,10 +9,10 @@
 >
 > **Roadmap.** `road-to-evidence-based-adr-governance`, Phase 3.
 > **Contract.** `docs/contracts/adr-layout.md` § Provenance and evidence.
-> **Doctrine.** ADR-238 (`status: proposed`).
+> **Doctrine.** ADR-239 (`status: proposed`).
 > **Corpus.** 178 flat records in `docs/decisions/` + 7 per-area records in
 > `docs/adrs/**` = **185 records** at the head of this branch (177 flat before
-> ADR-238 was added by the same change).
+> ADR-239 was added by the same change).
 
 ## What this artifact is, and what it is not
 
@@ -32,7 +32,7 @@ ratification would invert the approval flow into write-and-hope.
 
 It **is not** an authority change. No disposition here lets an agent supersede
 anything on its own. The grade prices the reopen *record*; who may reopen stays
-with the transition-based discriminator (ADR-238 § 2).
+with the transition-based discriminator (ADR-239 § 2).
 
 ### The independence limit, stated rather than implied
 
@@ -58,7 +58,7 @@ calibrating against reads that were checked rather than asserted.
 | 106 | agentic | **E3** | complete | Cites `docs/benchmark.md` at `:60` and states at `:45` that "redundancy is now a measured fact, not an assumption". A real benchmark applied to the claim it supports. |
 | 128 | agentic | **E3** | complete | The strongest in the corpus: three named report artifacts (`internal/bench/reports/projection-cost.json`, `internal/reports/exec-evidence-feasibility.json`, `internal/reports/risk-escalation-shadow.json`) plus a counted result, "11 of 26 feasible" at `:34`. |
 | 229 | human | **E2** | complete | Duplicate work **measured twice** with the PR pairs named at `:52-54` (#1277/#1280, #1280/#1281). Two independent incidents is the E2 shape; it is not E3 because the measurement is incident-counting, not a pre-registered benchmark. |
-| 216 | human | **E0** + `owner_intent` | complete | A purpose decision. It is the only record in the tree carrying `reopen_policy: owner` + `protected_dimensions: [purpose]`. E0 is the honest grade and the authority comes from `authority_basis: owner_intent` — the case ADR-238 § 5 exists for. |
+| 216 | human | **E0** + `owner_intent` | complete | A purpose decision. It is the only record in the tree carrying `reopen_policy: owner` + `protected_dimensions: [purpose]`. E0 is the honest grade and the authority comes from `authority_basis: owner_intent` — the case ADR-239 § 5 exists for. |
 | 048 | mixed | **E1** | incomplete | The correction that matters most for calibration. A two-vendor council attribution at `:30` would be E0 on its own — consensus is not evidence. But `:30`/`:32` also carry **observed counts** (125, ~29 commands), which is one local observation. E1, and the trio it belongs to is 2/3 evidence-free rather than 3/3. |
 | 046 | agentic | **E0** | incomplete | Zero evidence markers across 93 lines — no measurement, no benchmark, no CLAIMS id, not even a council attribution. Pure doctrine, and it constrains every new command. |
 | 047 | agentic | **E0** | incomplete | Same, 94 lines. |
@@ -166,7 +166,7 @@ normalisation pass would hide exactly the divergence the overlap measures.
 | ADR-225 cross-corpus-proposal-verification | agentic (verification passes + 1 council pass) | **E3** | complete | evidence | easy | **partly** (decision current; numbers dated) | Four named axes, each behind its own reopening condition | unknown | **KEEP** | Claim-by-claim re-derivation over full populations, three independent passes, every number recomputed `ADR-225:44-46,:57-69` · measured distribution `:93-95` (n=289, p95 2,294, max 7,094) · both adopted repairs landed: `src/agent-src/templates/AGENTS.md:17` now reads "9 always-on; rest routed"; `references/` = 14 dirs, `reference/` = 0 (was 6/3) · counts moved (290 skills) — dated measurements, not stale claims |
 | ADR-227 paths-scoping-is-saturated | agentic (council) | **E3** | complete | evidence | easy | **partly** | Authoring `paths:`/`file_pattern` on a keyword-triggered rule; and it declines to activate projection-set selection | unknown | **AMEND** | Pre-registered Risk 1 falsified `ADR-227:48-49,:60-65` · exact-BPE counts + full kind census `:37-41,:66-73` · probed host fixture (host 2.1.226) `:60-61,:144-145` · re-anchor **rejected** at `:135-138`, then executed: `internal/bench/reports/token-baseline.json` `eager_rule_load` 106704 → **112694**, itemised (+777 this branch, 5213 inherited) · counts moved: 119 source rules (was 116), 21 path-shaped (was 25) |
 | ADR-235 process-full-blocked-outcome | agentic (council 2/2, one split) | E2 | complete | evidence | easy | n/a | — | unknown | **HISTORICAL-ONLY** | `ADR-235:3,7` superseded by ADR-237 (`ADR-237:5` `supersedes: ADR-235`) · its 12-roadmap census `:59-66` survives as a measurement; the record itself states what changed is the **reading** of it `:36-40` · three clauses carried forward `:42-45` |
-| ADR-238 evidence-based-decision-floor | **mixed** (`human_directed: true`, `agentic_mode: council`) | **E3** | complete | evidence | costly | **yes** | Its own acceptance by any agent (`protected_dimensions: [governance]`) | unknown | **KEEP (as `proposed`)** | Two external authorities directly on the graded claim `ADR-238:203-204` (Azure WAF ADR guidance; GRADE two-axis separation) + own census `:206` — E3 by triangulation, self-stated at `:209-214` · own measurements verified: `reopen_policy` in 2 files, `provenance:` in 1 · corpus arithmetic consistent with the sweep artifact (184 pre-, 185 post-) · Assumptions section names four unmeasured premises `:216-235` |
+| ADR-239 evidence-based-decision-floor | **mixed** (`human_directed: true`, `agentic_mode: council`) | **E3** | complete | evidence | costly | **yes** | Its own acceptance by any agent (`protected_dimensions: [governance]`) | unknown | **KEEP (as `proposed`)** | Two external authorities directly on the graded claim `ADR-239:203-204` (Azure WAF ADR guidance; GRADE two-axis separation) + own census `:206` — E3 by triangulation, self-stated at `:209-214` · own measurements verified: `reopen_policy` in 2 files, `provenance:` in 1 · corpus arithmetic consistent with the sweep artifact (184 pre-, 185 post-) · Assumptions section names four unmeasured premises `:216-235` |
 | docs/adrs/smoke/0001 per-tier-smoke | agentic (audit-derived) | **E1** | incomplete | evidence | easy | **partly** | Four smoke scripts + a ≤30 s budget + baseline-declaring stdout | unknown | **AMEND** | One local observation `smoke/0001:29-31` ("`task ci` ≥ 90 s"); the ≤30 s budget is chosen, not measured `:34,:50-54` · scripts + CI wiring live: `src/scripts/smoke/{kernel,router,schema,skills}.sh`, `.github/workflows/smoke.yml` · **all four path-trigger globs `:40-43` name `.agent-src.uncondensed/**`, which does not exist**; the scripts read `dist/agent-src/rules/` (`kernel.sh:6,:57`) and the workflow triggers on it (`smoke.yml:17`) · baseline "210 skills" `:68` vs 290 today |
 | docs/adrs/telegraph/0001 default-off-until-bench | agentic (council split, agent-resolved) | **E1** | incomplete | evidence | easy | **no** | Flipping `telegraph.speak` on, until three gates pass | unknown | **AMEND** | Decision rests on *absence* of a baseline `telegraph/0001:29-31,:68-70` — the 40% claim is named as "informal turn-snippet comparisons, not the locked corpus" · **the bench has since run and refuted the premise**: `src/config/agent-settings.template.yml:206-211` records median vs_terse −9.27% (API) / −5.47% (exact cl100k_base) — telegraph emits MORE tokens · gate 1 `:54` therefore resolved-and-failed, unrecorded here · `task bench` `:39` is not a task (only `bench:ui`, `bench:design-slop-fp`) · decision owner `:47` is `agents/roadmaps/archive/step-4-measurement-and-benchmark.md` (archived) · key is `telegraph.speak`, the record says `speak_scope` `:35` · extended, not superseded, by `docs/adrs/telegraph/0002` |
 

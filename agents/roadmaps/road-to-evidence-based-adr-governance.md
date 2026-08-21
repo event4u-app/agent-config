@@ -665,12 +665,12 @@ action joins the lane under the ADR-237 test.
 
 ## Phase 5 — Doctrine, proposed not accepted
 
-- [x] **5.1 Draft ADR-238 `evidence-based-decision-floor` as
+- [x] **5.1 Draft ADR-239 `evidence-based-decision-floor` as
       `status: proposed`.** Round 5, both seats: the doctrine record is not
       "later documentation" — it is the decision that would activate a new
       authorization regime, so it must be separately reviewable and
       kill-switchable, and it may not ship `accepted` alongside the schema
-      that it governs. ADR-238 is the next free number (verified against
+      that it governs. ADR-239 is the next free number (verified against
       `origin/main` and all 10 open PRs).
 
       It canonicalizes: the two descriptive axes; the layer separation from
@@ -708,7 +708,7 @@ action joins the lane under the ADR-237 test.
       E3 by triangulation — an authoritative external recommendation, a
       transferable method, and ac's own measured defects — not by counting
       sources.
-      verify: ADR-238 present with `status: proposed` and exactly this
+      verify: ADR-239 present with `status: proposed` and exactly this
       frontmatter shape; its `review_trigger` names the Phase 6 metrics;
       acceptance deferred to Phase 7.
 - [ ] **5.2 `decision-revisit-gate` — compatibility only, no new authority.**
@@ -839,12 +839,12 @@ existing authority floor.
       record.
 - [ ] AC-7 — No authority consequence ships in this roadmap: no fixture, rule
       path, or tool output lets a grade alone authorize an agent action, and
-      ADR-238 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
+      ADR-239 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
 - [ ] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
       measurement basis and minimum sample sizes — including
       `grade-accuracy-vs-gold`, `evidence-discovery-recall` and
       `beneficiary-linked-grade-bias` — before Phase 5.2 merges.
-- [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-238
+- [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-239
       acceptance occurred; no 0B-gated row executed; no Safety, Privacy,
       Legal or External-commitment floor was weakened.
 ## Blockers

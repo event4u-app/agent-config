@@ -28,7 +28,7 @@
  *      drifts from the ledger is a build failure, not a doc nit.
  *   4. Permanence language — an ADR record MUST NOT assert that its decision
  *      is permanent in a load-bearing position (its `# ` title, its
- *      `decision:` slug, its `## Decision` section, an `Addendum`). ADR-238
+ *      `decision:` slug, its `## Decision` section, an `Addendum`). ADR-239
  *      § 6 is the doctrine and ADR-208 the standing demonstration: its title
  *      says the tree is kept forever, its Decision says KEEP permanently, and
  *      its own frontmatter carries the conditions under which it is reopened.
@@ -496,7 +496,7 @@ function _frontmatterText(lines: readonly string[]): string {
 export const PERMANENCE_WORDS: readonly string[] = ['forever', 'permanently', 'permanent'];
 
 /**
- * Multi-word equivalents. The first three are named by ADR-238 § 6;
+ * Multi-word equivalents. The first three are named by ADR-239 § 6;
  * `now or in the future` is the corpus instance that made the list necessary
  * (ADR-108's Decision statement says it instead of "forever"). `in perpetuity`
  * and `for all time` have zero corpus hits today and are listed because they
@@ -560,7 +560,7 @@ const STOP_CONDITION_RE =
 
 const PERMANENCE_CONSEQUENCE_BOUND =
     'a record cannot both assert permanence and carry the conditions under which it ' +
-    'is reopened (ADR-238 § 6; ADR-208 is the standing demonstration). Two escapes: ' +
+    'is reopened (ADR-239 § 6; ADR-208 is the standing demonstration). Two escapes: ' +
     'scope the permanence to an external invariant AND state in the same section when ' +
     `that invariant stops applying, or record an owner purpose statement as \`${OWNER_INTENT_ESCAPE}\``;
 

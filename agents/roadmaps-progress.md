@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **19** open blockers in the active tree, **10** need you → `agent-config gates`
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers in the active tree, **9** need you → `agent-config gates`
 
 ## Overall
 
-**118 / 196 steps done · 60%**
+**107 / 179 steps done · 60%**
 
 ```text
 ████████████████████████░░░░░░░░░░░░░░░░   60%
@@ -17,17 +17,15 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
+| 2 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 10 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 11 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 12 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 7 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 8 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 9 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 10 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -159,40 +157,13 @@
     workers).
   - **Resolved when:** the policy artefact exists and the resolver entries cite it.
 
-### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
+### [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md)
 
-**Road to context fidelity** — 11 / 23 done (48%)
+**Road to condensed-link repair** — 0 / 6 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Memory eviction on the curated store | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Skill-top position lint | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
-| 4 | Context management for spawned workers | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
-
-<a id="blockers-road-to-context-fidelity"></a>
-**Blockers**
-
-- **compaction-census-session** (owner: user) — blocks Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
-  - **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
-  - **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
-  - **What to do:**
-    1. Run ONE manual compaction in an instrumented session and check whether `session_eol_report` counts it. This is the precondition and it is cheap — it decides whether cf01 is measurable at all, and without it a cf01 null is uninterpretable.
-    2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
-    3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
-    4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
-  - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
-- **prominence-gate-skills-corpus** (owner: maintainer) — blocks Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
-  - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
-  - **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
-  - **What to do:**
-    1. Decide extend-with-baseline versus leave-unscanned. If extending, the change is `./scripts-run src/scripts/check_iron_law_prominence --quiet src/skills` plus a baseline entry in `src/config/gate-violation-baselines.json` and a `min_scanned` floor in `src/config/gate-coverage.yml`.
-    2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
-    3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
-  - **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
-
-_1 blocker resolved._
+| 1 | Repair the two links, then decide about the gate | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 
 ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
 
@@ -396,22 +367,6 @@ _2 blockers resolved._
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
-
-### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
-
-**Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 0 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Run and publish | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
-
-### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
-
-**Measure the de-collided skill descriptions** — 0 / 0 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Run the instrument | ⏭️ skipped | 0 | 0 | 0 | 4 | 0% |
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
