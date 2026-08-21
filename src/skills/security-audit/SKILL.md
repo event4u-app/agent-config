@@ -129,7 +129,7 @@ true. Report the finding, route the fix to
 <https://cheatsheetseries.owasp.org/> — Cryptographic Storage, Transport Layer
 Security, Password Storage, XML External Entity Prevention — and never name a
 value from memory. Rationale and reopening condition:
-[ADR-238](../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
+[ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
 
 ### 4. Framework-specific checks
 
@@ -189,4 +189,4 @@ reaches it"). An audit that rejects nothing has usually skipped the gate.
 
 ## See also
 
-- [`docs/threat-model.md`](../../docs/threat-model.md) — package attack surface and trust boundary documentation.
+- [`docs/threat-model.md`](../../../docs/threat-model.md) — package attack surface and trust boundary documentation.
