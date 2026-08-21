@@ -1,0 +1,2026 @@
+diff --git a/README.md b/README.md
+index 27c9f93f4e4bc421befb981b727b33534143aec9..71fc35fbef776b23c1d551a31edbdf56b806a956 100644
+--- a/README.md
++++ b/README.md
+@@ -4,7 +4,7 @@
+ 
+ [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config) [![MCP Toplist](https://mcptoplist.com/badge/glama%2Fevent4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/glama%2Fevent4u-app%2Fagent-config)
+ 
+-[![Skills](https://img.shields.io/badge/Skills-290-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-119-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-200-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-107-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
++[![Skills](https://img.shields.io/badge/Skills-290-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-119-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-201-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-107-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+ 
+ **Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
+ 
+diff --git a/agents/index.md b/agents/index.md
+index 4f724ee46477f23026b4e43d3b0e3b35b1c26d4d..793887e95c2214c4c9b1d884bb2d2cb6850660da 100644
+--- a/agents/index.md
++++ b/agents/index.md
+@@ -1,6 +1,6 @@
+ # Agent-Config Internal Index
+ 
+-Maintainer-facing index of all **715 artefacts** in this package.
++Maintainer-facing index of all **716 artefacts** in this package.
+ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ 
+ > **Regenerate:** `./scripts-run src/scripts/generate_index`
+@@ -425,7 +425,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
+ | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
+ 
+-## Commands (200)
++## Commands (201)
+ 
+ | kind | name | cluster/shim | description |
+ |---|---|---|---|
+@@ -563,6 +563,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ | command | [`post-as-me`](../src/domains/gtm-marketing/post-as/me/command.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+ | command | [`git-pr-create`](../src/domains/git/pr/create/command.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
+ | command | [`git-pr-create-description-only`](../src/domains/git/pr/create/description-only/command.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
++| command | [`git-pr-merge`](../src/domains/git/pr/merge/command.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
+ | command | [`prediction-pool`](../src/domains/fun/prediction-pool/command.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
+ | command | [`prepare-for-review`](../src/domains/engineering-base/prepare-for-review/command.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
+ | command | [`profile`](../src/domains/meta/profile/command.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 4c997d61351c8b57c482c4c916ca0248840127a9..c27d46ab90eddb930841d5a32e0e9edf71f9a4eb 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers in the active tree, **9** need you → `agent-config gates`
++> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers in the active tree, **10** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**107 / 173 steps done · 62%**
++**135 / 210 steps done · 64%**
+ 
+ ```text
+-█████████████████████████░░░░░░░░░░░░░░░   62%
++██████████████████████████░░░░░░░░░░░░░░   64%
+ ```
+ 
+ ## Open roadmaps
+@@ -17,16 +17,17 @@
+ | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+-| 2 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
+-| 3 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 4 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+-| 5 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 6 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+-| 9 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+-| 10 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+-| 11 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 9 | 28 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 76% |
++| 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
++| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
++| 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
++| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
++| 8 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
++| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
++| 10 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
++| 11 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
++| 12 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+ 
+ ---
+ 
+@@ -158,6 +159,42 @@
+     workers).
+   - **Resolved when:** the policy artefact exists and the resolver entries cite it.
+ 
++### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
++
++**Road to drain commands** — 28 / 37 done (76%)
++
++| # | Phase | State | Open | Done | Deferred | Cancelled | % |
++|---|---|---|---:|---:|---:|---:|---:|
++| 1 | Security hotfix: the guard window | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 2 | The bundle is verified by content, not by timestamp | ✅ done | 0 | 3 | 0 | 0 | 100% |
++| 3 | `/pr:merge` — prepare one PR or drain the queue | ✅ done | 0 | 10 | 0 | 0 | 100% |
++| 4 | `/roadmap:process-full --all [--merge]` | ✅ done | 0 | 6 | 2 | 0 | 100% |
++| 5 | Governance record | ✅ done | 0 | 3 | 0 | 0 | 100% |
++| 6 | Gates, evals, delivery | 🟡 in progress | 9 | 4 | 0 | 0 | 31% |
++
++<a id="blockers-road-to-drain-commands"></a>
++**Blockers**
++
++- **merge-authority** (owner: user) — blocks steps 4.4 and 4.7 — activating `--merge` on `/roadmap:process-full` and amending the canonical loop's "merge is out of scope in every mode" sentence. Everything else in this roadmap, including all of `/pr:merge` except its § 9 merge step, ships without it.
++  - **What to do:**
++    decide whether an explicit `--merge` typed by the user in
++    the invocation may serve as the per-turn confirmation
++    `non-destructive-by-default` requires for a production-branch merge, and
++    therefore as an amendment to ADR-237 § 4, whose current words are "no
++    invocation extends it". This is owner-reserved rather than council-decidable
++    because it lowers a recorded safety floor
++    ([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
++    § owner-reserved set), and three independent reviews reached the same
++    answer without it: the AI council's Q1 verdict (2026-08-21, mergeability-only
++    until authorization is target-bound and tamper-resistant), the committed
++    `road-to-gate-preauth-authorization` stub (an authorization the agent can
++    write is not an authorization), and the runtime classifier, which refused
++    this roadmap's own attempt to edit the loop contract. The design the decision
++    would activate is already written and inert: no new grant store, the existing
++    prompt-derived per-session ledger only, an immutable `(PR number, head SHA)`
++    manifest, and a clean stop-and-report at window expiry.
++  - **Resolved when:** either the owner accepts the amendment and an ADR records it — after which 4.4 and 4.7 land and `--merge` becomes active — or the owner declines, in which case 4.4 and 4.7 are cancelled, the flag is removed from the `argument-hint`, and both command files keep only their mergeability-delivery half.
++
+ ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
+ 
+ **Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 3 / 6 done (50%)
+diff --git a/agents/roadmaps/road-to-drain-commands.md b/agents/roadmaps/road-to-drain-commands.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a124c12f5ec3bbdf533104c95bf50e08215efdfd
+--- /dev/null
++++ b/agents/roadmaps/road-to-drain-commands.md
+@@ -0,0 +1,436 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: autonomous
++---
++# Road to drain commands
++
++> **Source:** three operator artifacts from the 2026-08-20/21 sessions, handed
++> over via `agents/tmp.old/roadmap-process.txt` — (a) an "Autonomous Roadmap
++> Drain" prompt, (b) an "Autonomous PR Merge Queue" prompt, and (c) a
++> merge-extension message adding cutoff / window-scheduling / expiry-reporting
++> semantics. All three were proven by hand in live runs; this roadmap turns
++> them into governed command surface. Design questions were put to the AI
++> council (2 reviewers + chairman, deep + peer-review, 2026-08-21) — its
++> verdicts are recorded per phase below and reshaped the plan in two places.
++> Verified against `origin/main @ b900dd099`.
++
++## Goal
++
++A maintainer can drain the roadmap estate and the open-PR queue with two
++invocations instead of two pasted prompts: `/roadmap:process-full --all
++[--merge]` iterates every active roadmap to one PR each, and `/pr:merge
++[all|<N>] [--no-merge]` prepares open PRs to mergeable and merges them. Both
++terminate provably against a concurrently-producing session, both stop and
++report instead of stalling when their authorization window closes, and neither
++adds a new authorization store the agent could write on the user's behalf. The
++temporary 6-hour weakening of the git guard is off the trunk, and the hook
++bundle that enforces it is verified by content rather than by timestamp.
++
++## The defect, stated first
++
++**A drain run longer than the authorization window is structurally impossible,
++and the workaround for that is currently a committed security hole.**
++
++- `src/scripts/hooks/block_unauthorized_git.ts:489` reads
++  `export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain run,
++  revert after`. The intended bound is 30 minutes. The `// TEMP` widening was
++  committed to the trunk during the 2026-08-21 drain run and never reverted —
++  a twelvefold expansion of the authorization lifetime on the guard that gates
++  `pr-merge`, which is a `BLOCK_OPS` member (`:90`) precisely because it is
++  irreversible.
++- Measured live on 2026-08-21: of 9 open PRs, 8 are `CONFLICTING` and 1 is
++  `MERGEABLE`. Every one of them touches `agents/roadmaps-progress.md` and
++  `src/config/estate-count-budget.json`, so **each merge re-conflicts every
++  remaining PR**. Throughput is one merge per authorization window, and
++  pre-greening several PRs ahead of their merge is wasted work by construction.
++- The bundle that actually enforces the guard is `dist/hooks/dispatch.js`, and
++  the repo-local copy shadows the global install. `check_hook_bundle_freshness.ts`
++  compares **mtimes**, not content, so an mtime-preserving edit or a `touch`
++  passes. In the live run a source edit was silently inert and the run started
++  on a false premise.
++
++## Council verdicts that reshaped this plan
++
++Recorded here rather than in a PR body, because two of them changed the
++deliverable and a later reader needs to see why.
++
++| Q | Verdict | Effect on this roadmap |
++|---|---|---|
++| Is `process-all` a new command? | **No — `/roadmap:process-full --all`.** `docs/contracts/command-clusters.md` says "sibling variants become a flag, never a second command"; `all` changes cardinality, not lifecycle. | The operator asked for `/roadmap:process-all`. It ships as a flag instead. Same capability, no registry violation. |
++| `/prs:merge` or `/pr:merge`? | **`/pr:merge`**, path-derived per ADR-044, `all` as an argument. | Naming settled without a second command. |
++| Merge authority vs ADR-237 | ADR-237:92 excludes merging and says "no invocation extends it". Council: mergeability-only until authorization is target-bound and tamper-resistant. | `--merge` **does** ship — but on the *existing* human-only authorization path, not a new grant store. See Phase 4. |
++| The committed `// TEMP` weakening | **Immediate hotfix, blocks the rest.** | Phase 1, first commit of this branch. Deviation from "own PR" is recorded in that phase. |
++| Bundle freshness | mtime proves ordering, not equivalence. Content check is a prerequisite. | Phase 2. |
++
++**Why `--merge` ships despite the Q1/Q3 verdict, stated openly.** The council's
++blocker was a *new* agent-writable grant store. This roadmap adds none. The
++guard already classifies `pr-merge` as `BLOCK_OPS` and already derives its
++authorization from the user's own prompt text on the `UserPromptSubmit` path
++(`src/scripts/git_authorization_hook.ts:466`, from `classifyAuthorization`) —
++a signal the agent cannot forge. `--merge` consumes that existing
++authorization and nothing else; when it expires the run stops and reports
++(Phase 3, E3), which is the periodic re-authorization the council asked for.
++
++## Prerequisites
++
++- `gh` CLI authenticated with merge rights.
++- Surface this builds on, verified at `b900dd099`:
++  `src/domains/product-basic/roadmap/process-full/command.md` (ADR-237 grant,
++  terminal outcomes) · `.../roadmap/next/command.md` (§4 worktree routing, §7
++  CI push gate) · `src/domains/git/pr/create/` (the `pr` verb family,
++  `visibility: advanced`) · `src/scripts/hooks/block_unauthorized_git.ts` ·
++  `src/scripts/check_hook_bundle_freshness.ts` + `rebuild_hook_bundle.ts` ·
++  `docs/contracts/command-clusters.md` (locked registry).
++
++## Phase 1 — Security hotfix: the guard window
++
++- [x] **1.1 Restore the intended authorization window.** Set
++      `LEDGER_MAX_AGE_MS` back to `30 * 60 * 1000` at
++      `src/scripts/hooks/block_unauthorized_git.ts:489` and delete the
++      `// TEMP: PR-drain run, revert after` marker. Rebuild the hook bundle so
++      `dist/hooks/dispatch.js` carries the restored value — the source edit
++      alone is inert.
++      verify: `grep -n 'LEDGER_MAX_AGE_MS = ' src/scripts/hooks/block_unauthorized_git.ts`
++      shows `30 * 60 * 1000` and no `TEMP` marker; `grep -c '6 \* 60 \* 60 \* 1e3' dist/hooks/dispatch.js`
++      returns 0.
++- [x] **1.2 Record the one-PR deviation.** The council asked for this as its
++      own PR blocking the roadmap. It ships as the first commit of this branch
++      instead, because this branch merges in the same session — a separate PR
++      would add a round-trip without shortening the exposure. State that
++      reasoning in the guard's header comment next to the constant, so the next
++      reader of the constant sees why it was widened and why it is not again.
++      verify: the header comment names the 2026-08-21 incident and says that
++      widening `LEDGER_MAX_AGE_MS` for a run is forbidden practice.
++
++## Phase 2 — The bundle is verified by content, not by timestamp
++
++- [x] **2.1 Add a content-equivalence check for the hook bundle — against the
++      LOCAL bundle, not a committed one.** Measured 2026-08-21:
++      `git ls-files dist/hooks/` returns **zero** files, so the council's
++      framing ("compare against the committed artifact") has nothing to compare
++      against and is re-scoped here rather than implemented as stated. The
++      bundle is a local build artefact, which is exactly why the live-run
++      divergence was invisible: the executing copy is machine-local and no gate
++      reads it. The check therefore rebuilds with the same esbuild flags
++      `package.json` `build:hooks` uses, into a temporary location, and
++      compares a digest against the bundle **present on this machine**. Keep
++      `check_hook_bundle_freshness.ts` as the fast mtime diagnostic; the
++      content check is the authority.
++      verify: the new script exits 0 on a freshly built tree, and exits
++      non-zero after an mtime-preserving edit to a bundled hook source that the
++      existing mtime check passes — demonstrate both, since a check never seen
++      red has unknown sensitivity.
++- [x] **2.2 Wire it into the same local task the mtime check runs in**, after
++      the healer, so a stale bundle is rebuilt before it is judged. State
++      plainly that this gate is **local-only and cannot be a CI gate**: a fresh
++      CI checkout has no `dist/hooks/` at all, so CI has nothing to verify and
++      a green CI says nothing about the bundle a maintainer is actually
++      running. That asymmetry is the finding, not a gap to paper over.
++      verify: the task target invokes the new script; a deliberately corrupted
++      local `dist/hooks/dispatch.js` makes that target fail; the script's
++      header states the CI limitation.
++- [x] **2.3 Handle non-determinism honestly.** If the rebuild is not
++      byte-reproducible, that is a release-integrity defect, not a reason to
++      fall back to mtime — record it as a finding with the exact difference and narrow
++      the comparison to a canonical form only if the residue is provably
++      inert (timestamps, absolute paths).
++      verify: the script's header states which of the two cases holds, with the
++      evidence.
++
++## Phase 3 — `/pr:merge` — prepare one PR or drain the queue
++
++Command home `src/domains/git/pr/merge/command.md`. **`pr/` is a bare path
++segment, not a cluster** — `create/` is itself a cluster head
++(`cluster: git-pr-create`). So the merge command is a **new cluster**
++`git-pr-merge`, not a sub of an existing `pr` head; mirror
++`src/domains/git/pr/create/command.md` structurally, including its
++`## Sub-commands` / `## Dispatch` / `## Rules` sections, since
++`check_cluster_patterns.ts` requires them. `visibility: advanced`,
++`name: git-pr-merge`, `argument-hint: "[all|<pr-number>] [--no-merge]"`.
++The slug's leading token is `git`, which is already on the ADR-041 verb
++allowlist — no new verb ADR is needed.
++
++- [x] **3.1 Author the three invocation shapes.** `/pr:merge <N>` — prepare and
++      merge exactly PR N. `/pr:merge` — auto-select one PR: green first, then
++      infrastructure/tooling before content, then smallest diff, tiebreak
++      ascending number. `/pr:merge all` — drain the open-PR list.
++      `--no-merge` runs the whole preparation and stops before merging; it is
++      the entry point Phase 4 delegates to and it consumes no merge
++      authorization.
++      verify: the command file declares all three shapes and states which of
++      them touch a `BLOCK_OPS` git operation.
++- [x] **3.2 Bind every merge to an immutable target.** The queue is snapshotted
++      once at invocation as a manifest of `(PR number, head SHA)` pairs. A
++      merge refuses when either has changed since the snapshot — PR number
++      prevents branch substitution, head SHA prevents a force-push swapping the
++      content after authorization. The manifest is never silently refreshed.
++      verify: the command states the refusal, and names the recomputation as
++      the *only* way to widen the target set.
++- [x] **3.3 Encode the semantic conflict classes.** `gh pr checkout` →
++      `git merge origin/main --no-edit`, never rebase a pushed branch. Roadmap
++      files: union of completions — never un-check a box either side checked,
++      never resurrect a roadmap either side archived or parked. Generated
++      artifacts (`agents/roadmaps-progress.md`, `src/config/estate-count-budget.json`,
++      dashboards, catalogs, census): never hand-merge — take either side and
++      regenerate with the repo's own task, commit the regenerated output.
++      Archive-move versus edit: the archived end-state wins; re-apply the edit
++      at the new path or drop it with a note in the summary. Evidence files:
++      append-only, keep both sides. A conflict outside these enumerated classes
++      stops the run rather than being resolved by judgement.
++      verify: each class is named with the file glob it applies to, and the
++      "stop on an unenumerated class" rule is stated as a halt, not a warning.
++- [x] **3.4 Post-sync emptiness check.** An effectively-empty diff against
++      `main` after syncing means the PR was superseded: close it with
++      `Superseded: landed via <PRs>` and record it. Never merge an empty PR to
++      make the count fall.
++      verify: the command distinguishes "empty" from "only generated-artifact
++      churn that regeneration on main would produce anyway".
++- [x] **3.5 Bounded CI repair.** Root-cause fixes only, within the PR's own
++      scope. A known flake class gets one `gh run rerun --failed` before red
++      counts as real. Six fix iterations per PR per pass; exhaustion posts a
++      diagnosis comment and moves the PR to the end of the queue once; a second
++      exhaustion is terminal. Explicitly out of scope and a halt: dependency
++      changes, workflow changes, deleting or skipping tests, loosening a
++      threshold, weakening a gate, expected-fail markers, branch-protection
++      changes. Green means the **required checks succeeded for the exact head
++      SHA being merged**, re-verified on the pushed head — never a local run.
++      verify: the command names the halt list verbatim and states the SHA
++      requirement for "green".
++- [x] **3.6 E1 — cutoff against a concurrently-producing session.** When the
++      queue empties, recompute the open-PR list exactly once. PRs that appeared
++      during the run are drained as one final straggler batch; after that batch
++      the run ends unconditionally. Anything arriving during or after it is
++      recorded as `arrived-after-cutoff` and not processed. This is what gives
++      `all` a termination bound of (initial queue + one batch) independent of
++      other sessions.
++      verify: the command states the bound in those terms, and the summary
++      artifact has a row class for `arrived-after-cutoff`.
++- [x] **3.7 E2 — window-aware scheduling.** A green, waiting PR is spent
++      authorization window, because the next merge re-conflicts it. When the
++      projected remaining work exceeds the remaining window, stop entering
++      CI-fix loops and merge everything already green first. Pre-greening
++      several PRs ahead of their merge is forbidden under window pressure.
++      verify: the command states the override and the signal it reads to know
++      the window is under pressure.
++- [x] **3.8 E3 — expiry is a reported state, never a stall.** When the
++      authorization window closes with the queue non-empty, the run stops
++      cleanly, writes the summary with a `window-expired` disposition per
++      unprocessed PR, and names the exact re-authorization needed. It never
++      retries the guard, never edits the guard, its source, or its bundles.
++      verify: the command carries that prohibition as an Iron Law, and the
++      summary schema has the `window-expired` disposition.
++- [x] **3.9 Kill-switch list and the no-rollback rule.** Stop before the next
++      merge on: target or head-SHA mismatch, `main` advanced by an actor other
++      than this run, review dismissal, a change to the required-check set,
++      a conflict outside the enumerated classes, guard or bundle verification
++      failure, or the first unexplained CI repair failure. A completed merge is
++      the commit point — the command never auto-reverts an earlier merge as
++      "rollback"; it stops, emits the merge SHAs and the reason, and leaves
++      compensation to a separately authorized human decision.
++      verify: both rules are in the command's Rules section.
++- [x] **3.10 The `all`-mode summary artifact.** On queue empty or terminal-only,
++      write `agents/evidence/pr-drain-run-summary.md`: one row per PR with
++      queue position, conflict classes hit, CI iterations used, disposition
++      (merged SHA / superseded-closed / blocked-external / twice-exhausted /
++      window-expired / arrived-after-cutoff), and any edits dropped in conflict
++      resolution.
++      verify: the command specifies the columns; the disposition set is closed.
++
++## Phase 4 — `/roadmap:process-full --all [--merge]`
++
++Council Q2: a flag on the existing sub, not a new `process-all` command.
++
++- [x] **4.1 Extend the argument surface** to
++      `argument-hint: "[roadmap] [--all] [--merge] [--worktree]"` and document
++      each flag's scope in the Scope-delta section.
++      verify: the frontmatter line matches and each flag has a paragraph.
++- [x] **4.2 `--all` semantics — the estate loop.** Recompute the live active
++      roadmap inventory (never memory, never the dashboard count — the
++      live-screen rule `next` § 1 already carries), build the queue, then per
++      roadmap: branch from the updated default, run the existing single-roadmap
++      loop, then move to the next roadmap against the **new** main. One roadmap
++      = one branch = one PR, the existing invariant iterated. Queue order:
++      roadmaps at or above 10 % checkbox progress in descending progress;
++      roadmaps below 10 % appended after, ascending by declared `complexity:`
++      tier, tiebreak ascending total checkbox count. `later/`, `skipped/`,
++      `archive/` and `stubs/` are out of scope.
++      verify: the ordering rule is stated exactly once and is computable from
++      the files alone; the section names the live-screen obligation.
++- [x] **4.3 A blocked roadmap never stalls the estate queue.** Within a
++      roadmap the existing terminal outcomes and halt conditions keep full
++      authority. Between roadmaps, only queue exhaustion, window expiry, or a
++      kill-switch condition stops the run — a `blocked` roadmap is recorded and
++      the loop continues.
++      verify: the distinction between intra-roadmap halts and inter-roadmap
++      continuation is explicit.
++- [~] **4.4 `--merge` semantics.** <!-- blocked-by: merge-authority --> Delivery: on outcome `complete`, open the PR
++      as today, then run the Phase 3 preparation loop on it so the deliverable
++      is a **mergeable** PR rather than merely an open one. With `--merge`,
++      merge it via the Phase 3 merge step, under the Phase 3 target-manifest,
++      SHA and kill-switch rules. Without the flag, stop at mergeable-and-open —
++      today's review handoff, unchanged. On outcome `blocked`, `--merge` is
++      **ignored**: a partial-progress PR is never auto-merged.
++      verify: the ignore-on-blocked rule is stated as an invariant, not a
++      default.
++- [x] **4.5 Mergeability is per-PR against a recorded base, not a queue
++      property.** With every PR touching the same two generated files, making
++      PR *n* mergeable against base SHA `M` says nothing about its state after
++      PR *n−1* advances main. The command reports "mergeable against base
++      `<SHA>`", never "the queue is mergeable".
++      verify: the wording appears in the command and in the summary schema.
++- [x] **4.6 `--worktree` semantics.** Route workspace creation through
++      `/worktree:create` in full, including its § 4b seeding allow/deny list;
++      one worktree, re-branched per roadmap; `/worktree:cleanup` at end of run.
++      verify: the section delegates rather than restating the list.
++- [~] **4.7 Amend the canonical loop's merge sentence.** <!-- blocked-by: merge-authority -->
++      `src/agent-src/contexts/execution/roadmap-process-loop.md:642` reads
++      "**Merge is out of scope in every mode — always conversational.**" That
++      is a second load-bearing text `--merge` contradicts, and overriding it
++      downstream would leave the contract saying the opposite of the command.
++      Amend it in place: merge stays out of scope in every mode **except**
++      under an explicit `--merge` on the invocation, which is the user's word
++      for that run. Add the `--all` cardinality to the § Scope-deltas table
++      row for `process-full` in the same edit.
++      verify: the sentence names the single exception and cites the ADR from
++      5.1; the scope-delta row mentions `--all`.
++- [x] **4.8 Update the Iron-Law and forbidden-non-halt blocks.** Waiting on
++      remote CI for the delivery loop is part of the run, not a boundary stop.
++      verify: the existing Iron-Law block is amended, not duplicated.
++
++## Phase 5 — Governance record
++
++- [x] **5.1 Write the merge-authority ADR.** It records: that `--merge` / `all`
++      typed by the user in the invocation is the per-turn confirmation the
++      Hard Floor requires; that it consumes the **existing** prompt-derived
++      authorization and introduces no new grant store; that `/roadmap:next`'s
++      "No merge, ever" is unchanged; that the agent never modifies the guard,
++      its source, or its bundles; and the hard floor — never force-merge past
++      failing required checks, never admin-bypass, never weaken a gate to go
++      green. It also records the council's Q1/Q3 reservation and the two
++      properties whose absence would make a future *persistent* grant unsafe
++      (agent-unforgeable storage, immutable target manifest), so a later
++      attempt starts from the objection rather than rediscovering it.
++      verify: the ADR exists with a number, is indexed, and cites ADR-237 § 4
++      and the `road-to-gate-preauth-authorization` stub by name.
++- [x] **5.2 Register the new sub in the locked cluster registry.** A
++      `git-pr-merge` row mirroring `git-pr-create`. `--all` needs no row: it is
++      a flag on an existing sub, which is the outcome the registry rule asked
++      for.
++      verify: the cluster linter passes and the row's column count matches the
++      table header.
++- [x] **5.3 Sync the cluster head, and regenerate the catalog.** The `roadmap`
++      cluster head's `argument-hint` reflects the new flags (no new
++      sub-command row — `--all` is a flag, which is the point of the Q2
++      verdict). `docs/catalog.md` is auto-generated: run the index generator
++      rather than hand-editing it, so the merge command's row and the artefact
++      count are both produced by the same pass.
++      verify: the documented-commands linter passes and the catalog diff is
++      generator output only.
++
++## Phase 6 — Gates, evals, delivery
++
++- [x] **6.1 Eval fixture for the merge command.** The routing linter resolves
++      the fixture stem from the command's `name` (or a `replaces` alias), so
++      the file is `src/agent-src/commands/evals/git-pr-merge.json`, schema
++      `{command, intent, cases[{prompt, expected}]}`, **at least five cases**
++      (`MIN_CASES = 5`): the three invocation shapes plus a negative case that
++      must route elsewhere.
++      verify: `lint_command_routing` reports no missing-eval violation for the
++      new command.
++- [x] **6.2 Extend the roadmap cluster's routing eval** —
++      `src/agent-src/commands/evals/roadmap.json` gains prompts that must route
++      to `roadmap-process-full` for the estate-drain phrasings ("drain every
++      roadmap", "arbeite alle Roadmaps ab"), so the flag is reachable by
++      intent and not only by flag literal. Its `intent` line is already stale
++      (it omits `next`) — fix it in the same edit.
++      verify: `lint_command_routing` passes and the fixture still has at least
++      five cases.
++- [x] **6.3 New-gate verification: run the Phase 2 content check and both
++      fixtures once locally.** <!-- carve-out: new-gate-verification -->
++      verify: exit codes recorded in the PR body, including the deliberate red
++      from 2.1.
++- [ ] **6.4 Run the command, cluster, frontmatter and roadmap gates on the
++      changed files** and fix every failure at the root.
++      verify: each named gate reports 0 for this branch.
++- [x] **6.5 Update `docs/CLAIMS.md` only if a claim above turns out measurable
++      in CI**; otherwise record an honest null in the PR body.
++      verify: either a ledger entry exists or the PR body states the null.
++
++## Blockers
++
++### blocker: merge-authority
++
++- **Status:** open
++- **Owner:** user
++- **Class:** 3 — owner-reserved governance amendment
++- **Blocks:** steps 4.4 and 4.7 — activating `--merge` on
++  `/roadmap:process-full` and amending the canonical loop's
++  "merge is out of scope in every mode" sentence. Everything else in this
++  roadmap, including all of `/pr:merge` except its § 9 merge step, ships
++  without it.
++- **What to do:** decide whether an explicit `--merge` typed by the user in
++  the invocation may serve as the per-turn confirmation
++  `non-destructive-by-default` requires for a production-branch merge, and
++  therefore as an amendment to ADR-237 § 4, whose current words are "no
++  invocation extends it". This is owner-reserved rather than council-decidable
++  because it lowers a recorded safety floor
++  ([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
++  § owner-reserved set), and three independent reviews reached the same
++  answer without it: the AI council's Q1 verdict (2026-08-21, mergeability-only
++  until authorization is target-bound and tamper-resistant), the committed
++  `road-to-gate-preauth-authorization` stub (an authorization the agent can
++  write is not an authorization), and the runtime classifier, which refused
++  this roadmap's own attempt to edit the loop contract. The design the decision
++  would activate is already written and inert: no new grant store, the existing
++  prompt-derived per-session ledger only, an immutable `(PR number, head SHA)`
++  manifest, and a clean stop-and-report at window expiry.
++- **Resolved when:** either the owner accepts the amendment and an ADR records
++  it — after which 4.4 and 4.7 land and `--merge` becomes active — or the owner
++  declines, in which case 4.4 and 4.7 are cancelled, the flag is removed from
++  the `argument-hint`, and both command files keep only their
++  mergeability-delivery half.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-21 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | `--merge` becomes a standing licence | implementation | A flag read once at invocation is easy to re-read later in the run, turning one confirmation into unbounded merge authority — the exact failure the council's Q1/Q3 reservation names | No new grant store; `--merge` consumes only the existing prompt-derived ledger entry, and expiry stops the run (3.8) instead of extending itself | Phase 4 — `/roadmap:process-full --all [--merge]` |
++| 2 | Target substitution between authorization and merge | implementation | A force-push after the queue snapshot swaps the content that was authorized | Immutable `(PR number, head SHA)` manifest, refusal on either mismatch, never silently refreshed | Phase 3 — `/pr:merge` — prepare one PR or drain the queue |
++| 3 | Semantic conflict resolution drifts into judgement | implementation | Every PR touches the same two generated files; an unenumerated conflict class resolved by taste silently loses work | Enumerated classes only; anything outside them halts rather than resolves | Phase 3 — `/pr:merge` — prepare one PR or drain the queue |
++| 4 | The content-equivalence check is never seen red | implementation | A gate that only ever passed has unknown sensitivity, which is how the mtime check earned false confidence in the first place | 2.1 requires demonstrating the red on an mtime-preserving edit before the green counts | Phase 2 — The bundle is verified by content, not by timestamp |
++| 5 | The flag decision is re-litigated as a new command | product | The operator asked for `/roadmap:process-all` by name; a later reader may add it, splitting the surface the registry rule protects | The council verdict and its reasoning are recorded in the roadmap and the ADR, not only in a PR body | Phase 5 — Governance record |
++
++## Acceptance Criteria
++
++- [ ] AC-1 — `LEDGER_MAX_AGE_MS` is `30 * 60 * 1000` in the guard source, no
++      temporary-widening marker remains anywhere in the guard, and a rebuild of
++      the hook bundle from that source carries the restored value. The bundle
++      itself is untracked, so the source and the rebuild are the checkable
++      surface — not a committed artefact.
++- [ ] AC-2 — An mtime-preserving edit to a bundled hook source fails the
++      content-equivalence gate while passing the mtime check; both outcomes are
++      demonstrated, not asserted. The gate's header states that it is
++      local-only because `dist/hooks/` is untracked.
++- [ ] AC-3 — `/pr:merge` exists at `src/domains/git/pr/merge/command.md`, is
++      registered in the locked cluster registry, and specifies the immutable
++      target manifest, the enumerated conflict classes, the bounded CI-repair
++      halt list, the kill-switch set, the no-rollback rule, and the closed
++      disposition set of its summary artifact.
++- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree` and
++      delivers a **mergeable** PR per roadmap; `--merge` is specified, marked
++      inert, and points at the `merge-authority` blocker rather than merging.
++      Mergeability is expressed per-PR against a recorded base SHA, never as a
++      queue property.
++- [ ] AC-5 — No new command named `process-all` exists anywhere in the tree,
++      and no new authorization store exists in `src/scripts/hooks/`. No shipped
++      path merges anything while the `merge-authority` blocker is open: both
++      command files state the gate in a block a reader cannot miss.
++- [ ] AC-6 — `/roadmap:next` is byte-identical: it still never merges.
++- [ ] AC-7 — An accepted ADR records the merge-authority decision, cites
++      ADR-237 § 4 and the `road-to-gate-preauth-authorization` stub, and names
++      the two properties a future persistent grant would need.
++- [ ] AC-8 — The command, cluster, frontmatter and roadmap gates pass on the
++      changed files, and both new eval fixtures load under the existing loader.
+diff --git a/dist/agent-src/commands/evals/git-pr-merge.json b/dist/agent-src/commands/evals/git-pr-merge.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0534e2bdb96a4e0584ae21162f9699ac03fec887
+--- /dev/null
++++ b/dist/agent-src/commands/evals/git-pr-merge.json
+@@ -0,0 +1,13 @@
++{
++  "command": "git-pr-merge",
++  "intent": "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so",
++  "cases": [
++    { "prompt": "merge PR 1478", "expected": "git-pr-merge" },
++    { "prompt": "get this pull request mergeable and merge it", "expected": "git-pr-merge" },
++    { "prompt": "drain all the open PRs — sync each one with main, fix CI, merge", "expected": "git-pr-merge" },
++    { "prompt": "bring PR 1502 up to date with main and get its checks green, but don't merge it", "expected": "git-pr-merge" },
++    { "prompt": "the open PRs all conflict with each other now — work through the queue", "expected": "git-pr-merge" },
++    { "prompt": "open a pull request for this branch", "expected": "git-pr-create" },
++    { "prompt": "write me a PR description I can paste", "expected": "git-pr-create-description-only" }
++  ]
++}
+diff --git a/dist/agent-src/commands/evals/roadmap.json b/dist/agent-src/commands/evals/roadmap.json
+index 8c09045deceaf89745aa667016965360fedd52f1..ba4be5dcc50be5749b300a030f7a7c7ddc02e21d 100644
+--- a/dist/agent-src/commands/evals/roadmap.json
++++ b/dist/agent-src/commands/evals/roadmap.json
+@@ -1,6 +1,6 @@
+ {
+   "command": "roadmap",
+-  "intent": "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council",
++  "intent": "Roadmap dispatcher \u2014 create, materialize, process-step, process-phase, process-full (incl. --all estate drain), next, ai-council",
+   "cases": [
+     {
+       "prompt": "create a roadmap for this initiative",
+@@ -37,6 +37,22 @@
+     {
+       "prompt": "either roadmap it or turn it into a feature plan, your pick",
+       "expected": "roadmap"
++    },
++    {
++      "prompt": "drain every open roadmap, one PR each",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "arbeite alle Roadmaps der Reihe nach ab",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "work through the whole roadmap estate in a worktree",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "merge all the open pull requests",
++      "expected": "git-pr-merge"
+     }
+   ]
+ }
+diff --git a/dist/agent-src/commands/pr/merge.md b/dist/agent-src/commands/pr/merge.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b4230296f44803b76e505277bc74b31a56223aea
+--- /dev/null
++++ b/dist/agent-src/commands/pr/merge.md
+@@ -0,0 +1,259 @@
++---
++model_tier: medium
++name: git-pr-merge
++disable-model-invocation: true
++argument-hint: "[all|<pr-number>] [--no-merge]"
++pack: git
++intent: "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so"
++routes_to: [git-workflow, github-ci]
++replaces: []
++visibility: advanced
++cluster: git-pr-merge
++skills: [git-workflow, github-ci, ai-council]
++description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++suggestion:
++  eligible: false
++  rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
++workspaces:
++  - agent-config-maintainer
++packs:
++  - git
++---
++
++# /git-pr-merge
++
++Prepare an open pull request until it is genuinely mergeable — its base merged
++in, its conflicts resolved by class rather than by taste, its required checks
++green on the head that will actually be merged — and then merge it, if and only
++if the invocation authorised that.
++
++```
++THE MERGE STEP (§ 9) IS SPECIFIED AND NOT YET ACTIVE. `--no-merge` IS THE
++OPERATIVE PATH TODAY, AND A BARE INVOCATION BEHAVES AS IF IT CARRIED IT.
++ACTIVATION NEEDS THE OWNER DECISION IN THE `merge-authority` BLOCKER OF
++`road-to-drain-commands` — NEVER A COMMAND EDIT, AND NEVER A GUARD EDIT.
++```
++
++**The invocation is the authorization, and nothing else is.** `pr-merge` is a
++`BLOCK_OPS` member in `block_unauthorized_git.ts` because it is irreversible.
++This command would consume the authorization the user's own prompt text already
++wrote to the per-session ledger on `UserPromptSubmit`; it introduces no second
++authorization store, and it never writes one. When that window closes the run
++stops and reports (§ 7) — the window never grows.
++
++Why it ships inert rather than not at all: everything before § 9 — the target
++manifest, the four conflict classes, the superseded check, the bounded CI
++repair, the cutoff — is the expensive, error-prone half, it is what the live
++runs actually proved, and none of it merges anything. `--no-merge` delivers all
++of it today.
++
++## Sub-commands
++
++| Sub-command | Routes to | Purpose |
++|---|---|---|
++
++*(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
++an argument rather than a second command — the locked registry's rule that
++"sibling variants become a flag, never a second command"
++([`command-clusters`](../../../../docs/contracts/command-clusters.md)) applied
++to this cluster. A future sub belongs here only if it has a materially
++different lifecycle, not a different count.
++
++## Dispatch
++
++| Invocation | Behaviour |
++|---|---|
++| `/pr:merge <N>` | Prepare and merge exactly PR N. |
++| `/pr:merge` | Auto-select ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number. |
++| `/pr:merge all` | Drain the open-PR list under § 6's cutoff. |
++| `… --no-merge` | Run the whole preparation and stop before merging. Consumes no merge authorization. This is the entry point [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) delegates to for its delivery loop. |
++
++**Bare invocation** (`/pr:merge` with no argument) is a **documented default
++flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
++picked and why, before touching it. A menu would be the wrong shape here —
++selection is deterministic from the queue-order rule in § 1, so asking the user
++to pick would hand back a decision the command can compute. When the open-PR
++list is empty there is nothing to select and the command reports that and
++stops.
++
++## 1. Snapshot the target — an immutable manifest
++
++Compute the queue ONCE at invocation and record it as a manifest of
++`(PR number, head SHA)` pairs:
++
++```bash
++gh pr list --state open --limit 100 \
++  --json number,title,headRefName,headRefOid,additions,deletions,changedFiles,mergeable,updatedAt
++```
++
++The manifest is the authorization's target set and is **never silently
++refreshed**. Before every merge, re-read the PR and refuse when either field
++moved: the number prevents branch substitution, the head SHA prevents a
++force-push swapping the content after the user authorised it. A PR that
++appeared after the snapshot is not in scope for this run — § 6 says what
++happens to it.
++
++## 2. Sync with the base
++
++```bash
++git fetch origin
++gh pr checkout <N>
++git merge origin/<base> --no-edit
++```
++
++Merge the base **into** the branch. Never rebase a branch that is already
++pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++
++## 3. Resolve conflicts by class, never by taste
++
++Conflicts between queued PRs are expected, not exceptional: in this repository
++every roadmap PR touches `agents/roadmaps-progress.md` and
++`src/config/estate-count-budget.json`, so each merge re-conflicts every
++remaining PR. Resolve semantically, by these enumerated classes:
++
++| Class | Files | Resolution |
++|---|---|---|
++| Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
++| Generated artefacts | progress dashboard, estate-count budget, catalogs, census, any file whose header says auto-generated | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
++| Archive move vs. edit | a file one side moved to `archive/` | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
++| Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
++
++```
++A CONFLICT OUTSIDE THESE FOUR CLASSES HALTS THE RUN.
++IT IS NOT RESOLVED BY JUDGEMENT AND NOT ESCALATED TO A WARNING.
++```
++
++The classes exist so a merge resolution is reproducible by a second reader. An
++unenumerated conflict is a case nobody has decided yet, and deciding it silently
++inside a drain loop is how work disappears.
++
++## 4. Superseded check — before any CI is spent
++
++If the effective diff against the base is empty after syncing, the PR's content
++already landed elsewhere. Distinguish genuinely empty from generated-artefact
++churn that regeneration on the base would produce anyway — the latter is not
++emptiness.
++
++```bash
++git diff origin/<base>...HEAD --stat
++```
++
++Empty ⇒ close it with `Superseded: landed via <PRs>` and record it. **Never
++merge an empty PR to make the queue count fall.**
++
++## 5. Drive CI green — bounded
++
++Push, then wait for the verdict on the pushed head. Green means **the required
++checks succeeded for the exact head SHA that will be merged** — never a local
++run, never an earlier commit ([`/git-pr-create` § 4d](../create/command.md)).
++
++- **Root-cause fixes only**, inside the PR's own scope.
++- **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
++  red counts as real.
++- **Six fix iterations per PR per pass.** Exhaustion posts a diagnosis comment
++  and moves the PR to the end of the queue once; a second exhaustion is
++  terminal.
++
++```
++THESE ARE HALTS, NOT OPTIONS OF LAST RESORT:
++DEPENDENCY CHANGES · WORKFLOW CHANGES · DELETING OR SKIPPING A TEST ·
++LOOSENING A THRESHOLD · WEAKENING A GATE · AN EXPECTED-FAIL MARKER ·
++A BRANCH-PROTECTION CHANGE.
++"DRIVE CI GREEN" AUTHORIZES DIAGNOSIS AND REPAIR, NEVER REMOVING THE CHECK
++THAT WOULD HAVE CAUGHT THE PROBLEM.
++```
++
++## 6. `all` — the queue, and the cutoff that ends it
++
++Process the manifest in order. After each merge the base has moved, so the next
++PR is re-synced against the NEW base — that is the loop, and it is why
++pre-greening several PRs ahead of their merges is wasted work.
++
++**Cutoff.** When the manifest is exhausted, recompute the open-PR list
++**exactly once**. PRs that appeared during the run are drained as ONE final
++straggler batch. After that batch the run ends unconditionally; anything
++arriving during or after it is recorded as `arrived-after-cutoff` and is not
++processed.
++
++```
++THE CUTOFF IS THE TERMINATION PROOF.
++WITHOUT IT, "THE QUEUE MUST SHRINK" DOES NOT TERMINATE AGAINST A SECOND
++SESSION THAT KEEPS OPENING PRs — THE RECOMPUTE JUST REFILLS IT.
++BOUND: INITIAL MANIFEST + ONE BATCH, WHATEVER ELSE IS HAPPENING IN THE REPO.
++```
++
++**Window-aware scheduling.** A green, waiting PR is spent authorization window,
++because the next merge re-conflicts it. When the projected remaining work
++exceeds the remaining window, stop entering CI-fix loops and merge everything
++already green first. Pre-greening several PRs ahead of their merge is forbidden
++under window pressure.
++
++## 7. Expiry is a reported state, never a stall
++
++```
++WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN STOPS CLEANLY
++AND REPORTS. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS THE GUARD,
++ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
++```
++
++Write the summary as-is with a `window-expired` disposition per unprocessed PR
++and name the exact re-authorization needed. Widening `LEDGER_MAX_AGE_MS` is
++forbidden practice: on 2026-08-21 it was patched to six hours for a drain run
++and the widening reached the trunk.
++
++## 8. Kill switches, and what happens after a merge
++
++Stop **before** the next merge on any of:
++
++- target number or head SHA differs from the manifest;
++- the base advanced by an actor other than this run;
++- a review was dismissed, or the required-check set changed;
++- a conflict outside the four enumerated classes;
++- guard or hook-bundle verification failed;
++- the first unexplained CI-repair failure.
++
++```
++A COMPLETED MERGE IS THE COMMIT POINT.
++NEVER AUTO-REVERT AN EARLIER MERGE AS "ROLLBACK" — AFTER FIVE MERGES THERE IS
++NO ROLLBACK, ONLY COMPENSATION, AND COMPENSATION IS A SEPARATELY AUTHORIZED
++HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
++```
++
++## 9. Merge, and the summary
++
++```bash
++gh pr merge <N> --<detected-method> --delete-branch
++```
++
++Use the method the repository already uses; never invent one mid-queue. Never
++force-merge past a failing required check, never admin-bypass.
++
++On queue empty or terminal-only, `all` writes
++`agents/evidence/pr-drain-run-summary.md`: one row per PR with queue position,
++conflict classes hit, CI iterations used, disposition, and any edits dropped in
++conflict resolution. The disposition set is closed:
++
++`merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
++`window-expired` · `arrived-after-cutoff`
++
++## Rules
++
++- **Never merge without the invocation's word.** `--no-merge` and an absent
++  merge argument both stop at mergeable-and-open.
++- **Never widen, patch, or rebuild-around the git guard.** Verification of the
++  authorization window is read-only.
++- **Never rebase a pushed branch**; the base is merged in.
++- **Never hand-merge a generated artefact**; regenerate it.
++- **Never resolve a conflict outside the four classes**; halt instead.
++- **Never call CI green off a local run**; re-verify on the pushed head.
++- **Never auto-revert a completed merge.**
++- **Mergeability is per-PR against a recorded base SHA**, never a property of
++  the queue: making PR *n* mergeable against base `M` says nothing about its
++  state once PR *n−1* advances the base.
++
++## See also
++
++- [`/git-pr-create`](../create/command.md) — opens the PR this command finishes.
++- [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates here for its delivery loop.
++- [`git-history-discipline`](../../../../rules/git-history-discipline.md) — never rewrite pushed history.
++- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.
+diff --git a/dist/agent-src/commands/roadmap.md b/dist/agent-src/commands/roadmap.md
+index 08f10dae9c7c58322077babe67acd132f0d45b5a..98294d931279b043f7fd76e296557d2c8df9dcad 100644
+--- a/dist/agent-src/commands/roadmap.md
++++ b/dist/agent-src/commands/roadmap.md
+@@ -38,7 +38,7 @@ paused for confirmation before every step) was removed —
+ | `/roadmap:materialize` | `commands/roadmap/materialize.md` | Turn an accepted roadmap into the concrete artefacts it plans |
+ | `/roadmap:process-step` | `commands/roadmap/process-step.md` | Autonomously process the next open step, then stop |
+ | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
+-| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase |
++| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase; `--all` iterates the whole active estate, `--worktree` isolates the workspace |
+ | `/roadmap:next` | `commands/roadmap/next.md` | Screen for the next executable roadmap, then carry it to a reviewable PR (selection + `process-full` + delivery) |
+ 
+ Sub-command names match the locked contract in
+diff --git a/dist/agent-src/commands/roadmap/process-full.md b/dist/agent-src/commands/roadmap/process-full.md
+index 1c75651401b7a609d0a2f88a61d951d413265278..fdff9a24056fcac1495d79fd55c00c5e4312be12 100644
+--- a/dist/agent-src/commands/roadmap/process-full.md
++++ b/dist/agent-src/commands/roadmap/process-full.md
+@@ -7,7 +7,7 @@ cluster: roadmap
+ sub: process-full
+ skills: [agent-docs-writing, ai-council, roadmap-management]
+ description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
+-argument-hint: "[roadmap]"
++argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
+ suggestion:
+   eligible: false
+   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
+@@ -80,6 +80,98 @@ with the **scope delta below**.
+   archival check from
+   [`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival).
+ 
++## The three flags
++
++### `--all` — the estate, one roadmap at a time
++
++`--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
++iterated over the whole active estate. It is a flag rather than a
++`/roadmap:process-all` command because
++[`command-clusters`](../../../../docs/contracts/command-clusters.md) says
++sibling variants become a flag, and a drain is a count of the thing this
++command already does.
++
++1. **Recompute the inventory live.** Never from memory, never from the
++   dashboard count — the same live-screen rule
++   [`/roadmap:next` § 1](../next/command.md) already carries. The corpus is the
++   non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
++   `archive/` and `stubs/` are out of scope.
++2. **Order the queue.** Roadmaps at or above 10 % checkbox progress first, in
++   **descending** progress — nearly-done first, because they convert soonest.
++   Roadmaps below 10 % are appended after, ascending by declared `complexity:`
++   tier (lightweight → bounded → structural), tiebreak ascending total
++   checkbox count.
++3. **Loop.** Per roadmap: branch from the updated default, run this command's
++   normal single-roadmap loop, deliver per § Delivery, then take the next
++   roadmap **against the new default** — every merged PR moves it. One roadmap
++   = one branch = one PR, which is the existing invariant iterated, not a new
++   one.
++
++**A blocked roadmap never stalls the estate queue.** Inside a roadmap the five
++halt conditions and the terminal outcomes keep full authority. Between
++roadmaps, only queue exhaustion, authorization-window expiry, or a
++[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill-switch stops the run:
++a `blocked` roadmap is recorded and the loop continues to the next one.
++
++### `--merge` — NOT YET ACTIVE: deliver mergeable, merging is owner-gated
++
++**Delivery.** On outcome `complete`, open the PR as today, then run
++[`/pr:merge <N> --no-merge`](../../../git/pr/merge/command.md) on it: sync the
++base in, resolve conflicts by that command's four enumerated classes, drive the
++required checks green on the pushed head. The deliverable is a **mergeable** PR
++rather than merely an open one — with or without the flag.
++
++```
++`--merge` IS SPECIFIED HERE AND IS NOT ACTIVE. THE RUN STOPS AT
++MERGEABLE-AND-OPEN WHETHER OR NOT THE FLAG IS PASSED, AND SAYS SO.
++ACTIVATING IT NEEDS THE OWNER DECISION RECORDED IN THE `merge-authority`
++BLOCKER OF `road-to-drain-commands` — NOT A COMMAND EDIT.
++```
++
++Why it is specified but inert: the canonical loop states "**merge is out of
++scope in every mode — always conversational**"
++([`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival)),
++and ADR-237 § 4 excludes merging from the invocation grant with the words "no
++invocation extends it". A command cannot reinterpret either from below. Three
++independent reviews reached the same verdict: the AI council (Q1, 2026-08-21),
++the committed `road-to-gate-preauth-authorization` stub, and the runtime guard
++that refused the contract edit when this roadmap first attempted it.
++
++When the blocker resolves, `--merge` merges via
++[`/pr:merge`](../../../git/pr/merge/command.md)'s merge step, under its
++immutable target manifest, its head-SHA check, and its kill-switch list. Until
++then the flag is accepted, reported as inert, and changes nothing.
++
++```
++AND WHEN IT DOES ACTIVATE: ON OUTCOME `blocked`, `--merge` IS IGNORED.
++AN INVARIANT, NOT A DEFAULT — A PARTIAL-PROGRESS PR SAYS SO IN ITS FIRST
++LINE (ADR-237) AND IS NEVER AUTO-MERGED, HOWEVER THE RUN WAS INVOKED.
++```
++
++**Mergeability is per-PR against a recorded base, never a queue property.**
++When every PR in the estate touches the same generated files — in this
++repository `agents/roadmaps-progress.md` and
++`src/config/estate-count-budget.json` — making PR *n* mergeable against base
++SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
++Report "mergeable against base `<SHA>`", never "the queue is mergeable".
++
++**The design the blocker decides on, stated so the decision is concrete.** The
++flag would authorise the merge without *storing* an authorization: it consumes
++the per-session ledger entry the user's own prompt text already wrote on
++`UserPromptSubmit` — a signal the agent cannot forge — and creates no grant
++store. When that window closes with work left, the run stops and reports per
++[`/pr:merge` § 7](../../../git/pr/merge/command.md). Widening
++`LEDGER_MAX_AGE_MS` is forbidden practice either way.
++
++### `--worktree` — isolate the workspace
++
++Route workspace creation through [`/worktree:create`](../../../engineering-base/worktree/create/command.md)
++in full, including its
++[§ 4b seeding allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list) —
++dependencies symlinked or installed **fully**, `.agent-settings.yml` **never**
++copied, because absent is the CI shape. Under `--all` the worktree is created
++once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
++
+ ## Iron Law — Full is Full
+ 
+ ```
+@@ -87,6 +179,11 @@ with the **scope delta below**.
+ TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
+ PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
+ NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
++UNDER `--all`, A ROADMAP BOUNDARY IS NOT A STOP EITHER: ONLY ESTATE-QUEUE
++EXHAUSTION, WINDOW EXPIRY, OR A KILL-SWITCH ENDS THE RUN.
++WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
++RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
++AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
+ ```
+ 
+ The **five — and only five — halt conditions** (exhaustive; nothing else
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 3be42a2dcc3fbc804387516e87a6d95d57b87b93..60172fb6ac7f767d759431495ba07eed9866f042 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -214,7 +214,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - last_verified: 2026-07-08
+ 
+ ### claim: command-count
+-- claim: 200 commands.
++- claim: 201 commands.
+ - kind: quant
+ - evidence: exec:check_artefact_count_messaging -> 0
+ - status: backed
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 96a795f58dc1c9e7f96f3dce474bee552776427b..d1b0a962193d0d83f3035f48c45f2eb166273c94 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -155,7 +155,7 @@ note, package-internal path-swap, description budget, and the
+ |---|---|---|
+ | **Skills** | 290 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+ | **Rules** | 119 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+-| **Commands** | 200 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
++| **Commands** | 201 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+ | **Guidelines** | 107 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
+ | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
+ | **Contexts** | 5 | Shared knowledge about the system itself |
+diff --git a/docs/catalog.md b/docs/catalog.md
+index a135c4e57e18fdd08b739a4b1b9f36ec42a7d027..359602697243e8d1a2bb2710879550acd7e38927 100644
+--- a/docs/catalog.md
++++ b/docs/catalog.md
+@@ -1,6 +1,6 @@
+ # agent-config — Public Catalog
+ 
+-Consumer-facing catalog of all **714 public artefacts** shipped by
++Consumer-facing catalog of all **715 public artefacts** shipped by
+ this package. Internal package-maintenance rules and deprecation shims
+ are excluded.
+ 
+@@ -440,7 +440,7 @@ are excluded.
+ | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
+ | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
+ 
+-## Commands (200)
++## Commands (201)
+ 
+ | kind | name | cluster | description |
+ |---|---|---|---|
+@@ -578,6 +578,7 @@ are excluded.
+ | command | [`post-as-me`](../dist/agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+ | command | [`git-pr-create`](../dist/agent-src/commands/pr/create.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
+ | command | [`git-pr-create-description-only`](../dist/agent-src/commands/pr/create/description-only.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
++| command | [`git-pr-merge`](../dist/agent-src/commands/pr/merge.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
+ | command | [`prediction-pool`](../dist/agent-src/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
+ | command | [`prepare-for-review`](../dist/agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
+ | command | [`profile`](../dist/agent-src/commands/profile.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |
+diff --git a/docs/command-flows.md b/docs/command-flows.md
+index 65dc5f6168d162d946b5468eb200044b34e66e46..a3561a088b2e5bbc6af154245aef1513b82c2515 100644
+--- a/docs/command-flows.md
++++ b/docs/command-flows.md
+@@ -7,7 +7,7 @@
+ 
+ > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
+ 
+-**200 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
++**201 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+ 
+ ## User-work flows
+ 
+diff --git a/docs/contracts/command-clusters.md b/docs/contracts/command-clusters.md
+index 922276b409c190c3d0d20da98fb2d92738592982..0dcd4225b3cde45bb145816bf2ef7b2019792af3 100644
+--- a/docs/contracts/command-clusters.md
++++ b/docs/contracts/command-clusters.md
+@@ -43,6 +43,7 @@ column 1 of this table.
+ | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
+ | `git-commit` | 2 | `in-chunks` | `commit-in-chunks` · former cluster name `commit` — renamed 2026-06-09 to the path-derived pack-prefixed slug (`src/domains/git/commit/`, ADR-044 amendment; issue #380) |
+ | `git-pr-create` | 2 | `description-only` | `create-pr-description` · former cluster `create-pr` — physically merged into the `pr` verb family at `src/domains/git/pr/create/` and renamed 2026-06-09 to the path-derived pack-prefixed slug (ADR-044 amendment; issue #380) |
++| `git-pr-merge` | 2 | none — the three invocation shapes are arguments, not subs | new 2026-08-21. Sibling of `git-pr-create` in the `pr` verb family at `src/domains/git/pr/merge/`, path-derived per ADR-044. Its `all` form was proposed as a second command and rejected by council review under this table's own rule that sibling variants become a flag: `all` changes cardinality, not lifecycle, so it is an argument. `pr/` remains a bare path segment rather than a cluster head, so this is a new cluster next to `git-pr-create` and not a sub of it |
+ | `council` | 3 | `default` · `pr` · `design` · `optimize` · `analysis` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize`; `analysis` added 2026-05-14 — wrapper for local analysis outputs with a Top-N consensus tail block consumed by `/roadmap create` |
+ | `challenge-me` | — | `vision` · `with-docs` | new — Pocock-inspired one-question-at-a-time interview; `vision` is the standard 95%-confidence variant, `with-docs` adds doc/glossary awareness with a session-scoped glossary and load-bearing claim-vs-code verification |
+ | `research` | 2 | `deep` · `report` | preliminary-research scaffolder ported from `Weizhena/Deep-Research-skills` (cluster head emits `outline.yaml` + `fields.yaml` against the `research-schema` contract). `:deep` populates per-item JSON in batches with native web-search + JSON-Schema self-validation (no Python runtime); `:report` renders `report.md` directly + optionally emits a `jq` template for deterministic regeneration. `add-items` / `add-fields` intentionally **not** ported — re-run `/research <topic>` to extend the field framework. |
+diff --git a/docs/decisions/ADR-238-drain-command-surface-and-merge-authority.md b/docs/decisions/ADR-238-drain-command-surface-and-merge-authority.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f8fc5437b982c68691bb26ad210443dae35c814
+--- /dev/null
++++ b/docs/decisions/ADR-238-drain-command-surface-and-merge-authority.md
+@@ -0,0 +1,157 @@
++---
++adr: 238
++status: accepted
++date: 2026-08-21
++decision: drain-command-surface-and-merge-authority
++supersedes: —
++superseded_by: —
++phase: —
++type: structural
++review_trigger: >-
++  Reopen on any of three observations, none of them a calendar. First — the
++  owner resolves the `merge-authority` blocker in either direction, since this
++  record's § Decision 3 is written as an open question and a resolved one needs
++  a different record. Second — a second command wants `all`-style cardinality,
++  since one flag is a decision and two are a pattern that belongs in the
++  cluster contract rather than in two command files. Third — an authorization
++  store appears anywhere under `src/scripts/hooks/` that an agent can write,
++  since § Decision 3's whole argument is that no such store exists.
++---
++
++# ADR-238 — Drain command surface, and where merge authority stops
++
++## Status
++
++**Accepted** · 2026-08-21. Authored from `road-to-drain-commands`, which
++promoted three hand-proven operator prompts into command surface. Builds on
++[`ADR-237`](ADR-237-end-to-end-execution-authority.md) (the invocation is the
++grant, and merging is outside it), [`ADR-044`](ADR-044-pack-prefixed-command-slugs.md)
++(path-derived slugs), and the locked cluster registry
++([`command-clusters`](../contracts/command-clusters.md)).
++
++## Context
++
++Two workflows were being run by pasting long prompts into a session: draining
++every active roadmap to one PR each, and draining the open-PR queue by syncing,
++resolving conflicts, fixing CI and merging. Both worked. Neither was governed —
++the rules lived in a chat message, so nothing could review them, nothing could
++gate them, and each run re-derived them slightly differently.
++
++Three things made promoting them non-obvious.
++
++**The registry forbids the obvious shape.** The operator asked for a
++`/roadmap:process-all` command. `command-clusters.md` says sibling variants
++become a flag, never a second command, and a drain is a *count* of what
++`process-full` already does.
++
++**`pr/` is not a cluster.** `src/domains/git/pr/create/` is itself a cluster
++head (`git-pr-create`); `pr/` is a bare path segment. A merge command is
++therefore a new cluster beside it, not a sub of it.
++
++**Merging is excluded by an ADR that says its exclusion cannot be extended.**
++ADR-237 § 4: *"What the grant does NOT cover, and no invocation extends it:
++merging to a production trunk …"*. The canonical loop says the same thing in
++its own words: *"Merge is out of scope in every mode — always conversational."*
++And the guard agrees mechanically — `pr-merge` is a `BLOCK_OPS` member.
++
++Against that stood a real cost, measured rather than assumed. On 2026-08-21 a
++drain run found that every open PR touches `agents/roadmaps-progress.md` and
++`src/config/estate-count-budget.json`, so **each merge re-conflicts every
++remaining PR**. Throughput is one merge per authorization window. The
++workaround in production was the operator sed-patching `LEDGER_MAX_AGE_MS` from
++30 minutes to 6 hours — and that widening reached the trunk and stayed there.
++
++## Decision
++
++**1. Cardinality is a flag.** The estate drain ships as
++`/roadmap:process-full --all`, not as a new `process-all` command. `--worktree`
++mirrors `/roadmap:next` § 4 exactly, including its seeding allow/deny list.
++
++**2. The PR command is `/pr:merge`, a new `git-pr-merge` cluster.** Named
++path-derived per ADR-044 from `src/domains/git/pr/merge/`, not the operator's
++`prs:merge`. Its `all` form is an argument for the same reason as § 1. It
++carries the queue mechanics the live runs proved: an immutable
++`(PR number, head SHA)` manifest snapshotted at invocation, four enumerated
++semantic conflict classes with a halt for anything outside them, a
++superseded-close on an empty post-sync diff, bounded CI repair with a named
++halt list, a termination cutoff, and a closed disposition set in its summary.
++
++**3. Merge authority is not extended here, and the reason is recorded rather
++than the conclusion.** `--merge` and the `/pr:merge` merge step are specified
++and **inert**, gated on an owner decision tracked as the `merge-authority`
++blocker. Three independent reviews reached that verdict and none of them was
++the plan's author:
++
++- The AI council (2 reviewers + chairman, deep, peer-reviewed, 2026-08-21):
++  mergeability-only until authorization is target-bound and tamper-resistant.
++- The committed `road-to-gate-preauth-authorization` stub: `agents/runtime/`
++  is agent-writable, so an authorization read out of it "would let the agent
++  consent on the user's behalf — which is the thing the abort exists to
++  prevent, reimplemented as a feature".
++- The runtime classifier, which refused this roadmap's own attempt to edit
++  "merge is out of scope in every mode" out of the canonical loop.
++
++Lowering a recorded safety floor is owner-reserved
++([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)), and an
++agent that both wants the capability and writes the amendment authorising it is
++the shape the reservation exists for.
++
++**4. The design the owner would be accepting is written down, so the decision
++is concrete rather than open-ended.** If activated, `--merge` introduces **no
++new authorization store**. It consumes the per-session ledger entry the user's
++own prompt text already wrote on `UserPromptSubmit` via `classifyAuthorization`
++— a signal the agent cannot forge, since it is derived from the user's typed
++words and the agent writes no prompts. Expiry stops the run and reports; the
++window never grows. Two properties whose absence would make a *persistent*
++grant unsafe, named so a future attempt starts from the objection: storage the
++agent cannot write, and an immutable target manifest bound to PR number and
++head SHA.
++
++**5. Widening `LEDGER_MAX_AGE_MS` for a run is forbidden practice.** The
++constant is restored to 30 minutes, its header says why, and the supported
++answer to "my run is longer than the window" is that the run stops and reports
++and the user re-authorizes. The agent never edits the guard, its source, or its
++bundles; verification of the window is read-only.
++
++**6. The hook bundle is verified by content.** `dist/hooks/` is untracked, so
++the executing bytes were only ever compared by mtime — ordering, not
++equivalence. A content gate rebuilds with the canonical flags and compares
++sha256. It is local-only by construction and says so: a fresh CI checkout has
++no bundle, so a green CI cannot speak for the bundle a maintainer runs.
++
++## Consequences
++
++- A drain is one invocation instead of a pasted prompt, and its rules are
++  reviewable text under `src/`.
++- The estate drain delivers **mergeable** PRs, not merely open ones — which is
++  most of the value, since the conflict arithmetic made "open" nearly
++  meaningless in a queue.
++- Merging still needs the owner, per PR or per decision. The friction is real
++  and it is the point: § 3's three reviews are the argument that the friction
++  is cheaper than the alternative.
++- Two command files carry a specified-but-inert feature. That is a real cost —
++  a reader can mistake specification for capability — and it is mitigated by
++  the gate block being the first thing each file says about merging.
++
++## Alternatives
++
++- **`/roadmap:process-all` as its own command** — rejected: the registry's own
++  anti-sprawl rule covers it exactly, and `all` changes count, not lifecycle.
++- **`/roadmap:next --all`** — rejected: `next` owns selection but declares
++  "No merge, ever"; delivery belongs to `process-full`.
++- **A run-scoped grant store in `agents/runtime/`** — rejected: the stub's
++  objection is decisive; an authorization the agent can write is not one.
++- **Simply keeping the 6-hour window** — rejected: it is a twelvefold expansion
++  of the authorization lifetime on the guard for irreversible operations, and
++  it was never a decision, only a patch nobody reverted.
++- **Shipping `--merge` active because the operator asked** — rejected here and
++  routed to the blocker instead. The operator may well grant it; an agent
++  writing the amendment that authorises its own merge is what must not happen.
++
++## References
++
++- [`ADR-237`](ADR-237-end-to-end-execution-authority.md) § 4 — the exclusion this record does not extend.
++- [`command-clusters`](../contracts/command-clusters.md) — the flag-not-command rule, and the new `git-pr-merge` row.
++- `agents/roadmaps/road-to-drain-commands.md` — the plan, and the `merge-authority` blocker.
++- `src/scripts/hooks/block_unauthorized_git.ts` — `BLOCK_OPS`, `LEDGER_MAX_AGE_MS`.
++- `src/scripts/git_authorization_hook.ts` — `classifyAuthorization`, the human-only write path.
+diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
+index 5da2dd3bfc353ec707389df1e03a0ca820421d25..7178ed322356f384bc749ea53e557ab7e148f475 100644
+--- a/docs/decisions/INDEX.md
++++ b/docs/decisions/INDEX.md
+@@ -180,6 +180,7 @@ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ | [ADR-235](ADR-235-process-full-blocked-terminal-outcome.md) | Process Full Blocked Terminal Outcome | superseded | 2026-08-19 | — | ADR-237 | — |
+ | [ADR-236](ADR-236-one-artefact-one-layer.md) | One Artefact One Layer | accepted | 2026-08-19 | ADR-226 | — | — |
+ | [ADR-237](ADR-237-end-to-end-execution-authority.md) | End To End Execution Authority | accepted | 2026-08-20 | ADR-235 | — | — |
++| [ADR-238](ADR-238-drain-command-surface-and-merge-authority.md) | Drain Command Surface And Merge Authority | accepted | 2026-08-21 | — | — | — |
+ 
+ ## Unnumbered (legacy)
+ 
+diff --git a/docs/featured-skills.md b/docs/featured-skills.md
+index 39f02d0d947eebceedaf49aef0d3e20cb93eab2b..1928fb4b4cac8383b02027fc5ea73398fc7857e1 100644
+--- a/docs/featured-skills.md
++++ b/docs/featured-skills.md
+@@ -93,4 +93,4 @@ task lint-featured-skills
+ 
+ CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.py) for the matcher.
+ 
+-→ Browse all 290 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 200 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
++→ Browse all 290 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 201 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
+diff --git a/docs/getting-started-by-role.md b/docs/getting-started-by-role.md
+index aea2f2e07cf563930d80aa4b35a46d95a3053081..e620bd9598574ceeb2bfbc416b4f9308df061023 100644
+--- a/docs/getting-started-by-role.md
++++ b/docs/getting-started-by-role.md
+@@ -2,7 +2,7 @@
+ 
+ > Pick the entry that matches what you do day-to-day. Each section names the three skills you will reach for first and shows whether MCP (no terminal) or CLI (terminal) is the simpler install path for that role.
+ 
+-`agent-config` ships 290 skills, 119 governed rules, and 200 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
++`agent-config` ships 290 skills, 119 governed rules, and 201 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
+ 
+ > **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
+ 
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+index cf9753834f4307122ddf8b943115075ac8ae7531..bf2d30aca1f94c931ead77e8515ed79fce12e539 100644
+--- a/docs/getting-started.md
++++ b/docs/getting-started.md
+@@ -176,7 +176,7 @@ Your agent now understands slash commands:
+ | `/fix quality` | Run and fix all quality checks |
+ | `/chat-history import` | Pull a prior session into the current chat (resume) |
+ 
+-→ [Browse all 200 active commands](../dist/agent-src/commands/)
++→ [Browse all 201 active commands](../dist/agent-src/commands/)
+ 
+ ---
+ 
+diff --git a/src/agent-src/commands/evals/git-pr-merge.json b/src/agent-src/commands/evals/git-pr-merge.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0534e2bdb96a4e0584ae21162f9699ac03fec887
+--- /dev/null
++++ b/src/agent-src/commands/evals/git-pr-merge.json
+@@ -0,0 +1,13 @@
++{
++  "command": "git-pr-merge",
++  "intent": "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so",
++  "cases": [
++    { "prompt": "merge PR 1478", "expected": "git-pr-merge" },
++    { "prompt": "get this pull request mergeable and merge it", "expected": "git-pr-merge" },
++    { "prompt": "drain all the open PRs — sync each one with main, fix CI, merge", "expected": "git-pr-merge" },
++    { "prompt": "bring PR 1502 up to date with main and get its checks green, but don't merge it", "expected": "git-pr-merge" },
++    { "prompt": "the open PRs all conflict with each other now — work through the queue", "expected": "git-pr-merge" },
++    { "prompt": "open a pull request for this branch", "expected": "git-pr-create" },
++    { "prompt": "write me a PR description I can paste", "expected": "git-pr-create-description-only" }
++  ]
++}
+diff --git a/src/agent-src/commands/evals/roadmap.json b/src/agent-src/commands/evals/roadmap.json
+index 8c09045deceaf89745aa667016965360fedd52f1..ba4be5dcc50be5749b300a030f7a7c7ddc02e21d 100644
+--- a/src/agent-src/commands/evals/roadmap.json
++++ b/src/agent-src/commands/evals/roadmap.json
+@@ -1,6 +1,6 @@
+ {
+   "command": "roadmap",
+-  "intent": "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council",
++  "intent": "Roadmap dispatcher \u2014 create, materialize, process-step, process-phase, process-full (incl. --all estate drain), next, ai-council",
+   "cases": [
+     {
+       "prompt": "create a roadmap for this initiative",
+@@ -37,6 +37,22 @@
+     {
+       "prompt": "either roadmap it or turn it into a feature plan, your pick",
+       "expected": "roadmap"
++    },
++    {
++      "prompt": "drain every open roadmap, one PR each",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "arbeite alle Roadmaps der Reihe nach ab",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "work through the whole roadmap estate in a worktree",
++      "expected": "roadmap"
++    },
++    {
++      "prompt": "merge all the open pull requests",
++      "expected": "git-pr-merge"
+     }
+   ]
+ }
+diff --git a/src/domains/git/README.md b/src/domains/git/README.md
+index a417109b8871cb93b99b06e54726ea248b092691..5f7b77fad98730a793f69c4e9476ba83499eee43 100644
+--- a/src/domains/git/README.md
++++ b/src/domains/git/README.md
+@@ -7,11 +7,12 @@ Git workflow — commit, pull requests, branch sync.
+ - **id**: `git`
+ - **owner**: engineering
+ - **requires**: engineering-base
+-- **artefacts**: 4
++- **artefacts**: 5
+ 
+-## Commands (4)
++## Commands (5)
+ 
+ - **`git-commit`** — Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
+ - **`git-commit-in-chunks`** — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
+ - **`git-pr-create`** — Create a GitHub PR with structured description from Jira ticket and code changes
+ - **`git-pr-create-description-only`** — Generate a PR description as a copyable markdown block — used standalone or by create-pr
++- **`git-pr-merge`** — Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
+diff --git a/src/domains/git/pack.yaml b/src/domains/git/pack.yaml
+index ac32f166e80c591fcdb37074962bfb6363f4aec9..2ed42f48d904244a21fb8f2631aa5c933150f686 100644
+--- a/src/domains/git/pack.yaml
++++ b/src/domains/git/pack.yaml
+@@ -1,9 +1,11 @@
+ # Generated by scripts/generate_pack_manifests.ts — DO NOT EDIT BY HAND
+-artefact_count: 4
++artefact_count: 5
+ dependencies:
+   rules: []
+   skills:
++  - ai-council
+   - git-workflow
++  - github-ci
+ description: Git workflow — commit, pull requests, branch sync.
+ id: git
+ label: Git
+diff --git a/src/domains/git/pr/merge/command.md b/src/domains/git/pr/merge/command.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b4230296f44803b76e505277bc74b31a56223aea
+--- /dev/null
++++ b/src/domains/git/pr/merge/command.md
+@@ -0,0 +1,259 @@
++---
++model_tier: medium
++name: git-pr-merge
++disable-model-invocation: true
++argument-hint: "[all|<pr-number>] [--no-merge]"
++pack: git
++intent: "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so"
++routes_to: [git-workflow, github-ci]
++replaces: []
++visibility: advanced
++cluster: git-pr-merge
++skills: [git-workflow, github-ci, ai-council]
++description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++suggestion:
++  eligible: false
++  rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
++workspaces:
++  - agent-config-maintainer
++packs:
++  - git
++---
++
++# /git-pr-merge
++
++Prepare an open pull request until it is genuinely mergeable — its base merged
++in, its conflicts resolved by class rather than by taste, its required checks
++green on the head that will actually be merged — and then merge it, if and only
++if the invocation authorised that.
++
++```
++THE MERGE STEP (§ 9) IS SPECIFIED AND NOT YET ACTIVE. `--no-merge` IS THE
++OPERATIVE PATH TODAY, AND A BARE INVOCATION BEHAVES AS IF IT CARRIED IT.
++ACTIVATION NEEDS THE OWNER DECISION IN THE `merge-authority` BLOCKER OF
++`road-to-drain-commands` — NEVER A COMMAND EDIT, AND NEVER A GUARD EDIT.
++```
++
++**The invocation is the authorization, and nothing else is.** `pr-merge` is a
++`BLOCK_OPS` member in `block_unauthorized_git.ts` because it is irreversible.
++This command would consume the authorization the user's own prompt text already
++wrote to the per-session ledger on `UserPromptSubmit`; it introduces no second
++authorization store, and it never writes one. When that window closes the run
++stops and reports (§ 7) — the window never grows.
++
++Why it ships inert rather than not at all: everything before § 9 — the target
++manifest, the four conflict classes, the superseded check, the bounded CI
++repair, the cutoff — is the expensive, error-prone half, it is what the live
++runs actually proved, and none of it merges anything. `--no-merge` delivers all
++of it today.
++
++## Sub-commands
++
++| Sub-command | Routes to | Purpose |
++|---|---|---|
++
++*(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
++an argument rather than a second command — the locked registry's rule that
++"sibling variants become a flag, never a second command"
++([`command-clusters`](../../../../docs/contracts/command-clusters.md)) applied
++to this cluster. A future sub belongs here only if it has a materially
++different lifecycle, not a different count.
++
++## Dispatch
++
++| Invocation | Behaviour |
++|---|---|
++| `/pr:merge <N>` | Prepare and merge exactly PR N. |
++| `/pr:merge` | Auto-select ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number. |
++| `/pr:merge all` | Drain the open-PR list under § 6's cutoff. |
++| `… --no-merge` | Run the whole preparation and stop before merging. Consumes no merge authorization. This is the entry point [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) delegates to for its delivery loop. |
++
++**Bare invocation** (`/pr:merge` with no argument) is a **documented default
++flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
++picked and why, before touching it. A menu would be the wrong shape here —
++selection is deterministic from the queue-order rule in § 1, so asking the user
++to pick would hand back a decision the command can compute. When the open-PR
++list is empty there is nothing to select and the command reports that and
++stops.
++
++## 1. Snapshot the target — an immutable manifest
++
++Compute the queue ONCE at invocation and record it as a manifest of
++`(PR number, head SHA)` pairs:
++
++```bash
++gh pr list --state open --limit 100 \
++  --json number,title,headRefName,headRefOid,additions,deletions,changedFiles,mergeable,updatedAt
++```
++
++The manifest is the authorization's target set and is **never silently
++refreshed**. Before every merge, re-read the PR and refuse when either field
++moved: the number prevents branch substitution, the head SHA prevents a
++force-push swapping the content after the user authorised it. A PR that
++appeared after the snapshot is not in scope for this run — § 6 says what
++happens to it.
++
++## 2. Sync with the base
++
++```bash
++git fetch origin
++gh pr checkout <N>
++git merge origin/<base> --no-edit
++```
++
++Merge the base **into** the branch. Never rebase a branch that is already
++pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++
++## 3. Resolve conflicts by class, never by taste
++
++Conflicts between queued PRs are expected, not exceptional: in this repository
++every roadmap PR touches `agents/roadmaps-progress.md` and
++`src/config/estate-count-budget.json`, so each merge re-conflicts every
++remaining PR. Resolve semantically, by these enumerated classes:
++
++| Class | Files | Resolution |
++|---|---|---|
++| Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
++| Generated artefacts | progress dashboard, estate-count budget, catalogs, census, any file whose header says auto-generated | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
++| Archive move vs. edit | a file one side moved to `archive/` | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
++| Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
++
++```
++A CONFLICT OUTSIDE THESE FOUR CLASSES HALTS THE RUN.
++IT IS NOT RESOLVED BY JUDGEMENT AND NOT ESCALATED TO A WARNING.
++```
++
++The classes exist so a merge resolution is reproducible by a second reader. An
++unenumerated conflict is a case nobody has decided yet, and deciding it silently
++inside a drain loop is how work disappears.
++
++## 4. Superseded check — before any CI is spent
++
++If the effective diff against the base is empty after syncing, the PR's content
++already landed elsewhere. Distinguish genuinely empty from generated-artefact
++churn that regeneration on the base would produce anyway — the latter is not
++emptiness.
++
++```bash
++git diff origin/<base>...HEAD --stat
++```
++
++Empty ⇒ close it with `Superseded: landed via <PRs>` and record it. **Never
++merge an empty PR to make the queue count fall.**
++
++## 5. Drive CI green — bounded
++
++Push, then wait for the verdict on the pushed head. Green means **the required
++checks succeeded for the exact head SHA that will be merged** — never a local
++run, never an earlier commit ([`/git-pr-create` § 4d](../create/command.md)).
++
++- **Root-cause fixes only**, inside the PR's own scope.
++- **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
++  red counts as real.
++- **Six fix iterations per PR per pass.** Exhaustion posts a diagnosis comment
++  and moves the PR to the end of the queue once; a second exhaustion is
++  terminal.
++
++```
++THESE ARE HALTS, NOT OPTIONS OF LAST RESORT:
++DEPENDENCY CHANGES · WORKFLOW CHANGES · DELETING OR SKIPPING A TEST ·
++LOOSENING A THRESHOLD · WEAKENING A GATE · AN EXPECTED-FAIL MARKER ·
++A BRANCH-PROTECTION CHANGE.
++"DRIVE CI GREEN" AUTHORIZES DIAGNOSIS AND REPAIR, NEVER REMOVING THE CHECK
++THAT WOULD HAVE CAUGHT THE PROBLEM.
++```
++
++## 6. `all` — the queue, and the cutoff that ends it
++
++Process the manifest in order. After each merge the base has moved, so the next
++PR is re-synced against the NEW base — that is the loop, and it is why
++pre-greening several PRs ahead of their merges is wasted work.
++
++**Cutoff.** When the manifest is exhausted, recompute the open-PR list
++**exactly once**. PRs that appeared during the run are drained as ONE final
++straggler batch. After that batch the run ends unconditionally; anything
++arriving during or after it is recorded as `arrived-after-cutoff` and is not
++processed.
++
++```
++THE CUTOFF IS THE TERMINATION PROOF.
++WITHOUT IT, "THE QUEUE MUST SHRINK" DOES NOT TERMINATE AGAINST A SECOND
++SESSION THAT KEEPS OPENING PRs — THE RECOMPUTE JUST REFILLS IT.
++BOUND: INITIAL MANIFEST + ONE BATCH, WHATEVER ELSE IS HAPPENING IN THE REPO.
++```
++
++**Window-aware scheduling.** A green, waiting PR is spent authorization window,
++because the next merge re-conflicts it. When the projected remaining work
++exceeds the remaining window, stop entering CI-fix loops and merge everything
++already green first. Pre-greening several PRs ahead of their merge is forbidden
++under window pressure.
++
++## 7. Expiry is a reported state, never a stall
++
++```
++WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN STOPS CLEANLY
++AND REPORTS. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS THE GUARD,
++ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
++```
++
++Write the summary as-is with a `window-expired` disposition per unprocessed PR
++and name the exact re-authorization needed. Widening `LEDGER_MAX_AGE_MS` is
++forbidden practice: on 2026-08-21 it was patched to six hours for a drain run
++and the widening reached the trunk.
++
++## 8. Kill switches, and what happens after a merge
++
++Stop **before** the next merge on any of:
++
++- target number or head SHA differs from the manifest;
++- the base advanced by an actor other than this run;
++- a review was dismissed, or the required-check set changed;
++- a conflict outside the four enumerated classes;
++- guard or hook-bundle verification failed;
++- the first unexplained CI-repair failure.
++
++```
++A COMPLETED MERGE IS THE COMMIT POINT.
++NEVER AUTO-REVERT AN EARLIER MERGE AS "ROLLBACK" — AFTER FIVE MERGES THERE IS
++NO ROLLBACK, ONLY COMPENSATION, AND COMPENSATION IS A SEPARATELY AUTHORIZED
++HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
++```
++
++## 9. Merge, and the summary
++
++```bash
++gh pr merge <N> --<detected-method> --delete-branch
++```
++
++Use the method the repository already uses; never invent one mid-queue. Never
++force-merge past a failing required check, never admin-bypass.
++
++On queue empty or terminal-only, `all` writes
++`agents/evidence/pr-drain-run-summary.md`: one row per PR with queue position,
++conflict classes hit, CI iterations used, disposition, and any edits dropped in
++conflict resolution. The disposition set is closed:
++
++`merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
++`window-expired` · `arrived-after-cutoff`
++
++## Rules
++
++- **Never merge without the invocation's word.** `--no-merge` and an absent
++  merge argument both stop at mergeable-and-open.
++- **Never widen, patch, or rebuild-around the git guard.** Verification of the
++  authorization window is read-only.
++- **Never rebase a pushed branch**; the base is merged in.
++- **Never hand-merge a generated artefact**; regenerate it.
++- **Never resolve a conflict outside the four classes**; halt instead.
++- **Never call CI green off a local run**; re-verify on the pushed head.
++- **Never auto-revert a completed merge.**
++- **Mergeability is per-PR against a recorded base SHA**, never a property of
++  the queue: making PR *n* mergeable against base `M` says nothing about its
++  state once PR *n−1* advances the base.
++
++## See also
++
++- [`/git-pr-create`](../create/command.md) — opens the PR this command finishes.
++- [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates here for its delivery loop.
++- [`git-history-discipline`](../../../../rules/git-history-discipline.md) — never rewrite pushed history.
++- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.
+diff --git a/src/domains/product-basic/roadmap/command.md b/src/domains/product-basic/roadmap/command.md
+index cf6c0286162a8512633bec16ccab821659631b7a..a1ec67379a7b73c0fdd24bb604177e916727821b 100644
+--- a/src/domains/product-basic/roadmap/command.md
++++ b/src/domains/product-basic/roadmap/command.md
+@@ -38,7 +38,7 @@ paused for confirmation before every step) was removed —
+ | `/roadmap:materialize` | `commands/roadmap/materialize.md` | Turn an accepted roadmap into the concrete artefacts it plans |
+ | `/roadmap:process-step` | `commands/roadmap/process-step.md` | Autonomously process the next open step, then stop |
+ | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
+-| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase |
++| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase; `--all` iterates the whole active estate, `--worktree` isolates the workspace |
+ | `/roadmap:next` | `commands/roadmap/next.md` | Screen for the next executable roadmap, then carry it to a reviewable PR (selection + `process-full` + delivery) |
+ 
+ Sub-command names match the locked contract in
+diff --git a/src/domains/product-basic/roadmap/process-full/command.md b/src/domains/product-basic/roadmap/process-full/command.md
+index 1c75651401b7a609d0a2f88a61d951d413265278..fdff9a24056fcac1495d79fd55c00c5e4312be12 100644
+--- a/src/domains/product-basic/roadmap/process-full/command.md
++++ b/src/domains/product-basic/roadmap/process-full/command.md
+@@ -7,7 +7,7 @@ cluster: roadmap
+ sub: process-full
+ skills: [agent-docs-writing, ai-council, roadmap-management]
+ description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
+-argument-hint: "[roadmap]"
++argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
+ suggestion:
+   eligible: false
+   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
+@@ -80,6 +80,98 @@ with the **scope delta below**.
+   archival check from
+   [`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival).
+ 
++## The three flags
++
++### `--all` — the estate, one roadmap at a time
++
++`--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
++iterated over the whole active estate. It is a flag rather than a
++`/roadmap:process-all` command because
++[`command-clusters`](../../../../docs/contracts/command-clusters.md) says
++sibling variants become a flag, and a drain is a count of the thing this
++command already does.
++
++1. **Recompute the inventory live.** Never from memory, never from the
++   dashboard count — the same live-screen rule
++   [`/roadmap:next` § 1](../next/command.md) already carries. The corpus is the
++   non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
++   `archive/` and `stubs/` are out of scope.
++2. **Order the queue.** Roadmaps at or above 10 % checkbox progress first, in
++   **descending** progress — nearly-done first, because they convert soonest.
++   Roadmaps below 10 % are appended after, ascending by declared `complexity:`
++   tier (lightweight → bounded → structural), tiebreak ascending total
++   checkbox count.
++3. **Loop.** Per roadmap: branch from the updated default, run this command's
++   normal single-roadmap loop, deliver per § Delivery, then take the next
++   roadmap **against the new default** — every merged PR moves it. One roadmap
++   = one branch = one PR, which is the existing invariant iterated, not a new
++   one.
++
++**A blocked roadmap never stalls the estate queue.** Inside a roadmap the five
++halt conditions and the terminal outcomes keep full authority. Between
++roadmaps, only queue exhaustion, authorization-window expiry, or a
++[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill-switch stops the run:
++a `blocked` roadmap is recorded and the loop continues to the next one.
++
++### `--merge` — NOT YET ACTIVE: deliver mergeable, merging is owner-gated
++
++**Delivery.** On outcome `complete`, open the PR as today, then run
++[`/pr:merge <N> --no-merge`](../../../git/pr/merge/command.md) on it: sync the
++base in, resolve conflicts by that command's four enumerated classes, drive the
++required checks green on the pushed head. The deliverable is a **mergeable** PR
++rather than merely an open one — with or without the flag.
++
++```
++`--merge` IS SPECIFIED HERE AND IS NOT ACTIVE. THE RUN STOPS AT
++MERGEABLE-AND-OPEN WHETHER OR NOT THE FLAG IS PASSED, AND SAYS SO.
++ACTIVATING IT NEEDS THE OWNER DECISION RECORDED IN THE `merge-authority`
++BLOCKER OF `road-to-drain-commands` — NOT A COMMAND EDIT.
++```
++
++Why it is specified but inert: the canonical loop states "**merge is out of
++scope in every mode — always conversational**"
++([`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival)),
++and ADR-237 § 4 excludes merging from the invocation grant with the words "no
++invocation extends it". A command cannot reinterpret either from below. Three
++independent reviews reached the same verdict: the AI council (Q1, 2026-08-21),
++the committed `road-to-gate-preauth-authorization` stub, and the runtime guard
++that refused the contract edit when this roadmap first attempted it.
++
++When the blocker resolves, `--merge` merges via
++[`/pr:merge`](../../../git/pr/merge/command.md)'s merge step, under its
++immutable target manifest, its head-SHA check, and its kill-switch list. Until
++then the flag is accepted, reported as inert, and changes nothing.
++
++```
++AND WHEN IT DOES ACTIVATE: ON OUTCOME `blocked`, `--merge` IS IGNORED.
++AN INVARIANT, NOT A DEFAULT — A PARTIAL-PROGRESS PR SAYS SO IN ITS FIRST
++LINE (ADR-237) AND IS NEVER AUTO-MERGED, HOWEVER THE RUN WAS INVOKED.
++```
++
++**Mergeability is per-PR against a recorded base, never a queue property.**
++When every PR in the estate touches the same generated files — in this
++repository `agents/roadmaps-progress.md` and
++`src/config/estate-count-budget.json` — making PR *n* mergeable against base
++SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
++Report "mergeable against base `<SHA>`", never "the queue is mergeable".
++
++**The design the blocker decides on, stated so the decision is concrete.** The
++flag would authorise the merge without *storing* an authorization: it consumes
++the per-session ledger entry the user's own prompt text already wrote on
++`UserPromptSubmit` — a signal the agent cannot forge — and creates no grant
++store. When that window closes with work left, the run stops and reports per
++[`/pr:merge` § 7](../../../git/pr/merge/command.md). Widening
++`LEDGER_MAX_AGE_MS` is forbidden practice either way.
++
++### `--worktree` — isolate the workspace
++
++Route workspace creation through [`/worktree:create`](../../../engineering-base/worktree/create/command.md)
++in full, including its
++[§ 4b seeding allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list) —
++dependencies symlinked or installed **fully**, `.agent-settings.yml` **never**
++copied, because absent is the CI shape. Under `--all` the worktree is created
++once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
++
+ ## Iron Law — Full is Full
+ 
+ ```
+@@ -87,6 +179,11 @@ with the **scope delta below**.
+ TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
+ PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
+ NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
++UNDER `--all`, A ROADMAP BOUNDARY IS NOT A STOP EITHER: ONLY ESTATE-QUEUE
++EXHAUSTION, WINDOW EXPIRY, OR A KILL-SWITCH ENDS THE RUN.
++WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
++RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
++AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
+ ```
+ 
+ The **five — and only five — halt conditions** (exhaustive; nothing else
+diff --git a/src/scripts/check_hook_bundle_content.ts b/src/scripts/check_hook_bundle_content.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..5bfe8557149d935116ed9d937f943a39ff4de59d
+--- /dev/null
++++ b/src/scripts/check_hook_bundle_content.ts
+@@ -0,0 +1,151 @@
++#!/usr/bin/env tsx
++/**
++ * Content-equivalence gate for the self-hosted hook bundle.
++ *
++ * WHY THIS EXISTS — measured, not hypothetical.
++ *
++ * `check_hook_bundle_freshness` compares **mtimes**: every bundled hook source
++ * must be older than `dist/hooks/dispatch.js`. That establishes ordering, not
++ * equivalence. An mtime-preserving edit, a `touch` on the bundle, a restore
++ * from an archive, or a filesystem with coarse timestamp resolution all make
++ * the inference false while the check stays green.
++ *
++ * On 2026-08-21 exactly that gap cost a live run: `LEDGER_MAX_AGE_MS` was
++ * edited in `block_unauthorized_git.ts`, the bundle was not rebuilt, and the
++ * guard kept enforcing the old value. All three copies (source, repo bundle,
++ * global install) were inspected by hand before anyone noticed. This gate
++ * answers the question the mtime check cannot: *are the bytes that execute the
++ * bytes this source produces?*
++ *
++ * WHAT IT CANNOT DO, STATED PLAINLY.
++ *
++ * `dist/hooks/` is **untracked** — `git ls-files dist/hooks/` returns zero.
++ * There is no committed artefact to compare against, so this gate can only
++ * compare the bundle **present on this machine** against a fresh rebuild from
++ * this checkout's sources. In CI a fresh checkout has no bundle at all, so
++ * this gate declares a loud no-op there and a green CI says nothing about the
++ * bundle a maintainer is actually running. That asymmetry is the finding, not
++ * a gap to paper over: the bundle is a local execution artefact and only a
++ * local gate can see it.
++ *
++ * The esbuild invocation is NOT duplicated here — it is read from
++ * `package.json`'s `build:hooks` script with only `--outfile=` rewritten, via
++ * the same `rewriteOutfile` helper `rebuild_hook_bundle` uses, so the flag set
++ * has exactly one home.
++ *
++ * DETERMINISM — measured, not assumed. Two consecutive rebuilds of an
++ * unchanged tree produced the identical sha256 (`616561fb…`, 2026-08-21), and
++ * a one-constant edit that left the output byte-count unchanged
++ * (1 139 302 bytes both times) still produced a different digest. So the
++ * comparison is byte-exact with no canonicalisation, and it is sensitive to
++ * the smallest semantic change. Had the rebuild NOT been reproducible, that
++ * would have been a release-integrity defect to fix rather than a reason to
++ * fall back to timestamps.
++ *
++ * Exit codes: 0 = equivalent, or no bundle to check · 1 = the executing bundle
++ * is not what this source produces · 2 = the rebuild itself failed.
++ */
++// ledger-exempt: single-artefact transaction — one rebuild compared against one
++// bundle, yielding one aggregate verdict. The per-source accounting lives in
++// check_hook_bundle_freshness, which carries the ledger.
++import { spawnSync } from "node:child_process";
++import * as crypto from "node:crypto";
++import * as fs from "node:fs";
++import * as path from "node:path";
++import { fileURLToPath } from "node:url";
++
++import { rewriteOutfile } from "./rebuild_hook_bundle.js";
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(HERE, "..", "..");
++const LIVE_REL = path.join("dist", "hooks", "dispatch.js");
++const PROBE_REL = path.join("dist", "hooks", "dispatch.content-check.js");
++
++/** sha256 of a file's bytes, hex. */
++export function digestOf(file: string): string {
++  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
++}
++
++/**
++ * Read `build:hooks` out of package.json. Returns null when the script is
++ * absent — a renamed build script must fail loudly, never be guessed at.
++ */
++export function buildScript(repoRoot: string): string | null {
++  const pkgPath = path.join(repoRoot, "package.json");
++  if (!fs.existsSync(pkgPath)) return null;
++  const pkg: unknown = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
++  const scripts =
++    typeof pkg === "object" && pkg !== null ? (pkg as Record<string, unknown>)["scripts"] : null;
++  if (typeof scripts !== "object" || scripts === null) return null;
++  const s = (scripts as Record<string, unknown>)["build:hooks"];
++  return typeof s === "string" ? s : null;
++}
++
++function main(): number {
++  const live = path.join(REPO_ROOT, LIVE_REL);
++  if (!fs.existsSync(live)) {
++    // Loud no-op, matching the sibling gates: a fresh checkout or CI has no
++    // bundle, and materialising one here would change what other gates see.
++    process.stdout.write(
++      `check_hook_bundle_content: no self-hosted ${LIVE_REL} — nothing executes locally, nothing to compare\nscanned: 0\n`,
++    );
++    return 0;
++  }
++
++  const script = buildScript(REPO_ROOT);
++  if (script === null) {
++    process.stderr.write(
++      "check_hook_bundle_content: package.json has no `build:hooks` script — refusing to guess the flag set\nscanned: 0\n",
++    );
++    return 2;
++  }
++  const rewritten = rewriteOutfile(script, PROBE_REL);
++  if (rewritten === null) {
++    process.stderr.write(
++      `check_hook_bundle_content: \`build:hooks\` no longer writes ${LIVE_REL} — refusing to build to a guessed path\nscanned: 0\n`,
++    );
++    return 2;
++  }
++
++  const probe = path.join(REPO_ROOT, PROBE_REL);
++  try {
++    const built = spawnSync(rewritten, { cwd: REPO_ROOT, shell: true, encoding: "utf8" });
++    if (built.status !== 0 || !fs.existsSync(probe)) {
++      process.stderr.write(
++        `check_hook_bundle_content: rebuild failed (exit ${String(built.status)})\n${built.stderr ?? ""}\nscanned: 0\n`,
++      );
++      return 2;
++    }
++
++    const liveDigest = digestOf(live);
++    const probeDigest = digestOf(probe);
++    if (liveDigest === probeDigest) {
++      process.stdout.write(
++        `✅  ${LIVE_REL} is byte-identical to a rebuild from this source (sha256 ${liveDigest.slice(0, 12)})\nscanned: 1\n`,
++      );
++      return 0;
++    }
++
++    process.stderr.write(
++      `❌  ${LIVE_REL} is NOT what this source produces.\n` +
++        `    executing: sha256 ${liveDigest.slice(0, 12)}  (${String(fs.statSync(live).size)} bytes)\n` +
++        `    rebuilt:   sha256 ${probeDigest.slice(0, 12)}  (${String(fs.statSync(probe).size)} bytes)\n` +
++        `    The mtime check cannot see this — it compares ordering, not bytes.\n` +
++        `    Heal with: ./scripts-run src/scripts/rebuild_hook_bundle\n` +
++        `scanned: 1\n`,
++    );
++    return 1;
++  } finally {
++    try {
++      fs.rmSync(probe, { force: true });
++    } catch {
++      // Best effort — a leftover probe file is untracked build output.
++    }
++  }
++}
++
++if (process.argv[1] !== undefined && import.meta.url === `file://${path.resolve(process.argv[1])}`) {
++  process.exit(main());
++}
++
++export { main };
+diff --git a/src/scripts/hooks/block_unauthorized_git.ts b/src/scripts/hooks/block_unauthorized_git.ts
+index 97c43b038f989fa97a887efda026e461daf63828..bfb39344b5106969d12bf9662d166ffd60ca1b31 100644
+--- a/src/scripts/hooks/block_unauthorized_git.ts
++++ b/src/scripts/hooks/block_unauthorized_git.ts
+@@ -485,8 +485,24 @@ export function commandOp(command: string): GitOp | null {
+   return found;
+ }
+ 
+-/** A ledger older than this is not "this turn" under any reading. */
+-export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain run, revert after
++/**
++ * A ledger older than this is not "this turn" under any reading.
++ *
++ * **Widening this constant for a long run is forbidden practice.** On
++ * 2026-08-21 it was sed-patched to `6 * 60 * 60 * 1000` with a
++ * a "temporary, revert after" marker so an autonomous PR-drain
++ * could merge past the 30-minute bound — and the widening was committed to
++ * the trunk and left there. It is a twelvefold expansion of the
++ * authorization lifetime on the guard that gates `pr-merge`, which is a
++ * `BLOCK_OPS` member precisely because it is irreversible.
++ *
++ * The supported answer to "my run is longer than the window" is that the run
++ * STOPS and REPORTS at expiry and the user re-authorizes — never that the
++ * window grows. The agent never edits this constant, this file, or the built
++ * bundle; `dist/hooks/dispatch.js` is what actually executes, and a source
++ * edit without a rebuild is silently inert.
++ */
++export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
+ 
+ /**
+  * Load the ledger, and refuse one that does not belong to THIS session and
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 17b492299251cca08a02ab8ddec0a4204c85321c..1aec3d0034d04429ddd2382ecb5c6e1bcbd43205 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -133,6 +133,17 @@ tasks:
+       # both are no-ops — a fresh checkout has no bundle.
+       - ./scripts-run src/scripts/rebuild_hook_bundle
+       - ./scripts-run src/scripts/check_hook_bundle_freshness
++      # Byte-equivalence behind the mtime check. The freshness gate compares
++      # ORDERING (every source older than the bundle); this compares BYTES
++      # (the bundle is what these sources produce). An mtime-preserving edit,
++      # a `touch`, or an archive restore passes the first and fails the
++      # second — demonstrated 2026-08-21 with an edit that changed the
++      # dispatcher's digest while leaving its size and mtime untouched.
++      # LOCAL-ONLY BY CONSTRUCTION: dist/hooks/ is untracked, so CI has no
++      # bundle to compare and declares a no-op. A green CI says nothing about
++      # the bundle a maintainer is actually executing — which is precisely the
++      # blind spot that cost the 2026-08-21 drain run its first hour.
++      - ./scripts-run src/scripts/check_hook_bundle_content
+       - ./scripts-run src/scripts/lint_regression
+       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
+       # forms are sub-second here (0.44s --changed / 0.52s --all, measured
