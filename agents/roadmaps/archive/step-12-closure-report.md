@@ -67,7 +67,9 @@ The roadmap's Phase 7 header (`step-12-universal-os-reframe.md` § Phase 7) decl
 ## Cross-references
 
 - Roadmap: [`step-12-universal-os-reframe.md`](step-12-universal-os-reframe.md)
-- Dashboard: [`../roadmaps-progress.md`](../roadmaps-progress.md)
+- Dashboard: `agents/roadmaps-progress.md` — not committed since 2026-08-21;
+  regenerate with `task roadmap-progress` (it was the repository's #1
+  merge-conflict path, so it became a local view rather than an artefact).
 - Halt-condition contract: [`.augment/contexts/execution/roadmap-process-loop.md`](../../.augment/contexts/execution/roadmap-process-loop.md) § 5
 - Original council session that authored step-12: [`agents/council-responses/2026-05-15-universal-os.json`](../council-responses/2026-05-15-universal-os.json)
 - This decision's council session: [`agents/council-responses/2026-05-15-step12-process-full-scope`](../council-responses/2026-05-15-step12-process-full-scope)

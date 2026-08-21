@@ -140,6 +140,27 @@ describe('check_references — content-class allowlist (port)', () => {
         expect(cr._is_allowlisted('packaging-helper')).toBe(false);
     });
 
+    // --- the deliberately-untracked dashboard ---
+    it('the untracked dashboard resolves even when no such file exists', () => {
+        // It is a generated LOCAL artefact this repository does not commit, so
+        // it is present on a developer's disk and in NO clone. Without this
+        // carve-out the gate reported 49 broken references in CI while passing
+        // locally — the exact false red this pins.
+        const body = 'See `agents/roadmaps-progress.md` for the current state.\n';
+        const broken = pathRefs(check(body));
+        expect(broken.some((b) => b.ref.includes('agents/roadmaps-progress.md'))).toBe(false);
+    });
+
+    it('the carve-out is exactly one path, not a prefix', () => {
+        expect(cr.UNTRACKED_GENERATED_DASHBOARD).toBe('agents/roadmaps-progress.md');
+        // A sibling that merely starts with the same stem is still a real
+        // broken reference. (`.md.bak` is not extracted as a path at all, so it
+        // would prove nothing — the probe has to be a shape the gate DOES read.)
+        const body = 'Stale copy at `agents/roadmaps-progress-old.md` — should fail.\n';
+        const broken = pathRefs(check(body));
+        expect(broken.some((b) => b.ref.includes('agents/roadmaps-progress-old.md'))).toBe(true);
+    });
+
     // --- docs/ + src/ path-root coverage (Phase-0 step 7a guardrail) ---
     it('docs dead path fails', () => {
         const body = 'See the guide at `docs/nonexistent-guide.md` for details.\n';

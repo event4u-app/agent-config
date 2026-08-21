@@ -105,5 +105,8 @@ for the free half.
   `## Outcome` names this transfer.
 - [`docs/contracts/settings-classes.md`](../../../docs/contracts/settings-classes.md)
   — the class-C fence that is the only human-only write path in the tree.
-- [`agents/roadmaps/stubs/README.md`](README.md) § Drain-run transfers — the
-  class of stub this belongs to and the per-item promotion rule.
+- [`agents/roadmaps/stubs/README.md`](README.md) — the class of stub this belongs
+  to (§ The two classes) and the per-item promotion rule (§ Closing a drain-run
+  transfer). The per-stub index table it used to point at was deleted 2026-08-21:
+  it was an authored append surface that conflicted in every open CONFLICTING PR
+  while duplicating what each stub already states.

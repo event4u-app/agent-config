@@ -64,8 +64,10 @@ directions against the real pinned tree (§ Phase 3, Repo).
 
 **The transfer has a home, and that is the point.** It lives in
 [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md),
-alongside the estate's other drain-run transfers and registered in their
-[`README`](../stubs/README.md) table with its baselines. The three items below carry
+alongside the estate's other drain-run transfers, with its baselines in the stub
+itself. (It was also registered in the [`README`](../stubs/README.md) index table
+at the time; that table was deleted 2026-08-21 as a duplicate append surface —
+every baseline it carried was verified present in the stub first.) The three items below carry
 `[-]` here with a one-line pointer each. A transfer recorded only as prose in a
 roadmap that stays open is indistinguishable from work nobody started — the stub
 is what makes it a moved obligation rather than a note.

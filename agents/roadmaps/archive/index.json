@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 545,
+  "count": 546,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3401,6 +3401,20 @@
         "done": 27,
         "deferred": 0,
         "cancelled": 3
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-generated-artifact-conflict-drawdown",
+      "title": "Road to generated-artifact conflict drawdown — the repository-local cut",
+      "disposition": "completed",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 21,
+        "deferred": 0,
+        "cancelled": 0
       },
       "verdict": null,
       "status": "ready"

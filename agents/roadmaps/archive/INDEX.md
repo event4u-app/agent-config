@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**545 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 199 · completed 253 · completed-with-deferrals 26 · not-extractable 34
+**546 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 199 · completed 254 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -267,6 +267,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-gated-reach-followup`](road-to-gated-reach-followup.md) | Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel | closed-with-cancellations | 1 | 6/15 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |
+| [`road-to-generated-artifact-conflict-drawdown`](road-to-generated-artifact-conflict-drawdown.md) | Road to generated-artifact conflict drawdown — the repository-local cut | completed | 4 | 21/21 | _not extractable_ |
 | [`road-to-glama-registry-listing`](road-to-glama-registry-listing.md) | Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more | completed | 5 | 11/11 | _not extractable_ |
 | [`road-to-global-first-install`](road-to-global-first-install.md) | Road to Global-First Install | closed-with-cancellations | 3 | 24/25 | _not extractable_ |
 | [`road-to-global-only-install`](road-to-global-only-install.md) | Road to Global-Only Install — ARCHIVED | closed-with-cancellations | 7 | 40/41 | _not extractable_ |
