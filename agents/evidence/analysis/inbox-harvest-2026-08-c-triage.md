@@ -83,10 +83,25 @@ a small diff, and no coverage anywhere in 33 active or 42 parked roadmaps.
 Its recommendations resolve into three states and none of them is "live and
 lost":
 
-- **Implemented** — untrusted-content boundary and trust propagation
-  (`src/scripts/_lib/untrusted_content.ts` plus four ingress sites), the
-  confirmation threat model as executable invariants, the routing-metadata
-  consumer audit, completion evidence as a first-class record.
+- **Implemented** — the confirmation threat model as executable invariants, the
+  routing-metadata consumer audit, completion evidence as a first-class record.
+  **Corrected 2026-08-21: the untrusted-content boundary was listed here and does
+  not belong.** `src/scripts/_lib/untrusted_content.ts` exists, and every export
+  it has (`wrapUntrusted`, `checkCredentialFilePermissions`, `MIN_NONCE_LENGTH`,
+  `WrapOptions`, `PermissionVerdict`, `PermissionFinding`) has **zero consumers**
+  outside the module and its own test file; there are **zero** occurrences of an
+  `<untrusted_content>` tag anywhere in `src/` or `dist/`. The entry also carried
+  a count of ingress sites, and that count was never true at any commit this
+  triage could have been written against — the number of wired ingress sites was
+  and is nought. Measured at HEAD `492873f09` (v14.7.0), six releases after the
+  claim was written; re-measure before citing it either way.
+  **Whether that module is wired or removed is undecided, and it is the
+  maintainer's call — not a documentation pass's.** Wiring it adds live behaviour
+  to an untrusted-content boundary, which is a security surface and needs its own
+  threat pass first (`security-sensitive-stop`); deleting it is a scope decision
+  no correction of the record owns. This sentence exists so the question stays
+  open: an honest label on an unwired module removes the pressure to resolve it
+  unless the open decision is named beside it.
 - **Declined by a recorded decision** — the eight-kind split of
   `runtime_requires` (the schema refuses a speculative vocabulary and ships four
   kinds), the extended executable skill contract, and the release-highlight

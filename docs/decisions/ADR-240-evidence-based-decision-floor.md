@@ -1,5 +1,5 @@
 ---
-adr: 239
+adr: 240
 status: proposed
 date: 2026-08-21
 decision: evidence-based-decision-floor
@@ -31,7 +31,7 @@ review_trigger: >-
   blocked or wrongly authorized because of this model.
 ---
 
-# ADR-239 — An ADR's weight comes from its evidence, not from its existence
+# ADR-240 — An ADR's weight comes from its evidence, not from its existence
 
 ## Status
 

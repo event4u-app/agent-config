@@ -442,9 +442,11 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       strength `E0`, `discovery: incomplete`.
       verify: runs over every flat record under `docs/decisions/ADR-*.md` plus
       the 7 per-area records, and its `scanned:` equals that file count at the
-      run's head (179 + 7 = 186 today). A bare number is deliberately NOT the
+      run's head (180 + 7 = 187 at the time of writing, up from 186 one merge
+      earlier — which is the demonstration, not a correction). A bare number is deliberately NOT the
       criterion: the earlier wording said `scanned: 184` over "177 flat", the
-      tool emits 186 over 179, and the trunk moved between the two — which is
+      tool emitted 186 over 179 at that point and 187 over 180 now, and the
+      trunk moved three times between the readings — which is
       the same falsified-by-a-moving-corpus defect AC-2's own note records for
       the sweep. Caught in completion review; spot-check anchors match
       independent reads
@@ -634,7 +636,7 @@ authority for the change.
       exist. So the step was ticked on the work it did rather than on the work
       it specified, which is precisely the "prose lifecycle enforcement is
       satisfied by its weakest honest reading" defect this roadmap cites as its
-      third motivating measurement (Proof 3, ADR-239 § Context). Catching it in
+      third motivating measurement (Proof 3, ADR-240 § Context). Catching it in
       its own change is the only reassuring thing about it.
 
 ## Phase 4 — Autonomy-blocker lane
@@ -705,12 +707,12 @@ action joins the lane under the ADR-237 test.
 
 ## Phase 5 — Doctrine, proposed not accepted
 
-- [x] **5.1 Draft ADR-239 `evidence-based-decision-floor` as
+- [x] **5.1 Draft ADR-240 `evidence-based-decision-floor` as
       `status: proposed`.** Round 5, both seats: the doctrine record is not
       "later documentation" — it is the decision that would activate a new
       authorization regime, so it must be separately reviewable and
       kill-switchable, and it may not ship `accepted` alongside the schema
-      that it governs. ADR-239 is the next free number (verified against
+      that it governs. ADR-240 is the next free number (verified against
       `origin/main` and all 10 open PRs).
 
       It canonicalizes: the two descriptive axes; the layer separation from
@@ -748,7 +750,7 @@ action joins the lane under the ADR-237 test.
       E3 by triangulation — an authoritative external recommendation, a
       transferable method, and ac's own measured defects — not by counting
       sources.
-      verify: ADR-239 present with `status: proposed` and exactly this
+      verify: ADR-240 present with `status: proposed` and exactly this
       frontmatter shape; its `review_trigger` names the Phase 6 metrics;
       acceptance deferred to Phase 7.
 - [x] **5.2 `decision-revisit-gate` — compatibility only, no new authority.**
@@ -917,12 +919,12 @@ existing authority floor.
       ADR-020 stale-prose proof rides with 2.2 for the same reason.
 - [ ] AC-7 — No authority consequence ships in this roadmap: no fixture, rule
       path, or tool output lets a grade alone authorize an agent action, and
-      ADR-239 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
+      ADR-240 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
 - [ ] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
       measurement basis and minimum sample sizes — including
       `adr-grade-accuracy-vs-gold`, `adr-evidence-discovery-recall` and
       `adr-beneficiary-grade-bias` — before Phase 5.2 merges.
-- [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-239
+- [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-240
       acceptance occurred; no 0B-gated row executed; no Safety, Privacy,
       Legal or External-commitment floor was weakened.
 ## Blockers

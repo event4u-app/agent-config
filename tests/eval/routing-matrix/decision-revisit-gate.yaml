@@ -1,7 +1,7 @@
 ---
 rule: decision-revisit-gate
 # Extended 2026-08-21 for the two descriptive axes (`provenance`, `evidence`) —
-# ADR-239 + `adr-layout § Provenance and evidence`.
+# ADR-240 + `adr-layout § Provenance and evidence`.
 #
 # AUTHORITY-INTEGRITY INVARIANT (what this file must never come to contain):
 #   No case in this matrix asserts, or may be added asserting, that an evidence
@@ -30,7 +30,7 @@ positives:
   - prompt: "The review_trigger on that record fired months ago and nobody looked - can I treat the ADR as a live lock?"
 
   # E3 respected — a measurement is answered in kind, not out-argued
-  - prompt: "ADR-239 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
+  - prompt: "ADR-240 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
 
   # owner_intent surfaced, never overruled (DE)
   - prompt: "Ist ADR-216 mit authority_basis owner_intent noch bindend, oder darf ich das selbst ueberstimmen?"

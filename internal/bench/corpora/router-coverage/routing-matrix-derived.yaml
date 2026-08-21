@@ -449,7 +449,7 @@ prompts:
   - id: rm-decision-revisit-gate-06
     category: router-coverage
     language: en
-    prompt: "ADR-239 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
+    prompt: "ADR-240 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
     expected_skills: []
     intended_triggers: [decision-revisit-gate]
 
