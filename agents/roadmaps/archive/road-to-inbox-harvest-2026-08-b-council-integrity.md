@@ -21,7 +21,7 @@ checkable repo claims held, one exact to the line number. This roadmap is that
 file, expanded, plus the one surviving sub-mechanism from the council-hardening
 bundle.
 
-**The defect.** `agents/roadmaps/road-to-always-on-orchestration.md:395` (Risk 6)
+**The defect.** `agents/roadmaps/archive/road-to-always-on-orchestration.md:395` (Risk 6)
 claimed as its mitigation that *"attendance telemetry makes absent members
 visible rather than silent"*, while `src/scripts/ai_council/events_log.ts:30`
 carries `EventAction = 'proceed' | 'skip_necessity' | 'block_quota'` and the file
