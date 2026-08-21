@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 525,
+  "count": 537,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1782,6 +1782,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-ci-native-release-first-run",
+      "title": "Roadmap: Follow-up to CI-native release — first live run + drills",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 2,
+        "deferred": 0,
+        "cancelled": 6
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-ci-native-release",
       "title": "Roadmap: CI-native release path alongside `task release`",
       "disposition": "closed-with-cancellations",
@@ -2020,6 +2034,20 @@
       "status": null
     },
     {
+      "slug": "road-to-context-fidelity",
+      "title": "Road to context fidelity",
+      "disposition": "archived-with-open-steps",
+      "phases": 5,
+      "steps": {
+        "open": 1,
+        "done": 15,
+        "deferred": 0,
+        "cancelled": 12
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-context-layer-maturity",
       "title": "Road to Context Layer Maturity",
       "disposition": "closed-with-cancellations",
@@ -2076,6 +2104,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-cost-parity-1-rule-payload-diet",
+      "title": "Road to cost parity — 1: the maintained estate shrinks where nothing else owns it",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 14,
+        "deferred": 0,
+        "cancelled": 37
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-cost-parity-3-handoff-envelope",
       "title": "Road to cost parity — 3: the handoff envelope carries what the successor actually needs",
       "disposition": "completed",
@@ -2116,6 +2158,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-council-blind-review",
+      "title": "Roadmap: Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 3,
+        "deferred": 0,
+        "cancelled": 3
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-council-modes",
@@ -2449,6 +2505,20 @@
         "done": 16,
         "deferred": 2,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-distillation-followups",
+      "title": "Road to the distillation follow-ups — two maintainer-gated items, relocated intact",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 1,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": null
@@ -3182,6 +3252,20 @@
       "status": "active"
     },
     {
+      "slug": "road-to-frontend-skill-application",
+      "title": "Roadmap: Frontend skills stop being loaded shelfware",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 26,
+        "deferred": 0,
+        "cancelled": 7
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-frontier-grade-reasoning",
       "title": "Roadmap: Reasoning Discipline Protocol — make every host model think like a pro",
       "disposition": "completed-with-deferrals",
@@ -3726,6 +3810,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-c-evidence-lifecycle",
+      "title": "Road to a review binding that survives a checkbox",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 9,
+        "deferred": 0,
+        "cancelled": 4
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-inbox-harvest-2026-08-c-prompt-deinflation",
@@ -4720,6 +4818,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-orchestration-scope-decision",
+      "title": "Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 7
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-orchestrator-discipline-carriers",
@@ -5870,6 +5982,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-session-closeout",
+      "title": "Road to closing what fifty sessions left open",
+      "disposition": "closed-with-cancellations",
+      "phases": 9,
+      "steps": {
+        "open": 0,
+        "done": 53,
+        "deferred": 0,
+        "cancelled": 1
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-session-profile-activation",
       "title": "Road to Session-Profile Activation",
       "disposition": "closed-with-cancellations",
@@ -6019,6 +6145,20 @@
         "done": 53,
         "deferred": 0,
         "cancelled": 1
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-skill-ecosystem-gate-integrity",
+      "title": "Road to gate integrity — a gate that scanned nothing must never exit green",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 43,
+        "deferred": 0,
+        "cancelled": 3
       },
       "verdict": null,
       "status": null
@@ -6190,6 +6330,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-subagent-value-realization-followup",
+      "title": "Roadmap: Follow-up to Subagent value realization",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 4,
+        "deferred": 0,
+        "cancelled": 5
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-subagent-value-realization",
@@ -6498,6 +6652,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-ui-track-integrity-followup",
+      "title": "Road to UI-track integrity — follow-up: two measurements, one missing harness",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 7,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-ui-track-integrity",

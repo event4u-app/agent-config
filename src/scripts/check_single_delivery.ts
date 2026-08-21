@@ -29,13 +29,36 @@
  *      correctness fact rather than a token fact, and it needs a different
  *      remedy, so it is never folded into the overlap number.
  *
- * REPORT BY DEFAULT, ENFORCE ON REQUEST — and that is not timidity. The
- * invariant is not true yet: `road-to-single-delivery` Phase 2, which makes the
- * producers write disjoint layers, is HALTED on blocker
- * `partition-current-layer-undecidable`. A blocking default would therefore red every
- * run on a defect nobody can currently fix, which teaches readers to ignore it —
- * the exact failure this estate has recorded twice already. Pass `--enforce` once
- * Phase 2 lands.
+ * REPORT BY DEFAULT, ENFORCE ON REQUEST — and that is not timidity. A blocking
+ * default would red every run on a defect a given machine may not be able to
+ * fix, which teaches readers to ignore it — the exact failure this estate has
+ * recorded twice already.
+ *
+ * The reason used to be that `road-to-single-delivery` Phase 2 was HALTED on
+ * blocker `partition-current-layer-undecidable`. That is no longer true and the
+ * sentence is corrected rather than left standing: the blocker reads
+ * `**Status:** resolved`, its roadmap is archived, and the partition shipped
+ * under ADR-236 Phase 2. What replaced the halt is a per-machine activation —
+ * the partition withholds artefacts only where the host layer is verified
+ * against `installed.lock`, so a machine whose install predates the fingerprint
+ * keeps the full projection BY DESIGN and the overlap this gate reports there is
+ * the fail-safe working, not a regression.
+ *
+ * WHERE THIS CHECK IS MEANINGFUL — read this before quoting one of its numbers
+ * (road-to-session-closeout 3.3). It is a DEVELOPER-MACHINE check. It reads two
+ * host layers off the filesystem, and in CI both are absent: a fresh checkout
+ * carries no `<project>/.claude/**` (zero tracked files under `.claude/`) and no
+ * `~/.claude/**` because no CI leg installs at user scope. So in CI this gate
+ * finds zero layers and has nothing to compare — which is reported as `absent`
+ * rather than as a pass, per the paragraph below, but is still not a statement
+ * about any developer's machine.
+ *
+ * How large that gap is, measured on ONE tree in ONE session on 2026-08-20:
+ * `check_standing_rule_delivery` read the same repository twice and reported
+ * 115 781 tok with one layer installed and 209 767 tok with two — a 1.8x
+ * difference produced entirely by which layers existed where. Any figure from
+ * this gate or that one describes the machine it ran on. Cite it with the layer
+ * counts attached, never as a repository property.
  *
  * A LAYER THAT DOES NOT EXIST IS NOT A PASS. Where a layer is absent there is no
  * overlap to find, and saying "invariant holds" would be a gate reading nothing
