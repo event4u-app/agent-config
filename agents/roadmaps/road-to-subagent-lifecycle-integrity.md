@@ -24,6 +24,39 @@ complexity: structural
 > External claims carry their source. Anything marked *(proposal)* is this
 > roadmap's own suggestion, never a foundation to cross-cite.
 
+## Outcome — drain run 2026-08-20
+
+> **Archived does not mean achieved, and this roadmap is not archived.** Four
+> steps remain open on purpose: each is a measurement window or an undecided
+> design question, and a `[x]` on any of them would be evidence nobody observed.
+> The operator's three symptoms are **instrumented, not fixed** — every guard
+> this roadmap shipped is shadow or capture-only by design, so nothing here has
+> yet refused a single spawn or recovered a single lost return.
+
+Per phase, in the framework's four outcome states.
+
+| Phase | State | What that means |
+|---|---|---|
+| 0 — spikes | **transferred** (partly) | Steps 1, 3 closed. Steps 2, 4: both assertion halves **answered** from shipped instruments (§ B2-B4); only the verbatim-payload halves moved to [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md). |
+| 1 — measure | **narrowed** | Steps 1-3 shipped. Step 4 publishes **three of four** baseline columns plus a fifth the step never named; the envelope-return column is now measurable *forward* because the four-way split landed, and has no reading yet. |
+| 2 — return channel | **narrowed** | Step 1 (contract addendum) shipped earlier. Step 2's part (i) — the four-way verdict split — landed here, so its fallback condition is expressible for the first time; the concern itself stays gated on a post-split window. Step 3 waits on the concern. |
+| 3 — containment | **satisfied**, and its falsifier now evaluated | All three steps shipped shadow-first. The Step 1 falsifier **does not fire**: 96 `would_deny` at the widest candidate over 325 dispatches (§ B6), so the guard is not removed. |
+| 4 — role axis | **transferred** (Step 1) + **satisfied** (Steps 2, 3) | Step 3's invariant test landed, and found the neighbouring test had no sensitivity to the guard it was named after. Step 1 is gated on Phase 0 Step 4 and closes against the stub. The phase falsifier cannot run — recorded, not pending. |
+| 5 — tier routing | **satisfied**, as a published null | Step 2's before/after pair is unbuildable by the named instrument (the ledger carries no tier) and cannot have moved (nothing reads the resolver's output). The falsifier's publish-and-stop branch is taken **on a derivation, never on a measured distribution** (§ B5). |
+| 6 — frontend | **abandoned here** (superseded) | Unchanged: both steps file into `road-to-frontend-skill-application` via SFF. |
+| 7 — `do_not_touch` guard | **narrowed** | Condition (a) is **met by measurement** — 6 of 13 envelopes carry the field — so the phase falsifier is **refuted** and the guard is not cancelled. (b)'s preferred cheap route turned out not to exist, and a fourth condition (d) surfaced. Two named design decisions now block it, not a missing producer. |
+
+**What the drain run added that was not on the plan.** Three corrections to the
+roadmap's own text, each recorded at its step: the `last_assistant_message` half
+of Phase 0's falsifier note was wrong (the ledger *could* see it); Phase 7's
+per-turn-cost citation was stale by six lines; and Phase 2 Step 2's join
+availability is 8.0 %, not "not always available".
+
+**The four still-open items, and what each waits on.** Phase 1 Step 4 — one
+column, one window. Phase 2 Step 2 — a pre-registered threshold off that window.
+Phase 2 Step 3 — the concern Step 2 would ship. Phase 7 Step 1 — decisions (c)
+and (d). None of the four waits on the transferred capture.
+
 ## Context / What is verified
 
 **V1 — The host exposes subagent lifecycle events; the tree registers none.**
@@ -53,7 +86,7 @@ Step 2)"
 That Step 2 is now **PREMISE-STALE**: always-on orchestration deleted the two
 settings arms the step names, while the ≥20-dispatch half of the trigger is
 "separately met at 99"
-(`agents/roadmaps/road-to-subagent-value-realization-followup.md:46-56`,
+(`agents/roadmaps/archive/road-to-subagent-value-realization-followup.md:46-56`,
 note dated 2026-08-10). The reopen condition names an experiment the tree can
 no longer express, so the cancellation can never lift by its own letter — while
 production now supplies exactly the "used in anger" evidence the stopping rule
@@ -175,9 +208,26 @@ roadmap does **not** duplicate that work.
       given event carries a given field — Steps 2 and 4 remain open and
       Phase 4 stays gated on Step 4.
       `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`.
-- [ ] **Step 2:** Payload spike: capture the raw `SubagentStop` stdin JSON and
+- [-] **Step 2:** *(raw-capture half transferred to [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md) — council disposition **B**, outcome state `transferred`; both assertions answered here)* Payload spike: capture the raw `SubagentStop` stdin JSON and
       assert `last_assistant_message` and `agent_type` arrive as documented on
       THIS host version.
+      **Both assertions are now answered, and neither needed the capture.** The
+      transferred residue is narrower than the step: the verbatim field list, and
+      **which** of the two accepted key spellings the host sends.
+      **Assertion 1 — `last_assistant_message` IS delivered.** The 17 `fail`
+      records in the post-fix window are an existence proof rather than an
+      inference: `classifyEnvelope` can only reach `fail` after a JSON object was
+      decoded *out of the message*, which requires a non-blank message string.
+      What the ledger cannot say is which key carried it — it reads
+      `last_assistant_message` and `lastAssistantMessage` through one lookup — and
+      that is exactly the half the stub holds
+      (`subagent-lifecycle-drain-close.md` § B2).
+      **Assertion 2 — `agent_type` is NOT delivered**, confirmed at 136× the
+      original sample: 3,129 of 3,400 stops null (92.0 %), and the 271 that carry
+      one are exactly the 271 with a correlated start (§ B3).
+      **Where the line falls:** the assertions were answerable from a shipped
+      instrument; the verbatim payload is not observable from inside a session at
+      all. Only the second is in the stub.
       **The throwaway hook this step specified is unnecessary — the capture is
       already shipped.** `_maybe_capture_payload` (`dispatch_hook.ts:486`) writes
       the raw stdin payload to `$AGENT_HOOK_CAPTURE_DIR` and is called
@@ -200,11 +250,25 @@ roadmap does **not** duplicate that work.
       full. `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`
       § F1. This is the measurement Phase 2 Step 1's never-end-on-a-tool-call
       clause was missing.
-- [ ] **Step 4:** Payload spike inside a subagent: confirm `agent_id` /
+- [-] **Step 4:** *(raw-capture half transferred to [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md) — council disposition **B**, outcome state `transferred`; the derivable half is recorded here)* Payload spike inside a subagent: confirm `agent_id` /
       `agent_type` are present on `PreToolUse`/`PostToolUse` stdin when the
       caller is a Task-spawned subagent (V6 refutation, verified locally).
-      Same method correction as Step 2 — no scratch hook, one env var; see
-      `blocker: raw-capture-needs-host-env`.
+      Same method correction as Step 2 — no scratch hook, one env var.
+      **The derivable half, and it is negative space rather than an answer:** in
+      632 observations no payload has ever supplied a parent — 307 of 307
+      `subagent_start` records read `assumed-root` / `parent_ref: null`, and 325
+      of 325 `spawn_guard_shadow` records read
+      `depth_usable_for_derivation: false`. A grep of `src/` confirms nothing in
+      the tree reads `agent_id` or `agent_type` off a tool event at all
+      (`subagent-lifecycle-drain-close.md` § B4).
+      **This is deliberately NOT read as an absence proof.** `spawn_guard_shadow`
+      fires on the parent's `Agent`/`Task` call, before a child exists, so a
+      subagent's own tool events are a population these 632 records do not
+      sample. Zero positive observations plus no instrument able to produce one
+      is the honest statement; Phase 4's falsifier cancels a phase on *absence*,
+      and absence-of-evidence is not it.
+      **Where the line falls:** everything observable from the existing
+      instruments is above; the in-subagent payload itself is in the stub.
 
 **Falsifier.** Step 2 or 4 shows the documented fields absent on the installed
 host → Phases 2 and 4 are re-scoped to what the payload actually carries before
@@ -213,6 +277,13 @@ any code is written; the doc claim is recorded as version-gated.
 so the doc claim is version-gated on that field already and Phase 2 Step 2's
 per-agent logging is re-scoped accordingly. The `last_assistant_message` half is
 untouched — it needs Step 2's raw capture, not the ledger.
+**Corrected 2026-08-20 — that last sentence was wrong, and the ledger did see
+it.** `last_assistant_message` is delivered, proved by 17 `fail` verdicts which
+cannot be produced without a message string (§ B2). What the raw capture is
+still needed for is one degree narrower: the exact key spelling and the full
+field list. The falsifier's re-scoping obligation is therefore discharged for
+Phase 2 (both fields now have observed answers) and remains open for Phase 4,
+whose field is on a payload class no instrument in this tree samples.
 
 **Rollback.** Spikes are scratch-project only; nothing lands in the tree except
 the evidence file.
@@ -294,6 +365,41 @@ dead (V2) and production evidence exists.
       that accrued *before* the fix is still cross-session and stays
       undiscardable-by-filtering, so the ≥20-dispatch baseline starts counting
       from the fix commit forward, not from the existing 25 stop records.
+
+      **NARROWED 2026-08-20 — three of the four columns are published; the
+      fourth is named, not skipped.** Full numbers, commands and cutoff:
+      [`subagent-lifecycle-drain-close.md`](../evidence/investigations/subagent-lifecycle-drain-close.md)
+      § B1. Post-fix window 2026-08-14T23:04Z → 2026-08-20T15:28Z, 57 sessions,
+      307 starts / 3,400 stops — the ≥20 bar cleared by an order of magnitude.
+      - **parse-failure rate — 0.50 %** (17 of 3,400), every one carrying
+        `envelope_error_count: 5`, which reads as one recurring answer shape
+        rather than 17 independent malformations.
+      - **duration distribution** over the 271 stops that carry one: p50 316 s,
+        p90 809 s, max 2,665 s (44.4 min). Stated with its denominator — a
+        duration needs a matched start and 3,129 stops have none, so this
+        describes the correlated 8.0 %, never the population.
+      - **nested-spawn count — 0 of 307.** Same observation as Phase 0 Step 4's
+        derivable half.
+      - **envelope return rate — NOT published, and (a) is why.** 3,383 of 3,400
+        read the collapsed `absent`; a rate off that column measures the answer
+        format, at n=3,400 exactly as it did at n=25. **The four-way split
+        `(a)` asked for landed in this change** — `classifyEnvelope` now returns
+        `no_message` / `no_envelope` / `fail` / `ok`
+        (`subagent_ledger_hook.ts`, `EnvelopeParse`), with the retired value
+        exported as `RETIRED_ENVELOPE_PARSE` and fenced by a test that no input
+        can produce it. So the column is measurable **forward from this commit**;
+        the historical 3,383 stay unresolvable by filtering, the same way the
+        pre-`session_id` window does. *Verified:* 30 tests in
+        `tests/hooks/subagent_ledger.test.ts`, and the split's own test was seen
+        RED against a re-collapsed classifier before it was seen green.
+      - **A fifth number the step never named, and it is the one that moved:**
+        `stop_loss_arms_exceeded` fired on **138 of 3,400 stops (4.1 %)** — 119
+        at 5 m, 17 at 5 m + 15 m, 2 at all three arms. Phase 3 Step 3's shadow
+        is not guarding a hypothetical.
+
+      **This step stays open on purpose.** One of its four named columns has no
+      reading yet, and a `[x]` would claim a publication that does not exist.
+      What remains is a measurement window, not a decision or a build.
 
 **Falsifier.** Envelope return rate ≥95% and no dispatch exceeds 2× its
 tier budget-equivalent duration over the window → symptoms (2)/(3) are not
@@ -379,7 +485,26 @@ mechanism (pre-register the threshold before reading the number).
       carries `agent_id` but not `agent_type` (F4), so a per-`agent_id` valve can
       key correctly and cannot name what it blocked unless the start record is
       joined to it — which the 18-of-25 uncorrelated stops show is not always
-      available.
+      available. **At n=3,400 the join is available 8.0 % of the time** (271
+      correlated of 3,400), so the valve should be designed to name nothing
+      rather than to name it usually.
+
+      **Part (i) LANDED 2026-08-20; the mechanism did not, and stays gated.**
+      The verdict is now four-way — `no_message` / `no_envelope` / `fail` / `ok`
+      — so the fallback condition this step keys on is expressible for the first
+      time: **`no_message` only**, which is what the split exists to isolate.
+      Landing the split ahead of the phase gate follows Step 1's own argument:
+      the gate is on shipping a *mechanism*, and a verdict vocabulary is the
+      instrument the gate reads. It also breaks a circularity the two steps had
+      between them — Phase 1 Step 4's return-rate column needs the split, and
+      this step needed Step 4's number.
+      **What is still open here is the concern**, and it is still gated: the
+      `subagent-return-gate` needs a pre-registered threshold read off a
+      post-split window that does not exist yet. Note also that the disk
+      fallback it would consult is declared-but-unwritten — nothing writes
+      `response-envelope.json` (Phase 2 Step 1 (ii) says so in the contract
+      itself), so on today's tree the `no_message` branch would find no file and
+      fall through to the block path on its first firing.
 - [ ] **Step 3:** Snapshot tests under `tests/hooks/` for all four paths
       (ok / disk-fallback / block-once / release), per the manifest's own
       concern checklist (`hook_manifest.yaml:10-14`).
@@ -485,14 +610,35 @@ The depth arm cannot be falsified here — it is not evaluated, and it becomes
 falsifiable only once Phase 0 Step 4 settles whether `agent_id` reaches a
 PreToolUse payload.
 
+**EVALUATED 2026-08-20, and it does NOT fire** (`subagent-lifecycle-drain-close.md`
+§ B6). Over 325 shadow records against a bar of 20, `would_deny` counts are
+`n2m4` 210 · `n3m6` 151 · **`n4m8` 96**. Ninety-six at the widest candidate is
+not zero, so the guard is not removed and the concurrency cap is describing a
+condition this estate actually reaches — monotonically across the spread, which
+is the curve the policy's derivation wanted. Two honest bounds: the shadow
+concern writes **no `session_id`**, so unlike the Phase-1 columns this count
+aggregates every session that touched the checkout; and
+`depth_usable_for_derivation` is `false` on all 325, so the depth arm remains
+unevaluated exactly as the paragraph above says. Whether to flip to deny is the
+policy's economic question and is untouched by this — the falsifier only ever
+asked whether the answer was a null.
+
 **Rollback.** Each concern is one manifest line; ledger stays (it is Phase-1
 infrastructure).
 
 ## Phase 4: Role axis binds on payload, not env
 
-- [ ] **Step 1:** Extend `_lib/session_role.ts` resolution: payload `agent_id`
+- [-] **Step 1:** *(blocked by the transfer, not moved into it — outcome state `transferred` via [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md), council disposition **B**; the step's text stays here unchanged)* Extend `_lib/session_role.ts` resolution: payload `agent_id`
       present ⇒ role `worker`, without touching the env path (CLI spawn
       wrappers keep working). Gated on the Phase-0 Step-4 spike.
+      **Why it closes as transferred rather than as open.** Its gate is Phase 0
+      Step 4, whose raw-capture half is now in the stub, and the parent's own
+      blocker was the only thing re-raising it — so leaving it `[ ]` would park
+      it behind a resolved blocker with nothing pointing at the successor. The
+      resolver is unchanged and env-only
+      (`_lib/session_role.ts:28`, `:37-42`); the one production writer is the
+      council CLI spawn (`ai_council/clients.ts:1386`). Nothing was implemented
+      and nothing was decided against.
 - [x] **Step 2:** Supersede the stale blocker comment
       (`hook_manifest.yaml:568-571` — the comment moved again when Phase 1
       Step 1 inserted the `subagent-ledger` concern above it; the draft's
@@ -517,12 +663,43 @@ infrastructure).
       that field presence is not assumed — the neighbouring `agent_type` probe
       already came back negative at 18 of 25 null.
       <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
+- [x] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
       droppable by role (the resolver already refuses this; add the payload
       path to the existing test).
+      → Landed as `refuses a pre_tool_use drop regardless of which channel
+      resolved the role` (`tests/scripts/hook_role_axis.test.ts`).
+      **The existing test it sits beside had no sensitivity to the guard it is
+      named after**, which is the finding: `pre_tool_use guards are undroppable
+      on EVERY role and platform` walks the LIVE manifest, whose worker `drop`
+      list names no `pre_tool_use`-bound concern — so deleting the
+      `event === 'pre_tool_use'` clause from `_role_drop_set`
+      (`dispatch_hook.ts:384`) would drop nothing on that slot and the test
+      would still pass. The new fixture names a bound concern in the drop list
+      and proves the list live on a droppable slot in the same test, so a pass
+      cannot come from an inert fixture.
+      **"The payload path" is pinned as provenance-independence, because there
+      is no payload path to feed.** The refusal is an early return keyed on the
+      SLOT and never reads the role, so an `agent_id`-derived `worker` is
+      refused by the same line that refuses an env-derived one; the test asserts
+      it for every role label including invented ones. Stated rather than
+      implied: this pins the property Step 1 will need, not Step 1's input.
+      **Sensitivity is DIFFERENTIAL, not mutation-proved.** The mutation that
+      would prove it is the removal of a safety clause from the dispatcher, and
+      the tool policy refused to stage that edit — correctly, since it is
+      config-weakening in shape. What stands instead is one fixture, one role,
+      two asserted outcomes separated only by the event argument: removing the
+      clause makes the second assertion return the first's value. Recorded as
+      the weaker guarantee it is.
+      <!-- verify: npx vitest run tests/scripts/hook_role_axis.test.ts -->
 **Falsifier.** Phase-0 Step 4 shows no `agent_id` on tool events for in-process
 subagents on the installed host → the blocker stands as written; this phase is
 cancelled and the comment gains the version-gated evidence instead.
+**Cannot run, and that is now a recorded state rather than a pending one.**
+Step 4's raw-capture half is transferred, so the observation this falsifier
+consumes has a named producer and no date. The 632 negative-space observations
+in § B4 are explicitly NOT it — they sample the parent's `Agent`/`Task` call,
+never a subagent's own tool events. The phase is therefore neither cancelled nor
+implemented: Step 2 landed, Step 3 landed, Step 1 is transferred.
 
 **Rollback.** Resolver change is one function; revert restores env-only.
 
@@ -551,11 +728,32 @@ whether a *wired* caller changes the outcome, and that is the open question.
       needs the ≥20-dispatch window the Phase-1 ledger has only just begun to
       collect. Full trace: `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`
       § Phase 5 Step 1.
-- [ ] **Step 2:** Re-measure the tier distribution over the next ≥20 dispatches
+- [x] **Step 2:** Re-measure the tier distribution over the next ≥20 dispatches
       via the Phase-1 ledger; publish the before/after pair.
+      → **Published as a null, and the null is a derivation rather than a
+      measured distribution — stated plainly because the difference is the whole
+      finding** (`subagent-lifecycle-drain-close.md` § B5). Two facts settle it
+      and neither needs a window.
+      **The named instrument does not carry the quantity.** `grep -in tier
+      src/scripts/hooks/subagent_ledger_hook.ts` returns nothing across all 736
+      lines; no record shape — start, stop, reap, unidentified, shadow — has a
+      tier, a model name, or a routing field. The ledger cannot measure a tier
+      distribution, before or after, so the before/after *pair* this step asks
+      for is not a window away, it is unbuildable by the method named.
+      **The wired caller cannot have moved one.** Step 1 traced it: the
+      resolver's output is interpolated into prose at
+      `delegation_nudge_hook.ts:382` and injected as `additionalContext`, and
+      nothing reads it back. A value no consumer reads cannot change a
+      distribution.
+      So the falsifier's own branch is taken. **What a `[x]` here does and does
+      not claim:** it claims the step's question is answered and published; it
+      does **not** claim a distribution was observed. Making the measurement
+      real would need a tier field on the ledger plus a consumer that reads the
+      resolver — both new work, neither this step.
 
 **Falsifier.** Distribution unchanged with the caller wired → tier drift is
 not routing-caused; publish and stop here.
+**Branch taken 2026-08-20** — on the derivation above. Phase 5 closes.
 
 **Rollback.** Single call-site change.
 
@@ -631,12 +829,59 @@ condition on shipping, not the thing that is missing.
       build-the-mechanism-before-measuring-the-premise pattern this package has
       recorded three times, and it was the source step's own reason for staying
       open.
+
+      **MEASURED 2026-08-20 — (a) is met, (b)'s preferred route does not exist,
+      and a fourth condition surfaced** (`subagent-lifecycle-drain-close.md`
+      § B7).
+      **(a) MET.** Across the maintainer's checkout and its `.claude/worktrees/*`
+      worktrees: **13 envelopes exist, 6 carry a non-empty `do_not_touch`, and 3
+      of those are entirely path-shaped** (every entry passes `isPathRef`). Two
+      of the three were written after the shape enforcement landed, so the count
+      is a fact about producers rather than an artefact of an unchecked field.
+      Caveat carried, not buried: the envelopes are gitignored runtime state, so
+      this measurement is machine-local and not reproducible from a clean clone.
+      **(c) has a concrete case now, not a hypothetical.** One real entry is
+      `agents/roadmaps/later/` — a bare directory with a trailing slash. It
+      validates, and under exact-string matching it matches nothing. The tree
+      offers target extraction plus Bash-command coverage
+      (`block_kernel_rule_writes.ts`, segment-based) and `workspace_root`-anchored
+      absolute-to-relative reconciliation with a regex exemption list
+      (`reread_guard_hook.ts:220-232`), and **nothing at all** for
+      directory-prefix or glob matching. The decision is still open; it now has a
+      worked example to be decided against.
+      **(b) — the preferred mitigation is unavailable as written.** "Reuse the
+      envelope read the handoff consumer already performs" cannot be done:
+      `handoff-context` is bound on **`session_start` only**
+      (`hook_manifest.yaml:892`, `:899`) and `consume_recycle_envelope` is
+      consume-on-read, **moved not copied** — every non-`absent` outcome renames
+      the envelope to `recycle-envelope.consumed.json`
+      (`handoff_context_hook.ts:156-170`). By the time any `pre_tool_use` fires
+      the file is gone, and the survivor is explicitly the *last* envelope kept
+      for debugging, possibly an earlier session's.
+      **(d) NEW, and a real blocker rather than a detail:** the list has to be
+      published somewhere a per-tool-call reader can see it — session state
+      written by the consumer, or a deliberate decision to read the consumed file
+      and accept its provenance. Until that is decided, "reuse the existing read"
+      names a read that has already destroyed its own source.
+      **Chain-cost citation corrected.** The counts are right and the line
+      reference is stale by six: augment binds **11** at `hook_manifest.yaml:895`,
+      claude and cowork **12** at `:903` and `:957`. `:889` is the worker role's
+      `drop:` list.
+      **Still open, and now for a named reason.** (a) is discharged; (c) and (d)
+      are undecided design questions this step owns. Shipping on an undecided
+      matcher is the same defect class as the unchecked field its own source
+      closed.
       <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
 
 **Falsifier.** Condition (a) is still unmet after a full measurement window in
 which envelopes were written and none carried a `do_not_touch` entry → the field
 is unused rather than unenforced, and the guard is cancelled with that count
 published, rather than waiting indefinitely on a producer nobody wants.
+**REFUTED 2026-08-20.** Envelopes were written and six of thirteen DO carry a
+`do_not_touch` entry, three of them entirely path-shaped. The field is used, so
+the guard is not cancelled — and the risk this falsifier existed to bound
+(Risk 6, an indefinite deferral) is now bounded by (c) and (d) instead: two
+named design decisions, not a wait on a producer.
 
 **Rollback.** One manifest line and one concern file; the field contract and its
 shape check stand on their own and are unaffected.
@@ -645,11 +890,12 @@ shape check stand on their own and are unaffected.
 
 ### blocker: raw-capture-needs-host-env
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is
-  closed; Step 2's `agent_type` assertion is answered without it.
+- **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half — plus
+  Phase 4 Step 1, which is gated on Step 4. Step 3 is closed; **both** of Step
+  2's assertions and Step 4's derivable half are answered without it (§ B2-B4).
 - **What to do:** the capture facility is shipped and verified
   (`_maybe_capture_payload`, `dispatch_hook.ts:486`, called unconditionally at
   `:1082`); the variable just has to reach the process environment the host
@@ -683,6 +929,42 @@ shape check stand on their own and are unaffected.
   `PreToolUse` payload exist as captured files, and their field lists are
   recorded in
   `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
+- **Resolution (2026-08-20) — transferred, and narrower than it was.**
+  **`Status:` reads `resolved` deliberately, and the outcome state is
+  `transferred`.** They are different fields: `lint_roadmap_blockers` recognises
+  exactly one closed token (`/Status:[ \t]*resolved/`, `:193`) and treats every
+  other word — `transferred` included — as still open, which also keeps the entry
+  counted in `check_estate_count`'s `open_blockers`. Writing the outcome state
+  into the status field would have left a blocker that reads closed to a human
+  and open to every gate. The outcome state lives here, in the stub, and in the
+  stubs README table, exactly as the two sibling drain-run transfers of
+  2026-08-20 record theirs. Council
+  disposition **B**, outcome state `transferred`, per
+  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)
+  § `raw-capture-needs-host-env`. The criterion above moves **verbatim** to
+  [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md),
+  which carries the named producer (the host owner), four read-only probes with
+  their baselines measured on the transfer date, and the seven containment
+  requirements adopted from the dissenting seat — a dedicated empty
+  owner-only-permission directory, one time-boxed session, field-NAME extraction
+  then deletion, removal of the setting, verification that it is gone, **a
+  fresh-session negative probe proving capture stopped**, and an abort on secrets
+  or an unexpected content class. "Remove it afterwards" was the whole bound
+  before and is not a kill switch: it survives neither an interruption nor a
+  cleanup failure, and the capture is fail-silent by design.
+- **What the transfer no longer blocks, because it was answered instead.** Both
+  of Step 2's assertions (§ B2, § B3 of
+  [`subagent-lifecycle-drain-close.md`](../evidence/investigations/subagent-lifecycle-drain-close.md))
+  and Step 4's derivable negative space (§ B4). The residue is the verbatim field
+  list, the key spelling `last_assistant_message` vs `lastAssistantMessage`, and
+  the in-subagent tool-event payload — nothing else.
+- **What it still blocks, named so nothing is buried:** Phase 4 Step 1, closed
+  `[-]` against the stub rather than left open behind a resolved blocker. Phase
+  4's falsifier consequently cannot run, which is now a recorded state rather
+  than a pending one.
+- **The "If you do nothing" cost above is unchanged and still accurate** — with
+  one correction: Phase 2 no longer rests on undocumented fields, since both of
+  its payload fields now have observed answers. Only Phase 4 does.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->

@@ -17,6 +17,96 @@ status: ready
 > Source + council cut:
 > [`elder-ponytail-harvest-cut`](../settings/contexts/elder-ponytail-harvest-cut.md).
 
+## Outcome
+
+**Archived does not mean achieved, and this roadmap is not archived.** Two of its
+six open items closed on evidence, three are `[-]` transferred to a stub, and one
+stays open.
+
+**The dashboard reads 97 %, and that number is not a claim about the goal.** It
+counts checkboxes, and three of them are transferred rather than done — a
+percentage cannot distinguish "the work was done" from "the work moved to
+somewhere it can be done". The transfer is the reason the figure is high, so it
+is stated here next to the figure rather than left for a reader to reconstruct:
+**Phase 3 has never reported.** Per phase:
+
+| Phase | Disposition | What that means |
+|---|---|---|
+| Phase 0 — spikes | **satisfied** | S0.1/S0.2/S0.3 all closed on evidence, unchanged by this pass. |
+| Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
+| Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
+| Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
+| Acceptance criteria | **4 of 6 satisfied, 1 transferred, 1 open** | The full-tier criterion is transferred to the stub. The quality-gates criterion stays open and is NOT claimed: see its own note for what actually ran, and note that it did **not** move to the stub — it is not gated on the run. |
+
+### The blocker disposition (A — re-scope, narrowed)
+
+`phase3-harness-deltas-9-10` is **removed**, not resolved: an AI council found it
+was never a blocker. Deltas #9-#10 are ordinary repository implementation, and
+the entry had converted "large" into "unavailable" for five steps. Record:
+[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
+Its substitute criterion, verbatim:
+
+> Implement `repo` and `sha` corpus keys, add approximately 30 hand-written
+> capability/discipline oracles, pin at least one task to a repository SHA, run
+> the full tier, and publish its report.
+
+**Satisfied here** — `repo` and `sha` corpus keys, and one task pinned to a
+repository SHA. Implemented in `_lib/bench_ab_pinned_repo.ts`, wired through
+`reset_fixture` and the offline complexity re-scorer, and scored in three
+directions against the real pinned tree (§ Phase 3, Repo).
+
+### Transferred (B) — the ~30 oracles and the full-tier run
+
+**The transfer has a home, and that is the point.** It lives in
+[`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md),
+alongside the estate's other drain-run transfers and registered in their
+[`README`](stubs/README.md) table with its baselines. The three items below carry
+`[-]` here with a one-line pointer each. A transfer recorded only as prose in a
+roadmap that stays open is indistinguishable from work nobody started — the stub
+is what makes it a moved obligation rather than a note.
+
+**Where the line falls, and why it is not "this is large".** Authoring oracles is
+ordinary work; *calibrating* one is a claim about model behaviour, and the run
+that would test it needs metered model calls. Verified rather than assumed in the
+environment that closed the rest of this roadmap: `git ls-remote` against a
+public remote succeeds (which is why delta #9 could land at all), and
+`ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_AUTH_TOKEN` are all
+unset. On top of that, firing a paid sweep is a Hard-Floor action requiring
+confirmation **on the turn it fires**; the 2026-08-14 pre-authorisation records a
+decision, and a recorded decision is not a live confirmation. So the network half
+of #9 was doable and was done; the metered half was not.
+
+The three-point integrity check:
+
+1. **Original criterion, verbatim** — the substitute criterion quoted above, and
+   the acceptance criterion it feeds: *"Phase 3 either reports from the full tier
+   with every pre-registered endpoint — added lines **paired** with cognitive
+   complexity, plus search-adherence and the safety tier — or publishes the null;
+   no number appears anywhere except rendered from the pinned report."*
+2. **Complete list of dependent steps moved** — three, and no others: Phase 3
+   **Tasks** (the mixed ~30-task corpus), Phase 3 **Hygiene** (the escalation
+   ladder through the full tier), and the acceptance criterion in (1). Phase 3
+   **Repo** and **Reproducibility** are *not* moved: they closed here. Nor did
+   the quality-gates criterion move — it is not gated on the run.
+3. **Re-entry producer and detection probe** — producer: the maintainer authoring
+   the remaining pinned tasks against `pallets/click@150d1071d` (or a second
+   pinned repo) and then running
+   `./scripts-run src/scripts/bench_ab_v2_run --host claude --max-usd 250` in an
+   environment carrying a credential, with a this-turn Hard-Floor confirmation.
+   Probe, checkable without judgement: `internal/bench/corpora/ab-trackb-v2.yaml`
+   carries **≥ 30** tasks declaring `repo` + `sha`, **and** `docs/benchmark.md`
+   renders a `Gate verdict:` for the ladder arms from a pinned report whose own
+   `sha` field is non-empty. Both halves false today: **1** pinned task, and no
+   report.
+
+**The residue, named rather than implied.** A transfer with a producer and a
+probe is still a transfer: nothing in this change makes the run happen, and the
+pre-registered thresholds stay committed and unfittable-to-data, which is the
+strongest form of that guarantee and also the reason nobody is forced to hurry.
+What this pass removes is the false report that Phase 3 was *blocked*. It was
+two-thirds ordinary work and one-third genuinely gated, and the roadmap said
+"gated" about all of it.
+
 ## Goal
 
 Ship the missing over-building discipline as projected rule text plus a
@@ -530,10 +620,21 @@ file is the inflation the repo's own complexity budget forbids.
 **Correction 2026-08-16 — this header was wrong, and the sentence below it is
 left standing so the wrong claim stays auditable.** The spend blocker has read
 `Status: resolved` since 2026-08-14 (granted, $250 ceiling, pre-authorised), so
-Phase 3 has not been spend-blocked for two days. Its real gate is
-[`phase3-harness-deltas-9-10`](#blocker-phase3-harness-deltas-9-10) — a pinned
-external repo and its oracles. Delta #11, the third member of that set, landed
-2026-08-16 and is no longer a gate. This is the same defect the § Blockers
+Phase 3 has not been spend-blocked for two days. Its real gate was
+`phase3-harness-deltas-9-10` — a pinned external repo and its oracles.
+Delta #11, the third member of that set, landed 2026-08-16 and is no longer a
+gate.
+
+**Superseded 2026-08-20 — that blocker is GONE, and it was never a blocker.** An
+AI council reviewed every open blocker in the estate and disposed of this one
+**A — re-scope, narrowed**: deltas #9-#10 are *ordinary repository
+implementation*, not an external dependency and not a decision anyone owed this
+roadmap. Large is not the same as unavailable, and the entry had converted the
+second into the first for four days. Record:
+[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
+Delta #9 landed with that disposition — see § Outcome for what of the substitute
+criterion is satisfied here and what is transferred, and why the split falls
+where it does. This is the same defect the § Blockers
 preamble names from the other direction: a roadmap that cites a resolved blocker
 as standing overstates its own gating, and the cost lands on whoever screens the
 backlog next.
@@ -589,13 +690,48 @@ blocker as standing overstates its own gating.
 > written. Full evidence, delta table, and price inputs:
 > [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
-- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: phase3-harness-deltas-9-10 --> A second repo on this
+- [x] **Repo:** one public OSS repo pinned at a SHA. A second repo on this
       package's home stack is optional and cost-gated.
       *Verify:* the SHA is recorded in the pinned report.
-- [ ] **Tasks:** deliberately mixed <!-- blocked-by: phase3-harness-deltas-9-10 --> — over-build-trap tickets **and** irreducible
+      **Delta #9 LANDED 2026-08-20 — the corpus can pin an external repo, and one
+      task does.** `repo` + `sha` are corpus keys; `_lib/bench_ab_pinned_repo.ts`
+      materialises the pin once per SHA (shallow fetch + `git archive` into a
+      `.git`-free tree, cached in tmp) and every per-trial workspace is a local
+      copy of it, so a sweep touches the network once per pinned task and never on
+      the metered path. `trapA-pinned-click-01` pins
+      `pallets/click@150d1071d69c5cdad7de78590013ffe56cf9e3bb`.
+      **Every refusal is a throw, not a fallback**, because the quiet alternative
+      produces a report that *looks* pinned: `repo` without `sha`, a task carrying
+      both a pin and a `fixture`, a non-`https` remote, and — the load-bearing one
+      — a branch or tag in `sha`, refused because a ref moves and a report pinned
+      to one records which repository answered but not which tree (F7).
+      **Scored in three directions on the real tree**, so the oracle is known to
+      discriminate rather than assumed to: the pristine clone has 0 changed files,
+      the untouched tree fails `capability_pass`, the upstream ground-truth fix
+      (`1f9cd54`, the direct child of the pin) passes both axes, and appending to a
+      `forbidden_files_modified` path — exactly what the real `bc32a92` pager
+      refactor did — drops `discipline_pass` to false at 0.667.
+      *Verify (the SHA in a report) is NOT satisfied and is not claimed:* there is
+      no report, because there has been no run. What this step asked for — a repo
+      pinned at a SHA that the harness can actually run — exists.
+      <!-- verify: BENCH_AB_PINNED_NETWORK=1 npx vitest run tests/scripts/bench_ab_pinned_repo.test.ts -->
+- [-] **Tasks:** deliberately mixed — over-build-trap tickets **and** irreducible
       CRUD **and** this package's own discipline family — so the report can show
       where the effect lives and where it is honestly zero.
       *Verify:* the per-task table shows both.
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 1 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: ≥ 30 tasks declaring
+      `repo` + `sha`, at 1 today. One pinned task exists
+      (`trapA-pinned-click-01`); the substitute criterion asks for ~30. Authoring
+      them is ordinary work and is NOT blocked. What is blocked is *calibrating*
+      them: the schema's own `notes` field asks why a trap is a trap, and that is
+      a claim about model behaviour, so an oracle nobody has run a trial against
+      is an assertion rather than an instrument. The one pinned task says
+      `UNCALIBRATED` in as many words for exactly that reason. Thirty unvalidated
+      oracles would be thirty unverified claims, which is the shape F2 and F7
+      both warn about — so the count travels with the run it needs, and the
+      transfer names its producer and its probe instead of leaving a number here
+      that nothing checks.
 - [x] **Arms:** vanilla · package (ladder off) · package + ladder ·
       **bare-principle control** (the seven-word prompt, F6 — isolates what the
       routed floors add over the naked principle; its safety-tier result is the
@@ -700,11 +836,23 @@ blocker as standing overstates its own gating.
       judges or a paid sweep, and Phase 3 still cannot report: deltas #9/#10
       remain open. What closed is the endpoint definition and its producer — the
       thing this step actually asked for.
-- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: phase3-harness-deltas-9-10 -->
+- [-] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full,
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
-- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: phase3-harness-deltas-9-10 -->
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 2 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: a `Gate verdict:` in
+      `docs/benchmark.md` from a pinned report with a non-empty `sha`, none today. The ladder and the statistics
+      are implemented; what is missing is a run. This is the one part of the
+      substitute criterion that genuinely depends on something no repository
+      change supplies: metered model calls. No credential is present in the
+      execution environment that closed the rest of this roadmap
+      (`ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_AUTH_TOKEN`
+      are all unset), and firing a paid sweep is a Hard-Floor action needing
+      confirmation **on the turn it fires** — the 2026-08-14 pre-authorisation
+      records the *decision*, and a recorded decision is not a live confirmation
+      ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)).
+- [x] **Reproducibility deliverables, first-class not afterthoughts:** a no-API
       `--selftest` entry point, the pinned SHA, preserved per-run workspaces for
       offline re-scoring, and a one-page reproduce doc. The record shows the
       harshest critic becomes the most-cited validator once handed the
@@ -732,6 +880,13 @@ blocker as standing overstates its own gating.
       the difference matters to the archival gate.
       The reproduce doc states this residue in its own closing section instead of
       implying a full reproduction path exists.
+      **Closed 2026-08-20 — the fourth deliverable landed.** The struck reasoning
+      above was accurate when written and is left standing rather than rewritten:
+      the corpus now carries `repo`/`sha` keys and one task pinned to
+      `pallets/click@150d1071d`, so a pinned SHA is deliverable and delivered. The
+      claim this step makes is about the *reproduction path*, and all four of its
+      named parts now exist. It does **not** claim a run happened; the tier and
+      the report are the Hygiene step's, transferred in § Outcome (B).
 - [x] **The size claim is a metric PAIR, not a single number (F9).** The ladder
       arm must lower added lines **without raising median cognitive complexity
       per changed function**. Lines down **and** complexity up is golfing, and it
@@ -975,6 +1130,31 @@ it. None is a step in this roadmap.
   when it provably points at our own script?) but unrelated to minimalism.
   Recorded here, owned nowhere yet — it is not scope for this roadmap.
 
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
+
+Written at the point the grandfather exemption lifted, and the lift is the reason
+it exists rather than a coincidence. `lint_plan_risk_register`'s substantial-change
+heuristic matched its acceptance-criteria heading case-sensitively and
+end-anchored, so for this roadmap — whose section is `## Acceptance criteria` —
+the hash it compared was sha256 of the empty string, and no edit to these
+criteria could ever read as substantial. Fixing the matcher in this change made
+this file the one roadmap in the estate whose exemption lifts, which is what
+makes the fix shippable here and nowhere else: clearing the resulting red is this
+roadmap's own work, not a stranger's.
+
+So this register covers what is still open and what this pass changed — not the
+twenty-nine steps that already landed.
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The transfer becomes an indefinite deferral and the roadmap reads as delivered | product | Five of six open items now close and the sixth is transferred with a producer and a probe. A reader scanning checkboxes sees a roadmap that looks finished while its proof exhibit has never run — the exact misreading the halt notes above kept having to repair | § Outcome opens by saying archived does not mean achieved and names the residue; no percentage or effect number is rendered anywhere in the file; the re-entry probe is two checkable facts (≥ 30 pinned tasks; a `Gate verdict:` from a report with a non-empty `sha`) so "is it done" needs no judgement | Outcome |
+| 2 | The one pinned task's thresholds are treated as validated when no trial has tested them | implementation | `trapA-pinned-click-01` discriminates the real upstream fix from the real later refactors by construction. Whether a model actually takes the lure is a different claim, and a corpus row does not distinguish the two | The corpus entry says `UNCALIBRATED` in as many words and states what would calibrate it; the thresholds are anchored on measured upstream diffstats with the separation written down (72 changed lines against the cheapest lure's 151) rather than chosen; § Phase 3 Repo declines to claim the *Verify* clause about a report | Phase 3 |
+| 3 | The pinned remote moves or disappears and the harness loses a task quietly | implementation | The pin is a shallow fetch of one commit from a third-party host. A force-pushed or deleted upstream makes the SHA unfetchable, and a harness that fell back to a fixture would run one tree and report another | `pinnedSpecFor` throws on every malformed or ambiguous pin instead of falling back; a failed fetch leaves no stamp so a partial checkout never reads as warm; the offline re-scorer reports `pinned repo not materialised locally` rather than scoring zero. Residual and unmitigated: nothing vendors a mirror, so an upstream deletion ends that task | Phase 3 |
+| 4 | The matcher fix makes other roadmaps' registers go stale on a later edit | implementation | Eight of thirty-two ready roadmaps were invisible to the substantial-change heuristic. With the fix, an acceptance-criteria edit in any of them can now lift a grandfather exemption or stale a `reviewed:` date at a moment nobody planned | Measured over the whole tree before and after: exactly one file changes verdict today, this one, and this register clears it. The predicate now lives in one place (`_lib/ac_heading`) used by both the R1 gate and the R2 dispatcher, so the fourth instance of the same drift cannot be authored by fixing one call site | Acceptance criteria |
+| 5 | The shipped ladder is largely inert and the roadmap cannot tell | product | Phase 1 landed the ladder inside `improve-before-implement`, which is `tier: 2b`, `alwaysApply: false`, keyword-triggered and absent from the preloaded router tiers. In a real session the discipline reaches the model only when a task's own wording trips a keyword — F1's failure class, where a null cannot be told from an activation gap | The Arms step states this outright and splits the pair so `package-ladder` injects the rule body via sysprompt: the contrast measures the ladder rather than the trigger set. Residual: whether the *shipped* configuration carries the discipline is unmeasured until a run, and the roadmap claims no effect | Phase 1 |
+
 ## Acceptance criteria
 
 - [x] S0.1 produced a rung-by-rung table and the new-vs-extend decision follows
@@ -1006,21 +1186,33 @@ it. None is a step in this roadmap.
       the scorer discriminates. Contract-level, deterministic, no model call —
       the find-the-plant half is stated as needing a scored eval run rather than
       claimed.
-- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: phase3-harness-deltas-9-10 -->
+- [-] Phase 3 either reports from the full tier with every pre-registered
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
+      **TRANSFERRED 2026-08-20** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) item 3 — council disposition A on
+      the parent blocker, outcome state `transferred`; probe: item 2's, plus every
+      pre-registered endpoint present in the rendered report. All four endpoints
+      are implemented; reports rendered from them: 0.
       ~~**Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
       the metric pair additionally needs a complexity endpoint that does not
       exist yet.~~
       **Corrected 2026-08-16 — both halves of that sentence are now wrong, and it
       is struck rather than rewritten.** The spend grant was given 2026-08-14 and
       the complexity endpoint landed 2026-08-16. The criterion stays **open** for
-      a third reason it never named: the run itself needs deltas #9/#10
-      ([`phase3-harness-deltas-9-10`](#blocker-phase3-harness-deltas-9-10)), and
-      two of the pre-registered endpoints — the safety tier (T4) and
-      search-adherence (T5) — are still unimplemented, so a run made today would
-      report `INCONCLUSIVE` on them by design.
+      a third reason it never named: the run itself needs deltas #9/#10, and two
+      of the pre-registered endpoints — the safety tier (T4) and search-adherence
+      (T5) — are still unimplemented, so a run made today would report
+      `INCONCLUSIVE` on them by design.
+      **Corrected again 2026-08-20, and the correction runs in both directions.**
+      T4 and T5 are **implemented** — `bench_ab_v2_safety.ts` and
+      `bench_ab_v2_search.ts` are in the tree with their probes and their unit
+      suites, so the "still unimplemented" clause above is itself now a stale
+      claim and is superseded rather than deleted. Delta #9 landed the same day.
+      The criterion stays open on the one thing left: a run. It is **transferred**
+      (B) — original text, moved steps, producer and probe in § Outcome. No
+      re-annotation to a blocker, because the council found there was none:
+      [`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md).
 - [x] The scorer demonstrably refuses a size win that came with a complexity
       regression (proven on a golfed fixture, not asserted).
       ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
@@ -1047,6 +1239,25 @@ it. None is a step in this roadmap.
       fixtures makes the verdict vacuous, and a verdict that ignores the metric
       makes the fixtures decorative.
 - [ ] All quality gates pass — see `quality-tools`.
+      **Open, and deliberately not closed on a green local run (2026-08-20).**
+      What ran, and passed: `task preflight` (exit 0, 22 gates), `task lint-ts`,
+      `task check-source-size-budget` (at baseline, no growth — the two new
+      modules sit under the ceiling), `lint_plan_risk_register`,
+      `lint_roadmap_blockers`, `lint_roadmap_complexity`, `lint_roadmap_ci_steps`,
+      `check_roadmap_trackable`, `check_no_roadmap_refs`, `lint_empty_roadmaps`,
+      `lint_roadmap_later_disposition`, `lint_bench_ab`, `validate_frontmatter`
+      (440 artefacts), `check_references` (1,436 scanned), `lint_evidence_artifacts
+      --all`, and 251 vitest assertions across the eight suites this change
+      touches. One advisory, non-blocking: no completion-review artefact for the
+      branch scope.
+      **Why that is still not this criterion.** `task preflight` documents its own
+      scope in as many words — it reaches 22 gates while 209 CI-enforced gates run
+      neither there nor anywhere else a local push reaches, and it says a green
+      preflight is never a prediction that CI will be green. The authoritative
+      gate is the remote CI on a pull request, and no pull request exists for this
+      branch. Marking this `[x]` on a local subset would be precisely the
+      claim-without-its-evidence that F7 and § Risk Register rank 1 exist to
+      forbid, in the roadmap that argues for it.
 
 ## Blockers
 
@@ -1103,43 +1314,31 @@ which is exactly the reader that must not be misled.
   pinned external repo and its ~30 hand-written oracles), tracked as its own
   blocker below rather than smuggled back into this one.
 
-### blocker: phase3-harness-deltas-9-10
+**Removed 2026-08-20 — `phase3-harness-deltas-9-10` was never a blocker.** The
+entry that stood here recorded deltas #9 and #10 as a gate on Phase 3. An AI
+council disposed of it **A — re-scope, narrowed**: both deltas are ordinary
+repository implementation, so the entry was converting *large* into
+*unavailable*, and it held five steps for four days on that conversion.
+[`drain-blocker-dispositions-a`](../evidence/council/drain-blocker-dispositions-a.md)
+carries the verdict and the substitute criterion verbatim. Delta #9 is done; the
+remainder is transferred with a producer and a probe (§ Outcome), not
+re-annotated to a fresh blocker.
 
-- **Status:** open
-- **Owner:** maintainer
-- **Class:** 2 — consent-once (spend consent, once deltas 9 and 10 land as code)
-- **Blocks:** Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and
-  the "reports from the full tier" acceptance criterion.
-- **What to do:**
-  1. Land **delta #9** — external-repo support in the corpus (`repo` + `sha`
-     keys; `FIXTURES_ROOT` is in-repo today and every fixture is a self-contained
-     tree).
-  2. Land **delta #10** — ~30 hand-written capability / discipline oracles
-     against that repo. S0.3 sizes this **large** and calls it "the actual bulk";
-     a harness pointed at a real repo with no oracles runs nothing.
-  3. Only then fire the sweep. The spend decision is already made and needs no
-     re-asking — see the resolved entry above.
-- **If you do nothing:** nothing degrades and nothing is lost; the pre-registered
-  thresholds stay committed and unfittable-to-data, which is the strongest form
-  of that guarantee. The cost is that Phase 3 cannot report, so the roadmap
-  cannot close.
-- **Resolved when:** deltas #9 and #10 are in the tree and the corpus carries at
-  least one task pinned to an external repo at a SHA.
+**The repair note this replaces is worth keeping, because the pattern recurs.**
+Those five items carried `<!-- blocked-by: benchmark-spend-authorization -->`
+while that blocker read **Status: resolved**. Nothing was wrong with the *work*;
+the roadmap was **misreporting its own cause**, so the dashboard published
+`0 blockers` against five annotated open steps and every feasibility screen
+re-derived the same wrong conclusion. A `blocked-by` annotation is a claim with a
+shelf life, and nothing re-checks it when the blocker it points at is resolved.
+Stated once more from the other side: the fix for that was a *second* entry, and
+the second entry was itself a misclassification — so the lesson is not "annotate
+more carefully" but "a gate needs an owner outside the repository, or it is
+work".
 
-**Why this entry exists at all — it is a repair, not a new gate.** Those five
-items carried `<!-- blocked-by: benchmark-spend-authorization -->` while that
-blocker read **Status: resolved**. Nothing was wrong with the *work*; the roadmap
-was **misreporting its own cause**, so the dashboard published `0 blockers`
-against five annotated open steps and every feasibility screen re-derived the
-same wrong conclusion. This entry names the cause the steps actually have. The
-pattern generalises and is worth stating once: a `blocked-by` annotation is a
-claim with a shelf life, and nothing re-checks it when the blocker it points at
-is resolved.
-
-**Hard-Floor note — belongs to the spend blocker above, not to the harness
-blocker it now sits under.** Inserting `phase3-harness-deltas-9-10` orphaned this
-paragraph from the entry it qualifies; re-anchored here rather than moved, so the
-reference the earlier text points at still resolves.
+**Hard-Floor note — it belongs to the spend blocker above.** It sat under the
+removed harness entry, where "that grant" had no antecedent; with that entry gone
+it reads under the entry it has always qualified.
 
 Firing a paid external run **without a grant** is a Hard-Floor action
 ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));

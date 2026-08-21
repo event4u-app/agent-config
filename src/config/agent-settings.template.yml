@@ -395,8 +395,9 @@ project:
   #   public   -> a product with an intended market. Full three-question gate
   #               and the full ladder.
   # Default `public` = the behaviour every install had before this key existed.
-  # Absent resolves to `public` for the same reason: this package has no
-  # defaults layer, so absent means nobody said.
+  # Absent resolves to `public` too, mechanically: the template-defaults layer
+  # supplies this value beneath every file layer (agent_settings.ts:873) and
+  # this is not a settingsCarveOut key, so absent == an explicit `public`.
   audience: public
 
 # --- GitHub integration ---
@@ -586,6 +587,30 @@ roadmap:
   # describe scope and ordering, not calendars. Flip to a positive integer
   # only if your team genuinely commits work on a calendar plate.
   horizon_weeks: 0
+
+  # --- Class-1 gate budget (road-to-gate-autonomy Phase 2) ---
+  #
+  # The standing spend bound for CLASS-1 roadmap blockers — the gate class
+  # that is billable but reversible, where the human ingredient is spend
+  # consent rather than judgment (`agent-config gates --execute <id>`).
+  # Decided at `b-gate-budget-preauth`, option (a): TWO caps, because a
+  # per-run cap alone bounds one mistake and not a week of them. Every
+  # authorised run appends a receipt to
+  # `agents/runtime/state/gate-budget-ledger.jsonl`, which is the audit
+  # surface the rolling cap reads back.
+  #
+  # These caps bound the SIZE of an authorised spend. They never supply the
+  # authorisation: `gates --execute` still requires `--confirm` on every
+  # class-1 run, and a class-1 entry over either cap renders its consent
+  # line instead of running.
+  gate_budget:
+    # Per-run ceiling in USD. A class-1 entry whose `Budget:` field states a
+    # larger figure renders instead of running.
+    max_cost_per_run_usd: 5
+
+    # Rolling-window ceiling in USD over the last 7 days, summed from the
+    # receipt ledger. A run whose estimate would cross it renders instead.
+    max_cost_per_rolling_7d_usd: 25
 
 # --- Plan governance gates ---
 #

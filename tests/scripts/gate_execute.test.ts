@@ -50,6 +50,42 @@ function writeRoadmap(name: string, body: string): void {
     fs.writeFileSync(path.join(roadmapRoot, name), body, 'utf-8');
 }
 
+/** The class-1 receipt ledger inside the fixture repo. */
+function ledger(): string {
+    return path.join(repo, 'agents', 'runtime', 'state', 'gate-budget-ledger.jsonl');
+}
+
+/** Configure the standing class-1 budget in the fixture repo's own settings. */
+function writeCaps(perRun: number, rolling: number): void {
+    fs.writeFileSync(
+        path.join(repo, '.agent-settings.yml'),
+        [
+            'roadmap:',
+            '  gate_budget:',
+            `    max_cost_per_run_usd: ${String(perRun)}`,
+            `    max_cost_per_rolling_7d_usd: ${String(rolling)}`,
+            '',
+        ].join('\n'),
+        'utf-8',
+    );
+}
+
+/** A class-1 entry whose stated estimate is far over any sane per-run cap. */
+const PAID_FIELDS: readonly string[] = [
+    '- **Class:** 1',
+    '- **Run:** `echo SHOULD-NOT-RUN`',
+    '- **Budget:** ~50 USD per run',
+    '- **Question:** authorize the paid eval?',
+];
+
+/** The same entry, priced inside the caps the tests configure. */
+const CHEAP_FIELDS: readonly string[] = [
+    '- **Class:** 1',
+    '- **Run:** `echo ran-the-paid-thing`',
+    '- **Budget:** ~$4 per run',
+    '- **Question:** authorize the paid eval?',
+];
+
 beforeEach(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-exec-'));
     roadmapRoot = path.join(repo, 'agents', 'roadmaps');
@@ -179,26 +215,152 @@ describe('gates --execute — the evidence lands under the blocker', () => {
     });
 });
 
-describe('gates --execute — class 1 renders instead of running', () => {
-    it('with no budget ledger it emits the consent line and spends nothing', () => {
+describe('gates --execute — class 1 runs only inside the standing budget', () => {
+    // Every refusal below RENDERS. That is the blocker's own prescription for a
+    // missing ledger, generalised: a budget that cannot say yes says the
+    // consent line, never a degraded run.
+    it('with no caps configured it emits the consent line and spends nothing', () => {
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', PAID_FIELDS));
+        const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('rendered');
+        expect(r.code).toBe(0);
+        expect(r.report).toContain('CONSENT');
+        expect(r.report).toContain('no standing class-1 budget is configured');
+        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+        expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).toBe(before);
+        expect(fs.existsSync(ledger())).toBe(false);
+    });
+
+    it('over the per-run cap it renders and names the two figures', () => {
+        writeCaps(5, 25);
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', PAID_FIELDS));
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('rendered');
+        expect(r.report).toContain('exceeds the per-run cap');
+        expect(r.report).toContain('$50.00');
+        expect(r.report).toContain('$5.00');
+        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+        expect(fs.existsSync(ledger())).toBe(false);
+    });
+
+    it('over the rolling cap it renders even though the per-run cap passes', () => {
+        // Per-run 5 admits a $5 estimate — the caps are inclusive, so a run
+        // exactly AT a cap is allowed and only crossing it refuses. Rolling 22
+        // with $20 already receipted is therefore the shape that isolates the
+        // rolling half: the per-run check passes and the window still refuses.
+        writeCaps(5, 22);
+        fs.mkdirSync(path.dirname(ledger()), { recursive: true });
+        fs.writeFileSync(
+            ledger(),
+            [0, 1, 2, 3]
+                .map((d) =>
+                    JSON.stringify({
+                        kind: 'consumption',
+                        blocker: 'paid-eval',
+                        authorization: 'confirm-flag',
+                        estimated_usd: 5,
+                        actual_usd: null,
+                        at: new Date(WHEN.getTime() - d * 3600_000).toISOString(),
+                        single_use: true,
+                    }),
+                )
+                .join('\n') + '\n',
+            'utf-8',
+        );
         writeRoadmap(
             'road-to-x.md',
             roadmap('paid-eval', [
                 '- **Class:** 1',
                 '- **Run:** `echo SHOULD-NOT-RUN`',
-                '- **Budget:** ~50 USD per run',
+                '- **Budget:** ~$5 per run',
                 '- **Question:** authorize the paid eval?',
             ]),
         );
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('rendered');
+        expect(r.report).toContain('over the rolling cap');
+        expect(r.report).toContain('$20.00 is already receipted');
+        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+    });
+
+    it('a Budget field with no USD figure renders rather than guessing one', () => {
+        writeCaps(5, 25);
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('paid-eval', [
+                '- **Class:** 1',
+                '- **Run:** `echo SHOULD-NOT-RUN`',
+                '- **Budget:** ~50 queries per run',
+                '- **Question:** authorize the paid eval?',
+            ]),
+        );
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('rendered');
+        expect(r.report).toContain('states no USD estimate');
+        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+    });
+
+    it('inside the budget but without --confirm it echoes and runs nothing', () => {
+        writeCaps(5, 25);
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', CHEAP_FIELDS));
         const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
 
         const r = execute(roadmapRoot, 'paid-eval', WHEN);
         expect(r.outcome).toBe('rendered');
-        expect(r.code).toBe(0);
-        expect(r.report).toContain('CONSENT');
-        expect(r.report).toContain('no budget ledger');
-        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+        expect(r.report).toContain('is class 1 and would run');
+        expect(r.report).toContain('--confirm');
         expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).toBe(before);
+        expect(fs.existsSync(ledger())).toBe(false);
+    });
+
+    it('inside the budget with --confirm it runs, receipts, and resolves', () => {
+        writeCaps(5, 25);
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', CHEAP_FIELDS));
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('resolved');
+        expect(r.code).toBe(0);
+        const body = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
+        expect(body).toContain('ran-the-paid-thing');
+        expect(body).toContain('**Status:** resolved 2026-08-17');
+
+        const lines = fs
+            .readFileSync(ledger(), 'utf-8')
+            .split('\n')
+            .filter((l) => l.trim() !== '');
+        expect(lines).toHaveLength(1);
+        const rec = JSON.parse(lines[0]!) as Record<string, unknown>;
+        expect(rec['kind']).toBe('consumption');
+        expect(rec['blocker']).toBe('paid-eval');
+        expect(rec['authorization']).toBe('confirm-flag');
+        expect(rec['estimated_usd']).toBe(4);
+        expect(rec['actual_usd']).toBeNull();
+        expect(rec['single_use']).toBe(true);
+        expect(r.report).toContain('Receipt appended');
+    });
+
+    it('a Hard-Floor Run is refused even with --confirm and inside the budget', () => {
+        writeCaps(5, 25);
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('paid-eval', [
+                '- **Class:** 1',
+                '- **Run:** `git push origin main`',
+                '- **Budget:** ~$1 per run',
+                '- **Question:** authorize the paid eval?',
+            ]),
+        );
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('failed');
+        expect(r.report).toContain('is class 1 but its **Run:** command contains');
+        expect(r.report).toContain('Classes 0 and 1 are');
+        expect(fs.existsSync(ledger())).toBe(false);
     });
 });
 
