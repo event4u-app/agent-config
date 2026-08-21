@@ -19,16 +19,21 @@ status: ready
 
 ## Outcome
 
-**Archived does not mean achieved, and this roadmap is not archived.** Two of its
-six open items closed on evidence, three are `[-]` transferred to a stub, and one
-stays open.
+**Archived does not mean achieved, and this roadmap is now archived.** Three of
+its six open items closed on evidence and three are `[-]` transferred to a stub.
+Nothing is left open, and that is a statement about the checkboxes rather than
+about the goal — read the next paragraph before the percentage.
 
-**The dashboard reads 97 %, and that number is not a claim about the goal.** It
+**The dashboard reads 100 %, and that number is not a claim about the goal.** It
 counts checkboxes, and three of them are transferred rather than done — a
 percentage cannot distinguish "the work was done" from "the work moved to
 somewhere it can be done". The transfer is the reason the figure is high, so it
 is stated here next to the figure rather than left for a reader to reconstruct:
-**Phase 3 has never reported.** Per phase:
+**Phase 3 has never reported.** The figure moved from 97 % to 100 % because the
+last open item was an *acceptance criterion about the gates*, closed on the
+authoritative gate (§ the criterion, and
+[`solmin-quality-gates-disposition`](../evidence/council/solmin-quality-gates-disposition.md));
+no benchmark ran, and none of the transferred work came back. Per phase:
 
 | Phase | Disposition | What that means |
 |---|---|---|
@@ -36,7 +41,7 @@ is stated here next to the figure rather than left for a reader to reconstruct:
 | Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
 | Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
 | Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
-| Acceptance criteria | **4 of 6 satisfied, 1 transferred, 1 open** | The full-tier criterion is transferred to the stub. The quality-gates criterion stays open and is NOT claimed: see its own note for what actually ran, and note that it did **not** move to the stub — it is not gated on the run. |
+| Acceptance criteria | **5 of 6 satisfied, 1 transferred** | The full-tier criterion is transferred to the stub. The quality-gates criterion is now **satisfied** — closed 2026-08-21 on PR #1480's remote CI (43 `SUCCESS` / 0 failure) plus 7/7 push-to-main runs on merge commit `b593d8c0`, by AI-council disposition **1, decide-now**, 2/2 convergent. It never moved to the stub because it was never gated on the run; what it *was* gated on was the existence of a pull request, and one now exists and reported green. |
 
 ### The blocker disposition (A — re-scope, narrowed)
 
@@ -1063,7 +1068,7 @@ twenty-nine steps that already landed.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The transfer becomes an indefinite deferral and the roadmap reads as delivered | product | Five of six open items now close and the sixth is transferred with a producer and a probe. A reader scanning checkboxes sees a roadmap that looks finished while its proof exhibit has never run — the exact misreading the halt notes above kept having to repair | § Outcome opens by saying archived does not mean achieved and names the residue; no percentage or effect number is rendered anywhere in the file; the re-entry probe is two checkable facts (≥ 30 pinned tasks; a `Gate verdict:` from a report with a non-empty `sha`) so "is it done" needs no judgement | Outcome |
+| 1 | The transfer becomes an indefinite deferral and the roadmap reads as delivered | product | All six open items now close — three on evidence, three transferred with a producer and a probe. A reader scanning checkboxes sees a roadmap that looks finished while its proof exhibit has never run — the exact misreading the halt notes above kept having to repair | § Outcome opens by saying archived does not mean achieved and names the residue; no benchmark effect number is rendered anywhere in the file, and the completion percentage appears only inside the paragraph that says it is not a claim about the goal; the re-entry probe is two checkable facts (≥ 30 pinned tasks; a `Gate verdict:` from a report with a non-empty `sha`) so "is it done" needs no judgement | Outcome |
 | 2 | The one pinned task's thresholds are treated as validated when no trial has tested them | implementation | `trapA-pinned-click-01` discriminates the real upstream fix from the real later refactors by construction. Whether a model actually takes the lure is a different claim, and a corpus row does not distinguish the two | The corpus entry says `UNCALIBRATED` in as many words and states what would calibrate it; the thresholds are anchored on measured upstream diffstats with the separation written down (72 changed lines against the cheapest lure's 151) rather than chosen; § Phase 3 Repo declines to claim the *Verify* clause about a report | Phase 3 |
 | 3 | The pinned remote moves or disappears and the harness loses a task quietly | implementation | The pin is a shallow fetch of one commit from a third-party host. A force-pushed or deleted upstream makes the SHA unfetchable, and a harness that fell back to a fixture would run one tree and report another | `pinnedSpecFor` throws on every malformed or ambiguous pin instead of falling back; a failed fetch leaves no stamp so a partial checkout never reads as warm; the offline re-scorer reports `pinned repo not materialised locally` rather than scoring zero. Residual and unmitigated: nothing vendors a mirror, so an upstream deletion ends that task | Phase 3 |
 | 4 | The matcher fix makes other roadmaps' registers go stale on a later edit | implementation | Eight of thirty-two ready roadmaps were invisible to the substantial-change heuristic. With the fix, an acceptance-criteria edit in any of them can now lift a grandfather exemption or stale a `reviewed:` date at a moment nobody planned | Measured over the whole tree before and after: exactly one file changes verdict today, this one, and this register clears it. The predicate now lives in one place (`_lib/ac_heading`) used by both the R1 gate and the R2 dispatcher, so the fourth instance of the same drift cannot be authored by fixing one call site | Acceptance criteria |
@@ -1152,26 +1157,53 @@ twenty-nine steps that already landed.
       Neither test alone would be enough: a metric that cannot separate the
       fixtures makes the verdict vacuous, and a verdict that ignores the metric
       makes the fixtures decorative.
-- [ ] All quality gates pass — see `quality-tools`.
-      **Open, and deliberately not closed on a green local run (2026-08-20).**
-      What ran, and passed: `task preflight` (exit 0, 22 gates), `task lint-ts`,
+- [x] All quality gates pass — see `quality-tools`.
+      **Closed 2026-08-21 on the authoritative gate, and the evidence is stated as
+      a split because one run cannot cover both halves.** AI council disposition
+      **1 — decide-now, `satisfied`**, 2/2 convergent, quorum concluded:
+      [`solmin-quality-gates-disposition`](../evidence/council/solmin-quality-gates-disposition.md).
+      **Half one — the substantive tree.** PR
+      [#1480](https://github.com/event4u-app/agent-config/pull/1480) carried every
+      artefact this roadmap produced to `main` at head `8ca8e001e`:
+      **45 checks — 43 `SUCCESS`, 0 failure, 2 `SKIPPED`**, and both skips are
+      conditional jobs rather than unmet gates (`Release` is release-only;
+      `skill-lint-strict` is gated `if: github.event_name == 'push' && github.ref
+      == 'refs/heads/main'`, `.github/workflows/skill-lint.yml:312-313`, so it runs
+      after the merge — where all **7** push-to-main workflow runs on merge commit
+      `b593d8c0` concluded `success`). The strict gate therefore also passed, on
+      the merged tree.
+      **Half two — this closing commit.** It is bookkeeping only: this checkbox,
+      § Outcome, the council record, and the generated dashboard. It carries no
+      `src/` change, no dependency, no configuration that feeds behaviour, and no
+      executable code, which is the exact condition the council attached to the
+      verdict; its own CI run covers it, and if that run is not green the roadmap
+      stays in `main` unarchived rather than this box being wrong.
+      **Why the 2026-08-20 local run was not enough, kept because the reasoning
+      still holds.** `task preflight` documents its own scope in as many words —
+      it reaches 22 gates while 209 CI-enforced gates run neither there nor
+      anywhere else a local push reaches, and it says a green preflight is never a
+      prediction that CI will be green. The authoritative gate is the remote CI on
+      a pull request, and at the time of that run **no pull request existed for
+      this branch**. That is the one sentence this closure turns false; it does
+      not retroactively make the local subset sufficient. Closing on the local
+      run would still have been the claim-without-its-evidence that F7 and
+      § Risk Register rank 1 exist to forbid.
+      **What ran locally, then and now, as corroboration and not as the gate.**
+      2026-08-20: `task preflight` (exit 0, 22 gates), `task lint-ts`,
       `task check-source-size-budget` (at baseline, no growth — the two new
       modules sit under the ceiling), `lint_plan_risk_register`,
       `lint_roadmap_blockers`, `lint_roadmap_complexity`, `lint_roadmap_ci_steps`,
       `check_roadmap_trackable`, `check_no_roadmap_refs`, `lint_empty_roadmaps`,
       `lint_roadmap_later_disposition`, `lint_bench_ab`, `validate_frontmatter`
       (440 artefacts), `check_references` (1,436 scanned), `lint_evidence_artifacts
-      --all`, and 251 vitest assertions across the eight suites this change
-      touches. One advisory, non-blocking: no completion-review artefact for the
-      branch scope.
-      **Why that is still not this criterion.** `task preflight` documents its own
-      scope in as many words — it reaches 22 gates while 209 CI-enforced gates run
-      neither there nor anywhere else a local push reaches, and it says a green
-      preflight is never a prediction that CI will be green. The authoritative
-      gate is the remote CI on a pull request, and no pull request exists for this
-      branch. Marking this `[x]` on a local subset would be precisely the
-      claim-without-its-evidence that F7 and § Risk Register rank 1 exist to
-      forbid, in the roadmap that argues for it.
+      --all`, and 251 vitest assertions across the eight suites that change
+      touched. 2026-08-21, on trunk `d0fad2ccd`: the same roadmap and structural
+      battery green again, plus `check_estate_count` (within ratchet),
+      `check_depth_budget` (4 violations **at baseline**, age 15d — known debt,
+      not new breakage), `check_no_external_sources`, and `task build-ts`.
+      **What this closure does NOT say.** It is a statement about the gates and
+      nothing else. Phase 3 has still never reported; the full-tier run stays
+      transferred with both halves of its probe false (1 pinned task, no report).
 
 ## Blockers
 
