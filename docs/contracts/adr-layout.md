@@ -62,10 +62,93 @@ phase: <roadmap-stem> · <phase-id>     # optional but recommended
 type: retrospective | prospective
 protected_dimensions: [...]            # optional — see § Reopen authority
 reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
+
+provenance:                            # see § Provenance and evidence
+  kind: human | agentic | mixed | unknown
+  decision_makers: [...]
+  human_directed: true | false | unknown
+  agentic_mode: single | council | delegated   # optional, descriptive only
+evidence:
+  strength: E0 | E1 | E2 | E3 | E4
+  discovery: complete | incomplete     # required when strength is E0
+  basis: [...]                         # file:line | URL | CLAIMS id | benchmark id
+authority_basis: evidence | owner_intent   # optional; absent → evidence
 ---
 ```
 
 Supersession links cross surfaces: a per-area ADR may supersede a flat ADR and vice versa. The numeric prefix in `supersedes:` makes the target unambiguous (`ADR-007` = flat, `ADR-cost-0001` = per-area).
+
+## Provenance and evidence
+
+Two **descriptive** axes, added 2026-08-21. They record who decided and how
+fact-based the decision is. They are read by
+[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) and printed
+by `adr_cite_check`, and they price the *burden* of a reopen record (below).
+
+```
+AN EVIDENCE GRADE IS A MEASUREMENT, NOT A PERMISSION.
+IT PRICES REVIEW BURDEN AND PRIORITY. IT CONFERS NO AUTHORITY.
+NO PARTY GAINS AUTHORITY FROM A GRADE IT PROPOSED OR BENEFITS FROM.
+`reversible-internal` IS ITSELF AN AUTHORITY-BEARING CLASSIFICATION AND IS
+NEVER SELF-ASSIGNED BY THE PARTY THAT WOULD ACT ON IT.
+AN ADR'S HISTORICAL DECISION-MAKER DOES NOT DETERMINE ITS REOPEN VENUE.
+```
+
+The last line matters because the opposite reflex is easy: a record decided by
+a council does not need a council to reopen it. Venue comes from the proposed
+transition, the affected trust boundaries and the reserved dimensions — the
+discriminator below — never from the historical decision-maker.
+
+### `provenance`
+
+- `human` — a human explicitly selected or directed the decision.
+- `agentic` — an agent or an AI council selected it without human selection. A
+  council is deliberately **not** its own `kind`: epistemically it is agents,
+  and a separate class would re-suggest that seats confer a different quality
+  of authority. `agentic_mode` records the shape descriptively instead.
+- `mixed` — human premise, agent mechanism.
+- `unknown` — the migration default. Never infer `human` because the word
+  "maintainer" appears in Consequences.
+
+### `evidence.strength`
+
+Claim-relative, never a count of sources. Three models citing three sources
+yields E3 **because of the sources**.
+
+| Grade | Meaning | Repo example |
+|---|---|---|
+| `E0` | Opinion — agent preference, council convergence, intuition | the 44 engine-shaped REJECTs (`engine-reclassification-2026-07.md`) |
+| `E1` | One local observation — one incident, consumer, measurement, tree constraint | ADR-048's observed command counts (`ADR-048:30`) |
+| `E2` | Repeated or comparative — reproducible comparison, multiple independent incidents, bounded A/B | ADR-229's duplicate work, measured twice (`ADR-229:52`) |
+| `E3` | Strong empirical or authoritative practice — pre-registered benchmark, production data, established community standard, applicable vendor guidance | `claims:code-graph-retrieval-null`; "PSR-12 because it is the PHP-FIG standard" |
+| `E4` | External constraint — protocol/API compatibility with real consumers, legal obligation, demonstrated security invariant | — |
+
+Even E4 is not "forever": standards change, contracts are retired.
+
+### `evidence.discovery` — required on E0
+
+A bare E0 collapses five different states: evidence absent · evidence existed
+but was never cited · cited somewhere non-standard · present elsewhere in the
+tree and not found · external and never fetched. The last four are **discovery**
+failures, not evidence failures, and a record graded weak because nobody looked
+is the cheapest way to manufacture a reopenable lock.
+
+So `discovery: incomplete` is the honest default and the only value permitted
+until a defined evidence search has run and found nothing; `complete` asserts
+absence and is a claim the author owns.
+
+### `authority_basis`
+
+`evidence` (default) or `owner_intent`. A human product decision does not fake
+a grade — it records `strength: E0` with `authority_basis: owner_intent`, and
+its authority comes from ownership of purpose rather than from pretend-empirics.
+
+**Mutation policy**, because without one the field is an authorization bypass:
+setting or changing `authority_basis` on an existing accepted ADR is itself an
+ADR transition. Moving *away from* `owner_intent` takes the owner-reserved
+path — it removes an owner's claim on the decision. Moving *to* `owner_intent`
+is a strengthening and needs only the standard record. A census may **propose**
+a value; it never writes one.
 
 ## Reopen authority
 
@@ -150,9 +233,55 @@ approval" and changes nothing. The residual risk is governance debt — an ADR
 that stays `unclassified` forever — and it is accepted here rather than traded
 for a certain re-blockage.
 
-**No bulk classification.** Classifying 146 decisions up front is expensive,
-error-prone, and invites tendentious self-classification. Classify an ADR when
-it is reopened, cited as a blocker, or otherwise on the desk.
+**No bulk classification of authority.** Classifying the estate's
+`reopen_policy` up front is expensive, error-prone, and invites tendentious
+self-classification. Classify an ADR's *authority* when it is reopened, cited
+as a blocker, or otherwise on the desk.
+
+**Amended 2026-08-21 — the descriptive axes are exempt under an owner
+mandate.** Full clause as it now reads: *classify an ADR when reopened, cited
+as a blocker, on the desk, or when executing an owner-mandated evidence
+census. Bulk classification requires an explicit owner mandate naming the
+census scope, and is permitted for the descriptive axes (`provenance`,
+`evidence`) only — `reopen_policy` stays classify-on-desk.*
+
+Two reasons, and the second is the load-bearing one.
+
+The axes are different objects from `reopen_policy`: they are derivable from
+the record's own citations and they default conservatively (`unknown`, `E0`,
+`discovery: incomplete`) when nothing is cited, so a census that finds nothing
+produces an honest low grade rather than a confident one. And a grade confers
+no authority (§ Provenance and evidence), which is precisely what made the
+original clause's fear apply to `reopen_policy` and not here.
+
+The second reason is measured. Classify-on-desk has produced approximately
+nothing: at `492873f09`, `reopen_policy` exists in **1 of 177** flat ADRs and
+**0 of 7** per-area records. The decisive detail is that the 2026-08-19 reopen
+sweep *was* the on-the-desk moment for twelve records and classified exactly
+one — noting in its own words that ADR-216 "is the first ADR to carry the new
+fields". Eleven of twelve left the desk unclassified in the very change that
+created the mechanism. A mechanism that fires once per twelve opportunities is
+not a policy, and the owner mandate (2026-08-21) is what this amendment
+records rather than a unilateral widening.
+
+**Every accepted ADR carries a `review_trigger` — staged, never terminal.**
+`terminal`, `none`, an empty value and permanence phrasing are invalid at
+every stage: "no trigger — terminal decision" is permanence with softer
+wording, and ADR-208 is the standing proof that permanence and reopen
+conditions do not cohere inside one document. The staging exists because 88 of
+the 147 accepted records carry no trigger at all, so a same-day hard
+requirement would make the tree invalid on the day the schema landed:
+
+- a new or materially amended accepted ADR needs a substantive trigger now;
+- an existing accepted record may carry `review_trigger: unclassified`;
+- the exception count is monotonically decreasing;
+- superseded and rejected records are historical and need no active trigger.
+
+A trigger must be externally observable and falsifiable. Invalid: "when the
+maintainer reconsiders" (a process, not a condition), "when this no longer
+makes sense" (subjective), "never". Valid: a named standard withdrawn, a
+platform constraint removed, a measured metric crossing a threshold, a stated
+objective changing, a regulation amended, the owner explicitly reopening.
 
 ### The reopen record
 
@@ -188,16 +317,52 @@ reserved row fires). Identical ceremony for a typo-level amendment and an
 architectural shift costs more than asking the owner, which would reintroduce
 the interrupt this section removes.
 
+**Burden priced by evidence grade** (2026-08-21). The discriminator above and
+the owner-reserved rows apply on top of this table, unchanged — the grade
+changes how much a reopen must *do*, never who may do it.
+
+| Grade × provenance | Reopen record burden |
+|---|---|
+| `E0`/`E1` · agentic | Lightweight: what changed in one paragraph, the old rationale noted, the rollback path. A snapshot does not earn a trial. |
+| `E0`/`E1` · human | Neither a silent obey nor a silent overturn: surface it — "your decision under conditions A/B; C has changed; re-evaluate?" |
+| `E2` | The standard record, items 1–5 above. |
+| `E3`/`E4` | The standard record **plus** engaging the original evidence in kind: answer a measurement with a measurement or its demonstrated invalidation; answer a standard with the standard's change or a recorded deviation rationale. |
+| `authority_basis: owner_intent` | Binding until the owner changes it. The agent may always surface accumulated cost — "this now causes X/Y/Z; still binding; recommend re-evaluation" — as sourced observations, never as a scalar score. |
+
+A **low-evidence record may state a decision; it does not establish that the
+alternatives remain invalid.** "We chose B because we had to choose" is a
+legitimate and publishable record. Three months later it is not grounds for
+"A is forbidden, the ADR says B". `adr_cite_check` prints that distinction at
+cite time (`authority_effect: disabled-shadow-mode`) rather than the record
+being demoted out of `accepted`.
+
+And what a grade does **not** buy: no row above lets a grade authorize an
+action. Whether an independently validated grade may ever reduce the
+*authorization* burden is a separate, owner-reserved question, deliberately
+not answered here — see the `authority-coupling-decision` blocker in
+`road-to-evidence-based-adr-governance`.
+
 ## Amendments
 
 Amendment is the most common form a reopen actually takes — an ADR is rarely
 replaced wholesale, it is corrected in place with its history kept. 18 ADRs in
 this tree carry an amendment block, in **three** unreconciled conventions
 (`## Amendment N (date)`, `## Amendment — date · topic`, `**Amended <date> —`),
-none of them signalled in frontmatter or in the index. The measurable cost:
-ADR-035 asserts a rejection in two places that ADR-232 reopened, and ADR-035
-contains no reference to ADR-232 — the amendment link is one-sided, so the stale
-half is the half a reader finds first.
+none of them signalled in frontmatter or in the index. The measurable cost was
+ADR-035: it asserted a rejection in two places that ADR-232 had reopened, with
+no reference back, so the stale half was the half a reader found first.
+
+**Corrected 2026-08-21 — this paragraph was itself the stale half.** ADR-035
+now carries `amended_by: ADR-232` (`:8`), a body banner (`:38-41`) and reopen
+markers on **both** assertion sites; the 2026-08-19 sweep records the fix. The
+present-tense claim above therefore described the contract's own memory rather
+than the tree, which is exactly the failure mode it was written to name — and
+it is why an effective-state projection is worth building: a linear read of a
+long document surfaces whichever half comes first, and that applies to
+contracts as readily as to ADRs. ADR-020 is the live fixture instead: its
+2026-07-13 amendment deleted the committed bridge marker and dropped the
+`bridge:` back-pointer (`:147`, `:155`) while `:194` still narrates that marker
+as a live failure mode.
 
 **The convention, going forward:**
 
