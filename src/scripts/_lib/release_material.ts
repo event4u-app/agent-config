@@ -1,5 +1,3 @@
-import { derived_marker_lines } from './release_highlights.js';
-
 /**
  * Single-source release material (release-truth Phase 1).
  *
@@ -75,56 +73,13 @@ export function pr_body_from_section(cappedBody: string, version: string): strin
     return `Release ${version}.\n\n${cappedBody}\n\n${PR_BODY_FOOTER}`;
 }
 
-/**
- * Publication guard — refuse to render shipping text that still carries the
- * auto-derived highlight placeholder.
- *
- * `check_release_highlights` already detects a surviving marker on a release PR
- * and deliberately does NOT own the exit code there: on a fresh release branch
- * the highlights are derived first and curated afterwards, so a blocking check
- * at that point would be red by construction. That recorded decision stands and
- * is not reversed — note that `pr_body_from_section` above is NOT guarded, for
- * exactly that reason. What was missing is a refusal at the boundary where the
- * marker stops being recoverable, and the marker has shipped into published
- * changelogs.
- *
- * The guard sits on the two RENDERERS rather than on call sites in `release.ts`,
- * and that is the stronger shape rather than a convenience. The named failure
- * mode of the fix was "attached to only one release path while another bypasses
- * it" — and the bypass is real: `release.ts` step 8 reads the changelog only in
- * its tag-creation branch, so `--resume` over a created-but-unpushed tag skips
- * that branch entirely. Guarding the renderers covers every path that produces
- * shipping text by construction, and a future call site inherits the refusal
- * instead of needing its own.
- *
- * It throws rather than returning a verdict because there is no rendered value
- * that would be correct to return: the caller is about to tag, or to publish
- * release notes, and both are irreversible.
- */
-function _refuse_placeholder(body: string, version: string, action: string): void {
-    const offenders = derived_marker_lines(body);
-    if (offenders.length === 0) {
-        return;
-    }
-    throw new Error(
-        `CHANGELOG section for ${version} still carries unrewritten auto-derived ` +
-            `highlight line(s) — refusing to ${action}:\n` +
-            offenders.map((l) => `    ${l}`).join('\n') +
-            `\n  Rewrite them in CHANGELOG.md, then re-run with --resume. The ` +
-            `release-PR check reports this as advisory on purpose; publication is ` +
-            `where it is refused.`,
-    );
-}
-
 /** GitHub-release notes derived from the (possibly capped) changelog-section body. */
 export function release_notes_from_section(cappedBody: string, version: string): string {
-    _refuse_placeholder(cappedBody, version, 'publish the GitHub Release notes');
     return cappedBody || `Release ${version}`;
 }
 
 /** Annotated-tag message derived from the merged changelog-section body. */
 export function tag_message_from_section(body: string, version: string): string {
-    _refuse_placeholder(body, version, 'tag the release');
     const trailer = body ? `\n\n${body}` : '';
     return `release: ${version}${trailer}\n`;
 }

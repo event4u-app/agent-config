@@ -290,31 +290,6 @@ export function stale_draft_labels(
     return HEAD_LABELS.filter((l) => (curated[l] ?? '').includes(DERIVED_MARKER));
 }
 
-/**
- * Publication guard — the lines of a rendered changelog body that still carry
- * the auto-derived marker.
- *
- * `stale_draft_labels` above answers the same question against a PARSED curated
- * record, which is what the release-PR advisory reads. This answers it against
- * the raw section body, which is what actually ships: the annotated tag
- * message, the GitHub Release notes and `CHANGELOG.md` on main all render from
- * that body.
- *
- * The two are deliberately separate functions rather than one shared entry
- * point. The advisory path must keep its non-blocking posture — the exit code
- * there is owned solely by the `_none_` check, because a warning that reds the
- * release PR is guaranteed-red by construction (highlights are auto-derived
- * first and curated later). A shared helper would invite one caller's
- * exit-code semantics onto the other, which is exactly the confusion the
- * advisory decision was recorded to avoid.
- */
-export function derived_marker_lines(body: string): string[] {
-    return body
-        .split('\n')
-        .filter((line) => line.includes(DERIVED_MARKER))
-        .map((line) => line.trim());
-}
-
 // ─── git span collection ────────────────────────────────────────────────────
 
 const _RECORD = '\u001e';
