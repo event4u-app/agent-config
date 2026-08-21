@@ -25,9 +25,17 @@ anti-regrowth ratchet whose baseline *"walks down only"*; a metric whose
 population the authors can opt out of, one line at a time, does not deliver that
 promise.
 
-This is not a hypothesis. Measured 2026-08-21 at `origin/main` @ `52cfb4bb8`:
-`agents/roadmaps/*.md` holds **27** roadmap files and `check_estate_count`
-reports `active_roadmaps 24`. The three-file gap is exactly the `draft` set.
+This is not a hypothesis. Measured 2026-08-21: `agents/roadmaps/*.md` holds
+**26** roadmap files and `check_estate_count` reports `active_roadmaps 23`. The
+**three-file gap is exactly the `draft` set.**
+
+**The gap, not either number, is the defect** — and this stub was drafted with
+`27` and `24` in it, from a reading taken earlier in the very change that
+transferred it, before that change archived its own parent roadmap. Both absolute
+figures moved by one within a single commit series; the difference did not. The
+figures are corrected here and the episode is left recorded, because it is a
+small live demonstration of why the probe below is written as a **comparison**
+rather than as a pinned number.
 
 ## The mechanism, with file:line
 
@@ -84,8 +92,10 @@ named authority for disabling enforcement."*
 
 1. The **decision**: does the estate ratchet count `draft` roadmaps?
 2. If yes, the **counting change** in `check_estate_count` / its parser, its
-   **baseline migration** (24 → 27 today, an accounting change that earns a
-   `baseline_history` entry saying so), an **observe-only first release**,
+   **baseline migration** (23 → 26 on today's tree, an accounting change that
+   earns a `baseline_history` entry saying so — and one whose two numbers will
+   both have moved again by the time anyone acts on this, which is why the
+   entry must state the *reason*, never just the delta), an **observe-only first release**,
    **rollback criteria**, and a **named authority** who can disable enforcement.
 3. If no, a written reason recorded against T2 stating that the ratchet
    deliberately measures non-draft files only, so the hole is a documented
@@ -111,23 +121,26 @@ so the probe is satisfied by either branch resolving.
 ```bash
 # Clause 1 — does the gate's population still exclude drafts?
 #   Compares the raw file count against what the gate counts.
-ls agents/roadmaps/*.md | wc -l                        # 27 at transfer
+ls agents/roadmaps/*.md | wc -l                        # 26 at transfer
 ./scripts-run src/scripts/check_estate_count | grep active_roadmaps
-#   -> "active_roadmaps       24  (baseline 24, +0)" at transfer
+#   -> "active_roadmaps       23  (baseline 23, +0)" at transfer
+#   The DIFFERENCE (3) is the defect. Both absolutes drift with every archival.
 
 # Clause 2 — is there a written decision either way?
 grep -rn "draft" src/config/estate-count-budget.json    # 0 matches at transfer
 ```
 
-**Measured 2026-08-21 at `52cfb4bb8`: 27 files, gate counts 24, and the budget
+**Measured 2026-08-21: 26 files, gate counts 23 — a gap of 3 — and the budget
 file records nothing about drafts (0 matches).** Re-entry completes when the two
 numbers agree **or** the budget file carries a decision naming `draft`.
 
 The first clause is deliberately a *comparison* rather than a fixed number: the
 raw count and the gate count both move as the estate drains, and only their
-**difference** is the defect. A probe pinned to "27" would report FIRED the first
+**difference** is the defect. A probe pinned to "26" would report FIRED the first
 time an unrelated roadmap archived, which is the false-fired failure the parent's
-own triage batch recorded three times.
+own triage batch recorded three times — and, as § The defect records, both
+absolutes in this stub's own first draft went stale inside a single commit series,
+which is that argument arriving before the ink dried.
 
 ## Dissent, recorded
 
