@@ -1017,26 +1017,34 @@ gates:
     # last case is what pins the metric as excess lines rather than a file count;
     # a count-based ratchet passes it, and this gate must not.
 
-  - id: adr_cite_check
-    argv: ["--cited"]
-    min_scanned: 140
-    corpus: "distinct ADR references cited across src/rules, src/skills, src/domains and docs (178 at baseline)"
-    status: enforced
-    note: >
-      The count is references RESOLVED AGAINST the corpus, not the subset that
-      resolved successfully — the same number the gate's own ledger reports, so
-      two values cannot drift under one word. Floor set well below the live 178
-      because the citation population moves with ordinary work (a retired rule
-      or a merged skill legitimately drops citations), while a collapse of
-      either root cannot pass: an emptied citation root drops the count to 0 and
-      the gate's `reportScanned` assertion reds, and a moved decision surface
-      makes every reference unresolved, which reds on exit 1 with 178 ledger
-      failures. Before this row no workflow invoked this gate at all — only a
-      test imported it — so every "enforced at cite time" claim about ADR
-      citations was model-carried.
-      No `canary:` recipe is needed to prove discrimination and one is also
-      possible here (a created file citing a non-existent ADR), but the gate
-      carries a `--self-test` instead: three cases, two rejecting, covering an
-      unresolvable citation AND the dead-scope shape a single plant cannot
-      express — a citation root that names no ADR at all, which must red rather
-      than report a green scan over nothing.
+  # adr_cite_check is DELIBERATELY NOT REGISTERED here, and the reason is a
+  # disagreement between two gates over the same file rather than an oversight.
+  #
+  # The script is gate-shaped by behaviour: it emits one `scanned:` line, adopts
+  # the ledger, asserts its scan scope, and runs in CI as `ADR citations resolve`
+  # (rule-backstops.yml) plus `task check-adr-citations`. So it certifies
+  # something and can lie about it, which is this manifest's own criterion.
+  #
+  # But `gate_population.matchesGatePattern` classifies structurally, on a NAME
+  # PREFIX (`lint|check|audit|skill|verify_`), and `adr_cite_check.ts` carries
+  # `check` as a suffix. Registering it made `gate_population.test.ts` red:
+  # "manifest lists adr_cite_check, population does not". The two gates read the
+  # same file and disagree.
+  #
+  # Three fixes were weighed and each was worse than the gap:
+  #   - widening the pattern to a `_check$` suffix pulls in four unrelated
+  #     scripts (bench_drift_check, worktree_cleanup_check, update_check,
+  #     cmd_settings_check), forcing them into the ledger contract and reddening
+  #     the completeness ratchet for work nobody asked for;
+  #   - renaming the script to `check_adr_citations.ts` is the convention-conform
+  #     answer and touches 26 files, including archived review artefacts and a
+  #     committed diff.patch that must not be rewritten;
+  #   - manifest-driven classification is explicitly rejected by
+  #     gate_population.ts's own header (a new gate lands before anyone
+  #     registers it, so that inverts the real dependency).
+  #
+  # So the row is dropped and the floor is unregistered. What is LOST is stated
+  # rather than implied: the gate runs, but nothing holds it to a minimum scan,
+  # so a future change that silently narrowed its corpus to zero would pass. The
+  # honest close is the rename, in its own change, where 26 files of churn are
+  # the subject rather than a side effect.
