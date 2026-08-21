@@ -4,7 +4,13 @@
 // The measurement itself is `check_standing_rule_delivery`'s and is tested
 // there; what these tests pin is the user-visible half — that a consumer sees
 // the scoped-delivery win on first run, and that the both-layers state reads as
-// a red pointing at `install --layer` rather than as a saving.
+// a red pointing at the REMEDY THAT EXISTS rather than as a saving.
+//
+// Updated 2026-08-21: the remedy this file used to pin was
+// `install --layer=<global|project>` — layer suppression, which ADR-226 declined
+// for this repository and ADR-236 superseded with the partition. A test that
+// pins superseded advice as the desired output is how the advice survives the
+// decision that replaced it, so the assertions moved to the partition.
 //
 // Fixture layers only: both real layers are machine-local (`~/.claude/rules` is
 // per-machine, `.claude/rules` is gitignored), so asserting live numbers would
@@ -100,7 +106,7 @@ describe("standing-delivery savings line", () => {
     }
   });
 
-  it("both-layers-red: names the doubled delivery and points at install --layer", () => {
+  it("both-layers-red: names the doubled delivery and points at the partition", () => {
     const ws = tmpDir("sd-both-ws-");
     ruleLayer(ws, ["commit-policy.md", "scope-control.md"]);
     const globalHome = tmpDir("sd-both-global-");
@@ -116,8 +122,13 @@ describe("standing-delivery savings line", () => {
     expect(text).toContain("⚠️");
     expect(text).toContain("both rule layers active");
     expect(text).toContain("2 rule(s) delivered twice");
-    expect(text).toContain("install --layer");
-    expect(text).toContain(`scoped delivery would be ~${m!.received_tokens - m!.overlap_tokens}`);
+    expect(text).toContain(`single-layer delivery would be ~${m!.received_tokens - m!.overlap_tokens}`);
+    // The remedy must be the one that can actually fix the condition: the
+    // partition is armed by `agent-config install` writing a host-layer
+    // fingerprint, and nothing about `--layer` does that.
+    expect(text).toContain("ADR-236");
+    expect(text).toContain("agent-config install");
+    expect(text).not.toMatch(/run `agent-config install --layer=/);
     // Pure duplicates — suppression alone is enough, so no refresh caveat.
     expect(text).not.toContain("refresh before suppressing");
   });

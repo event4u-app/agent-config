@@ -6164,6 +6164,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-single-delivery-closure",
+      "title": "Road to single delivery closure — the two families the partition never reached",
+      "disposition": "completed",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-single-delivery",
       "title": "Road to single delivery — one artefact, one layer, no duplicates",
       "disposition": "completed",

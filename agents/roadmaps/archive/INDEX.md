@@ -464,6 +464,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-shared-design-tokens`](road-to-shared-design-tokens.md) | Road to shared design tokens — one visual identity across two independent GUIs | completed | 4 | 18/18 | _not extractable_ |
 | [`road-to-simplicity-and-everywhere`](road-to-simplicity-and-everywhere.md) | Road to Simplicity and Everywhere | closed-with-cancellations | 7 | 32/38 | _not extractable_ |
 | [`road-to-simplicity-and-goal-discipline`](road-to-simplicity-and-goal-discipline.md) | Road to simplicity and goal discipline — close the over-engineering and vague-goal gaps | completed | 4 | 13/13 | _not extractable_ |
+| [`road-to-single-delivery-closure`](road-to-single-delivery-closure.md) | Road to single delivery closure — the two families the partition never reached | completed | 3 | 16/16 | _not extractable_ |
 | [`road-to-single-delivery`](road-to-single-delivery.md) | Road to single delivery — one artefact, one layer, no duplicates | completed | 6 | 21/21 | _not extractable_ |
 | [`road-to-single-install-source-of-truth`](road-to-single-install-source-of-truth.md) | Roadmap: Single Install Source-of-Truth — finish the `--apply-payload` bridge | completed-with-deferrals | 6 | 21/24 | _not extractable_ |
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |

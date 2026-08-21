@@ -23,6 +23,8 @@ import { fingerprintLayers, hostLayerInputs } from '../../src/install/hostLayerF
 import {
     isExclusivelyPackageOnly,
     partitionVerdict,
+    personaPartition,
+    personaWithheldFor,
     MAINTAINER_WORKSPACE,
 } from '../../src/install/partitionEligibility.js';
 import { read_lockfile, write_lockfile } from '../../src/scripts/_lib/installed_lock.js';
@@ -262,5 +264,65 @@ describe('installed.lock carries the fingerprint across a round trip', () => {
         const back = read_lockfile(target);
         expect(back?.host_layer_fingerprint).toBeUndefined();
         expect(back?.agent_config_version).toBe('14.6.0');
+    });
+});
+
+describe('personaWithheldFor — the family the partition never reached until 2026-08-21', () => {
+    // `.claude/personas` was written unconditionally while `~/.claude/personas` was
+    // installed from `_CLAUDE_SKILL_BUNDLE`: 29 shared names on a freshly
+    // regenerated tree, measured by neither delivery surface because `personas` was
+    // in neither's TYPES.
+    it('withholds a Claude tool directory when the partition is active', () => {
+        expect(personaWithheldFor('.claude/personas', true)).toBe(true);
+    });
+
+    it('withholds NOTHING when the partition is inactive', () => {
+        // The fail-safe direction: no verified host layer means the project layer
+        // is the only one, so withholding would deliver the persona nowhere.
+        expect(personaWithheldFor('.claude/personas', false)).toBe(false);
+        expect(personaWithheldFor('.cursor/personas', false)).toBe(false);
+    });
+
+    it('never withholds a non-Claude tool directory, even when active', () => {
+        // `partitionActive` verifies the CLAUDE host layer against installed.lock.
+        // It says nothing about ~/.cursor, so withholding a cursor persona on the
+        // strength of a claude fingerprint is the one outcome that loses an
+        // artefact outright.
+        expect(personaWithheldFor('.cursor/personas', true)).toBe(false);
+        expect(personaWithheldFor('.windsurf/personas', true)).toBe(false);
+    });
+
+    it('exposes the full list unchanged, so the caller can still report the count', () => {
+        expect(personaPartition(process.cwd(), ['a.md', 'b.md']).all).toEqual(['a.md', 'b.md']);
+    });
+
+    it('listFor returns an EMPTY ARRAY for a withheld directory, not null', () => {
+        // The shape the caller's stale-symlink sweep depends on: it removes any
+        // link absent from the list it was given, so `[]` is what empties a
+        // populated tree. `null` or the full list would stop new duplication and
+        // leave the existing symlinks standing.
+        //
+        // This asserts the CONTRACT only. An earlier version of this test
+        // reimplemented `personaWithheldFor(...) ? [] : ['a.md']` and called that
+        // a reconciliation test — both seats of a neutral review named it: it
+        // would stay green if the generator stopped applying the partition. The
+        // reconciliation itself is exercised through the real generators in
+        // `partition_delivery_topology.test.ts`, which reds when the gating is
+        // removed.
+        const p = personaPartition(process.cwd(), ['a.md', 'b.md']);
+        for (const dir of ['.claude/personas', '.cursor/personas']) {
+            const got = p.listFor(dir);
+            // Shape only, deliberately: which of the two values comes back is a
+            // property of THIS machine's install state, so asserting it here
+            // would pass either way. The value is asserted where it can be
+            // forced — the topology test above.
+            expect(Array.isArray(got)).toBe(true);
+            expect(got.length === 0 || got.length === 2).toBe(true);
+            expect(p.countFor(dir)).toBe(got.length);
+        }
+        // `.cursor/` is never withheld, whatever the install state — this one IS
+        // machine-independent and is the assertion that would catch a helper
+        // withholding everywhere.
+        expect(p.listFor('.cursor/personas')).toEqual(['a.md', 'b.md']);
     });
 });
