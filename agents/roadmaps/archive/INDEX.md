@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**524 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 181 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -226,6 +226,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-enforcement-peer-disposition`](road-to-enforcement-peer-disposition.md) | Road to enforcement-peer disposition — wire the fail-open gates, record what 9.8.0 already answered | completed | 3 | 7/7 | _not extractable_ |
 | [`road-to-enforcement-proof`](road-to-enforcement-proof.md) | Road to Enforcement Proof — say only what the machine actually enforces | completed | 5 | 27/27 | _not extractable_ |
 | [`road-to-engineering-memory`](road-to-engineering-memory.md) | Roadmap: Engineering Memory — project-specific facts as first-class input | completed | 4 | 15/15 | _not extractable_ |
+| [`road-to-estate-drawdown`](road-to-estate-drawdown.md) | Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced | closed-with-cancellations | 5 | 4/8 | _not extractable_ |
 | [`road-to-eval-loop-runnability`](road-to-eval-loop-runnability.md) | Roadmap: Eval-loop runnability — one dead root the sweep cannot see | archived-with-open-steps | 2 | 9/10 | _not extractable_ |
 | [`road-to-event4u-namespace-and-claude-desktop`](road-to-event4u-namespace-and-claude-desktop.md) | Road to `~/.event4u/agent-config/` namespace + real Claude Desktop deployment | completed | 6 | 40/40 | _not extractable_ |
 | [`road-to-evidence-v2-accumulation-layer`](road-to-evidence-v2-accumulation-layer.md) | Roadmap: Evidence v2 — Accumulation Layer (deferred from project-intelligence) | closed-with-cancellations | 3 | 2/6 | _not extractable_ |

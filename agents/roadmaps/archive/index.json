@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 524,
+  "count": 525,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2827,6 +2827,20 @@
         "done": 15,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-estate-drawdown",
+      "title": "Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 4,
+        "deferred": 0,
+        "cancelled": 4
       },
       "verdict": null,
       "status": null

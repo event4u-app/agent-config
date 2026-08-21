@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 52,
     "open_blockers": 61
   },
@@ -286,6 +286,13 @@
       "later_roadmaps": 52,
       "open_blockers": 61,
       "why": "WALKED DOWN by 1 blocker: road-to-subagent-lifecycle-integrity resolved raw-capture-needs-host-env, which is open on origin/main and resolved here \u2014 checked against the diff rather than taken from the branch's own prose. The item that could not be finished went to stubs/road-to-subagent-payload-capture.md with its own probe, so the open work is counted in the stub rather than dropped. active_roadmaps unchanged at 24: the roadmap keeps open steps and the regen did not archive it. later_roadmaps unchanged at 52 \u2014 nothing parked. The history array was conflicted at merge (trunk ahead, branch carrying its own entries); main was taken as the base and the branch entries appended, because the array is append-only and a dropped entry is a lost reason."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 active roadmap: road-to-estate-drawdown archived, all eight steps terminal. EARNED vs BANKED, because the trunk moved under this branch and the split matters: this change earned the ENTIRE -1 on active_roadmaps and NONE of the movement on the other two. When this branch fast-forwarded to 52cfb4bb8 the tree measured exactly 24/52/61, i.e. already at the baseline the trunk had just set, so open_blockers 62->61 was the previous entry's drawdown and not this one's. later_roadmaps unchanged at 52 -- nothing was parked. open_blockers unchanged at 61 and that is the honest number even though this change closed a roadmap: its single blocker b-consolidated-decision-sheet was ALREADY resolved on the trunk by PR #1492, so archiving the file removed no open record from the count. ACCOUNTING WARNING, recorded rather than absorbed: two of the five closures were TRANSFERS into agents/roadmaps/stubs/, which neither metric counts -- steps 2.1 and 2.2 plus AC-2 went to road-to-estate-triage-remaining-batches.md, and the draft-status ratchet hole went to road-to-draft-status-ratchet-boundary.md. So a reader must not read -1 active as -1 unit of work: the stub carries a probe measured at 71 untriaged files, and 71 files of scope left the counted estate by being renamed rather than by being done. That is exactly the accounting move this history array exists to make visible."
     }
   ],
   "target": {
