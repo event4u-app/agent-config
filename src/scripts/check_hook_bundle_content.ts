@@ -54,6 +54,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { reportScanned } from "./_lib/scan_scope.js";
 import { rewriteOutfile } from "./rebuild_hook_bundle.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -87,22 +88,33 @@ function main(): number {
     // Loud no-op, matching the sibling gates: a fresh checkout or CI has no
     // bundle, and materialising one here would change what other gates see.
     process.stdout.write(
-      `check_hook_bundle_content: no self-hosted ${LIVE_REL} — nothing executes locally, nothing to compare\nscanned: 0\n`,
+      `check_hook_bundle_content: no self-hosted ${LIVE_REL} — nothing executes locally, nothing to compare\n`,
     );
+    reportScanned({
+      gate: "check_hook_bundle_content",
+      scanned: 0,
+      units: "bundle(s)",
+      roots: [LIVE_REL],
+      allowEmpty:
+        "dist/hooks/ is UNTRACKED (`git ls-files dist/hooks/` returns zero), so a fresh " +
+        "checkout or a CI runner has no bundle by construction. An empty scope here is the " +
+        "correct reading of the environment, not a dead scan root — the artefact this gate " +
+        "guards is a local build output and exists only where the hooks actually run.",
+    });
     return 0;
   }
 
   const script = buildScript(REPO_ROOT);
   if (script === null) {
     process.stderr.write(
-      "check_hook_bundle_content: package.json has no `build:hooks` script — refusing to guess the flag set\nscanned: 0\n",
+      "check_hook_bundle_content: package.json has no `build:hooks` script — refusing to guess the flag set\n",
     );
     return 2;
   }
   const rewritten = rewriteOutfile(script, PROBE_REL);
   if (rewritten === null) {
     process.stderr.write(
-      `check_hook_bundle_content: \`build:hooks\` no longer writes ${LIVE_REL} — refusing to build to a guessed path\nscanned: 0\n`,
+      `check_hook_bundle_content: \`build:hooks\` no longer writes ${LIVE_REL} — refusing to build to a guessed path\n`,
     );
     return 2;
   }
@@ -124,7 +136,7 @@ function main(): number {
     });
     if (built.status !== 0 || !fs.existsSync(probe)) {
       process.stderr.write(
-        `check_hook_bundle_content: rebuild failed (exit ${String(built.status)})\n${built.stderr ?? ""}\nscanned: 0\n`,
+        `check_hook_bundle_content: rebuild failed (exit ${String(built.status)})\n${built.stderr ?? ""}\n`,
       );
       return 2;
     }
@@ -133,8 +145,14 @@ function main(): number {
     const probeDigest = digestOf(probe);
     if (liveDigest === probeDigest) {
       process.stdout.write(
-        `✅  ${LIVE_REL} is byte-identical to a rebuild from this source (sha256 ${liveDigest.slice(0, 12)})\nscanned: 1\n`,
+        `✅  ${LIVE_REL} is byte-identical to a rebuild from this source (sha256 ${liveDigest.slice(0, 12)})\n`,
       );
+      reportScanned({
+        gate: "check_hook_bundle_content",
+        scanned: 1,
+        units: "bundle(s)",
+        roots: [LIVE_REL],
+      });
       return 0;
     }
 
@@ -143,9 +161,14 @@ function main(): number {
         `    executing: sha256 ${liveDigest.slice(0, 12)}  (${String(fs.statSync(live).size)} bytes)\n` +
         `    rebuilt:   sha256 ${probeDigest.slice(0, 12)}  (${String(fs.statSync(probe).size)} bytes)\n` +
         `    The mtime check cannot see this — it compares ordering, not bytes.\n` +
-        `    Heal with: ./scripts-run src/scripts/rebuild_hook_bundle\n` +
-        `scanned: 1\n`,
+        `    Heal with: ./scripts-run src/scripts/rebuild_hook_bundle\n`,
     );
+    reportScanned({
+      gate: "check_hook_bundle_content",
+      scanned: 1,
+      units: "bundle(s)",
+      roots: [LIVE_REL],
+    });
     return 1;
   } finally {
     try {

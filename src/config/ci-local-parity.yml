@@ -184,6 +184,25 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: check_hook_bundle_content
+    class: developer-machine-scoped
+    reason: >
+      Compares `dist/hooks/dispatch.js` — the bundle that ACTUALLY EXECUTES the
+      hooks — against a rebuild from this checkout's sources. `git ls-files
+      dist/hooks/` returns ZERO: the bundle is an untracked local build
+      artefact, so a fresh CI checkout has none and the gate can only report
+      "nothing to compare". Wiring it into a workflow would measure an artefact
+      no CI run has, which is the empty-scope false green this repo's
+      gate-coverage manifest exists to refuse. Declared rather than wired for
+      the same reason `check_single_delivery` below is. The blind spot it
+      closes is real and was measured on 2026-08-21: an edit to the git guard's
+      authorization window was never rebuilt into the bundle, the guard kept
+      enforcing the old value for a full hour, and the sibling
+      `check_hook_bundle_freshness` stayed green throughout because it compares
+      MTIMES — ordering, not equivalence. An mtime-preserving edit, a `touch`,
+      or an archive restore all pass it. That asymmetry is the finding: a green
+      CI cannot speak for the bundle a maintainer is running, and only a local
+      gate can. Cost measured, like its neighbours in the pre-push set: 0.27s.
   - id: check_single_delivery
     class: developer-machine-scoped
     reason: >
