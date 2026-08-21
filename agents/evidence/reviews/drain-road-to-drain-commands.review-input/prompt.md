@@ -21,14 +21,17 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 73d720501cd89606812727281de0f680410f89e5, review
-  artefacts excluded), scope hash `9a444f8e59089e22e78f86cd032fbbf20a2f7bb75778beb76ab7e5704c1e2799`
+- diff: `diff.patch` — the review scope (branch head e9d6c96f9b1ce695e0828e32058fc684c1f449fc, review
+  artefacts excluded), scope hash `296c8627bf3e41ea1a7f52e73abd7d3d5657ee178d1ec7c8a59a1e5e305b20c9`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
+- CAPABILITIES.yaml
 - README.md
 - agents/index.md
+- agents/reports/originality.json
+- agents/reports/originality.md
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-drain-commands.md
 - dist/agent-src/commands/evals/git-pr-merge.json
@@ -41,13 +44,16 @@ Changed files:
 - docs/catalog.md
 - docs/command-flows.md
 - docs/contracts/command-clusters.md
-- docs/decisions/ADR-238-drain-command-surface-and-merge-authority.md
+- docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md
 - docs/decisions/INDEX.md
 - docs/featured-skills.md
 - docs/getting-started-by-role.md
 - docs/getting-started.md
+- docs/proof.md
+- internal/reports/secret-scanner-adversarial.json
 - src/agent-src/commands/evals/git-pr-merge.json
 - src/agent-src/commands/evals/roadmap.json
+- src/config/ci-local-parity.yml
 - src/config/estate-count-budget.json
 - src/domains/git/README.md
 - src/domains/git/pack.yaml
@@ -79,5 +85,5 @@ Fill the findings table in `drain-road-to-drain-commands.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 9a444f8e59089e22e78f86cd032fbbf20a2f7bb75778beb76ab7e5704c1e2799, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 296c8627bf3e41ea1a7f52e73abd7d3d5657ee178d1ec7c8a59a1e5e305b20c9, reviewed <YYYY-MM-DD>
 ```
