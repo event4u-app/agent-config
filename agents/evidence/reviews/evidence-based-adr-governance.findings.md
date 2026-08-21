@@ -6,8 +6,8 @@ inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
   scope_hash: b8cc986720c129738b8e86e7f099625a0940ede6623b2be711ee4d11c96061d7
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
-  roadmap_hash: a9bd1750025021d4e29b0aec4235e8c217b8dcd3d8634b035e747027fed9a3cd
-  ac_hash: 327efd58479ca26ce9d509ee580e6d433a34250fe5a7ab40dbf30d17c9b679ee
+  roadmap_hash: 800a9818d2d9b9d49a3aba039efd66f0b832e10b2de77b1d3fe18e48691ad9a3
+  ac_hash: 8242b18b255db39bda653ae3500a284986007aa38a6e4976fdfb69048f710552
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
@@ -24,6 +24,20 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**`roadmap_hash` and `ac_hash` re-derived with it — and this is the step I missed.**
+The manifest pins four inputs, not one: `scope_hash`, `diff_sha`, `roadmap_hash` and
+`ac_hash`. All three re-binds above moved the scope and left the roadmap pair at the
+round-2 values, while the fixes had edited the roadmap itself (AC-3, AC-6, 2.1's and
+4.1's verify lines, blocker-lane row 5, the archive path). Locally
+`check_completion_review` reported clean throughout, because it does NOT compare those
+two — `dispatch_r2_reviewer --verify-current` does, and I ran it to READ the new scope
+hash without re-running it afterwards to confirm the manifest. CI caught it:
+`manifest mismatch (stale review): roadmap_hash, ac_hash diverged`.
+
+Two green gates are not one green gate. The lesson is the re-bind checklist, not the
+hashes: after editing the manifest, re-run `--verify-current` until it says verified,
+rather than inferring it from the sibling check that happens to be cheaper to run.
 
 **Re-bound a third time.** `deb847a3…` → `b8cc9867…`, for one path correction the merge
 forced: the trunk archived `road-to-user-out-of-the-loop.md` mid-review and
