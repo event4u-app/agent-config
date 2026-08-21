@@ -39,7 +39,7 @@ of them is a judgement call:
 | Class | What it is | Resolution |
 |---|---|---|
 | **generated** | a build output, an index, a compiled manifest — anything a generator writes from a source in the tree | re-run the generator. **Never mix hunks**, and note that a *clean* auto-merge of a generated file is still wrong: it can produce a file matching neither branch |
-| **measured** | a baseline, budget, or ratchet number a CI gate compares against | re-run the measurement on the merged tree and record what it says. Two branches legitimately measured two different trees, so there is no side to take — and picking one is how a ratchet silently loosens |
+| **remeasured** | a baseline, budget, or ratchet number a CI gate compares against | re-run the measurement on the merged tree and record what it says. Two branches legitimately measured two different trees, so there is no side to take — and picking one is how a ratchet silently loosens |
 | **authored** | prose, source, config a human wrote | a human decision — read both sides. This is what the rest of this skill is about |
 
 Getting the class wrong is the expensive direction: hand-merging a generated

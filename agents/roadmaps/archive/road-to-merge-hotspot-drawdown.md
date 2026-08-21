@@ -42,13 +42,13 @@ paths conflict, with the count of the 7 PRs each appears in:
 
 **D2 — `sync_pr_branch` calls two generated files authored.** `build_archive_index.ts`
 writes `agents/roadmaps/archive/{INDEX.md,index.json}` (`:409–410`, both in one
-call). The `GENERATED` array (`sync_pr_branch.ts:36–52`) does not list either,
+call). The `GENERATED` array (`sync_pr_branch.ts:36–50`) does not list either,
 so `classifyConflicts` (`:85`) routes them to `authored` and the tool tells the
 reader to make a human decision about a file whose only correct resolution is
 `task`-regenerate. That array already carries a comment recording this exact
 defect once before, for `src/scripts/hook_manifest.json`: *"One session resolved
 this same conflict three times and named it structural."* Same failure, two
-more paths, 48 commits/60d each.
+more paths, 47 commits/60d each.
 
 **D3 — the two ratchet baselines have no classification at all.**
 `src/config/estate-count-budget.json` (93 commits/60d, `baseline_history` now
@@ -64,8 +64,14 @@ measurements — pick-a-side on a number, which is how a ratchet silently loosen
 
 **D4 — the cadence behind the #1 hotspot is unexplained.**
 `agents/roadmaps-progress.md` was touched by **1030** commits in 60 days —
-~17/day — against 303 for the next path (`internal/.condensation-hashes.json`,
-which is already untracked and appears in **zero** conflicts). Nothing in the
+~17/day — against ~303 for the next path,
+`internal/.condensation-hashes.json`. **Correction (post-review): that file is
+DELETED, not untracked** — `23f189a58` dropped the hash cache entirely
+(`feat(condense): read staleness off the projection`), it is in no `.gitignore`,
+and no generator writes it. Its zero conflicts come from the mechanism being
+removed, not from untracking, so it is **not** an in-repo precedent for the
+untrack answer and must not be cited as one. Its churn number does not reproduce
+either (301 on a relative window, 306-307 on absolute bounds). Nothing in the
 handover asks *why* 17/day; it goes straight to merge strategy. A cadence that
 high may itself be the defect, and a merge strategy chosen before measuring it
 is a fix aimed at a symptom.
@@ -154,9 +160,16 @@ Divergent, recorded not resolved: whether the per-gate split of
 measurement epoch (seat 2). Both agree the split is the leading design. This
 roadmap ships neither — it ships the block and the precondition, per B2.
 
-**This roadmap is council guards 1–3 plus the two measurements the council
-asked for.** It deliberately does not contain the cutover: guard 3 does not
-exist yet, and a consumer-CI-breaking change is owner-reserved.
+**This roadmap delivers council guard 1, plus the two measurements the council
+asked for.** Guard 2 (sync-tool support for an intentional tracked→untracked
+transition) is **not** delivered and is the open gate. Guard 3 (old/new consumer
+compatibility checks) is **not** delivered either: what shipped is a
+*measurement* of the propagation path (D7), and the council asked to *introduce*
+checks — a measured gap discharges nothing. **Corrected post-review:** an earlier
+version of this line claimed "guards 1–3", while the stub simultaneously said
+"guard 3 half-discharged" and its own probe section said no version guard exists.
+One delivered guard, two open. The cutover is out of scope because guard 2 does
+not exist and a consumer-CI-breaking change is owner-reserved.
 
 ## Phase 1 — Tell the truth about what conflicts
 
@@ -228,14 +241,25 @@ exist yet, and a consumer-CI-breaking change is owner-reserved.
       "reduce the cadence" from the cutover's option set.
       verify: the measurement lands under `agents/evidence/` with the exact
       commands, the three counts, and a one-line verdict either way.
-- [x] **3.2 Attribute the estate-budget conflict anatomy.** Over the same
-      window, classify conflicting hunks on
+- [x] **3.2 Attribute the estate-budget conflict anatomy. THE HONEST NULL
+      FIRED.** Over the same window, classify commits touching
       `src/config/estate-count-budget.json` as `baseline_history` append vs.
-      `baseline` walk vs. other. Pre-registered expectation: appends dominate
-      (71 history entries against a handful of baseline moves). **Honest null:**
-      if baseline moves dominate, an append-safety split buys little and the
-      REMEASURED class from 1.2 is the whole available fix — publish that.
-      verify: same evidence file, per-class counts, verdict either way.
+      `baseline` walk vs. both. Pre-registered expectation: appends dominate (71
+      history entries against a handful of baseline moves). Pre-registered honest
+      null: if baseline moves dominate, an append-safety split buys little and
+      the REMEASURED class from 1.2 is the whole available fix.
+      **Result: baseline moves dominate — 39 of 43 commits move the baseline, and
+      exactly 1 in 60 days is a pure append.** So the null is the outcome, and
+      `REMEASURED` is the whole fix on this file rather than an interim step.
+      **The first published number (40 of 43 pure appends) was WRONG** and was
+      caught by an independent reviewer, not by me: the method classified `-U0`
+      hunks by regex, and the `baseline` object uses the same key names as a
+      history entry, so a pure baseline walk matched the entry-line pattern. The
+      tell was in the output — `structure keys only: 0`, a cell that cannot be
+      non-zero — and it shipped unquestioned into an ADR premise and a PR body.
+      verify: the evidence file carries the corrected JSON-parse method, the five
+      per-class counts, the defect mechanism, and the single worked example
+      commit (`e79f0450e`, a pure baseline walk counted as an append).
 
 ## Phase 4 — Record what the council refused
 
@@ -272,6 +296,28 @@ exist yet, and a consumer-CI-breaking change is owner-reserved.
       verify: the sentence exists at both locations and names this roadmap;
       the AC does not claim behavioural adoption.
 
+## Rollback triggers, per phase
+
+Council point 8 asked for one per phase. An earlier version of this roadmap
+recorded the point and shipped none, which is the failure the point names.
+
+- **Phase 1 (classification).** Revert the `REMEASURED` class if the tool is ever
+  observed *performing* a measurement rather than naming it, or if a path lands
+  in two arrays — `isGenerated` wins the routing, so a duplicate would silently
+  hand a baseline a `git checkout --ours` instruction. Revert the archive-pair
+  entry if `build_archive_index` stops writing both files in one call.
+- **Phase 2 (corrections).** Nothing to roll back: a probe that built nothing,
+  and a header sentence replaced by a true one. If the corrected header is read
+  as a feature *removal*, the fix is one more sentence, not a revert.
+- **Phase 3 (measurements).** A measurement is not revertible; it is
+  **falsifiable**. Both are superseded the moment someone re-runs the published
+  commands and gets different counts — which already happened to 3.2, and the
+  corrected entry carries the mechanism that hid it.
+- **Phase 4 (records).** Reopen ADR-239 only on the six preconditions it names,
+  never on the conflicts having got worse. Promote or delete the cutover stub if
+  its four probes stop being measurable — a stub whose probes cannot be run is
+  the burial its own risk row names.
+
 ## Blockers
 
 None. Every step above is agent-executable on this checkout; the two decisions
@@ -295,16 +341,23 @@ because a blocker here would keep this roadmap open on work nobody is doing.
 - [x] **AC-1** — `sync_pr_branch` classifies every one of the six measured
       conflicting paths, and the classification is asserted in tests: three
       `GENERATED` (dashboard, archive INDEX.md, archive index.json), two
-      `REMEASURED` (both baseline files), one authored (stubs README). No
-      measured conflicting path is silently absent from all three buckets.
+      `REMEASURED` (both baseline files), one authored (stubs README).
+      **The `authored` row is a tautology and is marked as one:**
+      `classifyConflicts` uses `authored` as its `else` branch, so every
+      non-empty string lands somewhere and "absent from all three buckets" is
+      unreachable by construction. The falsifiable half is the five non-default
+      rows.
 - [x] **AC-2** — the archive-pair atomicity invariant is shown to be already
       enforced, with the observed red from a one-sided-staleness probe and the
       two registration file:lines recorded, and **no** new gate is added for it;
       and `src/config/gitignore-block.txt` no longer claims an unstage that no
       code performs.
 - [x] **AC-3** — both Phase 3 measurements exist under `agents/evidence/` with
-      their commands, their counts and a verdict, and each states which option
-      it removed from the cutover's option set.
+      their commands, their counts and a verdict, and each states which option it
+      removed from the cutover's option set. 3.1 removed "throttle the
+      generation"; 3.2, after correction, removed "split the history for
+      append-safety" — its honest null fired, and the entry carries the method
+      defect that first hid it.
 - [x] **AC-4** — the union-merge block is an ADR carrying all six reopening
       preconditions, and the cutover stub names council guards 1–3 with the two
       this roadmap discharged marked as such. Neither claims the cutover

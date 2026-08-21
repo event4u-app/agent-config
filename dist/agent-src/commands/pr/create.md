@@ -161,8 +161,10 @@ the ratchet silently loosens), and the third has none a script may choose.
 **On `CONFLICTING`, run this before touching the GitHub web editor.** The web
 editor cannot tell generated from authored, so it presents a mechanical
 regenerate and a real human decision as the same three-way merge — which is the
-exact failure path observed on a branch 11 commits behind base
-(road-to-merge-hotspot-drawdown § 0). Adoption of this line is not measurable
+failure path road-to-merge-hotspot-drawdown was opened over — a branch resolved
+in the web editor while behind its base. The observation itself lives in the
+maintainer handover that roadmap cites as its Source, not in the roadmap's own
+§ 0, so do not expect to find it there. Adoption of this line is not measurable
 without telemetry this repository has ruled out; it is a checklist item, not a
 gate.
 Deliberately not in the pre-push hook: it mutates the tree, and a hook that

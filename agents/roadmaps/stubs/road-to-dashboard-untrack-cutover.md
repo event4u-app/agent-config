@@ -45,10 +45,12 @@ rollout), specifically:
 8. A `BREAKING_CHANGES` entry with both migration paths, and the first-party
    consumer run (Galawork et al.) as evidence.
 
-## Guards — two discharged, one open
+## Guards — ONE discharged, two open
 
-The council named three guards, in order. Two were discharged by the parent
-roadmap and are recorded here so this stub is not a re-analysis:
+The council named three guards, in order. **Corrected post-review:** an earlier
+version of this section said "two discharged, one open" and then stated two
+paragraphs later that no version guard exists — the accounting contradicted its
+own probe, and the parent roadmap claimed all three. One is discharged.
 
 - **Guard 1 — `GENERATED` classification with paired regeneration and fixture
   tests. DISCHARGED.** `agents/roadmaps/archive/{INDEX.md,index.json}` are
@@ -57,8 +59,11 @@ roadmap and are recorded here so this stub is not a re-analysis:
   `tests/scripts/sync_pr_branch.test.ts`. The paired-regeneration half was found
   already enforced: `build_archive_index --check` names a one-sided drift and
   runs at `.github/workflows/consistency.yml:160`.
-- **Guard 3 (partial) — old/new consumer compatibility. HALF-DISCHARGED, and
-  the discharged half is the bad news.** The propagation path is confirmed
+- **Guard 3 — old/new consumer compatibility. OPEN.** The council asked to
+  *introduce* compatibility checks; what exists is a *measurement* of the
+  propagation path, and a measured gap discharges nothing. The measurement is
+  still worth having, and its second half is the bad news. The propagation path
+  is confirmed
   (`install.sh:1280` on any non-`--global` install; `cmd_refresh.ts:307` for
   `refresh --project`, which `init --project` aliases to via
   `initRouting.ts:125-129`), so a template line reaches consumers with no code
@@ -66,7 +71,8 @@ roadmap and are recorded here so this stub is not a re-analysis:
   `SKIP_SYNC=true` (`install:181`) and syncs no gitignore at all — a
   global-scope consumer never receives the entry.
 - **Guard 2 — sync-tool support for an intentional tracked→untracked
-  transition. OPEN.** Nothing exists. This is the gate.
+  transition. OPEN.** Nothing exists. This is the gate, and with Guard 3 it is
+  two of three still to build.
 
 ## Re-entry probes, measured 2026-08-21
 

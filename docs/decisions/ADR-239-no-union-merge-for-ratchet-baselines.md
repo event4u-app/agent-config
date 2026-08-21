@@ -35,15 +35,21 @@ other's.
 `src/config/gate-violation-baselines.json` are the two most-conflicted
 non-generated paths in this repository: each conflicts in **7 of the 7 open PRs
 that were `CONFLICTING`** when measured on 2026-08-21, at 93 and 55 commits per
-60 days. The churn is overwhelmingly append-shaped — measured for the budget
-file, **40 of 43** non-merge commits touch only history-entry lines, and the file
-carries 71 `baseline_history` entries (evidence:
-`agents/evidence/analysis/merge-hotspot-cadence.md` § 3.2).
+60 days. The churn was believed to be append-shaped, and it is not. A first
+measurement reported 40 of 43 non-merge commits as pure history appends; that
+method classified `-U0` hunks by regex and the `baseline` object uses the same
+key names as a history entry, so a pure baseline walk was counted as an append. A
+JSON-parse re-measurement of the same 43 commits reads **1** pure append, 4 pure
+baseline walks, 35 commits doing both, and **39 of 43 commits moving the
+baseline** (evidence: `agents/evidence/analysis/merge-hotspot-cadence.md` § 3.2,
+corrected). The file carries 71 `baseline_history` entries, so the array does
+grow — but almost never on its own.
 
 The obvious fix, and the one an inbox handover proposed, is to move the
 append-only history into a line-per-record file and declare
 `merge=union eol=lf` on it in `.gitattributes`, citing the precedent this
-repository already has for agent memory (`.gitattributes:50`, `:62-66`).
+repository already has for agent memory (`.gitattributes:50`, `:62-66`) — a
+citation that is itself part of the error, see § Decision.
 
 Neither file can be gitignored instead: a ratchet's entire mechanism is a
 committed number a PR diff can be compared against, so an untracked baseline is
@@ -85,11 +91,21 @@ change that proposes the driver:
 **The endorsed alternative needs none of them: one file per record.**
 `src/config/<budget>-history/<record-id>.json`, where a filename collision *is*
 content identity, so a same-identity conflict becomes structurally impossible
-rather than silently reduced. This is the shape `.gitattributes:62-66` already
-describes for the memory directory, and it is the correct reading of that
-precedent — union-merging *inside* one file and separating records *into* files
-are different mechanisms, and only the second one is what the memory layout
-actually does for identity.
+rather than silently reduced. This is the shape `.gitattributes:68-75` describes
+for the memory **directory** layout, in its own words: *"one file per entry,
+content-addressed by hash. Filename collisions are content-identity, so normal
+(non-union) merge is fine here."*
+
+**The lines usually cited for this are the wrong ones, and the mistake is
+instructive.** `.gitattributes:62-66` is the memory **flat** layout — five YAML
+files carrying `merge=union`, i.e. the very mechanism this record forbids, whose
+own comment calls itself *"a best-effort safety net for the append-only case, not
+a guarantee — the directory layout below has no such caveat."* Union-merging
+*inside* one file and separating records *into* files are different mechanisms
+living eight lines apart in one config, and an earlier revision of this record
+named that distinction correctly in this very sentence and then pointed at the
+wrong half. A reader following the pointer to implement the alternative would
+have landed on the forbidden mechanism. Cite `:68-75`.
 
 **For `gate-violation-baselines.json` specifically**, the same per-record shape
 maps onto its 11 keyed gate entries as one file per gate. The council split on
@@ -124,10 +140,19 @@ appeal is real — it is one `.gitattributes` line against a schema migration �
 and that asymmetry is exactly why the block needs to be a record rather than a
 review comment.
 
-**Leave both files monolithic and rely on `REMEASURED` alone.** Rejected as a
-*permanent* answer, kept as the interim one. The measurement says 40 of 43
-non-merge commits are pure appends, so an append-safety change removes the
-dominant mode; declining to build it is a sequencing decision, not a design one.
+**Leave both files monolithic and rely on `REMEASURED` alone.** For
+`estate-count-budget.json` this is now the ACCEPTED answer, not an interim one,
+and the corrected measurement is why: 39 of 43 commits move the baseline and
+exactly one is a pure append, so an append-safety split would have addressed the
+mode that fires once per 60 days and left the one firing in 35 of 43 commits
+untouched. That remaining mode is the semantically real one — two branches
+measured two different trees — and `REMEASURED` is the whole fix available for
+it. An earlier revision of this record argued the opposite from the wrong number
+and called the decline a sequencing choice; it is a design conclusion.
+
+This does not transfer to `gate-violation-baselines.json`, whose churn is
+per-gate keyed entries rather than an appended array. Its anatomy has not been
+measured and the per-gate split stays the leading design, gated as above.
 
 **Gitignore both files.** Rejected: it deletes the ratchet. Recorded because it
 was the maintainer's original question and the answer is unambiguous — the
@@ -141,5 +166,7 @@ committed number *is* the mechanism.
   never auto-resolves.
 - `src/scripts/_lib/gate_baseline.ts:42` — `BASELINE_REL`, the reader that makes
   `gate-violation-baselines.json` a ratchet rather than a log.
-- `.gitattributes:50`, `:62-66` — the union-merge and per-file-identity
-  precedents, and why only the second one transfers.
+- `.gitattributes:50` and `:62-66` — the two union-merge precedents (intake
+  JSONL, flat memory YAML). `:68-75` — the per-file-identity precedent, which is
+  the one that transfers. The three are eight lines apart and are routinely
+  conflated; an earlier revision of this record conflated them.

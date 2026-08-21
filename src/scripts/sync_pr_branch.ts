@@ -57,7 +57,7 @@ const GENERATED = [
     // classified AUTHORED until 2026-08-21, which made this tool ask for a human
     // decision about a file whose only correct resolution is regeneration --
     // the identical defect the hook_manifest.json comment above records, on two
-    // more paths at 48 commits/60d each. They conflict in 2 of the 7 open PRs
+    // more paths at 47 commits/60d each. They conflict in 2 of the 7 open PRs
     // measured for road-to-merge-hotspot-drawdown. Regenerate; never merge.
     'agents/roadmaps/archive/INDEX.md',
     'agents/roadmaps/archive/index.json',
@@ -108,7 +108,16 @@ export function isGenerated(rel: string): boolean {
     return GENERATED.some((g) => (g.endsWith('/') ? norm.startsWith(g) : norm === g));
 }
 
-/** True when `rel` is a measured ratchet baseline rather than generated or authored. */
+/**
+ * True when `rel` is listed as a measured ratchet baseline.
+ *
+ * This does NOT assert exclusivity against `GENERATED` — it only reads its own
+ * array. `classifyConflicts` establishes the precedence (generated first), so a
+ * path added to both arrays would route as generated while this predicate also
+ * returned true, and no test would catch it. Keep the arrays disjoint; the
+ * per-path exclusivity assertions in the test file cover today's two members
+ * only.
+ */
 export function isRemeasured(rel: string): boolean {
     const norm = rel.replace(/\\/g, '/');
     return REMEASURED.some((g) => (g.endsWith('/') ? norm.startsWith(g) : norm === g));
@@ -145,6 +154,36 @@ export function classifyConflicts(files: readonly string[]): Pick<Plan, 'generat
         else authored.push(rel);
     }
     return { generated, remeasured, authored };
+}
+
+/**
+ * Render the conflict report for a plan that needs a human.
+ *
+ * Pure and exported so the WORDING is testable without producing a real merge
+ * conflict. That matters more than it looks: the per-class instruction is the
+ * entire value of the classification, and while this lived inline in `main()`
+ * the whole block could be deleted and every test stayed green — the header
+ * still counted the conflict, and the paths went unnamed with no instruction.
+ */
+export function renderConflictReport(plan: Plan): string {
+    const out: string[] = [`❌  ${plan.message}\n`];
+    if (plan.generated.length > 0) {
+        out.push(`\n  GENERATED (${String(plan.generated.length)}) — resolve by REGENERATING, never by mixing hunks:\n`);
+        for (const f of plan.generated) out.push(`    · ${f}\n`);
+        out.push('    → git checkout --ours <file> && task sync && task generate-tools\n');
+    }
+    if (plan.remeasured.length > 0) {
+        out.push(
+            `\n  REMEASURED (${String(plan.remeasured.length)}) — RE-RUN THE MEASUREMENT on the merged tree; never merge, never pick a side:\n`,
+        );
+        for (const f of plan.remeasured) out.push(`    · ${f}\n`);
+        out.push('    → resolve the tree, then re-run the gate that owns the baseline and record its number\n');
+    }
+    if (plan.authored.length > 0) {
+        out.push(`\n  AUTHORED (${String(plan.authored.length)}) — a human decision, read both sides:\n`);
+        for (const f of plan.authored) out.push(`    · ${f}\n`);
+    }
+    return out.join('');
 }
 
 /** Resolve the base this branch will actually merge into. */
@@ -298,25 +337,7 @@ export function main(argv?: readonly string[]): number {
     }
 
     if (plan.exit === 1) {
-        process.stdout.write(`❌  ${plan.message}\n`);
-        if (plan.generated.length > 0) {
-            process.stdout.write(
-                `\n  GENERATED (${String(plan.generated.length)}) — resolve by REGENERATING, never by mixing hunks:\n`,
-            );
-            for (const f of plan.generated) process.stdout.write(`    · ${f}\n`);
-            process.stdout.write('    → git checkout --ours <file> && task sync && task generate-tools\n');
-        }
-        if (plan.remeasured.length > 0) {
-            process.stdout.write(
-                `\n  REMEASURED (${String(plan.remeasured.length)}) — RE-RUN THE MEASUREMENT on the merged tree; never merge, never pick a side:\n`,
-            );
-            for (const f of plan.remeasured) process.stdout.write(`    · ${f}\n`);
-            process.stdout.write('    → resolve the tree, then re-run the gate that owns the baseline and record its number\n');
-        }
-        if (plan.authored.length > 0) {
-            process.stdout.write(`\n  AUTHORED (${String(plan.authored.length)}) — a human decision, read both sides:\n`);
-            for (const f of plan.authored) process.stdout.write(`    · ${f}\n`);
-        }
+        process.stdout.write(renderConflictReport(plan));
     } else if (plan.message.startsWith('unverified')) {
         // Loud even under --quiet: unverified reported silently is
         // indistinguishable from verified, which is the defect being closed.

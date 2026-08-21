@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { classifyConflicts, isGenerated, isRemeasured, main, resolveBase } from '../../src/scripts/sync_pr_branch.js';
+import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, resolveBase } from '../../src/scripts/sync_pr_branch.js';
 
 describe('generated vs authored', () => {
     it('recognises the generated artefacts a merge routinely conflicts on', () => {
@@ -128,6 +128,56 @@ describe('generated vs authored', () => {
     it('an empty list is empty on both sides, not a silent pass', () => {
         expect(classifyConflicts([])).toEqual({ generated: [], remeasured: [], authored: [] });
         expect(classifyConflicts(['', '   '])).toEqual({ generated: [], remeasured: [], authored: [] });
+    });
+});
+
+describe('the conflict report names a per-class resolution', () => {
+    const plan = {
+        exit: 1 as const,
+        message: 'merge of origin/main hit 3 conflict(s).',
+        generated: ['agents/roadmaps/archive/index.json'],
+        remeasured: ['src/config/gate-violation-baselines.json'],
+        authored: ['agents/roadmaps/stubs/README.md'],
+        scanned: 1,
+    };
+
+    it('tells a remeasured conflict to re-run the measurement, not to read both sides', () => {
+        // road-to-merge-hotspot-drawdown 1.2 promised this assertion and the
+        // first version of that step shipped without it. Consequence, measured:
+        // the entire report block could be deleted and all 16 tests stayed green
+        // while the header still counted the conflict and named no path.
+        const out = renderConflictReport(plan);
+        const section = out.slice(out.indexOf('REMEASURED'), out.indexOf('AUTHORED'));
+        expect(section).toContain('RE-RUN THE MEASUREMENT');
+        expect(section).toContain('src/config/gate-violation-baselines.json');
+        // The two resolutions it must NOT be handed. `read both sides` is the
+        // authored advice; `checkout --ours` is the generated one, and picking a
+        // side on a ratchet number is how the ratchet silently loosens.
+        expect(section).not.toContain('read both sides');
+        expect(section).not.toContain('checkout --ours');
+    });
+
+    it('keeps the three classes and their instructions separate', () => {
+        const out = renderConflictReport(plan);
+        expect(out).toContain('GENERATED (1)');
+        expect(out).toContain('REMEASURED (1)');
+        expect(out).toContain('AUTHORED (1)');
+        // Every conflicted path is NAMED. A count with no path is the shape the
+        // deleted-block failure produced.
+        for (const f of [...plan.generated, ...plan.remeasured, ...plan.authored]) {
+            expect(out).toContain(f);
+        }
+        // Order is generated -> remeasured -> authored, so the mechanical
+        // resolutions come before the one that needs a human.
+        expect(out.indexOf('GENERATED')).toBeLessThan(out.indexOf('REMEASURED'));
+        expect(out.indexOf('REMEASURED')).toBeLessThan(out.indexOf('AUTHORED'));
+    });
+
+    it('emits no class section when that class is empty', () => {
+        const only = renderConflictReport({ ...plan, generated: [], remeasured: [] });
+        expect(only).not.toContain('GENERATED');
+        expect(only).not.toContain('REMEASURED');
+        expect(only).toContain('AUTHORED (1)');
     });
 });
 
