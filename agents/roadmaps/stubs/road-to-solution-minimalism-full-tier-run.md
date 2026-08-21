@@ -88,9 +88,11 @@ failure the complete-list requirement exists to catch.
 
 Also not moved: the parent's **"All quality gates pass"** criterion. It was never
 gated on this run and this stub does not carry it — and on 2026-08-21 it closed
-in the parent on its own terms, on PR #1480's remote CI, by AI-council
-disposition **1, decide-now** / `satisfied`
-([`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md)).
+in the parent on its own terms, on PR #1480's remote CI, by AI-council decision
+recorded as disposition **2** / outcome state **`narrowed`**
+([`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md)
+— `narrowed` describes the closure's own diff, which had to walk a CI ratchet
+down, and says nothing about the criterion's substance).
 **That closure archived the parent and changed nothing here.** Its three items
 are still transferred, still un-run, and both halves of the re-entry probe below
 are still false. A reader arriving from an archived parent should read this

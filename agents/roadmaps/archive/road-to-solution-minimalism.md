@@ -41,7 +41,7 @@ no benchmark ran, and none of the transferred work came back. Per phase:
 | Phase 1 — the ladder as rule text | **narrowed, then satisfied** | S0.1's 12-EXTEND tally re-scoped it from a new rule to edits of the colliding artefacts; that is what shipped. The credits step is `[-]` **abandoned** with its reasons recorded at the step. |
 | Phase 2 — over-build review lens | **satisfied** | Golden set green, including the lean fixture and the longer-simpler-form fixture. |
 | Phase 3 — pinned public-repo benchmark | **narrowed** | Repo pinning and the reproducibility deliverables are satisfied here. The ~30 oracles and the full-tier run are **transferred** to [`stubs/road-to-solution-minimalism-full-tier-run.md`](../stubs/road-to-solution-minimalism-full-tier-run.md) (B, below). Phase 3 has never reported and does not report now. |
-| Acceptance criteria | **5 of 6 satisfied, 1 transferred** | The full-tier criterion is transferred to the stub. The quality-gates criterion is now **satisfied** — closed 2026-08-21 on PR #1480's remote CI (43 `SUCCESS` / 0 failure) plus 7/7 push-to-main runs on merge commit `b593d8c0`, by AI-council disposition **1, decide-now**, 2/2 convergent. It never moved to the stub because it was never gated on the run; what it *was* gated on was the existence of a pull request, and one now exists and reported green. |
+| Acceptance criteria | **5 of 6 closed, 1 transferred** | The full-tier criterion is transferred to the stub. The quality-gates criterion closed 2026-08-21 on PR #1480's remote CI (43 `SUCCESS` / 0 failure) plus 7/7 push-to-main runs on merge commit `b593d8c0`. Its closure is recorded **`narrowed`**, not `satisfied`: the council disposed the criterion decide-now on that evidence, then — asked about the one file the closing diff could not avoid — converged on disposition **2**, because the ratchet walk-down archival compels is a CI-policy configuration change the Round-1 condition had excluded. The criterion never moved to the stub; it was never gated on the run, only on the existence of a pull request, and one now exists and reported green. |
 
 ### The blocker disposition (A — re-scope, narrowed)
 
@@ -1159,8 +1159,12 @@ twenty-nine steps that already landed.
       makes the fixtures decorative.
 - [x] All quality gates pass — see `quality-tools`.
       **Closed 2026-08-21 on the authoritative gate, and the evidence is stated as
-      a split because one run cannot cover both halves.** AI council disposition
-      **1 — decide-now, `satisfied`**, 2/2 convergent, quorum concluded:
+      a split because one run cannot cover both halves.** AI council, two passes:
+      the criterion itself was disposed **decide-now** on the CI evidence below
+      (2/2 convergent), and the *closure* is recorded under disposition
+      **2 — re-scope, outcome state `narrowed`** after a 1–1 split and a debate
+      round on one question the first pass had not seen — see § the ratchet note
+      at the end of this item. Record:
       [`solmin-quality-gates-disposition`](../../evidence/council/solmin-quality-gates-disposition.md).
       **Half one — the substantive tree.** PR
       [#1480](https://github.com/event4u-app/agent-config/pull/1480) carried every
@@ -1201,9 +1205,30 @@ twenty-nine steps that already landed.
       battery green again, plus `check_estate_count` (within ratchet),
       `check_depth_budget` (4 violations **at baseline**, age 15d — known debt,
       not new breakage), `check_no_external_sources`, and `task build-ts`.
+      **The ratchet note — why the closure is `narrowed` and not `satisfied`.**
+      Archiving this roadmap made the measured active estate 23 under a ceiling of
+      24, and `check_estate_count` hard-fails on an un-walked tightening — so the
+      closing diff had to walk `src/config/estate-count-budget.json` down by one.
+      The council's Round-1 condition excluded "configuration" by name, which made
+      the collision unavoidable rather than avoidable: the only diffs available
+      were one containing that edit, one that reds CI, or one that refuses an
+      archival `roadmap-progress-sync` requires. Asked rather than assumed, the
+      council split 1–1 and then converged, in debate, on **2**: the walk-down is
+      a **CI-policy configuration change** — monotonic, compelled, and
+      independently validated — and validation makes it *safe*, not
+      *non-configurational*. Both seats refuted the tempting synthesis in the same
+      words: CI proves the configuration change is correct, never that no
+      configuration changed. The classification test for the next agent, the
+      rollback procedure (a plain atomic revert **is** valid, verified against the
+      gate's raise check rather than assumed), and the kill-switch criteria are in
+      the record.
       **What this closure does NOT say.** It is a statement about the gates and
       nothing else. Phase 3 has still never reported; the full-tier run stays
       transferred with both halves of its probe false (1 pinned task, no report).
+      Two conditions belong to the merge and not to this box: full required CI on
+      the exact closing commit, and branch protection confirming it. If either
+      fails, the roadmap returns to `main` unarchived — that is the council's own
+      stated fallback, not an escape hatch invented here.
 
 ## Blockers
 
