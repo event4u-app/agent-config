@@ -1,17 +1,17 @@
 # Findings: drain-road-to-drain-commands
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: e42a5ce04733762362f805182e9d2cb56a5fabac12c2d545f9552711fba6a60a | diff: 1c4b3deca58a6aee4c8d9f6c9c207c3e9ec6eb68 | reviewer: r2-fresh-subagent-drain-road-to-drain-commands | prompt_hash: 31cacaf04aa6429aa60beeea73212bb7cf8f08fdf7816812df2edf538cf018fa -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: c271ac5b5f81c9a21c7c4d68e9ad845f748305e4c71cec34692258b7867e6c01 | diff: aea3e2ccc944ca0f39874e05d434923d1b450d7b | reviewer: r2-fresh-subagent-drain-road-to-drain-commands | prompt_hash: 2b9845c4dfbf3870ddb4fd4d42ae90a7911890bddf18233c9bc4cdfb0d52e81e -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-21 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 1c4b3deca58a6aee4c8d9f6c9c207c3e9ec6eb68
-  scope_hash: e42a5ce04733762362f805182e9d2cb56a5fabac12c2d545f9552711fba6a60a
+  diff_sha: aea3e2ccc944ca0f39874e05d434923d1b450d7b
+  scope_hash: c271ac5b5f81c9a21c7c4d68e9ad845f748305e4c71cec34692258b7867e6c01
   roadmap: agents/roadmaps/road-to-drain-commands.md
   roadmap_hash: f4bc0895efecba296042f235f8ec483490ab6e4280620e2ea75e8837bd2f8282
   ac_hash: 188021fb998afe8f9cc88bcdcd23e8762e75b922de5a4b76cab8729d3de506a2
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-21T10:44:35Z
+dispatched: 2026-08-21T11:08:46Z
 -->
 
 **Four rounds ran. This artefact carries round 4's findings with their
