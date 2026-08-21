@@ -106,27 +106,38 @@ The review has raised this since v12.1.0 — it is recurring, not new.
 > council seats reached the same distinction independently and both declined to
 > make the PR gate blocking. The advisory warning stays exactly as it is.
 
-- [x] **2.1 Refuse to tag when the changelog section still carries the marker.**
-      In `release.ts` step 8, guard the target version's CHANGELOG section
-      before `git tag -a` — the first irreversible action, and the one that
-      triggers `publish-npm.yml`. Reuse the exported `DERIVED_MARKER`; `die()`
-      with the offending label(s) and the file to fix, matching the two existing
-      `die()` guards in the same step that already refuse to tag a release whose
-      changelog section is missing.
-      verify: a unit test over the guard predicate asserts a section containing
-      `DERIVED_MARKER` is refused and a curated section passes —
-      `npx vitest run tests/scripts/release_placeholder_guard.test.ts`
-- [x] **2.2 Close the `--resume` bypass, which is the failure both seats named.**
-      Step 8 reads the changelog only in its `else` branch: when the tag already
-      exists locally, `_tag_exists_local(plan.target)` short-circuits to
-      skip-or-push and the guard is never reached, so `--resume` after a
-      created-but-unpushed tag reaches step 9 unguarded. Guard step 9's
-      `tagged_section` as well — the content the GitHub Release notes are
-      rendered from, read at the tag rather than at plan time. Both insertion
-      points share one predicate.
-      verify: the same test file covers the resume path — the guard is asserted
-      on the step-9 tagged-section input independently of step 8, so neither
-      insertion point alone satisfies it.
+- [x] **2.1 Refuse to render shipping text that carries the marker.** Guard the
+      two renderers in `_lib/release_material.ts` that produce the text a
+      release actually ships — `tag_message_from_section` (the annotated tag)
+      and `release_notes_from_section` (the GitHub Release notes) — using the
+      exported `DERIVED_MARKER` via a new `derived_marker_lines` predicate in
+      `_lib/release_highlights.ts`. Throw with the offending line(s) and the
+      action named, because there is no rendered value that would be correct to
+      return when the caller is about to tag or publish.
+      verify: `npx vitest run tests/scripts/release_placeholder_guard.test.ts`
+- [x] **2.2 Guard the render path, not call sites — the `--resume` bypass is why.**
+      `release.ts` step 8 reads the changelog only in its tag-creation branch,
+      so `--resume` over a created-but-unpushed tag skips that branch entirely
+      and reaches step 9 with no tag message rendered at all. Hand-placed call
+      sites therefore have to enumerate paths correctly and a future one
+      inherits nothing; the renderers cover every path that produces shipping
+      text by construction. `pr_body_from_section` is deliberately NOT guarded —
+      the marker legitimately exists on a release PR, and guarding it would
+      re-introduce the guaranteed-red posture the recorded decision avoids.
+      verify: the test asserts each renderer refuses **independently**, and pins
+      `pr_body_from_section` as non-refusing so a later "guard all three" edit
+      cannot silently reverse the recorded decision. Sensitivity proven by
+      sabotage: neutralising either guard reds two cases.
+
+> **Why this landed on the renderers rather than in `release.ts` — a gate
+> changed the design, and the gate was right.** The first implementation put a
+> helper plus three call sites in `release.ts`. That file is already 2,818 lines,
+> over the 1,500-line ceiling `check_source_size_budget` ratchets, so the 60
+> added lines were a straight regression the gate refused — and it says in as
+> many words that raising the baseline is a defect, not a fix. Moving the whole
+> guard onto the render path took `release.ts` back to net zero AND produced the
+> stronger invariant, which is the outcome worth recording: the ratchet did not
+> merely cost a detour, it found the better placement.
 
 > **The named net-negative.** Both council seats independently named the same
 > way this phase could make the repo worse: *"a nominal publication check
@@ -233,11 +244,12 @@ needs a machine-parseable roadmap frontmatter convention defined first.
       what was wrong — an assertion and a citation of an assertion are not the
       same thing, and a criterion that forbade both would forbid this roadmap
       from stating its own finding.
-- [x] AC-2 — `release.ts` cannot create a tag, and cannot publish GitHub
-      Release notes, for a version whose CHANGELOG section still contains
-      `DERIVED_MARKER`. Both refusals hold independently: neither the step-8 nor
-      the step-9 guard alone satisfies this, which the test asserts by covering
-      each insertion point on its own.
+- [x] AC-2 — Neither the annotated tag message nor the GitHub Release notes can
+      be rendered for a version whose CHANGELOG section still contains
+      `DERIVED_MARKER`. Both refusals hold independently — the test covers each
+      renderer on its own, so neither alone satisfies this — and `release.ts`
+      gained no lines, so the guard cannot be bypassed by a release path that
+      forgot to call it.
 - [x] AC-3 — The release-PR advisory posture is unchanged. The `⚠️ advisory,
       not blocking` path in `check_release_highlights.ts` still runs and still
       does not own the exit code, so the recorded guaranteed-red decision is
