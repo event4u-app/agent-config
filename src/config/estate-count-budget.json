@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 23,
     "later_roadmaps": 52,
-    "open_blockers": 61
+    "open_blockers": 60
   },
   "baseline_history": [
     {
@@ -274,11 +274,32 @@
       "why": "MERGE RECONCILIATION plus the walk-down this branch earned, stated as one entry because the arithmetic only makes sense together. The history array itself was conflicted: the trunk had moved four entries ahead while this branch carried two of its own, so main's file was taken as the base (authoritative trunk baseline and order) and the branch's two entries appended rather than dropped \u2014 append-only means both sides survive. Those two entries quote 70 -> 68 -> 66 against a trunk that has since measured 64, so their NUMBERS are superseded and only their reasons still stand; that is why this entry re-states the delta instead of trusting them. open_blockers 64 -> 62 is verified against the diff, not against that prose: sink-choice and dpo-signoff are both open on origin/main and both resolved on this branch. active_roadmaps 25 -> 24: road-to-org-telemetry reached zero open steps and the regen archived it, migrating its one inbound reference. This entry was written before the regen ran and said the roadmap would NOT archive; the number is corrected here rather than by appending a second entry, because one change earns one entry and two would read as two independent walk-downs and later_roadmaps unchanged at 52 \u2014 nothing parked, nothing relocated."
     },
     {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 69,
+      "why": "One blocker closed, and the -1 is the whole change to this file: road-to-subagent-lifecycle-integrity's raw-capture-needs-host-env moved to Status resolved with outcome state transferred, its criterion carried verbatim to stubs/road-to-subagent-payload-capture.md under council disposition B. active_roadmaps and later_roadmaps are unchanged because a stub under stubs/ registers with neither this gate nor the dashboard, which is the point of the drain-run transfer shape: the work leaves the active estate without a roadmap being archived as if it were achieved. Walked here rather than banked because the gate reported the tightening un-walked and a baseline above the measurement is headroom a later change can spend with nothing objecting. Worth recording for WHY the number moved at all, because the first attempt did not move it: Status was written as transferred, matching the outcome-state vocabulary of the stubs README, and lint_roadmap_blockers recognises exactly one closed token (Status: resolved, at :193) while treating every other word as still open. So the entry read closed to a human and open to every gate, and this ratchet correctly reported +0. The two fields are different: Status carries the token the tooling reads, the outcome state lives in the resolution prose, in the stub, and in the stubs README table, which is what the two sibling drain-run transfers of the same day already do."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 blocker: road-to-subagent-lifecycle-integrity resolved raw-capture-needs-host-env, which is open on origin/main and resolved here \u2014 checked against the diff rather than taken from the branch's own prose. The item that could not be finished went to stubs/road-to-subagent-payload-capture.md with its own probe, so the open work is counted in the stub rather than dropped. active_roadmaps unchanged at 24: the roadmap keeps open steps and the regen did not archive it. later_roadmaps unchanged at 52 \u2014 nothing parked. The history array was conflicted at merge (trunk ahead, branch carrying its own entries); main was taken as the base and the branch entries appended, because the array is append-only and a dropped entry is a lost reason."
+    },
+    {
       "at": "2026-08-21",
       "active_roadmaps": 23,
       "later_roadmaps": 52,
       "open_blockers": 61,
       "why": "active_roadmaps 24 -> 23 and open_blockers 62 -> 61, both walked down by the close of road-to-standing-context-40k. NOTHING IN THE REPOSITORY EARNED EITHER DROP, and the two are one accounting event rather than two: the roadmap left the active tree for archive/ and its one blocker (b-rules-efficiency-signal) left the active estate with it, reappearing as an item in stubs/road-to-instructions-loaded-observer.md that this metric does not scan. No question was answered and no work finished -- the roadmap closed with outcome state `transferred`, five of its nine lines moved to two stubs and one sibling roadmap, and the registered 40k destination is not reached. The blocker's own Correction B had already concluded it was a transfer under the framework's rule 4; PR #1484 held the `Status: open` token only because the roadmap was still active, so writing `resolved` here applies a recorded disposition rather than making a new one. later_roadmaps is unchanged at 52 on purpose: the council explicitly rejected parking this roadmap in later/, on the ground that its four open lines shared no producer and three unrelated resume triggers in one parked file is the ownerless queue the framework warns against. For whoever merges next: main is moving fast and this file collides the same way every time. Keep every history entry from both sides and RE-MEASURE the baseline against the merged tree -- never adopt one side's number. Measured on this branch against d0fad2ccd."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "MERGE RECONCILIATION, and the number is MEASURED against the merged tree rather than taken from either side. Both sides walked open_blockers 62 -> 61 for a different blocker: origin/main for road-to-subagent-lifecycle-integrity's raw-capture-needs-host-env, this branch for road-to-standing-context-40k's b-rules-efficiency-signal. Neither number describes the merged tree, which reads 60 = 62 - 1 - 1. Adopting one side's 61 would have claimed a count no tree has, and would have left a -1 drawdown for the next PR to fail on. active_roadmaps stays 23: this branch's archival is the only one in the merge. NOTHING IN THE REPOSITORY EARNED THE DROP on either side -- both blockers left the active estate by transfer to a stub this metric does not scan. Every history entry from both sides is preserved; none was collapsed. For whoever merges next: keep every entry and RE-MEASURE; never adopt one side's number."
     }
   ],
   "target": {

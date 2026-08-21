@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers in the active tree, **16** need you → `agent-config gates`
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers in the active tree, **16** need you → `agent-config gates`
 
 ## Overall
 
-**194 / 432 steps done · 45%**
+**196 / 429 steps done · 46%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
 ```
 
 ## Open roadmaps
@@ -35,7 +35,7 @@
 | 17 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 19 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 20 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+| 20 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 | 21 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
@@ -782,39 +782,18 @@ _2 blockers resolved._
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
-**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 11 / 20 done (55%)
+**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 13 / 17 done (76%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 0 | Spikes — pin the host, reproduce the two upstream premises | ✅ done | 0 | 2 | 0 | 2 | 100% |
 | 1 | Measure — lifecycle capture, no behaviour change | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 2 | Return-channel integrity — validate, fall back to disk, retry once | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Role axis binds on payload, not env | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 5 | Tier routing has a caller — measure whether it moved the distribution | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 4 | Role axis binds on payload, not env | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 5 | Tier routing has a caller — measure whether it moved the distribution | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 | 7 | The `do_not_touch` write-guard — relocated, and deliberately its own phase | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-subagent-lifecycle-integrity"></a>
-**Blockers**
-
-- **raw-capture-needs-host-env** (owner: maintainer) — blocks Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is closed; Step 2's `agent_type` assertion is answered without it.
-  - **Recommendation:** run the four steps. The capture facility is shipped and verified, so this is a one-session errand, not a build — and step 4 bounds the only real cost, since the standing egress surface exists solely while the `env` entry is present. The alternative on the table is reading the field lists out of the hook source instead of a captured payload, which is precisely the build-against-documentation failure Phase 0 exists to stop.
-  - **If you do nothing:** Phases 2 and 4 keep resting on payload fields documented for a host version that is not the installed one — Risk 4 states that dependency, and Phase 4 is cancelled outright if `agent_id` turns out to be absent. So the cost of not deciding is not a delay; it is that the later phases stay buildable-on-paper against a shape nobody has seen, and the falsifier that would re-scope them cannot run.
-  - **What to do:**
-    the capture facility is shipped and verified
-    (`_maybe_capture_payload`, `dispatch_hook.ts:486`, called unconditionally at
-    `:1082`); the variable just has to reach the process environment the host
-    spawns hooks from, which a command issued inside a session cannot do.
-    1. Add to `~/.claude/settings.json`:
-    `"env": { "AGENT_HOOK_CAPTURE_DIR": "~/.agent-hook-capture" }`
-    2. Start a **fresh** session — env and hooks are read at session start.
-    3. Dispatch one subagent, then read
-    `~/.agent-hook-capture/claude__SubagentStop__*.json` and the
-    `claude__PreToolUse__*.json` files written from inside it.
-    4. Remove the `env` entry afterwards — the capture writes every payload
-    verbatim, which is a standing egress surface, not a setting to leave on.
-  - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
