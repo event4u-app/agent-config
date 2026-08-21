@@ -613,6 +613,13 @@ gates:
       defect rather than to archival — either falsifies the number, not the
       obligation.
 
+      Lowered again 10 → 5 on 2026-08-21, during the PR drain that produced the
+      paragraph above. 10 was measured against 12 and the drain had already
+      taken the corpus to 11 — one file of headroom, so the next archival would
+      have reddened CI for the exact reason this entry says is the wrong thing to
+      detect. 5 keeps the root-moved / scanner-blind signal (both scan 0) and
+      stops the number from needing a commit per archived roadmap.
+
   - id: check_estate_count
     argv: []
     min_scanned: 20
