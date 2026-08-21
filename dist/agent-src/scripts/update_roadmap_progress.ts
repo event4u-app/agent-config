@@ -998,8 +998,9 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
         // script name covers the rest.
         '> Auto-generated — do not edit. Regenerate with `task roadmap-progress` ' +
             'or by running the `update_roadmap_progress` script for your install; ' +
-            'rewritten on every roadmap create / execute / completion change ' +
-            '(timestamp lives in git history).\n>\n' +
+            'rewritten on every roadmap create / execute / completion change. ' +
+            'A repository that does not commit this file has no git history for ' +
+            'it — regenerate to see the current state.\n>\n' +
             header_meta,
     );
     lines.push('## Overall\n');
