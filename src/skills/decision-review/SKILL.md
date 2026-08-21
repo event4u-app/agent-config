@@ -93,6 +93,31 @@ available at the time it was made**, not against the outcome alone.
 A decision can be correct given the information then and still need
 revision now.
 
+**Read the record's axes in this order** — each step can end the review, so
+running them out of order pays for the expensive ones first:
+
+1. **Effective state** — status, `superseded_by`, amendments, whether the
+   `review_trigger` fired. `superseded`/`deprecated` is not a live lock at all.
+2. **`provenance`** (+ `agentic_mode`) — who decided; descriptive only.
+3. **`evidence.strength`** — E0–E4, claim-relative, not a count of sources.
+4. **`evidence.discovery`** — on E0, `incomplete` means *nobody looked*: a
+   discovery failure, not an evidence failure. Search before treating the
+   absence as established, or the grade measures the review, not the decision.
+5. **Current evidence** — what tree, measurements and sources say *today*.
+6. **Reversibility** — of the transition you propose, not of the original
+   decision. The routing unit is the transition, never the document.
+7. **Reserved dimensions** — `protected_dimensions`, `reopen_policy` (absent →
+   `unclassified`, which is not `owner`).
+
+Then price the reopen record from the grade × provenance burden table in
+[`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md) —
+cheap for an `E0`/`E1` agentic snapshot, *surfaced* rather than obeyed or
+overturned for `E0`/`E1` human, the standard five fields at `E2`, and those
+fields plus engaging the original evidence **in kind** at `E3`/`E4`. Read the
+table; do not reconstruct it from memory. The axes are defined by
+[`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md),
+not here.
+
 ### 4. Verdict
 
 One of three:
@@ -298,6 +323,40 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
    Identical ceremony for a typo-level amendment would cost more than asking
    the owner and the mechanism would die of its own weight.
 
+### The grade prices the record, never the authority
+
+```
+AN EVIDENCE GRADE IS A MEASUREMENT, NOT A PERMISSION.
+IT PRICES THE REOPEN RECORD AND THE REVIEW PRIORITY. IT CONFERS NO AUTHORITY.
+A LOW GRADE NEVER LETS AN AGENT SUPERSEDE A RECORD ON ITS OWN.
+```
+
+Nothing in the burden table changes **who** may act: venue comes from the
+discriminator, the trust boundaries the transition touches, and the
+owner-reserved rows — never from the grade.
+
+The coupling was proposed and refused: two council seats independently named it
+the design's central defect, because the party assigning the grade would also
+be the party gaining authority from it, and would additionally be
+self-classifying its own transition as `reversible-internal` — itself an
+authority-bearing classification. Calling the result "provisional" changes
+neither the trust boundary nor the blast radius. Whether an *independently
+validated* grade may ever reduce the authorization burden is owner-reserved and
+open: do not answer it here — it is the `authority-coupling-decision` blocker in
+`road-to-evidence-based-adr-governance`, and
+[`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md) closes
+on the same point.
+
+Two consequences that are easy to get backwards:
+
+- **An ADR's historical decision-maker does not determine its reopen venue.** A
+  record decided by a council does not need a council to reopen it; a record
+  decided by one agent is not thereby an agent's to overturn.
+- **A low-evidence record may state a decision; it does not establish that the
+  alternatives remain invalid.** *"We chose B because we had to choose"* is
+  legitimate and publishable — but never grounds for *"A is forbidden, the ADR
+  says B"*, which needs evidence the record never carried.
+
 ### When NOT to fire
 
 - The blocked change has no real benefit — the gate is not a lever to
@@ -324,6 +383,12 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
   value-over-budget clause.
 - Silently dropping a good idea because "we already decided this" —
   the canonical failure the gate exists to stop.
+- Reading a low `evidence.strength` as permission to supersede — the grade
+  prices the record, it never moves the venue.
+- Treating `discovery: incomplete` as established absence: that grades the
+  review, not the decision.
+- Citing a low-evidence ADR as proof its rejected alternatives are still
+  invalid. It records a choice, not a refutation.
 
 ## See also
 
