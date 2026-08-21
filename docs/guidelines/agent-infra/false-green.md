@@ -138,6 +138,7 @@ commit whose hooks passed. The same shape reaches the runtime hook layer: a
 concern bound in the manifest is still inert on a host that does not honour a
 deny, so "the guard is registered" is not "the guard fired".
 
+<!-- example-fence-allow: git-no-verify -- the fence teaches how to DETECT the core.hooksPath bypass; the forbidden form has to appear for the diagnostic to be readable, and every line here is a read-only query -->
 ```bash
 git config --get core.hooksPath                       # empty = repo default, good
 ./scripts-run src/scripts/hooks/block_no_verify --help # the tool-call guard
