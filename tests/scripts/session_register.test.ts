@@ -832,6 +832,13 @@ describe('foreign_sessions_block — collision-gated, and never a git gate', () 
 
         const block = foreign_sessions_block(wt, 'me')!;
         expect(block).toContain('COLLISION');
+
+        // road-to-session-closeout 6.3: option 1 is chosen routinely, so the
+        // collision text must price it. Three costs, each asserted by name —
+        // the shared index, the shared stash stack, and the pre-push read.
+        expect(block).toContain('SHARED INDEX');
+        expect(block).toContain('SHARED STASH STACK');
+        expect(block).toContain('PRE-PUSH runs over the shared tree');
         // The clause that closes the gap the model was falling into.
         expect(block).toContain('are ALWAYS executed');
         expect(block).toContain('never gates a git operation');
