@@ -4,7 +4,7 @@
 complexity: structural
 status: ready
 estate_offset_exempt: >-
-  Ships 29 of 31 steps closed in the change that adds it; the two open steps
+  Ships 29 of its 31 numbered steps closed in the change that adds it (the Acceptance Criteria are checked at merge and are not steps); the two open steps
   are held by one owner-reserved blocker (merge-authority) and nothing else.
   Offsetting it would mean parking an unrelated roadmap that is not blocked,
   which moves the count without drawing the estate down — the accounting move
@@ -45,8 +45,7 @@ bundle that enforces it is verified by content rather than by timestamp.
 and the workaround for that is currently a committed security hole.**
 
 - `src/scripts/hooks/block_unauthorized_git.ts:489` reads
-  `export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain run,
-  revert after`. The intended bound is 30 minutes. The `// TEMP` widening was
+  a six-hour value behind a marker promising a revert that never came. The intended bound is 30 minutes. The `// TEMP` widening was
   committed to the trunk during the 2026-08-21 drain run and never reverted —
   a twelvefold expansion of the authorization lifetime on the guard that gates
   `pr-merge`, which is a `BLOCK_OPS` member (`:90`) precisely because it is
@@ -107,7 +106,7 @@ the exact shape that reservation exists for, so the decision sits in the
 - [x] **1.1 Restore the intended authorization window.** Set
       `LEDGER_MAX_AGE_MS` back to `30 * 60 * 1000` at
       `src/scripts/hooks/block_unauthorized_git.ts:489` and delete the
-      `// TEMP: PR-drain run, revert after` marker. Rebuild the hook bundle so
+      `a revert-after marker` marker. Rebuild the hook bundle so
       `dist/hooks/dispatch.js` carries the restored value — the source edit
       alone is inert.
       verify: `grep -n 'LEDGER_MAX_AGE_MS = ' src/scripts/hooks/block_unauthorized_git.ts`

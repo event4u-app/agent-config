@@ -25,7 +25,7 @@ index 27c9f93f4e4bc421befb981b727b33534143aec9..71fc35fbef776b23c1d551a31edbdf56
  **Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
  
 diff --git a/agents/index.md b/agents/index.md
-index 4f724ee46477f23026b4e43d3b0e3b35b1c26d4d..793887e95c2214c4c9b1d884bb2d2cb6850660da 100644
+index 4f724ee46477f23026b4e43d3b0e3b35b1c26d4d..1cecc69f5135d26fc27e4d147b2f30ba170f0fac 100644
 --- a/agents/index.md
 +++ b/agents/index.md
 @@ -1,6 +1,6 @@
@@ -49,7 +49,7 @@ index 4f724ee46477f23026b4e43d3b0e3b35b1c26d4d..793887e95c2214c4c9b1d884bb2d2cb6
  | command | [`post-as-me`](../src/domains/gtm-marketing/post-as/me/command.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
  | command | [`git-pr-create`](../src/domains/git/pr/create/command.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
  | command | [`git-pr-create-description-only`](../src/domains/git/pr/create/description-only/command.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
-+| command | [`git-pr-merge`](../src/domains/git/pr/merge/command.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
++| command | [`git-pr-merge`](../src/domains/git/pr/merge/command.md) | cluster: git-pr-merge | Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open |
  | command | [`prediction-pool`](../src/domains/fun/prediction-pool/command.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
  | command | [`prepare-for-review`](../src/domains/engineering-base/prepare-for-review/command.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
  | command | [`profile`](../src/domains/meta/profile/command.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |
@@ -94,52 +94,50 @@ index b52689a9442c7dee034c290ef4ec47cad6a791fb..bcea84dbc90ce4c4564b36febabb5406
  - Overlap distribution: worst **40%** · p95 **0%** · median **0%**
  
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index dd4ed66e40abec921804cce576109e4441b33651..de7a4e39fb9871e23260fb4062f5960f298062e1 100644
+index 4f0d7365393e6029a4cd34065484aad295cfeca7..e331e8a4d9086140dbafb62c459088e492d9469e 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,14 +2,14 @@
  
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
--> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers in the active tree, **9** need you → `agent-config gates`
-+> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers in the active tree, **10** need you → `agent-config gates`
+-> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers in the active tree, **9** need you → `agent-config gates`
++> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers in the active tree, **10** need you → `agent-config gates`
  
  ## Overall
  
--**107 / 179 steps done · 60%**
-+**136 / 216 steps done · 63%**
+-**105 / 170 steps done · 62%**
++**134 / 207 steps done · 65%**
  
  ```text
--████████████████████████░░░░░░░░░░░░░░░░   60%
-+█████████████████████████░░░░░░░░░░░░░░░   63%
+-█████████████████████████░░░░░░░░░░░░░░░   62%
++██████████████████████████░░░░░░░░░░░░░░   65%
  ```
  
  ## Open roadmaps
-@@ -18,14 +18,15 @@
+@@ -18,13 +18,14 @@
  |---|---|---:|---:|---:|---:|---:|---:|---:|---|
  | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
  | 2 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 -| 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 -| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 -| 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
--| 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
--| 7 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
--| 8 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
--| 9 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
--| 10 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+-| 6 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+-| 7 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+-| 8 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+-| 9 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 +| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
 +| 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 +| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 +| 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-+| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-+| 8 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-+| 9 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-+| 10 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-+| 11 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 7 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
++| 8 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
++| 9 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
++| 10 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
  
  ---
  
-@@ -165,6 +166,42 @@
+@@ -164,6 +165,42 @@
  |---|---|---|---:|---:|---:|---:|---:|
  | 1 | Repair the two links, then decide about the gate | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
  
@@ -184,15 +182,15 @@ index dd4ed66e40abec921804cce576109e4441b33651..de7a4e39fb9871e23260fb4062f5960f
  **Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 3 / 6 done (50%)
 diff --git a/agents/roadmaps/road-to-drain-commands.md b/agents/roadmaps/road-to-drain-commands.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..2468beba36494b34a3aabde3149a8fa3bec59780
+index 0000000000000000000000000000000000000000..7cab2f305260a96831f0df91ec244d424dd0495e
 --- /dev/null
 +++ b/agents/roadmaps/road-to-drain-commands.md
-@@ -0,0 +1,473 @@
+@@ -0,0 +1,472 @@
 +---
 +complexity: structural
 +status: ready
 +estate_offset_exempt: >-
-+  Ships 29 of 31 steps closed in the change that adds it; the two open steps
++  Ships 29 of its 31 numbered steps closed in the change that adds it (the Acceptance Criteria are checked at merge and are not steps); the two open steps
 +  are held by one owner-reserved blocker (merge-authority) and nothing else.
 +  Offsetting it would mean parking an unrelated roadmap that is not blocked,
 +  which moves the count without drawing the estate down — the accounting move
@@ -233,8 +231,7 @@ index 0000000000000000000000000000000000000000..2468beba36494b34a3aabde3149a8fa3
 +and the workaround for that is currently a committed security hole.**
 +
 +- `src/scripts/hooks/block_unauthorized_git.ts:489` reads
-+  `export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain run,
-+  revert after`. The intended bound is 30 minutes. The `// TEMP` widening was
++  a six-hour value behind a marker promising a revert that never came. The intended bound is 30 minutes. The `// TEMP` widening was
 +  committed to the trunk during the 2026-08-21 drain run and never reverted —
 +  a twelvefold expansion of the authorization lifetime on the guard that gates
 +  `pr-merge`, which is a `BLOCK_OPS` member (`:90`) precisely because it is
@@ -295,7 +292,7 @@ index 0000000000000000000000000000000000000000..2468beba36494b34a3aabde3149a8fa3
 +- [x] **1.1 Restore the intended authorization window.** Set
 +      `LEDGER_MAX_AGE_MS` back to `30 * 60 * 1000` at
 +      `src/scripts/hooks/block_unauthorized_git.ts:489` and delete the
-+      `// TEMP: PR-drain run, revert after` marker. Rebuild the hook bundle so
++      `a revert-after marker` marker. Rebuild the hook bundle so
 +      `dist/hooks/dispatch.js` carries the restored value — the source edit
 +      alone is inert.
 +      verify: `grep -n 'LEDGER_MAX_AGE_MS = ' src/scripts/hooks/block_unauthorized_git.ts`
@@ -717,23 +714,23 @@ index 8c09045deceaf89745aa667016965360fedd52f1..358d3cc22dd19ff29b68965510bc6d04
  }
 diff --git a/dist/agent-src/commands/pr/merge.md b/dist/agent-src/commands/pr/merge.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a79def30c5
+index 0000000000000000000000000000000000000000..d0c59ab9415ec65e592982248e6cbe3ce4361512
 --- /dev/null
 +++ b/dist/agent-src/commands/pr/merge.md
-@@ -0,0 +1,362 @@
+@@ -0,0 +1,379 @@
 +---
 +model_tier: medium
 +name: git-pr-merge
 +disable-model-invocation: true
 +argument-hint: "[all|<pr-number>] [--no-merge]"
 +pack: git
-+intent: "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so"
++intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — merging itself is gated and inert"
 +routes_to: [git-workflow, github-ci]
 +replaces: []
 +visibility: advanced
 +cluster: git-pr-merge
 +skills: [git-workflow, github-ci]
-+description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++description: Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open
 +suggestion:
 +  eligible: false
 +  rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
@@ -900,11 +897,24 @@ index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a7
 +the queue count fall — and never close one on a bare diff.**
 +
 +```
-+CLOSING SOMEONE ELSE'S PR IS IRREVERSIBLE TO ITS AUTHOR AND IS NOT IN
-+`BLOCK_OPS`, SO NO GUARD WILL STOP IT. THE RUN CLOSES A PR ONLY WHEN THE
-+EXCLUDED DIFF IS EMPTY *AND* IT CAN NAME THE PRs THE CONTENT LANDED VIA.
-+IT CANNOT NAME THEM → LEAVE THE PR OPEN AND RECORD IT AS `blocked-external`.
++CLOSING SOMEONE ELSE'S PR IS AN IRREVERSIBLE EXTERNAL ACTION AND IS NOT
++GUARDED: `pr-close` IS NOT A `GitOp` AT ALL — NOT IN `BLOCK_OPS`, NOT EVEN
++IN `WARN_OPS`. NOTHING WILL STOP IT, WHICH IS WHY THIS COMMAND MUST.
++
++THE RUN NEVER CLOSES A PR ON ITS OWN HEURISTIC. IT STOPS AND ASKS, NAMING
++THE EXACT OBJECT: THE PR NUMBER, ITS TITLE, ITS AUTHOR, AND THE PRs THE
++CONTENT LANDED VIA. ONE CONFIRMATION PER PR, THIS TURN, PER
++non-destructive-by-default. NEVER A BATCH APPROVAL FOR "THE SUPERSEDED ONES".
++IT CANNOT NAME WHERE THE CONTENT LANDED → DO NOT EVEN ASK; LEAVE THE PR OPEN
++AND RECORD IT AS `blocked-external`.
 +```
++
++The asymmetry is deliberate and worth stating, because it looks inconsistent:
++merging is gated on an owner *decision* recorded once in a blocker, while
++closing is gated on a *per-object* confirmation every time. Merging this run's
++own PR is an action the run's whole design is about; closing a PR someone else
++opened is not, it destroys their work in progress, and no guard in this tree
++sees it happen. The cheaper gate goes on the action nothing else watches.
 +
 +## 5. Drive CI green — bounded
 +
@@ -980,8 +990,12 @@ index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a7
 +cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
 +```
 +
-+Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`, with the constant
-+read from `src/scripts/hooks/block_unauthorized_git.ts`. Under pressure means
++Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`. Take the constant
++from the guard source **only after** `check_hook_bundle_content` says the
++source and the executing bundle agree — reading the source alone is the
++2026-08-21 failure re-expressed as an instruction, since the bundle is what
++enforces the value and a source edit without a rebuild is silently inert. Under
++pressure means
 +the remaining window is shorter than one CI cycle on this repository. The read
 +is the whole interaction: the run never edits that file, the constant, or the
 +built bundle.
@@ -1097,7 +1111,7 @@ index 08f10dae9c7c58322077babe67acd132f0d45b5a..98294d931279b043f7fd76e296557d2c
  
  Sub-command names match the locked contract in
 diff --git a/dist/agent-src/commands/roadmap/process-full.md b/dist/agent-src/commands/roadmap/process-full.md
-index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af5952f9a2 100644
+index 1c75651401b7a609d0a2f88a61d951d413265278..90afcd988e30d279d697344b3526afc8362ce824 100644
 --- a/dist/agent-src/commands/roadmap/process-full.md
 +++ b/dist/agent-src/commands/roadmap/process-full.md
 @@ -7,7 +7,7 @@ cluster: roadmap
@@ -1229,7 +1243,7 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
  ## Iron Law — Full is Full
  
  ```
-@@ -87,6 +200,12 @@ with the **scope delta below**.
+@@ -87,9 +200,15 @@ with the **scope delta below**.
  TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
  PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
  NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
@@ -1241,11 +1255,23 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
  ```
  
- The **five — and only five — halt conditions** (exhaustive; nothing else
-@@ -98,6 +217,31 @@ stops the run):
+-The **five — and only five — halt conditions** (exhaustive; nothing else
++The **six — and only six — halt conditions** (exhaustive; nothing else
+ stops the run):
+ 
+ 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+@@ -97,6 +216,39 @@ stops the run):
+ 3. **Security-sensitive** surface reached.
  4. **Scope-out-of-roadmap** work discovered.
  5. **Test / quality red** that cannot be cleared within the N=3 budget.
- 
++6. **A merge conflict outside the four enumerated classes** of
++   [`/pr:merge` § 3](../../../git/pr/merge/command.md), during the delivery
++   loop. Added when delivery became unconditional: the loop runs on every
++   completed run, `--all` or not, so its stop is a stop of this command and
++   calling it "a kill switch rather than a halt reason" would not change that —
++   a run that stops has stopped. It fires only where a run reaches delivery,
++   which is the one thing that distinguishes it from the five above.
++
 +**Under `--all`, which of these end the roadmap and which end the loop.** Two
 +of the five are safety floors and they end the **whole run**, not the current
 +roadmap:
@@ -1257,6 +1283,7 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +| 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 +| 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
 +| 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
++| 6. Unenumerated merge conflict in delivery | Ends the roadmap; the loop records it and continues. |
 +
 +**And the conditions that end the loop without ending a roadmap:**
 +estate-queue exhaustion (always), a
@@ -1268,13 +1295,12 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +window to govern. Three conditions, one of them currently inert, and this
 +table is the only place the set is stated.
 +
-+Nothing here widens a run without `--all`: it still has exactly the five
++Nothing here widens a run without `--all`: it still has exactly the six
 +above, all of them ending the run because there is no loop to continue.
-+
+ 
  ```
  FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
-   · "running low on context / token budget"
-@@ -109,7 +253,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
+@@ -109,7 +261,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
      runnable test over PRE-EXISTING blockers, never by how a step feels
    · "the branch is not protected" / "a branch must be created"
    · "a PR must be opened" / "a GitHub setting must change"
@@ -1316,7 +1342,7 @@ index 96a795f58dc1c9e7f96f3dce474bee552776427b..d1b0a962193d0d83f3035f48c45f2eb1
  | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
  | **Contexts** | 5 | Shared knowledge about the system itself |
 diff --git a/docs/catalog.md b/docs/catalog.md
-index a135c4e57e18fdd08b739a4b1b9f36ec42a7d027..359602697243e8d1a2bb2710879550acd7e38927 100644
+index a135c4e57e18fdd08b739a4b1b9f36ec42a7d027..9499925083228aa77666aece80841510f848d734 100644
 --- a/docs/catalog.md
 +++ b/docs/catalog.md
 @@ -1,6 +1,6 @@
@@ -1340,12 +1366,12 @@ index a135c4e57e18fdd08b739a4b1b9f36ec42a7d027..359602697243e8d1a2bb2710879550ac
  | command | [`post-as-me`](../dist/agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
  | command | [`git-pr-create`](../dist/agent-src/commands/pr/create.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
  | command | [`git-pr-create-description-only`](../dist/agent-src/commands/pr/create/description-only.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
-+| command | [`git-pr-merge`](../dist/agent-src/commands/pr/merge.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
++| command | [`git-pr-merge`](../dist/agent-src/commands/pr/merge.md) | cluster: git-pr-merge | Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open |
  | command | [`prediction-pool`](../dist/agent-src/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
  | command | [`prepare-for-review`](../dist/agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
  | command | [`profile`](../dist/agent-src/commands/profile.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |
 diff --git a/docs/command-flows.md b/docs/command-flows.md
-index 65dc5f6168d162d946b5468eb200044b34e66e46..49b32f5435ad6387d9a66c28ddd7e4a17de4a0c3 100644
+index 65dc5f6168d162d946b5468eb200044b34e66e46..7927c12c052ed5aecf8e6fe4fbe85d8317272773 100644
 --- a/docs/command-flows.md
 +++ b/docs/command-flows.md
 @@ -7,7 +7,7 @@
@@ -1361,7 +1387,7 @@ index 65dc5f6168d162d946b5468eb200044b34e66e46..49b32f5435ad6387d9a66c28ddd7e4a1
  - `fix-seeder` — Scan seeder data files for broken foreign key references — find constants used without getReference() and f…
  - `git-pr-create` — Create a GitHub PR with structured description from Jira ticket and code changes
  - `git-pr-create-description-only` — Generate a PR description as a copyable markdown block — used standalone or by create-pr
-+- `git-pr-merge` — Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++- `git-pr-merge` — Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, s…
  - `prepare-for-review` — Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to…
  
  ## Platform & domain surfaces
@@ -1379,7 +1405,7 @@ index 922276b409c190c3d0d20da98fb2d92738592982..0dcd4225b3cde45bb145816bf2ef7b20
  | `research` | 2 | `deep` · `report` | preliminary-research scaffolder ported from `Weizhena/Deep-Research-skills` (cluster head emits `outline.yaml` + `fields.yaml` against the `research-schema` contract). `:deep` populates per-item JSON in batches with native web-search + JSON-Schema self-validation (no Python runtime); `:report` renders `report.md` directly + optionally emits a `jq` template for deterministic regeneration. `add-items` / `add-fields` intentionally **not** ported — re-run `/research <topic>` to extend the field framework. |
 diff --git a/docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md b/docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..c89cbf376388e87a98f82c43be0e1136c939479a
+index 0000000000000000000000000000000000000000..76bb78881eccffa1a2f10d7fe94b19b9a60d23f4
 --- /dev/null
 +++ b/docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md
 @@ -0,0 +1,157 @@
@@ -1537,7 +1563,7 @@ index 0000000000000000000000000000000000000000..c89cbf376388e87a98f82c43be0e1136
 +
 +- [`ADR-237`](ADR-237-end-to-end-execution-authority.md) § 4 — the exclusion this record does not extend.
 +- [`command-clusters`](../contracts/command-clusters.md) — the flag-not-command rule, and the new `git-pr-merge` row.
-+- `agents/roadmaps/road-to-drain-commands.md` — the plan, and the `merge-authority` blocker.
++- The `road-to-drain-commands` roadmap — the plan, and the `merge-authority` blocker. Named without a path: an accepted ADR is permanent and that roadmap is archived on completion (`no-roadmap-references`; `check_no_roadmap_refs` does not scan `docs/decisions/`, so the rule holds here without a gate behind it).
 +- `src/scripts/hooks/block_unauthorized_git.ts` — `BLOCK_OPS`, `LEDGER_MAX_AGE_MS`.
 +- `src/scripts/git_authorization_hook.ts` — `classifyAuthorization`, the human-only write path.
 diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
@@ -1668,10 +1694,10 @@ index 8c09045deceaf89745aa667016965360fedd52f1..358d3cc22dd19ff29b68965510bc6d04
    ]
  }
 diff --git a/src/config/ci-local-parity.yml b/src/config/ci-local-parity.yml
-index 978023a4407f462b2f981bcbbff9dfd73b2e69ce..82af0dcaa7d526eca1b77267e99e3e7cf4c68ac7 100644
+index 978023a4407f462b2f981bcbbff9dfd73b2e69ce..c728def792cffa6417398ac222a788af24cb7248 100644
 --- a/src/config/ci-local-parity.yml
 +++ b/src/config/ci-local-parity.yml
-@@ -184,6 +184,25 @@ ci_only:
+@@ -184,6 +184,27 @@ ci_only:
  # worth remote enforcement, OR it should simply be added to a workflow. Prefer
  # adding it: a local-only gate is the direction that let real defects merge.
  local_only:
@@ -1687,48 +1713,50 @@ index 978023a4407f462b2f981bcbbff9dfd73b2e69ce..82af0dcaa7d526eca1b77267e99e3e7c
 +      gate-coverage manifest exists to refuse. Declared rather than wired for
 +      the same reason `check_single_delivery` below is. The blind spot it
 +      closes is real and was measured on 2026-08-21: an edit to the git guard's
-+      authorization window was never rebuilt into the bundle, the guard kept
-+      enforcing the old value for a full hour, and the sibling
-+      `check_hook_bundle_freshness` stayed green throughout because it compares
-+      MTIMES — ordering, not equivalence. An mtime-preserving edit, a `touch`,
-+      or an archive restore all pass it. That asymmetry is the finding: a green
++      authorization window was never rebuilt into the bundle and the guard kept
++      enforcing the old value for a full hour. The sibling
++      `check_hook_bundle_freshness` did not miss it — that gate is pre-push and
++      was never run, and an ordinary edit moves the source mtime, so it would
++      have reddened. What it structurally cannot see is the narrower set this
++      gate covers: an mtime-preserving write, a `touch` on the bundle, a `cp -p`
++      restore. Ordering is not equivalence. That asymmetry is the finding: a green
 +      CI cannot speak for the bundle a maintainer is running, and only a local
 +      gate can. Cost measured, like its neighbours in the pre-push set: 0.27s.
    - id: check_single_delivery
      class: developer-machine-scoped
      reason: >
 diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
-index 6c0ae30f4d64fc33d4ecf239ad9a79ad7a7e6530..ff9d2a8a534383ddc7692e1a308b364874bed665 100644
+index b93e33d463638daee89fa9499a9d3cb0858a447c..4ccb439d52698c1e19108cfc54ef193086467e5d 100644
 --- a/src/config/estate-count-budget.json
 +++ b/src/config/estate-count-budget.json
 @@ -16,9 +16,9 @@
      ]
    },
    "baseline": {
--    "active_roadmaps": 10,
-+    "active_roadmaps": 11,
+-    "active_roadmaps": 9,
++    "active_roadmaps": 10,
      "later_roadmaps": 55,
--    "open_blockers": 43
-+    "open_blockers": 44
+-    "open_blockers": 41
++    "open_blockers": 42
    },
    "baseline_history": [
      {
-@@ -517,6 +517,13 @@
+@@ -538,6 +538,13 @@
        "later_roadmaps": 55,
-       "open_blockers": 43,
-       "why": "WALKED DOWN by 1 active and 2 blockers. road-to-context-fidelity archived (under agents/roadmaps/ on main, under archive/ here). Two of its three blockers are open on the trunk and closed here on council dispositions dated 2026-08-20: compaction-census-session and prominence-gate-skills-corpus. The third, memory-sweep-instrument, was already resolved on the trunk by a 2026-08-19 council and is excluded from the delta -- the kind of pre-existing closure that would otherwise be banked as this change's drawdown. later_roadmaps unchanged at 55: the part that could not be finished went to stubs/road-to-compaction-survival-census.md with its own probe, so the open work stays counted rather than parked."
+       "open_blockers": 41,
+       "why": "RE-MEASURED after a SECOND merge of origin/main, not a second drawdown. The trunk moved while this branch waited for CI (PR #1507 landed and walked open_blockers to 41 itself), so the entry this branch wrote earlier -- active 11 -> 10, blockers 43 -> 41 -- was measured against a tree that no longer exists. Against the merged tree the only delta still owned by this branch is active_roadmaps 10 -> 9, the archival of road-to-rule-coherence-followup. open_blockers is left at 41 rather than claimed again: its two closures are already recorded, once, in the earlier entry, and re-counting them here is exactly how a ratchet double-books a single piece of work. later_roadmaps unchanged at 55."
 +    },
 +    {
 +      "at": "2026-08-21",
-+      "active_roadmaps": 11,
++      "active_roadmaps": 10,
 +      "later_roadmaps": 55,
-+      "open_blockers": 44,
++      "open_blockers": 42,
 +      "why": "Raised by one for `merge-authority` in road-to-drain-commands. The blocker is not deferred work: it records that activating a `--merge` flag lowers a recorded safety floor (ADR-237 s4 excludes merging and says no invocation extends it), which docs the decision-revisit-gate reserves to the owner. Three independent reviews reached that same verdict before the blocker was written - the AI council, the committed road-to-gate-preauth-authorization stub, and the runtime classifier, which refused this branch's own attempt to edit the prohibition out of the canonical loop. Writing it as a blocker is what keeps the estate honest here: the alternative was to ship the flag active with an amendment the agent authored for itself, which would have left the count unchanged and the floor lowered. Also raised active_roadmaps 10 -> 11 for the same file. It ships 27 of its 29 steps closed in the change that adds it, and stays active only because that one owner decision is outstanding; its frontmatter carries the matching estate_offset_exempt line rather than parking an unrelated roadmap to balance the books. Rebased onto main's drawdown during the merge: main lowered active_roadmaps to 10 and open_blockers to 43 while this branch was open, so the +1 for this roadmap is applied to THAT floor (11 / 44) rather than to the 11 / 43 this branch started from. Taking our own higher numbers would have silently undone someone else's drawdown, which is the one thing a ratchet must never let a merge do."
      }
    ],
    "target": {
 diff --git a/src/domains/git/README.md b/src/domains/git/README.md
-index a417109b8871cb93b99b06e54726ea248b092691..5f7b77fad98730a793f69c4e9476ba83499eee43 100644
+index a417109b8871cb93b99b06e54726ea248b092691..66370f521e69add97b58c5c9677fe3f5c5f94a98 100644
 --- a/src/domains/git/README.md
 +++ b/src/domains/git/README.md
 @@ -7,11 +7,12 @@ Git workflow — commit, pull requests, branch sync.
@@ -1745,7 +1773,7 @@ index a417109b8871cb93b99b06e54726ea248b092691..5f7b77fad98730a793f69c4e9476ba83
  - **`git-commit-in-chunks`** — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
  - **`git-pr-create`** — Create a GitHub PR with structured description from Jira ticket and code changes
  - **`git-pr-create-description-only`** — Generate a PR description as a copyable markdown block — used standalone or by create-pr
-+- **`git-pr-merge`** — Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++- **`git-pr-merge`** — Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open
 diff --git a/src/domains/git/pack.yaml b/src/domains/git/pack.yaml
 index ac32f166e80c591fcdb37074962bfb6363f4aec9..4c3a78c6c518388da0e2ca67fad9a6ca15120bd0 100644
 --- a/src/domains/git/pack.yaml
@@ -1764,23 +1792,23 @@ index ac32f166e80c591fcdb37074962bfb6363f4aec9..4c3a78c6c518388da0e2ca67fad9a6ca
  label: Git
 diff --git a/src/domains/git/pr/merge/command.md b/src/domains/git/pr/merge/command.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a79def30c5
+index 0000000000000000000000000000000000000000..d0c59ab9415ec65e592982248e6cbe3ce4361512
 --- /dev/null
 +++ b/src/domains/git/pr/merge/command.md
-@@ -0,0 +1,362 @@
+@@ -0,0 +1,379 @@
 +---
 +model_tier: medium
 +name: git-pr-merge
 +disable-model-invocation: true
 +argument-hint: "[all|<pr-number>] [--no-merge]"
 +pack: git
-+intent: "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so"
++intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — merging itself is gated and inert"
 +routes_to: [git-workflow, github-ci]
 +replaces: []
 +visibility: advanced
 +cluster: git-pr-merge
 +skills: [git-workflow, github-ci]
-+description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
++description: Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open
 +suggestion:
 +  eligible: false
 +  rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
@@ -1947,11 +1975,24 @@ index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a7
 +the queue count fall — and never close one on a bare diff.**
 +
 +```
-+CLOSING SOMEONE ELSE'S PR IS IRREVERSIBLE TO ITS AUTHOR AND IS NOT IN
-+`BLOCK_OPS`, SO NO GUARD WILL STOP IT. THE RUN CLOSES A PR ONLY WHEN THE
-+EXCLUDED DIFF IS EMPTY *AND* IT CAN NAME THE PRs THE CONTENT LANDED VIA.
-+IT CANNOT NAME THEM → LEAVE THE PR OPEN AND RECORD IT AS `blocked-external`.
++CLOSING SOMEONE ELSE'S PR IS AN IRREVERSIBLE EXTERNAL ACTION AND IS NOT
++GUARDED: `pr-close` IS NOT A `GitOp` AT ALL — NOT IN `BLOCK_OPS`, NOT EVEN
++IN `WARN_OPS`. NOTHING WILL STOP IT, WHICH IS WHY THIS COMMAND MUST.
++
++THE RUN NEVER CLOSES A PR ON ITS OWN HEURISTIC. IT STOPS AND ASKS, NAMING
++THE EXACT OBJECT: THE PR NUMBER, ITS TITLE, ITS AUTHOR, AND THE PRs THE
++CONTENT LANDED VIA. ONE CONFIRMATION PER PR, THIS TURN, PER
++non-destructive-by-default. NEVER A BATCH APPROVAL FOR "THE SUPERSEDED ONES".
++IT CANNOT NAME WHERE THE CONTENT LANDED → DO NOT EVEN ASK; LEAVE THE PR OPEN
++AND RECORD IT AS `blocked-external`.
 +```
++
++The asymmetry is deliberate and worth stating, because it looks inconsistent:
++merging is gated on an owner *decision* recorded once in a blocker, while
++closing is gated on a *per-object* confirmation every time. Merging this run's
++own PR is an action the run's whole design is about; closing a PR someone else
++opened is not, it destroys their work in progress, and no guard in this tree
++sees it happen. The cheaper gate goes on the action nothing else watches.
 +
 +## 5. Drive CI green — bounded
 +
@@ -2027,8 +2068,12 @@ index 0000000000000000000000000000000000000000..a1a7fc3d5113d74d6281bacce9ce59a7
 +cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
 +```
 +
-+Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`, with the constant
-+read from `src/scripts/hooks/block_unauthorized_git.ts`. Under pressure means
++Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`. Take the constant
++from the guard source **only after** `check_hook_bundle_content` says the
++source and the executing bundle agree — reading the source alone is the
++2026-08-21 failure re-expressed as an instruction, since the bundle is what
++enforces the value and a source edit without a rebuild is silently inert. Under
++pressure means
 +the remaining window is shorter than one CI cycle on this repository. The read
 +is the whole interaction: the run never edits that file, the constant, or the
 +built bundle.
@@ -2144,7 +2189,7 @@ index cf6c0286162a8512633bec16ccab821659631b7a..a1ec67379a7b73c0fdd24bb604177e91
  
  Sub-command names match the locked contract in
 diff --git a/src/domains/product-basic/roadmap/process-full/command.md b/src/domains/product-basic/roadmap/process-full/command.md
-index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af5952f9a2 100644
+index 1c75651401b7a609d0a2f88a61d951d413265278..90afcd988e30d279d697344b3526afc8362ce824 100644
 --- a/src/domains/product-basic/roadmap/process-full/command.md
 +++ b/src/domains/product-basic/roadmap/process-full/command.md
 @@ -7,7 +7,7 @@ cluster: roadmap
@@ -2276,7 +2321,7 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
  ## Iron Law — Full is Full
  
  ```
-@@ -87,6 +200,12 @@ with the **scope delta below**.
+@@ -87,9 +200,15 @@ with the **scope delta below**.
  TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
  PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
  NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
@@ -2288,11 +2333,23 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
  ```
  
- The **five — and only five — halt conditions** (exhaustive; nothing else
-@@ -98,6 +217,31 @@ stops the run):
+-The **five — and only five — halt conditions** (exhaustive; nothing else
++The **six — and only six — halt conditions** (exhaustive; nothing else
+ stops the run):
+ 
+ 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+@@ -97,6 +216,39 @@ stops the run):
+ 3. **Security-sensitive** surface reached.
  4. **Scope-out-of-roadmap** work discovered.
  5. **Test / quality red** that cannot be cleared within the N=3 budget.
- 
++6. **A merge conflict outside the four enumerated classes** of
++   [`/pr:merge` § 3](../../../git/pr/merge/command.md), during the delivery
++   loop. Added when delivery became unconditional: the loop runs on every
++   completed run, `--all` or not, so its stop is a stop of this command and
++   calling it "a kill switch rather than a halt reason" would not change that —
++   a run that stops has stopped. It fires only where a run reaches delivery,
++   which is the one thing that distinguishes it from the five above.
++
 +**Under `--all`, which of these end the roadmap and which end the loop.** Two
 +of the five are safety floors and they end the **whole run**, not the current
 +roadmap:
@@ -2304,6 +2361,7 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +| 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 +| 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
 +| 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
++| 6. Unenumerated merge conflict in delivery | Ends the roadmap; the loop records it and continues. |
 +
 +**And the conditions that end the loop without ending a roadmap:**
 +estate-queue exhaustion (always), a
@@ -2315,13 +2373,12 @@ index 1c75651401b7a609d0a2f88a61d951d413265278..27a378e278f032c0b17900fef4f282af
 +window to govern. Three conditions, one of them currently inert, and this
 +table is the only place the set is stated.
 +
-+Nothing here widens a run without `--all`: it still has exactly the five
++Nothing here widens a run without `--all`: it still has exactly the six
 +above, all of them ending the run because there is no loop to continue.
-+
+ 
  ```
  FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
-   · "running low on context / token budget"
-@@ -109,7 +253,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
+@@ -109,7 +261,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
      runnable test over PRE-EXISTING blockers, never by how a step feels
    · "the branch is not protected" / "a branch must be created"
    · "a PR must be opened" / "a GitHub setting must change"
@@ -2350,10 +2407,10 @@ index d9fdcdebdf0b31b0a55a65f417ffb1d4181c60b0..e277998f9482f33e29fef421681b019f
    # Product-surface — deliberately-started FEATURES (not daily flow members,
 diff --git a/src/scripts/check_hook_bundle_content.ts b/src/scripts/check_hook_bundle_content.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa0008803e8a
+index 0000000000000000000000000000000000000000..db4804fd7b6d37e179cdd33c5f0a23b486b3c763
 --- /dev/null
 +++ b/src/scripts/check_hook_bundle_content.ts
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,219 @@
 +#!/usr/bin/env tsx
 +/**
 + * Content-equivalence gate for the self-hosted hook bundle.
@@ -2366,12 +2423,24 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 + * from an archive, or a filesystem with coarse timestamp resolution all make
 + * the inference false while the check stays green.
 + *
-+ * On 2026-08-21 exactly that gap cost a live run: `LEDGER_MAX_AGE_MS` was
-+ * edited in `block_unauthorized_git.ts`, the bundle was not rebuilt, and the
-+ * guard kept enforcing the old value. All three copies (source, repo bundle,
-+ * global install) were inspected by hand before anyone noticed. This gate
-+ * answers the question the mtime check cannot: *are the bytes that execute the
-+ * bytes this source produces?*
++ * On 2026-08-21 a live run edited `LEDGER_MAX_AGE_MS` in
++ * `block_unauthorized_git.ts`, did not rebuild, and the guard kept enforcing
++ * the old value; all three copies (source, repo bundle, global install) were
++ * inspected by hand before anyone noticed. **The freshness gate did not miss
++ * that one — it is pre-push and was never run.** Saying it "stayed green" would
++ * be a plausible mechanism standing in for the observed one, which is the
++ * failure this repository's own evidence discipline names.
++ *
++ * What the mtime check genuinely cannot see is narrower and is the reason this
++ * gate exists: the mtime check cannot see an edit that does not move the mtime — an
++mtime-preserving write, a `touch` on the bundle, an archive or `cp -p` restore,
++or a filesystem whose timestamp resolution is coarser than the edit interval.
++Demonstrated on this tree rather than argued: an mtime-preserving edit to one
++constant left the bundle at 1 139 302 bytes with an untouched mtime, the
++freshness gate passed, and the digest differed.
++ *
++ * This gate answers the question directly — are the bytes that execute the
++ * bytes this source produces?
 + *
 + * WHAT IT CANNOT DO, STATED PLAINLY.
 + *
@@ -2416,7 +2485,12 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +const HERE = path.dirname(fileURLToPath(import.meta.url));
 +const REPO_ROOT = path.resolve(HERE, "..", "..");
 +const LIVE_REL = path.join("dist", "hooks", "dispatch.js");
-+const PROBE_REL = path.join("dist", "hooks", "dispatch.content-check.js");
++// Suffixed with the pid: two concurrent invocations in one checkout (the
++// pre-push gate plus a manual run) otherwise share one path, the first
++// `finally` deletes the other's output, and the survivor reports "rebuild
++// failed" off a missing file — a false red on a pre-push gate, which is the
++// failure mode the PATH injection below exists to avoid.
++const PROBE_REL = path.join("dist", "hooks", `dispatch.content-check.${String(process.pid)}.js`);
 +
 +/** sha256 of a file's bytes, hex. */
 +export function digestOf(file: string): string {
@@ -2438,8 +2512,8 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +  return typeof s === "string" ? s : null;
 +}
 +
-+function main(): number {
-+  const live = path.join(REPO_ROOT, LIVE_REL);
++export function main(root: string = REPO_ROOT): number {
++  const live = path.join(root, LIVE_REL);
 +  if (!fs.existsSync(live)) {
 +    // Loud no-op, matching the sibling gates: a fresh checkout or CI has no
 +    // bundle, and materialising one here would change what other gates see.
@@ -2460,7 +2534,7 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +    return 0;
 +  }
 +
-+  const script = buildScript(REPO_ROOT);
++  const script = buildScript(root);
 +  if (script === null) {
 +    process.stderr.write(
 +      "check_hook_bundle_content: package.json has no `build:hooks` script — refusing to guess the flag set\n",
@@ -2475,7 +2549,7 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +    return 2;
 +  }
 +
-+  const probe = path.join(REPO_ROOT, PROBE_REL);
++  const probe = path.join(root, PROBE_REL);
 +  try {
 +    // PATH is injected exactly as `rebuild_hook_bundle` does it, and for the
 +    // same reason: `build:hooks` starts with a bare `esbuild`, so inheriting an
@@ -2483,11 +2557,11 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +    // failed" on a bundle that is in fact correct — a false red on a pre-push
 +    // gate, which is how a pre-push gate teaches people to skip it.
 +    const built = spawnSync("sh", ["-c", rewritten], {
-+      cwd: REPO_ROOT,
++      cwd: root,
 +      encoding: "utf8",
 +      env: {
 +        ...process.env,
-+        PATH: `${path.join(REPO_ROOT, "node_modules", ".bin")}:${process.env["PATH"] ?? ""}`,
++        PATH: `${path.join(root, "node_modules", ".bin")}:${process.env["PATH"] ?? ""}`,
 +      },
 +    });
 +    if (built.status !== 0 || !fs.existsSync(probe)) {
@@ -2556,7 +2630,6 @@ index 0000000000000000000000000000000000000000..a54f8c767046f009233c872d651dfa00
 +  process.exit(main());
 +}
 +
-+export { main };
 diff --git a/src/scripts/hooks/block_unauthorized_git.ts b/src/scripts/hooks/block_unauthorized_git.ts
 index 97c43b038f989fa97a887efda026e461daf63828..c4be428d78aa78bad3dad54a00e9f7931b683de8 100644
 --- a/src/scripts/hooks/block_unauthorized_git.ts
@@ -2593,19 +2666,21 @@ index 97c43b038f989fa97a887efda026e461daf63828..c4be428d78aa78bad3dad54a00e9f793
  /**
   * Load the ledger, and refuse one that does not belong to THIS session and
 diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
-index 17b492299251cca08a02ab8ddec0a4204c85321c..dd8dbe6b667a2797ab17157872cb12b84d7a4607 100644
+index 17b492299251cca08a02ab8ddec0a4204c85321c..c4fba10cda9ebe4cce9c089c67b49c9de2c3a4f6 100644
 --- a/taskfiles/ci-fast.yml
 +++ b/taskfiles/ci-fast.yml
-@@ -133,6 +133,22 @@ tasks:
+@@ -133,6 +133,24 @@ tasks:
        # both are no-ops — a fresh checkout has no bundle.
        - ./scripts-run src/scripts/rebuild_hook_bundle
        - ./scripts-run src/scripts/check_hook_bundle_freshness
 +      # Byte-equivalence behind the mtime check. The freshness gate compares
 +      # ORDERING (every source older than the bundle); this compares BYTES
 +      # (the bundle is what these sources produce). An mtime-preserving edit,
-+      # a `touch`, or an archive restore passes the first and fails the
-+      # second — demonstrated 2026-08-21 with an edit that changed the
-+      # dispatcher's digest while leaving its size and mtime untouched.
++      # a `touch` on the bundle, or a `cp -p` restore passes the first and
++      # fails the second — demonstrated 2026-08-21 with an edit that changed
++      # the dispatcher's digest while leaving its size and mtime untouched.
++      # NOT claimed: that the mtime gate missed the 2026-08-21 incident. It is
++      # pre-push and was not run; an ordinary edit would have reddened it.
 +      # LOCAL-ONLY BY CONSTRUCTION: dist/hooks/ is untracked, so CI has no
 +      # bundle to compare and declares a no-op. A green CI says nothing about
 +      # the bundle a maintainer is actually executing — which is precisely the
@@ -2619,3 +2694,105 @@ index 17b492299251cca08a02ab8ddec0a4204c85321c..dd8dbe6b667a2797ab17157872cb12b8
        - ./scripts-run src/scripts/lint_regression
        # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
        # forms are sub-second here (0.44s --changed / 0.52s --all, measured
+diff --git a/tests/scripts/check_hook_bundle_content.test.ts b/tests/scripts/check_hook_bundle_content.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd19e4daba693fc6b79315f8e7c39a09f2672702
+--- /dev/null
++++ b/tests/scripts/check_hook_bundle_content.test.ts
+@@ -0,0 +1,96 @@
++// The gate that catches an executing bundle the source no longer produces.
++//
++// Its sibling `check_hook_bundle_freshness` compares MTIMES, which is ordering
++// and not equivalence. The set it structurally cannot see: an mtime-preserving
++// write, a `touch` on the bundle, a `cp -p` restore. Measured 2026-08-21 on the
++// real tree — an edit to one constant left `dist/hooks/dispatch.js` at
++// 1 139 302 bytes with an untouched mtime and a different digest.
++//
++// The gate is `local_only` and a declared no-op in CI, so nothing else ever
++// exercises it: without this file a rename of `build:hooks`, of `rewriteOutfile`
++// or of the outfile path degrades it to a permanent exit 2 or a permanent pass,
++// silently. That is the same unreviewable-green class the gate itself exists to
++// remove, which is why every branch below is pinned — the red as well as the
++// green, since a gate never seen red has unknown sensitivity.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import { buildScript, digestOf, main } from '../../src/scripts/check_hook_bundle_content.js';
++
++/** A tree with a package.json whose `build:hooks` writes a deterministic file. */
++function fixture(buildHooks: string | null, bundle: string | null): string {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hookcontent-'));
++  fs.mkdirSync(path.join(root, 'dist', 'hooks'), { recursive: true });
++  const pkg: Record<string, unknown> = { name: 'fixture', scripts: {} };
++  if (buildHooks !== null) (pkg['scripts'] as Record<string, string>)['build:hooks'] = buildHooks;
++  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify(pkg));
++  if (bundle !== null) fs.writeFileSync(path.join(root, 'dist', 'hooks', 'dispatch.js'), bundle);
++  return root;
++}
++
++/** A `build:hooks` stand-in: writes `content` to whatever `--outfile=` names. */
++function writer(content: string): string {
++  return `sh -c 'printf %s ${JSON.stringify(content)} > "$(echo "$0" | sed s/.*--outfile=//)"' --outfile=dist/hooks/dispatch.js`;
++}
++
++describe('check_hook_bundle_content', () => {
++  it('passes when the executing bundle is byte-identical to a rebuild', () => {
++    const root = fixture(writer('BYTES'), 'BYTES');
++    expect(main(root)).toBe(0);
++  });
++
++  it('FAILS when the bundle differs from what the source produces — the whole point', () => {
++    // Same byte count on both sides, so a size check would not see it either.
++    const root = fixture(writer('BYTES'), 'BYTEX');
++    expect(main(root)).toBe(1);
++  });
++
++  it('is insensitive to mtime, which is exactly where the sibling gate is blind', () => {
++    const root = fixture(writer('BYTES'), 'BYTEX');
++    const live = path.join(root, 'dist', 'hooks', 'dispatch.js');
++    // Make the bundle look freshly built. The mtime gate would pass; this must not.
++    const future = Date.now() + 60_000;
++    fs.utimesSync(live, future / 1000, future / 1000);
++    expect(main(root)).toBe(1);
++  });
++
++  it('declares a loud no-op when no bundle exists — CI has none, and that is not a failure', () => {
++    const root = fixture(writer('BYTES'), null);
++    expect(main(root)).toBe(0);
++  });
++
++  it('refuses to guess when `build:hooks` is gone, rather than passing', () => {
++    expect(main(fixture(null, 'BYTES'))).toBe(2);
++  });
++
++  it('refuses to guess when `build:hooks` stops writing the live outfile', () => {
++    expect(main(fixture('esbuild --outfile=dist/hooks/somewhere-else.js', 'BYTES'))).toBe(2);
++  });
++
++  it('reports exit 2, never a pass, when the rebuild itself fails', () => {
++    expect(main(fixture('sh -c "exit 3" --outfile=dist/hooks/dispatch.js', 'BYTES'))).toBe(2);
++  });
++
++  it('leaves no probe artefact behind on any path', () => {
++    const root = fixture(writer('BYTES'), 'BYTES');
++    main(root);
++    const left = fs.readdirSync(path.join(root, 'dist', 'hooks')).filter((f) => f.includes('content-check'));
++    expect(left).toEqual([]);
++  });
++
++  it('buildScript returns null rather than a guess when the script is absent', () => {
++    expect(buildScript(fixture(null, null))).toBeNull();
++  });
++
++  it('digestOf distinguishes equal-length contents', () => {
++    const root = fixture(null, null);
++    const a = path.join(root, 'a');
++    const b = path.join(root, 'b');
++    fs.writeFileSync(a, 'BYTES');
++    fs.writeFileSync(b, 'BYTEX');
++    expect(digestOf(a)).not.toBe(digestOf(b));
++  });
++});

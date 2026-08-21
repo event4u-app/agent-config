@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head c6c99a415d4a98cfb2b729d0c343a0c21fba6349, review
-  artefacts excluded), scope hash `8411daa1c534817bb7c39408da666d6f2445ef74ef5859a6f7498793c429785d`
+- diff: `diff.patch` — the review scope (branch head 59e85c9c8bb795de8a5bce24a78b3eebc82baf63, review
+  artefacts excluded), scope hash `fbf87f6f18b19a0b03fa634ae9bff3d4598ff054d38031551822ddfc08563767`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -64,6 +64,7 @@ Changed files:
 - src/scripts/check_hook_bundle_content.ts
 - src/scripts/hooks/block_unauthorized_git.ts
 - taskfiles/ci-fast.yml
+- tests/scripts/check_hook_bundle_content.test.ts
 
 ## Output format (contract §2.2)
 
@@ -85,5 +86,5 @@ Fill the findings table in `drain-road-to-drain-commands.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 8411daa1c534817bb7c39408da666d6f2445ef74ef5859a6f7498793c429785d, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope fbf87f6f18b19a0b03fa634ae9bff3d4598ff054d38031551822ddfc08563767, reviewed <YYYY-MM-DD>
 ```
