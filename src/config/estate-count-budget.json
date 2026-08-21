@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 6,
+    "active_roadmaps": 5,
     "later_roadmaps": 55,
     "open_blockers": 33
   },
@@ -587,6 +587,27 @@
       "later_roadmaps": 55,
       "open_blockers": 33,
       "why": "WALKED DOWN by 1 active and 1 blocker, and the blocker half took real digging rather than a status-line count -- the driver reported ZERO open-to-resolved transitions, which is true and misleading. active_roadmaps 7 -> 6 is the archival of road-to-gated-reach-followup. open_blockers 34 -> 33 comes from a LEGACY marker: on origin/main that file carries '> Blocked until yt-dlp and a JavaScript runtime are installed by a human', which the parser counts as one open blocker via its legacy Blocked-until form, and this branch converts it into a structured '### blocker: legacy' entry with Status resolved and Owner user. So no status line changed from open to resolved; a legacy note became a structured, closed one. The obligation itself is preserved in stubs/road-to-youtube-channel-exercise.md, which is why later_roadmaps stays 55."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALK-DOWN, earned by one archival and nothing else, RE-MEASURED AT MERGE. road-to-solution-minimalism reached 0 open / 0 deferred / 0 open blockers and `roadmap:progress` archived it, so active_roadmaps measures 23 against a trunk ceiling of 24. The one point is a real termination, not an accounting move: nothing was parked, re-classified `draft`, or split, and later_roadmaps is unchanged at 52. Its residue did move to a stub (the ~30 oracles and the full-tier run, transferred 2026-08-20 in PR #1480), but that transfer was counted then and this entry adds nothing for it. RECONCILIATION: this entry first read open_blockers 62, measured against d0fad2ccd before origin/main moved 11 commits ahead; the trunk has since measured 61, so that NUMBER is superseded and only the active_roadmaps claim it carried still stands. The baseline above was re-measured against the merged tree rather than taken from either side, and every history entry from both sides is retained -- main's 38 in main's order, plus this one. A lower measurement is the new ceiling, never headroom to spend later."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 22,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-solution-minimalism merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 22, 'later_roadmaps': 52, 'open_blockers': 61}, from {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 5,
+      "later_roadmaps": 55,
+      "open_blockers": 33,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-solution-minimalism is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). This is the roadmap PR #1480 left open earlier in this same drain on exactly one acceptance step -- all quality gates pass -- which was deliberately NOT flipped then because a green CI run is what closes it, not an agent's assertion. That step is closed here and the archive follows. open_blockers unchanged at 33: its blockers were already resolved before this change, so nothing is claimed twice. later_roadmaps unchanged at 55."
     }
   ],
   "target": {

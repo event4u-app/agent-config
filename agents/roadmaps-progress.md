@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers in the active tree, **6** need you → `agent-config gates`
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers in the active tree, **6** need you → `agent-config gates`
 
 ## Overall
 
-**61 / 82 steps done · 74%**
+**30 / 50 steps done · 60%**
 
 ```text
-██████████████████████████████░░░░░░░░░░   74%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -19,9 +19,8 @@
 | 1 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 3 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 4 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 5 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 6 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 4 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 5 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 
 ---
 
@@ -257,17 +256,6 @@
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
 _2 blockers resolved._
-
-### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
-
-**Road to solution minimalism — a first-class discipline against over-building** — 31 / 32 done (97%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
-| 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 1 | 12 | 0 | 3 | 92% |
 
 ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
 
