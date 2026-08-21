@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 523,
+  "count": 524,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -4748,6 +4748,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-org-telemetry",
+      "title": "Road to org telemetry",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 21,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-overlap-truth-and-skill-cut",
