@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**524 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 181 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -363,6 +363,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-orchestration-and-memory-harvest`](road-to-orchestration-and-memory-harvest.md) | Road to orchestration-and-memory harvest | completed | 5 | 17/17 | _not extractable_ |
 | [`road-to-orchestrator-discipline-carriers`](road-to-orchestrator-discipline-carriers.md) | Road to orchestrator discipline carriers — the delegation obligation and the end-review obligation get mechanisms that reach real sessions | completed | 7 | 37/37 | _not extractable_ |
 | [`road-to-orchestrator-first-execution`](road-to-orchestrator-first-execution.md) | Road to orchestrator-first execution — make the gate clear, measure what already happened, then decide whether "orchestrate everything" survives contact with the numbers | closed-with-cancellations | 5 | 17/29 | _not extractable_ |
+| [`road-to-org-telemetry`](road-to-org-telemetry.md) | Road to org telemetry | closed-with-cancellations | 7 | 21/30 | _not extractable_ |
 | [`road-to-overlap-truth-and-skill-cut`](road-to-overlap-truth-and-skill-cut.md) | Road to overlap truth — repair the instrument, then cut the skills it was supposed to find | closed-with-cancellations | 6 | 13/14 | _not extractable_ |
 | [`road-to-package-impact-benchmark`](road-to-package-impact-benchmark.md) | Roadmap: Package-Impact Benchmark (with vs. without agent-config) | completed-with-deferrals | 5 | 31/32 | _not extractable_ |
 | [`road-to-package-optimization`](road-to-package-optimization.md) | Road to Package Optimization | closed-with-cancellations | 3 | 1/8 | _not extractable_ |
