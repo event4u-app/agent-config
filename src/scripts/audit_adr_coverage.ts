@@ -159,8 +159,19 @@ function _globMdSorted(dir: string): string[] {
  * keeping this script's own regex: the tree carried three divergent ADR
  * frontmatter parsers plus this one, and the two nested axes (`provenance`,
  * `evidence`) are exactly the shape a `^([a-z_]+):\s*(.+?)$` regex reads as
- * absent. The `{}`-on-absent return and the quote/space stripping are the
- * pinned part of the contract and are preserved.
+ * absent.
+ *
+ * What is preserved: the `{}`-on-absent return, and the scalar keys this
+ * script's callers read.
+ *
+ * What changed, stated because "preserved" was claimed for it and is false:
+ * the removed `_stripChars(v, ' "\'')` stripped repeated and unbalanced quote
+ * and space characters from both ends (Python `str.strip` semantics), while the
+ * shared reader's `stripQuotes` is `/^["'](.*)["']$/` — exactly one balanced
+ * pair. Two inputs now differ: `key: "value` keeps its opening quote (was
+ * `value`), and `key: ''v''` yields `'v'` (was `v`). No record in the corpus
+ * exercises either shape today, and the old behaviour is deliberately NOT
+ * restored — one shared reader beats a bug-compatible local copy.
  */
 export function parse_fm(text: string): Record<string, string> {
     return readAdrFrontmatterScalars(text) ?? {};

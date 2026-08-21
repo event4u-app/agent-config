@@ -272,6 +272,68 @@ jobs:
       - name: ADR citations resolve
         run: ./scripts-run src/scripts/adr_cite_check --cited
 
+      # Third instance of the same class, found in completion review: the ADR
+      # evidence census was wired into NOTHING — no workflow step, no task
+      # target, no gate-coverage.yml row, and no stated exemption — while
+      # `adr_cite_check` above got all three in the same change. AC-2 and AC-3
+      # of road-to-evidence-based-adr-governance rest on the 186 rows of
+      # `agents/evidence/analysis/adr-evidence-census-2026-08.md`, so the
+      # artifact could drift from the generator with no signal at all.
+      #
+      # This step gates the ARTIFACT's freshness, not the grades: the census is
+      # proposal-only and never exits non-zero on a grade (a low grade is a
+      # finding, not a violation). It regenerates to a temp path and diffs.
+      #
+      # NOT registered in src/config/gate-coverage.yml, for the reason recorded
+      # one step above: `gate_population.matchesGatePattern` classifies on a NAME
+      # PREFIX (`lint|check|audit|skill|verify_`) and `evidence_census.ts`
+      # carries none of them, so a manifest row would red
+      # `gate_population.test.ts` exactly as it did for `adr_cite_check`. The
+      # comment that would have sat beside that row sits here and in the
+      # `check-adr-evidence-census` task desc instead, because gate-coverage.yml
+      # is owned by a sibling change. Consequence: no minimum-scan floor from
+      # the manifest, though the census asserts its own scan scope internally.
+      #
+      # Inlined rather than `run: task check-adr-evidence-census`: no step in
+      # this workflow installs the `task` binary — every other one calls
+      # `./scripts-run` directly — so a task invocation here would fail on
+      # "command not found" and read as a census defect.
+      - name: ADR evidence census up to date
+        run: |
+          set -eu
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+          ./scripts-run src/scripts/adr/evidence_census --out "$tmp" >/dev/null
+          if ! diff -u agents/evidence/analysis/adr-evidence-census-2026-08.md "$tmp"; then
+            echo "❌  adr-evidence-census: the committed artifact is stale. Run ./scripts-run src/scripts/adr/evidence_census and commit the result." >&2
+            exit 1
+          fi
+          echo "✅  adr-evidence-census: committed artifact matches a fresh run"
+
+      # AC-5's first clause, which had no mechanism until this step existed.
+      # `check_adr_frontmatter.check_descriptive_axes` validates the SHAPE of an
+      # axis that is PRESENT — its own docstring says a fresh record with no
+      # `provenance`, no `evidence` and no `## Evidence` section passes every gate
+      # in this tree — and the named blocker was structural: requiring the axes
+      # needs a notion of NEW, and a single-file linter sees only a `date:` the
+      # author typed. This is the two-ref diff that docstring called "buildable
+      # and not built".
+      #
+      # Diff-scoped, so it exits 0 on any branch that adds no decision record:
+      # the 147 pre-existing accepted records predate the axes and retrofitting
+      # them is a migration event, not a gate (the scope decision
+      # `lint_evidence_artifacts` already took, adopted rather than re-argued).
+      #
+      # Registered in `src/config/gate-coverage.yml`, unlike the two ADR tools
+      # above — its `check_` prefix is in the gate population, so no
+      # two-gates-disagree problem arises. Its floor is an inert `min_scanned: 0`
+      # (a diff cannot carry an honest floor) and the discrimination proof is the
+      # gate's own `--self-test` instead, which is the stronger instrument here:
+      # this gate's usual reading is ZERO added records, the one state where a
+      # working gate and a broken one print the same thing.
+      - name: New accepted ADRs disclose their evidence
+        run: ./scripts-run src/scripts/check_new_adr_evidence
+
       - name: Subagent safety-floor freshness
         run: ./scripts-run src/scripts/generate_subagent_floor --check
 

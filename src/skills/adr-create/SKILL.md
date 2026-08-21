@@ -282,10 +282,14 @@ authority_basis: evidence | owner_intent      # optional; absent → evidence
 The frontmatter block is the same shape as the flat surface — the contract
 says so ([`adr-layout § Frontmatter`](../../../docs/contracts/adr-layout.md):
 "identical across both surfaces"), and `audit_adr_coverage.ts`'s parser reads
-it when present and falls back to "—" when absent. The quote-style header
-stays as the human-readable banner; existing per-area records carry it alone,
-which is why every field in their generated README table renders "—". Cite the
-area's contract from the README in
+it when present. The quote-style header stays as the human-readable banner,
+and every existing per-area record now carries frontmatter beside it, so their
+generated README tables render real values — see
+[`docs/adrs/telegraph/README.md`](../../../docs/adrs/telegraph/README.md),
+whose rows read `accepted` / `2026-05-16`. A record carrying the banner alone
+is not blank either: `parse_blockquote_meta` reads the
+`> Area: … · Status: … · Date: …` line as a fallback, and only a record with
+neither renders "—". Cite the area's contract from the README in
 [`docs/adrs/<area>/README.md`](../../../docs/adrs/).
 
 ### 5. Regenerate the index

@@ -207,6 +207,27 @@ describe('descriptive axes — provenance', () => {
         expect(f.some((x) => x.message.includes('must be a map'))).toBe(true);
     });
 
+    // The regression this pair pins: the guard used to read `fm.scalars` alone,
+    // and the reader routes an inline list into `nested` — so a malformed axis
+    // written as a list produced ZERO findings and every consumer downstream
+    // read the axis as absent. Sabotage-verified: restoring the scalars-only
+    // guard turns both of these red.
+    it('rejects an inline LIST where a map belongs (provenance)', () => {
+        const f = check_one(
+            'a.md',
+            fm('adr: 300\nstatus: accepted\ndate: 2026-08-21\ndecision: probe\nreview_trigger: unclassified\nprovenance: [human]'),
+        );
+        expect(f.some((x) => x.message.includes('must be a map'))).toBe(true);
+    });
+
+    it('rejects an inline LIST where a map belongs (evidence)', () => {
+        const f = check_one(
+            'a.md',
+            fm('adr: 300\nstatus: accepted\ndate: 2026-08-21\ndecision: probe\nreview_trigger: unclassified\nevidence: [E9]'),
+        );
+        expect(f.some((x) => x.message.includes('must be a map'))).toBe(true);
+    });
+
     it('rejects an unknown agentic_mode', () => {
         const f = check_one('a.md', withProvenance(['kind: agentic', 'agentic_mode: quorum']));
         expect(f.some((x) => x.message.includes('agentic_mode `quorum`'))).toBe(true);
@@ -528,5 +549,44 @@ describe('check_supersession_links', () => {
     it('does not confuse the amendment fields for supersession ones', () => {
         const f = check_supersession_links(corpus([{ adr: '232', amends: 'ADR-035' }, { adr: '35' }]));
         expect(f).toEqual([]);
+    });
+});
+
+describe('reciprocal links — per-area numbers never collide with flat ADR numbers', () => {
+    // `adr: 0001` appears on six of the seven per-area records, so a single
+    // Map keyed on the number kept one of seven and shadowed flat ADR-001 too.
+    // The false-NEGATIVE is the dangerous direction: a per-area record's
+    // reciprocal would mask a genuinely broken flat link as fine.
+    const flat = {
+        rel: 'docs/decisions/ADR-001-x.md',
+        fm: { adr: '001', superseded_by: 'ADR-002' },
+    };
+    const perArea = {
+        rel: 'docs/adrs/telegraph/0001-y.md',
+        fm: { adr: '0001', area: 'telegraph', supersedes: '—' },
+        perArea: true,
+    };
+    const other = { rel: 'docs/decisions/ADR-002-z.md', fm: { adr: '002', supersedes: '—' } };
+
+    // Sensitivity note: sabotage-verified, and only the SECOND test goes red
+    // when the per-area skip is removed. This one stays green because the flat
+    // record's own link still resolves — it pins the wrong-file-blamed
+    // direction, not the shadowing mechanism.
+    it('blames the flat record, never the per-area one, for a one-sided link', () => {
+        const f = check_supersession_links([flat, perArea, other]);
+        const one = f.filter((x) => x.kind === 'supersession_link');
+        expect(one.length).toBe(1);
+        expect(one[0]?.file).toBe('docs/decisions/ADR-001-x.md');
+        expect(f.some((x) => x.message.includes('docs/adrs/telegraph'))).toBe(false);
+    });
+
+    it('does not let a per-area reciprocal satisfy a flat link', () => {
+        const masking = {
+            rel: 'docs/adrs/telegraph/0002-w.md',
+            fm: { adr: '0002', area: 'telegraph', supersedes: 'ADR-001' },
+            perArea: true,
+        };
+        const f = check_supersession_links([flat, masking]);
+        expect(f.some((x) => x.kind === 'supersession_link')).toBe(true);
     });
 });

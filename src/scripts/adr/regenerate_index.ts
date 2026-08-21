@@ -38,19 +38,6 @@ interface Row extends Meta {
     [k: string]: string;
 }
 
-/** Mirror Python `str.strip(" \"'")` — strip listed chars from both ends. */
-function _stripChars(s: string, chars: string): string {
-    let start = 0;
-    let end = s.length;
-    while (start < end && chars.includes(s[start] as string)) {
-        start += 1;
-    }
-    while (end > start && chars.includes(s[end - 1] as string)) {
-        end -= 1;
-    }
-    return s.slice(start, end);
-}
-
 /** Mirror Python `str.title()`: cap first letter of each alphabetic run, lower the rest. */
 function _title(s: string): string {
     let out = '';

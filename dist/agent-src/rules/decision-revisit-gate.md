@@ -94,10 +94,12 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 Step 2 reads, in order: **effective state** (status · amendments · successors) →
 **provenance** → **evidence strength** → **discovery** → **current evidence**
 (does the basis still resolve in a clone?) → **reversibility of the proposed
-transition** → **reserved dimensions**. `adr_cite_check` prints all seven; the
+transition** → **reserved dimensions**. `adr_cite_check` prints six of them —
+read 6 is the agent's, because reversibility belongs to the proposed transition
+and no tool reading one record supplies it. What each field means, and what a
+`[found]` basis ref does NOT claim, is in that script's module docstring. The
 evidence-priced burden table stays in
-[`adr-layout § The reopen record`](../docs/contracts/adr-layout.md) and is not
-restated here.
+[`adr-layout § The reopen record`](../docs/contracts/adr-layout.md).
 
 ```
 A GRADE IS A MEASUREMENT, NOT A PERMISSION — IT GRANTS NOTHING.

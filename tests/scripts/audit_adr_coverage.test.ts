@@ -44,6 +44,17 @@ describe('audit_adr_coverage — pure helpers', () => {
     it('parse_fm returns {} when no frontmatter', () => {
         expect(aac.parse_fm('no fm')).toEqual({});
     });
+    it('parse_fm strips exactly ONE balanced quote pair — the documented delta from the removed local stripper', () => {
+        // The docstring on `parse_fm` names these two inputs as the behaviour
+        // that changed when it started delegating to the shared reader: the old
+        // `_stripChars(v, ' "\'')` peeled repeated and unbalanced quotes, the
+        // shared `stripQuotes` (/^["'](.*)["']$/) peels one balanced pair. No
+        // corpus record exercises either shape; this pins the claim so the
+        // docstring cannot drift back into asserting parity.
+        const fm = aac.parse_fm('---\ndecision: "value\nstatus: \'\'v\'\'\n---\nbody');
+        expect(fm.decision).toBe('"value');
+        expect(fm.status).toBe("'v'");
+    });
     it('render_area_readme title-cases the decision and emits the relative contract link', () => {
         const out = aac.render_area_readme(
             'cost',

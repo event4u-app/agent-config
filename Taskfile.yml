@@ -115,6 +115,8 @@ tasks:
       - task: check-claims
       - task: check-adr-frontmatter
       - task: check-adr-citations
+      - task: check-adr-evidence-census
+      - task: check-new-adr-evidence
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop

@@ -12,11 +12,13 @@ import {
     LOW_EVIDENCE_NOTICE,
     SURFACES_NOT_SCANNED,
     amendment_blocks,
+    basis_ref_kind,
     cite_check,
     cited_refs,
     normalise_ref,
     parse_frontmatter,
     trigger_state,
+    unresolved_basis_refs,
 } from '../../src/scripts/adr_cite_check.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -47,6 +49,9 @@ function adrWithAxes(opts: {
     strength: string;
     discovery?: string;
     basis?: string;
+    evidenceBasis?: readonly string[];
+    reopenPolicy?: string;
+    protectedDimensions?: readonly string[];
 }): string {
     return [
         '---',
@@ -64,8 +69,14 @@ function adrWithAxes(opts: {
         'evidence:',
         `  strength: ${opts.strength}`,
         ...(opts.discovery !== undefined ? [`  discovery: ${opts.discovery}`] : []),
-        '  basis: []',
+        ...(opts.evidenceBasis === undefined
+            ? ['  basis: []']
+            : ['  basis:', ...opts.evidenceBasis.map((b) => `    - ${b}`)]),
         ...(opts.basis !== undefined ? [`authority_basis: ${opts.basis}`] : []),
+        ...(opts.reopenPolicy !== undefined ? [`reopen_policy: ${opts.reopenPolicy}`] : []),
+        ...(opts.protectedDimensions !== undefined
+            ? [`protected_dimensions: [${opts.protectedDimensions.join(', ')}]`]
+            : []),
         '---',
         '',
         'Body.',
@@ -317,8 +328,13 @@ describe('cite_check', () => {
         expect(r?.file ?? '').not.toContain('docs/adrs');
     });
 
-    it('publishes both the unscanned surfaces and the partial one', () => {
-        expect(PARTIAL_COVERAGE.join(' ')).toContain('docs/adrs');
+    it('publishes an EMPTY partial-coverage list — the gap closed, the shape did not', () => {
+        // The entry that lived here said per-area records carry no frontmatter,
+        // which stopped being true on 2026-08-21; its replacement was prose
+        // denying partial coverage inside a field named for it. The constant is
+        // kept because `partial_coverage` is a published `--json` key (asserted
+        // in the CLI block below) — an empty list is the honest value.
+        expect(PARTIAL_COVERAGE).toEqual([]);
     });
 
     it('publishes the surfaces it deliberately does not scan', () => {
@@ -368,13 +384,13 @@ describe('authority_effect: disabled-shadow-mode', () => {
      * each axis combination and assert the block fires or does not — a check
      * never seen red has unknown sensitivity.
      */
-    it('fires on accepted + agentic + E0', () => {
+    it('fires on accepted + E0 — planted here on an agentic record, which the predicate never reads', () => {
         write('docs/decisions/ADR-301-e0.md', adrWithAxes({ num: '301', status: 'accepted', kind: 'agentic', strength: 'E0', discovery: 'incomplete' }));
         const [r] = cite_check(['ADR-301'], root);
         expect(r?.authority_effect).toBe('disabled-shadow-mode');
     });
 
-    it('fires on accepted + agentic + E1', () => {
+    it('fires on accepted + E1 — same, provenance is not part of the condition', () => {
         write('docs/decisions/ADR-302-e1.md', adrWithAxes({ num: '302', status: 'accepted', kind: 'agentic', strength: 'E1' }));
         const [r] = cite_check(['ADR-302'], root);
         expect(r?.authority_effect).toBe('disabled-shadow-mode');
@@ -430,6 +446,119 @@ describe('authority_effect: disabled-shadow-mode', () => {
         expect(fired.out).toContain('does not by itself');
         const quiet = runCli(root, ['ADR-307']);
         expect(quiet.out).not.toContain('disabled-shadow-mode');
+    });
+});
+
+describe('the reserved-authority reads — evidence.basis, reopen_policy, protected_dimensions', () => {
+    /**
+     * `decision-revisit-gate` step 2 tells an agent to read a record's basis and
+     * its reserved dimensions from this tool. Until 2026-08-21 the tool printed
+     * neither: `CiteResult` had no field for `evidence.basis` and `render()`
+     * emitted no `reopen_policy` / `protected_dimensions` — so two of the reads
+     * the rule delegated here were not performable from here at all.
+     */
+    const withBasis = {
+        num: '401',
+        status: 'accepted',
+        kind: 'mixed',
+        strength: 'E3',
+        discovery: 'complete',
+        reopenPolicy: 'owner',
+        protectedDimensions: ['purpose', 'governance'],
+        evidenceBasis: [
+            'docs/decisions/ADR-001-precondition-shipped.md',
+            'docs/decisions/ADR-999-never-written.md',
+            'https://example.invalid/paper (2026-08-21)',
+            'claim:some-registered-claim',
+        ],
+    } as const;
+
+    it('carries evidence.basis verbatim and flags only the repo path that is gone', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const [r] = cite_check(['ADR-401'], root);
+        expect(r?.evidence_basis).toEqual([...withBasis.evidenceBasis]);
+        // Exactly one entry: the missing repo path. The URL is not fetched and
+        // the `claim:` id is not resolved, so neither may appear here.
+        expect(r?.evidence_basis_unresolved).toEqual(['docs/decisions/ADR-999-never-written.md']);
+    });
+
+    it('prints each basis ref with a found / MISSING / not-checked marker', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const { out } = runCli(root, ['ADR-401']);
+        expect(out).toContain('evidence_basis   4 ref(s), 1 unresolved:');
+        expect(out).toContain('[found] docs/decisions/ADR-001-precondition-shipped.md');
+        expect(out).toContain('[MISSING] docs/decisions/ADR-999-never-written.md');
+        expect(out).toContain('[not checked: url] https://example.invalid/paper');
+        expect(out).toContain('[not checked: claim] claim:some-registered-claim');
+    });
+
+    it('prints the declared reopen_policy and every protected dimension', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const [r] = cite_check(['ADR-401'], root);
+        expect(r?.reopen_policy).toBe('owner');
+        expect(r?.reopen_policy_defaulted).toBe(false);
+        expect(r?.protected_dimensions).toEqual(['purpose', 'governance']);
+        const { out } = runCli(root, ['ADR-401']);
+        expect(out).toContain('reopen_policy    owner (declared)');
+        expect(out).toContain('protected dims   purpose, governance');
+    });
+
+    it('resolves an ABSENT reopen_policy to unclassified and says it was defaulted', () => {
+        // `adr-layout § Reopen authority`: absent → `unclassified`, never
+        // `owner`. Printing a blank would make the reader re-derive a default
+        // the contract already fixed; printing `unclassified` unmarked would
+        // hide that nobody classified it.
+        write('docs/decisions/ADR-402-unclassified.md', adrWithAxes({ num: '402', status: 'accepted', kind: 'human', strength: 'E2' }));
+        const [r] = cite_check(['ADR-402'], root);
+        expect(r?.reopen_policy).toBe('unclassified');
+        expect(r?.reopen_policy_defaulted).toBe(true);
+        expect(r?.protected_dimensions).toEqual([]);
+        const { out } = runCli(root, ['ADR-402']);
+        expect(out).toContain('reopen_policy    unclassified (absent → default)');
+        expect(out).toContain('protected dims   — (none declared)');
+        expect(out).toContain('evidence_basis   — (none recorded)');
+    });
+
+    it('emits all four fields in --json, not only in the human render', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const { out, code } = runCli(root, ['ADR-401', '--json']);
+        expect(code).toBe(0);
+        const payload = JSON.parse(out) as {
+            results: {
+                evidence_basis?: string[];
+                evidence_basis_unresolved?: string[];
+                reopen_policy?: string;
+                reopen_policy_defaulted?: boolean;
+                protected_dimensions?: string[];
+            }[];
+        };
+        const rec = payload.results[0];
+        expect(rec?.evidence_basis).toHaveLength(4);
+        expect(rec?.evidence_basis_unresolved).toEqual(['docs/decisions/ADR-999-never-written.md']);
+        expect(rec?.reopen_policy).toBe('owner');
+        expect(rec?.reopen_policy_defaulted).toBe(false);
+        expect(rec?.protected_dimensions).toEqual(['purpose', 'governance']);
+    });
+
+    it('classifies a ref shape without fetching or resolving anything', () => {
+        expect(basis_ref_kind('https://example.invalid/x')).toBe('url');
+        expect(basis_ref_kind('http://example.invalid/x')).toBe('url');
+        expect(basis_ref_kind('claim:foo-bar')).toBe('claim');
+        expect(basis_ref_kind('docs/decisions/ADR-001-x.md')).toBe('path');
+        expect(basis_ref_kind('src/scripts/x.ts:44-51')).toBe('path');
+    });
+
+    it('strips a trailing note and a line anchor before the existence check', () => {
+        // Both shapes occur in the corpus; neither is part of the filename, and
+        // checking the unstripped string would report every one of them missing.
+        const found = unresolved_basis_refs(
+            [
+                'docs/decisions/ADR-001-precondition-shipped.md:12-20',
+                'docs/decisions/ADR-001-precondition-shipped.md (2026-08-21)',
+            ],
+            root,
+        );
+        expect(found).toEqual([]);
     });
 });
 
@@ -522,6 +651,18 @@ describe('the CI gate — exit codes and the scanned: line', () => {
         const payload = JSON.parse(out) as { ledger?: { planned: number; failed: number } };
         expect(payload.ledger?.planned).toBe(1);
         expect(payload.ledger?.failed).toBe(0);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('still emits the partial_coverage key in --json, now empty, so a consumer does not break', () => {
+        // Removing the KEY would be a breaking change to this published shape;
+        // removing the dead ENTRY is not. This pins the distinction.
+        const tree = corpus('ADR-001');
+        const { out, code } = runCli(tree, ['--cited', '--json']);
+        expect(code).toBe(0);
+        const payload = JSON.parse(out) as Record<string, unknown>;
+        expect(Object.keys(payload)).toContain('partial_coverage');
+        expect(payload.partial_coverage).toEqual([]);
         fs.rmSync(tree, { recursive: true, force: true });
     });
 

@@ -285,14 +285,22 @@ const INVALID_TRIGGER_VALUES = new Set(['terminal', 'none', 'n/a', 'na', '-', '�
  * require the axes at all**, and an earlier version of this docstring said "a
  * NEW record must carry the axes", which nothing here enforces. Completion
  * review disproved it directly: a fresh record with no `provenance`, no
- * `evidence` and no `## Evidence` section passes every gate in this tree.
+ * `evidence` and no `## Evidence` section passed every gate in this tree.
  *
- * The gap is structural rather than an omission. Requiring the axes needs a
- * notion of NEW, and a single-file linter has none — it sees a `date:` the
- * author typed, not whether the record is new to the repository. `date:` is the
- * proxy used for the `review_trigger` staging below, and it is a weak one: a
- * backdated record slips through it. Closing this needs a two-ref diff, which
- * is buildable and not built, and is named here rather than implied away.
+ * The gap is structural rather than an omission, and it is why it was not closed
+ * HERE. Requiring the axes needs a notion of NEW, and a single-file linter has
+ * none — it sees a `date:` the author typed, not whether the record is new to the
+ * repository. `date:` is the proxy used for the `review_trigger` staging below,
+ * and it is a weak one: a backdated record slips through it.
+ *
+ * **The gap is now closed, in `check_new_adr_evidence.ts`** — the two-ref diff
+ * this paragraph used to call "buildable and not built" (review finding 4). It
+ * enumerates records ADDED against a base ref and requires all three of
+ * `provenance.kind`, `evidence.strength` and an `## Evidence` section of any
+ * added record whose status is `accepted`. Nothing moved out of this file: the
+ * split is one axis, one owner — that gate decides WHETHER a new record must
+ * disclose, this function decides whether what it wrote is well-formed, and the
+ * pre-existing corpus stays out of scope on both sides.
  *
  * The `review_trigger` staging IS enforced, on that same date proxy. 88 of the
  * 147 accepted records carry no trigger, so a same-day hard requirement would
@@ -351,11 +359,20 @@ export function check_descriptive_axes(
 
     // --- provenance
     const provenance = provenanceOf(fm);
-    if (fm.scalars['provenance'] !== undefined && provenance === null) {
+    // Key-presence is read from BOTH maps, not from `scalars` alone. The shared
+    // reader routes an inline list (`provenance: [human]`) into `nested`, so a
+    // scalars-only guard left the whole malformed-list class silently accepted:
+    // `provenanceOf` returns null via its `Array.isArray` branch, no branch
+    // fired, and every downstream consumer then read the axis as ABSENT. Found
+    // in completion review with a direct probe — `provenance: [human]` +
+    // `evidence: [E9]` on an otherwise valid accepted record produced zero
+    // findings. The list shape is a plausible slip precisely because
+    // `protected_dimensions: [purpose]` in the same block is a list.
+    if (axisPresent(fm, 'provenance') && provenance === null) {
         findings.push({
             file: rel,
             level: 'error',
-            message: '`provenance` must be a map with a `kind:` key, not a scalar',
+            message: '`provenance` must be a map with a `kind:` key — a scalar or a list is not a map',
         });
     }
     if (provenance !== null) {
@@ -382,11 +399,11 @@ export function check_descriptive_axes(
 
     // --- evidence
     const evidence = evidenceOf(fm);
-    if (fm.scalars['evidence'] !== undefined && evidence === null) {
+    if (axisPresent(fm, 'evidence') && evidence === null) {
         findings.push({
             file: rel,
             level: 'error',
-            message: '`evidence` must be a map with a `strength:` key, not a scalar',
+            message: '`evidence` must be a map with a `strength:` key — a scalar or a list is not a map',
         });
     }
     if (evidence !== null) {
@@ -460,9 +477,47 @@ export function check_descriptive_axes(
 }
 
 /** `ADR-035`, `035`, `35` → `35`. Returns null when nothing resolves. */
+/**
+ * Is a descriptive axis PRESENT in the frontmatter, in any shape?
+ *
+ * The typed accessors (`provenanceOf` / `evidenceOf`) return null for three
+ * different situations — absent, scalar, list — and only the first is legal.
+ * Distinguishing them needs the raw key, and the raw key can live in either
+ * map: the reader keeps a scalar in `scalars` and BOTH a map and an inline
+ * list in `nested`. Asking one map is how the malformed-list class escaped.
+ */
+export function axisPresent(fm: AdrFrontmatter, key: 'provenance' | 'evidence'): boolean {
+    return fm.scalars[key] !== undefined || fm.nested[key] !== undefined;
+}
+
 export function adr_number(raw: string): string | null {
     const m = /(\d{1,4})/.exec(raw.trim());
     return m?.[1] === undefined ? null : String(Number(m[1]));
+}
+
+/**
+ * Index a corpus by ADR number for the reciprocal-link checks — FLAT records
+ * only.
+ *
+ * A bare `ADR-NNN` reference denotes a flat record: that is the only surface
+ * whose numbers are globally unique. Per-area numbers are unique only within
+ * their area (`docs/adrs/<area>/0001`), so admitting them here would make one
+ * Map key mean several files — six per-area records carry `adr: 0001` today.
+ * Cross-surface links are therefore reported as unresolvable rather than
+ * resolved to an arbitrary sibling; a per-area record still gets every
+ * single-file check, and a real cross-surface reference needs a qualified
+ * reference form that `parse_adr_refs` does not yet have.
+ */
+function indexByNumber(
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
+): Map<string, { rel: string; fm: Record<string, string> }> {
+    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
+    for (const f of files) {
+        if (f.perArea === true) continue;
+        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        if (n !== null) byNumber.set(n, f);
+    }
+    return byNumber;
 }
 
 /**
@@ -503,14 +558,10 @@ export function check_amendment_shape(
  * and is the gap it documented rather than closed.
  */
 export function check_amendment_links(
-    files: { rel: string; fm: Record<string, string> }[],
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
 ): AdrFinding[] {
     const findings: AdrFinding[] = [];
-    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
-    for (const f of files) {
-        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
-        if (n !== null) byNumber.set(n, f);
-    }
+    const byNumber = indexByNumber(files);
 
     const reciprocal = { amends: 'amended_by', amended_by: 'amends' } as const;
     for (const f of files) {
@@ -661,14 +712,10 @@ export function parse_adr_refs(raw: string | undefined): AdrRef[] {
  * rather than folded into the same count.
  */
 export function check_supersession_links(
-    files: { rel: string; fm: Record<string, string> }[],
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
 ): AdrFinding[] {
     const findings: AdrFinding[] = [];
-    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
-    for (const f of files) {
-        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
-        if (n !== null) byNumber.set(n, f);
-    }
+    const byNumber = indexByNumber(files);
 
     const reciprocal = { supersedes: 'superseded_by', superseded_by: 'supersedes' } as const;
     for (const f of files) {
@@ -775,12 +822,34 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
     // step 1.5's stated rationale — "check_adr_frontmatter needs
     // machine-readable fields" — was unrealised until this call site changed.
     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
-    const perArea = listPerAreaRecords();
+    // The per-area root is derived from `dir` so the whole check is hermetic.
+    // It used to call `listPerAreaRecords()` with no argument, which always read
+    // the REAL `REPO_ROOT/docs/adrs` — so a call with a temp dir silently mixed
+    // the live corpus into `findings`, into `corpus` (both reciprocal-link
+    // checks) and into the `assertScanned` denominator. That last one is the
+    // damaging half: with the live corpus always contributing, an emptied or
+    // moved `docs/decisions` could never trip `DeadScopeError`, which is the one
+    // thing that assertion exists for. Found in completion review; the `root`
+    // parameter existed and had no caller.
+    const perArea = listPerAreaRecords(path.resolve(dir, '..', '..'));
     ledger?.plan([...candidates, ...perArea.map((r) => r.rel)]);
 
     // Collected for the two corpus-level reciprocal-link checks below
     // (amendment, supersession), neither of which can be decided from one file.
-    const corpus: { rel: string; fm: Record<string, string> }[] = [];
+    //
+    // `perArea: true` keeps per-area records out of the number index those
+    // checks build. Without it their `adr: 0001` collapses onto flat ADR-001 —
+    // and, worse, onto EACH OTHER: six of the seven per-area records carry
+    // `adr: 0001`, so a single Map keyed on the number kept exactly one of
+    // seven. Completion review found the flat half with a probe (`supersedes:
+    // ADR-001` blamed `docs/adrs/telegraph/0001` for a missing reciprocal —
+    // the wrong file); the six-way per-area collision is the same defect,
+    // wider, and it turned up only because the fix asked how many records
+    // shared a key. The false-negative direction is the dangerous one: a
+    // per-area record's reciprocal would mask a genuinely broken flat link.
+    // Latent today because nothing cites ADR-001/002, and introduced by folding
+    // per-area records into the shared corpus in this same change.
+    const corpus: { rel: string; fm: Record<string, string>; perArea?: boolean }[] = [];
 
     for (const name of candidates) {
         if (!/^ADR-.*\.md$/.test(name)) {
@@ -808,7 +877,7 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
     for (const rec of perArea) {
         const text = fs.readFileSync(rec.abs, 'utf-8');
         const parsed = parse_frontmatter(text);
-        if (parsed !== null) corpus.push({ rel: rec.rel, fm: parsed });
+        if (parsed !== null) corpus.push({ rel: rec.rel, fm: parsed, perArea: true });
         const own = check_one(rec.rel, text);
         findings.push(...own);
         const errs = own.filter((f) => f.level === 'error').length;

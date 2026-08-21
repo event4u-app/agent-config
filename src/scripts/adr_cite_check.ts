@@ -34,8 +34,21 @@
  * result means: this may not be presented as an unqualified lock — route it.
  *
  * It also prints the two descriptive axes (`provenance`, `evidence`) and
- * `authority_basis`, and for an accepted + agentic + E0/E1 record it prints
+ * `authority_basis`, and for an accepted E0/E1 record that does NOT carry
+ * `authority_basis: owner_intent` it prints
  * `authority_effect: disabled-shadow-mode` — see LOW_EVIDENCE_NOTICE.
+ * Provenance is deliberately NOT part of that condition: the notice is about
+ * evidence strength, and a human snapshot has exactly as little of it.
+ *
+ * It prints three more record fields, so that a revisit read can be performed
+ * from this tool instead of from the file by hand: `evidence.basis` verbatim
+ * (with a `[found]` / `[MISSING]` marker on the refs that are repo paths — a
+ * URL and a `claim:` id are printed and never checked), the RESOLVED
+ * `reopen_policy` marked declared-or-defaulted, and `protected_dimensions`.
+ *
+ * What it deliberately does not print: whether the proposed transition is
+ * reversible. That is a property of the PROPOSAL, not of the record, so no
+ * reader of an ADR file can supply it — the citer does.
  * Shadow mode means exactly what the word says: the axes are surfaced, and no
  * grade changes who may act (`adr-layout § Provenance and evidence`).
  *
@@ -58,6 +71,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+    type AdrFrontmatter,
     authorityBasisOf,
     evidenceOf,
     isLowEvidenceAccepted,
@@ -105,7 +119,9 @@ function scan_root(): string {
  * about, committed by this very file. It resolves by path and by the
  * `ADR-<area>-NNNN` citation form now; a BARE number still cannot address one,
  * because per-area numbering restarts per area and five files here are `0001`.
- * See `PARTIAL_COVERAGE` for what a per-area hit does and does not carry.
+ * A per-area hit now carries the same metadata as a flat one: all seven
+ * records gained YAML frontmatter on 2026-08-21, so `PARTIAL_COVERAGE` is
+ * empty and no residual limit is claimed for this surface.
  */
 export const ADR_DIRS = ['docs/decisions', 'docs/adrs'] as const;
 
@@ -116,17 +132,22 @@ export const SURFACES_NOT_SCANNED = [
 ] as const;
 
 /**
- * Partial coverage, stated because a silent partial is the failure this tool
- * exists to avoid: `docs/adrs/<area>/` resolves by PATH and by the
- * `ADR-<area>-NNNN` citation form, but those files carry a quote-block header
- * rather than YAML frontmatter, so `status` / `review_trigger` / the link
- * fields read as absent. A per-area result is an accurate location and an
- * honestly empty metadata set — never a claim that the fields are empty in the
- * document.
+ * Partial coverage — empty, and the KEY is kept deliberately.
+ *
+ * The single entry this held is gone. It said `docs/adrs/<area>/` resolves by
+ * PATH and by the `ADR-<area>-NNNN` citation form while those files carry a
+ * quote-block header rather than YAML, so `status` / `review_trigger` / the
+ * link fields read as absent. All seven per-area records carry real
+ * frontmatter as of 2026-08-21, so that gap closed — and its replacement text
+ * was prose asserting the absence of partial coverage inside a field named for
+ * its presence, plus a "remove on the next pass" TODO, shipped into `--json`.
+ *
+ * The key stays. `partial_coverage` is a published output shape (see the
+ * `--json` payload), so removing it breaks any consumer that reads it, while
+ * an empty list states exactly what is true: no partial coverage is known
+ * today. This is the place to record the next one.
  */
-export const PARTIAL_COVERAGE = [
-    'docs/adrs/<area>/ — no partial coverage remains: these records carry YAML frontmatter as of 2026-08-21, so status, date and review_trigger all read. Kept as an entry only to record that the gap closed; remove on the next pass.',
-] as const;
+export const PARTIAL_COVERAGE: readonly string[] = [];
 
 /** A trigger state. `none` means the ADR never recorded a reopen condition. */
 export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired';
@@ -156,8 +177,46 @@ export interface CiteResult {
     evidence_strength?: string;
     /** `evidence.discovery` — `complete` | `incomplete`; required on E0. */
     evidence_discovery?: string;
+    /**
+     * `evidence.basis` — the refs the grade rests on, VERBATIM.
+     *
+     * Present only when the record declares at least one. The tool prints them;
+     * whether each one still supports the claim is the citer's read, not a
+     * verdict this file may issue.
+     */
+    evidence_basis?: string[];
+    /**
+     * The subset of `evidence_basis` that looks like a repo path and does NOT
+     * exist in this checkout — the one existence question that is cheap and
+     * decidable here. A URL or a `claim:` id is never listed: liveness of a URL
+     * needs the network, and a claim id resolves against the claim registry,
+     * neither of which this tool touches. Set (possibly empty) whenever
+     * `evidence_basis` is set, so an empty list means "checked, all present"
+     * rather than "not checked".
+     */
+    evidence_basis_unresolved?: string[];
     /** `authority_basis` — `evidence` (default) or `owner_intent`. */
     authority_basis?: string;
+    /**
+     * `reopen_policy`, RESOLVED — `directional` | `owner` | `unclassified`.
+     *
+     * Never blank on a resolved record: `adr-layout § Reopen authority` states
+     * that an absent field resolves to `unclassified`, and printing a blank
+     * would make an agent re-derive a default the contract already fixed.
+     * `reopen_policy_defaulted` says which of the two it was, because
+     * "nobody classified this" and "someone classified it as unclassified" are
+     * the same value and not the same fact.
+     */
+    reopen_policy?: string;
+    /** True when `reopen_policy` was absent and resolved to `unclassified`. */
+    reopen_policy_defaulted?: boolean;
+    /**
+     * `protected_dimensions` — the reserved interests this record touches.
+     * Empty list when the record declares none; that is not the same as
+     * "no dimension is reserved for the transition being proposed", which is a
+     * property of the proposal and outside anything a record can say.
+     */
+    protected_dimensions?: string[];
     /**
      * What the axes say a cite-time reader may draw from this record.
      *
@@ -340,6 +399,60 @@ export function parse_frontmatter(text: string): Record<string, string> | null {
 }
 
 /**
+ * `protected_dimensions` off the shared reader's node, narrowed — not parsed.
+ *
+ * The field is written inline (`protected_dimensions: [governance]`), so the
+ * shared reader hands it back under `nested` as a string list. This only
+ * narrows that node; adding a second parser for a field one reader already
+ * reads is how the tree ended up with three divergent ADR parsers.
+ */
+export function protected_dimensions_of(fm: AdrFrontmatter): string[] {
+    const node = fm.nested['protected_dimensions'];
+    if (Array.isArray(node)) return node;
+    if (typeof node === 'string' && node !== '') return [node];
+    return [];
+}
+
+/**
+ * Which `evidence.basis` refs are repo paths that are not there any more.
+ *
+ * Deliberately narrow. A ref is checked ONLY when it looks like a repo-relative
+ * path — no scheme, no `claim:` prefix. A trailing `(YYYY-MM-DD)` access note
+ * and a `:LINE` / `:LINE-LINE` anchor are stripped before the check, because
+ * both appear in the corpus and neither is part of the filename.
+ *
+ * What this does NOT do, stated because the difference is the whole point: it
+ * does not fetch a URL, does not resolve a `claim:` id against the claim
+ * registry, and does not judge whether a ref that EXISTS still supports the
+ * grade. "The file is present" is the only claim made.
+ */
+export function unresolved_basis_refs(basis: readonly string[], repo_root: string): string[] {
+    const missing: string[] = [];
+    for (const ref of basis) {
+        if (basis_ref_kind(ref) !== 'path') continue;
+        if (!fs.existsSync(path.join(repo_root, basis_ref_path(ref)))) missing.push(ref);
+    }
+    return missing;
+}
+
+/** `url` and `claim` refs are printed and never checked; `path` refs are. */
+export function basis_ref_kind(ref: string): 'url' | 'claim' | 'path' {
+    const t = ref.trim();
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return 'url';
+    if (/^claim:/i.test(t)) return 'claim';
+    return 'path';
+}
+
+/** Strip a trailing `(note)` and a `:LINE[-LINE]` anchor off a path-shaped ref. */
+function basis_ref_path(ref: string): string {
+    return ref
+        .trim()
+        .replace(/\s*\([^)]*\)\s*$/, '')
+        .replace(/:\d+(-\d+)?$/, '')
+        .trim();
+}
+
+/**
  * The three amendment conventions the corpus actually uses. No convention is
  * canonical yet, so all three are matched rather than one being assumed.
  */
@@ -450,12 +563,23 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
         const fm = parse_frontmatter(text) ?? {};
         // The two nested axes need the structured reader; `parse_frontmatter`
         // folds them back to a string for scalar-only callers. `null` here is
-        // the honest answer for a per-area record (quote-block header, see
-        // PARTIAL_COVERAGE) and for any record predating the axes.
+        // the honest answer for a record predating the axes — no longer for a
+        // per-area record: all seven carry real frontmatter as of 2026-08-21
+        // and read through exactly the same path as a flat one.
         const structured = readAdrFrontmatter(text);
         const provenance = structured === null ? null : provenanceOf(structured);
         const evidence = structured === null ? null : evidenceOf(structured);
         const basis = structured === null ? null : authorityBasisOf(structured);
+        const evidence_basis = evidence?.basis ?? [];
+        // `adr-layout § Reopen authority`: absent resolves to `unclassified`,
+        // and deliberately NOT to `owner` — fail-closed there would encode the
+        // existing blockage into the schema. A record with no frontmatter at
+        // all resolves the same way, for the same reason.
+        const declared_policy = fm['reopen_policy'];
+        const reopen_policy =
+            declared_policy !== undefined && declared_policy !== '' ? declared_policy : 'unclassified';
+        const reopen_policy_defaulted = declared_policy === undefined || declared_policy === '';
+        const protected_dimensions = structured === null ? [] : protected_dimensions_of(structured);
         const provisional = structured !== null && isLowEvidenceAccepted(structured);
         const bodyStart = text.indexOf('\n---\n', 4);
         const body = bodyStart === -1 ? text : text.slice(bodyStart + 5);
@@ -501,7 +625,16 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
             ...(evidence?.discovery !== undefined && evidence.discovery !== null
                 ? { evidence_discovery: evidence.discovery }
                 : {}),
+            ...(evidence_basis.length > 0
+                ? {
+                      evidence_basis,
+                      evidence_basis_unresolved: unresolved_basis_refs(evidence_basis, repo_root),
+                  }
+                : {}),
             ...(basis !== null ? { authority_basis: basis } : {}),
+            reopen_policy,
+            reopen_policy_defaulted,
+            protected_dimensions,
             ...(provisional ? { authority_effect: 'disabled-shadow-mode' } : {}),
         };
         return { ...partial, verdict: verdict_for(partial) };
@@ -542,6 +675,41 @@ function render(results: CiteResult[]): string {
                 `  ·  discovery ${r.evidence_discovery ?? '—'}`,
         );
         lines.push(`  authority_basis  ${r.authority_basis ?? '— (absent → evidence)'}`);
+
+        // The basis refs, verbatim, one per line with an existence marker. A
+        // grade with no readable basis is the thing a citer has to see, so the
+        // absent case prints too rather than dropping the line.
+        if (r.evidence_basis === undefined || r.evidence_basis.length === 0) {
+            lines.push('  evidence_basis   — (none recorded)');
+        } else {
+            const unresolved = new Set(r.evidence_basis_unresolved ?? []);
+            lines.push(
+                `  evidence_basis   ${String(r.evidence_basis.length)} ref(s), ` +
+                    `${String(unresolved.size)} unresolved:`,
+            );
+            for (const ref of r.evidence_basis) {
+                const kind = basis_ref_kind(ref);
+                const marker =
+                    kind !== 'path'
+                        ? `[not checked: ${kind}]`
+                        : unresolved.has(ref)
+                          ? '[MISSING]'
+                          : '[found]';
+                lines.push(`                     ${marker} ${ref}`);
+            }
+        }
+
+        // The two reserved-authority fields, printed together because the
+        // routing question reads them together. `protected_dimensions` names
+        // what the RECORD reserves; whether a given transition weakens one is a
+        // property of the proposal and is nothing this tool can print.
+        const policyNote = r.reopen_policy_defaulted === true ? ' (absent → default)' : ' (declared)';
+        const dims =
+            r.protected_dimensions !== undefined && r.protected_dimensions.length > 0
+                ? r.protected_dimensions.join(', ')
+                : '— (none declared)';
+        lines.push(`  reopen_policy    ${r.reopen_policy ?? 'unclassified'}${policyNote}`);
+        lines.push(`  protected dims   ${dims}`);
         lines.push(`  →  ${r.verdict}`);
         // Verbatim + unindented, on purpose: see LOW_EVIDENCE_NOTICE.
         if (r.authority_effect === 'disabled-shadow-mode') lines.push(LOW_EVIDENCE_NOTICE);

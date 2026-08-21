@@ -42,11 +42,11 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 268 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 269 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-21 and it returns 268).
-# **44 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 42 of those 44 are listed below.** The manifest is
+# re-run 2026-08-21 and it returns 269).
+# **45 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 42 of those 45 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~16 % of the population.
 #
@@ -61,10 +61,17 @@
 # The derivation now, so the next reader can check it rather than trust it:
 # `grep -c '^  - id:'` returns 42 (computable, and computed); every listed row
 # is an emitter, because a row that did not emit could carry no floor and the
-# guard would report it `failing`; TWO emitters are deliberately unlisted —
-# `lint_evidence_artifacts` (below) and `adr_cite_check` (see the block where
-# its row would have sat); 42 + 2 = 44. The population figure comes from the
-# function.
+# guard would report it `failing`; THREE emitters are deliberately unlisted —
+# `lint_evidence_artifacts` (below), `adr_cite_check` and
+# `check_new_adr_evidence` (each in the block where its row would have sat);
+# 42 + 3 = 45. The population figure comes from the function, and it stays 269
+# because `check_new_adr_evidence` matches the population prefix whether or not
+# it carries a row here.
+#
+# `adr/evidence_census` emits a `scanned:` line too and is NOT in either number:
+# it carries no `lint|check|audit` prefix, so `count_gate_scripts()` never sees
+# it. Named because the omission looks like a fourth miscount and is not one —
+# an emitter outside the population cannot be an unlisted emitter within it.
 #
 # Corrected in completion review, and it is the third time this paragraph has
 # been off by one — which is the argument for computing it rather than
@@ -78,9 +85,10 @@
 # shape, including gates that emit only in a non-CI mode — so it is not a
 # recount of this sentence and must not be substituted for one.
 #
-# The one emitter deliberately NOT listed is `lint_evidence_artifacts`, for the
-# same reason `check_rule_projection_integrity` is not (see the paragraph
-# below): it is diff-scoped, so it legitimately emits `scanned: 0` on any
+# Three emitters are deliberately NOT listed, all for one reason. The first is
+# `lint_evidence_artifacts`, for the same reason `check_rule_projection_integrity`
+# is not (see the paragraph below): it is diff-scoped, so it legitimately emits
+# `scanned: 0` on any
 # branch that adds no evidence artifact, and `min_scanned: 0` is the
 # false-count shape this file rejects. Its ledger half IS discharged — it
 # adopts `_lib/gate_ledger.ts` and `_lib/scan_scope.ts`, so
@@ -1032,6 +1040,63 @@ gates:
     # an already-listed file that GREW while the file COUNT stayed at one. That
     # last case is what pins the metric as excess lines rather than a file count;
     # a count-based ratchet passes it, and this gate must not.
+
+  # check_new_adr_evidence is DELIBERATELY NOT REGISTERED here, following this
+  # file's own two precedents rather than breaking them.
+  #
+  # It is diff-scoped: its corpus is the set of decision records ADDED on the
+  # branch (`git diff --diff-filter=A` over `docs/decisions/ADR-*.md` and
+  # `docs/adrs/<area>/NNNN-*.md`), so ZERO is the honest reading on almost every
+  # run and any floor above 0 reds every branch that adds no ADR. A
+  # `min_scanned: 0` row is the false-count shape this file's header rejects in
+  # as many words, and `lint_evidence_artifacts` and
+  # `check_rule_projection_integrity` both hit this exact wall and resolved it by
+  # staying unregistered. A row was written first and then withdrawn: the
+  # argument for it was that a registered gate at least runs under CI-identical
+  # argv, and that is real but it is not worth being the one instance that
+  # introduces the shape two neighbours were excluded to avoid. Three precedents
+  # agreeing is a convention; two agreeing and one defecting is drift.
+  #
+  # It is NOT unwatched. `task check-new-adr-evidence` and the
+  # `New accepted ADRs disclose their evidence` step in rule-backstops.yml both
+  # run it, so a broken gate fails there.
+  #
+  # And it is NOT unproven, which is the part a floor could never have supplied.
+  # This gate's normal reading is zero added records — precisely the state where
+  # a working gate and a completely broken one emit identical output
+  # (`scanned: 0`, green), so no floor separates them at any value. `--self-test`
+  # does: seven cases, four rejecting, each building a throwaway repo and driving
+  # the real CLI with `--base <sha>`, including the case an `authority_basis:
+  # owner_intent` escape must NOT buy (that field governs authority, never
+  # disclosure). Sabotage-verified — with the `## Evidence` check removed the
+  # self-test exits 1 and names the two cases that stopped firing.
+  #
+  # What is LOST, stated rather than implied: no minimum scan is held against
+  # this gate by this manifest, so a change that silently narrowed its path
+  # regexes to nothing would pass here. The self-test is what catches that, and
+  # it is a test rather than a manifest floor — it runs when someone runs it.
+
+  # adr/evidence_census is DELIBERATELY NOT REGISTERED here either, for the
+  # same structural reason and with a different cost.
+  #
+  # `matchesGatePattern` classifies on a name PREFIX
+  # (`lint|check|audit|skill|verify_`) and `evidence_census.ts` carries neither,
+  # so a row here would red `gate_population.test.ts` exactly as the
+  # `adr_cite_check` row did. The block below weighs the three fixes for that
+  # case and they apply unchanged: widening the pattern, renaming the script, or
+  # inverting the classification to be manifest-driven.
+  #
+  # What is DIFFERENT, and better than the adr_cite_check case: the census is not
+  # unwatched. `task check-adr-evidence-census` regenerates it to a temp path and
+  # diffs against the committed artifact, wired in the `ci` chain and as the
+  # `ADR evidence census up to date` step in rule-backstops.yml, so a corpus that
+  # drifted from the artifact fails there instead of here. The census emits a
+  # `scanned:` line and adopts the ledger, so what is lost is only the MINIMUM
+  # SCAN FLOOR — a change that narrowed its corpus to zero AND regenerated the
+  # artifact to match would pass both. Stated rather than implied, because the
+  # drift check is a byte-comparison and byte-agreement on an empty corpus is
+  # still agreement. Closing it properly is the same rename, in the same change
+  # that renames adr_cite_check.
 
   # adr_cite_check is DELIBERATELY NOT REGISTERED here, and the reason is a
   # disagreement between two gates over the same file rather than an oversight.

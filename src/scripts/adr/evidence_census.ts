@@ -47,15 +47,36 @@
  * decidable from marker presence: whether a consumer actually exists is a fact
  * about the world, not about the text. The ceiling here is E3.
  *
- * ## The grades are heuristic and are biased LOW on purpose
+ * ## The grades are heuristic — biased LOW, EXCEPT for two classes biased HIGH
  *
- * A marker is a proxy for a citation, not the citation. The bias direction was
- * chosen deliberately: nothing acts on these numbers (no authority is derived
- * from a grade — `adr-layout`, and the roadmap's Architecture table), so an
- * under-graded proposal costs a reviewer one upgrade, while an over-graded one
- * would put unearned "this is measured" text into the tree. Every proposal
- * carries its matched lines so a reviewer checks the claim rather than the
- * grade.
+ * A marker is a proxy for a citation, not the citation. For most classes the
+ * bias direction was chosen deliberately downward: nothing acts on these numbers
+ * (no authority is derived from a grade — `adr-layout`, and the roadmap's
+ * Architecture table), so an under-graded proposal costs a reviewer one upgrade,
+ * while an over-graded one would put unearned "this is measured" text into the
+ * tree. `measurement` needs a figure or a dated verb; `repeated` needs something
+ * measured to compare; `prereg` needs a benchmark corpus beside it; `owner` and
+ * `council` raise nothing at all.
+ *
+ * **Two classes are biased HIGH by construction, and the sentence above is false
+ * for them.** `claim` and `external_standard` short-circuit to `E3` — the
+ * second-highest grade in the scale, and the highest this script proposes at
+ * all — on a bare textual match, ahead of every other rule and with no
+ * companion marker required. Both are the FIRST and THIRD branches of
+ * `proposeStrength`, so they pre-empt the measurement
+ * rules rather than competing with them. `EXTERNAL_STANDARD_RE` in particular
+ * matches a plain word-bounded `GDPR`, so naming a regulation as the SUBJECT of
+ * a decision reads identically to citing it as the evidence FOR one.
+ *
+ * Worked example, checkable against the corpus: `ADR-107` line 35 writes
+ * "EU DPA / GDPR Art. 28" to scope which legal domain its eval fixtures cover.
+ * The census proposes `E3 — cites a named external standard or vendor guidance`;
+ * the tranche reviewer reading the same line adjudicated `E2`. The grading rules
+ * are deliberately UNCHANGED — this paragraph exists so the artifact's own
+ * description of its bias is not contradicted by two of its own rules, and so a
+ * reviewer knows to check an `E3` sourced from `claim` or `external_standard`
+ * DOWNWARD rather than upward. Every proposal carries its matched lines so a
+ * reviewer checks the claim rather than the grade.
  *
  * Usage:
  *   ./scripts-run src/scripts/adr/evidence_census                 # write the artifact
@@ -394,6 +415,39 @@ function classes(markers: readonly Marker[]): Set<MarkerClass> {
 }
 
 /**
+ * Why a marker class that IS present still raised nothing.
+ *
+ * Four classes can be detected and grade to E0 on their own, because every rule
+ * that reads them requires a companion: `repeated` needs something measured to
+ * compare, `prereg` needs a benchmark corpus, `benchmark` needs a measurement or
+ * a pre-registration, and `owner` is a provenance input that the grading path
+ * never reads at all. Before this table existed those records printed
+ * "no evidence marker found" beside a Matched-markers cell that listed markers
+ * — 12 of 186 rows in the shipped artifact, `ADR-032` / `056` / `085` / `093` /
+ * `101` / `104` / `108` / `111` / `112` / `130` / `211` / `230`. The grade was
+ * right and the sentence was false, which is worse than a wrong grade: a
+ * reviewer who trusts the rationale stops reading the citation column.
+ */
+const UNGRADED_REASON: Readonly<Partial<Record<MarkerClass, string>>> = {
+    owner: 'an owner or maintainer declaration is provenance, not evidence',
+    repeated: 'comparative language with nothing measured to compare (E2 needs a measurement or a benchmark)',
+    prereg: 'pre-registration language with no benchmark corpus beside it (E3 needs both)',
+    benchmark: 'a benchmark path with no measurement or pre-registration beside it (E2 needs one)',
+};
+
+/**
+ * The ungraded classes, named, in first-appearance order — `classes()` builds
+ * its Set from the marker list, so the order is the record's own and is stable
+ * across runs.
+ */
+export function describeUngraded(present: ReadonlySet<MarkerClass>): string {
+    const parts = [...present]
+        .filter((cls) => !COUNCIL_CLASSES.has(cls))
+        .map((cls) => `${cls} (${UNGRADED_REASON[cls] ?? 'no rule raises the grade on this class alone'})`);
+    return parts.join('; ');
+}
+
+/**
  * Propose `evidence.strength` from the NON-council marker set.
  *
  * The council exclusion is the structure, not a branch: `present` is built from
@@ -430,6 +484,15 @@ export function proposeStrength(markers: readonly Marker[]): { strength: string;
         return {
             strength: 'E0',
             rationale: 'council / agreement markers only — consensus is not evidence',
+        };
+    }
+    // Markers WERE found and none of them is graded by any rule above. This
+    // branch exists because the fall-through used to claim the opposite; see
+    // `UNGRADED_REASON`.
+    if (graded.length > 0) {
+        return {
+            strength: 'E0',
+            rationale: `markers present, none graded: ${describeUngraded(present)}`,
         };
     }
     return { strength: 'E0', rationale: 'no evidence marker found' };
@@ -648,9 +711,36 @@ export function renderArtifact(result: CensusResult): string {
         'It is a **proposal set for human review**. It wrote no ADR frontmatter, and it has no code ' +
             'path that can: `adr-layout § Provenance and evidence` says a census may propose a value and ' +
             'never writes one, and the `No bulk classification` clause is why. The grades are **heuristic** ' +
-            '— a marker grep over each record\'s own text, not a citation audit — and they are biased LOW on ' +
-            'purpose, because an under-graded proposal costs a reviewer one upgrade while an over-graded one ' +
-            'puts unearned "this is measured" text into the tree.',
+            '— a marker grep over each record\'s own text, not a citation audit.',
+    );
+    L.push('');
+    L.push('### Which way each class is biased');
+    L.push('');
+    L.push(
+        'Most classes are biased **LOW** on purpose: an under-graded proposal costs a reviewer one ' +
+            'upgrade, while an over-graded one puts unearned "this is measured" text into the tree. ' +
+            '`measurement` needs a figure or a dated verb, `repeated` needs something measured to compare, ' +
+            '`prereg` needs a benchmark corpus beside it, and `owner` / `council` raise nothing at all.',
+    );
+    L.push('');
+    L.push(
+        '**Two classes are biased HIGH by construction, and the paragraph above is false for them.** ' +
+            '`claim` and `external_standard` short-circuit to `E3` — the second-highest grade in the ' +
+            'scale, and the highest this script proposes at all — on a bare textual match, ahead of ' +
+            'every other rule and with no companion marker ' +
+            'required: they are the first and third branches of `proposeStrength`, so they pre-empt the ' +
+            'measurement rules rather than competing with them. The standard pattern matches a plain ' +
+            'word-bounded `GDPR`, so naming a regulation as the *subject* of a decision reads identically ' +
+            'to citing it as the *evidence for* one.',
+    );
+    L.push('');
+    L.push(
+        'Worked example, checkable in this table: `ADR-107` line 35 writes "EU DPA / GDPR Art. 28" to ' +
+            'scope which legal domain its eval fixtures cover. This census proposes ' +
+            '`E3 — cites a named external standard or vendor guidance`; the tranche reviewer reading the ' +
+            'same line adjudicated `E2`. The grading rules are deliberately unchanged — so read an `E3` ' +
+            'whose only non-council marker is `claim` or `external_standard` as a **ceiling to check ' +
+            'downward**, not as a floor.',
     );
     L.push('');
     L.push(

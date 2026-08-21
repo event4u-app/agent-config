@@ -439,8 +439,14 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       bulk-classification clause feared, and round 5's structural objection
       is the same failure one layer up. Defaults: provenance `unknown`,
       strength `E0`, `discovery: incomplete`.
-      verify: runs over all 177 flat + 7 per-area records and emits
-      `scanned: 184`; spot-check anchors match independent reads
+      verify: runs over every flat record under `docs/decisions/ADR-*.md` plus
+      the 7 per-area records, and its `scanned:` equals that file count at the
+      run's head (179 + 7 = 186 today). A bare number is deliberately NOT the
+      criterion: the earlier wording said `scanned: 184` over "177 flat", the
+      tool emits 186 over 179, and the trunk moved between the two — which is
+      the same falsified-by-a-moving-corpus defect AC-2's own note records for
+      the sweep. Caught in completion review; spot-check anchors match
+      independent reads
       (ADR-106/110/126/128/202/217/223/227 → E2/E3 with a real basis ref;
       ADR-046/047 → E0; ADR-048 → E1 on its observational anchor;
       ADR-216 → owner_intent; ADR-229 → human/E2).
@@ -645,7 +651,7 @@ enables it) an independently validated grade. Rows below therefore state the
 | 2 | ADR-005 | No auto-merge, judge ranks only (`:48`); authority model predates ADR-237 | Destructive potential → 0B.2 |
 | 3 | ADR-137 | `:73` "Setting the sunset date is a maintainer act, not an agent act" — a role-based gate, the class ADR-237 § 2 outlaws | Internal, reversible; capability-vs-role question |
 | 4 | ADR-118 | § 2 rows 1, 2 and 8 read "Manual by decision" / "Never automated" / "Not automated" with judgment rationales ("demotion needs qualitative judgment", "selection bias both ways", "low marginal information"); the capacity anchor is valid (ADR-216) but no row cites a measurement | Internal; per-row re-grade |
-| 5 | ADR-133 | Freeze on (a)–(d). State at `492873f09`: (a) ✓ CLAIMS-bound null · (b) ✓ backstop debt 0 ≤ 25 · (d) ✓ only via ADR-134's unexpired defer · **(c) fails one subcheck**: `release-install-e2e` exists (`release-validation.yml:372`) but is not named in `branch-protection-policy.md`'s release-PR row, as (c) requires | **Mechanical remediation, not a reopen** — add the naming line, confirm one release-shaped pass; the freeze then lifts by its own terms. Note the circularity: (d) rests on ADR-134, whose expiry silently un-meets it |
+| 5 | ADR-133 | Freeze on (a)–(d). State at `492873f09`: (a) ✓ CLAIMS-bound null · (b) ✓ backstop debt 0 ≤ 25 · (d) ✓ only via ADR-134's unexpired defer · (c) **MET after reading the policy** — the pre-branch reading recorded here said `release-install-e2e` (`release-validation.yml:372`) "is not named in `branch-protection-policy.md`'s release-PR row"; the policy names the CHECK NAME `Release install E2E (pack → install → upgrade → boot)` at `branch-protection-policy.md:75`, which the sweep adjudicated and completion review re-confirmed. The subcheck was met all along | **No remediation needed** — the planned naming line would have duplicated a line already there, and `branch-protection-policy.md` is correctly absent from this branch's changed set. The freeze holds by its own terms on all four. The circularity stands and is unaffected: (d) rests on ADR-134, whose expiry silently un-meets it |
 | 6 | ADR-211 (sweep row) | Freeze lifted 2026-08-05 (Amendment E `:101`, ADR-216 `:265`); the 2026-08-19 sweep still carries it owner-open | Status contradiction → 0B.3 |
 | 7 | ADR-134 | Dated defer, expiry **2026-09-15** — unexpired (~25 days), so nothing has lapsed (`:11-14`) | Calendar watch; its early trigger ("both defer conditions clear before expiry") is the one condition to monitor |
 | 8 | ADR-046/047/048 | Command-doctrine trio constrains every new command. 046 and 047 carry **zero** evidence markers across 93 and 94 lines; 048 carries a two-vendor council attribution plus observed command counts (`:30`, `:32`) — the trio is **2/3** evidence-free, not 3/3 | Internal; expect `KEEP-BUT-DOWNGRADE` for 046/047, E1 for 048 on its observational anchor |
@@ -665,7 +671,12 @@ action joins the lane under the ADR-237 test.
       row 7 is a calendar watch to 2026-09-15 with its early trigger
       monitored.
       verify: (a)–(d) states re-confirmed with command output in the sweep
-      artifact; the `branch-protection-policy.md` diff merged; ADR-133's
+      artifact; **no** `branch-protection-policy.md` diff — the earlier verify
+      line demanded one, and the remediation turned out to be unnecessary
+      because the policy already names the check (`:75`). A closed step whose
+      verify names a diff that must not exist is the same weakest-honest-reading
+      defect as 3.4; corrected in completion review rather than satisfied by
+      producing a pointless diff. ADR-133's
       freeze status updated per its own terms, and the (c)/(d) circularity
       recorded.
 - [~] **4.2 Owner-gated rows (1, 2, 6) — blocked on 0B.**
@@ -863,9 +874,22 @@ existing authority floor.
       (184)") then claimed coverage of a record the sweep never read. The two
       uncovered records are named in the artifact with their reasons — that is
       the check, not the number.
-- [ ] AC-3 — Grading integrity is evidenced, not asserted: an externally
-      adjudicated anchor sample exists, ≥10 % blinded overlap was graded
-      twice, and the disagreement count is published rather than smoothed.
+- [ ] AC-3 — Grading integrity is evidenced, not asserted: the disagreement
+      count is published rather than smoothed, and the blinded-overlap and
+      external-adjudication halves are reported at what they actually reached
+      rather than at what was planned.
+
+      Two of the three clauses are **not met**, stated here rather than in a
+      footnote. (a) Blinded overlap: 17 records were assigned for double
+      grading, **16 came back** doubled, over 173 non-anchor records — **9.2 %**,
+      under the 10 % the criterion names. Two more doubled records would clear
+      it, and that needs a second blind grader, not a re-read by this session.
+      (b) No externally adjudicated anchor sample exists: the artifact records
+      the anchor set's ADR-104 provenance error as adjudicated by the party that
+      wrote the schema, and `claim:adr-grade-accuracy-vs-gold` stays `unbacked`
+      with exactly that note. The published disagreement count IS met. Caught in
+      completion review; the criterion is left open rather than re-scoped to fit
+      the number that came out.
 - [ ] AC-4 — Every blocker-lane row has a landed outcome or a named owner
       gate: rows 3, 4, 8, 9, 10, 11, 12, 13 disposed with the venue derived
       from the transition (never from the historical decision-maker); row 5's
@@ -877,11 +901,19 @@ existing authority floor.
       language; an existing record may carry `review_trigger: unclassified`;
       `terminal`/`none`/empty are rejected everywhere; a reversible
       calibration change does not route to `adr-create`.
-- [ ] AC-6 — `adr:effective` ships and ADR-020 proves a superseded clause
-      cannot be read as current; `adr-layout.md:198-200`'s stale ADR-035
-      assertion is corrected; `adr_cite_check` runs in CI and prints
-      `authority_effect: disabled-shadow-mode` on an accepted agentic E0/E1
-      record.
+- [ ] AC-6 — `adr-layout.md:198-200`'s stale ADR-035 assertion is corrected
+      (met — corrected in place at `:435-437`), and `adr_cite_check` runs in CI
+      and prints `authority_effect: disabled-shadow-mode` on an accepted E0/E1
+      record without `owner_intent` (met — `rule-backstops.yml` plus
+      `task check-adr-citations` from `Taskfile.yml:117`).
+
+      The `adr:effective` clause is **gated on step 2.2, which is open** —
+      the verb ships nowhere (a grep for `adr:effective` / `adr-effective`
+      across `Taskfile.yml`, `taskfiles/`, `src/`, `docs/` and `.github/`
+      returns zero), and 2.2 budgets eight registration surfaces. Completion
+      review read this criterion as claiming a shipped verb; it is now stated
+      as what it is — two clauses met, one waiting on an unstarted step. The
+      ADR-020 stale-prose proof rides with 2.2 for the same reason.
 - [ ] AC-7 — No authority consequence ships in this roadmap: no fixture, rule
       path, or tool output lets a grade alone authorize an agent action, and
       ADR-239 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.

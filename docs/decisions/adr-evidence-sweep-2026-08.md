@@ -56,21 +56,21 @@ Chosen to span the range in both axes and to include the records with
 independently verified evidence, so a reviewer calibrating against them is
 calibrating against reads that were checked rather than asserted.
 
-| ADR | Provenance | Strength | Discovery | Why this grade |
-|---|---|---|---|---|
-| 106 | agentic | **E3** | complete | Cites `docs/benchmark.md` at `:60` and states at `:45` that "redundancy is now a measured fact, not an assumption". A real benchmark applied to the claim it supports. |
-| 128 | agentic | **E3** | complete | The strongest in the corpus: three named report artifacts (`internal/bench/reports/projection-cost.json`, `internal/reports/exec-evidence-feasibility.json`, `internal/reports/risk-escalation-shadow.json`) plus a counted result, "11 of 26 feasible" at `:34`. |
-| 229 | human | **E2** | complete | Duplicate work **measured twice** with the PR pairs named at `:52-54` (#1277/#1280, #1280/#1281). Two independent incidents is the E2 shape; it is not E3 because the measurement is incident-counting, not a pre-registered benchmark. |
-| 216 | human | **E0** + `owner_intent` | complete | A purpose decision. It is the only record in the tree carrying `reopen_policy: owner` + `protected_dimensions: [purpose]`. E0 is the honest grade and the authority comes from `authority_basis: owner_intent` — the case ADR-239 § 5 exists for. |
-| 048 | mixed | **E1** | incomplete | The correction that matters most for calibration. A two-vendor council attribution at `:30` would be E0 on its own — consensus is not evidence. But `:30`/`:32` also carry **observed counts** (125, ~29 commands), which is one local observation. E1, and the trio it belongs to is 2/3 evidence-free rather than 3/3. |
-| 046 | agentic | **E0** | incomplete | Zero evidence markers across 93 lines — no measurement, no benchmark, no CLAIMS id, not even a council attribution. Pure doctrine, and it constrains every new command. |
-| 047 | agentic | **E0** | incomplete | Same, 94 lines. |
-| 104 | **human** (corrected) | **E0** | incomplete | No measurement anywhere, so E0 holds. Provenance was adjudicated `agentic` and that was WRONG — see the correction below. `:16` reads "Maintainer directive (standing, restated and sharpened)" and no line in the record holds a council *decision*. |
-| 118 | agentic | **E0** | incomplete | § 2 rows 1, 2 and 8 read "Manual by decision" / "Never automated" / "Not automated", each with a judgment rationale ("demotion needs qualitative judgment", "selection bias both ways", "low marginal information"). No row cites a measurement. The capacity anchor it leans on (ADR-216) is real, but that is ADR-216's evidence, not this record's. |
-| 208 | agentic | **E1** | incomplete | Council-converged, with real tree facts about the current build shape — one local observation. Notably NOT strong enough to support the permanence its title, slug and Decision line assert. |
-| 001 | agentic | **E1** | incomplete | One tree constraint, honestly recorded. Its defect is lifecycle, not evidence: `:84-86` made a re-evaluation "mandatory before P4.1" and it was never written. |
-| 133 | agentic | **E1** | complete | Its four freeze conditions are named yes/no artifact checks, which is what makes it mechanically evaluable; `discovery: complete` because the conditions themselves enumerate what to look for. |
-| 137 | agentic | **E0** | incomplete | `:73` "Setting the sunset date is a maintainer act, not an agent act" — a role assertion with no measurement behind it. |
+| ADR | Provenance | Strength | Discovery | Current? | Blocking cost | Disposition | Basis refs | Why this grade |
+|---|---|---|---|---|---|---|---|---|
+| 106 | agentic | **E3** | complete | **partly** (gate design current; the gate has since fired and the record does not say so) | **sourced in-record**: the block was the shipped default staying `off`, and it resolved rather than persisting — the cheap prereq passed (human preference 4/4 = 100 % > 60 %), the three-baseline arm then returned the null, so `off` is the gate's own ELSE branch and not an open block | **AMEND** | Gate executed end-to-end and published: `docs/benchmark.md:340-380` (D₁ 0.852 → D₂ 0.861, Δ = +0.009 Wilcoxon p = 0.79; capability 87 % → 87 % McNemar p = 1.0; first attempt already passes 72 % of the time) · the two executed steps `agents/roadmaps/archive/road-to-recursive-verification.md:195,:202-206` · restated as settled in `src/rules/self-repair-loop.md:71` ("capability Δ = 0, council verdict TERMINAL") · **the record itself carries no outcome pointer and no `review_trigger`**, so its own text still reads as a gate awaiting data · `internal/bench/recursive-verification/` holds only `human-preference-test.md`, the PLAN; the run artefacts the roadmap names (`pairs.json`, `judging-key.json`) are local and uncommitted | Cites `docs/benchmark.md` at `:60` and states at `:45` that "redundancy is now a measured fact, not an assumption". A real benchmark applied to the claim it supports. |
+| 128 | agentic | **E3** | complete | **partly** (decision current; counts dated) | **sourced in-record**: D2 makes re-execution CI-only, so a laptop reports `UNVERIFIED` and never a pass; and 35 of 48 backed claims still rest on a pointer (the record's own figure was 17 of 27) · D6/D7 escalation is classified and not gated, by design | **AMEND** | All three named report artefacts and both libraries present: `internal/reports/exec-evidence-feasibility.json`, `internal/reports/risk-escalation-shadow.json`, `src/scripts/_lib/exec_evidence.ts`, `src/scripts/_lib/risk_paths.ts`, `tests/scripts/exec_evidence.test.ts` · counts moved and the residue is published: `docs/proof.md:99-107` reads **13 of 48** re-deriving, 35 on pointers · **D8's own follow-up record was never written** — `grep -l 'non-declinable' docs/decisions/*.md` returns ADR-128 alone, so the 11-of-99 measurement cleared its pre-registered bar and the class it justifies has no record · D6/D7 remain shadow-only: `escalated_floor` (`risk_paths.ts:156`) has zero callers in `src/` — only `src/scripts/risk_escalation_shadow.ts` and `tests/scripts/exec_evidence.test.ts:205-211` | The strongest in the corpus: three named report artifacts (`internal/bench/reports/projection-cost.json`, `internal/reports/exec-evidence-feasibility.json`, `internal/reports/risk-escalation-shadow.json`) plus a counted result, "11 of 26 feasible" at `:34`. |
+| 229 | human | **E2** | complete | **yes** | **sourced in-record**: the cost it removes was measured twice — one roadmap phase built under two branch names, one PR discarded (`:52-54`); the cost it imposes is one sentence in the chat per intended worktree, and the `review_trigger` that would price that needs a consumer report, of which none is filed | **KEEP** | Executed in full and each half checkable: key deleted with a reason naming the replacement, `src/scripts/_lib/agent_settings.ts:952` · template records the deletion and both failure directions, `src/config/agent-settings.template.yml:875-883` · instruction-only pre-flight, `src/skills/using-git-worktrees/SKILL.md:51-59` · collision-gated emission, `src/scripts/session_register_hook.ts:644` (returns `null` when neither collision fires) · never-gates-git clause, `:650-653` · the settings-ask consequence holds: no shipped key routes a question through `settings-ask-protocol` | Duplicate work **measured twice** with the PR pairs named at `:52-54` (#1277/#1280, #1280/#1281). Two independent incidents is the E2 shape; it is not E3 because the measurement is incident-counting, not a pre-registered benchmark. |
+| 216 | human | **E0**; `owner_intent` PROPOSED, not current | complete | **yes** — a purpose decision the owner has not changed; only an owner ruling on project purpose would move it | **structured**: what it blocks going forward is adoption-anchored gating (D5) plus the two-slot cap, which is why four harvest roadmaps keep their `later/` disposition; its own measured counter-cost was 33 open steps freed (19 + 14) · no count of proposals refused under D5 since | **AMEND** | Unique in the tree for `protected_dimensions: [purpose]` (`ADR-216:10`; ADR-239 carries `[governance]`) — but **`authority_basis` is ABSENT from its frontmatter**, so the file resolves to the default `evidence` (`docs/contracts/adr-layout.md:79`) and this table's own row attributes to it a field it does not carry; moving *to* `owner_intent` is a strengthening needing only the standard record (`adr-layout.md:206-218`), so the amendment is not owner-reserved · the unblock delivered: `road-to-zero-ceremony-settings` is now in `agents/roadmaps/archive/`, `host-primitives` sits in `later/` on its preserved non-adoption condition · the surviving restraint is enforced, not written: `src/scripts/lint_roadmap_family_cap.ts`, `Taskfile.yml:177` · `road-to-adoption-without-narrative-debt` is in `skipped/`, so D4's exit fired on the gate's own terms | A purpose decision. It is the only record in the tree carrying `reopen_policy: owner` + `protected_dimensions: [purpose]`. E0 is the honest grade and the authority comes from `authority_basis: owner_intent` — the case ADR-239 § 5 exists for. |
+| 048 | mixed | **E1** | incomplete | **partly** | unknown — no count of command proposals the three-case test refused, and no gate applies it; the shipped-surface counts are observations about the governed surface rather than about the block, so they sit in basis refs | **AMEND** | The observed counts `ADR-048:30-32` (125, ~29) are the E1 anchor and sit on the same line as the two-vendor attribution that is not evidence · the locked contract text it points at is present: `docs/contracts/command-clusters.md:164` · the ≈40–50 sweet spot `:74-75` is chosen, never measured, and the shipped surface is 200 `src/domains/**/command.md` carrying `visibility` 5 `visible` / 17 `advanced` / 178 `internal` — managed by hiding rather than by the three-case test · the sibling-variant corollary `:67-70` names two examples the tree contradicts: `src/domains/git/commit/in-chunks/command.md` and `src/domains/product-basic/roadmap/process-step/command.md` both ship as separate commands | The correction that matters most for calibration. A two-vendor council attribution at `:30` would be E0 on its own — consensus is not evidence. But `:30`/`:32` also carry **observed counts** (125, ~29 commands), which is one local observation. E1, and the trio it belongs to is 2/3 evidence-free rather than 3/3. |
+| 046 | agentic | **E0** | incomplete | **partly** | unknown — the record states at `:76-78` that the principle is a discipline and "not (yet) a hard lint", and no command-body gate exists in `src/scripts/`, so nothing counts either compliance or the cost of enforcing it in review | **AMEND** | Zero evidence markers across 93 lines is the E0 basis, and the record's own accepted negative `:76-78` still holds: no gate bounds a command body · the shipped shape argues against the thin claim it asserts — 200 `command.md` files totalling 27,282 lines, the largest `src/domains/git/pr/create/command.md` at 542 lines, which is not "a short orchestration spec" · Decision 2's destination exists and is populated (`src/skills/`, flat, per ADR-043) · nothing in the record is falsifiable as written, which is why the disposition is an amendment rather than a challenge to the principle | Zero evidence markers across 93 lines — no measurement, no benchmark, no CLAIMS id, not even a council attribution. Pure doctrine, and it constrains every new command. |
+| 047 | agentic | **E0** | incomplete | **partly** | **structured**: 31 anchor-keyed exemptions in `src/scripts/lint_framework_leakage_allowlist.json` — each one a place the floor bit and was waived rather than met; no count of firings that were fixed instead of waived, so the block's true cost is only partly observable | **AMEND** | Zero evidence markers across 94 lines is the E0 basis · unlike its sibling ADR-046 this one IS enforced: `src/rules/framework-neutrality-in-generic-skills.md` plus `src/scripts/lint_framework_leakage.ts` and a `file` + `anchor` keyed allowlist (31 entries), so an edit to an allowlisted anchor line reds the gate · the behaviour holds — `src/domains/engineering-base/tests/execute/command.md:29-32` detects pest / phpunit / vitest / jest / pytest · D2's named set is stale by NAME: `test-run` / `test-create` / `quality-fix` / `review-changes` ship as `tests/execute`, `tests/create`, `fix/quality`, `review/changes` — the same colon namespacing the ADR-044 row reports as shipped-against-the-record · `agents/reports/command-classification-6.0.0-d.md` present | Same, 94 lines. |
+| 104 | **human** (corrected) | **E0** | incomplete | **yes** | **sourced in-record**: the failure it closes was observed once and quoted verbatim `:38-48` (an agent deciding a structural fork solo because it searched the project); what it blocks is a project-local override, whose one real use case is served by `$AI_COUNCIL_CONFIG` · no count of recurrences since | **KEEP** | `:16` "Maintainer directive (standing, restated and sharpened)" is the provenance basis, and a grep for a council *decision* marker returns zero — see the correction below · implemented exactly as decided: `src/scripts/ai_council/config.ts:776-780` keeps `project_root` in the signature and voids it with an ADR-104 citation, `COUNCIL_CONFIG_ENV` at `:722` · the corollary reaches sessions on an always-loaded surface, `src/rules/council-availability.md` · the guard it names is present: `src/scripts/check_council_config_location.ts` · E0 stands: no measurement anywhere, and the decision rests on one observed incident plus the maintainer's standing directive | No measurement anywhere, so E0 holds. Provenance was adjudicated `agentic` and that was WRONG — see the correction below. `:16` reads "Maintainer directive (standing, restated and sharpened)" and no line in the record holds a council *decision*. |
+| 118 | agentic | **E0** | incomplete | **partly** | **structured**: §2 blocks seven of eight loops by decision, and row 1's mechanism no longer exists — `subagents.auto` is a removed key, so that row blocks nothing; for the other six there is no count, which §1's own false-positive criterion would need | **AMEND** | The §1 threshold and the §2 rationales carry no measurement of this record's own (the E0 basis): the ~15 % reward-hacking figure `:29` is cited about the field rather than about any disposition here, and the 20–45 min versus 10 s comparison `:63-64` is unsourced · §4, the one closure, SHIPPED and is checkable: `src/scripts/trigger_eval_rotation.ts` wired at `.github/workflows/cross-model-canary.yml:79-109` with the no-secrets path a logged no-op `:82` · §2 row 1 is stale: `subagents.auto` sits in `REMOVED_KEYS` (`src/scripts/_lib/agent_settings.ts:938-939`) while the anchor it cites still describes it as a live default (`orchestration-benchmark-gate.md:44-46`) · the quantified `Revisit-if` block `:120-129` lives in the body with **no** `review_trigger` field — the ADR-119 shape this artifact already reports once | § 2 rows 1, 2 and 8 read "Manual by decision" / "Never automated" / "Not automated", each with a judgment rationale ("demotion needs qualitative judgment", "selection bias both ways", "low marginal information"). No row cites a measurement. The capacity anchor it leans on (ADR-216) is real, but that is ADR-216's evidence, not this record's. |
+| 208 | agentic | **E1** | incomplete | **no** on the permanence, **yes** on the read path — its own `review_trigger` (c) has fired and nobody re-checked | **structured**: the published tarball measures **7.805 MB** against the 5 MB threshold this record set as its own reopening condition; whether `dist/agent-src/` is the material contributor is unmeasured, so the trigger is half-evaluated rather than cleared | **REVIEW-NOW** | The read path anchoring KEEP verifies exactly as written: `src/install/wizard-plan.ts:78,:109,:116` and `src/scripts/install.ts:1919` · the byte-exactness bridge is real: `src/scripts/check_condensation.ts:298,:316` · `review_trigger` (c) `:10-17` names 5 MB; `src/config/pack-size-budget.json` records `last_measured` 7.805 (CI, 2026-08-20) against a cap of 8.4, and that same file names `src/scripts/` (14.9 of 26.0 MB unpacked) plus `src/agent-src/` "partly duplicates `dist/agent-src/`" as the un-analysed growth surface — i.e. the record's own condition is met and its second conjunct is the open question · the permanence its title, slug and Decision line assert still rests on one council pass plus tree facts, which is the E1 the row grades | Council-converged, with real tree facts about the current build shape — one local observation. Notably NOT strong enough to support the permanence its title, slug and Decision line assert. |
+| 001 | agentic | **E1** | incomplete | **partly** — the decision's shipped state still holds; its own promise that the deferral is not indefinite no longer can | **structured**: nothing in the tree is blocked today — what is blocked is the swap itself, deferred since 2026-05-06 behind a forcing event that has since been **cancelled**, so "not indefinite" is now indefinite by construction · no count of decisions taken under the un-fenced `agent-authority` | **AMEND** | The projected-size table `ADR-001:29-33` (23,071 / 26,213 / 24,545 against the 25k cap) is the single local observation; the two-vendor cross-check `:19-20` is consensus, not evidence · the decision is still the shipped state: `src/rules/agent-authority.md:2` `type: "always"` (9 always-rules total) and `src/rules/autonomous-execution.md:2` `type: "auto"` · `:84-86` makes the re-evaluation ADR "mandatory before P4.1" — no such record exists, **and P4.1 itself was cancelled** (`agents/roadmaps/archive/road-to-kernel-and-router.md:261`, `[-] Cancelled — scope-cut`), the same gate-with-an-impossible-leg shape ADR-137 exists to repair · References `:108-109` point into `.agent-src.uncondensed/`, which is not in the tree | One tree constraint, honestly recorded. Its defect is lifecycle, not evidence: `:84-86` made a re-evaluation "mandatory before P4.1" and it was never written. |
+| 133 | agentic | **E1** | complete | **yes** — and self-executing: the only thing that would change it is condition (d) re-arming on 2026-09-15 | **sourced this session**: while it held, it refused two subsystems by name (the host×task evidence router, the knowledge-security subsystem) and parked proposals with a pointer rather than a debate; all four conditions are met at this branch head, so the current block is nil and re-arms 2026-09-15 unless ADR-134 is resolved first | **AMEND** | The four conditions `:48-59` are yes/no artifact checks, which is both the E1 anchor and what makes `discovery: complete` honest · executed at this branch head — see § Mechanical evaluation below: (a) `claim: code-graph-retrieval-null` at `docs/CLAIMS.md:387`, (b) `internal/reports/rule-backstop-debt.json` total 0, (c) check-name match at `docs/contracts/branch-protection-policy.md:75` plus 14 of 16 release-shaped runs, (d) met **via the OR arm only** · `review_trigger` `:10-15` is what makes a superseding ADR unnecessary, and it is the mechanism working · what the record does NOT say is that it has lifted, or that its exit now depends on ADR-134 staying unexpired — a circular dependency recorded in this artifact rather than in either record | Its four freeze conditions are named yes/no artifact checks, which is what makes it mechanically evaluable; `discovery: complete` because the conditions themselves enumerate what to look for. |
+| 137 | agentic | **E0** | incomplete | **partly** — the decision was honoured and its content is now spent; a new deprecation needing a sunset is the one thing that would make D3 bite again | **measured, and now zero going forward**: the maintainer act D3 reserved was performed once — `sunset: '2026-08-13'` — and the surface it gated has been removed, so no agent is waiting on it today | **AMEND** | `:73` is a role assertion with no measurement, which is the E0 basis · the gate it left as the sole leg cleared and was executed: the sunset was published (`src/scripts/build_discovery_manifest.ts:800`, shipped as `"sunset": "2026-08-13"` in `dist/discovery/discovery-manifest.json`) and ADR-231 (2026-08-14, `supersedes: ADR-092`) removed the alias, quoting the maintainer's express waiver of the wait-it-out leg · so ADR-092 now reads `status: superseded` / `superseded_by: ADR-231` while this record still presents itself as a live amendment to a live deferral, `superseded_by: —` · all three of its own `review_trigger` legs `:10-19` are unfired · § Autonomy blockers below keeps D3 in the kept lane; the act it reserves no longer recurs on this surface | `:73` "Setting the sunset date is a maintainer act, not an agent act" — a role assertion with no measurement behind it. |
 
 **Two calibration lessons a reviewer must carry into a tranche**, both of them
 places where the obvious read is wrong:
@@ -157,11 +157,20 @@ inside a tranche.
 
 ### Records with no tranche row
 
-Two, both accounted for rather than silently absent:
+**One** — ADR-238. An earlier revision of this section listed two and named
+ADR-239 as the other; that was wrong in the artifact's own table. ADR-239 does
+carry a full 11-column tranche row (below), added when its disposition was
+settled, so listing it here as row-less contradicted the row three hundred lines
+away. Completion review found it, and it is the second bookkeeping error in this
+section rather than the first: the previous revision had claimed full coverage
+while ADR-238 was absent, and the correction of that overshot into the opposite
+error. Re-derived mechanically both times — an escape-aware split of every table
+row, matching the first ADR number in column 1 against `docs/decisions/ADR-*.md`
+— which is the only reason two successive miscounts in the same paragraph got
+caught rather than compounded.
 
 | Record | Why no row | Disposition |
 |---|---|---|
-| ADR-239 | This change's own doctrine record — did not exist when tranches were assigned | `KEEP` pending the owner ruling its `status: proposed` waits on. `provenance: mixed`, `evidence: E3` by triangulation. Self-graded, and one tranche reviewer concurred at E3 independently — a single outside datum, nowhere near the sample `claim:adr-grade-accuracy-vs-gold` needs. |
 | ADR-238 | `security-content-routes-to-external-authority`, merged to `main` by PR #1509 after the tranches ran | **Not adjudicated.** It arrived from another change and this sweep did not read it. Recorded as an explicit gap rather than counted as covered — the honest disposition is `REVIEW-NOW`, deferred to the next pass, and AC-2 is phrased against the records present at the sweep's head rather than against a moving corpus. |
 
 The second row is why the coverage claim above says "of the records present at
@@ -380,7 +389,7 @@ normalisation pass would hide exactly the divergence the overlap measures.
 |---|---|---|---|---|---|---|---|---|---|---|
 | ADR-005 subagent-worktrees | agentic (`council`) | E1 | incomplete | evidence | easy | partly | Agent merging its own candidate branch into a local integration branch; agent pruning a losing worktree it created | unknown | **AMEND** | council verdict `ADR-005:20-21`; Hard-Floor derivation `:29-35`; blockers `:48-52`, `:56-59`; mode renumbered — `do-competitively` is now its own Mode 5 and `do-in-worktrees` Mode 7 (`src/skills/subagent-orchestration/SKILL.md:182`, `:197`), competitive isolation demoted to a routed detail `:203-204` |
 | ADR-020 global-only-consumer-scope | agentic (`council`) | E2 | incomplete | evidence | costly | partly | — | unknown | **AMEND** | six-months-field-use problem set `ADR-020:36-48`; marker-failure observation `:132-140`; two dated council attributions with model ids `:104-106`, `:142-143`; § Decision still mandates the retired bridge marker `:58-64` against its own `:129-161` amendment; `scripts/install.py` `:74`, `scripts/lint_global_paths.py` `:27`,`:200` are both `.ts` now |
-| ADR-029 multi-workspace-deferred | mixed | E2 | complete | evidence | costly | yes | Reopening Phase 3 without an L0 test a maintainer must run | unknown | **KEEP** | 4-audit verdict bundle `ADR-029:43-50`; L0-vs-L1 gap `:52-59`; maintainer mandate `:41`; all four Phase-1 claims verified today (tool roots real dirs with L1 symlinks → `../dist/agent-src/`, `user-types/` at root, `bench|evals|workers` absent) `:73-80` |
+| ADR-029 multi-workspace-deferred | mixed | E2 | complete | evidence | costly | yes | Reopening Phase 3 without an L0 test a maintainer must run | unknown | **KEEP** | 4-audit verdict bundle `ADR-029:43-50`; L0-vs-L1 gap `:52-59`; maintainer mandate `:41`; all four Phase-1 claims verified today (tool roots real dirs with L1 symlinks → `../dist/agent-src/`, `user-types/` at root, `bench\|evals\|workers` absent) `:73-80` |
 | ADR-030 claude-code-command-projection | agentic (`council`) | E2 | complete | evidence | easy | partly | — | unknown | **AMEND** | diagnostic findings `ADR-030:38-46`; three empirically verified conditions `:87-109`; council + `$0.06` `:82-85`; Decision 2 retired by ADR-209 per its own header `:16-22` yet still reads live at `:63-67` and `:126-130`; bundle entry is now `['dist/agent-src/commands','commands']` (`src/install/wizard-plan.ts:78`) not `.agent-src/…` `:107` |
 | ADR-039 claude-skills-untracked | agentic (`council`) | E2 | complete | evidence | easy | **no** | — (mechanism gone) | unknown | **SUPERSEDE (candidate)** | six-check evidence block `ADR-039:67-88`; council blind-spot + live-runtime test `:90-99`; **its own `review_trigger` (`:10-16`) has fired** — `lint_marketplace` now reports "1 plugin, bootstrap shim: 1 pointer skill", `.claude-plugin/skills/` holds **1** file not 142, marketplace metadata declares itself "DEPRECATED as a content channel" (`.claude-plugin/marketplace.json`), and `git ls-files .claude/` is empty so `:65` "`.claude/` in git is `settings.json` only" is also false |
 | ADR-055 flow-layer-data-model | agentic (`council`) | E1 | incomplete | evidence | easy | partly | — | unknown | **AMEND** | verified-facts block `ADR-055:74-88` (223 skills, zero misses); two council rounds `:217-231`; "**No known external consumers** … no docs generator … parses `src/flows/`" `:186-190` is overtaken — `generate_command_flows.ts`, `generate_cookbook.ts`, `lint_command_flow_coverage.ts`, `validate_flow_teams.ts` all read `src/flows`; `lint_flows.py` `:97`,`:137` and `validate_pack_yaml.py` `:240` are `.ts`; the Python usage sketch `:62-69` describes no live caller |
@@ -416,28 +425,82 @@ inside a tranche.
 
 ### Coverage
 
-185 records covered of 186 present: 13 adjudicated as anchors up front, 165
-further flat records and 7 per-area records across eight tranches.
+**Graded** and **dispositioned** are two different counts, and until this
+revision they diverged. Grading is the two-axis read — provenance and strength,
+with discovery. Disposing is the AC-2 obligation: a disposition from the
+vocabulary, basis refs, a `Blocking cost` that is either sourced observations or
+explicitly `unknown`, and the would-we-accept-it-today answer.
 
-**The one record with no tranche row is ADR-239, this change's own doctrine
-record**, and completion review caught the artifact claiming full coverage while
-it was absent. It could not have had a row: it did not exist when the tranches
-were assigned. Its disposition is stated here instead, and the self-grading is
-visible rather than buried — `provenance: mixed`, `evidence: E3` by
-triangulation, `KEEP` pending the owner ruling its `status: proposed` waits on.
-One tranche reviewer graded it independently at E3, which is a single outside
-concurrence and nowhere near the sample `claim:adr-grade-accuracy-vs-gold`
-needs.
+- **Graded — 185 of 186 present.** 13 anchors up front, 165 further flat records
+  and 7 per-area records across eight tranches.
+- **Dispositioned — 185, as of this revision.** The same set. It was 172 for the
+  duration of the sweep.
+
+**The 13 anchors were graded-only, and § Coverage counted them as covered
+anyway.** The anchor table shipped five columns — ADR, provenance, strength,
+discovery, why this grade — and none of the four AC-2 fields, so a count that
+was true of *grading* was read as a claim about *disposition*. Completion review
+found it. The four columns are now on every anchor row, adjudicated against each
+record's own text at the head of this branch.
+
+**Six of the thirteen had exactly one substantive mention in this artifact
+before this revision** — ADR-046, ADR-047, ADR-106, ADR-128, **ADR-208** and
+ADR-229, each appearing only in its own anchor row. (The `## Anchor set`
+exclusion list in § Reproducing the assignment is a mechanical enumeration, not
+a disposition, and is not counted.) For those six the anchor row was the whole
+disposition, and there was none. The review finding that caught this named
+**five** and omitted ADR-208 — recorded rather than smoothed, because ADR-208 is
+precisely the record whose per-record read moved it to `REVIEW-NOW`, so the
+omission understated the finding on the row that turned out to matter most.
+
+The repair is not bookkeeping, which is the argument for doing it per record
+rather than asserting coverage: three anchors move off a `KEEP`-shaped reading
+on evidence only a per-record read surfaces. **ADR-208**'s own `review_trigger`
+(c) has fired — it names 5 MB and the published tarball measures 7.805 MB — and
+is `REVIEW-NOW`. **ADR-001**'s promise that its deferral is "not indefinite"
+cannot hold: the re-evaluation it made mandatory before P4.1 was never written
+and P4.1 was then cancelled, so the forcing event is gone. **ADR-216** does not
+carry the `authority_basis: owner_intent` this table's own row attributes to it.
+
+Two `Blocking cost` cells read `unknown`, both with the reason stated in the
+cell: ADR-046 and ADR-048 govern the command surface through discipline rather
+than through a gate, so nothing counts either compliance or refusals. `unknown`
+there is the honest answer and is recorded as one, per the protocol above.
+
+**The one record with no tranche row is ADR-238**
+(`security-content-routes-to-external-authority`), which merged to `main` from
+another change after the tranches had been assigned and which this sweep did not
+read. Its honest disposition is `REVIEW-NOW`, deferred to the next pass and
+recorded as a gap rather than counted as covered.
+
+ADR-239, this change's own doctrine record, **does** carry a tranche row: it
+could not have been assigned one, so its disposition was settled separately and
+then written into the table as a full 11-column row. Its self-grading is visible
+rather than buried — `provenance: mixed`, `evidence: E3` by triangulation,
+`KEEP` pending the owner ruling its `status: proposed` waits on. One tranche
+reviewer graded it independently at E3, a single outside concurrence and nowhere
+near the sample `claim:adr-grade-accuracy-vs-gold` needs.
 
 No record was skipped and none was sampled — the owner's instruction was to
 question all of them, and the count is the check on that, which is exactly why
-the off-by-one mattered enough to write down.
+the off-by-one mattered enough to write down. The graded-versus-dispositioned
+split above is the same lesson one level down: a coverage figure that does not
+name *which* obligation it counts will be read as covering the strongest one.
 
 ### Blinded overlap — the disagreement, published rather than smoothed
 
 17 records were assigned to a second reviewer who was not told it was a double.
 **16 came back doubled** (one reviewer covered its primary list only, so that
 record has a single grade — stated because a 17/17 claim would be false).
+
+**That is 9.2 % of the 173 non-anchor records, not the ≥10 % AC-3 names.** The
+assignment was 10 % (`random.sample` over the remainder, 17 of 173); the
+delivered overlap is one record short of the bar, so the criterion is **not
+met** on its own arithmetic. Completion review computed it; AC-3 now says so
+instead of reading as satisfied. Two more doubled records would clear it, and
+that needs a second blind grader rather than a re-read by the session that
+graded them the first time — which is the same independence property the whole
+overlap exists to measure.
 
 Of the 16: **provenance agreed on 14, strength agreed on 14.** Three records
 disagreed, one of them on both axes. Adjudicated here, with the reasoning, so

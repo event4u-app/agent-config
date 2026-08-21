@@ -224,6 +224,52 @@ describe('proposeStrength', () => {
             'E1',
         );
     });
+
+    // The rationale is not decoration — it is the sentence a reviewer reads
+    // INSTEAD of the citation column. Before this case existed, every record
+    // whose only markers were ungraded classes (`owner`, `repeated`, `prereg`,
+    // `benchmark` alone) fell through to "no evidence marker found", the
+    // no-markers-at-all message: 12 of 186 rows in the shipped artifact printed
+    // it beside a Matched-markers cell that listed markers. The grade was right
+    // and the sentence was false, so the three cases below pin the sentence, not
+    // the grade. Checked RED against the pre-fix fall-through.
+    it('names the markers it saw when markers are present but none is graded', () => {
+        const ownerOnly = body('The owner decision was to keep the adapters in tree.');
+        expect(classesIn(ownerOnly).has('owner')).toBe(true);
+        const { strength, rationale } = proposeStrength(detectMarkers(ownerOnly));
+        expect(strength).toBe('E0');
+        expect(rationale).not.toMatch(/no evidence marker found/);
+        expect(rationale).toMatch(/markers present, none graded/);
+        expect(rationale).toMatch(/\bowner\b/);
+    });
+
+    it('names EVERY ungraded class, not just the first', () => {
+        const both = body('The maintainer decision stands.\nThe approach is reproducible in principle.');
+        const present = classesIn(both);
+        expect(present.has('owner')).toBe(true);
+        expect(present.has('repeated')).toBe(true);
+        const { strength, rationale } = proposeStrength(detectMarkers(both));
+        expect(strength).toBe('E0');
+        expect(rationale).toMatch(/\bowner\b/);
+        expect(rationale).toMatch(/\brepeated\b/);
+    });
+
+    it('keeps "no evidence marker found" for a record with genuinely no markers', () => {
+        const bare = body('The decision renames a directory and changes nothing else.');
+        expect(detectMarkers(bare)).toHaveLength(0);
+        expect(proposeStrength(detectMarkers(bare)).rationale).toBe('no evidence marker found');
+    });
+
+    // A council-only record must keep its OWN message, not the new one: the two
+    // states are different findings ("agreement is not evidence" vs "these
+    // markers do not grade"), and collapsing them would re-lose the distinction
+    // this fix restored.
+    it('leaves the council-only rationale untouched', () => {
+        const councilOnly = body('Both seats were convergent; the AI council ruled it in.');
+        expect(proposeStrength(detectMarkers(councilOnly)).rationale).toMatch(
+            /consensus is not evidence/,
+        );
+    });
 });
 
 // ---------------------------------------------------------------------------
