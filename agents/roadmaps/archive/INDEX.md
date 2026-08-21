@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**526 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 183 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**527 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 184 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -252,6 +252,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-flow-learnings`](road-to-flow-learnings.md) | Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater | completed | 4 | 19/19 | _not extractable_ |
 | [`road-to-frictionless-employee-workspace`](road-to-frictionless-employee-workspace.md) | Frictionless Employee Workspace — close the 3.1.1 → 3.3.0 feedback gaps without lifting Hard-Floor | closed-with-cancellations | 4 | 30/33 | _not extractable_ |
 | [`road-to-frontend-design-intelligence`](road-to-frontend-design-intelligence.md) | Road to Frontend Design Intelligence — absorb an external design suite into our orchestrated UI suite | closed-with-cancellations | 10 | 48/53 | _not extractable_ |
+| [`road-to-frontend-skill-application`](road-to-frontend-skill-application.md) | Roadmap: Frontend skills stop being loaded shelfware | closed-with-cancellations | 5 | 26/33 | _not extractable_ |
 | [`road-to-frontier-grade-reasoning`](road-to-frontier-grade-reasoning.md) | Roadmap: Reasoning Discipline Protocol — make every host model think like a pro | completed-with-deferrals | 9 | 24/31 | _not extractable_ |
 | [`road-to-frontier-quality-operating-system`](road-to-frontier-quality-operating-system.md) | Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage | completed | 9 | 49/49 | _not extractable_ |
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |

@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 526,
+  "count": 527,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3194,6 +3194,20 @@
       },
       "verdict": null,
       "status": "active"
+    },
+    {
+      "slug": "road-to-frontend-skill-application",
+      "title": "Roadmap: Frontend skills stop being loaded shelfware",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 26,
+        "deferred": 0,
+        "cancelled": 7
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-frontier-grade-reasoning",

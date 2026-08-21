@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 21,
+    "active_roadmaps": 20,
     "later_roadmaps": 54,
-    "open_blockers": 57
+    "open_blockers": 54
   },
   "baseline_history": [
     {
@@ -370,6 +370,20 @@
       "later_roadmaps": 54,
       "open_blockers": 57,
       "why": "WALKED DOWN by 1 blocker: human-gated-live-trigger-eval is open on origin/main and closed here on council disposition B with the outcome state transferred. The token matters and is worth stating: the Status line reads 'resolved -- transferred', and it is the leading 'resolved' that every gate keys on, so the count moves while the prose carries the real outcome. The transferred work is not lost \u2014 it sits in stubs/road-to-live-trigger-eval.md with its own probe, which is why later_roadmaps stays 54 and nothing was parked. active_roadmaps stays 21: the roadmap keeps open steps and the regen did not archive it."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 58,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-frontend-skill-application merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 58}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 20,
+      "later_roadmaps": 54,
+      "open_blockers": 54,
+      "why": "WALKED DOWN by 1 active and 3 blockers, all earned here and each checked against origin/main per blocker rather than by counting status lines. road-to-frontend-skill-application archived (under agents/roadmaps/ on main, under archive/ here). Its three blockers open on the trunk are now closed with distinct outcomes, which the Status prose keeps and the count cannot: ui-session-capture-window is 'resolved -- transferred' with two named destinations that carry the obligation, ui-corpus-has-no-ui is 'resolved -- narrowed' with the premise refuted and the session floor honestly 4 short, and enforcement-evidence is 'resolved -- satisfied' on a condition that explicitly admits an explicit no-change. The roadmap's fourth blocker, consultation-rate-instrument, was already resolved on the trunk and is excluded. later_roadmaps unchanged at 54: this is a closure, nothing was parked to buy the number."
     }
   ],
   "target": {

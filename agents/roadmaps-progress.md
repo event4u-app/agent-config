@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **31** open blockers in the active tree, **14** need you → `agent-config gates`
+> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **28** open blockers in the active tree, **14** need you → `agent-config gates`
 
 ## Overall
 
-**199 / 371 steps done · 54%**
+**177 / 340 steps done · 52%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -22,21 +22,20 @@
 | 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 6 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
-| 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 11 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 17 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 18 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 10 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 16 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 17 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 18 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -286,44 +285,6 @@ _1 blocker resolved._
 | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
-
-### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
-
-**Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — capture the catalogue, publish the baseline | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Deliver — design surfaces reach the model with a description | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
-| 3 | Own the prompt — an ad-hoc lane for UI work | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Route — a runtime signal that is framework-agnostic | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 5 | Reach and enforcement — only where a mechanism exists | 🟡 in progress | 5 | 7 | 0 | 0 | 58% |
-
-<a id="blockers-road-to-frontend-skill-application"></a>
-**Blockers**
-
-- **ui-session-capture-window** (owner: maintainer) — blocks Phase 1 — Measure · Phase 2 — Deliver
-  - **What to do:**
-    1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
-    2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
-    3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
-    4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
-    5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
-    6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
-  - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
-- **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
-    2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
-    3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
-  - **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
-- **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
-  - **What to do:**
-    1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
-    2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
-  - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
-
-_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
