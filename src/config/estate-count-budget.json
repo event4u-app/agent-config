@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 10,
+    "active_roadmaps": 9,
     "later_roadmaps": 55,
     "open_blockers": 41
   },
@@ -531,6 +531,13 @@
       "later_roadmaps": 55,
       "open_blockers": 41,
       "why": "WALKED DOWN by 1 active and 2 blockers. road-to-rule-coherence-followup archived (under agents/roadmaps/ on main, under archive/ here) and both of its blockers, default-flip-release-gate and bench-spend-and-methodology, are open on origin/main and resolved here -- verified per blocker against the trunk. later_roadmaps unchanged at 55, and that is the load-bearing part of this entry: the two items the roadmap could not finish went to TWO stubs created in this same change, stubs/road-to-declared-protocol-cap.md and stubs/road-to-discipline-default-flip.md, each with its own probe. Nothing was parked into later/ and nothing was dropped, so the -2 is a relocation into probe-carrying stubs rather than work completed."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 9,
+      "later_roadmaps": 55,
+      "open_blockers": 41,
+      "why": "RE-MEASURED after a SECOND merge of origin/main, not a second drawdown. The trunk moved while this branch waited for CI (PR #1507 landed and walked open_blockers to 41 itself), so the entry this branch wrote earlier -- active 11 -> 10, blockers 43 -> 41 -- was measured against a tree that no longer exists. Against the merged tree the only delta still owned by this branch is active_roadmaps 10 -> 9, the archival of road-to-rule-coherence-followup. open_blockers is left at 41 rather than claimed again: its two closures are already recorded, once, in the earlier entry, and re-counting them here is exactly how a ratchet double-books a single piece of work. later_roadmaps unchanged at 55."
     }
   ],
   "target": {

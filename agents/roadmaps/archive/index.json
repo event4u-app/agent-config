@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 537,
+  "count": 540,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2013,6 +2013,20 @@
       "steps": {
         "open": 0,
         "done": 5,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-consumer-security-guidance",
+      "title": "Road to consumer security guidance",
+      "disposition": "completed",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 12,
         "deferred": 0,
         "cancelled": 0
       },
@@ -5856,6 +5870,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-scale-history-bench-run",
+      "title": "Road to the scale-history bench run — fire the pre-registered Phase-4 bench",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 0,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-scripts-settings-defaults",
       "title": "Road to scripts settings defaults — give the SCRIPTS read path the defaults layer the server already has",
       "disposition": "completed",
@@ -6131,6 +6159,20 @@
         "done": 23,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-skill-description-measurement",
+      "title": "Roadmap: Measure the de-collided skill descriptions",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 0,
+        "deferred": 0,
+        "cancelled": 4
       },
       "verdict": null,
       "status": "ready"
