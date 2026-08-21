@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 542,
+  "count": 543,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3359,6 +3359,20 @@
         "done": 12,
         "deferred": 0,
         "cancelled": 1
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-gated-reach-followup",
+      "title": "Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 9
       },
       "verdict": null,
       "status": "ready"

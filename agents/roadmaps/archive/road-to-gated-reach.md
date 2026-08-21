@@ -547,4 +547,4 @@ than shipped "while we are in here".
 - All measurement rows in § Context were produced first-hand against the live
   services on 2026-07-25 from a residential network.
 
-<!-- Deferred items migrated to agents/roadmaps/road-to-gated-reach-followup.md on 2026-07-25 -->
+<!-- Deferred items migrated to agents/roadmaps/archive/road-to-gated-reach-followup.md on 2026-07-25 -->
