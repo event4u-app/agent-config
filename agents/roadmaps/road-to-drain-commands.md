@@ -301,7 +301,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ## Phase 5 — Governance record
 
-- [ ] **5.1 Write the merge-authority ADR.** It records: that `--merge` / `all`
+- [x] **5.1 Write the merge-authority ADR.** It records: that `--merge` / `all`
       typed by the user in the invocation is the per-turn confirmation the
       Hard Floor requires; that it consumes the **existing** prompt-derived
       authorization and introduces no new grant store; that `/roadmap:next`'s
@@ -320,7 +320,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       for.
       verify: the cluster linter passes and the row's column count matches the
       table header.
-- [ ] **5.3 Sync the cluster head, and regenerate the catalog.** The `roadmap`
+- [x] **5.3 Sync the cluster head, and regenerate the catalog.** The `roadmap`
       cluster head's `argument-hint` reflects the new flags (no new
       sub-command row — `--all` is a flag, which is the point of the Q2
       verdict). `docs/catalog.md` is auto-generated: run the index generator
@@ -339,7 +339,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       must route elsewhere.
       verify: `lint_command_routing` reports no missing-eval violation for the
       new command.
-- [ ] **6.2 Extend the roadmap cluster's routing eval** —
+- [x] **6.2 Extend the roadmap cluster's routing eval** —
       `src/agent-src/commands/evals/roadmap.json` gains prompts that must route
       to `roadmap-process-full` for the estate-drain phrasings ("drain every
       roadmap", "arbeite alle Roadmaps ab"), so the flag is reachable by
@@ -347,14 +347,14 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       (it omits `next`) — fix it in the same edit.
       verify: `lint_command_routing` passes and the fixture still has at least
       five cases.
-- [ ] **6.3 New-gate verification: run the Phase 2 content check and both
+- [x] **6.3 New-gate verification: run the Phase 2 content check and both
       fixtures once locally.** <!-- carve-out: new-gate-verification -->
       verify: exit codes recorded in the PR body, including the deliberate red
       from 2.1.
 - [ ] **6.4 Run the command, cluster, frontmatter and roadmap gates on the
       changed files** and fix every failure at the root.
       verify: each named gate reports 0 for this branch.
-- [ ] **6.5 Update `docs/CLAIMS.md` only if a claim above turns out measurable
+- [x] **6.5 Update `docs/CLAIMS.md` only if a claim above turns out measurable
       in CI**; otherwise record an honest null in the PR body.
       verify: either a ledger entry exists or the PR body states the null.
 

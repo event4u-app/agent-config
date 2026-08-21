@@ -6,10 +6,10 @@
 
 ## Overall
 
-**181 / 276 steps done · 66%**
+**186 / 276 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 14 | 23 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ██████░░░░ 62% |
+| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 9 | 28 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 76% |
 | 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
@@ -198,7 +198,7 @@ _1 blocker resolved._
 
 ### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
 
-**Road to drain commands** — 23 / 37 done (62%)
+**Road to drain commands** — 28 / 37 done (76%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -206,8 +206,8 @@ _1 blocker resolved._
 | 2 | The bundle is verified by content, not by timestamp | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | `/pr:merge` — prepare one PR or drain the queue | ✅ done | 0 | 10 | 0 | 0 | 100% |
 | 4 | `/roadmap:process-full --all [--merge]` | ✅ done | 0 | 6 | 2 | 0 | 100% |
-| 5 | Governance record | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 6 | Gates, evals, delivery | 🟡 in progress | 12 | 1 | 0 | 0 | 8% |
+| 5 | Governance record | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 6 | Gates, evals, delivery | 🟡 in progress | 9 | 4 | 0 | 0 | 31% |
 
 <a id="blockers-road-to-drain-commands"></a>
 **Blockers**

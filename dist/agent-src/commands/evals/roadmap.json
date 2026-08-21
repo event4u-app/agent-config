@@ -1,6 +1,6 @@
 {
   "command": "roadmap",
-  "intent": "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council",
+  "intent": "Roadmap dispatcher \u2014 create, materialize, process-step, process-phase, process-full (incl. --all estate drain), next, ai-council",
   "cases": [
     {
       "prompt": "create a roadmap for this initiative",
@@ -37,6 +37,22 @@
     {
       "prompt": "either roadmap it or turn it into a feature plan, your pick",
       "expected": "roadmap"
+    },
+    {
+      "prompt": "drain every open roadmap, one PR each",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "arbeite alle Roadmaps der Reihe nach ab",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "work through the whole roadmap estate in a worktree",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "merge all the open pull requests",
+      "expected": "git-pr-merge"
     }
   ]
 }

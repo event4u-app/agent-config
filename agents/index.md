@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **715 artefacts** in this package.
+Maintainer-facing index of all **716 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -425,7 +425,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (200)
+## Commands (201)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -563,6 +563,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`post-as-me`](../src/domains/gtm-marketing/post-as/me/command.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
 | command | [`git-pr-create`](../src/domains/git/pr/create/command.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`git-pr-create-description-only`](../src/domains/git/pr/create/description-only/command.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
+| command | [`git-pr-merge`](../src/domains/git/pr/merge/command.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
 | command | [`prediction-pool`](../src/domains/fun/prediction-pool/command.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../src/domains/engineering-base/prepare-for-review/command.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`profile`](../src/domains/meta/profile/command.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |

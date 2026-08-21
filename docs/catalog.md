@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **714 public artefacts** shipped by
+Consumer-facing catalog of all **715 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -440,7 +440,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (200)
+## Commands (201)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -578,6 +578,7 @@ are excluded.
 | command | [`post-as-me`](../dist/agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
 | command | [`git-pr-create`](../dist/agent-src/commands/pr/create.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`git-pr-create-description-only`](../dist/agent-src/commands/pr/create/description-only.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
+| command | [`git-pr-merge`](../dist/agent-src/commands/pr/merge.md) | cluster: git-pr-merge | Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all` |
 | command | [`prediction-pool`](../dist/agent-src/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../dist/agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`profile`](../dist/agent-src/commands/profile.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |

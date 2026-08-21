@@ -38,7 +38,7 @@ paused for confirmation before every step) was removed —
 | `/roadmap:materialize` | `commands/roadmap/materialize.md` | Turn an accepted roadmap into the concrete artefacts it plans |
 | `/roadmap:process-step` | `commands/roadmap/process-step.md` | Autonomously process the next open step, then stop |
 | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
-| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase |
+| `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase; `--all` iterates the whole active estate, `--worktree` isolates the workspace |
 | `/roadmap:next` | `commands/roadmap/next.md` | Screen for the next executable roadmap, then carry it to a reviewable PR (selection + `process-full` + delivery) |
 
 Sub-command names match the locked contract in
