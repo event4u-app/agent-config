@@ -388,11 +388,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 6ebae09, cafb8a2.
+- **Behaviour changes:** a blocked decision lock is now re-evaluated by the AI council by default instead of interrupting the owner, and only an owner-reserved transition still reaches a human (cafb8a2). ADR reopen authority became a property of the *transition* rather than of the document, carried by a new `reopen_policy` field (e8543f4). An R2 review of the ADR sweep confirmed five findings and refuted one (6ebae09).
 - **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 6ebae09, 5fd366f, 2de07e2, 3245188, 4510f6d, 406cb22 +13 more.
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in 93c30da.
+- **Security and correctness:** run-continuation gained `blocked` as a terminal outcome and had four state defects repaired, including state keyed on the roadmap rather than the reader (3245188, 5fd366f, 084b5c3). Gate work closed its own R2 findings with a test that discriminates rather than one that merely passes (4510f6d, 406cb22). The layer-overlap notice moved out of `condense.ts` (2de07e2), and `check_single_delivery` was added — it immediately found a third duplicated artefact type (e666899).
+- **Honest nulls:** ADR-234 shipped together with the honest null on pointer liveness (93c30da).
 - **Known limitations:** _none_
 
 ### Features
@@ -516,11 +515,10 @@ Tests: 15397 (+125 since 14.5.0)
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
 - **Behaviour changes:** _none_
 - **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 1b787fe, 7f65655.
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in c45093d.
+- **Security and correctness:** seven R2 findings on the hook-hardening branch were closed (1b787fe), and the injection ceiling now charges only the bytes the host actually receives rather than everything the concern produced (7f65655).
+- **Honest nulls:** no null was recorded in this span. The commit the generator matched here (c45093d) binds the R2 review scope *before* the reviewer runs, which is review hygiene rather than a null result — stated rather than left as `_none_`, because the derived category was populated and a bare `_none_` would contradict it.
 - **Known limitations:** _none_
 
 ### Features
