@@ -638,7 +638,12 @@ describe('countRoadmap — a phase span survives its own sub-headings', () => {
         const files = fs
             .readdirSync(dir)
             .filter((n) => n.endsWith('.md') && n.startsWith('road-to-'));
-        expect(files.length).toBeGreaterThan(10);
+        // Corpus guard, not an estate-size assertion: it must fail when the root
+        // moves or the filter matches nothing (either gives 0), and must NOT fail
+        // when archival legitimately shrinks the active tree. The floor was 10,
+        // pinned to a corpus the drain deliberately reduces; a tree-wide grep for
+        // this construct found two instances and this is the second.
+        expect(files.length).toBeGreaterThan(5);
         const falseCompletions: string[] = [];
         for (const name of files) {
             const body = fs.readFileSync(path.join(dir, name), 'utf-8');

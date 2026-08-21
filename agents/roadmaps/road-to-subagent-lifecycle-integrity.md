@@ -86,7 +86,7 @@ Step 2)"
 That Step 2 is now **PREMISE-STALE**: always-on orchestration deleted the two
 settings arms the step names, while the ≥20-dispatch half of the trigger is
 "separately met at 99"
-(`agents/roadmaps/road-to-subagent-value-realization-followup.md:46-56`,
+(`agents/roadmaps/archive/road-to-subagent-value-realization-followup.md:46-56`,
 note dated 2026-08-10). The reopen condition names an experiment the tree can
 no longer express, so the cancellation can never lift by its own letter — while
 production now supplies exactly the "used in anger" evidence the stopping rule

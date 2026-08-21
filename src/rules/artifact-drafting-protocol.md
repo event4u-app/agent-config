@@ -55,8 +55,12 @@ Fires once per creation task, not once per edit.
 - At most two propose → reject cycles; then stop.
 - Commit only on approval.
 - Bypass is legitimate — *"just write it"* drops the protocol immediately.
+- An artifact discovered **after** an accepted contract halts by default;
+  `late_artifacts: auto-research` is the only declared value that continues,
+  capped at three per run (mechanics guideline § Late artifacts).
 
-Body migrated to [`guideline:agent-infra/artifact-drafting-protocol-mechanics`](../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — Phase A/B/C procedure detail + the roadmap-run batch-mode carve-out (Research-once-at-contract-time, batch scope, no `artifact_protocol: skip`).
+Body migrated to [`guideline:agent-infra/artifact-drafting-protocol-mechanics`](../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — Phase A/B/C procedure detail + the roadmap-run batch-mode carve-out (Research-once-at-contract-time, batch scope, no `artifact_protocol: skip`) + § Late artifacts (the `halt` default
+and the five-step `auto-research` procedure).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 Extends (cross-link, don't restate): `ask-when-uncertain`,

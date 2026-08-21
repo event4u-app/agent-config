@@ -120,6 +120,17 @@ Worked example (fail-open): `if (!$gate->check($user)) { … }` wrapped in a
 grants access. Finding shape: Category *Insecure defaults*, Evidence the
 catch block `file:line`, Fix *fail closed — rethrow or deny on gate error*.
 
+### 3b. Out of scope — route, do not guess
+
+The table above names vulnerability **classes**, which are stable. This package
+carries no cryptographic parameter, key size, work factor, cipher suite, or TLS
+version floor: a value copied here reads authoritative long after it stops being
+true. Report the finding, route the fix to
+<https://cheatsheetseries.owasp.org/> — Cryptographic Storage, Transport Layer
+Security, Password Storage, XML External Entity Prevention — and never name a
+value from memory. Rationale and reopening condition:
+[ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
+
 ### 4. Framework-specific checks
 
 → Laravel-specific checks: see [`laravel`](../laravel/SKILL.md) § Security audit checks.
@@ -178,4 +189,4 @@ reaches it"). An audit that rejects nothing has usually skipped the gate.
 
 ## See also
 
-- [`docs/threat-model.md`](../../docs/threat-model.md) — package attack surface and trust boundary documentation.
+- [`docs/threat-model.md`](../../../docs/threat-model.md) — package attack surface and trust boundary documentation.

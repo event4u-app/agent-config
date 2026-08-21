@@ -59,10 +59,10 @@ export const MODE_BODY_DIRS: readonly string[] = ['tasks', 'references'];
  * Measured, not guessed. REMOVE entries as skills are restructured; never add.
  */
 export const GRANDFATHERED: readonly string[] = [
-    'ai-council',          // 1055
-    'skill-writing',       //  767
-    'roadmap-management',  //  552
-    'quality-tools',       //  445
+    // Emptied 2026-08-20: all four seeded entries were restructured into router
+    // heads (entry head + `references/` mode bodies) under the published K6 cap.
+    // Shrink-only means this list may never grow again — a new oversized
+    // monolith fails the gate instead of joining it.
 ];
 
 export interface Finding {

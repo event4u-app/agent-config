@@ -124,4 +124,4 @@ not evidence about truth, and nothing in the ladder reads it.
 - `agents/evidence/eval-findings/context-fidelity-cf04.md` — the honest null on pointer liveness
 - `docs/guidelines/agent-infra/engineering-memory-data-format.md` — the schema and the ladder
 - `src/scripts/memory_eviction.ts`, `src/scripts/report_memory_pointers.ts`
-- `agents/roadmaps/road-to-context-fidelity.md` — Phase 2
+- `agents/roadmaps/archive/road-to-context-fidelity.md` — Phase 2
