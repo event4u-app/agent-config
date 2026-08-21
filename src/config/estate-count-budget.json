@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 18,
+    "active_roadmaps": 17,
     "later_roadmaps": 54,
-    "open_blockers": 51
+    "open_blockers": 50
   },
   "baseline_history": [
     {
@@ -412,6 +412,20 @@
       "later_roadmaps": 54,
       "open_blockers": 51,
       "why": "WALKED DOWN by 1 active and 2 blockers, and the SHAPE of this one deserves stating rather than being buried in a number. road-to-ui-track-integrity-followup archived (under agents/roadmaps/ on main, under archive/ here). Its two blockers, measurement-a-no-per-arm-builder-tier and measurement-b-no-renderable-lane-pair, are open on the trunk and closed here as 'resolved -- abandoned'. That is a DROP, not completed work: the leading resolved token is what every gate reads, so the count falls by two while the prose records that the two measurements were given up rather than taken. Flagged for the maintainer in the drain-run summary rather than presented as progress. later_roadmaps unchanged at 54: nothing was parked, and nothing was moved into a stub either, which is exactly why abandoned is the honest word here."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-subagent-value-realization-followup merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 17,
+      "later_roadmaps": 54,
+      "open_blockers": 50,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-subagent-value-realization-followup archived (under agents/roadmaps/ on main, under archive/ here) and its single blocker telemetry-sample-size, open on the trunk, is closed here as 'resolved -- transferred' on disposition B. Transferred and not completed: the sample size was never reached, the obligation moved to a named destination, and the leading resolved token is what the gates read. later_roadmaps unchanged at 54, so the destination is a stub rather than a park -- the open work stays counted where a probe can find it instead of being relocated into later/ to move this number."
     }
   ],
   "target": {

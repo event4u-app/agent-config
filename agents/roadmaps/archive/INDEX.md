@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**529 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 186 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**530 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 187 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -469,6 +469,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-structure-grounding-v2`](road-to-structure-grounding-v2.md) | Roadmap: Structure-grounding v2 — global cross-project card sharing | completed | 6 | 17/17 | _not extractable_ |
 | [`road-to-structure-grounding`](road-to-structure-grounding.md) | Roadmap: Evidence-first structure discovery | closed-with-cancellations | 6 | 29/30 | _not extractable_ |
 | [`road-to-structured-guard-input`](road-to-structured-guard-input.md) | Road to structured guard input — stop guessing intent from prose | closed-with-cancellations | 4 | 8/9 | _not extractable_ |
+| [`road-to-subagent-value-realization-followup`](road-to-subagent-value-realization-followup.md) | Roadmap: Follow-up to Subagent value realization | closed-with-cancellations | 2 | 4/9 | _not extractable_ |
 | [`road-to-subagent-value-realization`](road-to-subagent-value-realization.md) | Roadmap: Subagent value realization | closed-with-cancellations | 6 | 24/31 | _not extractable_ |
 | [`road-to-substrate-adoption`](road-to-substrate-adoption.md) | road-to-substrate-adoption | not-extractable | 0 | — | _not extractable_ |
 | [`road-to-suite-closure`](road-to-suite-closure.md) | Road to Suite Closure | completed | 6 | 37/37 | _not extractable_ |

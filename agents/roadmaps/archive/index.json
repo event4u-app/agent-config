@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 529,
+  "count": 530,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6232,6 +6232,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-subagent-value-realization-followup",
+      "title": "Roadmap: Follow-up to Subagent value realization",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 4,
+        "deferred": 0,
+        "cancelled": 5
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-subagent-value-realization",
