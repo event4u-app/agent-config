@@ -133,3 +133,66 @@ describe('check_no_external_sources — synthetic hits', () => {
         expect(parsed.hits[0]!.token).toBe('\\b' + TOK1 + '\\b');
     });
 });
+
+// --- Layer 3: the SHIPPED denylist patterns added 2026-08-21 ---------------
+//
+// The three tokens added for the evaluated security ruleset are broad enough
+// to deserve pinning in both directions. Positive: each one fires. Negative:
+// a word-boundary token must not match inside a longer word, and the OWASP
+// routing URL that the same change adds to two skills must stay clean —
+// otherwise the gate would flag the very pointer the decision routes to.
+//
+// Tokens are assembled from fragments at runtime for the same reason as
+// Layer 2: the literals must not appear in this file's own source.
+describe('check_no_external_sources — 2026-08-21 denylist additions', () => {
+    let work: string;
+
+    const SLUG = 'project' + '-' + 'code' + 'guard';
+    const WORD = 'code' + 'guard';
+    const ORG = 'co' + 'sai';
+    const NEAR = ORG + 'co'; // longer word — the \b anchor must NOT match it
+    const ROUTE = 'https://cheatsheetseries.owasp.org/';
+
+    beforeEach(() => {
+        work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cnes3-')));
+        fs.mkdirSync(path.join(work, 'src', 'scripts'), { recursive: true });
+        fs.copyFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', 'external_sources_denylist.json'),
+            path.join(work, 'src', 'scripts', 'external_sources_denylist.json'),
+        );
+        fs.copyFileSync(TS_SCRIPT, path.join(work, 'src', 'scripts', 'check_no_external_sources.ts'));
+        fs.mkdirSync(path.join(work, 'src', 'scripts', '_lib'), { recursive: true });
+        fs.copyFileSync(SCAN_SCOPE_SRC, path.join(work, 'src', 'scripts', '_lib', 'scan_scope.ts'));
+        spawnSync('git', ['init', '-q'], big(work));
+    });
+
+    afterEach(() => {
+        fs.rmSync(work, { recursive: true, force: true });
+    });
+
+    const scan = (body: string): ReturnType<typeof spawnSync> => {
+        fs.writeFileSync(path.join(work, 'probe.md'), body, 'utf-8');
+        spawnSync('git', ['add', '-A'], big(work));
+        return spawnSync(
+            TSX_BIN,
+            [path.join(work, 'src', 'scripts', 'check_no_external_sources.ts')],
+            big(work),
+        );
+    };
+
+    it.each([
+        ['slug form', SLUG],
+        ['bare word form', WORD],
+        ['org form', ORG],
+    ])('fires on the %s', (_label, token) => {
+        expect(scan(`harvested from ${token} at a pin\n`).status).toBe(1);
+    });
+
+    it('does not fire on a longer word containing the org token', () => {
+        expect(scan(`the ${NEAR} pattern is unrelated\n`).status).toBe(0);
+    });
+
+    it('does not fire on the OWASP routing URL the same change adds', () => {
+        expect(scan(`route the fix to <${ROUTE}>\n`).status).toBe(0);
+    });
+});
