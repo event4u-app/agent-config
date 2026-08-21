@@ -62,6 +62,14 @@ Focus on: attack surface, trusting user input, authorization gaps.
 → For PHP / Laravel specifics (auth helpers, mass assignment, Blade escaping, CSRF middleware): see guideline `docs/guidelines/php/security.md`.
 → For other stacks, follow the framework's hardening guide and the carve-outs above.
 
+### Crypto, password storage, certificates — route, do not guess
+
+This skill carries no algorithm choice, key size, work factor, cipher suite, or
+TLS version floor: such a value is authoritative-looking long after it stops
+being true. Take it from <https://cheatsheetseries.owasp.org/> at the moment you
+need it — never from memory, never from this file. Rationale and reopening
+condition: [ADR-238](../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
+
 ### Validate
 
 - Verify all user input is validated at the boundary via the framework's primitive — never trust raw request data.
