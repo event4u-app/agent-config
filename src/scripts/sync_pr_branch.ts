@@ -21,6 +21,11 @@
  * do not hand-merge) versus authored (a human decision). Auto-resolving a
  * content conflict is how a parallel session's work disappears.
  *
+ * Classification changes the ADVICE, not the conflict. A path stays a hotspot by
+ * frequency while becoming mechanical to resolve, so a class added here is never
+ * conflict-count reduction and must not be banked as drawdown (AI council
+ * 2026-08-21, both seats; roadmap road-to-merge-hotspot-drawdown).
+ *
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
  * could not be resolved · 2 = internal error. `scanned:` on every path.
  */
@@ -47,6 +52,44 @@ const GENERATED = [
     // times and named it structural: main adds a concern and recompiles, so
     // every open branch collides here. Regenerate; never merge.
     'src/scripts/hook_manifest.json',
+    // Written together by one `build_archive_index.ts` call (`:409-410`) from the
+    // archived roadmap tree, so neither is ever hand-authored. They were
+    // classified AUTHORED until 2026-08-21, which made this tool ask for a human
+    // decision about a file whose only correct resolution is regeneration --
+    // the identical defect the hook_manifest.json comment above records, on two
+    // more paths at 48 commits/60d each. They conflict in 2 of the 7 open PRs
+    // measured for road-to-merge-hotspot-drawdown. Regenerate; never merge.
+    'agents/roadmaps/archive/INDEX.md',
+    'agents/roadmaps/archive/index.json',
+];
+
+/**
+ * Paths that are MEASURED BASELINES -- a conflict here is neither regenerated
+ * nor hand-merged. It is RE-MEASURED on the merged tree, and the number that
+ * measurement produces is the resolution.
+ *
+ * Why this is a third class and not a variant of GENERATED: a generated file has
+ * one correct content given the tree, so "regenerate" is a complete instruction.
+ * A ratchet baseline records what a tree MEASURED at a point in time, and two
+ * branches legitimately measured two different trees -- so there is no side to
+ * take and no file to re-render. Picking a side on a ratchet number is how the
+ * ratchet silently loosens, and mixing hunks yields a baseline matching neither
+ * branch.
+ *
+ * Why this tool never performs the re-measurement itself (AI council 2026-08-21,
+ * both seats): "re-measure instead of merge" delegates conflict resolution to a
+ * script and its execution environment, and a wrong or environment-dependent
+ * measurement would overwrite a deliberate tightening with nothing objecting,
+ * because the result looks measured either way. So this class NAMES the
+ * resolution and stops. The human runs it, with the result in front of them.
+ *
+ * Both members conflict in 7 of the 7 open PRs measured for
+ * road-to-merge-hotspot-drawdown. Neither is gitignorable: an untracked baseline
+ * is a baseline no PR diff can be compared against, which deletes the ratchet.
+ */
+const REMEASURED = [
+    'src/config/estate-count-budget.json',
+    'src/config/gate-violation-baselines.json',
 ];
 
 function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {
@@ -65,12 +108,20 @@ export function isGenerated(rel: string): boolean {
     return GENERATED.some((g) => (g.endsWith('/') ? norm.startsWith(g) : norm === g));
 }
 
+/** True when `rel` is a measured ratchet baseline rather than generated or authored. */
+export function isRemeasured(rel: string): boolean {
+    const norm = rel.replace(/\\/g, '/');
+    return REMEASURED.some((g) => (g.endsWith('/') ? norm.startsWith(g) : norm === g));
+}
+
 export interface Plan {
     /** 0 = nothing to do or merged · 1 = needs a human · 2 = internal. */
     exit: 0 | 1 | 2;
     message: string;
     /** Conflicted paths, split so the caller knows which to regenerate. */
     generated: string[];
+    /** Conflicted measured baselines — re-measure on the merged tree, never merge. */
+    remeasured: string[];
     authored: string[];
     scanned: number;
 }
@@ -82,14 +133,18 @@ export interface Plan {
  * the split is the useful part: a generated conflict has one correct resolution
  * (regenerate) and an authored one has none that a script may choose.
  */
-export function classifyConflicts(files: readonly string[]): Pick<Plan, 'generated' | 'authored'> {
+export function classifyConflicts(files: readonly string[]): Pick<Plan, 'generated' | 'remeasured' | 'authored'> {
     const generated: string[] = [];
+    const remeasured: string[] = [];
     const authored: string[] = [];
     for (const f of files) {
-        if (f.trim() === '') continue;
-        (isGenerated(f.trim()) ? generated : authored).push(f.trim());
+        const rel = f.trim();
+        if (rel === '') continue;
+        if (isGenerated(rel)) generated.push(rel);
+        else if (isRemeasured(rel)) remeasured.push(rel);
+        else authored.push(rel);
     }
-    return { generated, authored };
+    return { generated, remeasured, authored };
 }
 
 /** Resolve the base this branch will actually merge into. */
@@ -125,7 +180,7 @@ export function resolveBase(repo: string, override: string | null): { base: stri
 export function sync(repo: string, baseOverride: string | null, dryRun: boolean): Plan {
     const { base, how } = resolveBase(repo, baseOverride);
     if (base === null) {
-        return { exit: 1, message: `cannot resolve a base to update against — ${how}.`, generated: [], authored: [], scanned: 0 };
+        return { exit: 1, message: `cannot resolve a base to update against — ${how}.`, generated: [], remeasured: [], authored: [], scanned: 0 };
     }
 
     const fetched = sh('git', ['fetch', 'origin', '--prune'], repo);
@@ -136,6 +191,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean)
             exit: 0,
             message: `unverified — could not fetch origin (${fetched.err.split('\n')[0] ?? '?'}). Base freshness NOT checked.`,
             generated: [],
+            remeasured: [],
             authored: [],
             scanned: 0,
         };
@@ -143,13 +199,14 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean)
 
     const behind = sh('git', ['rev-list', '--count', `HEAD..${base}`], repo).out.trim();
     if (behind === '' || behind === '0') {
-        return { exit: 0, message: `already current with ${base} (${how}).`, generated: [], authored: [], scanned: 1 };
+        return { exit: 0, message: `already current with ${base} (${how}).`, generated: [], remeasured: [], authored: [], scanned: 1 };
     }
     if (dryRun) {
         return {
             exit: 0,
             message: `${behind} commit(s) behind ${base} (${how}) — would merge it in. Dry run, nothing changed.`,
             generated: [],
+            remeasured: [],
             authored: [],
             scanned: 1,
         };
@@ -163,6 +220,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean)
                 `merged ${base} in (${how}, was ${behind} behind). REGENERATE derived files now — a clean ` +
                 'auto-merge of a generated file is still wrong.',
             generated: [],
+            remeasured: [],
             authored: [],
             scanned: 1,
         };
@@ -173,7 +231,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean)
     return {
         exit: 1,
         message:
-            `merge of ${base} (${how}) hit ${String(split.generated.length + split.authored.length)} conflict(s). ` +
+            `merge of ${base} (${how}) hit ${String(split.generated.length + split.remeasured.length + split.authored.length)} conflict(s). ` +
             'NOT auto-resolved: a content conflict is where a parallel session\'s work disappears.',
         ...split,
         scanned: 1,
@@ -218,7 +276,8 @@ export function main(argv?: readonly string[]): number {
                     '  Merges the PR base into the current branch so the PR does not go stale.\n' +
                     '  Resolves the base from the open PR when there is one. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
-                    '  listed separately because only the first has one correct resolution.\n',
+                    '  listed separately because only the first has one correct resolution;\n' +
+                    '  measured ratchet baselines are a third class, re-measured not merged.\n',
             );
             reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'help output' });
             return 0;
@@ -246,6 +305,13 @@ export function main(argv?: readonly string[]): number {
             );
             for (const f of plan.generated) process.stdout.write(`    · ${f}\n`);
             process.stdout.write('    → git checkout --ours <file> && task sync && task generate-tools\n');
+        }
+        if (plan.remeasured.length > 0) {
+            process.stdout.write(
+                `\n  REMEASURED (${String(plan.remeasured.length)}) — RE-RUN THE MEASUREMENT on the merged tree; never merge, never pick a side:\n`,
+            );
+            for (const f of plan.remeasured) process.stdout.write(`    · ${f}\n`);
+            process.stdout.write('    → resolve the tree, then re-run the gate that owns the baseline and record its number\n');
         }
         if (plan.authored.length > 0) {
             process.stdout.write(`\n  AUTHORED (${String(plan.authored.length)}) — a human decision, read both sides:\n`);

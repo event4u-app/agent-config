@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { classifyConflicts, isGenerated, main, resolveBase } from '../../src/scripts/sync_pr_branch.js';
+import { classifyConflicts, isGenerated, isRemeasured, main, resolveBase } from '../../src/scripts/sync_pr_branch.js';
 
 describe('generated vs authored', () => {
     it('recognises the generated artefacts a merge routinely conflicts on', () => {
@@ -45,6 +45,74 @@ describe('generated vs authored', () => {
         expect(isGenerated('agents/roadmaps-progress.md.bak')).toBe(false);
     });
 
+    it('classifies the archive-index PAIR as generated, not authored', () => {
+        // road-to-merge-hotspot-drawdown 1.1. Both files are written by ONE
+        // `build_archive_index.ts` call (`:409-410`) from the archived roadmap
+        // tree, so neither is ever hand-authored -- yet both classified AUTHORED
+        // until 2026-08-21 and conflict in 2 of the 7 open PRs measured there.
+        expect(isGenerated('agents/roadmaps/archive/INDEX.md')).toBe(true);
+        expect(isGenerated('agents/roadmaps/archive/index.json')).toBe(true);
+        // The pair is generated; the archived roadmaps they index are authored.
+        expect(isGenerated('agents/roadmaps/archive/road-to-x.md')).toBe(false);
+        // A prefix that only LOOKS like the pair must not match.
+        expect(isGenerated('agents/roadmaps/archive/INDEX.md.bak')).toBe(false);
+    });
+
+    it('classifies the two ratchet baselines as REMEASURED, not generated and not authored', () => {
+        // road-to-merge-hotspot-drawdown 1.2. Both conflict in 7 of 7 open PRs.
+        // A baseline records what a tree MEASURED, so there is no side to take
+        // (authored) and no file to re-render (generated) -- the resolution is
+        // to re-run the measurement on the merged tree.
+        for (const rel of ['src/config/estate-count-budget.json', 'src/config/gate-violation-baselines.json']) {
+            expect(isRemeasured(rel)).toBe(true);
+            // The three buckets are mutually exclusive: a baseline that also read
+            // as generated would be handed a `git checkout --ours` instruction,
+            // which is exactly the pick-a-side that loosens a ratchet.
+            expect(isGenerated(rel)).toBe(false);
+        }
+    });
+
+    it('does NOT claim a neighbouring config file is a measured baseline', () => {
+        // The gate that READS the baselines is authored; only the baselines
+        // themselves are re-measured. A broader match here would tell the reader
+        // to re-measure a hand-written script.
+        expect(isRemeasured('src/config/gate-coverage.yml')).toBe(false);
+        expect(isRemeasured('src/scripts/_lib/gate_baseline.ts')).toBe(false);
+        expect(isRemeasured('src/config/estate-count-budget.json.bak')).toBe(false);
+        expect(isRemeasured('agents/roadmaps-progress.md')).toBe(false);
+    });
+
+    it('a three-way conflict set lands one path in each bucket', () => {
+        const out = classifyConflicts([
+            'agents/roadmaps/archive/index.json',
+            'src/config/gate-violation-baselines.json',
+            'agents/roadmaps/stubs/README.md',
+        ]);
+        expect(out.generated).toEqual(['agents/roadmaps/archive/index.json']);
+        expect(out.remeasured).toEqual(['src/config/gate-violation-baselines.json']);
+        expect(out.authored).toEqual(['agents/roadmaps/stubs/README.md']);
+    });
+
+    it('every one of the six measured conflicting paths is classified — AC-1', () => {
+        // The population is the six paths that actually conflict, measured with
+        // `git merge-tree` across all 7 CONFLICTING open PRs on 2026-08-21. A
+        // path in none of the three buckets is a path this tool is silent about.
+        const measured: ReadonlyArray<readonly [string, 'generated' | 'remeasured' | 'authored']> = [
+            ['agents/roadmaps-progress.md', 'generated'],
+            ['agents/roadmaps/archive/INDEX.md', 'generated'],
+            ['agents/roadmaps/archive/index.json', 'generated'],
+            ['src/config/estate-count-budget.json', 'remeasured'],
+            ['src/config/gate-violation-baselines.json', 'remeasured'],
+            ['agents/roadmaps/stubs/README.md', 'authored'],
+        ];
+        for (const [rel, bucket] of measured) {
+            const out = classifyConflicts([rel]);
+            expect(out[bucket], `${rel} should classify as ${bucket}`).toEqual([rel]);
+            const others = (['generated', 'remeasured', 'authored'] as const).filter((b) => b !== bucket);
+            for (const o of others) expect(out[o], `${rel} must not be ${o}`).toEqual([]);
+        }
+    });
+
     it('splits a mixed conflict set and drops blank lines', () => {
         const out = classifyConflicts([
             'agents/roadmaps-progress.md',
@@ -54,11 +122,12 @@ describe('generated vs authored', () => {
         ]);
         expect(out.generated).toEqual(['agents/roadmaps-progress.md', 'dist/agent-src/x.md']);
         expect(out.authored).toEqual(['src/config/gate-coverage.yml']);
+        expect(out.remeasured).toEqual([]);
     });
 
     it('an empty list is empty on both sides, not a silent pass', () => {
-        expect(classifyConflicts([])).toEqual({ generated: [], authored: [] });
-        expect(classifyConflicts(['', '   '])).toEqual({ generated: [], authored: [] });
+        expect(classifyConflicts([])).toEqual({ generated: [], remeasured: [], authored: [] });
+        expect(classifyConflicts(['', '   '])).toEqual({ generated: [], remeasured: [], authored: [] });
     });
 });
 
