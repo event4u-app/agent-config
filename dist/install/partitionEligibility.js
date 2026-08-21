@@ -128,6 +128,23 @@ export function partitionVerdict(inputs) {
  * artefact is NOT package-only, so it is delivered globally and withheld from
  * the project layer. Both defaults resolve toward "the artefact is generally
  * useful"; only one of them is about withholding.
+ *
+ * ## The state space, MEASURED rather than enumerated defensively (2026-08-21)
+ *
+ * Three of this function's branches — unreadable file, absent `workspaces:`,
+ * empty list — all resolve to `false`, and the closure review asked whether one
+ * of them was resolving by accident. Counted over all 119 files in `src/rules/`:
+ *
+ *     absent=0 · empty=0 · maintainer-only=16 · mixed=103 · scalar-or-other=0
+ *
+ * So exactly TWO states occur, both deliberate, and the 16 is the figure ADR-236
+ * partitions on. The other branches are unreachable in this tree, and the input
+ * is always THIS package's own `src/rules/` — never a consumer's — so the state
+ * space is closed by that count rather than merely unobserved. Fixtures for the
+ * absent and malformed cases were considered and NOT written: they would pin
+ * behaviour on inputs the only caller cannot produce, which is a test asserting
+ * a hypothetical. Should a rule ever ship with a bare or malformed
+ * `workspaces:`, that count moves and this note is the thing that dates.
  */
 export function isExclusivelyPackageOnly(source_path) {
     let meta;
@@ -308,9 +325,23 @@ export function personaPartition(projectRoot, all) {
     const active = partitionActive(projectRoot);
     return {
         all,
-        listFor: (toolDir) => (active && toolDir.startsWith('.claude/') ? [] : all),
+        listFor: (toolDir) => (personaWithheldFor(toolDir, active) ? [] : all),
         note: active ? ' — .claude/ withheld: ADR-236 partition, personas arrive from ~/.claude' : '',
     };
+}
+/**
+ * The pure half of {@link personaPartition}: withhold iff the partition is active
+ * AND this is a Claude tool directory.
+ *
+ * Split out so the decision is testable in BOTH directions. `personaPartition`
+ * reads `installed.lock` through a memoized `partitionActive`, so a test over it
+ * can only assert whatever this machine happens to be — which is a test that
+ * passes either way and therefore proves nothing. The two properties worth
+ * pinning are exactly the two this signature exposes: `.claude/` is withheld when
+ * active, and NOTHING else ever is.
+ */
+export function personaWithheldFor(toolDir, active) {
+    return active && toolDir.startsWith('.claude/');
 }
 /**
  * Does the project layer withhold the colon-form `/cluster:sub` commands?
