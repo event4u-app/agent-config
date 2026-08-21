@@ -1180,8 +1180,10 @@ describe('extractAcceptanceCriteria — over the REAL active tree, not a fixture
         const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
         const blind: string[] = [];
         let declaring = 0;
+        let scanned = 0;
         for (const name of fs.readdirSync(dir)) {
             if (!name.endsWith('.md')) continue;
+            scanned += 1;
             const text = fs.readFileSync(path.join(dir, name), 'utf-8');
             // Detected independently of the extractor, so this cannot pass by the
             // extractor and the detector sharing a blind spot — the failure mode
@@ -1193,7 +1195,14 @@ describe('extractAcceptanceCriteria — over the REAL active tree, not a fixture
             if (!hasAcceptanceCriteria(extractAcceptanceCriteria(text))) blind.push(name);
         }
         // Vacuity guard: a moved roadmaps root would make the loop assert nothing.
-        expect(declaring).toBeGreaterThan(10);
+        // Tied to the corpus rather than a pinned count. The floor used to be
+        // `declaring > 10`, chosen when the active estate was large; archival
+        // shrinks that estate (26 -> 14 active over the 2026-08-21 PR drain) and
+        // the constant reached exactly 10, failing for a reason unrelated to a
+        // moved root. `scanned` proves the root is real; `declaring` proves the
+        // loop had something to assert over.
+        expect(scanned).toBeGreaterThan(5);
+        expect(declaring).toBeGreaterThan(0);
         expect(blind).toEqual([]);
     });
 });
