@@ -40,6 +40,13 @@ const GENERATED = [
     'docs/catalog.md',
     'dist/agent-src/',
     '.augment/',
+    // Compiled from `hook_manifest.yaml` by `task build-ts`, never hand-written.
+    // It was classified AUTHORED until 2026-08-20, so this tool told the reader
+    // to "read both sides" on a file where mixing hunks yields a concern table
+    // matching NEITHER branch. One session resolved this same conflict three
+    // times and named it structural: main adds a concern and recompiles, so
+    // every open branch collides here. Regenerate; never merge.
+    'src/scripts/hook_manifest.json',
 ];
 
 function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {

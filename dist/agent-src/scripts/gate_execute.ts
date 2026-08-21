@@ -22,11 +22,17 @@
  *     instead of one entry.
  *   - **No resolve on failure.** A non-zero exit reports and changes nothing.
  *     A gate marked resolved by a command that failed is worse than an open one.
- *   - **No invented ledger.** Class 1 needs a standing budget, and the shape of
- *     that budget is an OPEN maintainer decision (`b-gate-budget-preauth`).
- *     Until it is taken there is no ledger, so class 1 takes the
- *     render-instead-of-run path — which is the behaviour the blocker itself
- *     prescribes for a missing ledger, not a stub of the decision.
+ *   - **No spend outside the standing budget.** Class 1 runs only under the
+ *     caps `b-gate-budget-preauth` decided (option (a), 2026-08-20): a per-run
+ *     cap AND a rolling-7-day cap, with an append-only receipt as the audit
+ *     surface. No caps configured, no USD estimate in the entry, over either
+ *     cap — every one of those RENDERS instead of running, which is the
+ *     behaviour the blocker itself prescribes for a missing ledger.
+ *   - **No consent from the ledger.** The receipt records CONSUMPTION only.
+ *     `agents/runtime/state/` is agent-writable, so reading an "authorisation"
+ *     out of it would be the agent consenting on the user's behalf — the exact
+ *     threat model the live-trigger-eval terminal abort exists for. `--confirm`
+ *     remains the consent on every class-1 run.
  *   - **No class-3 change.** The class-3 branch executes nothing and writes
  *     nothing, so `agent-config gates` renders a class-3 entry exactly as it did
  *     before this module existed. `--execute` on one returns a one-line notice
@@ -35,8 +41,9 @@
  *     markdown field. Without the flag the command is echoed and refused, so
  *     the operator sees the exact string first — the this-turn, names-the-object
  *     confirmation `non-destructive-by-default` requires. A command carrying a
- *     Hard-Floor action is refused even WITH the flag: class 0 means reversible,
- *     so such an entry is misclassified rather than merely dangerous.
+ *     Hard-Floor action is refused even WITH the flag: classes 0 and 1 are both
+ *     defined as reversible, so such an entry is misclassified rather than
+ *     merely dangerous.
  */
 
 import * as fs from 'node:fs';
@@ -44,15 +51,24 @@ import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { collect, blocker_class, type Blocker } from './update_roadmap_progress.js';
+import {
+    appendGateBudgetReceipt,
+    evaluateGateBudget,
+    GATE_BUDGET_LEDGER_REL,
+    parseBudgetUsd,
+    readGateBudgetCaps,
+    readGateBudgetLedger,
+} from './gate_budget.js';
+import { load_agent_settings } from '../templates/scripts/work_engine/_lib/agent_settings.js';
 
 /**
- * Where a class-1 receipt ledger would live once the budget decision is taken.
+ * Where the class-1 receipt ledger lives.
  *
- * Named here so the absent-ledger branch has something concrete to report, and
- * deliberately NOT created: the path is a consequence of the decision, and
- * writing it now would answer a question that is still the maintainer's.
+ * Kept as a name here because it was already exported, but the definition
+ * moved to `gate_budget.ts` when the budget decision landed — one path, one
+ * builder, so a relocation cannot leave a second joiner behind.
  */
-const LEDGER_REL = path.join('agents', 'runtime', 'state', 'gate-budget-ledger.jsonl');
+const LEDGER_REL = GATE_BUDGET_LEDGER_REL;
 
 type Outcome = 'resolved' | 'failed' | 'rendered' | 'not-found';
 
@@ -260,6 +276,7 @@ function execute(
     }
     const { blocker, file, rel } = found;
     const cls = blocker_class(blocker);
+    const repoRoot = path.dirname(path.dirname(roadmapRoot));
 
     if (cls === '3') {
         // Byte-identical to today by construction: nothing is executed and
@@ -273,28 +290,32 @@ function execute(
     if (cls === '2') {
         return { outcome: 'rendered', report: consentLine(blocker), code: 0 };
     }
+    // Class 1 runs under the standing budget decided by `b-gate-budget-preauth`
+    // option (a): a per-run cap AND a rolling-7-day cap, with an append-only
+    // receipt as the audit surface. Every refusal path RENDERS rather than
+    // running — the blocker's own prescription for a missing ledger,
+    // generalised to every way the budget can say no. The `--confirm`
+    // requirement below is untouched: the caps bound the size of an authorised
+    // spend, they never supply the authorisation.
+    let budgeted: { estimateUsd: number } | null = null;
     if (cls === '1') {
-        const ledger = path.join(path.dirname(path.dirname(roadmapRoot)), LEDGER_REL);
-        if (!fs.existsSync(ledger)) {
-            // The blocker's own prescription for a missing ledger: render the
-            // consent line INSTEAD of running. Not a degraded mode — the
-            // budget shape is an open decision and this is what open means.
+        const verdict = evaluateGateBudget({
+            caps: readGateBudgetCaps(load_agent_settings({ cwd: repoRoot })),
+            records: readGateBudgetLedger(repoRoot),
+            estimateUsd: parseBudgetUsd(blocker.budget),
+            now,
+        });
+        if (!verdict.ok) {
             return {
                 outcome: 'rendered',
                 report: consentLine(
                     blocker,
-                    'class 1 with no budget ledger, so it renders instead of running',
+                    `class 1 and ${verdict.detail}, so it renders instead of running`,
                 ),
                 code: 0,
             };
         }
-        return {
-            outcome: 'rendered',
-            report:
-                `${id} is class 1 and a ledger exists at ${LEDGER_REL}, but spend execution ` +
-                'is gated on `b-gate-budget-preauth`, which is open. Rendering instead of running.\n',
-            code: 0,
-        };
+        budgeted = { estimateUsd: verdict.estimateUsd };
     }
 
     const command = commandOf(blocker);
@@ -304,7 +325,7 @@ function execute(
         // and guessing a command here is the one thing that must not happen.
         return {
             outcome: 'failed',
-            report: `${id} is class 0 but carries no **Run:** command. Nothing was executed.\n`,
+            report: `${id} is class ${cls} but carries no **Run:** command. Nothing was executed.\n`,
             code: 1,
         };
     }
@@ -318,9 +339,9 @@ function execute(
         return {
             outcome: 'failed',
             report:
-                `${id} is class 0 but its **Run:** command contains \`${floor}\`, which is a ` +
-                'Hard-Floor action under non-destructive-by-default. Class 0 means ' +
-                'deterministic, free and REVERSIBLE, so this entry is misclassified. ' +
+                `${id} is class ${cls} but its **Run:** command contains \`${floor}\`, which is a ` +
+                'Hard-Floor action under non-destructive-by-default. Classes 0 and 1 are ' +
+                'both defined as REVERSIBLE, so this entry is misclassified. ' +
                 'Nothing was executed; re-author the class.\n',
             code: 1,
         };
@@ -333,7 +354,7 @@ function execute(
         return {
             outcome: 'rendered',
             report:
-                `${id} is class 0 and would run, from the repo root:\n\n` +
+                `${id} is class ${cls} and would run, from the repo root:\n\n` +
                 `    ${command}\n\n` +
                 'Nothing has been executed. Re-run with `--confirm` to execute it and ' +
                 'record the evidence at the blocker.\n',
@@ -344,7 +365,7 @@ function execute(
     const r = spawnSync(command, {
         shell: true,
         encoding: 'utf-8',
-        cwd: path.dirname(path.dirname(roadmapRoot)),
+        cwd: repoRoot,
         timeout: 120_000,
     });
     const output = `${r.stdout ?? ''}${r.stderr ?? ''}`;
@@ -367,6 +388,22 @@ function execute(
             code: 1,
         };
     }
+    if (budgeted !== null) {
+        // Written BEFORE the file rewrite: an unreceipted spend is invisible to
+        // the rolling cap, and the cap failing open is the one way this
+        // mechanism could become a blank cheque. `actual_usd` is null because
+        // nothing on this path observes the provider's billed amount — the
+        // estimate is what the cap compared against and what it records.
+        appendGateBudgetReceipt(repoRoot, {
+            kind: 'consumption',
+            blocker: id,
+            authorization: 'confirm-flag',
+            estimated_usd: budgeted.estimateUsd,
+            actual_usd: null,
+            at: now.toISOString(),
+            single_use: true,
+        });
+    }
     const when = today(now);
     if (!appendEvidence(file, id, command, output, when)) {
         return {
@@ -382,6 +419,10 @@ function execute(
         report:
             `${id} resolved. Ran \`${command}\` (exit 0); evidence appended in ${rel} ` +
             `and the status flipped to resolved ${when}.\n` +
+            (budgeted === null
+                ? ''
+                : `Receipt appended to ${LEDGER_REL} ` +
+                  `($${budgeted.estimateUsd.toFixed(2)} estimated).\n`) +
             // The dashboard is derived from the file this just rewrote, so it
             // is now stale. Saying so is the same follow-up `renderResumed`
             // already prints for its own file-move suggestion.

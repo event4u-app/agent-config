@@ -254,6 +254,16 @@ The resolution order for an open question becomes: decision sheet at contract ti
   1. Confirm the deltas are in scope at all. **Corrected 2026-08-17, verified against the tree — this blocker overstated its own scope 4:1.** Only `ask-when-uncertain` (batch elicitation) is in the locked kernel set (`docs/contracts/kernel-membership.md § 4`, row 142) and needs the own-PR + soak guarantee. `autonomy-mechanics` (set-scoped form) is **not a rule at all** — it is a context at `src/agent-src/contexts/execution/autonomy-mechanics.md`, so the rules-tree path for it does not exist. `artifact-drafting-protocol` (late artifacts) and `roadmap-progress-sync` (deferred policy) ARE rules but are **absent from the locked nine**. Three of the four therefore need no soak window; the phase text calling them "kernel-adjacent" is what carried the error forward.
   2. Name the order, or accept the recommended one.
   3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — for `ask-when-uncertain` only. The agent will not shorten it and cannot self-authorize it.
+- **Answer:** PARTLY COVERED by option (a) — 2026-08-20. Per
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  (`B | transferred`), the entry splits: the three NON-kernel deltas proceed now as
+  ordinary rule edits, in the order the rendered default names, and that half is
+  accepted. The one kernel delta (`ask-when-uncertain`) is **transferred** — authorising
+  a kernel-rule edit and letting its soak interval elapse are not agent-completable, and
+  `scope-control` states in as many words that no autonomous mandate lifts the
+  slow-rollout guarantee. Batch A carries the three-point check verbatim: original
+  criterion, only batch elicitation and its own-PR soak moved, re-entry producer the
+  kernel-rule maintainer with the `kernel-rule-edits.md` interval as the probe.
 - **Resolved when:** the user authorizes or declines the `ask-when-uncertain` delta, and says whether the three non-kernel deltas proceed independently.
 
 ### blocker: autonomy-defaults-sheet
@@ -270,6 +280,16 @@ The resolution order for an open question becomes: decision sheet at contract ti
   2. Confirm or override the lane cap: 2 versus the configured `subagents.max_parallel`.
   3. Confirm or override the late-artifact default: `auto-research` versus `halt`.
   4. Confirm whether the deferred policy offers only the follow-up-draft option or also an explicit cancellation with a reasoning memo.
+- **Answer:** OVERRIDDEN 2026-08-20 — option (a) does not carry this row as rendered.
+  The council settled all four values itself in
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  (`D | satisfied`) and chose the CONSERVATIVE variant on three of the four:
+  preselection `phase-checkpoints` (NOT `autonomous`), lane cap `2` (as rendered),
+  late-artifact default `halt` (NOT `auto-research`), and a deferred policy offering
+  BOTH a follow-up draft and explicit cancellation with a reasoning memo (NOT limited to
+  the follow-up-draft option). Those four values are the recorded answer; the rendered
+  default is superseded on three of them. This is the clearest single case for why
+  blanket acceptance of the sheet was not applied unexamined.
 - **Resolved when:** the four values are named, and they are recorded in the decision sheet the Phase 1 contract screen renders.
 
 ## Risk Register

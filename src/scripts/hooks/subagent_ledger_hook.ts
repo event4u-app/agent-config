@@ -35,8 +35,9 @@
  *     (`Explore` / `general-purpose` / `production-validator` / …), the same
  *     single host string `orchestration_record_hook` already records.
  *   - `last_assistant_message` is free model prose and is NEVER recorded, in
- *     any form — not truncated, not hashed, not summarised. Only the three-way
- *     parse VERDICT (`ok` / `fail` / `absent`) and a validator error COUNT
+ *     any form — not truncated, not hashed, not summarised. Only the four-way
+ *     parse VERDICT (`ok` / `fail` / `no_message` / `no_envelope`) and a
+ *     validator error COUNT
  *     leave this function. A record type with no field able to hold prose has
  *     no scrubber that can fail.
  *
@@ -196,7 +197,20 @@ function extractParentId(payload: JsonObject, ownId: string | null): string | nu
     return null;
 }
 
-export type EnvelopeParse = 'ok' | 'fail' | 'absent';
+export type EnvelopeParse = 'ok' | 'fail' | 'no_message' | 'no_envelope';
+
+/**
+ * The retired fifth value. Records written before 2026-08-20 carry `absent`,
+ * which collapsed `no_message` and `no_envelope` into one bucket.
+ *
+ * It is deliberately NOT in the union. Nothing reads `envelope_parse` back
+ * programmatically — the only writer is this file and the only reader is a
+ * human or a `grep` — so there is no consumer to keep compatible, and leaving
+ * the value writable would let the collapse reappear. A reader of the
+ * historical window must treat `absent` as "one of the two, unknown which":
+ * the measurement it supports starts at the split, not before it.
+ */
+export const RETIRED_ENVELOPE_PARSE = 'absent';
 
 export interface ParseVerdict {
     verdict: EnvelopeParse;
@@ -207,18 +221,33 @@ export interface ParseVerdict {
 /**
  * Classify a subagent's final message against the response-envelope contract.
  *
- * Three outcomes, and the distinction between the last two is the whole point
- * of the measurement: `absent` means no envelope was found to judge, `fail`
- * means one was found and did not satisfy `validateResponse`. Collapsing them
- * would make the Phase-1 baseline unable to separate "the worker never
- * returned a structured result" from "it returned a malformed one" — two
- * different defects with two different fixes.
+ * Four outcomes, and every boundary between them separates two defects with
+ * two different fixes:
+ *
+ *   - `no_message` — the host delivered no `last_assistant_message` at all
+ *     (null, or whitespace only). This is the return-channel loss #58109
+ *     describes, and it is the ONLY verdict a disk-envelope fallback may key
+ *     on.
+ *   - `no_envelope` — a message arrived and carried no JSON object. This is
+ *     the overwhelmingly common case: subagents answer in prose. It is not a
+ *     channel failure, and a fallback keyed on it would fire on nearly every
+ *     dispatch.
+ *   - `fail` — an object arrived and did not satisfy `validateResponse`.
+ *   - `ok` — an object arrived and validated.
+ *
+ * The first two used to be one value, `absent`. Over the first measured window
+ * that collapse read 25 of 25 `absent` — including the #58109 control arm that
+ * returned a complete report — so a rate computed off it measured the answer
+ * format rather than the channel
+ * (`agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`
+ * § F2). Splitting them is what makes the Phase-1 baseline's return-rate
+ * column, and Phase 2's fallback condition, expressible at all.
  */
 export function classifyEnvelope(message: string | null): ParseVerdict {
-    if (message === null || !message.trim()) return { verdict: 'absent', error_count: 0 };
+    if (message === null || !message.trim()) return { verdict: 'no_message', error_count: 0 };
 
     const candidates = _jsonObjectCandidates(message);
-    if (candidates.length === 0) return { verdict: 'absent', error_count: 0 };
+    if (candidates.length === 0) return { verdict: 'no_envelope', error_count: 0 };
 
     // A message may carry several object-shaped spans. The envelope is the one
     // that validates, so a `fail` is only reported once every candidate has
@@ -229,7 +258,7 @@ export function classifyEnvelope(message: string | null): ParseVerdict {
         if (result.valid) return { verdict: 'ok', error_count: 0 };
         if (best === null) best = { verdict: 'fail', error_count: result.errors.length };
     }
-    return best ?? { verdict: 'absent', error_count: 0 };
+    return best ?? { verdict: 'no_envelope', error_count: 0 };
 }
 
 /**
@@ -239,9 +268,9 @@ export function classifyEnvelope(message: string | null): ParseVerdict {
  * R2 finding 4: the previous implementation took the span from the first `{`
  * to the LAST `}`, so a valid envelope followed by any later brace in prose
  * ("… — done. See {done}.") produced unparseable text and was reported
- * `absent` — routing an extraction failure into the "never returned anything"
- * bucket that the whole three-way verdict exists to keep separate, and biasing
- * the Phase-1 return-rate falsifier downward.
+ * `no_envelope` — routing an extraction failure into the "answered in prose"
+ * bucket that the verdict split exists to keep separate, and biasing the
+ * Phase-1 return-rate falsifier downward.
  *
  * R2 finding 11: fenced blocks are now matched with an anchored, global scan
  * rather than a first-match-anywhere regex, which used to be able to match at
