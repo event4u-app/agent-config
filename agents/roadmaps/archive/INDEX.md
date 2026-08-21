@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**533 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 190 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**534 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 191 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -367,6 +367,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-opt-subagent-harvest`](road-to-opt-subagent-harvest.md) | Road to opt subagent harvest — the post-flip second look at orchestration references | completed | 3 | 9/9 | _not extractable_ |
 | [`road-to-optimized-ci-and-release-gates`](road-to-optimized-ci-and-release-gates.md) | Optimized CI + Release Gates — cut release-PR wall-clock and make every gate intentional | closed-with-cancellations | 4 | 25/27 | _not extractable_ |
 | [`road-to-orchestration-and-memory-harvest`](road-to-orchestration-and-memory-harvest.md) | Road to orchestration-and-memory harvest | completed | 5 | 17/17 | _not extractable_ |
+| [`road-to-orchestration-scope-decision`](road-to-orchestration-scope-decision.md) | Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front | closed-with-cancellations | 4 | 6/13 | _not extractable_ |
 | [`road-to-orchestrator-discipline-carriers`](road-to-orchestrator-discipline-carriers.md) | Road to orchestrator discipline carriers — the delegation obligation and the end-review obligation get mechanisms that reach real sessions | completed | 7 | 37/37 | _not extractable_ |
 | [`road-to-orchestrator-first-execution`](road-to-orchestrator-first-execution.md) | Road to orchestrator-first execution — make the gate clear, measure what already happened, then decide whether "orchestrate everything" survives contact with the numbers | closed-with-cancellations | 5 | 17/29 | _not extractable_ |
 | [`road-to-org-telemetry`](road-to-org-telemetry.md) | Road to org telemetry | closed-with-cancellations | 7 | 21/30 | _not extractable_ |

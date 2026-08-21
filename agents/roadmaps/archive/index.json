@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 533,
+  "count": 534,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -4804,6 +4804,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-orchestration-scope-decision",
+      "title": "Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 7
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-orchestrator-discipline-carriers",

@@ -27,6 +27,70 @@ parent_roadmap: road-to-subagent-value-realization-followup
 > <!-- reconciled 2026-07-12 with ADR-117 via road-to-opt-portfolio-consolidation
 >      Phase 1 (default was described as `ask` — stale since 2026-07-09). -->
 
+## Outcome — closed 2026-08-20, and closed is not achieved
+
+```
+ARCHIVED DOES NOT MEAN ACHIEVED. NOT ONE PHASE OF THIS ROADMAP WAS SATISFIED.
+THE PRE-REGISTERED CLAIM IS STILL `unbacked` AND WAS NEVER EVALUATED.
+```
+
+Every open item is `[-]` **transferred**, none is `[x]`. Disposition **B** per
+[`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md),
+which merged this roadmap's `real-orchestration-usage` with the sibling's
+`telemetry-sample-size` — one evidence gap under two names — into one shared
+stub: [`stubs/road-to-task-completion-observability.md`](stubs/road-to-task-completion-observability.md).
+
+| Phase | State | One-line honest reading |
+|---|---|---|
+| Prerequisites | 2 satisfied, 1 **transferred** | The build work was always done. The third prerequisite's literal text (≥20 lines) is MET at 570 and was deliberately **not** marked `[x]`: marking a satisfied proxy `[x]` is the exact defect the 2026-08-17 Resolved-when rewrite removed. |
+| Phase 1 — pre-commit the claim | **satisfied** (already `[x]` before this run) | The claim is pre-registered, deterministically scored, negative control defined. `docs/CLAIMS.md:259-264`, status `unbacked`. This phase is the one thing this roadmap actually delivered. |
+| Phase 2 — accumulate telemetry | 1 satisfied, 1 **transferred** | The deterministic half (classifier recall 2/2, FP 0) was done 2026-07-11. The real-telemetry half is transferred, and is **doubly** unexecutable: the settings keys its text names no longer exist, and the count it gates on is already met while every quality column is null. |
+| Phase 3 — prove or drop | **all 3 transferred** | Neither branch is reachable. PROVE has no held-quality input (`first_pass_success` null on 570 of 570) and no fan-out population (`spawn_count >= 2` on 0 of 570). DROP is premise-stale in clause 1 and maintainer-owned in clause 2. |
+| Phase 4 — position the minimalism | **both transferred** | Gated on Phase 3 by its own heading. Additionally maintainer-owned: both steps change what the package publicly claims. The `docs/proof.md` row cannot be added as worded at all — see below. |
+
+**What this run did add, and it is a narrowing rather than a resolution.** The
+probe the merged criterion asks for was run and is published at
+[`agents/evidence/analysis/orchestration-task-completion-payload-probe.md`](../evidence/analysis/orchestration-task-completion-payload-probe.md).
+It splits the single question into three answers instead of one:
+
+1. **Cost and latency ARE visible to a hook and already read** — `post_tool_use`
+   on a **sync** completion (`orchestration_record_hook.ts:120`, `:193-199`;
+   8/8 agent-shaped transcript results carry `usage`; 40 of 570 audit rows
+   numeric). The first clause of the criterion is therefore partly **YES**, and
+   has been all along.
+2. **For a background dispatch one candidate slot is now named and unverified** —
+   `subagent_stop` is bound on this host and `transcript_path` is in the binary's
+   string table, so the open question narrows from "does any slot see it" to one
+   decidable pair of facts. It still needs the host env
+   (`raw-capture-needs-host-env`), which is not a repository act.
+3. **The quality columns are NOT payload-derivable at any slot, by
+   construction** — `orchestration-telemetry.md:86-107` defines both over the
+   parent's *subsequent* rework and re-dispatch, events that have not happened
+   at task completion; and no hook in the tree writes either field. So the
+   criterion's second clause cannot be satisfied by the first clause's success.
+   That is the finding that makes this a transfer rather than a wait.
+
+**Three things that must not be read out of this closure.**
+
+- The evidence gate this roadmap committed to was **never passed and never
+  evaluated** — the 2026-08-14 note in Phase 3 says so and is not softened here.
+  Always-on orchestration shipped the capability unconditionally and made the
+  gate unreachable; that structural decision stands and is not reopened, but it
+  did not satisfy anything on this page.
+- The Phase-4 `docs/proof.md` row — "orchestration value is measured before
+  default-on (or absent), not asserted" — is **contradicted by the shipped
+  default** and cannot be added as worded even after the stub clears. Writing it
+  would publish a false claim. Re-cutting the sentence is maintainer-owned.
+- `status: ready` in the frontmatter is left untouched deliberately: only
+  `ready` / `draft` / `proposed` are in use across the estate, and inventing a
+  fourth value to signal closure would be a schema change smuggled in as
+  bookkeeping. This section is the closure record.
+
+Nothing was abandoned. Nothing was narrowed by weakening a criterion — the only
+criterion restatement on this page (the 2026-08-17 Resolved-when rewrite) made
+the blocker **harder** to resolve, not easier.
+
+
 ## Goal
 
 Ship a single, falsifiable orchestration claim ("on delegable task family X,
@@ -62,7 +126,13 @@ not an unfinished swarm.
 
 - [x] Telemetry-capture path + aggregator + bench arms built (parent).
 - [x] Honest-null recorded; `ask` is the safe default.
-- [ ] ≥20 real orchestration audit lines (parent followup Phase 1).
+- [-] ≥20 real orchestration audit lines (parent followup Phase 1).
+      <!-- [-] transferred 2026-08-20 — merged blocker `real-orchestration-usage` +
+      `telemetry-sample-size`, disposition B, outcome `transferred`, to the shared stub
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md`. The literal text is
+      MET (570 orchestration lines) and marking it `[x]` would restore exactly the
+      already-satisfied proxy the 2026-08-17 Resolved-when rewrite removed: the gap is the
+      quality columns (0 of 570), not the count. -->
 
 ## Phase 1 — Pre-commit the falsifiable minimal claim
 
@@ -91,10 +161,15 @@ CLAIMS, `unbacked`.
 
 ## Phase 2 — Accumulate real telemetry (inherits parent followup)
 
-- [ ] Run real delegable work with `subagents.enabled: true` under the
+- [-] Run real delegable work with `subagents.enabled: true` under the
       post-ADR-117 default (`subagents.auto: on`) until
       `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥20 orchestration
       lines (parent followup Phase 1, Steps 1–3).
+      <!-- [-] transferred 2026-08-20 — Phase 1 telemetry seeding moved to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`). Doubly unexecutable as written: `subagents.enabled` / `subagents.auto`
+      no longer exist (always-on orchestration deleted both), and the ≥20-line condition is
+      already met at 570 while every quality column stays null. -->
 - [x] Measure `parallelizable:` classifier recall AND false-positive rate on the
       corpus (`orch-01..03`, `pv-01`, `pv-02`) — both matter; a leaky classifier
       loses on cost even when it wins on the true positives.
@@ -112,13 +187,24 @@ CLAIMS, `unbacked`.
 
 ## Phase 3 — Gate the claim: prove or drop
 
-- [ ] Feed the accumulated real telemetry through `gateVerdict()` /
+- [-] Feed the accumulated real telemetry through `gateVerdict()` /
       `resolveShippedDefault()`. PROVE = the pre-registered claim clears its
       threshold at held quality AND the negative control stayed quiet.
-- [ ] PROVE → mark the CLAIMS entry `backed` with a resolving pointer; the
+      <!-- [-] transferred 2026-08-20 — Phase 2 evaluation moved to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`). RUN ANYWAY for the record, 2026-08-20: `orchestration_savings_report`
+      over 570 dispatches returns `first_pass_success_rate: n/a (n=1)`, `escalation_rate: n/a
+      (n=1)`, `measured share: 0%`, `MODELED cost reduction: n/a`. Both `gateVerdict()` inputs
+      are absent — no counterfactual and no quality column — so this is a reading assembled
+      from one July line, not a verdict. -->
+- [-] PROVE → mark the CLAIMS entry `backed` with a resolving pointer; the
       ADR-117 `on` default is thereby CONFIRMED for the proven family (the
       bounded-downside basis upgrades to evidence); update the flip verdict.
-- [ ] DROP → record the renewed honest null; demote the default back to
+      <!-- [-] transferred 2026-08-20 — Phase 3's dependent decision moved to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`). PROVE is not evaluable: its held-quality input is null on 570 of 570
+      lines and the parallel arm has no population (`spawn_count >= 2` on 0 of 570). -->
+- [-] DROP → record the renewed honest null; demote the default back to
       `ask` via ADR-117's retained demotion gate; **and** demote the
       orchestration surface from the public value proposition: README/site stop
       listing orchestration as a capability and instead state the honest stance —
@@ -174,6 +260,11 @@ CLAIMS, `unbacked`.
       governance on its own. That is a doctrine question about how this tree
       records superseded commitments; it is maintainer-owned and is not settled
       by recording one instance of it. -->
+      <!-- [-] transferred 2026-08-20 — Phase 3's dependent decision moved to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`). Also NOT agent-executable on its own terms, as the two notes above
+      already record: clause 1 is premise-stale (no `subagents.auto` left to demote) and
+      clause 2 is maintainer-owned (it changes what the package publicly claims). -->
 
 **Exit:** a `backed` scoped claim + scoped flip, OR a recorded null + a public
 demotion of the front. No middle state where marketing implies a swarm the
@@ -182,13 +273,24 @@ evidence doesn't support.
 
 ## Phase 4 — Position the minimalism (only after Phase 3 resolves)
 
-- [ ] Write `docs/orchestration-stance.md`: whichever way Phase 3 went, state
+- [-] Write `docs/orchestration-stance.md`: whichever way Phase 3 went, state <!-- ref-ignore -->
       the category contrast honestly — agent-config offers evidence-gated
       minimal dispatch (or none), explicitly not a swarm platform; each claim
       binds to a resolvable pointer, the category is described only by what is
       publicly observable, never a named competitor.
-- [ ] Add the `docs/proof.md` § 4 row: "orchestration value is measured before
+      <!-- [-] transferred 2026-08-20 to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`). NOT in the council's move-list, which names Phases 1-3; transferred on
+      this phase's own stated gate ("only after Phase 3 resolves") plus the fact that a public
+      stance document is decide-what-ships. Stated as this run's reading, not the council's. -->
+- [-] Add the `docs/proof.md` § 4 row: "orchestration value is measured before
       default-on (or absent), not asserted."
+      <!-- [-] transferred 2026-08-20 to
+      `agents/roadmaps/stubs/road-to-task-completion-observability.md` (disposition B, outcome
+      `transferred`), and it cannot be added AS WORDED even after the stub clears: always-on
+      orchestration shipped the capability unconditionally without evaluating this roadmap's
+      gate, so "measured before default-on" would publish a false claim. Re-cutting the
+      sentence is maintainer-owned. -->
 
 **Exit:** the stance doc exists and is CI-drift-checked like the rest of the
 proof surface.
@@ -208,10 +310,77 @@ proof surface.
 ## Blockers
 
 ### blocker: real-orchestration-usage
-- **Status:** open
+- **Status:** resolved — transferred 2026-08-20 (disposition B, outcome `transferred`)
 - **Owner:** user
 - **Class:** 3 — human-only
-- **Blocks:** Phase 2 (and thereby Phase 3's decision)
+- **Blocks:** Phase 2, and thereby Phase 3's decision and Phase 4. All seven open items are now `[-]` transferred; nothing here was satisfied.
+- **Merged pair — this entry is ONE HALF of two.** Its sibling is
+  `telemetry-sample-size` in
+  [`road-to-subagent-value-realization-followup.md`](road-to-subagent-value-realization-followup.md),
+  and the two were found to be **one evidence gap wearing two names** by
+  [`agents/evidence/council/drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md):
+  "Line count is already satisfied and no longer diagnostic; the shared gap is
+  whether a hook can observe task completion and populate quality fields." Both
+  halves were rewritten off the count and onto the quality columns (this one
+  2026-08-17, the sibling 2026-08-16) and both now point at ONE shared stub. The
+  sibling roadmap's own checkboxes are owned elsewhere and were **not** touched
+  by this closure — only this half is closed.
+- **Resolution (2026-08-20) — transferred to
+  [`stubs/road-to-task-completion-observability.md`](stubs/road-to-task-completion-observability.md),
+  with the probe RUN and its answer recorded.** The criterion's first clause was
+  probed and is now partly answered; its second clause is structurally
+  unreachable from the first, which is what makes this a transfer and not a wait.
+  Full measurement:
+  [`agents/evidence/analysis/orchestration-task-completion-payload-probe.md`](../evidence/analysis/orchestration-task-completion-payload-probe.md).
+
+  **(a) A hook slot DOES see the task-completion payload — for a sync
+  completion, and it already reads it.** `orchestration_record_hook.ts:120` reads
+  `tool_response`, takes `totalTokens` at `:193` and falls back to
+  `usage.input_tokens + usage.output_tokens` at `:194-199`. Measured over the 40
+  most-recent transcripts of this project: 8 agent-shaped `toolUseResult`
+  entries, **8 of 8** carrying a populated `usage` object, union keys
+  `agentId, agentType, content, prompt, resolvedModel, status, toolStats,
+  totalDurationMs, totalTokens, totalToolUseCount, usage`. Corroborated on the
+  output side by `dispatch_tokens` numeric on 40 of 570 rows.
+
+  **(b) For a BACKGROUND dispatch the candidate slot is now named, and
+  unverified.** `subagent_stop` is bound on this host (`hook_manifest.yaml:926`,
+  `:967`; alias at `:1062`) and has been observed 3410 times, but
+  `subagent_ledger_hook` reads no usage field, so the ledger shows only that
+  nobody looked. `transcript_path` is present in the installed binary's
+  exact-token string table (count 1, host `2.1.237` — a fresh read; the prior
+  pin was `2.1.229`). Presence is not arrival: the open question narrows from
+  "does any slot see it" to *does `transcript_path` reach `SubagentStop` stdin,
+  and does the entry it points at carry the usage object for a background
+  dispatch*. Instrument shipped (`dispatch_hook.ts:578`), env not a repository
+  act — the standing `raw-capture-needs-host-env` dependency.
+
+  **(c) The QUALITY columns are not payload-derivable at ANY slot, by
+  construction — and this is the decisive finding.**
+  `orchestration-telemetry.md:86-107` defines `first_pass_success` over whether
+  the parent later adopted the return without rework, and `escalated` over
+  whether the parent later re-dispatched to a higher tier. Both are facts about
+  events strictly AFTER completion, so no completion payload can carry them.
+  Confirmed on the write side: `grep --line-number -rE
+  'first_pass_success|escalated' src/scripts/hooks/` returns **nothing**. The
+  only producer is the model-carried CLI (`orchestration_record.ts:136`), whose
+  measured capture rate before the hook existed was 1 of 370. Consequence: even
+  a fully successful (b) fills cost and latency and leaves the quality columns
+  as `null`. Clause 2 of the criterion is therefore not downstream of clause 1
+  at all.
+
+  **Re-measured corpus, 2026-08-20** (was 367 orchestration lines on
+  2026-08-17): `2026-08.jsonl` holds 579 lines, **570 orchestration**.
+  `first_pass_success` / `escalated` / `task_class` / `dispatch_mode` non-null on
+  **0 of 570**. `dispatch_tokens` numeric on **40 of 570** — the same 40 as three
+  days ago, so no sync completion has landed since. `wall_clock_ms` 570/570.
+  `token_delta_provenance` `estimated` 570/570. `spawn_count >= 2` on **0 of
+  570** (1 in 569, 0 in 1) — across 570 dispatches the corpus has never produced
+  a fan-out, which blocks the claim's parallel arm independently of the columns.
+  `orchestration_savings_report`: `first_pass_success_rate: n/a (n=1)`,
+  `escalation_rate: n/a (n=1)`, `measured share: 0%`, `MODELED cost reduction:
+  n/a`. **203 new orchestration lines moved not one field verdict** — the third
+  consecutive reading to confirm the recommendation below.
 - **What to do:** the build work is done; only real delegable work produces the
   telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
   the post-ADR-117 default (`subagents.auto: on`), then check
@@ -287,3 +456,12 @@ proof surface.
   feasibility screen that trusted it read this roadmap as resumable. The
   sibling `road-to-subagent-value-realization-followup` had the identical
   defect repaired on 2026-08-16; this one was missed in the same pass.
+
+  **Carried forward unchanged, 2026-08-20.** This criterion is not weakened and
+  not withdrawn — it now lives as P1 (the `SubagentStop` payload capture) and P2
+  (≥ 20 rows with populated quality columns) in
+  [`stubs/road-to-task-completion-observability.md`](stubs/road-to-task-completion-observability.md),
+  both measured FAILING at transfer, alongside a P3 the criterion never named:
+  one row with `spawn_count >= 2`, also 0 of 570. The probe half of the sentence
+  has been discharged; the ≥ 20-populated-lines half has not, and the probe's
+  own finding (c) is why it cannot be discharged by a hook at all.
