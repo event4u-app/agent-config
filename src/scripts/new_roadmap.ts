@@ -11,9 +11,15 @@
  *      one of them on the active side and reddening the trunk, seven more in
  *      `later/` where the gate does not scan and which would red on the day
  *      they are reactivated.
- *   2. The acceptance heading must match `/^##\s+Acceptance Criteria\s*$/` —
- *      end-anchored AND case-sensitive. 10 of 22 roadmaps carrying such a
- *      section wrote `Acceptance criteria` and were invisible to the extractor.
+ *   2. The acceptance heading is matched CASE-INSENSITIVELY and without an end
+ *      anchor — one predicate, `_lib/ac_heading.ts`, shared by the R1 gate and
+ *      the R2 dispatcher. It was not always: an end-anchored, case-sensitive
+ *      copy made 10 of 22 roadmaps writing `Acceptance criteria` invisible to
+ *      the extractor, and a third copy in `lint_plan_risk_register` kept both
+ *      faults until 2026-08-20, hashing the empty string for 8 of the 32 ready
+ *      roadmaps while the gate exited 0. The skeleton still emits the
+ *      capitalised form: it is the shape every reader already recognises, and
+ *      nothing now depends on the case.
  *   3. The Risk Register needs its `<!-- risk-review: … -->` marker as the
  *      first non-blank line of the section.
  *   4. `Risk type` is a two-value enum — `product` | `implementation`. The
