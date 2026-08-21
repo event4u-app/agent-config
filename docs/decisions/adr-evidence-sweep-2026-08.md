@@ -10,9 +10,12 @@
 > **Roadmap.** `road-to-evidence-based-adr-governance`, Phase 3.
 > **Contract.** `docs/contracts/adr-layout.md` § Provenance and evidence.
 > **Doctrine.** ADR-239 (`status: proposed`).
-> **Corpus.** 178 flat records in `docs/decisions/` + 7 per-area records in
-> `docs/adrs/**` = **185 records** at the head of this branch (177 flat before
-> ADR-239 was added by the same change).
+> **Corpus.** 179 flat records in `docs/decisions/` + 7 per-area records in
+> `docs/adrs/**` = **186 records** at the head of this branch. The count moved
+> twice while the sweep ran, and both moves are stated rather than smoothed: 184
+> at the pin, 185 once this change added its own doctrine record, and 186 after
+> PR #1509 took ADR-238 and forced that record to ADR-239. A corpus figure in a
+> live tree is a reading with a timestamp, not a constant.
 
 ## What this artifact is, and what it is not
 
@@ -133,6 +136,38 @@ not commensurable, and one ordinal collapses distinct failure modes into a
 number that cannot guide action.
 
 ## Tranche dispositions
+
+### Reproducing the assignment
+
+Recorded here rather than in `agents/runtime/tmp/`, which is gitignored: an
+earlier version of this sweep's `verify:` line pointed a reproducibility claim
+at a file that ships to nobody.
+
+Seed **20260821**, Python `random`. Take the flat records under
+`docs/decisions/ADR-*.md` sorted, plus the per-area records under
+`docs/adrs/*/[0-9]*.md` sorted; remove the 13 anchors (ADR-001, 046, 047, 048,
+104, 106, 118, 128, 133, 137, 208, 216, 229); `random.shuffle` the remainder and
+deal it round-robin into 8 tranches (`rest[i::8]`). Then `random.sample` 10 % of
+the remainder as the blinded overlap and assign each to a second tranche chosen
+as `(owner + 1 + random.randrange(7)) % 8`.
+
+Assignment is random rather than by number range on purpose: grouping similar
+records under one reviewer is what makes tranche-local drift invisible from
+inside a tranche.
+
+### Records with no tranche row
+
+Two, both accounted for rather than silently absent:
+
+| Record | Why no row | Disposition |
+|---|---|---|
+| ADR-239 | This change's own doctrine record — did not exist when tranches were assigned | `KEEP` pending the owner ruling its `status: proposed` waits on. `provenance: mixed`, `evidence: E3` by triangulation. Self-graded, and one tranche reviewer concurred at E3 independently — a single outside datum, nowhere near the sample `claim:adr-grade-accuracy-vs-gold` needs. |
+| ADR-238 | `security-content-routes-to-external-authority`, merged to `main` by PR #1509 after the tranches ran | **Not adjudicated.** It arrived from another change and this sweep did not read it. Recorded as an explicit gap rather than counted as covered — the honest disposition is `REVIEW-NOW`, deferred to the next pass, and AC-2 is phrased against the records present at the sweep's head rather than against a moving corpus. |
+
+The second row is why the coverage claim above says "of the records present at
+the sweep's head" instead of a bare total: in a live tree a corpus count is a
+reading with a timestamp, and a sweep that claims a total it did not read is the
+kind of overstatement this whole artifact exists to stop.
 
 ### Rows, by tranche
 
@@ -374,17 +409,29 @@ normalisation pass would hide exactly the divergence the overlap measures.
 
 ## Central adjudication
 
-One normalisation pass over all 185 records after the tranches, which the
+One normalisation pass over all 185 tranche-and-anchor records after the tranches, which the
 tranches cannot do for themselves: a cross-record citation only coheres if both
 grades are adjudicated together, and tranche-local drift is invisible from
 inside a tranche.
 
 ### Coverage
 
-185 records, all covered: 13 adjudicated as anchors up front, 165 further flat
-records and 7 per-area records across eight tranches. No record was skipped and
-none was sampled — the owner's instruction was to question all of them, and the
-count is the check on that.
+185 records covered of 186 present: 13 adjudicated as anchors up front, 165
+further flat records and 7 per-area records across eight tranches.
+
+**The one record with no tranche row is ADR-239, this change's own doctrine
+record**, and completion review caught the artifact claiming full coverage while
+it was absent. It could not have had a row: it did not exist when the tranches
+were assigned. Its disposition is stated here instead, and the self-grading is
+visible rather than buried — `provenance: mixed`, `evidence: E3` by
+triangulation, `KEEP` pending the owner ruling its `status: proposed` waits on.
+One tranche reviewer graded it independently at E3, which is a single outside
+concurrence and nowhere near the sample `claim:adr-grade-accuracy-vs-gold`
+needs.
+
+No record was skipped and none was sampled — the owner's instruction was to
+question all of them, and the count is the check on that, which is exactly why
+the off-by-one mattered enough to write down.
 
 ### Blinded overlap — the disagreement, published rather than smoothed
 
@@ -418,7 +465,7 @@ independence limit predicts.
 
 ### The heuristic's blind spot, measured
 
-`evidence_census.ts` proposed **E4 = 0** across all 185 records, and declared in
+`evidence_census.ts` proposed **E4 = 0** across all 186 records, and declared in
 its own header why: a heuristic cannot establish that a real consumer depends on
 an interface or that a legal obligation applies, so it never proposes E4.
 

@@ -125,7 +125,7 @@ export const SURFACES_NOT_SCANNED = [
  * document.
  */
 export const PARTIAL_COVERAGE = [
-    'docs/adrs/<area>/ — resolves, but the header is a quote block, not YAML: metadata reads empty',
+    'docs/adrs/<area>/ — no partial coverage remains: these records carry YAML frontmatter as of 2026-08-21, so status, date and review_trigger all read. Kept as an entry only to record that the gap closed; remove on the next pass.',
 ] as const;
 
 /** A trigger state. `none` means the ADR never recorded a reopen condition. */
@@ -161,11 +161,19 @@ export interface CiteResult {
     /**
      * What the axes say a cite-time reader may draw from this record.
      *
-     * Present only as `disabled-shadow-mode`, and only for an accepted +
-     * agentic + E0/E1 record. The literal is deliberate: no grade authorizes
-     * anything in this change (§ Architecture — evidence grade confers no
-     * authority until Phase 7), so the field reports a *disabled* effect
-     * rather than asserting a provisional permission that does not exist.
+     * Present only as `disabled-shadow-mode`, and only for an accepted E0/E1
+     * record that does NOT carry `authority_basis: owner_intent`.
+     *
+     * Provenance is deliberately NOT part of that condition, and this docstring
+     * said "accepted + agentic + E0/E1" after the predicate had stopped
+     * checking provenance — caught in completion review. The notice is about
+     * evidence strength, which a human snapshot has exactly as little of; the
+     * real exemption is an owner purpose statement, whose alternatives are
+     * foreclosed by ownership rather than by evidence.
+     *
+     * The literal is deliberate: no grade authorizes anything here, so the
+     * field reports a *disabled* effect rather than asserting a permission
+     * that does not exist. Whether one ever may is Phase 7's open question.
      */
     authority_effect?: string;
     /** Why this may or may not be cited as a live lock. */
@@ -356,6 +364,14 @@ export function amendment_blocks(body: string): string[] {
 export function trigger_state(fm: Record<string, string>): TriggerState {
     const t = (fm['review_trigger'] ?? '').trim();
     if (t === '') return 'none';
+    // The transitional migration value records that no condition has been
+    // written yet, so it is `none` rather than `indeterminate`. Mapping it to
+    // `indeterminate` would report "a condition exists, its state is unknown"
+    // for a record that has no condition at all — the opposite of what the
+    // staging is for, and indistinguishable at a glance from a real trigger
+    // nobody has evaluated. Found in completion review; the field did not
+    // exist in this file's corpus when the mapping was written.
+    if (t.toLowerCase() === 'unclassified') return 'none';
     return 'indeterminate';
 }
 

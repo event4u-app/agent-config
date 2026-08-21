@@ -263,7 +263,12 @@ jobs:
       # "enforced at cite time" claim about ADR citations was model-carried.
       # `--cited` resolves every ADR reference in src/rules, src/skills,
       # src/domains and docs against the decision corpus and reds when one points
-      # nowhere. Registered in gate-coverage.yml with this exact argv.
+      # nowhere. NOT registered in gate-coverage.yml: the manifest keys on the
+      # gate-population name prefix (lint|check|audit|skill|verify_) and this
+      # script carries `check` as a suffix, so registering it reddened
+      # gate_population.test.ts. The row and the reasoning are in
+      # gate-coverage.yml where it would have sat. Consequence: this step
+      # runs with no minimum-scan floor.
       - name: ADR citations resolve
         run: ./scripts-run src/scripts/adr_cite_check --cited
 

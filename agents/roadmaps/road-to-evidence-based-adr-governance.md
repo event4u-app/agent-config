@@ -83,8 +83,9 @@ Phase 7 on measured evidence and shipped default-off behind a kill switch.
 
 ```
 EVIDENCE GRADE IS A DESCRIPTIVE MEASUREMENT. IT PRICES REVIEW BURDEN AND
-PRIORITY. IT CONFERS NO AUTHORITY UNTIL PHASE 7 SAYS SO, ON MEASURED
-EVIDENCE, DEFAULT-OFF, BEHIND A KILL SWITCH.
+PRIORITY. IT CONFERS NO AUTHORITY. WHETHER IT EVER MAY IS PHASE 7'S OPEN
+QUESTION, DECIDABLE ONLY ON MEASURED EVIDENCE, AND A PUBLISHED NULL IS AN
+ACCEPTABLE ANSWER.
 ```
 
 Three layers, deliberately decoupled so a failure in one does not silently
@@ -94,7 +95,14 @@ become a failure in the next:
 |---|---|---|
 | **Metadata** — `provenance`, `evidence`, `authority_basis`, `review_trigger` | Phases 1–3 | No |
 | **Surfacing** — census, `adr:effective`, cite-time output, sweep artifact | Phases 2–4 | No |
-| **Authority** — grade-derived reopen routing | Phase 7 only, default-off | Yes, once enabled |
+| **Authority** — grade-derived reopen routing | not in this roadmap; Phase 7 decides *whether*, not *when* | only if Phase 7 rules for it, and then default-off |
+
+**Corrected in completion review:** three lines in this section presupposed the
+answer. "CONFERS NO AUTHORITY **UNTIL PHASE 7 SAYS SO**", "Yes, **once**
+enabled" and "**ONLY ONCE** PHASE 7 ENABLES IT" all read as scheduling a
+coupling rather than leaving it open — which is the thing the council refused,
+smuggled back in as a tense. Phase 7 decides *whether*, and its own blocker
+says a published null is an acceptable outcome.
 
 The previous draft fused all three. That fusion is what both council seats
 refused, and the repo has the receipt: the 44 engine-shaped REJECTs were
@@ -116,8 +124,9 @@ NEVER SELF-ASSIGNED BY THE PARTY THAT WOULD ACT ON IT.
 
 AN ADR'S HISTORICAL DECISION-MAKER DOES NOT DETERMINE ITS REOPEN VENUE.
 VENUE IS DETERMINED BY THE PROPOSED TRANSITION, THE AFFECTED TRUST
-BOUNDARIES, THE RESERVED DIMENSIONS, AND — ONLY ONCE PHASE 7 ENABLES IT —
-AN INDEPENDENTLY VALIDATED EVIDENCE ASSESSMENT.
+BOUNDARIES AND THE RESERVED DIMENSIONS. NOTHING ELSE TODAY. WHETHER AN
+INDEPENDENTLY VALIDATED GRADE MAY EVER JOIN THAT LIST IS PHASE 7'S QUESTION,
+AND IT IS OPEN.
 
 A LOW-EVIDENCE ADR MAY RECORD A DECISION.
 IT MAY NOT ESTABLISH THAT ALTERNATIVES REMAIN INVALID BY ITS EXISTENCE ALONE.
@@ -389,8 +398,10 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       ADRs (`docs/adrs/<area>/NNNN-*.md`) carry no YAML frontmatter at all —
       metadata lives in a blockquote line (`> Area: … · Status: accepted ·
       Date: …`). `adr_cite_check` already declares them `PARTIAL_COVERAGE`
-      for exactly this reason (`:89-91`), so this is a pre-existing tooling
-      gap, not one this roadmap creates. Decided here rather than discovered
+      for exactly this reason (the `PARTIAL_COVERAGE` constant — the earlier
+      citation `:89-91` pointed inside `ADR_DIRS`, a neighbouring block, and a
+      line range is the wrong anchor for a constant that moves), so this is a
+      pre-existing tooling gap, not one this roadmap creates. Decided here rather than discovered
       mid-backfill:
       (a) **convert to YAML frontmatter** (chosen): one metadata format for
       the estate; the census, `adr:effective` and `check_adr_frontmatter` all
@@ -584,11 +595,17 @@ authority for the change.
       ADR-100–138 record has a row, and ADR-104 is in the anchor set. What is
       NOT preserved is a per-era progress signal, which is the cost of the
       control and is stated rather than implied.
-      verify: 185 records, each with exactly one adjudicated disposition; the
-      assignment reproducible from `agents/runtime/tmp/adr-sweep-assignment.md`
-      (seed 20260821); zero records without a row.
+      verify: every record present at the sweep's head carries exactly one
+      adjudicated disposition; the assignment reproducible from the seed and
+      method recorded IN the sweep artifact.
 
-- [x] **3.4 Central adjudication, tally, and dated follow-ups.** One
+      **Anchor corrected in completion review.** The earlier `verify:` pointed
+      at `agents/runtime/tmp/adr-sweep-assignment.md`, which is gitignored — so
+      the reproducibility claim rested on a file that ships to nobody, and a
+      reader could not check it even in principle. The seed and the derivation
+      now live in the artifact itself, which is tracked.
+
+- [ ] **3.4 Central adjudication, tally, and dated follow-ups.** One
       normalization pass across all 184 rows after the tranches — required
       because cross-record citations must cohere ("X is E3 because it rests
       on Y's E4 claim" needs both grades adjudicated together) and because
@@ -601,6 +618,17 @@ authority for the change.
       verify: tally section; zero candidate rows without both a route and a
       dated follow-up; a lint over sweep artifacts red on a dateless
       candidate row.
+
+      **NOT DONE, and un-ticked in completion review after being marked `[x]`.**
+      The central adjudication ran — one normalisation pass, three overlap
+      disagreements resolved with reasoning, the anchor-set error caught. What
+      did NOT happen is the half this `verify:` actually names: the sweep table
+      carries no route and no dated-follow-up column, and the lint does not
+      exist. So the step was ticked on the work it did rather than on the work
+      it specified, which is precisely the "prose lifecycle enforcement is
+      satisfied by its weakest honest reading" defect this roadmap cites as its
+      third motivating measurement (Proof 3, ADR-239 § Context). Catching it in
+      its own change is the only reassuring thing about it.
 
 ## Phase 4 — Autonomy-blocker lane
 
@@ -711,17 +739,26 @@ action joins the lane under the ADR-237 test.
       verify: ADR-239 present with `status: proposed` and exactly this
       frontmatter shape; its `review_trigger` names the Phase 6 metrics;
       acceptance deferred to Phase 7.
-- [ ] **5.2 `decision-revisit-gate` — compatibility only, no new authority.**
+- [x] **5.2 `decision-revisit-gate` — compatibility only, no new authority.**
       The rule learns to read the new fields and to surface them when a lock
       is cited (effective state → provenance → grade → discovery → current
       evidence → reversibility → reserved dimensions). It grants nothing:
       citing an E0 lock as a hard blocker without surfacing its grade becomes
       a rule violation, and that is the whole change. The council-first venue
       for E2+ adversarial review stays; the E0/E1 agent path is **not**
-      enabled here — Phase 7 owns it. The rule is tier-2b `auto` with a
-      4,000-char cap (`CAP_AUTO`, `lint_load_context.ts:71`) and currently
-      166 lines, so the burden table stays in `adr-layout` and the rule
-      carries routing lines only.
+      enabled here — Phase 7 owns it.
+
+      The burden table stays in `adr-layout` and the rule carries routing lines
+      only — but NOT because a 4,000-char cap forces it, which is what an
+      earlier version of this step claimed. `CAP_AUTO` never applies to this
+      rule: `lint_load_context` computes the char budget only inside
+      `if (eager.length)`, for files declaring `load_context_eager`, and this
+      rule declares no `load_context` at all; `task lint-rule-budget` fails
+      only on the kernel bucket. The file was already ~8,300 chars — twice that
+      nominal cap — before this change touched it. So the reason is ownership,
+      not a gate: the contract owns the table and a rule that restated it would
+      be a second copy to drift. Found in completion review, where the cited
+      constraint turned out to be vacuous for the file citing it.
       verify: `lint-rule-budget` green; trigger-eval fixtures — grade
       surfaced at cite time · E3 respected · `owner_intent` surfaced, not
       overruled · floor-weakening still owner-routed · council agreement does
@@ -741,14 +778,14 @@ makes Phase 7 a decision rather than a hope. Pre-registered in
       verify: baseline entries bound in CLAIMS.md before 5.2 merges.
 - [x] **6.2 Pre-register the grading-integrity metrics.** Round 5's controls,
       because these are what Phase 7 must actually decide on:
-      - **grade-accuracy-vs-gold** — reviewer grades against the externally
+      - **adr-grade-accuracy-vs-gold** — reviewer grades against the externally
         adjudicated anchor sample, reported with a disagreement count and
         stratified by record type. Not inter-reviewer agreement, which can
         measure shared bias.
-      - **evidence-discovery-recall** — of records graded E0 with
+      - **adr-evidence-discovery-recall** — of records graded E0 with
         `discovery: complete`, how many had findable evidence a deeper search
         located. Measures the failure mode `discovery` exists for.
-      - **beneficiary-linked-grade-bias** — the E0/E1 rate on records that
+      - **adr-beneficiary-grade-bias** — the E0/E1 rate on records that
         constrain agent behaviour versus records that do not. A
         disproportionately weak grade on constraint records is the
         conflict-of-interest signal, measured rather than asserted.
@@ -797,15 +834,15 @@ existing authority floor.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Self-authorizing grade | product | The party that assigns a grade draws authority from it — and assigns `reversible-internal` too, authorizing itself on two of its own judgments. Both council seats named this as the design's central defect; the 44-REJECT record is the repo's proof that correlated agreement passes for evidence | The layer separation in § Architecture: metadata and surfacing ship without any authority consequence; Phase 7 is a separate owner decision, default-off, gated on measured accuracy against an adjudicated gold sample and a passed suspension drill; the authority-integrity invariant is stated in the contract and pinned by a 5.2 fixture asserting no grade alone authorizes an action | Phase 7 — The authority question (separate decision, default-off) `[~]` |
-| 2 | Grade inflation / deflation by the grader | product | An agent grades constraining records weak to unlock them, or grades its own past decisions strong to harden them | Census proposes with matched-line provenance and never writes; defaults `unknown`/E0/`discovery: incomplete`; `beneficiary-linked-grade-bias` measures exactly this rather than trusting provenance to neutralise it; adjudicated anchors, random assignment, blinded overlap | Phase 6 — Shadow-mode measurement |
+| 2 | Grade inflation / deflation by the grader | product | An agent grades constraining records weak to unlock them, or grades its own past decisions strong to harden them | Census proposes with matched-line provenance and never writes; defaults `unknown`/E0/`discovery: incomplete`; `adr-beneficiary-grade-bias` measures exactly this rather than trusting provenance to neutralise it; adjudicated anchors, random assignment, blinded overlap | Phase 6 — Shadow-mode measurement |
 | 3 | Backfill before ratification | product | Frontmatter written into 184 accepted records before the owner ratifies the bulk-classification amendment, inverting the approval flow into "write and hope it sticks" | Phase 3 writes no frontmatter at all; `INSUFFICIENT-EVIDENCE-TO-CLASSIFY` makes the challenge deliverable without a write; the backfill is a later phase gated on 0A | Phase 3 — Full-corpus challenge sweep (no frontmatter writes) |
 | 4 | Day-one invalid tree | implementation | A hard `review_trigger` requirement makes 88 accepted records fail the moment the schema lands, forcing schema and backfill into one unreviewable PR | Staged migration: `unclassified` accepted on existing records, substantive triggers required on new and materially amended ones, `terminal`/`none`/empty invalid everywhere, monotonically decreasing exception count | Phase 1 — Schema: two descriptive axes, staged so the tree stays valid |
-| 5 | Discovery failure read as evidence absence | product | E0 conflates "no evidence exists" with "the search did not find it"; a record then looks cheap because nobody looked | `discovery: complete \| incomplete`, required on E0 and defaulting to `incomplete`; `evidence-discovery-recall` measures the residual | Phase 6 — Shadow-mode measurement |
+| 5 | Discovery failure read as evidence absence | product | E0 conflates "no evidence exists" with "the search did not find it"; a record then looks cheap because nobody looked | `discovery: complete \| incomplete`, required on E0 and defaulting to `incomplete`; `adr-evidence-discovery-recall` measures the residual | Phase 6 — Shadow-mode measurement |
 | 6 | Fourth parser | implementation | Nested axes added to three divergent frontmatter readers; `regenerate_index`'s regex reader silently reads them empty | 2.0 extracts one shared reader before any axis lands, with a nested-plus-list round-trip fixture | Phase 2 — Tooling (surfacing only; no authority) |
 | 7 | Sweep fatigue → silent skips | implementation | 184 records; tranche C is 100 files and the least rewarding | Value-first tranche order; per-tranche checkboxes and honest `[~]`; the trigger-absence check is scriptable; central adjudication catches a thin tranche | Phase 3 — Full-corpus challenge sweep (no frontmatter writes) |
 | 8 | Evidence theater | product | New ADRs pad an Evidence section with weak citations to buy E2/E3 | Consensus-≠-evidence Iron Law; cite-time output prints the grade so inflation meets reality when challenged; E3/E4 reopens must engage the evidence in kind, which exposes a hollow basis | Phase 5 — Doctrine, proposed not accepted |
 | 9 | Hard-Floor erosion via 0B | product | The commit-policy and merge carve-outs widen agent write authority | Owner rulings by construction, `[~]` and unstarted; any carve-out inherits ADR-237's excluded list verbatim (trunk, deploy, prod data, irreversible external) | Phase 0B — Autonomy owner batch (gates only its own rows) `[~]` |
-| 10 | Rule budget breach | implementation | `decision-revisit-gate` outgrows its 4,000-char `CAP_AUTO` | The burden table lives in `adr-layout`; the rule carries routing lines only; `lint-rule-budget` gates | Phase 5 — Doctrine, proposed not accepted |
+| 10 | Rule size unbounded in practice | implementation | `decision-revisit-gate` grows without a gate objecting — `CAP_AUTO` applies only to rules declaring `load_context_eager`, which this one does not, and `lint-rule-budget` fails only on the kernel bucket. The file is already ~2x the nominal cap | The burden table lives in `adr-layout` by ownership rather than by force; size is reviewed in the diff, which is the honest mechanism and is stated as such rather than as a gate | Phase 5 — Doctrine, proposed not accepted |
 
 ## Acceptance Criteria
 
@@ -813,11 +850,19 @@ existing authority floor.
       are defined in `adr-layout.md`, emitted by `adr-create`, validated by
       `check_adr_frontmatter`, and read through **one** shared frontmatter
       reader used by all three former parsers.
-- [ ] AC-2 — The sweep artifact holds one disposition row per record (184),
-      each with basis refs and a `Blocking cost` that is either sourced
-      observations or explicitly `unknown`; it answers the
-      would-we-accept-it-today question per row; and it writes **zero** ADR
-      frontmatter.
+- [ ] AC-2 — The sweep artifact holds one disposition per record present at the
+      sweep's head, each with basis refs and a `Blocking cost` that is either
+      sourced observations or explicitly `unknown`; it answers the
+      would-we-accept-it-today question per row; every record WITHOUT a tranche
+      row is named with the reason and its disposition; and it writes **zero**
+      ADR frontmatter.
+
+      Phrased against the sweep's head rather than a fixed total, because a
+      bare count is falsified by the trunk moving: PR #1509 merged ADR-238
+      after the tranches ran, and the earlier wording ("one row per record
+      (184)") then claimed coverage of a record the sweep never read. The two
+      uncovered records are named in the artifact with their reasons — that is
+      the check, not the number.
 - [ ] AC-3 — Grading integrity is evidenced, not asserted: an externally
       adjudicated anchor sample exists, ≥10 % blinded overlap was graded
       twice, and the disagreement count is published rather than smoothed.
@@ -842,8 +887,8 @@ existing authority floor.
       ADR-239 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
 - [ ] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
       measurement basis and minimum sample sizes — including
-      `grade-accuracy-vs-gold`, `evidence-discovery-recall` and
-      `beneficiary-linked-grade-bias` — before Phase 5.2 merges.
+      `adr-grade-accuracy-vs-gold`, `adr-evidence-discovery-recall` and
+      `adr-beneficiary-grade-bias` — before Phase 5.2 merges.
 - [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-239
       acceptance occurred; no 0B-gated row executed; no Safety, Privacy,
       Legal or External-commitment floor was weakened.
@@ -889,8 +934,8 @@ existing authority floor.
   authorization burden for a reopen — and if so, under which pre-registered
   accuracy threshold, with which rollback unit?
 - **Recommendation:** Do not decide it now. Let Phase 6 run in shadow mode
-  first: the question is only answerable once `grade-accuracy-vs-gold`,
-  `evidence-discovery-recall` and `beneficiary-linked-grade-bias` have
+  first: the question is only answerable once `adr-grade-accuracy-vs-gold`,
+  `adr-evidence-discovery-recall` and `adr-beneficiary-grade-bias` have
   numbers, and a suspension drill has passed. A published null is an
   acceptable answer.
 - **If you do nothing:** Everything in Phases 0A–6 still lands. The estate

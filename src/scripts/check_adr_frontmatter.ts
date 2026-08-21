@@ -281,13 +281,25 @@ const INVALID_TRIGGER_VALUES = new Set(['terminal', 'none', 'n/a', 'na', '-', '�
  * Validate `provenance`, `evidence`, `authority_basis` and the trigger's
  * transitional vocabulary.
  *
- * Staged on purpose (`adr-layout § Provenance and evidence`): a NEW record must
- * carry the axes, an existing one may not. 88 of the 147 accepted records
- * carry no `review_trigger` at all, so a same-day hard requirement would have
- * made the tree invalid on the day this landed and forced the schema and the
- * backfill into one unreviewable change. What is rejected at every stage is a
- * value that asserts permanence — `terminal` is not a migration state, it is
- * the thing the staging exists to avoid becoming permanent.
+ * **This function validates the SHAPE of an axis that is present. It does not
+ * require the axes at all**, and an earlier version of this docstring said "a
+ * NEW record must carry the axes", which nothing here enforces. Completion
+ * review disproved it directly: a fresh record with no `provenance`, no
+ * `evidence` and no `## Evidence` section passes every gate in this tree.
+ *
+ * The gap is structural rather than an omission. Requiring the axes needs a
+ * notion of NEW, and a single-file linter has none — it sees a `date:` the
+ * author typed, not whether the record is new to the repository. `date:` is the
+ * proxy used for the `review_trigger` staging below, and it is a weak one: a
+ * backdated record slips through it. Closing this needs a two-ref diff, which
+ * is buildable and not built, and is named here rather than implied away.
+ *
+ * The `review_trigger` staging IS enforced, on that same date proxy. 88 of the
+ * 147 accepted records carry no trigger, so a same-day hard requirement would
+ * have made the tree invalid on the day this landed and forced the schema and
+ * the backfill into one unreviewable change. What is rejected at every stage is
+ * a value asserting permanence — `terminal` is not a migration state, it is the
+ * thing the staging exists to stop becoming permanent.
  *
  * Everything here is shape validation. Nothing in this function grants an
  * agent authority over anything, and `authority_basis` is checked precisely so
@@ -727,12 +739,44 @@ export function check_supersession_links(
  * A `warn`-level finding resolves as `complete`: warnings are allowed by this
  * gate's exit-code contract, so `fail` is reserved for what actually reds it.
  */
+/** A per-area record under `docs/adrs/<area>/NNNN-*.md`, excluding READMEs. */
+export function listPerAreaRecords(root: string = REPO_ROOT): { abs: string; rel: string }[] {
+    const base = path.join(root, 'docs', 'adrs');
+    if (!fs.existsSync(base)) return [];
+    const out: { abs: string; rel: string }[] = [];
+    for (const area of fs.readdirSync(base).sort()) {
+        const dir = path.join(base, area);
+        if (!fs.statSync(dir).isDirectory()) continue;
+        for (const name of fs.readdirSync(dir).sort()) {
+            if (!/^\d{4}-.*\.md$/.test(name)) continue;
+            const abs = path.join(dir, name);
+            out.push({ abs, rel: path.relative(root, abs) });
+        }
+    }
+    return out;
+}
+
 export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] {
     const findings: AdrFinding[] = [];
     if (!fs.existsSync(dir)) return findings;
 
+    // Flat records, plus the per-area records under `docs/adrs/<area>/`.
+    //
+    // The per-area half was MISSING and that was this gate's largest hole, found
+    // in completion review: three sibling tools in the same change read both
+    // roots (`adr_cite_check.ADR_DIRS`, `audit_adr_coverage`, `evidence_census`)
+    // and this one read only the flat tree — so the seven per-area records that
+    // had just been given frontmatter were validated by nothing. The consequence
+    // was already in the tree rather than hypothetical:
+    // `docs/adrs/telegraph/0002` carried `review_trigger: unclassified` on a
+    // post-cutoff record, which this file's own rule classifies as an error.
+    //
+    // A gate that does not read a surface cannot be cited as covering it, and
+    // step 1.5's stated rationale — "check_adr_frontmatter needs
+    // machine-readable fields" — was unrealised until this call site changed.
     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
-    ledger?.plan(candidates);
+    const perArea = listPerAreaRecords();
+    ledger?.plan([...candidates, ...perArea.map((r) => r.rel)]);
 
     // Collected for the two corpus-level reciprocal-link checks below
     // (amendment, supersession), neither of which can be decided from one file.
@@ -757,6 +801,21 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
             ledger?.complete(name);
         }
     }
+    // Per-area records: same per-file checks, same corpus for the reciprocal
+    // link checks. A supersession crosses surfaces (adr-layout § Frontmatter),
+    // so keeping them out of `corpus` would make a cross-surface link look
+    // one-sided.
+    for (const rec of perArea) {
+        const text = fs.readFileSync(rec.abs, 'utf-8');
+        const parsed = parse_frontmatter(text);
+        if (parsed !== null) corpus.push({ rel: rec.rel, fm: parsed });
+        const own = check_one(rec.rel, text);
+        findings.push(...own);
+        const errs = own.filter((f) => f.level === 'error').length;
+        if (errs > 0) ledger?.fail(rec.rel, `${String(errs)} frontmatter error(s)`);
+        else ledger?.complete(rec.rel);
+    }
+
     findings.push(...check_amendment_links(corpus));
     findings.push(...check_supersession_links(corpus));
     return findings;
@@ -784,7 +843,7 @@ function main(argv: string[]): number {
             gate: 'check_adr_frontmatter',
             scanned: total,
             units: 'ADR file(s)',
-            roots: ['docs/decisions'],
+            roots: ['docs/decisions', 'docs/adrs'],
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {

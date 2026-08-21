@@ -1,6 +1,6 @@
 // Tests for src/scripts/lint_provenance_vocabulary.ts
 // (road-to-provenance-and-license-governance Phase 3, S3.2/S3.3; rule 4 from
-// road-to-evidence-based-adr-governance / ADR-238 § 6).
+// road-to-evidence-based-adr-governance / ADR-239 § 6).
 //
 // Differential over the exported pure helpers: a banned phrase must fail, an
 // approved-vocabulary use without a co-located scope box must fail, a valid

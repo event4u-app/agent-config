@@ -345,6 +345,21 @@ describe('the two descriptive axes at cite time', () => {
     });
 });
 
+describe('trigger_state — `unclassified` is no condition, not an unknown one', () => {
+    it('maps the transitional value to `none`', () => {
+        expect(trigger_state({ review_trigger: 'unclassified' })).toBe('none');
+        expect(trigger_state({ review_trigger: 'Unclassified' })).toBe('none');
+    });
+
+    it('still maps a real condition to `indeterminate`', () => {
+        expect(trigger_state({ review_trigger: 'Reopen when PSR-12 is withdrawn' })).toBe('indeterminate');
+    });
+
+    it('still maps an absent trigger to `none`', () => {
+        expect(trigger_state({})).toBe('none');
+    });
+});
+
 describe('authority_effect: disabled-shadow-mode', () => {
     /**
      * The literal is load-bearing (council ruling): no grade authorizes anything

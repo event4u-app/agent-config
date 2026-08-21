@@ -46,7 +46,7 @@
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run 2026-08-21 and it returns 268).
 # **44 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 43 of those 44 are listed below.** The manifest is
+# CI-identical argv, and 42 of those 44 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~16 % of the population.
 #
@@ -59,10 +59,19 @@
 # the prose was adjusted by one instead of recounted.
 #
 # The derivation now, so the next reader can check it rather than trust it:
-# `grep -c '^  - id:'` returns 43 (computable, and computed); every listed row
+# `grep -c '^  - id:'` returns 42 (computable, and computed); every listed row
 # is an emitter, because a row that did not emit could carry no floor and the
-# guard would report it `failing`; exactly one emitter is deliberately unlisted;
-# 43 + 1 = 44. The population figure comes from the function.
+# guard would report it `failing`; TWO emitters are deliberately unlisted —
+# `lint_evidence_artifacts` (below) and `adr_cite_check` (see the block where
+# its row would have sat); 42 + 2 = 44. The population figure comes from the
+# function.
+#
+# Corrected in completion review, and it is the third time this paragraph has
+# been off by one — which is the argument for computing it rather than
+# adjusting it. The previous reading said 43 listed and self-invited a `grep`
+# that returns 42, so the check it offered refuted the sentence containing it.
+# The cause each time is the same: a row was added or removed and the prose
+# was incremented instead of recounted.
 #
 # A shape-grep over `src/scripts/` (`reportScanned(` or a literal `scanned: ${`)
 # returns 63 files. That is a DIFFERENT population — any file carrying an emit

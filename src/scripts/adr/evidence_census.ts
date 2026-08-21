@@ -756,8 +756,12 @@ function main(argv: string[]): number {
     }
 
     const dist = distribution(result);
+    // `path.join(REPO_ROOT, outRel)` silently rewrote an ABSOLUTE `--out` into
+    // the repo — `--out /tmp/x.md` wrote `<repo>/tmp/x.md` and then printed
+    // `/tmp/x.md`, so the caller was told a path that held nothing. Resolve
+    // instead, and print what was actually written. Found in completion review.
+    const abs = path.isAbsolute(outRel) ? outRel : path.join(REPO_ROOT, outRel);
     if (!checkOnly) {
-        const abs = path.join(REPO_ROOT, outRel);
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, renderArtifact(result), 'utf-8');
     }
@@ -771,7 +775,7 @@ function main(argv: string[]): number {
             `\n`,
     );
     ledger.report();
-    if (!checkOnly) process.stdout.write(`proposal artifact: ${outRel}\n`);
+    if (!checkOnly) process.stdout.write(`proposal artifact: ${path.relative(REPO_ROOT, abs) || abs}\n`);
 
     if (result.unreadable.length > 0) {
         for (const u of result.unreadable) {

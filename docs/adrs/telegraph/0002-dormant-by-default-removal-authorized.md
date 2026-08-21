@@ -7,7 +7,11 @@ decision: dormant-by-default-removal-authorized
 supersedes: —
 superseded_by: —
 type: structural
-review_trigger: unclassified
+review_trigger: >-
+  Reopen when the deletion authorized in principle by § Decision part 3 is
+  actually executed, when the `prose_only` bench the recorded dissent asks
+  for is run and its result contradicts the dormancy decision, or when a
+  consumer is found relying on the dormant telegraph surface.
 ---
 
 # ADR 0002 — telegraph-speak: dormant by default (zero-cost), removal authorized but not executed
