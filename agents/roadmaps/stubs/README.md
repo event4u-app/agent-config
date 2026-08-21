@@ -58,6 +58,17 @@ Floor.** Some pending acts here — a repo-admin ruleset write, a
 branch-protection change — **are** Hard-Floor actions in their own right, and
 each such stub says so.
 
+**A gate is not always a measurement.** For such a row the gate is the
+*authority* itself, exercised by a named human — not a number anyone can read.
+Requiring a recruited customer and a funded audit before a maintainer may edit
+their own repository settings would gate on nothing and make the stub unclosable.
+
+Framework of record for drain-run dispositions:
+[`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)
+and its batch-B sibling. That pointer is kept here deliberately: it is the only
+central path to where disposition B and the numbered rules are formally defined,
+and most transfer stubs do not link it themselves.
+
 ## What every stub carries — and why this file no longer lists them
 
 Each stub carries the framework's three-point stub-integrity check: the original
