@@ -555,14 +555,20 @@ gates:
 
   - id: lint_plan_risk_register
     argv: []
-    min_scanned: 12
-    corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
+    min_scanned: 5
+    corpus: "ready roadmap files under agents/roadmaps/ top level (11 as of the 2026-08-21 drain; 19 at the original baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
     note: >
       Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
       reported, never silently skipped, so a collapse below the floor means
       the roadmaps root moved, not that the corpus went clean.
+
+      The floor was 12 against a 19-file corpus. Archival shrinks that corpus by
+      design — the 2026-08-21 PR drain took it to 11 — so a floor tracking the
+      corpus size reds on a healthy tree every time a roadmap completes. Lowered
+      to 5, which still catches the failure the paragraph above describes (a
+      moved or dead root scans 0) without re-breaking on the next archival.
 
   - id: check_estate_count
     argv: []
