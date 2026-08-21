@@ -152,7 +152,7 @@ segment, not a cluster** — `create/` is itself a cluster head
 The slug's leading token is `git`, which is already on the ADR-041 verb
 allowlist — no new verb ADR is needed.
 
-- [ ] **3.1 Author the three invocation shapes.** `/pr:merge <N>` — prepare and
+- [x] **3.1 Author the three invocation shapes.** `/pr:merge <N>` — prepare and
       merge exactly PR N. `/pr:merge` — auto-select one PR: green first, then
       infrastructure/tooling before content, then smallest diff, tiebreak
       ascending number. `/pr:merge all` — drain the open-PR list.
@@ -161,14 +161,14 @@ allowlist — no new verb ADR is needed.
       authorization.
       verify: the command file declares all three shapes and states which of
       them touch a `BLOCK_OPS` git operation.
-- [ ] **3.2 Bind every merge to an immutable target.** The queue is snapshotted
+- [x] **3.2 Bind every merge to an immutable target.** The queue is snapshotted
       once at invocation as a manifest of `(PR number, head SHA)` pairs. A
       merge refuses when either has changed since the snapshot — PR number
       prevents branch substitution, head SHA prevents a force-push swapping the
       content after authorization. The manifest is never silently refreshed.
       verify: the command states the refusal, and names the recomputation as
       the *only* way to widen the target set.
-- [ ] **3.3 Encode the semantic conflict classes.** `gh pr checkout` →
+- [x] **3.3 Encode the semantic conflict classes.** `gh pr checkout` →
       `git merge origin/main --no-edit`, never rebase a pushed branch. Roadmap
       files: union of completions — never un-check a box either side checked,
       never resurrect a roadmap either side archived or parked. Generated
@@ -181,13 +181,13 @@ allowlist — no new verb ADR is needed.
       stops the run rather than being resolved by judgement.
       verify: each class is named with the file glob it applies to, and the
       "stop on an unenumerated class" rule is stated as a halt, not a warning.
-- [ ] **3.4 Post-sync emptiness check.** An effectively-empty diff against
+- [x] **3.4 Post-sync emptiness check.** An effectively-empty diff against
       `main` after syncing means the PR was superseded: close it with
       `Superseded: landed via <PRs>` and record it. Never merge an empty PR to
       make the count fall.
       verify: the command distinguishes "empty" from "only generated-artifact
       churn that regeneration on main would produce anyway".
-- [ ] **3.5 Bounded CI repair.** Root-cause fixes only, within the PR's own
+- [x] **3.5 Bounded CI repair.** Root-cause fixes only, within the PR's own
       scope. A known flake class gets one `gh run rerun --failed` before red
       counts as real. Six fix iterations per PR per pass; exhaustion posts a
       diagnosis comment and moves the PR to the end of the queue once; a second
@@ -198,7 +198,7 @@ allowlist — no new verb ADR is needed.
       SHA being merged**, re-verified on the pushed head — never a local run.
       verify: the command names the halt list verbatim and states the SHA
       requirement for "green".
-- [ ] **3.6 E1 — cutoff against a concurrently-producing session.** When the
+- [x] **3.6 E1 — cutoff against a concurrently-producing session.** When the
       queue empties, recompute the open-PR list exactly once. PRs that appeared
       during the run are drained as one final straggler batch; after that batch
       the run ends unconditionally. Anything arriving during or after it is
@@ -207,21 +207,21 @@ allowlist — no new verb ADR is needed.
       other sessions.
       verify: the command states the bound in those terms, and the summary
       artifact has a row class for `arrived-after-cutoff`.
-- [ ] **3.7 E2 — window-aware scheduling.** A green, waiting PR is spent
+- [x] **3.7 E2 — window-aware scheduling.** A green, waiting PR is spent
       authorization window, because the next merge re-conflicts it. When the
       projected remaining work exceeds the remaining window, stop entering
       CI-fix loops and merge everything already green first. Pre-greening
       several PRs ahead of their merge is forbidden under window pressure.
       verify: the command states the override and the signal it reads to know
       the window is under pressure.
-- [ ] **3.8 E3 — expiry is a reported state, never a stall.** When the
+- [x] **3.8 E3 — expiry is a reported state, never a stall.** When the
       authorization window closes with the queue non-empty, the run stops
       cleanly, writes the summary with a `window-expired` disposition per
       unprocessed PR, and names the exact re-authorization needed. It never
       retries the guard, never edits the guard, its source, or its bundles.
       verify: the command carries that prohibition as an Iron Law, and the
       summary schema has the `window-expired` disposition.
-- [ ] **3.9 Kill-switch list and the no-rollback rule.** Stop before the next
+- [x] **3.9 Kill-switch list and the no-rollback rule.** Stop before the next
       merge on: target or head-SHA mismatch, `main` advanced by an actor other
       than this run, review dismissal, a change to the required-check set,
       a conflict outside the enumerated classes, guard or bundle verification
@@ -230,7 +230,7 @@ allowlist — no new verb ADR is needed.
       "rollback"; it stops, emits the merge SHAs and the reason, and leaves
       compensation to a separately authorized human decision.
       verify: both rules are in the command's Rules section.
-- [ ] **3.10 The `all`-mode summary artifact.** On queue empty or terminal-only,
+- [x] **3.10 The `all`-mode summary artifact.** On queue empty or terminal-only,
       write `agents/evidence/pr-drain-run-summary.md`: one row per PR with
       queue position, conflict classes hit, CI iterations used, disposition
       (merged SHA / superseded-closed / blocked-external / twice-exhausted /
@@ -314,7 +314,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       attempt starts from the objection rather than rediscovering it.
       verify: the ADR exists with a number, is indexed, and cites ADR-237 § 4
       and the `road-to-gate-preauth-authorization` stub by name.
-- [ ] **5.2 Register the new sub in the locked cluster registry.** A
+- [x] **5.2 Register the new sub in the locked cluster registry.** A
       `git-pr-merge` row mirroring `git-pr-create`. `--all` needs no row: it is
       a flag on an existing sub, which is the outcome the registry rule asked
       for.
@@ -331,7 +331,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ## Phase 6 — Gates, evals, delivery
 
-- [ ] **6.1 Eval fixture for the merge command.** The routing linter resolves
+- [x] **6.1 Eval fixture for the merge command.** The routing linter resolves
       the fixture stem from the command's `name` (or a `replaces` alias), so
       the file is `src/agent-src/commands/evals/git-pr-merge.json`, schema
       `{command, intent, cases[{prompt, expected}]}`, **at least five cases**
