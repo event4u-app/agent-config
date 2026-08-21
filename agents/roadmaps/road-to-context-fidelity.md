@@ -163,6 +163,17 @@ what changed is that the gate is now countable.
   2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
   3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
   4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
+- **Answer:** NOT COVERED by option (a) — 2026-08-20, disposition **transferred**. The
+  rendered default (establish manual detectability first, then decide) is maximally
+  conservative and is accepted as the ORDERING; the experiment it orders needs live host
+  behaviour, a manual compaction and an external session-state directory, which
+  repository automation cannot manufacture — Rule 3 in
+  [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+  assigns that `B`. Batch A carries the three-point check verbatim: original criterion
+  (the `context-fidelity-cf01.md` finding with a per-probe-class number and host stamp,
+  or a recorded closed-unmeasured decision), Phase 0 cf01 plus the dependent Phase 1
+  steps moved, re-entry producer the context-fidelity maintainer on an instrumented host
+  session.
 - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
 
 ### blocker: memory-sweep-instrument

@@ -972,6 +972,14 @@ PR is already a performance change carrying one security fix.
   with no bar to prove they helped. The budget-ownership discipline this repo
   follows says the bar precedes the lever, so the phases would be shipping against
   no registered target at all.
+- **Answer:** ACCEPTED 2026-08-20 — **option (b), register the composite observe-only
+  for one release**, via option (a) of `road-to-estate-drawdown` blocker
+  `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible, and it is the option that REFUSES to invent a
+  number: no empirical prior exists for a per-turn composite in this tree, so
+  observe-only for one release then derive the ceiling from the measured distribution.
+  Outcome state `narrowed`.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
   the row exists in `hook-latency-budget.json` with its bar or its observe-only
   marker.
@@ -1005,6 +1013,14 @@ PR is already a performance change carrying one security fix.
   silent — that was the actual defect and it is fixed — but a reader of
   `hook-architecture-v1`'s fail-closed contract would still expect a refusal that
   does not happen, and nothing in the tree records the gap except this blocker.
+- **Answer:** ACCEPTED 2026-08-20 — **option (c)**, via option (a) of
+  `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible, and specifically it PRESERVES fail-closed
+  semantics where they bite: deny a failed read only on a block-capable slot with at
+  least one blocking `fail_closed: true` concern, and do not add availability risk on
+  advisory slots where denying would refuse nothing. Tests must cover `EAGAIN`
+  exhaustion, `EIO` and `EBADF`.
 - **Resolved when:** one option is recorded at this blocker and, for (a) or (c),
   `_readStdin`'s failure path returns a deny for the named slots with a test that
   fails when it allows.
@@ -1040,6 +1056,14 @@ PR is already a performance change carrying one security fix.
   absorbing the per-concern half on all eight platforms, and Phase 4's composite
   row is what tells anyone whether the remaining per-turn cost is worth a
   security-surface decision at all.
+- **Answer:** ACCEPTED 2026-08-20 — **option (c), decline the Claude-only partition**,
+  via option (a) of `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible: declining changes nothing and keeps the two
+  bypass-must-be-impossible guards unfiltered. Both council seats refused the partition
+  and the adopted value is the narrower of the two refusals; outcome state `abandoned`
+  applies to the zero-dispatch goal, and Phase 4 measurement plus the shipped in-process
+  `tools:` filter are retained.
 - **Resolved when:** one option is recorded at this blocker, and — for (a) — the
   partition ships with a per-class absent-invocation proof and a test that fails
   when a claude tool name is added to no class.
@@ -1070,6 +1094,14 @@ PR is already a performance change carrying one security fix.
   option (b) is a conclusion or a shrug. Without it "the host makes us pay this"
   is an assumption of exactly the kind Phase 1 and Phase 2 have each already
   falsified once in this file.
+- **Answer:** ACCEPTED 2026-08-20 — **option (a), add the isolated read-and-exit
+  measurement cell**, via option (a) of `road-to-estate-drawdown` blocker
+  `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible: it adds a measurement, commits to no change and
+  can be deleted. Dissent recorded in that session — one seat preferred accepting the
+  Phase-2 null — and the adopted reasoning is that the null falsified the earlier
+  attribution without showing the remaining latency unavoidable.
 - **Resolved when:** one option is recorded at this blocker and — for (a) — the
   read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share
   of the large-payload cell is a number rather than an assumption.
@@ -1214,6 +1246,14 @@ PR is already a performance change carrying one security fix.
   not the one-line change — without them the fix is a coverage change nobody can
   review, which is exactly the reason the council split it out of the
   `ship-diff-volume` PR rather than shipping the pair.
+- **Answer:** ACCEPTED 2026-08-20 — **option (a), as its own PR**, via option (a) of
+  `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible: it specifies the envelope contract and fixtures
+  BEFORE narrowing the scanner input, which raises the security floor rather than
+  lowering it. Outcome state `narrowed`. Fixtures must cover each supported output key,
+  missing output, malformed envelopes and unrelated root text, with a regression test
+  that fails against the old unwrap.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or
   (b) — `injection-scan` carries a test that fails against the pre-fix unwrap,
   with the valid / missing / malformed payload shapes named.
@@ -1265,6 +1305,15 @@ PR is already a performance change carrying one security fix.
   contract change for one concern while leaving the collisions in place. Option (c)
   is defensible only if Phase 4's composite says turn-end wall clock is not the
   binding cost.
+- **Answer:** ACCEPTED 2026-08-20 — **option (a), P3 before anything else**, via option
+  (a) of `road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`
+  ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)).
+  Audited conservative and reversible: it sequences two correctness defects ahead of the
+  async split rather than shipping the split over them, so it removes a live
+  data-integrity exposure instead of creating one. Sequence P3 -> P4 -> combined P1/P2
+  -> P5 live host check -> split; no split may ship before all three P3 files pass
+  concurrency regression tests. Dissent recorded — one seat preferred cancelling the
+  split outright.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
   P3's three files are written under a lock with a tmp+rename and a test that fails
   against the current unlocked write, before any group split ships.

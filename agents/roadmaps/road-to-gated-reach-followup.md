@@ -14,6 +14,21 @@ parent_roadmap: road-to-gated-reach
 > package never auto-installs — that is a contract (`missing-tool-handling`), not
 > a limitation to work around.
 
+> **Answer (consolidated decision sheet, 2026-08-20) — NOT COVERED by option (a);
+> disposition `transferred`.** This gate is a legacy `> Blocked until …` note rather
+> than a `### blocker:` entry, so it has no `Recommendation:` field and the sheet
+> renders it with **no default at all** — there is nothing for an accept-all-defaults
+> answer to accept. Independently, installing `yt-dlp` and a JavaScript runtime is a
+> host-environment modification, which the council framework in
+> [drain-blocker-dispositions-a](../evidence/council/drain-blocker-dispositions-a.md)
+> assigns categorically to `transferred`. Batch A dispositioned it there with the
+> three-point check: original criterion verbatim, "condition described above
+> clears"; the entire roadmap moved; re-entry producer the host owner, probe
+> `command -v yt-dlp` plus this roadmap's JavaScript-runtime version probe both
+> succeeding in the execution environment. Converting the note into a real blocker
+> entry is what would give it a default, and that conversion belongs to this
+> roadmap's own closure, not to the decision-sheet run.
+
 ## Context
 
 This roadmap collects items deferred from
