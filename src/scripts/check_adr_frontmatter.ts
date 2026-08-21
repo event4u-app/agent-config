@@ -177,9 +177,26 @@ export function parse_frontmatter(text: string): Record<string, string> | null {
     return readAdrFrontmatterScalars(text);
 }
 
+/**
+ * The transitional migration value, legal on an existing accepted record only.
+ *
+ * It has to be named here as well as in `check_descriptive_axes`, and the reason
+ * is a contract-versus-validator contradiction this change nearly shipped:
+ * `adr-layout` blesses `review_trigger: unclassified` for an existing record,
+ * while `trigger_is_meaningful` rejects anything under 20 characters and
+ * `unclassified` is 12. The contradiction was latent — no flat ADR carries the
+ * value yet and this gate scans `docs/decisions/` only — and would have fired
+ * on the first backfill onto a post-`REVIEW_TRIGGER_SINCE` record, i.e. exactly
+ * when someone followed the contract. A contract and its validator disagreeing
+ * is worse than either rule alone, because the tree then teaches the opposite
+ * of what the document says.
+ */
+const TRANSITIONAL_TRIGGER = 'unclassified';
+
 /** A trigger must name a condition. A bare cadence is the failure mode. */
 export function trigger_is_meaningful(value: string): boolean {
     const v = value.trim();
+    if (v.toLowerCase() === TRANSITIONAL_TRIGGER) return true;
     if (v.length < 20) return false;
     // "annually" / "every 6 months" / a bare date is a calendar, not a condition.
     if (/^(annually|yearly|quarterly|monthly|every\s+\d+\s+\w+|\d{4}-\d{2}-\d{2})\.?$/i.test(v)) {
@@ -275,6 +292,24 @@ export function check_descriptive_axes(
     // --- review_trigger vocabulary: invalid values are invalid at every stage.
     const trigger = (fm.scalars['review_trigger'] ?? '').trim();
     if (trigger !== '' && !historical) {
+        // The staged half. `unclassified` is the migration value for a record
+        // that already existed; a record authored now has no migration to be
+        // in, and letting it through would turn a transitional state into the
+        // permanent default — which is the failure the staging exists to avoid.
+        // "Existing" is read from the same `REVIEW_TRIGGER_SINCE` date this
+        // file already uses for grandfathering, so there is one notion of
+        // old-versus-new rather than two that can drift apart.
+        if (trigger.toLowerCase() === TRANSITIONAL_TRIGGER) {
+            const recordDate = fm.scalars['date'] ?? '';
+            const preexisting = recordDate !== '' && recordDate < REVIEW_TRIGGER_SINCE;
+            if (!preexisting) {
+                findings.push({
+                    file: rel,
+                    level: 'error',
+                    message: `\`review_trigger: unclassified\` is the migration value for a record that already existed (dated before ${REVIEW_TRIGGER_SINCE}). This record is dated ${recordDate || 'undated'} — name the condition that would reopen it.`,
+                });
+            }
+        }
         if (INVALID_TRIGGER_VALUES.has(trigger.toLowerCase())) {
             findings.push({
                 file: rel,

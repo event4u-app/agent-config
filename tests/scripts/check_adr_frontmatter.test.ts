@@ -8,6 +8,7 @@ import {
     check_one,
     check_reopen_authority,
     split_dimensions,
+    trigger_is_meaningful,
 } from '../../src/scripts/check_adr_frontmatter.js';
 
 /**
@@ -313,5 +314,56 @@ describe('review_trigger vocabulary — permanence is invalid at every stage', (
             withTrigger('Reopen when PHP-FIG withdraws PSR-12 or the interface stops requiring it'),
         );
         expect(f.filter((x) => x.message.includes('permanence'))).toEqual([]);
+    });
+});
+
+/**
+ * The staged `unclassified` migration value.
+ *
+ * This block exists because the contract and the validator contradicted each
+ * other and the contradiction was latent: `adr-layout` blesses
+ * `review_trigger: unclassified` on an existing record, while
+ * `trigger_is_meaningful` rejected anything under 20 characters and
+ * `unclassified` is 12. Nothing in the tree carried the value yet, so nothing
+ * was red — it would have fired on the first backfill, i.e. on the first person
+ * to follow the document.
+ */
+describe('review_trigger: unclassified — legal on an existing record, not on a new one', () => {
+    function rec(date: string, trigger: string): string {
+        return fm(`adr: 304\nstatus: accepted\ndate: ${date}\ndecision: probe\nreview_trigger: ${trigger}`);
+    }
+
+    it('is accepted on a pre-existing record (dated before the grandfather cutoff)', () => {
+        const f = check_one('a.md', rec('2026-05-16', 'unclassified'));
+        expect(f.filter((x) => x.message.includes('review_trigger'))).toEqual([]);
+    });
+
+    it('is REJECTED on a record dated after the cutoff — a new record has no migration to be in', () => {
+        const f = check_one('a.md', rec('2026-08-21', 'unclassified'));
+        expect(f.some((x) => x.message.includes('migration value for a record that already existed'))).toBe(true);
+    });
+
+    it('is rejected on an undated record rather than being given the benefit of the doubt', () => {
+        const f = check_one('a.md', fm('adr: 304\nstatus: accepted\ndecision: probe\nreview_trigger: unclassified'));
+        expect(f.some((x) => x.message.includes('undated'))).toBe(true);
+    });
+
+    it('does not trip the cadence check — the length floor would have rejected it at 12 chars', () => {
+        expect(trigger_is_meaningful('unclassified')).toBe(true);
+        expect(trigger_is_meaningful('Unclassified')).toBe(true);
+    });
+
+    it('still rejects a genuinely too-short trigger, so the carve-out did not open the floor', () => {
+        expect(trigger_is_meaningful('when it breaks')).toBe(false);
+    });
+
+    it('still rejects a bare cadence', () => {
+        expect(trigger_is_meaningful('annually')).toBe(false);
+        expect(trigger_is_meaningful('every 6 months')).toBe(false);
+    });
+
+    it('says nothing on a superseded record dated after the cutoff', () => {
+        const f = check_one('a.md', fm('adr: 304\nstatus: superseded\ndate: 2026-08-21\ndecision: probe\nreview_trigger: unclassified'));
+        expect(f.filter((x) => x.message.includes('migration value'))).toEqual([]);
     });
 });
