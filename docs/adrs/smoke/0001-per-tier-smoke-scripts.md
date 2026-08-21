@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: smoke
+status: accepted
+date: 2026-05-16
+decision: per-tier-smoke-scripts
+supersedes: —
+superseded_by: —
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — Per-tier smoke scripts (kernel · router · schema · skills)
 
 > Area: `smoke` · Status: accepted · Date: 2026-05-16 · Type: retrospective
