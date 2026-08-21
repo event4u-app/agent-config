@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as cr from '../../src/scripts/check_references.js';
+import * as sweep from '../../src/agent-src/scripts/archive_completed_roadmaps.js';
 
 
 
@@ -290,6 +291,139 @@ describe('check_references — YAML-memory branch (port)', () => {
         setupRepo();
         const broken = cr.scan_all(tmp);
         expect(broken).toEqual([]);
+    });
+});
+
+// ===========================================================================
+// Frozen records naming an archived roadmap
+// ===========================================================================
+//
+// Two gates used to contradict each other here. `archive_completed_roadmaps`
+// treats `agents/evidence/**` and every `*.patch` as a frozen record and
+// refuses to rewrite path strings there; this checker then reported the
+// un-rewritten path as broken. Result: archiving a roadmap that any review
+// artefact mentions turned CI red with no compliant fix available — a rewrite
+// was forbidden and the reference was required to resolve.
+//
+// The carve-out is narrow and each condition is asserted, including the ones
+// that must still red. It also pins the duplicated frozen-record predicate
+// against the same table the sweep's own `_is_frozen_record` answers, so the
+// two copies cannot drift apart silently.
+
+describe('check_references — a frozen record may name an archived roadmap', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crfrozen-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function write(rel: string, body: string): void {
+        const fp = path.join(tmp, rel);
+        fs.mkdirSync(path.dirname(fp), { recursive: true });
+        fs.writeFileSync(fp, body, 'utf-8');
+    }
+
+    /** Minimal artifact tree so scan_all runs. */
+    function base(): void {
+        for (const d of [
+            'dist/agent-src/skills',
+            'dist/agent-src/rules',
+            'dist/agent-src/commands',
+            'dist/agent-src/guidelines',
+        ]) {
+            fs.mkdirSync(path.join(tmp, d), { recursive: true });
+        }
+    }
+
+    it('resolves the pre-archival path when the roadmap sits in archive/', () => {
+        base();
+        write('agents/roadmaps/archive/road-to-x.md', '# x');
+        write(
+            'agents/evidence/reviews/some-scope.findings.md',
+            'The plan is `agents/roadmaps/road-to-x.md` as reviewed.\n',
+        );
+        const broken = cr.scan_all(tmp).filter((b) => b.ref_type === 'path');
+        expect(broken).toEqual([]);
+    });
+
+    it.each(['skipped', 'later'])('also resolves under %s/', (dir) => {
+        base();
+        write(`agents/roadmaps/${dir}/road-to-x.md`, '# x');
+        write(
+            'agents/evidence/reviews/some-scope.findings.md',
+            'The plan is `agents/roadmaps/road-to-x.md`.\n',
+        );
+        const broken = cr.scan_all(tmp).filter((b) => b.ref_type === 'path');
+        expect(broken).toEqual([]);
+    });
+
+    it('STILL reds when the roadmap exists nowhere — the file is genuinely gone', () => {
+        base();
+        write(
+            'agents/evidence/reviews/some-scope.findings.md',
+            'The plan is `agents/roadmaps/road-to-never-existed.md`.\n',
+        );
+        const refs = cr
+            .scan_all(tmp)
+            .filter((b) => b.ref_type === 'path')
+            .map((b) => b.ref);
+        expect(refs).toEqual(['agents/roadmaps/road-to-never-existed.md']);
+    });
+
+    it('STILL reds for a NON-frozen source naming an archived roadmap', () => {
+        base();
+        write('agents/roadmaps/archive/road-to-x.md', '# x');
+        // A live rule/skill/guideline must be re-pointed at the archive path —
+        // the sweep rewrites those, so a stale one here is real drift.
+        write(
+            'dist/agent-src/guidelines/live-doc.md',
+            'See `agents/roadmaps/road-to-x.md`.\n',
+        );
+        const refs = cr
+            .scan_all(tmp)
+            .filter((b) => b.ref_type === 'path')
+            .map((b) => b.ref);
+        expect(refs).toEqual(['agents/roadmaps/road-to-x.md']);
+    });
+
+    // The `*.patch` half of the predicate is UNREACHABLE through this gate and
+    // is asserted at predicate level only (below). `check_file` reads `.md`
+    // exclusively, so a `.patch` never enters the corpus — writing a scan-level
+    // test for it would assert a behaviour the gate does not have (and the
+    // dead-scope guard fired instead, which is how this was found). The suffix
+    // stays in the predicate so both copies answer the sweep's table
+    // identically; the sweep is where it does real work.
+
+    // Drift guard: the sweep owns `_is_frozen_record`, this gate owns
+    // `_is_frozen_record_source`, and they are separate copies on purpose (the
+    // sweep is projected into consumer installs and drags the dashboard
+    // generator with it). One table, both answers.
+    it.each([
+        ['agents/evidence/reviews/x.findings.md', true],
+        ['agents/evidence/analysis/y.md', true],
+        ['agents/evidence/reviews/x.review-input/diff.patch', true],
+        ['some/other/place/z.patch', true],
+        ['agents/roadmaps/road-to-x.md', false],
+        ['src/rules/a-rule.md', false],
+        ['docs/guidelines/g.md', false],
+    ])('frozen-record predicate agrees with the sweep on %s', (rel, expected) => {
+        expect(cr._is_frozen_record_source(rel)).toBe(expected);
+        expect(sweep._is_frozen_record(rel)).toBe(expected);
+    });
+
+    it('only a TOP-LEVEL roadmap path qualifies', () => {
+        base();
+        write('agents/roadmaps/archive/road-to-x.md', '# x');
+        // A nested path is not the shape the sweep moves, so no carve-out.
+        expect(cr._resolves_under_terminal_disposition('agents/roadmaps/road-to-x.md', tmp)).toBe(
+            true,
+        );
+        expect(
+            cr._resolves_under_terminal_disposition('agents/roadmaps/sub/road-to-x.md', tmp),
+        ).toBe(false);
+        expect(cr._resolves_under_terminal_disposition('docs/road-to-x.md', tmp)).toBe(false);
     });
 });
 

@@ -48,24 +48,23 @@ legal signature, another human, or a capability nobody is building. The parent
 roadmap closes against an explicit outcome state (`transferred`), so a completed
 roadmap can never be read as an achieved goal.
 
+The distinction that decides which gates apply: the stubs in **§ Current stubs**
+are **demand-gated** — the work is buildable today and the open question is
+whether it *should* be built. A drain-run transfer is **capability-gated** — the
+scope decision is already made, the work is wanted, and the only thing missing is
+an environment the run did not have.
+
 Each entry carries the framework's three-point stub-integrity check — the
 original criterion **verbatim**, the complete list of dependent steps moved, and
 a **named producer with a detection probe** (never "when some subsystem exists",
 which names nobody) — plus the probe's measured baseline on the transfer date, so
-a later reader can tell real movement from noise.
+a later reader can tell real movement from noise, and any reasoning that would
+otherwise die with the parent.
 
 Council disposition **B — transferred**, 2026-08-20
 (anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2) for the
 always-on-orchestration set; see each parent roadmap for the others.
 
-| Stub | Transferred from | Outcome state | Re-entry producer | Re-entry gates (baseline at transfer) |
-|---|---|---|---|---|
-| [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | Skill-projection maintainer | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
-| [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | Repo administrator + a second reviewer | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
-| [`road-to-team-telemetry-behind-flag.md`](road-to-team-telemetry-behind-flag.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md) 5.4, 2026-08-20 | `transferred` | Maintainer of a flag-enabled environment | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` **unset** (3rd dated reading: 08-09, 08-13, 08-20) |
-| [`road-to-f4-full-stop-block.md`](road-to-f4-full-stop-block.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | Maintainer running the supported host | 9 `review_skipped` lines, all `exact` (`diff_lines` 243-1770); model-visible canary **not captured** |
-| [`road-to-gate-council-auto-dispatch.md`](road-to-gate-council-auto-dispatch.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | Gate-autonomy maintainer | 121 `quorum_result` events (17 solo-concluded) + 553 dispatch lines — **window has opened**; soak unverified, minima unwritten |
-| [`road-to-point-of-action-carrier.md`](road-to-point-of-action-carrier.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | Maintainer with a real multi-agent host session | **not locally measurable** — no session-lineage field in the hook envelope |
 
 The producer column is carried in addition to the gate column on purpose: the
 three-point check names a producer AND a probe, and a table with only the probe
@@ -78,29 +77,77 @@ against different telemetry streams (`review_skipped` versus F3-lite adoption),
 and the council assigned them separate re-entry producers. One stub per distinct
 evidence gap; a merged stub would have one probe standing in for two facts.
 
-**The shared promotion criteria below do NOT govern a drain-run transfer.** They
-were written for the org-mode stubs and require a recruited customer, a funded
-security audit, and an ADR lifting a Hard-Floor item. A drain-run transfer
-introduces no new product surface — it is existing, already-agreed work waiting
-on one external act — so demanding a funded audit before adding a repo secret or
-asking a second person to review would be a category error that parks the work
-permanently. **A drain-run transfer is gated only by its own per-item probe.**
-Promote per item, not per file, and delete the stub when its last item is gone.
+The producer is carried INLINE at the front of the gate cell rather than
+in its own column: this table reached 20 rows on the trunk while the column
+was being added here, and back-filling a producer for those 20 would mean
+inventing 20 facts. The information above is kept verbatim; promoting it to a
+real column is a schema migration that belongs in its own change.
 
-One qualification, because the shorter version of that sentence is false: a
-transfer crossing no *new* surface is not the same as a transfer crossing no Hard
-Floor. Some of these pending acts — a repo-admin ruleset write, a branch
-protection change — **are** Hard-Floor actions in their own right. Being exempt
-from the org-mode promotion gates does not exempt the act itself: when a human
-performs it, it needs its own this-turn approval under
-`non-destructive-by-default`, exactly as it would have inside the parent roadmap.
+| Stub | Transferred from | Outcome state | Re-entry gate (its own probe, baseline at transfer) |
+|---|---|---|---|
+| [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
+| [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
+| [`road-to-main-protection-ruleset-changes.md`](road-to-main-protection-ruleset-changes.md) | `road-to-inbox-harvest-2026-08-b-ci-economy.md` Phase 4, blockers `required-check-set-change` + `merge-queue-enablement`, 2026-08-20 | `transferred` | One gate, in the stub: a repo-admin write on ruleset `17749383` by the named producer. Two probes, both measured at transfer time: required checks **1**, `merge_queue` entries **0**, `merge_group` files **0** |
+| [`road-to-multi-host-screenshot-census.md`](road-to-multi-host-screenshot-census.md) | [`road-to-source-first-frontend`](../road-to-source-first-frontend.md) — Phase 1 Step 2, the screenshot dimension of Phase 6 Step 1, and the W5 URL / live-page handover class | `transferred` | A **page-reaching** capture primitive on a second supported host. Measured 2026-08-20: this host has `screencapture` only, which photographs the display. Display-only capture on a second host changes nothing. |
+| [`road-to-session-closeout-gated.md`](road-to-session-closeout-gated.md) | [`road-to-session-closeout.md`](../archive/road-to-session-closeout.md) — Phase 2 entire, Phase 7 entire, steps 1.2/1.4/1.4b/1.5/4.1/4.2/4.4/5.3/8.1/8.2/8.4 and the classification half of 5.2, 2026-08-20 | `transferred` | Six groups, each with its own probe measured at transfer: burned-version record `grep -rl burned src/config/` **0** · `release-drift.yml` triggers cron+dispatch only, **no** merge trigger · `payloadOf` in `injection_scan_hook.ts` **0** (sibling **2**) · pack cap **8.4** MB / census **111 012** recorded vs **111 035** measured, `measured_at_commit: "unrecorded"` · **165** local-only gates at baseline · estate **384** worktrees / **973** local / **267** remote / **18** open PRs (parent reasoned from 346/929/245/**0**) · **5** orphaned `src/domains/**/evals/triggers.json`, not the 1 the parent named |
+| [`road-to-gate-preauth-authorization.md`](road-to-gate-preauth-authorization.md) | [`road-to-gate-autonomy.md`](../road-to-gate-autonomy.md) step 2.3, 2026-08-20 | `transferred` | 1 item, both probe halves required: an authorisation artefact `lint_settings_classes` reports as class **C** and naming a blocker id (none of today's 107 C keys is one) · the abort intact, `grep -c 'Refusing to run under automation' src/scripts/skill_trigger_eval.ts` still `1` (`1`) |
+| [`road-to-org-telemetry-sink.md`](road-to-org-telemetry-sink.md) | [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 2 (`sink-choice`), 2026-08-20 | `transferred` | 1 item: a private, package-CI-inaccessible repository identifier resolves **and** appears in org-pack settings (measured FAIL on every clause — no identifier exists in the tree, `read_remote_settings` reports `missing: endpoint, org_id, salt`). Producer: the org repository administrator. **The pending act is itself Hard-Floor** — repository creation and pointing an endpoint at it; monitoring owner + rollback recorded in the stub |
+| [`road-to-org-telemetry-enablement.md`](road-to-org-telemetry-enablement.md) | [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 3 (`dpo-signoff`), 2026-08-20 | `transferred` | 1 item: a written internal data-protection outcome covering the Class-A field list **and** the disclosure line is linked from ADR-233 (measured FAIL — ADR-233 exists and is indexed, `grep -c "sign-off"` returns 0). Producer: the named internal data-protection reviewer. Its four measurement items are gated by the sink stub as well; both must clear |
+| [`road-to-solution-minimalism-full-tier-run.md`](road-to-solution-minimalism-full-tier-run.md) | [`road-to-solution-minimalism.md`](../road-to-solution-minimalism.md) Phase 3 + the full-tier AC, 2026-08-20 | `transferred` | 3 items, all gated on one paid sweep: ≥ 30 corpus tasks declaring `repo` + `sha` (**1**) · a `Gate verdict:` in `docs/benchmark.md` from a pinned report with a non-empty `sha` (**none**; 0 full-tier runs ever) · that verdict carrying all four pre-registered endpoints (all four implemented, 0 reports rendered). Blocked by an absent credential and by a Hard Floor that a 2026-08-14 pre-authorisation does not clear |
+| [`road-to-subagent-payload-capture.md`](road-to-subagent-payload-capture.md) | [`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md) Phase 0 Steps 2+4 raw-payload halves (Phase 4 Step 1 blocked by, not moved), 2026-08-20 | `transferred` | P1-P4 in the stub: a captured `SubagentStop` payload, a captured in-subagent `PreToolUse` payload, their field lists recorded, and the `AGENT_HOOK_CAPTURE_DIR` setting absent again afterwards (P1/P2 directory does not exist · P3 absent · P4 correctly no match today). Producer: the host owner, one time-boxed fresh session, under the 7 containment requirements in the stub — the capture writes payloads verbatim and "remove it afterwards" is not a kill switch |
+| [`road-to-first-reference-analysis-run.md`](road-to-first-reference-analysis-run.md) | [`road-to-distillation-followups.md`](../road-to-distillation-followups.md) Phase 2, 2026-08-20 | `transferred` | 3 items: a `compare-*.md` artefact under `agents/evidence/analysis/` (0 files) · that file carrying both `## Anchor table` and `## Iteration record`, the two sections an ad-hoc pass does not produce (0 files) · a stated confidentiality classification with `check_no_external_sources` green (nothing to classify) |
+| [`road-to-scale-history-primary-rating.md`](road-to-scale-history-primary-rating.md) | [`road-to-scale-history-bench-run.md`](../road-to-scale-history-bench-run.md) Phase 1, 2026-08-20 | `transferred` | 3 items: 96 non-errored cells in `artifacts/manifest.json` (root absent — no live sweep) · a **named** rater in the stub's `Rater:` line (`(unassigned)`) · every rubric score timestamped before its `score.ts` output (0 rated rows, 0 outputs — vacuous). P1/P3 are bench-machine checks, not tree checks: the artifact root is gitignored |
+| [`road-to-live-trigger-eval.md`](road-to-live-trigger-eval.md) | [`road-to-skill-description-measurement.md`](../road-to-skill-description-measurement.md) Phase 1 (all) + [`road-to-cost-parity-1-rule-payload-diet.md`](../road-to-cost-parity-1-rule-payload-diet.md) steps 1.3 (skill-usage column), 2.1c, 2.5 (bar-gated half), 2026-08-20 | `transferred` | 4 items: a pre-rewrite predictions JSON (none exist) · a post-rewrite one from the same protocol (none) · a fixture corpus meeting the ≥ 100 requests / ≥ 3 shapes pre-registration (**34** fixtures, 2 of 3 `kind` values used) · a pilot tranche PR citing its activation baseline and window (no tranche landed). One merged gap under two blocker names — `human-gated-live-trigger-eval` + `skill-activation-window` |
+| [`road-to-council-blind-ratings.md`](road-to-council-blind-ratings.md) | `road-to-council-blind-review.md` Phase 2 + Phase 3 (Ü2/Ü3 half), 2026-08-20 | `transferred` | P1-P2 in the stub: a named maintainer blind rater fills R1 and R2 in the prepared packet, timestamped before arm disclosure, each with an adopt-or-null verdict — both measured failing (10 of 10 slots unfilled). No agent and no council pass may substitute |
+| [`road-to-ci-native-release-live-label-path.md`](road-to-ci-native-release-live-label-path.md) | [`road-to-ci-native-release-first-run.md`](../archive/road-to-ci-native-release-first-run.md) Phase 2 items 1-4 + AC2 + AC3, 2026-08-20 | `transferred` | 4 items, all gated on a release happening through the **label** path: non-skipped `release.yml` runs on `pull_request` (**0** of 300 scanned, though all four release labels exist and `release.yml:92` matches them) · failure-drill case (a) needs an open `release/*` PR (**none**) · double-fire needs two consecutive labeled merges (the path has never fired once) · the collision drill is **re-specified in the stub** — as written it cannot pass, since `preflight` is skipped under `--dry-run` (`release.ts:2659`) and carries no open-release-PR probe (`:1738-1814`). Discharged and NOT transferred: the post-merge dry-run dispatch (run `32083648970`) and failure-drill (b)+(c) (run `32118914154`) |
+| [`road-to-task-completion-observability.md`](road-to-task-completion-observability.md) | [`road-to-orchestration-scope-decision.md`](../road-to-orchestration-scope-decision.md) Prerequisite + Phase 2-4 **and** [`road-to-subagent-value-realization-followup.md`](../road-to-subagent-value-realization-followup.md) Phase 1 Step 2 + Phase 2, 2026-08-20 — one stub, two parents (the council found one evidence gap under two names) | `transferred` | P1-P3 in the stub, all three measured failing: a `SubagentStop` capture carrying `transcript_path` (0 captures exist) · ≥ 20 audit rows with non-null `first_pass_success` / `escalated` / `task_class` (**0 of 570**; the whole quality corpus is one July line) · one row with `spawn_count ≥ 2` (**0 of 570**). The quality columns are **not** hook-derivable at any slot — see the stub’s three-way probe result |
+| [`road-to-kernel-cross-link-soak.md`](road-to-kernel-cross-link-soak.md) | `road-to-skill-ecosystem-gate-integrity.md` Phase 3 Steps 6-7 + the cross-link half of one AC, 2026-08-20 | `transferred` | P1-P3 in the stub: the merged PR diff carries both `../../docs/` links and the ease tripwire, `kernel-prefix.json` is clean after re-anchoring, and the kernel-rule merge spacing holds — P3 measured passing, P1 and P2 measured not-yet |
+| [`road-to-compaction-survival-census.md`](road-to-compaction-survival-census.md) | `road-to-context-fidelity.md` Phase 0 (cf01) + all six Phase 1 steps, 2026-08-20 | `transferred` | Three gates in the stub, all measured failing on transfer day: cf01's finding is absent; manual-compaction detectability is unestablished (19 events / 591 sessions, `auto:19`, zero manual); and the session-eol capture directory is `UNOBSERVED`, so a Phase 1 delta is uncomputable. Establish detectability in ONE session before spending five |
+| [`road-to-declared-protocol-cap.md`](road-to-declared-protocol-cap.md) | [`road-to-rule-coherence-followup.md`](../archive/road-to-rule-coherence-followup.md) Phase 5 F5.1, 2026-08-20 | `transferred` | One dated gate plus a broken instrument. The 90-day branch of the cap's own trigger fires **2026-11-04** (14 days elapsed at transfer); the session-counting branch has **no counter** (`grep -rn 'declared_protocol' src/scripts/hooks/ src/scripts/_lib/` → 0) and the transcript grep that stands in for one matches the rule's own prose. Provisional note still in place (`LOWER BOUND` → 1 hit). |
+| [`road-to-discipline-default-flip.md`](road-to-discipline-default-flip.md) | [`road-to-rule-coherence-followup.md`](../archive/road-to-rule-coherence-followup.md) Phases 1-2, blockers `default-flip-release-gate` + `bench-spend-and-methodology`, 2026-08-20 | `transferred` | Two gates. **T1** a release-maintainer default flip: measured at transfer `discipline_profile: __DISCIPLINE_PROFILE__` (unflipped), `rule_packs: []`, `scope_dedup` absent from the template. **T2** the A/B run — method pre-registered, `essential-plus` occurs **0** times in `docs/benchmark.md` and **0** files under `agents/evidence/`. The two independent human judges are the gap. |
+|  [`road-to-team-telemetry-behind-flag.md`](road-to-team-telemetry-behind-flag.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md) 5.4, 2026-08-20 | `transferred` | producer: Maintainer of a flag-enabled environment — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` **unset** (3rd dated reading: 08-09, 08-13, 08-20)  |
+|  [`road-to-f4-full-stop-block.md`](road-to-f4-full-stop-block.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Maintainer running the supported host — 9 `review_skipped` lines, all `exact` (`diff_lines` 243-1770); model-visible canary **not captured**  |
+|  [`road-to-gate-council-auto-dispatch.md`](road-to-gate-council-auto-dispatch.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Gate-autonomy maintainer — 121 `quorum_result` events (17 solo-concluded) + 553 dispatch lines — **window has opened**; soak unverified, minima unwritten  |
+|  [`road-to-point-of-action-carrier.md`](road-to-point-of-action-carrier.md) | [`road-to-always-on-orchestration.md`](../road-to-always-on-orchestration.md), 2026-08-20 | `transferred` | producer: Maintainer with a real multi-agent host session — **not locally measurable** — no session-lineage field in the hook envelope  |
+
+
+
+```
+THE SHARED PROMOTION CRITERIA IN THE NEXT SECTION — RECRUITED CUSTOMER, FUNDED
+SECURITY AUDIT, ADR SIGN-OFF — DO **NOT** GOVERN A DRAIN-RUN TRANSFER.
+A TRANSFER IS PROMOTED BY ITS OWN NAMED PROBE RETURNING TRUE. NOTHING ELSE.
+```
+Applying a recruited customer or a funded security audit to a capability-gated
+transfer is a category error: there is no customer to recruit for a tool surface
+that simply is not connected, and no audit clears a missing capability. Promote
+**per item**, not per file, and delete a stub when its last item is gone.
+
+Two qualifications, because the short version of that paragraph is false in two
+different directions.
+
+**A transfer crossing no *new* surface is not a transfer crossing no Hard Floor.**
+Some pending acts here — a repo-admin ruleset write, a branch-protection change —
+**are** Hard-Floor actions in their own right, and the third row is exactly that
+case: a repository-administration setting is a `non-destructive-by-default`
+trigger, which is precisely why the council could only transfer it. Being exempt
+from the org-mode promotion gates does not exempt the act. When a human performs
+it, it needs its own this-turn approval naming the exact object, exactly as it
+would have inside the parent roadmap.
+
+**A gate is not always a measurement.** For that same row the gate is the
+*authority* itself, exercised by a named human — not a number anyone can read.
+Requiring a recruited customer and a funded audit before a maintainer may edit
+their own repository settings would gate on nothing and make the stub unclosable.
+
+Framework of record for drain-run dispositions:
+[`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)
+and its batch-B sibling.
 
 ## Promotion criteria (shared)
 
-Applies to the **org-mode stubs** in § Current stubs only — not to
-drain-run transfers, which name their own per-item probes. Such a stub
-may move from `stubs/` to `agents/roadmaps/` only when **all three** of
-these are true:
+Governs the **demand-gated** stubs in § Current stubs only — never a drain-run
+transfer, which names its own probe above. Any such stub may move from `stubs/`
+to `agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.

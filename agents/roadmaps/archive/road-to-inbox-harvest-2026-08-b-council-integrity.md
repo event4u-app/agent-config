@@ -21,7 +21,7 @@ checkable repo claims held, one exact to the line number. This roadmap is that
 file, expanded, plus the one surviving sub-mechanism from the council-hardening
 bundle.
 
-**The defect.** `agents/roadmaps/road-to-always-on-orchestration.md:395` (Risk 6)
+**The defect.** `agents/roadmaps/archive/road-to-always-on-orchestration.md:395` (Risk 6)
 claimed as its mitigation that *"attendance telemetry makes absent members
 visible rather than silent"*, while `src/scripts/ai_council/events_log.ts:30`
 carries `EventAction = 'proceed' | 'skip_necessity' | 'block_quota'` and the file
@@ -112,7 +112,7 @@ from.
    (`ai_council/session.ts:59-66`), carried on `absent_members` at `:103`. What is
    banned is **slot indirection**, not identification. `grep -rn
    'member_slot\|memberSlot\|slot_index' src/scripts/ai_council/` returns **zero**
-   today, and `agents/roadmaps/road-to-council-blind-review.md` is `status: ready`
+   today, and `agents/roadmaps/archive/road-to-council-blind-review.md` is `status: ready`
    with open work in Phase 2 (`:145`) and Phase 3 (`:179`); its anonymisation seam
    is `ai_council/orchestrator.ts:1430-1433` and `:1589` (`Response-A` labels for
    the peer-review pass). So 1.1 records `member` as the already-public name the

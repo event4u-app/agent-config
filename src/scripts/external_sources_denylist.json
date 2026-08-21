@@ -62,7 +62,10 @@
     "\\bagent-reach\\b",
     "panniantong",
     "virgiliojr94",
-    "book-to-skill"
+    "book-to-skill",
+    "project-codeguard",
+    "\\bcodeguard\\b",
+    "\\bcosai\\b"
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",
