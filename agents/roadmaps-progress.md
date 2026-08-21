@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers in the active tree, **9** need you → `agent-config gates`
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers in the active tree, **9** need you → `agent-config gates`
 
 ## Overall
 
-**107 / 179 steps done · 60%**
+**105 / 170 steps done · 62%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+█████████████████████████░░░░░░░░░░░░░░░   62%
 ```
 
 ## Open roadmaps
@@ -21,11 +21,10 @@
 | 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
 | 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 7 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 8 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 9 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 10 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 6 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 7 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 8 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 9 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -337,36 +336,6 @@
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
 _2 blockers resolved._
-
-### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
-
-**Follow-up to road-to-rule-coherence** — 2 / 9 done (22%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The default flip (human release gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Measure, with the comparison that is actually open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Architecture, owned elsewhere | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Re-adjudicate what the audit left open | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 5 | Retire the two provisional numbers | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-
-<a id="blockers-road-to-rule-coherence-followup"></a>
-**Blockers**
-
-- **default-flip-release-gate** (owner: maintainer) — blocks Phase 1
-  - **What to do:**
-    rule on whether the measured configuration becomes the shipped
-    default. The evidence is prepared and cited in F1.1–F1.4; the settings
-    template's own comment on `rule_packs` — "Do not set this from automation" —
-    is why this cannot be an agent decision.
-  - **Resolved when:** the maintainer merges the flip with the census attached, or records a decision to keep the current default and ship the preset as opt-in.
-- **bench-spend-and-methodology** (owner: maintainer) — blocks Phase 2
-  - **What to do:**
-    authorize the A/B run and confirm the methodology. The council
-    was explicit that an LLM-judged probe has no power against the original
-    human-judged production measurement, so a real claim needs human judging at
-    adequate N.
-  - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 

@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 10,
+    "active_roadmaps": 9,
     "later_roadmaps": 55,
-    "open_blockers": 43
+    "open_blockers": 41
   },
   "baseline_history": [
     {
@@ -517,6 +517,27 @@
       "later_roadmaps": 55,
       "open_blockers": 43,
       "why": "WALKED DOWN by 1 active and 2 blockers. road-to-context-fidelity archived (under agents/roadmaps/ on main, under archive/ here). Two of its three blockers are open on the trunk and closed here on council dispositions dated 2026-08-20: compaction-census-session and prominence-gate-skills-corpus. The third, memory-sweep-instrument, was already resolved on the trunk by a 2026-08-19 council and is excluded from the delta -- the kind of pre-existing closure that would otherwise be banked as this change's drawdown. later_roadmaps unchanged at 55: the part that could not be finished went to stubs/road-to-compaction-survival-census.md with its own probe, so the open work stays counted rather than parked."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "WALKED DOWN by 2 blockers, and NOTHING IN THE REPOSITORY EARNED THE DROP - a transfer lowers this number by construction, which is the one case where a falling measurement is not progress. The drain run that closed road-to-rule-coherence-followup resolved its two entries (default-flip-release-gate, bench-spend-and-methodology) under the council's B and D dispositions: the shipped-default flip and the human-judged A/B run both left for stubs/road-to-discipline-default-flip.md with verbatim criteria, complete moved-step lists, a named producer and probes measured at transfer. The work is not done and is not gone; it is counted in the stub instead of here, exactly as the 2026-08-20 phase3-harness-deltas-9-10 entry above records for its own transfer. Written as `resolved` because that is the ONLY closed token lint_roadmap_blockers reads - `transferred` scans as open to every gate - so the outcome state lives in the resolution prose, the stub and the stubs/README row rather than in the status token. Anyone reading this series as a drawdown curve should discount these 2 the way they discount the parking entries: the estate got smaller, the obligation did not. Re-measured over the merged tree after merging origin/main, not carried over from before the merge. Active roadmaps also fall 25 -> 24 in the same change, and that half IS earned in the ordinary way: road-to-rule-coherence-followup reached zero open steps and `agent-config roadmap:progress` archived it. The two halves of this entry are therefore different kinds of movement and are recorded separately on purpose - the roadmap genuinely left the active tree, while the 2 blockers only changed which file counts them. RE-BASED ON MERGE with origin/main, 2026-08-21. Authored against a different base; the trunk moved in parallel, so neither side's number describes the merged tree and the gate MEASURED it at 23 active / 60 open_blockers. What THIS branch earned is -1 active (road-to-rule-coherence-followup reached 0 open and was archived by the roadmap:progress sweep) and -2 open_blockers (both of its entries closed, each with outcome state transferred rather than satisfied). The blocker half of that is a RELOCATION, not a discharge: the criteria moved into stubs/road-to-discipline-default-flip.md and stubs/road-to-declared-protocol-cap.md, and the metric counts entries, so it falls whether or not a line of the transferred work exists. Any remaining delta came from the trunk and is banked rather than attributed."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 10,
+      "later_roadmaps": 55,
+      "open_blockers": 41,
+      "why": "WALKED DOWN by 1 active and 2 blockers. road-to-rule-coherence-followup archived (under agents/roadmaps/ on main, under archive/ here) and both of its blockers, default-flip-release-gate and bench-spend-and-methodology, are open on origin/main and resolved here -- verified per blocker against the trunk. later_roadmaps unchanged at 55, and that is the load-bearing part of this entry: the two items the roadmap could not finish went to TWO stubs created in this same change, stubs/road-to-declared-protocol-cap.md and stubs/road-to-discipline-default-flip.md, each with its own probe. Nothing was parked into later/ and nothing was dropped, so the -2 is a relocation into probe-carrying stubs rather than work completed."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 9,
+      "later_roadmaps": 55,
+      "open_blockers": 41,
+      "why": "RE-MEASURED after a SECOND merge of origin/main, not a second drawdown. The trunk moved while this branch waited for CI (PR #1507 landed and walked open_blockers to 41 itself), so the entry this branch wrote earlier -- active 11 -> 10, blockers 43 -> 41 -- was measured against a tree that no longer exists. Against the merged tree the only delta still owned by this branch is active_roadmaps 10 -> 9, the archival of road-to-rule-coherence-followup. open_blockers is left at 41 rather than claimed again: its two closures are already recorded, once, in the earlier entry, and re-counting them here is exactly how a ratchet double-books a single piece of work. later_roadmaps unchanged at 55."
     }
   ],
   "target": {

@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**540 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 194 · completed 254 · completed-with-deferrals 25 · not-extractable 34
+**541 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 195 · completed 254 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -434,6 +434,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-rootless-write-refusal`](road-to-rootless-write-refusal.md) | Road to rootless-write refusal | completed | 3 | 19/19 | _not extractable_ |
 | [`road-to-routing-correctness`](road-to-routing-correctness.md) | Road to routing correctness — the rule set stops fighting itself, and a command proves what routes | closed-with-cancellations | 4 | 14/15 | _not extractable_ |
 | [`road-to-rtk-onboarding-correctness`](road-to-rtk-onboarding-correctness.md) | Road to rtk onboarding correctness — the install path we ship is currently broken | completed | 4 | 21/21 | _not extractable_ |
+| [`road-to-rule-coherence-followup`](road-to-rule-coherence-followup.md) | Roadmap: Follow-up to road-to-rule-coherence | closed-with-cancellations | 5 | 4/11 | _not extractable_ |
 | [`road-to-rule-coherence`](road-to-rule-coherence.md) | Road to rule coherence — fix the delivery system, not the rules | closed-with-cancellations | 4 | 14/21 | _not extractable_ |
 | [`road-to-rule-delivery-integrity`](road-to-rule-delivery-integrity.md) | Road to rule delivery integrity — rules that arrive once, scoped, and provably | closed-with-cancellations | 6 | 15/17 | _not extractable_ |
 | [`road-to-rule-hardening`](road-to-rule-hardening.md) | Road to Rule Hardening | closed-with-cancellations | 7 | 27/33 | _not extractable_ |
