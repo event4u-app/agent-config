@@ -136,9 +136,11 @@ tasks:
       # Byte-equivalence behind the mtime check. The freshness gate compares
       # ORDERING (every source older than the bundle); this compares BYTES
       # (the bundle is what these sources produce). An mtime-preserving edit,
-      # a `touch`, or an archive restore passes the first and fails the
-      # second — demonstrated 2026-08-21 with an edit that changed the
-      # dispatcher's digest while leaving its size and mtime untouched.
+      # a `touch` on the bundle, or a `cp -p` restore passes the first and
+      # fails the second — demonstrated 2026-08-21 with an edit that changed
+      # the dispatcher's digest while leaving its size and mtime untouched.
+      # NOT claimed: that the mtime gate missed the 2026-08-21 incident. It is
+      # pre-push and was not run; an ordinary edit would have reddened it.
       # LOCAL-ONLY BY CONSTRUCTION: dist/hooks/ is untracked, so CI has no
       # bundle to compare and declares a no-op. A green CI says nothing about
       # the bundle a maintainer is actually executing — which is precisely the

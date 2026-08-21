@@ -196,11 +196,13 @@ local_only:
       gate-coverage manifest exists to refuse. Declared rather than wired for
       the same reason `check_single_delivery` below is. The blind spot it
       closes is real and was measured on 2026-08-21: an edit to the git guard's
-      authorization window was never rebuilt into the bundle, the guard kept
-      enforcing the old value for a full hour, and the sibling
-      `check_hook_bundle_freshness` stayed green throughout because it compares
-      MTIMES — ordering, not equivalence. An mtime-preserving edit, a `touch`,
-      or an archive restore all pass it. That asymmetry is the finding: a green
+      authorization window was never rebuilt into the bundle and the guard kept
+      enforcing the old value for a full hour. The sibling
+      `check_hook_bundle_freshness` did not miss it — that gate is pre-push and
+      was never run, and an ordinary edit moves the source mtime, so it would
+      have reddened. What it structurally cannot see is the narrower set this
+      gate covers: an mtime-preserving write, a `touch` on the bundle, a `cp -p`
+      restore. Ordering is not equivalence. That asymmetry is the finding: a green
       CI cannot speak for the bundle a maintainer is running, and only a local
       gate can. Cost measured, like its neighbours in the pre-push set: 0.27s.
   - id: check_single_delivery

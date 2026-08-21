@@ -10,12 +10,24 @@
  * from an archive, or a filesystem with coarse timestamp resolution all make
  * the inference false while the check stays green.
  *
- * On 2026-08-21 exactly that gap cost a live run: `LEDGER_MAX_AGE_MS` was
- * edited in `block_unauthorized_git.ts`, the bundle was not rebuilt, and the
- * guard kept enforcing the old value. All three copies (source, repo bundle,
- * global install) were inspected by hand before anyone noticed. This gate
- * answers the question the mtime check cannot: *are the bytes that execute the
- * bytes this source produces?*
+ * On 2026-08-21 a live run edited `LEDGER_MAX_AGE_MS` in
+ * `block_unauthorized_git.ts`, did not rebuild, and the guard kept enforcing
+ * the old value; all three copies (source, repo bundle, global install) were
+ * inspected by hand before anyone noticed. **The freshness gate did not miss
+ * that one — it is pre-push and was never run.** Saying it "stayed green" would
+ * be a plausible mechanism standing in for the observed one, which is the
+ * failure this repository's own evidence discipline names.
+ *
+ * What the mtime check genuinely cannot see is narrower and is the reason this
+ * gate exists: the mtime check cannot see an edit that does not move the mtime — an
+mtime-preserving write, a `touch` on the bundle, an archive or `cp -p` restore,
+or a filesystem whose timestamp resolution is coarser than the edit interval.
+Demonstrated on this tree rather than argued: an mtime-preserving edit to one
+constant left the bundle at 1 139 302 bytes with an untouched mtime, the
+freshness gate passed, and the digest differed.
+ *
+ * This gate answers the question directly — are the bytes that execute the
+ * bytes this source produces?
  *
  * WHAT IT CANNOT DO, STATED PLAINLY.
  *
@@ -60,7 +72,12 @@ import { rewriteOutfile } from "./rebuild_hook_bundle.js";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..", "..");
 const LIVE_REL = path.join("dist", "hooks", "dispatch.js");
-const PROBE_REL = path.join("dist", "hooks", "dispatch.content-check.js");
+// Suffixed with the pid: two concurrent invocations in one checkout (the
+// pre-push gate plus a manual run) otherwise share one path, the first
+// `finally` deletes the other's output, and the survivor reports "rebuild
+// failed" off a missing file — a false red on a pre-push gate, which is the
+// failure mode the PATH injection below exists to avoid.
+const PROBE_REL = path.join("dist", "hooks", `dispatch.content-check.${String(process.pid)}.js`);
 
 /** sha256 of a file's bytes, hex. */
 export function digestOf(file: string): string {
@@ -82,8 +99,8 @@ export function buildScript(repoRoot: string): string | null {
   return typeof s === "string" ? s : null;
 }
 
-function main(): number {
-  const live = path.join(REPO_ROOT, LIVE_REL);
+export function main(root: string = REPO_ROOT): number {
+  const live = path.join(root, LIVE_REL);
   if (!fs.existsSync(live)) {
     // Loud no-op, matching the sibling gates: a fresh checkout or CI has no
     // bundle, and materialising one here would change what other gates see.
@@ -104,7 +121,7 @@ function main(): number {
     return 0;
   }
 
-  const script = buildScript(REPO_ROOT);
+  const script = buildScript(root);
   if (script === null) {
     process.stderr.write(
       "check_hook_bundle_content: package.json has no `build:hooks` script — refusing to guess the flag set\n",
@@ -119,7 +136,7 @@ function main(): number {
     return 2;
   }
 
-  const probe = path.join(REPO_ROOT, PROBE_REL);
+  const probe = path.join(root, PROBE_REL);
   try {
     // PATH is injected exactly as `rebuild_hook_bundle` does it, and for the
     // same reason: `build:hooks` starts with a bare `esbuild`, so inheriting an
@@ -127,11 +144,11 @@ function main(): number {
     // failed" on a bundle that is in fact correct — a false red on a pre-push
     // gate, which is how a pre-push gate teaches people to skip it.
     const built = spawnSync("sh", ["-c", rewritten], {
-      cwd: REPO_ROOT,
+      cwd: root,
       encoding: "utf8",
       env: {
         ...process.env,
-        PATH: `${path.join(REPO_ROOT, "node_modules", ".bin")}:${process.env["PATH"] ?? ""}`,
+        PATH: `${path.join(root, "node_modules", ".bin")}:${process.env["PATH"] ?? ""}`,
       },
     });
     if (built.status !== 0 || !fs.existsSync(probe)) {
@@ -200,4 +217,3 @@ if (invokedDirectly) {
   process.exit(main());
 }
 
-export { main };

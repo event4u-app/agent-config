@@ -208,7 +208,7 @@ RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
-The **five — and only five — halt conditions** (exhaustive; nothing else
+The **six — and only six — halt conditions** (exhaustive; nothing else
 stops the run):
 
 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
@@ -216,6 +216,13 @@ stops the run):
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
 5. **Test / quality red** that cannot be cleared within the N=3 budget.
+6. **A merge conflict outside the four enumerated classes** of
+   [`/pr:merge` § 3](../../../git/pr/merge/command.md), during the delivery
+   loop. Added when delivery became unconditional: the loop runs on every
+   completed run, `--all` or not, so its stop is a stop of this command and
+   calling it "a kill switch rather than a halt reason" would not change that —
+   a run that stops has stopped. It fires only where a run reaches delivery,
+   which is the one thing that distinguishes it from the five above.
 
 **Under `--all`, which of these end the roadmap and which end the loop.** Two
 of the five are safety floors and they end the **whole run**, not the current
@@ -228,6 +235,7 @@ roadmap:
 | 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 | 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
 | 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
+| 6. Unenumerated merge conflict in delivery | Ends the roadmap; the loop records it and continues. |
 
 **And the conditions that end the loop without ending a roadmap:**
 estate-queue exhaustion (always), a
@@ -239,7 +247,7 @@ gated**, because the run then performs no `BLOCK_OPS` operation for the
 window to govern. Three conditions, one of them currently inert, and this
 table is the only place the set is stated.
 
-Nothing here widens a run without `--all`: it still has exactly the five
+Nothing here widens a run without `--all`: it still has exactly the six
 above, all of them ending the run because there is no loop to continue.
 
 ```

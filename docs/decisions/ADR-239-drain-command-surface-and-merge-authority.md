@@ -152,6 +152,6 @@ no bundle, so a green CI cannot speak for the bundle a maintainer runs.
 
 - [`ADR-237`](ADR-237-end-to-end-execution-authority.md) § 4 — the exclusion this record does not extend.
 - [`command-clusters`](../contracts/command-clusters.md) — the flag-not-command rule, and the new `git-pr-merge` row.
-- `agents/roadmaps/road-to-drain-commands.md` — the plan, and the `merge-authority` blocker.
+- The `road-to-drain-commands` roadmap — the plan, and the `merge-authority` blocker. Named without a path: an accepted ADR is permanent and that roadmap is archived on completion (`no-roadmap-references`; `check_no_roadmap_refs` does not scan `docs/decisions/`, so the rule holds here without a gate behind it).
 - `src/scripts/hooks/block_unauthorized_git.ts` — `BLOCK_OPS`, `LEDGER_MAX_AGE_MS`.
 - `src/scripts/git_authorization_hook.ts` — `classifyAuthorization`, the human-only write path.

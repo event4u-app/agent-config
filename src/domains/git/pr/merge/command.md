@@ -4,13 +4,13 @@ name: git-pr-merge
 disable-model-invocation: true
 argument-hint: "[all|<pr-number>] [--no-merge]"
 pack: git
-intent: "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so"
+intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — merging itself is gated and inert"
 routes_to: [git-workflow, github-ci]
 replaces: []
 visibility: advanced
 cluster: git-pr-merge
 skills: [git-workflow, github-ci]
-description: Prepare one open PR to mergeable and merge it, or drain the whole open-PR queue with `all`
+description: Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open
 suggestion:
   eligible: false
   rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
@@ -177,11 +177,24 @@ Empty **after that exclusion** ⇒ superseded. **Never merge an empty PR to make
 the queue count fall — and never close one on a bare diff.**
 
 ```
-CLOSING SOMEONE ELSE'S PR IS IRREVERSIBLE TO ITS AUTHOR AND IS NOT IN
-`BLOCK_OPS`, SO NO GUARD WILL STOP IT. THE RUN CLOSES A PR ONLY WHEN THE
-EXCLUDED DIFF IS EMPTY *AND* IT CAN NAME THE PRs THE CONTENT LANDED VIA.
-IT CANNOT NAME THEM → LEAVE THE PR OPEN AND RECORD IT AS `blocked-external`.
+CLOSING SOMEONE ELSE'S PR IS AN IRREVERSIBLE EXTERNAL ACTION AND IS NOT
+GUARDED: `pr-close` IS NOT A `GitOp` AT ALL — NOT IN `BLOCK_OPS`, NOT EVEN
+IN `WARN_OPS`. NOTHING WILL STOP IT, WHICH IS WHY THIS COMMAND MUST.
+
+THE RUN NEVER CLOSES A PR ON ITS OWN HEURISTIC. IT STOPS AND ASKS, NAMING
+THE EXACT OBJECT: THE PR NUMBER, ITS TITLE, ITS AUTHOR, AND THE PRs THE
+CONTENT LANDED VIA. ONE CONFIRMATION PER PR, THIS TURN, PER
+non-destructive-by-default. NEVER A BATCH APPROVAL FOR "THE SUPERSEDED ONES".
+IT CANNOT NAME WHERE THE CONTENT LANDED → DO NOT EVEN ASK; LEAVE THE PR OPEN
+AND RECORD IT AS `blocked-external`.
 ```
+
+The asymmetry is deliberate and worth stating, because it looks inconsistent:
+merging is gated on an owner *decision* recorded once in a blocker, while
+closing is gated on a *per-object* confirmation every time. Merging this run's
+own PR is an action the run's whole design is about; closing a PR someone else
+opened is not, it destroys their work in progress, and no guard in this tree
+sees it happen. The cheaper gate goes on the action nothing else watches.
 
 ## 5. Drive CI green — bounded
 
@@ -257,8 +270,12 @@ never write it:
 cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
 ```
 
-Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`, with the constant
-read from `src/scripts/hooks/block_unauthorized_git.ts`. Under pressure means
+Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`. Take the constant
+from the guard source **only after** `check_hook_bundle_content` says the
+source and the executing bundle agree — reading the source alone is the
+2026-08-21 failure re-expressed as an instruction, since the bundle is what
+enforces the value and a source edit without a rebuild is silently inert. Under
+pressure means
 the remaining window is shorter than one CI cycle on this repository. The read
 is the whole interaction: the run never edits that file, the constant, or the
 built bundle.
