@@ -112,7 +112,7 @@ from.
    (`ai_council/session.ts:59-66`), carried on `absent_members` at `:103`. What is
    banned is **slot indirection**, not identification. `grep -rn
    'member_slot\|memberSlot\|slot_index' src/scripts/ai_council/` returns **zero**
-   today, and `agents/roadmaps/road-to-council-blind-review.md` is `status: ready`
+   today, and `agents/roadmaps/archive/road-to-council-blind-review.md` is `status: ready`
    with open work in Phase 2 (`:145`) and Phase 3 (`:179`); its anonymisation seam
    is `ai_council/orchestrator.ts:1430-1433` and `:1589` (`Response-A` labels for
    the peer-review pass). So 1.1 records `member` as the already-public name the

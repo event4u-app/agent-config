@@ -11,6 +11,55 @@ execution:
 > names its skips from a closed vocabulary, prints its denominator on green, and
 > refuses to report success it cannot substantiate.
 
+## Outcome
+
+Closed 2026-08-20 with **43 of 46 checkboxes satisfied, 3 transferred, 0 open**
+— the dashboard reports the same state as 41 of 44 because its denominator omits
+the two prerequisites. The three transferred boxes are Phase 3 Steps 6 and 7 plus
+the cross-link half of one acceptance criterion, which was split into two boxes
+rather than force-closed (so the total moved 45 → 46). Recorded here rather than
+in a commit message because a reader who finds this file in `archive/` needs it:
+**archived does not mean achieved.**
+
+**Satisfied — the mechanism this roadmap set out to build exists.** Completeness
+accounting (`_lib/gate_ledger.ts`), shrink-only base-ref enforcement
+(`_lib/ratchet_base_ref.ts` behind `check_suppression_hygiene`), the two
+authoring guidelines, the estate-level result classifier
+(`_lib/gate_result.ts`), the CI-delta freshness gate
+(`check_ci_local_parity`) and the measured-render invariant
+(`_lib/measured_render.ts`) all landed and are proven by their own paired
+fixtures. Phases 1, 2, 4 and 5 are complete as written, with the two execution
+notes above recording where the landing differed from the literal wording.
+
+**Narrowed in this closing pass.** Phase 3 Step 5 enumerated eight false-green
+classes and the shipped catalogue covered six of them plus three it added on its
+own. Two of the eight — **hook-bypass overrides** and **cached-green reuse** —
+were absent, so the step's `[x]` was over-claimed against its own list. Both are
+now entries 10 and 11 of `false-green.md`, each with a detection command run
+against this tree before it was written down. This is the only build work in
+this pass; everything else that remained was gated.
+
+**Transferred — Phase 3 Steps 6 and 7, and half of one acceptance criterion.**
+Destination
+[`stubs/road-to-kernel-cross-link-soak.md`](stubs/road-to-kernel-cross-link-soak.md),
+disposition **B**, outcome state `transferred`. The two edits add an ease
+tripwire and two guideline cross-links to `src/rules/verify-before-complete.md`,
+which is one of the nine kernel rules: the `block-kernel-rule-writes` PreToolUse
+guard refuses every agent write to it, and the only two bypasses named in its own
+deny message are human acts outside the session. The edits are **fully drafted**
+and are preserved verbatim in the stub — the residual gate is a write guard, not
+unfinished analysis. The ≥ 24 h kernel-merge spacing is already satisfied
+(last kernel-rule merge `d74f1238a`, 2026-07-31), so nothing here is waiting on
+a clock.
+
+**What that leaves genuinely open.** `verify-before-complete` still does not
+route to either guideline, so both remain reachable from the catalog, the index
+and two contracts but **not** from the always-loaded rule Risk 4 named as their
+routing surface. That risk — "a guideline nobody routes to is inert cost" — is
+therefore mitigated in part and not in full, and it stays open until the stub's
+P1 probe passes. Recording it as closed would be exactly the false green this
+roadmap exists to prevent.
+
 ## Context
 
 Source + verdicts:
@@ -117,8 +166,8 @@ rather than silently absorbed.
 - [x] **Step 3:** Require a gaming-risk block on every new gate or ratchet: name at least one degenerate way the metric passes without the underlying property holding, and name the mitigation. If one degenerate pass is nameable at authoring time, it will be found in practice.
 - [x] **Step 4:** Require the finding message to carry its own suppression key inline, so silencing a false positive is copy-pasteable. Friction in the suppression path is what drives a maintainer to disable the gate instead.
 - [x] **Step 5:** Add `docs/guidelines/agent-infra/false-green.md` cataloguing the ways a green result can be false in this estate, each with its detection command: allowlist growth, ratchet-entry deletion, threshold re-anchoring, suppression sweeps, dead scan roots, hook-bypass overrides, cached-green reuse, and a derived page reporting an unmeasured dimension.
-- [ ] **Step 6:** _(BLOCKED — see `blocker: kernel-cross-link-soak`; the exact edit is drafted there)_ Add an ease tripwire to `verify-before-complete`'s red flags: a verification that was far easier than expected is a signal to check the path, not a signal of success. The existing red flags track confidence wording and not ease.
-- [ ] **Step 7:** _(BLOCKED — see `blocker: kernel-cross-link-soak`; the exact edit is drafted there)_ Cross-link the new guideline from `verify-before-complete` and from the token-optimizer catalog row for that rule, per `token-optimizer-maintenance`.
+- [-] **Step 6:** _(TRANSFERRED 2026-08-20 — disposition B, outcome `transferred`, to [`stubs/road-to-kernel-cross-link-soak.md`](stubs/road-to-kernel-cross-link-soak.md); the edit is preserved verbatim there and needs no re-derivation.)_ Add an ease tripwire to `verify-before-complete`'s red flags: a verification that was far easier than expected is a signal to check the path, not a signal of success. The existing red flags track confidence wording and not ease.
+- [-] **Step 7:** _(TRANSFERRED 2026-08-20 — disposition B, outcome `transferred`, to [`stubs/road-to-kernel-cross-link-soak.md`](stubs/road-to-kernel-cross-link-soak.md); the token-optimizer half is recorded there as never-firing rather than carried.)_ Cross-link the new guideline from `verify-before-complete` and from the token-optimizer catalog row for that rule, per `token-optimizer-maintenance`.
 
 ## Phase 4: Second-order guards
 
@@ -177,11 +226,25 @@ rather than silently absorbed.
 
 ### blocker: kernel-cross-link-soak
 
-- **Status:** open
+- **Status:** resolved 2026-08-20 — **transferred**, not done. Disposition **B**
+  per the drain-run framework
+  `agents/evidence/council/drain-blocker-dispositions-b.md` <!-- ref-ignore -->
+  (read from `origin/drain/council-records`, PR #1463 — not yet on `main`, hence
+  the marker). Its rationale, verbatim: *"Rule 3 requires B because bypassing
+  the kernel write guard and merging the dedicated PR are externally controlled
+  actions."* Outcome state `transferred`; destination
+  [`stubs/road-to-kernel-cross-link-soak.md`](stubs/road-to-kernel-cross-link-soak.md),
+  which carries the original criterion verbatim, the full list of dependent
+  items moved, a named re-entry producer, and three detection probes measured
+  2026-08-20 (P3 passing, P1 and P2 not-yet). **Nothing below was executed** —
+  the two edits are preserved verbatim in the stub so the maintainer applies
+  rather than re-derives them.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** Phase 3 Step 6 and Step 7, and the acceptance criterion that both
-  new guidelines are cross-linked from `verify-before-complete`.
+- **Blocks:** nothing further in this roadmap. It blocked Phase 3 Step 6 and
+  Step 7 and the cross-link half of one acceptance criterion; all three are now
+  `[-]` transferred, and the *existence* half of that criterion is closed on its
+  own evidence.
 - **What to do:** apply the two edits below to
   `src/rules/verify-before-complete.md` in their OWN pull request.
   `verify-before-complete` is one of the nine kernel rules
@@ -251,6 +314,9 @@ rather than silently absorbed.
 - **Resolved when:** both edits are merged and the soak has elapsed. Everything
   else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and
   the inline suppression key — landed in this change and does not wait on it.
+  **This criterion is carried verbatim into the stub and is satisfied there, not
+  here.** It is deliberately left unedited: the transfer moves who owns the
+  condition, never what the condition says.
 
 ## Acceptance Criteria
 
@@ -259,7 +325,8 @@ rather than silently absorbed.
 - [x] A planned-but-unaccounted target throws, proven by a test.
 - [x] An allowlist entry present in the working copy and absent at the base ref fails, proven by a test.
 - [x] Every human-authored suppression entry carries a non-empty `reason`, and new entries additionally carry a `falsifier`.
-- [ ] `docs/guidelines/agent-infra/gate-authoring.md` and `docs/guidelines/agent-infra/false-green.md` exist and are cross-linked from `verify-before-complete`.
+- [x] `docs/guidelines/agent-infra/gate-authoring.md` and `docs/guidelines/agent-infra/false-green.md` exist. _(177 and 232 lines; `gate-authoring.md` carries all five obligations Phase 3 Step 1 enumerates, `false-green.md` carries eleven catalogue entries covering all eight classes Phase 3 Step 5 enumerates — see § Outcome for the two that were missing until 2026-08-20. Both cross-link each other and are referenced from `docs/catalog.md`, `agents/index.md`, `docs/contracts/ci-green-floor.md` and `docs/contracts/branch-protection-policy.md`.)_
+- [-] Both guidelines are cross-linked **from `verify-before-complete`**. _(TRANSFERRED 2026-08-20 — disposition B, outcome `transferred`, to [`stubs/road-to-kernel-cross-link-soak.md`](stubs/road-to-kernel-cross-link-soak.md). `verify-before-complete` is a kernel rule and the `block-kernel-rule-writes` guard refuses every agent write to it; the criterion's other half is closed above.)_
 - [x] A deliberately crashing gate does not produce a green aggregate, proven by a test.
 - [x] `docs/contracts/ci-green-floor.md` carries a `## CI delta` section and a gate keeps it fresh.
 - [x] A generator given an unmeasured dimension emits no percentage for it, proven by a test.
@@ -267,15 +334,22 @@ rather than silently absorbed.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
+
+Re-reviewed 2026-08-20 at the roadmap's close, against measurements taken the
+same day rather than by restamping the date. Two rows changed materially:
+Risk 4's mitigation was **falsified in both halves** and is rewritten, and
+Risk 5's premise was corrected during execution so its mitigation describes
+something that no longer happens. Risks 1, 2 and 3 keep their wording and gain
+an outcome line each.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Ledger adoption becomes a 466-gate sweep | implementation | Adopting the ledger everywhere at once is a very large mechanical diff across the whole gate estate, and a batch touching the kernel-prefix set would trip the byte-stability gate. | Phase 1 adopts exactly three gates and records an exempt count as a ratchet; the remainder migrates incrementally as gates are touched, never as a sweep. | Phase 1: Completeness accounting |
-| 2 | The falsifier field lands as a pro-forma string | product | A required field invites a placeholder value that satisfies the schema without deciding anything, which is the gate-fatigue failure this package has already recorded. | New entries only, no retro-fill; the field holds a command, and Phase 3's gaming-risk discipline applies to this gate as much as to any other. | Phase 2: Make shrink-only mechanical |
-| 3 | Base-ref enforcement false-reds on a legitimate ratchet reset | implementation | A deliberate baseline reset after a real tooling change would present as new entries and block the change that performs the reset. | Renames read from git; a documented reset path records the reason in the commit and the gate reports the reset rather than failing silently. | Phase 2: Make shrink-only mechanical |
-| 4 | Two new guidelines add reading surface without changing behaviour | product | This package already carries a large guideline layer, and a guideline nobody routes to is inert cost. | Both files are routed from an existing always-loaded rule and from the token-optimizer catalog; the authoring path is the single entry point for a new gate rather than optional reading. | Phase 3: Gate authoring discipline |
-| 5 | The estate-level result change masks a real failure | implementation | Degrading a crashed gate to a warning could hide a genuine break that previously surfaced as a hard failure. | The rethrow set covers estate-invalidating conditions, and the null-result check fails closed, so the only softened case is a single gate crash that is now reported as itself rather than as a false pass. | Phase 4: Second-order guards |
+| 1 | Ledger adoption becomes a 466-gate sweep | implementation | Adopting the ledger everywhere at once is a very large mechanical diff across the whole gate estate, and a batch touching the kernel-prefix set would trip the byte-stability gate. | Phase 1 adopts exactly three gates and records an exempt count as a ratchet; the remainder migrates incrementally as gates are touched, never as a sweep. **Held — measured 2026-08-20: 46 of 261 registered gates carry the ledger (38 ledgered + 8 exempt, 17.6%), grown from the three named adoptions by the adopt-or-exempt rule firing on new arrivals rather than by any sweep; the ratchet went 216 → 215 that way and carries zero headroom, so the next un-adopted arrival reds it immediately.** | Phase 1: Completeness accounting |
+| 2 | The falsifier field lands as a pro-forma string | product | A required field invites a placeholder value that satisfies the schema without deciding anything, which is the gate-fatigue failure this package has already recorded. | New entries only, no retro-fill; the field holds a command, and Phase 3's gaming-risk discipline applies to this gate as much as to any other. **Held so far, on a small sample — measured 2026-08-20: 6 of 11 `gate-violation-baselines.json` entries carry a falsifier and all six are real re-runnable `./scripts-run` commands, none a placeholder. Narrower than it reads, though: the field lives on that file only, and the eleven allowlist surfaces `check_suppression_hygiene` tracks carry `reason` without a falsifier, so the pro-forma risk is unmeasured there rather than absent.** | Phase 2: Make shrink-only mechanical |
+| 3 | Base-ref enforcement false-reds on a legitimate ratchet reset | implementation | A deliberate baseline reset after a real tooling change would present as new entries and block the change that performs the reset. | Renames read from git; a documented reset path records the reason in the commit and the gate reports the reset rather than failing silently. **Untested, not disproven — measured 2026-08-20: `check_suppression_hygiene` is green across 12 declared surfaces with 0 removals, and no reset has been performed since the mechanism landed. The mitigation has therefore never been exercised; treat a first reset as the moment this row is decided.** | Phase 2: Make shrink-only mechanical |
+| 4 | Two new guidelines add reading surface without changing behaviour | product | This package already carries a large guideline layer, and a guideline nobody routes to is inert cost. | **FALSIFIED in both halves, 2026-08-20 — this cell previously read "routed from an existing always-loaded rule and from the token-optimizer catalog", and neither is true.** The always-loaded route is `verify-before-complete`, which is a kernel rule the write guard refuses; that work is transferred to `stubs/road-to-kernel-cross-link-soak.md` and has not landed. The token-optimizer route does not exist and never will: the catalog carries no `verify-before-complete` row and that rule is not in `token-optimizer-maintenance`'s cited-asset list, so the obligation never fires — inventing a row to satisfy this mitigation was explicitly refused. What the guidelines DO have is four inbound references (`docs/catalog.md`, `agents/index.md`, `docs/contracts/ci-green-floor.md`, `docs/contracts/branch-protection-policy.md`) plus a mutual cross-link, and `gate-authoring.md` is named as the single authoring path for a new gate. **The risk is mitigated in part and stays OPEN until the stub's P1 probe passes.** | Phase 3: Gate authoring discipline |
+| 5 | The estate-level result change masks a real failure | implementation | Degrading a crashed gate to a warning could hide a genuine break that previously surfaced as a hard failure. | **Did not arise — the change that would have created it was not made.** Phase 4 Step 4's premise ("a crashed gate currently reads as a passing gate") was measured half-wrong: a crash was already ❌ in `check_gate_coverage`. What was missing was the distinction between *found violations* and *could not measure at all*, so `_lib/gate_result.ts` classifies on structural error names and the aggregator gained an `estate_invalid` verdict. **No crash was softened to a warning, so there is nothing here to mask a failure**; the null-result check fails closed as originally specified. A test pins it (`tests/scripts/gate_estate_result.test.ts`). | Phase 4: Second-order guards |
 
 ## Provenance
 
