@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**525 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 182 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**527 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 184 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -199,6 +199,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-discipline-axis-meso-pilot`](road-to-discipline-axis-meso-pilot.md) | Roadmap: discipline-axis benchmark — complexity-stratified pilot (meso/multi + weak host) | closed-with-cancellations | 7 | 14/17 | _not extractable_ |
 | [`road-to-discipline-lift-significance`](road-to-discipline-lift-significance.md) | Roadmap: discipline-lift to significance (clean harness) | completed | 3 | 5/5 | _not extractable_ |
 | [`road-to-discipline-profile-tiering`](road-to-discipline-profile-tiering.md) | Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated | completed-with-deferrals | 5 | 16/18 | _not extractable_ |
+| [`road-to-distillation-followups`](road-to-distillation-followups.md) | Road to the distillation follow-ups — two maintainer-gated items, relocated intact | closed-with-cancellations | 2 | 1/2 | _not extractable_ |
 | [`road-to-distribution-and-adoption`](road-to-distribution-and-adoption.md) | Road to Distribution and Adoption | closed-with-cancellations | 6 | 5/14 | _not extractable_ |
 | [`road-to-distribution-identity`](road-to-distribution-identity.md) | Roadmap: Distribution identity — make npm-primary explicit, retire the stale registry | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-distribution-maturity`](road-to-distribution-maturity.md) | Road to distribution maturity (post-2.2.2 evaluation follow-ups) | completed | 12 | 49/49 | _not extractable_ |
@@ -443,6 +444,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-self-critical`](road-to-self-critical.md) | Road to self-critical — structural review honesty instead of rule #108 | completed | 3 | 10/10 | _not extractable_ |
 | [`road-to-self-update-and-global-hook-resolution`](road-to-self-update-and-global-hook-resolution.md) | Road to Self-Update + Global Hook Resolution | completed | 6 | 35/35 | _not extractable_ |
 | [`road-to-session-analytics`](road-to-session-analytics.md) | Road to session analytics — a post-session cost/turn/churn report | completed | 1 | 2/2 | _not extractable_ |
+| [`road-to-session-closeout`](road-to-session-closeout.md) | Road to closing what fifty sessions left open | closed-with-cancellations | 9 | 53/54 | _not extractable_ |
 | [`road-to-session-profile-activation`](road-to-session-profile-activation.md) | Road to Session-Profile Activation | closed-with-cancellations | 4 | 12/16 | _not extractable_ |
 | [`road-to-session-profile-observability`](road-to-session-profile-observability.md) | Roadmap: Session-Profile Observability for Employees — make "which profile, what changed, why" legible without a CLI | completed | 3 | 20/20 | _not extractable_ |
 | [`road-to-setup-experience`](road-to-setup-experience.md) | Road to Setup Experience | completed | 6 | 25/25 | _not extractable_ |

@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 525,
+  "count": 527,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2449,6 +2449,20 @@
         "done": 16,
         "deferred": 2,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-distillation-followups",
+      "title": "Road to the distillation follow-ups — two maintainer-gated items, relocated intact",
+      "disposition": "closed-with-cancellations",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 1,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": null
@@ -5865,6 +5879,20 @@
         "done": 2,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-session-closeout",
+      "title": "Road to closing what fifty sessions left open",
+      "disposition": "closed-with-cancellations",
+      "phases": 9,
+      "steps": {
+        "open": 0,
+        "done": 53,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"

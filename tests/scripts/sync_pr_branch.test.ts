@@ -25,6 +25,15 @@ describe('generated vs authored', () => {
         expect(isGenerated('agents/index.md')).toBe(true);
     });
 
+    it('classifies the compiled hook manifest as generated, not authored', () => {
+        // Regression for road-to-session-closeout 8.5. `hook_manifest.json` is
+        // compiled from `hook_manifest.yaml`; mixing hunks yields a concern
+        // table matching neither branch. The YAML source stays AUTHORED — that
+        // is the file a human actually edits, and the asymmetry is the point.
+        expect(isGenerated('src/scripts/hook_manifest.json')).toBe(true);
+        expect(isGenerated('src/scripts/hook_manifest.yaml')).toBe(false);
+    });
+
     it('does NOT claim an authored file is generated', () => {
         // gate-coverage.yml conflicted on this branch and is hand-authored — a
         // regenerate-resolution there would have discarded the other side.
