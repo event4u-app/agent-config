@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**542 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 196 · completed 254 · completed-with-deferrals 25 · not-extractable 34
+**543 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 197 · completed 254 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -512,6 +512,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-universal-distribution`](road-to-universal-distribution.md) | Roadmap: Universal Distribution (Cloud + Local Fallbacks) | archived-with-open-steps | 7 | 36/51 | _not extractable_ |
 | [`road-to-universal-execution-engine`](road-to-universal-execution-engine.md) | Roadmap: Universal Execution Engine | closed-with-cancellations | 7 | 45/50 | _not extractable_ |
 | [`road-to-universal-stack-coverage`](road-to-universal-stack-coverage.md) | Road to universal stack coverage — an honest refusal is not coverage | closed-with-cancellations | 4 | 25/26 | _not extractable_ |
+| [`road-to-user-out-of-the-loop`](road-to-user-out-of-the-loop.md) | Road to user-out-of-the-loop | closed-with-cancellations | 10 | 30/44 | _not extractable_ |
 | [`road-to-value-dashboard-netto-cuts`](road-to-value-dashboard-netto-cuts.md) | Roadmap: Value Dashboard NETTO — cut the base-load, keep Panel B value | archived-with-open-steps | 6 | 20/34 | _not extractable_ |
 | [`road-to-verified-chat-history-platforms`](road-to-verified-chat-history-platforms.md) | Road to verified chat-history platforms | archived-with-open-steps | 6 | 35/43 | _not extractable_ |
 | [`road-to-video-deferred-design`](road-to-video-deferred-design.md) | Road to video deferred design — checkpoint/resume, ComfyUI sandbox, provenance (design-gated backlog) | completed | 3 | 8/8 | _not extractable_ |
