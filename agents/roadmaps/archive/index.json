@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 527,
+  "count": 528,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3754,6 +3754,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-c-evidence-lifecycle",
+      "title": "Road to a review binding that survives a checkbox",
+      "disposition": "closed-with-cancellations",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 9,
+        "deferred": 0,
+        "cancelled": 4
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-inbox-harvest-2026-08-c-prompt-deinflation",
