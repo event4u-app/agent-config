@@ -1,6 +1,13 @@
 ---
 complexity: structural
 status: ready
+estate_offset_exempt: >-
+  Ships 27 of 29 steps closed in the change that adds it; the two open steps
+  are held by one owner-reserved blocker (merge-authority) and nothing else.
+  Offsetting it would mean parking an unrelated roadmap that is not blocked,
+  which moves the count without drawing the estate down — the accounting move
+  the ratchet exists to refuse. It leaves the active set on the owner's
+  decision, not on this run's convenience.
 execution:
   mode: autonomous
 ---
@@ -231,7 +238,8 @@ allowlist — no new verb ADR is needed.
       compensation to a separately authorized human decision.
       verify: both rules are in the command's Rules section.
 - [x] **3.10 The `all`-mode summary artifact.** On queue empty or terminal-only,
-      write `agents/evidence/pr-drain-run-summary.md`: one row per PR with
+      write `agents/evidence/pr-drain-run-summary.md` <!-- ref-ignore --> (a
+      runtime output, absent until a run produces one): one row per PR with
       queue position, conflict classes hit, CI iterations used, disposition
       (merged SHA / superseded-closed / blocked-external / twice-exhausted /
       window-expired / arrived-after-cutoff), and any edits dropped in conflict

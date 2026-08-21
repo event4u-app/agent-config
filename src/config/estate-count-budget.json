@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 11,
+    "active_roadmaps": 12,
     "later_roadmaps": 55,
-    "open_blockers": 43
+    "open_blockers": 44
   },
   "baseline_history": [
     {
@@ -517,6 +517,13 @@
       "later_roadmaps": 55,
       "open_blockers": 43,
       "why": "WALKED DOWN by 1 active and 2 blockers. road-to-context-fidelity archived (under agents/roadmaps/ on main, under archive/ here). Two of its three blockers are open on the trunk and closed here on council dispositions dated 2026-08-20: compaction-census-session and prominence-gate-skills-corpus. The third, memory-sweep-instrument, was already resolved on the trunk by a 2026-08-19 council and is excluded from the delta -- the kind of pre-existing closure that would otherwise be banked as this change's drawdown. later_roadmaps unchanged at 55: the part that could not be finished went to stubs/road-to-compaction-survival-census.md with its own probe, so the open work stays counted rather than parked."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 12,
+      "later_roadmaps": 55,
+      "open_blockers": 44,
+      "why": "Raised by one for `merge-authority` in road-to-drain-commands. The blocker is not deferred work: it records that activating a `--merge` flag lowers a recorded safety floor (ADR-237 s4 excludes merging and says no invocation extends it), which docs the decision-revisit-gate reserves to the owner. Three independent reviews reached that same verdict before the blocker was written - the AI council, the committed road-to-gate-preauth-authorization stub, and the runtime classifier, which refused this branch's own attempt to edit the prohibition out of the canonical loop. Writing it as a blocker is what keeps the estate honest here: the alternative was to ship the flag active with an amendment the agent authored for itself, which would have left the count unchanged and the floor lowered. Also raised active_roadmaps 11 -> 12 for the same file. It ships 27 of its 29 steps closed in the change that adds it, and stays active only because that one owner decision is outstanding; its frontmatter carries the matching estate_offset_exempt line rather than parking an unrelated roadmap to balance the books."
     }
   ],
   "target": {

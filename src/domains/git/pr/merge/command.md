@@ -229,7 +229,8 @@ Use the method the repository already uses; never invent one mid-queue. Never
 force-merge past a failing required check, never admin-bypass.
 
 On queue empty or terminal-only, `all` writes
-`agents/evidence/pr-drain-run-summary.md`: one row per PR with queue position,
+`agents/evidence/pr-drain-run-summary.md` <!-- ref-ignore --> (created by the
+run, so it does not exist until one has happened): one row per PR with queue position,
 conflict classes hit, CI iterations used, disposition, and any edits dropped in
 conflict resolution. The disposition set is closed:
 
