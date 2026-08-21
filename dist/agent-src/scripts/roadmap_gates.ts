@@ -427,13 +427,83 @@ export function sheetQuestion(b: Blocker): { text: string; source: 'question' | 
  * none is recorded it says so and names what the reader must supply, so
  * regenerating the sheet cannot silently overwrite an answer with a guess.
  */
-function renderSheet(entries: readonly Entry[], now: Date): string {
+/**
+ * The recorded answer to the consolidated decision sheet.
+ *
+ * The sheet is DERIVED, so an answer written into it is lost on the next run —
+ * the file says so in its own header. But `road-to-estate-drawdown` blocker
+ * `b-consolidated-decision-sheet` resolves only when "the sheet records which
+ * option was used", and a derived file cannot carry that by being edited. So the
+ * option lives in a NON-derived sibling and the sheet reads it, which keeps the
+ * sheet deterministic and still lets it state the answer.
+ *
+ * Read, never written, and absent is a first-class answer: no marker means the
+ * sheet renders exactly as before, so this is additive to every existing caller.
+ */
+interface SheetAnswer {
+    option: string;
+    answered: string;
+    authority: string;
+}
+
+const SHEET_ANSWER_REL = path.join('agents', 'decisions', 'consolidated-decision-sheet-answer.md');
+
+/**
+ * One line, three fields, all required — a partial marker is treated as absent
+ * rather than rendered half-filled, because a header that named an option with
+ * no date or authority would be less honest than one that says nothing.
+ */
+const SHEET_ANSWER_RE =
+    /<!--\s*sheet-answer:\s*(.+?)\s*\|\s*answered:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*authority:\s*(\S+)\s*-->/;
+
+export function readSheetAnswer(repoRoot: string): SheetAnswer | null {
+    const file = path.join(repoRoot, SHEET_ANSWER_REL);
+    let text: string;
+    try {
+        text = fs.readFileSync(file, 'utf8');
+    } catch {
+        return null;
+    }
+    const m = SHEET_ANSWER_RE.exec(text);
+    if (m === null) {
+        return null;
+    }
+    return {
+        option: (m[1] as string).trim(),
+        answered: (m[2] as string).trim(),
+        authority: (m[3] as string).trim(),
+    };
+}
+
+/** The header block naming the recorded answer, or nothing when none is recorded. */
+function answerBanner(answer: SheetAnswer | null): string[] {
+    if (answer === null) {
+        return [];
+    }
+    return [
+        '>',
+        `> **ANSWERED ${answer.answered} — ${answer.option}.**`,
+        `> Recorded in \`${SHEET_ANSWER_REL}\` (not derived);`,
+        `> authority \`${answer.authority}\`.`,
+        '> The rows below are the ones still OPEN: an answered',
+        '> row stays here until the work its own entry names is done, so this is a work',
+        '> queue and not a count of unanswered questions.',
+    ];
+}
+
+function renderSheet(
+    entries: readonly Entry[],
+    now: Date,
+    answer: SheetAnswer | null = null,
+): string {
     const mine = entries.filter((e) => needsUser(e.blocker.owner));
     const stamp = now.toISOString().slice(0, 10);
     if (mine.length === 0) {
+        const banner = answerBanner(answer);
         return (
             `# Consolidated decision sheet — nothing owned by you (${stamp})\n\n` +
-            'No open blocker in the active roadmap tree carries `Owner: user`. Nothing to answer.\n'
+            'No open blocker in the active roadmap tree carries `Owner: user`. Nothing to answer.\n' +
+            (banner.length === 0 ? '' : '\n' + banner.slice(1).join('\n') + '\n')
         );
     }
 
@@ -461,6 +531,7 @@ function renderSheet(entries: readonly Entry[], now: Date): string {
         '> This file is DERIVED — every line above and below comes from the roadmaps themselves,',
         '> so regenerating is deterministic and an answer written into this file would be lost.',
         '> Answers go back into each roadmap at its own blocker; the agent does that.',
+        ...answerBanner(answer),
         '',
         '| # | Decision | Roadmap | Unblocks | Default source |',
         '|---:|---|---|---:|---|',
@@ -847,7 +918,7 @@ function main(argv?: readonly string[]): number {
     const resumed = reply || sheet ? [] : probeLater(roadmapRoot, repoRoot);
     process.stdout.write(
         sheet
-            ? renderSheet(entries, new Date())
+            ? renderSheet(entries, new Date(), readSheetAnswer(repoRoot))
             : reply
               ? renderReply(entries)
               : json

@@ -15073,7 +15073,15 @@ var settingsSchema = external_exports.object({
     ),
     horizon_weeks: external_exports.number().int().min(0).default(0).describe(
       'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon \u2014 most teams prefer to ship without a hardcoded window.'
-    )
+    ),
+    gate_budget: external_exports.object({
+      max_cost_per_run_usd: external_exports.number().min(0).default(5).describe(
+        "Per-run USD ceiling for a CLASS-1 roadmap blocker executed via `agent-config gates --execute`. A class-1 entry whose **Budget:** field states a larger figure renders its consent line instead of running. Bounds the size of an authorised spend; never supplies the authorisation \u2014 `--confirm` is still required on every class-1 run."
+      ),
+      max_cost_per_rolling_7d_usd: external_exports.number().min(0).default(25).describe(
+        "Rolling 7-day USD ceiling for class-1 gate execution, summed from the append-only receipt ledger at agents/runtime/state/gate-budget-ledger.jsonl. A run whose estimate would cross it renders instead of running. A per-run cap alone bounds one mistake, not a week of them, which is why option (a) of b-gate-budget-preauth carries two numbers."
+      )
+    }).default({ max_cost_per_run_usd: 5, max_cost_per_rolling_7d_usd: 25 })
   }),
   planning: external_exports.object({
     challenge_on_create: external_exports.boolean().default(true).describe(

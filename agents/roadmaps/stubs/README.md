@@ -48,40 +48,67 @@ legal signature, another human, or a capability nobody is building. The parent
 roadmap closes against an explicit outcome state (`transferred`), so a completed
 roadmap can never be read as an achieved goal.
 
+The distinction that decides which gates apply: the stubs in **§ Current stubs**
+are **demand-gated** — the work is buildable today and the open question is
+whether it *should* be built. A drain-run transfer is **capability-gated** — the
+scope decision is already made, the work is wanted, and the only thing missing is
+an environment the run did not have.
+
 Each entry carries the framework's three-point stub-integrity check — the
 original criterion **verbatim**, the complete list of dependent steps moved, and
 a **named producer with a detection probe** (never "when some subsystem exists",
 which names nobody) — plus the probe's measured baseline on the transfer date, so
-a later reader can tell real movement from noise.
+a later reader can tell real movement from noise, and any reasoning that would
+otherwise die with the parent.
 
-| Stub | Transferred from | Outcome state | Re-entry gates (baseline at transfer) |
+| Stub | Transferred from | Outcome state | Re-entry gate (its own probe, baseline at transfer) |
 |---|---|---|---|
 | [`road-to-host-aware-skill-projection.md`](road-to-host-aware-skill-projection.md) | `road-to-release-review-p0.md` Phase 1 + AC1, 2026-08-20 | `transferred` | P1-P3 in the stub: a same-`projection_mode` observation pair, a non-throwing scoped path in `condense.ts`, and a published projected-away-skill finding — each with a probe, all three measured failing |
 | [`road-to-bus-factor-external-actions.md`](road-to-bus-factor-external-actions.md) | [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md) Phase 1-4, 2026-08-20 | `transferred` | 4 items: `ANTHROPIC_API_KEY` present **and** a non-skipped `live-advisory` run (absent; 0 live runs) · ruleset 17749383 requires code-owner review, ≥ 1 approval, > 1 check (`false` / `0` / `1`) · a dated cold-dry-run record (none) · distinct trailing-90-day reviewers > 1 (1) |
+| [`road-to-main-protection-ruleset-changes.md`](road-to-main-protection-ruleset-changes.md) | `road-to-inbox-harvest-2026-08-b-ci-economy.md` Phase 4, blockers `required-check-set-change` + `merge-queue-enablement`, 2026-08-20 | `transferred` | One gate, in the stub: a repo-admin write on ruleset `17749383` by the named producer. Two probes, both measured at transfer time: required checks **1**, `merge_queue` entries **0**, `merge_group` files **0** |
+| [`road-to-multi-host-screenshot-census.md`](road-to-multi-host-screenshot-census.md) | [`road-to-source-first-frontend`](../road-to-source-first-frontend.md) — Phase 1 Step 2, the screenshot dimension of Phase 6 Step 1, and the W5 URL / live-page handover class | `transferred` | A **page-reaching** capture primitive on a second supported host. Measured 2026-08-20: this host has `screencapture` only, which photographs the display. Display-only capture on a second host changes nothing. |
+| [`road-to-gate-preauth-authorization.md`](road-to-gate-preauth-authorization.md) | [`road-to-gate-autonomy.md`](../road-to-gate-autonomy.md) step 2.3, 2026-08-20 | `transferred` | 1 item, both probe halves required: an authorisation artefact `lint_settings_classes` reports as class **C** and naming a blocker id (none of today's 107 C keys is one) · the abort intact, `grep -c 'Refusing to run under automation' src/scripts/skill_trigger_eval.ts` still `1` (`1`) |
+| [`road-to-org-telemetry-sink.md`](road-to-org-telemetry-sink.md) | [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 2 (`sink-choice`), 2026-08-20 | `transferred` | 1 item: a private, package-CI-inaccessible repository identifier resolves **and** appears in org-pack settings (measured FAIL on every clause — no identifier exists in the tree, `read_remote_settings` reports `missing: endpoint, org_id, salt`). Producer: the org repository administrator. **The pending act is itself Hard-Floor** — repository creation and pointing an endpoint at it; monitoring owner + rollback recorded in the stub |
+| [`road-to-org-telemetry-enablement.md`](road-to-org-telemetry-enablement.md) | [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 3 (`dpo-signoff`), 2026-08-20 | `transferred` | 1 item: a written internal data-protection outcome covering the Class-A field list **and** the disclosure line is linked from ADR-233 (measured FAIL — ADR-233 exists and is indexed, `grep -c "sign-off"` returns 0). Producer: the named internal data-protection reviewer. Its four measurement items are gated by the sink stub as well; both must clear |
+| [`road-to-solution-minimalism-full-tier-run.md`](road-to-solution-minimalism-full-tier-run.md) | [`road-to-solution-minimalism.md`](../road-to-solution-minimalism.md) Phase 3 + the full-tier AC, 2026-08-20 | `transferred` | 3 items, all gated on one paid sweep: ≥ 30 corpus tasks declaring `repo` + `sha` (**1**) · a `Gate verdict:` in `docs/benchmark.md` from a pinned report with a non-empty `sha` (**none**; 0 full-tier runs ever) · that verdict carrying all four pre-registered endpoints (all four implemented, 0 reports rendered). Blocked by an absent credential and by a Hard Floor that a 2026-08-14 pre-authorisation does not clear |
+| [`road-to-subagent-payload-capture.md`](road-to-subagent-payload-capture.md) | [`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md) Phase 0 Steps 2+4 raw-payload halves (Phase 4 Step 1 blocked by, not moved), 2026-08-20 | `transferred` | P1-P4 in the stub: a captured `SubagentStop` payload, a captured in-subagent `PreToolUse` payload, their field lists recorded, and the `AGENT_HOOK_CAPTURE_DIR` setting absent again afterwards (P1/P2 directory does not exist · P3 absent · P4 correctly no match today). Producer: the host owner, one time-boxed fresh session, under the 7 containment requirements in the stub — the capture writes payloads verbatim and "remove it afterwards" is not a kill switch |
 
-**The shared promotion criteria below do NOT govern a drain-run transfer.** They
-were written for the org-mode stubs and require a recruited customer, a funded
-security audit, and an ADR lifting a Hard-Floor item. A drain-run transfer
-introduces no new product surface — it is existing, already-agreed work waiting
-on one external act — so demanding a funded audit before adding a repo secret or
-asking a second person to review would be a category error that parks the work
-permanently. **A drain-run transfer is gated only by its own per-item probe.**
-Promote per item, not per file, and delete the stub when its last item is gone.
+```
+THE SHARED PROMOTION CRITERIA IN THE NEXT SECTION — RECRUITED CUSTOMER, FUNDED
+SECURITY AUDIT, ADR SIGN-OFF — DO **NOT** GOVERN A DRAIN-RUN TRANSFER.
+A TRANSFER IS PROMOTED BY ITS OWN NAMED PROBE RETURNING TRUE. NOTHING ELSE.
+```
+Applying a recruited customer or a funded security audit to a capability-gated
+transfer is a category error: there is no customer to recruit for a tool surface
+that simply is not connected, and no audit clears a missing capability. Promote
+**per item**, not per file, and delete a stub when its last item is gone.
 
-One qualification, because the shorter version of that sentence is false: a
-transfer crossing no *new* surface is not the same as a transfer crossing no Hard
-Floor. Some of these pending acts — a repo-admin ruleset write, a branch
-protection change — **are** Hard-Floor actions in their own right. Being exempt
-from the org-mode promotion gates does not exempt the act itself: when a human
-performs it, it needs its own this-turn approval under
-`non-destructive-by-default`, exactly as it would have inside the parent roadmap.
+Two qualifications, because the short version of that paragraph is false in two
+different directions.
+
+**A transfer crossing no *new* surface is not a transfer crossing no Hard Floor.**
+Some pending acts here — a repo-admin ruleset write, a branch-protection change —
+**are** Hard-Floor actions in their own right, and the third row is exactly that
+case: a repository-administration setting is a `non-destructive-by-default`
+trigger, which is precisely why the council could only transfer it. Being exempt
+from the org-mode promotion gates does not exempt the act. When a human performs
+it, it needs its own this-turn approval naming the exact object, exactly as it
+would have inside the parent roadmap.
+
+**A gate is not always a measurement.** For that same row the gate is the
+*authority* itself, exercised by a named human — not a number anyone can read.
+Requiring a recruited customer and a funded audit before a maintainer may edit
+their own repository settings would gate on nothing and make the stub unclosable.
+
+Framework of record for drain-run dispositions:
+[`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)
+and its batch-B sibling.
 
 ## Promotion criteria (shared)
 
-Applies to the **org-mode stubs** in § Current stubs only — not to
-drain-run transfers, which name their own per-item probes. Such a stub
-may move from `stubs/` to `agents/roadmaps/` only when **all three** of
-these are true:
+Governs the **demand-gated** stubs in § Current stubs only — never a drain-run
+transfer, which names its own probe above. Any such stub may move from `stubs/`
+to `agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
    `agents/recruit-sessions/<role>/`. No speculative promotion.
