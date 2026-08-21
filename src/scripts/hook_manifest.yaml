@@ -429,6 +429,34 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-org-telemetry Phase 2 (step 2.1) — session-end Class-A flush.
+  # Checks whether the outbound spool has bytes and, if so, spawns a DETACHED
+  # sender and returns. It makes no network call in the session's own process,
+  # ever, and that shape is measured rather than preferred: Phase 0's second
+  # spike pre-registered "at or below one second at p95" for an inline flush
+  # and measured 1002 ms against a blackhole sink (a socket that accepts and
+  # never answers — the shape a wedged sink takes), against 20.5 ms for the
+  # detached spool. The step's own text defers to that result.
+  #
+  # DEFAULT-OFF and then some, exactly as telemetry-usage: `active` needs
+  # `enabled` AND an endpoint AND an org id AND a salt, none of which this
+  # public repository ships a value for, so a clone cannot reach the spawn
+  # path. `flush: never` short-circuits before the spool is stat-ed. Inactive
+  # ⇒ zero telemetry file operations and zero network calls.
+  #
+  # Bound on the six platforms that carry `session_end`; windsurf has the slot
+  # nowhere in this manifest, so an org running it keeps its records local
+  # until a flush slot exists there — a readable absence, not a silent one.
+  #
+  # Silent on every path and exit 0 always, including a failed spawn: a
+  # telemetry concern has nothing to say to the model, least of all at session
+  # end where the line would arrive after the last thing the user reads.
+  # Carries no hook-token-budget row — it emits nothing. fail_closed: false.
+  telemetry-flush:
+    script: src/scripts/hooks/telemetry_flush_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   # Self-repair intake (road-to-self-repair Phase 1). Two slots, one queue:
   # user_prompt_submit opens a record when the user states the agent worked
   # wrongly and injects the open-queue line; stop runs the deterministic
@@ -838,6 +866,35 @@ concerns:
     fail_closed: false
     severity: advisory
     tools: [Agent, Task]
+  # road-to-source-first-frontend Phase 3 Steps 1-2 — source-first gate, SHADOW
+  # ONLY, per docs/contracts/concern-activation-policy.md. On every
+  # capture-shaped tool call it appends one `source_first_gate_shadow` line
+  # recording what the gate WOULD have warned under four candidate gating
+  # rules. It emits nothing to the model and has no code path that can warn or
+  # deny.
+  #
+  # Phase 3 Step 1 was drafted as `exit 2 warn` and Step 2 left the posture an
+  # explicit maintainer call; the roadmap's own 2026-08-17 correction records
+  # that the activation policy contradicts the drafted default-ON warn. Shadow
+  # is the re-argued answer, and it dissolves both of that step's blocking
+  # dependencies rather than waiting on them: the verifier-exemption risk is a
+  # harm of EMISSION (a concern that emits nothing warns nobody, so the open
+  # SLI `agent_id` binding becomes a recorded field instead of a gate), and the
+  # unfinished multi-host matcher census becomes the measurement rather than a
+  # false-positive generator (`capture_kind` separates page-reaching capture
+  # from display capture on every record).
+  #
+  # No `tools:` filter on purpose: the concern must see ordinary reads to latch
+  # whether the handover source was read before the capture. The flip condition
+  # to advisory is pre-registered in the hook header.
+  #
+  # Never blocks, never warns: exit 0 on every path. fail_closed: false.
+  source-first-gate:
+    script: src/scripts/hooks/source_first_gate_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    needs_payload_bodies: [input]
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
@@ -890,17 +947,17 @@ roles:
 platforms:
   augment:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -941,7 +998,7 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     # end-review-nudge and delegation-nudge are DELIBERATELY NOT bound on
     # this platform (F10, review) — cowork-dispatcher.sh's own header states
     # it "always exit[s] 0" and its dispatch line discards the dispatcher's
@@ -954,7 +1011,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges
@@ -975,7 +1032,7 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
@@ -990,7 +1047,7 @@ platforms:
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
@@ -1026,7 +1083,7 @@ platforms:
   # — this is our `stop` slot.
   gemini:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+    session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]

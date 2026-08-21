@@ -706,7 +706,7 @@ gates:
       (post-compaction truncation keeps the file start) is unverified, the tree's one
       measured truncation fact being ENTRY-level. Re-opening this needs a measured
       reason plus the reported-and-baselined ratchet, not a path added to `argv`.
-      See `agents/roadmaps/road-to-context-fidelity.md` § Phase 3.
+      See `agents/roadmaps/archive/road-to-context-fidelity.md` § Phase 3.
 
   - id: check_cli_registry_budget_sync
     argv: []

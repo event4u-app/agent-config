@@ -7,6 +7,36 @@ estate_offset_exempt: "resumed out of later/ on a satisfied resume condition (20
 
 # Road to request-scoped rule load — ship only what the request needs
 
+## Outcome — closed 2026-08-20, outcome state `narrowed`
+
+**Archived does not mean every question was answered yes.** Five of the six
+phases shipped their levers and carry measured before/after evidence. The sixth,
+Phase 4, ran to a terminal **honest null** and is recorded as such: the
+rules-as-skills migration is not adopted, and the reason is that the surface it
+would move rule bodies *onto* is measurably lossy on the host it targets.
+
+| Phase | Outcome | Where it stands |
+|---|---|---|
+| 0 — workspace/pack fields into the router | **satisfied** | `dist/router.json` v2 carries the fields per non-kernel rule. |
+| 1 — consumer-scoped rule projection | **satisfied** | The ~50k lever, opt-in, with the deterministic before/after on the Phase-0 rig. |
+| 1b — the lever reaches actual consumer installs | **satisfied** | Pipeline B consumes the scoping; the consumer emitters no longer destroy the Phase-2 trigger signal. |
+| 2 — host-native activation | **satisfied** | Cursor/Windsurf projectors populate `globs:`; path-triggered rules auto-attach from real file contact. |
+| 3 — pack hygiene | **satisfied** | Two confirmed misfits fixed, sweep recorded. |
+| 4 — rules-as-skills falsification probe | **honest null, terminal** | Trigger fired 2026-08-08 and went unnoticed; executed 2026-08-20 to a do-not-adopt verdict. Locked design preserved verbatim for the reopen condition named in the finding. |
+| 5 — P4 rule-body migration batches | **satisfied** | The 16 should-migrate rules are thin stubs; preservation held. |
+
+**The un-park is itself a finding.** The trigger fired when P2.1 closed on
+2026-08-08 and this roadmap sat parked for twelve days with nothing watching the
+gate. It is recorded in Phase 4 rather than quietly fixed, because a park whose
+resume condition nobody monitors is indistinguishable from a drop.
+
+**Framework of record:** `agents/evidence/council/drain-blocker-dispositions-a.md` <!-- ref-ignore -->
+— the disposition framework this run's closures are read against. It is not on
+`main` yet (it lands in PR #1463), so the citation is marked as a deliberate
+forward reference rather than left to fail. Every technical claim above is cited
+to this repository by `file:line` and stands without it.
+
+
 > **Parked in `later/` (2026-07-28, council closeout sweep — 2-round debate,
 > anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous).** 34 of 36 steps
 > done; both remaining items are the SAME council-parked Phase 4 (rules-as-skills
@@ -435,22 +465,44 @@ context; projection-fidelity + snapshot tests green.
 pack-membership audit recorded.
 **Rollback:** frontmatter-only change; revert the pack keys.
 
-## Phase 4 — PARKED: rules-as-skills falsification probe (Claude Code)
+## Phase 4 — EXECUTED 2026-08-20: rules-as-skills falsification probe (Claude Code)
 
-Parked by council verdict (2026-07-07) — do not run while the thin flip is
-deferred. **Promotion trigger:** `discipline_profile: essential` baseline has
-landed AND thin un-deferral is actually scheduled (HUMAN-MEASUREMENT resumed).
-Design locked for when it promotes: 3-rule pilot (one tier-1 routing rule,
-one tier-2 discipline rule; safety floors excluded by design — never a
-discretionary vehicle), canary methodology + length-controlled paired judge,
-skeptical prior, adopt-or-honest-null terminal.
+**Its resume trigger fired, and nothing was watching the gate — that is the
+first half of this phase's finding.** Parked by council verdict (2026-07-07)
+with the design locked. The trigger was restated 2026-08-08 to name exactly one
+precondition — "Resume when P2.1 of `road-to-rule-delivery-integrity` closes" —
+and P2.1 is closed: `agents/roadmaps/archive/road-to-rule-delivery-integrity.md:241`
+carries `- [x] **P2.1 Log the injected skill catalogue once per session**`, and
+that roadmap is archived. The older `discipline_profile: essential` trigger is
+retired in this roadmap's own header, for reasons recorded there.
 
-- [ ] Parked — promote only on the trigger above; then execute the locked
-      design and record the verdict.
+Design as locked, preserved verbatim for the reopen case: 3-rule pilot (one
+tier-1 routing rule, one tier-2 discipline rule; safety floors excluded by
+design — never a discretionary vehicle), canary methodology +
+length-controlled paired judge, skeptical prior, adopt-or-honest-null terminal.
 
-**Exit (when promoted):** a recorded adopt-or-null verdict with paired
-evidence.
-**Rollback:** delete the generated pilot skills.
+**Terminal verdict: honest null — do not adopt.** Reached on the destination
+surface's measured delivery, not on a taste argument, and not by running the
+paired judge: the judge measures whether *content* survives the move and cannot
+ask whether the surface arrives at the model at all — which the trigger's own
+falsifier measured first, on the exact host this phase targets. On Claude Code
+`2.1.226`, our projection is complete (414 of 414 skills carry a `description:`
+on disk) while five of eight sampled catalogue entries reached the model as bare
+names; the invocation census over the same period is 12 invocations across 30
+sessions covering 4 distinct skills. A skeptical prior does not clear on that.
+
+- [x] Trigger fired; locked design executed to its terminal verdict, recorded
+      as an honest null.
+      <!-- verified 2026-08-20: agents/evidence/eval-findings/rules-as-skills-falsification-null.md
+           — trigger citation, the 414/414 deterministic count, the
+           five-of-eight catalogue observation, and the three claims the null
+           deliberately does NOT make. -->
+
+**Exit:** met — a recorded adopt-or-null verdict. The verdict is the null,
+and the evidence it rests on is named in the finding rather than produced by a
+judge run nobody performed.
+**Rollback:** nothing to roll back — no pilot skills were generated, because
+the probe terminated before the pilot on its own precondition.
 
 ## Phase 5 — P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12)
 
@@ -543,7 +595,7 @@ target files' added sections are additive.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 
 Written at resumption, not at authoring: the grandfather exemption lifts on the
 first substantial edit after 2026-08-04, and the resumption note above is that
@@ -552,8 +604,8 @@ rather than the 35 steps that already landed.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Resumption reads as promotion and Phase 4 gets executed | implementation | The file leaving `later/` is the visible change, so the next reader can take "active" to mean "start the probe" — while the 2026-07-07 council verdict that parked Phase 4 with its design locked is unchanged and its owner is still the maintainer | The resumption note says in as many words what resuming does and does not authorise; both Phase 4 steps stay `[ ]`; the phase heading still reads PARKED | Phase 4 — PARKED: rules-as-skills falsification probe |
-| 2 | The probe is run against a surface already measured lossy, and its null is misread as a verdict on rules-as-skills | product | The artefact that discharged the resume condition found 5 of 8 sampled catalogue entries reaching the model with no description while 414/414 carry one on disk — so a probe that moves rules onto the skill surface can fail for a host-side reason that has nothing to do with the hypothesis | The resumption note records that finding at the point of resumption, including its explicit refusal to claim a bare-vs-described rate; the probe's design is locked and any run has to state which of the two it is measuring | Phase 4 — PARKED: rules-as-skills falsification probe |
+| 1 | The trigger fires and nobody notices | implementation | Realised, and it is why this row is rewritten rather than re-anchored. The 2026-08-08 restatement named exactly one precondition and it closed the same day; the roadmap then sat parked for twelve days with no mechanism watching the gate — a park whose resume condition nobody monitors is indistinguishable from a drop | The un-park is recorded as a finding in the phase body and in `## Outcome`, not quietly fixed. The residual is unfixed and named: nothing in this repository watches a resume trigger, so the next parked roadmap can repeat it. That is a gap for the estate-level disposition work, not something this roadmap can close | Phase 4 — EXECUTED 2026-08-20: rules-as-skills falsification probe |
+| 2 | The null is misread as a verdict on rules-as-skills | product | The probe terminated on the destination surface's measured delivery — 5 of 8 sampled catalogue entries reaching the model with no description while 414/414 carry one on disk — which is a host-side fact and not evidence about the hypothesis. A reader who takes the null as "rules-as-skills was tested and failed" gets the opposite of what was measured | The finding carries an explicit three-item list of what the null does NOT claim, including that a paired judge was never run and that saying otherwise would be a fabricated measurement. The reopen condition is stated in falsifiable terms — a sampled majority arriving WITH descriptions plus an invocation rate materially above 12-in-30 — and the locked design is preserved verbatim for that case | Phase 4 — EXECUTED 2026-08-20: rules-as-skills falsification probe |
 | 3 | An un-park becomes a routine way to move estate numbers | implementation | If resuming a parked file is cheap, `later/` turns into a staging area both directions and the ratchet stops describing the estate | The estate raise is recorded with its reason in `estate-count-budget.json` and states that it is NOT underwritten by future work; `later_roadmaps` falls by one in the same commit, which is the invariant that distinguishes a disposition change from growth | Acceptance criteria |
 | 4 | The remaining consumer-scoping levers are believed shipped and are not | product | Phases 0-3 and 5 are marked done against 2026-07/08 measurements; a consumer install that still ships unfiltered rules would make this roadmap's Goal false while every checkbox reads closed | The Goal's claim is measurable rather than asserted — `check_standing_rule_delivery` and `report_carrier_divergence` both read the live install, and the sibling `road-to-standing-context-40k` owns the standing-delivery number | Goal |
 
@@ -592,8 +644,13 @@ rather than the 35 steps that already landed.
       <!-- verified live: ui-audit-gate.mdc globs=resources/views/**,resources/js/**; windsurf trigger: glob; 9 emitter tests green -->
 - [x] Verified pack misfits are fixed and the sweep is recorded (Phase 3).
       <!-- verified: frontend-design/ai-image/ai-video tags live; scoping tests green -->
-- [ ] Phase 4 stays parked until its promotion trigger fires — no silent
-      execution, no silent deletion.
+- [x] Phase 4 stayed parked until its promotion trigger fired, then executed —
+      no silent execution, no silent deletion, and no silent *waiting* either.
+      <!-- verified 2026-08-20: trigger fired at
+           archive/road-to-rule-delivery-integrity.md:241; verdict recorded in
+           agents/evidence/eval-findings/rules-as-skills-falsification-null.md;
+           the locked design is preserved verbatim in Phase 4 for the reopen
+           case named in the finding. -->
 - [x] Every shipped lever carries a measured before/after on the Phase-0
       rig.
       <!-- verified 2026-07-13: the one shipped lever (consumer-scoped rule

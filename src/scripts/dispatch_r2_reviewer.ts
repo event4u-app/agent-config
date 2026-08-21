@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // (validator → dispatcher for the scope hash, dispatcher → validator for
 // relevance) is safe: neither module calls the other at module-evaluation
 // time, and each CLI entry guard only fires for its own argv[1].
+import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
 import { gitEnv } from './_lib/git_env.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { artifactRelevance } from './check_completion_review.js';
@@ -492,20 +493,11 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
     const lines = roadmapText.split('\n');
     let start = -1;
     for (let i = 0; i < lines.length; i++) {
-        // Case-insensitive, and NOT anchored at the end of the line.
-        //
-        // Case first: the tree carries both `## Acceptance Criteria` and
-        // `## Acceptance criteria`; a case-sensitive match silently extracted
-        // nothing for the latter (found by the zcs-close R2 review, 2026-08-09).
-        //
-        // The end-anchor was the same defect wearing a different mask, and it was
-        // LIVE: `\s*$` rejected a heading carrying a qualifier, so
-        // `## Acceptance criteria (per phase, on promotion to ready)` and
-        // `## Acceptance criteria (anti-dump — the review-s own rule)` extracted
-        // nothing. Two roadmaps, measured 2026-08-18 — and they had been counted
-        // as "declares no criteria" by the very census that motivated this fix,
-        // which is how a matcher tuned to its own measurement hides its misses.
-        if (/^##\s+acceptance criteria\b/i.test(lines[i] as string)) {
+        // Case-insensitive and NOT end-anchored — both of those were live misses
+        // here (case: zcs-close R2 review 2026-08-09; the `(per phase, …)` qualifier:
+        // measured 2026-08-18). The predicate now lives in `_lib/ac_heading`, which
+        // records all three instances of the defect and why it is shared.
+        if (isAcceptanceCriteriaHeading(lines[i] as string)) {
             start = i;
             break;
         }
