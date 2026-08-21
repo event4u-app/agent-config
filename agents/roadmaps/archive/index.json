@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 541,
+  "count": 542,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6820,6 +6820,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-user-out-of-the-loop",
+      "title": "Road to user-out-of-the-loop",
+      "disposition": "closed-with-cancellations",
+      "phases": 10,
+      "steps": {
+        "open": 0,
+        "done": 30,
+        "deferred": 0,
+        "cancelled": 14
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-value-dashboard-netto-cuts",

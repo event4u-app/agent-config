@@ -385,7 +385,7 @@ execution:
 
 - `interactive` — every gate fires as today. Declare it explicitly if you want
   it: an **absent** field is derived from the invocation form
-  (`process-full` / `roadmap:next` → `autonomous`, `process-phase` →
+  (`process-full` → `autonomous`, `roadmap:next` / `process-phase` →
   `phase-checkpoints`), not defaulted to `interactive`. The contract screen is
   still shown once either way and still offers "run interactive instead".
 - `phase-checkpoints` — one compact status + continue prompt per phase
