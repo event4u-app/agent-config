@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3a35a8c8c2753c4ecbb73a721ae2659b95191e8b, review
-  artefacts excluded), scope hash `88d3558e88e02c6deef59a21ca419397038fb76a8ca26e91dbfde33668702e5c`
+- diff: `diff.patch` — the review scope (branch head daefc280094a633462b935117f56879b532e39f6, review
+  artefacts excluded), scope hash `a81de63343e1a96a2f68e5e8515015c7a05e480c0ef894854bdc44ae4e0dd003`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -40,10 +40,14 @@ Changed files:
 - agents/roadmaps/stubs/road-to-gate-preauth-authorization.md
 - agents/roadmaps/stubs/road-to-org-telemetry-enablement.md
 - agents/roadmaps/stubs/road-to-ratchet-baseline-append-safety.md
+- dist/agent-src/scripts/dashboard_mode.ts
 - dist/agent-src/scripts/update_roadmap_progress.ts
+- src/agent-src/scripts/dashboard_mode.ts
 - src/agent-src/scripts/update_roadmap_progress.ts
+- src/scripts/check_references.ts
 - src/scripts/sync_pr_branch.ts
 - taskfiles/content.yml
+- tests/scripts/check_references.test.ts
 - tests/scripts/sync_pr_branch.test.ts
 - tests/scripts/update_roadmap_progress.test.ts
 
@@ -67,5 +71,5 @@ Fill the findings table in `untrack-generated-conflict-surface.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 88d3558e88e02c6deef59a21ca419397038fb76a8ca26e91dbfde33668702e5c, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope a81de63343e1a96a2f68e5e8515015c7a05e480c0ef894854bdc44ae4e0dd003, reviewed <YYYY-MM-DD>
 ```
