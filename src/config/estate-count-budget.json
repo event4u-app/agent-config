@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
+    "active_roadmaps": 22,
     "later_roadmaps": 52,
     "open_blockers": 60
   },
@@ -288,6 +288,20 @@
       "why": "WALKED DOWN by 1 blocker: road-to-subagent-lifecycle-integrity resolved raw-capture-needs-host-env, which is open on origin/main and resolved here \u2014 checked against the diff rather than taken from the branch's own prose. The item that could not be finished went to stubs/road-to-subagent-payload-capture.md with its own probe, so the open work is counted in the stub rather than dropped. active_roadmaps unchanged at 24: the roadmap keeps open steps and the regen did not archive it. later_roadmaps unchanged at 52 \u2014 nothing parked. The history array was conflicted at merge (trunk ahead, branch carrying its own entries); main was taken as the base and the branch entries appended, because the array is append-only and a dropped entry is a lost reason."
     },
     {
+      "at": "2026-08-20",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by 1 active roadmap and nothing else. road-to-session-closeout was closed against explicit outcome states and archived by `roadmap:progress`, which now performs the archival itself rather than warning. Measured on the merged tree AFTER the archival, not on a branch: active_roadmaps 24, later_roadmaps 52, open_blockers 64. No blocker moved -- that file shipped with none by maintainer instruction, its three decisions having been taken by the council instead, so there was never an entry here to dispose of. The lower measurement is the new ceiling, not headroom: the gate refused a silent tightening and asked for exactly this edit in the change that earned it. Honest note on what the archival means, because a count cannot carry it: 35 of that roadmap's 54 lines are TRANSFERRED to stubs/road-to-session-closeout-gated.md with named producers and probes, not done. The estate is one file smaller; the work is not one file's worth smaller."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-session-closeout is at agents/roadmaps/ on origin/main and at agents/roadmaps/archive/ on this branch, so the archival is this change's own work \u2014 confirmed with git ls-tree against both refs rather than inferred from the regen output, which also reported the unrelated org-telemetry move arriving from the trunk. open_blockers unchanged at 61 and later_roadmaps unchanged at 52: nothing was parked and no open decision was relocated to make the active count fall."
+    },
+    {
       "at": "2026-08-21",
       "active_roadmaps": 23,
       "later_roadmaps": 52,
@@ -300,6 +314,13 @@
       "later_roadmaps": 52,
       "open_blockers": 60,
       "why": "MERGE RECONCILIATION, and the number is MEASURED against the merged tree rather than taken from either side. Both sides walked open_blockers 62 -> 61 for a different blocker: origin/main for road-to-subagent-lifecycle-integrity's raw-capture-needs-host-env, this branch for road-to-standing-context-40k's b-rules-efficiency-signal. Neither number describes the merged tree, which reads 60 = 62 - 1 - 1. Adopting one side's 61 would have claimed a count no tree has, and would have left a -1 drawdown for the next PR to fail on. active_roadmaps stays 23: this branch's archival is the only one in the merge. NOTHING IN THE REPOSITORY EARNED THE DROP on either side -- both blockers left the active estate by transfer to a stub this metric does not scan. Every history entry from both sides is preserved; none was collapsed. For whoever merges next: keep every entry and RE-MEASURE; never adopt one side's number."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 22,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-standing-context-40k merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 22, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
     }
   ],
   "target": {

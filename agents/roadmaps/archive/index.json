@@ -5856,6 +5856,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-session-closeout",
+      "title": "Road to closing what fifty sessions left open",
+      "disposition": "closed-with-cancellations",
+      "phases": 9,
+      "steps": {
+        "open": 0,
+        "done": 53,
+        "deferred": 0,
+        "cancelled": 1
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-session-profile-activation",
       "title": "Road to Session-Profile Activation",
       "disposition": "closed-with-cancellations",
