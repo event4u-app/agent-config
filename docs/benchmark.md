@@ -819,7 +819,7 @@ still carries no claim for it.
 Two readings that narrow the gate rather than restate it. The **runtime half is
 already satisfied** — `node v26.7.0` is on `PATH` and the yt-dlp user config
 already carries the `--js-runtimes` entry — so the pending act is one
-`pipx install`, not the two installs plus config edit the original note implied.
+`pipx` installation, not the two installs plus config edit the original note implied.
 And the doctor's readiness state today is **`unknown`**, not `not-ready`: with the
 backend absent, readiness is never evaluated. That matters for the one criterion
 that asked for *both* states on one machine — only the third is observable, so
