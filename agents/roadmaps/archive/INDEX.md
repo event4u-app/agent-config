@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**534 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 191 · completed 252 · completed-with-deferrals 25 · not-extractable 34
+**536 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 192 · completed 252 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -169,6 +169,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-conformance-round7`](road-to-conformance-round7.md) | Road to conformance round 7 — the rules held, the tooling did not | closed-with-cancellations | 7 | 31/35 | _not extractable_ |
 | [`road-to-consistent-rule-scoping`](road-to-consistent-rule-scoping.md) | Road to consistent rule scoping — the CLI global install ships rules the wizard filters out | completed | 2 | 5/5 | _not extractable_ |
 | [`road-to-context-aware-command-suggestion`](road-to-context-aware-command-suggestion.md) | Roadmap: Context-Aware Command Suggestion | completed | 7 | 52/52 | _not extractable_ |
+| [`road-to-context-fidelity`](road-to-context-fidelity.md) | Road to context fidelity | archived-with-open-steps | 5 | 15/28 | _not extractable_ |
 | [`road-to-context-layer-maturity`](road-to-context-layer-maturity.md) | Road to Context Layer Maturity | closed-with-cancellations | 6 | 27/31 | _not extractable_ |
 | [`road-to-corpus-expansion-evidence-based-cuts`](road-to-corpus-expansion-evidence-based-cuts.md) | Roadmap: Corpus expansion → evidence-based tier-1 cuts | archived-with-open-steps | 7 | 27/37 | _not extractable_ |
 | [`road-to-cost-aware-model-routing`](road-to-cost-aware-model-routing.md) | Road to Cost-Aware Model Routing | completed | 6 | 24/24 | _not extractable_ |
@@ -461,6 +462,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-single-install-source-of-truth`](road-to-single-install-source-of-truth.md) | Roadmap: Single Install Source-of-Truth — finish the `--apply-payload` bridge | completed-with-deferrals | 6 | 21/24 | _not extractable_ |
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |
 | [`road-to-skill-ecosystem-authoring-discipline`](road-to-skill-ecosystem-authoring-discipline.md) | Road to authoring discipline — forced artifacts, named biases, and a removal signal | closed-with-cancellations | 6 | 53/54 | _not extractable_ |
+| [`road-to-skill-ecosystem-gate-integrity`](road-to-skill-ecosystem-gate-integrity.md) | Road to gate integrity — a gate that scanned nothing must never exit green | closed-with-cancellations | 5 | 43/46 | _not extractable_ |
 | [`road-to-skill-eval-coverage`](road-to-skill-eval-coverage.md) | Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted | completed | 4 | 14/14 | _not extractable_ |
 | [`road-to-slot-scoped-concern-loading`](road-to-slot-scoped-concern-loading.md) | Road to slot-scoped concern loading — stop every concern taxing every slot | closed-with-cancellations | 4 | 2/8 | _not extractable_ |
 | [`road-to-source-first-frontend`](road-to-source-first-frontend.md) | Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation | closed-with-cancellations | 6 | 16/18 | _not extractable_ |

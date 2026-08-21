@@ -695,6 +695,18 @@ gates:
     note: >
       Emits on stderr, not stdout: `--format json` owns this gate's stdout and a
       count written there would corrupt the payload. The guard reads both streams.
+      Corpus boundary, decided 2026-08-20 (council, `leave-unscanned`): `src/skills`
+      is deliberately OUT of this gate's corpus. Pointed at it the gate reports 13
+      findings (11 `buried_iron_law`, 2 `deep_iron_law`) that nobody currently sees.
+      Extending the corpus was declined on three grounds — the gate has no warn
+      level, so a staged extension would mean adding a warning mode to an enforced
+      blocking gate; the reverted `lint_skill_top_position` attempt showed two gates
+      defining one construct incompatibly, and the disputed `deep_iron_law` class is
+      still live in those 13; and the premise for scanning skills at all
+      (post-compaction truncation keeps the file start) is unverified, the tree's one
+      measured truncation fact being ENTRY-level. Re-opening this needs a measured
+      reason plus the reported-and-baselined ratchet, not a path added to `argv`.
+      See `agents/roadmaps/archive/road-to-context-fidelity.md` § Phase 3.
 
   - id: check_cli_registry_budget_sync
     argv: []

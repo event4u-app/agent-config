@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers in the active tree, **11** need you → `agent-config gates`
+> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers in the active tree, **10** need you → `agent-config gates`
 
 ## Overall
 
-**186 / 276 steps done · 67%**
+**135 / 210 steps done · 64%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -17,19 +17,17 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 9 | 28 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 76% |
-| 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
-| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 12 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 13 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 14 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 9 | 28 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 76% |
+| 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
+| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 6 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 0 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 0 | 0 | 0 | 4 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 10 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 11 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 12 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -160,41 +158,6 @@
     egress discipline), then add the two resolver entries (report-only
     workers).
   - **Resolved when:** the policy artefact exists and the resolver entries cite it.
-
-### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
-
-**Road to context fidelity** — 11 / 23 done (48%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Memory eviction on the curated store | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Skill-top position lint | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
-| 4 | Context management for spawned workers | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
-
-<a id="blockers-road-to-context-fidelity"></a>
-**Blockers**
-
-- **compaction-census-session** (owner: user) — blocks Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
-  - **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
-  - **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
-  - **What to do:**
-    1. Run ONE manual compaction in an instrumented session and check whether `session_eol_report` counts it. This is the precondition and it is cheap — it decides whether cf01 is measurable at all, and without it a cf01 null is uninterpretable.
-    2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
-    3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
-    4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
-  - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
-- **prominence-gate-skills-corpus** (owner: maintainer) — blocks Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
-  - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
-  - **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
-  - **What to do:**
-    1. Decide extend-with-baseline versus leave-unscanned. If extending, the change is `./scripts-run src/scripts/check_iron_law_prominence --quiet src/skills` plus a baseline entry in `src/config/gate-violation-baselines.json` and a `min_scanned` floor in `src/config/gate-coverage.yml`.
-    2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
-    3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
-  - **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
-
-_1 blocker resolved._
 
 ### [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md)
 
@@ -450,81 +413,6 @@ _2 blockers resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Run the instrument | ⏭️ skipped | 0 | 0 | 0 | 4 | 0% |
-
-### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
-
-**Road to gate integrity — a gate that scanned nothing must never exit green** — 40 / 43 done (93%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Completeness accounting | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Make shrink-only mechanical | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 3 | Gate authoring discipline | 🟡 in progress | 2 | 5 | 0 | 0 | 71% |
-| 4 | Second-order guards | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 5 | Honest reporting surfaces | 🟡 in progress | 1 | 15 | 0 | 0 | 94% |
-
-<a id="blockers-road-to-skill-ecosystem-gate-integrity"></a>
-**Blockers**
-
-- **kernel-cross-link-soak** (owner: maintainer) — blocks Phase 3 Step 6 and Step 7, and the acceptance criterion that both new guidelines are cross-linked from `verify-before-complete`.
-  - **What to do:**
-    apply the two edits below to
-    `src/rules/verify-before-complete.md` in their OWN pull request.
-    `verify-before-complete` is one of the nine kernel rules
-    (`docs/contracts/kernel-membership.md`), and `scope-control § Kernel-rule
-    edits` requires one rule per PR — a guarantee no autonomous mandate lifts.
-    Commit the re-anchored `internal/bench/reports/kernel-prefix.json` from
-    `./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline`
-    in the same PR; the byte-stability gate stays red without it and local
-    preflight does not catch that.
-    **This is maintainer-applied end to end — an agent cannot author it**
-    (measured 2026-08-10, on the attempt). The `block-kernel-rule-writes`
-    PreToolUse guard in `src/scripts/hook_manifest.yaml` refuses every agent
-    write to a kernel rule outright: *"kernel rule verify-before-complete is
-    immutable — tighten-only via the override exception registry"*. Its own
-    message names the only legitimate bypass, and both branches are human acts
-    outside the session: go through the override exception registry, or disable
-    the guard entry. Same shape as `road-to-kernel-question-triangle`, whose
-    one-line kernel amendment is maintainer-owned for exactly this reason.
-    So the residual gate here is the **write guard**, not a waiting period —
-    which is worth stating because the ≥24 h is a *spacing* constraint between
-    merges of consecutive kernel-rule PRs, and it is already satisfied: the last
-    merge touching any of the nine kernel rules was 2026-07-31 (`d74f1238a`).
-    A screen that reads the 24 h as an unstarted soak will wrongly conclude this
-    roadmap is one merge away from closing.
-    1. **Step 6 — the ease tripwire.** Add to the `## Red flags — STOP
-    immediately` list:
-    > - A verification that was **far easier than expected** — check the path
-    >   before believing the result, per [`false-green`](../../docs/guidelines/agent-infra/false-green.md)
-    The existing red flags track confidence *wording* ("should pass", "seems
-    fine") and not *ease*; every false green catalogued in `false-green.md`
-    felt like a pass at the moment it happened.
-    2. **Step 7 — the cross-links.** Add to `## Verification commands`:
-    > Authoring a new gate → [`gate-authoring`](../../docs/guidelines/agent-infra/gate-authoring.md).
-    > Ways a green result can be false, with detection commands →
-    > [`false-green`](../../docs/guidelines/agent-infra/false-green.md).
-    **Link depth corrected 2026-08-10.** Both drafts above originally said
-    `../docs/…`. From a source file under `src/rules/` that resolves to
-    `src/docs/`, which **does not exist**; `../../docs/` reaches the real
-    repo-root `docs/`. The two-level form is also what the majority of
-    `src/rules/` uses when it links a guideline, `direct-answers` (the other
-    kernel rule in that set) included — though three rules do carry the
-    one-level form, so the tree is not unanimous and the filesystem is the
-    deciding evidence, not the count.
-    **No gate catches this, which is why the source form has to be right.**
-    Probed by canary the same day: a deliberately nonexistent
-    `../../docs/guidelines/agent-infra/<bogus>.md` appended to a roadmap left
-    `check_references` at rc=0 over 1118 scanned references — it did not
-    resolve the path at all. So "the reference checker is green" is not
-    evidence that either form works, in either direction.
-    **No `token-optimizer` edit rides along** — this instruction previously
-    said to update the `verify-before-complete` row in
-    `src/skills/token-optimizer/SKILL.md` per `token-optimizer-maintenance`.
-    There is no such row: the catalog does not carry `verify-before-complete`,
-    and that rule's cited-asset list does not name this file, so the
-    maintenance obligation never fires. Do not invent a row to satisfy it —
-    that would add a catalog entry nobody asked for.
-  - **Resolved when:** both edits are merged and the soak has elapsed. Everything else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and the inline suppression key — landed in this change and does not wait on it.
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 

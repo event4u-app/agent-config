@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 534,
+  "count": 536,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2029,6 +2029,20 @@
         "done": 52,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-context-fidelity",
+      "title": "Road to context fidelity",
+      "disposition": "archived-with-open-steps",
+      "phases": 5,
+      "steps": {
+        "open": 1,
+        "done": 15,
+        "deferred": 0,
+        "cancelled": 12
       },
       "verdict": null,
       "status": null
@@ -6117,6 +6131,20 @@
         "done": 53,
         "deferred": 0,
         "cancelled": 1
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-skill-ecosystem-gate-integrity",
+      "title": "Road to gate integrity — a gate that scanned nothing must never exit green",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 43,
+        "deferred": 0,
+        "cancelled": 3
       },
       "verdict": null,
       "status": null
