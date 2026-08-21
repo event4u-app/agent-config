@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Merge-hotspot cadence — what actually drives the churn
 
 > Measured 2026-08-21 on `origin/main` at
