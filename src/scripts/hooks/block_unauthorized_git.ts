@@ -486,7 +486,7 @@ export function commandOp(command: string): GitOp | null {
 }
 
 /** A ledger older than this is not "this turn" under any reading. */
-export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
+export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain run, revert after
 
 /**
  * Load the ledger, and refuse one that does not belong to THIS session and
