@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 6d5731d896cf7b9ef986ea27b6e869bc15b0bee7, review
-  artefacts excluded), scope hash `51af5c79d74abdbc350092f7ca922110ffd9f5a83181a42cb636f918c6661028`
+- diff: `diff.patch` — the review scope (branch head 13fae204b1583891da5715b1d53fc1ab59e53ff1, review
+  artefacts excluded), scope hash `7b8979d29fbcab29279b486d1c950ecf9569efe47ff910292bf515425d5ea8c7`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -48,6 +48,7 @@ Changed files:
 - docs/decisions/INDEX.md
 - docs/decisions/adr-evidence-sweep-2026-08.md
 - docs/proof.md
+- internal/bench/corpora/router-coverage/routing-matrix-derived.yaml
 - src/config/estate-count-budget.json
 - src/config/gate-coverage.yml
 - src/config/gate-violation-baselines.json
@@ -93,5 +94,5 @@ Fill the findings table in `evidence-based-adr-governance.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 51af5c79d74abdbc350092f7ca922110ffd9f5a83181a42cb636f918c6661028, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 7b8979d29fbcab29279b486d1c950ecf9569efe47ff910292bf515425d5ea8c7, reviewed <YYYY-MM-DD>
 ```

@@ -4,11 +4,19 @@
       are defined in `adr-layout.md`, emitted by `adr-create`, validated by
       `check_adr_frontmatter`, and read through **one** shared frontmatter
       reader used by all three former parsers.
-- [ ] AC-2 — The sweep artifact holds one disposition row per record (184),
-      each with basis refs and a `Blocking cost` that is either sourced
-      observations or explicitly `unknown`; it answers the
-      would-we-accept-it-today question per row; and it writes **zero** ADR
-      frontmatter.
+- [ ] AC-2 — The sweep artifact holds one disposition per record present at the
+      sweep's head, each with basis refs and a `Blocking cost` that is either
+      sourced observations or explicitly `unknown`; it answers the
+      would-we-accept-it-today question per row; every record WITHOUT a tranche
+      row is named with the reason and its disposition; and it writes **zero**
+      ADR frontmatter.
+
+      Phrased against the sweep's head rather than a fixed total, because a
+      bare count is falsified by the trunk moving: PR #1509 merged ADR-238
+      after the tranches ran, and the earlier wording ("one row per record
+      (184)") then claimed coverage of a record the sweep never read. The two
+      uncovered records are named in the artifact with their reasons — that is
+      the check, not the number.
 - [ ] AC-3 — Grading integrity is evidenced, not asserted: an externally
       adjudicated anchor sample exists, ≥10 % blinded overlap was graded
       twice, and the disagreement count is published rather than smoothed.
@@ -33,8 +41,8 @@
       ADR-239 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
 - [ ] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
       measurement basis and minimum sample sizes — including
-      `grade-accuracy-vs-gold`, `evidence-discovery-recall` and
-      `beneficiary-linked-grade-bias` — before Phase 5.2 merges.
+      `adr-grade-accuracy-vs-gold`, `adr-evidence-discovery-recall` and
+      `adr-beneficiary-grade-bias` — before Phase 5.2 merges.
 - [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-239
       acceptance occurred; no 0B-gated row executed; no Safety, Privacy,
       Legal or External-commitment floor was weakened.
