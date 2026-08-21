@@ -19,11 +19,25 @@ import { describe, expect, it } from 'vitest';
 
 import {
     evidenceOf,
-    hasProvisionalAuthority,
+    isLowEvidenceAccepted,
     provenanceOf,
     readAdrFrontmatter,
     readAdrFrontmatterScalars,
 } from './adr_frontmatter.js';
+
+/**
+ * Keys the shared reader parses as NESTED, where equivalence with the legacy
+ * parsers was never the promise.
+ *
+ * The legacy fold produced a meaningless string for these — ADR-238's evidence
+ * block came back as `"strength: E3 discovery: complete basis: - url1 - url2"`,
+ * a value nothing read and nothing could use. The equivalence contract is about
+ * SCALAR keys, which is where the three parsers actually diverged in ways a
+ * caller could observe. Naming the exception here rather than filtering it
+ * silently, and asserting below that the legacy value really was garbage — a
+ * skip nobody checks is how a real divergence hides behind an intended one.
+ */
+const NESTED_KEYS = ['provenance', 'evidence'];
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -105,12 +119,35 @@ describe('corpus equivalence with the parsers it replaces', () => {
                 continue;
             }
             for (const [key, value] of Object.entries(legacy)) {
+                if (NESTED_KEYS.includes(key)) continue;
                 if (shared[key] !== value) {
                     divergent.push(`${path.basename(file)}#${key}: ${JSON.stringify(value)} vs ${JSON.stringify(shared[key])}`);
                 }
             }
         }
         expect(divergent).toEqual([]);
+    });
+
+    it('the legacy value for a nested key really was garbage — so the exception is earned', () => {
+        // If a legacy parser ever produced something usable for a nested key,
+        // excluding it above would be hiding a real divergence. Assert the
+        // premise instead of trusting it.
+        let checked = 0;
+        for (const file of files) {
+            const text = readFileSync(file, 'utf8');
+            const legacy = legacyCiteParser(text);
+            if (legacy === null) continue;
+            for (const key of NESTED_KEYS) {
+                const value = legacy[key];
+                if (value === undefined) continue;
+                checked += 1;
+                // A usable scalar would not carry an inner `key: value` pair or
+                // a bare list marker. The legacy fold always does.
+                expect(value).toMatch(/(\w+:\s)|(^|\s)- /);
+            }
+        }
+        // At least one record must exercise this, or the assertion is vacuous.
+        expect(checked).toBeGreaterThan(0);
     });
 
     it('matches the strict parser on every real ADR, modulo the documented `>-` strip', () => {
@@ -126,6 +163,7 @@ describe('corpus equivalence with the parsers it replaces', () => {
                 // it, and the shared reader keeps the cite behaviour. That is
                 // the one intended divergence, so it is normalised here and
                 // named rather than smoothed away.
+                if (NESTED_KEYS.includes(key)) continue;
                 const normalised = value.replace(/^\|[-+]?\s*|^>[-+]?\s*/, '');
                 if (shared[key] !== normalised) {
                     divergent.push(`${path.basename(file)}#${key}`);
@@ -258,7 +296,7 @@ describe('negative cases — the discriminations are decisions, not accidents', 
     });
 });
 
-describe('provisional authority', () => {
+describe('low-evidence notice — provenance-independent by design', () => {
     function build(status: string, kind: string, strength: string): string {
         return [
             '---',
@@ -274,26 +312,54 @@ describe('provisional authority', () => {
     }
 
     it('fires on an accepted agentic E0 record', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter(build('accepted', 'agentic', 'E0'))!)).toBe(true);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'agentic', 'E0'))!)).toBe(true);
     });
 
     it('fires on an accepted agentic E1 record', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter(build('accepted', 'agentic', 'E1'))!)).toBe(true);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'agentic', 'E1'))!)).toBe(true);
+    });
+
+    // The regression this rename exists for. The predicate used to require
+    // `kind === 'agentic'`, so an identical human E0 record printed nothing —
+    // while the notice is a statement about EVIDENCE strength, which a human
+    // snapshot has exactly as little of.
+    it('fires on an accepted HUMAN E0 record — the notice is about evidence, not authorship', () => {
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'human', 'E0'))!)).toBe(true);
+    });
+
+    it('fires on mixed and unknown provenance too', () => {
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'mixed', 'E1'))!)).toBe(true);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'unknown', 'E0'))!)).toBe(true);
     });
 
     it('does NOT fire on E2 — the grade boundary is the whole point', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter(build('accepted', 'agentic', 'E2'))!)).toBe(false);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'agentic', 'E2'))!)).toBe(false);
     });
 
-    it('does NOT fire on a human E0 record — provenance is a separate axis', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter(build('accepted', 'human', 'E0'))!)).toBe(false);
+    it('does NOT fire on E3 or E4', () => {
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'agentic', 'E3'))!)).toBe(false);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('accepted', 'human', 'E4'))!)).toBe(false);
     });
 
     it('does NOT fire on a superseded record', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter(build('superseded', 'agentic', 'E0'))!)).toBe(false);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(build('superseded', 'agentic', 'E0'))!)).toBe(false);
     });
 
     it('does NOT fire when the axes are absent — silence is not a weak grade', () => {
-        expect(hasProvisionalAuthority(readAdrFrontmatter('---\nstatus: accepted\n---\n')!)).toBe(false);
+        expect(isLowEvidenceAccepted(readAdrFrontmatter('---\nstatus: accepted\n---\n')!)).toBe(false);
+    });
+
+    // The exemption, and the reason provenance was the wrong gate: an owner
+    // purpose statement is legitimately E0 and its alternatives ARE foreclosed —
+    // by ownership, not by evidence. `authority_basis` is the declared field for
+    // that, so it is the field that decides.
+    it('does NOT fire on an owner_intent record, at E0', () => {
+        const doc = '---\nstatus: accepted\nauthority_basis: owner_intent\nevidence:\n  strength: E0\n  discovery: complete\n---\n';
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(doc)!)).toBe(false);
+    });
+
+    it('DOES fire on a thin human record that carries no owner claim', () => {
+        const doc = '---\nstatus: accepted\nprovenance:\n  kind: human\nevidence:\n  strength: E0\n  discovery: incomplete\n---\n';
+        expect(isLowEvidenceAccepted(readAdrFrontmatter(doc)!)).toBe(true);
     });
 });

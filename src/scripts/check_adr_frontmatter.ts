@@ -162,6 +162,18 @@ export interface AdrFinding {
     file: string;
     level: 'error' | 'warn';
     message: string;
+    /**
+     * Optional finding class, set only by the supersession-link check.
+     *
+     * It exists because `main()`'s summary line labels its warn count
+     * "grandfathered without a revisit condition" — accurate while that was the
+     * only warn class in the file, and a lie the moment a second one lands. A
+     * new warn class must not silently inflate a count that names a different
+     * cause, and a warn nobody prints is a warn nobody acts on, so the tagged
+     * ones are counted and printed separately. Absent = the pre-existing
+     * grandfathering class; nothing else reads this field.
+     */
+    kind?: 'supersession_link' | 'supersession_qualifier';
 }
 
 /**
@@ -469,10 +481,14 @@ export function check_amendment_shape(
 
 /**
  * Corpus-level check: every `amends:` has its reciprocal `amended_by:` and vice
- * versa. This is the half the `supersedes:` / `superseded_by:` pair never had —
- * and its absence is exactly how ADR-035 kept asserting a rejection ADR-232 had
- * reopened. A one-sided link is invisible from the side that is stale, which is
- * the side a reader lands on first.
+ * versa. Its absence for the `supersedes:` / `superseded_by:` pair is exactly
+ * how ADR-035 kept asserting a rejection ADR-232 had reopened. A one-sided link
+ * is invisible from the side that is stale, which is the side a reader lands on
+ * first.
+ *
+ * That pair now has the same half, in `check_supersession_links` below — this
+ * docstring used to say it "never had" one, which was true when it was written
+ * and is the gap it documented rather than closed.
  */
 export function check_amendment_links(
     files: { rel: string; fm: Record<string, string> }[],
@@ -525,6 +541,180 @@ export function check_amendment_links(
     return findings;
 }
 
+/** The none-tokens a link field uses to say "no link". `—` is the corpus form. */
+const LINK_PLACEHOLDERS = new Set(['—', '–', '-', 'none', 'n/a']);
+
+/** One parsed member of a `supersedes:` / `superseded_by:` list. */
+export interface AdrRef {
+    /** The segment as written, trimmed — what an error message should quote. */
+    raw: string;
+    /** The resolved ADR number, or null when the segment names none. */
+    number: string | null;
+    /** Free text found inside `(…)`, or null. A partial-supersession marker. */
+    qualifier: string | null;
+}
+
+/**
+ * Parse an ADR link field into its members. List-aware and qualifier-aware,
+ * because both shapes are already in the corpus and a first-number parser reads
+ * them wrong in opposite directions.
+ *
+ * ADR-206 carries sixteen targets in one `supersedes:` field, so anything that
+ * takes the first number and stops reports the other fifteen back-links as
+ * one-sided — 15 of the 19 findings a naive parser produces on this corpus are
+ * that artifact, not a defect in the tree. ADR-124 carries
+ * `ADR-088 (engine-adoption interpretation only), ADR-094 (…)`, so the split
+ * has to respect parentheses (a qualifier may itself contain a comma) and the
+ * number has to be read with the qualifier removed rather than from the
+ * concatenated text — `ADR-030 (Decision 2 — …)` is one reference with a note,
+ * not two.
+ *
+ * `check_amendment_shape` / `check_amendment_links` keep their naive
+ * `split(',')`: no `amends:` value in the corpus carries a comma or a list, so
+ * rewriting them here would be an unrequested behaviour change to code under
+ * test. The shape is identical if that ever stops being true.
+ */
+export function parse_adr_refs(raw: string | undefined): AdrRef[] {
+    if (raw === undefined) return [];
+    const whole = raw.trim();
+    if (whole === '' || LINK_PLACEHOLDERS.has(whole.toLowerCase())) return [];
+
+    // Split on top-level commas only — a comma inside `(…)` belongs to the note.
+    const segments: string[] = [];
+    let depth = 0;
+    let cur = '';
+    for (const ch of whole) {
+        if (ch === '(') depth += 1;
+        else if (ch === ')') depth = Math.max(0, depth - 1);
+        else if (ch === ',' && depth === 0) {
+            segments.push(cur);
+            cur = '';
+            continue;
+        }
+        cur += ch;
+    }
+    segments.push(cur);
+
+    const refs: AdrRef[] = [];
+    for (const segment of segments) {
+        const seg = segment.trim();
+        if (seg === '' || LINK_PLACEHOLDERS.has(seg.toLowerCase())) continue;
+        const qm = /\(([^)]*)\)/.exec(seg);
+        // Read the number from the reference only. A qualifier can contain
+        // digits ("Decision 2"), so stripping first is what keeps the match
+        // order-independent instead of relying on the note trailing the ref.
+        const bare = seg.replace(/\([^)]*\)/g, ' ');
+        refs.push({
+            raw: seg,
+            number: adr_number(bare),
+            qualifier: qm?.[1] === undefined ? null : qm[1].trim(),
+        });
+    }
+    return refs;
+}
+
+/**
+ * Corpus-level check: every `supersedes:` has its reciprocal `superseded_by:`
+ * and vice versa — the half this pair never had, which is what
+ * `check_amendment_links` was built for `amends:` / `amended_by:` and this one
+ * closes for the pair whose absence produced the ADR-035 case in the first
+ * place. A one-sided link is invisible from the stale side, and the stale side
+ * is the one a reader lands on: ADR-030 reads as live while ADR-209 has
+ * superseded part of it.
+ *
+ * Levels are split by whether a human has to decide anything.
+ *
+ * A dangling or unparseable reference is an **error**: it cannot be a content
+ * decision, only a typo, and it points at nothing a reader can follow. Zero
+ * occurrences today, so it reds nothing on landing and reds the right thing
+ * later.
+ *
+ * A one-sided link is a **warn**, deliberately, and this is the choice worth
+ * stating. There are 4 in the tree, and each one is a content decision rather
+ * than a typo: someone has to choose the direction. ADR-209 supersedes ADR-030
+ * only in its "Decision 2" carve-out, so marking ADR-030 wholly
+ * `superseded_by` would assert more than happened, while leaving it blank
+ * asserts less — the fix is a judgement about the record, not a field to fill
+ * in mechanically. Erroring would red the build on landing and force those four
+ * judgements into an unrelated change; warning surfaces them so the next change
+ * can decide each one and ratchet the count. The repo's baseline-ratchet
+ * mechanism is the usual home for exactly this, and belongs here once someone
+ * owns those four decisions.
+ *
+ * The free-text qualifier is its own warn class. `supersedes: ADR-088
+ * (engine-adoption interpretation only)` encodes a PARTIAL supersession in
+ * prose inside a field that nothing parses as partial: every consumer of the
+ * frontmatter reads it as total. That is a different problem from a broken
+ * link — the link is correct and reciprocal — so it is reported separately
+ * rather than folded into the same count.
+ */
+export function check_supersession_links(
+    files: { rel: string; fm: Record<string, string> }[],
+): AdrFinding[] {
+    const findings: AdrFinding[] = [];
+    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
+    for (const f of files) {
+        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        if (n !== null) byNumber.set(n, f);
+    }
+
+    const reciprocal = { supersedes: 'superseded_by', superseded_by: 'supersedes' } as const;
+    for (const f of files) {
+        const self = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        for (const key of ['supersedes', 'superseded_by'] as const) {
+            for (const ref of parse_adr_refs(f.fm[key])) {
+                if (ref.qualifier !== null) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'warn',
+                        kind: 'supersession_qualifier',
+                        message:
+                            `\`${key}: ${ref.raw}\` records a PARTIAL supersession as free text. ` +
+                            `Every reader of this field parses it as total — the scope lives only ` +
+                            `in the prose.`,
+                    });
+                }
+                if (ref.number === null) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        kind: 'supersession_link',
+                        message: `\`${key}\` value \`${ref.raw}\` names no ADR number`,
+                    });
+                    continue;
+                }
+                const other = byNumber.get(ref.number);
+                if (other === undefined) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        kind: 'supersession_link',
+                        message: `\`${key}: ${ref.raw}\` points at an ADR that does not exist`,
+                    });
+                    continue;
+                }
+                const names_self =
+                    self !== null &&
+                    parse_adr_refs(other.fm[reciprocal[key]])
+                        .map((r) => r.number)
+                        .includes(self);
+                if (!names_self) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'warn',
+                        kind: 'supersession_link',
+                        message:
+                            `\`${key}: ${ref.raw}\` is one-sided — ${other.rel} carries no ` +
+                            `reciprocal \`${reciprocal[key]}\`. A one-sided supersession link is ` +
+                            `invisible from the stale side, which is the side a reader lands on.`,
+                    });
+                }
+            }
+        }
+    }
+    return findings;
+}
+
 /**
  * Check every ADR in `dir`, optionally recording per-file completeness.
  *
@@ -544,8 +734,8 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
     ledger?.plan(candidates);
 
-    // Collected for the corpus-level reciprocal-amendment check below, which
-    // cannot be decided from one file.
+    // Collected for the two corpus-level reciprocal-link checks below
+    // (amendment, supersession), neither of which can be decided from one file.
     const corpus: { rel: string; fm: Record<string, string> }[] = [];
 
     for (const name of candidates) {
@@ -568,6 +758,7 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
         }
     }
     findings.push(...check_amendment_links(corpus));
+    findings.push(...check_supersession_links(corpus));
     return findings;
 }
 
@@ -612,13 +803,26 @@ function main(argv: string[]): number {
 
     const errors = findings.filter((f) => f.level === 'error');
     const warns = findings.filter((f) => f.level === 'warn');
+    // The untagged warns are the grandfathering class the summary label names;
+    // there are ~114 of them, so they stay a count and are not printed. The
+    // link classes are few and each needs a decision, so they are printed by
+    // name — folding them into the grandfathered count would both mislabel them
+    // and bury them.
+    const grandfathered = warns.filter((f) => f.kind === undefined);
+    const linkWarns = warns.filter((f) => f.kind === 'supersession_link');
+    const partialWarns = warns.filter((f) => f.kind === 'supersession_qualifier');
 
     process.stdout.write(
         `ADR frontmatter: ${total} ADR(s) · ${errors.length} error(s) · ` +
-            `${warns.length} grandfathered without a revisit condition\n`,
+            `${grandfathered.length} grandfathered without a revisit condition · ` +
+            `${linkWarns.length} one-sided supersession link(s) · ` +
+            `${partialWarns.length} free-text partial supersession(s)\n`,
     );
     ledger.report();
     for (const e of errors) process.stderr.write(`    ❌ ${e.file}: ${e.message}\n`);
+    for (const w of [...linkWarns, ...partialWarns]) {
+        process.stdout.write(`    ⚠️ ${w.file}: ${w.message}\n`);
+    }
 
     if (errors.length > 0) {
         process.stderr.write(

@@ -35,7 +35,7 @@
  *
  * It also prints the two descriptive axes (`provenance`, `evidence`) and
  * `authority_basis`, and for an accepted + agentic + E0/E1 record it prints
- * `authority_effect: disabled-shadow-mode` — see PROVISIONAL_AUTHORITY_BLOCK.
+ * `authority_effect: disabled-shadow-mode` — see LOW_EVIDENCE_NOTICE.
  * Shadow mode means exactly what the word says: the axes are surfaced, and no
  * grade changes who may act (`adr-layout § Provenance and evidence`).
  *
@@ -60,7 +60,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     authorityBasisOf,
     evidenceOf,
-    hasProvisionalAuthority,
+    isLowEvidenceAccepted,
     provenanceOf,
     readAdrFrontmatter,
     readAdrFrontmatterScalars,
@@ -181,7 +181,7 @@ export interface CiteResult {
  * reader (or a downstream check) must be able to match it without knowing this
  * renderer's indentation.
  */
-export const PROVISIONAL_AUTHORITY_BLOCK = [
+export const LOW_EVIDENCE_NOTICE = [
     'authority_effect: disabled-shadow-mode',
     'This record documents the prior choice. It does not by itself',
     'establish that alternatives remain invalid.',
@@ -440,7 +440,7 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
         const provenance = structured === null ? null : provenanceOf(structured);
         const evidence = structured === null ? null : evidenceOf(structured);
         const basis = structured === null ? null : authorityBasisOf(structured);
-        const provisional = structured !== null && hasProvisionalAuthority(structured);
+        const provisional = structured !== null && isLowEvidenceAccepted(structured);
         const bodyStart = text.indexOf('\n---\n', 4);
         const body = bodyStart === -1 ? text : text.slice(bodyStart + 5);
 
@@ -527,8 +527,8 @@ function render(results: CiteResult[]): string {
         );
         lines.push(`  authority_basis  ${r.authority_basis ?? '— (absent → evidence)'}`);
         lines.push(`  →  ${r.verdict}`);
-        // Verbatim + unindented, on purpose: see PROVISIONAL_AUTHORITY_BLOCK.
-        if (r.authority_effect === 'disabled-shadow-mode') lines.push(PROVISIONAL_AUTHORITY_BLOCK);
+        // Verbatim + unindented, on purpose: see LOW_EVIDENCE_NOTICE.
+        if (r.authority_effect === 'disabled-shadow-mode') lines.push(LOW_EVIDENCE_NOTICE);
     }
     return lines.join('\n');
 }

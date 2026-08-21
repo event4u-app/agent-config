@@ -362,16 +362,44 @@ export function authorityBasisOf(fm: AdrFrontmatter): string | null {
  * Does this record's own metadata say a cite-time reader must NOT treat it as
  * establishing that the alternatives remain invalid?
  *
- * True for an accepted record that is agentic and graded E0 or E1. The name is
- * `provisionalAuthority` and the value it drives is
- * `authority_effect: disabled-shadow-mode` — the distinction is deliberate: no
- * grade authorizes anything today, so the output reports a *disabled* effect
- * rather than asserting a provisional permission that does not exist yet.
+ * True for an accepted record graded E0 or E1, whatever its provenance.
+ *
+ * **Provenance was in this predicate and has been removed** (neutral review,
+ * 2026-08-21). It required `kind === 'agentic'`, so an identical E0 record made
+ * by a human printed no notice at all. That was wrong on the claim's own terms:
+ * "this record does not by itself establish that alternatives remain invalid"
+ * is a statement about the strength of the EVIDENCE, and a human snapshot is
+ * exactly as thin as an agent snapshot. Gating it on who decided also sat one
+ * step sideways from `adr-layout`'s own line that a record's historical
+ * decision-maker does not determine how it is treated on citation.
+ *
+ * `authority_basis: owner_intent` is the one exemption, and it is the RIGHT
+ * discriminator where provenance was the wrong one. An owner purpose statement
+ * is legitimately E0 — that is the honest form — and its alternatives ARE
+ * foreclosed, by ownership rather than by evidence. Printing "this does not
+ * establish that alternatives remain invalid" over it would be false. The
+ * declared field says which kind of authority a record rests on, so it is the
+ * field that decides, and the burden table already reads `owner_intent` as
+ * binding until the owner changes it.
+ *
+ * That is also why the earlier provenance gate was subtly wrong rather than
+ * simply wrong: it was reaching for this exemption and grabbing a correlate.
+ * Most owner-intent records are human-made, so `kind === 'agentic'` approximated
+ * it — and silently withheld the notice from every thin HUMAN record that
+ * carried no owner claim at all.
+ *
+ * The name says `lowEvidence` rather than `provisionalAuthority` for a second
+ * reason from the same review: ADR-238 and the roadmap both explicitly REJECT
+ * the word "provisional" for this output, because it asserts a permission that
+ * does not exist. Identifiers carrying the rejected vocabulary would have been
+ * the doctrine contradicted in its own implementation.
+ *
+ * What the caller prints is `authority_effect: disabled-shadow-mode` — a
+ * DISABLED effect, not a provisional permission. No grade authorizes anything.
  */
-export function hasProvisionalAuthority(fm: AdrFrontmatter): boolean {
+export function isLowEvidenceAccepted(fm: AdrFrontmatter): boolean {
     if ((fm.scalars.status ?? '') !== 'accepted') return false;
-    const provenance = provenanceOf(fm);
-    if (provenance?.kind !== 'agentic') return false;
+    if (authorityBasisOf(fm) === 'owner_intent') return false;
     const evidence = evidenceOf(fm);
     return evidence?.strength === 'E0' || evidence?.strength === 'E1';
 }

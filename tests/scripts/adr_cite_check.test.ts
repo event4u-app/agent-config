@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
     CITATION_ROOTS,
     PARTIAL_COVERAGE,
-    PROVISIONAL_AUTHORITY_BLOCK,
+    LOW_EVIDENCE_NOTICE,
     SURFACES_NOT_SCANNED,
     amendment_blocks,
     cite_check,
@@ -372,9 +372,25 @@ describe('authority_effect: disabled-shadow-mode', () => {
         expect(r?.authority_effect).toBeUndefined();
     });
 
-    it('does NOT fire on a human E0 — a human product decision is not a weak agent opinion', () => {
-        write('docs/decisions/ADR-304-human-e0.md', adrWithAxes({ num: '304', status: 'accepted', kind: 'human', strength: 'E0', discovery: 'incomplete', basis: 'owner_intent' }));
-        const [r] = cite_check(['ADR-304'], root);
+    it('DOES fire on a human E0 with no owner claim — the notice is about evidence, not authorship', () => {
+        // This case asserted the OPPOSITE until 2026-08-21. The predicate gated
+        // on `provenance.kind === 'agentic'`, which withheld the notice from
+        // every thin HUMAN record. Caught in neutral review: the notice states
+        // that a record does not by itself establish its alternatives invalid,
+        // and that is a claim about EVIDENCE strength — a human snapshot has
+        // exactly as little of it. The real exemption is `owner_intent`, tested
+        // next; the provenance gate was reaching for that and grabbing a
+        // correlate, since most owner-intent records happen to be human-made.
+        write('docs/decisions/ADR-306-human-e0.md', adrWithAxes({ num: '306', status: 'accepted', kind: 'human', strength: 'E0', discovery: 'incomplete' }));
+        const [r] = cite_check(['ADR-306'], root);
+        expect(r?.provenance_kind).toBe('human');
+        expect(r?.authority_effect).toBe('disabled-shadow-mode');
+    });
+
+    it('does NOT fire on an owner_intent record — its alternatives are foreclosed by ownership, not by evidence', () => {
+        write('docs/decisions/ADR-307-owner.md', adrWithAxes({ num: '307', status: 'accepted', kind: 'human', strength: 'E0', discovery: 'complete', basis: 'owner_intent' }));
+        const [r] = cite_check(['ADR-307'], root);
+        expect(r?.authority_basis).toBe('owner_intent');
         expect(r?.evidence_strength).toBe('E0');
         expect(r?.authority_effect).toBeUndefined();
     });
@@ -395,7 +411,7 @@ describe('authority_effect: disabled-shadow-mode', () => {
         write('docs/decisions/ADR-306-e0.md', adrWithAxes({ num: '306', status: 'accepted', kind: 'agentic', strength: 'E0', discovery: 'incomplete' }));
         write('docs/decisions/ADR-307-e2.md', adrWithAxes({ num: '307', status: 'accepted', kind: 'agentic', strength: 'E2' }));
         const fired = runCli(root, ['ADR-306']);
-        expect(fired.out).toContain(PROVISIONAL_AUTHORITY_BLOCK);
+        expect(fired.out).toContain(LOW_EVIDENCE_NOTICE);
         expect(fired.out).toContain('does not by itself');
         const quiet = runCli(root, ['ADR-307']);
         expect(quiet.out).not.toContain('disabled-shadow-mode');

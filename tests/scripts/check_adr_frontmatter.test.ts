@@ -7,6 +7,8 @@ import {
     check_amendment_shape,
     check_one,
     check_reopen_authority,
+    check_supersession_links,
+    parse_adr_refs,
     split_dimensions,
     trigger_is_meaningful,
 } from '../../src/scripts/check_adr_frontmatter.js';
@@ -365,5 +367,166 @@ describe('review_trigger: unclassified — legal on an existing record, not on a
     it('says nothing on a superseded record dated after the cutoff', () => {
         const f = check_one('a.md', fm('adr: 304\nstatus: superseded\ndate: 2026-08-21\ndecision: probe\nreview_trigger: unclassified'));
         expect(f.filter((x) => x.message.includes('migration value'))).toEqual([]);
+    });
+});
+
+/**
+ * The reciprocal half for `supersedes:` / `superseded_by:`.
+ *
+ * Every case plants a violation and asserts it fires, or plants the exact
+ * corpus shape a naive parser gets wrong and asserts silence. The two shapes
+ * that matter are the list (ADR-206 carries sixteen targets in one field) and
+ * the parenthetical qualifier (ADR-124 carries two annotated refs, ADR-209 one
+ * whose note contains an em dash and a digit) — a first-number parser turns the
+ * first into fifteen phantom findings and the second into a missed match.
+ */
+describe('parse_adr_refs', () => {
+    it('is empty for an absent key, an empty value, and every placeholder', () => {
+        expect(parse_adr_refs(undefined)).toEqual([]);
+        expect(parse_adr_refs('')).toEqual([]);
+        for (const p of ['—', '–', '-', 'none', 'N/A']) {
+            expect(parse_adr_refs(p)).toEqual([]);
+        }
+    });
+
+    it('reads every member of a list, not just the first', () => {
+        const refs = parse_adr_refs('ADR-068, ADR-070, ADR-071');
+        expect(refs.map((r) => r.number)).toEqual(['68', '70', '71']);
+    });
+
+    it('keeps a comma inside a qualifier out of the split', () => {
+        const refs = parse_adr_refs('ADR-088 (engine-adoption only, not the contract), ADR-094');
+        expect(refs.map((r) => r.number)).toEqual(['88', '94']);
+        expect(refs[0]?.qualifier).toBe('engine-adoption only, not the contract');
+    });
+
+    it('reads the number with the qualifier removed, so a digit in the note cannot win', () => {
+        // The real ADR-209 shape: the note carries "Decision 2" and an em dash.
+        const refs = parse_adr_refs('ADR-030 (Decision 2 — the carve-out only)');
+        expect(refs).toHaveLength(1);
+        expect(refs[0]?.number).toBe('30');
+    });
+
+    it('is order-independent about the qualifier — a leading note does not become the number', () => {
+        expect(parse_adr_refs('(Decision 2 only) ADR-030')[0]?.number).toBe('30');
+    });
+
+    it('reports a segment that names no ADR number rather than dropping it', () => {
+        const refs = parse_adr_refs('the other one');
+        expect(refs).toHaveLength(1);
+        expect(refs[0]?.number).toBeNull();
+    });
+
+    it('skips a placeholder member inside a list', () => {
+        expect(parse_adr_refs('ADR-017, —').map((r) => r.number)).toEqual(['17']);
+    });
+});
+
+describe('check_supersession_links', () => {
+    const corpus = (rows: Record<string, string>[]) =>
+        rows.map((fmRow, i) => ({ rel: `ADR-${String(i)}.md`, fm: fmRow }));
+
+    it('is silent on a clean reciprocal pair', () => {
+        const f = check_supersession_links(
+            corpus([
+                { adr: '45', supersedes: 'ADR-028' },
+                { adr: '28', superseded_by: 'ADR-045' },
+            ]),
+        );
+        expect(f).toEqual([]);
+    });
+
+    it('is silent when both sides carry the em-dash placeholder', () => {
+        const f = check_supersession_links(
+            corpus([
+                { adr: '1', supersedes: '—', superseded_by: '—' },
+                { adr: '2', supersedes: '—', superseded_by: '—' },
+            ]),
+        );
+        expect(f).toEqual([]);
+    });
+
+    it('fires on a one-sided `superseded_by` — the ADR-067 shape', () => {
+        const f = check_supersession_links(corpus([{ adr: '67', superseded_by: '111' }, { adr: '111' }]));
+        expect(f).toHaveLength(1);
+        expect(f[0]?.level).toBe('warn');
+        expect(f[0]?.kind).toBe('supersession_link');
+        expect(f[0]?.message).toContain('one-sided');
+    });
+
+    it('fires on a one-sided `supersedes` — the ADR-043 shape', () => {
+        const f = check_supersession_links(corpus([{ adr: '43', supersedes: 'ADR-017' }, { adr: '17' }]));
+        expect(f).toHaveLength(1);
+        expect(f[0]?.kind).toBe('supersession_link');
+        expect(f[0]?.message).toContain('one-sided');
+    });
+
+    it('is silent on a sixteen-target list whose back-links are all present (the ADR-206 shape)', () => {
+        // The case a first-number parser fails: it reads ADR-068 and reports the
+        // other fifteen as one-sided. Fifteen phantom findings, zero defects.
+        const targets = Array.from({ length: 16 }, (_v, i) => 68 + i);
+        const rows: Record<string, string>[] = [
+            { adr: '206', supersedes: targets.map((n) => `ADR-0${String(n)}`).join(', ') },
+            ...targets.map((n) => ({ adr: String(n), superseded_by: '206' })),
+        ];
+        expect(check_supersession_links(corpus(rows))).toEqual([]);
+    });
+
+    it('fires exactly once when one member of a sixteen-target list lacks its back-link', () => {
+        const targets = Array.from({ length: 16 }, (_v, i) => 68 + i);
+        const rows: Record<string, string>[] = [
+            { adr: '206', supersedes: targets.map((n) => `ADR-0${String(n)}`).join(', ') },
+            // ADR-075 is present but carries no reciprocal.
+            ...targets.map((n) => (n === 75 ? { adr: '75' } : { adr: String(n), superseded_by: '206' })),
+        ];
+        const f = check_supersession_links(corpus(rows));
+        expect(f.filter((x) => x.kind === 'supersession_link')).toHaveLength(1);
+        expect(f[0]?.message).toContain('ADR-075');
+    });
+
+    it('matches through a parenthetical qualifier on either side', () => {
+        const f = check_supersession_links(
+            corpus([
+                { adr: '124', supersedes: 'ADR-088 (engine-adoption interpretation only)' },
+                { adr: '88', superseded_by: 'ADR-124 (engine-adoption interpretation only)' },
+            ]),
+        );
+        expect(f.filter((x) => x.kind === 'supersession_link')).toEqual([]);
+    });
+
+    it('reports the free-text qualifier as its own finding class, separate from the link', () => {
+        const f = check_supersession_links(
+            corpus([
+                { adr: '124', supersedes: 'ADR-088 (engine-adoption interpretation only)' },
+                { adr: '88', superseded_by: 'ADR-124 (engine-adoption interpretation only)' },
+            ]),
+        );
+        const partial = f.filter((x) => x.kind === 'supersession_qualifier');
+        expect(partial).toHaveLength(2);
+        expect(partial[0]?.level).toBe('warn');
+        expect(partial[0]?.message).toContain('PARTIAL');
+    });
+
+    it('errors when the target does not exist', () => {
+        const f = check_supersession_links(corpus([{ adr: '35', superseded_by: 'ADR-999' }]));
+        expect(f).toHaveLength(1);
+        expect(f[0]?.level).toBe('error');
+        expect(f[0]?.message).toContain('does not exist');
+    });
+
+    it('errors when a value names no ADR number at all', () => {
+        const f = check_supersession_links(corpus([{ adr: '35', supersedes: 'the older one' }]));
+        expect(f).toHaveLength(1);
+        expect(f[0]?.level).toBe('error');
+        expect(f[0]?.message).toContain('names no ADR number');
+    });
+
+    it('says nothing about a corpus with no supersession links at all', () => {
+        expect(check_supersession_links(corpus([{ adr: '1' }, { adr: '2' }]))).toEqual([]);
+    });
+
+    it('does not confuse the amendment fields for supersession ones', () => {
+        const f = check_supersession_links(corpus([{ adr: '232', amends: 'ADR-035' }, { adr: '35' }]));
+        expect(f).toEqual([]);
     });
 });
