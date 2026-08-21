@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: router
+status: accepted
+date: 2026-05-16
+decision: three-tier-routing
+supersedes: —
+superseded_by: —
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — Three-tier rule router (kernel · tier-1 · tier-2)
 
 > Area: `router` · Status: accepted · Date: 2026-05-16 · Type: retrospective

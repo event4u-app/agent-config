@@ -40,10 +40,32 @@ const NETWORK_TIMEOUT_MS = 8_000;
 
 /** Paths that are GENERATED — a conflict here is regenerated, never hand-merged. */
 const GENERATED = [
+    // Untracked in THIS repository since 2026-08-21 (it was the #1 conflict
+    // path: 830 commits/60d, in the conflict set of every open CONFLICTING PR).
+    // The entry STAYS anyway, and the retirement criterion is a declared window
+    // rather than "one release" — the AI council flagged the release count as
+    // arbitrary and unverifiable. Remove this entry once no open branch predates
+    // the untrack commit, which is checkable:
+    //
+    //   git branch -r --contains <untrack-commit>   # must list every open branch
+    //
+    // Until then a straggler branch created before the untrack still carries the
+    // tracked file, and a conflict on it is still resolved by regeneration.
     'agents/roadmaps-progress.md',
     'agents/index.md',
     'docs/catalog.md',
     'dist/agent-src/',
+    // Written by `src/scripts/adr/regenerate_index.ts`, which takes the decisions
+    // directory as an ARGUMENT — so the path literal appears nowhere in the
+    // generator and every grep-based audit of this list missed it. Found instead
+    // by measurement: 4 of the last 50 sessions resolved a conflict here, and
+    // its only correct resolution is `task regenerate-adr-index`, never a hunk
+    // merge of two append-shaped indexes.
+    'docs/decisions/INDEX.md',
+    // Compiled by `compile_router.ts`. The `dist/agent-src/` prefix above does
+    // NOT match a sibling one level up under `dist/`, so this file was routed to
+    // a human decision despite being pure build output.
+    'dist/router.json',
     '.augment/',
     // Compiled from `hook_manifest.yaml` by `task build-ts`, never hand-written.
     // It was classified AUTHORED until 2026-08-20, so this tool told the reader

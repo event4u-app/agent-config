@@ -163,3 +163,63 @@ describe('main exit codes', () => {
         expect(main(['--global'])).toBe(1);
     });
 });
+
+describe('unknown family in the project layer', () => {
+    // The forcing function for this gate's OWN 2026-08-21 omission: `personas` was
+    // written by a generator, shipped by the installer, and named by neither
+    // measurer — so it was invisible rather than reported. A gate cannot report a
+    // family it was never told exists, and nothing made the omission surface.
+    const args = (...extra: string[]): string[] => [
+        '--global',
+        join(root, 'g'),
+        '--project',
+        join(root, 'p'),
+        ...extra,
+    ];
+
+    it('REPORTS but does not refuse when --project is repointed', () => {
+        // The refusal is scoped to `<repo>/.claude`, which `condense.ts` writes and
+        // nothing else does. Under an arbitrary `--project` path an unrecognised
+        // directory does not establish generator ownership — it may be a consumer
+        // tree with a host-native or project-only family that legitimately cannot
+        // overlap, and refusing there would make a nominal report exit 1 on a
+        // correct topology. (Neutral review, 2026-08-21.) The refusal over the real
+        // repo root is verified end-to-end, not here: `mkdir .claude/widgets` in the
+        // checkout exits 1, removing it exits 0.
+        rule(layer('g', 'rules'), 'a.md');
+        rule(layer('p', 'rules'), 'b.md');
+        mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
+        expect(main(args())).toBe(0);
+        expect(main(args('--enforce'))).toBe(0);
+    });
+
+    it('still DETECTS the family under a repointed root — reporting, not blindness', () => {
+        // The scoping above must not have turned detection off, only the exit code.
+        rule(layer('g', 'rules'), 'a.md');
+        mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['widgets']);
+    });
+
+    it('reports nothing on the same tree once the family is gone (mutation control)', () => {
+        // Without this the assertions above could be passing for any reason at all.
+        rule(layer('g', 'rules'), 'a.md');
+        rule(layer('p', 'rules'), 'b.md');
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual([]);
+        expect(main(args())).toBe(0);
+    });
+
+    it('ignores dotfile directories and the six known families', () => {
+        rule(layer('g', 'rules'), 'a.md');
+        for (const t of ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents']) {
+            mkdirSync(join(root, 'p', t), { recursive: true });
+        }
+        mkdirSync(join(root, 'p', '.hidden'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual([]);
+    });
+
+    it('reports several unknown families sorted, not just the first', () => {
+        mkdirSync(join(root, 'p', 'zeta'), { recursive: true });
+        mkdirSync(join(root, 'p', 'alpha'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['alpha', 'zeta']);
+    });
+});

@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 5,
+    "active_roadmaps": 7,
     "later_roadmaps": 55,
-    "open_blockers": 33
+    "open_blockers": 36
   },
   "baseline_history": [
     {
@@ -608,6 +608,20 @@
       "later_roadmaps": 55,
       "open_blockers": 33,
       "why": "WALKED DOWN by 1 active and nothing else: road-to-solution-minimalism is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). This is the roadmap PR #1480 left open earlier in this same drain on exactly one acceptance step -- all quality gates pass -- which was deliberately NOT flipped then because a green CI run is what closes it, not an agent's assertion. That step is closed here and the archive follows. open_blockers unchanged at 33: its blockers were already resolved before this change, so nothing is claimed twice. later_roadmaps unchanged at 55."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 6,
+      "later_roadmaps": 55,
+      "open_blockers": 34,
+      "why": "Raised by one for `merge-authority` in road-to-drain-commands. The blocker is not deferred work: it records that activating a `--merge` flag lowers a recorded safety floor (ADR-237 s4 excludes merging and says no invocation extends it), which docs the decision-revisit-gate reserves to the owner. Three independent reviews reached that same verdict before the blocker was written - the AI council, the committed road-to-gate-preauth-authorization stub, and the runtime classifier, which refused this branch's own attempt to edit the prohibition out of the canonical loop. Writing it as a blocker is what keeps the estate honest here: the alternative was to ship the flag active with an amendment the agent authored for itself, which would have left the count unchanged and the floor lowered. Also raised active_roadmaps 10 -> 11 for the same file. It ships 27 of its 29 steps closed in the change that adds it, and stays active only because that one owner decision is outstanding; its frontmatter carries the matching estate_offset_exempt line rather than parking an unrelated roadmap to balance the books. Rebased onto main's drawdown during the merge: main lowered active_roadmaps to 10 and open_blockers to 43 while this branch was open, so the +1 for this roadmap is applied to THAT floor (11 / 44) rather than to the 11 / 43 this branch started from. Taking our own higher numbers would have silently undone someone else's drawdown, which is the one thing a ratchet must never let a merge do."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 7,
+      "later_roadmaps": 55,
+      "open_blockers": 36,
+      "why": "REBASED ONTO THE TRUNK'S WALK-DOWN (FIFTH time on this branch -- main moved five times across the review rounds, twice while CI was running on this branch). Re-measured from the tree: with main's file in place `check_estate_count` reported `active_roadmaps 7 (baseline 6, +1)` and `open_blockers 36 (baseline 34, +2)`, which is exactly this branch's contribution. main's lineage is kept whole (85 history entries, baseline 6/55/34) and only that delta rides on top, giving 7/55/36.\n\nFive identical resolutions is worth naming as a PATTERN rather than five accidents: the trunk is being drained continuously, a CI cycle here takes about twenty minutes, and main moved 45 commits during the last one. The drain's own run summary records the same shape from the other side -- 'the merge-authorization window is shorter than a drain takes'. So this conflict is structural for any branch that is not merged within one CI cycle, and the resolution is mechanical each time: take main's lineage, re-measure the delta, never carry the numbers. The one time they were carried, the entry shipped a `why` naming 12 -> 13 while its own field read 10.\n\nThe +2 open blockers are both on road-to-evidence-based-adr-governance and both are maintainer decisions put in front of the maintainer rather than drift: `owner-autonomy-batch` (three Hard-Floor rulings the source instruction did not authorize) and `authority-coupling-decision` (whether an independently validated evidence grade may ever reduce authorization burden -- deferred on a unanimous two-seat council ruling that fusing evidence metadata with authority is the design's central defect, because the party assigning the grade would also be the party gaining authority from it AND would be self-classifying the transition as reversible-internal). The active_roadmaps side is covered by the roadmap's own estate_offset_exempt, which records why no one-in-one-out offset is taken: the other active roadmaps belong to other sessions, and this ledger's own 67 -> 69 entry names 'closing someone else's work to buy the number back' as the incentive the ratchet must never create. 7 and 36 are the measured trunk-plus-this-change values and are now the numbers that must walk down."
     }
   ],
   "target": {

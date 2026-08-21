@@ -34,6 +34,25 @@ describe('generated vs authored', () => {
         expect(isGenerated('src/scripts/hook_manifest.yaml')).toBe(false);
     });
 
+    it('classifies the two paths a grep-based audit of the list could not find', () => {
+        // Both found by measurement over the last 50 sessions, not by reading
+        // the generator: `docs/decisions/INDEX.md` in 4 distinct sessions, and
+        // `dist/router.json` in 1.
+        //
+        // `regenerate_index.ts` takes the decisions directory as an argument, so
+        // the path literal is in no generator and every grep missed it.
+        expect(isGenerated('docs/decisions/INDEX.md')).toBe(true);
+        // `dist/router.json` sits one level ABOVE the `dist/agent-src/` prefix,
+        // so the prefix check did not reach it.
+        expect(isGenerated('dist/router.json')).toBe(true);
+        // The ADRs themselves are authored — only their index is generated, and
+        // conflating the two would discard a human's decision record.
+        expect(isGenerated('docs/decisions/ADR-239-no-union-merge.md')).toBe(false);
+        // And the router entry must not widen into a `dist/` catch-all: `dist/`
+        // also carries `dist/install/`, which is shipped and hand-reviewed.
+        expect(isGenerated('dist/router.json.bak')).toBe(false);
+    });
+
     it('does NOT claim an authored file is generated', () => {
         // gate-coverage.yml conflicted on this branch and is hand-authored — a
         // regenerate-resolution there would have discarded the other side.

@@ -111,6 +111,7 @@ commands:
     - commit/in-chunks
     - pr/create
     - pr/create/description-only
+    - pr/merge
     - prepare-for-review
 
   # Product-surface — deliberately-started FEATURES (not daily flow members,

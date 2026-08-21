@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 545,
+  "count": 548,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3406,6 +3406,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-generated-artifact-conflict-drawdown",
+      "title": "Road to generated-artifact conflict drawdown — the repository-local cut",
+      "disposition": "completed",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 21,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-glama-registry-listing",
       "title": "Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more",
       "disposition": "completed",
@@ -6164,6 +6178,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-single-delivery-closure",
+      "title": "Road to single delivery closure — the two families the partition never reached",
+      "disposition": "completed",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-single-delivery",
       "title": "Road to single delivery — one artefact, one layer, no duplicates",
       "disposition": "completed",
@@ -7002,6 +7030,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-wiring-truth-corrections",
+      "title": "Road to wiring truth corrections — three places where declared and effective diverge",
+      "disposition": "completed-with-deferrals",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 8,
+        "deferred": 2,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-wiring-truth",

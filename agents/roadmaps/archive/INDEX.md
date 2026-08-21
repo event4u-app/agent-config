@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**545 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 199 · completed 254 · completed-with-deferrals 25 · not-extractable 34
+**548 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 199 · completed 256 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -267,6 +267,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-gated-reach-followup`](road-to-gated-reach-followup.md) | Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel | closed-with-cancellations | 1 | 6/15 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |
+| [`road-to-generated-artifact-conflict-drawdown`](road-to-generated-artifact-conflict-drawdown.md) | Road to generated-artifact conflict drawdown — the repository-local cut | completed | 4 | 21/21 | _not extractable_ |
 | [`road-to-glama-registry-listing`](road-to-glama-registry-listing.md) | Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more | completed | 5 | 11/11 | _not extractable_ |
 | [`road-to-global-first-install`](road-to-global-first-install.md) | Road to Global-First Install | closed-with-cancellations | 3 | 24/25 | _not extractable_ |
 | [`road-to-global-only-install`](road-to-global-only-install.md) | Road to Global-Only Install — ARCHIVED | closed-with-cancellations | 7 | 40/41 | _not extractable_ |
@@ -464,6 +465,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-shared-design-tokens`](road-to-shared-design-tokens.md) | Road to shared design tokens — one visual identity across two independent GUIs | completed | 4 | 18/18 | _not extractable_ |
 | [`road-to-simplicity-and-everywhere`](road-to-simplicity-and-everywhere.md) | Road to Simplicity and Everywhere | closed-with-cancellations | 7 | 32/38 | _not extractable_ |
 | [`road-to-simplicity-and-goal-discipline`](road-to-simplicity-and-goal-discipline.md) | Road to simplicity and goal discipline — close the over-engineering and vague-goal gaps | completed | 4 | 13/13 | _not extractable_ |
+| [`road-to-single-delivery-closure`](road-to-single-delivery-closure.md) | Road to single delivery closure — the two families the partition never reached | completed | 3 | 16/16 | _not extractable_ |
 | [`road-to-single-delivery`](road-to-single-delivery.md) | Road to single delivery — one artefact, one layer, no duplicates | completed | 6 | 21/21 | _not extractable_ |
 | [`road-to-single-install-source-of-truth`](road-to-single-install-source-of-truth.md) | Roadmap: Single Install Source-of-Truth — finish the `--apply-payload` bridge | completed-with-deferrals | 6 | 21/24 | _not extractable_ |
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |
@@ -524,6 +526,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-visual-review-loop`](road-to-visual-review-loop.md) | Roadmap: Visual Review Loop + A11y | completed | 7 | 45/45 | _not extractable_ |
 | [`road-to-webfont-delivery-ownership`](road-to-webfont-delivery-ownership.md) | Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids | completed | 3 | 12/12 | _not extractable_ |
 | [`road-to-weighted-decision-matrix`](road-to-weighted-decision-matrix.md) | Road to weighted decision matrix — quantitative mode for `decision-record` | completed | 4 | 18/18 | _not extractable_ |
+| [`road-to-wiring-truth-corrections`](road-to-wiring-truth-corrections.md) | Road to wiring truth corrections — three places where declared and effective diverge | completed-with-deferrals | 3 | 8/10 | _not extractable_ |
 | [`road-to-wiring-truth`](road-to-wiring-truth.md) | Road to Wiring Truth | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-wizard-sse-hardening`](road-to-wizard-sse-hardening.md) | Roadmap: Wizard SSE hardening — edge-case test coverage, severity-phased | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-wizard-ux-improvements`](road-to-wizard-ux-improvements.md) | Roadmap: Wizard UX — first-run detection, fresh-start, tool-list cleanup | completed | 8 | 21/21 | _not extractable_ |

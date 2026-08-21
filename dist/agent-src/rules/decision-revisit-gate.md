@@ -39,25 +39,21 @@ THE USER IS REACHED FOR THE RESERVED SET — AND ALWAYS FOR IT.
 NEVER CITE A LOCK YOU HAVE NOT EVALUATED THIS TURN.
 ```
 
-An agent that finds a genuinely beneficial change blocked by a recorded
-past decision — an honest-null eval verdict, a "don't relitigate"
-memory or context note, a token-frugality/budget canon line, or an ADR —
-does not quietly comply and drop the change. It surfaces the conflict and
-re-evaluates the lock — **in the council by default**, reaching the user only
-for the reserved set below. Progress means adaptation: locks encode what was
-true when they were written, not a ceiling on what the package may ever become.
+An agent that finds a beneficial change blocked by a recorded decision — an
+honest-null verdict, a "don't relitigate" note, a budget-canon line, or an ADR —
+does not quietly comply and drop it. It surfaces the conflict and re-evaluates
+the lock **in the council by default**, reaching the user only for the reserved
+set below. Locks encode what was true when they were written, not a ceiling on
+what the package may ever become.
 
 **The default venue is the council, and this is a correction, not a new
-policy.** [`ai-council`](../skills/ai-council/SKILL.md) has said since its own
-Iron Law that *"a design decision the agent cannot settle from the tree goes to
-the council first, not to the user first"*, and its class table already lists
-"reopening a recorded decision". This rule used to say "offers the user a path",
-which contradicted that and made every lock an owner interrupt. The measured
-cost of the contradiction: across 26 days of transcripts, the agent reported a
-lock and waited, and the owner had to void the decision retroactively before the
-work resumed — in the two clearest cases the lock report is timestamped **before**
-the override demand. The ordering was the defect; the permission was never
-missing.
+policy.** [`ai-council`](../skills/ai-council/SKILL.md)'s Iron Law already sends
+a decision the agent cannot settle from the tree to the council first, and its
+class table lists "reopening a recorded decision". The old "offers the user a
+path" wording made every lock an owner interrupt; measured across 26 days of
+transcripts, the agent reported a lock and waited while the owner voided the
+decision retroactively — twice with the lock report timestamped **before** the
+override demand. The ordering was the defect; the permission was never missing.
 
 **Mechanism-match check comes FIRST**: a verdict settles the *mechanism it
 tested*, not every future proposal that resembles it — if the blocked change
@@ -81,19 +77,53 @@ distinction.
 4. **Route it** — council by default (below), user only for the reserved set.
 5. **Record** the outcome with scope and `revisit-if`.
 
-These five are the obligation and they are stated here rather than only behind
-a route, because the route was measurably unreachable: `decision-revisit-gate`
-lives in the always-on `meta` pack while `decision-review` ships
-`install.default: false` in the non-default `analysis-workbench` pack, so a
-pack-legal install received the obligation and not the procedure. `routes_to`
-now names two always-on skills; the backward-audit depth in
-[`decision-review`](../skills/decision-review/SKILL.md) stays optional, which is
-the correct status for depth.
+The five are stated here, not only behind a route, because the route was
+measurably unreachable: `decision-review` ships `install.default: false` in the
+non-default `analysis-workbench` pack, so a pack-legal install received the
+obligation and not the procedure. `routes_to` now names two always-on skills;
+the backward-audit depth in
+[`decision-review`](../skills/decision-review/SKILL.md) stays optional.
 
 Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs,
 hard structural caps), the per-step detail, when-NOT-to-fire and the failure
 modes remain in [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+
+## Reading a lock — the two descriptive axes
+
+Step 2 reads, in order: **effective state** (status · amendments · successors) →
+**provenance** → **evidence strength** → **discovery** → **current evidence**
+(does the basis still resolve in a clone?) → **reversibility of the proposed
+transition** → **reserved dimensions**. `adr_cite_check` prints six of them —
+read 6 is the agent's, because reversibility belongs to the proposed transition
+and no tool reading one record supplies it. What each field means, and what a
+`[found]` basis ref does NOT claim, is in that script's module docstring. The
+evidence-priced burden table stays in
+[`adr-layout § The reopen record`](../docs/contracts/adr-layout.md).
+
+```
+A GRADE IS A MEASUREMENT, NOT A PERMISSION — IT GRANTS NOTHING.
+CITING AN E0 LOCK AS A HARD BLOCKER WITHOUT SURFACING ITS GRADE IS A VIOLATION.
+NO GRADE LETS AN AGENT SUPERSEDE A RECORD, SKIP A COUNCIL, OR TAKE ANY ACTION
+IT COULD NOT TAKE YESTERDAY. THE COUNCIL-FIRST VENUE STAYS, AT EVERY GRADE.
+AN ADR'S HISTORICAL DECISION-MAKER DOES NOT DETERMINE ITS REOPEN VENUE.
+A LOW-EVIDENCE RECORD MAY STATE A DECISION; IT DOES NOT ESTABLISH THAT ITS
+ALTERNATIVES REMAIN INVALID.
+```
+
+Venue comes from the proposed transition, the trust boundaries it touches and
+the reserved dimensions below — never from who decided originally, and never
+from a grade. A weak grade changes how much a reopen must **do**, never who may
+do it: `authority_basis: owner_intent` is surfaced with its accumulated cost and
+never overruled, and council agreement never raises `evidence.strength` —
+sources and measurements do.
+
+**No E0/E1 agent path is enabled here, and no reading of this rule enables
+one.** Whether an independently validated grade may ever reduce the
+*authorization* burden is an owner-reserved open question — the
+`authority-coupling-decision` blocker — left unanswered because the party
+assigning a grade would be the party gaining authority from it, and would be
+self-classifying the transition as reversible-internal on top.
 
 ## Who decides — the owner-reserved set
 
@@ -121,27 +151,24 @@ forever. Availability is `agent-config council:status`, never a project file
 ([`council-availability`](council-availability.md)).
 
 Field on the ADR: `reopen_policy: directional | owner | unclassified`, absent →
-**`unclassified`**, which permits council investigation and reversible
-experiments and gates only execution of a reserved transition. Absent is
+**`unclassified`** — council investigation and reversible experiments are
+permitted; only execution of a reserved transition is gated. Absent is
 deliberately not `owner`: with 146 accepted ADRs that default would encode
-today's blockage into the new schema. Full contract, the reopen record, and the
+today's blockage into the new schema. Full contract, the reopen record and the
 precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../docs/contracts/adr-layout.md).
 
 ## See also
 
 - [`recurring-criticism`](recurring-criticism.md) — the **other entrance**: this
   rule fires when a lock blocks a change, that one when the same criticism arrives
-  again. It reuses the five steps and the owner-reserved table below.
+  again. It reuses the five steps and the owner-reserved table above.
 - [`decision-review`](../skills/decision-review/SKILL.md) — the backward-audit
   procedure + the migrated gate mechanics.
 - [`ai-council`](../skills/ai-council/SKILL.md) — the re-evaluation mechanism;
   owns the convergence-summary scope + `revisit-if` contract.
 - [`decision-record`](../skills/decision-record/SKILL.md) — forward-flow decision
   locking; its **§ 4 Lock the choice + consequences** requires the `Revisit-if:`
-  line that names the reopening condition up front. (This pointer used to cite an
-  "escalation litmus" heading; `grep` over `src/` + `docs/` returns two hits and
-  neither is in that file — the heading never existed, so the pointer led
-  nowhere. Corrected to the section that carries the obligation.)
+  line that names the reopening condition up front.
 - [`token-budget-discipline`](token-budget-discipline.md) — the frugality-canon
   value-over-budget escalation this rule's budget-lock case defers to.
 - [`no-cheap-questions`](no-cheap-questions.md) — the question-quality floor a
@@ -164,3 +191,8 @@ plus the curated `dist/agent-src/scripts/` list and is deliberately out of this
 change. And `docs/decisions/` is projected into no agent-visible tree at all —
 the agent sees ADR *numbers* cited across rules and skills, almost never ADR
 *text*. Until that changes, "evaluate before citing" means opening the file.
+
+`docs/contracts/` is unprojected on the same terms (`dist/agent-src/` carries no
+`docs/`), so the burden table this rule points at is maintainer-reachable only.
+That is why the reserved-set table above stays here rather than becoming a
+pointer: a consumer install receives these lines and not the contract.

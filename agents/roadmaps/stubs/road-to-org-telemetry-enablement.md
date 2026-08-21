@@ -83,7 +83,7 @@ about adoption. Do not publish that null as an adoption result.
 |---|---|
 | **Producer** | The **named internal data-protection reviewer** for the organisation — the person or role the company's data-protection process routes a written review to. Named by role because the repository cannot name the individual; the promotion act is filling this cell with a person's name, and a promotion that leaves it as a role has not cleared the gate. |
 | **Detection probe** | The signed outcome, covering the Class-A field list **and** the disclosure line, is linked from ADR-233. Concretely: `docs/decisions/ADR-233-*.md` contains a reference to a dated written outcome, and that outcome names both artefacts. |
-| **Measured at transfer (2026-08-20)** | **FAIL.** ADR-233 exists and is indexed; it carries no sign-off reference. `grep -c "sign-off" docs/decisions/ADR-233-*.md` finds no linked outcome. |
+| **Measured at transfer (2026-08-20)** | **FAIL.** ADR-233 exists and is indexed; it carries no sign-off reference. `grep -c "sign-off" docs/decisions/ADR-233-*.md` returns **0**. |
 
 ## Monitoring, review and rollback
 

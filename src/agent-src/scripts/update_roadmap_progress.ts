@@ -64,6 +64,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
+import { evaluateDashboardOnDisk, parseModeToken, type DashboardMode } from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -998,8 +999,9 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
         // script name covers the rest.
         '> Auto-generated — do not edit. Regenerate with `task roadmap-progress` ' +
             'or by running the `update_roadmap_progress` script for your install; ' +
-            'rewritten on every roadmap create / execute / completion change ' +
-            '(timestamp lives in git history).\n>\n' +
+            'rewritten on every roadmap create / execute / completion change. ' +
+            'A repository that does not commit this file has no git history for ' +
+            'it — regenerate to see the current state.\n>\n' +
             header_meta,
     );
     lines.push('## Overall\n');
@@ -1214,17 +1216,22 @@ class ArgparseExit extends Error {
 const _PROG = 'update_roadmap_progress.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--check] [--archive | --no-archive] [--repo-root REPO_ROOT]\n`;
+    return (
+        `usage: ${_PROG} [-h] [--check] [--tracked-mode | --untracked-mode]\n` +
+        `       [--archive | --no-archive] [--repo-root REPO_ROOT]\n`
+    );
 }
 
 interface Args {
     check: boolean;
+    mode: DashboardMode;
     archive: boolean;
     repo_root: string;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
+    let mode: DashboardMode = 'tracked';
     let archive = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
@@ -1240,6 +1247,9 @@ function _parseArgs(argv: readonly string[]): Args {
             throw new ArgparseExit(0);
         } else if (tok === '--check') {
             check = true;
+            i += 1;
+        } else if (parseModeToken(tok) !== null) {
+            mode = parseModeToken(tok) as DashboardMode;
             i += 1;
         } else if (tok === '--archive') {
             archive = true;
@@ -1267,7 +1277,7 @@ function _parseArgs(argv: readonly string[]): Args {
         // rather than silently letting one win.
         emitError('argument --archive: not allowed with --check');
     }
-    return { check, archive, repo_root };
+    return { check, mode, archive, repo_root };
 }
 
 /**
@@ -1334,12 +1344,9 @@ function main(argv?: readonly string[]): number {
     }
     const roadmaps = collect(roadmap_root);
     const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
-    const current = fs.existsSync(target) ? fs.readFileSync(target, { encoding: 'utf-8' }) : '';
     const complete = unarchived_complete(roadmaps);
     const pending = pending_iron_law_3(roadmaps);
     const gated = merge_gated_pending(roadmaps);
-
-    const _relToRepo = (p: string): string => _relPosix(repo_root, p);
 
     const _warn_merge_gated = (): void => {
         process.stderr.write(
@@ -1357,15 +1364,10 @@ function main(argv?: readonly string[]): number {
     };
 
     if (args.check) {
-        const stale = current !== new_text;
-        if (stale) {
-            process.stderr.write(
-                `❌  ${_relToRepo(target)} is stale. ` +
-                    'Run `node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts` ' +
-                    'to regenerate (or `task roadmap-progress` in Taskfile ' +
-                    'projects).\n',
-            );
-        }
+        const rel = _relPosix(repo_root, target);
+        const verdict = evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel });
+        const stale = verdict.stale;
+        if (verdict.error !== null) process.stderr.write(verdict.error);
         if (complete.length) {
             process.stderr.write(
                 '❌  Completed roadmaps are still in `agents/roadmaps/` — ' +
@@ -1395,12 +1397,12 @@ function main(argv?: readonly string[]): number {
         if (stale || complete.length || pending.length) {
             return 1;
         }
-        process.stdout.write(`✅  ${_relToRepo(target)} is up to date.\n`);
+        process.stdout.write(verdict.ok ?? '');
         return 0;
     }
     fs.writeFileSync(target, new_text, { encoding: 'utf-8' });
     process.stdout.write(
-        `✅  Wrote ${_relToRepo(target)} · ` +
+        `✅  Wrote ${_relPosix(repo_root, target)} · ` +
             `${roadmaps.length} roadmap(s) · ` +
             `${roadmaps.reduce((s, r) => s + r.done, 0)}/${roadmaps.reduce((s, r) => s + r.total_active, 0)} steps done.\n`,
     );

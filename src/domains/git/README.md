@@ -7,11 +7,12 @@ Git workflow — commit, pull requests, branch sync.
 - **id**: `git`
 - **owner**: engineering
 - **requires**: engineering-base
-- **artefacts**: 4
+- **artefacts**: 5
 
-## Commands (4)
+## Commands (5)
 
 - **`git-commit`** — Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
 - **`git-commit-in-chunks`** — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
 - **`git-pr-create`** — Create a GitHub PR with structured description from Jira ticket and code changes
 - **`git-pr-create-description-only`** — Generate a PR description as a copyable markdown block — used standalone or by create-pr
+- **`git-pr-merge`** — Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open

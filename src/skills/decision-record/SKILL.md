@@ -119,6 +119,21 @@ Write:
   law instead of a decision under current conditions; see
   [`decision-revisit-gate`](../../rules/decision-revisit-gate.md) for
   what happens when a later change is blocked by it without one.
+  It is an externally observable **condition**, never a cadence and never
+  permanence under a field name: `terminal`, `none`, "never" and "forever"
+  are invalid, and `unclassified` is legal only on an *existing* record
+  during the migration — never on the one you are locking now.
+- **Evidence + assumptions, split explicitly.** Every load-bearing factual
+  claim in the rationale either points at a basis ref — `file:line`, a URL, a
+  `docs/CLAIMS.md` claim id, a benchmark id — or is **labelled an
+  assumption**. There is no third state. Cite nothing and the record grades
+  `E0`, which is honest and publishable; a confident grade over no citations
+  is not. **Agreement is not evidence:** the council converging, or two
+  models liking the same option, is `provenance: agentic` with
+  `agentic_mode: council` — sources and measurements raise the grade,
+  consensus does not. A human product call records `E0` plus
+  `authority_basis: owner_intent` rather than a faked grade. Vocabulary:
+  [`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md).
 
 ### 5. Wire the supersession chain (if any)
 
@@ -129,9 +144,34 @@ If this decision overrides a prior ADR:
   not "we now think differently".
 - Hand off the `supersedes:` linkage to `adr-create`.
 
-### 6. Hand off to file mechanics
+### 6. Admission gate — is this an ADR at all?
 
-Output the structured payload (below). The user — or
+Classify **before** handing off. A locked choice earns an ADR only when it is
+architecturally significant on at least one axis:
+
+- **Hard or costly to reverse** — a one-way door: public API shape, DB schema,
+  wire format, published identifier, migration.
+- **Broadly constraining** — it binds work outside the module that made it.
+- **Crosses a governed surface** — consumer contract, API, security or privacy
+  floor, package structure.
+
+None of the three → **no ADR**. The record still exists; it lands as a
+decision note in `agents/decisions/`, a config value, a measurement record in
+`docs/CLAIMS.md`, an experiment, or a roadmap item. Explicitly not ADRs: a
+temporary numeric threshold · a benchmark value · a model mapping · one-off
+release sequencing · a reversible local implementation detail.
+
+**The reference case is in this tree.** ADR-002 encodes `25 000 → 26 000` and
+a `4.0k` override ceiling as architecture law (`ADR-002:55`, `:62`), and
+ADR-114 then had to add another override while recording that 7 of 9 kernel
+rules already carry them (`ADR-114:74`). The *principle* — a kernel budget
+exists, is measured, and is capped — is the ADR. The numbers belong in a
+versioned budget contract with a regression gate, so a recalibration stops
+needing an architecture supersession.
+
+### 7. Hand off to file mechanics
+
+Gate passed → output the structured payload (below). The user — or
 `adr-create` — turns it into the file.
 
 ## Weighted-matrix mode (quantitative)
@@ -226,10 +266,22 @@ Consequences:
   - <becomes harder>
   ✗ <becomes impossible>
 
+Assumptions:
+  ~ <load-bearing claim with no basis ref>
+
+Evidence:
+  <basis ref>  — file:line | URL | CLAIMS id | benchmark id   (or: none — E0)
+
+Provenance: human | agentic | mixed | unknown   (agentic_mode: single | council | delegated)
+Grade:      E0 | E1 | E2 | E3 | E4             (authority_basis: evidence | owner_intent)
+
 Supersedes: <ADR-XYZ "title">  (if any)
 Trigger:    <what changed>     (if superseding)
+Revisit-if: <observable condition>
 
-Next: /adr-create  with the payload above
+Admission gate: ADR | decision note | config value | measurement | experiment | roadmap item
+
+Next: /adr-create  with the payload above   (only when the gate says ADR)
 ```
 
 ## Gotcha
@@ -240,6 +292,12 @@ Next: /adr-create  with the payload above
   cons for the chosen option, you have not understood it yet.
 - A supersession with no "what changed in the world" is a vibe
   pivot. Reject and ask.
+- An unlabelled guess is worse than a labelled one. A claim with no basis ref
+  and no assumption label reads as established fact to the next reader.
+- "The council agreed" is a provenance fact, not an evidence grade. If the
+  only support is agreement, the grade is `E0` — write it.
+- Writing an ADR for a threshold is how a recalibration becomes an
+  architecture supersession. Run the admission gate first.
 
 ## Do NOT
 

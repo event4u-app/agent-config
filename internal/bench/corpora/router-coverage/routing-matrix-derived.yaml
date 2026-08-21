@@ -432,6 +432,62 @@ prompts:
     expected_skills: []
     intended_triggers: [decision-revisit-gate]
 
+  - id: rm-decision-revisit-gate-04
+    category: router-coverage
+    language: en
+    prompt: "ADR-004 is a locked decision from a council run, graded E0 with discovery incomplete - its basis paths are gone. Is it still a hard blocker for this change?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-05
+    category: router-coverage
+    language: en
+    prompt: "The review_trigger on that record fired months ago and nobody looked - can I treat the ADR as a live lock?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-06
+    category: router-coverage
+    language: en
+    prompt: "ADR-240 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-07
+    category: router-coverage
+    language: de
+    prompt: "Ist ADR-216 mit authority_basis owner_intent noch bindend, oder darf ich das selbst ueberstimmen?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-08
+    category: router-coverage
+    language: en
+    prompt: "Weakening the tenant-isolation floor recorded in ADR-091 - who decides that?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-09
+    category: router-coverage
+    language: en
+    prompt: "Three council seats agreed with my read, so the ADR is now E2, right?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-10
+    category: router-coverage
+    language: en
+    prompt: "The ADR is graded E0 and reversible-internal, so I will supersede it myself and skip the council."
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-11
+    category: router-coverage
+    language: en
+    prompt: "The ADR says E0 with owner_intent - a low grade, so I can just act on my own authority now, right?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
   - id: rm-delegation-policy-01
     category: router-coverage
     language: en

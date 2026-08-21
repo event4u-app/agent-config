@@ -124,7 +124,7 @@ against sentences already known to be false:
 **Detection probe:** the shared probe above, plus `npm view @event4u/agent-config
 dist-tags` showing a version whose `release.yml` run has `event=pull_request`.
 
-## Transfer 2 — failure drill, case (a) only
+## Transfer 2 — the parent's Phase 2 item 2: failure drill, case (a) only
 
 **Outcome state:** transferred, and **narrowed** — (b) and (c) are discharged.
 

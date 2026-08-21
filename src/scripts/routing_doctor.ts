@@ -276,7 +276,11 @@ export function render_standing_delivery(m: StandingDeliveryMeasure | null): str
     lines.push(
       `⚠️ Standing delivery: both rule layers active — ${m.overlap_rules} rule(s) delivered twice ` +
         `(~${m.overlap_tokens} tok). This session's host receives ${m.received_tokens} rule tokens; ` +
-        `scoped delivery would be ~${scoped} — run \`agent-config install --layer=<global|project>\`.`,
+        `single-layer delivery would be ~${scoped} — run \`agent-config install\` to arm the ` +
+        `ADR-236 partition on this machine (it fingerprints the host layer; the next ` +
+        `\`task generate-tools\` then withholds the globally-owned artefacts). The former advice ` +
+        `here, \`install --layer=<global|project>\`, was layer suppression — declined by ADR-226 ` +
+        `and superseded by the partition.`,
     );
     if (m.divergent_rules > 0) {
       // Suppressing a layer whose copies differ drops whichever obligations only
