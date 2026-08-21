@@ -34,7 +34,7 @@
 
 ---
 
-## Parked — `later/` (54 roadmaps, not active backlog)
+## Parked — `later/` (55 roadmaps, not active backlog)
 
 > Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
 
@@ -70,6 +70,7 @@
 | [road-to-mixed-trigger-activation-cost.md](roadmaps/later/road-to-mixed-trigger-activation-cost.md) | 1 (1 you) | Blocked until: the host exposes an `InstructionsLoaded` observer that a session can read (step 3.3's instrument; absent from the 2.1.229 binary's token extraction, so building against it today woul... | <!-- ref-ignore -->
 | [road-to-originality-gate-and-contributor-funnel.md](roadmaps/later/road-to-originality-gate-and-contributor-funnel.md) | 1 | Blocked until: the extraction demand-gate window closes — floor met (≥ 3 distinct external signals) or 90 days after `docs/anti-reskin-gate.md` lands on `main`. Phases 0-2 and the Phase-3 probe are... | <!-- ref-ignore -->
 | [road-to-per-workspace-license-policy.md](roadmaps/later/road-to-per-workspace-license-policy.md) | 0 | Blocked until: a real consumer repo hits the v1 escalation, i.e. a heterogeneous monorepo (workspace SPDX id differs from root) is actually encountered and the maintainer wants derivation instead o... | <!-- ref-ignore -->
+| [road-to-plan-gates-measurement.md](roadmaps/later/road-to-plan-gates-measurement.md) | 0 | Blocked until / Resume when: `agents/evidence/metrics/gate-metrics.jsonl` carries at least 10 `r2_review` events (Stage B); Phase 2 additionally needs 20. Probe: `grep --line-number 'r2_review' age... | <!-- ref-ignore -->
 | [road-to-plugin-runtime-borrowings.md](roadmaps/later/road-to-plugin-runtime-borrowings.md) | 0 | Resume when the maintainer decides to spend a slot on it. That is the only remaining condition: a sequencing decision, in the maintainer's control, not an event to wait for. Per-item evidence disci... | <!-- ref-ignore -->
 | [road-to-policy-evaluation-core.md](roadmaps/later/road-to-policy-evaluation-core.md) | 0 | Blocked until BOTH hold: (1) the first native engine's Phase-5 benchmark verdict is published (ADR-124 sequencing rule; queue position 2 per the sequencing plan in `road-to-native-code-intelligence... | <!-- ref-ignore -->
 | [road-to-product-bets.md](roadmaps/later/road-to-product-bets.md) | 1 (1 you) | Blocked until: a real external user signal naming rule count or surface count as the adoption blocker is recorded under `agents/evidence/`. Why this half: blocker `simple-expert-mode-demand-evidenc... | <!-- ref-ignore -->

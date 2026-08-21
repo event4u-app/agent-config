@@ -17,7 +17,7 @@
   },
   "baseline": {
     "active_roadmaps": 15,
-    "later_roadmaps": 54,
+    "later_roadmaps": 55,
     "open_blockers": 47
   },
   "baseline_history": [
@@ -454,6 +454,13 @@
       "later_roadmaps": 54,
       "open_blockers": 47,
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-council-blind-review archived (under agents/roadmaps/ on main, under archive/ here) and its single blocker maintainer-blind-ratings, open on the trunk, is closed here as 'resolved -- transferred'. The destination is stubs/road-to-council-blind-ratings.md, created in this same change, which is what makes the transfer legitimate rather than a disposal: the obligation names a maintainer rating pass, so it could not be completed by an agent, and it is now carried by a stub with its own probe instead of sitting open on an archived roadmap. later_roadmaps unchanged at 54 -- transferred to a stub, not parked into later/."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 15,
+      "later_roadmaps": 55,
+      "open_blockers": 47,
+      "why": "A PARK with the draft asymmetry, recorded in the direction it actually moves: road-to-plan-gates-measurement goes from agents/roadmaps/ to agents/roadmaps/later/, so later_roadmaps 54 -> 55 is RAISED, and active_roadmaps stays 15 because the file carried status: draft on the trunk and collect() never counted it as active. The raise is taken rather than netted because parking is not closing. It qualifies as a park: the file keeps its open steps and its resume condition is an existence predicate over a named file, agents/evidence/metrics/gate-metrics.jsonl, which a probe can decide -- stronger than the maintainer-statement triggers some of the other parks in this run carry. open_blockers unchanged at 47."
     }
   ],
   "target": {
