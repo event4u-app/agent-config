@@ -14,11 +14,15 @@
       target manifest, the enumerated conflict classes, the bounded CI-repair
       halt list, the kill-switch set, the no-rollback rule, and the closed
       disposition set of its summary artifact.
-- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree` and
-      delivers a **mergeable** PR per roadmap; `--merge` is specified, marked
-      inert, and points at the `merge-authority` blocker rather than merging.
-      Mergeability is expressed per-PR against a recorded base SHA, never as a
-      queue property.
+- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree`.
+      **Weakened after R2 (finding 8), because the original wording was not
+      satisfiable:** an `--all` hand-off is one immediately-mergeable PR plus
+      N−1 *prepared* ones, each needing a re-sync at merge time — while
+      `--merge` is gated nothing merges, so the base never advances and every
+      PR after the first is mergeable only against the base recorded when it
+      was prepared. The command says this in those words rather than promising
+      "N mergeable PRs". `--merge` is specified, marked inert, and points at
+      the `merge-authority` blocker.
 - [ ] AC-5 — No new command named `process-all` exists anywhere in the tree,
       and no new authorization store exists in `src/scripts/hooks/`. No shipped
       path merges anything while the `merge-authority` blocker is open: both

@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 9ee309dbb4cc83713aa7e586741cd9b39f416261, review
-  artefacts excluded), scope hash `6c4d2979f331049419136a244fe0599af49c524adb7d3e682b8204820f3e16cc`
+- diff: `diff.patch` — the review scope (branch head 73d720501cd89606812727281de0f680410f89e5, review
+  artefacts excluded), scope hash `9a444f8e59089e22e78f86cd032fbbf20a2f7bb75778beb76ab7e5704c1e2799`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -48,11 +48,13 @@ Changed files:
 - docs/getting-started.md
 - src/agent-src/commands/evals/git-pr-merge.json
 - src/agent-src/commands/evals/roadmap.json
+- src/config/estate-count-budget.json
 - src/domains/git/README.md
 - src/domains/git/pack.yaml
 - src/domains/git/pr/merge/command.md
 - src/domains/product-basic/roadmap/command.md
 - src/domains/product-basic/roadmap/process-full/command.md
+- src/flows/surface-map.yaml
 - src/scripts/check_hook_bundle_content.ts
 - src/scripts/hooks/block_unauthorized_git.ts
 - taskfiles/ci-fast.yml
@@ -77,5 +79,5 @@ Fill the findings table in `drain-road-to-drain-commands.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 6c4d2979f331049419136a244fe0599af49c524adb7d3e682b8204820f3e16cc, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 9a444f8e59089e22e78f86cd032fbbf20a2f7bb75778beb76ab7e5704c1e2799, reviewed <YYYY-MM-DD>
 ```

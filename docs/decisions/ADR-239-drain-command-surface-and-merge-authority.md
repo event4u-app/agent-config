@@ -1,5 +1,5 @@
 ---
-adr: 238
+adr: 239
 status: accepted
 date: 2026-08-21
 decision: drain-command-surface-and-merge-authority
@@ -18,7 +18,7 @@ review_trigger: >-
   since § Decision 3's whole argument is that no such store exists.
 ---
 
-# ADR-238 — Drain command surface, and where merge authority stops
+# ADR-239 — Drain command surface, and where merge authority stops
 
 ## Status
 
