@@ -178,8 +178,13 @@ is the standing demonstration: its title says the tree is kept forever, its
 Decision says KEEP permanently, and its own frontmatter carries the conditions
 under which that decision should be reopened. A record cannot be both.
 
-An owner purpose statement writes `owner_intent: currently binding` instead —
-authoritative, and honest about being a choice rather than a law of nature.
+An owner purpose statement records `authority_basis: owner_intent` instead —
+authoritative, and honest about being a choice rather than a law of nature. That
+field is the one the schema declares and the validator checks; an earlier draft
+of this record named a bare `owner_intent: currently binding` key, which no
+schema declares anywhere in the tree. It would have worked — nothing rejects an
+unknown frontmatter key — and that is what made it wrong: a second vocabulary
+for one concept, readable only by the lint that invented it.
 
 ### 7. Fewer ADRs
 

@@ -373,7 +373,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       Four further live hits verified at `492873f09`, each needing a
       disposition rather than a blanket rewrite: ADR-108 `:12`/`:24` and
       ADR-107 `:37` ("open-source forever" — an owner purpose statement, so
-      `owner_intent: currently binding` is the correct rewrite, not deletion),
+      `authority_basis: owner_intent` is the correct rewrite, not deletion),
       ADR-122 `:77`, ADR-124 `:229`.
       verify: lint fires on an ADR-208-shaped fixture and stays silent on an
       externally-scoped invariant with its stop-condition; the five live hits
@@ -616,7 +616,7 @@ enables it) an independently validated grade. Rows below therefore state the
 | 10 | ADR-020 | Global-only consumer scope | RE-AFFIRM expected (measured double-copy defect); its stale-prose defect is fixed by 2.2 |
 | 11 | ADR-002 + ADR-114 | Literal caps as architecture law (`ADR-002:55`, `:63`); 7 of 9 kernel rules already overrides (`ADR-114:74`) | `MERGE-INTO-POLICY` — principle stays an ADR, numbers move to a versioned budget contract with a regression gate |
 | 12 | ADR-208 | "KEEP — permanently" (`:52`) plus its own reopen conditions (`:10-11`); council-converged, with no grounds for "forever" | Amend the permanence wording per 1.4; disposition on the merits |
-| 13 | ADR-107, ADR-108, ADR-122, ADR-124 | The four further live permanence hits (1.4). ADR-107/108's "open-source forever" is an owner purpose statement | `owner_intent: currently binding` rewrite for the purpose statements; merits disposition for 122/124 |
+| 13 | ADR-107, ADR-108, ADR-122, ADR-124 | The four further live permanence hits (1.4). ADR-107/108's "open-source forever" is an owner purpose statement | `authority_basis: owner_intent` rewrite for the purpose statements; merits disposition for 122/124 |
 
 The v4 row 13 — "any blocker cited by `road-to-user-out-of-the-loop`" — is
 **deleted**: that roadmap cites zero ADRs as blockers (verified). Any

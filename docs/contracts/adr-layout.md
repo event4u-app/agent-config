@@ -50,16 +50,16 @@ Identical across both surfaces:
 ```yaml
 ---
 adr: NNN              # zero-padded; per-area uses 4-digit (0001), flat uses 3-digit (010)
-area: <area> | flat   # 'flat' for docs/decisions/, otherwise the area slug
-status: proposed | accepted | superseded | deprecated
+area: <area>          # per-area records only — see the note below
+status: proposed | accepted | superseded | deprecated | rejected
 date: YYYY-MM-DD
 decision: <slug>
-supersedes: — | ADR-<area>-NNNN | ADR-MMM
-superseded_by: — | ADR-<area>-NNNN | ADR-MMM
+supersedes: — | ADR-MMM | ADR-MMM, ADR-NNN, …    # a list is legal; see below
+superseded_by: — | ADR-MMM
 amends: — | ADR-MMM                    # optional; this ADR amends that one
 amended_by: — | ADR-MMM                # optional; reciprocal of `amends`
 phase: <roadmap-stem> · <phase-id>     # optional but recommended
-type: retrospective | prospective
+type: <free-form label>                # NOT an enum — see the note below
 protected_dimensions: [...]            # optional — see § Reopen authority
 reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
 
@@ -77,6 +77,28 @@ authority_basis: evidence | owner_intent   # optional; absent → evidence
 ```
 
 Supersession links cross surfaces: a per-area ADR may supersede a flat ADR and vice versa. The numeric prefix in `supersedes:` makes the target unambiguous (`ADR-007` = flat, `ADR-cost-0001` = per-area).
+
+**Corrected 2026-08-21 — this block documented three things the corpus does not
+do.** Found by the evidence sweep, and worth recording as a finding rather than
+a silent edit, because it is ADR-013's own two-gate lesson turned on the ADR
+layout itself: a contract nobody enforces drifts, and the drift is invisible
+until someone reads both.
+
+- **`area:` appeared in 0 of 178 flat records.** It was documented as required on
+  both surfaces and is carried by neither. Now scoped to per-area records, where
+  it is actually written.
+- **`type:` was documented as `retrospective | prospective`; the corpus carries
+  ten values**, `structural` 130 times against `retrospective` once. Nothing
+  validates the field, so the enum was aspirational from the day it was written.
+  It is recorded as free-form rather than pretending to a closed set — narrowing
+  it to a real enum is a separate decision, and one that has to start from the
+  ten values in use.
+- **`supersedes:` takes a list**, which the single-value grammar denied: ADR-206
+  supersedes sixteen records in one field. The reciprocity check below is
+  list-aware for exactly this reason.
+
+`status:` also gains `rejected`, which the validator has always accepted and
+this block omitted.
 
 ## Provenance and evidence
 
@@ -124,6 +146,28 @@ yields E3 **because of the sources**.
 | `E4` | External constraint — protocol/API compatibility with real consumers, legal obligation, demonstrated security invariant | — |
 
 Even E4 is not "forever": standards change, contracts are retired.
+
+### `evidence.basis` must resolve in a clone
+
+A basis ref is only evidence if the next reader can reach it. Two shapes fail
+that test and both exist in the corpus today:
+
+- a path under a **gitignored** tree (`agents/runtime/**`, `internal/reports/**`
+  where untracked) — present on the author's disk, absent in every clone;
+- a bare URL with no retrieval date, which cannot be distinguished from a page
+  that has since changed.
+
+The worked example is ADR-004, found in the 2026-08 sweep: its three named
+measurement artifacts are gone even locally, while its council-response JSON is
+still on disk — both under gitignored `agents/runtime/`. So the record's
+*deliberation* survived and its *evidence* did not, which is the exact inversion
+this whole axis exists to prevent. ADR-017 is the counter-case and shows the fix
+is cheap: its migration data is tracked under `dist/`.
+
+So: a basis ref points at a **tracked** path, a `docs/CLAIMS.md` claim id, a
+benchmark id recorded in a tracked report, or a URL carrying its retrieval date.
+A ref that resolves only on one machine is a citation, not a basis, and a grade
+resting on one is `E0` with `discovery: incomplete` however confident its prose.
 
 ### `evidence.discovery` — required on E0
 
