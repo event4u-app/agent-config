@@ -575,7 +575,7 @@ gates:
 
   - id: lint_plan_risk_register
     argv: []
-    min_scanned: 10
+    min_scanned: 5
     corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
     note: >
@@ -583,21 +583,35 @@ gates:
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
       reported, never silently skipped.
 
-      Lowered 12 → 10 on 2026-08-21, and the reason matters more than the
-      number: the previous note asserted that "a collapse below the floor
-      means the roadmaps root moved, not that the corpus went clean." That
-      premise is now falsified by evidence. Archiving two roadmaps that were
-      each at zero open and zero deferred steps on main dropped the top-level
-      count from 12 to 10 with the root untouched — the corpus really did go
-      cleaner. A floor calibrated to the exact size of a corpus that
-      road-to-estate-drawdown is deliberately shrinking fails on the drawdown
-      succeeding, which is the wrong thing to detect.
+      Lowered 12 → 5 on 2026-08-21, and the SHAPE of the change matters more
+      than the number. The previous note asserted that "a collapse below the
+      floor means the roadmaps root moved, not that the corpus went clean."
+      That premise is falsified: archiving roadmaps at zero open and zero
+      deferred steps dropped the top-level count from 12 to 10 with the root
+      untouched — the corpus really did go cleaner, which is what
+      road-to-estate-drawdown exists to achieve. A floor pinned to the exact
+      corpus size fails on the drawdown succeeding, which is the wrong thing
+      to detect.
 
-      The floor still does its job: it catches the root moving or the scanner
-      silently reading nothing. It is NOT a proxy for how many roadmaps ought
-      to exist. Revisit-if the active roadmap set is deliberately grown back
-      above 12, or if a future drop is traced to a scanner defect rather than
-      to archival — either falsifies the number, not the obligation.
+      So the replacement is deliberately NOT today's count. Re-pinning at 10
+      would repeat the defect one archival later and force this note to be
+      rewritten every time a roadmap closes. 5 sits structurally below any
+      plausible active set while still catching the two failures this floor is
+      for: the roadmaps root moving, and the scanner silently reading nothing.
+      It is not a target for how many roadmaps ought to exist.
+
+      Count reconciliation, since two numbers move in this change and they
+      count different populations: this gate counts READY files at the top
+      level of agents/roadmaps/ (12 → 10 here), while
+      estate-count-budget.json::active_roadmaps counts NON-DRAFT candidates as
+      collect() sees them (11 → 10). The gap is the draft-status file each
+      population treats differently; neither number is derivable from the
+      other.
+
+      Revisit-if the active set is deliberately grown past ~15, at which point
+      5 is uninformatively low, or if a drop is ever traced to a scanner
+      defect rather than to archival — either falsifies the number, not the
+      obligation.
 
   - id: check_estate_count
     argv: []
