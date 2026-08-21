@@ -1,10 +1,10 @@
 # R2 completion review — evidence-based-adr-governance (round 2)
-<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: 381b602eb0552327108b9d882a259bb74ef6ded1008fb23b7828cd27b205cfbc | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-21 | scope: deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9 | diff: ae9dc4d45bbc78aff9914174d598b8e642345bb0 | reviewer: r2-fresh-subagent-evidence-based-adr-governance-round2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: ae9dc4d45bbc78aff9914174d598b8e642345bb0
-  scope_hash: 381b602eb0552327108b9d882a259bb74ef6ded1008fb23b7828cd27b205cfbc
+  scope_hash: deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9
   roadmap: agents/roadmaps/road-to-evidence-based-adr-governance.md
   roadmap_hash: a9bd1750025021d4e29b0aec4235e8c217b8dcd3d8634b035e747027fed9a3cd
   ac_hash: 327efd58479ca26ce9d509ee580e6d433a34250fe5a7ab40dbf30d17c9b679ee
@@ -13,7 +13,7 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-21T11:21:00Z
 -->
 
-Scope `381b602eb0552327108b9d882a259bb74ef6ded1008fb23b7828cd27b205cfbc`, reviewed 2026-08-21.
+Scope `deb847a3e96d6c4e4c809dec09d3b6b0299f710b582e6a866930051e0601d8d9`, reviewed 2026-08-21.
 Blind review: findings below were formed from the diff, the tree and executed probes only.
 
 Verification actually run: `check_adr_frontmatter` (0 errors, 186 scanned) · `lint_provenance_vocabulary`
@@ -24,6 +24,23 @@ committed artifact) · `check_estate_count` · `check_claims` · `check_roadmap_
 `typecheck-ts` + `eslint` on every changed `.ts` (clean) · the 7 changed test files (283 passed) ·
 `routing_matrix.test.ts` + `rule_trigger_eval.test.ts` (207 passed). Two ad-hoc TypeScript probes
 (malformed-axis acceptance, ADR-number collision) and four Python audits over the sweep table.
+
+**Re-bound a second time, after merging `origin/main` (contract §2.7).** `381b602e…`
+→ `deb847a3…`. The scope is a merge-BASE diff, so it moves when the trunk moves even
+with the branch untouched. Measured rather than asserted, because §2.1 forces a fresh
+review on a CONTENT change and only a measurement separates the two: the changed-file
+SET is identical (`comm -13` and `comm -23` over the pre- and post-merge scopes both
+return nothing), and the whole content delta is one file —
+`src/config/estate-count-budget.json`, +54/-5.
+
+That file IS in scope, so this is stated as what it is rather than as "content
+unchanged": the delta is the merge conflict's own resolution. `main` walked its estate
+ratchet down from 9/55/41 to 6/55/33 during the review rounds, so the conflict was
+resolved by taking main's 81-entry lineage whole and re-measuring this branch's delta
+against it — `check_estate_count` reported `+1` active roadmap and `+2` open blockers,
+which is exactly this branch's contribution, giving 7/55/35. No reviewable behaviour
+changed: three integers and a `why` string in a budget ledger. A reviewer re-reading
+the 21 findings against the new scope would read the same 48 files.
 
 **Re-bound after the fix pass (contract §2.7).** The header `scope:`, the manifest
 `scope_hash` and the prose line all moved from `7b8979d2…` to `381b602e…`; `diff:`
