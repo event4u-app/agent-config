@@ -44,7 +44,7 @@ blocks *this* roadmap, because the transfer resolved it, and the outcome state
 records that the result was never achieved. Resolving it also drops this file's
 open-blocker count to zero, so the archival sweep now offers to archive it:
 `archive_completed_roadmaps --dry-run` reports *"Would archive:
-agents/roadmaps/road-to-scale-history-bench-run.md"*. That is the correct
+agents/roadmaps/archive/road-to-scale-history-bench-run.md"*. That is the correct
 verdict and this run deliberately does not act on it — naming it is what
 separates a genuine close from a rename, and the archiving itself is the
 maintainer's call.
