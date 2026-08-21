@@ -139,6 +139,92 @@ expense without the benchmark seeing it.
   `SubagentStop`**, and rules already reach subagents without either.
 - The license here and at the source are both MIT.
 
+### Handoff — the live AC-extractor miss (added 2026-08-20, from the plan-gates drain)
+
+Additive handoff, not a relitigation of the Context above: nothing here changes
+this roadmap's scope, its checkboxes, or its blockers. It is parked here because
+this is the roadmap that has to make the decision, and it is the next one worked
+in this drain run.
+
+**The defect.** `src/scripts/lint_plan_risk_register.ts:118` — the gate R1
+substantial-change matcher — is case-sensitive and end-anchored:
+
+```
+if (/^##\s+Acceptance Criteria\s*$/.test(entry.line)) {
+```
+
+**The fix, in its exact one-line form:**
+
+```
+if (/^##\s+acceptance criteria\b/i.test(entry.line)) {
+```
+
+Keep the existing body walk and the checkbox-state normalisation beneath it.
+Do **not** import `dispatch_r2_reviewer.extractAcceptanceCriteria` instead: that
+extractor keeps the heading line and does not normalise checkbox state, so
+importing it would make every `[ ]`→`[x]` flip a substantial change, which
+contract § 3 lists under "Never substantial".
+
+**Measured reach.** Hand-counted, deliberately not with that script, whose
+matcher is the artefact being measured. Over the **34** active roadmaps as this
+block is written (2026-08-20, after `origin/main` @ `1d2f73c40` was merged and
+`road-to-plan-gates-measurement` was parked into `later/`), the matcher sees
+**12 of the 24** roadmaps that declare acceptance criteria:
+
+| Declaration form | Roadmaps | Seen by `lint_plan_risk_register` |
+|---|---|---|
+| `## Acceptance Criteria` (capital C) | 12 | yes |
+| `## Acceptance criteria` (lowercase c) | 8 | **no** |
+| inline `- **AC-n:**`, no heading | 4 | **no** |
+| declares no criteria | 10 | n/a |
+
+The 8 heading-form misses are a spelling markdown treats as the same heading and
+which the R2 extractor has recognised since 2026-08-09. The 4 inline-only files
+stay invisible even after this fix — closing them is a separate decision, since
+contract § 3.3 names only the section. For every missed file `acHash` is the
+sha256 of the empty string, so any edit to its acceptance criteria is invisible
+to the § 3 trigger.
+
+**Re-count before quoting any of these figures.** This defect has now been
+recorded with three different denominators — 13 of 30, then 13 of 25, now 12 of
+24 — and not one of the three readings was wrong. The **population** moves:
+roadmaps archive, park, and are created, and every such move changes both terms
+without anything about the matcher improving or degrading. The share is not the
+finding; the 8 + 4 missed *forms* are. A figure quoted from an older note will
+look like drift that never happened.
+
+**Why it is handed to this roadmap specifically.** This file is itself in the
+missed set — its criteria live under a `## Acceptance criteria` heading with a
+lowercase `c` (line 961 as of this edit; the number moves, the spelling is the
+thing to grep for). Applying the fix therefore extracts this roadmap's AC content for
+the first time, the § 3 comparison against its pre-activation baseline shows that
+content changed, and its grandfather exemption lifts:
+
+```
+❌  1 Risk-Register violation(s):
+
+  agents/roadmaps/road-to-solution-minimalism.md:1 — missing_register
+    │ no `## Risk Register` section and the plan changed substantially since the activation date 2026-08-04 — the grandfather exemption is lifted
+```
+
+Reproduced twice: once on `206ab4f16` and again after merging `origin/main`
+(`1d2f73c40`), same single verdict both times. The block above is the second
+run's output verbatim, unwrapped.
+
+`lint_plan_risk_register` goes exit 0 → exit 1. The verdict is **correct** — the
+criteria did change — which is exactly why the fix was not shipped from the
+plan-gates drain: **clearing it requires authoring this roadmap's own
+`## Risk Register`**, and an agent writing a register for a roadmap it does not
+own is the pro-forma-register / Risk-4 gate-fatigue failure contract § 1 names.
+That is this roadmap's decision to make, by its owner, not a side effect of
+someone else's one-line matcher fix.
+
+**Two ways to close it,** either acceptable, both belonging to whoever picks this
+roadmap up: author the register (real rows, not pro-forma), or baseline the
+revealed finding the way `lint_roadmap_blockers:decidability` baselines revealed
+debt. Take the matcher fix in the same change as whichever is chosen, so the fix
+verifies in its own commit.
+
 ## Findings that constrain the design (from the independent benchmark and the critic thread)
 
 Each one is a measured fact about how this borrow fails when copied naively.

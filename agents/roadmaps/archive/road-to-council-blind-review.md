@@ -29,6 +29,40 @@ status: ready
 > showing attributed synthesis yields HIGHER expert agreement than blind
 > would reopen Ü1.
 
+## Outcome (2026-08-20 — drain-run close)
+
+**Archived does not mean achieved.** One of the three adoptions landed; the
+other two are transferred with their verdict unmade — not negative.
+
+| Item | State | What that means |
+|---|---|---|
+| Phase 1 — protocol diff | **satisfied** | Ü1-Ü3 machinery shipped behind four default-off flags plus `blind_review.ts`; neutrality lint + pinned Iron-Law sha256 in `tests/scripts/ai_council_blind_review.test.ts` (26/26 green, re-verified 2026-08-20). |
+| Phase 2 — A/B re-run | **satisfied** | n=10 paired re-runs, $1.58 measured spend, 0 failed runs (`internal/bench/council-blind-review/results-2026-07-28.md`). |
+| Phase 2 — decision rules | **Ü1 satisfied · Ü2/Ü3 transferred** | Ü1: 0/10 crit-a and 0/10 crit-b, rule met, adopted. Ü2/Ü3: the rules are fixed and unapplied — they need a maintainer blind reading. |
+| Phase 3 — landing | **Ü1 satisfied · Ü2/Ü3 transferred** | Ü1 merged: `blind_chairman` default `true`, `--no-blind-chairman` opt-out, mandatory post-verdict de-anon map, anchored in `docs/contracts/ai-council-config.md:804-820`. Ü2/Ü3 merge-or-null unwritable without the readings. |
+| Phase 3 — N1 `council-lite` paragraph | **abandoned** | No explicit maintainer demand signal; the N1 exclusion zone stands (skipped 2026-07-28). |
+
+**The Ü2/Ü3 verdict is unmade, not null.** No honest null was recorded for
+either: an honest null is a *measured* answer ("the preference was not
+majority"), and the instrument here — a maintainer blind rating — never ran.
+Calling this a null would claim a measurement nobody took. Transferred to
+[`stubs/road-to-council-blind-ratings.md`](stubs/road-to-council-blind-ratings.md),
+outcome state `transferred`.
+
+**One thing this run found rather than inherited:** the prepared packet cannot
+deliver a blind R1. Ü3's mandatory `## Collective blind spot` / `## One-line
+verdict` sections *are* the arm label, and the fields-bearing synthesis is arm b
+in **10 of 10** questions — verified by mapping those headings per question
+against `internal/bench/council-blind-review/rating-key.md`, zero mismatches. A
+rater who notices the pattern once has the key for every remaining pair. The
+stub carries the two ways out (an R1-recut packet, or a reading explicitly
+labelled non-blind) as blocker 4. R2 is unaffected.
+
+**No agent rated anything, and that is the point.** The pre-registration names
+the maintainer; substituting an AI rater would be exactly the self-preference
+bias (E1/E2) this roadmap exists to measure. A council pass is not a substitute
+either — a council seat is neither the maintainer nor blind to what it is asked.
+
 ## Goal
 
 Three small, separately gated upgrades to the AI-council deliberation
@@ -142,8 +176,11 @@ production host mode; method in `internal/bench/council-blind-review/`.
   preference over the chairman syntheses (arms hidden); the two
   pre-registered degradation criteria below; `collective_blind_spot`
   content quality.
-- [ ] **Pre-registered decision rules (council-TIGHTENED versions, fixed
-  now):**
+- [-] **Pre-registered decision rules (council-TIGHTENED versions, fixed
+  now):** transferred 2026-08-20 — U1 rule applied and adopted (0/10 + 0/10);
+  U2/U3 rules fixed but unapplied, moved to
+  `stubs/road-to-council-blind-ratings.md` (disposition B, outcome
+  `transferred`) because they require a maintainer blind rating.
   <!-- blocker 2026-07-28 (owner: maintainer — partially decided): Ü1 DECIDED — ADOPTED, 0/10 +
   0/10 degradation triggers on the n=10 A/B ($1.58 spend, 0 failed runs),
   default flipped + test-pinned. Ü2/Ü3 PENDING the maintainer blind ratings
@@ -176,9 +213,12 @@ production host mode; method in `internal/bench/council-blind-review/`.
 
 ## Phase 3 — Landing & close
 
-- [ ] Merge accepted adoptions into the deliberation protocol; anchor the
+- [-] Merge accepted adoptions into the deliberation protocol; anchor the
   de-anonymization step (Ü1) in the council audit log; document rejected
-  parts as honest nulls in this roadmap at archive time.
+  parts as honest nulls in this roadmap at archive time. Transferred
+  2026-08-20 — the Ü1 half is merged and anchored; the Ü2/Ü3 merge-or-null
+  moved to `stubs/road-to-council-blind-ratings.md` (disposition B, outcome
+  `transferred`), unwritable until the two readings exist.
   <!-- blocker 2026-07-28 (owner: maintainer — Ü1 half done): Ü1 MERGED — blind_chairman
   default true on council:run, --no-blind-chairman opt-out, mandatory
   post-verdict de-anon map in the artifact, § Blind synthesis anchored in
@@ -210,7 +250,10 @@ production host mode; method in `internal/bench/council-blind-review/`.
 
 ### blocker: maintainer-blind-ratings
 
-- **Status:** open
+- **Status:** resolved — transferred 2026-08-20 (disposition **B**, outcome
+  state `transferred`). The gate is not cleared and no verdict was produced;
+  the work moved to a maintainer-owned stub so this roadmap can close without
+  claiming an outcome it never reached. See **Resolution** below.
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and
@@ -254,6 +297,22 @@ production host mode; method in `internal/bench/council-blind-review/`.
   timestamped records existing before arm disclosure.
 - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an
   adopt-or-honest-null verdict rather than a deferral.
+- **Resolution (2026-08-20):** **disposition B — transferred**, outcome state
+  `transferred`, per
+  [`drain-blocker-dispositions-b.md`](../evidence/council/drain-blocker-dispositions-b.md)
+  (adopted rationale: *"Blind human judgments cannot be substituted with an
+  architectural choice or inferred from existing nulls."*). Destination stub:
+  [`stubs/road-to-council-blind-ratings.md`](stubs/road-to-council-blind-ratings.md).
+  Moved: R1 (Ü2), R2 (Ü3), and Phase 3's Ü2/Ü3 merge-or-null. Re-entry
+  producer: a **named maintainer blind rater**; probe: timestamped R1 and R2
+  records exist before arm disclosure, each carrying an adopt-or-null verdict —
+  both probe halves measured **failing** 2026-08-20 (10 of 10 rating slots in
+  the packet still read `____`; `grep -rl 'R1 preference'` finds no record
+  outside the packet). The **Resolved when** criterion above is unchanged and
+  travels verbatim into the stub. Ü1 is explicitly NOT transferred: decided,
+  adopted, merged, test-pinned. New finding recorded in the stub as blocker 4:
+  Ü3's mandatory sections are themselves the arm label, so the packet cannot
+  deliver a blind R1 as prepared (fields-bearing synthesis = arm b in 10/10).
 
 <!-- SURFACED 2026-08-14. This blocker existed and was invisible: it was
 encoded twice as HTML comments inside step bodies (Phase 2's decision-rules
