@@ -122,7 +122,6 @@ import {
     HEAD_LABELS,
     collect_span_commits,
     derive_category_hits,
-    derived_marker_lines,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
@@ -1134,60 +1133,6 @@ function _remote_tag_commit(tag: string): string | null {
  * other rejection, and a same-name tag on a DIFFERENT commit, stays fatal
  * with the push output as the error.
  */
-/**
- * Refuse to ship a changelog section that still carries the auto-derived
- * placeholder marker.
- *
- * The release-PR check (`check_release_highlights`) already detects this and
- * deliberately does NOT own the exit code there: on a fresh release branch the
- * highlights are auto-derived first and curated afterwards, so a blocking check
- * at that point would be red by construction. That decision stands and is not
- * reversed here. What was missing is a refusal at the boundary where the marker
- * stops being recoverable — the marker has shipped into published changelogs.
- *
- * Called before every irreversible action that renders from a changelog
- * section: creating the annotated tag, pushing a pre-existing local tag, and
- * publishing the GitHub Release notes. Placing it on only one of those was the
- * named failure mode — `--resume` over a created-but-unpushed tag skips the
- * tag-creation branch entirely, so a single guard there is bypassable.
- *
- * A missing section is a different guard's problem (the two `die()` calls in
- * step 8 and step 9 already own it) — this one passes when there is nothing to
- * read, so it can never be the reason a resume cannot proceed.
- */
-/**
- * The decision half, pure and exported so the refusal is testable without a
- * real release: the message to die with, or `null` when publication may
- * proceed. A guard whose only observable behaviour is `process.exit` cannot be
- * asserted on, and an unasserted guard is the shape this whole change exists to
- * remove.
- */
-function _placeholder_refusal(version: string, action: string, text: string | null): string | null {
-    if (text === null) {
-        return null;
-    }
-    const offenders = derived_marker_lines(text);
-    if (offenders.length === 0) {
-        return null;
-    }
-    return (
-        `CHANGELOG section for ${version} still carries unrewritten auto-derived ` +
-        `highlight line(s) — refusing to ${action}:\n` +
-        offenders.map((l) => `    ${l}`).join('\n') +
-        `\n  Rewrite them in ${CHANGELOG}, then re-run with --resume. The release-PR ` +
-        `check reports this as advisory on purpose; publication is where it is refused.`
-    );
-}
-
-function _refuse_unrewritten_placeholder(version: string, action: string, body?: string): void {
-    const text =
-        body ?? extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), version)?.body ?? null;
-    const message = _placeholder_refusal(version, action, text);
-    if (message !== null) {
-        die(message);
-    }
-}
-
 function _push_tag(tag: string): void {
     const first = run(['git', 'push', REMOTE, tag], { check: false, capture: true });
     if (first.returncode === 0) {
@@ -2237,7 +2182,6 @@ function execute(
             _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
             _step(8, total, `Tag ${plan.target} exists locally — push only`);
-            _refuse_unrewritten_placeholder(plan.target, 'push the tag');
             _push_tag(plan.target);
         }
     } else {
@@ -2255,7 +2199,6 @@ function execute(
                     'refusing to tag a release whose changelog entry is missing',
             );
         }
-        _refuse_unrewritten_placeholder(plan.target, 'tag the release', merged!.body);
         run(['git', 'tag', '-a', plan.target, '-m', tag_message_from_section(merged!.body, plan.target)]);
         _push_tag(plan.target);
     }
@@ -2282,7 +2225,6 @@ function execute(
                     'refusing to publish release notes from a different source',
             );
         }
-        _refuse_unrewritten_placeholder(plan.target, 'publish the GitHub Release notes', tagged_section!.body);
         const notes = _cap_body(
             release_notes_from_section(tagged_section!.body, plan.target),
             GH_RELEASE_NOTES_LIMIT,
@@ -2872,7 +2814,5 @@ export {
     watch_pr_checks,
     _pr_merge_state,
     _MERGE_UPDATE_ROUNDS,
-    // Publication placeholder guard (road-to-wiring-truth-corrections Phase 2).
-    _placeholder_refusal,
 };
 export type { Args };

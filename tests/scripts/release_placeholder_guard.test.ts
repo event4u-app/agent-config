@@ -1,11 +1,11 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { describe, expect, it } from 'vitest';
 
 import { DERIVED_MARKER, derived_marker_lines } from '../../src/scripts/_lib/release_highlights.js';
-import { _placeholder_refusal } from '../../src/scripts/release.js';
+import {
+    pr_body_from_section,
+    release_notes_from_section,
+    tag_message_from_section,
+} from '../../src/scripts/_lib/release_material.js';
 
 /**
  * Publication guard for the auto-derived highlight placeholder
@@ -18,15 +18,14 @@ import { _placeholder_refusal } from '../../src/scripts/release.js';
  * where it stops being recoverable, and it has shipped into published
  * changelogs.
  *
- * The named failure mode of the fix was "attached to only one release path
- * while another bypasses it". Step 8 reads the changelog only in its
- * tag-creation branch, so `--resume` over a created-but-unpushed tag skips that
- * branch entirely. The wiring block below therefore asserts each of the three
- * call sites SEPARATELY: no single one of them satisfies this file.
+ * The guard sits on the two RENDERERS, not on call sites in `release.ts`. The
+ * named failure mode of the fix was "attached to only one release path while
+ * another bypasses it", and the bypass is real: step 8 reads the changelog only
+ * in its tag-creation branch, so `--resume` over a created-but-unpushed tag
+ * skips it. Guarding what RENDERS the shipping text covers every path by
+ * construction, and the last describe block below pins the one renderer that
+ * must NOT refuse.
  */
-
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const RELEASE_TS = path.join(REPO_ROOT, 'src', 'scripts', 'release.ts');
 
 const CURATED = [
     '### Highlights',
@@ -59,61 +58,59 @@ describe('derived_marker_lines — the body-level predicate', () => {
     });
 });
 
-describe('_placeholder_refusal — the decision', () => {
-    it('permits a curated section', () => {
-        expect(_placeholder_refusal('14.8.0', 'tag the release', CURATED)).toBeNull();
+describe('tag_message_from_section — the first irreversible render', () => {
+    it('renders a curated section', () => {
+        expect(tag_message_from_section(CURATED, '14.8.0')).toContain('release: 14.8.0');
     });
 
     it('refuses a section carrying the marker, naming the version and the action', () => {
-        const msg = _placeholder_refusal('14.8.0', 'tag the release', WITH_MARKER);
-        expect(msg).not.toBeNull();
-        expect(msg!).toContain('14.8.0');
-        expect(msg!).toContain('tag the release');
-        expect(msg!).toContain(DERIVED_MARKER);
+        expect(() => tag_message_from_section(WITH_MARKER, '14.8.0')).toThrow(/14\.8\.0/u);
+        expect(() => tag_message_from_section(WITH_MARKER, '14.8.0')).toThrow(/tag the release/u);
     });
 
-    it('carries the action verbatim, so each call site names its own boundary', () => {
-        for (const action of ['push the tag', 'publish the GitHub Release notes']) {
-            expect(_placeholder_refusal('14.8.0', action, WITH_MARKER)!).toContain(action);
-        }
+    it('names the offending line so the fix is one edit', () => {
+        expect(() => tag_message_from_section(WITH_MARKER, '14.8.0')).toThrow(
+            new RegExp(DERIVED_MARKER.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'),
+        );
     });
 
-    it('permits a missing section — a resume must never be blocked by this guard', () => {
-        // A missing section is owned by the two existing `die()` calls in steps
-        // 8 and 9. If this guard also fired on it, a release whose changelog
-        // section genuinely cannot be read would have two different refusals
-        // for one cause, and the less informative one would win.
-        expect(_placeholder_refusal('14.8.0', 'tag the release', null)).toBeNull();
+    it('renders an empty section — a missing body is a different guard problem', () => {
+        // The two die() calls in release.ts steps 8 and 9 own the missing-section
+        // case. If this guard also fired on it, one cause would have two
+        // refusals and the less informative one could win.
+        expect(tag_message_from_section('', '14.8.0')).toBe('release: 14.8.0\n');
     });
 });
 
-describe('wiring — every irreversible path is guarded, and each independently', () => {
-    const source = fs.readFileSync(RELEASE_TS, 'utf-8');
+describe('release_notes_from_section — the publication render', () => {
+    it('renders a curated section', () => {
+        expect(release_notes_from_section(CURATED, '14.8.0')).toBe(CURATED);
+    });
 
-    it('guards the push-only path, which is the --resume bypass', () => {
-        // `_tag_exists_local` short-circuits step 8 to skip-or-push. The tag
-        // already exists here, so pushing it is the first irreversible act —
-        // it is what triggers publish-npm.yml.
-        expect(source).toMatch(
-            /_refuse_unrewritten_placeholder\(plan\.target, 'push the tag'\);\s*\n\s*_push_tag\(plan\.target\);/,
+    it('refuses a section carrying the marker, with its own action named', () => {
+        expect(() => release_notes_from_section(WITH_MARKER, '14.8.0')).toThrow(
+            /publish the GitHub Release notes/u,
         );
     });
 
-    it('guards tag creation, before the annotated tag exists', () => {
-        expect(source).toMatch(
-            /_refuse_unrewritten_placeholder\(plan\.target, 'tag the release', merged!\.body\);\s*\n\s*run\(\['git', 'tag', '-a'/,
-        );
+    it('is independent of the tag render — the --resume path reaches only this one', () => {
+        // On --resume over an existing local tag, step 8 short-circuits to
+        // skip-or-push and no tag message is rendered at all. This renderer is
+        // then the only thing between the marker and a published release, so it
+        // must refuse on its own rather than relying on the tag path.
+        expect(() => release_notes_from_section(WITH_MARKER, '14.8.0')).toThrow();
     });
+});
 
-    it('guards the GitHub Release notes, read at the tag rather than at plan time', () => {
-        expect(source).toMatch(
-            /_refuse_unrewritten_placeholder\(\s*plan\.target,\s*'publish the GitHub Release notes',\s*tagged_section!\.body,?\s*\);/,
-        );
-    });
-
-    it('has exactly three call sites — a fourth path would need its own assertion', () => {
-        const calls = source.match(/_refuse_unrewritten_placeholder\(/g) ?? [];
-        // 3 call sites + the function's own declaration.
-        expect(calls).toHaveLength(4);
+describe('pr_body_from_section — the recorded advisory decision, preserved', () => {
+    it('does NOT refuse a marked section', () => {
+        // On a fresh release branch the highlights are auto-derived first and
+        // curated afterwards, so the marker legitimately exists here. Making
+        // this renderer refuse would red every release PR by construction — the
+        // guaranteed-red failure mode check_release_highlights recorded its
+        // advisory posture to avoid. This assertion is what keeps a later
+        // "be consistent, guard all three" edit from reversing that decision.
+        expect(() => pr_body_from_section(WITH_MARKER, '14.8.0')).not.toThrow();
+        expect(pr_body_from_section(WITH_MARKER, '14.8.0')).toContain(DERIVED_MARKER);
     });
 });
