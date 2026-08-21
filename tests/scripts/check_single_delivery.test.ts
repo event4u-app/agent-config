@@ -163,3 +163,50 @@ describe('main exit codes', () => {
         expect(main(['--global'])).toBe(1);
     });
 });
+
+describe('unknown family in the project layer', () => {
+    // The forcing function for this gate's OWN 2026-08-21 omission: `personas` was
+    // written by a generator, shipped by the installer, and named by neither
+    // measurer — so it was invisible rather than reported. A gate cannot report a
+    // family it was never told exists, and nothing made the omission surface.
+    const args = (...extra: string[]): string[] => [
+        '--global',
+        join(root, 'g'),
+        '--project',
+        join(root, 'p'),
+        ...extra,
+    ];
+
+    it('refuses, and names the family, without --enforce', () => {
+        rule(layer('g', 'rules'), 'a.md');
+        rule(layer('p', 'rules'), 'b.md');
+        mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
+        // Refuses in report mode too, unlike every other verdict here: an unknown
+        // family is a property of THIS REPOSITORY's generator output, true on every
+        // checkout, not of one machine's two layers.
+        expect(main(args())).toBe(1);
+        expect(main(args('--enforce'))).toBe(1);
+    });
+
+    it('passes on the same tree once the family is gone (mutation control)', () => {
+        // Without this the assertion above could be passing for any reason at all.
+        rule(layer('g', 'rules'), 'a.md');
+        rule(layer('p', 'rules'), 'b.md');
+        expect(main(args())).toBe(0);
+    });
+
+    it('ignores dotfile directories and the six known families', () => {
+        rule(layer('g', 'rules'), 'a.md');
+        for (const t of ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents']) {
+            mkdirSync(join(root, 'p', t), { recursive: true });
+        }
+        mkdirSync(join(root, 'p', '.hidden'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual([]);
+    });
+
+    it('reports several unknown families sorted, not just the first', () => {
+        mkdirSync(join(root, 'p', 'zeta'), { recursive: true });
+        mkdirSync(join(root, 'p', 'alpha'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['alpha', 'zeta']);
+    });
+});

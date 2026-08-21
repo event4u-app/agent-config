@@ -76,9 +76,9 @@ import { reportScanned } from './_lib/scan_scope.js';
 
 // ledger-exempt: this gate has no skip semantics to account for. `_lib/gate_ledger`
 // exists so a gate that PASSES OVER targets says which and why; here the target set
-// is four fixed artefact types, every one of them appears in the output, and a type
+// is six fixed artefact types, every one of them appears in the output, and a type
 // whose layer is missing is printed as `absent` rather than quietly dropped — see
-// the `absent` field and the `types_compared=N of 4` ledger line, which together
+// the `absent` field and the `types_compared=N of 6` ledger line, which together
 // already carry what a per-target ledger would. Adding one would restate the render
 // in a second format, and the gate's own docstring warns that the degenerate pass
 // here is a marker with no argument behind it. If a future version gains a real skip
@@ -88,8 +88,30 @@ import { reportScanned } from './_lib/scan_scope.js';
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
-/** Artefact types the host loads from both layers. */
-const TYPES = ['rules', 'skills', 'commands', 'agents'] as const;
+/**
+ * Artefact types the host loads from both layers.
+ *
+ * ## The identity key, named because it is not the same for every row
+ *
+ * Every row below compares BASENAMES within one family directory. For `rules`,
+ * `personas`, `user-types` and `agents` that IS the host's unit, so basename
+ * equality is the right key. For `commands` it is not: the host-visible unit is
+ * the invocation name `/cluster:sub`, which the colon form encodes in the PATH
+ * (`commands/<cluster>/<sub>.md`), so this gate's `commands` row compares cluster
+ * DIRECTORY names — a coarser key than the thing the host registers.
+ *
+ * That gap is recorded rather than closed, and the reason is a measurement: since
+ * `commandsWithheld` gates the colon-form generator, a machine with a verified
+ * host layer projects ZERO commands, so there is no project-side name for the
+ * coarse key to be wrong about. On a machine WITHOUT one, the project layer is
+ * the only layer and there is nothing to compare. The key is therefore imprecise
+ * exactly where it has no work to do. Closing it would mean reading each command
+ * file's own slug — real work for a row whose overlap is 0 in both topologies.
+ *
+ * `personas` and `user-types` were added 2026-08-21 (closure correction). See
+ * `unknownProjectFamilies` for what now prevents the next omission.
+ */
+const TYPES = ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents'] as const;
 type ArtefactType = (typeof TYPES)[number];
 
 /**
@@ -273,6 +295,47 @@ export interface Verdict {
     namesRead: number;
     /** True when no type had BOTH layers present — nothing was actually compared. */
     readNothing: boolean;
+    /**
+     * Family directories present in the PROJECT layer that `TYPES` does not name.
+     *
+     * The forcing function that makes this gate's own 2026-08-21 omission
+     * non-recurring: `personas` was written by a generator, shipped by the
+     * installer, and named by neither measurer, so it was invisible rather than
+     * reported — a gate cannot report a family it was never told exists.
+     *
+     * Only the PROJECT layer is scanned, and that is the whole reason this can be
+     * a hard refusal rather than a warning. `<repo>/.claude/` is written by
+     * `condense.ts` generators and nothing else, so every entry in it is a family
+     * this repository chose to emit. `~/.claude/` is the host's own directory —
+     * `plugins`, `projects`, `sessions`, `shell-snapshots`, `telemetry` and a
+     * dozen more live there — and treating an unrecognised name in it as a defect
+     * would be a false-positive generator, not a check.
+     */
+    unknownFamilies: string[];
+}
+
+/**
+ * Family directories the project layer holds that `TYPES` does not name.
+ *
+ * Deliberately NOT derived from the installer's `_CLAUDE_SKILL_BUNDLE` or from
+ * `check_generator_output_coverage`'s registry: a verifier whose scope comes from
+ * a producer inherits that producer's omissions, which is the exact defect this
+ * function exists to catch. `TYPES` stays hand-written and independent; this
+ * compares it against the filesystem the generators actually produced and refuses
+ * on disagreement.
+ */
+function unknownProjectFamilies(projectRoot: string): string[] {
+    const known = new Set<string>(TYPES);
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(projectRoot, { withFileTypes: true });
+    } catch {
+        return []; // no project layer at all — nothing emitted, nothing to miss
+    }
+    return entries
+        .filter((e) => e.isDirectory() && !e.name.startsWith('.') && !known.has(e.name))
+        .map((e) => e.name)
+        .sort();
 }
 
 export function evaluate(globalRoot: string, projectRoot: string): Verdict {
@@ -299,6 +362,7 @@ export function evaluate(globalRoot: string, projectRoot: string): Verdict {
             0,
         ),
         readNothing: compared === 0,
+        unknownFamilies: unknownProjectFamilies(projectRoot),
     };
 }
 
@@ -354,12 +418,24 @@ export function render(v: Verdict, globalRoot: string, projectRoot: string): str
         out.push('');
         out.push(`  layers not present (nothing to compare there): ${v.absent.join(', ')}`);
     }
+    if (v.unknownFamilies.length > 0) {
+        out.push('');
+        out.push(
+            `  ❌  unknown family in the project layer: ${v.unknownFamilies.join(', ')}` +
+                ' — add it to TYPES in this gate AND in _lib/layer_overlap_notice.ts,',
+        );
+        out.push(
+            '      or the next family shipped from two layers is invisible the way `personas`' +
+                ' was until 2026-08-21.',
+        );
+    }
     out.push('');
     out.push(
         `check_single_delivery ledger: duplicated=${v.duplicated}` +
             ` name_overlap_different_shape=${v.nameOverlapDifferentShape}` +
             ` scope_defeat=${v.defeated}` +
             ` types_compared=${v.typesCompared} of ${v.readings.length}` +
+            ` unknown_families=${v.unknownFamilies.length}` +
             ` names_read=${v.namesRead}`,
     );
     return out.join('\n');
@@ -458,6 +534,23 @@ export function main(argv?: readonly string[]): number {
             ' delivered twice — a true verdict, not a dead scope. The unverifiable' +
             ' case (layers present but never paired) is refused separately.',
     });
+
+    // Refuses in BOTH modes, unlike every other branch here, and the asymmetry is
+    // the argument for it: every other verdict this gate produces is a property of
+    // ONE MACHINE's two layers, which is why `--enforce` is opt-in. An unknown
+    // family directory is not — `<repo>/.claude/` is generator-owned, so the
+    // finding is "this repository emits a family no measurer names", which is true
+    // on every checkout and fixable in one line. Gating it behind `--enforce`
+    // would put the one topology-independent check behind the flag that exists
+    // for topology-dependent ones.
+    if (v.unknownFamilies.length > 0) {
+        process.stdout.write(
+            `❌  check_single_delivery: unknown family in the project layer:` +
+                ` ${v.unknownFamilies.join(', ')}. Add measurement before it can ship —` +
+                ' TYPES in this gate and in _lib/layer_overlap_notice.ts.\n',
+        );
+        return 1;
+    }
 
     if (v.readNothing) {
         // Never a pass. A gate that compared nothing has not verified anything,

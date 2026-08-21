@@ -28,12 +28,21 @@ import * as path from 'node:path';
 /**
  * Artefact types both host layers can carry.
  *
- * All four, matching `check_single_delivery` (R2 finding): this notice read three
+ * All five, matching `check_single_delivery` (R2 finding): this notice read three
  * where the gate reads four, so a subagent duplicated across layers was invisible
  * on one surface and reported on the other — two surfaces disagreeing about the
  * same question is worse than one surface being silent.
+ *
+ * `personas` was added 2026-08-21. Both lists had read four types while the
+ * installer's `_CLAUDE_SKILL_BUNDLE` (`install.ts:1916-1921`) ships
+ * rules · skills · commands · **personas** — so the one family this repository
+ * actually delivered from both layers was the one neither surface looked at
+ * (29 shared names on a freshly regenerated tree). The two lists stay
+ * hand-written and independent of the installer's on purpose: deriving the
+ * verifier's scope from the producer would make the check inherit the producer's
+ * omissions, which is the defect being closed here.
  */
-const TYPES = ['rules', 'skills', 'commands', 'agents'] as const;
+const TYPES = ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents'] as const;
 
 /**
  * Count shared entry names per artefact type between the two layers.
