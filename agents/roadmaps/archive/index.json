@@ -4764,6 +4764,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-org-telemetry",
+      "title": "Road to org telemetry",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 21,
+        "deferred": 0,
+        "cancelled": 9
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-overlap-truth-and-skill-cut",
       "title": "Road to overlap truth — repair the instrument, then cut the skills it was supposed to find",
       "disposition": "closed-with-cancellations",
