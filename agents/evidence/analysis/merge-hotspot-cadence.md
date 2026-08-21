@@ -137,7 +137,7 @@ measured two different trees. So the `REMEASURED` class from Phase 1.2 is not th
 interim mitigation ahead of a split; on this file it is **the whole available
 fix**, which is what the honest null pre-registered.
 
-It also strengthens [ADR-239](../../../docs/decisions/ADR-239-no-union-merge-for-ratchet-baselines.md)
+It also strengthens [ADR-241](../../../docs/decisions/ADR-241-no-union-merge-for-ratchet-baselines.md)
 rather than weakening it: the union-merge proposal was not merely unsafe, it was
 aimed at a mode that barely exists here. A driver would have been built, carried
 its silent-corruption risk, and bought one conflict per 60 days.

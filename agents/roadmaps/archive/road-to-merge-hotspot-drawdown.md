@@ -34,7 +34,7 @@ paths conflict, with the count of the 7 PRs each appears in:
 | Path | PRs | Generated? | In `sync_pr_branch` GENERATED? |
 |---|---|---|---|
 | `agents/roadmaps-progress.md` | 7/7 | yes | yes |
-| `agents/roadmaps/stubs/README.md` | 7/7 | no — authored | n/a |
+| `agents/roadmaps/stubs/README.md` | 7/7 | no — authored | n/a — **fixed on `main` 2026-08-21 by deleting the append surface**, while this branch was open |
 | `src/config/estate-count-budget.json` | 7/7 | measured baseline | **no** |
 | `src/config/gate-violation-baselines.json` | 7/7 | measured baseline | **no** |
 | `agents/roadmaps/archive/INDEX.md` | 2/7 | yes | **no** |
@@ -140,6 +140,12 @@ Convergent, both seats:
 4. **Cut the stubs-README restructure as an implementation phase**, and do not
    put a union driver on authored prose. Re-measure after the dashboard cutover:
    the dashboard co-conflicts in the same merges and inflates today's number.
+   **Outcome, recorded at merge:** the re-measurement never had to happen here —
+   `main` removed the append surface outright on 2026-08-21, deleting both index
+   tables with the same reasoning (largest *authored* conflict path in the repo,
+   and the rows duplicated the stub files). The council's instinct to cut the
+   phase rather than build the restructure was right, and for a reason it did
+   not name: someone else was already about to solve it a simpler way.
 5. **Cut the one-sentence docs phase as a phase** — it is a rollout checklist
    item, and phase status falsely implies it blocks something.
 6. **Untrack the dashboard only through a guarded cutover.** The guards named
@@ -283,9 +289,15 @@ not exist and a consumer-CI-breaking change is owner-reserved.
       entry alone does not satisfy, and the reason it is not in this roadmap:
       guard 3 does not exist, and breaking consumer CI is owner-reserved.
       A stub is the documented promotion path and is not counted as estate.
-      verify: the stub file exists, is listed in
-      `agents/roadmaps/stubs/README.md`, and names guards 1–3 with this
-      roadmap as the record of which of them Phase 1–2 discharged.
+      verify: the stub file exists and names guards 1–3 with this roadmap as the
+      record of which of them Phase 1–2 discharged. **Amended at merge
+      (2026-08-21):** the verify line originally also required a row in
+      `agents/roadmaps/stubs/README.md`. While this branch was open, `main`
+      **deleted both index tables from that file** — for the reason this roadmap
+      measured independently: it was an authored append surface that conflicted
+      in every `CONFLICTING` PR, and it duplicated the stubs. The inventory is
+      the directory listing now, so the row requirement is void rather than
+      unmet, and the stub is discoverable by the contract that replaced it.
 - [x] **4.3 The sync-first sentence, as a checklist item not a phase.** In
       `/create-pr` § 1b-ii and the conflict-facing docs page: on
       `CONFLICTING`, run the sync task before touching the GitHub web editor —
@@ -313,7 +325,7 @@ recorded the point and shipped none, which is the failure the point names.
   **falsifiable**. Both are superseded the moment someone re-runs the published
   commands and gets different counts — which already happened to 3.2, and the
   corrected entry carries the mechanism that hid it.
-- **Phase 4 (records).** Reopen ADR-239 only on the six preconditions it names,
+- **Phase 4 (records).** Reopen ADR-241 only on the six preconditions it names,
   never on the conflicts having got worse. Promote or delete the cutover stub if
   its four probes stop being measurable — a stub whose probes cannot be run is
   the burial its own risk row names.

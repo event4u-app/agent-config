@@ -1,5 +1,5 @@
 ---
-adr: 239
+adr: 241
 status: accepted
 date: 2026-08-21
 decision: no-union-merge-for-ratchet-baselines
@@ -20,7 +20,7 @@ review_trigger: >-
   is the evidence.
 ---
 
-# ADR-239 — `merge=union` is not available for a ratchet baseline
+# ADR-241 — `merge=union` is not available for a ratchet baseline
 
 ## Status
 
@@ -69,7 +69,8 @@ can combine two lines without knowing whether they represent compatible facts,
 competing measurements, or a weakened ratchet. Two branches appending a
 same-date entry with different counts union-merge into two contradictory records,
 and every available reduction is wrong in a different way — latest-timestamp is
-arbitrary when the dates are equal, max-count permanently loosens the ratchet,
+arbitrary when the dates are equal, max-count adopts the looser of the two bounds
+with nothing to tighten it back,
 min-count rejects legitimate capacity growth, first-in-file depends on merge
 order and is therefore non-deterministic, and erroring on a duplicate defeats the
 point of union merging. The failure is silent by construction: the number still

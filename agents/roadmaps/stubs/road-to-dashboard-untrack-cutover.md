@@ -147,7 +147,7 @@ once the coordinator sets a date — nothing in P1 needs a human, it needs an
 The two ratchet baselines. They are not gitignorable at all — an untracked
 baseline is a baseline no PR diff can be compared against — and their
 append-safety fix is blocked on its own terms by
-[ADR-239](../../../docs/decisions/ADR-239-no-union-merge-for-ratchet-baselines.md).
+[ADR-241](../../../docs/decisions/ADR-241-no-union-merge-for-ratchet-baselines.md).
 The stubs README append surface is also not here: the council cut it and asked
 for a re-measurement *after* this cutover, because the dashboard co-conflicts in
 the same merges and inflates today's number.
