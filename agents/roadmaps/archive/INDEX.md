@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**540 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 195 · completed 253 · completed-with-deferrals 25 · not-extractable 34
+**543 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 198 · completed 253 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -122,6 +122,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-ai-os-product-ui`](road-to-ai-os-product-ui.md) | Roadmap: AI OS Product UI — beyond the installer shell | closed-with-cancellations | 5 | 32/37 | _not extractable_ |
 | [`road-to-always-budget-relief`](road-to-always-budget-relief.md) | Road to Always-Budget Relief | closed-with-cancellations | 4 | 10/14 | _not extractable_ |
 | [`road-to-always-loaded-corpus-scoping`](road-to-always-loaded-corpus-scoping.md) | Roadmap: Scope the always-loaded rule corpus | closed-with-cancellations | 4 | 13/19 | _not extractable_ |
+| [`road-to-always-on-orchestration`](road-to-always-on-orchestration.md) | Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works | closed-with-cancellations | 7 | 37/38 | _not extractable_ |
 | [`road-to-analysis-workbench`](road-to-analysis-workbench.md) | Roadmap: Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump) | closed-with-cancellations | 6 | 28/33 | _not extractable_ |
 | [`road-to-anti-slop-detector`](road-to-anti-slop-detector.md) | Road to an Anti-Slop Detector (deterministic aesthetic-tell layer) | completed | 5 | 16/16 | _not extractable_ |
 | [`road-to-api-cost-optimization`](road-to-api-cost-optimization.md) | Road to API-cost optimization — cut the dollar bill of paid LLM calls | completed | 5 | 18/18 | _not extractable_ |
@@ -263,6 +264,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-frontmatter-schema`](road-to-frontmatter-schema.md) | Roadmap: frontmatter JSON-Schema validation | completed | 4 | 25/25 | _not extractable_ |
 | [`road-to-gate-autonomy`](road-to-gate-autonomy.md) | Road to gate autonomy — human gates only where a human is the point | closed-with-cancellations | 4 | 7/9 | _not extractable_ |
 | [`road-to-gate-hardening-adoption`](road-to-gate-hardening-adoption.md) | Road to gate-hardening adoption — take the unhardened-gate count to zero | closed-with-cancellations | 3 | 12/13 | _not extractable_ |
+| [`road-to-gated-reach-followup`](road-to-gated-reach-followup.md) | Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel | closed-with-cancellations | 1 | 6/15 | _not extractable_ |
 | [`road-to-gated-reach`](road-to-gated-reach.md) | Roadmap: Road to gated reach — read the resources the host cannot fetch | closed-with-cancellations | 6 | 36/41 | _not extractable_ |
 | [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) | Road to gates that can fail — make every check prove it read something | closed-with-cancellations | 7 | 27/30 | _not extractable_ |
 | [`road-to-glama-registry-listing`](road-to-glama-registry-listing.md) | Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more | completed | 5 | 11/11 | _not extractable_ |
@@ -510,6 +512,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-universal-distribution`](road-to-universal-distribution.md) | Roadmap: Universal Distribution (Cloud + Local Fallbacks) | archived-with-open-steps | 7 | 36/51 | _not extractable_ |
 | [`road-to-universal-execution-engine`](road-to-universal-execution-engine.md) | Roadmap: Universal Execution Engine | closed-with-cancellations | 7 | 45/50 | _not extractable_ |
 | [`road-to-universal-stack-coverage`](road-to-universal-stack-coverage.md) | Road to universal stack coverage — an honest refusal is not coverage | closed-with-cancellations | 4 | 25/26 | _not extractable_ |
+| [`road-to-user-out-of-the-loop`](road-to-user-out-of-the-loop.md) | Road to user-out-of-the-loop | closed-with-cancellations | 10 | 30/44 | _not extractable_ |
 | [`road-to-value-dashboard-netto-cuts`](road-to-value-dashboard-netto-cuts.md) | Roadmap: Value Dashboard NETTO — cut the base-load, keep Panel B value | archived-with-open-steps | 6 | 20/34 | _not extractable_ |
 | [`road-to-verified-chat-history-platforms`](road-to-verified-chat-history-platforms.md) | Road to verified chat-history platforms | archived-with-open-steps | 6 | 35/43 | _not extractable_ |
 | [`road-to-video-deferred-design`](road-to-video-deferred-design.md) | Road to video deferred design — checkpoint/resume, ComfyUI sandbox, provenance (design-gated backlog) | completed | 3 | 8/8 | _not extractable_ |

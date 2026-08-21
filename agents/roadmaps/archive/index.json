@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 540,
+  "count": 543,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1371,6 +1371,20 @@
         "done": 13,
         "deferred": 0,
         "cancelled": 6
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-always-on-orchestration",
+      "title": "Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works",
+      "disposition": "closed-with-cancellations",
+      "phases": 7,
+      "steps": {
+        "open": 0,
+        "done": 37,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"
@@ -3345,6 +3359,20 @@
         "done": 12,
         "deferred": 0,
         "cancelled": 1
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-gated-reach-followup",
+      "title": "Roadmap: Follow-up to Road to gated reach — exercise the YouTube channel",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 9
       },
       "verdict": null,
       "status": "ready"
@@ -6806,6 +6834,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-user-out-of-the-loop",
+      "title": "Road to user-out-of-the-loop",
+      "disposition": "closed-with-cancellations",
+      "phases": 10,
+      "steps": {
+        "open": 0,
+        "done": 30,
+        "deferred": 0,
+        "cancelled": 14
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-value-dashboard-netto-cuts",

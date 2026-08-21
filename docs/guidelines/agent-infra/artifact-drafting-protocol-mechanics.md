@@ -87,9 +87,53 @@ those artifacts:
   to obtain.
 - **Scope is the batch, nothing more.** An artifact NOT declared in the
   roadmap (discovered mid-run) triggers the full interactive protocol —
-  or, under the contract, the scope-out-of-roadmap halt.
+  or, under the contract, the scope-out-of-roadmap halt. That halt is the
+  **default** and stays the default; see § Late artifacts below for the one
+  declared value that changes it.
 - Batch mode never skips the Research pass itself — it relocates and
   batches it. `artifact_protocol: skip` does not exist.
+
+### Late artifacts — `halt` by default, `auto-research` only when declared
+
+The bullet above is the whole rule when the contract says nothing. A contract
+may instead declare `late_artifacts: auto-research`
+([`roadmap-execution-contract § 2a`](../../../src/agent-src/contexts/execution/roadmap-execution-contract.md)),
+and then a mid-run discovery runs **this** procedure rather than halting:
+
+1. **Re-run Phase B against current state** — the same overlap scan the batch
+   ran at contract time, now over the artifact the run just found. Nothing new
+   is invented: this is the accepted-as-non-interactive procedure, later.
+2. **Extend verdict → extend silently.** The nearest match is edited. This is
+   the outcome the overlap scan exists to produce and it needs no approval it
+   did not already have.
+3. **Create verdict → derive Phase A from what is already on the record.** The
+   understand-answers come from the roadmap step text plus the decision-sheet
+   answers the user accepted. No new question is opened.
+4. **Genuine overlap conflict → halt.** Two plausible extend targets, or a
+   match whose scope contradicts the step, is a real decision and stops the
+   run.
+5. **Cap: three per run, then halt regardless of verdict.**
+
+`halt` remains the shipped default (`decision 2026-08-20`, AI council 2/2 on
+the `autonomy-defaults-sheet` fork; record
+`agents/evidence/council/drain-blocker-dispositions-a.md`). The reasoning is
+short: the cap bounds how far an unplanned artifact can drift the run, but it
+does not decide whether the drift is wanted, and the conservative side of that
+fork is the behaviour the tree already had. Making `auto-research` a declared
+value rather than an inherited one is also what makes its own kill criterion —
+the late-artifact revisit rate — attributable to the runs that chose it.
+Reverting is one word in each of the two tables; no mechanism depends on the
+default's direction.
+
+**Kill criterion for `auto-research`, at the site rather than in a roadmap:**
+a late-artifact revisit rate above 20 % — an auto-authored or auto-extended
+artifact later reworked or reverted — removes the value and returns every
+late discovery to `halt`. **No instrument today:** nothing counts late
+artifacts or their revisits, so the rate is unmeasured rather than low, and
+the cap of three is the only live bound. Recorded here because a criterion
+that lives only in the roadmap that flipped the default becomes unreachable
+the moment that roadmap is archived.
+
 
 ## Complexity budget — the six questions before a new artefact
 

@@ -2,29 +2,26 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers in the active tree, **9** need you → `agent-config gates`
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers in the active tree, **6** need you → `agent-config gates`
 
 ## Overall
 
-**105 / 170 steps done · 62%**
+**61 / 82 steps done · 74%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   62%
+██████████████████████████████░░░░░░░░░░   74%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
-| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 6 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 7 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 8 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 9 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 1 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
+| 3 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 4 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 5 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 6 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 
 ---
 
@@ -96,66 +93,6 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
-
-**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 36 done (97%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | settings teardown, contract first | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | one judgment ladder instead of three scattered classifiers | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | CLI-first shipped as the default transport, quorum-resilient | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | verdict handoff + the wiring the resolved blocker was waiting for | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | team readiness: verify first, doctrine second | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 6 | the measurement that replaces the switch | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 7 | what this roadmap will not do | ✅ done | 0 | 12 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-always-on-orchestration"></a>
-**Blockers**
-
-- **gate-council-auto-dispatch** (owner: maintainer) — blocks auto-firing the council at the release-gate escalation
-  - **What to do:**
-    after Phase 3 has soaked (transport reconciliation
-    verified in real passes) and the F6/F4 + council-attendance telemetry has
-    a usable window, wire the gate escalation to dispatch the pass itself
-    (quorum rules from 3.3; inconclusive holds). Guards named by council:
-    loop protection, metered-fallback cap via `cost_budget`, latency budget,
-    unactioned-verdict kill criterion (6.2).
-  - **Resolved when:** the wiring lands citing the soak evidence, or the telemetry says auto-fire adds nothing and the gate stays recommend-only.
-- **point-of-action-carrier** (owner: maintainer) — blocks any pre-tool-use mid-session delegation carrier + escalation ladder (Sources E/H harvest)
-  - **What to do:**
-    run the main-vs-subagent discrimination spike (upstream
-    closed the identity request as NOT_PLANNED; the per-agent-permission fix
-    landed with unverified scope — probe a real host). No discriminator → the
-    carrier ships only with scope reduction (source-file writes above a size
-    threshold, generous exemptions) or not at all. Pre-registered null: "no
-    discriminator" is publishable and does not block this roadmap.
-  - **Resolved when:** the spike note exists and the build/no-build decision cites it plus the F3-lite adoption telemetry.
-- **f4-full-stop-block** (owner: maintainer) — blocks single-shot stop-block continuation for the end-review obligation
-  - **What to do:**
-    carried from the carriers roadmap, upgraded by two
-    verified facts: `additionalContext` on Stop IS documented at exit 0 (the
-    advisory path may already reach the model — verify live first), and
-    `stop_hook_active` is gone from the docs, so the loop guard must be a
-    self-built session-scoped marker (the end-review once-per-session state is
-    the template). Calibrate the threshold on `review_skipped` telemetry
-    (`exact` lines only).
-  - **Resolved when:** live delivery evidence exists and the block/advisory decision cites the telemetry distribution.
-- **team-telemetry-behind-flag** (owner: maintainer) — blocks Phase 5.4 (team telemetry concerns, TaskCompleted artifact-check)
-  - **What to do:**
-    when the experimental flag is on in a real environment,
-    run the 5.1 spike, then bind the concerns with the same fail-open
-    discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
-- **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
-  - **What to do:**
-    the drafts cited a direction-policy artefact that does not
-    exist; before any cross-vendor worker ships, write the direction policy
-    (which vendor may review which, what may be sent — extending the existing
-    egress discipline), then add the two resolver entries (report-only
-    workers).
-  - **Resolved when:** the policy artefact exists and the resolver entries cite it.
-
 ### [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md)
 
 **Road to condensed-link repair** — 0 / 6 done (0%)
@@ -175,22 +112,6 @@
 | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
-
-### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
-
-**Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | YouTube — exercise and score the channel | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-gated-reach-followup"></a>
-**Blockers**
-
-- **legacy** (owner: user) — blocks entire roadmap
-  - **What to do:**
-    `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
-  - **Resolved when:** condition described above clears
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
@@ -390,43 +311,6 @@ _2 blockers resolved._
 | 5 | Tier routing has a caller — measure whether it moved the distribution | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 | 7 | The `do_not_touch` write-guard — relocated, and deliberately its own phase | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-### [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md)
-
-**Road to user-out-of-the-loop** — 9 / 40 done (22%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Measurement foundation | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1 | One elicitation surface | 🟡 in progress | 1 | 6 | 0 | 0 | 86% |
-| 2 | Set scope, serial then parallel | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Merge decoupling | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Question-elimination ladder | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 5 | Asynchronous disposition of deferred items | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 6 | Session continuity | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 7 | Unattended backlog operation | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 8 | Standing measurement | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-user-out-of-the-loop"></a>
-**Blockers**
-
-- **kernel-soak-window** (owner: user) — blocks Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
-  - **Recommendation:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
-  - **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work touch no kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
-  - **What to do:**
-    1. Confirm the deltas are in scope at all. **Corrected 2026-08-17, verified against the tree — this blocker overstated its own scope 4:1.** Only `ask-when-uncertain` (batch elicitation) is in the locked kernel set (`docs/contracts/kernel-membership.md § 4`, row 142) and needs the own-PR + soak guarantee. `autonomy-mechanics` (set-scoped form) is **not a rule at all** — it is a context at `src/agent-src/contexts/execution/autonomy-mechanics.md`, so the rules-tree path for it does not exist. `artifact-drafting-protocol` (late artifacts) and `roadmap-progress-sync` (deferred policy) ARE rules but are **absent from the locked nine**. Three of the four therefore need no soak window; the phase text calling them "kernel-adjacent" is what carried the error forward.
-    2. Name the order, or accept the recommended one.
-    3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — for `ask-when-uncertain` only. The agent will not shorten it and cannot self-authorize it.
-  - **Resolved when:** the user authorizes or declines the `ask-when-uncertain` delta, and says whether the three non-kernel deltas proceed independently.
-- **autonomy-defaults-sheet** (owner: user) — blocks Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
-  - **Recommendation:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.
-  - **If you do nothing:** the phases can still be built with the conservative variant of each; the measurement in Phase 0 then compares a smaller delta and takes proportionally longer to reach significance.
-  - **What to do:**
-    1. Confirm or override the preselection for `/roadmap:next`: `autonomous` versus `phase-checkpoints`.
-    2. Confirm or override the lane cap: 2 versus the configured `subagents.max_parallel`.
-    3. Confirm or override the late-artifact default: `auto-research` versus `halt`.
-    4. Confirm whether the deferred policy offers only the follow-up-draft option or also an explicit cancellation with a reasoning memo.
-  - **Resolved when:** the four values are named, and they are recorded in the decision sheet the Phase 1 contract screen renders.
 
 ---
 
