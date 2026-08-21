@@ -9,17 +9,20 @@ phase: —
 type: structural
 reopen_policy: directional
 review_trigger: >-
-  Reopen on any of three observations together, never on one alone, because the
-  three are what the rejection rested on. First — a named maintainer accepts
-  ownership of security-domain content with a stated review cadence, since
-  "no owner exists" was the decisive ground and an owner removes it. Second —
-  a fixture set shows the package's security skills missing a real defect that
-  local content would have caught, since coverage was asserted and never
-  measured. Third — the external authority this record routes to stops being
-  maintained or stops being freely reachable, since routing to a dead authority
-  is worse than the copy it replaced. A reopening that cannot show all three has
-  not met the condition; a reopening that shows all three should proceed without
-  re-deriving the eleven gaps, which are recorded in the roadmap named below.
+  TWO INDEPENDENT triggers, either one sufficient — they reopen different
+  questions and conjoining them would make the record unreachable rather than
+  strict. Trigger A reopens WHETHER TO CARRY LOCAL CONTENT and needs both of
+  its parts, because each answers one of the two grounds the rejection rested
+  on: a named maintainer accepting ownership with a stated review cadence, AND
+  a fixture set showing the package's security skills missing a real defect
+  that local content would have caught. The fixture half is not satisfiable by
+  assertion: the fixtures are authored against the CURRENT skills before any
+  replacement content exists, the miss is observed rather than argued, and a
+  fixture set written alongside the content it justifies does not count.
+  Trigger B reopens WHETHER ROUTING STILL WORKS and stands alone: the external
+  authority stops being maintained, or stops being freely reachable. A
+  reopening under either trigger should proceed without re-deriving the eleven
+  gaps, which are recorded in the roadmap named below.
 ---
 
 # ADR-238 — Security-domain parameters are routed to the maintained authority, not carried
@@ -44,7 +47,17 @@ hardening is already carried by `skill:terraform`, dependency security by
 rather than a gap. The surviving eight are real. Cryptography is the largest:
 a grep for `AES-GCM`, `argon2`, `TLS 1.2`, `ChaCha20`, `ML-KEM` and
 `post-quantum` across every skill, rule and guideline returns exactly one
-incidental table row. XXE returns nothing at all.
+match. XXE returns nothing at all.
+
+That one match is `skill:ai-code-blindspots:55` — a checklist row reading
+"password columns use bcrypt/argon2, never MD5/SHA". It is named here rather
+than left as "incidental", because a boundary with an unexplained match is not
+a boundary. It **stays**, and it does not violate the decision below: it names
+algorithm *families* in a prohibition-plus-default, which is a stable
+class-level statement, and it carries no parameter, key size, work factor,
+cipher suite, or version floor — the enumerated set this record actually
+bounds. An algorithm family whose deprecation is measured in decades is not
+the thing that rots; a work factor revised every few years is.
 
 So the question was never whether gaps exist. It was whether *this* package is
 the right place to close them.
@@ -58,8 +71,17 @@ which topics it does not cover.**
 Concretely, and as a bright line rather than a preference: no cryptographic
 algorithm tier, key size, work factor, iteration count, cipher suite, TLS
 version floor, or certificate-lifetime value is authored into this corpus.
-Where a consumer needs one, the skill they are reading names the topic as
-out of scope and points at the authority that maintains it.
+
+The boundary is stated in **two** artefacts, and the count is deliberate rather
+than partial. `skill:security-audit` and `skill:security` are the two a
+consumer reaches with "is this safe" and "how do I write this safely", so they
+carry the notice. `skill:secrets-management` already does the same thing in its
+own words at `:31` — "the decision is which cipher to use for at-rest
+encryption — read the provider's KMS docs directly" — so a third notice would
+be duplication, not coverage. `skill:authz-review` and
+`docs/guidelines/php/security.md` are named in the Context above as part of the
+security corpus, not as places this boundary applies: neither carries or
+invites a cryptographic parameter.
 
 What this package *does* carry, and keeps carrying, is the enforcement layer:
 `rule:secret-vcs-guard` with its detector and CI net, `skill:authz-review`'s
@@ -104,8 +126,16 @@ member's conditional position, and it is the strongest alternative. It was
 gated on three conditions of that member's own naming: fixtures showing a real
 detection gain, a named owner, and a resolved provenance classification. None
 was available, and the member's stated kill criterion — *no maintainer accepts
-ownership before merge* — therefore fired. The path is not closed; it is the
-reopening condition in this record's frontmatter.
+ownership before merge* — therefore fired.
+
+The path is not closed, and Trigger A in the frontmatter is what reopens it —
+but the two lists are **not** the same list, and conflating them would be an
+error. That member named three conditions *for adopting content in that
+session*, provenance among them. Provenance is not a reopening condition here:
+this record adapts nothing, so there is nothing to classify, and a future
+proposal that adapts something acquires that obligation from
+`rule:code-provenance` rather than from this ADR. Trigger A therefore carries
+the two conditions that survive the decision — owner and observed miss.
 
 **Do nothing at all.** Rejected as dishonest. The gaps are real and now
 measured; leaving the corpus silent about its own boundary means the next
