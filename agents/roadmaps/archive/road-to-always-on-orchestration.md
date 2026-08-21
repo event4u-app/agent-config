@@ -56,6 +56,102 @@ falsifiability moves from "whether enabled" to "when invoked and did it
 help", with registered metrics and per-trigger kill criteria written down
 before any behaviour data exists.
 
+## Outcome (closed 2026-08-20 — read this before the phase checkboxes)
+
+```
+ARCHIVED DOES NOT MEAN ACHIEVED.
+ONE STEP AND FOUR BLOCKERS LEFT THIS ROADMAP BECAUSE THIS REPOSITORY
+CANNOT PRODUCE THE EVIDENCE THEY REQUIRE.
+A TRANSFER IS A RECORDED RELOCATION OF UNFINISHED WORK, NOT A RESULT.
+```
+
+**The count, with its denominator named** — two true numbers circulate here and
+a reader comparing them would otherwise think one is wrong. Counting the two
+prerequisites plus the 36 phase steps: **37 of 38 landed, 1 transferred**. The
+dashboard counts phase steps only and reports **35 done, 1 cancelled of 36** at
+100 %, because `[-]` is the glyph for a step that will not be done here, so a
+transferred step reads as `cancelled` in that view. Neither number counts the
+seven acceptance criteria, and the 100 % says nothing about the goal — see
+§ Against the goal, honestly.
+
+Closed by the autonomous drain run of 2026-08-20 under the council record
+[`drain-blocker-dispositions-b`](../evidence/council/drain-blocker-dispositions-b.md)
+(2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2).
+Outcome states are the four that record defines: `satisfied`, `narrowed`,
+`transferred`, `abandoned`.
+
+| Phase | Outcome | What that means here |
+|---|---|---|
+| 1 — settings teardown | **satisfied** | All six steps landed, contract before code. The activation keys are gone and `lint_no_activation_gates` makes their return a CI failure — green over 137 template leaves, self-test 7/7. |
+| 2 — one judgment ladder | **satisfied** | One committed table plus `judgment_ladder.ts` replaced three scattered classifiers; precision registered as a metric with kill/tighten paths. This run **added** to the same table: the `CV-1`/`CV-2` cross-vendor entries. |
+| 3 — CLI-first transport | **satisfied** | Both transport implementations reconciled, defaults flipped, quorum majority with absentees recorded — verified in two real passes, each naming every member's transport. |
+| 4 — verdict handoff | **satisfied for what it scoped; one item transferred** | 4.1 (handoff envelope) and 4.2 (doc repair) landed. 4.3 was *written as* a deferral rather than as work, and the blocker it deferred to is now a stub. |
+| 5 — team readiness | **narrowed** | 5.1–5.3 landed (spike script, ADR-109 contract line, AGENTS.md obligation without the unverified mechanism claim). **5.4 transferred** — the experimental host flag is unset, third dated reading. |
+| 6 — the measurement | **satisfied** | Metrics and per-layer kill/tighten criteria registered. Worth noting against the roadmap's own premise: they are **no longer pre-data** (below). |
+| 7 — what this will not do | **satisfied** | All five negative statements re-verified 2026-08-20. 7.3's two deferred items now have stubs rather than open blockers. |
+
+### The five blockers
+
+| Blocker | Disposition | Outcome | Went to |
+|---|---|---|---|
+| `cross-vendor-worker-slices` | D — decided | **satisfied** | Nowhere — shipped here: [`docs/contracts/cross-vendor-worker-direction.md`](../../docs/contracts/cross-vendor-worker-direction.md) + the two citing entries |
+| `team-telemetry-behind-flag` | B | **transferred** | [`stubs/road-to-team-telemetry-behind-flag.md`](stubs/road-to-team-telemetry-behind-flag.md) |
+| `f4-full-stop-block` | B | **transferred** | [`stubs/road-to-f4-full-stop-block.md`](stubs/road-to-f4-full-stop-block.md) |
+| `gate-council-auto-dispatch` | B | **transferred** | [`stubs/road-to-gate-council-auto-dispatch.md`](stubs/road-to-gate-council-auto-dispatch.md) |
+| `point-of-action-carrier` | B | **transferred** | [`stubs/road-to-point-of-action-carrier.md`](stubs/road-to-point-of-action-carrier.md) |
+
+Every transfer carries the three-point integrity check the disposition
+framework requires: the original `Resolved when` criterion **verbatim**, the
+complete list of dependent steps moved, and a **named** re-entry producer with
+a detection probe. Four stubs for four blockers — merging was considered and
+refused, because the two host-probe cases probe different mechanisms against
+different telemetry streams and the council assigned them separate producers.
+
+### Against the goal, honestly
+
+The Goal has four clauses. Three are achieved and one is not:
+
+- *"zero configuration … capabilities probed at runtime instead of declared in
+  settings"* — **achieved**, verified live against a 0-byte settings file.
+- *"one committed judgment ladder"* — **achieved**.
+- *"council members ride vendor CLIs by default"* — **achieved**, with the
+  degradation graded and the transport named per member in the artifact.
+- *"every layer's effect is measured — falsifiability moves from 'whether
+  enabled' to 'when invoked and did it help'"* — **not achieved, and not
+  transferable to a stub either.** The metrics and kill criteria are
+  *registered*; no layer has yet been *judged* against one. "Did it help" is
+  answerable now in a way it was not when this was cut, and nobody has
+  answered it.
+
+### What changed under the roadmap while it ran
+
+The Context section states flatly: *"Telemetry accumulation is zero. F6/F4
+shipped yesterday. Every calibration-consuming step is therefore a gated
+blocker, not a phase."* Measured 2026-08-20, that premise no longer holds —
+**554 lines carrying an `orchestration` block (553 with `spawn_count > 0`) and
+121 `quorum_result` events**, plus 9 `exact` `review_skipped` lines. Two
+consequences, and they point in opposite directions:
+
+1. `gate-council-auto-dispatch` is the one transferred blocker whose gate has
+   **measurably moved**; its stub records the numbers so the next reader can
+   tell movement from noise rather than re-deriving both halves.
+2. Volume is not a verdict. 121 attendance records include **17
+   solo-concluded passes** — Risk 6 (majority at n=2 is a single voice) is now
+   visible in data rather than argued in prose, and still nothing gates on the
+   rate. A stub keyed on "the window opened" would be a parking lot; each stub
+   is keyed on its probe instead.
+
+### The one thing this closure does not settle
+
+Four stubs is four pieces of specified, sequenced work now sitting outside the
+active estate. The disposition framework's own residual applies: a transferred
+item can become an indefinite deferral, and only a re-entry probe reading
+positive — or a registered honest null closing it — discharges that. Two of the
+four carry such a null already (`point-of-action-carrier`'s "no discriminator
+is publishable"; `gate-council-auto-dispatch`'s "auto-fire adds nothing and the
+gate stays recommend-only"). The other two do not, and that is the honest
+statement of what is still owed.
+
 ## Prerequisites
 
 - [x] #1223/#1224 on main (carriers, telemetry, hardening) — verified at
@@ -258,12 +354,17 @@ before any behaviour data exists.
       WITHOUT the unverified third-party "delegate mode" claim — the
       structural restriction becomes doctrine only after the 5.1 spike (or a
       host doc) verifies the mechanism exists.
-- [ ] 5.4 Full team telemetry concerns + TaskCompleted artifact-check
+- [-] 5.4 Full team telemetry concerns + TaskCompleted artifact-check
       ("the report is the interface, not the verification" — a teammate's
       confident completion report is counted, checked against the declared
       deliverable, never adopted unverified) → blocker
       `team-telemetry-behind-flag`, keyed on the experimental flag and the
       5.1 payload evidence.
+      <!-- TRANSFERRED 2026-08-20 (council disposition B, outcome
+      `transferred`) → stubs/road-to-team-telemetry-behind-flag.md: the
+      experimental host flag is unset on this host for the third dated reading
+      (2026-08-09, 2026-08-13, 2026-08-20), so the payload evidence this step
+      binds concerns to cannot be produced here at all. NOT done. -->
 
 **Exit:** everything teams need from us that does not depend on the experimental flag is shipped; everything that does is a blocker with its evidence requirement named.
 **Rollback:** doc lines.
@@ -310,9 +411,22 @@ before any behaviour data exists.
 
 ## Blockers
 
+> **All five entries below are RESOLVED by the autonomous drain run of
+> 2026-08-20** — four by transfer to a stub, one by shipping the artefact it
+> was waiting for. The resolving mechanism is the council record
+> [`drain-blocker-dispositions-b`](../evidence/council/drain-blocker-dispositions-b.md)
+> (2026-08-20, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2 —
+> merged to main via PR #1463, so the citation resolves and no longer needs the
+> reference-exemption marker it carried while it was branch-local). Each entry keeps its original
+> `What to do` and `Resolved when` text unedited — those are the history a
+> future reader needs — and records the resolution beneath them.
+>
+> **A transfer is not an achievement.** Four of these five moved because this
+> repository cannot produce the evidence they require. See § Outcome.
+
 ### blocker: gate-council-auto-dispatch
 
-- **Status:** open
+- **Status:** resolved — transferred (council 2026-08-20, disposition B)
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** auto-firing the council at the release-gate escalation
@@ -324,10 +438,23 @@ before any behaviour data exists.
   unactioned-verdict kill criterion (6.2).
 - **Resolved when:** the wiring lands citing the soak evidence, or the
   telemetry says auto-fire adds nothing and the gate stays recommend-only.
+- **Resolution (2026-08-20):** disposition **B — transferred**, outcome state
+  `transferred`. Council rationale: auto-dispatch changes external behaviour
+  and cannot precede verified reconciliation soak or a usable benefit/risk
+  window. Moved to
+  [`stubs/road-to-gate-council-auto-dispatch.md`](stubs/road-to-gate-council-auto-dispatch.md)
+  with the criterion above copied verbatim, the five dependent items
+  enumerated, and a named re-entry producer (gate-autonomy maintainer) plus
+  probe (dated soak report + telemetry query against pre-registered minima).
+  **Probe measured today:** 121 `quorum_result` events and 553 dispatch lines
+  in the gitignored runtime logs — this is the ONE transferred blocker whose
+  gate has measurably moved, since the roadmap was cut on the premise that
+  "telemetry accumulation is zero". The soak half is still unverified and the
+  minima are still unwritten, so the transfer stands.
 
 ### blocker: point-of-action-carrier
 
-- **Status:** open
+- **Status:** resolved — transferred (council 2026-08-20, disposition B)
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** any pre-tool-use mid-session delegation carrier + escalation
@@ -340,10 +467,24 @@ before any behaviour data exists.
   discriminator" is publishable and does not block this roadmap.
 - **Resolved when:** the spike note exists and the build/no-build decision
   cites it plus the F3-lite adoption telemetry.
+- **Resolution (2026-08-20):** disposition **B — transferred**, outcome state
+  `transferred`. Council rationale: a repository-only inference cannot
+  establish main-agent versus subagent identity on the real host. Moved to
+  [`stubs/road-to-point-of-action-carrier.md`](stubs/road-to-point-of-action-carrier.md)
+  with the criterion above copied verbatim, the four dependent items
+  enumerated, and a named re-entry producer (maintainer with a real
+  multi-agent host session) plus probe (paired main/subagent traces
+  publishing a separation result or a measured null). **Probe not locally
+  measurable, and that is the finding:** the ladder's own contract surface
+  already records that no field in this repository's hook envelope carries
+  session lineage, which is why the recursive-dispatch guard is a
+  caller-supplied fact rather than an env probe. The pre-registered null ("no
+  discriminator is publishable") stands and remains the likely outcome after
+  the upstream NOT_PLANNED close.
 
 ### blocker: f4-full-stop-block
 
-- **Status:** open
+- **Status:** resolved — transferred (council 2026-08-20, disposition B)
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** single-shot stop-block continuation for the end-review
@@ -357,10 +498,23 @@ before any behaviour data exists.
   (`exact` lines only).
 - **Resolved when:** live delivery evidence exists and the block/advisory
   decision cites the telemetry distribution.
+- **Resolution (2026-08-20):** disposition **B — transferred**, outcome state
+  `transferred`. Council rationale: the block/advisory decision depends on
+  real-host delivery behaviour and a telemetry distribution not present in the
+  repository. Moved to
+  [`stubs/road-to-f4-full-stop-block.md`](stubs/road-to-f4-full-stop-block.md)
+  with the criterion above copied verbatim, the four dependent items
+  enumerated, and a named re-entry producer (maintainer running the supported
+  host) plus probe (captured model-visible canary + dated telemetry report).
+  **Probe measured today:** the telemetry half is no longer empty — 9
+  `review_skipped` lines, ALL `mutation_measure: exact`, `diff_lines` 243 to
+  1770. Nine points spanning that range have no usable shape and every one is
+  a skip (no contrast class), so they cannot fix a threshold; the canary half
+  is untouched at zero. Both halves are needed, so the transfer stands.
 
 ### blocker: team-telemetry-behind-flag
 
-- **Status:** open
+- **Status:** resolved — transferred (council 2026-08-20, disposition B)
 - **Owner:** maintainer
 - **Class:** 3 — human-only (a host flag that does not clear by waiting on this host)
 - **Blocks:** Phase 5.4 (team telemetry concerns, TaskCompleted
@@ -378,10 +532,26 @@ before any behaviour data exists.
   the repetition is also the finding: this blocker does not clear by waiting on
   this host, so 5.4's realistic paths are an upstream flag flip or the "teams
   leave the experimental state" branch already named in the resolution clause.
+- **Re-probed 2026-08-20:** still unset (`env | grep --line-number
+  EXPERIMENTAL_AGENT_TEAMS` returns nothing; the variable is absent from the
+  environment). Third dated reading, eleven days across the three. The
+  inference the second reading drew is confirmed rather than revisited.
+- **Resolution (2026-08-20):** disposition **B — transferred**, outcome state
+  `transferred`. Council rationale: no instrument can produce the required
+  payload evidence until the experimental surface is active in a real
+  environment. Moved to
+  [`stubs/road-to-team-telemetry-behind-flag.md`](stubs/road-to-team-telemetry-behind-flag.md)
+  with the criterion above copied verbatim, the five dependent items
+  enumerated (Phase 5.4, the observation half of 5.1, payload classification,
+  concern binding, re-cut decision), and a named re-entry producer (maintainer
+  of a flag-enabled environment) plus probe (flag-state check, then captured
+  `TaskCompleted` payload fixtures). A fourth reading of the same unset value
+  would add nothing, which is the argument for a probe-keyed stub over an open
+  step that re-reads an unchanging environment.
 
 ### blocker: cross-vendor-worker-slices
 
-- **Status:** open
+- **Status:** resolved — satisfied (council 2026-08-20, disposition D; policy shipped)
 - **Owner:** maintainer
 - **Class:** 2 — consent-once
 - **Blocks:** routing ordinary work slices to second-vendor CLI workers
@@ -393,19 +563,51 @@ before any behaviour data exists.
   workers).
 - **Resolved when:** the policy artefact exists and the resolver entries
   cite it.
+- **Resolution (2026-08-20):** disposition **D — decided**, outcome state
+  `satisfied`. The two council seats diverged and were **merged, not picked**:
+  one approved report-only workers under a deny-by-default policy, the other
+  required the direction policy to exist first. The adopted disposition is the
+  conjunction — write the policy, then approve report-only workers under it —
+  and both halves shipped in this change, because both are ordinary repository
+  work with no external dependency:
+  - **Policy artefact:** [`docs/contracts/cross-vendor-worker-direction.md`](../../docs/contracts/cross-vendor-worker-direction.md)
+    — deny-by-default; two permitted directions stated as **role pairs, never
+    vendor names** (per `subagent-routing` § Why vendor-neutral); exhaustive
+    payload allow list (tracked repository text, bundler-redacted artefacts)
+    and deny list (secrets, credentials, personal data, raw confidential
+    evidence, privileged material); report-only capability boundary; a
+    no-recursion clause; and the human egress gate that
+    `lethal-trifecta-guard` and `subagent-boundary` already own.
+  - **The two resolver entries:** `CV-1` / `CV-2` in the ladder's committed
+    table ([`auto-dispatch-classification`](../../src/agent-src/contexts/execution/auto-dispatch-classification.md)
+    § Cross-vendor worker direction), each citing the policy.
+  - **What did NOT ship, stated so the `satisfied` is not read too widely:**
+    no cross-vendor worker dispatch path. `classifyLadder` carries no vendor
+    identity by design, nothing reads `CV-1`/`CV-2` at runtime, and the
+    policy's own enforcement section says `enforced_by: none` rather than
+    implying a gate on code that does not exist. The criterion asked for the
+    artefact and the citing entries; that is exactly what exists. The phantom
+    reference the original survey cited is what this closes.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-09 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
+<!-- Re-read on closure 2026-08-20, not restamped. Three rows changed on
+     evidence (2 and 6 moved from argued to measured; 7's holder changed from
+     an open blocker to a stub) and one row was ADDED (9) for a risk this
+     closing change itself introduces. Rows 1, 3, 4, 5, 8 were re-read and
+     are unchanged: their mitigations shipped in Phase 1/3 and nothing in the
+     drain touched them. -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Always-on burns plan quota (unmetered is not free) | product | Subscription CLIs have real limits; an always-available council can exhaust a plan silently | `cli_call_budget` per-provider defaults (3.4) are the one remaining brake; quota exhaustion is a visible probe state degrading to quorum paths, never to uncapped metered API | Phase 3 |
-| 2 | The judgment ladder over-fires and becomes the canary at system scale | product | A classifier that fires on every prompt is the cosmetic-injection failure this repo already measured at 24/29 misses | Silence/∅ is a first-class verdict at every rung; per-rung precision metric with pre-registered kill/tighten criteria (2.5, 6.2); the nudge layer keeps its conditional-injection shape | Phase 2 |
+| 2 | The judgment ladder over-fires and becomes the canary at system scale | product | A classifier that fires on every prompt is the cosmetic-injection failure this repo already measured at 24/29 misses | Silence/∅ is a first-class verdict at every rung; per-rung precision metric with pre-registered kill/tighten criteria (2.5, 6.2); the nudge layer keeps its conditional-injection shape. **Re-read 2026-08-20: the mitigation is no longer pre-data.** 554 lines carrying an `orchestration` block (553 with `spawn_count > 0`) accumulated in the gitignored audit log, so per-rung precision is now computable where this row was written assuming zero. It has not been computed, and the registered kill/tighten criteria have not been applied to it — the risk is unchanged in kind and now falsifiable in practice | Phase 2 |
 | 3 | Deleting activation keys breaks readers that silently assumed them | implementation | `auto_dispatch`, the nudge hook, routing_doctor and tests read `subagents.*` today; a missed reader turns always-on into always-crash | 1.2 enumerates the reader migration as part of the step itself; the hook suite + registry parity tests gate the PR; every hook stays fail-open on every path | Phase 1 |
 | 4 | The incident switch becomes an activation gate under a new name | product | One boolean that turns the stack off is exactly what the doctrine deletes | Council-specified enforcement difference: on-by-default, audited transitions, justification required to re-enable, incident-response documentation only (1.4); the no-activation-gates lint allowlists exactly this one key | Phase 1 |
 | 5 | Transport reconciliation picks the wrong implementation under load | implementation | Two resolve paths exist; flipping the default against the dead one produces nondeterministic member transports | 3.1 makes reconciliation the step, not a footnote; the pass artifact names each member's transport (3.2) so a mismatch is visible in the first real run | Phase 3 |
-| 6 | Quorum 1-of-2 lets one model wave through what two should judge | product | Majority at n=2 is a single voice | Council-weighed trade-off: the alternative (2-of-2) deadlocks a release gate on any timeout, and inconclusive-holds keeps the human in the loop. Absent members are artifact-visible (`orchestrator.ts` renders `_render_quorum_line` / `_render_absent_members`, `session.ts` serialises the quorum) **and, since `events_log.ts` schema v2, log-visible**: both `evaluateQuorum` sites emit a `quorum_result` event carrying `status` / `threshold` / `total` / `present` / `solo_concluded` / `absent[]`, so a solo-concluded pass is no longer downstream-identical to a full-attendance one. What the telemetry does **not** do is act: nothing gates on the rate, and the solo-attendance floor stays an open blocker (`road-to-inbox-harvest-2026-08-b.md` — `quorum-solo-floor`) precisely because a floor cannot be chosen before real passes accumulate. Metrics registered in `src/config/quorum-attendance-budget.json` | Phase 3 |
-| 7 | Team doctrine built on an unverified third-party mechanism | product | "Delegate mode" exists only in third-party writeups; doctrine naming it would claim what no official doc backs | 5.3 ships the obligation without the mechanism claim; the mechanism enters doctrine only after the 5.1 spike or official docs verify it | Phase 5 |
+| 6 | Quorum 1-of-2 lets one model wave through what two should judge | product | Majority at n=2 is a single voice | Council-weighed trade-off: the alternative (2-of-2) deadlocks a release gate on any timeout, and inconclusive-holds keeps the human in the loop. Absent members are artifact-visible (`orchestrator.ts` renders `_render_quorum_line` / `_render_absent_members`, `session.ts` serialises the quorum) **and, since `events_log.ts` schema v2, log-visible**: both `evaluateQuorum` sites emit a `quorum_result` event carrying `status` / `threshold` / `total` / `present` / `solo_concluded` / `absent[]`, so a solo-concluded pass is no longer downstream-identical to a full-attendance one. What the telemetry does **not** do is act: nothing gates on the rate, and the solo-attendance floor stays an open blocker (`road-to-inbox-harvest-2026-08-b.md` — `quorum-solo-floor`) precisely because a floor cannot be chosen before real passes accumulate. Metrics registered in `src/config/quorum-attendance-budget.json`. **Re-read 2026-08-20 — this risk has MATERIALISED and is measured:** 121 `quorum_result` events carry attendance `present=2` in 94, `present=1` in **17**, `present=0` in 9, `present=3` in 1. So 17 passes concluded on a single voice, which is exactly the shape this row predicted. The mitigation stands as written (inconclusive-holds keeps the human in the loop, absences are artifact- and log-visible) and its stated limit also stands: nothing gates on the rate, and the solo-attendance floor is still an open blocker on another roadmap because a floor cannot be chosen before real passes accumulate. They have now begun to | Phase 3 |
+| 7 | Team doctrine built on an unverified third-party mechanism | product | "Delegate mode" exists only in third-party writeups; doctrine naming it would claim what no official doc backs | 5.3 ships the obligation without the mechanism claim; the mechanism enters doctrine only after the 5.1 spike or official docs verify it. **Re-read 2026-08-20: the mitigation holds and its holder changed.** 5.4 is transferred to `stubs/road-to-team-telemetry-behind-flag.md`, so the verification gate now lives in that stub's re-entry probe rather than in an open step here. The load-bearing property is unaffected — no shipped doctrine names the unverified mechanism — but the risk is now held by a stub, which is a weaker holder than an open step and is recorded as such rather than presented as closed | Phase 5 |
 | 8 | The doctrine deletes a safety property caps do not cover | product | Owner directive removes switches wholesale; a missed safety semantics would ship unguarded | Council question 6 returned none beyond the incident switch; privacy/egress switches, destructive gates, spend and quota caps all survive by name (1.2–1.4); the settings-classes contract change is reviewed before code (1.1) | Phase 1 |
+| 9 | The cross-vendor direction policy authorises an egress class that did not previously have one | product | Closing `cross-vendor-worker-slices` ships a policy that names sending tracked repository text and redacted artefacts to a SECOND vendor as permitted-in-principle. Before it, no artefact said that was allowed; a written permission is easier to over-read than an absence, and the two symmetric directions compose into an unbounded review-of-review chain if read carelessly | Deny-by-default with an EXHAUSTIVE two-member permitted set and an exhaustive payload deny list (secrets, credentials, personal data, raw confidential evidence, privileged material — each restating an existing floor rather than re-deriving it); report-only capability boundary (no write, no commit, no action); an explicit no-recursion clause (one hop, always); and the human egress gate restated from `lethal-trifecta-guard` and `subagent-boundary` — direction permitted + payload allowed + human approved, any one missing = may not send. **The honest limit:** the policy ships `enforced_by: none` and says so in its own text. No dispatch path exists, so there is no call site to instrument, and the first shipped worker path is where a payload classifier in front of the send becomes the gate. Until then this row is the record that a permission was written before a mechanism existed | Phase 2 |
 
 ## Acceptance criteria
 
@@ -465,6 +667,18 @@ before any behaviour data exists.
       doc line 170); no pre_tool_use delegation carrier in the manifest;
       team events exist only as team_events_spike.ts, flag-gated with a
       clean exit-0 skip. All four have named blockers below. -->
+      <!-- STILL SATISFIED after the 2026-08-20 drain, with the vehicle
+      changed and the wording therefore now imprecise: the four exist as
+      transfer STUBS rather than as open blockers. The property this criterion
+      actually tests — none half-shipped, enabling evidence named — holds more
+      strongly than before, because each stub carries its criterion verbatim,
+      an enumerated moved-step list, a named re-entry producer and a detection
+      probe, where an open blocker carried only prose. Deliberately NOT
+      flipped to [-]: this is the criterion that documents the deferral, so
+      marking it unachieved would assert the roadmap failed to defer cleanly,
+      which is the opposite of what happened. Re-verified 2026-08-20: still no
+      dispatch wiring, still no block severity, still no pre_tool_use
+      delegation carrier, team events still only the flag-gated spike. -->
 - [x] All external systems appear as Sources A–H only; the external-sources
       gate is green.
       <!-- verified 2026-08-09: check_no_external_sources exit 0 (checked

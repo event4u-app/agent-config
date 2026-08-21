@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 10,
+    "active_roadmaps": 9,
     "later_roadmaps": 55,
-    "open_blockers": 42
+    "open_blockers": 37
   },
   "baseline_history": [
     {
@@ -540,10 +540,24 @@
       "why": "RE-MEASURED after a SECOND merge of origin/main, not a second drawdown. The trunk moved while this branch waited for CI (PR #1507 landed and walked open_blockers to 41 itself), so the entry this branch wrote earlier -- active 11 -> 10, blockers 43 -> 41 -- was measured against a tree that no longer exists. Against the merged tree the only delta still owned by this branch is active_roadmaps 10 -> 9, the archival of road-to-rule-coherence-followup. open_blockers is left at 41 rather than claimed again: its two closures are already recorded, once, in the earlier entry, and re-counting them here is exactly how a ratchet double-books a single piece of work. later_roadmaps unchanged at 55."
     },
     {
+      "at": "2026-08-20",
+      "active_roadmaps": 32,
+      "later_roadmaps": 52,
+      "open_blockers": 65,
+      "why": "open_blockers 70 -> 65 by the road-to-always-on-orchestration drain: all five of that roadmap's entries were RESOLVED in one change \u2014 four transferred to probe-keyed stubs under council disposition B (2026-08-20, anthropic + openai, quorum 2/2) and one satisfied by shipping the cross-vendor direction policy the criterion asked for. active_roadmaps and later_roadmaps are unchanged at 32 and 52: the roadmap stays in the active tree because this run was instructed not to archive it, and the four stubs land under agents/roadmaps/stubs/, which collect() does not count. So this is a pure blocker drawdown with no estate movement behind it. Worth recording honestly: FOUR of the five closures are transfers, not achievements \u2014 the work moved to a stub because this repository cannot produce the evidence it needs (an unset experimental host flag, an unverified live Stop-slot delivery, an unverified transport soak, and a main-vs-subagent identity upstream closed NOT_PLANNED). The blocker count fell by five; the amount of unfinished work fell by one. A future reader comparing this metric against progress should read \u00a7 Outcome in that roadmap, which states the same thing at length."
+    },
+    {
       "at": "2026-08-21",
-      "active_roadmaps": 10,
+      "active_roadmaps": 8,
       "later_roadmaps": 55,
-      "open_blockers": 42,
+      "open_blockers": 36,
+      "why": "WALKED DOWN by 1 active and 5 blockers -- the largest single drawdown of this drain, so the composition matters. road-to-always-on-orchestration archived (under agents/roadmaps/ on main, under archive/ here). All five of its blockers are open on origin/main and closed here, and FOUR of the five are 'resolved -- transferred', each to a stub created in this same change: gate-council-auto-dispatch, point-of-action-carrier, f4-full-stop-block and team-telemetry-behind-flag. Only ONE, cross-vendor-worker-slices, is 'resolved -- satisfied', i.e. actually finished. So this -5 is mostly relocation into probe-carrying stubs rather than completed work, and reading it as five closed problems would be wrong. later_roadmaps unchanged at 55: stubs, not parks."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 9,
+      "later_roadmaps": 55,
+      "open_blockers": 37,
       "why": "Raised by one for `merge-authority` in road-to-drain-commands. The blocker is not deferred work: it records that activating a `--merge` flag lowers a recorded safety floor (ADR-237 s4 excludes merging and says no invocation extends it), which docs the decision-revisit-gate reserves to the owner. Three independent reviews reached that same verdict before the blocker was written - the AI council, the committed road-to-gate-preauth-authorization stub, and the runtime classifier, which refused this branch's own attempt to edit the prohibition out of the canonical loop. Writing it as a blocker is what keeps the estate honest here: the alternative was to ship the flag active with an amendment the agent authored for itself, which would have left the count unchanged and the floor lowered. Also raised active_roadmaps 10 -> 11 for the same file. It ships 27 of its 29 steps closed in the change that adds it, and stays active only because that one owner decision is outstanding; its frontmatter carries the matching estate_offset_exempt line rather than parking an unrelated roadmap to balance the books. Rebased onto main's drawdown during the merge: main lowered active_roadmaps to 10 and open_blockers to 43 while this branch was open, so the +1 for this roadmap is applied to THAT floor (11 / 44) rather than to the 11 / 43 this branch started from. Taking our own higher numbers would have silently undone someone else's drawdown, which is the one thing a ratchet must never let a merge do."
     }
   ],

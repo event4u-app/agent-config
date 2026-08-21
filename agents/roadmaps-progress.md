@@ -2,30 +2,29 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers in the active tree, **10** need you → `agent-config gates`
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers in the active tree, **10** need you → `agent-config gates`
 
 ## Overall
 
-**134 / 207 steps done · 65%**
+**99 / 171 steps done · 58%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
-| 4 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
-| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 7 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
-| 8 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 9 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
-| 10 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 1 | [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
+| 3 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 3 | 2 | 0 | 0 | █████░░░░░ 50% |
+| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 6 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 1 | 31 | 0 | 4 | 0 | ██████████ 97% |
+| 7 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 8 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 9 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -96,66 +95,6 @@
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
-
-**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 36 done (97%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | settings teardown, contract first | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | one judgment ladder instead of three scattered classifiers | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | CLI-first shipped as the default transport, quorum-resilient | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | verdict handoff + the wiring the resolved blocker was waiting for | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | team readiness: verify first, doctrine second | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 6 | the measurement that replaces the switch | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 7 | what this roadmap will not do | ✅ done | 0 | 12 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-always-on-orchestration"></a>
-**Blockers**
-
-- **gate-council-auto-dispatch** (owner: maintainer) — blocks auto-firing the council at the release-gate escalation
-  - **What to do:**
-    after Phase 3 has soaked (transport reconciliation
-    verified in real passes) and the F6/F4 + council-attendance telemetry has
-    a usable window, wire the gate escalation to dispatch the pass itself
-    (quorum rules from 3.3; inconclusive holds). Guards named by council:
-    loop protection, metered-fallback cap via `cost_budget`, latency budget,
-    unactioned-verdict kill criterion (6.2).
-  - **Resolved when:** the wiring lands citing the soak evidence, or the telemetry says auto-fire adds nothing and the gate stays recommend-only.
-- **point-of-action-carrier** (owner: maintainer) — blocks any pre-tool-use mid-session delegation carrier + escalation ladder (Sources E/H harvest)
-  - **What to do:**
-    run the main-vs-subagent discrimination spike (upstream
-    closed the identity request as NOT_PLANNED; the per-agent-permission fix
-    landed with unverified scope — probe a real host). No discriminator → the
-    carrier ships only with scope reduction (source-file writes above a size
-    threshold, generous exemptions) or not at all. Pre-registered null: "no
-    discriminator" is publishable and does not block this roadmap.
-  - **Resolved when:** the spike note exists and the build/no-build decision cites it plus the F3-lite adoption telemetry.
-- **f4-full-stop-block** (owner: maintainer) — blocks single-shot stop-block continuation for the end-review obligation
-  - **What to do:**
-    carried from the carriers roadmap, upgraded by two
-    verified facts: `additionalContext` on Stop IS documented at exit 0 (the
-    advisory path may already reach the model — verify live first), and
-    `stop_hook_active` is gone from the docs, so the loop guard must be a
-    self-built session-scoped marker (the end-review once-per-session state is
-    the template). Calibrate the threshold on `review_skipped` telemetry
-    (`exact` lines only).
-  - **Resolved when:** live delivery evidence exists and the block/advisory decision cites the telemetry distribution.
-- **team-telemetry-behind-flag** (owner: maintainer) — blocks Phase 5.4 (team telemetry concerns, TaskCompleted artifact-check)
-  - **What to do:**
-    when the experimental flag is on in a real environment,
-    run the 5.1 spike, then bind the concerns with the same fail-open
-    discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
-- **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
-  - **What to do:**
-    the drafts cited a direction-policy artefact that does not
-    exist; before any cross-vendor worker ships, write the direction policy
-    (which vendor may review which, what may be sent — extending the existing
-    egress discipline), then add the two resolver entries (report-only
-    workers).
-  - **Resolved when:** the policy artefact exists and the resolver entries cite it.
 
 ### [road-to-condensed-link-repair.md](roadmaps/road-to-condensed-link-repair.md)
 
