@@ -442,7 +442,7 @@ describe('lint_provenance_vocabulary — rule 4 over the real corpus', () => {
         // another at the same total.
         for (const record of ['ADR-122', 'ADR-124', 'ADR-208']) {
             const hits = live.filter((v) => v.file.includes(record));
-            expect(hits.map((v) => `${v.file}:${v.line}`), `${record} should be clean`).toEqual([]);
+            expect(hits.map((v) => `${v.file} ${v.msg}`), `${record} should be clean`).toEqual([]);
         }
     });
 
