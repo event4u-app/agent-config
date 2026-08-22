@@ -16,7 +16,12 @@
 #     are listed below at a lower cadence so their toolchains do not rot
 #     silently either.
 #   * `github-actions` — pinned action SHAs/tags rot and are a real supply-
-#     chain surface; the repo pins actions, so updates need a PR to land.
+#     chain surface; the repo pins every action to a full 40-hex commit SHA
+#     with a `# vX.Y.Z` comment beside it, so updates need a PR to land.
+#     Corrected 2026-08-22: this line previously read "the repo pins
+#     actions" while the repo pinned mutable TAGS — 112 references, 0 SHAs —
+#     so this entry's own justification rested on something untrue. It is
+#     true as of road-to-ci-supply-chain-integrity Phase 1.
 #
 # Grouping is deliberate: one PR per ecosystem per week, not one per package.
 # An ungrouped dependabot on ~30 direct deps produces more review load than

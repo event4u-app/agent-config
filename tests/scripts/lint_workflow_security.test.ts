@@ -42,7 +42,13 @@ const CLEAN_WF = [
     'jobs:',
     '  build:',
     '    steps:',
+    // `persist-credentials: false` is what makes this fixture clean under the
+    // rule of the same name: without it the repository token stays in the
+    // runner's git config for the rest of the job. The fixture carries the fix
+    // rather than the assertion being narrowed, so "clean" keeps meaning clean.
     '      - uses: actions/checkout@0000000000000000000000000000000000000000',
+    '        with:',
+    '          persist-credentials: false',
     '      - run: npm ci --ignore-scripts',
     '',
 ].join('\n');
@@ -85,6 +91,17 @@ describe('lint_workflow_security — scan_workflow', () => {
         const wf = path.join(tmp, 'ok.yml');
         fs.writeFileSync(wf, CLEAN_WF, 'utf-8');
         expect(scan_workflow(wf, [])).toEqual([]);
+    });
+
+    // The negative control for the fixture above. Without this case, dropping
+    // `persist-credentials: false` from CLEAN_WF is indistinguishable from the
+    // rule never firing — the clean assertion alone cannot tell those apart.
+    it('checkout without an explicit persist-credentials → MEDIUM finding', () => {
+        const wf = path.join(tmp, 'no-persist.yml');
+        fs.writeFileSync(wf, CLEAN_WF.replace(/ {8}with:\n {10}persist-credentials: false\n/, ''), 'utf-8');
+        const finding = scan_workflow(wf, []).find((f) => f['rule'] === 'persist-credentials');
+        expect(finding).toBeDefined();
+        expect(finding!['severity']).toBe('MEDIUM');
     });
 
     it('parse error → HIGH parse-error finding', () => {

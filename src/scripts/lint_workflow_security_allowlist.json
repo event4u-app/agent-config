@@ -1,20 +1,4 @@
 {
-  "_comment": "Legitimate workflow security findings. Hard-capped at 20 entries (lint_workflow_security.py ALLOWLIST_CAP). Exceeding the cap signals the linter is wrong, not the content — tighten the heuristic, do not grow this list (autonomous-execution allowlist-growth antipattern). Each entry MUST cite why the finding is acceptable in `reason`.",
-  "findings": [
-    {
-      "workflow": "bench-drift.yml",
-      "rule": "mutable-action-tag",
-      "reason": "marocchino/sticky-pull-request-comment@v2 — sticky PR comment for bench drift reporting; no code execution, output-only action. SHA-pinning tracked in road-to-security-hardening P3."
-    },
-    {
-      "workflow": "skill-lint.yml",
-      "rule": "mutable-action-tag",
-      "reason": "marocchino/sticky-pull-request-comment@v2 — sticky PR comment for skill-lint reporting; same rationale as bench-drift.yml. SHA-pinning tracked in road-to-security-hardening P3."
-    },
-    {
-      "workflow": "cloud-release.yml",
-      "rule": "mutable-action-tag",
-      "reason": "softprops/action-gh-release@v2 — creates GitHub releases; runs only on push to main (not on pull_request_target), no untrusted input. SHA-pinning tracked in road-to-security-hardening P3."
-    }
-  ]
+  "_comment": "Legitimate workflow security findings. Hard-capped at 20 entries (lint_workflow_security.py ALLOWLIST_CAP). Exceeding the cap signals the linter is wrong, not the content \u2014 tighten the heuristic, do not grow this list (autonomous-execution allowlist-growth antipattern). Each entry MUST cite why the finding is acceptable in `reason`. EMPTIED 2026-08-22 (road-to-ci-supply-chain-integrity 0.2). It held three mutable-action-tag exemptions for marocchino/sticky-pull-request-comment and softprops/action-gh-release. All three are now pinned to full commit SHAs, so the findings they excused no longer exist and the entries matched nothing \u2014 lint_workflow_security reports \"0 allowlisted\". The roadmap step asked to REPAIR their `reason` text, each of which closed by naming an archived roadmap phase as the tracker for SHA-pinning; that phase is a git-discipline hook and its file mentions pinning nowhere, so the pointer dangled. Deleting a dead exemption is the honest repair \u2014 rewriting the reason on an entry that excuses nothing would have kept the allowlist looking load-bearing. The dangling pointer is also WHY the three survived: each one read as deferred rather than open. The full trace lives in the archived roadmap's completion note.",
+  "findings": []
 }
