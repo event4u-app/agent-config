@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 22,
     "later_roadmaps": 59,
-    "open_blockers": 59
+    "open_blockers": 57
   },
   "baseline_history": [
     {
@@ -825,6 +825,13 @@
       "later_roadmaps": 59,
       "open_blockers": 59,
       "why": "WALKED DOWN active 23 -> 22 and open_blockers 60 -> 59 by the close of road-to-host-capability-observations: the roadmap archives at zero open steps and its one blocker is resolved. The branch carried the same walk against its own pre-merge base of 24/64, so the numbers are restated here against main's already-walked 23/60 rather than left as a stale delta."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 59,
+      "open_blockers": 57,
+      "why": "open_blockers 59 -> 57 by a PARTIAL drain of road-to-council-seat-selection: both of its blockers (b-ladder-order-benchmark-spend, b-provider-model-listing) are RESOLVED, nothing carried. RE-STATED against the floor origin/main moved to while this branch was open, after an estate-budget merge conflict was resolved onto main's side rather than by carrying this branch's earlier figures. active_roadmaps is UNCHANGED and that is deliberate: Phase 1 of 3 shipped and the roadmap is intentionally NOT archived, so it stays on the active side. Booking an archive on a one-of-three-phases drain would be the dishonest half of a partial. Both resolutions were taken with NO council seat available (both seats 50/50 requests, 0 of 2 present, $0.00 spent) on Owner:maintainer blockers, so each is a single-decider decision recorded as one at the blocker; the ordering blocker went in its conservative direction - drop the claim - precisely because its option (a) needed vendor spend the exhausted quota could not supply."
     }
   ],
   "target": {
