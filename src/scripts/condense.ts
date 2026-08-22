@@ -264,7 +264,8 @@ export {
 } from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
-import { commandsWithheld, isExclusivelyPackageOnly, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { commandsWithheld, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
@@ -440,15 +441,6 @@ function _read_augment_rules_use_symlinks(): boolean {
     return false;
 }
 
-/**
- * Per-tool user-scope rule directory, for the scope-dedup below. Only tools
- * whose host reads a user-scope rules directory can have a redundant twin;
- * everything else has nothing to de-duplicate against.
- */
-const USER_SCOPE_RULE_DIRS: Readonly<Record<string, string>> = {
-    '.claude/rules': path.join('.claude', 'rules'),
-};
-
 function _read_projection_scope_dedup(): boolean {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const projection = data['projection'];
@@ -465,60 +457,6 @@ function _read_projection_scope_dedup(): boolean {
     return false;
 }
 
-/**
- * Rules whose user-scope twin is BYTE-IDENTICAL to the source, i.e. safe to
- * skip at project scope: the host still loads the same text, once instead of
- * twice, so nothing the model sees changes.
- *
- * Byte-identity is the whole safety argument and is not negotiable. Keying on
- * the filename alone would silently let a stale globally-installed copy win
- * whenever the two scopes hold different versions — which is the NORMAL state
- * while developing the package (measured: 110/110 shared filenames differing in
- * bytes). This is deliberately not the thin-projection mechanism: no rule
- * becomes trigger-gated, so the quality floor that disabled thin projection
- * does not apply here.
- */
-function _dedupable_rules(tool_dir: string, rules: readonly string[], userHome: string): Set<string> {
-    const relative = USER_SCOPE_RULE_DIRS[tool_dir];
-    if (relative === undefined) {
-        return new Set();
-    }
-    // A hostile or simply absent $HOME must make the dedup inert, not
-    // adventurous. In a container `$HOME` is often unset (so `homedir()` can
-    // resolve to `/`) or world-writable, and this function decides which rules
-    // to STOP emitting — reading an unexpected tree there is how a projection
-    // silently loses a rule. Council review of PR #1055 raised exactly this.
-    let userDirStat: fs.Stats;
-    const userDir = path.join(userHome, relative);
-    try {
-        userDirStat = fs.statSync(userDir);
-    } catch {
-        return new Set();
-    }
-    if (!userDirStat.isDirectory()) {
-        return new Set();
-    }
-    // World-writable user scope: anyone on the box could plant a byte-identical
-    // twin and thereby delete a rule from the project projection. Refuse.
-    if ((userDirStat.mode & 0o002) !== 0) {
-        _print(`  ⚠️  ${tool_dir}: user-scope rules dir is world-writable — scope-dedup skipped`);
-        return new Set();
-    }
-    const skip = new Set<string>();
-    for (const rule of rules) {
-        const twin = path.join(userDir, rule);
-        const source = path.join(MODULE_STATE.RULES_SOURCE, rule);
-        try {
-            if (!_isFile(twin) || !_isFile(source)) continue;
-            if (fs.readFileSync(twin).equals(fs.readFileSync(source))) {
-                skip.add(rule);
-            }
-        } catch {
-            // An unreadable twin is simply not de-duplicable — emit the project copy.
-        }
-    }
-    return skip;
-}
 
 function _lean_projection_mode(): string {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
@@ -1133,9 +1071,20 @@ function _scoped_rule_basenames(): string[] {
         // is its fourth consumer, after the router compiler, the dist writer, and
         // check_sync. Same predicate in all four; that is the point.
         .filter((p) => !skip_compile_disabled_rule(`rules/${path.basename(p)}`))
-        .filter((p) => !partitionActive(MODULE_STATE.PROJECT_ROOT) || isExclusivelyPackageOnly(p))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/** Adapter over {@link partitionRulesForDir}; that module carries the reasoning. */
+export function partition_rules_for_dir(
+    tool_dir: string,
+    rules: readonly string[],
+    user_home: string = process.env['HOME'] ?? os.homedir(),
+): string[] {
+    return partitionRulesForDir({
+        toolDir: tool_dir, rules, userHome: user_home, announce: _print,
+        projectRoot: MODULE_STATE.PROJECT_ROOT, rulesSource: MODULE_STATE.RULES_SOURCE,
+    });
 }
 
 /**
@@ -1162,8 +1111,12 @@ export function projected_rule_trees(
     const dedup_on = _read_projection_scope_dedup();
     const out: Record<string, string[]> = {};
     for (const tool_dir of Object.keys(_filter_tool_dirs(TOOL_DIRS))) {
-        const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
-        out[tool_dir] = rules.filter((r) => !skip.has(r));
+        const skip = dedup_on
+            ? dedupableRules({ toolDir: tool_dir, rules, userHome: user_home,
+                  rulesSource: MODULE_STATE.RULES_SOURCE, announce: _print })
+            : new Set<string>();
+        const kept = rules.filter((r) => !skip.has(r));
+        out[tool_dir] = partition_rules_for_dir(tool_dir, kept, user_home);
     }
     return out;
 }
@@ -1282,7 +1235,10 @@ export function generate_rule_symlinks(): number {
 }
 
 export function generate_windsurfrules(): number {
-    const rules = _scoped_rule_basenames();
+    // Windsurf's LEGACY single-file surface — same host, so the same evidence, keyed
+    // on `.windsurf/rules`. Without this line removing the per-run filter regressed
+    // it 13 → 113: the per-run filter had been covering it by accident.
+    const rules = partition_rules_for_dir('.windsurf/rules', _scoped_rule_basenames());
     const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
     for (const rule of rules) {
         const p = path.join(MODULE_STATE.RULES_SOURCE, rule);
@@ -1452,12 +1408,16 @@ function _clean_modern_dir(target_dir: string, valid_names: ReadonlySet<string>)
 export function generate_cursor_mdc_rules(): number {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+    let rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
+    // ADR-236 per-host partition (src/install/ruleLayerPartition.ts). Narrowing the
+    // list is a REMOVAL, because `_clean_modern_dir` below sweeps to `valid`.
+    const kept = new Set(partition_rules_for_dir('.cursor/rules', rules.map((r) => path.basename(r))));
+    rules = rules.filter((r) => kept.has(path.basename(r)));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1474,12 +1434,15 @@ export function generate_cursor_mdc_rules(): number {
 export function generate_windsurf_modern_rules(): number {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+    let rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
+    // ADR-236 per-host partition — same shape as the cursor emitter above.
+    const kept = new Set(partition_rules_for_dir('.windsurf/rules', rules.map((r) => path.basename(r))));
+    rules = rules.filter((r) => kept.has(path.basename(r)));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {
@@ -2521,10 +2484,17 @@ export function project_to_augment(): void {
     const current = new Set<string>();
     let written = 0;
     if (_exists(src_rules)) {
-        const rules = _iterdirSorted(src_rules)
-            .filter((p) => p.endsWith('.md') && _isFile(p))
-            .map((p) => path.basename(p))
-            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        // ADR-236 per-host partition, ahead of the `use_symlinks` branch so both
+        // writers narrow; the `existing` minus `current` sweep below makes it a
+        // removal. This emitter never had the scope or ADR-004 manual filters
+        // either — why its count is 15 and the symlink trees' 13. Pre-existing.
+        const rules = partition_rules_for_dir(
+            '.augment/rules',
+            _iterdirSorted(src_rules)
+                .filter((p) => p.endsWith('.md') && _isFile(p))
+                .map((p) => path.basename(p))
+                .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+        );
         for (const rule of rules) {
             const target = path.join(dst_rules, rule);
             if (_isSymlink(target) || _existsOrSymlink(target)) {

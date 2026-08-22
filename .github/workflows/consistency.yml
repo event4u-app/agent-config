@@ -200,6 +200,20 @@ jobs:
         # which runs it before anything regenerates.
         run: ./scripts-run src/scripts/check_rule_projection_integrity
 
+      - name: Rule layer partition — no rule is delivered from both layers
+        # road-to-single-rule-layer Phase 4. Companion to the step above, asking the
+        # opposite question: that gate audits the trees against the generator's own
+        # emit plan (completeness), so a plan that means to write a duplicate passes
+        # it by construction. This one asks whether what the plan writes is already
+        # delivered from the host's global layer.
+        #
+        # On this runner it compares nothing — the project trees are gitignored and
+        # no CI leg installs at user scope — and it says so rather than printing a
+        # success line. It has teeth in `task preflight` on a working checkout, and
+        # it runs here so a syntax or import regression in it is caught by CI rather
+        # than by the next maintainer's push.
+        run: ./scripts-run src/scripts/check_rule_layer_partition
+
       - name: Evidence artifacts — a newly added one declares its type
         # road-to-release-review-p0 Phase 2. Diff-scoped: it checks only files
         # ADDED under agents/evidence/ relative to the resolved base ref, so a

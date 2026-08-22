@@ -20,13 +20,47 @@ Every projection starts from `dist/agent-src/` (condensed) which is generated fr
 |---|---|---|---|---|
 | **Augment** (host) | `.augment/rules/*.md` (copies; symlink opt-in via `augment.rules_use_symlinks`) | `.augment/skills/<name>/SKILL.md` (symlink → `dist/agent-src/skills/`) | `.augment/commands/*.md` | full source frontmatter preserved |
 | **Claude** (Code + Desktop) | `.claude/rules/*.md` | `.claude/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` (commands rendered as skills) | full source frontmatter preserved |
-| **Cursor** | `.cursor/rules/*.mdc` + legacy `.md` symlinks (130 files = 65 × 2) | **not projected** | `.cursor/commands/*.md` | `description`, `globs`, `alwaysApply` only — `triggers`, `routes_to`, `tier`, `type` are **dropped** |
+| **Cursor** | `.cursor/rules/*.mdc` + `.md` symlinks — see § Cursor's two formats | **not projected** | `.cursor/commands/*.md` | `description`, `globs`, `alwaysApply` only — `triggers`, `routes_to`, `tier`, `type` are **dropped** |
 | **Windsurf** | `.windsurfrules` (single concatenated file) + `.windsurf/rules/*.md` (per-rule) | **not projected** | `.windsurf/workflows/*.md` | concatenated body; per-rule frontmatter only retained in `.windsurf/rules/`, not in the legacy `.windsurfrules` single-file |
 | **Cline** | `.clinerules/*.md` | **not projected** | **not projected** | full router frontmatter preserved (`type`, `tier`, `description`, `triggers`, `routes_to`) |
 | **Gemini** | `GEMINI.md` (single-file digest) | embedded inline | embedded inline | digest only — no per-rule frontmatter |
 | **Copilot** | `AGENTS.md` / `copilot-instructions.md` | embedded inline | embedded inline | digest only |
 
 `AGENTS.md` is the **tool-agnostic root pointer** and exists at workspace root regardless of which projections are enabled.
+
+
+## Cursor's two formats — what is established, and what is not
+
+`.cursor/rules/` receives the same rule twice: a `.mdc` file from
+`generate_cursor_mdc_rules` and a `.md` symlink from the shared `TOOL_DIRS`
+emitter. Both counts are now 13 rather than the 65 × 2 this table used to record,
+because the ADR-236 per-host partition narrowed the directory to the package-only
+set (road-to-single-rule-layer, 2026-08-22).
+
+**What this repository can show, from its own code:**
+
+- `check_host_loadability::check_cursor_rules` examines `.mdc` files ONLY —
+  `if (!name.endsWith('.mdc')) continue;` — and its docstring is written around
+  Cursor rejecting a file whose frontmatter fails to parse. So the gate that asks
+  "can the host load this" treats `.mdc` as the loadable format and does not read
+  `.md` at all.
+- `generate_cursor_mdc_rules` rewrites the frontmatter into Cursor's dialect
+  (`description`, `globs`, `alwaysApply`). The `.md` symlinks carry the full
+  agent-config frontmatter, which that dialect does not define.
+
+**What is NOT established, stated plainly rather than assumed either way:** no
+observation in this tree records whether a current Cursor build reads
+`.cursor/rules/*.md`, ignores it, or errors on it. The word "legacy" in the
+earlier version of this row was an unsourced label, not a measurement, and it is
+the reason the symlinks have neither been removed nor justified for as long as
+they have existed.
+
+**What would resolve it** — one observation, either direction, on a named Cursor
+version: place a rule as `.md` only and check whether the host applies it. That
+is a five-minute test for anyone with Cursor installed and it has not been run.
+Until it is, the symlinks stay: removing a delivery surface on the strength of a
+label is the same class of error as withholding a rule on another host's
+fingerprint, which is what that partition exists to prevent.
 
 ## Fidelity guarantees per axis
 

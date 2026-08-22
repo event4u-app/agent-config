@@ -741,6 +741,13 @@
       "later_roadmaps": 55,
       "open_blockers": 26,
       "why": "WALKED DOWN by 1 active and nothing else: road-to-condensed-link-repair is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). open_blockers unchanged at 26 and later_roadmaps unchanged at 55 \u2014 nothing was parked and no blocker moved, so the drawdown is the archival alone and is not padded with a closure this change did not earn."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 26,
+      "why": "NET ZERO, and the number is MEASURED against the merged tree rather than carried from either side. road-to-single-rule-layer was authored AND archived in this same change, so it never joins the active estate: it opened at 7 on this branch's base, origin/main independently walked the floor to 4 active and 28 open blockers while this branch was being built, and the merged tree measures both because the roadmap this branch added is in archive/. Re-anchored at the second merge per ADR-239: main's lineage is kept whole (100 entries) and only this branch's delta rides on top, measured from the tree rather than carried from either side. An earlier revision of this entry recorded 'GREW by 1 active' and was true only between the roadmap landing and its closure hours later \u2014 leaving it would have raised a floor nothing in the tree justifies, which is the silent-give-back this ratchet exists to refuse. What the change did to the estate is nothing; what it did to the repository is close a live ADR-236 regression on four of five hosts."
     }
   ],
   "target": {
