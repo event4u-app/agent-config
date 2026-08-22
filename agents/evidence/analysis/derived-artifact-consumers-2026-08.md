@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Consumer classification of the four candidate derived artifacts
 
 > Produced by `road-to-generated-artifacts-out-of-index` Phase 1.1 on
