@@ -1520,12 +1520,24 @@ function _clean_modern_dir(target_dir: string, valid_names: ReadonlySet<string>)
 export function generate_cursor_mdc_rules(): number {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+    let rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
+    // ADR-236 per-host partition. Applied to the BASENAMES and then mapped back,
+    // because `partition_rules_for_dir` speaks the same vocabulary as the emit plan
+    // and the gate. `_clean_modern_dir` below sweeps whatever is no longer in
+    // `valid`, so the narrowing removes the existing duplicates rather than only
+    // declining to add more — a filter without a sweep is not a partition.
+    const kept = new Set(
+        partition_rules_for_dir(
+            '.cursor/rules',
+            rules.map((r) => path.basename(r)),
+        ),
+    );
+    rules = rules.filter((r) => kept.has(path.basename(r)));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1542,12 +1554,21 @@ export function generate_cursor_mdc_rules(): number {
 export function generate_windsurf_modern_rules(): number {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+    let rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
+    // ADR-236 per-host partition, same shape as the cursor emitter above and for
+    // the same reason: `_clean_modern_dir` turns the narrowed set into a removal.
+    const kept = new Set(
+        partition_rules_for_dir(
+            '.windsurf/rules',
+            rules.map((r) => path.basename(r)),
+        ),
+    );
+    rules = rules.filter((r) => kept.has(path.basename(r)));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {
@@ -2589,10 +2610,26 @@ export function project_to_augment(): void {
     const current = new Set<string>();
     let written = 0;
     if (_exists(src_rules)) {
-        const rules = _iterdirSorted(src_rules)
-            .filter((p) => p.endsWith('.md') && _isFile(p))
-            .map((p) => path.basename(p))
-            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        // ADR-236 per-host partition. Applied on BOTH branches of
+        // `use_symlinks` below, because the flag selects a different writer and a
+        // narrowing on one of them would leave the other duplicating.
+        //
+        // This emitter reads `dist/agent-src/rules` directly rather than going
+        // through `_scoped_rule_basenames`, so it never had the scope or the
+        // ADR-004 manual filter either — which is why it wrote 118 files where the
+        // symlink trees wrote 113. The partition is what this step adds; the other
+        // two differences are pre-existing and left alone.
+        //
+        // The stale sweep below (`existing` minus `current`) turns the narrowed set
+        // into a removal, so an .augment/rules populated by an earlier version is
+        // reconciled in one run.
+        const rules = partition_rules_for_dir(
+            '.augment/rules',
+            _iterdirSorted(src_rules)
+                .filter((p) => p.endsWith('.md') && _isFile(p))
+                .map((p) => path.basename(p))
+                .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+        );
         for (const rule of rules) {
             const target = path.join(dst_rules, rule);
             if (_isSymlink(target) || _existsOrSymlink(target)) {

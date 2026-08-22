@@ -112,15 +112,15 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Phase 3 — Connect the three emitters that never asked
 
-- [ ] **3.1 Cursor `.mdc` emitter.** Consume the per-host plan from 2.2 and add
+- [x] **3.1 Cursor `.mdc` emitter.** Consume the per-host plan from 2.2 and add
       the stale sweep — a filter that only declines to write leaves the existing
       100 standing, which is the failure `personaPartition` names as "not a
       partition".
       verify: fresh generate in a clean worktree → `.cursor/rules` global-only = 0;
       then re-run over a directory pre-populated with all 113 → also 0.
-- [ ] **3.2 Windsurf emitter.** Same, against `~/.codeium/windsurf/rules`.
+- [x] **3.2 Windsurf emitter.** Same, against `~/.codeium/windsurf/rules`.
       verify: as 3.1, `.windsurf/rules` global-only = 0 from both starting states.
-- [ ] **3.3 Augment emitter.** Same, on both its branches — `rules_use_symlinks`
+- [x] **3.3 Augment emitter.** Same, on both its branches — `rules_use_symlinks`
       true and false — since the flag selects a different writer.
       verify: as 3.1 for each branch; `.augment/rules` global-only = 0.
 
