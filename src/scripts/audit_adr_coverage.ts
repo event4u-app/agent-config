@@ -28,7 +28,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { readAdrFrontmatterScalars } from './_lib/adr_frontmatter.js';
+import { readAdrAxisCells, readAdrFrontmatterScalars } from './_lib/adr_frontmatter.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -279,8 +279,13 @@ export function scan_area(area: string): [AdrEntry[], string[]] {
             errs.push(`${area}/${base}: filename does not match NNNN-<slug>.md`);
             continue;
         }
-        const fm = read_adr_meta(fs.readFileSync(p, 'utf-8'));
-        adrs.push({ num: m[1] as string, slug: m[2] as string, path: base, ...fm });
+        const text = fs.readFileSync(p, 'utf-8');
+        const fm = read_adr_meta(text);
+        // Read apart from `fm`, for the same reason the index does: the two
+        // axes are nested, so the scalar reader keeps them out of its map and
+        // spreading it could never produce these cells.
+        const axes = readAdrAxisCells(text);
+        adrs.push({ num: m[1] as string, slug: m[2] as string, path: base, ...fm, ...axes });
     }
     // Gap check.
     const nums = adrs.map((a) => parseInt(a.num, 10));
@@ -322,7 +327,11 @@ export function render_area_readme(area: string, meta: AreaMeta, adrs: AdrEntry[
     } else {
         lines.push(`Contract: _not yet published_ (\`${repoRel}\`).`);
     }
-    lines.push('', '| # | Title | Status | Date | Supersedes |', '|---|---|---|---|---|');
+    lines.push(
+        '',
+        '| # | Title | Status | Date | Provenance | Evidence | Supersedes |',
+        '|---|---|---|---|---|---|---|',
+    );
     for (const a of adrs) {
         // a.get("decision", a["slug"]).replace("-", " ").title()
         const decision = a['decision'] !== undefined ? a['decision'] : a.slug;
@@ -330,11 +339,12 @@ export function render_area_readme(area: string, meta: AreaMeta, adrs: AdrEntry[
         lines.push(
             `| [${a.num}](${a.path}) | ${title} | ` +
                 `${a['status'] ?? '—'} | ${a['date'] ?? '—'} | ` +
+                `${a['provenance_kind'] ?? '—'} | ${a['evidence_grade'] ?? '—'} | ` +
                 `${a['supersedes'] ?? '—'} |`,
         );
     }
     if (adrs.length === 0) {
-        lines.push('| _none yet_ | — | — | — | — |');
+        lines.push('| _none yet_ | — | — | — | — | — | — |');
     }
     return lines.join('\n') + '\n';
 }
@@ -411,9 +421,26 @@ export function cmd_check(): number {
             process.stderr.write(`❌ ${e}\n`);
             hard += 1;
         }
-        if (adrs.length > 0 && !_exists(path.join(ADR_ROOT, area, 'README.md'))) {
+        const readmePath = path.join(ADR_ROOT, area, 'README.md');
+        if (adrs.length > 0 && !_exists(readmePath)) {
             process.stderr.write(`❌ ${area}/: README.md missing\n`);
             hard += 1;
+        } else if (_exists(readmePath)) {
+            // Existence was the whole check until 2026-08-22, and the six
+            // committed READMEs proved what that costs: every one of them had
+            // been generated before the shared frontmatter reader landed, so
+            // they rendered `—` for `status` and `date` on ADRs that carry
+            // both — stale for months against a gate reporting zero failures.
+            // A generated file with no freshness gate is a file nobody
+            // regenerates.
+            const rendered = render_area_readme(area, meta, adrs);
+            if (fs.readFileSync(readmePath, 'utf-8') !== rendered) {
+                process.stderr.write(
+                    `❌ ${area}/README.md is stale — regenerate with ` +
+                        `\`audit_adr_coverage --regen-area-readme ${area}\`\n`,
+                );
+                hard += 1;
+            }
         }
         if (adrs.length === 0) {
             process.stderr.write(`⚠️  ${area}/: no bootstrap ADR yet (contract: ${meta.contract})\n`);

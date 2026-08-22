@@ -552,7 +552,7 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       "enforced at cite time" stays a claim.
       verify: check output on an accepted agentic E0 record shows the block;
       the new workflow step runs it; `check_gate_coverage` green on its row.
-- [ ] **2.4 Index and README columns.** `regenerate_index.ts` gains
+- [x] **2.4 Index and README columns.** `regenerate_index.ts` gains
       `Provenance` and `Evidence` columns (`HEAD` `:34-36`, `row()`
       `:189-198`); `audit_adr_coverage.ts` `render_area_readme()` `:239`
       follows for the per-area tables. Both are byte-compared by
@@ -560,6 +560,30 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       READMEs ship in the same commit.
       verify: `regenerate_index --check` and `audit_adr_coverage --check`
       both green after the regen commit.
+
+      **LANDED 2026-08-22.** `HEAD` and `row()` in `regenerate_index.ts` carry
+      `Provenance` and `Evidence` between `Date` and `Supersedes`;
+      `render_area_readme()` and `scan_area()` in `audit_adr_coverage.ts` follow
+      for the six per-area tables. Neither renderer re-implements the read:
+      both call `readAdrAxisCells`, which already existed with **zero
+      consumers** and owns the rule that `discovery` rides inside the evidence
+      cell rather than in a third column. Regenerated `docs/decisions/INDEX.md`
+      and all six area READMEs ship in the same commit; both `--check` gates are
+      green.
+      **The step's own premise was false, and fixing it is the reason this step
+      is larger than two columns.** "Both are byte-compared by `--check` gates"
+      held for `regenerate_index` and NOT for `audit_adr_coverage`, whose
+      `cmd_check` only ever asserted that a README *exists*. The six committed
+      READMEs are the proof: every one of them still rendered `—` for `status`
+      and `date` on ADRs that carry both, because they were generated before the
+      shared frontmatter reader landed and nothing has regenerated them since —
+      stale for months against a gate reporting zero failures. `cmd_check` now
+      byte-compares each area README against `render_area_readme` and names the
+      regen command; sensitivity verified by appending one line to
+      `docs/adrs/cost/README.md` (1 hard fail) and restoring it (0).
+      Most of the corpus renders `—` in both new columns and is expected to:
+      three ADRs carry the axes, the backfill is AC-9's excluded work, and `—`
+      means *not assessed*, never *assessed as weak*.
 - [x] **2.5 ADR admission gate — fewer ADRs.** `decision-record` and
       `adr-create` classify before creating: architecturally significant?
       hard or costly to reverse, or broadly constraining? consumer / API /
