@@ -1,7 +1,6 @@
 ---
-estate_offset_exempt: "Authored by the 2026-08-22 inbox drain, which consumed 25 dropped artefacts carrying 53 pre-written roadmap drafts in one pass. It ships status: draft, so it is not active work and moves none of the three gated metrics; there is nothing yet to offset. The offset alternatives all cost more than this line: no active roadmap sits at zero open steps, so archiving buys nothing; parking these in later/ is what the estate register calls burial and would hide twenty verified defect sets behind a disposition nobody reviews; and terminating another session's roadmap would be a judgement about their work rather than mine. The blockers these drafts carry will charge this ratchet on the day the maintainer flips one to ready, which is the point at which an offset is a real decision. Charged as one reviewable line, per this gate's own instruction."
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -52,14 +51,16 @@ Re-verified against the tree on 2026-08-22.
   'ignore everything above' passes this check. No linter reads intent."*
   (`src/scripts/lint_override_kernel_guard.ts:25-27`).
 
-**This roadmap has no blockers.** Nothing here waits on host access, on a
-maintainer-only capture, on another roadmap, or on a decision that has not been
-made. Phase 1 is a fixture and a test; Phase 2 runs on the same paired-session
-machinery the package already uses for every other published number; Phase 3 is
-a read-only report line. That is the reason to sequence it first in any batch it
-lands in — it is the highest confidence-per-effort item available, and it
-unblocks nothing else, so it can also be dropped without cost if a batch runs
-short.
+**This roadmap carries one blocker, and it is a spend decision.** Nothing here
+waits on host access, on a maintainer-only capture, or on another roadmap. What
+it does wait on is Step 2.3, which runs paired agent sessions — model calls that
+bill real tokens — so the Phase 2 number cannot be produced without a budget
+someone names. Phases 1 and 3 are unaffected: Phase 1 is a fixture and a test,
+Phase 3 is a read-only report line, and Step 2.1's pre-registration is written
+before any run and therefore before any spend. That split is why this is still a
+good candidate to sequence early — two of its three phases are the highest
+confidence-per-effort work available, and it unblocks nothing else, so the
+unfunded half can be deferred without cost if a batch runs short.
 
 ## Phase 1 — Reachability: prove the override is delivered, discovered and named
 
@@ -183,6 +184,38 @@ two is how a delivery check ends up being quoted as an efficacy claim.
       verify: the emitted line carries no honoured / applied / enforced
       vocabulary — `agent-config doctor 2>&1 | grep -iE 'override.*(enforced|applied|honoured|honored)'`
       returns nothing.
+
+## Blockers
+
+### blocker: b-paired-session-spend
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 2 — consent-once (paired agent sessions bill real model tokens)
+- **Blocks:** Phase 2 steps 2.3, 2.4 and 2.5. Step 2.1 is the pre-registration
+  and Step 2.2 picks the observable; both are writing, not running, and proceed
+  without spend — deliberately, because a pre-registration written after the
+  budget conversation is a pre-registration written after someone has an
+  expectation. Phases 1 and 3 are unaffected.
+- **What to do:** pick exactly one — (a) name a budget for the paired run,
+  sized against the pair count Step 2.1 pre-registers, and run it so the
+  efficacy question gets an answer with an honesty label either way; or (b)
+  defer the run, mark steps 2.3–2.5 deferred in the same change, and ship
+  Phase 1 and Phase 3 on their own — the reader then gets a delivery claim that
+  is explicitly labelled as delivery-only, with the efficacy question recorded
+  as unmeasured rather than answered.
+- **Recommendation:** **(b) — defer and label.** Phase 1 and Phase 3 already
+  close the defect that a reachability check reads as an efficacy claim, which
+  is the highest-value part of this roadmap and costs no tokens. The measurement
+  is n=1 against the single real override in the tree, so buying it now buys a
+  result about that one file; the spend is better placed once a second override
+  exists to widen the population.
+- **If you do nothing:** Phase 2 stalls with a pre-registration and no run,
+  which is the worst of the three states — a committed bar, no number against
+  it, and nothing in the tree saying the efficacy question was left open on
+  purpose rather than forgotten.
+- **Resolved when:** one of (a) or (b) is recorded at this blocker, and — for
+  (b) — steps 2.3–2.5 are marked deferred and the Phase 3 report line states
+  that efficacy is unmeasured.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
