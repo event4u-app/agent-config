@@ -391,10 +391,19 @@ describe("payload opt-in — end to end through the dispatcher", () => {
     expect(declared["payload_stubs"]).toBe(1);
     expect(declared["payload_bodies"]).toBe("result");
 
+    // summary.json is schema 2 since P3 of `b-stop-async-split-prerequisites`:
+    // a capped LIST of per-invocation rollups, because one path per session lost
+    // a whole rollup whenever two dispatches overlapped. One dispatch ran here,
+    // so there is exactly one entry — asserted, so a regression that appends
+    // twice or drops the list is visible from this test.
     const summary = JSON.parse(
       fs.readFileSync(path.join(dispatcherDir, "summary.json"), "utf8"),
     ) as Record<string, unknown>;
-    expect(summary["payload_stubs_served"]).toBe(3);
+    expect(summary["schema_version"]).toBe(2);
+    const invocations = summary["invocations"] as Record<string, unknown>[];
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]!["payload_stubs_served"]).toBe(3);
+    expect(typeof invocations[0]!["invocation"]).toBe("string");
   });
 });
 

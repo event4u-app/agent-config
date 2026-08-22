@@ -2678,6 +2678,20 @@
       "status": null
     },
     {
+      "slug": "road-to-drain-commands",
+      "title": "Road to drain commands",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 37,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
       "slug": "road-to-ecosystem-harvest-bug-security-rigor",
       "title": "Roadmap: Ecosystem-Harvest — Bug & Security Rigor",
       "disposition": "completed",

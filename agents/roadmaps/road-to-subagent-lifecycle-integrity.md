@@ -335,7 +335,7 @@ dead (V2) and production evidence exists.
       depth 1 with `"assumed-root"` — absence recorded as absence, since
       Phase 0 Steps 2/4 are what will replace the assumption with an observed
       payload shape. *Verified:* 16 tests in `tests/hooks/subagent_ledger.test.ts`.
-- [ ] **Step 4:** Publish the baseline after ≥20 real dispatches: envelope
+- [x] **Step 4:** Publish the baseline after ≥20 real dispatches: envelope
       return rate, parse-failure rate, duration distribution, nested-spawn
       count. This number replaces the 0.27% model-carried capture as the
       instrument (`archive/road-to-orchestrator-first-execution.md:299-305`).
@@ -397,9 +397,50 @@ dead (V2) and production evidence exists.
         at 5 m, 17 at 5 m + 15 m, 2 at all three arms. Phase 3 Step 3's shadow
         is not guarding a hypothetical.
 
-      **This step stays open on purpose.** One of its four named columns has no
-      reading yet, and a `[x]` would claim a publication that does not exist.
-      What remains is a measurement window, not a decision or a build.
+      **CLOSED 2026-08-22 — the fourth column now has a reading.** Full
+      numbers, the window's anchor and the stated limits:
+      [`subagent-envelope-return-baseline.md`](../evidence/investigations/subagent-envelope-return-baseline.md).
+      Window 2026-08-21T01:23:41Z → 2026-08-22T03:01:39Z (~25.6 h), 10 sessions,
+      **74 starts / 1,296 stops** — the ≥20 bar cleared on starts and exceeded by
+      three orders of magnitude on stops.
+      - **envelope return rate — 0.00 %.** Zero `ok` in 1,296.
+      - parse-failure rate — **0.39 %** (5 of 1,296), every one carrying
+        `envelope_error_count: 5`. The 2026-08-20 window read 0.50 % with all 17
+        carrying the same 5, so two independent windows agree: one recurring
+        answer shape, not independent malformations.
+      - duration — p50 **655 s**, p90 **1,212 s**, max **2,179 s** (36.3 min),
+        over the **64** stops (4.9 %) that carry one. Stated with its denominator;
+        1,232 stops have no matched start.
+      - nested-spawn count — **0** of 74 starts.
+
+      **Why the 0 % is a measurement and not the artefact `(a)` feared.** The
+      four-way split is what makes it readable: `no_message` is **0**, so
+      something came back every single time; `no_envelope` is **1,291 (99.61 %)**,
+      so what came back was prose; `ok` is **0**. The channel therefore works and
+      is *universally unused* — the envelope contract honoured 0 of 1,296 times
+      while the prose channel is honoured 1,296 of 1,296. That is the number
+      replacing the 0.27 % model-carried capture, and it points the same way but
+      harder.
+
+      **One correction the run made on itself, recorded because it would have
+      shipped a wrong denominator.** The first pass anchored the window on the
+      earliest record carrying any post-split value and got 08-13 → 1,317 stops
+      across 23 sessions. `fail` **predates the split** — it existed in the
+      retired classifier — so those rows are old-classifier output and folding
+      them in inflates both the denominator and the parse-failure count. The
+      correct anchor is the first `no_envelope`, a value only the new classifier
+      can emit.
+
+      **A fifth number, reproduced rather than newly claimed:**
+      `stop_loss_arms_exceeded` fired on **46 of 1,296 (3.55 %)**, against 4.1 %
+      (138 of 3,400) on 2026-08-20. Phase 3 Step 3's shadow is guarding something
+      real at a rate that has now held across two windows.
+
+      **What this unblocks, and what it does not.** Phase 2 Step 2 was gated on
+      "the Phase-1 baseline this step does not [provide]" — that gate is now
+      lifted, and the three-way verdict split it needs already shipped with the
+      2026-08-20 change. Step 2 remains open as a **build**, not as a
+      measurement. Phase 4 Step 1's three conditions are untouched by this.
 
 **Falsifier.** Envelope return rate ≥95% and no dispatch exceeds 2× its
 tier budget-equivalent duration over the window → symptoms (2)/(3) are not

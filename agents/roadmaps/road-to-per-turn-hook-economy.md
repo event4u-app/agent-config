@@ -14,6 +14,107 @@ execution:
 
 ---
 
+## Outcome — read this before the phases
+
+**Archived does not mean achieved.** This section exists so nobody reads a
+closed roadmap as a solved problem. All six open blockers were decided on
+2026-08-20 by an AI council (2/2 quorum, anthropic + openai; record:
+`agents/evidence/council/drain-blocker-dispositions-b.md`), every one of them
+disposition **D — decide now**. Four of the six were split verdicts and every
+dissent is recorded at its blocker and inline at the step it touches.
+
+| Phase | State | What that means |
+|---|---|---|
+| **0** — falsify or localise | **transferred** | 0.1 / 0.2 / 0.3 need the AFFECTED MACHINE at the version installed on it when the slowdown was reported, and nobody here has either. Moved verbatim to [`stubs/road-to-per-turn-hook-economy-host-repro.md`](stubs/road-to-per-turn-hook-economy-host-repro.md) with a named producer (the reporter), a three-reading probe, and every reading measured here as the wrong-machine control. 0.0 already RAN here and stays `[x]` — its result (the mixed-trigger flip is not live locally) is why these three are a transfer rather than a cancellation. |
+| **1** — serialize once | **satisfied, null result** | 1.2 measured it: ten of eleven stringifies removed, latency unmoved. 1.1 stays `[-]`. The null stands. |
+| **2** — payload opt-in | **satisfied, null result + two spin-offs** | 2.1/2.2 landed and moved nothing either. What the phase's AUDIT produced outlived it: `ship-diff-volume`'s dead unwrap (fixed earlier), `injection-scan`'s accidental one (fixed here), and the read+parse attribution now measured. |
+| **3** — spawns off the hot path | **satisfied** | 3.1 and 3.2 landed. Unchanged by this pass. |
+| **4** — register the number | **narrowed** | 4.1 registered the composite; 4.3 refreshed the census. 4.2 stays `[~]` **by decision**: the bar is observe-only for one release with a recorded arming procedure and precondition. There is no ceiling on the per-turn number today, and that is deliberate rather than forgotten. |
+| **5** — host-native prefiltering | **abandoned (5.1) + narrowed (5.3)** | 5.1's zero-dispatch goal is abandoned outright — the guard tool filter is declined. 5.3 stays `[~]`: the sequence is fixed, P3 landed, and the split itself does not ship. |
+
+### What actually landed in the closing change
+
+- **P3 of the async-split prerequisites**, in full, and it is the largest piece:
+  three state files that were unsafe under concurrent dispatch are now safe.
+  `dispatch-issues.jsonl` (was unlocked, corruption-capable — 3 of 96 lines
+  survived pre-fix), `rule-trips.json` (read outside the lock — 3 of 24
+  increments survived), `summary.json` (single path, lossy overwrite — 1 of 8
+  rollups survived). Numbers measured by restoring each pre-fix writer.
+- **The stdin read-failure deny**, option (c): a failed read on a block-capable
+  slot carrying a fail-closed blocking guard now refuses instead of allowing.
+- **`injection-scan`'s output contract**, written down first, then the unwrap
+  narrowed against it, with 14 fixtures and one existing test rewritten because
+  it asserted the defect.
+- **The transport-isolation cell**, which produced the number the roadmap had
+  been assuming: ~70 % of the large-payload delta is the dispatcher's own read
+  and parse.
+- **The composite's arming procedure**, recorded on the row itself.
+- **The Phase 0 transfer**, which is what lets this roadmap close at all: three
+  steps that needed a host this run is not are moved to a stub under an explicit
+  `transferred` outcome state, rather than being cancelled (which would drop a
+  live question) or left open (which would park the whole roadmap on one
+  unavailable machine). The § 3 finding — that the likelier cause is the
+  activation flip in `road-to-mixed-trigger-activation-cost`, not anything in this
+  file — travels INTO the stub, so it does not die with this document.
+- **A merge convergence that the clean auto-merge hid.** `origin/main`
+  (`bcbb0380b`) changed the read-modify-write lock primitive under this branch
+  while P3 was being written: FILE-keyed instead of directory-keyed, on a
+  measured argument, and a three-state `written`/`skipped`/`failed` return in
+  place of a boolean. The merge produced no conflict, which is precisely the
+  case where a clean merge is not evidence of compatibility —
+  `update_text_under_lock` still held the directory lock and still returned a
+  boolean. Converged, with the caller comparing the return LITERAL rather than
+  testing falsiness, because every member of that union is truthy. P3's
+  regression was then re-verified against the merged primitive instead of being
+  trusted from the pre-merge run.
+
+### What is still open, and where it goes
+
+Nothing here is closed by the archival, and none of it has a home yet:
+
+- ~~**P4**~~ — **CLOSED ON THE TRUNK, not here.** `bcbb0380b`
+  ("fix(state): make the lock primitive honest about scope, staleness and
+  outcome") replaced the reclaim-after-waiting-5000 ms behaviour with a decision
+  read from the COMPANION's own mtime against a 30 s staleness bound, added a
+  non-blocking mode, and split the return into `written` / `skipped` / `failed`.
+  Verified against the merged tree rather than assumed from the subject line.
+  Two consequences worth recording: the P4 half of the adopted sequence is
+  already satisfied, so the remaining prerequisite chain is **P1/P2 → P5 → split**;
+  and that same commit moved the read-modify-write lock to a FILE key, which this
+  change's own `update_text_under_lock` had to converge onto after a CLEAN
+  auto-merge that hid the divergence.
+- **P1** — `build_claude_hook_matrix` returns ONE command per native event and
+  `claude_hook_matrix_parity.test.ts` asserts it; a sync/async split needs two
+  `Stop` entries, i.e. a deliberate change to the type that reaches every claude
+  consumer's settings.
+- **P2** — `turn_end_gate_hook` reads state whose producer is async-capable, so
+  the split puts a refusal surface's input behind a race whose losing branch
+  makes the gate ALLOW.
+- **P5** — the step's `verify:` is a claim about what the HOST does with
+  `async: true`, and is not observable from this repository.
+- **Phase 0's three steps** — transferred, not merely blocked: [`stubs/road-to-per-turn-hook-economy-host-repro.md`](stubs/road-to-per-turn-hook-economy-host-repro.md)
+  holds them with the criteria verbatim, the complete moved list, and a named
+  producer plus probe. Promotion can be decided by ONE reading —
+  `AGENT_CONFIG_HOOKS_ISOLATED=1` anywhere in that environment closes the whole
+  report and retires 0.2 unrun.
+- **The per-concern `<concern>.json` feedback files** carry the same
+  lossy-overwrite property schema-1 `summary.json` had. Left alone because
+  `hooks_doctor._latest_feedback` resolves them by that exact path; noted in
+  `docs/contracts/hook-architecture-v1.md`.
+- **`injection_scan_hook.main()`** reads `cwd` / `project_root` off the envelope
+  ROOT to find `.agent-settings.yml`, where a dispatcher envelope carries
+  `workspace_root` at the root and `cwd` under `payload`. Benign today only
+  because the dispatcher's own cwd is the workspace.
+
+### The defect-pattern count, re-run
+
+`b-payload-mis-nested-readers` reported **2 of 47** concerns reading tool payload
+keys off the envelope root, and it took three predicates to find the second. Both
+are now fixed, and the same three predicates re-run over the current tree report
+**0 of 47**. Five files still match the crude "never mentions `payload` but names
+a payload key" predicate and all five are false positives — prose mentions, or a
+read from a transcript entry rather than from the hook envelope.
+
 ## 0. The defect, stated first
 
 The hook suite carries a **structural per-turn latency tax that no registered
@@ -123,13 +224,17 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `road-to-mixed-trigger-activation-cost` owns is the conversion of those 17,
       and none of it has happened. The one-liner refutation this step carries is
       unchanged and was not re-tested, because the census supersedes it.
-- [ ] **0.1** On the affected machine, record: the prior installed version
+- [-] **0.1** On the affected machine, record: the prior installed version
       (lockfile history), the node version, the OS, and whether
       `AGENT_CONFIG_HOOKS_ISOLATED=1` is set anywhere — env, shell profile, or CI.
       That flag alone restores the retired ~1.6 s/event class, which would explain
       the entire report by itself.
       `verify:` a one-page note per machine with all four values filled in.
-- [ ] **0.2** Run the § 2 matrix on that machine at the installed version and at
+      **Cancelled here 2026-08-20 → transferred, not dropped:** all four values are
+      properties of the AFFECTED machine, so recording this one answers a different
+      question. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
+- [-] **0.2** Run the § 2 matrix on that machine at the installed version and at
       11.0.0. Decidable outcome: a per-event p50 delta above a declared threshold
       across two or more slots means the regression is confirmed and localisable;
       otherwise the latency claim closes as environment or workload, and the
@@ -145,11 +250,20 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       one container's milliseconds as a repo fact — but a comparison needs the
       same fixtures on both arms, and those are specifiable without claiming a
       number.
-- [ ] **0.3** Read the turn-end-gate refusal state for the affected sessions and
+      **Cancelled here 2026-08-20 → transferred, not dropped:** the second arm is "the
+      version installed on that machine", which this tree cannot supply, and a one-armed
+      matrix is not this comparison. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
+- [-] **0.3** Read the turn-end-gate refusal state for the affected sessions and
       count refusals per session. A median above one refusal per session means the
       perceived slowness is extra model turns rather than hook wall clock.
       `verify:` the per-session counts, with the split before and after the local
       12.1 install date.
+      **Cancelled here 2026-08-20 → transferred, not dropped:** "the affected sessions"
+      are on that machine — this workspace holds zero refusal records, and the one
+      `verify-before-complete.json` present is a May smoke fixture whose schema carries
+      no refusal counter at all. Moved verbatim to `agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md`;
+      disposition **B — transfer**, parent outcome state **transferred**.
 - [x] **0.4** Same-runner path split, so 0.2 does not have to measure two things
       at once. CI run **32103306843** (job 95607853943, `ubuntu-latest`) measures
       the bundle path and the cli path back to back inside ONE job:
@@ -237,6 +351,21 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 > cheapen the events that remain. Because Phase 5 changes the denominator every
 > later benchmark divides by, it lands first and pre-registers its own A/B.
 
+<!-- decision 2026-08-20: b-guard-tool-partition resolved D, option (c) —
+     DECLINE the claude-only guard tool filter. Council 2/2 SPLIT on how narrow
+     the decline should be: openai (c) outright decline, anthropic (b) partition
+     the advisory concerns and leave the guards unscoped. Both seats refuse to
+     ship the partition; the narrower was adopted. DISSENT (anthropic, (b)):
+     "Finding 2 showed unscoped group buys nothing. Keeps guards safe while
+     allowing advisory optimization. Phase 4 measurement is real lever." The
+     dissent is preserved because it is the same finding this step recorded —
+     an unscoped group in front of the guards still fires on every call — so the
+     disagreement was about which non-shipping answer to record, never about
+     shipping. Reasoning for (c): a silently-skippable filter in front of the two
+     guards that exist because a bypass must be impossible, for a gain that is
+     real but unmeasured. The ZERO-DISPATCH GOAL is abandoned; the Phase 4
+     measurement and the shipped in-process `tools:` filter are retained.
+     Reopen only if Phase 4's composite exceeds its bar. -->
 - [-] **5.1** Split the monolithic per-event registration into matcher groups:
       pre/post concerns that only care about one tool family get a `matcher`, and
       command-shaped guards additionally get an `if` prefilter. The dispatcher
@@ -324,6 +453,23 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `stop` or `session_start` handler silently disables that handler
       completely. It fails open only on an unparseable **Bash** command, which is
       a narrower guarantee than the roadmap's unqualified wording implied.
+<!-- decision 2026-08-20: b-stop-async-split-prerequisites resolved D, option
+     (a) — sequence P3 -> P4 -> combined P1/P2 -> P5 live host check -> split. No
+     split ships before all three P3 files pass concurrency regression tests.
+     Council 2/2 SPLIT: openai (a) sequence, anthropic (c) cancel 5.3 outright
+     the way 5.1 was cancelled. (a) adopted because "sequencing preserves the
+     outcome; cancelling discards it". DISSENT (anthropic, (c)): "Async split
+     requires five prerequisites, three with corruption/safety concerns. Phase 4
+     measurement exists as alternative lever. 5.1 cancellation precedent." —
+     recorded rather than dropped, and it remains the fallback if P1/P2 turn out
+     to cost more than the turn-end wall clock they buy. P3 LANDED in this
+     change (dispatch-issues.jsonl locked, rule-trips.json read moved inside the
+     lock, summary.json to a capped per-invocation list), because it is a live
+     data-integrity defect that does not need the split to matter. P4 turned out
+     to be closed on the trunk by bcbb0380b (verified against the merged tree,
+     not inferred from the subject line), so the remaining chain is P1/P2 -> P5
+     -> split. P1, P2 and P5 remain open and are carried in ## Outcome. This step
+     stays [~]: the split itself does not ship here. -->
 - [~] **5.3** Move the non-gating Stop concerns to the host's async handler form,
       so turn-end wall clock carries only the concerns that can actually refuse.
       `end-review-nudge` needs its stdout to reach the model, so it stays
@@ -525,6 +671,35 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
   published there and in `_run_concern_inproc`'s header.
 
 ### Phase 2 — Payload opt-in per concern (D-2, second lever)
+
+<!-- decision 2026-08-20: b-payload-read-parse-dominates resolved D, option (a) —
+     add the same-fixture read-and-exit cell. Council 2/2 SPLIT: openai (a) add
+     the isolated cell, anthropic C (accept the Phase-2 null as terminal per
+     Rule 4). (a) adopted because "the null falsified the earlier attribution; it
+     did not show the remaining latency unavoidable". DISSENT (anthropic, C):
+     "Measured null — instrument ran, found dispatcher's own read+parse
+     dominates. Two independent phases converged. Terminal per Rule 4." What the
+     cell then measured makes the dissent mostly right and not entirely: ~70% of
+     the large-payload delta IS the dispatcher's own read + parse (69% and 74%
+     over two rounds at --runs 50, darwin-arm64, one machine), leaving ~30%
+     downstream of the read with an owner rather than a shrug. Evidence:
+     agents/evidence/analysis/hook-payload-transport-share.md. Shipped:
+     `dispatch_hook --read-exit` and `bench_hook_latency --read-exit-cell`, both
+     measurement-only. Phase 2's own steps are unchanged — this is the finding
+     the phase's null produced, not a re-opening of the phase.
+
+     decision 2026-08-20: b-injection-scan-unwrap-security resolved D, option (a)
+     — write the output-envelope contract and its fixtures FIRST, then narrow
+     `_tool_output`. Council 2/2 SPLIT: openai D (a), anthropic B (transfer to a
+     maintainer stub pending contract + fixture work). (a) adopted because it IS
+     the "establish the contract first" the dissent asks for and is executable
+     now. DISSENT (anthropic, B): "Security surface requiring contract fixtures
+     before any narrowing change. Current fallback works (albeit broad). Too
+     risky without established valid/missing/malformed shapes." — honoured rather
+     than overridden: the contract is written in the hook header before the code
+     change, and the 14 fixtures are the deliverable. This is the half of
+     b-payload-mis-nested-readers that option (b) deliberately did not ship, so
+     it closes the pair Phase 2's audit opened. -->
 
 - [x] **2.1** Add a manifest field declaring which concerns need the tool-response
       body; absent means the envelope arrives **without** the result and input
@@ -809,6 +984,22 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `tests/scripts/bench_hook_latency_composite.test.ts` (9 cases).
 - [~] **4.2** The bar itself is the maintainer's to pre-register, not this
       document's. Blocked on `b-per-turn-composite-bar`.
+      <!-- decision 2026-08-20: b-per-turn-composite-bar resolved D, option (b) —
+      observe-only for one release, then derive an absolute ceiling plus a
+      pathology net from the observed distribution. Council 2/2, both seats
+      convergent, NO dissent. Reasoning: the source draft's p50 <= 1.5 s has no
+      empirical prior in this tree, and an invented bar on a metric that
+      multiplies two slot readings by ten is the flappiest gate available (risk
+      5). What landed is the half that was missing — the row already shipped
+      observe-only with step 4.1, so nothing said WHICH release the window
+      started in or what "then derive" requires; hook-latency-budget.json now
+      carries observe_only_decision, observe_only_since_version 14.6.0, a
+      four-step arming_procedure and an arming_precondition of >= 10 CI readings
+      from >= 2 runner sessions. The precondition is a STATED minimum, not a
+      derived one, and its evidence is this same PR: the transport cell read
+      44-157% at n=12 and 69-74% at n=50. This step stays [~] deliberately —
+      the bar is not registered, by decision, and calling it done would claim a
+      ceiling that does not exist. -->
 - [x] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
       same PR, so the cap is measured against the live chain rather than an older
       one.
@@ -836,6 +1027,21 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 ## Findings the phases produced
 
 ### F-1 — a measured guard bypass on large payloads, found by 1.2's own instrument
+
+<!-- decision 2026-08-20: b-stdin-read-failure-policy resolved D, option (c) —
+     on a read failure, DENY only when the slot is block-capable AND at least one
+     selected concern is both blocking and fail_closed: true. Council 2/2, both
+     seats convergent on (c), NO dissent. Reasoning: a block-capable slot must
+     preserve fail-closed semantics, while denying on an advisory event adds
+     availability risk with no enforcement value — exit 2 on post_tool_use
+     refuses nothing (the tool already ran) and on stop it would break a turn
+     end for a guard that was never there. Option (b), the status quo, leaves a
+     documented allow-on-failure on the security path F-1 measured. Shipped:
+     host_semantics.isBlockCapable exported, dispatch_hook.stdinReadFailure
+     (injectable reader, so EAGAIN exhaustion / EIO / EBADF are reachable) and
+     dispatch_hook.denyOnStdinFailure, wired after concern resolution and before
+     the chain. The cost is on the record: a transient I/O error on pre_tool_use
+     now refuses a tool call the user must retry. -->
 
 **Fixed in this PR, with a mutation-verified negative test.** Recorded here
 because it is the most valuable thing this roadmap produced and it was not on any
@@ -945,7 +1151,7 @@ PR is already a performance change carrying one security fix.
 ## Blockers
 
 ### blocker: b-per-turn-composite-bar
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured
@@ -984,8 +1190,40 @@ PR is already a performance change carrying one security fix.
   the row exists in `hook-latency-budget.json` with its bar or its observe-only
   marker.
 
+- **Resolution (2026-08-20): option (b) — the composite is observe-only for one
+  release, and the arming procedure is now recorded where the row lives.**
+  Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`. Both seats
+  independently returned option (b); the adopted wording is *"mark `(pre + post)
+  × 10 + ups + stop` observe-only for one release, then derive an absolute
+  ceiling and a pathology net from that distribution"*, with the rationale
+  *"the proposed 1.5-second ceiling has no empirical prior and should not become
+  a release claim by fiat"*.
+
+  **What landed, and what was already there.** The row itself — `observe_only:
+  true`, `p50_ci: null` — shipped with step 4.1, so option (b) was half-satisfied
+  before the decision. What was missing is the half that makes it a decision
+  rather than a status quo: nothing said WHICH release the observation window
+  started in, or what "then derive" concretely requires, so the row could sit
+  observe-only forever and look compliant. `per_turn_composite` now carries
+  `observe_only_decision`, `observe_only_since_version` (`14.6.0`),
+  `arming_procedure` (four steps, absolute cap plus a separate pathology net) and
+  `arming_precondition`.
+
+  **The precondition is the load-bearing addition, and it is a stated minimum
+  rather than a derived one** — said plainly, because a number with no
+  derivation presented as one is the failure this roadmap's own risk 6 gates
+  against. It requires ≥ 10 CI readings from ≥ 2 runner sessions before the bar
+  is set, and the evidence behind it comes from this same PR: the
+  transport-isolation cell added for `b-payload-read-parse-dominates` read
+  44-157 % at n=12 and 69-74 % at n=50 on one machine. A summed metric — which
+  multiplies two slot readings by ten — set from single-digit samples would
+  carry that instability straight into a gate, which is risk 5 exactly.
+
+- **If you do nothing:** the per-turn cost stays structurally invisible — every
+  slot green, the number the user feels unrepresented.
+
 ### blocker: b-stdin-read-failure-policy
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing — F-1's trigger is fixed and the residual failure is now
@@ -1025,8 +1263,43 @@ PR is already a performance change carrying one security fix.
   `_readStdin`'s failure path returns a deny for the named slots with a test that
   fails when it allows.
 
+- **Resolution (2026-08-20): option (c) — implemented.** Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`.
+  Both seats returned (c) independently. Adopted wording: *"on a read failure,
+  deny only when the slot is block-capable and at least one selected concern is
+  both blocking and `fail_closed: true`; test `EAGAIN` exhaustion, `EIO`, and
+  `EBADF`"*, on the ground that *"a block-capable slot must preserve fail-closed
+  semantics, while denying on advisory events adds availability risk without
+  enforcement value"*.
+
+  **What landed.** Three pieces, and the split is deliberate — the trigger and
+  the policy are separately testable, which is what makes the three named errno
+  classes reachable at all.
+  · `host_semantics.isBlockCapable(platform, event)` is now exported. It was a
+  private set, and the deny needed the same fact; a copy one module away would
+  have drifted in the dangerous direction — denying on a slot that discards the
+  deny, i.e. enforcement theatre.
+  · `dispatch_hook.stdinReadFailure(read)` isolates the seam where a failed read
+  became `''`, with the reader injectable. `EAGAIN` exhaustion, `EIO` and `EBADF`
+  cannot be staged against a live fd 0 portably, and a policy whose trigger is
+  untestable is a policy nobody can show works.
+  · `dispatch_hook.denyOnStdinFailure(...)` is the policy, placed AFTER concern
+  resolution because the whole question is whether a fail-closed blocking guard
+  was among the ones that ran blind — and before the dry-run branch it would
+  have turned a plan printer into a refusal.
+
+  **The regression is red against both neighbouring options, verified by
+  building each.** Against the pre-fix behaviour (never deny) 3 cases fail;
+  against option (a) (deny on every slot) 4 cases fail, and they are different
+  cases. A test that only pinned one direction would have passed against the
+  broader policy the council refused.
+
+  **The cost is on the record rather than in a footnote:** a transient I/O error
+  on `pre_tool_use` now refuses a tool call the user must retry. The retry budget
+  already survived ~10 s of `EAGAIN` before this point, so the class of failure
+  that reaches the deny is not "the writer was slow".
+
 ### blocker: b-guard-tool-partition
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap — step 5.1 is cancelled and Phases 1-4
@@ -1068,8 +1341,34 @@ PR is already a performance change carrying one security fix.
   partition ships with a per-class absent-invocation proof and a test that fails
   when a claude tool name is added to no class.
 
+- **Resolution (2026-08-20): option (c) — decline the claude-only partition. No
+  code change; the zero-dispatch goal is `abandoned`.** Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`.
+  The two seats split on how narrow the decline should be — openai returned (c),
+  outright decline; anthropic returned (b), partition the advisory concerns and
+  leave the guards unscoped. **Both refuse to ship the partition**, and the
+  narrower of the two was adopted: *"decline the Claude-only partition and cancel
+  the zero-dispatch outcome"*, with the rationale *"guard filtering introduces
+  host-specific coverage risk for a performance optimization that no active step
+  requires"*. The adopted verdict retains *"Phase 4 measurement and the shipped
+  in-process `tools:` filter"*.
+
+  **What is abandoned is the GOAL, not the measurement**, and the distinction
+  matters for reading Phase 5: the zero-dispatch path for tools no concern can
+  act on is cancelled, while Phase 4's composite row and the in-process `tools:`
+  filter that already ships both stay. The dissent is preserved for the same
+  reason step 5.1's finding 2 is: (b) keeps one unscoped group in front of the
+  guards, which still fires on every call and therefore buys nothing — so the
+  disagreement was about which of two non-shipping answers to record, never
+  about whether to ship.
+
+  **Reopening condition, unchanged from the original recommendation:** revisit
+  only if Phase 4's registered composite exceeds its bar. That bar is now
+  observe-only for one release with a recorded arming procedure (see
+  `b-per-turn-composite-bar`), so the reopening trigger has a date attached to
+  it rather than being indefinite.
+
 ### blocker: b-payload-read-parse-dominates
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing — Phase 2 has landed and published its null. This records
@@ -1109,6 +1408,51 @@ PR is already a performance change carrying one security fix.
   with no owner, and D-2's remaining cost keeps being attributed to per-concern
   churn in any future reading of § 0 — which is the specific error two phases of
   measurement have now refuted.
+
+- **Resolution (2026-08-20): option (a) — the cell exists, and it produced a
+  number: ~70 % of the large-payload delta is the dispatcher's own read +
+  parse.** Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`. openai returned (a);
+  anthropic returned C (accept the Phase-2 null as terminal). (a) was adopted
+  with the dissent recorded, on the stated ground that *"the null falsified the
+  earlier attribution; it did not show the remaining latency unavoidable"*.
+  Adopted wording: *"add a same-fixture dispatcher cell that reads stdin and
+  exits immediately, reporting its latency and share of the large-payload
+  delta"*.
+
+  **What landed.** `dispatch_hook --read-exit` reads fd 0, builds the envelope
+  and returns — before the manifest load, before concern resolution, before every
+  concern. `bench_hook_latency --read-exit-cell <bytes>` takes all four readings
+  in ONE invocation with alternating arms, so nothing here is compared across
+  runs; `benchReadExitCell` / `renderReadExitCell` are the exported seam.
+
+  **It is the real bundle rather than a standalone probe, deliberately.** A probe
+  would have to re-implement the audited retrying reader, and that copy is
+  precisely the drift `hook_stdin` was consolidated to remove. Bundle load and
+  process spawn are in both arms and cancel in the large-minus-small delta, which
+  is the number the option asked for.
+
+  **Result** (darwin-arm64, node v26.7.0, one machine, `--runs 50`, two
+  consecutive rounds): slot delta 96 / 84 ms, transport delta 66 / 62 ms →
+  **69 % and 74 %**. Full table, method and reproduction:
+  `agents/evidence/analysis/hook-payload-transport-share.md`. Per § 2 the shape
+  transfers and the magnitude does not — these are not CI numbers.
+
+  **What that does to the dissent.** C turns out to be mostly right and not
+  entirely: about 30 % of the delta is still downstream of the read, so there is
+  a remainder with an owner rather than a shrug. This is the reason the cheap
+  measurement was worth taking — "the host makes us pay this" would have been an
+  assumption of exactly the kind Phase 1 and Phase 2 each already falsified once
+  in this file.
+
+  **A second finding, unasked for and worth keeping.** At `--runs 12` the same
+  cell read 44 %, 51 % and 157 % across three rounds. A share above 100 % is
+  only reachable as noise, so 12 runs is below the threshold at which this
+  estimator says anything — which is now the recorded evidence behind the
+  `arming_precondition` on the `per_turn_composite` row.
+
+  **Not closed by this:** whether the ~70 % is irreducible. A streaming or
+  incremental parse attacks exactly that term; option (c) names it and it is a
+  much larger change than this roadmap scoped.
 
 ### blocker: b-payload-mis-nested-readers
 - **Status:** resolved
@@ -1215,7 +1559,7 @@ PR is already a performance change carrying one security fix.
   right as they stand. The first predicate alone would have reported one.
 
 ### blocker: b-injection-scan-unwrap-security
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap. It is the half of
@@ -1261,8 +1605,69 @@ PR is already a performance change carrying one security fix.
   its fallback rather than of its contract, and the next envelope change can
   remove it with every test still green.
 
+- **Resolution (2026-08-20): option (a) — contract first, then the fix, with a
+  regression that fails against the old unwrap.** Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`.
+  openai returned D option (a); anthropic returned B — transfer the whole thing
+  to a maintainer stub pending contract and fixture work. (a) was adopted on the
+  ground that *"(a) IS the 'establish the contract first' the dissent asks for,
+  and it is executable now"*, with the rationale *"the current fallback obscures
+  the security contract; narrowing it safely requires executable payload-shape
+  definitions first"*. The adopted wording names the fixture set: *"valid
+  fixtures cover each supported output key, missing output, malformed envelopes,
+  and unrelated root text; then fix `_tool_output`, with a regression test
+  failing against the old unwrap"*.
+
+  **The contract is written down before the code.** It is stated in
+  `injection_scan_hook.ts`'s `_tool_output` header, in seven numbered points:
+  what the scanner reads (tool output, only), where it lives (under `payload`, or
+  at the root for a bare-host invocation), which keys (`OUTPUT_KEYS`, now an
+  exported constant), how a value is read, missing output → nothing to scan,
+  malformed → allow, and a stubbed body → allow loudly.
+
+  **The fixtures are the deliverable**, per the council, and they are
+  `tests/hooks/injection_scan_output_contract.test.ts` — 14 cases across the four
+  classes the verdict names. Envelopes are built by the dispatcher's OWN
+  `_build_envelope`, so a hand-written fixture cannot drift into agreeing with
+  the bug, and the assertion is on the extracted STRING rather than on "a hit":
+  asserting a hit would have passed pre-fix too, because the whole-envelope
+  fallback contains the same text. Both seats required the regression to sit at
+  the dispatcher boundary, which is why `toolOutputFromStdin` is the export.
+
+  **The descent is LOCAL, not `envelope.ts`'s shared `unwrap`** — that one
+  descends only when all four `ENVELOPE_KEYS` are present, so a producer emitting
+  a partial envelope would have returned this concern to reading the root with
+  every test still green. A partial-envelope case is pinned. Same reason
+  `ship-diff-volume`, `design-slop` and `ui-route-nudge` each carry their own.
+
+  **Both directions of the cost, because only one is an improvement.** Removed:
+  false positives on text that is not tool output — a `cwd` containing an exfil
+  signature, an injection phrase in the tool INPUT the user typed; two such cases
+  are pinned. Accepted: a host putting its output under an unenumerated key is now
+  unscanned where the fallback would have caught it. Mitigated rather than
+  dismissed — an unrecognised payload shape emits one stderr line naming the
+  payload's top-level KEY NAMES (never values, since a value here could be the
+  tool output), so a new host spelling surfaces on first contact instead of going
+  dark.
+
+  **One existing test asserted the defect and was rewritten, not deleted.**
+  `injection_scan_hook.test.ts`'s *"fallback to the whole payload when no
+  recognized output key"* expected exit 2 on `{cwd, foo: <exfil>}`. It now
+  asserts exit 0, the stderr shape, and that the stderr does NOT echo the value.
+
+  **Sensitivity verified:** restoring the exact pre-fix extraction fails 11 of
+  the 14 contract cases.
+
+  **Found and NOT fixed here, noted per the remediation ladder:** `main()` reads
+  `cwd` / `project_root` off the envelope ROOT to locate `.agent-settings.yml`,
+  where a dispatcher envelope carries `workspace_root` at the root and `cwd` under
+  `payload`. It is benign today because the in-process dispatcher's own cwd IS the
+  workspace, so the `"."` fallback resolves correctly — but it means the
+  default-OFF gate of a security concern is read from a path the envelope did not
+  supply. Out of scope for a blocker about `_tool_output`, and it changes which
+  settings file arms a scanner, so it needs its own change.
+
 ### blocker: b-stop-async-split-prerequisites
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** step 5.3 only. Phases 1-4 are unaffected and Phase 2 has landed.
@@ -1322,6 +1727,72 @@ PR is already a performance change carrying one security fix.
   concurrent dispatch, and the classification above rots — it is pinned to
   `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it
   less true.
+
+- **Resolution (2026-08-20): option (a) — sequence adopted, and P3 is DONE.**
+  Decided by council 2026-08-20, 2/2 quorum (anthropic + openai); record: `agents/evidence/council/drain-blocker-dispositions-b.md`. openai returned D
+  option (a); anthropic returned D option (c) — cancel 5.3 outright, the way 5.1
+  was cancelled. (a) was adopted with the dissent recorded, on the stated ground
+  that *"sequencing preserves the outcome; cancelling discards it"*. Adopted
+  wording: *"sequence P3 → P4 → combined P1/P2 → P5 live host check → split. No
+  split may ship before all three P3 files pass concurrency regression tests"*,
+  with the rationale *"P3 and P4 are correctness defects independent of async
+  dispatch; shipping the split before fixing them creates corruption and
+  lost-update paths"*.
+
+  **P3 landed here, because it is not really about the split.** The council's
+  recommendation said "P3 before anything else" and gave the reason: it is a live
+  data-integrity defect that does not need async dispatch to matter. Two
+  concurrent dispatchers in one workspace is a supported configuration (two
+  platforms installed side by side), and a host that runs tool calls in parallel
+  produces one with a single platform.
+  · `dispatch-issues.jsonl` — was `readFileSync` outside any lock then
+  `writeFileSync` straight onto the target. Now one locked read-append-publish
+  through the new `state_io.update_text_under_lock`, tmp+rename included.
+  **Measured pre-fix: 3 of 96 lines survived** eight concurrent writers.
+  · `rule-trips.json` — the read sat outside the lock while the publish was
+  atomic, so two dispatchers both loaded the same counter. Now
+  `update_json_under_lock`, the primitive that already existed for this shape.
+  **Measured pre-fix: 3 of 24 increments survived.**
+  · `summary.json` — the publish was atomic and the PATH was singular, so the
+  later rename discarded the earlier rollup whole. Now schema 2: a capped list of
+  per-invocation rollups keyed on pid + monotonic clock, cap 20. **Measured
+  pre-fix: 1 of 8 rollups survived.**
+
+  **The concurrency test forks 8 real processes, and its sensitivity was
+  established the hard way.** `tests/hooks/p3_state_concurrency.test.ts`. The
+  first version passed against a deliberately sabotaged lock primitive — the
+  classic concurrency test that proves nothing — and two separate defects in the
+  HARNESS were the cause: the barrier file was written after spawning, so
+  children raced their own tsx startup instead of each other; and the mutator ran
+  in microseconds, so the pre-fix read-to-write window was never entered. Both
+  are fixed in the test (a wall-clock barrier deadline, and a 25 ms hold inside
+  the mutator that changes the workload and not the code under test), and only
+  then did the sabotage produce the three numbers above.
+
+  **P4 is already closed, and on the trunk rather than here.** `bcbb0380b`
+  replaced the reclaim-after-waiting behaviour with a staleness decision read
+  from the companion's own mtime (30 s bound), added a non-blocking mode, and
+  moved the RMW lock to a FILE key on a measured argument. Checked against the
+  merged tree, not inferred: the old code computed `Date.now() - start > 5000`
+  from how long THIS caller had waited, the new code stats the companion. So the
+  adopted sequence's remaining chain is **P1/P2 → P5 → split**, one link shorter
+  than when the council decided it.
+
+  **Still open, and this resolution does not pretend otherwise:** P1 (the
+  hook-matrix type carries ONE command per native event, and
+  `claude_hook_matrix_parity.test.ts` asserts it), P2 (`turn-end-gate`'s input
+  behind a race whose losing branch makes the gate ALLOW), and P5 (a claim about
+  what the host does with `async: true`, not observable from this repository). No
+  split may ship before P1/P2 land and P5 is checked live. The remaining work is
+  carried in `## Outcome` as the follow-up this roadmap does not close.
+
+  **Scope line, stated rather than left to be discovered:** the per-concern
+  `<concern>.json` feedback files carry the SAME lossy-overwrite property as
+  schema-1 `summary.json`. They are untouched because
+  `hooks_doctor._latest_feedback` resolves them by that exact path and picks the
+  newest mtime, so renaming them is a consumer-visible change this pass did not
+  take. Recorded in `docs/contracts/hook-architecture-v1.md` beside the schema-2
+  note.
 
 ### blocker: b-concern-load-taxes-every-slot
 
