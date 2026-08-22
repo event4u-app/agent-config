@@ -1,7 +1,6 @@
 ---
-estate_offset_exempt: "Authored by the 2026-08-22 inbox drain, which consumed 25 dropped artefacts carrying 53 pre-written roadmap drafts in one pass. It ships status: draft, so it is not active work and moves none of the three gated metrics; there is nothing yet to offset. The offset alternatives all cost more than this line: no active roadmap sits at zero open steps, so archiving buys nothing; parking these in later/ is what the estate register calls burial and would hide twenty verified defect sets behind a disposition nobody reviews; and terminating another session's roadmap would be a judgement about their work rather than mine. The blockers these drafts carry will charge this ratchet on the day the maintainer flips one to ready, which is the point at which an offset is a real decision. Charged as one reviewable line, per this gate's own instruction."
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -84,6 +83,41 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       verify: `git show HEAD:src/scripts/ai_council/orchestrator.ts | sed -n '1540,1544p'`
       shows the old claim; the working copy shows the corrected one, and neither
       contains the phrase "the deterministic A/B mapping" applied to the map.
+- [ ] **1.4 Land the red test for label ORDER.** A second, orthogonal defect
+      lives in the same nine lines and cannot be landed independently without a
+      conflict. `run_peer_review` (`orchestrator.ts:1492`) passes `others_pairs`
+      to `anonymize_responses` (`:1561`) in `by_source` iteration order with no
+      shuffle anywhere on the path:
+      `grep -rn 'deterministic_shuffle_indices' src/scripts/ai_council/` hits
+      `blind_review.ts:42` and returns nothing in `orchestrator.ts`. So label
+      assignment is a pure function of config order and identical across runs —
+      and it is ALSO inconsistent per reviewer, because the list is
+      self-filtered, so each reviewer's `Response-A` already points at a
+      different member. Both properties hold at once and the test pins both:
+      identical inputs produce identical labels today, and across at least eight
+      distinct run seeds at least two different permutations occur once 1.5
+      lands.
+      verify: `npx vitest run tests/scripts/ai_council/orchestrator.test.ts -t 'label order'`
+      fails against unmodified `orchestrator.ts` on the permutation assertion,
+      and the failure text names the single observed permutation rather than a
+      count.
+- [ ] **1.5 Seed the label order, and correct the skill in the same step.**
+      Import `deterministic_shuffle_indices` (`blind_review.ts:42`) and order
+      `others_pairs` by it before the `anonymize_responses` call at
+      `orchestrator.ts:1561`. Seed = the original ask plus the deliberation
+      bodies — run-scoped and replayable, never `Math.random` and never `Date`.
+      `blind_review.ts:52-54` already argues the half this path is missing
+      ("which pair becomes `Response-A` is not simply input order, so position
+      alone leaks nothing"), so the two paths contradict each other in code
+      until this lands. `src/skills/ai-council/references/advanced-modes.md:143`
+      says labels are assigned "in stable input order" — accurate today, wrong
+      the moment the shuffle lands — so it is corrected in THIS step, never a
+      later one.
+      verify: the 1.4 permutation assertion is green;
+      `grep -c deterministic_shuffle_indices src/scripts/ai_council/orchestrator.ts`
+      returns at least 1; and
+      `git show HEAD:src/skills/ai-council/references/advanced-modes.md | grep -c 'in stable input order'`
+      returns 1 while the working copy returns 0.
 
 ## Phase 2 — A parse failure is reported as a parse failure
 
@@ -278,13 +312,16 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 | 3 | The agreement field silently moves an existing denominator | implementation | Adding a dimension to `quorum_result` can change what a consumer filtering that action sees, which is the failure `events_log.ts:411-418` already names for a new action and which an additive field only avoids if older lines are excluded rather than defaulted | Step 3.2 bumps the schema version and requires a replay over a fixture log with pre-change lines to reproduce the four registered metrics unchanged | Phase 3 — Agreement becomes an additive field on `quorum_result` |
 | 4 | Vocabulary collapse loses a real distinction | product | Evidence quality and a member's certainty in a pick are different properties; folding `CONFIDENCE` into `confirmed / inferred / speculative` would read as tidying and would destroy information the stance line exists to carry | Step 4.1 requires the skill to name the property each surviving term measures, so a collapse that merges two properties cannot pass its own verify | Phase 4 — One certainty vocabulary, or an honest declaration of prose |
 | 5 | Parity is claimed from an argv array | implementation | A flag present in a constructed argv proves the flag was passed, not that the vendor CLI honoured it — and the one existing bound was found by a live overflow, not by inspection | Step 5.3 requires a canary that fails with the bound removed and passes with it restored, in the same run; `b-probe-channel-decision` forces the strength of the claim to be chosen explicitly | Phase 5 — CLI least-agency parity, proven by a canary |
+| 6 | A run-scoped shuffle hides a wrong map instead of fixing it | implementation | Once labels are seeded (Step 1.5), a per-reviewer map that is still wrong reads as a permutation rather than as a collision — the shuffle supplies a plausible reason for any two reviewers disagreeing about `Response-A`, which is exactly the signal Steps 1.1 and 1.2 exist to expose | Steps 1.4 and 1.5 land strictly AFTER 1.2, never beside or before it, so 1.4's red run is recorded against code that already carries the per-reviewer map and a surviving collision still fails loudly | Phase 1 — Per-reviewer attribution replaces the last-wins map |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — A peer-review quote in a council artefact resolves to the member
       who wrote it, for every reviewer in the run, and a test asserting a
       per-reviewer label mapping was observed failing against the pre-change
-      code.
+      code. The mapping is also not reproducible from member config order alone:
+      it is a function of the run seed, and across at least eight distinct seeds
+      at least two distinct permutations occur.
 - [ ] AC-2 — An unparseable member answer is distinguishable in the artefact
       from a member that found nothing, and the rendered attendance line does
       not count it toward `N/N present`.

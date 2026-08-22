@@ -1,7 +1,6 @@
 ---
-estate_offset_exempt: "Authored by the 2026-08-22 inbox drain, which consumed 25 dropped artefacts carrying 53 pre-written roadmap drafts in one pass. It ships status: draft, so it is not active work and moves none of the three gated metrics; there is nothing yet to offset. The offset alternatives all cost more than this line: no active roadmap sits at zero open steps, so archiving buys nothing; parking these in later/ is what the estate register calls burial and would hide twenty verified defect sets behind a disposition nobody reviews; and terminating another session's roadmap would be a judgement about their work rather than mine. The blockers these drafts carry will charge this ratchet on the day the maintainer flips one to ready, which is the point at which an offset is a real decision. Charged as one reviewable line, per this gate's own instruction."
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -121,6 +120,22 @@ PR-comment machinery exists in the tree, so the mechanism is not novel here.
       argv.** A reporting step still has to be discoverable; an unregistered
       workflow step is invisible to `check_gate_coverage`.
       verify: `./scripts-run src/scripts/check_gate_coverage 2>&1 | tail -3` exits green with the new entry present.
+- [ ] **0.5 Book the credit side, so the ledger is two-sided.** Steps 0.3 and
+      0.4 measure only the debit — what a PR ADDS to the standing payload. A
+      one-sided ledger can only ever report drift, so a change that *removes*
+      standing payload scores zero and reads as neutral. Extend the same delta
+      comment with a credit column, and take the first booking from a saving
+      that is already measured and already shipped: the ADR-236 one-rule-one-layer
+      partition. `src/scripts/check_rule_layer_partition.ts:15-21` publishes a
+      per-host split measured 2026-08-22 in a freshly generated worktree with
+      `partitionActive: true` — `.cursor/rules` 126 files / 26 package-only /
+      100 global-only, `.windsurf/rules` 113 / 13 / 100, `.augment/rules`
+      118 / 15 / 103, against `.claude/rules` 13 / 13 / 0 and `.clinerules`
+      14 / 13 / 0. The withheld files are the credit; the two symlink trees at
+      zero global-only are the control that says the number is a partition
+      effect and not a counting artefact. Book it against the same buckets the
+      debit uses, so a reader can see net movement rather than inflow alone.
+      verify: `./scripts-run src/scripts/check_rule_layer_partition 2>&1 | tail -5` reproduces a per-host split, and the delta comment's rendered body contains a credit column whose first booking cites that gate by name.
 
 ## Phase 1 — the body diet: a `norm` pin plus its lint
 
