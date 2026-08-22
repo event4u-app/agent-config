@@ -435,6 +435,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Bug Fixes
 
+* **gate:** unblock preflight during a release — two gates that could not be green mid-release ([917778a](https://github.com/event4u-app/agent-config/commit/917778a83e331750ac53724c36d319fd1f5ed7fc))
 * **baselines:** remove the zero-count entry, and undo three JSON reformats ([97f5e9b](https://github.com/event4u-app/agent-config/commit/97f5e9bdd348a47025899f64605dbb7fc99856b6))
 * **gates:** retire the zero-count baseline instead of shipping it ([c35412e](https://github.com/event4u-app/agent-config/commit/c35412edab41b751308b0980c9e3806201a7c013))
 * **ci:** put only the dashboard's own state behind the required check ([0baf882](https://github.com/event4u-app/agent-config/commit/0baf882836df2e5f962776c62cc5c049fa0b6dd7))
@@ -654,7 +655,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 * **solution-minimalism:** archive at zero open, and repair every link the move broke ([fc3c294](https://github.com/event4u-app/agent-config/commit/fc3c294737ab36be35d14b86cc62d597655cd34a))
 * **solution-minimalism:** close the quality-gates criterion on the authoritative gate ([aee9337](https://github.com/event4u-app/agent-config/commit/aee93372e6bc7157b6f9826f06b58999c38a2d8a))
 
-Tests: 16170 (+401 since 14.7.0)
+Tests: 16175 (+406 since 14.7.0)
 
 # Era: pre-4.0.0 — archived
 
