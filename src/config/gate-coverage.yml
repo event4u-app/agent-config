@@ -394,6 +394,14 @@ gates:
     min_scanned: 15
     corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22)"
     status: enforced
+    no_canary_reason: >-
+      this gate is a LISTING, not an enforcement: `main()` returns 0 on every
+      path and `process.exit(main())` is its only exit, so no planted file can
+      make it red and the harness's "caught the planted defect (exit 1)"
+      observation is unreachable by construction. Verified, not assumed — a probe
+      roadmap carrying an unresolved acceptance-criteria ref left the exit code at
+      0. It is registered for its `scanned:` floor, which is the one thing about
+      it that CAN break, and that floor is the negative control here.
     note: >
       A LISTING gate: it exits 0 always, including on a dangling `[AC:]` ref and
       on an empty corpus. Registered here for its `scanned:` floor rather than
