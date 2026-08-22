@@ -13,6 +13,8 @@
  * `council:status` is the one command that must stay free of side effects.
  */
 
+import type { ApiOnQuota } from '../ai_council/transport_resolver.js';
+
 export type FallbackPosture = 'api' | 'none' | 'n/a';
 
 export interface PostureInput {
@@ -59,7 +61,7 @@ export function fallbackPostureFor(input: PostureInput): FallbackPosture {
  */
 export function renderPostureLines(
     postures: ReadonlyArray<readonly [string, FallbackPosture]>,
-    apiOnQuota: boolean,
+    apiOnQuota: ApiOnQuota,
 ): string[] {
     const live = postures.filter(([, p]) => p !== 'n/a');
     if (live.length === 0) return [];
@@ -72,10 +74,55 @@ export function renderPostureLines(
     );
     // Separate from the per-seat lines: not a per-seat property but the one
     // billing-class decision, governing every seat at once.
-    lines.push(
-        `  fallback quota   api_on_quota: ${apiOnQuota ? 'on' : 'off'}` +
-            ` — an exhausted cli quota ${apiOnQuota ? 'MAY' : 'may not'}` +
-            ' retry on the metered rung',
-    );
+    // Three postures, rendered by name rather than by truthiness. `'ask'` is
+    // truthy, so an `apiOnQuota ? 'on' : 'off'` reading would print `on` for
+    // it — telling the operator that quota fall-through happens silently when
+    // the whole point of the value is that it does not.
+    const word = apiOnQuota === 'ask' ? 'ask' : apiOnQuota ? 'on' : 'off';
+    const consequence =
+        apiOnQuota === 'ask'
+            ? ' — an exhausted cli quota PARKS the seat and the round closes with a question,' +
+              ' unless a run-scoped billing grant is already in force'
+            : apiOnQuota
+              ? ' — an exhausted cli quota MAY retry on the metered rung'
+              : ' — an exhausted cli quota may not retry on the metered rung';
+    lines.push(`  fallback quota   api_on_quota: ${word}${consequence}`);
     return lines;
+}
+
+/**
+ * The Human Gate a round closes with when `api_on_quota: 'ask'` parked seats.
+ *
+ * A correction to this roadmap step, recorded rather than quietly absorbed:
+ * the step said to render this "through the existing `renderPostureLines`
+ * path". That path is `council:status`, which runs before any round and can
+ * therefore never know which seats a round parked. So this is a sibling in the
+ * same module rather than a branch inside that function — same place, same
+ * vocabulary, different moment.
+ *
+ * Returns `[]` when nothing parked, so a caller may render unconditionally
+ * without a heading over an empty list.
+ */
+export function renderBillingGateLines(
+    parked: readonly string[],
+    opts: { readonly runId: string; readonly estimatedUsd: number | null },
+): string[] {
+    if (parked.length === 0) return [];
+    const seats = [...new Set(parked)].sort();
+    const cost =
+        opts.estimatedUsd === null
+            ? 'unknown — no priced estimate for the retry'
+            : `~$${opts.estimatedUsd.toFixed(2)}`;
+    return [
+        '',
+        'HUMAN GATE — plan quota exhausted, metered spend not authorised',
+        `  parked seats     ${seats.join(', ')}`,
+        `  retry cost       ${cost}`,
+        // The command is printed rather than described because the whole
+        // mechanism fails if answering it takes a lookup: an operator who has
+        // to go find the syntax is an operator who says yes tomorrow, on a run
+        // that has already ended.
+        `  to authorise     agent-config council:grant-billing ${opts.runId}`,
+        '  to decline       do nothing — the grant is never implied by silence',
+    ];
 }
