@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 23,
     "later_roadmaps": 59,
-    "open_blockers": 62
+    "open_blockers": 60
   },
   "baseline_history": [
     {
@@ -797,6 +797,20 @@
       "later_roadmaps": 59,
       "open_blockers": 62,
       "why": "WALKED DOWN active 24 -> 23 on the sync with main, not on work this PR did: road-to-evidence-based-adr-governance was archived by #1534 without walking the baseline, so main landed measured 23 against a stored 24 and every branch merging main inherited the red. Recorded here because this is the first change to merge that main state, and the gate's own remediation note says the walk belongs in the change that carries the lower measurement rather than in a follow-up."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 25,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on open_blockers only, 64 -> 62, by resolving both blockers of road-to-publish-boundary-evidence. active_roadmaps does NOT move and must not be read as an oversight: that roadmap is only PARTLY drained -- Phase 1 steps 1.1 and 1.2 landed, and 1.3 plus Phases 2 and 3 are still open -- so it stays in the active tree and its PR is explicitly partial. Recording that here because every other entry in this history pairs a blocker drop with an archive, and a reader scanning for the pattern would otherwise assume the archive was forgotten. Both resolutions are council-ratified 2/2: b-sourcemap-intent took (b'), which is NEITHER of the two options as written -- the option set conflated a consumer debugging affordance (product source maps, kept at a provisional ratchet of 120) with valueless compiled-test output (stripped, threshold 0) -- and b-sbom-scope took (a), leaving a prior council's rejection standing under ADR-238 Trigger A, whose two halves both remain unmet."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 60,
+      "why": "WALKED DOWN open_blockers 62 -> 60 on the merge resolution: this PR resolves both blockers of road-to-publish-boundary-evidence, and the branch entry it carried was written against the pre-merge baseline of 64. Rewritten here against main's walked 62 rather than left as a stale delta, because the ratchet reads the stored number and not the history prose."
     }
   ],
   "target": {
