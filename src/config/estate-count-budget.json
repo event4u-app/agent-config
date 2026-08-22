@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 59,
     "open_blockers": 62
   },
@@ -786,10 +786,10 @@
     },
     {
       "at": "2026-08-22",
-      "active_roadmaps": 24,
+      "active_roadmaps": 23,
       "later_roadmaps": 59,
       "open_blockers": 62,
-      "why": "WALKED DOWN on two axes by the close of road-to-subagent-envelope-adoption: active 25 -> 24 on the archive, open_blockers 64 -> 62 on its two blockers RESOLVED. Worth reading the shape of that close, because the roadmap archives WITHOUT achieving its Phase 2 goal and the glyphs say so: six steps [x], three [-], and two acceptance criteria [-]. b-classifier-vs-contract resolved (b) conditionally by 2/2 council -- narrow the contract to the validator's five fields, do not widen the validator -- with the condition that rule (f)'s two delivery clauses survive as delivery invariants rather than being folded into a field set. b-production-window-reach resolved on a SPLIT: one seat chose (a) publish the machine-local window, the other (b) park until an independently sourced one exists, and both agreed drain traffic does not discharge Phase 2. Recorded as a split rather than resolved by preference, and no owner escalation was taken because the blocker's own Resolved-when admits either branch and the intersection satisfies both. This is the sixth drain branch to walk active 25 -> 24 against its own base; the counts do not compose and the last to land must re-measure."
+      "why": "WALKED DOWN on two axes by the close of road-to-subagent-envelope-adoption: active 25 -> 24 on the archive, open_blockers 64 -> 62 on its two blockers RESOLVED. Worth reading the shape of that close, because the roadmap archives WITHOUT achieving its Phase 2 goal and the glyphs say so: six steps [x], three [-], and two acceptance criteria [-]. b-classifier-vs-contract resolved (b) conditionally by 2/2 council -- narrow the contract to the validator's five fields, do not widen the validator -- with the condition that rule (f)'s two delivery clauses survive as delivery invariants rather than being folded into a field set. b-production-window-reach resolved on a SPLIT: one seat chose (a) publish the machine-local window, the other (b) park until an independently sourced one exists, and both agreed drain traffic does not discharge Phase 2. Recorded as a split rather than resolved by preference, and no owner escalation was taken because the blocker's own Resolved-when admits either branch and the intersection satisfies both. This is the sixth drain branch to walk active 25 -> 24 against its own base; the counts do not compose and the last to land must re-measure. RE-MEASURED AT THE MERGE, which is the correction the sentence above predicted for whoever landed second. origin/main gained the merge of PR #1534 (road-to-evidence-based-adr-governance archived) while this branch was open, so main's own active count had already walked 25 -> 24. This archive takes the merged tree to 23, which is neither side's row, and the baseline is set from the measurement rather than from either branch's figure. open_blockers needed no correction: main's walk to 62 and this branch's walk to 62 are the SAME two-blocker drop counted once, because #1534's blockers were already resolved before either branch existed."
     }
   ],
   "target": {
