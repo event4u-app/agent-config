@@ -56,13 +56,16 @@ decision rather than a patch.
 
 ## The three files, at transfer
 
-All three are simultaneously (a) in the active tree, (b) invisible to the
-ratcheted `active_roadmaps` count, and (c) carrying no triage verdict row.
+All three were simultaneously (a) in the active tree, (b) invisible to the
+ratcheted `active_roadmaps` count, and (c) carrying no triage verdict row. **Two
+still are** — the third was archived on 2026-08-22 and is kept in the table with
+its new path, because removing the row would erase the evidence that the shape
+existed while leaving the shape itself unfixed.
 
 | File | `status` |
 |---|---|
 | `agents/roadmaps/later/road-to-conformance-round7-followup.md` | `draft` |
-| `agents/roadmaps/road-to-demand-gate-audience-followup.md` | `draft` |
+| `agents/roadmaps/archive/road-to-demand-gate-audience-followup.md` | `draft` — **left the active tree 2026-08-22**, transferred to [`road-to-demand-gate-audience-default.md`](road-to-demand-gate-audience-default.md). One of the three, resolved by drain rather than by this stub; the shape it illustrates is unchanged. |
 | `agents/roadmaps/later/road-to-plan-gates-measurement.md` | `draft` |
 
 Naming them is not the same as fixing it. The drain-run handoff note had already

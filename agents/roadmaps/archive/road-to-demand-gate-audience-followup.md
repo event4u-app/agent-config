@@ -9,6 +9,14 @@ parent_roadmap: road-to-demand-gate-audience
 **Goal.** Hold the two decisions the parent roadmap deliberately did not take,
 so neither is lost and neither is taken by an agent on its own authority.
 
+## Outcome — drained 2026-08-20 (`partially satisfied`), closed 2026-08-22 (`transferred`)
+
+**Closed 2026-08-22 as `transferred`, not completed and not cancelled.** The one
+remaining live item moved to
+[`stubs/road-to-demand-gate-audience-default.md`](../stubs/road-to-demand-gate-audience-default.md)
+on a 2-of-2 convergent AI-council ruling; the shipped default is untouched. The
+2026-08-20 drain record below is unchanged and is what the transfer builds on.
+
 ## Outcome — drained 2026-08-20, outcome state `partially satisfied`
 
 **Archived does not mean achieved, and this roadmap is not archived.** Of six
@@ -92,11 +100,27 @@ conservative value and left the flip here.
 
 What would have to be true before flipping:
 
-- [ ] A stated position on whether an unconfigured repo running this package is more likely internal than public — evidence, or an explicit maintainer judgement recorded as such.
-      **Open — owner-reserved.** The evidence half is a terminal null (§ Outcome):
-      nothing in or reachable from this tree can report the audience mix of
-      installs. What remains is a maintainer judgement, which no agent may
-      record on the maintainer's behalf.
+- [-] A stated position on whether an unconfigured repo running this package is more likely internal than public — evidence, or an explicit maintainer judgement recorded as such.
+      **TRANSFERRED 2026-08-22 to
+      [`stubs/road-to-demand-gate-audience-default.md`](../stubs/road-to-demand-gate-audience-default.md).**
+      Not cancelled, and not resolved. The two halves are closed to an
+      autonomous run for different reasons, and the stub keeps them apart:
+      · **Disposition** — administrative only. No consumer-facing behaviour
+        change; the shipped default stays `project.audience: public`.
+      · **Unresolved decision** — the maintainer judgement, owner-reserved. An
+        AI council (2026-08-22, 2 of 2 convergent) applied the
+        `road-to-drain-commands` precedent of the same day: a council may not
+        manufacture the owner decision a blocker reserves, and recording an
+        owner's *absence* as an owner's *decision* fabricates satisfaction of a
+        terminal condition. Cancelling outright would have read as a permanent
+        rejection nobody ruled.
+      · **Reopens when** — evidence exists, **or** an explicit maintainer
+        judgement is recorded as such. Either alone suffices; neither implies
+        council approval of the flip.
+      Only the EVIDENCE half is a null; the item as a whole is not. The transfer
+      target was verified rather than assumed: `stubs` is in `EXCLUDE_DIRS` at
+      `src/agent-src/scripts/update_roadmap_progress.ts:88`, so the record
+      genuinely leaves the active estate.
 - [x] A migration note for existing installs: what changes for a repo that never sets the key.
       → `agents/evidence/analysis/demand-gate-default-flip-migration-note.md`.
       Derived from the tree with file:line per claim; takes no position on the flip.
