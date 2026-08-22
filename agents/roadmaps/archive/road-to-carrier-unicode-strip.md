@@ -59,7 +59,7 @@ permanent, stated non-goal.
 
 ## Phase 1 — The strip function
 
-- [ ] **1.1 Add `stripCarrierUnicode` to `src/scripts/detect_ai_tells.ts`,
+- [x] **1.1 Add `stripCarrierUnicode` to `src/scripts/detect_ai_tells.ts`,
       beside `scanHiddenUnicode`.** Import `_classify` from
       `lint_hidden_unicode.ts` rather than forking its class list — one source
       of truth for what counts as a carrier, so a class added there is covered
@@ -70,23 +70,46 @@ permanent, stated non-goal.
       verify: `grep -n 'stripCarrierUnicode' src/scripts/detect_ai_tells.ts`
       returns the export, and `grep -n "_classify" src/scripts/detect_ai_tells.ts`
       shows it imported rather than redefined.
-- [ ] **1.2 Return a removal/preservation summary, not just a string.** The
+
+      **LANDED 2026-08-22.** `stripCarrierUnicode` sits beside
+      `scanHiddenUnicode` in `detect_ai_tells.ts`. `_classify` was **already**
+      imported there at `:40` for the scanner, so the one-source-of-truth
+      property was free rather than newly established — worth stating, because
+      the step reads as though the import is new work and it is not. The
+      function adds only the neighbour predicate: removed when both neighbours
+      are ASCII (`< 0x80`) **or absent**, which makes a boundary carrier
+      removable — a carrier at the start or end of a string has no neighbour to
+      be joining. No `NFKC`, no new dependency.
+- [x] **1.2 Return a removal/preservation summary, not just a string.** The
       shape is `{ out, removed, preserved }` plus per-codepoint records
       (codepoint, class from `_classify`, offset, disposition). A strip that
       returns only text cannot be audited, and the whole point of the opt-in is
       that the operator can see what left.
       verify: a targeted unit run asserts the record count equals
       `removed + preserved` on a mixed input.
-- [ ] **1.3 Do not touch `_sanitize`.** It stays exactly as it is — it is a
+
+      **LANDED.** `{ out, removed, preserved, records }`, one record per
+      candidate carrying `codepoint` (`U+XXXX`), `cls` (from `_classify`,
+      never a second list), `offset`, `disposition`, and `reason` — non-null
+      exactly when preserved. **Offsets are CODEPOINT indices, not UTF-16
+      units**, which the step did not specify and which matters: the emoji
+      before a preserved `U+200D` is a surrogate pair, so a UTF-16 index would
+      report a different number and make the audit line wrong for precisely the
+      inputs the predicate exists to protect. Pinned by its own fixture.
+- [x] **1.3 Do not touch `_sanitize`.** It stays exactly as it is — it is a
       file-repair path whose blind class drop and `NFKC` are correct for its own
       callers. This roadmap adds a sibling; it does not generalise the existing
       one.
       verify: `git diff --stat -- src/scripts/lint_hidden_unicode.ts` is empty
       at the end of Phase 1.
 
+      **HELD — the diff is empty.** `_sanitize` is untouched, and step 3.3
+      records the refusal in the skill's own `## Do NOT` so the shortcut is
+      refused where an author would reach for it rather than only here.
+
 ## Phase 2 — The opt-in skill step
 
-- [ ] **2.1 Add step 5b to the humanize procedure as OPT-IN.** It sits between
+- [x] **2.1 Add step 5b to the humanize procedure as OPT-IN.** It sits between
       the mechanical verification (step 5) and the deterministic self-check
       (step 6) in `src/skills/humanizer/SKILL.md`. Default is off: the step runs
       only when the operator asks for a carrier strip. A silent default strip
@@ -94,37 +117,91 @@ permanent, stated non-goal.
       factual-integrity guard forbids.
       verify: `grep -n '5b' src/skills/humanizer/SKILL.md` resolves inside the
       `## Procedure` section, and the step text contains the word "opt-in".
-      <!-- blocked-by: carrier-strip-wiring-point -->
-- [ ] **2.2 Emit the audit line.** When the step runs it prints the
+
+      **LANDED, and labelled as documentation rather than implied to be wired.**
+      Step 5b sits between 5 and 6, default off, running only on an explicit
+      operator request. The blocker resolved as **(b)**: there is **no
+      programmatic call site**. What exists is
+      `docs/contracts/write-engine.md:109`, which invokes the humanizer skill
+      for the step-4b humanize audit — a real consumer of the *skill*, but an
+      agent-carried prose step that calls no function, and it invokes the audit
+      rather than 5b. `src/domains/gtm-marketing/humanize/command.md:62` is the
+      same shape ("Follow humanizer § Procedure"). Neither is a wiring, and
+      claiming either would be the "defined but not wired" failure the
+      engineering floor calls not-done.
+- [x] **2.2 Emit the audit line.** When the step runs it prints the
       removal/preservation summary from 1.2 — how many carriers were removed, of
       which classes, and how many were preserved and why. An unexplained
       preservation is the interesting half: it is what tells the operator the
       predicate fired conservatively rather than failed.
       verify: the step text names the summary fields, and the Phase 3 fixture
       asserts both counts are reported.
-- [ ] **2.3 Restate the load-bearing guard at the step.** Step 0's ingestion
+
+      **LANDED.** 5b names `removed`, `preserved`, the classes removed, and the
+      per-preservation reason, and says why the preserved half is the
+      interesting one. The fixture asserts `records.length === removed +
+      preserved` and that a preserved record's `reason` is non-null while a
+      removed one's is null — so a summary that reported counts without
+      accounting for every candidate would fail.
+- [x] **2.3 Restate the load-bearing guard at the step.** Step 0's ingestion
       rule is unchanged — input findings are still surfaced, never stripped. Say
       so at 5b so the two directions cannot be read as one policy.
       verify: `sed -n '/5b/,/^6\./p' src/skills/humanizer/SKILL.md` contains a
       sentence distinguishing the output strip from the step-0 ingestion warning.
 
+      **LANDED, with the reason and not only the rule.** 5b states that step 0
+      scans *ingested* input and never strips **because there the hidden
+      characters are an injection vector and removing them destroys the
+      evidence**, whereas 5b's prose is the suite's own output and the operator
+      asked. Two directions, two policies — the sentence exists so they cannot
+      be read as one.
+
 ## Phase 3 — Fixtures and the two refusals
 
-- [ ] **3.1 Add `src/skills/humanizer/evals/strip_fixtures.json`.** The
+- [x] **3.1 Add `src/skills/humanizer/evals/strip_fixtures.json`.** The
       directory currently holds `triggers.json` only. The fixture set carries
       the six reproduced assertions: three ASCII-flanked carriers removed
       (`U+200B`, `U+202E`, `U+E0041`), an emoji ZWJ sequence preserved, a
       Persian ZWNJ preserved, and a clean-prose no-op that is also idempotent.
       verify: `npx tsx -e` over the fixture file asserts 6 cases, and a targeted
       vitest run of the strip test file exits 0.
-- [ ] **3.2 Add Fixture 3 to `src/skills/humanizer/references/fixtures.md`.**
+
+      **LANDED — 6 cases, 11 assertions, and the blocker resolved as (b).**
+      `tests/scripts/strip_carrier_unicode.test.ts` drives all six from the JSON
+      and adds AC-1's single combined input plus the codepoint-offset case.
+      Carriers in the fixture file are written as literal characters with an
+      escape-form note, because a fixture whose payload is invisible in review
+      is a fixture nobody can check.
+      **`carrier-strip-script-property` → (b):** `recorded_limitation` in the
+      JSON names the tested blocks (Arabic/Persian, emoji ZWJ) and states
+      plainly that Indic, Thai, Khmer, Myanmar and Mongolian are **untested** —
+      and why that is acceptable rather than merely admitted: the predicate errs
+      toward preservation, so an untested script is preserved rather than
+      corrupted. The failure mode cannot occur in the unsafe direction. It also
+      records what WOULD change the answer — a script whose format characters
+      legitimately sit between two ASCII characters; none is known.
+      **Sensitivity verified:** forcing the predicate to always strip turns
+      three fixtures red (both preservation cases and AC-1); restoring returns
+      11/11.
+- [x] **3.2 Add Fixture 3 to `src/skills/humanizer/references/fixtures.md`.**
       The file has Fixture 1 (`:8`) and Fixture 2 (`:32`) today. Fixture 3 is
       the worked before/after of a carrier strip, showing the audit line — a
       reader has to be able to see what "preserved" looks like without running
       anything.
       verify: `grep -n '^## Fixture 3' src/skills/humanizer/references/fixtures.md`
       returns a line.
-- [ ] **3.3 Record the two refusals in the skill's `## Do NOT` section.**
+
+      **LANDED at `:72`, and built around the preserved half.** The worked input
+      carries all four carriers at once, and the audit line was **generated by
+      running the real function rather than written by hand** — the first draft
+      had an offset of 24 where the code reports 26, which is exactly the
+      hand-written-example rot this fixture exists to prevent. Three readings
+      are called out for the reader: `U+200B` and `U+200D` are the SAME class
+      and get opposite dispositions (so any strip keyed on class alone destroys
+      the emoji); offsets are codepoint indices; and a preservation always
+      carries its reason, because an unexplained one is indistinguishable from a
+      bug.
+- [x] **3.3 Record the two refusals in the skill's `## Do NOT` section.**
       (a) The blind sanitiser and `NFKC` are forbidden on a deliverable — name
       `_sanitize` and say why (it drops `0x200c`/`0x200d` unconditionally).
       (b) No statistical-watermark rewrite and no detector-evasion mode — that
@@ -134,11 +211,20 @@ permanent, stated non-goal.
       the refusal, and `git show HEAD:src/skills/humanizer/SKILL.md | sed -n '100,108p'`
       still matches the shipped exclusion text.
 
+      **LANDED — both refusals in `## Do NOT`.** (a) names `_sanitize`, `NFKC`,
+      and the two codepoints (`U+200C`, `U+200D`) that make the blind path
+      corrupt a deliverable, and says outright that 5b exists *because* that
+      shortcut is one import away and looks like the same job — Risk 2, placed
+      where an author would reach for it. (b) restates the detector-evasion
+      exclusion and adds why the strip cannot be repurposed toward it: it
+      removes invisible characters and alters no visible prose. The original
+      exclusion is unweakened; this adds to it.
+
 ## Blockers
 
 ### blocker: carrier-strip-script-property
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** implementer
 - **Blocks:** step 3.1
 - **Class:** 3
@@ -156,10 +242,22 @@ permanent, stated non-goal.
   unverified pass.
 - **Resolved when:** the fixture file either cites a Script-property lookup or
   carries the recorded-limitation paragraph naming the tested blocks.
+- **Resolution (2026-08-22) — (b), the recommended option.**
+  `src/skills/humanizer/evals/strip_fixtures.json` carries a
+  `recorded_limitation` block naming the tested blocks (Arabic/Persian, emoji
+  ZWJ) and the untested ones (Indic, Thai, Khmer, Myanmar, Mongolian, and every
+  other script using a mid-word format character). It states *why* that is
+  acceptable rather than merely admitting it: the predicate removes a carrier
+  only when both neighbours are ASCII, so a format character inside a non-ASCII
+  word is preserved whatever its script — an untested script is preserved, never
+  corrupted, and the failure mode cannot occur in the unsafe direction. It also
+  records what would change the answer: a script whose format characters
+  legitimately appear between two ASCII characters. None is known. A test
+  asserts the block is present, so the limitation cannot be quietly deleted.
 
 ### blocker: carrier-strip-wiring-point
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** implementer
 - **Blocks:** step 2.1
 - **Class:** 3
@@ -173,6 +271,16 @@ permanent, stated non-goal.
   is the "defined but not wired" failure the engineering floor calls not-done.
 - **Resolved when:** step 2.1 carries either the consumer `file:line` or the
   explicit "skill-procedure only, no programmatic consumer" note.
+- **Resolution (2026-08-22) — (b), after checking for (a).** No programmatic
+  call site exists. Two consumers of the SKILL do:
+  `docs/contracts/write-engine.md:109` (the step-4b humanize audit) and
+  `src/domains/gtm-marketing/humanize/command.md:62` ("Follow humanizer §
+  Procedure"). Both are agent-carried prose that call no function, and the
+  write-engine one invokes the *audit* rather than 5b. Step 2.1 says so
+  explicitly. Recording them rather than omitting them matters in both
+  directions: citing either as a wiring would be the "defined but not wired"
+  failure this blocker names, and omitting them would hide where 5b will
+  actually be reached from when someone does wire it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -186,17 +294,17 @@ permanent, stated non-goal.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — ONE fixture simultaneously demonstrates all three properties: the
+- [x] AC-1 — ONE fixture simultaneously demonstrates all three properties: the
       three ASCII-flanked carriers are gone, the emoji ZWJ sequence and the
       Persian ZWNJ are byte-identical to their input, and re-running the strip
       over its own output changes nothing.
-- [ ] AC-2 — `src/scripts/lint_hidden_unicode.ts` is unchanged by this work, and
+- [x] AC-2 — `src/scripts/lint_hidden_unicode.ts` is unchanged by this work, and
       `detect_ai_tells.ts` imports `_classify` rather than restating its class
       list, so the candidate set cannot drift between the two files.
-- [ ] AC-3 — Running the humanize skill without asking for a carrier strip
+- [x] AC-3 — Running the humanize skill without asking for a carrier strip
       produces output byte-identical to what it produces today; the step is
       reachable only on an explicit request.
-- [ ] AC-4 — The skill's `## Do NOT` section names `_sanitize` and `NFKC` as
+- [x] AC-4 — The skill's `## Do NOT` section names `_sanitize` and `NFKC` as
       forbidden on a deliverable, and the detector-evasion exclusion at
       `SKILL.md:100-108` is present and unweakened.
 
