@@ -470,7 +470,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
      not inferred from the subject line), so the remaining chain is P1/P2 -> P5
      -> split. P1, P2 and P5 remain open and are carried in ## Outcome. This step
      stays [~]: the split itself does not ship here. -->
-- [~] **5.3** Move the non-gating Stop concerns to the host's async handler form,
+- [-] **5.3** Move the non-gating Stop concerns to the host's async handler form,
       so turn-end wall clock carries only the concerns that can actually refuse.
       `end-review-nudge` needs its stdout to reach the model, so it stays
       synchronous until measured otherwise.
@@ -568,6 +568,29 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       cost is a `spawnSync` with a 30 s timeout that `_run_concern_inproc` cannot
       preempt — so if any part of this ever lands first, it is that one, alone, and
       the three sync-required concerns are the set that must never move.
+
+      **CARRIED 2026-08-22, not cancelled.** `[-]` here means closed *in this
+      roadmap*; the outcome is alive in
+      [`road-to-per-turn-hook-economy-carry`](../road-to-per-turn-hook-economy-carry.md),
+      created in the same change. Iron-Law-3 resolution by AI council 2026-08-22,
+      2/2 quorum (anthropic + openai); record
+      [`per-turn-hook-economy-deferred-carry`](../../evidence/council/per-turn-hook-economy-deferred-carry.md).
+      Neither seat proposed dropping it, and both confirmed the recorded
+      cancellation dissent does not overturn the sequencing decision: it is *"an
+      owner-reserved fallback if later evidence shows that prerequisite cost
+      exceeds the expected wall-clock benefit. No such comparison is supplied
+      here."*
+      **Destination:** Track B, carrying P1, P2 and P5. One correction travels
+      with it — the summary above under-describes P5, and a council seat read it
+      as undefined and recommended a discovery phase for that reason. P5 IS
+      defined at `b-stop-async-split-prerequisites`: the `verify:` is a claim
+      about what the host does with `async: true`, so the final gate is
+      capability-gated on a live session, producer the host owner.
+      **What closes it:** B1.0 produces the cost comparison both seats found
+      missing; B1.1-B1.3 land P1, P2 and the audit of P3/P4's claimed closure;
+      B2.2 is the live-host check at `b-async-split-live-verification`. Choosing
+      the dissent's cancellation instead stays the owner's, at
+      `b-async-split-cancellation`.
 
 - **AC-5:** on the § 2 matrix, a `PreToolUse` with a non-matching payload costs no
   dispatcher spawn at all, and the Stop cell drops materially on the large-transcript
@@ -982,7 +1005,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       definition needs is missing from a run: a composite over a subset reads
       low, and low is the direction that makes a ceiling look met. Pinned by
       `tests/scripts/bench_hook_latency_composite.test.ts` (9 cases).
-- [~] **4.2** The bar itself is the maintainer's to pre-register, not this
+- [-] **4.2** The bar itself is the maintainer's to pre-register, not this
       document's. Blocked on `b-per-turn-composite-bar`.
       <!-- decision 2026-08-20: b-per-turn-composite-bar resolved D, option (b) —
       observe-only for one release, then derive an absolute ceiling plus a
@@ -1000,6 +1023,22 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       44-157% at n=12 and 69-74% at n=50. This step stays [~] deliberately —
       the bar is not registered, by decision, and calling it done would claim a
       ceiling that does not exist. -->
+      **CARRIED 2026-08-22, not cancelled.** `[-]` here means closed *in this
+      roadmap*; the outcome is alive in
+      [`road-to-per-turn-hook-economy-carry`](../road-to-per-turn-hook-economy-carry.md),
+      created in the same change. Iron-Law-3 resolution by AI council 2026-08-22,
+      2/2 quorum (anthropic + openai); record
+      [`per-turn-hook-economy-deferred-carry`](../../evidence/council/per-turn-hook-economy-deferred-carry.md).
+      Neither seat proposed dropping it. Same glyph convention as
+      `road-to-estate-drawdown` steps 2.1/2.2.
+      **Destination:** Track A. What was missing is named there and it is not
+      time: step 1 of the recorded arming procedure — collecting the printed
+      composite — has no implementation, so the `>= 10 readings / >= 2 sessions`
+      precondition cannot even be evaluated. Both seats corrected the framing on
+      this: *"time passing doesn't satisfy a data-collection requirement."*
+      **What closes it:** A1.1-A1.3 make the precondition evaluable; the ceiling
+      value itself stays the owner's at `b-composite-ceiling-value`, which both
+      seats placed there independently.
 - [x] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
       same PR, so the cap is measured against the live chain rather than an older
       one.

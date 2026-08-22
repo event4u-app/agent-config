@@ -177,7 +177,7 @@ saying too much.
       check that must run before a tool call is `pre_tool_use`, whose CI budget
       is `p95_ci: 175` (`src/config/hook-latency-budget.json`) and whose
       measured readings in this tree are 141–148 ms
-      (`agents/roadmaps/road-to-per-turn-hook-economy.md:270`, `:296`) — i.e.
+      (`agents/roadmaps/archive/road-to-per-turn-hook-economy.md:270`, `:296`) — i.e.
       the slot is already close to its cap before anything is added.
       verify: blocked — see `b-pre-tool-turn-budget`.
 
@@ -214,7 +214,7 @@ saying too much.
 
 ### blocker: b-pre-tool-turn-budget
 - **Status:** open
-- **Owner:** `agents/roadmaps/road-to-per-turn-hook-economy.md`
+- **Owner:** `agents/roadmaps/archive/road-to-per-turn-hook-economy.md`
 - **Blocks:** Phase 3 entirely. Phases 1 and 2 are unaffected — they touch a
   `post_tool_use` hook whose budget row is `any_hook_event` (`p95_ci: 250`).
 - **What to do:** pick exactly one — (a) wait for that roadmap's step 4.2 to
