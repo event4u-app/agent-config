@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
-    "later_roadmaps": 59,
+    "active_roadmaps": 22,
+    "later_roadmaps": 60,
     "open_blockers": 62
   },
   "baseline_history": [
@@ -797,6 +797,13 @@
       "later_roadmaps": 59,
       "open_blockers": 62,
       "why": "WALKED DOWN active 24 -> 23 on the sync with main, not on work this PR did: road-to-evidence-based-adr-governance was archived by #1534 without walking the baseline, so main landed measured 23 against a stored 24 and every branch merging main inherited the red. Recorded here because this is the first change to merge that main state, and the gate's own remediation note says the walk belongs in the change that carries the lower measurement rather than in a follow-up."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 60,
+      "open_blockers": 62,
+      "why": "RE-STATED against the floor origin/main moved to while this branch was open, after an estate-budget merge conflict was resolved onto main's side rather than by carrying this branch's earlier figures. Drain of road-to-catalog-and-projection-economy. active_roadmaps 23 -> 22: the roadmap was executed and archived inside this one change. later_roadmaps 59 -> 60, a park WITH a carrier and not a drop: an AI council (2/2) instructed ABSORB over defer for agents/roadmaps/stubs/road-to-host-aware-skill-projection.md, whose step 1.4 asserted the primary host has no measured truncation pressure while the host's own budget event refutes it (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20), and whose originating framework document is absent from this tree - so there was no live authority to defer to. The stub is DELETED here; its corrected steps plus a council-added retained-set-quality step live in later/road-to-host-catalogue-contract.md with owner maintainer and review_by 2027-02-22. open_blockers flat at 62: this roadmap's blocker resolved (-1), the carrier declares one (+1). MEASURED FINDING, recorded because a sibling entry above states the opposite and was believed while this branch started: a blocker in later/ IS counted by collect(). An earlier revision of this branch set the baseline to 62 on the belief that it was not, and the gate reported 64. The false belief is what would let a real growth be booked as flat next time, which is why the correction is written down instead of quietly re-set."
     }
   ],
   "target": {
