@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council record — disposition of two `[~]` items at per-turn-hook-economy closure
 
 **Date:** 2026-08-22 · **Members:** anthropic/claude-sonnet-4-5, openai/codex-default ·
