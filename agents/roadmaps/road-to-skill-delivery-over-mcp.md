@@ -1,9 +1,9 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Ships status: draft, so the estate charge waits for the owner's flip. Nothing to offset: its subject — how the skill catalogue reaches the host at all — is covered by no active roadmap, and its own harvest establishes that the two existing MCP servers are the reason a third must NOT be built. Landed by /analyze:inbox with six of seven defects re-verified at 577bdbf88."
+estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate charge this key said would wait for the owner's flip is now due, because the owner has taken that decision for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction; the file files no blockers, so open_blockers is unchanged. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft, so the estate charge waits for the owner's flip. Nothing to offset: its subject — how the skill catalogue reaches the host at all — is covered by no active roadmap, and its own harvest establishes that the two existing MCP servers are the reason a third must NOT be built. Landed by /analyze:inbox with six of seven defects re-verified at 577bdbf88."
 ---
 # Road to skill delivery over MCP — without losing the skills the host can still route
 

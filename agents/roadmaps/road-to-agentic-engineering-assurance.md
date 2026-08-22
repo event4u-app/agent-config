@@ -1,13 +1,14 @@
 ---
 complexity: structural
-status: draft
+status: ready
+estate_growth_exempt: "Same owner-instructed draft -> ready flip, 2026-08-22. Two blockers that were dormant under status: draft now charge open_blockers, and the policy sanctions a new blocker through no allowance other than this claim. Growth is +2 open_blockers. Both are owner-reserved by their own text, so they surface at exactly the moment the roadmap becomes executable, which is the point of the flip. Neither blocker was added, weakened, or resolved here; only their visibility to the ratchet changed."
 execution:
   mode: phase-checkpoints
 research_pin:
   repository: event4u-app/agent-config
   main: 572e147cc0110f4453dc23ea04891bca4e38d897
   date: 2026-08-22
-estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
+estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate decision this key deferred to the owner has now been taken, for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
 ---
 # Road to Agentic Engineering Assurance
 > **Source anonymisation (`source-confidentiality`).** External harvest sources

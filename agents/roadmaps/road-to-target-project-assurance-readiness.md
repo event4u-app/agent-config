@@ -1,9 +1,9 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Ships status: draft, same terms as its parent road-to-agentic-engineering-assurance: no charge until the owner flips it, and no unrelated roadmap archived to pay for it. It is the parent's Phase 1 matrix carrier and has no active sibling covering target-repo readiness grading."
+estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate decision this key deferred to the owner has now been taken, for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction; the file carries no blockers, so open_blockers is unchanged. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft, same terms as its parent road-to-agentic-engineering-assurance: no charge until the owner flips it, and no unrelated roadmap archived to pay for it. It is the parent's Phase 1 matrix carrier and has no active sibling covering target-repo readiness grading."
 ---
 # Road to target-project assurance readiness
 
