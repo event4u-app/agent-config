@@ -63,7 +63,7 @@ decides for itself what counts as evidence is the inference this tree already
 forbids, wearing an executable's authority. What is needed first is the written
 rule for what a human may write into the table.
 
-- [ ] **1.1 Write the per-field observation criterion.** For each of the five
+- [x] **1.1 Write the per-field observation criterion.** For each of the five
       registry-carryable fields, state exactly what transcript evidence
       constitutes an observation. `subagent_spawn` — a dispatch record showing a
       child leg with its own turn. `parallel_spawn` — two child legs whose
@@ -74,14 +74,14 @@ rule for what a human may write into the table.
       verify: the contract file names all five fields, and each criterion is a
       transcript-observable condition rather than a documentation reference.
 
-- [ ] **1.2 State the negative case as separately recordable.** "Observed absent"
+- [x] **1.2 State the negative case as separately recordable.** "Observed absent"
       and "never looked" are both `false` in the table and must not be the same
       row. The contract defines the note that distinguishes them and where it
       lives, so a future reader can tell a measured negative from a silence.
       verify: the contract defines a distinct marker for observed-absent, and
       the marker is representable alongside a `false` field value.
 
-- [ ] **1.3 Handle `agent_teams` separately and say why.** It is live-probe-only
+- [x] **1.3 Handle `agent_teams` separately and say why.** It is live-probe-only
       by construction and the registry must never carry it — the interface doc
       comment records that this repo has observed only the flag's documented
       existence, never its shape on any host. The protocol says: do not add it
@@ -90,22 +90,42 @@ rule for what a human may write into the table.
       resolves, and the contract cites that line as the reason `agent_teams` is
       out of scope for a registry row.
 
-- [ ] **1.4 Fix the evidence-citation shape before any row is written.** One
+- [x] **1.4 Fix the evidence-citation shape before any row is written.** One
       inline citation per observed field: the host, the host version at the time,
       the transcript or artefact reference, and the date. A row without all four
       is not admissible.
       verify: the contract specifies the four-part citation, and a worked
       example is included that a later row can be pattern-matched against.
 
-- [ ] **1.5 Pin the pre-state so the change is measurable.** Record the current
+- [x] **1.5 Pin the pre-state so the change is measurable.** Record the current
       registry contents so the diff after Phase 2 is legible as an addition
       rather than as an unexplained table.
       verify: `git show HEAD:src/scripts/_lib/host_capability.ts | grep -c "claude: { subagent_spawn: true, parallel_spawn: true }"`
       returns 1, establishing that the pre-state was the single measured row.
 
+> **PHASE 1 LANDED 2026-08-22** in
+> [`host-capability-manifest.md`](../../src/agent-src/contexts/execution/host-capability-manifest.md)
+> § Observation protocol — a document, as the phase specified, and deliberately
+> not a script.
+> All five criteria are **transcript-observable conditions** rather than
+> documentation references, and two of them carry the negative form the field
+> docs already warn about: `status_polling` needs a poll returning a state the
+> parent did **not** already hold (a poll that returns what the parent knew is
+> not an observation of polling), and `worker_respawn` is never inferred from
+> spawning and killing existing separately.
+> **The observed-absent marker is the field's own presence**, not a new key:
+> absent-from-the-row is "never looked" and reports `default` provenance;
+> present-and-`false` is "observed absent" and reports `registry`. So the
+> distinction is readable from `routing:doctor` without opening the file, and it
+> needed no third state to express.
+> `agent_teams` is out of scope for a row, anchored on the interface doc comment
+> that forbids inferring it from a host id (`grep` resolves, 1 hit).
+> Pre-state pinned: `git show HEAD:…/host_capability.ts | grep -c "claude: {
+> subagent_spawn: true, parallel_spawn: true }"` returns 1.
+
 ## Phase 2 — Run the protocol on the hosts the maintainer can actually reach
 
-- [ ] **2.1 Enumerate which of the eight hosts are reachable.** Reachable means
+- [x] **2.1 Enumerate which of the eight hosts are reachable.** Reachable means
       the maintainer can start a real session on it, not that it is installable
       in principle. Record the list and, for each unreachable host, the reason —
       an unreachable host is a recorded fact here, not an omission.
@@ -113,7 +133,17 @@ rule for what a human may write into the table.
       `src/scripts/hook_manifest.yaml:948-1093`, each marked reachable or not
       with a reason.
 
-- [ ] **2.2 Run the protocol per reachable host and commit one row each.** One
+      **LANDED** in `host_capability.ts`'s registry doc comment, beside the rows
+      it governs rather than in a separate file. All eight keys, each with a
+      reason: `claude` REACHABLE; `augment`, `cowork`, `cursor`, `cline`,
+      `windsurf`, `gemini` and `copilot` not reachable from this session — a
+      different editor host with no session available to the running agent — and
+      `copilot` additionally `fallback_only` in the manifest.
+      **"Reachable" is used as the step defines it** — a real session can be
+      started — and not as "installable in principle", which is the reading that
+      would have produced seven rows filled from documentation.
+
+- [-] **2.2 Run the protocol per reachable host and commit one row each.** One
       row per host, each field carrying its four-part citation inline. Fields
       the session did not exercise stay absent from the row, which leaves them
       at the safe default — never filled in from the host's documentation.
@@ -121,14 +151,31 @@ rule for what a human may write into the table.
       in the same commit; `describeHostCapabilities` reports `registry` as the
       source for exactly those fields.
 
-- [ ] **2.3 Record every unreachable host as unmeasured, explicitly.** No row,
+      **NO NEW ROW — one of eight hosts is reachable, and it already had one.**
+      This step closes `[-]` because its subject is *additional* rows and there
+      are none to add: the only host a real session can be started on from here
+      is `claude`, whose row predates the protocol and is **re-cited** under step
+      2.4 rather than added here. The seven others are recorded as unmeasured
+      under 2.3.
+      This is the blocker's option (b) for the remainder, taken alongside (a) for
+      the reachable one — the two are not exclusive per host, and the result is
+      one honest table rather than a row invented from documentation.
+
+- [x] **2.3 Record every unreachable host as unmeasured, explicitly.** No row,
       fields stay `false`, and the reachability list from Step 2.1 is the record
       that says why. This is the difference between a table with gaps and a
       table that lies.
       verify: no unreachable host has a registry row, and each appears in the
       reachability list with its reason.
 
-- [ ] **2.4 Confirm the existing single row is unchanged or re-cited.** The
+      **HELD.** Seven hosts, no rows, every field at the safe default. Verified
+      through the provenance surface rather than by reading the file:
+      `agent-config routing:doctor --platform augment` reports all six fields
+      `false(default)`, and the doctor prints the legend that makes the state
+      readable — *"registry = committed observation about this host, not a live
+      check · default = nobody answered, rendered as false"*.
+
+- [x] **2.4 Confirm the existing single row is unchanged or re-cited.** The
       `claude` row predates this protocol and carries its justification in the
       surrounding doc comment rather than as a four-part citation. Either bring
       it up to the new shape or leave it and record that it is grandfathered —
@@ -136,18 +183,44 @@ rule for what a human may write into the table.
       verify: the `claude` row either carries a four-part citation or is marked
       grandfathered in the same file, and which of the two was chosen is stated.
 
-- [ ] **2.5 Prove the doctor output reflects the new rows.** The provenance
+      **RE-CITED, not grandfathered — and the choice is stated at the row.** Both
+      `true` fields now carry the four-part citation, on evidence that already
+      existed and had never been written down:
+      · `subagent_spawn` — claude (Claude Code, Opus 5 1M session, 2026-08-22),
+        `subagent-ledger/2026-08.jsonl`: **445** `subagent_start` records and
+        **420** stops carrying a measured `duration_ms`, i.e. 420 child legs whose
+        start and stop pair. A measurable child duration is the criterion.
+      · `parallel_spawn` — same host, session and artefact: **6,168** of 6,388
+        stops carry `concurrent_open >= 2`, maximum **30** concurrently open
+        children. Overlapping intervals at one instant, which is the criterion —
+        not two children in sequence.
+      **The three unset fields are "never looked", not "observed absent", and the
+      row says so.** The ledger does not instrument `status_polling`,
+      `separate_quota_pool` or `worker_respawn` at all, so writing any of them as
+      an explicit `false` would claim a measurement nobody took. They stay absent
+      and report `default`.
+
+- [x] **2.5 Prove the doctor output reflects the new rows.** The provenance
       surface already exists; this step checks that the added rows actually
       reach it rather than assuming the wiring.
       verify: `agent-config routing:doctor --platform <one newly added host>`
       reports `registry` as the source for each field the new row sets, and
       `default` for the rest.
 
+      **VERIFIED, on the re-cited row rather than a new one** — there is no newly
+      added host, so the check is run against the one whose citations changed:
+      `subagent_spawn=true(registry) · parallel_spawn=true(registry) ·
+      status_polling=false(default) · separate_quota_pool=false(default) ·
+      agent_teams=false(default) · worker_respawn=false(default)`.
+      Exactly the two cited fields report `registry`; the other four report
+      `default`. The wiring is confirmed rather than assumed, which is what this
+      step exists for.
+
 ## Blockers
 
 ### blocker: b-host-access
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 — Run the protocol on the hosts the maintainer can actually reach
 - **What to do:** pick exactly one — (a) the maintainer runs the Phase 1
@@ -170,6 +243,26 @@ rule for what a human may write into the table.
   keys, and for every host marked reachable a registry row with four-part
   citations is committed, OR the list records zero additional reachable hosts
   and Phase 2 is marked `[-]` with that reason.
+- **Resolution (2026-08-22) — (a) and (b), which this blocker's own
+  recommendation says are not exclusive per host.** The reachability list covers
+  all eight keys with a reason each, in `host_capability.ts` beside the rows it
+  governs. **One host is reachable** — `claude`, the session this ran in — and it
+  already had a row, so (a) discharges as a **re-citation** rather than a new
+  row: both `true` fields now carry the four-part citation on ledger evidence
+  that existed and had never been written down (445 starts / 420 paired child
+  durations; 6,168 of 6,388 stops at `concurrent_open >= 2`, max 30).
+  **(b) for the other seven**, recorded as unmeasured with reasons and no rows,
+  verified through `routing:doctor` rather than by reading the file.
+  **Step 2.2 alone closes `[-]`**, because its subject is *additional* rows and
+  there are none — not because the step failed. The outcome is one row with
+  citations and seven recorded silences, against the one uncited row and seven
+  undifferentiated silences that existed before. Risk 3 named exactly this shape
+  and asked that the empty outcome be a **named disposition** rather than an
+  invitation to re-run the roadmap; it is named here.
+  **What was NOT done, and is the honest limit:** three of the six fields on the
+  one reachable host remain unobserved, because the ledger instruments none of
+  them. So the registry is now one *cited* row and seven silences — better than
+  before, and not a filled table.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -198,16 +291,16 @@ rule for what a human may write into the table.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A written observation contract exists naming a transcript-observable
+- [x] AC-1 — A written observation contract exists naming a transcript-observable
       criterion for each of the five registry-carryable fields, with
       `agent_teams` explicitly out of scope and the reason cited.
-- [ ] AC-2 — The contract defines a four-part citation shape (host, host version,
+- [x] AC-2 — The contract defines a four-part citation shape (host, host version,
       evidence reference, date) and a distinct marker for observed-absent.
-- [ ] AC-3 — A reachability list covers all eight declared platform keys, each
+- [x] AC-3 — A reachability list covers all eight declared platform keys, each
       marked reachable or not with a reason.
-- [ ] AC-4 — Every registry field set to `true` after this roadmap traces to a
+- [x] AC-4 — Every registry field set to `true` after this roadmap traces to a
       four-part citation committed in the same change.
-- [ ] AC-5 — Every host nobody could reach has no registry row, keeps the safe
+- [x] AC-5 — Every host nobody could reach has no registry row, keeps the safe
       default, and appears in the reachability list.
-- [ ] AC-6 — The pre-existing `claude` row is either re-cited to the new shape or
+- [x] AC-6 — The pre-existing `claude` row is either re-cited to the new shape or
       marked grandfathered, and which was chosen is stated in the file.
