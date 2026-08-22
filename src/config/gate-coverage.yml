@@ -42,13 +42,24 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 269 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 272 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-21 and it returns 269).
-# **45 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 42 of those 45 are listed below.** The manifest is
+# re-run 2026-08-22 and it returns 272).
+# **47 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 44 of those 47 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~16 % of the population.
+# carry a floor, and covers ~17 % of the population.
+#
+# RECOUNTED on 2026-08-22, and it was wrong on every figure before the recount —
+# which is the fourth time, and the reason this paragraph keeps asking to be
+# computed. `check_no_stub_inventory_table` added ONE row and ONE script, but the
+# readings moved by more than one in three of the four places: population
+# 269 -> 272 (two scripts had landed since 2026-08-21 without touching this
+# prose), listed rows 42 -> 44 (the file already held 43 before this change; the
+# prose had again been adjusted instead of recounted, and the paragraph below
+# says so about its own previous revision), emitters 45 -> 47. Every number here
+# is reproducible: `grep -c '^  - id:' src/config/gate-coverage.yml` for the rows
+# and `count_gate_scripts()` for the population.
 #
 # Both halves were RE-DERIVED on 2026-08-21, not incremented, and the previous
 # reading was off by one in a way worth recording: it said "42 … and 41 of those
@@ -59,14 +70,14 @@
 # the prose was adjusted by one instead of recounted.
 #
 # The derivation now, so the next reader can check it rather than trust it:
-# `grep -c '^  - id:'` returns 42 (computable, and computed); every listed row
+# `grep -c '^  - id:'` returns 44 (computable, and computed); every listed row
 # is an emitter, because a row that did not emit could carry no floor and the
 # guard would report it `failing`; THREE emitters are deliberately unlisted —
 # `lint_evidence_artifacts` (below), `adr_cite_check` and
 # `check_new_adr_evidence` (each in the block where its row would have sat);
-# 42 + 3 = 45. The population figure comes from the function, and it stays 269
-# because `check_new_adr_evidence` matches the population prefix whether or not
-# it carries a row here.
+# 44 + 3 = 47. The population figure comes from the function, and
+# `check_new_adr_evidence` matches the population prefix whether or not it
+# carries a row here.
 #
 # `adr/evidence_census` emits a `scanned:` line too and is NOT in either number:
 # it carries no `lint|check|audit` prefix, so `count_gate_scripts()` never sees
@@ -1074,6 +1085,30 @@ gates:
     # an already-listed file that GREW while the file COUNT stayed at one. That
     # last case is what pins the metric as excess lines rather than a file count;
     # a count-based ratchet passes it, and this gate must not.
+
+  - id: check_no_stub_inventory_table
+    argv: ["--quiet"]
+    min_scanned: 1
+    corpus: "the guarded watch list — agents/roadmaps/stubs/README.md (1 file; the whole scope, not a sample)"
+    status: enforced
+    # No `canary:` recipe: the guarded path already EXISTS, and the canary
+    # contract is create-only. A recipe would have to mutate a tracked file
+    # rather than plant one, which the contract does not express. The gate
+    # reports UNPROVEN there rather than green, which is the honest state.
+    #
+    # Discrimination is proven by the gate's own `--self-test` instead, and the
+    # five cases are the sabotage probes it was verified with before landing:
+    # a restored transfer table, the inventory header alone, a DEAD watch list
+    # (the `check_safety_floor_untouched` shape — it must red, never report
+    # clean), plus two accepting cases that pin the narrowness review asked for
+    # — a glossary table and a table citing parent roadmaps one directory up
+    # must both pass. A blanket ban on markdown tables in the file would trade
+    # one regression for a permanent block on legitimate documentation.
+    #
+    # `min_scanned: 1` is the true corpus, not a weak floor: the scope is one
+    # known file. The collapse this file's rule 3 guards against is covered by
+    # `assertWatchlistResolves`, which refuses to report clean when the path
+    # does not resolve — so a rename reds the gate instead of retiring it.
 
   # check_new_adr_evidence is DELIBERATELY NOT REGISTERED here, following this
   # file's own two precedents rather than breaking them.
