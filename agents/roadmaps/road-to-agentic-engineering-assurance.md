@@ -1,13 +1,14 @@
 ---
 complexity: structural
-status: draft
+status: ready
+estate_growth_exempt: "Same owner-instructed draft -> ready flip, 2026-08-22. Two blockers that were dormant under status: draft now charge open_blockers, and the policy sanctions a new blocker through no allowance other than this claim. Growth is +2 open_blockers. Both are owner-reserved by their own text, so they surface at exactly the moment the roadmap becomes executable, which is the point of the flip. Neither blocker was added, weakened, or resolved here; only their visibility to the ratchet changed."
 execution:
   mode: phase-checkpoints
 research_pin:
   repository: event4u-app/agent-config
   main: 572e147cc0110f4453dc23ea04891bca4e38d897
   date: 2026-08-22
-estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
+estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate decision this key deferred to the owner has now been taken, for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
 ---
 # Road to Agentic Engineering Assurance
 > **Source anonymisation (`source-confidentiality`).** External harvest sources
@@ -852,21 +853,22 @@ requirements traceability while their current owners exist.
 | Runtime evidence composition | partial / stack-specific | unify here |
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
 
-| Rank | Risk | Failure mode | Mitigation |
-|---|---|---|---|
-| 1 | Assurance theater | More green badges create more confidence without catching more defects | frozen corpus, false-verified metric, ablations before enforcement |
-| 2 | Duplicate AC mechanisms | umbrella reimplements TDD/review/traceability | explicit ownership table + no-dup acceptance criteria |
-| 3 | Tool sprawl | AC installs fashionable tools beside project-native equivalents | capability-first registry + prefer-existing rule |
-| 4 | Mutation cargo cult | universal MSI threshold becomes the goal | changed-surface probes, survivor findings, no universal core threshold |
-| 5 | Cost explosion | every change triggers browser + mutation + multiple reviewers | R0-R4 risk selection + measured incremental value |
-| 6 | Correlated agent errors | multiple agents repeat the same mistaken premise | independence metadata + deterministic oracles + spec-first only if measured |
-| 7 | Legacy lockout | old repos can never become "agent-ready" | changed-surface ratchet + explicit grandfathered debt |
-| 8 | Silent degradation | unavailable tool is skipped while final result still says verified | degraded verdict is schema-visible; no silent skip |
-| 9 | Readiness score gaming | teams optimize a scalar | vector is source of truth; critical capability floors override score |
-| 10 | Risk classifier drift | semantic model over-classifies or misses sensitive changes | deterministic signals first + benchmarked ambiguity path |
-| 11 | Stale evidence | capability existed last month but command/config is broken now | evidence freshness + proof command + re-discovery triggers |
-| 12 | Human role ambiguity | "high assurance" is read as automatic merge authority | merge/risk-acceptance remains separate user-governance concern |
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Assurance theater | product | More green badges create more confidence without catching more defects | frozen corpus, false-verified metric, ablations before enforcement | Phase 8 — evaluation before stronger enforcement |
+| 2 | Duplicate AC mechanisms | implementation | umbrella reimplements TDD/review/traceability | explicit ownership table + no-dup acceptance criteria | Phase 0 — inventory and overlap contract |
+| 3 | Tool sprawl | implementation | AC installs fashionable tools beside project-native equivalents | capability-first registry + prefer-existing rule | Phase 3 — capability bootstrap |
+| 4 | Mutation cargo cult | product | universal MSI threshold becomes the goal | changed-surface probes, survivor findings, no universal core threshold | P5 — test sensitivity beats raw coverage |
+| 5 | Cost explosion | product | every change triggers browser + mutation + multiple reviewers | R0-R4 risk selection + measured incremental value | Phase 2 — risk-to-assurance policy engine |
+| 6 | Correlated agent errors | implementation | multiple agents repeat the same mistaken premise | independence metadata + deterministic oracles + spec-first only if measured | P6 — independent verification is risk-conditioned |
+| 7 | Legacy lockout | product | old repos can never become "agent-ready" | changed-surface ratchet + explicit grandfathered debt | P4 — changed-surface ratchet for legacy |
+| 8 | Silent degradation | implementation | unavailable tool is skipped while final result still says verified | degraded verdict is schema-visible; no silent skip | P8 — no silent degradation |
+| 9 | Readiness score gaming | product | teams optimize a scalar | vector is source of truth; critical capability floors override score | P2 — readiness is a vector |
+| 10 | Risk classifier drift | implementation | semantic model over-classifies or misses sensitive changes | deterministic signals first + benchmarked ambiguity path | Phase 2 — risk-to-assurance policy engine |
+| 11 | Stale evidence | implementation | capability existed last month but command/config is broken now | evidence freshness + proof command + re-discovery triggers | Evidence contract |
+| 12 | Human role ambiguity | product | "high assurance" is read as automatic merge authority | merge/risk-acceptance remains separate user-governance concern | Phase 6 — assurance verdict and autonomy ceiling |
 
 ## Acceptance Criteria
 
