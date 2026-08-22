@@ -16,7 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
+import { readAdrAxisCells, readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
 
 // ^ADR-(\d{3})-([a-z0-9-]+)\.md$
 const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
@@ -29,8 +29,8 @@ const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
  * amendments from one never touched.
  */
 const HEAD =
-    '| # | Title | Status | Date | Supersedes | Superseded by | Amended by |\n' +
-    '|---|---|---|---|---|---|---|';
+    '| # | Title | Status | Date | Provenance | Evidence | Supersedes | Superseded by | Amended by |\n' +
+    '|---|---|---|---|---|---|---|---|---|';
 
 type Meta = Record<string, string>;
 interface Row extends Meta {
@@ -130,10 +130,16 @@ export function scan(d: string): [Row[], Row[], string[]] {
         if (name === 'INDEX.md') {
             continue;
         }
-        const meta = fm(fs.readFileSync(p, 'utf-8'));
+        const text = fs.readFileSync(p, 'utf-8');
+        const meta = fm(text);
+        // Read apart from `meta` on purpose. `provenance` and `evidence` are
+        // nested, so the scalar reader keeps them out of its map entirely —
+        // spreading `meta` could never produce these two cells, and the axis
+        // reader is where the `discovery`-rides-in-the-grade rule lives.
+        const axes = readAdrAxisCells(text);
         const m = NAMED.exec(name);
         if (!m) {
-            leg.push({ path: name, ...meta });
+            leg.push({ path: name, ...meta, ...axes });
             continue;
         }
         const n = m[1] as string;
@@ -144,7 +150,7 @@ export function scan(d: string): [Row[], Row[], string[]] {
             errs.push(`ADR-${n} duplicate: ${name} and ${seen[n]}`);
         }
         seen[n] = name;
-        num.push({ num: n, slug: m[2] as string, path: name, ...meta });
+        num.push({ num: n, slug: m[2] as string, path: name, ...meta, ...axes });
     }
     const nums = new Set(num.map((r) => r.num as string));
     for (const r of num) {
@@ -172,7 +178,8 @@ export function row(r: Row): string {
     const label = 'num' in r ? `ADR-${r.num}` : (r.path as string).slice(0, -3);
     return (
         `| [${label}](${r.path}) | ${title} | ${r.status ?? '—'} ` +
-        `| ${r.date ?? '—'} | ${r.supersedes ?? '—'} | ${r.superseded_by ?? '—'} ` +
+        `| ${r.date ?? '—'} | ${r.provenance_kind ?? '—'} | ${r.evidence_grade ?? '—'} ` +
+        `| ${r.supersedes ?? '—'} | ${r.superseded_by ?? '—'} ` +
         `| ${r.amended_by ?? '—'} |`
     );
 }

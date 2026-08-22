@@ -1,10 +1,9 @@
-# ADRs — `memory` (retired)
+# ADRs — `memory`
 
-> **Retired area.** The `@event4u/agent-memory` companion package was removed
-> (memory is now entirely file-backed); see
-> [ADR-094](../../decisions/ADR-094-agent-memory-layer-removal.md). This area is
-> kept only for the historical record below and is no longer audited.
+> Memory / knowledge surfaces. RETIRED area — its single ADR is superseded by the agent-memory-layer removal; listed so the directory is audited rather than invisible.
 
-| # | Title | Status | Date | Supersedes |
-|---|---|---|---|---|
-| [0001](0001-consumer-side-snapshot.md) | Consumer Side Snapshot | superseded | 2026-05-16 | — |
+Contract: [`docs/contracts/memory-visibility-v1.md`](../../../docs/contracts/memory-visibility-v1.md).
+
+| # | Title | Status | Date | Provenance | Evidence | Supersedes |
+|---|---|---|---|---|---|---|
+| [0001](0001-consumer-side-snapshot.md) | Consumer Side Snapshot | superseded | 2026-05-16 | — | — | — |
