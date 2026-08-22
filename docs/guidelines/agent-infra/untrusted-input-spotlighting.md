@@ -135,6 +135,23 @@ recommends. The mapping (no new gate needed):
 | LLM01 #6 — segregate and identify external content | [`untrusted-input-defense`](../../../src/rules/untrusted-input-defense.md) + this guideline |
 | LLM06 — least agency / post-action gating | [`runtime-safety`](../../../src/rules/runtime-safety.md) (manual/assisted/automated), [`verify-before-complete`](../../../src/rules/verify-before-complete.md) |
 
+## The content-scanning hook
+
+`injection_scan_hook.ts` binds to `post_tool_use`, reads tool output, and
+reports **15 measured encoding channels plus four phrase families** — measured
+over the frozen corpus at `internal/bench/corpora/encoding-channels/` at
+**99.00 % recall and a 0.85 % false-positive rate**. It is warn-only
+(`fail_closed: false`, `severity: advisory` in `hook_manifest.yaml`) and ships
+**default-OFF**.
+
+Read those two numbers as properties of that corpus, not of the wild: a channel
+nobody put in the corpus is a channel the recall figure says nothing about.
+
+It changes nothing about the rule's `enforced_by` field, and the reason is in
+[`untrusted-input-defense § Enforcement`](../../../src/rules/untrusted-input-defense.md):
+a hook that cannot refuse does not enforce. The detector narrows what an
+injection can do unnoticed; it does not make the quarantine mechanical.
+
 ## Limits
 
 Detection and spotlighting are **probabilistic** layers, not guarantees

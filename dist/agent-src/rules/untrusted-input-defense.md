@@ -72,19 +72,12 @@ instructions — the quarantine is carried by the model (ADR-135 lists it in the
 CRITICAL policy class). Counting an adjacent lint here would be coverage
 inflation, so none is counted.
 
-**A content-scanning hook now exists, and the field above is unchanged.**
-`injection_scan_hook.ts` runs on `post_tool_use`, reads tool output, and reports
-15 measured encoding channels plus four phrase families — measured over the
-frozen corpus at `internal/bench/corpora/encoding-channels/` at 99.00 % recall
-and a 0.85 % false-positive rate. It is **warn-only** (`fail_closed: false`,
-`severity: advisory` in `hook_manifest.yaml`) and ships **default-OFF**.
-
-It cannot refuse, and a hook that cannot refuse does not enforce — so this field
-stays `none`. Wiring a detector is not wiring a gate, and moving the field
-because a hook now names more channels would be exactly the inflation the
-paragraph above declines. What changed is that this section used to say no such
-backstop existed and that a future one would be the first candidate to change
-the field; the first half is now false and the second was always wrong.
+**A content-scanning hook now exists and this field is unchanged.**
+`injection_scan_hook.ts` is warn-only and default-OFF: it cannot refuse, and a
+hook that cannot refuse does not enforce. This section used to say no such
+backstop existed and that a future one would change the field — the first half
+is now false, the second always was. Detail:
+[`untrusted-input-spotlighting § The content-scanning hook`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md).
 
 Body migrated to [`guideline:agent-infra/untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) (per P4 of `road-to-kernel-and-router.md`) — runtime defense protocol (separate / spotlight / refuse role-takeover / no silent egress / untrusted agent-instruction files), hidden-instruction awareness (invisible Unicode + confusables), injection-signal taxonomy, least-agency → existing-gate OWASP mapping.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
