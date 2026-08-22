@@ -141,10 +141,114 @@ function _enabled(root: string): boolean {
   return false;
 }
 
-/** Best-effort extraction of the tool-output text from the envelope. */
+/**
+ * ── The output-envelope contract ─────────────────────────────────────────────
+ *
+ * `b-injection-scan-unwrap-security`, option (a), council 2026-08-20 (2/2
+ * quorum): "specify the envelope contract and its fixtures BEFORE narrowing the
+ * scanner input". This block is that contract; the fixtures are in
+ * `tests/hooks/injection_scan_output_contract.test.ts`, and they are the
+ * deliverable — the code change below is one descent and one deletion.
+ *
+ * WHAT THIS CONCERN READS, exhaustively:
+ *
+ *  1. **The tool output, and only the tool output.** `injection-scan` is bound
+ *     to `post_tool_use` on every platform that carries it, so a payload
+ *     reaching here is expected to hold a tool result.
+ *  2. **Where it lives.** Under a dispatcher envelope the host-shaped fields are
+ *     nested under `payload` (`dispatch_hook._build_envelope`); under a bare-host
+ *     or direct invocation they sit at the root. Both are supported.
+ *  3. **Which keys.** {@link OUTPUT_KEYS}, in order. The first four mirror
+ *     `payload_stub.BODY_KEYS.result` — the set the dispatcher stubs, and
+ *     therefore the set it knows how to serve whole. `output` and `result` are
+ *     the two generic spellings this concern has accepted since it shipped and
+ *     are kept: dropping them would narrow coverage on the same change that
+ *     narrows the fallback, and only one of those is decided here.
+ *  4. **How a value is read.** A string is scanned verbatim. An object or array
+ *     is scanned as its compact JSON serialisation — unchanged, deliberately,
+ *     including the consequence that a hidden codepoint inside a nested string
+ *     becomes the literal text `\u200b` and does NOT trip `_HIDDEN`. That is a
+ *     detection property of the serialiser, not of this contract, and changing
+ *     it is a separate question.
+ *  5. **Missing output → nothing to scan → allow.** THIS IS THE NARROWING. The
+ *     previous code fell through to serialising the WHOLE envelope, so what it
+ *     actually scanned in production was everything: the tool input echo, the
+ *     cwd, the session id, the settings block. It worked by accident and nothing
+ *     tested the accident.
+ *  6. **Malformed envelope → allow.** Non-JSON, a list, a scalar: unchanged.
+ *  7. **A stubbed result body → allow, LOUDLY.** The manifest declares
+ *     `needs_payload_bodies: [input, result]`, which is what keeps the result
+ *     served whole. If that declaration is ever dropped the body arrives as a
+ *     `PayloadStub` and a plain read finds no string — indistinguishable from
+ *     "clean output", which is a scanner that silently stops scanning. Say so on
+ *     stderr instead. Same second-silent-death route `ship-diff-volume` closes.
+ *
+ * BOTH DIRECTIONS OF THE COST, stated because the narrowing is on a security
+ * surface and only one direction is an improvement:
+ *
+ *  - **Removed false positives.** The old fallback could raise a hit on text
+ *    that is not tool output at all — a `cwd` under a path containing an exfil
+ *    signature, an injection phrase echoed in the tool INPUT the user typed.
+ *  - **Accepted false-negative risk.** A host that puts its tool output under a
+ *    key not in {@link OUTPUT_KEYS} is now unscanned where the fallback would
+ *    have caught it. This is mitigated, not dismissed: an unrecognised payload
+ *    shape emits one stderr line naming the payload's top-level KEY NAMES (never
+ *    values), so a new host spelling surfaces on first contact instead of going
+ *    dark. The list is one exported constant; adding a spelling is one line.
+ *
+ * The descent below is LOCAL and is deliberately NOT `envelope.ts`'s shared
+ * `unwrap`, which descends only when all four `ENVELOPE_KEYS` are present: a
+ * producer emitting a partial envelope would leave this concern reading the root
+ * again with every test still green. `ship-diff-volume`, `design-slop` and
+ * `ui-route-nudge` each carry their own descent for the same reason.
+ */
+export const OUTPUT_KEYS: readonly string[] = [
+  // payload_stub.BODY_KEYS.result — the spellings the dispatcher serves.
+  "tool_response",
+  "toolResponse",
+  "tool_result",
+  "toolUseResult",
+  // Generic spellings accepted since this concern shipped.
+  "output",
+  "result",
+];
+
+/** The dispatcher's stub marker (payload_stub.STUB_MARKER), inlined so this
+ * concern keeps its no-hard-import-dependency property in a consumer repo. */
+const STUB_MARKER = "_agent_config_body_omitted";
+
+function _isStub(v: unknown): boolean {
+  return _isObject(v as JsonValue) && (v as JsonObject)[STUB_MARKER] === true;
+}
+
+/**
+ * Descend to the platform payload. See the contract block above, point 2.
+ */
+function _payload_of(root: JsonObject): JsonObject {
+  const inner = root["payload"];
+  return _isObject(inner) ? inner : root;
+}
+
+/**
+ * The tool-output text, per the contract above. `''` means "nothing to scan",
+ * which is a real answer and not a failure.
+ */
 function _tool_output(envelope: JsonObject): string {
-  for (const key of ["tool_response", "tool_result", "toolResponse", "output", "result"]) {
-    const v = envelope[key];
+  const payload = _payload_of(envelope);
+  for (const key of OUTPUT_KEYS) {
+    const v = payload[key];
+    if (v === undefined || v === null) {
+      continue;
+    }
+    if (_isStub(v)) {
+      // Contract point 7: the declaration that serves this body was dropped.
+      process.stderr.write(
+        `injection-scan: ${key} arrived stubbed; the concern declares ` +
+          "needs_payload_bodies: [input, result] and cannot scan tool output " +
+          "without it. Nothing was scanned on this event.\n",
+      );
+      return "";
+    }
     if (typeof v === "string") {
       return v;
     }
@@ -152,8 +256,36 @@ function _tool_output(envelope: JsonObject): string {
       return _pyJsonDumpsCompact(v);
     }
   }
-  // fall back to the whole payload (minus obvious input echoes)
-  return _pyJsonDumpsCompact(envelope);
+  // Contract point 5 + the accepted false-negative risk. Key NAMES only — a
+  // value here could be tool output, which is exactly what must not be logged.
+  const names = Object.keys(payload);
+  if (names.length > 0) {
+    process.stderr.write(
+      "injection-scan: no recognised tool-output key in this payload; nothing " +
+        `scanned. Present keys: ${names.sort().join(", ")}. Expected one of: ` +
+        `${OUTPUT_KEYS.join(", ")}.\n`,
+    );
+  }
+  return "";
+}
+
+/**
+ * The stdin boundary: raw concern stdin → the text this concern scans.
+ *
+ * Exported so the regression drives the BOUNDARY rather than the extractor —
+ * both council seats required that, and it is what stops a hand-written fixture
+ * from drifting into agreeing with the bug. Never throws.
+ */
+export function toolOutputFromStdin(raw: string): string {
+  if (!raw.trim()) return "";
+  let root: unknown;
+  try {
+    root = JSON.parse(raw);
+  } catch {
+    return "";
+  }
+  if (!_isObject(root as JsonValue)) return "";
+  return _tool_output(root as JsonObject);
 }
 
 function _scan(text: string): string[] {
