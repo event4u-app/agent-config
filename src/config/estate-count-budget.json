@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 59,
-    "open_blockers": 64
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -776,6 +776,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 24,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on two axes by the close of road-to-subagent-envelope-adoption: active 25 -> 24 on the archive, open_blockers 64 -> 62 on its two blockers RESOLVED. Worth reading the shape of that close, because the roadmap archives WITHOUT achieving its Phase 2 goal and the glyphs say so: six steps [x], three [-], and two acceptance criteria [-]. b-classifier-vs-contract resolved (b) conditionally by 2/2 council -- narrow the contract to the validator's five fields, do not widen the validator -- with the condition that rule (f)'s two delivery clauses survive as delivery invariants rather than being folded into a field set. b-production-window-reach resolved on a SPLIT: one seat chose (a) publish the machine-local window, the other (b) park until an independently sourced one exists, and both agreed drain traffic does not discharge Phase 2. Recorded as a split rather than resolved by preference, and no owner escalation was taken because the blocker's own Resolved-when admits either branch and the intersection satisfies both. This is the sixth drain branch to walk active 25 -> 24 against its own base; the counts do not compose and the last to land must re-measure."
     }
   ],
   "target": {
