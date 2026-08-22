@@ -11,4 +11,4 @@ Python-language patterns.
 
 ## Skills (1)
 
-- **`async-python-patterns`** — Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized.
+- **`async-python-patterns`** — When writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized.

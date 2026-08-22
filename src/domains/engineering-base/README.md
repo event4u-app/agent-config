@@ -60,9 +60,9 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`aws-infrastructure`** — Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS.
 - **`blast-radius-analyzer`** — Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 - **`bug-analyzer`** — Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
-- **`code-refactoring`** — Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
+- **`code-refactoring`** — When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 - **`code-review`** — Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
-- **`conventional-commits-writing`** — Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
+- **`conventional-commits-writing`** — When writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
 - **`corpus-grounding`** — Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints.
 - **`dashboard-design`** — Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
 - **`data-flow-mapper`** — Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line.
@@ -71,7 +71,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`deep-reading-analyst`** — Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary.
 - **`defense-in-depth`** — Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one.
 - **`dependency-upgrade`** — Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic.
-- **`design-review`** — Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more.
+- **`design-review`** — When the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility and more.
 - **`devcontainer`** — Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`).
 - **`developer-like-execution`** — Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it.
 - **`docker`** — Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'.
@@ -83,7 +83,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`form-handler`** — Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
 - **`frontend-render-security`** — Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
 - **`git-workflow`** — Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git.
-- **`github-ci`** — Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
+- **`github-ci`** — When working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
 - **`grafana`** — Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
 - **`incident-commander`** — Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'.
 - **`learning-tutor`** — Use when the user wants to learn a topic or verify real understanding — rapid-competence session, error drills, learning sprint, gap probe, Feynman check. Triggers 'teach me X', 'quiz me'.
@@ -92,7 +92,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`license-compliance-credits`** — Regenerate docs/THIRD-PARTY-NOTICES.md from provenance/borrows.jsonl after any ledger change — even a single new entry — never hand-edit the notices file
 - **`logging-monitoring`** — Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers.
 - **`merge-conflicts`** — Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow.
-- **`migration-architect`** — Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
+- **`migration-architect`** — When shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
 - **`mobile-e2e-strategy`** — Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps.
 - **`multi-tenancy`** — Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
 - **`openapi`** — Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI.
@@ -106,10 +106,10 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`project-analysis-hypothesis-driven`** — Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'.
 - **`project-analyzer`** — Single-pass tech-stack detection with an agents/evidence/analysis/ write-up; explicit request only. Deep multi-pass audit → universal-project-analysis. Raw primitives → project-analysis-core.
 - **`quality-tools`** — Use when PHPStan, Rector, or ECS output appears — "phpstan says mixed", type errors, "fix code style", "run rector" — even when Eloquent/Laravel/model code is also mentioned.
-- **`receiving-code-review`** — Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'.
+- **`receiving-code-review`** — When processing code review feedback (bot or human) before changing anything — triages, verifies and pushes back with technical reasoning — even when the user just says 'fix the comments'.
 - **`requesting-code-review`** — Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'.
 - **`risk-officer`** — Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
-- **`secrets-management`** — Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized.
+- **`secrets-management`** — When picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
 - **`security-audit`** — Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling.
 - **`security-maturity-assessment`** — Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
@@ -132,7 +132,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`ui-apply-generic`** — Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus.
 - **`ui-component-architect`** — Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'.
 - **`universal-project-analysis`** — Deep multi-pass codebase audit — orchestrates project-analysis-core plus the framework-specific project-analysis-*; explicit request only. Single-pass scan → project-analyzer.
-- **`using-git-worktrees`** — Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
+- **`using-git-worktrees`** — When starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
 - **`validate-feature-fit`** — Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
 - **`verify-completion-evidence`** — Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.
 - **`worktree-lifecycle`** — Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist.

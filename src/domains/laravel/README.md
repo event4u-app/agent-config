@@ -33,7 +33,7 @@ Laravel framework patterns; depends on PHP at the artefact level.
 - **`laravel-pulse`** — Use when setting up Laravel Pulse — real-time dashboard, built-in cards, custom recorders, performance insights — even when the user just says 'I need app monitoring' without naming Pulse.
 - **`laravel-reverb`** — Use when configuring Laravel Reverb — the first-party WebSocket server with Pusher protocol compatibility, horizontal scaling, and Pulse monitoring.
 - **`laravel-scheduling`** — Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling.
-- **`laravel-validation`** — Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it.
+- **`laravel-validation`** — When writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it.
 - **`laravel-websocket`** — Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the stack-native skill.
 - **`livewire`** — Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive state, events, lifecycle hooks, and component/view separation.
 - **`livewire-architect`** — Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'.
