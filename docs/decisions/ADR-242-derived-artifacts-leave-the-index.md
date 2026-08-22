@@ -130,6 +130,33 @@ which is the precise shape of the regression above.
 - Rollback is artifact-scoped and never global; the conditions live in the
   roadmap that shipped this.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| Six paths carry essentially all conflict-resolution traffic, and the seventh drops to 6 | Files touched in the last 120 merge commits, counted per path: 53 / 50 / 49 / 49 / 32 / 21, then 6. Reproduce with `git log --merges -n 120 --format=%H \| while read h; do git show --format= --name-only "$h"; done \| sort \| uniq -c \| sort -rn` |
+| The archive index is the most frequent single `Consistency` failure | 3 of the 6 `Consistency` failures among the last 300 runs are literally `archive index out of date (…) — run task build-archive-index` (`gh run list --limit 300`, failure rate 18/300 = 6.0 %) |
+| The three untracked artefacts have no consumer that needs them tracked or present | Every hit for each literal path classified in `agents/evidence/analysis/derived-artifact-consumers-2026-08.md`; the two automation sites are string lists (`sync_pr_branch.ts:84-85` `GENERATED`, `ship_diff_volume_hook.ts:53` `EXCLUDED`). Confirmed by deleting all three from a clean working tree and running the gate set — the only two reds isolate to this change's own `+1` roadmap and to the committed-copy comparison Phase 3.2 replaces |
+| Both generators are deterministic | Output deleted and regenerated twice per artefact, byte-compared: `build_archive_index` → `483d30f0…` / `c98da496…` on both runs, `update_roadmap_progress` → `ffe17843…` on both runs |
+| Code inspection alone does not discharge the consumer test | `archive_completed_roadmaps.ts:403` ran `git add -- agents/roadmaps-progress.md`; `git add` on an ignored path exits **1** (probed 2026-08-22 in a scratch repository) and `_run` returns a code the call site discards — a silent no-op from the 2026-08-21 untrack onward that no reader noticed |
+| A stale branch re-adds the file through a `modify/delete` merge, and the guard catches it | `origin/main` merged into the cutover branch produced `CONFLICT (modify/delete)` on all three paths with the stale version left in the tree; resolved by staging what was found, all three read as re-added, and on that tree both required-job gates exit 1 naming their paths |
+| The two ratchet baselines are not reconstructible and not untrackable | ADR-241 § Context (39 of 43 sampled commits moved the baseline) and `src/scripts/sync_pr_branch.ts:110` |
+
+The grade is **E2 — repeated and comparative**, and deliberately not higher.
+The conflict population is measured across 120 merges and the CI population
+across 300 runs rather than from one incident, and the consumer classification
+was checked twice by different means — reading every call site, then deleting
+the files and running the gates. There is no pre-registered benchmark and no
+external authority.
+
+What it is **not**: a demonstration that GitHub takes the required check's
+definition from the merge ref rather than from the head branch. That is the one
+load-bearing claim this record rests on which was not executed here, because it
+cannot be observed from a branch that is not yet the base. It is carried as an
+open criterion in
+`agents/roadmaps/stubs/road-to-generated-artifact-guard-post-merge-proof.md`
+with the procedure that closes it, rather than asserted.
+
 ## Alternatives
 
 - **`merge=union` on the conflicting paths.** Refused for the two ratchet
