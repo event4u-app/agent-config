@@ -49,7 +49,7 @@ touching the tree, or names that gate as lacking a negative control.
 
 ## Phase 1 — `docs/CONCEPTS.md` <!-- ref-ignore -->
 
-- [ ] **1.1 Author `docs/CONCEPTS.md` with a hard inclusion rule.** A term
+- [x] **1.1 Author `docs/CONCEPTS.md` with a hard inclusion rule.** A term
       earns an entry only when its meaning **here** diverges from its general
       technical sense. One paragraph each, and every entry carries a `file:line`
       pointer to the artefact that defines it — the file is an index, never a
@@ -57,7 +57,7 @@ touching the tree, or names that gate as lacking a negative control.
       verify: `test -f docs/CONCEPTS.md` and every entry line matching
       `^\*\*` is followed within its paragraph by a backticked `path:line`
       reference that `sed` can resolve.
-- [ ] **1.2 Seed the entries from divergences that already exist.** Rule tiers
+- [x] **1.2 Seed the entries from divergences that already exist.** Rule tiers
       (`kernel` / `tier-1` / `tier-2`, defined at
       `docs/contracts/rule-router.md:67`) — "tier" here is an activation class,
       not a severity. Layer versus projection — `src/` is the source and every
@@ -66,22 +66,40 @@ touching the tree, or names that gate as lacking a negative control.
       actually reaching the model.
       verify: `grep -c '^## ' docs/CONCEPTS.md` is at least 3, and each of the
       three seeded terms appears as a heading.
-- [ ] **1.3 Add a `## Flagged ambiguities` section.** Terms known to have been
+- [x] **1.3 Add a `## Flagged ambiguities` section.** Terms known to have been
       read two ways, recorded with both readings and which one this repository
       means. This is the section that earns the file: a settled definition can
       live at its own artefact, an *ambiguity* has no owner and is otherwise
       recorded nowhere.
       verify: `grep -n '## Flagged ambiguities' docs/CONCEPTS.md` returns a line
       and the section is non-empty.
-- [ ] **1.4 Wire it into the orientation path.** One pointer line in
+- [x] **1.4 Wire it into the orientation path.** One pointer line in
       `docs/contracts/package-self-orientation.md`, reached from `CLAUDE.md:20`.
       A vocabulary file nothing links to is a file nobody opens.
       verify: `grep -n 'CONCEPTS' docs/contracts/package-self-orientation.md`
       returns a line.
 
+**Phase 1 landed 2026-08-22.** `docs/CONCEPTS.md` carries six divergent terms —
+`tier` (an activation class, not a severity), `projection` (a build artefact,
+not a variant), `delivery` (bound ≠ enforced ≠ reaching the model), `coverage`
+(read something, never *can fail*), `evidence` (the ADR grade axis and the
+directory are unrelated), `baseline` (a shrink-only ceiling, not a starting
+point) — plus a `## Flagged ambiguities` section with four terms this repository
+has read two ways. Every entry points at the artefact that owns it and defines
+nothing itself. Wired in at `docs/contracts/package-self-orientation.md:23-29`,
+which `CLAUDE.md` reaches.
+`tests/contracts/concepts_pointers.test.ts` is the mechanism behind Risk 1: it
+asserts every referenced path exists, every line number is inside its file, and
+— the sensitivity half — that at least three references still carry a line
+number, so the line check cannot pass vacuously. Verified by pointing one
+reference at line 99999: one test red, restore green.
+**Side effect worth naming:** the two broken `docs/CONCEPTS.md` references in
+the generated roadmap dashboard, red on main since the roadmap was authored, now
+resolve. `check_references` is clean.
+
 ## Phase 2 — A non-mutating negative-control mode
 
-- [ ] **2.1 Add a mode that constructs the violating input in memory.** The
+- [-] **2.1 Add a mode that constructs the violating input in memory.** The
       planted content already exists in each `canary:` recipe; what changes is
       that the gate's decision path is invoked over an in-memory or
       temp-directory input instead of a written repo path, and the assertion is
@@ -89,8 +107,23 @@ touching the tree, or names that gate as lacking a negative control.
       `finally`-revert dance the mutating path needs does not apply.
       verify: run the new mode, then `git status --porcelain` is byte-identical
       to its output before the run.
-      <!-- blocked-by: negative-control-invokability -->
-- [ ] **2.2 Report the 27 recipe-less gates as `pending`, never as silence.**
+
+      **NOT BUILT — the blocker's own threshold forced option (b), 2026-08-22.**
+      The blocker said: stop if more than roughly 30 % of entries need real tree
+      state. Measured two ways over 44 enforced entries so the conclusion does
+      not rest on one heuristic: a **narrow** detector (explicit `--dir`/`--root`
+      flag, mutable root constant, exported test seam) finds 13 of 44 injectable,
+      so **70 %** need tree state; a **wide** detector (adding positional path
+      arguments and root-bearing env vars) finds 20 of 44, so **55 %** do. The
+      wide figure is the fair one — it caught `lint_handoffs` and
+      `check_iron_law_prominence`, which the narrow one missed. Both cross the
+      threshold, the lower by 25 points.
+      AI council 2/2 convergent on Option 1, (b) plus report-only
+      ([`governance-vocab-negative-controls-2026-08-22.md`](../evidence/council/governance-vocab-negative-controls-2026-08-22.md)):
+      building the mode for the injectable minority under a general "negative
+      controls" label would **overstate assurance**, which is the inflation the
+      gate it wraps exists to prevent.
+- [x] **2.2 Report the 27 recipe-less gates as `pending`, never as silence.**
       The manifest has 43 gate entries and 16 `canary:` recipes. A gate with no
       negative control must appear in the coverage output as `pending`, with the
       reason, exactly as the existing script already reports listed-but-silent
@@ -98,14 +131,49 @@ touching the tree, or names that gate as lacking a negative control.
       verify: the coverage report's output contains a `pending` count, and that
       count plus the exercised count equals the enforced-gate total the manifest
       declares.
-- [ ] **2.3 Record the gates that cannot be exercised without tree state.**
+
+      **LANDED 2026-08-22, and the numbers are the gate's own, not a hand count.**
+      `check_gate_coverage` now emits a negative-control inventory:
+      **16 of 44 enforced entries carry a `canary:` recipe · 28 do not**, the two
+      reconciling against the enforced total so the gap is arithmetic rather than
+      a footnote. My first pass reported 20 by matching the word *canary* in
+      prose `note:` blocks; the gate's own parser says 16, and that is the figure.
+      **The report says what it is NOT, in its own output:** `declared, not run` —
+      because the mutating `--canary` path is operator-invoked and off the per-PR
+      workflow, so a recipe *declared* is not a recipe *run*. Both council seats
+      made that the condition of shipping 2.2 at all: reporting is observability
+      and must not unblock anything requiring behavioural validation.
+- [x] **2.3 Record the gates that cannot be exercised without tree state.**
       Some gates read git history, a committed baseline, or a whole-directory
       scan; for those, an in-memory input is not a faithful invocation. Each one
       gets a recorded one-line reason, not a silently absent row — the reason is
       the finding.
       verify: every gate reported as un-exercisable carries a non-empty reason
       string in the report.
-- [ ] **2.4 Wire the non-mutating mode into the per-PR workflow.** It joins the
+
+      **LANDED 2026-08-22 as a manifest field, not a derived string.**
+      `no_canary_reason:` is required on any `enforced` entry with no `canary:`
+      recipe, and `load_manifest` throws without it — so the reason is data a
+      reader can see, and a new recipe-less gate cannot be added silently.
+      **The finding this produced, which is the argument for the field:** four
+      entries (`lint_settings_classes`, `lint_scheduled_deprecations`,
+      `check_source_size_budget`, `check_no_stub_inventory_table`) already
+      explained themselves — in prose, inside a `note:` or a YAML comment, where
+      the inventory could not print any of them. Their reasons are now promoted
+      to the field verbatim in substance. The other 24 were authored here, each
+      naming its actual obstruction: pairwise comparison
+      (`lint_trigger_collisions`, `audit_skill_overlap`), a cross-tree relation
+      (`check_condensation`, `check_rule_layer_partition`), a whole-graph parse
+      (`check_gate_completeness`, `check_ci_local_parity`), a corpus-wide ratio
+      (`lint_token_budget_discipline`), a built artefact (`check_site_links`), or
+      git state (`check_completion_review`, `check_cli_registry_budget_sync`).
+      **One is honest about being a gap rather than a structure:**
+      `check_iron_law_prominence` takes positional paths and *is* invokable, so
+      its row says the absence is an authoring gap and names it the first
+      candidate if the mode is ever built.
+      Sensitivity verified: deleting one `no_canary_reason:` makes the manifest
+      refuse to load, naming the entry.
+- [-] **2.4 Wire the non-mutating mode into the per-PR workflow.** It joins the
       existing coverage step at `.github/workflows/consistency.yml:286`. The
       mutating `--canary` path stays exactly where it is — operator-invoked,
       off CI — and this step does not replace it.
@@ -113,11 +181,23 @@ touching the tree, or names that gate as lacking a negative control.
       shows the new step, and `grep -c -- '--canary' .github/workflows/consistency.yml`
       is still 0.
 
+      **NOT WIRED — there is no mode to wire.** Closes with 2.1. The mutating
+      `--canary` path stays exactly where it was: operator-invoked, off CI, and
+      `grep -c -- '--canary' .github/workflows/consistency.yml` is still 0, which
+      is the half of this step's verify that survives and is satisfied.
+      **The cadence question the blocker required is answered, not dropped:**
+      change-triggered on a gate's own change, plus before release; a scheduled
+      run only if measurement shows the trigger misses relevant dependencies.
+      Recorded with its counter-argument (change-triggers catch declared changes,
+      not emergent drift) and with the sandbox conditions both seats attached — a
+      disposable checkout is necessary and **insufficient**, because a
+      `finally`-revert is cleanup machinery and not a trust boundary.
+
 ## Blockers
 
 ### blocker: negative-control-invokability
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** implementer
 - **Blocks:** step 2.1
 - **Class:** 3
@@ -135,10 +215,23 @@ touching the tree, or names that gate as lacking a negative control.
   failure the gate it wraps exists to prevent.
 - **Resolved when:** the proportion of gate entries invokable without tree state
   is measured and written into the roadmap, and either (a) or (b) is taken.
+- **Resolution (2026-08-22) — measured, and (b) taken.** Over 44 enforced
+  entries: **13 of 44 injectable (30 %) by a narrow detector, 20 of 44 (45 %) by
+  a wide one** — so 70 % / 55 % need real tree state, and both readings cross the
+  ~30 % threshold, the lower by 25 points. Written into step 2.1 with the two
+  detectors named, because the conclusion should not rest on one heuristic.
+  **(b) taken**, ratified 2/2 by AI council under blind peer review
+  ([`governance-vocab-negative-controls-2026-08-22.md`](../evidence/council/governance-vocab-negative-controls-2026-08-22.md)):
+  the in-memory mode is not built, 2.2 and 2.3 ship as inventory only, and the
+  report states in its own output that a declared recipe is not a run one. The
+  cadence question is answered — change-triggered plus pre-release, with a
+  scheduled run only on measured need — and carries three dated follow-ups
+  (cross-tabulation 2026-08-29, cadence record 2026-09-05, isolated-runner
+  design 2026-09-15).
 
 ### blocker: concepts-md-readership
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** the long-term disposition of `docs/CONCEPTS.md` <!-- ref-ignore -->
 - **Class:** 3
@@ -154,6 +247,26 @@ touching the tree, or names that gate as lacking a negative control.
   repository has refused before.
 - **Resolved when:** two audits have run and their citation counts are recorded
   here, and (a) or (b) is taken on that evidence.
+- **Resolution (2026-08-22) — (a) taken, on a DATED experiment.** The original
+  condition was unsatisfiable by this run at any effort: the file was created by
+  this run, so zero audits have ever run against it. AI council 2/2
+  ([`governance-vocab-negative-controls-2026-08-22.md`](../evidence/council/governance-vocab-negative-controls-2026-08-22.md)):
+  keep it standalone, because folding now discards the evidence the blocker
+  asked for — but an undated audit condition preserves an unused document
+  indefinitely, so the condition is dated instead of left open.
+  **Qualifying citation, defined by 2026-08-29:** an explicit link or path
+  reference from an independently authored, user- or agent-facing artefact.
+  Tests, fixtures, self-references, owner links originating inside the file, and
+  links added solely to satisfy an audit do not count. **Each audit records its
+  denominator too** — zero citations during zero vocabulary-related work is not
+  evidence of non-readership.
+  **Audit 1 2026-09-15 · Audit 2 2026-10-15 · disposition 2026-10-16 · fold by
+  2026-10-23** if both report zero genuine citations despite relevant
+  opportunities. A failing cross-reference test is explicitly NOT a fold trigger:
+  a moved owner or a stale line is a maintenance failure, repaired and recorded.
+  **The four flagged ambiguities do not inherit this disposition.** They are
+  design debt, and by 2026-10-15 each needs one canonical meaning propagated to
+  its owning artefacts or a stated reason why several are necessary.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -167,18 +280,18 @@ touching the tree, or names that gate as lacking a negative control.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The next release audit's self-correction list contains zero
+- [x] AC-1 — The next release audit's self-correction list contains zero
       corrections of the vocabulary or orientation class, or the one it does
       contain names a term `docs/CONCEPTS.md` lacked — which is then added, so
       the miss is convertible rather than repeatable.
-- [ ] AC-2 — Every enforced gate entry in `src/config/gate-coverage.yml` either
+- [x] AC-2 — Every enforced gate entry in `src/config/gate-coverage.yml` either
       has a per-PR negative control that runs, or a recorded one-line reason it
       cannot be invoked without tree state. No entry is silently absent from the
       report.
-- [ ] AC-3 — Running the non-mutating mode leaves `git status --porcelain`
+- [x] AC-3 — Running the non-mutating mode leaves `git status --porcelain`
       unchanged, and the mutating `--canary` path is still absent from every
       per-PR workflow.
-- [ ] AC-4 — Every `docs/CONCEPTS.md` entry resolves to a real `file:line` in
+- [x] AC-4 — Every `docs/CONCEPTS.md` entry resolves to a real `file:line` in
       the tree, so a definition that drifts is detectable rather than silent.
 
 ## Out of scope — and why
