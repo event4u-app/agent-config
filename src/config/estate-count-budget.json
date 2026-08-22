@@ -17,8 +17,8 @@
   },
   "baseline": {
     "active_roadmaps": 23,
-    "later_roadmaps": 60,
-    "open_blockers": 64
+    "later_roadmaps": 59,
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -786,10 +786,17 @@
     },
     {
       "at": "2026-08-22",
+      "active_roadmaps": 24,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on two axes by the close of road-to-code-graph-extractor-defect. active 25 -> 24 is the archive at zero open and zero deferred steps; open_blockers 64 -> 62 is its two blockers RESOLVED. b-bench-repo-pinning resolved (a) on evidence -- all four pre-registered truth-file hashes match exactly and all three repo clones resolve, so Phase 1 is reproducible; it is nonetheless unrun, for the unrelated reason that the Phase 0 pre-falsifier fired. b-code-graph-default-flip resolved (a) by 2/2 council: the reachability repair lands as an independent bug fix, with code_graph.enabled, the registered null and DEFAULT_CACHE all explicitly out of scope. Note that this roadmap ARCHIVES WITHOUT ACHIEVING ITS GOAL, and the glyphs say so: three steps [x], six [-]. The extraction defect was real and is repaired; the pre-falsifier then established it is NOT the cause of the retrieval null, which is the honest-null closing state the roadmap registered for itself before any repair. NOTE FOR THE MERGE: the fifth drain branch to walk active 25 -> 24 against its own base (PRs #1532, #1534, #1536, #1537 are the others); five independent -1s do not compose, so the last to land must re-measure."
+    },
+    {
+      "at": "2026-08-22",
       "active_roadmaps": 23,
-      "later_roadmaps": 60,
-      "open_blockers": 64,
-      "why": "ONE metric LOWERED, one RAISED on the parked side, one FLAT, by the drain of road-to-catalog-and-projection-economy. active_roadmaps 24 -> 23: the roadmap was executed and archived inside this one change. later_roadmaps 59 -> 60, and it is a park with a carrier rather than a drop: an AI council (2/2) instructed ABSORB over defer for agents/roadmaps/stubs/road-to-host-aware-skill-projection.md, because its step 1.4 asserted the primary host has no measured truncation pressure and the host's own budget event refutes that (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20), while the framework document that transferred the stub is absent from this tree - so there was no live authority to defer to. The stub is DELETED here and its corrected steps, plus a council-added retained-set-quality step, live in later/road-to-host-catalogue-contract.md with owner maintainer and review_by 2027-02-22. open_blockers stays 64: this roadmap's blocker was resolved (-1) and the absorbed carrier declares one (+1). CORRECTION to the 2026-08-22 entry above, which is wrong and was believed while writing this one: it states that a blocker moved to later/ is somewhere 'collect() does not count'. Measured here - baseline 62 was set on that belief and the gate reported 64 - later/ blockers ARE counted. Recorded rather than quietly re-set, because the false belief is what would let a real growth be booked as flat next time."
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN active 24 -> 23 on the sync with main, not on work this PR did: road-to-evidence-based-adr-governance was archived by #1534 without walking the baseline, so main landed measured 23 against a stored 24 and every branch merging main inherited the red. Recorded here because this is the first change to merge that main state, and the gate's own remediation note says the walk belongs in the change that carries the lower measurement rather than in a follow-up."
     }
   ],
   "target": {
