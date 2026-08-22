@@ -1035,7 +1035,7 @@ shape check stand on their own and are unaffected.
   its payload fields now have observed answers. Only Phase 4 does.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Reopening cancelled work on a clause that cannot lift | product | V2 argues the 2026-08-07 stopping rule's reopen condition is deadlocked and therefore reopens two cancelled items on production evidence instead. That reasoning is correct and is also exactly the shape a scope-creep argument takes — "the lock cannot fire, so I am free". If the deadlock reading is wrong, this roadmap re-proposes work a council already refused | The reopen is confined to the two items whose clause is provably dead (envelope wiring, SubagentStop concern) and explicitly does NOT revive the orchestrator-first content verdict, which is restated as a non-goal; the deadlock claim carries its own file:line evidence on both halves so a reviewer can refute it in one read | Phase 1 |

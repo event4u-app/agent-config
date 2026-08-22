@@ -1,4 +1,5 @@
 ---
+estate_offset_exempt: "A genuine addition, so this key is the right instrument here — unlike the twenty it was just removed from, which were already on main and not re-added by any diff. The gate charges per addition and this is one of three. No offset was available: nothing in the active tree is archivable, because the only roadmap at zero open steps carries two deferred items and roadmap-progress-sync Iron Law 3 requires its deferred-resolution gate to run before any archive; parking this one would bury a repair whose defect is measured and reproducible today. Charged as one reviewable line, per this gate own instruction."
 complexity: lightweight
 status: ready
 execution:
