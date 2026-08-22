@@ -35,7 +35,6 @@
     "!dist/**/*.spec.js.map"
   ],
   "npmignore": [
-    ".agent-src.uncondensed/",
     ".idea/",
     ".vscode/",
     ".phpunit.cache/",
@@ -57,5 +56,5 @@
   "npmignore_shadowed": [
     "agents/"
   ],
-  "shadowed_measured_in": "unbuilt tree (payload carries no dist/cli/**)"
+  "shadowed_measured_in": "built tree (payload carries dist/cli/**)"
 }
