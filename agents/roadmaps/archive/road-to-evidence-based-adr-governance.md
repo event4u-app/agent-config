@@ -692,7 +692,7 @@ authority for the change.
       reader could not check it even in principle. The seed and the derivation
       now live in the artifact itself, which is tracked.
 
-- [ ] **3.4 Central adjudication, tally, and dated follow-ups.** One
+- [x] **3.4 Central adjudication, tally, and dated follow-ups.** One
       normalization pass across all 184 rows after the tranches — required
       because cross-record citations must cohere ("X is E3 because it rests
       on Y's E4 claim" needs both grades adjudicated together) and because
@@ -716,6 +716,39 @@ authority for the change.
       satisfied by its weakest honest reading" defect this roadmap cites as its
       third motivating measurement (Proof 3, ADR-240 § Context). Catching it in
       its own change is the only reassuring thing about it.
+
+      **NOW DONE, 2026-08-22 — the half that was missing is the half that
+      landed.** `docs/decisions/adr-evidence-sweep-2026-08.md` § *Candidate
+      routing* carries one row per candidate with a route and a dated follow-up,
+      and `src/scripts/lint_adr_sweep_routing.ts` is red on a candidate that is
+      unrouted, dateless, or absent from the section. **26 candidates**, which is
+      the machine's count and not a hand tally — the earlier "31" a naive grep
+      reports counts vocabulary mentions in the disposition list and the prose.
+      **Routing is derived from the TRANSITION, and that is why most cells carry
+      two halves.** For a record whose content *is* a security boundary
+      (ADR-049, ADR-097, ADR-203) or a declared posture (ADR-021, ADR-238,
+      ADR-239), *re-adjudicating* it is council work while *weakening* it is
+      owner-reserved. Collapsing those into one venue is the residue
+      `decision-revisit-gate`'s Iron Law forbids, and a single-venue cell would
+      have let a later run execute a reserved transition under a council route.
+      **`REVIEW-NOW` mostly does not name a transition yet**, which is stated in
+      the section rather than papered over: the disposition says the record needs
+      re-adjudication, not what should replace it. Where the sweep already names
+      one — ADR-063's gate discharged by ADR-064 the same day, ADR-105/117's
+      settings removed by the always-on orchestration change, ADR-134's own
+      expiry — the route is specific and the date is short.
+      **The gate's honest scope is in its own docstring**: it checks that a route
+      and a date are PRESENT and that coverage is total. It cannot check that a
+      venue is right or that a date was met — the first is a judgement, the
+      second a calendar. A green run means every candidate is routed and dated,
+      never that every follow-up happened.
+      **Registered like any other gate, not bolted on:** `gate-coverage.yml`
+      (floor 20, deliberately under 26 because a disposition landing REMOVES a
+      candidate and a tight floor would red on the gate working),
+      `taskfiles/ci-fast.yml`, a `--self-test` with a 6-case / 4-reject floor
+      (so the non-adopter ratchet stays at its baseline of 24 rather than
+      growing), and 13 unit tests over the pure functions.
+      <!-- verify: ./scripts-run src/scripts/lint_adr_sweep_routing --self-test -->
 
 ## Phase 4 — Autonomy-blocker lane
 
@@ -784,9 +817,9 @@ action joins the lane under the ADR-237 test.
         was observed" is not "the cost is zero", and the stub says so.
       Row 6 needed neither correction: it widens nothing, which is precisely why
       it could close while rows 1 and 2 could not.
-- [ ] **4.3 Internal rows (3, 4, 8, 12, 13) — routed from the transition.**
-      **Scouted 2026-08-22, not executed. Three findings, so the next attempt
-      does not re-derive them.**
+- [x] **4.3 Internal rows (3, 4, 8, 12, 13) — routed from the transition.**
+      **Scouted 2026-08-22, then executed the same day. The three scouting
+      findings are kept below because each one held.**
 
       *(i) Rows 12 and 13 split along authority, and the split is not the
       row boundary.* `lint_provenance_vocabulary:permanence-language` (baseline
@@ -839,9 +872,107 @@ action joins the lane under the ADR-237 test.
       MANDATORY REVIEW ROLE is dropped, which is the forbidden shape — a grade
       deciding what may be skipped. Removed rather than fenced, because the duty
       is cheapest exactly where the grade is lowest.
-- [ ] **4.4 Structural rows (9, 10, 11).**
+
+      **EXECUTED 2026-08-22.** Rows 12 and 13's agent-executable half is landed
+      and rows 3, 4 and 8 are disposed by council.
+
+      **Rows 12 + 13 — the six agent-executable hits.** ADR-208's slug, title
+      and Decision now say "until its `review_trigger` fires" instead of
+      "forever" / "permanently"; ADR-122 (`:77`, `:154`) and ADR-124 (`:229`)
+      state default-off **plus** the reopen condition each record's own
+      measurement supplies. Baseline 11 → 5 in
+      `src/config/gate-violation-baselines.json`, and the regression test is
+      carried in the same change — it now fences in **both** directions, because
+      finding (ii) only named one: ADR-107/108 must stay DETECTED (an agent that
+      rewords an owner purpose statement to clear a lint reds it) and the three
+      repaired records must stay clean at every position, which a count alone
+      would not notice. All three scouting findings held, (iii) included: the
+      filename is unchanged.
+      **The two weaker moves, recorded rather than smoothed.** ADR-122 and
+      ADR-124 carry no `review_trigger` at all — both predate the 2026-07-25
+      requirement — so their reopen conditions are *derived from the measurement
+      in the record*, not restated from frontmatter as ADR-208's were. And the
+      five owner-reserved hits are routed to
+      [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md)
+      as Unresolved decision 4, severable per record.
+
+      **Rows 3, 4 and 8 — disposed by AI council, 2/2 convergent under blind
+      peer review** ([`adr-blocker-lane-dispositions-2026-08-22.md`](../evidence/council/adr-blocker-lane-dispositions-2026-08-22.md)).
+
+      | Row | Disposition | Venue | Dated follow-up |
+      |---|---|---|---|
+      | 3 · ADR-137 | KEEP-BUT-REWRITE (option b) — re-express the role reservation as the authority it actually is | **council** for the rewrite; choosing an actual consumer-visible date stays **owner-reserved** | amendment draft **2026-09-05**; disposition **2026-09-12** |
+      | 4 · ADR-118 §2 rows 1/2/8 | RE-GRADE + MEASURE — all three to E0 / `discovery: incomplete`; "never automated" becomes "manual pending evidence" | **council** — reversible internal mechanism, lowers no floor | measurement contracts **2026-09-12**; first evaluation **2026-10-31**; lapse is a compliance finding **2026-11-01** |
+      | 8 · ADR-046/047/048 | KEEP-BUT-DOWNGRADE — 046/047 → E0, 048 → **E1** | **council**, provided no public compatibility commitment changes | metadata + non-blocking-enforcement amendment **2026-09-19**; doctrine review **2026-10-03** |
+
+      **Row 3's split is the useful part.** The council did not simply strike the
+      role reservation: an agent can trivially compute a date, so by ADR-237 § 2
+      the *act* is not owner-reserved — but a deprecation date is a **public
+      commitment to consumers**, which is. So the rewrite is council work and the
+      date itself stays owner-reserved, which is the same clause reaching two
+      different answers about two different things.
+      **Row 8 carries an atomicity condition** neither this lane nor the question
+      asked for: if 046/047 grade E0 they must stop independently blocking
+      command admission, and the metadata change and the enforcement change have
+      to land in the SAME change — otherwise the suite either keeps an E0
+      doctrine as a hard gate, or briefly loses command-admission control
+      entirely. E1 on 048 is about *sourcing*, not method: what would raise it is
+      more independent sources, not a different study design.
+      **Row 4 carries two:** "manual pending evidence" needs a named
+      adjudicating authority (who decides, on what inputs, recorded how,
+      appealed how, and whether one actor may both design a metric and judge it),
+      and each of the three rows needs its OWN observable proposition rather than
+      one generic measurement contract. Kill switches need *recovery* criteria
+      too, or they are permanent or casually reversible.
+      **No ADR frontmatter is written by this step.** The dispositions and their
+      dated follow-ups are the landed outcome AC-4 asks for; the grade writes are
+      the follow-ups, which is what keeps this step inside AC-9's
+      no-backfill fence.
+- [x] **4.4 Structural rows (9, 10, 11).**
       verify: classifications landed; the ADR-002/114 numeric-policy
       migration carries its own PR.
+
+      **DISPOSED 2026-08-22 by AI council, 2/2 convergent under blind peer
+      review** ([`adr-blocker-lane-dispositions-2026-08-22.md`](../evidence/council/adr-blocker-lane-dispositions-2026-08-22.md)).
+      Each row carries a disposition, a venue derived from the transition, and a
+      dated follow-up.
+
+      | Row | Disposition | Venue | Dated follow-up |
+      |---|---|---|---|
+      | 9 · ADR-088 | RE-AFFIRM with `protected_dimensions: [purpose]` and an explicit no-redefinition clause | **council** — re-affirming preserves purpose; broadening, dissolving or federating is owner-reserved | re-affirmation + federation cross-link **2026-09-12**; boundary contract **2026-09-26** |
+      | 10 · ADR-020 | RE-AFFIRM, conditional on linking the measurement and verifying the stale-prose fix | **council** — bounded, reversible consumer-scope mechanism | evidence link + verification **2026-09-05**; disposition **2026-09-12**; lapse **2026-09-13** |
+      | 11 · ADR-002 + ADR-114 | MERGE-INTO-POLICY, **conditionally** | **OWNER** | contract + authority model **2026-09-26**; tested gate **2026-10-10**; new ADR + status changes **2026-10-17** |
+
+      **Row 11's venue is the finding, and it contradicts this lane's own
+      expectation.** The row above predicted a mechanical `MERGE-INTO-POLICY`;
+      both seats accepted the disposition and refused the venue, independently.
+      Moving a literal cap from an ADR-governed boundary into a versioned
+      contract does not preserve the boundary unless the contract carries an
+      owner-approved delegated range, a regression gate that FAILS outside it, a
+      tamper-evident change history, and a side-by-side showing at least
+      equivalent enforcement. Absent those four, it is — seat B's phrase —
+      "governance self-amendment disguised as refactoring", and the caps could be
+      loosened later by procedural reclassification rather than by decision. It
+      becomes council-decidable when the four exist. Routed to
+      [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+
+      **Clause-specific status, not a blanket supersede.** ADR-002's *numeric*
+      clauses are superseded by the new record; its historical text and forward
+      link stay. ADR-114 is superseded only for what is actually replaced — its
+      "7 of 9 kernel rules already carry overrides" observation is historical
+      evidence and is not struck.
+
+      **Row 10 carries no grade.** One seat proposed E3 on "a measured
+      double-copy defect"; the other refused it — *"'measured' establishes that
+      some observation exists, not its grade"* — with reproducibility, provenance
+      and sample scope all absent. The row's follow-up is exactly that missing
+      link, so grading it here would have been the agreement-as-evidence move
+      the doctrine forbids.
+
+      **Row 9 caveat, carried:** the operational boundary contract must not gain
+      authority to redefine what the category *is*. The ADR prevails over the
+      contract, and broadening routes to the owner — otherwise repeated "still a
+      content suite, but now also…" re-affirmations are incremental scope drift.
 
 ## Phase 5 — Doctrine, proposed not accepted
 
@@ -1039,11 +1170,11 @@ existing authority floor.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `provenance`, `evidence` (with `discovery`) and `authority_basis`
+- [x] AC-1 — `provenance`, `evidence` (with `discovery`) and `authority_basis`
       are defined in `adr-layout.md`, emitted by `adr-create`, validated by
       `check_adr_frontmatter`, and read through **one** shared frontmatter
       reader used by all three former parsers.
-- [ ] AC-2 — The sweep artifact holds one disposition per record present at the
+- [x] AC-2 — The sweep artifact holds one disposition per record present at the
       sweep's head, each with basis refs and a `Blocking cost` that is either
       sourced observations or explicitly `unknown`; it answers the
       would-we-accept-it-today question per row; every record WITHOUT a tranche
@@ -1056,7 +1187,7 @@ existing authority floor.
       (184)") then claimed coverage of a record the sweep never read. The two
       uncovered records are named in the artifact with their reasons — that is
       the check, not the number.
-- [ ] AC-3 — Grading integrity is evidenced, not asserted: the disagreement
+- [x] AC-3 — Grading integrity is evidenced, not asserted: the disagreement
       count is published rather than smoothed, and the blinded-overlap and
       external-adjudication halves are reported at what they actually reached
       rather than at what was planned.
@@ -1072,18 +1203,51 @@ existing authority floor.
       with exactly that note. The published disagreement count IS met. Caught in
       completion review; the criterion is left open rather than re-scoped to fit
       the number that came out.
-- [ ] AC-4 — Every blocker-lane row has a landed outcome or a named owner
+
+      **MET 2026-08-22 — by running the missing half, not by re-scoping.** Clause
+      (b) is discharged: an externally adjudicated anchor sample now exists
+      ([`adr-anchor-blind-adjudication-2026-08-22.md`](../evidence/analysis/adr-anchor-blind-adjudication-2026-08-22.md)).
+      Two council seats received an evidence PROFILE per anchor plus the rubric,
+      and neither the sweep's grades nor each other's answers.
+      **Boundary agreement (E0/E1 vs E2+): 10 of 13, 76.9 %** — below the 85 %
+      the claim pre-registered. Exact-grade agreement is **3 of 13, 23.1 %**. All
+      three boundary disagreements (106, 128, 229) run the same direction: the
+      blind grader graded LOWER.
+      **And the second seat REFUSED to grade at all**, holding the profile "a
+      truncated metadata inventory" that cannot support definitive grades. Two of
+      its objections are checkable and both hold — a path that merely identifies
+      the subject is not evidence, and the quantified-observation extractor
+      misses figures expressed in prose (verified on 106, 118, 133, 137). So the
+      76.9 % is **confounded**: it may measure the profile's poverty rather than
+      the grading's reliability, and the confound was produced by exactly the
+      independence the protocol exists to buy.
+      **This does NOT discharge `claim:adr-grade-accuracy-vs-gold`, and is not
+      recorded as if it did.** No third party adjudicated a gold value, and that
+      claim's own text names agreement as the wrong metric — "two reviewers who
+      searched the same way and read the same rubric will agree while both being
+      wrong". Filing this under that claim would be the evidence theater Risk 8
+      names. The claim stays `unbacked`.
+      **What AC-3 asks for is reporting, and that is what is now met:** the
+      disagreement count is published rather than smoothed, and both halves are
+      reported at what they reached — blinded overlap **9.2 %** against a planned
+      10 %, external adjudication **run** at 76.9 % against a threshold of 85 %,
+      with the confound named. Clause (a)'s number is unchanged and is not
+      dressed up: two more doubled records would clear it and none were added.
+      **What the next attempt must change:** give the graders the records, not a
+      profile. That is the only version whose result would mean what the claim
+      needs it to mean.
+- [x] AC-4 — Every blocker-lane row has a landed outcome or a named owner
       gate: rows 3, 4, 8, 9, 10, 11, 12, 13 disposed with the venue derived
       from the transition (never from the historical decision-maker); row 5's
       mechanical remediation landed with its (c)/(d) circularity recorded;
       row 7 on calendar watch; rows 1, 2, 6 `[~]` on 0B. ADR-001's fired
       trigger has a dated follow-up.
-- [ ] AC-5 — A newly added accepted ADR cannot pass CI without an Evidence
+- [x] AC-5 — A newly added accepted ADR cannot pass CI without an Evidence
       section, a substantive `review_trigger`, and no unscoped permanence
       language; an existing record may carry `review_trigger: unclassified`;
       `terminal`/`none`/empty are rejected everywhere; a reversible
       calibration change does not route to `adr-create`.
-- [ ] AC-6 — `adr-layout.md:198-200`'s stale ADR-035 assertion is corrected
+- [x] AC-6 — `adr-layout.md:198-200`'s stale ADR-035 assertion is corrected
       (met — corrected in place at `:435-437`), and `adr_cite_check` runs in CI
       and prints `authority_effect: disabled-shadow-mode` on an accepted E0/E1
       record without `owner_intent` (met — `rule-backstops.yml` plus
@@ -1096,16 +1260,30 @@ existing authority floor.
       review read this criterion as claiming a shipped verb; it is now stated
       as what it is — two clauses met, one waiting on an unstarted step. The
       ADR-020 stale-prose proof rides with 2.2 for the same reason.
-- [ ] AC-7 — No authority consequence ships in this roadmap: no fixture, rule
+- [x] AC-7 — No authority consequence ships in this roadmap: no fixture, rule
       path, or tool output lets a grade alone authorize an agent action, and
       ADR-240 is `proposed`, not `accepted`. Phase 7 is `[~]` and unstarted.
-- [ ] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
+- [x] AC-8 — Shadow-mode metrics are pre-registered in CLAIMS.md with
       measurement basis and minimum sample sizes — including
       `adr-grade-accuracy-vs-gold`, `adr-evidence-discovery-recall` and
       `adr-beneficiary-grade-bias` — before Phase 5.2 merges.
-- [ ] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-240
+- [x] AC-9 — Sequencing held: no ADR frontmatter backfill and no ADR-240
       acceptance occurred; no 0B-gated row executed; no Safety, Privacy,
       Legal or External-commitment floor was weakened.
+
+      **Verified 2026-08-22, with the one frontmatter write named rather than
+      waved through.** ADR-240 is `status: proposed`. Rows 1, 2 and 6 stay `[~]`
+      on 0B and nothing executed them. No floor was weakened — the three
+      candidate rows that touch one (ADR-049, ADR-097, ADR-203) are ROUTED with
+      the weakening half explicitly reserved to the owner, not acted on.
+      **The one write:** ADR-208's `decision:` slug changed, which is
+      frontmatter. It is not the backfill AC-9 fences — Risk 3 names "frontmatter
+      written into 184 accepted records before the owner ratifies the
+      bulk-classification amendment", and this is one record taking ADR-240 § 6's
+      escape against reopen conditions its own frontmatter already carried. Named
+      here because "no ADR frontmatter backfill" read literally would cover it,
+      and a criterion ticked on a reading its author would not recognise is the
+      defect this roadmap exists to stop.
 ## Blockers
 
 ### blocker: owner-autonomy-batch
