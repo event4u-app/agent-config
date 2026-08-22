@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
-    "later_roadmaps": 59,
+    "active_roadmaps": 23,
+    "later_roadmaps": 60,
     "open_blockers": 64
   },
   "baseline_history": [
@@ -783,6 +783,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 60,
+      "open_blockers": 64,
+      "why": "ONE metric LOWERED, one RAISED on the parked side, one FLAT, by the drain of road-to-catalog-and-projection-economy. active_roadmaps 24 -> 23: the roadmap was executed and archived inside this one change. later_roadmaps 59 -> 60, and it is a park with a carrier rather than a drop: an AI council (2/2) instructed ABSORB over defer for agents/roadmaps/stubs/road-to-host-aware-skill-projection.md, because its step 1.4 asserted the primary host has no measured truncation pressure and the host's own budget event refutes that (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20), while the framework document that transferred the stub is absent from this tree - so there was no live authority to defer to. The stub is DELETED here and its corrected steps, plus a council-added retained-set-quality step, live in later/road-to-host-catalogue-contract.md with owner maintainer and review_by 2027-02-22. open_blockers stays 64: this roadmap's blocker was resolved (-1) and the absorbed carrier declares one (+1). CORRECTION to the 2026-08-22 entry above, which is wrong and was believed while writing this one: it states that a blocker moved to later/ is somewhere 'collect() does not count'. Measured here - baseline 62 was set on that belief and the gate reported 64 - later/ blockers ARE counted. Recorded rather than quietly re-set, because the false belief is what would let a real growth be booked as flat next time."
     }
   ],
   "target": {

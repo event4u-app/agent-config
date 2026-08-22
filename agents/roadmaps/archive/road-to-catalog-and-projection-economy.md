@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -96,7 +96,7 @@ not because it closes the budget gap.
 Lead with this because it is the only phase whose answer is unknown. The other
 two phases work on numbers this tree already has.
 
-- [ ] **1.1 Record the persona null and stop the corpus being re-proposed.**
+- [x] **1.1 Record the persona null and stop the corpus being re-proposed.**
       Write the 2026-08-21 finding into an evidence note under
       `agents/evidence/analysis/`: the four in-repo references, the absence of
       any host contract, the empty `.claude/agents/`, and the resulting
@@ -104,7 +104,7 @@ two phases work on numbers this tree already has.
       condition that would reverse it — a host that reads a personas directory,
       or a generator that starts folding persona prose into an instruction file.
       verify: the note exists and `grep -c "check_generator_output_coverage\|tool_adapter_registry" <the note>` is non-zero; the pre-state is `git show HEAD:src/scripts/check_generator_output_coverage.ts | grep -c "\.claude/personas"` = 1, i.e. the reference is in-repo only.
-- [ ] **1.2 Establish whether contexts are standing or on-demand.** Measured
+- [x] **1.2 Establish whether contexts are standing or on-demand.** Measured
       here, **0 rules declare `load_context_eager:`** (`grep -rln "^load_context_eager:" src/rules/`), 21
       declare the lazy `load_context:`, and the schema
       (`src/scripts/schemas/rule.schema.json:49`) documents eager as *"Counts
@@ -113,14 +113,14 @@ two phases work on numbers this tree already has.
       reaches a session without being asked for, and record the answer either
       way.
       verify: `grep -rln "^load_context_eager:" src/rules/ | wc -l` is quoted in the written finding alongside a delivery-layer observation; the finding names which of the two inputs it used, the way `check_standing_rule_delivery` names its own.
-- [ ] **1.3 Establish the same for skill bodies.** ~595,843 tok is by far the
+- [x] **1.3 Establish the same for skill bodies.** ~595,843 tok is by far the
       largest corpus in the table and progressive disclosure is the claimed
       reason it does not cost that. Record whether a body reaches a session
       before the skill is invoked, and if the answer is "only the description
       does", say so — that makes Phase 2 the *whole* skill-side lever rather
       than a fragment of one.
       verify: the finding is written with the observation that produced it, and it explicitly reconciles against the 14,408 catalog figure `check_preamble_payload_budget` already reports.
-- [ ] **1.4 Give a census bucket to whichever corpus Phase 1 finds is standing.**
+- [x] **1.4 Give a census bucket to whichever corpus Phase 1 finds is standing.**
       A bucket for a corpus measured at zero is noise; a corpus measured above
       zero with no bucket is the gap this roadmap opened on. Add buckets only
       where 1.1–1.3 found cost, and record the nulls in
@@ -131,7 +131,7 @@ two phases work on numbers this tree already has.
 
 ## Phase 2 — argue the description ceiling down, then rewrite the tail trigger-first
 
-- [ ] **2.1 Take the free tightening first: 220 → 200.** Zero descriptions exceed
+- [x] **2.1 Take the free tightening first: 220 → 200.** Zero descriptions exceed
       200 today, so lowering the ceiling to the recommended line costs no
       rewrites and removes 20 characters × 290 of dead headroom that a future
       author could otherwise fill without any gate objecting. This is the same
@@ -139,7 +139,7 @@ two phases work on numbers this tree already has.
       *"free tightening … a lower measurement becomes the new ceiling instead of
       becoming unused headroom."*
       verify: `grep -n '"maxLength": 220' src/scripts/schemas/skill.schema.json` returns nothing afterwards; the pre-state is `git show HEAD:src/scripts/schemas/skill.schema.json | grep -c '"maxLength": 220'` = 1.
-- [ ] **2.2 Derive the real target from p75, and record the argument.** p75 is
+- [x] **2.2 Derive the real target from p75, and record the argument.** p75 is
       189. A ceiling below p75 is a rewrite programme, not a schema edit, so the
       number has to be argued against the table in Context: what the tighter cap
       returns in tokens, how many descriptions it forces open, and what that
@@ -147,7 +147,7 @@ two phases work on numbers this tree already has.
       — a cap picked without the distribution in front of it is an invented
       threshold.
       verify: the written argument cites the measured distribution (median 181 / p75 189 / max 200) and names the rejected caps; `./scripts-run src/scripts/audit_skill_descriptions 2>&1 | tail -3` runs against the new number.
-- [ ] **2.3 Rewrite the over-cap tail trigger-first, in ranked batches.** The
+- [x] **2.3 Rewrite the over-cap tail trigger-first, in ranked batches.** The
       four existing scripts are the tooling — `lint_skill_descriptions` for the
       gate, `audit_skill_descriptions` for the ranking,
       `optimize_skill_description` for the per-skill rewrite,
@@ -156,7 +156,7 @@ two phases work on numbers this tree already has.
       routing than it saves in tokens, so each batch is checked for trigger
       survival, not just length.
       verify: `./scripts-run src/scripts/lint_skill_descriptions 2>&1 | tail -3` and `./scripts-run src/scripts/check_augment_description_cap 2>&1 | tail -3` both exit green after each batch.
-- [ ] **2.4 Publish the delta against the 14,408 baseline, including the misses.**
+- [x] **2.4 Publish the delta against the 14,408 baseline, including the misses.**
       Skills whose description could not shorten without losing a trigger are a
       row in the table with the reason, not an omission.
       verify: `./scripts-run src/scripts/check_preamble_payload_budget 2>&1 | grep -i catalog` reports a lower catalog figure than 14,408, and the published table names any skill that did not shorten.
@@ -167,7 +167,7 @@ The catalog is preloaded in full because the host's contract is assumed to
 require it. That assumption has never been probed here, and it is the same class
 of assumption this tree has overturned before.
 
-- [ ] **3.1 Reconcile with the existing stub before spiking anything.**
+- [x] **3.1 Reconcile with the existing stub before spiking anything.**
       `agents/roadmaps/stubs/road-to-host-aware-skill-projection.md` already
       owns most of this ground: its transferred steps 1.1–1.4 cover a measured
       per-host catalogue profile, composing the projected set from that profile,
@@ -175,13 +175,28 @@ of assumption this tree has overturned before.
       leaving the primary host unchanged. Decide in writing whether this phase
       **absorbs** that stub or **defers** to it. Do not run both.
       verify: `ls agents/roadmaps/stubs/road-to-host-aware-skill-projection.md` resolves and the decision is recorded at this step with the disposition named.
-- [ ] **3.2 Probe what the host actually does with a large catalog.** The stub's
+
+      **Disposition: ABSORB.** AI council 2026-08-22, 2/2 convergent. Deferral
+      was rejected on two independent grounds: the stub's step 1.4 asserts the
+      primary host has *"no measured truncation pressure"*, which the host's own
+      budget event refutes
+      (`agents/evidence/analysis/scoped-projection-host-delivery.md:19-20`), and
+      the framework document that transferred the stub is **not present in this
+      tree** — so there was no live authority to defer to. Deferring would have
+      preserved a known falsehood behind a tidy-looking disposition.
+
+      Absorbed steps 1.1–1.3 plus a **corrected** 1.4 now live in
+      `agents/roadmaps/later/road-to-host-catalogue-contract.md`, together with a
+      1.5 the council added: measure retained-set **quality**, not drop count.
+      The stub is deleted in this change, eliminating it as a separate
+      authority per the council's instruction.
+- [~] **3.2 Probe what the host actually does with a large catalog.** The stub's
       own step 1.1 makes the point this phase must not lose: record *measured*
       catalogue behaviour per host rather than deriving the limit from this
       package's model of the host. That probe is a host-contract question, which
       is why it sits behind a blocker.
       verify: the probe output is written under `agents/evidence/analysis/` and names the host build it was taken against.
-- [ ] **3.3 Keep the safe direction as the default.** The stub's step 1.3 already
+- [~] **3.3 Keep the safe direction as the default.** The stub's step 1.3 already
       states it: an unmeasured host receives the full catalogue, because
       under-projecting a skill is worse than paying for one that is never used.
       Whatever 3.2 finds, the fallback stays the full set.
@@ -190,7 +205,7 @@ of assumption this tree has overturned before.
 ## Blockers
 
 ### blocker: b-catalog-preload-host-contract
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 — consent-once (a host-contract observation, not a repo edit)
 - **Blocks:** Phase 3 steps 3.2 and 3.3. Phase 1 and Phase 2 proceed without it;
@@ -213,6 +228,31 @@ of assumption this tree has overturned before.
 - **Resolved when:** one of (a) or (b) is recorded at this blocker, and — for (b) —
   step 3.1's disposition is written and steps 3.2/3.3 are marked deferred rather
   than left open-looking.
+- **Resolution — (b) spike-only, with the wording the council insisted on
+  changing.** Decided by AI council 2026-08-22, **2/2 convergent, full quorum,
+  $0.0507**, in the maintainer's place under the standing autonomous mandate;
+  the recorded decision substitutes for owner sign-off.
+
+  Both seats rejected the roadmap's own phrase *"the host question closes as
+  recorded-open"* as ambiguous, and the objection is substantive rather than
+  editorial: **two** things were on the table and that phrase collapses them.
+  What closes is the **release disposition** — no projection behaviour changes
+  in this release. What stays open, explicitly and with a named carrier, is the
+  **build-pinned host contract**. Recorded in the council's own words:
+
+  > Projection behavior is deferred for this release. Primary-host truncation is
+  > established; the build-pinned catalogue/load contract remains unresolved.
+
+  Both seats also refused to let the existing observation count as satisfying
+  (a), and the reason is worth keeping: a projection **mode** name is not a
+  host/**build** identifier, and `402 → 330` establishes that scoping changes
+  the magnitude of the host's own drop count while establishing **nothing**
+  about whether the surviving set is better. Conflating a symptom count with a
+  design contract would have authorised a projection change nothing supports.
+
+  Steps 3.2 and 3.3 are marked `[~]` per this blocker's own instruction, and
+  their carrier exists: `agents/roadmaps/later/road-to-host-catalogue-contract.md`,
+  created in this same change, owner maintainer, review by 2027-02-22.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -228,21 +268,82 @@ of assumption this tree has overturned before.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Each of the three un-bucketed corpora carries a written, dated load
+- [x] AC-1 — Each of the three un-bucketed corpora carries a written, dated load
       semantic under `agents/evidence/analysis/`: standing, on-demand, or zero,
       with the observation that produced it and the input it used.
-- [ ] AC-2 — The persona null is recorded with its four in-repo references and
+- [x] AC-2 — The persona null is recorded with its four in-repo references and
       the condition that would reverse it, so the corpus is not re-proposed as a
       token lever.
-- [ ] AC-3 — `src/config/preamble-payload-budget.json` reflects Phase 1's
+- [x] AC-3 — `src/config/preamble-payload-budget.json` reflects Phase 1's
       answers: a gated bucket where cost was measured, an entry in
       `excluded_buckets` with its reason where it was not.
-- [ ] AC-4 — The skill-description ceiling in `src/scripts/schemas/skill.schema.json`
+- [x] AC-4 — The skill-description ceiling in `src/scripts/schemas/skill.schema.json`
       is no longer 220. The replacement number is published together with the
       measured distribution it came from and the alternatives that were rejected.
-- [ ] AC-5 — The catalog bucket reported by `check_preamble_payload_budget` is
+- [x] AC-5 — The catalog bucket reported by `check_preamble_payload_budget` is
       below the 14,408 recorded in Context, and the accompanying table names
       every skill whose description could not shorten without losing a trigger.
-- [ ] AC-6 — Phase 3's relationship to the existing host-aware-projection stub is
+- [x] AC-6 — Phase 3's relationship to the existing host-aware-projection stub is
       recorded in writing as absorbed or deferred, and no projection default
       changed for a host that has no measurement behind it.
+
+## Completion note
+
+15 of 17 steps executed; **3.2 and 3.3 are `[~]` by the resolved blocker's own
+instruction**, carried into `agents/roadmaps/later/road-to-host-catalogue-contract.md`
+— created in this same change, owner maintainer, review by 2027-02-22 — so the
+deferral is a park with a carrier rather than a drop. Disposition decided by AI
+council (2/2), which is the preserving route: the criterion stays active in the
+estate.
+
+### Where this roadmap's own premises did not survive measurement
+
+Four, all re-measured rather than carried over. Recorded because the roadmap
+opened by correcting two of its *source's* claims, and it earns the same
+treatment.
+
+1. **Persona references: five, not four.** `inventory_abstraction_budget.ts` was
+   unlisted. Re-run, not re-quoted:
+   `grep -rln "\.claude/personas" src/scripts/`.
+2. **`.claude/agents/` is not empty — it holds 1 file.** `production-validator.md`,
+   and it is live in the host's own agent list. So the persona null is the
+   narrower claim that the host reads `.claude/agents/` (1 file from this package)
+   and not `.claude/personas/` (29 project + 32 user scope).
+3. **17 rules declare `load_context:`, not 21.** Eager is 0 as stated.
+4. **AC-5's premise is refuted.** It expected the un-shortened tail to be *"skills
+   whose description could not shorten without losing a trigger"*. Measured, **none
+   of the 45 is**: each still holds 39–112 chars of removable filler against a need
+   of 6–11. The wall is this tool's conservatism, not trigger vocabulary — so not
+   rewriting them is a **decision** (45 hand edits to the routing surface for 60
+   further tokens), not an inability, and the table names them with that reason.
+
+### The lever's honest size
+
+`tighten_skill_descriptions --cap 189 --apply` shortened 27 descriptions by 113
+chars ≈ 28 tok. Catalog bucket **14,408 → 14,379**, both figures the gate's own
+chars/4 proxy. The schema ceiling is 220 → **200**, free (zero descriptions
+exceeded 200), with p75 = 189 recorded as the soft target.
+
+The council's sharper finding, 2/2: the description cap is not merely a small
+lever but **structurally wrong** for the payload gap — 4,144 tok at the most
+brutal cap against a ~27,761-tok overage. `check_preamble_payload_budget` is red
+at 135,407 > 107,646 and was **already red at 135,436 before this branch**; this
+change lowers it by 29 and the baseline was **not** raised. That gap belongs to
+`road-to-standing-payload-diet`, not here.
+
+### Pre-existing red found and not fixed
+
+`check_augment_description_cap` reports 4 auto-**rule** descriptions over its
+150-char cap — `code-provenance` (187), `brand-source-of-truth` (169),
+`recurring-criticism` (166), `fix-what-you-see` (161). Verified pre-existing by
+stashing this branch and re-running: identical output. Different surface (rules,
+Augment's workspace-guidelines budget) from the skill descriptions here, so it is
+recorded in the evidence note rather than fixed inside this scope.
+
+### Sensitivity
+
+`tighten_skill_descriptions --self-test` is 4 pass, and its load-bearing case is
+a negative one: `informativeTokens` must NOT treat `manifests`/`manifest` as
+equal, because if it did the trigger guard would wave a changed content word
+through. `review_axis_report`-style sabotage probing was applied to the guard
+before the 27 writes were claimed safe.
