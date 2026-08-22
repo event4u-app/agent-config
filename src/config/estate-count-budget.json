@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 6,
+    "active_roadmaps": 7,
     "later_roadmaps": 55,
     "open_blockers": 36
   },
@@ -643,6 +643,13 @@
       "later_roadmaps": 55,
       "open_blockers": 36,
       "why": "WALKED DOWN by 1 active and nothing else: road-to-estate-drawdown is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). Fitting, since it is the roadmap this ratchet was registered to serve. open_blockers unchanged at 36 and later_roadmaps unchanged at 55, which together are the check that nothing was bought by relocating an open decision: the two items the roadmap could not finish went to stubs created in this same change (road-to-draft-status-ratchet-boundary, road-to-estate-triage-remaining-batches), each with its own probe, and a stub is not a park."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 7,
+      "later_roadmaps": 55,
+      "open_blockers": 36,
+      "why": "GREW by 1 active: road-to-single-rule-layer is added by this branch. It is not a discretionary addition \u2014 it closes a measured live regression that ADR-236 was accepted to prevent. Measured 2026-08-22 in a freshly generated worktree with the partition ACTIVE: three of the five rule emitters (cursor .mdc, windsurf, augment) never consult isExclusivelyPackageOnly, so they write 100, 100 and 103 global-only rules into project directories whose global layers were verified to already carry all 103; and this checkout's own .claude/rules holds 77 pre-partition stale symlinks, duplicating 286147 bytes of rule prose into every session here. Nothing guards it: check_single_delivery hardcodes the two .claude paths and its own docstring records that it compares nothing in CI. open_blockers unchanged at 36 and later_roadmaps unchanged, so no open decision was relocated to buy this."
     }
   ],
   "target": {

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change. A repository that does not commit this file has no git history for it — regenerate to see the current state.
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers in the active tree, **9** need you → `agent-config gates`
+> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers in the active tree, **9** need you → `agent-config gates`
 
 ## Overall
 
-**72 / 112 steps done · 64%**
+**72 / 128 steps done · 56%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -20,8 +20,9 @@
 | 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
 | 3 | [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md) | 7 | 34 | 15 | 16 | 3 | 0 | [2](#blockers-road-to-evidence-based-adr-governance) | █████░░░░░ 52% |
 | 4 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 5 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 6 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 5 | [road-to-single-rule-layer.md](roadmaps/road-to-single-rule-layer.md) | 5 | 16 | 16 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
+| 7 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 
 ---
 
@@ -317,6 +318,18 @@
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
 _2 blockers resolved._
+
+### [road-to-single-rule-layer.md](roadmaps/road-to-single-rule-layer.md)
+
+**Road to a single rule layer** — 0 / 16 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Make the layer split measurable | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Earn the withhold per host, never by extrapolation | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Connect the three emitters that never asked | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | A gate that can fail | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Clean up what the measurement turned up | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
 
