@@ -4,6 +4,6 @@
 
 Contract: [`docs/contracts/smoke-contracts.md`](../../../docs/contracts/smoke-contracts.md).
 
-| # | Title | Status | Date | Supersedes |
-|---|---|---|---|---|
-| [0001](0001-per-tier-smoke-scripts.md) | Per Tier Smoke Scripts | — | — | — |
+| # | Title | Status | Date | Provenance | Evidence | Supersedes |
+|---|---|---|---|---|---|---|
+| [0001](0001-per-tier-smoke-scripts.md) | Per Tier Smoke Scripts | accepted | 2026-05-16 | — | — | — |

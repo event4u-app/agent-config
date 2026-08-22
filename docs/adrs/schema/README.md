@@ -4,6 +4,6 @@
 
 Contract: [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md).
 
-| # | Title | Status | Date | Supersedes |
-|---|---|---|---|---|
-| [0001](0001-json-schema-frontmatter.md) | Json Schema Frontmatter | — | — | — |
+| # | Title | Status | Date | Provenance | Evidence | Supersedes |
+|---|---|---|---|---|---|---|
+| [0001](0001-json-schema-frontmatter.md) | Json Schema Frontmatter | accepted | 2026-05-16 | — | — | — |

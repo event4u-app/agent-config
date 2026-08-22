@@ -2,7 +2,7 @@
 adr: 208
 status: accepted
 date: 2026-08-03
-decision: dist-agent-src-keep-forever
+decision: dist-agent-src-is-the-shipped-projection-tree
 supersedes: —
 superseded_by: —
 phase: road-to-renewal-adr-hygiene
@@ -16,7 +16,7 @@ review_trigger: >-
   contributor, making the duplication cost real instead of theoretical
 ---
 
-# ADR-208 — `dist/agent-src/` is kept forever as the shipped projection tree; rewrite-at-projection-time is rejected
+# ADR-208 — `dist/agent-src/` is the shipped projection tree until its `review_trigger` fires; rewrite-at-projection-time is rejected
 
 ## Status
 
@@ -49,8 +49,8 @@ byte-exactness gate makes src↔dist drift mechanically impossible.
 
 ## Decision
 
-**KEEP — permanently.** `dist/agent-src/` remains the shipped,
-deterministically produced, git-diffable projection root:
+**KEEP, until `review_trigger` (a), (b) or (c) fires.** `dist/agent-src/`
+remains the shipped, deterministically produced, git-diffable projection root:
 
 1. The installer, the per-tool projectors, and the npm `files[]` surface
    keep reading `dist/agent-src/` — not `src/` — as the consumer-facing

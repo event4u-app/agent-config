@@ -422,6 +422,69 @@ normalisation pass would hide exactly the divergence the overlap measures.
 | docs/adrs/smoke/0001 per-tier-smoke-scripts | agentic | E1 | incomplete | evidence | easy | partly | — | unknown | **AMEND** | the ≥ 90 s `task ci` vs ≤ 30 s budget observation `:28-30` is the one local measurement; contract-derived limits `:45-55`. Scripts, workflow and taskfile all verified present. **Every locked baseline at `:63-68` is stale:** kernel is now `N kernel rules · M carry Iron-Law fences · 1 dispatch index · K budget breach(es)` with `EXPECTED_BREACHES=3` (`src/scripts/smoke/kernel.sh:28`, `:105`) — not "23 / 26 kB used (88 %) · 0 fence breaches"; skills is `$TOTAL_SKILLS skills` (`skills.sh:131`) against 290, not 210; and all four path-trigger globs name `.agent-src.uncondensed/**`, retired by ADR-051 — `smoke.yml:17` triggers on `dist/agent-src/rules/**`. The 88 % kernel baseline also contradicts ADR-203 `:34` (27,521 / 26,000 = 105.9 % on 2026-07-31) |
 
 
+## Candidate routing — one route and one dated follow-up per candidate
+
+Added 2026-08-22 by `road-to-evidence-based-adr-governance` 3.4, which had been
+ticked on the adjudication pass it ran rather than on the half its own `verify:`
+named. `lint_adr_sweep_routing` now reads this section and fails on a candidate
+row that is unrouted or dateless, so the requirement is a gate instead of a
+sentence.
+
+**The route is derived from the proposed TRANSITION, never from who decided the
+record originally** — the Iron Law in `decision-revisit-gate`. That distinction
+does most of the work here and is why so many cells carry two halves: for a
+record whose content *is* a security boundary or a purpose statement,
+*re-adjudicating* it is council work while *weakening* it is owner-reserved.
+Collapsing those into one venue is the residue the Iron Law forbids.
+
+**`REVIEW-NOW` mostly does not name a transition yet**, which is the honest
+reading of the disposition: it says the record needs re-adjudication, not what
+should replace it. Where the sweep already names the transition (a discharged
+gate, a superseded mechanism, an expiry) the route is specific. Where it does
+not, the route is the council for the adjudication itself, and the owner-reserved
+half is named so a later run cannot execute a reserved transition under a
+council route.
+
+**Dates are follow-up deadlines, not predictions.** A lapse is a compliance
+finding, on the ADR-134 pattern — never a silent extension. They are spread by
+mechanical cost rather than assigned uniformly: a stale `superseded_by` field is
+a two-week item, a doctrine re-read is a six-week one.
+
+| Record | Disposition | Route | Dated follow-up |
+|---|---|---|---|
+| ADR-063 append-jsonl-encryption-deferred | SUPERSEDE (candidate) | council — mechanical; ADR-064 discharged the nonce gate the same day (`ADR-064:16`), only `superseded_by: —` is stale | set `superseded_by` by **2026-09-05** |
+| ADR-208 dist-agent-src | REVIEW-NOW | council — build shape, reversible internal | measure whether `dist/agent-src/` is a material contributor to the 7.805 MB tarball, i.e. the second conjunct of its own fired trigger (c), by **2026-09-19** |
+| ADR-219 MERGEABLE_KEYS | REVIEW-NOW | council — mechanical follow-through on a migration already landed | disposition by **2026-09-19** |
+| ADR-039 claude-skills-untracked | SUPERSEDE (candidate) | council — projection mechanism, reversible | disposition by **2026-09-19** |
+| ADR-105 automatic-subagent-orchestration | SUPERSEDE (candidate) | council — the always-on orchestration change removed the settings this record gates on | disposition by **2026-09-12** |
+| ADR-117 subagents-auto-default-on | SUPERSEDE (candidate) | council — same removal; the flipped default no longer has a setting to flip | disposition by **2026-09-12** |
+| ADR-134 launch-decision-dated-defer | SUPERSEDE (candidate) | council at expiry — the record's own dated defer is the mechanism | expiry **2026-09-15**; a lapse is the compliance finding, per this record's own pattern |
+| ADR-049 configuration-trust-boundary | REVIEW-NOW | council to re-adjudicate · **owner** to narrow — the record's content IS a security boundary (`the user-global whitelist is a security boundary`) | adjudication by **2026-09-26** |
+| ADR-097 mission-recipe-privilege-boundary | REVIEW-NOW | council to re-adjudicate · **owner** to lower — `type: security`, a privilege boundary | adjudication by **2026-09-26** |
+| ADR-203 narrow-the-safety-floor-lock | REVIEW-NOW | council to re-adjudicate · **owner** to narrow further — a safety-floor lock | adjudication by **2026-09-26** |
+| ADR-238 security-content-routes-to-external-authority | REVIEW-NOW (unread by this sweep) | council to adjudicate · **owner** to stop routing security content outward | first adjudication by **2026-09-26** |
+| ADR-239 drain-command-surface-and-merge-authority | REVIEW-NOW (unread by this sweep) | council to adjudicate · **owner** for any widening of merge authority | first adjudication by **2026-09-26** |
+| ADR-021 deployment-shape | REVIEW-NOW | council to re-adjudicate · **owner** to change the declared deployment posture | adjudication by **2026-10-03** |
+| ADR-236 one-artefact-one-layer | REVIEW-NOW | council — projection partition, reversible internal | disposition by **2026-09-26** |
+| ADR-222 blocker-handover-at-reply-close | REVIEW-NOW | council — delivery mechanism, reversible internal | disposition by **2026-09-26** |
+| ADR-016 installer-architecture | REVIEW-NOW | council — `type: prospective`; the record misdescribes the shipped installer, so the transition is a correction | AMEND-or-supersede draft by **2026-10-03** |
+| ADR-044 command-naming-hyphenated | REVIEW-NOW | council — the tree already ships what the record forbids, so the transition is reconciling one of the two | disposition by **2026-10-03** |
+| ADR-015 discovery-manifest-contract | SUPERSEDE (candidate) | council — `type: prospective` contract, reversible internal | disposition by **2026-10-03** |
+| ADR-017 monorepo-physical-layout | REVIEW-NOW | council — `type: prospective` layout, reversible internal | disposition by **2026-10-03** |
+| ADR-023 host-agent-protocol | REVIEW-NOW | council — forward-looking protocol sketch, reversible internal | disposition by **2026-10-03** |
+| ADR-024 workspace-v0-feature-floor | SUPERSEDE (candidate) | council — forward-looking scope floor, reversible internal | disposition by **2026-10-03** |
+| ADR-025 workspace-chrome | SUPERSEDE (candidate) | council — forward-looking UI shape, reversible internal | disposition by **2026-10-03** |
+| ADR-026 explain-mode-translation | REVIEW-NOW | council — renderer shape, reversible internal | disposition by **2026-10-03** |
+| ADR-087 installer-e2e-test-strategy | REVIEW-NOW | council — test strategy, reversible internal | disposition by **2026-10-03** |
+| ADR-099 file-first-pattern-library | REVIEW-NOW | council — library layout, reversible internal | disposition by **2026-10-03** |
+| docs/adrs/router/0001 three-tier-routing | REVIEW-NOW | council — routing mechanism, reversible internal | disposition by **2026-10-03** |
+
+**What this section does NOT claim.** The gate checks that a route and a date are
+present and that every candidate is covered. It cannot check that a route is the
+right venue, and it cannot check that a date was met — the first is a judgement,
+the second a calendar. Read a green run as "every candidate is routed and dated",
+never as "every follow-up happened".
+
 ## Central adjudication
 
 One normalisation pass over all 185 tranche-and-anchor records after the tranches, which the

@@ -226,11 +226,21 @@ archived).
   same-shaped repos), and string-keyed dynamic consumers have no static edge.
   Static indexes cannot represent dynamic dispatch or runtime-constructed
   identifiers.
-- **Consequence:** `code_graph.enabled: false` permanently, deprecation at the
+- **Consequence:** `code_graph.enabled: false`, deprecation at the
   next major and removal the major after (`docs/CLAIMS.md`
   `code-graph-retrieval-null`; tracked in `docs/MIGRATION.md` § Scheduled
   deprecations). The doctrine's own § 3 gates worked as designed — they
   produced a measurement that retired the feature instead of shipping it.
+- **Reopen condition, supplied by the measurement rather than by a calendar.**
+  The null rests on a *category* limit, so the condition is that the category
+  limit is shown not to hold: a static index that represents dynamic dispatch or
+  runtime-constructed identifiers, or a TS extractor that emits symbol nodes for
+  arrow-function exports at a density comparable to the PHP side (the measured
+  gap is 170 vs 13,428 on same-shaped repos). Absent one of those, a re-run
+  cannot move the result and is not the condition. Stated because the earlier
+  wording read "`false` permanently", which asserts a permanence the
+  measurement does not support — a category limit is a fact about today's
+  extractor, not about all possible ones.
 - **Sequencing rule — satisfied, and now advisory in the other direction.**
   The rule ("no second native engine before the first publishes its verdict")
   is met: the verdict is published. It no longer blocks the § 4 queue. But the

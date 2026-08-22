@@ -133,17 +133,34 @@ describe('regenerate_index — pure helpers', () => {
 
     it('row title-cases the decision and emits the ADR-NNN label', () => {
         const out = rgi.row({ num: '001', slug: 'foo-bar', path: 'ADR-001-foo-bar.md', decision: 'python-to-ts-migration', status: 'accepted', date: '2026-01-01' });
-        expect(out).toBe('| [ADR-001](ADR-001-foo-bar.md) | Python To Ts Migration | accepted | 2026-01-01 | — | — | — |');
+        expect(out).toBe('| [ADR-001](ADR-001-foo-bar.md) | Python To Ts Migration | accepted | 2026-01-01 | — | — | — | — | — |');
     });
 
     it('row falls back to the slug, then to dashes, when decision is absent', () => {
         const out = rgi.row({ num: '003', slug: 'just-the-slug', path: 'ADR-003-just-the-slug.md' });
-        expect(out).toBe('| [ADR-003](ADR-003-just-the-slug.md) | Just The Slug | — | — | — | — | — |');
+        expect(out).toBe('| [ADR-003](ADR-003-just-the-slug.md) | Just The Slug | — | — | — | — | — | — | — |');
     });
 
     it('row for a legacy entry strips .md for the label and renders em-dash placeholders', () => {
         const out = rgi.row({ path: 'ADR-rule-kernel.md' });
-        expect(out).toBe('| [ADR-rule-kernel](ADR-rule-kernel.md) | — | — | — | — | — | — |');
+        expect(out).toBe('| [ADR-rule-kernel](ADR-rule-kernel.md) | — | — | — | — | — | — | — | — |');
+    });
+
+    it('row renders the provenance kind and the evidence grade when present', () => {
+        // The widening above only proves the columns exist. This proves they
+        // CARRY something: before 2.4 the two axes were parsed by
+        // `readAdrAxisCells` and read by nothing at all.
+        const out = rgi.row({
+            num: '240',
+            slug: 'evidence-based-decision-floor',
+            path: 'ADR-240-evidence-based-decision-floor.md',
+            decision: 'evidence-based-decision-floor',
+            status: 'proposed',
+            date: '2026-08-21',
+            provenance_kind: 'mixed',
+            evidence_grade: 'E3 (complete)',
+        });
+        expect(out).toContain('| mixed | E3 (complete) |');
     });
 
     it('render emits the No-ADRs body when empty', () => {
