@@ -61,6 +61,62 @@ export interface SubagentResponse {
      * the same claim as "no assumptions were made".
      */
     assumptions?: CapsuleAssumption[];
+    /**
+     * Where the tests in this change were authored FROM.
+     *
+     * `from-spec` — written against the acceptance criteria, before the diff
+     * existed. `from-diff` — written after reading the implementation.
+     * `unknown` — not recorded.
+     *
+     * **`unknown` is the default and an ABSENT field resolves to it, never to
+     * `from-spec`.** That asymmetry is the whole point of the field. The claim
+     * this metric exists to keep measurable is that a suite written by the same
+     * context as the implementation inherits its blind spots — so the valuable
+     * state is `from-spec`, and a default that let absence read as the valuable
+     * state would report the claim as satisfied by silence.
+     *
+     * Structural enum only: three string values and nothing that can hold
+     * free-form content. Same exclusion-by-construction the rest of this
+     * envelope uses — a field that cannot carry a prompt or a diff has no
+     * scrubber to fail.
+     *
+     * OPTIONAL, and deliberately not in `RESPONSE_REQUIRED_FIELDS`: that list
+     * is calibrated against a recorded ledger equivalence (`error_count: 5`),
+     * and adding a sixth required field would break it. A metric is not worth
+     * invalidating a measurement for.
+     */
+    test_authorship?: TestAuthorship;
+}
+
+/**
+ * Three states. `unknown` is one of them, not the absence of the other two.
+ *
+ * Ordered by what they license rather than alphabetically: `from-spec` is the
+ * only value that supports the independence claim, `from-diff` is the weaker
+ * form the claim says is worthless, and `unknown` licenses nothing.
+ */
+export type TestAuthorship = 'from-spec' | 'from-diff' | 'unknown';
+
+export const TEST_AUTHORSHIP: ReadonlySet<string> = new Set<TestAuthorship>([
+    'from-spec',
+    'from-diff',
+    'unknown',
+]);
+
+/**
+ * Resolve the field from a decoded envelope. ABSENT and UNRECOGNISED both
+ * resolve to `unknown`.
+ *
+ * An unrecognised value resolving to `unknown` rather than throwing is
+ * deliberate: this is a metric, and a producer that emits `from_spec` with an
+ * underscore should show up in the distribution as unrecorded, not stop a
+ * dispatch. The report is what surfaces it — a spike of `unknown` IS the
+ * finding that the field is not reaching its producers.
+ */
+export function resolveTestAuthorship(input: unknown): TestAuthorship {
+    if (input === null || typeof input !== 'object') return 'unknown';
+    const v = (input as Record<string, unknown>)['test_authorship'];
+    return typeof v === 'string' && TEST_AUTHORSHIP.has(v) ? (v as TestAuthorship) : 'unknown';
 }
 
 const CONFIDENCE: ReadonlySet<string> = new Set<Confidence>(['low', 'medium', 'high']);
