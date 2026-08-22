@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 5,
+    "active_roadmaps": 4,
     "later_roadmaps": 55,
-    "open_blockers": 35
+    "open_blockers": 34
   },
   "baseline_history": [
     {
@@ -671,6 +671,20 @@
       "later_roadmaps": 55,
       "open_blockers": 35,
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-standing-context-40k is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker b-rules-efficiency-signal, open on origin/main, is resolved here -- checked against the trunk rather than read off the branch's prose. later_roadmaps unchanged at 55: the two items it could not finish went to stubs created in this same change (road-to-instructions-loaded-observer, road-to-standing-rule-delivery-per-machine), each with its own probe, so the open work stays counted where a probe can decide it instead of being parked."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 5,
+      "later_roadmaps": 55,
+      "open_blockers": 35,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE, then re-measured -- main moved from 66b3dc993 to c298a6aba while this branch was being built (PR #1505, drain/road-to-estate-drawdown, landed in that window). main's history is kept whole (89 entries, baseline 6/55/36) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -1 active and -1 open blocker, both earned by closing `road-to-drain-commands` (37 done / 2 cancelled / 0 open / 0 deferred) and archiving it. The blocker decrement is `merge-authority` moving to Status: resolved -- closed as NOT AUTHORIZED IN THIS ROADMAP by a 2-of-2 convergent AI-council pass (2026-08-22), which is a real disposition rather than a dropped item: steps 4.4 and 4.7 are `[-]` cancelled, `--merge` is REMOVED from `/roadmap:process-full` rather than left inert so an archived roadmap leaves no latent executable authority behind a documented switch, and ADR-239 gains a dated Disposition section with an explicit non-rejection clause plus the reopening condition (owner approval AND a target-bound, head-SHA-bound, tamper-resistant, agent-unwritable, kill-switch-subject authorization).\n\nNo offset is taken and none is due: this change disposes of one roadmap and creates none. 5 and 35 are the measured trunk-plus-this-change values and are now the numbers that must walk down."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 34,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-drain-commands is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker merge-authority, open on origin/main, is resolved here -- checked against the trunk rather than taken from the branch's prose. Worth a note given what this run is: merge-authority is the blocker about who may press merge, and it is closed in the same run whose every merge needed a fresh human authorization. later_roadmaps unchanged at 55 and nothing was parked."
     }
   ],
   "target": {
