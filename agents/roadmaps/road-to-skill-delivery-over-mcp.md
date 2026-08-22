@@ -3,6 +3,7 @@ complexity: structural
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Ships status: draft, so the estate charge waits for the owner's flip. Nothing to offset: its subject — how the skill catalogue reaches the host at all — is covered by no active roadmap, and its own harvest establishes that the two existing MCP servers are the reason a third must NOT be built. Landed by /analyze:inbox with six of seven defects re-verified at 577bdbf88."
 ---
 # Road to skill delivery over MCP — without losing the skills the host can still route
 

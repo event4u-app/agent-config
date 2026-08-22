@@ -7,6 +7,7 @@ research_pin:
   repository: event4u-app/agent-config
   main: 572e147cc0110f4453dc23ea04891bca4e38d897
   date: 2026-08-22
+estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
 ---
 # Road to Agentic Engineering Assurance
 

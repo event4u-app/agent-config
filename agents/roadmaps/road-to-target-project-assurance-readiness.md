@@ -3,6 +3,7 @@ complexity: lightweight
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Ships status: draft, same terms as its parent road-to-agentic-engineering-assurance: no charge until the owner flips it, and no unrelated roadmap archived to pay for it. It is the parent's Phase 1 matrix carrier and has no active sibling covering target-repo readiness grading."
 ---
 # Road to target-project assurance readiness
 
