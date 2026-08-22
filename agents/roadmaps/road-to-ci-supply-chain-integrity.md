@@ -1,7 +1,6 @@
 ---
-estate_offset_exempt: "Authored by the 2026-08-22 inbox drain, which consumed 25 dropped artefacts carrying 53 pre-written roadmap drafts in one pass. It ships status: draft, so it is not active work and moves none of the three gated metrics; there is nothing yet to offset. The offset alternatives all cost more than this line: no active roadmap sits at zero open steps, so archiving buys nothing; parking these in later/ is what the estate register calls burial and would hide twenty verified defect sets behind a disposition nobody reviews; and terminating another session's roadmap would be a judgement about their work rather than mine. The blockers these drafts carry will charge this ratchet on the day the maintainer flips one to ready, which is the point at which an offset is a real decision. Charged as one reviewable line, per this gate's own instruction."
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -20,7 +19,9 @@ Four findings, all re-measured, in descending order of how badly they read.
 **Nothing in CI is SHA-pinned.** `grep -rhoE 'uses: [^ ]+@[^ ]+' .github/workflows .github/actions`
 returns **112** lines across **11 distinct actions**; the same grep narrowed to
 `@[0-9a-f]{40}` returns **0**. Every action in every workflow resolves through a
-mutable tag.
+mutable tag. The predicate requires an `@version`, which is why 112 and not the
+**119** any `uses:` line yields: the other **7** are `uses: ./.github/actions/setup-task`,
+local composite refs with no version to pin and therefore out of pinning scope.
 
 **No checkout drops its credentials.** `grep -rn 'persist-credentials' .github/workflows`
 returns **0** against **50** `actions/checkout` invocations. Each of those
