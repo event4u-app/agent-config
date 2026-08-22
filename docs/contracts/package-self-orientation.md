@@ -22,6 +22,14 @@ as `event4u/agent-config` / `@event4u/agent-config`. No application
 runtime. Installed via `scripts/install.sh` (Bash) and
 `scripts/install.py` (Python bridge).
 
+**Vocabulary first, if a term reads oddly.** Several words here mean something
+narrower than their general technical sense — `tier` is an activation class and
+not a severity, a per-tool tree is a *projection* and not a variant, `coverage`
+proves a gate read something and never that it can fail, and "enforced" and
+"delivered" each name two different facts. `docs/CONCEPTS.md` indexes only the
+divergent ones, each pointing at the artefact that owns it. Read it when a term
+surprises you; it is deliberately not a glossary of everything.
+
 ## Authoring-time vs. runtime — the scope line
 
 The package is an **authoring-time orchestration toolkit, not an agent
