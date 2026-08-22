@@ -36,13 +36,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out released tag
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
       - name: Set up Node
         # build_cloud_bundle is now TypeScript; the dispatcher runs it via tsx.
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: "20"
           cache: "npm"
@@ -101,7 +102,7 @@ jobs:
           ls -la artefacts/
 
       - name: Upload as workflow artefact (debugging fallback)
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: cloud-release-${{ steps.tag.outputs.name }}
           path: artefacts/
@@ -114,7 +115,7 @@ jobs:
         # release.yml's --ci path, which dispatches this workflow
         # explicitly and could race with a native tag-push trigger when a
         # RELEASE_PR_TOKEN PAT is configured.
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
         with:
           tag_name: ${{ steps.tag.outputs.name }}
           files: artefacts/*
