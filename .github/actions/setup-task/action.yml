@@ -17,7 +17,7 @@ runs:
     # download failure (HTTP 504 from the release CDN) does not fail the
     # job outright — the fallback below takes over.
     - id: action
-      uses: arduino/setup-task@v2
+      uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611  # v2.0.0
       continue-on-error: true
       with:
         repo-token: ${{ inputs.repo-token }}
