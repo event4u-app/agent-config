@@ -193,6 +193,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-decision-revisit-discipline`](road-to-decision-revisit-discipline.md) | Road to decision-revisit discipline | completed | 5 | 18/18 | _not extractable_ |
 | [`road-to-deep-root-restructure`](road-to-deep-root-restructure.md) | Deep Root Restructure — sink maintainer + projection dirs out of the root | closed-with-cancellations | 7 | 15/17 | _not extractable_ |
 | [`road-to-defensive-agent`](road-to-defensive-agent.md) | Roadmap: Defensive Agent — Senior-Engineer Security & Analysis | closed-with-cancellations | 0 | 33/51 | _not extractable_ |
+| [`road-to-demand-gate-audience-followup`](road-to-demand-gate-audience-followup.md) | Road to Demand-Gate Audience — Follow-up | closed-with-cancellations | 0 | 2/6 | _not extractable_ |
 | [`road-to-demand-gate-audience`](road-to-demand-gate-audience.md) | Road to Demand-Gate Audience | completed | 4 | 18/18 | _not extractable_ |
 | [`road-to-design-artifact-fidelity`](road-to-design-artifact-fidelity.md) | Road to design artifact fidelity — make visual work production-grade before it reaches the user | completed | 8 | 39/39 | _not extractable_ |
 | [`road-to-design-canon-grounding`](road-to-design-canon-grounding.md) | Road to Design-Canon Grounding | completed | 4 | 10/10 | _not extractable_ |
