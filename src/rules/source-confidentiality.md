@@ -91,7 +91,7 @@ substitute for not writing the attribution in the first place.
 
 ## Why this rule is not path-scoped
 
-Under [ADR-236](../docs/decisions/ADR-236-one-artefact-one-layer.md) this rule is
+Under ADR-236 (`docs/decisions/ADR-236-one-artefact-one-layer.md`) this rule is
 delivered by the PROJECT layer only — it exists to maintain this package, so the
 global layer no longer carries an unscoped twin of it. A `paths:`-scoped rule is
 **not re-injected after `/compact`** (ADR-227:79-80), so scoping it would mean the

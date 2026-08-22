@@ -177,6 +177,15 @@ jobs:
       - name: Verify dist == rewrite(src) byte-for-byte
         run: task check-condensation
 
+      # A body link in a projected rule is what a consumer actually clicks, and
+      # nothing remote checked that it resolves: this gate was reachable only
+      # from `task ci`, which no workflow invokes. It stayed red on `main` with
+      # two unfollowable cross-references while remote CI was green. Registered
+      # next to check-condensation because both read the COMMITTED projection,
+      # before the regeneration steps below overwrite it.
+      - name: Verify projected rule links resolve
+        run: task check-condensed-paths
+
       - name: Regenerate .augment from source
         run: task sync
 
