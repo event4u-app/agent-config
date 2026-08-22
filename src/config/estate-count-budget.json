@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 25,
+    "active_roadmaps": 24,
     "later_roadmaps": 59,
-    "open_blockers": 64
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -776,6 +776,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 24,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on two axes by the close of road-to-code-graph-extractor-defect. active 25 -> 24 is the archive at zero open and zero deferred steps; open_blockers 64 -> 62 is its two blockers RESOLVED. b-bench-repo-pinning resolved (a) on evidence -- all four pre-registered truth-file hashes match exactly and all three repo clones resolve, so Phase 1 is reproducible; it is nonetheless unrun, for the unrelated reason that the Phase 0 pre-falsifier fired. b-code-graph-default-flip resolved (a) by 2/2 council: the reachability repair lands as an independent bug fix, with code_graph.enabled, the registered null and DEFAULT_CACHE all explicitly out of scope. Note that this roadmap ARCHIVES WITHOUT ACHIEVING ITS GOAL, and the glyphs say so: three steps [x], six [-]. The extraction defect was real and is repaired; the pre-falsifier then established it is NOT the cause of the retrieval null, which is the honest-null closing state the roadmap registered for itself before any repair. NOTE FOR THE MERGE: the fifth drain branch to walk active 25 -> 24 against its own base (PRs #1532, #1534, #1536, #1537 are the others); five independent -1s do not compose, so the last to land must re-measure."
     }
   ],
   "target": {
