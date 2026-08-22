@@ -403,3 +403,57 @@ export function isLowEvidenceAccepted(fm: AdrFrontmatter): boolean {
     const evidence = evidenceOf(fm);
     return evidence?.strength === 'E0' || evidence?.strength === 'E1';
 }
+
+// ---------------------------------------------------------------------------
+// Index cells. The two nested axes rendered as two flat table cells, in ONE
+// place, because two generated tables print them (`adr/regenerate_index.ts`
+// and `audit_adr_coverage.render_area_readme`) and both are byte-compared by a
+// `--check` gate — a second copy of the em-dash-on-absent convention would be
+// two gates disagreeing about one record.
+// ---------------------------------------------------------------------------
+
+/** The placeholder both generated tables already use for an absent scalar. */
+const CELL_ABSENT = '—';
+
+/**
+ * Reserved row keys the index generators spread over their frontmatter scalars.
+ *
+ * Named apart from the frontmatter keys they derive from (`provenance`,
+ * `evidence`), which `readAdrFrontmatterScalars` also emits as folded strings —
+ * a folded `kind: agentic decision_makers: [...]` is not a table cell, and
+ * colliding with those keys would put it in one.
+ */
+export interface AdrAxisCells {
+    provenance_kind: string;
+    evidence_grade: string;
+}
+
+/**
+ * `provenance.kind` and `evidence.strength` as table cells.
+ *
+ * `discovery` rides in the evidence cell rather than in a third column: a bare
+ * `E0` collapses the five states `adr-layout § evidence.discovery` separates,
+ * so an index that printed the grade alone would re-create exactly the
+ * conflation the axis exists to undo.
+ *
+ * Most of the corpus carries neither axis and is not expected to — the backfill
+ * is deliberately out of this roadmap — so `—` is the common answer and means
+ * "not assessed", never "assessed as weak".
+ */
+export function readAdrAxisCells(text: string): AdrAxisCells {
+    const fm = readAdrFrontmatter(text);
+    if (fm === null) return { provenance_kind: CELL_ABSENT, evidence_grade: CELL_ABSENT };
+    const provenance = provenanceOf(fm);
+    const evidence = evidenceOf(fm);
+    const strength = evidence?.strength ?? null;
+    const discovery = evidence?.discovery ?? null;
+    return {
+        provenance_kind: provenance?.kind ?? CELL_ABSENT,
+        evidence_grade:
+            strength === null
+                ? CELL_ABSENT
+                : discovery === null
+                  ? strength
+                  : `${strength} (${discovery})`,
+    };
+}

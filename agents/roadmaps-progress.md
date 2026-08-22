@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change. A repository that does not commit this file has no git history for it — regenerate to see the current state.
 >
-> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **2** open blockers in the active tree, **2** need you → `agent-config gates`
+> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**41 / 59 steps done · 69%**
+**44 / 60 steps done · 73%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   69%
+█████████████████████████████░░░░░░░░░░░   73%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -24,7 +24,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md) | 7 | 34 | 15 | 16 | 3 | 0 | [2](#blockers-road-to-evidence-based-adr-governance) | █████░░░░░ 52% |
+| 1 | [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md) | 7 | 34 | 13 | 19 | 0 | 2 | 0 | ██████░░░░ 59% |
 | 2 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 0 | 11 | 2 | 5 | 0 | ██████████ 100% |
 | 3 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 3 | 14 | 0 | 5 | 0 | ████████░░ 82% |
 
@@ -100,39 +100,17 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 
 ### [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md)
 
-**Road to evidence-based ADR governance — provenance, E0–E4 evidence grades, full-corpus re-adjudication** — 16 / 31 done (52%)
+**Road to evidence-based ADR governance — provenance, E0–E4 evidence grades, full-corpus re-adjudication** — 19 / 32 done (59%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Schema: two descriptive axes, staged so the tree stays valid | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Tooling (surfacing only; no authority) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
+| 2 | Tooling (surfacing only; no authority) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 3 | Full-corpus challenge sweep (no frontmatter writes) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 4 | Autonomy-blocker lane | 🟡 in progress | 2 | 1 | 1 | 0 | 33% |
+| 4 | Autonomy-blocker lane | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 5 | Doctrine, proposed not accepted | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 6 | Shadow-mode measurement | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 7 | The authority question (separate decision, default-off) `[~]` | ⬜ not started | 9 | 0 | 2 | 0 | 0% |
-
-<a id="blockers-road-to-evidence-based-adr-governance"></a>
-**Blockers**
-
-- **owner-autonomy-batch** (owner: user) — blocks Phase 0B (all three rows), Phase 4 step 4.2 (blocker-lane rows 1, 2, 6)
-  - **Recommendation:** Take (c) first and close it as stale — Amendment E and ADR-216 both say the freeze is lifted, so the sweep row contradicts the tree and costs nothing to correct. Hold (a) and (b): both widen agent write authority, and this roadmap's own Phase 7 argues that authority changes belong behind measurement rather than alongside a schema change.
-  - **If you do nothing:** Phases 1–3, 5 and 6 run in full and blocker-lane rows 3, 4, 5, 7–13 all dispose normally. Rows 1, 2 and 6 stay `[~]`, so three of thirteen lane rows and AC-4's owner-gate clause remain open. Nothing else stalls.
-  - **What to do:**
-    Answer (a), (b), (c) in one sitting. Each `yes` executes its
-    lane row with the carve-out inheriting ADR-237's excluded list verbatim
-    (trunk, deploy, prod data, irreversible external); each `no` lands a
-    RE-AFFIRMED row whose blocking cost is recorded as sourced observations per
-    Phase 3's `blocking_cost` shape.
-  - **Resolved when:** all three rulings are recorded in the sweep artifact and blocker-lane rows 1, 2 and 6 each carry a landed outcome.
-- **authority-coupling-decision** (owner: user) — blocks Phase 7 (both steps)
-  - **Recommendation:** Do not decide it now. Let Phase 6 run in shadow mode first: the question is only answerable once `adr-grade-accuracy-vs-gold`, `adr-evidence-discovery-recall` and `adr-beneficiary-grade-bias` have numbers, and a suspension drill has passed. A published null is an acceptable answer.
-  - **If you do nothing:** Everything in Phases 0A–6 still lands. The estate gains provenance, evidence grades, substantive review triggers, a full 184-record challenge disposition and cite-time surfacing — all of it descriptive. What stays absent is any autonomous reopen path derived from a grade, which is exactly the state the council ruled the safe default.
-  - **What to do:**
-    Read the Phase 6 measurements when they land, then rule
-    once: enabled default-off with a named re-enabler and a chosen rollback
-    unit, or not enabled with the null published.
-  - **Resolved when:** an owner ruling is recorded either way, and — if enabled — the rollback unit is one of the four named options and the suspension drill has passed before the first grade-derived action.
+| 6 | Shadow-mode measurement | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 7 | The authority question (separate decision, default-off) `[~]` | ⬜ not started | 9 | 0 | 0 | 2 | 0% |
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
