@@ -256,6 +256,7 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: check-no-stub-inventory-table
       - task: lint-documented-commands
       - task: lint-store-boundary
       - task: check-knowledge-cards

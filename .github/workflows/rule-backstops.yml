@@ -361,3 +361,18 @@ jobs:
 
       - name: Governed writes (protected surfaces)
         run: ./scripts-run src/scripts/lint_governed_writes
+
+      # --- a gate standing in for a paragraph that lost ----------------------
+      # agents/roadmaps/stubs/README.md carried a hand-maintained index of its
+      # own directory: the largest AUTHORED merge-conflict path in the tree,
+      # every row duplicating its stub. Deleted 2026-08-21 (3793855b3, AI
+      # council both seats) with a note written in the same change telling
+      # future runs not to restore a row. A merge restored one anyway on
+      # 2026-08-22 (28ba2f592, PR #1505) — both parents lacked the table, so it
+      # was a deliberate restore against that note, not a mis-resolved
+      # modify/delete. Prose cannot refuse; this can. Wired here rather than
+      # left local-only on purpose: a gate `task ci` runs and no workflow does
+      # is its own violation under ci-parity:local-only (165, shrink-only).
+
+      - name: Stub inventory table stays deleted
+        run: ./scripts-run src/scripts/check_no_stub_inventory_table

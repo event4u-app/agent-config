@@ -127,7 +127,9 @@ including the three rows appended *after* the restore
 never seen and which the restore's own note miscounted as part of its twelve.
 
 **If you are resolving a conflict on this file, the resolution without a table
-is the correct one.**
+is the correct one.** `check_no_stub_inventory_table` enforces that in CI — a
+restored table fails the build rather than relying on this paragraph, which is
+the one that lost last time.
 
 To see what is here, list the directory:
 
