@@ -148,7 +148,18 @@ export const CODEX_MEASURED_UNSERVABLE: ReadonlyMap<string, string> = new Map([
 ]);
 
 export const DEFAULT_OPENAI_CLI_MODEL = OPENAI_CLI_VENDOR_DEFAULT;
-export const DEFAULT_ANTHROPIC_CLI_MODEL = 'claude-sonnet-4-5';
+// A vendor ALIAS, not a version. `claude --help` documents 'fable', 'opus' and
+// 'sonnet' as "an alias for the latest model" in their band, so an alias cannot
+// go stale the way a dated id can — which is the whole point of the change that
+// put it here.
+//
+// It was `'claude-sonnet-4-5'`, and this line is the half the roadmap that
+// found the defect did not know about: refreshing only the template's pin would
+// have left every member that omits `model:` falling back to the SAME stale id
+// from code. Read from the provider's own CLI surface on 2026-08-22, never from
+// the agent's recall — the source that road-to-council-seat-selection's own
+// Risk 1 declares inadmissible.
+export const DEFAULT_ANTHROPIC_CLI_MODEL = 'sonnet';
 export const DEFAULT_GEMINI_CLI_MODEL = 'gemini-2.5-pro';
 
 // OpenAI-API-compatible endpoints. xAI and Perplexity both expose the
