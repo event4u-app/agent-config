@@ -12,6 +12,8 @@
  */
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+
+import { rmTempRepo } from '../_lib/rm_temp_repo.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -52,7 +54,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    rmSync(repo, { recursive: true, force: true });
+    // Retrying remove: git can still be finishing work in this `.git` after the
+    // spawnSync that started it returned, and a plain recursive rmSync then
+    // fails ENOTEMPTY. Observed on ubuntu and macOS across three PRs while the
+    // same suite passed locally every time. See `rmTempRepo`.
+    rmTempRepo(repo);
 });
 
 const opts = () => ({ baselinePath: 'src/config/allow.json', baseRef: 'base', repoRoot: repo });
