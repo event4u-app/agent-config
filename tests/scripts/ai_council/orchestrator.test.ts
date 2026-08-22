@@ -439,7 +439,12 @@ describe('orchestrator — fallback observability', () => {
     const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
     const deadCli = (error = 'auth_expired'): Mock =>
         new Mock('anthropic', 'claude-sonnet-4-6', { error, transport: 'cli', billable: false });
-    type Ev = { provider: string; failure: string; outcome: string; api_on_quota: boolean };
+    type Ev = {
+        provider: string;
+        failure: string;
+        outcome: string;
+        api_on_quota: boolean | 'ask';
+    };
 
     it('emits one event per ESTABLISHING escalation, not per substituted call', () => {
         const events: Ev[] = [];
