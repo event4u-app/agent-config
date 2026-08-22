@@ -125,6 +125,31 @@ function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; o
 }
 
 /** True when `rel` is a generated artefact rather than an authored one. */
+/**
+ * The subset of GENERATED that this repository no longer commits at all
+ * (`road-to-generated-artifacts-out-of-index`, 2026-08-22). They are still
+ * generated, so they stay in `GENERATED` and keep being reported — a straggler
+ * branch created before the untrack still carries them, which is exactly when
+ * the reader needs to be told something.
+ *
+ * What changes is the INSTRUCTION. A branch that predates the cutover hits a
+ * `modify/delete` conflict here, not a content conflict, and `git checkout
+ * --ours` has no side to check out: the correct resolution is to take the
+ * deletion. Printing the generic advice would send the reader to re-add the
+ * file, which is precisely how PR #1505 put the dashboard back on `main` a day
+ * after it was first untracked.
+ */
+const UNTRACKED_BY_DESIGN: readonly string[] = [
+    'agents/roadmaps-progress.md',
+    'agents/roadmaps/archive/INDEX.md',
+    'agents/roadmaps/archive/index.json',
+];
+
+/** Is this a generated path this repository deliberately does not commit? */
+export function isUntrackedByDesign(rel: string): boolean {
+    return UNTRACKED_BY_DESIGN.includes(rel);
+}
+
 export function isGenerated(rel: string): boolean {
     const norm = rel.replace(/\\/g, '/');
     return GENERATED.some((g) => (g.endsWith('/') ? norm.startsWith(g) : norm === g));
@@ -189,10 +214,19 @@ export function classifyConflicts(files: readonly string[]): Pick<Plan, 'generat
  */
 export function renderConflictReport(plan: Plan): string {
     const out: string[] = [`❌  ${plan.message}\n`];
-    if (plan.generated.length > 0) {
-        out.push(`\n  GENERATED (${String(plan.generated.length)}) — resolve by REGENERATING, never by mixing hunks:\n`);
-        for (const f of plan.generated) out.push(`    · ${f}\n`);
+    const untracked = plan.generated.filter(isUntrackedByDesign);
+    const regenerable = plan.generated.filter((f) => !isUntrackedByDesign(f));
+    if (regenerable.length > 0) {
+        out.push(`\n  GENERATED (${String(regenerable.length)}) — resolve by REGENERATING, never by mixing hunks:\n`);
+        for (const f of regenerable) out.push(`    · ${f}\n`);
         out.push('    → git checkout --ours <file> && task sync && task generate-tools\n');
+    }
+    if (untracked.length > 0) {
+        out.push(
+            `\n  UNTRACKED BY DESIGN (${String(untracked.length)}) — this repository does not commit these; TAKE THE DELETION:\n`,
+        );
+        for (const f of untracked) out.push(`    · ${f}\n`);
+        out.push('    → git rm --cached -- <file>   (the working-tree copy stays; regenerate it locally)\n');
     }
     if (plan.remeasured.length > 0) {
         out.push(
