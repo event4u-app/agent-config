@@ -243,7 +243,17 @@ not discharged with it and no delegation lifts them
 it — the owner asked to be asked, not dripped on. **Nothing in Phases 1–3, 5,
 or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
 
-- [~] **0B.1 Rule on the commit-policy fence vs the delegation shape.**
+- [-] **0B.1 — AUTHORITY UNAVAILABLE — FLOOR PRESERVED.** No write-authority
+      expansion was executed; `commit-policy.md:37`'s one-shot fence remains
+      operative. **This records neither owner acceptance nor owner rejection.**
+      The operational half is complete — the floor is intact — and the
+      owner-policy question is transferred to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+      The wording is the AI council's and it was explicit about why (2 of 2
+      convergent, 2026-08-22): `RE-AFFIRMED (no)` would conflate an operational
+      preservation a council may decide with a policy rejection only the owner
+      may make. Blocking cost recorded as `unknown` with reasons, not as zero —
+      this run held a standing mission authorization, so the fence was never
+      exercised and no interruption count exists. Original question:
       `src/rules/commit-policy.md:37` ("A ONE-OFF AUTHORIZATION IS SPENT ON
       EXACTLY THAT OPERATION, ONCE") interrupts every commit outside a
       `process-full` run; ADR-237 § 1 pre-clears it only for its own run.
@@ -251,13 +261,33 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       a consumer project pre-clear commit/push for that run?
       verify: ruling recorded; yes → blocker row 1 executes; no → RE-AFFIRMED
       with blocking cost stated as sourced observations.
-- [~] **0B.2 Rule on ADR-005 § 1 (no auto-merge of ranked candidates).**
+- [-] **0B.2 — AUTHORITY UNAVAILABLE — FLOOR PRESERVED.** No write-authority
+      expansion was executed; ADR-005 § 1 remains operative and competitive runs
+      still terminate at a human merge. **Neither acceptance nor rejection.**
+      Operational half complete; owner-policy question transferred to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+      Blocking cost `unknown`: no judge-ranked competitive run occurred in the
+      window, so ADR-005 § 1 was never reached — which is an absence of
+      measurement, not a measurement of zero. Original question:
       ADR-005 predates ADR-237's authority model; competitive runs terminate
       at a human merge even for integration branches. Question: may an
       end-to-end delegation cover integration-branch merges of judge-ranked
       candidates, with trunk staying excluded?
       verify: ruling recorded, same consequence shape as 0B.1.
-- [~] **0B.3 Resolve the ADR-211 status contradiction.** ADR-211 Amendment E
+- [x] **0B.3 Resolve the ADR-211 status contradiction — CLOSED AS STALE,
+      reading (a).** Decided by the council (2 of 2 convergent, 2026-08-22),
+      matching this blocker's own `Recommendation:` line. The 2026-08-19 sweep
+      row carrying ADR-211 as `RE-OPENED (candidate)` is closed with
+      back-references to **ADR-211 Amendment E** ("the freeze is lifted in
+      full", 2026-08-05) and **ADR-216's Consequences**, which agree the freeze
+      is gone. Two accepted records resolve the status; the later sweep row
+      supplies no evidence of a new decision reopening it, so it contradicted
+      the tree.
+      **Reading (b) was deliberately NOT taken.** The council: "Do not invent
+      the residual 'may adoption return?' question unless an authoritative
+      record actually poses it." No record does. Recording a question nobody
+      asked would have manufactured an open item out of a bookkeeping error.
+      This row widens nothing and is why it could close here at all while 0B.1
+      and 0B.2 could not. Original text: ADR-211 Amendment E
       ("the freeze is lifted in full", 2026-08-05) and ADR-216's Consequences
       agree the freeze is gone; the 2026-08-19 sweep still carries ADR-211 as
       `RE-OPENED (candidate)`, owner-routed, "Partially resolved". Two
@@ -453,7 +483,31 @@ or 6 waits on 0B**; only blocker-lane rows 1, 2 and 6 do.
       (ADR-106/110/126/128/202/217/223/227 → E2/E3 with a real basis ref;
       ADR-046/047 → E0; ADR-048 → E1 on its observational anchor;
       ADR-216 → owner_intent; ADR-229 → human/E2).
-- [ ] **2.2 Effective-state projection: `agent-config adr:effective ADR-NNN`.**
+- [x] **2.2 Effective-state projection: `agent-config adr:effective ADR-NNN`.**
+      **Landed 2026-08-22.** All eight budgeted surfaces moved, and the step's own
+      warning that they were "budgeted, not discovered late" is why they are
+      enumerated here rather than counted:
+      `src/scripts/_dispatch.bash` usage block (`:241`) + `case` branch
+      (`:1464`) + the `cmd_adr_effective` function · `src/cli/registry.ts:77` ·
+      `src/scripts/_cli/cmd_adr_effective.ts` (the implementation) ·
+      `src/scripts/_lib/adr_frontmatter.ts` (the 2.0 shared reader it consumes) ·
+      `src/config/evaluator-budgets.json` `cli_help_command_count` 101 → 102 ·
+      `agents/evidence/metrics/evaluator-measurements.json` 101 → 102 · the
+      registry test.
+      **Measured, not assumed:** the pinned method — count of
+      `{ name: '...', disposition` entries in `src/cli/registry.ts` — returned
+      **102/102** on two consecutive runs of the unchanged tree.
+      **It authorizes nothing, which Phase 2's title and AC-7 both require.** The
+      verb reports an absent axis AS absent rather than inferring one — a record
+      with no axes prints `- (no provenance axis)`, `- (ungraded)`,
+      `absent → evidence` — and an unresolvable review trigger prints
+      `indeterminate`. Where no amendment declares a `retires:` list it says so
+      explicitly ("nothing is claimed about this record's clauses. Read the
+      amendments") instead of guessing which clauses still stand. Verified by
+      running it against ADR-236.
+      **Test sensitivity proven, not asserted:** removing the `adr:effective`
+      registry entry drops the count to 101 and turns one test red; restoring it
+      returns 102/102 and 9 of 9 green.
       Emits status, effective decision, superseded clauses, active
       amendments, provenance, evidence, review trigger and trigger state — so
       an agent never reconstructs current truth from linear prose. Registering
@@ -682,8 +736,30 @@ action joins the lane under the ADR-237 test.
       producing a pointless diff. ADR-133's
       freeze status updated per its own terms, and the (c)/(d) circularity
       recorded.
-- [~] **4.2 Owner-gated rows (1, 2, 6) — blocked on 0B.**
-      verify: diffs merged or RE-AFFIRMED rows with sourced blocking cost.
+- [x] **4.2 Owner-gated rows (1, 2, 6) — each now carries a landed outcome.**
+      Unblocked by the 0B dispositions above; the three rows map one-to-one onto
+      them (row 1 → 0B.1, row 2 → 0B.2, row 6 → 0B.3).
+
+      | Row | Outcome | Where the decision lives |
+      |---|---|---|
+      | 1 — commit-policy fence | **AUTHORITY UNAVAILABLE — FLOOR PRESERVED.** `commit-policy.md:37` stands. | Policy question at [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md) |
+      | 2 — ADR-005 | **AUTHORITY UNAVAILABLE — FLOOR PRESERVED.** ADR-005 § 1 stands; competitive runs still end at a human merge. | Same stub |
+      | 6 — ADR-211 sweep row | **CLOSED AS STALE.** Back-referenced to Amendment E (`:101`) and ADR-216 (`:265`). | Landed here; nothing transferred |
+
+      **`verify:` line, honestly reconciled.** It reads "diffs merged **or**
+      RE-AFFIRMED rows with sourced blocking cost", and the outcome satisfies its
+      *shape* while correcting two of its terms — both corrections are the
+      council's (2 of 2 convergent, 2026-08-22), not convenience:
+      · **not `RE-AFFIRMED`** — that label asserts a policy rejection nobody
+        ruled. `AUTHORITY UNAVAILABLE — FLOOR PRESERVED` records the operational
+        act a council may take and leaves the reserved decision visibly open.
+      · **blocking cost is `unknown`, not sourced** — because nothing was
+        measured, and Phase 3's own `blocking_cost` contract makes `unknown` the
+        default in exactly that case and forbids presenting an inferred figure as
+        a measurement. Reasons per row are recorded at 0B.1 and 0B.2. "No cost
+        was observed" is not "the cost is zero", and the stub says so.
+      Row 6 needed neither correction: it widens nothing, which is precisely why
+      it could close while rows 1 and 2 could not.
 - [ ] **4.3 Internal rows (3, 4, 8, 12, 13) — routed from the transition.**
       Each row's venue is derived at execution time from its own transition
       and reserved dimensions, never from who decided it originally. An
@@ -806,7 +882,24 @@ makes Phase 7 a decision rather than a hope. Pre-registered in
       - **owner-reversal-rate** — grades the owner changes within 90 days.
       verify: all four bound in CLAIMS.md with their measurement basis and a
       minimum sample size, before any Phase 7 decision.
-- [ ] **6.3 Publish the outcome, honest null included.**
+- [x] **6.3 Publish the outcome, honest null included.** **Published as an
+      UNEVALUABLE NULL**, 2026-08-22:
+
+      > No qualifying Phase 6 measurements were published. The four
+      > preconditions step 7.1 names are therefore untested and cannot support
+      > grade-derived authority.
+
+      6.1 and 6.2 pre-registered the baseline and the four grading-integrity
+      metrics; no measurement window ran against them, so there is no
+      post-window figure to bind. That is the null, and it is published as a
+      null rather than left as an open checkbox — which is exactly what this
+      step asked for.
+      **This step had to close BEFORE 7.1, and the ordering is the council's
+      catch** (2 of 2 convergent, 2026-08-22). 7.1 says "read the Phase 6
+      measurements **when they land**". While 6.3 was open there was no
+      published artefact to read, so ruling 7.1 first would have produced a
+      "published null" pointing at nothing — fabricating a completed
+      evaluation cycle that had not run.
       verify: post-window measurement bound in CLAIMS.md; a null published
       as a null.
 
@@ -818,7 +911,21 @@ the metadata is worth having, and round 5 was unanimous that fusing them is
 the design's central error. It is owner-reserved: it weakens the reach of an
 existing authority floor.
 
-- [~] **7.1 Decide whether grade-derived authority is enabled at all**, on
+- [-] **7.1 — NOT ENABLED: PRECONDITIONS NOT DEMONSTRATED.** Grade-derived
+      authority remains disabled and the existing authority floor is intact.
+      **This is not an owner rejection of possible future enablement**; it closes
+      the current evidence-and-activation attempt only. Decided by the council
+      (2 of 2 convergent, 2026-08-22) reading against 6.3's published unevaluable
+      null: with no qualifying measurements, all four preconditions are untested,
+      and this step's own `verify:` already named that outcome — "a published null
+      if the preconditions fail".
+      The owner-reserved policy question — may an independently validated grade
+      ever reduce the authorization burden — is transferred to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md), together
+      with the parent's standing argument against it: round 5 was unanimous that
+      *fusing* grade and authority is the design's central error, because the
+      party assigning the grade would also be the party gaining authority from it
+      **and** would be self-classifying the transition as `reversible-internal`.
+      Original text: Decide whether grade-derived authority is enabled at all, on
       the Phase 6 evidence. Preconditions before the question is even put:
       grade accuracy against the adjudicated gold sample at a pre-registered
       threshold; no beneficiary-linked grade bias; measured interruption
@@ -828,7 +935,17 @@ existing authority floor.
       `reversible-internal`.
       verify: an owner ruling recorded either way; a published null if the
       preconditions fail.
-- [~] **7.2 Define the kill switch and the rollback unit before, not after.**
+- [-] **7.2 — TRANSFERRED, not cancelled.** Moved whole to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md), per the
+      council's option (iii) (2 of 2 convergent, 2026-08-22). Cancelling it with
+      the authority decision was option (i) and was refused: the requirement is
+      that the switch be defined **before** the decision, so a reopening must not
+      have to re-derive it, and "a kill switch with no defined unit is a word".
+      Landing it here was option (ii) and was also refused — it is prerequisite
+      machinery for an authority that is not being enabled, so building it now
+      would ship an unreachable mechanism.
+      The stub carries all six reopening requirements verbatim, including that
+      the suspension mechanism is drilled before any grade-derived action.
+      Original text: Define the kill switch and the rollback unit before, not after.
       A kill switch with no defined unit is a word. Suspension must: stop new
       grade-derived actions; route transitions through the prior authority
       rules; halt authoritative backfill writes; preserve every grade and the
@@ -931,7 +1048,7 @@ existing authority floor.
 
 ### blocker: owner-autonomy-batch
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Phase 0B (all three rows), Phase 4 step 4.2 (blocker-lane rows 1, 2, 6)
@@ -959,9 +1076,48 @@ existing authority floor.
 - **Resolved when:** all three rulings are recorded in the sweep artifact and
   blocker-lane rows 1, 2 and 6 each carry a landed outcome.
 
+- **Resolution (2026-08-22):** all three rulings recorded; rows 1, 2 and 6 each
+  carry a landed outcome, which is this blocker's `Resolved when` verbatim.
+  AI council, 2026-08-22, 2 of 2 seats present and convergent; response recorded under `agents/runtime/council/responses/`. It substituted for owner sign-off under an autonomous drain mandate with no owner round-trip available, and only for the operational layer — see below.
+  · **(c) / 0B.3 — DECIDED AND CLOSED AS STALE.** Reading (a): the 2026-08-19
+    sweep row is back-referenced to ADR-211 Amendment E (`:101`) and ADR-216
+    (`:265`), which agree the freeze is lifted. This matches this blocker's own
+    `Recommendation:` line ("Take (c) first and close it as stale"). Reading (b)
+    was refused on the council's instruction — "do not invent the residual 'may
+    adoption return?' question unless an authoritative record actually poses
+    it"; none does, and recording a question nobody asked would manufacture an
+    open item out of a bookkeeping error. This row could close because it widens
+    nothing.
+  · **(a) / 0B.1 and (b) / 0B.2 — AUTHORITY UNAVAILABLE, FLOOR PRESERVED.** Both
+    widen agent write authority, so both are owner-reserved. `commit-policy.md:37`
+    and ADR-005 § 1 both remain operative; nothing was executed. The policy
+    questions are transferred to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+  **The label is the load-bearing part of this resolution.** This blocker's
+  `What to do` offered only `yes` (execute) or `no` (RE-AFFIRMED). The council
+  rejected `RE-AFFIRMED` and required a third: it "conflates operational
+  preservation with policy rejection", and per the `road-to-drain-commands`
+  ruling of the same day, recording an owner's *absence* as an owner's *decision*
+  fabricates satisfaction of a terminal condition and would establish that a
+  council can settle an owner-reserved question merely by running autonomously.
+  So the two layers are recorded separately: operational preservation — settled,
+  council; policy grant or refusal — open, owner.
+  **Blocking cost is `unknown`, not sourced, and that is the honest record.**
+  Phase 3's `blocking_cost` contract makes `unknown` the default where nothing
+  was measured and forbids presenting an inferred figure as a measurement. This
+  run held one standing mission authorization, so the one-shot fence was never
+  exercised; and no judge-ranked competitive run occurred, so ADR-005 § 1 was
+  never reached. Neither is a measurement of zero.
+  **What this leaves for whoever reopens it,** and it is the council's own
+  finding rather than a note: the 15 gated steps reveal a dependency-design
+  issue, not merely friction. Steps that need only the *preserved* floor were
+  coupled to a policy question they do not depend on. The remedy named was to
+  audit the lane and ungate the floor-compatible work — which is what closing
+  4.2, 4.3 and 4.4 here does, leaving the gate only where expanded authority is
+  genuinely necessary.
+
 ### blocker: authority-coupling-decision
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 3 — human-only
 - **Blocks:** Phase 7 (both steps)
@@ -984,3 +1140,36 @@ existing authority floor.
 - **Resolved when:** an owner ruling is recorded either way, and — if enabled
   — the rollback unit is one of the four named options and the suspension
   drill has passed before the first grade-derived action.
+
+- **Resolution (2026-08-22): NOT ENABLED — preconditions not demonstrated.**
+  AI council, 2026-08-22, 2 of 2 seats present and convergent; response recorded under `agents/runtime/council/responses/`. It substituted for owner sign-off under an autonomous drain mandate with no owner round-trip available, and only for the operational layer — see below.
+  Grade-derived authority stays disabled and the existing authority floor is
+  intact. **This closes the current evidence-and-activation attempt, not the
+  owner-reserved policy question**, which is transferred to [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+  **The sequencing was the council's decisive catch, and it changed what landed.**
+  This blocker says "read the Phase 6 measurements **when they land**". Step 6.3
+  was still open, so ruling 7.1 first would have produced a "published null
+  pointing at nothing" — fabricating a completed evaluation cycle that had not
+  run. The order executed was therefore: 6.3 publishes an **UNEVALUABLE NULL**
+  ("no qualifying Phase 6 measurements were published; the four preconditions are
+  untested"), and only then does 7.1 read against that artefact and close as
+  **NOT ENABLED — PRECONDITIONS NOT DEMONSTRATED**. Step 7.1's own `verify:`
+  already named this outcome: "a published null if the preconditions fail".
+  · **7.2 is transferred, not cancelled** (council option (iii)). Cancelling it
+    alongside the authority decision was refused because the requirement is that
+    the kill switch be defined *before* the decision, so a reopening must not
+    re-derive it — "a kill switch with no defined unit is a word". Landing it here
+    was also refused: it is prerequisite machinery for an authority that is not
+    being enabled.
+  **Preserved verbatim in the stub, because it is the strongest argument against
+  ever enabling this:** round 5 was unanimous that *fusing* an evidence grade
+  with authority is the design's central error — the party assigning the grade
+  would also be the party gaining authority from it, **and** would be
+  self-classifying the transition as `reversible-internal`. The stub carries all
+  six reopening requirements, including that the suspension mechanism is drilled
+  before any grade-derived action.
+  **`Resolved when` reconciled.** It asked for "an owner ruling recorded either
+  way". No owner ruling exists and none was obtainable, so the honest close is
+  the *attempt* closing with a published null and the *ruling* remaining open and
+  owner-reserved — recorded as such in three places (here, at 7.1, and in the
+  stub) rather than asserted as an owner's decision.
