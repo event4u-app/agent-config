@@ -48,6 +48,11 @@
             "minLength": 1,
             "description": "The input fixture handed to the skill under test."
           },
+          "_why": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional rationale: why this fixture exists at all. Annotation, never input — nothing reads it at run time, and it carries the same underscore prefix as the top-level `_calibration` to say so. Added because the alternative, on scenarios whose rationale IS the negative-control argument for the pair above them, was to delete the argument to satisfy additionalProperties."
+          },
           "environment": {
             "type": "string",
             "minLength": 1,

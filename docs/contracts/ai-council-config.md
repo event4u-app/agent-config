@@ -98,6 +98,24 @@ members:                        # per-provider blocks, at least one enabled
     api_key_ref: <string>                 # optional — the credential for the metered `api` fallback rung
     # no per-member `mode:` either — same reason as `defaults`
     binary: <string>                      # optional; only valid when effective mode == "cli" or "auto"
+    verified_at: "<YYYY-MM-DD>"           # optional, MUST BE QUOTED — when a human last checked this member's pin
+                                          # the provider's own surface. Read by `check_council_pin_staleness`
+                                          # (cadence 100d). A malformed or impossible date fails CLOSED at load, and
+                                          # an UNQUOTED value is rejected with the fix in the message: YAML 1.1 parses
+                                          # it as a date and silently rolls impossible values over (2026-13-45 becomes
+                                          # 2027-02-14), which would launder a malformed stamp into a valid one.
+                                          # A member on a vendor sentinel (`codex-default`) or a documented
+                                          # "latest in band" alias (`fable`/`opus`/`sonnet`/`haiku`) needs NO stamp:
+                                          # it cannot go stale, so the gate exempts it rather than demanding a date
+                                          # nobody would refresh.
+    # THIS BLOCK IS NOT THE FULL ACCEPTED KEY SET — `_build_member` in
+    # src/scripts/ai_council/config.ts IS AUTHORITATIVE. It accepts ten keys; six
+    # are listed here. The four omitted (`mode` — read then ignored, `model_ladder`,
+    # `participate_low_impact`, `tier`, `prompt_cache`) are each documented in their
+    # own section further down, which is why the drift went unnoticed: nothing was
+    # missing from the DOCUMENT, only from this summary. Stated rather than silently
+    # completed, because a reader who trusts a summary block as exhaustive will
+    # reject a valid config.
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
     enabled: <bool>

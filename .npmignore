@@ -1,5 +1,11 @@
 # Development files — not shipped to consumers
-.agent-src.uncondensed/
+# `.agent-src.uncondensed/` was listed here until 2026-08-22 and is removed
+# rather than carried: ADR-051 retired that container, the directory does not
+# exist, and it is not a `files[]` root — so the rule could never have shipped or
+# withheld anything. It surfaced when the publish-surface artefact started
+# RECORDING this file and check_no_new_legacy_path flagged the record. Removing
+# the dead rule is the honest fix; exempting the artefact would have preserved
+# the debt behind an exemption.
 .idea/
 .vscode/
 .phpunit.cache/

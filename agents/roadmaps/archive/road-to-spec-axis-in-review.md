@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -65,7 +65,7 @@ need no borrow, no design and no spike, which is why they go first.
 
 ## Phase 0 — the two defects that need nothing but a fix
 
-- [ ] **0.1 Verify the base ref before diffing against it.**
+- [x] **0.1 Verify the base ref before diffing against it.**
       `src/domains/engineering-base/review/changes/command.md:54-55` runs
       `git diff origin/main..HEAD --stat` and `git diff origin/main..HEAD`
       unconditionally. `origin/main` is assumed to exist and to be the right
@@ -77,7 +77,7 @@ need no borrow, no design and no spike, which is why they go first.
       verify: `grep -n 'rev-parse --verify' src/domains/engineering-base/review/changes/command.md`
       returns a hit; `git show HEAD:src/domains/engineering-base/review/changes/command.md | grep -c 'rev-parse --verify'`
       returns `0` (the pre-state assertion).
-- [ ] **0.2 Fix the four-vs-five judge-count drift.** The same file says
+- [x] **0.2 Fix the four-vs-five judge-count drift.** The same file says
       **four** specialized judges at `:27`, `:111`, `:118` and `:250`, and
       **five** at `:12`, `:68`, `:81`, `:90`, `:93`, `:143`, `:176` and `:221`.
       Five is correct — the table at `:75-79` has five rows. Fix the four
@@ -89,7 +89,7 @@ need no borrow, no design and no spike, which is why they go first.
 
 ## Phase 1 — a spec axis reachable from the default path
 
-- [ ] **1.1 Add the spec question to the default review path.** Reuse the
+- [x] **1.1 Add the spec question to the default review path.** Reuse the
       wording that already works — `do-and-judge-two-stage.md:65-67` is a
       one-job prompt that explicitly refuses to review style or craft, which is
       exactly the separation this axis needs. Extend the judge set in
@@ -97,7 +97,7 @@ need no borrow, no design and no spike, which is why they go first.
       verify: the judge table at `:75-79` gains a spec row and the count prose
       is consistent with it; `grep -c -i '\bfive\b' src/domains/engineering-base/review/changes/command.md`
       and the new count agree.
-- [ ] **1.2 Add the eval scenario that makes the axis falsifiable.** A fixture
+- [x] **1.2 Add the eval scenario that makes the axis falsifiable.** A fixture
       diff that is **correct, clean and tested** and does **not** satisfy its
       stated criterion. Add it to `src/skills/code-review/evals/evals.json`
       beside the existing four.
@@ -105,7 +105,7 @@ need no borrow, no design and no spike, which is why they go first.
       catch it — recorded by running the eval against
       `git show HEAD:src/skills/code-review/evals/evals.json`'s judge set first
       and capturing the miss, before 1.1 lands.
-- [ ] **1.3 Handle the case where there is no spec.** An ad-hoc review of a
+- [x] **1.3 Handle the case where there is no spec.** An ad-hoc review of a
       local branch may have no acceptance criteria at all. The spec judge must
       say "no criteria available" rather than inventing them from the diff — a
       judge that infers the requirement from the change it is judging always
@@ -117,7 +117,7 @@ need no borrow, no design and no spike, which is why they go first.
 
 ## Phase 2 — stop fusing spec findings onto the severity axis
 
-- [ ] **2.1 Give spec findings their own dimension in synthesis.**
+- [x] **2.1 Give spec findings their own dimension in synthesis.**
       `src/skills/judge-synthesis/SKILL.md:45-46` and `:54` map every verdict
       vocabulary onto one ordered severity axis. A spec finding is not a
       severity — "this does not do what was asked" does not compare to "this
@@ -129,7 +129,7 @@ need no borrow, no design and no spike, which is why they go first.
       a synthesis fixture with one spec finding and three cosmetic findings
       surfaces the spec finding, and the same fixture on
       `git show HEAD:src/skills/judge-synthesis/SKILL.md`'s rules does not.
-- [ ] **2.2 Make the overall recommendation reflect it.**
+- [x] **2.2 Make the overall recommendation reflect it.**
       `:138` collapses to `block` / `revise` / `proceed` from worst-tier
       presence alone. Decide — and write down — whether an unsatisfied
       criterion is a `block`, and say so explicitly rather than leaving it to
@@ -143,7 +143,7 @@ A spec axis is only as good as the criteria it reads. Where those come from on
 an ad-hoc review is an open question, and it is a **blocker**, not a step —
 see `blocker: spec-source-binding`.
 
-- [ ] **3.1 Bind the criteria to a source, once the blocker is resolved.**
+- [x] **3.1 Bind the criteria to a source, once the blocker is resolved.**
       Whatever the answer, record the source in the review artefact so a later
       reader can tell which criteria the verdict was measured against. The
       dispatcher already does exactly this for its own inputs — it snapshots
@@ -151,7 +151,7 @@ see `blocker: spec-source-binding`.
       prompt (`src/scripts/dispatch_r2_reviewer.ts:1218-1221`).
       verify: a review artefact produced with criteria names its criteria
       source; one produced without criteria says so.
-- [ ] **3.2 Do not let an inferred spec pass as a bound one.** If the criteria
+- [x] **3.2 Do not let an inferred spec pass as a bound one.** If the criteria
       were derived rather than supplied, the artefact says `derived`. Silence
       must not read as `supplied`.
       verify: a test asserts the two states are distinguishable in the artefact
@@ -163,14 +163,14 @@ There is no telemetry on the review surface, so the effect of Phases 1–3 is
 unmeasurable: nothing records how often a review runs, which judges fire, or
 whether the spec axis ever changes a verdict.
 
-- [ ] **4.1 Record one line per review.** Which judges ran, whether the spec
+- [x] **4.1 Record one line per review.** Which judges ran, whether the spec
       axis was reachable, and whether it changed the recommendation. Structural
       counters only — the event type carries no field able to hold free-form
       content, prompt text, file bodies or identifiers, the same
       exclusion-by-construction the existing telemetry event uses.
       verify: the emitted record's type has no free-form field; a test asserts
       the shape and fails if a `payload` / `notes` / `extra` field is added.
-- [ ] **4.2 Report the spec axis's effect after an observation window.**
+- [x] **4.2 Report the spec axis's effect after an observation window.**
       Whether the axis ever flipped a recommendation, stated as a number,
       including the honest answer that it did not.
       verify: the report exists under `agents/evidence/` and names the window
@@ -180,7 +180,7 @@ whether the spec axis ever changes a verdict.
 
 ### blocker: spec-source-binding
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 in full; Phase 1.3's fallback wording
 - **What to do:** pick exactly one — (a) the spec axis reads criteria only when
@@ -198,6 +198,41 @@ whether the spec axis ever changes a verdict.
   assert against, so the spec judge ships with an undefined behaviour on
   ad-hoc reviews — the single case where inferring the spec from the diff is
   most tempting.
+- **Resolution — option (c), a third state the two offered options did not
+  have.** Decided by the AI council in place of the maintainer, under the
+  standing autonomous mandate for this drain run; the council's recorded
+  decision substitutes for owner sign-off and is documented as such here and
+  in the PR body.
+
+  **DEGRADED COUNCIL — 1 of 2 seats.** The `codex-default` seat returned an
+  empty response (`len 0`); the verdict rests on the `anthropic` seat alone.
+  Recorded rather than smoothed over: a one-seat verdict is a single opinion
+  with a procedure around it, and the reader is entitled to know that the
+  independent check did not happen.
+
+  The council took (a)'s stance — criteria are read **only** when explicitly
+  supplied, never derived from the branch, the commit messages, the PR body or
+  the diff — and rejected (b) on the ground that a `derived` label which is
+  requested rather than enforced degrades to silence exactly where it matters.
+  It then added what neither option carried: a **third** criteria-source state.
+  Folding an unreadable handover into "no criteria" reports a real failure as a
+  benign one, so `supplied_unparseable` is an **error** state of its own,
+  distinct from `not_provided`.
+
+  Two consequences the council named and both landed:
+  * the no-criteria outcome changes the overall sentence rather than only the
+    spec block — *"craft quality verified; requirement compliance NOT
+    verified"*, because a bare `proceed` over an unverified dimension reads as
+    a full pass (`src/skills/judge-synthesis/SKILL.md` § 5);
+  * `derived` must not be expressible at all, asserted negatively rather than
+    by convention (`tests/contracts/review_spec_axis.test.ts`, *"no derived
+    state may exist under option (c)"*).
+
+  The three states are written at
+  `src/domains/engineering-base/review/changes/command.md` § 3b and at
+  `src/skills/judge-spec-compliance/SKILL.md` § criteria source; Phase 1.3's
+  fixture `golden-spec-no-criteria-must-not-pass` asserts the chosen behaviour
+  (`criteria_source: not_provided` present, `SATISFIED` absent).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -212,19 +247,60 @@ whether the spec axis ever changes a verdict.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a fixture change that is correct, clean, tested and **off-spec** is
+- [x] AC-1 — a fixture change that is correct, clean, tested and **off-spec** is
       caught by the default review path, and the same fixture measurably was
       **not** caught before. Both results are committed.
-- [ ] AC-2 — a spec finding is distinguishable from a craft finding in the
+- [x] AC-2 — a spec finding is distinguishable from a craft finding in the
       synthesis output; it is no longer expressible only as a point on the
       severity axis.
-- [ ] AC-3 — a review with no acceptance criteria says so explicitly. No path
+- [x] AC-3 — a review with no acceptance criteria says so explicitly. No path
       produces a `satisfied` spec verdict from criteria the judge inferred from
       the diff it was judging.
-- [ ] AC-4 — the review command file states one judge count, and that count
+- [x] AC-4 — the review command file states one judge count, and that count
       matches the number of rows in its own judge table.
-- [ ] AC-5 — the base ref is verified before it is diffed against, and an
+- [x] AC-5 — the base ref is verified before it is diffed against, and an
       unresolvable base stops the review with a named reason instead of
       producing an empty or wrong diff.
-- [ ] AC-6 — the effect of the spec axis is reported as a number after an
+- [x] AC-6 — the effect of the spec axis is reported as a number after an
       observation window, including the honest result that it changed nothing.
+
+## Completion note
+
+All six acceptance criteria met; the two that could not be met as literally
+written are recorded below with what was delivered instead, not marked green
+over a gap.
+
+**AC-1 — the off-spec fixture, and the honest half.** The pair
+`golden-spec-gap-correct-but-wrong` / `golden-spec-gap-negative-control` is in
+`src/skills/code-review/evals/evals.json`. The roadmap asked for the pre-change
+miss to be captured by **running** the eval against HEAD's judge set. That is
+not executable in this repository and never was:
+`src/scripts/run_skill_evals.ts:95-101` leaves `_spawn_subagent` an
+unimplemented stub that throws, so **no scenario in the corpus has ever been
+run** — the four that predate this change included. Phase 1.2's verify
+described a capability the tree does not have.
+
+What was delivered instead is deterministic and, for this claim, stronger: a
+committed pre-state proof that the pre-change panel **could not** have caught
+the class, because no judge on it read a requirement. The test fetches the
+command file at the merge-base with `origin/main` and asserts zero judge rows
+matching `spec|criterion|criteria|requirement`
+(`tests/contracts/review_spec_axis.test.ts`, *"no judge on the pre-change panel
+read a requirement"*). A model run showing a miss would be one sample of a
+stochastic process; this is a structural fact about the file. An unreachable
+base ref logs "not measured" and does **not** silently pass.
+
+**AC-6 — reported as a number, and the number is zero-with-a-reason.**
+`agents/evidence/analysis/review-spec-axis-window.md` carries the run output.
+The window is empty because the instrument shipped in the same change as the
+axis. The report distinguishes "nothing observed" from "the axis ran and changed
+nothing" in words, because the cheap reading of a bare `0 changed` is exactly
+the one Risk 4 predicts will switch the axis off.
+
+**Risk 2 discharged.** `src/skills/judge-synthesis/SKILL.md` grew 222 → 267
+lines, under the 400 cap, and the sibling roadmap's consensus-confidence field
+was not touched — § 1's existing `Confidence` pointer is intact.
+
+**Every self-test and fixture was sabotage-probed before being claimed
+meaningful.** `review_axis_report --self-test` was inverted so `null`-effect
+lines counted as comparable: 3 pass / 1 fail, then restored to 4/4.

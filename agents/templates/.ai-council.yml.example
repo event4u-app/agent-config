@@ -289,8 +289,20 @@ quorum: majority
 # markers.
 members:
   anthropic:
+    # `sonnet` is a vendor ALIAS, not a version. `claude --help` documents
+    # 'fable', 'opus' and 'sonnet' as "an alias for the latest model" in their
+    # band, so this line cannot go stale the way a dated id can — the same
+    # property `codex-default` gives the openai member below.
+    #
+    # Until 2026-08-22 this read a dated, several-generation-old id: an enabled
+    # member of a quality council pinned in a template nobody re-reads, with
+    # nothing in the file able to notice. Read from the provider's own CLI
+    # surface, never from recall.
+    #
+    # A member on an alias or a sentinel needs no `verified_at:` — see the
+    # disabled members below for the stamped form.
     enabled: true
-    model: claude-sonnet-4-5
+    model: sonnet
     api_key_ref: file:anthropic.key
     # binary: /usr/local/bin/claude      # only valid when mode == cli
     # Phase 7 — size-fit downgrade ladder (smallest → largest). The
@@ -298,9 +310,9 @@ members:
     # classifier flags a request as oversized, it suggests the next
     # rung *down*; the top rung is the default for complex prompts.
     model_ladder:
-      - claude-haiku-4-5
-      - claude-sonnet-4-5
-      - claude-opus-4-5
+      - haiku
+      - sonnet
+      - opus
     # Prompt caching (GA — no beta header) is ON by default: the stable
     # system + artefact prefix is sent as a cache-controlled block, so
     # members 2..N in a round (and round-2+ within the 5-min TTL) read
@@ -381,20 +393,38 @@ members:
 
   gemini:
     enabled: false
+    # not-listed: gemini — the `gemini` CLI is installed here and its `--help` exposes only `-m, --model <string>` — no listing subcommand and no documented "latest" alias, so no sentinel could be substituted. An honest null for this provider, not a guess.
+    # The pin is therefore stamped as-of the drain date with NO refresh claimed;
+    # `verified_at` records when a human last looked, which is the only thing it
+    # has ever meant. This member ships disabled, so the pin costs nothing today
+    # and `check_council_pin_staleness` will say so when the stamp ages out.
     model: gemini-2.5-pro
+    verified_at: "2026-08-22"
     api_key_ref: env:GEMINI_API_KEY
     # binary: /usr/local/bin/gemini      # only valid when mode == cli
 
   xai:
     enabled: false
+    # not-listed: grok — no `grok` binary on this machine, so the provider's own surface was unreachable.
+    # The pin is therefore stamped as-of the drain date with NO refresh claimed;
+    # `verified_at` records when a human last looked, which is the only thing it
+    # has ever meant. This member ships disabled, so the pin costs nothing today
+    # and `check_council_pin_staleness` will say so when the stamp ages out.
     model: grok-4
+    verified_at: "2026-08-22"
     api_key_ref: env:XAI_API_KEY
     # binary: /usr/local/bin/grok        # The CLI consumes XAI_API_KEY and remains billable=True;
     #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.
 
   perplexity:
     enabled: false
+    # not-listed: sonar — no `sonar` binary on this machine, so the provider's own surface was unreachable.
+    # The pin is therefore stamped as-of the drain date with NO refresh claimed;
+    # `verified_at` records when a human last looked, which is the only thing it
+    # has ever meant. This member ships disabled, so the pin costs nothing today
+    # and `check_council_pin_staleness` will say so when the stamp ages out.
     model: sonar-pro
+    verified_at: "2026-08-22"
     api_key_ref: env:PERPLEXITY_API_KEY
     # binary: /usr/local/bin/perplexity  # The CLI consumes PERPLEXITY_API_KEY and remains billable=True;
     #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.

@@ -69,9 +69,15 @@ delegating unbounded execution of everything the task's data happens to say.
 
 No deterministic gate inspects fetched/tool/RAG content for injected
 instructions — the quarantine is carried by the model (ADR-135 lists it in the
-CRITICAL policy class precisely BECAUSE no mechanical backstop exists today;
-a future content-scanning hook would be the first candidate to change this).
-Counting an adjacent lint here would be coverage inflation, so none is counted.
+CRITICAL policy class). Counting an adjacent lint here would be coverage
+inflation, so none is counted.
+
+**A content-scanning hook now exists and this field is unchanged.**
+`injection_scan_hook.ts` is warn-only and default-OFF: it cannot refuse, and a
+hook that cannot refuse does not enforce. This section used to say no such
+backstop existed and that a future one would change the field — the first half
+is now false, the second always was. Detail:
+[`untrusted-input-spotlighting § The content-scanning hook`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md).
 
 Body migrated to [`guideline:agent-infra/untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) (per P4 of `road-to-kernel-and-router.md`) — runtime defense protocol (separate / spotlight / refuse role-takeover / no silent egress / untrusted agent-instruction files), hidden-instruction awareness (invisible Unicode + confusables), injection-signal taxonomy, least-agency → existing-gate OWASP mapping.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

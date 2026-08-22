@@ -217,6 +217,86 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: check_pack_size
+    argv: []
+    min_scanned: 2000
+    corpus: "the `npm pack --dry-run --ignore-scripts` payload — every file package.json `files[]` resolves (2,954 in a built worktree and 2,686 in an unbuilt one on 2026-08-22, which is why the floor sits well under both)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/zz-canary-shipped-credential.pem
+      content: |
+        zz canary probe: not a key, and deliberately not shaped like one.
+        The credential-shaped class matches on the PATH (`\.pem$`), never on the
+        body, so the plant needs no key-shaped content to red the class - and a
+        PEM header here would be a high-confidence check_secret_leak finding in
+        this tracked file. Measured, not guessed: the first draft carried a
+        BEGIN PRIVATE KEY block and reddened the secret gate at
+        gate-coverage.yml:229 in both `diff` and the new `pack` mode. A canary
+        that breaks a sibling gate to prove its own is not a canary.
+    note: >
+      ONE canary, and the entry shape is why. `canary:` is a single recipe per
+      gate id, not a list, while this gate carries FOUR content classes — so
+      per-class red observation lives in the gate's own `--self-test` (9 cases,
+      6 rejecting), which proves every class discriminates over a synthetic
+      payload with no pack run. Two of the four cannot be planted through the
+      register at all: `compiled-test-artefact` is excluded from the payload by
+      the `files[]` negations that fixed it, so a plant never ships and never
+      reds, and `source-map` needs 121 files in a BUILT tree.
+
+      The credential class is the one that gets the recipe. It is empty today,
+      and an empty class with no check is indistinguishable from a class nobody
+      looked at — so it is the class where "has this ever been red" is a real
+      question. The plant sits under `src/scripts/`, which IS a `files[]` root;
+      an earlier attempt under `src/skills/` was silently absent from the
+      payload because that path is not shipped, and a canary that cannot reach
+      the corpus proves nothing.
+
+      Floor is a count, not a size. The size arm has a budget file; the count
+      arm is what stops an empty payload — a botched `files[]`, a pack that
+      resolved nothing — from measuring 0 MB and passing every budget. The gate
+      already exits 2 rather than 0 on that, via `assertScanned`.
+
+  - id: check_secret_leak
+    argv: ["--pack"]
+    min_scanned: 2000
+    corpus: "the npm pack payload — every file package.json `files[]` resolves, INCLUDING shipped-but-gitignored paths no git-backed mode can reach (2,684 in an unbuilt worktree on 2026-08-22)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: dist/zz-canary-shipped-and-gitignored.pem
+      content: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEowIBAAKCAQEAzz-canary-not-a-real-key-zz
+        -----END RSA PRIVATE KEY-----
+    note: >
+      Registered on the `--pack` argv specifically, and the canary path is the
+      whole point: `dist/` is a `files[]` root while `/dist/*` is
+      `.gitignore:206`, so this plant is shipped and untracked at the same time.
+      `git check-ignore -q` matches it and `npm pack` includes it. A canary in a
+      tracked file would pass under the pre-existing `diff` and `all` modes too
+      and would prove nothing about the scope this entry exists for.
+
+      Measured, not assumed: with the plant in place `--pack` exits 1 and names
+      the path, while the default `diff` mode exits 0. The plant carries a real
+      PEM shape because THIS gate matches on CONTENT — unlike its sibling
+      `check_pack_size`, whose credential class matches on the path and whose
+      canary therefore deliberately carries no key-shaped body.
+
+      Two reasons the scope was blind, and adding the mode only fixed the first.
+      Mode enumeration walks the git tree; the `DEFAULT_EXCLUDE` list ALSO drops
+      all of `dist/`, regardless of mode. Until that exclusion became
+      mode-aware, the new scope resolved the payload and then filtered away
+      exactly the paths it was built to reach — the mode was measurably inert.
+
+  - id: check_publish_surface
+    argv: []
+    min_scanned: 2000
+    corpus: "the npm pack payload (2,686 in an unbuilt worktree on 2026-08-22), read to classify each .npmignore pattern against what actually shipped"
+    status: enforced
+    no_canary_reason: >-
+      the violation is a MODIFICATION, not a creation: this gate reds when package.json `files[]` or `.npmignore` changes and the committed artefact does not, and the canary contract is create-only. A planted FILE cannot move either surface — the closest it gets is changing the payload-derived shadowed set, which is informational and deliberately excluded from the drift verdict, so a plant would leave the gate green and be reported as dead. Discrimination is proven by the gate's own `--self-test` (8 cases, 5 rejecting) over the pattern matcher, and end to end by hand: editing `files[]` alone exits 1, regenerating exits 0, editing `.npmignore` alone exits 1, restoring exits 0.
+
   - id: check_gate_completeness
     argv: []
     min_scanned: 180
@@ -410,6 +490,25 @@ gates:
       report an empty inventory as a clean one. Floor 15 against 25 at
       registration: the active estate is being drained deliberately and is
       expected to shrink, so a tight floor would red on the drain working.
+
+  - id: check_council_pin_staleness
+    argv: []
+    min_scanned: 3
+    corpus: "council members carrying a `model:` in agents/templates/.ai-council.yml.example (5 at registration, 2026-08-22)"
+    status: enforced
+    no_canary_reason: >-
+      the harness is create-only and this gate reads ONE fixed path
+      (agents/templates/.ai-council.yml.example), so no planted file lands inside
+      its scan scope — making it red means EDITING that template, which the
+      harness does not do. Discrimination is proven by the gate's own
+      `--self-test` instead: 10 cases across the fresh, stale, future-date,
+      malformed, unstamped and vendor-sentinel branches.
+    note: >
+      Floor 3 against 5 at registration: the template's member list is a shipped
+      artifact rather than a draining corpus, but an exact floor would red on a
+      legitimate trim of one member. Collapse is covered more strictly from the
+      other side — `reportScanned` raises DeadScopeError at 0 members, before
+      this floor is consulted at all.
 
   - id: lint_trigger_collisions
     argv: []
