@@ -45,6 +45,7 @@ import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
 import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
+import { apiOnQuotaView } from '../../scripts/ai_council/transport_resolver.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -329,8 +330,8 @@ interface CouncilConfigView {
     // Mode per decision class (trivial/low_impact/medium_impact); matches the
     // SPA `AiCouncilState.decision` + the POST payload `decision` field.
     decision: Record<string, string>;
-    /** `fallback.api_on_quota` — the one billing-class decision. Default off. */
-    fallback: { api_on_quota: boolean };
+    /** `fallback.api_on_quota` — the billing-class decision: off · on · `'ask'`. */
+    fallback: { api_on_quota: boolean | 'ask' };
 }
 
 /** Pull the wizard-controlled scalar subset out of a parsed council config. */
@@ -373,7 +374,7 @@ function extractCouncilConfig(body: string): CouncilConfigView {
         decision,
         // Anything but a literal `true` reads as off — the same shape the
         // CLI reader uses, so the two never disagree about spend.
-        fallback: { api_on_quota: fallbackCfg['api_on_quota'] === true },
+        fallback: { api_on_quota: apiOnQuotaView(fallbackCfg['api_on_quota']) },
     };
 }
 
@@ -704,7 +705,7 @@ const aiCouncilPayloadSchema = z.object({
      * the write path is a comment-preserving `replaceScalar`, so an unmodelled
      * block was never at risk. Contract: ai-council-config.md.
      */
-    fallbackApiOnQuota: z.boolean().optional(),
+    fallbackApiOnQuota: z.union([z.boolean(), z.literal('ask')]).optional(),
 }).strict();
 
 // road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible

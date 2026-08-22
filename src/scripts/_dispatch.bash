@@ -162,6 +162,11 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: council:render <responses.json>
   council:status             Report whether an AI council is configured, and from where
                              (no API call, no spend)
+  council:grant-billing      Record the human yes that lets an exhausted plan quota
+                             retry on the metered rung, for ONE run.
+                             Usage: council:grant-billing <run-id>
+  council:revoke-billing     End a run-scoped billing grant (exit 0 when none)
+                             Usage: council:revoke-billing <run-id>
   council:quota              Show today's per-provider CLI-call usage against the
                              enforced cap; --reset <provider> --confirm clears one
                              (no API call, no spend)
@@ -1502,6 +1507,8 @@ main() {
     council:render)          cmd_council render "$@" ;;
     council:status)         cmd_council status "$@" ;;
     council:quota)           cmd_council quota "$@" ;;
+    council:grant-billing)   cmd_council grant-billing "$@" ;;
+    council:revoke-billing)  cmd_council revoke-billing "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
     decision:memo)           cmd_decision_memo "$@" ;;
