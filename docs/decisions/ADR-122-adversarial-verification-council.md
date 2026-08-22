@@ -74,7 +74,8 @@ Ship an **adversarial verification council** as a distinct, opt-in,
    judge-survivable subtlety distribution, with a **dual threshold** (relative
    ≥ +25% AND absolute ≥ +8 pp residual-recall lift) and a
    **controversial-but-correct FP control**. Honest-null is an accepted outcome
-   and keeps the surface inert-by-default permanently.
+   and keeps the surface inert-by-default until a re-run of this same protocol
+   clears both locked thresholds with the FP control held.
 
 ### Skeptic transport (fork F1)
 
@@ -151,9 +152,14 @@ single skeptic exactly (residual recall 0.60 = 0.60, **zero lift** — the secon
 vendor's catches were a strict subset of the first's), at a **100%** false-
 positive rate on the controversial-but-correct controls under the adversarial-
 skeptic posture. Both locked recall thresholds missed -> honest-null. **The
-Mode 9 `adversarial-verification-council` surface stays default-off permanently**
-(no settings change — it already ships off), recorded like recursive-verification
-(ADR-106). Detail + reproducible artifact:
+Mode 9 `adversarial-verification-council` surface stays default-off** (no
+settings change — it already ships off), recorded like recursive-verification
+(ADR-106). **Reopen condition, which the measurement itself supplies:** a re-run
+of the two-stage residual-detection protocol that clears both locked thresholds
+(relative ≥ +25 % AND absolute ≥ +8 pp residual-recall lift) with the
+controversial-but-correct FP control held. Nothing else — an argument that the
+panel ought to help is not the condition, and the zero-lift result is what the
+re-run has to overturn. Detail + reproducible artifact:
 `docs/benchmark.md#adversarial-verification-council`,
 `internal/bench/adversarial-council/runs/`.
 
