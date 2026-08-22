@@ -403,12 +403,75 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
  * `auto` may infer — the USD spend itself remains guarded by the ordinary
  * `cost_budget` gates the orchestrator runs on the retry.
  */
+/**
+ * The three postures of `ai_council.fallback.api_on_quota`.
+ *
+ * `false` and `true` mean what they always meant. `'ask'` is the third: the
+ * billing-class decision is deferred out of configuration time and into the
+ * round that would actually cross the cliff, where the remaining scope is
+ * known. Under `'ask'` the seat is eligible only when a run-scoped billing
+ * grant is present — a human said yes for THIS run — and is parked otherwise.
+ */
+export type ApiOnQuota = boolean | 'ask';
+
 export interface FallbackPolicy {
-    readonly apiOnQuota: boolean;
+    readonly apiOnQuota: ApiOnQuota;
+    /**
+     * True when a run-scoped billing grant is in force. Only consulted under
+     * `apiOnQuota: 'ask'`; absent is never read as granted, which is why this
+     * is optional rather than defaulted anywhere.
+     */
+    readonly billingGrant?: boolean;
 }
 
 /** The base policy: exactly the three-plus-one no-double-charge classes. */
 export const DEFAULT_FALLBACK_POLICY: FallbackPolicy = { apiOnQuota: false };
+
+/**
+ * Collapse the tri-state plus the grant into the boolean the eligibility rule
+ * needs. `'ask'` without a grant is `false` — never `true` by omission, which
+ * is the one direction that would turn a configured question into silent
+ * metered spend.
+ */
+export function effectiveApiOnQuota(policy: FallbackPolicy): boolean {
+    if (policy.apiOnQuota === 'ask') return policy.billingGrant === true;
+    return policy.apiOnQuota === true;
+}
+
+/**
+ * Parse a config value into the tri-state, or throw.
+ *
+ * Rejecting is the point. A parser that mapped an unknown value onto a truthy
+ * default would turn a configured `off` into metered spend — the exact failure
+ * the `'ask'` posture exists to prevent, introduced by the code that adds it.
+ * Accepts the Python-ish spellings the council config has always allowed on
+ * the boolean side, plus `ask` on the new one.
+ */
+export function apiOnQuotaView(raw: unknown): ApiOnQuota {
+    // Lenient by design, unlike `parseApiOnQuota`: this feeds a DISPLAY
+    // surface, where throwing on a malformed file would blank the wizard
+    // instead of showing the operator the setting they need to fix. Reading
+    // by value rather than by truthiness is the half that still matters —
+    // `=== true` alone renders `'ask'` as `false`, and the next save
+    // downgrades a configured question to a configured no.
+    return raw === 'ask' ? 'ask' : raw === true;
+}
+
+export function parseApiOnQuota(raw: unknown): ApiOnQuota {
+    if (typeof raw === 'boolean') return raw;
+    if (raw === undefined || raw === null) return false;
+    if (typeof raw === 'string') {
+        const s = raw.trim().toLowerCase();
+        if (s === 'ask') return 'ask';
+        if (s === 'true' || s === 'yes' || s === 'on' || s === '1') return true;
+        if (s === '' || s === 'false' || s === 'no' || s === 'off' || s === '0') {
+            return false;
+        }
+    }
+    throw new Error(
+        `ai_council.fallback.api_on_quota: expected false | true | 'ask', got ${JSON.stringify(raw)}`,
+    );
+}
 
 /** Normalise a raw client error / skip reason into a `CliFailureClass`. */
 export function classifyCliFailure(raw: string): CliFailureClass {
@@ -464,7 +527,7 @@ export function isFallbackEligibleUnder(
     policy: FallbackPolicy,
 ): boolean {
     if (FALLBACK_ELIGIBLE.has(failure)) return true;
-    return policy.apiOnQuota && failure === 'quota_exhausted';
+    return effectiveApiOnQuota(policy) && failure === 'quota_exhausted';
 }
 
 /**

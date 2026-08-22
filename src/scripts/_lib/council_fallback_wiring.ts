@@ -13,13 +13,18 @@
  */
 
 import type { CliFallbackOptions, FallbackEvent } from '../ai_council/mid_flight_fallback.js';
+import type { ApiOnQuota } from '../ai_council/transport_resolver.js';
+import { parseApiOnQuota } from '../ai_council/transport_resolver.js';
+import { hasBillingGrant } from './billing_grant.js';
 import { CouncilConfigError } from '../ai_council/config.js';
 
 type Dict = Record<string, unknown>;
 
 /** Anything the twin factory needs that `council_cli.ts` owns. */
 export interface FallbackWiringDeps {
-    readonly apiOnQuota: boolean;
+    readonly apiOnQuota: ApiOnQuota;
+    /** Run-scoped billing grant in force. Read only under `'ask'`. */
+    readonly billingGrant?: boolean;
     /** Does this provider have an api constructor at all? */
     readonly hasApiRung: (provider: string) => boolean;
     /** This provider's `members.<name>` block, or `{}`. */
@@ -38,6 +43,7 @@ export interface FallbackWiringDeps {
     ) => unknown;
     /** The events-log appender. */
     readonly emit: (record: Dict) => unknown;
+
 }
 
 /**
@@ -77,8 +83,15 @@ function isRefusal(exc: unknown): boolean {
 }
 
 export function buildFallbackOptions(deps: FallbackWiringDeps): CliFallbackOptions {
+    // Owned here, not passed in. `establishTwin` emits `awaiting_grant` and
+    // this is the nearest thing to it that outlives one call, so a caller
+    // wanting the closing question reads `options.parked` instead of
+    // threading a collector through the factory.
+    const parked: string[] = [];
     return {
         api_on_quota: deps.apiOnQuota,
+        billing_grant: deps.billingGrant === true,
+        parked,
         // The orchestrator is a pure library and holds no sink; this is it.
         // One line per establishing escalation, so attendance analysis can
         // tell a seat SAVED by the fallback from one that was natively api.
@@ -93,6 +106,7 @@ export function buildFallbackOptions(deps: FallbackWiringDeps): CliFallbackOptio
             // during a fallback kills the whole round, and the mechanism whose
             // entire purpose is to SAVE a seat becomes the thing that loses
             // every seat. Losing the log line is the strictly smaller failure.
+            if (e.outcome === 'awaiting_grant') parked.push(e.provider);
             try {
                 deps.emit({
                     action: 'transport_fallback',
@@ -123,4 +137,50 @@ export function buildFallbackOptions(deps: FallbackWiringDeps): CliFallbackOptio
             }
         },
     };
+}
+
+/** Everything `wireCouncilFallback` needs that `council_cli.ts` owns. */
+export interface CallSiteDeps {
+    readonly repoRoot: string;
+    readonly isDict: (v: unknown) => v is Dict;
+    readonly membersCfg: Dict;
+    readonly overrides: Dict;
+    readonly hasApiRung: (provider: string) => boolean;
+    readonly constructApi: FallbackWiringDeps['constructApi'];
+    readonly emit: (record: Dict) => unknown;
+}
+
+/**
+ * Build the fallback factory from the raw `ai_council` block and hand it back
+ * through the out-param `build_members` threads.
+ *
+ * Extracted from `council_cli.ts` when the billing-grant read joined the two
+ * config reads already here: that file is ~2,500 lines over the source ceiling
+ * and the documented remedy is extraction rather than a raised baseline
+ * (`gate-violation-baselines.json` § check_source_size_budget). Keeping the
+ * derivation next to the factory it feeds is the better shape anyway — the
+ * caller had to know that an absent `fallback` block means `false` and that
+ * the grant is read per-run, neither of which is the caller's business.
+ */
+export function wireCouncilFallback(
+    out: { options: CliFallbackOptions | null } | null,
+    ai: Dict,
+    d: CallSiteDeps,
+): void {
+    // The null check lives here, not at the call site: `fallback_out` is an
+    // optional out-param and "the caller passed no ref" is this function's
+    // business, not a branch every caller has to remember.
+    if (out === null) return;
+    // Absent/malformed block means `false`, never a throw. Why quota
+    // fall-through is opt-in: `FallbackPolicy.apiOnQuota`.
+    const cfg = d.isDict(ai['fallback']) ? ai['fallback'] : {};
+    out.options = buildFallbackOptions({
+        apiOnQuota: parseApiOnQuota(cfg['api_on_quota']),
+        billingGrant: hasBillingGrant(d.repoRoot),
+        hasApiRung: d.hasApiRung,
+        memberConfig: (p) => ((d.membersCfg[p] as Dict) || {}) as Dict,
+        modelOverride: (p) => (d.overrides[p] as string | undefined) ?? null,
+        constructApi: d.constructApi,
+        emit: d.emit,
+    });
 }
