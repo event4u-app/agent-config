@@ -44,7 +44,7 @@
         "slash-command-routing-policy": 77,
         "symfony-routing": 129,
         "ui-audit-gate": 1280,
-        "untrusted-input-defense": 845,
+        "untrusted-input-defense": 934,
         "upstream-proposal": 76
     },
     "history": [
@@ -82,6 +82,13 @@
             "from": 2185,
             "to": 2479,
             "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md. RE-BASED on merge with origin/main, 2026-08-20: this entry was authored against a base of 2117 and raised to 2411. main had independently raised the same ceiling 2117 -> 2185 for its own reason, so the merged tree measures 2479 and the honest arithmetic for THIS raise is 2185 -> 2479 -- the same +294 for the same subsection, re-based rather than re-argued. Recorded rather than silently regenerated because the gate's own failure text names a history-versus-ceilings disagreement as the signature of a hand-edited count, and a merge that quietly adopted one side's numbers would produce exactly that signature with nothing saying why."
+        },
+        {
+            "date": "2026-08-22",
+            "rule": "untrusted-input-defense",
+            "from": 845,
+            "to": 934,
+            "reason": "Six lines, +89 tokens, correcting a claim the section itself had made false. It said no content-scanning backstop existed and that a future one would be the first candidate to change enforced_by; injection_scan_hook.ts now exists, so the first half is false, and the second was always wrong because a warn-only hook cannot refuse and therefore cannot enforce. Every sentence left carries one of those claims. The measurement half -- slot, 15 channels, 99.00 percent recall, 0.85 percent false positives, the manifest keys -- did move to the pointer target, which is what cut the overshoot from +194 to +89; what stays is the rule's own enforcement disclosure, and a stub ceiling that forbids correcting a false statement about the rule's own enforcement is the wrong constraint applied to the right file."
         }
     ]
 }
