@@ -196,7 +196,7 @@ function selfTest(): number {
             if (textBad) console.error(`   prose missing: ${String(c.wantText)}`);
         }
     }
-    console.log(`review_axis_report --self-test: ${pass} pass, ${fail} fail`);
+    process.stdout.write(`review_axis_report --self-test: ${pass} pass, ${fail} fail\n`);
     return fail === 0 ? 0 : 1;
 }
 
@@ -208,8 +208,8 @@ function main(argv: string[]): number {
             ? String(argv[dirIdx + 1])
             : path.join(process.cwd(), 'agents', 'runtime', 'state', 'review-axis');
     const lines = readLedger(dir);
-    console.log(render(summarise(lines)));
-    console.log(`scanned: ${lines.length}`);
+    process.stdout.write(render(summarise(lines)) + '\n');
+    process.stdout.write(`scanned: ${lines.length}\n`);
     return 0;
 }
 
