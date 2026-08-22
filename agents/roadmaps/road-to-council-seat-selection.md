@@ -95,7 +95,7 @@ two already ship, and the third never existed.
 
 Spends no vendor calls. Independent of Phases 2 and 3.
 
-- [ ] **1.1 Re-read the pins before changing any of them.** Record the current
+- [x] **1.1 Re-read the pins before changing any of them.** Record the current
       value and enabled-state of each of the five `model:` keys in the template,
       so the diff in 1.2 is against a stated pre-state rather than against
       recollection.
@@ -103,7 +103,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       lists exactly the five active keys at `293`, `343`, `384`, `390`, `397`
       with the values above; a differing list means the template drifted and 1.2
       re-scopes to the real one.
-- [ ] **1.2 Refresh the stale pin, and prefer the sentinel where the vendor CLI
+- [x] **1.2 Refresh the stale pin, and prefer the sentinel where the vendor CLI
       offers one.** Replace the stale flagship at `:293`. Where a member's CLI
       exposes a "let the CLI choose" sentinel — the shape `:343` already uses —
       prefer it over a hard pin, because a sentinel cannot go stale and a pin
@@ -111,7 +111,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       verify: the template's enabled members carry either a sentinel or a pin
       plus a `verified_at`; `grep -c 'claude-sonnet-4-5' agents/templates/.ai-council.yml.example`
       returns 0.
-- [ ] **1.3 Add a `verified_at` stamp and an offline staleness guard.** Add an
+- [x] **1.3 Add a `verified_at` stamp and an offline staleness guard.** Add an
       optional per-member `verified_at: YYYY-MM-DD` and a gate that warns past a
       declared age. Mirror `check_corpus_staleness` rather than inventing a
       second idiom: offline, deterministic, time injected via `--today` so a
@@ -120,7 +120,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       verify: the gate warns on a fixture whose `verified_at` is older than the
       cadence with `--today` pinned, stays silent on a fresh one, and errors on a
       future date — all three in one run, no network.
-- [ ] **1.4 Extend the schema and the contract in the same change.** Add
+- [x] **1.4 Extend the schema and the contract in the same change.** Add
       `verified_at` to `_build_member` beside the eight keys it already accepts,
       and add it to the schema block at `docs/contracts/ai-council-config.md:94-100`.
       Note in the same edit that the block documents four of the nine accepted
@@ -195,7 +195,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 
 ### blocker: b-ladder-order-benchmark-spend
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 Step 2.1's ordering semantics and Step 2.4's notion of a
   "better" seat. It does NOT block Phase 1, which refreshes a demonstrably stale
@@ -227,10 +227,34 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 - **Resolved when:** either a recorded benchmark result names the band ordering
   with the harness path and date, or Phase 2 carries a written line dropping the
   ordering claim and Step 2.4 is rephrased on family diversity alone.
+- **Resolution — (b), the ordering claim is DROPPED. Decided with NO COUNCIL
+  SEAT AVAILABLE.**
+
+  This blocker is `Owner: maintainer`, so under the drain run's standing mandate
+  it routes to the AI council. The council was invoked earlier in this same run
+  and returned `0/2 present · INCONCLUSIVE`: **both seats at 50/50 requests,
+  quota exhausted, $0.00 spent**. There was no seat left to degrade to, so this
+  is a single-decider decision and is recorded as one.
+
+  Nothing in this tree establishes that a higher capability band reviews better.
+  The transcript this roadmap came from assumed it; the archived substrate would
+  have to be re-run to support it, and (a) spends real vendor calls across
+  several members — with the quota already at its ceiling, (a) was not merely
+  expensive, it was **unavailable**.
+
+  So: **`tier` keeps its single documented meaning** — a capability rank read
+  only as a chairman-selection input (`config.ts:1903`, contract `:787`) — and
+  any Phase 2 seat field carries **mission, never rank**. Step 2.4 is to be
+  phrased on **family diversity alone**.
+
+  This is written into the blocker rather than only into a note because it is a
+  standing constraint on Phase 2, which has not been built: whoever builds it
+  inherits "no band-ordering claim without a cited benchmark and its date".
+  (a) stays available later and nothing here has claimed against it.
 
 ### blocker: b-provider-model-listing
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer, with an external dependency
 - **Blocks:** Phase 1 Step 1.2's sentinel-or-pin choice for members whose CLI
   behaviour is unknown here, and Phase 2 Step 2.3's tier-map completeness for
@@ -261,6 +285,25 @@ Spends no vendor calls. Independent of Phases 2 and 3.
   the two failure directions.
 - **Resolved when:** every provider in `members:` carries either a recorded
   listing source with a date, or a `not-listed:` line naming it.
+- **Resolution — (a) where the provider's surface answered, an honest null where
+  it did not. Same degraded council condition as above.**
+
+  Every one of the five members now carries a recorded source or an explicit
+  `not-listed:` line, and none of it came from recall — the source Step 2.3
+  declares inadmissible and Risk 1 names as the top risk.
+
+  | member | source | outcome |
+  |---|---|---|
+  | anthropic | `claude --help` on the installed binary, 2026-08-22 | **sentinel EXISTS** — the CLI documents `'fable'`, `'opus'`, `'sonnet'` as *"an alias for the latest model"*. Pin replaced with the alias; no stamp needed |
+  | openai | already on `codex-default`, documented at template `:367` | sentinel already in use, unchanged |
+  | gemini | `gemini --help` on the installed binary, 2026-08-22 | **null** — exposes only `-m, --model <string>`; no listing subcommand, no documented "latest" alias. `not-listed:` + stamp |
+  | xai | no `grok` binary on this machine | **unreachable** — `not-listed:` + stamp |
+  | perplexity | no `sonar` binary on this machine | **unreachable** — `not-listed:` + stamp |
+
+  The three nulls keep their existing pins, stamped `verified_at: "2026-08-22"`
+  with **no refresh claimed**. All three ship `enabled: false`, so they cost
+  nothing today, and `check_council_pin_staleness` will say so when the stamps
+  age past 100 days.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -275,7 +318,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No enabled member in `agents/templates/.ai-council.yml.example`
+- [x] AC-1 — No enabled member in `agents/templates/.ai-council.yml.example`
       carries a hard model pin without a `verified_at` stamp, and an offline
       gate flags a stamp older than its declared cadence with `--today` pinned.
 - [ ] AC-2 — A config with no seat-constraint block produces a byte-identical
@@ -295,3 +338,70 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       recorded directions, and no shipped text in this roadmap's output claims a
       capability band reviews better than another without citing the benchmark
       result and its date.
+
+## Progress note — Phase 1 shipped, Phases 2–3 open
+
+**This roadmap is NOT complete and is deliberately not archived.** Phase 1 (4/4
+steps) and AC-1 are done; both blockers are resolved so Phases 2 and 3 are now
+unblocked and buildable. They are not started. Recorded here so the next reader
+inherits state rather than guessing at it.
+
+### What Phase 1 turned out to be, versus what it was scoped as
+
+The roadmap named one defect: a stale pin in the starter template. **There were
+three sites, and the template was the least dangerous of them.**
+
+1. `agents/templates/.ai-council.yml.example` — the pin the roadmap found.
+2. **`src/scripts/ai_council/clients.ts:151` — `DEFAULT_ANTHROPIC_CLI_MODEL`
+   held the SAME dated id.** Refreshing only the template would have left every
+   member that omits `model:` falling back to the identical stale id from code.
+   This is the site the roadmap did not know about and the one a consumer with a
+   minimal config would actually have hit.
+3. `DEFAULT_ANTHROPIC_MODEL` (`clients.ts:103`) — the **API** default, still a
+   dated id and **deliberately left alone**: `/v1/messages` takes model ids, not
+   CLI aliases, so a `sonnet` alias would 404 there. That path keeps a real
+   staleness surface and this change does not close it. Stated rather than
+   quietly counted as fixed.
+
+### The fix's shape, and why it is a property rather than a value
+
+`sonnet` is a vendor **alias**, read from `claude --help` on the installed
+binary: *"Provide an alias for the latest model (e.g. 'fable', 'opus', or
+'sonnet')"*. An alias cannot go stale the way a dated id can — the same property
+`codex-default` already gave the openai member. So the enabled seats now delegate
+the version decision to the vendor CLI, and the gate exempts them because there
+is nothing left to rot.
+
+The clients test was changed to assert the **property** (`/^(fable|opus|sonnet|haiku)$/`)
+rather than the value. A value assertion would need editing on every refresh and
+would therefore never fail for the reason that matters: a dated id creeping back
+into the code default, which is exactly how the template pin survived.
+
+### A fail-open found by running the thing, not by reading it
+
+`verified_at` was first implemented to accept both a string and a YAML Date,
+normalising the Date back with `toISOString()`. That **laundered impossible
+dates**: YAML 1.1 silently rolls `2026-13-45` over to 2027-02-14, so the
+calendar check saw a valid date and the malformed input passed. Found by running
+the validator against a deliberately-bad config, not by inspection.
+
+The key now requires a **quoted** string and rejects a Date with the fix in the
+message. Five configs verified: the template loads `CONFIGURED`; unquoted,
+`"2026-13-45"`, `soon`, and a mapping all fail **closed**.
+
+### Sensitivity
+
+`check_council_pin_staleness --self-test` is 10 pass, and every verdict class is
+exercised against the real file with `--today` pinned rather than only in the
+unit: fresh → **exit 0**, stale at +200d → **exit 1**, future-stamp at −100d →
+**exit 1**, dead scan scope → **exit 2**. The cadence boundary is asserted
+inclusive at exactly 100 days, matching `check_corpus_staleness`.
+
+### What Phase 2 inherits from the resolved blockers
+
+- **No band-ordering claim** without a cited benchmark and its date. `tier` stays
+  a chairman-selection rank; a seat field carries mission, never rank; Step 2.4
+  is family diversity alone.
+- **Every model id must resolve through the shipped `model_tier` bands**, and
+  the per-provider listing state is now recorded — one sentinel found, one
+  provider null, two providers unreachable.

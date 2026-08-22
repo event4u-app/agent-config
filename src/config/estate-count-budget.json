@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 23,
     "later_roadmaps": 59,
-    "open_blockers": 60
+    "open_blockers": 58
   },
   "baseline_history": [
     {
@@ -811,6 +811,13 @@
       "later_roadmaps": 59,
       "open_blockers": 60,
       "why": "WALKED DOWN open_blockers 62 -> 60 on the merge resolution: this PR resolves both blockers of road-to-publish-boundary-evidence, and the branch entry it carried was written against the pre-merge baseline of 64. Rewritten here against main's walked 62 rather than left as a stale delta, because the ratchet reads the stored number and not the history prose."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 58,
+      "why": "open_blockers 60 -> 58 by a PARTIAL drain of road-to-council-seat-selection: both of its blockers (b-ladder-order-benchmark-spend, b-provider-model-listing) are RESOLVED, nothing carried. active_roadmaps is UNCHANGED and that is deliberate - Phase 1 of 3 shipped and the roadmap is intentionally NOT archived, so it stays on the active side where it belongs. Booking an archive here would have been the dishonest half of a partial drain. Both resolutions were taken with NO council seat available (both seats 50/50 requests, 0 of 2 present, $0.00 spent) on Owner:maintainer blockers, so each is a single-decider decision recorded as one at the blocker itself; the ordering blocker was resolved in its conservative direction (drop the claim) precisely because option (a) needed vendor spend the exhausted quota could not supply."
     }
   ],
   "target": {
