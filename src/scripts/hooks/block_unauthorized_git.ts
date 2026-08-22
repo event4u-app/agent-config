@@ -92,6 +92,9 @@ export const BLOCK_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   "tag",
   "release",
   "pr-merge",
+  // Enabling auto-merge commits the outcome to a condition the agent does not
+  // control, so it is blocked on the same terms as the merge it schedules.
+  "pr-merge-auto",
 ]);
 
 /** Recoverable operations — warned without a this-turn authorization. */
@@ -162,10 +165,25 @@ const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     op: "tag",
     re: new RegExp(`${P}git\\s+${G}push\\b[^\\n;|&]*(--tags|--follow-tags|refs\\/tags\\/)`, "i"),
   },
+  // ORDER IS LOAD-BEARING, per this table's own rule that the most specific
+  // pattern wins: `gh pr merge 12 --auto` matches the plain merge pattern too.
+  //
+  // The GraphQL mutation needs its OWN pattern rather than a widening of
+  // `ghApiWrite()`. That helper requires BOTH a REST-shaped path and an
+  // explicit write method, and `gh api graphql -f query='mutation{...}'` has
+  // neither — widening it to reach this would loosen every other op that uses
+  // it, which is a bigger change than the defect.
+  {
+    op: "pr-merge-auto",
+    re: new RegExp(
+      `${P}gh\\s+pr\\s+merge\\b(?=[^\\n]*--auto\\b)|${P}gh\\s+api\\b(?=[^\\n]*enablePullRequestAutoMerge\\b)`,
+      "i",
+    ),
+  },
   {
     op: "pr-merge",
     re: new RegExp(
-      `${P}gh\\s+pr\\s+merge\\b|${ghApiWrite("\\/pulls\\/\\d+\\/merge\\b").source}`,
+      `${P}gh\\s+pr\\s+merge\\b(?![^\\n]*--(auto|disable-auto)\\b)|${ghApiWrite("\\/pulls\\/\\d+\\/merge\\b").source}`,
       "i",
     ),
   },
