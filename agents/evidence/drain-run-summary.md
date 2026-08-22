@@ -159,6 +159,33 @@ Every ratchet conflict was resolved by taking main's lineage whole and
 re-measuring from the tree, never by carrying numbers forward
 (`ADR-239-no-union-merge-for-ratchet-baselines`).
 
+## A gate that reports green on a stale commit
+
+Found while clearing #1519's CI, and it is the reason CI was right and the local
+run was not.
+
+`task check-archive-index` **regenerates** `agents/roadmaps/archive/{INDEX.md,index.json}`
+and *then* compares — so it writes the fix into the working tree before checking,
+and reports `rc=0` on a commit whose committed index is stale. CI, checking out a
+clean tree, correctly reported `archive index out of date`.
+
+Both runs printed the same `scanned: 552`, which is what made it look like an
+environment difference. It was not: the count matched, the *comparison* did not,
+because one side had already mutated the thing it was comparing. `git status`
+immediately after the gate is what shows it — two modified files the gate itself
+wrote.
+
+Consequence for this run: three of #1519's checks were red on one cause
+(`Sync + Generate Tools Consistency` plus two `Node Tests` shards, whose failing
+assertion was literally *"is up to date against the real archive — the committed
+index is not stale"*). One commit fixed all three.
+
+Worth recording beyond this run, because it makes a whole class of local
+verification untrustworthy: a gate that repairs before it checks cannot fail
+locally, so "green locally" says nothing about the commit. The archival flow is
+also where this bites hardest — the index only goes stale when a roadmap is
+archived, which is exactly what a drain run does.
+
 ## Known pre-existing red, not introduced here
 
 `check_condensed_paths` is red on `main` with two `body-link-missing` findings and
