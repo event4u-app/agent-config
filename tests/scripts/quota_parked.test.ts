@@ -262,7 +262,7 @@ describe('the grant is re-read at resume, never carried in the plan', () => {
         const r = root();
         const plan = planResume(
             r,
-            { session_id: 'sess-1', platform: 'claude', worktree: r, roadmap: 'road-to-x', head: 'abc123' },
+            { roadmapSlug: 'road-to-x', worktree: r, platform: 'claude', head: 'abc123' },
             NOW,
         );
         const serialised = JSON.stringify(plan);
