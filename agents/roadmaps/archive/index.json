@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 552,
+  "count": 553,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1959,6 +1959,20 @@
         "done": 7,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-condensed-link-repair",
+      "title": "Road to condensed-link repair",
+      "disposition": "closed-with-cancellations",
+      "phases": 1,
+      "steps": {
+        "open": 0,
+        "done": 6,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"
