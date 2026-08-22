@@ -35,6 +35,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { update_text_under_lock } from "./state_io.js";
+
 export const LOG_CAP = 200;
 
 export const VALID_ISSUE: ReadonlySet<string> = new Set([
@@ -185,27 +187,44 @@ export function log_dispatch_issue(
   };
 
   try {
-    fs.mkdirSync(path.dirname(log), { recursive: true });
-    // Read existing lines (cheap — bounded log).
-    let existing: string[] = [];
-    if (fs.existsSync(log)) {
-      try {
-        existing = fs.readFileSync(log, "utf-8").split("\n");
-        // Python str.splitlines() drops a trailing empty element from a
-        // trailing newline; mirror that.
-        if (existing.length > 0 && existing[existing.length - 1] === "") {
-          existing.pop();
-        }
-      } catch {
-        existing = [];
+    // P3 of `b-stop-async-split-prerequisites` (council 2026-08-20, option (a),
+    // "P3 before anything else"): read + append + write is one critical
+    // section, held under the shared dispatcher lock and published by
+    // tmp+rename.
+    //
+    // What it was: `readFileSync` outside any lock, then `writeFileSync`
+    // straight onto the target. Two failures, and the second is the one that
+    // made this the first P3 item — a lost line is an absent record, while a
+    // TRUNCATED write is a corrupt one, and this file is written exactly when
+    // something has already gone wrong. Two concurrent dispatchers in one
+    // workspace is supported (two platforms installed side by side), and a host
+    // that runs tool calls in parallel produces it with one platform.
+    //
+    // Still best-effort: `update_text_under_lock` returns false rather than
+    // throwing when the lock or the write fails, and observability never breaks
+    // the agent loop.
+    const outcome = update_text_under_lock(log, (loaded) => {
+      const existing = loaded === null ? [] : loaded.split("\n");
+      // Python str.splitlines() drops a trailing empty element from a
+      // trailing newline; mirror that.
+      if (existing.length > 0 && existing[existing.length - 1] === "") {
+        existing.pop();
       }
+      existing.push(_json_dumps_flat(entry));
+      // Cap rotation: drop the oldest entries.
+      const capped =
+        existing.length > LOG_CAP ? existing.slice(existing.length - LOG_CAP) : existing;
+      return capped.join("\n") + "\n";
+    });
+    // `!outcome` would be a silent no-op — every member of the union is a
+    // truthy string, which the primitive's own commit message names as the
+    // migration hazard. Compare the literal.
+    if (outcome !== "written") {
+      process.stderr.write(
+        `dispatch_issues: could not append to ${log} (${outcome}) — ` +
+          `the entry was dropped: ${entry.issue} on ${entry.hook}\n`,
+      );
     }
-    existing.push(_json_dumps_flat(entry));
-    // Cap rotation: drop the oldest entries.
-    if (existing.length > LOG_CAP) {
-      existing = existing.slice(existing.length - LOG_CAP);
-    }
-    fs.writeFileSync(log, existing.join("\n") + "\n", { encoding: "utf-8" });
   } catch (exc) {
     // Observability never blocks the agent.
     const msg = exc instanceof Error ? exc.message : String(exc);

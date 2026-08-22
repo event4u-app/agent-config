@@ -127,9 +127,28 @@ describe('injection_scan_hook — golden parity', () => {
         expect(status).toBe(0);
     });
 
-    it('fallback to the whole payload when no recognized output key', () => {
-        const { status } = expectParity(env({ foo: PIPE_PHRASE }));
-        expect(status).toBe(2);
+    // WAS: 'fallback to the whole payload when no recognized output key', which
+    // asserted exit 2 here. That behaviour was the defect
+    // `b-injection-scan-unwrap-security` records: `_tool_output` read its keys
+    // off the envelope ROOT, found none under the real dispatcher envelope, and
+    // serialised EVERYTHING as a fallback — so the scanner's production coverage
+    // was a property of the fallback rather than of a contract, and a hit could
+    // be raised on text that is not tool output at all. Council 2026-08-20,
+    // option (a): the contract is now stated in the hook header, and an
+    // unrecognised shape scans nothing and says so on stderr.
+    it('scans nothing when no recognised output key is present, and names the shape', () => {
+        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], {
+            encoding: 'utf8',
+            cwd: REPO_ROOT,
+            input: env({ foo: PIPE_PHRASE }),
+        });
+        expect(ts.status).toBe(0);
+        expect(ts.stdout).toBe('');
+        // The accepted false-negative risk is made loud rather than silent: key
+        // NAMES only, never values — a value here could be the tool output.
+        expect(ts.stderr).toContain('no recognised tool-output key');
+        expect(ts.stderr).toContain('foo');
+        expect(ts.stderr).not.toContain(PIPE_PHRASE);
     });
 
     it('malformed (non-JSON) stdin → allow', () => {
