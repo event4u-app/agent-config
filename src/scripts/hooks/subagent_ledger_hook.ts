@@ -212,6 +212,32 @@ export type EnvelopeParse = 'ok' | 'fail' | 'no_message' | 'no_envelope';
  */
 export const RETIRED_ENVELOPE_PARSE = 'absent';
 
+/**
+ * READING THE HISTORICAL WINDOW — the caveat, not a version field.
+ *
+ * A verdict records conformance to the shape that was canonical **when the row
+ * was written**, and that shape was reconciled on 2026-08-22
+ * (`subagent-response-contract.md` § The canonical shape). Before that date one
+ * contract existed in three mutually inconsistent states: the spawn contract's
+ * rule (f), a narrower JSON injected by `team_dispatch.ts:297`, and the
+ * validator's five required fields. Nothing recorded which one a given row was
+ * judged against, because until the reconciliation there was no single answer.
+ *
+ * So a row from the 2026-08 window must NOT be read as conforming — or as
+ * failing to conform — to the reconciled shape. What it says is narrower: the
+ * classifier at the time either found a `validateResponse`-passing object or did
+ * not. As it happens the two agree for every row in that window, because the
+ * count is **0 of 1,845** and a rate of zero is the same number under either
+ * reading — but that is a property of this particular window, not of the
+ * comparison, and the next window will not have it.
+ *
+ * Deliberately a comment and not a `contract_version` field. Adding one would
+ * be honest going forward and would still say nothing about the rows already on
+ * disk, which are the rows this caveat exists for. A council seat asked for the
+ * field; it is the right next step and it is not this one, because a field
+ * stamped from today cannot retro-tag yesterday.
+ */
+
 export interface ParseVerdict {
     verdict: EnvelopeParse;
     /** Count of validator errors. A COUNT — the messages never leave this function. */
