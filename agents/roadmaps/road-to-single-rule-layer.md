@@ -126,7 +126,7 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Phase 4 — A gate that can fail
 
-- [ ] **4.1 Make `check_rule_layer_partition` blocking, with an honest skip.**
+- [x] **4.1 Make `check_rule_layer_partition` blocking, with an honest skip.**
       Non-zero when a project host directory carries a global-only rule while that
       host's global layer is verified to carry it. When a global layer is absent —
       CI, a fresh clone, a machine with no install — it must say
@@ -136,7 +136,7 @@ Phase 2 is exactly the evidence the docstring says is missing.
       non-zero and that the message names the file; remove it, assert zero. Then
       run with `HOME` pointed at an empty directory and assert the skip line
       appears for all five.
-- [ ] **4.2 Register it under CI-identical argv and record the coverage row.**
+- [x] **4.2 Register it under CI-identical argv and record the coverage row.**
       Same invocation locally and in `consistency.yml`, beside
       `check_rule_projection_integrity`.
       verify: `gate-coverage.yml` carries the row and the workflow step runs it.

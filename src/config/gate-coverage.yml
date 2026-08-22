@@ -219,6 +219,28 @@ gates:
       the Taskfile parse degrades and the population silently collapses —
       cannot pass.
 
+  - id: check_rule_layer_partition
+    argv: []
+    min_scanned: 0
+    corpus: "the five project rule directories that receive a projected tree (.claude/rules, .cursor/rules, .clinerules, .windsurf/rules, .augment/rules)"
+    status: enforced
+    note: >
+      `min_scanned: 0` is the honest floor and not the false-count shape this file
+      rejects elsewhere. This gate compares a project rule directory against its
+      host's GLOBAL layer, and on a fresh CI checkout neither side exists — the
+      project trees are gitignored and no CI leg installs at user scope. So the
+      population is legitimately zero there, exactly as it is for the diff-scoped
+      gates the header paragraph carves out.
+      What keeps a zero from reading as a pass is inside the gate rather than in
+      this floor: with nothing compared it prints "nothing compared — N skipped.
+      This is not a pass" instead of a success line, and every skip names the host
+      and the unreadable path. Teeth land on a working checkout, where `task
+      preflight` runs it against real global layers.
+      It never reports a duplicate for a host whose global layer cannot be read: a
+      project copy is the only carrier when the global one is absent, so demanding
+      its removal on unread evidence would delete the rule from that host —
+      the failure `partitionEligibility`'s fail-safe ordering exists to prevent.
+
   - id: check_rule_activation_census
     argv: []
     min_scanned: 100

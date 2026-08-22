@@ -105,6 +105,21 @@ tasks:
       # every preflight on a defect nobody can currently fix, which is how a gate
       # teaches people to skip it. The --enforce flip lands WITH Phase 2.
       - ./scripts-run src/scripts/check_single_delivery --quiet
+      # One rule, one layer — the RULE half of ADR-236, across all five host
+      # directories (road-to-single-rule-layer Phase 4). Binds HERE for the same
+      # measured reason as the gate above: the comparison needs a global layer, and
+      # CI has none. It runs in CI too, where it prints "nothing compared" rather
+      # than a success line.
+      #
+      # ENFORCE, not report: unlike check_single_delivery above, this invariant IS
+      # true as of this change — all five directories measure 0 duplicated rules
+      # after one `task generate-tools`. A gate whose defect nobody can fix teaches
+      # people to skip it; a gate whose defect is one command away does not.
+      #
+      # If it reds on your checkout, the tree is stale rather than broken: run
+      # `task sync && task generate-tools` (that order) and re-run. It never reds on
+      # a host whose global layer it could not read — that case is skipped by name.
+      - ./scripts-run src/scripts/check_rule_layer_partition
       # No shipped artefact may DIRECT a silent re-run — the mechanism was
       # benchmarked and falsified (recursive-verification, TERMINAL 2026-07-28).
       - ./scripts-run src/scripts/lint_never_silent

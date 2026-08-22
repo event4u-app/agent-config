@@ -54,6 +54,8 @@ import * as path from 'node:path';
 import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
 import { PROJECT_RULE_DIRS, globalRuleLayerNames, globalRuleLayerPath } from '../install/globalRuleLayers.js';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
+import { reportScanned } from './_lib/scan_scope.js';
+import { runSelfTest } from './_lib/gate_self_test.js';
 
 /** Re-exported so `check_rule_layer_partition`'s own importers keep working. */
 export { PROJECT_RULE_DIRS };
@@ -208,12 +210,155 @@ export function renderTable(audit: PartitionAudit): string[] {
     return lines;
 }
 
+/**
+ * `--self-test`: does this gate DISCRIMINATE?
+ *
+ * An enforced `scanned:` floor proves the gate read something; only this proves the
+ * reading changes the verdict. Each case builds a synthetic project root and home,
+ * so the suite is hermetic and never touches the live tree — which matters here
+ * because the directories under audit are gitignored and a leaked fixture would sit
+ * in one unnoticed.
+ *
+ * Three rejecting cases, deliberately more than the floor of one: the three ways
+ * this gate can be wrong are a duplicate it fails to see, a sole-carrier it
+ * mistakes for a duplicate, and a missing global layer it reports on anyway. The
+ * middle and last are the ones that would DELETE a rule from a host.
+ */
+function selfTest(): number {
+    const seed = (opts: {
+        readonly projectHas: readonly string[];
+        readonly globalHas: readonly string[];
+    }): { root: string; home: string } => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'crlp-st-root-'));
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'crlp-st-home-'));
+        const src = path.join(root, RULES_SOURCE);
+        fs.mkdirSync(src, { recursive: true });
+        fs.writeFileSync(
+            path.join(src, 'pkg-only.md'),
+            '---\nworkspaces:\n  - agent-config-maintainer\n---\n# pkg\n',
+        );
+        fs.writeFileSync(path.join(src, 'global-scope.md'), '---\ntier: 1\n---\n# global\n');
+        const proj = path.join(root, '.cursor/rules');
+        fs.mkdirSync(proj, { recursive: true });
+        for (const n of opts.projectHas) fs.writeFileSync(path.join(proj, n), '# x\n');
+        if (opts.globalHas.length > 0) {
+            const gdir = path.join(home, '.cursor/rules');
+            fs.mkdirSync(gdir, { recursive: true });
+            for (const n of opts.globalHas) fs.writeFileSync(path.join(gdir, n), '# x\n');
+        }
+        return { root, home };
+    };
+
+    /** 1 when the audit would fail the build, 0 otherwise. */
+    const verdict = (root: string, home: string): number => {
+        const a = auditRuleLayers(root, home);
+        return a.dirs.some((d) => d.duplicated.length > 0) ? 1 : 0;
+    };
+
+    return runSelfTest({
+        gate: 'check_rule_layer_partition',
+        minCases: 4,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'a global-scope rule in both layers is refused',
+                expect: 'reject',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['pkg-only.md', 'global-scope.md'],
+                        globalHas: ['global-scope.md'],
+                    });
+                    return verdict(root, home);
+                },
+            },
+            {
+                name: 'a .mdc duplicate is refused too (normalisation is not a bypass)',
+                expect: 'reject',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['global-scope.mdc'],
+                        globalHas: ['global-scope.md'],
+                    });
+                    return verdict(root, home);
+                },
+            },
+            {
+                name: 'a duplicate under a .mdc global layer is refused',
+                expect: 'reject',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['global-scope.md'],
+                        globalHas: ['global-scope.mdc'],
+                    });
+                    return verdict(root, home);
+                },
+            },
+            {
+                name: 'package-only in the project layer is accepted',
+                expect: 'accept',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['pkg-only.md'],
+                        globalHas: ['global-scope.md'],
+                    });
+                    return verdict(root, home);
+                },
+            },
+            {
+                name: 'a sole-carrier is accepted — removing it would delete the rule',
+                expect: 'accept',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['global-scope.md'],
+                        globalHas: ['something-else.md'],
+                    });
+                    return verdict(root, home);
+                },
+            },
+            {
+                name: 'no global layer at all is accepted, never reported on',
+                expect: 'accept',
+                run: () => {
+                    const { root, home } = seed({
+                        projectHas: ['global-scope.md'],
+                        globalHas: [],
+                    });
+                    return verdict(root, home);
+                },
+            },
+        ],
+    });
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) {
+        return selfTest();
+    }
     const report = argv.includes('--report');
     const root = process.cwd();
     const audit = auditRuleLayers(root);
 
     for (const l of renderTable(audit)) process.stdout.write(`${l}\n`);
+
+    // Scope hardening. The count is the number of directory PAIRS actually
+    // compared, not the five planned — otherwise a run that skipped everything
+    // would publish `scanned: 5` and the number would describe an intention rather
+    // than a reading.
+    //
+    // `allowEmpty` is load-bearing rather than a formality: on a fresh CI checkout
+    // both sides are legitimately absent (the project trees are gitignored, no CI
+    // leg installs at user scope), so zero is the correct reading there and the
+    // skip lines above already name every host it applies to.
+    reportScanned({
+        gate: 'check_rule_layer_partition',
+        scanned: audit.dirs.length,
+        units: 'host rule directory pairs',
+        roots: Object.keys(PROJECT_RULE_DIRS),
+        allowEmpty:
+            'both layers are absent on a fresh checkout — the project rule trees are ' +
+            'gitignored and no CI leg installs at user scope, so there is no pair to compare. ' +
+            'The run prints "nothing compared … This is not a pass" instead of a success line.',
+    });
 
     let tally;
     try {
@@ -228,9 +373,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     const offenders = audit.dirs.filter((d) => d.duplicated.length > 0);
     if (offenders.length === 0) {
+        const skips = Object.keys(audit.skipped).length;
+        if (tally.completed === 0) {
+            // Measured nothing. Saying "each rule is delivered from one layer" here
+            // would be the exact failure this gate's docstring names: a gate that
+            // scans nothing and exits green reads identically to one that passed.
+            // The skip lines above already say which hosts and why; this line has to
+            // agree with them rather than contradict them in the same output.
+            process.stdout.write(
+                `⚠️  check_rule_layer_partition: nothing compared — ${String(skips)} host ` +
+                    `directory/directories skipped (see the reasons above). This is not a pass.\n`,
+            );
+            return 0;
+        }
         process.stdout.write(
             `✅  check_rule_layer_partition: ${String(tally.completed)} host rule tree(s) deliver ` +
-                `each rule from one layer\n`,
+                `each rule from one layer` +
+                (skips > 0 ? `; ${String(skips)} skipped (reasons above)` : '') +
+                `\n`,
         );
         return 0;
     }

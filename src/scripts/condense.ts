@@ -265,7 +265,7 @@ export {
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
 import { commandsWithheld, isExclusivelyPackageOnly, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
-import { hostLayerCarries, toolIdForProjectRuleDir } from '../install/globalRuleLayers.js'; // ADR-236, per-host evidence
+import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
@@ -441,15 +441,6 @@ function _read_augment_rules_use_symlinks(): boolean {
     return false;
 }
 
-/**
- * Per-tool user-scope rule directory, for the scope-dedup below. Only tools
- * whose host reads a user-scope rules directory can have a redundant twin;
- * everything else has nothing to de-duplicate against.
- */
-const USER_SCOPE_RULE_DIRS: Readonly<Record<string, string>> = {
-    '.claude/rules': path.join('.claude', 'rules'),
-};
-
 function _read_projection_scope_dedup(): boolean {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const projection = data['projection'];
@@ -466,60 +457,6 @@ function _read_projection_scope_dedup(): boolean {
     return false;
 }
 
-/**
- * Rules whose user-scope twin is BYTE-IDENTICAL to the source, i.e. safe to
- * skip at project scope: the host still loads the same text, once instead of
- * twice, so nothing the model sees changes.
- *
- * Byte-identity is the whole safety argument and is not negotiable. Keying on
- * the filename alone would silently let a stale globally-installed copy win
- * whenever the two scopes hold different versions — which is the NORMAL state
- * while developing the package (measured: 110/110 shared filenames differing in
- * bytes). This is deliberately not the thin-projection mechanism: no rule
- * becomes trigger-gated, so the quality floor that disabled thin projection
- * does not apply here.
- */
-function _dedupable_rules(tool_dir: string, rules: readonly string[], userHome: string): Set<string> {
-    const relative = USER_SCOPE_RULE_DIRS[tool_dir];
-    if (relative === undefined) {
-        return new Set();
-    }
-    // A hostile or simply absent $HOME must make the dedup inert, not
-    // adventurous. In a container `$HOME` is often unset (so `homedir()` can
-    // resolve to `/`) or world-writable, and this function decides which rules
-    // to STOP emitting — reading an unexpected tree there is how a projection
-    // silently loses a rule. Council review of PR #1055 raised exactly this.
-    let userDirStat: fs.Stats;
-    const userDir = path.join(userHome, relative);
-    try {
-        userDirStat = fs.statSync(userDir);
-    } catch {
-        return new Set();
-    }
-    if (!userDirStat.isDirectory()) {
-        return new Set();
-    }
-    // World-writable user scope: anyone on the box could plant a byte-identical
-    // twin and thereby delete a rule from the project projection. Refuse.
-    if ((userDirStat.mode & 0o002) !== 0) {
-        _print(`  ⚠️  ${tool_dir}: user-scope rules dir is world-writable — scope-dedup skipped`);
-        return new Set();
-    }
-    const skip = new Set<string>();
-    for (const rule of rules) {
-        const twin = path.join(userDir, rule);
-        const source = path.join(MODULE_STATE.RULES_SOURCE, rule);
-        try {
-            if (!_isFile(twin) || !_isFile(source)) continue;
-            if (fs.readFileSync(twin).equals(fs.readFileSync(source))) {
-                skip.add(rule);
-            }
-        } catch {
-            // An unreadable twin is simply not de-duplicable — emit the project copy.
-        }
-    }
-    return skip;
-}
 
 function _lean_projection_mode(): string {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
@@ -1138,61 +1075,16 @@ function _scoped_rule_basenames(): string[] {
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
-/**
- * Narrow one directory's rule list to the package-only set — but only when THIS
- * host's own global layer is verified to carry what would be withheld.
- *
- * ## Why the decision moved from per-run to per-directory
- *
- * The filter used to sit in {@link _scoped_rule_basenames}, which runs once per
- * generation, so `partitionActive` — a claude-only fingerprint against
- * `installed.lock` — decided for every host at once. That contradicted
- * `partitionEligibility.ts`'s own fail-safe reasoning, which refuses to withhold a
- * cursor artefact on claude's evidence because it "would deliver it nowhere", and
- * it was measurably wrong in both directions on 2026-08-22: `.clinerules` was
- * narrowed to 13 on borrowed evidence, while `.cursor/rules`, `.windsurf/rules`
- * and `.augment/rules` were not narrowed at all because their emitters never
- * called the filter.
- *
- * So the narrowing is per directory and gated on real evidence:
- * {@link hostLayerCarries} reads that host's global directory and answers whether
- * every name about to be withheld is actually there. No layer, an unreadable
- * layer, or one missing a single name → the full projection is returned. A
- * withhold now costs a directory read; the alternative cost a rule.
- *
- * Shared with the three non-symlink emitters, deliberately: four call sites
- * deciding this separately is how three of them came to disagree.
- */
+/** Adapter over {@link partitionRulesForDir}; that module carries the reasoning. */
 export function partition_rules_for_dir(
     tool_dir: string,
     rules: readonly string[],
     user_home: string = process.env['HOME'] ?? os.homedir(),
 ): string[] {
-    if (!partitionActive(MODULE_STATE.PROJECT_ROOT)) {
-        return [...rules];
-    }
-    const tool_id = toolIdForProjectRuleDir(tool_dir);
-    if (tool_id === null) {
-        // An unmapped directory has no global layer this code can point at, so
-        // there is no evidence to withhold on. Full projection.
-        return [...rules];
-    }
-    const package_only = rules.filter((r) =>
-        isExclusivelyPackageOnly(path.join(MODULE_STATE.RULES_SOURCE, r)),
-    );
-    const withheld = rules.filter((r) => !package_only.includes(r));
-    const verdict = hostLayerCarries(tool_id, withheld, user_home);
-    if (!verdict.carries) {
-        _print(
-            `  ⚠️  ${tool_dir}: full projection kept — ${tool_id}'s global layer ` +
-                `${verdict.reason === 'carries' ? 'disagreed' : verdict.reason}` +
-                (verdict.missing.length > 0
-                    ? ` (${String(verdict.missing.length)} rule(s) not there, e.g. ${verdict.missing.slice(0, 3).join(', ')})`
-                    : ''),
-        );
-        return [...rules];
-    }
-    return package_only;
+    return partitionRulesForDir({
+        toolDir: tool_dir, rules, userHome: user_home, announce: _print,
+        projectRoot: MODULE_STATE.PROJECT_ROOT, rulesSource: MODULE_STATE.RULES_SOURCE,
+    });
 }
 
 /**
@@ -1219,7 +1111,10 @@ export function projected_rule_trees(
     const dedup_on = _read_projection_scope_dedup();
     const out: Record<string, string[]> = {};
     for (const tool_dir of Object.keys(_filter_tool_dirs(TOOL_DIRS))) {
-        const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
+        const skip = dedup_on
+            ? dedupableRules({ toolDir: tool_dir, rules, userHome: user_home,
+                  rulesSource: MODULE_STATE.RULES_SOURCE, announce: _print })
+            : new Set<string>();
         const kept = rules.filter((r) => !skip.has(r));
         out[tool_dir] = partition_rules_for_dir(tool_dir, kept, user_home);
     }
@@ -1340,16 +1235,9 @@ export function generate_rule_symlinks(): number {
 }
 
 export function generate_windsurfrules(): number {
-    // `.windsurfrules` is Windsurf's LEGACY single-file surface, read alongside
-    // `.windsurf/rules/`. It is the same host and therefore the same evidence, so
-    // it is narrowed through the same per-directory gate — keyed on
-    // `.windsurf/rules` because that is the directory whose global counterpart
-    // supplies the proof.
-    //
-    // This line exists because removing the per-run filter regressed it: the file
-    // went 13 → 113 rules in one generation, silently concatenating every rule the
-    // global layer already delivers into a file the host reads unconditionally. The
-    // per-run filter had been covering this surface by accident.
+    // Windsurf's LEGACY single-file surface — same host, so the same evidence, keyed
+    // on `.windsurf/rules`. Without this line removing the per-run filter regressed
+    // it 13 → 113: the per-run filter had been covering it by accident.
     const rules = partition_rules_for_dir('.windsurf/rules', _scoped_rule_basenames());
     const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
     for (const rule of rules) {
@@ -1526,17 +1414,9 @@ export function generate_cursor_mdc_rules(): number {
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
-    // ADR-236 per-host partition. Applied to the BASENAMES and then mapped back,
-    // because `partition_rules_for_dir` speaks the same vocabulary as the emit plan
-    // and the gate. `_clean_modern_dir` below sweeps whatever is no longer in
-    // `valid`, so the narrowing removes the existing duplicates rather than only
-    // declining to add more — a filter without a sweep is not a partition.
-    const kept = new Set(
-        partition_rules_for_dir(
-            '.cursor/rules',
-            rules.map((r) => path.basename(r)),
-        ),
-    );
+    // ADR-236 per-host partition (src/install/ruleLayerPartition.ts). Narrowing the
+    // list is a REMOVAL, because `_clean_modern_dir` below sweeps to `valid`.
+    const kept = new Set(partition_rules_for_dir('.cursor/rules', rules.map((r) => path.basename(r))));
     rules = rules.filter((r) => kept.has(path.basename(r)));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
@@ -1560,14 +1440,8 @@ export function generate_windsurf_modern_rules(): number {
         // ADR-004 manual rules are reference-only — never auto-injected into a
         // per-tool tree. Same predicate as generate_rule_symlinks.
         .filter((p) => !_is_manual_rule(p));
-    // ADR-236 per-host partition, same shape as the cursor emitter above and for
-    // the same reason: `_clean_modern_dir` turns the narrowed set into a removal.
-    const kept = new Set(
-        partition_rules_for_dir(
-            '.windsurf/rules',
-            rules.map((r) => path.basename(r)),
-        ),
-    );
+    // ADR-236 per-host partition — same shape as the cursor emitter above.
+    const kept = new Set(partition_rules_for_dir('.windsurf/rules', rules.map((r) => path.basename(r))));
     rules = rules.filter((r) => kept.has(path.basename(r)));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
@@ -2610,19 +2484,10 @@ export function project_to_augment(): void {
     const current = new Set<string>();
     let written = 0;
     if (_exists(src_rules)) {
-        // ADR-236 per-host partition. Applied on BOTH branches of
-        // `use_symlinks` below, because the flag selects a different writer and a
-        // narrowing on one of them would leave the other duplicating.
-        //
-        // This emitter reads `dist/agent-src/rules` directly rather than going
-        // through `_scoped_rule_basenames`, so it never had the scope or the
-        // ADR-004 manual filter either — which is why it wrote 118 files where the
-        // symlink trees wrote 113. The partition is what this step adds; the other
-        // two differences are pre-existing and left alone.
-        //
-        // The stale sweep below (`existing` minus `current`) turns the narrowed set
-        // into a removal, so an .augment/rules populated by an earlier version is
-        // reconciled in one run.
+        // ADR-236 per-host partition, ahead of the `use_symlinks` branch so both
+        // writers narrow; the `existing` minus `current` sweep below makes it a
+        // removal. This emitter never had the scope or ADR-004 manual filters
+        // either — why its count is 15 and the symlink trees' 13. Pre-existing.
         const rules = partition_rules_for_dir(
             '.augment/rules',
             _iterdirSorted(src_rules)

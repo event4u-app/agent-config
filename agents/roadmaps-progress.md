@@ -6,10 +6,10 @@
 
 ## Overall
 
-**79 / 128 steps done · 62%**
+**81 / 128 steps done · 63%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   62%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
 | 3 | [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md) | 7 | 34 | 15 | 16 | 3 | 0 | [2](#blockers-road-to-evidence-based-adr-governance) | █████░░░░░ 52% |
 | 4 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 5 | [road-to-single-rule-layer.md](roadmaps/road-to-single-rule-layer.md) | 5 | 16 | 9 | 7 | 0 | 0 | 0 | ████░░░░░░ 44% |
+| 5 | [road-to-single-rule-layer.md](roadmaps/road-to-single-rule-layer.md) | 5 | 16 | 7 | 9 | 0 | 0 | 0 | ██████░░░░ 56% |
 | 6 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
 | 7 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 
@@ -321,14 +321,14 @@ _2 blockers resolved._
 
 ### [road-to-single-rule-layer.md](roadmaps/road-to-single-rule-layer.md)
 
-**Road to a single rule layer** — 7 / 16 done (44%)
+**Road to a single rule layer** — 9 / 16 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Make the layer split measurable | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Earn the withhold per host, never by extrapolation | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | Connect the three emitters that never asked | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | A gate that can fail | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | A gate that can fail | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 5 | Clean up what the measurement turned up | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
