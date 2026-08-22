@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 59,
-    "open_blockers": 64
+    "open_blockers": 63
   },
   "baseline_history": [
     {
@@ -783,6 +783,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 63,
+      "why": "LOWERED on both counted metrics by the drain of road-to-spec-axis-in-review: the roadmap was executed to 17/17 and archived inside this one change, so active_roadmaps walks 24 -> 23, and its single blocker (spec-source-binding) was RESOLVED rather than parked, so open_blockers walks 64 -> 63. Resolved, not carried: an AI council took option (c) \u2014 criteria are read only when explicitly supplied, plus a third `supplied_unparseable` error state neither offered option carried \u2014 and the choice is recorded at the blocker with the degradation (1 of 2 seats; the second returned an empty response) named rather than smoothed over. later_roadmaps is untouched: nothing was parked. Walked in the change that earned it, per this gate's own instruction, and measured against the floor origin/main stands at while this branch is open \u2014 not against the figure the branch started from."
     }
   ],
   "target": {
