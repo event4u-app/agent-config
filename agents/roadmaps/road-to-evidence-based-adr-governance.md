@@ -761,6 +761,44 @@ action joins the lane under the ADR-237 test.
       Row 6 needed neither correction: it widens nothing, which is precisely why
       it could close while rows 1 and 2 could not.
 - [ ] **4.3 Internal rows (3, 4, 8, 12, 13) — routed from the transition.**
+      **Scouted 2026-08-22, not executed. Three findings, so the next attempt
+      does not re-derive them.**
+
+      *(i) Rows 12 and 13 split along authority, and the split is not the
+      row boundary.* `lint_provenance_vocabulary:permanence-language` (baseline
+      11) locates every hit, and its own note already classifies the fixes:
+      · **agent-executable — 6 hits.** ADR-208 (`:5` slug, `:19` title, `:52`
+        Decision) is the standing self-contradiction: its `review_trigger`
+        carries three reopen conditions (a)(b)(c) in the same frontmatter that
+        says "keep forever", so the ADR-240 § 6 escape "restate a mechanism
+        decision with the reopen condition it already carries" applies directly.
+        ADR-122 (`:77`, `:154`) and ADR-124 (`:229`) assert a permanently-off
+        default whose honest form is default-off **plus** a reopen condition.
+      · **owner-reserved — 5 hits.** ADR-107 (`:37`) and ADR-108
+        (`:5`, `:12`, `:24`, `:29`) are owner PURPOSE statements
+        ("open-source forever", "liability disclaimer is permanent"). Their fix
+        is `authority_basis: owner_intent`, which the gate's own note calls
+        "an owner ruling, not an agent edit". They belong with the three
+        decisions already transferred to
+        [`stubs/road-to-owner-authority-decisions.md`](stubs/road-to-owner-authority-decisions.md).
+
+      *(ii) A regression test pins the violation set and will break on the fix.*
+      `tests/scripts/lint_provenance_vocabulary.test.ts:424-436` reads the LIVE
+      corpus and asserts all five records are detected, plus that ADR-208 fires
+      in all three positions. Lowering the ratchet therefore requires carrying
+      that test in the same change — it is a legitimate edit (the record no
+      longer violates) but it is not a copy edit, and a run that fixes the ADR
+      without it ships a red test.
+
+      *(iii) The filename stays.* `ADR-208-dist-agent-src-keep-forever.md` is
+      referenced from archived roadmaps, the evidence census and the test
+      fixtures. The gate flags the `decision:` slug, the title and the Decision
+      line — **not** the path — so the rename is neither required nor safe, and
+      only those three positions change.
+
+      Not started here because the step's `verify:` demands a per-row route for
+      rows 3, 4 and 8 as well, and a partial pass would leave the step open
+      while having broken a regression test for six of eleven hits.
       Each row's venue is derived at execution time from its own transition
       and reserved dimensions, never from who decided it originally. An
       independent reviewer is selected where the transition affects a trust
