@@ -115,6 +115,25 @@ const TYPES = ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents'
 type ArtefactType = (typeof TYPES)[number];
 
 /**
+ * Directory names under `<repo>/.claude/` that the HOST writes, not a generator.
+ *
+ * `unknownProjectFamilies` used to rest on the premise that `<repo>/.claude/` is
+ * "written by `condense.ts` generators and nothing else". That premise is false
+ * and the gate proved it on 2026-08-22, refusing a release push over
+ * `.claude/worktrees/` — the maintainer's git-worktree root, gitignored at
+ * `.gitignore:246`, named as a conventional worktree location by
+ * `worktree_cleanup_check.STANDARD_WORKTREE_DIRS`, and excluded from
+ * `inventory_abstraction_budget`. Nothing about it is an artefact family, so
+ * "add it to TYPES" was advice that could not be taken.
+ *
+ * The set is hand-written and stays independent of any producer registry, for
+ * the same reason `TYPES` is: a verifier that derives its scope from a producer
+ * inherits that producer's omissions. It grows only on tree evidence that a name
+ * is host state — never to silence a family a generator actually emits.
+ */
+const HOST_OWNED = new Set(['worktrees']);
+
+/**
  * What a layer's entries physically ARE — symlinks, directories, or regular files.
  *
  * R2 finding 2: without this, name-equality was reported as "delivered twice" for
@@ -304,9 +323,10 @@ export interface Verdict {
      * reported — a gate cannot report a family it was never told exists.
      *
      * Only the PROJECT layer is scanned, and that is the whole reason this can be
-     * a hard refusal rather than a warning. `<repo>/.claude/` is written by
-     * `condense.ts` generators and nothing else, so every entry in it is a family
-     * this repository chose to emit. `~/.claude/` is the host's own directory —
+     * a hard refusal rather than a warning. Every entry in `<repo>/.claude/` is a
+     * family this repository chose to emit, EXCEPT the host-written names in
+     * `HOST_OWNED` — see that constant for why the unqualified version of this
+     * sentence was wrong. `~/.claude/` is the host's own directory —
      * `plugins`, `projects`, `sessions`, `shell-snapshots`, `telemetry` and a
      * dozen more live there — and treating an unrecognised name in it as a defect
      * would be a false-positive generator, not a check.
@@ -333,7 +353,13 @@ function unknownProjectFamilies(projectRoot: string): string[] {
         return []; // no project layer at all — nothing emitted, nothing to miss
     }
     return entries
-        .filter((e) => e.isDirectory() && !e.name.startsWith('.') && !known.has(e.name))
+        .filter(
+            (e) =>
+                e.isDirectory() &&
+                !e.name.startsWith('.') &&
+                !known.has(e.name) &&
+                !HOST_OWNED.has(e.name),
+        )
         .map((e) => e.name)
         .sort();
 }
