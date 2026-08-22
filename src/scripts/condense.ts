@@ -265,6 +265,7 @@ export {
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
 import { commandsWithheld, isExclusivelyPackageOnly, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { hostLayerCarries, toolIdForProjectRuleDir } from '../install/globalRuleLayers.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
@@ -1133,9 +1134,65 @@ function _scoped_rule_basenames(): string[] {
         // is its fourth consumer, after the router compiler, the dist writer, and
         // check_sync. Same predicate in all four; that is the point.
         .filter((p) => !skip_compile_disabled_rule(`rules/${path.basename(p)}`))
-        .filter((p) => !partitionActive(MODULE_STATE.PROJECT_ROOT) || isExclusivelyPackageOnly(p))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/**
+ * Narrow one directory's rule list to the package-only set — but only when THIS
+ * host's own global layer is verified to carry what would be withheld.
+ *
+ * ## Why the decision moved from per-run to per-directory
+ *
+ * The filter used to sit in {@link _scoped_rule_basenames}, which runs once per
+ * generation, so `partitionActive` — a claude-only fingerprint against
+ * `installed.lock` — decided for every host at once. That contradicted
+ * `partitionEligibility.ts`'s own fail-safe reasoning, which refuses to withhold a
+ * cursor artefact on claude's evidence because it "would deliver it nowhere", and
+ * it was measurably wrong in both directions on 2026-08-22: `.clinerules` was
+ * narrowed to 13 on borrowed evidence, while `.cursor/rules`, `.windsurf/rules`
+ * and `.augment/rules` were not narrowed at all because their emitters never
+ * called the filter.
+ *
+ * So the narrowing is per directory and gated on real evidence:
+ * {@link hostLayerCarries} reads that host's global directory and answers whether
+ * every name about to be withheld is actually there. No layer, an unreadable
+ * layer, or one missing a single name → the full projection is returned. A
+ * withhold now costs a directory read; the alternative cost a rule.
+ *
+ * Shared with the three non-symlink emitters, deliberately: four call sites
+ * deciding this separately is how three of them came to disagree.
+ */
+export function partition_rules_for_dir(
+    tool_dir: string,
+    rules: readonly string[],
+    user_home: string = process.env['HOME'] ?? os.homedir(),
+): string[] {
+    if (!partitionActive(MODULE_STATE.PROJECT_ROOT)) {
+        return [...rules];
+    }
+    const tool_id = toolIdForProjectRuleDir(tool_dir);
+    if (tool_id === null) {
+        // An unmapped directory has no global layer this code can point at, so
+        // there is no evidence to withhold on. Full projection.
+        return [...rules];
+    }
+    const package_only = rules.filter((r) =>
+        isExclusivelyPackageOnly(path.join(MODULE_STATE.RULES_SOURCE, r)),
+    );
+    const withheld = rules.filter((r) => !package_only.includes(r));
+    const verdict = hostLayerCarries(tool_id, withheld, user_home);
+    if (!verdict.carries) {
+        _print(
+            `  ⚠️  ${tool_dir}: full projection kept — ${tool_id}'s global layer ` +
+                `${verdict.reason === 'carries' ? 'disagreed' : verdict.reason}` +
+                (verdict.missing.length > 0
+                    ? ` (${String(verdict.missing.length)} rule(s) not there, e.g. ${verdict.missing.slice(0, 3).join(', ')})`
+                    : ''),
+        );
+        return [...rules];
+    }
+    return package_only;
 }
 
 /**
@@ -1163,7 +1220,8 @@ export function projected_rule_trees(
     const out: Record<string, string[]> = {};
     for (const tool_dir of Object.keys(_filter_tool_dirs(TOOL_DIRS))) {
         const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
-        out[tool_dir] = rules.filter((r) => !skip.has(r));
+        const kept = rules.filter((r) => !skip.has(r));
+        out[tool_dir] = partition_rules_for_dir(tool_dir, kept, user_home);
     }
     return out;
 }
@@ -1282,7 +1340,17 @@ export function generate_rule_symlinks(): number {
 }
 
 export function generate_windsurfrules(): number {
-    const rules = _scoped_rule_basenames();
+    // `.windsurfrules` is Windsurf's LEGACY single-file surface, read alongside
+    // `.windsurf/rules/`. It is the same host and therefore the same evidence, so
+    // it is narrowed through the same per-directory gate — keyed on
+    // `.windsurf/rules` because that is the directory whose global counterpart
+    // supplies the proof.
+    //
+    // This line exists because removing the per-run filter regressed it: the file
+    // went 13 → 113 rules in one generation, silently concatenating every rule the
+    // global layer already delivers into a file the host reads unconditionally. The
+    // per-run filter had been covering this surface by accident.
+    const rules = partition_rules_for_dir('.windsurf/rules', _scoped_rule_basenames());
     const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
     for (const rule of rules) {
         const p = path.join(MODULE_STATE.RULES_SOURCE, rule);

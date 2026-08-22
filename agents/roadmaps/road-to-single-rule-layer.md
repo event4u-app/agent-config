@@ -79,13 +79,13 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Phase 1 — Make the layer split measurable
 
-- [ ] **1.1 Add a host→global-rules-path registry.** Five entries, two of which
+- [x] **1.1 Add a host→global-rules-path registry.** Five entries, two of which
       are not derivable from the tool id: windsurf resolves to
       `~/.codeium/windsurf/rules` and cline to `~/Documents/Cline/Rules`. Put it
       beside the existing tool detection so a sixth host is one row.
       verify: a unit test asserts all five paths and that each is absent-tolerant
       (a missing directory returns null, never throws).
-- [ ] **1.2 Add `check_rule_layer_partition` in report mode.** For each of the
+- [x] **1.2 Add `check_rule_layer_partition` in report mode.** For each of the
       five host directories print project total / package-only / global-only, and
       for each global layer print how many of the expected global-scope rules it
       carries. Read-only, exit 0 in this phase.
@@ -94,7 +94,7 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Phase 2 — Earn the withhold per host, never by extrapolation
 
-- [ ] **2.1 Add `hostLayerCarries(hostId, ruleNames)`.** True only when that
+- [x] **2.1 Add `hostLayerCarries(hostId, ruleNames)`.** True only when that
       host's global directory exists and contains every name that would be
       withheld. This is the property `personaPartition`'s docstring demands
       ("withholding is only safe once the surviving layer is known to carry what
@@ -103,7 +103,7 @@ Phase 2 is exactly the evidence the docstring says is missing.
       verify: sabotage in both directions — temporarily rename one global layer,
       assert the predicate flips to false and the projection goes back to full;
       restore, assert it flips back. A predicate never seen false proves nothing.
-- [ ] **2.2 Route the rule filter through it.** `_scoped_rule_basenames()` stops
+- [x] **2.2 Route the rule filter through it.** `_scoped_rule_basenames()` stops
       being per-run: the emit plan already exists per tool directory
       (`projected_rule_trees`), so the package-only narrowing moves there and is
       applied per host, gated on 2.1.
