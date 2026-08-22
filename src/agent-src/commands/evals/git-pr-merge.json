@@ -1,0 +1,13 @@
+{
+  "command": "git-pr-merge",
+  "intent": "Prepare an open PR to mergeable — sync, resolve conflicts semantically, drive CI green — and merge it when the invocation says so",
+  "cases": [
+    { "prompt": "merge PR 1478", "expected": "git-pr-merge" },
+    { "prompt": "get this pull request mergeable and merge it", "expected": "git-pr-merge" },
+    { "prompt": "drain all the open PRs — sync each one with main, fix CI, merge", "expected": "git-pr-merge" },
+    { "prompt": "bring PR 1502 up to date with main and get its checks green, but don't merge it", "expected": "git-pr-merge" },
+    { "prompt": "the open PRs all conflict with each other now — work through the queue", "expected": "git-pr-merge" },
+    { "prompt": "open a pull request for this branch", "expected": "git-pr-create" },
+    { "prompt": "write me a PR description I can paste", "expected": "git-pr-create-description-only" }
+  ]
+}

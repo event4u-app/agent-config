@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: cost
+status: accepted
+date: 2026-05-16
+decision: hard-stop-hook
+supersedes: —
+superseded_by: —
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — Hard-stop hook surface
 
 > Area: `cost` · Status: accepted · Date: 2026-05-16 · Type: retrospective

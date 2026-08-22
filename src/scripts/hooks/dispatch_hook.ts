@@ -49,11 +49,15 @@ import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
   clearHookStdinOverride,
-  readFd0ToEnd,
 } from "./hook_stdin.js";
-import { emitFor, isBlockCapable, type Severity } from "./host_semantics.js";
+import { emitFor, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
+import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
+export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
+import { _py_json_dumps } from './py_json_dumps.js';
+import { _fallback_yaml } from './fallback_yaml.js';
+export { _fallback_yaml } from './fallback_yaml.js';
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -245,63 +249,6 @@ export function _load_yaml(p: string): JsonObject {
   return _isObject(data) ? data : {};
 }
 
-/**
- * Indent-aware mini-parser for the manifest's flat shape only.
- * Handles: scalars, `key: null`, `key: true/false`, `key: [a, b]`.
- * Drops comments + blank lines. Two-space indent assumed.
- *
- * Ported verbatim from the Python `_fallback_yaml` so the parser unit
- * tests have an exact twin; runtime prefers `_load_yaml` above.
- */
-export function _fallback_yaml(text: string): JsonObject {
-  const root: JsonObject = {};
-  const stack: Array<[number, JsonObject]> = [[-1, root]];
-  for (const raw of text.split("\n")) {
-    const line = raw.split("#", 1)[0]!.replace(/\s+$/, "");
-    if (!line.trim()) {
-      continue;
-    }
-    const indent = line.length - line.replace(/^ +/, "").length;
-    while (stack.length > 0 && stack[stack.length - 1]![0] >= indent) {
-      stack.pop();
-    }
-    const parent = stack.length > 0 ? stack[stack.length - 1]![1] : root;
-    const body = line.trim();
-    if (!body.includes(":")) {
-      continue;
-    }
-    const idx = body.indexOf(":");
-    const key = body.slice(0, idx).trim();
-    const val = body.slice(idx + 1).trim();
-    if (!val) {
-      const newObj: JsonObject = {};
-      parent[key] = newObj;
-      stack.push([indent, newObj]);
-    } else {
-      const lower = val.toLowerCase();
-      if (lower === "null" || lower === "~" || lower === "") {
-        parent[key] = null;
-      } else if (lower === "true") {
-        parent[key] = true;
-      } else if (lower === "false") {
-        parent[key] = false;
-      } else if (val.startsWith("[") && val.endsWith("]")) {
-        const inner = val.slice(1, -1).trim();
-        parent[key] = inner
-          ? inner
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s)
-          : [];
-      } else if (/^-?\d+$/.test(val)) {
-        parent[key] = parseInt(val, 10);
-      } else {
-        parent[key] = val.replace(/^['"]+|['"]+$/g, "");
-      }
-    }
-  }
-  return root;
-}
 
 interface ConcernDef extends JsonObject {
   name: string;
@@ -489,97 +436,6 @@ export function _resolve_concerns(
   return out;
 }
 
-// Python json.dumps(record, indent=2) byte-for-byte (ensure_ascii=True).
-function _py_json_dumps(value: unknown, indent: number): string {
-  const pad = " ".repeat(indent);
-  const escapeString = (s: string): string => {
-    let out = '"';
-    for (const ch of s) {
-      const code = ch.codePointAt(0) as number;
-      switch (ch) {
-        case '"':
-          out += '\\"';
-          break;
-        case "\\":
-          out += "\\\\";
-          break;
-        case "\n":
-          out += "\\n";
-          break;
-        case "\r":
-          out += "\\r";
-          break;
-        case "\t":
-          out += "\\t";
-          break;
-        case "\b":
-          out += "\\b";
-          break;
-        case "\f":
-          out += "\\f";
-          break;
-        default:
-          if (code < 0x20 || code > 0x7e) {
-            if (code > 0xffff) {
-              const c = code - 0x10000;
-              const hi = 0xd800 + (c >> 10);
-              const lo = 0xdc00 + (c & 0x3ff);
-              out +=
-                "\\u" +
-                hi.toString(16).padStart(4, "0") +
-                "\\u" +
-                lo.toString(16).padStart(4, "0");
-            } else {
-              out += "\\u" + code.toString(16).padStart(4, "0");
-            }
-          } else {
-            out += ch;
-          }
-      }
-    }
-    return out + '"';
-  };
-  const render = (v: unknown, depth: number): string => {
-    if (v === null || v === undefined) return "null";
-    if (typeof v === "boolean") return v ? "true" : "false";
-    if (typeof v === "number") {
-      if (!Number.isFinite(v)) {
-        if (Number.isNaN(v)) return "NaN";
-        return v > 0 ? "Infinity" : "-Infinity";
-      }
-      return String(v);
-    }
-    if (typeof v === "string") return escapeString(v);
-    const curPad = pad.repeat(depth + 1);
-    const closePad = pad.repeat(depth);
-    if (Array.isArray(v)) {
-      if (v.length === 0) return "[]";
-      return (
-        "[\n" +
-        v.map((item) => curPad + render(item, depth + 1)).join(",\n") +
-        "\n" +
-        closePad +
-        "]"
-      );
-    }
-    if (typeof v === "object") {
-      const obj = v as Record<string, unknown>;
-      const keys = Object.keys(obj);
-      if (keys.length === 0) return "{}";
-      return (
-        "{\n" +
-        keys
-          .map((k) => curPad + escapeString(k) + ": " + render(obj[k], depth + 1))
-          .join(",\n") +
-        "\n" +
-        closePad +
-        "}"
-      );
-    }
-    throw new TypeError(`Object of type ${typeof v} is not JSON serializable`);
-  };
-  return render(value, 0);
-}
 
 /**
  * Write the raw stdin payload to a capture directory when
@@ -1576,87 +1432,6 @@ function _sortedRepr(s: ReadonlySet<string>): string {
  */
 let _stdin_read_failed: string | null = null;
 
-/**
- * The seam where a FAILED read becomes an empty string — isolated so the three
- * failure classes the policy names can be driven with real errno values.
- *
- * Returns the failure message, or `null` when the read succeeded. The read
- * itself is injectable for exactly one reason: `EAGAIN` exhaustion, `EIO` and
- * `EBADF` cannot be staged against a live fd 0 portably, and a policy whose
- * trigger is untestable is a policy nobody can show works. What the injection
- * does NOT buy is proof that the production path reaches here — that is the
- * wiring, pinned separately by driving `main()`.
- */
-export function stdinReadFailure(read: () => string = readFd0ToEnd): {
-  text: string;
-  failure: string | null;
-} {
-  try {
-    // Reads to EOF and retries on EAGAIN rather than treating it as empty
-    // input; shared with the concern-side reader so both paths cannot drift.
-    return { text: read(), failure: null };
-  } catch (exc) {
-    return { text: "", failure: exc instanceof Error ? exc.message : String(exc) };
-  }
-}
-
-/**
- * Is this concern one whose verdict a failed read silently converted into an
- * allow?
- *
- * Both halves are required and neither is redundant. `fail_closed: true` is the
- * manifest's declaration that this concern's own crash must not become a pass;
- * `severity: blocking` is the declaration that it can refuse at all. An
- * advisory concern that happens to be `fail_closed` has no verdict to lose, and
- * a blocking concern that is not `fail_closed` has already declared the opposite
- * intent.
- */
-export function _is_fail_closed_blocking(concern: JsonObject): boolean {
-  const severity = String(concern["severity"] ?? "").trim().toLowerCase();
-  return concern["fail_closed"] === true && severity === "blocking";
-}
-
-/**
- * `b-stdin-read-failure-policy`, option (c) — deny a failed read ONLY where a
- * deny is honoured AND something was actually silenced.
- *
- * Decided by council 2026-08-20, 2/2 quorum, both seats on option (c):
- * "on a read failure, deny only when the slot is block-capable and at least one
- * selected concern is both blocking and `fail_closed: true`".
- *
- * The two rejected options are worth keeping visible, because each is the
- * obvious move. Denying on EVERY slot (option (a)) refuses nothing on
- * `post_tool_use` — the tool already ran — and on `stop` it breaks a turn end
- * to protect a guard that was never there; it buys availability risk for no
- * enforcement. Keeping the allow (option (b), the status quo) leaves a
- * documented allow-on-failure on a security path: F-1 measured a
- * `git commit --no-verify` DENIED at small payload size and ALLOWED at 300 KB,
- * and the loud stderr line that now ships makes that visible without making it
- * stop.
- *
- * The cost is stated rather than hidden: a transient I/O error on
- * `pre_tool_use` now refuses a tool call the user must retry. The retry budget
- * already survived ~10 s of `EAGAIN` before this point, so the class of error
- * that reaches here is not "the writer was slow".
- *
- * Returns `null` when the dispatch proceeds normally.
- */
-export function denyOnStdinFailure(
-  platform: string,
-  event: string,
-  concerns: readonly JsonObject[],
-  failure: string,
-): { reason: string } | null {
-  if (!isBlockCapable(platform, event)) return null;
-  const silenced = concerns.filter(_is_fail_closed_blocking).map((c) => String(c["name"]));
-  if (silenced.length === 0) return null;
-  return {
-    reason:
-      `agent-config: refusing this action — the hook payload could not be read ` +
-      `(${failure}), so ${silenced.join(", ")} evaluated nothing. ` +
-      `A fail-closed guard on a block-capable slot must not pass by default. Retry.`,
-  };
-}
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
 // every module shares the bundle's `import.meta.url` (declare at top of file).

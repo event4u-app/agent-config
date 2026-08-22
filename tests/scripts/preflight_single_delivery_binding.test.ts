@@ -78,10 +78,25 @@ describe('preflight binding for check_single_delivery', () => {
         expect(preflight.join('\n')).toContain('src/scripts/check_single_delivery');
     });
 
-    it('is registered in REPORT mode, not --enforce, while Phase 2 is open', () => {
-        // --enforce here would red every preflight run on a defect nobody can
-        // currently fix, which is how a gate teaches people to skip it. The flip
-        // lands with the partition; an early flip has to fail here and be argued.
+    it('is registered in REPORT mode — --enforce is unbindable HERE, not merely early', () => {
+        // The original reason was "while Phase 2 is open", and the promise attached
+        // to it was that the flip lands with the partition. Phase 2 shipped, the
+        // partition now reaches all six families, and `--enforce` exits 0 on a
+        // two-layer machine — and the flip STILL cannot land here. Measured
+        // 2026-08-21: pointed at a one-layer topology, `--enforce` exits **1** via
+        // the `readNothing` branch, which is correct behaviour and exactly the
+        // wrong behaviour for this binding. `.claude/` is gitignored, no CI leg
+        // installs at user scope, and a contributor without a global install has
+        // one layer — so an enforced preflight would red for everyone whose
+        // topology is the normal one, on an invariant their machine cannot even
+        // express.
+        //
+        // So the condition is structural, not temporal, and this assertion is not
+        // waiting for anything: `--enforce` belongs where BOTH layers are known to
+        // exist and be verified — a doctor surface or an explicit maintainer run —
+        // never in a task every checkout runs. An attempt to flip it here has to
+        // fail this test and argue against the measurement above, not against a
+        // phase that has since closed.
         const line = preflight.find((l) => l.includes('src/scripts/check_single_delivery'));
         expect(line).toBeDefined();
         expect(line).not.toContain('--enforce');

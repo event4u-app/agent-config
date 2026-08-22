@@ -196,9 +196,19 @@ export function evictionOrder(
  * Nudge exclusivity: keep the lowest `nudge_rank`, drop every other nudge.
  *
  * Ties break on concern name so the winner is stable; a tie is a manifest
- * defect rather than a runtime one, and `lint_hook_manifest` is where it should
- * eventually be caught — that check does not exist yet and this comment is the
- * honest statement of the gap, not a claim that it is covered.
+ * defect rather than a runtime one, and `lint_hook_manifest` is where it is
+ * caught — `_check_concerns` rejects a repeated non-null `nudge_rank`, naming
+ * the rank and every concern declaring it, and rejects a non-positive-integer
+ * value rather than coercing it (road-to-wiring-truth-corrections Phase 3;
+ * cases in `tests/scripts/lint_hook_manifest.test.ts`). The tie-break below
+ * therefore stays as the runtime's stable fallback for a manifest that got
+ * past the lint, not as the only thing standing between a collision and a
+ * silently non-emitting concern.
+ *
+ * The lint enforces uniqueness GLOBALLY while this selector compares within
+ * one dispatch, so the lint is deliberately the stricter of the two — see its
+ * own note for why, and narrow it rather than delete it if a design ever needs
+ * one rank on two disjoint events.
  */
 function _selectNudge(
     candidates: readonly EmissionCandidate[],

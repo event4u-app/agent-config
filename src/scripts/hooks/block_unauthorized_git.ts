@@ -485,7 +485,27 @@ export function commandOp(command: string): GitOp | null {
   return found;
 }
 
-/** A ledger older than this is not "this turn" under any reading. */
+/**
+ * A ledger older than this is not "this turn" under any reading.
+ *
+ * **Widening this constant for a long run is forbidden practice.** On
+ * 2026-08-21 it was sed-patched to twelve times this value — six hours —
+ * behind a marker promising a revert that never came, so an autonomous PR-drain could
+ * merge past the 30-minute bound. The widening was committed to the trunk and
+ * left there. It is a twelvefold expansion of the authorization lifetime on
+ * the guard that gates `pr-merge`, which is a `BLOCK_OPS` member precisely
+ * because it is irreversible.
+ *
+ * Neither the widened expression nor the marker text is written out here: the
+ * obvious regression check for either is a grep, and a comment reciting the
+ * literal makes that grep match the guard's own prose on a clean tree.
+ *
+ * The supported answer to "my run is longer than the window" is that the run
+ * STOPS and REPORTS at expiry and the user re-authorizes — never that the
+ * window grows. The agent never edits this constant, this file, or the built
+ * bundle; `dist/hooks/dispatch.js` is what actually executes, and a source
+ * edit without a rebuild is silently inert.
+ */
 export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
 
 /**

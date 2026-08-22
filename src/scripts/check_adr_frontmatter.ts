@@ -37,6 +37,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import {
+    type AdrFrontmatter,
+    AUTHORITY_BASES,
+    AGENTIC_MODES,
+    DISCOVERY_STATES,
+    EVIDENCE_STRENGTHS,
+    PROVENANCE_KINDS,
+    evidenceOf,
+    provenanceOf,
+    readAdrFrontmatter,
+    readAdrFrontmatterScalars,
+} from './_lib/adr_frontmatter.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -150,36 +162,53 @@ export interface AdrFinding {
     file: string;
     level: 'error' | 'warn';
     message: string;
+    /**
+     * Optional finding class, set only by the supersession-link check.
+     *
+     * It exists because `main()`'s summary line labels its warn count
+     * "grandfathered without a revisit condition" — accurate while that was the
+     * only warn class in the file, and a lie the moment a second one lands. A
+     * new warn class must not silently inflate a count that names a different
+     * cause, and a warn nobody prints is a warn nobody acts on, so the tagged
+     * ones are counted and printed separately. Absent = the pre-existing
+     * grandfathering class; nothing else reads this field.
+     */
+    kind?: 'supersession_link' | 'supersession_qualifier';
 }
 
+/**
+ * Read the leading `---` block.
+ *
+ * Delegates to the shared reader (`_lib/adr_frontmatter.ts`) rather than
+ * carrying a fourth copy: the nested `provenance` / `evidence` axes cannot be
+ * read by the scalar-only parser this function used to be, and a corpus
+ * equivalence test holds the shared reader to this one's exact scalar output
+ * for every ADR in the tree. Re-exported because the test suite imports it.
+ */
 export function parse_frontmatter(text: string): Record<string, string> | null {
-    if (!text.startsWith('---\n')) return null;
-    const end = text.indexOf('\n---\n', 4);
-    if (end === -1) return null;
-    const out: Record<string, string> = {};
-    let key: string | null = null;
-    for (const raw of text.slice(4, end).split('\n')) {
-        const line = raw.replace(/\s+$/, '');
-        if (!line || line.trimStart().startsWith('#')) continue;
-        // Continuation of a folded/indented value.
-        if (/^\s/.test(line) && key) {
-            out[key] = `${out[key]} ${line.trim()}`.trim();
-            continue;
-        }
-        const idx = line.indexOf(':');
-        if (idx === -1) continue;
-        key = line.slice(0, idx).trim();
-        out[key] = line
-            .slice(idx + 1)
-            .trim()
-            .replace(/^["'](.*)["']$/, '$1');
-    }
-    return out;
+    return readAdrFrontmatterScalars(text);
 }
+
+/**
+ * The transitional migration value, legal on an existing accepted record only.
+ *
+ * It has to be named here as well as in `check_descriptive_axes`, and the reason
+ * is a contract-versus-validator contradiction this change nearly shipped:
+ * `adr-layout` blesses `review_trigger: unclassified` for an existing record,
+ * while `trigger_is_meaningful` rejects anything under 20 characters and
+ * `unclassified` is 12. The contradiction was latent — no flat ADR carries the
+ * value yet and this gate scans `docs/decisions/` only — and would have fired
+ * on the first backfill onto a post-`REVIEW_TRIGGER_SINCE` record, i.e. exactly
+ * when someone followed the contract. A contract and its validator disagreeing
+ * is worse than either rule alone, because the tree then teaches the opposite
+ * of what the document says.
+ */
+const TRANSITIONAL_TRIGGER = 'unclassified';
 
 /** A trigger must name a condition. A bare cadence is the failure mode. */
 export function trigger_is_meaningful(value: string): boolean {
     const v = value.trim();
+    if (v.toLowerCase() === TRANSITIONAL_TRIGGER) return true;
     if (v.length < 20) return false;
     // "annually" / "every 6 months" / a bare date is a calendar, not a condition.
     if (/^(annually|yearly|quarterly|monthly|every\s+\d+\s+\w+|\d{4}-\d{2}-\d{2})\.?$/i.test(v)) {
@@ -229,13 +258,266 @@ export function check_one(rel: string, text: string): AdrFinding[] {
     }
     check_reopen_authority(rel, fm, findings);
     check_amendment_shape(rel, fm, findings);
+    const parsed = readAdrFrontmatter(text);
+    if (parsed !== null) check_descriptive_axes(rel, parsed, findings);
+    return findings;
+}
+
+/**
+ * The permanence vocabulary, checked on the `decision` slug and on the value of
+ * any frontmatter key.
+ *
+ * ADR-208 is why this is a frontmatter check and not only a prose one: its
+ * `decision:` slug is literally `dist-agent-src-keep-forever`, so the
+ * permanence claim is in the metadata a tool reads, not only in the body a
+ * human reads.
+ */
+const PERMANENCE_RE = /\b(forever|permanently|permanent|never revisit|never reconsider|settled forever)\b/i;
+
+/** `terminal`, `none` and their kin are permanence wearing a field name. */
+const INVALID_TRIGGER_VALUES = new Set(['terminal', 'none', 'n/a', 'na', '-', '—', 'never']);
+
+/**
+ * Validate `provenance`, `evidence`, `authority_basis` and the trigger's
+ * transitional vocabulary.
+ *
+ * **This function validates the SHAPE of an axis that is present. It does not
+ * require the axes at all**, and an earlier version of this docstring said "a
+ * NEW record must carry the axes", which nothing here enforces. Completion
+ * review disproved it directly: a fresh record with no `provenance`, no
+ * `evidence` and no `## Evidence` section passed every gate in this tree.
+ *
+ * The gap is structural rather than an omission, and it is why it was not closed
+ * HERE. Requiring the axes needs a notion of NEW, and a single-file linter has
+ * none — it sees a `date:` the author typed, not whether the record is new to the
+ * repository. `date:` is the proxy used for the `review_trigger` staging below,
+ * and it is a weak one: a backdated record slips through it.
+ *
+ * **The gap is now closed, in `check_new_adr_evidence.ts`** — the two-ref diff
+ * this paragraph used to call "buildable and not built" (review finding 4). It
+ * enumerates records ADDED against a base ref and requires all three of
+ * `provenance.kind`, `evidence.strength` and an `## Evidence` section of any
+ * added record whose status is `accepted`. Nothing moved out of this file: the
+ * split is one axis, one owner — that gate decides WHETHER a new record must
+ * disclose, this function decides whether what it wrote is well-formed, and the
+ * pre-existing corpus stays out of scope on both sides.
+ *
+ * The `review_trigger` staging IS enforced, on that same date proxy. 88 of the
+ * 147 accepted records carry no trigger, so a same-day hard requirement would
+ * have made the tree invalid on the day this landed and forced the schema and
+ * the backfill into one unreviewable change. What is rejected at every stage is
+ * a value asserting permanence — `terminal` is not a migration state, it is the
+ * thing the staging exists to stop becoming permanent.
+ *
+ * Everything here is shape validation. Nothing in this function grants an
+ * agent authority over anything, and `authority_basis` is checked precisely so
+ * it cannot be used to route around the owner.
+ */
+export function check_descriptive_axes(
+    rel: string,
+    fm: AdrFrontmatter,
+    findings: AdrFinding[],
+): AdrFinding[] {
+    const status = fm.scalars['status'] ?? '';
+    const historical = status === 'superseded' || status === 'rejected' || status === 'deprecated';
+
+    // --- review_trigger vocabulary: invalid values are invalid at every stage.
+    const trigger = (fm.scalars['review_trigger'] ?? '').trim();
+    if (trigger !== '' && !historical) {
+        // The staged half. `unclassified` is the migration value for a record
+        // that already existed; a record authored now has no migration to be
+        // in, and letting it through would turn a transitional state into the
+        // permanent default — which is the failure the staging exists to avoid.
+        // "Existing" is read from the same `REVIEW_TRIGGER_SINCE` date this
+        // file already uses for grandfathering, so there is one notion of
+        // old-versus-new rather than two that can drift apart.
+        if (trigger.toLowerCase() === TRANSITIONAL_TRIGGER) {
+            const recordDate = fm.scalars['date'] ?? '';
+            const preexisting = recordDate !== '' && recordDate < REVIEW_TRIGGER_SINCE;
+            if (!preexisting) {
+                findings.push({
+                    file: rel,
+                    level: 'error',
+                    message: `\`review_trigger: unclassified\` is the migration value for a record that already existed (dated before ${REVIEW_TRIGGER_SINCE}). This record is dated ${recordDate || 'undated'} — name the condition that would reopen it.`,
+                });
+            }
+        }
+        if (INVALID_TRIGGER_VALUES.has(trigger.toLowerCase())) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `\`review_trigger: ${trigger}\` is permanence under a field name. Every accepted decision has a conceivable reopening condition — write a narrow one, or \`unclassified\` while the migration runs.`,
+            });
+        } else if (trigger.toLowerCase() !== 'unclassified' && PERMANENCE_RE.test(trigger)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `\`review_trigger\` asserts permanence ("${trigger.slice(0, 60)}…"). A trigger names the condition under which the decision stops holding.`,
+            });
+        }
+    }
+
+    // --- provenance
+    const provenance = provenanceOf(fm);
+    // Key-presence is read from BOTH maps, not from `scalars` alone. The shared
+    // reader routes an inline list (`provenance: [human]`) into `nested`, so a
+    // scalars-only guard left the whole malformed-list class silently accepted:
+    // `provenanceOf` returns null via its `Array.isArray` branch, no branch
+    // fired, and every downstream consumer then read the axis as ABSENT. Found
+    // in completion review with a direct probe — `provenance: [human]` +
+    // `evidence: [E9]` on an otherwise valid accepted record produced zero
+    // findings. The list shape is a plausible slip precisely because
+    // `protected_dimensions: [purpose]` in the same block is a list.
+    if (axisPresent(fm, 'provenance') && provenance === null) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: '`provenance` must be a map with a `kind:` key — a scalar or a list is not a map',
+        });
+    }
+    if (provenance !== null) {
+        if (provenance.kind === null) {
+            findings.push({ file: rel, level: 'error', message: '`provenance` is present but carries no `kind`' });
+        } else if (!(PROVENANCE_KINDS as readonly string[]).includes(provenance.kind)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `provenance.kind \`${provenance.kind}\` is not one of: ${PROVENANCE_KINDS.join(', ')}. A council is \`agentic\` with \`agentic_mode: council\` — it is not its own kind.`,
+            });
+        }
+        if (
+            provenance.agenticMode !== null &&
+            !(AGENTIC_MODES as readonly string[]).includes(provenance.agenticMode)
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `provenance.agentic_mode \`${provenance.agenticMode}\` is not one of: ${AGENTIC_MODES.join(', ')}`,
+            });
+        }
+    }
+
+    // --- evidence
+    const evidence = evidenceOf(fm);
+    if (axisPresent(fm, 'evidence') && evidence === null) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: '`evidence` must be a map with a `strength:` key — a scalar or a list is not a map',
+        });
+    }
+    if (evidence !== null) {
+        if (evidence.strength === null) {
+            findings.push({ file: rel, level: 'error', message: '`evidence` is present but carries no `strength`' });
+        } else if (!(EVIDENCE_STRENGTHS as readonly string[]).includes(evidence.strength)) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.strength \`${evidence.strength}\` is not one of: ${EVIDENCE_STRENGTHS.join(', ')}`,
+            });
+        }
+        // `discovery` is required on E0 and only on E0. A bare E0 cannot
+        // distinguish "no evidence exists" from "nobody looked", and the
+        // second reading is the cheap way to manufacture a reopenable lock.
+        if (evidence.strength === 'E0' && evidence.discovery === null) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: '`evidence.strength: E0` requires `discovery: complete | incomplete` — an unsearched absence is not an established one',
+            });
+        }
+        if (
+            evidence.discovery !== null &&
+            !(DISCOVERY_STATES as readonly string[]).includes(evidence.discovery)
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.discovery \`${evidence.discovery}\` is not one of: ${DISCOVERY_STATES.join(', ')}`,
+            });
+        }
+        // A grade above E1 asserts a source. Saying so without naming one is
+        // the evidence-theater failure the contract names.
+        if (
+            evidence.strength !== null &&
+            ['E2', 'E3', 'E4'].includes(evidence.strength) &&
+            evidence.basis.length === 0
+        ) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: `evidence.strength \`${evidence.strength}\` cites no \`basis\`. A grade above E1 asserts a source; name it or grade it lower.`,
+            });
+        }
+    }
+
+    // --- authority_basis
+    const basis = fm.scalars['authority_basis'];
+    if (basis !== undefined && !(AUTHORITY_BASES as readonly string[]).includes(basis)) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: `authority_basis \`${basis}\` is not one of: ${AUTHORITY_BASES.join(', ')}`,
+        });
+    }
+    // `owner_intent` is the honest form for a purpose decision, and it pairs
+    // with E0 by design — the authority comes from owning the purpose, not
+    // from pretending the preference is empirical.
+    if (basis === 'owner_intent' && evidence !== null && evidence.strength !== null) {
+        if (['E2', 'E3', 'E4'].includes(evidence.strength) && evidence.basis.length === 0) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message: 'an `owner_intent` record claims an empirical grade with no basis — record it as `E0` + `owner_intent` instead of dressing intent as measurement',
+            });
+        }
+    }
+
     return findings;
 }
 
 /** `ADR-035`, `035`, `35` → `35`. Returns null when nothing resolves. */
+/**
+ * Is a descriptive axis PRESENT in the frontmatter, in any shape?
+ *
+ * The typed accessors (`provenanceOf` / `evidenceOf`) return null for three
+ * different situations — absent, scalar, list — and only the first is legal.
+ * Distinguishing them needs the raw key, and the raw key can live in either
+ * map: the reader keeps a scalar in `scalars` and BOTH a map and an inline
+ * list in `nested`. Asking one map is how the malformed-list class escaped.
+ */
+export function axisPresent(fm: AdrFrontmatter, key: 'provenance' | 'evidence'): boolean {
+    return fm.scalars[key] !== undefined || fm.nested[key] !== undefined;
+}
+
 export function adr_number(raw: string): string | null {
     const m = /(\d{1,4})/.exec(raw.trim());
     return m?.[1] === undefined ? null : String(Number(m[1]));
+}
+
+/**
+ * Index a corpus by ADR number for the reciprocal-link checks — FLAT records
+ * only.
+ *
+ * A bare `ADR-NNN` reference denotes a flat record: that is the only surface
+ * whose numbers are globally unique. Per-area numbers are unique only within
+ * their area (`docs/adrs/<area>/0001`), so admitting them here would make one
+ * Map key mean several files — six per-area records carry `adr: 0001` today.
+ * Cross-surface links are therefore reported as unresolvable rather than
+ * resolved to an arbitrary sibling; a per-area record still gets every
+ * single-file check, and a real cross-surface reference needs a qualified
+ * reference form that `parse_adr_refs` does not yet have.
+ */
+function indexByNumber(
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
+): Map<string, { rel: string; fm: Record<string, string> }> {
+    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
+    for (const f of files) {
+        if (f.perArea === true) continue;
+        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        if (n !== null) byNumber.set(n, f);
+    }
+    return byNumber;
 }
 
 /**
@@ -266,20 +548,20 @@ export function check_amendment_shape(
 
 /**
  * Corpus-level check: every `amends:` has its reciprocal `amended_by:` and vice
- * versa. This is the half the `supersedes:` / `superseded_by:` pair never had —
- * and its absence is exactly how ADR-035 kept asserting a rejection ADR-232 had
- * reopened. A one-sided link is invisible from the side that is stale, which is
- * the side a reader lands on first.
+ * versa. Its absence for the `supersedes:` / `superseded_by:` pair is exactly
+ * how ADR-035 kept asserting a rejection ADR-232 had reopened. A one-sided link
+ * is invisible from the side that is stale, which is the side a reader lands on
+ * first.
+ *
+ * That pair now has the same half, in `check_supersession_links` below — this
+ * docstring used to say it "never had" one, which was true when it was written
+ * and is the gap it documented rather than closed.
  */
 export function check_amendment_links(
-    files: { rel: string; fm: Record<string, string> }[],
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
 ): AdrFinding[] {
     const findings: AdrFinding[] = [];
-    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
-    for (const f of files) {
-        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
-        if (n !== null) byNumber.set(n, f);
-    }
+    const byNumber = indexByNumber(files);
 
     const reciprocal = { amends: 'amended_by', amended_by: 'amends' } as const;
     for (const f of files) {
@@ -322,6 +604,176 @@ export function check_amendment_links(
     return findings;
 }
 
+/** The none-tokens a link field uses to say "no link". `—` is the corpus form. */
+const LINK_PLACEHOLDERS = new Set(['—', '–', '-', 'none', 'n/a']);
+
+/** One parsed member of a `supersedes:` / `superseded_by:` list. */
+export interface AdrRef {
+    /** The segment as written, trimmed — what an error message should quote. */
+    raw: string;
+    /** The resolved ADR number, or null when the segment names none. */
+    number: string | null;
+    /** Free text found inside `(…)`, or null. A partial-supersession marker. */
+    qualifier: string | null;
+}
+
+/**
+ * Parse an ADR link field into its members. List-aware and qualifier-aware,
+ * because both shapes are already in the corpus and a first-number parser reads
+ * them wrong in opposite directions.
+ *
+ * ADR-206 carries sixteen targets in one `supersedes:` field, so anything that
+ * takes the first number and stops reports the other fifteen back-links as
+ * one-sided — 15 of the 19 findings a naive parser produces on this corpus are
+ * that artifact, not a defect in the tree. ADR-124 carries
+ * `ADR-088 (engine-adoption interpretation only), ADR-094 (…)`, so the split
+ * has to respect parentheses (a qualifier may itself contain a comma) and the
+ * number has to be read with the qualifier removed rather than from the
+ * concatenated text — `ADR-030 (Decision 2 — …)` is one reference with a note,
+ * not two.
+ *
+ * `check_amendment_shape` / `check_amendment_links` keep their naive
+ * `split(',')`: no `amends:` value in the corpus carries a comma or a list, so
+ * rewriting them here would be an unrequested behaviour change to code under
+ * test. The shape is identical if that ever stops being true.
+ */
+export function parse_adr_refs(raw: string | undefined): AdrRef[] {
+    if (raw === undefined) return [];
+    const whole = raw.trim();
+    if (whole === '' || LINK_PLACEHOLDERS.has(whole.toLowerCase())) return [];
+
+    // Split on top-level commas only — a comma inside `(…)` belongs to the note.
+    const segments: string[] = [];
+    let depth = 0;
+    let cur = '';
+    for (const ch of whole) {
+        if (ch === '(') depth += 1;
+        else if (ch === ')') depth = Math.max(0, depth - 1);
+        else if (ch === ',' && depth === 0) {
+            segments.push(cur);
+            cur = '';
+            continue;
+        }
+        cur += ch;
+    }
+    segments.push(cur);
+
+    const refs: AdrRef[] = [];
+    for (const segment of segments) {
+        const seg = segment.trim();
+        if (seg === '' || LINK_PLACEHOLDERS.has(seg.toLowerCase())) continue;
+        const qm = /\(([^)]*)\)/.exec(seg);
+        // Read the number from the reference only. A qualifier can contain
+        // digits ("Decision 2"), so stripping first is what keeps the match
+        // order-independent instead of relying on the note trailing the ref.
+        const bare = seg.replace(/\([^)]*\)/g, ' ');
+        refs.push({
+            raw: seg,
+            number: adr_number(bare),
+            qualifier: qm?.[1] === undefined ? null : qm[1].trim(),
+        });
+    }
+    return refs;
+}
+
+/**
+ * Corpus-level check: every `supersedes:` has its reciprocal `superseded_by:`
+ * and vice versa — the half this pair never had, which is what
+ * `check_amendment_links` was built for `amends:` / `amended_by:` and this one
+ * closes for the pair whose absence produced the ADR-035 case in the first
+ * place. A one-sided link is invisible from the stale side, and the stale side
+ * is the one a reader lands on: ADR-030 reads as live while ADR-209 has
+ * superseded part of it.
+ *
+ * Levels are split by whether a human has to decide anything.
+ *
+ * A dangling or unparseable reference is an **error**: it cannot be a content
+ * decision, only a typo, and it points at nothing a reader can follow. Zero
+ * occurrences today, so it reds nothing on landing and reds the right thing
+ * later.
+ *
+ * A one-sided link is a **warn**, deliberately, and this is the choice worth
+ * stating. There are 4 in the tree, and each one is a content decision rather
+ * than a typo: someone has to choose the direction. ADR-209 supersedes ADR-030
+ * only in its "Decision 2" carve-out, so marking ADR-030 wholly
+ * `superseded_by` would assert more than happened, while leaving it blank
+ * asserts less — the fix is a judgement about the record, not a field to fill
+ * in mechanically. Erroring would red the build on landing and force those four
+ * judgements into an unrelated change; warning surfaces them so the next change
+ * can decide each one and ratchet the count. The repo's baseline-ratchet
+ * mechanism is the usual home for exactly this, and belongs here once someone
+ * owns those four decisions.
+ *
+ * The free-text qualifier is its own warn class. `supersedes: ADR-088
+ * (engine-adoption interpretation only)` encodes a PARTIAL supersession in
+ * prose inside a field that nothing parses as partial: every consumer of the
+ * frontmatter reads it as total. That is a different problem from a broken
+ * link — the link is correct and reciprocal — so it is reported separately
+ * rather than folded into the same count.
+ */
+export function check_supersession_links(
+    files: { rel: string; fm: Record<string, string>; perArea?: boolean }[],
+): AdrFinding[] {
+    const findings: AdrFinding[] = [];
+    const byNumber = indexByNumber(files);
+
+    const reciprocal = { supersedes: 'superseded_by', superseded_by: 'supersedes' } as const;
+    for (const f of files) {
+        const self = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        for (const key of ['supersedes', 'superseded_by'] as const) {
+            for (const ref of parse_adr_refs(f.fm[key])) {
+                if (ref.qualifier !== null) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'warn',
+                        kind: 'supersession_qualifier',
+                        message:
+                            `\`${key}: ${ref.raw}\` records a PARTIAL supersession as free text. ` +
+                            `Every reader of this field parses it as total — the scope lives only ` +
+                            `in the prose.`,
+                    });
+                }
+                if (ref.number === null) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        kind: 'supersession_link',
+                        message: `\`${key}\` value \`${ref.raw}\` names no ADR number`,
+                    });
+                    continue;
+                }
+                const other = byNumber.get(ref.number);
+                if (other === undefined) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        kind: 'supersession_link',
+                        message: `\`${key}: ${ref.raw}\` points at an ADR that does not exist`,
+                    });
+                    continue;
+                }
+                const names_self =
+                    self !== null &&
+                    parse_adr_refs(other.fm[reciprocal[key]])
+                        .map((r) => r.number)
+                        .includes(self);
+                if (!names_self) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'warn',
+                        kind: 'supersession_link',
+                        message:
+                            `\`${key}: ${ref.raw}\` is one-sided — ${other.rel} carries no ` +
+                            `reciprocal \`${reciprocal[key]}\`. A one-sided supersession link is ` +
+                            `invisible from the stale side, which is the side a reader lands on.`,
+                    });
+                }
+            }
+        }
+    }
+    return findings;
+}
+
 /**
  * Check every ADR in `dir`, optionally recording per-file completeness.
  *
@@ -334,16 +786,70 @@ export function check_amendment_links(
  * A `warn`-level finding resolves as `complete`: warnings are allowed by this
  * gate's exit-code contract, so `fail` is reserved for what actually reds it.
  */
+/** A per-area record under `docs/adrs/<area>/NNNN-*.md`, excluding READMEs. */
+export function listPerAreaRecords(root: string = REPO_ROOT): { abs: string; rel: string }[] {
+    const base = path.join(root, 'docs', 'adrs');
+    if (!fs.existsSync(base)) return [];
+    const out: { abs: string; rel: string }[] = [];
+    for (const area of fs.readdirSync(base).sort()) {
+        const dir = path.join(base, area);
+        if (!fs.statSync(dir).isDirectory()) continue;
+        for (const name of fs.readdirSync(dir).sort()) {
+            if (!/^\d{4}-.*\.md$/.test(name)) continue;
+            const abs = path.join(dir, name);
+            out.push({ abs, rel: path.relative(root, abs) });
+        }
+    }
+    return out;
+}
+
 export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] {
     const findings: AdrFinding[] = [];
     if (!fs.existsSync(dir)) return findings;
 
+    // Flat records, plus the per-area records under `docs/adrs/<area>/`.
+    //
+    // The per-area half was MISSING and that was this gate's largest hole, found
+    // in completion review: three sibling tools in the same change read both
+    // roots (`adr_cite_check.ADR_DIRS`, `audit_adr_coverage`, `evidence_census`)
+    // and this one read only the flat tree — so the seven per-area records that
+    // had just been given frontmatter were validated by nothing. The consequence
+    // was already in the tree rather than hypothetical:
+    // `docs/adrs/telegraph/0002` carried `review_trigger: unclassified` on a
+    // post-cutoff record, which this file's own rule classifies as an error.
+    //
+    // A gate that does not read a surface cannot be cited as covering it, and
+    // step 1.5's stated rationale — "check_adr_frontmatter needs
+    // machine-readable fields" — was unrealised until this call site changed.
     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
-    ledger?.plan(candidates);
+    // The per-area root is derived from `dir` so the whole check is hermetic.
+    // It used to call `listPerAreaRecords()` with no argument, which always read
+    // the REAL `REPO_ROOT/docs/adrs` — so a call with a temp dir silently mixed
+    // the live corpus into `findings`, into `corpus` (both reciprocal-link
+    // checks) and into the `assertScanned` denominator. That last one is the
+    // damaging half: with the live corpus always contributing, an emptied or
+    // moved `docs/decisions` could never trip `DeadScopeError`, which is the one
+    // thing that assertion exists for. Found in completion review; the `root`
+    // parameter existed and had no caller.
+    const perArea = listPerAreaRecords(path.resolve(dir, '..', '..'));
+    ledger?.plan([...candidates, ...perArea.map((r) => r.rel)]);
 
-    // Collected for the corpus-level reciprocal-amendment check below, which
-    // cannot be decided from one file.
-    const corpus: { rel: string; fm: Record<string, string> }[] = [];
+    // Collected for the two corpus-level reciprocal-link checks below
+    // (amendment, supersession), neither of which can be decided from one file.
+    //
+    // `perArea: true` keeps per-area records out of the number index those
+    // checks build. Without it their `adr: 0001` collapses onto flat ADR-001 —
+    // and, worse, onto EACH OTHER: six of the seven per-area records carry
+    // `adr: 0001`, so a single Map keyed on the number kept exactly one of
+    // seven. Completion review found the flat half with a probe (`supersedes:
+    // ADR-001` blamed `docs/adrs/telegraph/0001` for a missing reciprocal —
+    // the wrong file); the six-way per-area collision is the same defect,
+    // wider, and it turned up only because the fix asked how many records
+    // shared a key. The false-negative direction is the dangerous one: a
+    // per-area record's reciprocal would mask a genuinely broken flat link.
+    // Latent today because nothing cites ADR-001/002, and introduced by folding
+    // per-area records into the shared corpus in this same change.
+    const corpus: { rel: string; fm: Record<string, string>; perArea?: boolean }[] = [];
 
     for (const name of candidates) {
         if (!/^ADR-.*\.md$/.test(name)) {
@@ -364,7 +870,23 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
             ledger?.complete(name);
         }
     }
+    // Per-area records: same per-file checks, same corpus for the reciprocal
+    // link checks. A supersession crosses surfaces (adr-layout § Frontmatter),
+    // so keeping them out of `corpus` would make a cross-surface link look
+    // one-sided.
+    for (const rec of perArea) {
+        const text = fs.readFileSync(rec.abs, 'utf-8');
+        const parsed = parse_frontmatter(text);
+        if (parsed !== null) corpus.push({ rel: rec.rel, fm: parsed, perArea: true });
+        const own = check_one(rec.rel, text);
+        findings.push(...own);
+        const errs = own.filter((f) => f.level === 'error').length;
+        if (errs > 0) ledger?.fail(rec.rel, `${String(errs)} frontmatter error(s)`);
+        else ledger?.complete(rec.rel);
+    }
+
     findings.push(...check_amendment_links(corpus));
+    findings.push(...check_supersession_links(corpus));
     return findings;
 }
 
@@ -390,7 +912,7 @@ function main(argv: string[]): number {
             gate: 'check_adr_frontmatter',
             scanned: total,
             units: 'ADR file(s)',
-            roots: ['docs/decisions'],
+            roots: ['docs/decisions', 'docs/adrs'],
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
@@ -409,13 +931,26 @@ function main(argv: string[]): number {
 
     const errors = findings.filter((f) => f.level === 'error');
     const warns = findings.filter((f) => f.level === 'warn');
+    // The untagged warns are the grandfathering class the summary label names;
+    // there are ~114 of them, so they stay a count and are not printed. The
+    // link classes are few and each needs a decision, so they are printed by
+    // name — folding them into the grandfathered count would both mislabel them
+    // and bury them.
+    const grandfathered = warns.filter((f) => f.kind === undefined);
+    const linkWarns = warns.filter((f) => f.kind === 'supersession_link');
+    const partialWarns = warns.filter((f) => f.kind === 'supersession_qualifier');
 
     process.stdout.write(
         `ADR frontmatter: ${total} ADR(s) · ${errors.length} error(s) · ` +
-            `${warns.length} grandfathered without a revisit condition\n`,
+            `${grandfathered.length} grandfathered without a revisit condition · ` +
+            `${linkWarns.length} one-sided supersession link(s) · ` +
+            `${partialWarns.length} free-text partial supersession(s)\n`,
     );
     ledger.report();
     for (const e of errors) process.stderr.write(`    ❌ ${e.file}: ${e.message}\n`);
+    for (const w of [...linkWarns, ...partialWarns]) {
+        process.stdout.write(`    ⚠️ ${w.file}: ${w.message}\n`);
+    }
 
     if (errors.length > 0) {
         process.stderr.write(

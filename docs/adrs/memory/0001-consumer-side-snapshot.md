@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: memory
+status: superseded
+date: 2026-05-16
+decision: consumer-side-snapshot
+supersedes: —
+superseded_by: ADR-094
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — Consumer-side snapshot of the agent-memory contract
 
 > **Superseded by [ADR-094](../../decisions/ADR-094-agent-memory-layer-removal.md)

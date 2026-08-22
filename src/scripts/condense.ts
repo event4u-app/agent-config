@@ -263,7 +263,8 @@ export {
     type ClaudePathsPlan,
 } from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
-import { isExclusivelyPackageOnly, partitionActive, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
+import { commandsWithheld, isExclusivelyPackageOnly, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
@@ -1781,18 +1782,16 @@ function _nested_command_subpath(source_file: string): string | null {
 /**
  * Project-scope `.claude/commands/<cluster>/<sub>.md` — the colon form.
  *
- * Before this, the package repo's own `.claude/` carried NO commands
- * directory: every command reached Claude Code as a hyphen-named skill
- * wrapper in `.claude/skills/`, while the colon form existed only in the
- * user-global tree written by `install.ts`. Every clustered command was
- * therefore listed TWICE for anyone with a global install
- * (`roadmap-process-full` AND `roadmap:process-full`), costing 4,214 GPT tok
- * of always-loaded catalog for zero added reach — measured 2026-08-02.
+ * Before this, the package repo's own `.claude/` carried NO commands directory:
+ * every command reached Claude Code as a hyphen-named skill wrapper in
+ * `.claude/skills/`, while the colon form existed only in the user-global tree
+ * written by `install.ts`. Every clustered command was therefore listed TWICE
+ * for anyone with a global install (`roadmap-process-full` AND
+ * `roadmap:process-full`), costing 4,214 GPT tok of catalog — measured 2026-08-02.
  *
  * Emitting the nested form here lets `generate_claude_commands` stop wrapping
  * the clustered commands: one listing, same reachability, and reachability no
- * longer depends on a global deploy having run. Claude Code dedupes project
- * and user scope by name, so the two copies of `/cluster:sub` collapse.
+ * longer depends on a global deploy. Dedup AND precedence: `commandsWithheld`.
  *
  * ADR-003 (colon canonical for clusters) and ADR-044 (flat commands stay
  * hyphenated) both hold: flat commands are untouched and keep their wrapper.
@@ -1800,6 +1799,8 @@ function _nested_command_subpath(source_file: string): string | null {
 export function generate_claude_project_commands(
     active_command_slugs: ReadonlySet<string> | null = null,
 ): number {
+    if (commandsWithheld(MODULE_STATE.PROJECT_ROOT)) active_command_slugs = new Set<string>();
+    // Returns before the stale sweep — invariant, see `commandsWithheld`.
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
     }
@@ -1816,8 +1817,7 @@ export function generate_claude_project_commands(
 
     const target_root = _CLAUDE_COMMANDS_DIR();
     const valid = new Set(nested.map(([, sub]) => `${sub}.md`));
-    // Sweep stale links first: a renamed or deleted command must not linger as
-    // a dangling `/cluster:sub`.
+    // Sweep stale links first — a renamed, deleted or WITHHELD command must not linger.
     if (_exists(target_root)) {
         for (const item of _rglobSorted(target_root, '*.md')) {
             const rel = _relativeToPosix(item, target_root);
@@ -1825,6 +1825,7 @@ export function generate_claude_project_commands(
                 fs.unlinkSync(item);
             }
         }
+        pruneEmptyDirs(target_root); // else the gate counts 40 empty cluster dirs as 40 commands
     }
 
     let count = 0;
@@ -2297,7 +2298,7 @@ export function generate_persona_symlinks(): number {
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     void personas;
-    const list = direct;
+    const partition = personaPartition(MODULE_STATE.PROJECT_ROOT, direct);
     const tool_dirs = _filter_tool_dirs(PERSONA_TOOL_DIRS);
     let total = 0;
     for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
@@ -2305,11 +2306,11 @@ export function generate_persona_symlinks(): number {
         _mkdirp(target_dir);
         for (const item of _iterdirSorted(target_dir)) {
             const name = path.basename(item);
-            if (_isSymlink(item) && !list.includes(name) && name !== 'README.md') {
+            if (_isSymlink(item) && !partition.listFor(tool_dir).includes(name) && name !== 'README.md') {
                 fs.unlinkSync(item);
             }
         }
-        for (const persona of list) {
+        for (const persona of partition.listFor(tool_dir)) {
             const link = path.join(target_dir, persona);
             const target = path.join(rel_prefix, persona);
             if (_existsOrSymlink(link)) {
@@ -2319,9 +2320,8 @@ export function generate_persona_symlinks(): number {
             total += 1;
         }
     }
-    info(
-        `  ✅  Created ${total} persona symlinks across ${Object.keys(tool_dirs).length} tool directories (${list.length} personas each)`,
-    );
+    const per_dir = Object.keys(tool_dirs).map((d) => `${d}=${partition.countFor(d)}`);
+    info(`  ✅  Created ${total} persona symlinks — ${per_dir.join(' · ')}${partition.note}`);
     return total;
 }
 

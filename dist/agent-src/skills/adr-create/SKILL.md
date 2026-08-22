@@ -45,6 +45,33 @@ Do NOT use when:
   supersede it instead of duplicating.
 - A skill, rule, or guideline is the better home (use those skills).
 
+## Admission gate — classify before you create
+
+Run this **before** picking a surface or a number. An ADR is warranted only
+when the decision is architecturally significant on at least one axis:
+
+1. **Hard or costly to reverse** — a one-way door: public API shape, DB
+   schema, wire format, published identifier, migration.
+2. **Broadly constraining** — it binds work outside the module that made it.
+3. **Crosses a governed surface** — consumer contract, API, security or
+   privacy floor, package structure.
+
+None of the three holds → it is **not** an ADR. Route it to its real home: a
+decision note in `agents/decisions/`, a config value, a measurement record in
+`docs/CLAIMS.md`, an experiment, or a roadmap item.
+
+Explicitly **not** ADRs: a temporary numeric threshold · a benchmark value ·
+a model mapping · one-off release sequencing · a reversible local
+implementation detail.
+
+**The tree's own reference case.** ADR-002 encodes `25 000 → 26 000` and a
+`4.0k` override ceiling as architecture law (`ADR-002:55`, `:62`), and
+ADR-114 then had to add another override while recording that 7 of 9 kernel
+rules already carry them (`ADR-114:74`). The *principle* — a kernel budget
+exists, is measured, and is capped — is the ADR. The numbers belong in a
+versioned budget contract with a regression gate, so a recalibration stops
+needing an architecture supersession.
+
 ## Goal
 
 - Sequential `ADR-NNN-<slug>.md` numbering with no gaps.
@@ -114,6 +141,11 @@ Use the surface-specific template. All sections are required; "—"
 is acceptable for genuinely empty Alternatives or References blocks
 but never for Status, Context, Decision, or Consequences.
 
+`## Evidence` and `## Assumptions` are required headings too, with one
+carve-out each: `## Evidence` may be empty only when the record grades itself
+`E0` and says so in the section, and `## Assumptions` may be "—" only when
+every load-bearing claim in the rationale carries a basis ref.
+
 **`review_trigger` is required and it names a CONDITION, not a date.** A
 decision is a call made under conditions that held at the time; the trigger
 records which change would make it worth re-deciding. "Review annually" is
@@ -124,10 +156,51 @@ the event: *"when a second consumer reports the same preservation surprise"*,
 below the pre-registered threshold"*. Enforced from 2026-07-25 forward; earlier
 ADRs are grandfathered by date.
 
+**Staged — and `terminal` is not one of the stages.** A new or materially
+amended accepted ADR needs a substantive trigger now. An *existing* accepted
+record may carry `review_trigger: unclassified` while the migration runs, and
+that exception count only ever decreases. `terminal`, `none`, an empty value
+and permanence phrasing ("forever", "never revisit", "settled forever") are
+invalid at **every** stage — `check_adr_frontmatter.ts` rejects them, because
+"no trigger — terminal decision" is permanence with softer wording. `terminal`
+is not a migration state; it is the thing the staging exists to stop becoming
+permanent. Superseded, rejected and deprecated records are historical and need
+no active trigger.
+
 When you later reopen one, say which **premise moved** and what evidences the
 move — not "we were wrong". If the original was right under its own conditions,
 record that too. A premise that turns out false while the decision stays correct
 gets a logged correction block, never a silent edit.
+
+**Three descriptive axes ship on a new record** — `provenance`, `evidence`,
+`authority_basis`. Vocabulary, defaults and the mutation policy are owned by
+[`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md);
+`check_adr_frontmatter.ts` validates the shape. What the author has to get
+right while drafting:
+
+- Every load-bearing factual claim in the rationale either **points at a basis
+  ref** — `file:line`, a URL, a `docs/CLAIMS.md` claim id, a benchmark id — or
+  is **labelled an assumption** under `## Assumptions`. There is no third
+  state, and an unlabelled guess reads as a finding to the next reader.
+- **An empty `## Evidence` section means `E0` by construction, and the record
+  says so.** An honest E0 is publishable, exactly as an honest null is; a
+  confident grade over an empty section is not.
+- `discovery: incomplete` is the honest default on E0 and stays that value
+  until a defined evidence search has run and found nothing. `complete`
+  asserts absence — a claim the author owns.
+- **A grade of E2 or above must name a `basis`.** The validator rejects an
+  E2/E3/E4 with an empty basis list; grade it lower rather than asserting a
+  source you cannot cite.
+- **A council attribution never lifts a grade above E0.** N models agreeing is
+  `provenance: agentic` with `agentic_mode: council` — sources and
+  measurements raise `strength`, consensus does not. A council is deliberately
+  not its own `kind`.
+- A human product decision records `strength: E0` with
+  `authority_basis: owner_intent` and does **not** fake a grade. Its authority
+  comes from owning the purpose.
+- **A grade prices review burden, never authority.** Nothing about writing
+  `E0` makes the record cheaper to overturn *by whom* — see
+  [`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md).
 
 **Flat-surface template** (`docs/decisions/ADR-NNN-<slug>.md`):
 
@@ -145,6 +218,17 @@ phase: <roadmap> · <phase-id>
 review_trigger: <the CONDITION that would reopen this decision>
 protected_dimensions: [...]  # optional — purpose | security_floor | privacy_floor | external_commitment | governance | none
 reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
+
+provenance:
+  kind: human | agentic | mixed | unknown
+  decision_makers: [...]          # who actually selected it
+  human_directed: true | false | unknown
+  agentic_mode: single | council | delegated   # optional, descriptive only
+evidence:
+  strength: E0 | E1 | E2 | E3 | E4
+  discovery: complete | incomplete    # required when strength is E0
+  basis: [...]                        # file:line | URL | CLAIMS id | benchmark id
+authority_basis: evidence | owner_intent      # optional; absent → evidence
 ---
 
 # ADR-NNN — <Decision Title>
@@ -153,24 +237,59 @@ reopen_policy: directional | owner | unclassified   # optional; absent → uncla
 
 **<Proposed | Accepted | …>** · YYYY-MM-DD.
 
-## Context / Decision / Consequences / Alternatives / References
+## Context / Decision / Evidence / Assumptions / Consequences / Alternatives / References
 ```
+
+`## Evidence` carries one line per basis ref backing a load-bearing claim.
+`## Assumptions` carries every load-bearing claim that has no basis ref — that
+is what makes the grade honest rather than decorative.
 
 **Per-area template** (`docs/adrs/<area>/NNNN-<slug>.md`):
 
 ```markdown
+---
+adr: NNNN
+area: <area>
+status: proposed | accepted | superseded | deprecated
+date: YYYY-MM-DD
+decision: <slug>
+supersedes: —
+superseded_by: —
+type: retrospective | prospective
+review_trigger: <the CONDITION that would reopen this decision>
+
+provenance:
+  kind: human | agentic | mixed | unknown
+  decision_makers: [...]
+  human_directed: true | false | unknown
+  agentic_mode: single | council | delegated   # optional, descriptive only
+evidence:
+  strength: E0 | E1 | E2 | E3 | E4
+  discovery: complete | incomplete    # required when strength is E0
+  basis: [...]                        # file:line | URL | CLAIMS id | benchmark id
+authority_basis: evidence | owner_intent      # optional; absent → evidence
+---
+
 # ADR NNNN — <Decision Title>
 
 > Area: `<area>` · Status: accepted · Date: YYYY-MM-DD · Type: retrospective | new
 > Roadmap: `agents/roadmaps/<file>.md` <phase-id>
 > Supersedes: —
 
-## Context / Decision / Considered alternatives / Consequences / References
+## Context / Decision / Evidence / Assumptions / Considered alternatives / Consequences / References
 ```
 
-Per-area ADRs use a quote-style header (no YAML frontmatter) so
-`audit_adr_coverage.ts`'s permissive parser can index them. Cite
-the area's contract from the README in
+The frontmatter block is the same shape as the flat surface — the contract
+says so ([`adr-layout § Frontmatter`](../../../docs/contracts/adr-layout.md):
+"identical across both surfaces"), and `audit_adr_coverage.ts`'s parser reads
+it when present. The quote-style header stays as the human-readable banner,
+and every existing per-area record now carries frontmatter beside it, so their
+generated README tables render real values — see
+[`docs/adrs/telegraph/README.md`](../../../docs/adrs/telegraph/README.md),
+whose rows read `accepted` / `2026-05-16`. A record carrying the banner alone
+is not blank either: `parse_blockquote_meta` reads the
+`> Area: … · Status: … · Date: …` line as a fallback, and only a record with
+neither renders "—". Cite the area's contract from the README in
 [`docs/adrs/<area>/README.md`](../../../docs/adrs/).
 
 ### 5. Regenerate the index

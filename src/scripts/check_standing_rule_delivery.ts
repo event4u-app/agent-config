@@ -326,8 +326,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (pct > 1) {
         process.stderr.write(
             `❌  ${PROG}: ${total} tok of standing rule prose exceeds the ${budget.total_cap_tokens} cap. `
-                + 'If two layers overlap, `agent-config install --layer=<global|project>` suppresses one '
-                + 'without deleting a file; otherwise scope rules with `paths:` or move bodies into the digest.\n',
+                + 'If two layers overlap, that is the ADR-236 partition not yet armed on this '
+                + 'machine: run `agent-config install` so the host layer is fingerprinted in '
+                + 'installed.lock, and the next `task generate-tools` withholds the globally-owned '
+                + 'artefacts instead of writing a second copy. (Superseded advice: this line used to '
+                + 'name `install --layer=<global|project>`, the layer-suppression remedy ADR-226 '
+                + 'declined and ADR-236 replaced — a reader following it could not fix the '
+                + 'condition.) Otherwise the total is body length, not duplication: scope rules with '
+                + '`paths:` or move bodies into the digest.\n',
         );
         return 1;
     }
