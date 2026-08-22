@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
+    "active_roadmaps": 22,
     "later_roadmaps": 59,
-    "open_blockers": 62
+    "open_blockers": 61
   },
   "baseline_history": [
     {
@@ -797,6 +797,13 @@
       "later_roadmaps": 59,
       "open_blockers": 62,
       "why": "WALKED DOWN active 24 -> 23 on the sync with main, not on work this PR did: road-to-evidence-based-adr-governance was archived by #1534 without walking the baseline, so main landed measured 23 against a stored 24 and every branch merging main inherited the red. Recorded here because this is the first change to merge that main state, and the gate's own remediation note says the walk belongs in the change that carries the lower measurement rather than in a follow-up."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 59,
+      "open_blockers": 61,
+      "why": "BOTH counted metrics LOWERED by the drain of road-to-ci-supply-chain-integrity; nothing parked, nothing raised. active_roadmaps 23 -> 22: the roadmap was executed to 17/17 and archived inside this one change. open_blockers 62 -> 61: its blocker workflow-lint-tool-adoption was RESOLVED, not carried. That resolution is the one worth flagging to a later reader - it was taken with NO council seat available (both seats 50/50, 0 of 2 present, $0.00 spent), so it is a single-decider decision on an Owner:user Class-3 blocker, recorded with its degradation at agents/evidence/analysis/workflow-security-net-degraded-decision.md. The conservative half of that decision is deliberate: the council-locked severity model was NOT re-tiered, and the regression net went into the test suite instead, so no locked line moved while nobody was watching. Measured against the floor origin/main stands at while this branch is open."
     }
   ],
   "target": {
