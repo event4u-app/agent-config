@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: docx-authoring
-description: "Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'."
+description: "When generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'."
 status: active
 tier: senior
 domain: process

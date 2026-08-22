@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: perf-feedback-craft
-description: "Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'."
+description: "When shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'."
 status: active
 tier: senior
 domain: process

@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: condense-memory
-description: "Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip."
+description: "When shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip."
 domain: process
 execution:
   type: assisted

@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: module-management
-description: "Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path."
+description: "When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path."
 domain: process
 workspaces:
   - agent-config-maintainer

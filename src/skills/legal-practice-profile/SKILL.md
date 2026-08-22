@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: legal-practice-profile
-description: "Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\"."
+description: "When setting up the legal pack — captures jurisdiction, role, escalation and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\"."
 status: active
 tier: senior
 council_depth: deep

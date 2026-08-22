@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: editorial-calendar
-description: "Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'."
+description: "When shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'."
 status: active
 tier: senior
 domain: product
