@@ -379,6 +379,52 @@ the regression it exists to repair.
       an unstage mechanism — is named here as separate work rather than started.
       No `BREAKING_CHANGES` entry either: nothing consumer-facing changed.
 
+## AC-2 disposition
+
+`count_open` reaches zero with one `[~]`, so Iron Law 3 of
+`roadmap-progress-sync` fires and this section is its record.
+
+**The criterion, verbatim, is AC-2 above.** **The blocker:** for a
+`pull_request` event GitHub builds the required check from the merge ref, so
+until this change is the base there is nothing on `main` to refuse a stale
+fixture PR. The refusal becomes observable at the moment it stops being needed
+here — a deployment dependency, not unfinished work.
+
+**Routed to the council rather than to the owner**, because every preserving
+disposition is council-routable under the preservation test and the owner has
+delegated this run end-to-end. Options put: (a) check it on the strength of the
+local merge-tree evidence — refused, that asserts an unobserved platform
+guarantee; (b) split it into a verified half and an observed half — **rejected
+by both seats**, on the ground that the platform half *is* the criterion;
+(c) leave it open and let `check_estate_count` red the PR — a real cost, and the
+estate gate's other legal response, a `baseline_history` entry, would falsify
+AC-4; (d) ship the minimum atomic enforcement slice now and observe from the new
+base.
+
+**Verdict: (d), 2/2 convergent** (AI council 2026-08-22, 2 seats + blind peer
+review, $0.10). The openai seat added the check that decides whether (d) is even
+available: a guard-only slice would **self-block**, reddening every PR while
+`main` still carries the paths tracked — so the slice has to contain the
+deletion *and* the guard, which is what shipped. Both seats named the same abuse
+the pattern opens, and it is the acceptance test for any future use: a precursor
+is legitimate only when the slice unlocks an otherwise-impossible observation,
+never when it reorders feature work to dodge the ratchet's friction.
+
+**Destination:** `agents/roadmaps/stubs/road-to-generated-artifact-guard-post-merge-proof.md`,
+created in this change. It carries the criterion verbatim, the blocker, the
+five-step closing procedure, and what was verified without it. A stub is the
+ratchet-compliant carrier the preservation test asks for —
+`estate-count-budget.json` states in its own `not_gated` list that a stub is not
+estate — so the criterion survives without buying its survival with the baseline
+raise AC-4 forbids.
+
+**Dissent, recorded:** the openai seat's peer round argued that if the estate
+model cannot represent a deployed-but-awaiting-acceptance change without either
+a sixth active roadmap or a weaker carrier, that is a circular lifecycle
+dependency in the model rather than something a disposition fixes. That is a
+real finding about the estate mechanism, it is not resolved here, and the stub's
+own closing section names the hole it leaves: nothing schedules a stub.
+
 ## Rollback criteria
 
 Both council seats required these, and both required the same bound: a rollback
@@ -419,19 +465,19 @@ trade-off the maintainer already made explicitly for the dashboard.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — None of the three paths is present in `git ls-files` on the branch
+- [x] AC-1 — None of the three paths is present in `git ls-files` on the branch
       this roadmap ships, and each is matched by `git check-ignore`.
-- [ ] AC-2 — A pull request built from a commit that predates this change, which
+- [~] AC-2 — A pull request built from a commit that predates this change, which
       re-adds one of the paths and carries no guard on its own branch, is
-      refused by the required check on `main`.
-- [ ] AC-3 — For every artifact kept, CI asserts all three properties
+      refused by the required check on `main`. **Deferred; the criterion is
+      carried verbatim and not weakened** — see § AC-2 disposition.
+- [x] AC-3 — For every artifact kept, CI asserts all three properties
       separately: absent from the index, buildable from a clean checkout, and
       byte-identical across two independent generations.
-- [ ] AC-4 — `src/config/estate-count-budget.json` and
+- [x] AC-4 — `src/config/estate-count-budget.json` and
       `src/config/gate-violation-baselines.json` are byte-identical to their
       state at the base commit, so ADR-241 is neither bypassed nor reopened.
-- [ ] AC-5 — `task roadmap-progress-check` exits zero on the branch, which it
+- [x] AC-5 — `task roadmap-progress-check` exits zero on the branch, which it
       does not on `main` at the base commit of this work.
-- [ ] AC-6 — `agents/roadmaps/stubs/road-to-dashboard-untrack-cutover.md` no
-      longer exists, and this roadmap names where each of its two open guards
-      was discharged.
+- [x] AC-6 — `road-to-dashboard-untrack-cutover` no longer exists, and this
+      roadmap names where each of its two open guards was discharged.
