@@ -1218,6 +1218,7 @@ const _PROG = 'update_roadmap_progress.py';
 function _usage(): string {
     return (
         `usage: ${_PROG} [-h] [--check] [--tracked-mode | --untracked-mode]\n` +
+        `       [--dashboard-only]\n` +
         `       [--archive | --no-archive] [--repo-root REPO_ROOT]\n`
     );
 }
@@ -1227,12 +1228,29 @@ interface Args {
     mode: DashboardMode;
     archive: boolean;
     repo_root: string;
+    /**
+     * Assert ONLY the dashboard artefact's own state — tracked / absent /
+     * stale — and not the estate-wide conditions `--check` also carries
+     * (completed-but-unarchived, Iron Law 3 deferred items).
+     *
+     * It exists because those are two different obligations with two different
+     * blast radii. The artefact check is about THIS file and belongs in the job
+     * `main protection` requires, so a branch cannot re-add the dashboard the
+     * way one did on 2026-08-21. The estate checks are about roadmaps this
+     * change never touches, and putting them behind a required check turns any
+     * pre-existing estate defect into a merge block on every unrelated PR —
+     * which is exactly what happened the first time this step was wired: a
+     * deferred item in `road-to-per-turn-hook-economy`, already on `main` and
+     * untouched here, blocked this PR. They keep running in `task ci`.
+     */
+    dashboard_only: boolean;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
     let mode: DashboardMode = 'tracked';
     let archive = false;
+    let dashboard_only = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -1250,6 +1268,9 @@ function _parseArgs(argv: readonly string[]): Args {
             i += 1;
         } else if (parseModeToken(tok) !== null) {
             mode = parseModeToken(tok) as DashboardMode;
+            i += 1;
+        } else if (tok === '--dashboard-only') {
+            dashboard_only = true;
             i += 1;
         } else if (tok === '--archive') {
             archive = true;
@@ -1277,7 +1298,10 @@ function _parseArgs(argv: readonly string[]): Args {
         // rather than silently letting one win.
         emitError('argument --archive: not allowed with --check');
     }
-    return { check, mode, archive, repo_root };
+    if (dashboard_only && !check) {
+        emitError('argument --dashboard-only: only meaningful with --check');
+    }
+    return { check, mode, archive, repo_root, dashboard_only };
 }
 
 /**
@@ -1368,7 +1392,7 @@ function main(argv?: readonly string[]): number {
         const verdict = evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel });
         const stale = verdict.stale;
         if (verdict.error !== null) process.stderr.write(verdict.error);
-        if (complete.length) {
+        if (!args.dashboard_only && complete.length) {
             process.stderr.write(
                 '❌  Completed roadmaps are still in `agents/roadmaps/` — ' +
                     'move them to `agents/roadmaps/archive/` (per the ' +
@@ -1378,7 +1402,7 @@ function main(argv?: readonly string[]): number {
                 process.stderr.write(`      - ${r.rel}  (${r.done}/${r.total_active} done)\n`);
             }
         }
-        if (pending.length) {
+        if (!args.dashboard_only && pending.length) {
             process.stderr.write(
                 '❌  Iron Law 3 — roadmaps with unresolved `[~]` deferred ' +
                     'items must NOT auto-archive. Resolve via `roadmap-management § 4b` ' +
@@ -1391,10 +1415,10 @@ function main(argv?: readonly string[]): number {
                 );
             }
         }
-        if (gated.length) {
+        if (!args.dashboard_only && gated.length) {
             _warn_merge_gated();
         }
-        if (stale || complete.length || pending.length) {
+        if (stale || (!args.dashboard_only && (complete.length || pending.length))) {
             return 1;
         }
         process.stdout.write(verdict.ok ?? '');
