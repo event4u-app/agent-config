@@ -129,6 +129,7 @@
  */
 
 import * as fs from 'node:fs';
+import { revokeBillingGrant } from '../_lib/billing_grant.js';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -599,12 +600,13 @@ function writeState(file: string, state: RunState): boolean {
  * stamp with it. Adoption is a fact this read already established; it is passed in
  * rather than re-derived from a condition that cannot express it.
  */
-function clearRunState(
+export function clearRunState(
     workspaceRoot: string,
     runId: string,
     keyedFile: string,
     adoptedLegacy: boolean,
 ): void {
+    revokeBillingGrant(workspaceRoot, runId); // the run IS the grant's TTL
     try {
         fs.rmSync(keyedFile, { force: true });
     } catch {

@@ -117,6 +117,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'council:render', disposition: 'delegate', synopsis: 'Re-render a saved council responses JSON to markdown.' },
     { name: 'council:status', disposition: 'delegate', synopsis: 'Is a council configured, and from which file — zero spend, no inference.' },
     { name: 'council:quota', disposition: 'delegate', synopsis: "Today's per-provider CLI-call usage against the enforced cap — zero spend." },
+    { name: 'council:grant-billing', disposition: 'delegate', synopsis: 'Record the human yes that lets an exhausted plan quota retry on the metered rung, for ONE run.' },
+    { name: 'council:revoke-billing', disposition: 'delegate', synopsis: 'End a run-scoped billing grant. Exit 0 when none exists.' },
     { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
     { name: 'self-repair:status', disposition: 'delegate', synopsis: 'List queued agent-config defect records (read-only).' },
     { name: 'self-repair:release', disposition: 'delegate', synopsis: 'Publish one defect record as a PR, or an issue when a PR is impossible (Hard-Floor gated).' },

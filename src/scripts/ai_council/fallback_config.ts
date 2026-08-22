@@ -10,6 +10,8 @@
  * here; the rest is there rather than duplicated.
  */
 
+import type { ApiOnQuota } from './transport_resolver.js';
+
 /**
  * `fallback.*` — the mid-flight cli→api retry's one configurable knob.
  *
@@ -24,8 +26,13 @@ export interface FallbackConfig {
      * May an exhausted CLI quota retry on the metered api rung? Default
      * `false`. The no-double-charge classes are always eligible and never
      * consult this; `timeout` / 5xx are never eligible under any value.
+     *
+     * Three values, not two. `'ask'` defers the answer out of configuration
+     * time and into the round that would cross the cliff: the seat is PARKED
+     * unless a run-scoped billing grant says a human already agreed for this
+     * run. See `transport_resolver.ts` § `ApiOnQuota` and `_lib/billing_grant`.
      */
-    readonly api_on_quota: boolean;
+    readonly api_on_quota: ApiOnQuota;
 }
 
 /**
@@ -67,12 +74,17 @@ export function buildFallback(raw: unknown, d: FallbackBuilderDeps): FallbackCon
     if (!d.isDict(raw)) return { api_on_quota: false };
     const v = raw['api_on_quota'];
     if (v === undefined) return { api_on_quota: false };
-    if (!d.isBool(v)) {
-        throw d.error(
-            `\`fallback.api_on_quota\`=${d.repr(v)} must be a boolean (got ${d.typeName(v)}).`,
-        );
-    }
-    return { api_on_quota: v };
+    if (d.isBool(v)) return { api_on_quota: v };
+    // `'ask'` is the ONLY string this accepts, and the narrowness is the
+    // point: the paragraph above refuses `"yes"` because an operator writing
+    // it is trying to authorise spend, and widening to "any truthy-looking
+    // string" to let `ask` through would readmit exactly that. A third named
+    // value is not a lenient parse.
+    if (d.isStr(v) && v === 'ask') return { api_on_quota: 'ask' };
+    throw d.error(
+        `\`fallback.api_on_quota\`=${d.repr(v)} must be \`false\`, \`true\` or \`'ask'\` ` +
+            `(got ${d.typeName(v)}).`,
+    );
 }
 
 /**

@@ -106,7 +106,8 @@ import {
     renderPostureLines,
     type FallbackPosture,
 } from './_lib/council_fallback_posture.js';
-import { buildFallbackOptions } from './_lib/council_fallback_wiring.js';
+import { wireCouncilFallback } from './_lib/council_fallback_wiring.js';
+import { BILLING_SUBCOMMANDS, billingArgSpec, handleBillingCommand, printBillingGate } from './_lib/billing_grant_cli.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -880,19 +881,11 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 'prints the resolved path.',
         );
     }
-    if (fallback_out !== null) {
-        // Absent/malformed block means `false`, never a throw. Why quota
-        // fall-through is opt-in: `FallbackPolicy.apiOnQuota`.
-        const fallback_cfg = _isDict(ai['fallback']) ? (ai['fallback'] as Dict) : {};
-        fallback_out.options = buildFallbackOptions({
-            apiOnQuota: _pyBool(fallback_cfg['api_on_quota']),
-            hasApiRung: (p) => _API_PROVIDERS.has(p),
-            memberConfig: (p) => ((members_cfg[p] as Dict) || {}) as Dict,
-            modelOverride: (p) => (overrides[p] as string | undefined) ?? null,
-            constructApi: _construct_api_member,
-            emit: appendEvent,
-        });
-    }
+    wireCouncilFallback(fallback_out, ai, {
+        repoRoot: REPO_ROOT, isDict: _isDict, membersCfg: members_cfg, overrides,
+        hasApiRung: (p) => _API_PROVIDERS.has(p),
+        constructApi: _construct_api_member, emit: appendEvent,
+    });
     return members;
 }
 
@@ -2668,6 +2661,7 @@ function cmd_run(
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
     recordRoundObservations(REPO_ROOT, members, responses, classifyCliFailure);
+    printBillingGate(fallback_out.options?.parked ?? [], { repoRoot: REPO_ROOT, stdout: _stdout, stderr: _stderr });
     // Attendance telemetry for the reading that actually decided the pass.
     // `post_run.absent` is the mid-flight set only; the construction-time
     // skips already went out under `phase: 'pre_run'` from `build_members`,
@@ -3509,7 +3503,7 @@ interface Args {
     json: boolean;
 }
 
-const _SUBCOMMANDS = ['estimate', 'run', 'debate', 'render', 'replay', 'quota', 'shadow-report', 'status'];
+const _SUBCOMMANDS = ['estimate', 'run', 'debate', 'render', 'replay', 'quota', 'shadow-report', 'status', ...BILLING_SUBCOMMANDS];
 
 const _TOP_USAGE =
     `usage: ${_PROG} [-h]\n` +
@@ -3698,7 +3692,7 @@ function _specsFor(cmd: string): { positionals: string[]; opts: OptSpec[]; requi
                 requiredOpts: [],
             };
         default:
-            return { positionals: [], opts: [], requiredOpts: [] };
+            return billingArgSpec(cmd) ?? { positionals: [], opts: [], requiredOpts: [] };
     }
 }
 
@@ -3902,6 +3896,8 @@ function main(argv: string[] | null = null): number {
         if (args.cmd === 'status') {
             return cmd_status(args);
         }
+        const billing = handleBillingCommand(String(args.cmd), _getattr(args, 'run_id', null), { repoRoot: REPO_ROOT, stdout: _stdout, stderr: _stderr });
+        if (billing !== null) return billing;
     } catch (exc) {
         if (exc instanceof CouncilDisabledError) {
             _stderr(`❌  council:${args.cmd}: ${exc.message}\n`);

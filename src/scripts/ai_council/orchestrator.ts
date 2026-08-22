@@ -75,7 +75,7 @@ import {
     emitOutcome,
     escalateUnmetered,
     refuseUnmeteredEscalation,
-    establishTwin,
+    establishTwin, isEstablishedTwin,
     isFailedCliCall,
     runGatedRetry,
     stampFallback,
@@ -764,7 +764,7 @@ function _run_round(
                 fallback,
                 ledger,
             });
-            if (twin !== null) {
+            if (isEstablishedTwin(twin)) {
                 const out = runGatedRetry(response, member, twin, fallback, {
                     gate: (client) =>
                         table === null ||

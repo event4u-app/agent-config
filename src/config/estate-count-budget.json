@@ -17,7 +17,7 @@
   },
   "baseline": {
     "active_roadmaps": 24,
-    "later_roadmaps": 58,
+    "later_roadmaps": 59,
     "open_blockers": 64
   },
   "baseline_history": [
@@ -775,7 +775,14 @@
       "active_roadmaps": 24,
       "later_roadmaps": 58,
       "open_blockers": 64,
-      "why": "WALKED DOWN by one on the archive of road-to-evidence-based-adr-governance, which reached zero open steps and zero deferred items. The other two numbers do not move, and both could be misread as free: its two blockers (owner-autonomy-batch, authority-coupling-decision) were already Status: resolved before this branch, so open_blockers never counted them, and nothing was parked in later/ to buy the number down. The drawdown is real work rather than a reclassification -- four open steps closed (2.4, 3.4, 4.3, 4.4) and nine acceptance criteria discharged, three of the closures resting on a 2/2 convergent council record at agents/evidence/council/adr-blocker-lane-dispositions-2026-08-22.md and one on an external blind adjudication at agents/evidence/analysis/adr-anchor-blind-adjudication-2026-08-22.md that came back BELOW its own pre-registered threshold and is published at that figure. NOTE FOR THE MERGE: a sibling drain branch archives road-to-subagent-lifecycle-integrity and walks this same number 25 -> 24 independently. Both are correct against their own base; the merged tree measures 23, and whichever lands second must re-measure against the merged tree rather than carry 24 forward -- a baseline above the measurement is headroom a later change can spend with nothing objecting."
+      "why": "WALKED DOWN by one on the archive of road-to-evidence-based-adr-governance, which reached zero open steps and zero deferred items. The other two numbers do not move, and both could be misread as free: its two blockers (owner-autonomy-batch, authority-coupling-decision) were already Status: resolved before this branch, so open_blockers never counted them, and nothing was parked in later/ to buy the number down. The drawdown is real work rather than a reclassification -- four open steps closed (2.4, 3.4, 4.3, 4.4) and nine acceptance criteria discharged, three of the closures resting on a 2/2 convergent council record at agents/evidence/council/adr-blocker-lane-dispositions-2026-08-22.md and one on an external blind adjudication at agents/evidence/analysis/adr-anchor-blind-adjudication-2026-08-22.md that came back BELOW its own pre-registered threshold and is published at that figure. NOTE FOR THE MERGE: a sibling drain branch archives road-to-subagent-lifecycle-integrity and walks this same number 25 -> 24 independently. Both are correct against their own base; the merged tree measures 23, and whichever lands second must re-measure against the merged tree rather than carry 24 forward -- a baseline above the measurement is headroom a later change can spend with nothing objecting. RESOLVED AT THE MERGE, and the prediction in the sentence above was half right. origin/main did not archive anything -- it PARKED one roadmap, so its own walk moved later_roadmaps 58 -> 59 and left active at 25. The merged tree therefore measures active 24 (main's 25 minus this archive) and later 59 (main's park), which is neither side's row and is why the conflict was resolved by re-measuring rather than by choosing a side. The sibling branch that also walks active 25 -> 24 is PR #1532, still open at this merge; whichever of the two lands second meets the same conflict and must re-measure the same way."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 25,
+      "later_roadmaps": 59,
+      "open_blockers": 64,
+      "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
     }
   ],
   "target": {

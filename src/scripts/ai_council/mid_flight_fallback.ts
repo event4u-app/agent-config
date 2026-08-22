@@ -19,19 +19,28 @@
 import type { ExternalAIClient, CouncilResponse } from './clients.js';
 import {
     classifyCliFailure,
+    effectiveApiOnQuota,
     isFallbackEligibleUnder,
+    type ApiOnQuota,
     type FallbackPolicy,
     type MidFlightFallback,
 } from './transport_resolver.js';
 
-/** One escalation's outcome, for the event sink. */
-export type FallbackOutcome = 'retried' | 'no_twin' | 'cost_budget';
+/**
+ * One escalation's outcome, for the event sink.
+ *
+ * `awaiting_grant` is the posture `'ask'` adds and it is neither of the two
+ * that existed: the seat was NOT switched to metered billing and it was NOT
+ * lost. It is held, and the round closes with a question instead of a silent
+ * charge or a silent absence.
+ */
+export type FallbackOutcome = 'retried' | 'no_twin' | 'cost_budget' | 'awaiting_grant';
 
 export interface FallbackEvent {
     readonly provider: string;
     readonly failure: string;
     readonly outcome: FallbackOutcome;
-    readonly api_on_quota: boolean;
+    readonly api_on_quota: ApiOnQuota;
 }
 
 export interface CliFallbackOptions {
@@ -42,7 +51,21 @@ export interface CliFallbackOptions {
      */
     readonly construct: (provider: string) => ExternalAIClient | null;
     /** `ai_council.fallback.api_on_quota` — see `FallbackPolicy.apiOnQuota`. */
-    readonly api_on_quota: boolean;
+    readonly api_on_quota: ApiOnQuota;
+    /**
+     * True when a run-scoped billing grant is in force for THIS run. Read only
+     * under `api_on_quota: 'ask'`; absence means park, never proceed.
+     */
+    readonly billing_grant?: boolean;
+    /**
+     * Providers parked under `'ask'`, appended during the round.
+     *
+     * It lives on the options object rather than in the CLI because the CLI
+     * has nothing to do with it: the factory that decides a seat is parked is
+     * the only thing that can populate it, and a caller threading an array
+     * down to that factory and back is plumbing with no reader in between.
+     */
+    readonly parked?: string[];
     /**
      * Called once per ESTABLISHING escalation, never per substituted call.
      *
@@ -58,6 +81,42 @@ export interface EstablishedTwin {
     readonly client: ExternalAIClient;
     readonly reason: string;
     readonly original_error: string;
+}
+
+/**
+ * A seat held back because the policy is `'ask'` and no grant is in force.
+ *
+ * The third state the boolean could not express. Before `'ask'` existed a
+ * quota-hit seat had exactly two futures — a twin (metered, silent) or `null`
+ * (lost for the round). Neither is answerable afterwards: by the time a human
+ * reads the output, the spend has happened or the seat is gone. A parked seat
+ * is still in the round's seat map, so the question the round closes with is
+ * about work that can still be done.
+ */
+export interface ParkedSeat {
+    readonly parked: true;
+    readonly provider: string;
+    readonly reason: string;
+    readonly original_error: string;
+}
+
+/** `establishTwin`'s three outcomes: a twin, a parked seat, or nothing. */
+export type EstablishOutcome = EstablishedTwin | ParkedSeat | null;
+
+/**
+ * Narrow an `EstablishOutcome` to the twin branch.
+ *
+ * Every caller must use this rather than a truthiness test: a `ParkedSeat` is
+ * an object, so `if (twin)` retries the parked marker as though it were a
+ * client — the one bug the park branch exists to make impossible.
+ */
+export function isEstablishedTwin(o: EstablishOutcome): o is EstablishedTwin {
+    return o !== null && !('parked' in o);
+}
+
+/** Narrow an `EstablishOutcome` to the parked branch. */
+export function isParkedSeat(o: EstablishOutcome): o is ParkedSeat {
+    return o !== null && 'parked' in o;
 }
 
 /**
@@ -99,10 +158,32 @@ export interface EstablishInput {
  * budget then refused. An ineligible class emits nothing at all: there was no
  * escalation to report.
  */
-export function establishTwin(input: EstablishInput): EstablishedTwin | null {
+export function establishTwin(input: EstablishInput): EstablishOutcome {
     const { member, error, fallback, ledger } = input;
     const failure = classifyCliFailure(error);
-    const policy: FallbackPolicy = { apiOnQuota: fallback.api_on_quota };
+    const policy: FallbackPolicy = {
+        apiOnQuota: fallback.api_on_quota,
+        billingGrant: fallback.billing_grant === true,
+    };
+    // The park branch runs BEFORE the eligibility test, and the order is the
+    // whole mechanism. `effectiveApiOnQuota` collapses an ungranted `'ask'`
+    // to `false`, so an eligibility-first reading would return `null` here —
+    // the seat lost, exactly as under `api_on_quota: false`, and the operator
+    // never asked. The ledger is deliberately NOT consulted: parking spends no
+    // fallback attempt, so the seat is still escalatable on the grant.
+    if (
+        fallback.api_on_quota === 'ask' &&
+        failure === 'quota_exhausted' &&
+        !effectiveApiOnQuota(policy)
+    ) {
+        fallback.on_event?.({
+            provider: member.name,
+            failure,
+            outcome: 'awaiting_grant',
+            api_on_quota: fallback.api_on_quota,
+        });
+        return { parked: true, provider: member.name, reason: failure, original_error: error };
+    }
     if (!isFallbackEligibleUnder(failure, policy)) return null;
     if (ledger.attempt(member.name, failure, policy) !== 'api') return null;
 
@@ -241,7 +322,7 @@ export function escalateUnmetered(
         fallback,
         ledger,
     });
-    if (twin === null) return null;
+    if (!isEstablishedTwin(twin)) return null;
     // NOTHING is emitted here, and the previous comment justifying an emit at
     // establishment is deleted rather than reworded because it stopped being
     // true. It read: "on this path the twin goes through the round's ORDINARY
