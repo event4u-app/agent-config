@@ -58,7 +58,9 @@ jobs:
     # without deleting the workflow (auditable in repo settings history).
     if: ${{ vars.SMOKE_TEST_ENABLED != 'false' && github.repository == 'event4u-app/agent-config' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-task
 

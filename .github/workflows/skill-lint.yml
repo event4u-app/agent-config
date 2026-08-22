@@ -43,6 +43,10 @@ concurrency:
   cancel-in-progress: true
 
 
+# Write scope justified (road-to-ci-supply-chain-integrity 1.3, 2026-08-22):
+#   pull-requests: write — the sticky skill-lint report is posted onto the
+#   PR. contents stays read. No pull_request_target in this tree, so a fork
+#   PR is capped read-only.
 permissions:
   contents: read
   pull-requests: write
@@ -53,8 +57,9 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
           # Tag span resolution (release PRs) needs the tags, not just the
           # commits — without this the widened scope resolves to nothing and
@@ -62,7 +67,7 @@ jobs:
           fetch-tags: true
 
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -117,7 +122,7 @@ jobs:
 
       - name: Upload lint reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: skill-lint-reports
           path: |
@@ -202,7 +207,7 @@ jobs:
 
       - name: Post PR comment
         if: github.event_name == 'pull_request' && always()
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88  # v3.0.5
         with:
           header: skill-lint-report
           path: /tmp/pr-comment.md
@@ -224,8 +229,9 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
           # Tag span resolution (release PRs) needs the tags, not just the
           # commits — without this the widened scope resolves to nothing and
@@ -233,7 +239,7 @@ jobs:
           fetch-tags: true
 
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -315,10 +321,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: '20'
           cache: 'npm'
