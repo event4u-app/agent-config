@@ -50,8 +50,14 @@ vocabularies in the suite map onto one ordered severity axis:
 | code judges (`judge-bug-hunter`, `-code-quality`, `-security-auditor`, `-test-coverage`, `architecture-review-lens`) | `apply` / `revise` / `reject` |
 | `judge-artifact-completeness` | `complete` / `partial` / `incomplete` |
 | `judge-injection-defense` | `defended` / `partial` / `breached` |
+| `judge-spec-compliance` | per criterion: `SATISFIED` / `PARTIAL` / `MISSING` — plus a `criteria_source` state that is not a verdict |
 
 Ordered worst→best: **`reject`/`incomplete`/`breached` > `revise`/`partial` > `apply`/`complete`/`defended`**.
+
+`judge-spec-compliance` is deliberately absent from that axis. Its verdicts
+answer a different question — *did the change do what was asked* — and mapping
+`MISSING` onto `reject` would let a craft-clean diff average it away, which is
+the miss this judge was added to catch. It gets its own dimension in § 4c.
 
 ## Procedure
 
@@ -133,11 +139,50 @@ the reviewed change, and it is not the `code-provenance` knowledge-layer
 obligation, which governs what a durable artefact asserts rather than what a
 transient review does.
 
+### 4c. Spec compliance is its own dimension — never folded into the tiers
+
+```
+A SPEC FINDING NEVER BECOMES A CRAFT FINDING.
+REPORT THE SPEC DIMENSION SEPARATELY, WITH ITS `criteria_source` STATE.
+A CRAFT-CLEAN DIFF THAT MISSES ITS CRITERION IS NOT A CLEAN REVIEW.
+NO CRITERIA SUPPLIED IS AN UNVERIFIED DIMENSION, NEVER A PASS.
+```
+
+`judge-spec-compliance` findings do **not** enter must-fix / should-fix /
+advisory. They form a separate block carrying, in this order: the
+`criteria_source` state, the per-criterion table, and the count of `MISSING`
+plus `PARTIAL`.
+
+The separation is the whole point. Folded into the craft tiers a `MISSING`
+criterion competes with five other judges' findings and can be outvoted by
+their silence; kept apart it cannot be, because there is nothing to average it
+against. Consensus (§ 2) and conflict (§ 3) do not apply either: no other judge
+reads the criteria, so a spec finding has no possible second voter and its
+absence of corroboration says nothing about it.
+
+Three `criteria_source` states, and each says something different about what
+this review established:
+
+| State | What the synthesis reports |
+|---|---|
+| `supplied` | the dimension was verified; report the per-criterion verdicts |
+| `not_provided` | the dimension was **not verified** — say so, never report it as clean |
+| `supplied_unparseable` | an **error**, not a no-criteria run: criteria were handed over and could not be read, so the reader must know their review silently skipped a dimension it was asked to check |
+
 ### 5. Overall recommendation
 
 One sentence, not a number: `block` (any worst-tier verdict), `revise` (any
 mid-tier, no worst-tier), or `proceed` (all clean). This is a recommendation the
 human acts on — it does not gate anything.
+
+**The sentence names the spec dimension explicitly, in every case.** A `MISSING`
+criterion is a `block` and a `PARTIAL` one is at least a `revise`, whatever the
+craft judges said. Where no criteria were supplied, the sentence says what was
+and was not established — *"craft quality verified; requirement compliance NOT
+verified (no criteria supplied)"* — because a bare `proceed` over an unverified
+dimension reads as a full pass, and that reading is the defect: a reviewer
+cannot tell "we checked and it complies" from "nobody checked" unless the
+sentence distinguishes them.
 
 ## Validation
 
