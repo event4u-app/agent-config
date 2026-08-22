@@ -79,7 +79,35 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
 
 ## Phase 0 — Three optional fields and one annotation convention
 
-- [ ] **Step 0.1:** add `requirement_id`, `acceptance_id` and `evidence_refs`
+> **Dogfooded here first, per step 0.3.** A convention its own author did not use
+> is a convention nobody will. The rows below are this roadmap's own declaration,
+> in the § 2c repeated-row form:
+>
+> ```yaml
+> traceability:
+>   - requirement_id: optional-fields-reuse-existing-grammars
+>     acceptance_id: contract-names-both-source-grammars
+>     evidence_refs:
+>       - src/agent-src/contexts/execution/roadmap-execution-contract.md
+>       - docs/CLAIMS.md
+>       - src/scripts/_lib/subagent_response.ts
+>   - requirement_id: listing-gate-cannot-fail-on-day-one
+>     acceptance_id: exits-zero-on-a-dangling-ref
+>     evidence_refs:
+>       - src/scripts/check_requirements_trace.ts
+>       - tests/scripts/check_requirements_trace.test.ts
+>   - requirement_id: unresolved-count-is-a-number-not-a-verdict
+>     acceptance_id: output-carries-integer-and-corpus-size
+>     evidence_refs:
+>       - src/scripts/check_requirements_trace.ts
+>       - src/config/requirements-trace-budget.json
+> ```
+>
+> Three rows and not three flat fields, because that is the shape § 2c settles:
+> a flat collection is countable and not traceable.
+
+
+- [x] **Step 0.1:** add `requirement_id`, `acceptance_id` and `evidence_refs`
       to the execution contract's § 2 as OPTIONAL fields, reusing the
       claim-slug kebab form for the two ids and the envelope's ref-token rule
       for `evidence_refs`. Absent means not declared, which is not the same
@@ -88,22 +116,46 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
       verify: `grep -c requirement_id src/agent-src/contexts/execution/roadmap-execution-contract.md`
       returns 1 or more, where the same grep against the `git show HEAD:` copy
       of that path returns 0.
-- [ ] **Step 0.2:** state the `[AC:<id>]` prefix convention for `verify:`
+- [x] **Step 0.2:** state the `[AC:<id>]` prefix convention for `verify:`
       lines, together with the verified fact that no gate parses those lines
       today — so a reader knows the convention is a new surface rather than an
       extension of an existing one.
       verify: the contract section names both the prefix form and the
       no-existing-parser fact; `./scripts-run src/scripts/lint_plan_risk_register`
       exits 0 afterwards.
-- [ ] **Step 0.3:** dogfood the three fields on this roadmap itself before
+- [x] **Step 0.3:** dogfood the three fields on this roadmap itself before
       asking any other roadmap to carry them. A convention its own author did
       not use is a convention nobody will.
       verify: this file's own § Phase 0 declares at least one
       `requirement_id`, and the value matches the claim-slug kebab pattern.
 
+> **PHASE 0 LANDED 2026-08-22, and the SHAPE changed.** § 2c of the execution
+> contract ships a **repeated trace row**, not the three flat fields step 0.1
+> named:
+> `traceability: [{requirement_id, acceptance_id, evidence_refs}]`.
+> Both council seats made the same correction and it is the substantive one:
+> with more than one requirement, more than one criterion and a shared pool of
+> refs, three flat top-level fields are an ambiguous many-to-many — **countable
+> but not traceable**. A gate over them reports a populated count while providing
+> no dependable trace.
+> Both grammars are reused as specified (claim-ledger kebab slug, envelope
+> ref-token rule), and three things the step did not state are now stated because
+> a slug grammar does not imply them: **namespace** (the roadmap file; two
+> roadmaps may share an id for the same external requirement), **cardinality**
+> (one row per requirement/acceptance pair), and **revision semantics** (refs are
+> evaluated at the CURRENT head — so a completed roadmap can move from resolved
+> to unresolved with no roadmap edit, which is the intended reading and is
+> written down rather than discovered).
+> `evidence_refs` are **syntactically safe tokens, not verified evidence** — the
+> newline rule rejects bodies and says nothing about existence, scope or
+> relevance.
+> The `[AC:<id>]` convention and the no-parser fact are both recorded, and
+> "gate" is disambiguated into its three senses with exactly listing and
+> resolving shipping.
+
 ## Phase 1 — A listing gate and a growth-only ratchet
 
-- [ ] **Step 1.1:** ship `check_requirements_trace` as a **listing** gate:
+- [x] **Step 1.1:** ship `check_requirements_trace` as a **listing** gate:
       print a REQ-to-AC-to-EVIDENCE table over the active roadmap corpus with
       `unlinked` and `unresolved` columns, and exit **0 always**. A gate that
       can fail on day one reds the whole backlog, which is the failure this
@@ -111,22 +163,71 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
       verify: the script exits 0 on the current corpus AND on a fixture
       containing a deliberately dangling `[AC:…]` ref, and prints a non-empty
       table in both cases.
-- [ ] **Step 1.2:** register a growth-only ratchet modelled on
+
+      **LANDED 2026-08-22.** `src/scripts/check_requirements_trace.ts`, exit 0
+      always — including on a dangling `[AC:]` ref and on an empty corpus, both
+      pinned by fixtures. **It exits 0 even on a DEAD SCAN SCOPE**, reporting the
+      condition to stderr: turning that into a non-zero exit would make the
+      listing a gate, which is the one thing it must not become.
+      **Three populations, never summed** — `fixture` (synthetic, tests the
+      reader, never counts toward adoption), `cohort` (frozen manifest, may
+      include archived members, experimental history), `live` (active corpus,
+      the compliance number and the only one a ratchet may read). The header says
+      why: collapsing them is how a zero from non-adoption becomes
+      indistinguishable from a zero from non-compliance.
+      **A deliberately small reader, not a YAML parser.** The block may sit
+      inside a blockquote — this roadmap dogfoods it that way — and a real parser
+      would require the whole document to be YAML, which a roadmap is not.
+      Registered in `gate-coverage.yml` (floor 15 against 25, because the estate
+      is being drained deliberately and a tight floor would red on the drain
+      working) and `taskfiles/ci-fast.yml`, with a `--self-test` so the
+      non-adopter ratchet stays at its baseline of 24.
+      **The self-test needed an argument, and it is recorded at the code:** a
+      harness whose premise is "prove you can go red" meets a gate that cannot,
+      so the one reject case is the harness's own truncation floor and the accept
+      cases assert the reader DISCRIMINATES on its output instead. 10 unit tests
+      besides.
+- [x] **Step 1.2:** register a growth-only ratchet modelled on
       `src/config/estate-count-budget.json` — baseline is the MEASURED count at
       registration, never a target, with `owner` and `review_by` set, so the
       number can only walk down.
       verify: the new budget file carries `owner`, `review_by`, a `baseline`
       block and a `_comment` naming what the metric counts; and the recorded
       baseline equals what step 1.1's gate printed on the same commit.
-- [ ] **Step 1.3:** record the unresolved count as a number, not as a verdict.
+
+      **LANDED** as `src/config/requirements-trace-budget.json` — `owner`,
+      `review_by: 2027-08-22`, a four-key `baseline` (all **0**) and a `_comment`
+      defining each key. Population is `live` only, and the file says why the
+      other two are out of scope: a fixture is evidence about the reader, and a
+      count over archived roadmaps cannot fall, which would make the ratchet
+      meaningless.
+      **The baseline's honest limit is recorded in the file itself:** four zeros
+      over a corpus with **one** declarer cannot distinguish compliance from
+      non-adoption — which is exactly the distinction Decision 2's separated
+      falsifiers exist to keep apart.
+- [x] **Step 1.3:** record the unresolved count as a number, not as a verdict.
       The point of the listing phase is the distribution, and a table summarised
       as "traceability is patchy" cannot be compared to the next reading.
       verify: the gate's output line carries an integer `unresolved` count and
       the corpus size it was computed over.
 
+      **LANDED.** The line, verbatim from the run on this commit:
+      `live: rows 3 · linked 3 · unlinked 0 · refs 7 · unresolved 0 ·
+      ac_annotations 0 · dangling_ac 0 · malformed 0 · over 25 active roadmap(s),
+      1 declaring`.
+      Integers with the corpus they were computed over, and `1 declaring` beside
+      `25` on purpose — a summary reading "traceability is patchy" cannot be
+      compared to the next reading, and a rate without its denominator hides
+      that adoption is one file.
+      **`unresolved` moved during this change, which is the counter working.**
+      It read **2** when the rows were first declared, because two of the seven
+      refs pointed at the test file and the budget file before either existed;
+      creating them took it to 0. Recorded because it is the only live
+      demonstration in this roadmap that the number responds to the tree.
+
 ## Phase 2 — Dogfood on three real roadmaps, then decide
 
-- [ ] **Step 2.1:** carry the three fields on the two other roadmaps authored
+- [-] **Step 2.1:** carry the three fields on the two other roadmaps authored
       in this drain run — `road-to-subagent-envelope-adoption.md` and
       `road-to-code-graph-extractor-defect.md` — and on the active
       `road-to-subagent-lifecycle-integrity.md` Phase 2. Three real roadmaps,
@@ -134,7 +235,7 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
       were dropped in this run and do not exist.
       verify: the gate's table lists all three files with a non-empty
       `requirement_id` column, and `unlinked` for those three rows is 0.
-- [ ] **Step 2.2:** read the `unresolved` count against the falsifier before
+- [x] **Step 2.2:** read the `unresolved` count against the falsifier before
       proposing any enforcement. If the count over the dogfooded set is 0 and
       the count over the rest of the corpus is 0 because nothing declared the
       fields at all, that is the parked-precedent outcome and the honest move is
@@ -143,12 +244,62 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
       verify: the recorded reading names both counts separately — dogfooded set
       and remainder — so a zero from adoption cannot be read as a zero from
       compliance.
-- [ ] **Step 2.3:** write the disposition down either way. A decision to park
+- [x] **Step 2.3:** write the disposition down either way. A decision to park
       carries the measured counts and the condition that would reopen it; a
       decision to continue carries the count that justified it.
       verify: the disposition paragraph exists in this file and names an
       integer count; `./scripts-run src/scripts/lint_roadmap_blockers`
       exits 0.
+
+## Phase 2 disposition — written down, per step 2.3
+
+**The measurement was taken. Enforcement and the adoption conclusion are parked,
+under separate named falsifiers, and the schema ships.**
+
+Live reading on this commit: **rows 3 · linked 3 · unlinked 0 · refs 7 ·
+unresolved 0 · dangling_ac 0 · malformed 0, over 25 active roadmaps, 1
+declaring.**
+
+**The two counts step 2.2 requires, reported separately** so a zero from
+adoption cannot be read as a zero from compliance:
+
+| Population | Declaring | unlinked | unresolved |
+|---|---|---|---|
+| Dogfooded set | **1** (this roadmap) | 0 | 0 |
+| Remainder of the active corpus | **0** of 24 | 0 | 0 |
+
+The remainder's zeros are **non-adoption**, not compliance. Nothing else declares
+the fields, so there is nothing there to be compliant with.
+
+**Judged against the four falsifiers, not against the one the roadmap proposed.**
+Both council seats rejected reusing `road-to-plan-gates-measurement`'s
+zero-adoption falsifier, and the reason is structural rather than a preference:
+keeping the fields optional makes a zero-adoption falsifier **certain** to fire,
+so that design creates the falsifier it exists to avoid.
+
+- **No opportunity — FIRED.** Fewer than three eligible roadmaps entered the
+  window. All three that step 2.1 named were archived by sibling PRs (#1542,
+  #1538, #1532) in this same drain run, before any window opened. This parks the
+  *adoption measurement*.
+- **No adoption — FIRED.** Zero non-maintainer-prompted roadmaps adopted the
+  fields; the single declarer is this mechanism's own roadmap. This parks
+  *enforcement*, and explicitly **not** the schema.
+- **Poor resolution — did NOT fire.** Resolution is deterministic, 10 unit tests
+  and 5 self-test cases pass, and the counter was observed moving 2 → 0 on a real
+  change.
+- **No demonstrated value — NOT EVALUABLE.** No documented sample exists yet.
+  Recorded as not-evaluable rather than as a pass or a failure.
+
+**So: the schema and the inventory stay; the enforcing arm is not built and is
+not scheduled.** That is not the parked-precedent outcome the roadmap braced
+for — that precedent parked a *counter that measured nothing*, and this counter
+measures three rows and responds to the tree. What is parked is the conclusion,
+which is the honest scope of a corpus of one declarer.
+
+**Reopening conditions, one per parked thing rather than one for all:** the
+adoption measurement reopens when three or more eligible roadmaps are expected to
+remain active across a window; enforcement reopens when at least one
+non-maintainer-prompted roadmap adopts the fields. Neither reopens on a calendar.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -162,20 +313,33 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The execution contract carries `requirement_id`, `acceptance_id`
+- [x] AC-1 — The execution contract carries `requirement_id`, `acceptance_id`
       and `evidence_refs` as optional § 2 fields, each pointing at the shipping
       grammar it reuses; and the contract states that no gate parses `verify:`
       lines today.
-- [ ] AC-2 — `check_requirements_trace` prints a REQ-to-AC-to-EVIDENCE table
+- [x] AC-2 — `check_requirements_trace` prints a REQ-to-AC-to-EVIDENCE table
       with integer `unlinked` and `unresolved` counts and the corpus size, and
       exits 0 on both the real corpus and a dangling-ref fixture. <!-- ref-ignore -->
-- [ ] AC-3 — A growth-only budget file exists with `owner`, `review_by` and a
+- [x] AC-3 — A growth-only budget file exists with `owner`, `review_by` and a
       baseline equal to the gate's printed count on the registering commit.
-- [ ] AC-4 — Three real roadmaps carry the fields, and the recorded reading
+- [-] AC-4 — Three real roadmaps carry the fields, and the recorded reading
       states the `unresolved` count for the dogfooded set and for the remainder
       separately — so an empty table from non-adoption is distinguishable from
       an empty table from compliance.
-- [ ] AC-5 — A disposition is written down naming an integer count: either
+
+      **HALF MET, and the unmet half is not achievable in this run.** The
+      separate-counts clause IS met — dogfooded set 1 declaring / 0 unlinked / 0
+      unresolved, remainder 0 of 24 declaring — and the disposition says
+      explicitly that the remainder's zeros are non-adoption rather than
+      compliance, which is the distinction this criterion exists to force.
+      **"Three real roadmaps" is not met: one does.** All three that step 2.1
+      named were archived by sibling pull requests in this same drain run before
+      any window opened. Marked `[-]` rather than `[x]`: reading "1 of 25
+      declaring" as three real roadmaps would be the silent-green this roadmap's
+      own falsifier discussion is written against. The council explicitly refused
+      the alternative of *creating* roadmaps to satisfy it — a maintainer-authored
+      fixture is evidence about the reader, not about uptake.
+- [x] AC-5 — A disposition is written down naming an integer count: either
       continue, with the count that justified it, or park with the count and the
       reopening condition, following the parked precedent rather than quietly
       keeping an empty gate.
@@ -184,7 +348,7 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
 
 ### blocker: b-traceability-value-unmeasured
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.2
 - **Class:** 3
@@ -205,10 +369,30 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
   acquires a second counter that measures 0 next to the first.
 - **Resolved when:** the falsifier is named at this blocker with its threshold,
   and step 2.2's reading is judged against it rather than against a narrative.
+- **Resolution (2026-08-22) — (b), AGAINST this blocker's own recommendation, 2/2
+  council** ([`traceability-blockers-2026-08-22.md`](../evidence/council/traceability-blockers-2026-08-22.md)).
+  Both seats rejected reusing the parked precedent's zero-adoption falsifier, and
+  the argument is structural rather than a preference: *"zero adoption does not
+  falsify traceability value — it may indicate no opportunity, no incentive, poor
+  documentation, or a measurement system that never operated."* One seat named
+  the destructive loop plainly: keeping the fields optional makes a
+  zero-adoption falsifier **certain** to fire, so the design creates the
+  falsifier it exists to avoid.
+  **Four falsifiers replace the one, and they park different things:** *no
+  opportunity* (fewer than three eligible roadmaps enter the window) parks the
+  adoption MEASUREMENT; *no adoption* (zero non-maintainer-prompted roadmaps)
+  parks ENFORCEMENT and never the schema; *poor resolution* (non-deterministic,
+  or over 20 in 100 manually-checked classifications false) parks the RESOLVER;
+  *no demonstrated value* (a documented sample shows no concrete reviewer use)
+  triggers removal or redesign.
+  **Read on this commit:** the first two FIRED, the third did not, the fourth is
+  not evaluable. So enforcement is unbuilt and unscheduled, the adoption
+  conclusion is parked, and the schema plus the inventory ship. Each parked thing
+  carries its own reopening condition, and none reopens on a calendar.
 
 ### blocker: b-required-for-structural
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 0.1
 - **Class:** 3
@@ -226,3 +410,16 @@ nothing is not a neutral outcome; it is that roadmap's outcome, arriving again.
   structural roadmap omitting them is non-conforming.
 - **Resolved when:** this blocker records (a) or (b), and if (b), names the
   phase and the enforcing gate.
+- **Resolution (2026-08-22) — (a), 2/2 council.** All three fields stay optional
+  for every complexity including `structural`; § 2c says so, and says that any
+  later transition to required needs its own record and must not make existing
+  roadmaps retroactively fail.
+  **Both seats added that (a) alone is an incomplete decision**, and the addition
+  is carried rather than noted: a slug grammar does not imply identity semantics,
+  so § 2c now states the namespace (the roadmap file), the cardinality (one row
+  per requirement/acceptance pair) and the rename policy (ids are
+  content-addressed). Without those a second author cannot tell whether two
+  roadmaps may share an id.
+  **No enforcing gate is named because none ships.** The listing gate exits 0
+  always, by design and by fixture — so requiredness has no mechanism behind it
+  today, which is the state (a) describes rather than a gap in it.
