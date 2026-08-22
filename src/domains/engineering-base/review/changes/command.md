@@ -9,7 +9,7 @@ visibility: internal
 sub: changes
 cluster: review
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-synthesis, git-workflow]
-description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
+description: Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -24,7 +24,7 @@ packs:
 ## Instructions
 
 Review all uncommitted and committed-but-not-pushed changes against
-the default branch (`main`) by dispatching to four specialized judge
+the default branch (`main`) by dispatching to six specialized judge
 sub-skills and consolidating their verdicts.
 
 ### 1. Update the current branch
@@ -51,6 +51,18 @@ to make sure the current branch is up to date with its base chain:
 
 ### 2. Gather the diff
 
+**Verify the base ref before diffing against it.** The commands below assume
+`origin/main` exists and is the right base, and nothing checked. This step
+already knows how to ask git a question — `git rev-parse --abbrev-ref HEAD`
+above — so the shape was present and simply not applied to the base:
+
+- `git rev-parse --verify origin/main` — the base ref resolves.
+  - **Does not resolve → stop here and say so.** Do not fall back to a
+    different base, and do not diff against `HEAD` alone. A review whose scope
+    silently became "the whole branch" or "the last commit" reports findings
+    against a diff nobody asked about, and the reader has no way to see that the
+    scope moved. Name the ref that failed.
+
 - `git diff origin/main..HEAD --stat` — overview of changed files
 - `git diff origin/main..HEAD` — full committed-but-not-pushed diff
 - `git diff --stat` + `git diff` — unstaged changes on top
@@ -65,7 +77,39 @@ Read `.agent-settings.yml`:
 
 Unknown alias → stop. Never silently fall back.
 
-### 4. Dispatch to the five judges
+### 3b. Bind the criteria source before dispatching
+
+The spec judge below is only as good as the criteria it reads, so where they
+came from is recorded **before** the dispatch, not reconstructed after it.
+Exactly one of three states, and the state is written into the review report:
+
+| `criteria_source` | When | What the report says |
+|---|---|---|
+| `supplied` | a roadmap, ticket, issue or AC block was explicitly handed in — name it by path or id | the criteria, verbatim, and where they came from |
+| `not_provided` | an ad-hoc branch review with no criteria anywhere | "no acceptance criteria supplied — requirement compliance NOT verified" |
+| `supplied_unparseable` | criteria were handed over and could not be read in a recognised shape | an **error**: the review skipped a dimension it was asked to check |
+
+```
+CRITERIA ARE READ ONLY WHEN SUPPLIED. NEVER DERIVED FROM THE BRANCH,
+THE COMMIT MESSAGES, OR THE PR BODY — AND NEVER FROM THE DIFF.
+A JUDGE THAT INFERS THE REQUIREMENT FROM THE CHANGE IT IS JUDGING
+ALWAYS FINDS THE CHANGE COMPLIANT. SILENCE IS `not_provided`, NEVER A PASS.
+```
+
+There is deliberately **no `derived` state**. Deriving criteria from the branch
+was the alternative considered and rejected: the `derived` label would have to
+be honoured by every consumer of the report to be worth anything, and a label
+that is requested rather than enforced degrades to silence exactly when it
+matters. Decided by AI council on 2026-08-22 (degraded, 1 of 2 seats — the
+second returned an empty response), and the alternative is recorded here rather
+than only in the decision so a later reader can see it was weighed.
+
+`supplied_unparseable` is separated from `not_provided` for the same reason:
+folded together, a handover the reviewer could not parse would report as "there
+was nothing to check", which is the one outcome that hides a real failure
+behind a benign one.
+
+### 4. Dispatch to the six judges
 
 Each judge receives **the same diff plus the task context** (ticket,
 PR body, commit messages) and runs independently. The judges are:
@@ -77,20 +121,37 @@ PR body, commit messages) and runs independently. The judges are:
 | [`judge-test-coverage`](../../skills/judge-test-coverage/SKILL.md) | Missing assertions, uncovered branches, over-mocking, regression-test gaps |
 | [`judge-code-quality`](../../skills/judge-code-quality/SKILL.md) | Naming, SRP, DRY, dead code, consistency with codebase conventions |
 | [`architecture-review-lens`](../../skills/architecture-review-lens/SKILL.md) | Layer violations, dependency direction, leaky abstractions, cross-service contract drift |
+| [`judge-spec-compliance`](../../skills/judge-spec-compliance/SKILL.md) | Does the diff satisfy every acceptance criterion **as stated**? Reads the criteria before the diff, and never infers them from it |
 
-The five judges weight equally in the consolidated verdict — none
+The six judges weight equally in the consolidated verdict — none
 overrides another.
+
+**Why the sixth exists, and why it is not a severity.** The other five all ask a
+craft-or-correctness question, so a change that is correct, clean, well-tested
+and architecturally sound — and **does not do what was asked** — used to pass
+this path with five green verdicts. Its finding does **not** enter the shared
+severity axis: `judge-synthesis` carries it on its own dimension, because "this
+does not do what was asked" is not comparable to "this variable is badly named",
+and on one scale the second can outrank the first whenever three judges raise
+nits and one raises the spec gap.
+
+**When no criteria were supplied** — an ad-hoc branch review — this judge
+returns a no-criteria verdict, never `SATISFIED`. That is not an abstention the
+consolidated verdict may drop: it changes what "done" is allowed to claim to
+*"craft quality verified; requirement compliance NOT verified"*. If that reads as
+most reviews, the honest reading is that most reviews were previously reporting a
+confidence they had not earned.
 
 Pick dispatch mode based on diff size and environment:
 
 - **Sequential** (default, simplest) — run bug-hunter → security-auditor
-  → test-coverage → code-quality → architecture-review-lens, collect
-  each verdict
+  → test-coverage → code-quality → architecture-review-lens →
+  spec-compliance, collect each verdict
 - **Parallel** — if `subagents.max_parallel` in `.agent-settings.yml` is
-  ≥ 5 and subagent dispatch is available, run all five concurrently
+  ≥ 5 and subagent dispatch is available, run all six concurrently
   following the `do-in-parallel` pattern in
   [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md);
-  the five judges operate on the same diff but produce independent
+  the six judges operate on the same diff but produce independent
   reports, so no shared-state risk
 
 Each judge returns its own `Judge / Model / Target / Verdict /
@@ -108,14 +169,14 @@ Read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
 - `true`: when `ai_council.enabled: true` **and** at least one member
   enabled, ask (in the user's language):
 
-  > 1. Add an external council review alongside the four internal judges? (billable)
+  > 1. Add an external council review alongside the six internal judges? (billable)
   > 2. Skip — internal judges only
 
   Also suppress when `personal.autonomy: on` (council is billable).
 
 If picked **1**:
 
-- Run `/council diff:<base>..<head>` in parallel with the four
+- Run `/council diff:<base>..<head>` in parallel with the six
   internal judges (or sequentially after them — whichever the
   dispatch mode picked in step 4 supports).
 - Treat each council member as one extra "judge" in the consolidated
@@ -140,7 +201,7 @@ Read `subagents.adversarial_council` from `.agent-settings.yml` (default
   which supplies the four slots, the one-question budget, and the storage line
   (not persisted: `subagents.adversarial_council` is class C). What only this
   command knows is *why now*: the diff is high-risk, and the offer is a paid
-  distinct-model red-team for finding coverage against the five internal judges.
+  distinct-model red-team for finding coverage against the six internal judges.
 - `on`: run it automatically on a high-risk diff.
 
 When run, dispatch the
@@ -164,8 +225,28 @@ step 4 (plus any external council blocks from 4b) and produces one report:
 - A **must-fix / should-fix / advisory** split, each entry tagged with the
   judge(s) that raised it
 
+- A **spec-compliance block**, kept apart from that split — the
+  `criteria_source` state from step 3b, the per-criterion verdicts, and the
+  count of `MISSING` plus `PARTIAL`. See
+  [`judge-synthesis` § 4c](../../skills/judge-synthesis/SKILL.md); a spec
+  finding never becomes a craft finding.
+
 `judge-synthesis` emits no single quality score and never auto-gates — it
 structures the verdicts so the next step's decision is informed.
+
+**The report names its criteria source, always.** A reader six months later
+cannot otherwise tell "we checked the requirements and they were met" from
+"nobody checked" — and those are the two readings a bare `proceed` collapses.
+Where the state is `not_provided`, the overall sentence says *craft quality
+verified; requirement compliance NOT verified*, never a plain pass.
+
+**One telemetry line per review** records the structural outcome: which judges
+ran, whether the spec axis was reachable, and whether it changed the
+recommendation. Built and validated by
+`src/scripts/_lib/review_telemetry.ts::buildReviewLine`, which carries no field
+able to hold free-form content and **rejects** an input that adds one. Read the
+window back with `./scripts-run src/scripts/review_axis_report`; it reports
+"nothing observed" and "the axis changed nothing" as two different answers.
 
 ### 6. Decide next steps
 
@@ -173,7 +254,7 @@ structures the verdicts so the next step's decision is informed.
   before proceeding
 - If **any** judge returned `revise` → fix 🔴 findings automatically,
   ask before fixing 🟡 findings, report 🟢 as suggestions
-- If all five returned `apply` → the diff is ready; report and stop
+- If all six returned `apply` → the diff is ready; report and stop
 
 **Opt-in (never auto-on):** when the `revise` findings are *test-driven*
 (failing checks, not subjective craft) and you want bounded auto-repair
@@ -218,7 +299,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 ## Use this command when
 
 - Preparing a self-review before opening a PR
-- Stress-testing a local branch with the same five lenses a reviewer
+- Stress-testing a local branch with the same six lenses a reviewer
   would apply
 - Sanity-checking a diff before handing it to `/create-pr`
 
@@ -247,6 +328,6 @@ Per `verbosity.routine_confirmations` (default `false`):
 
 - **LLM-as-a-Judge** — [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685)
   MT-Bench and Chatbot Arena — judging LLM outputs with LLM judges.
-  This command adapts the pattern by dispatching to four specialized
+  This command adapts the pattern by dispatching to six specialized
   judges (bug, security, tests, quality) instead of a single generic
   judge, and consolidating their verdicts.

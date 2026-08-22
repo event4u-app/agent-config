@@ -1,59 +1,100 @@
 {
- "skill": "code-review",
- "_calibration": "Behavioral fixtures incl. the U2 golden-adversarial pair (reliability-measurement, 2026-07-13). finding_floor is an enforcing mechanism since the 2026-07-13 cross-host calibration (internal/bench/reports/parity-count.json); these per-fixture n values are conservative floors derived from the fixture's planted-defect count. The golden-* pair is the review regression gate: the planted-injection diff must be flagged high/block, the benign look-alike must NOT be flagged as injection.",
- "scenarios": [
-  {
-   "id": "diff-with-multiple-issues",
-   "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nfunction pay(amount) {\n  var x = amount\n  eval(userInput)\n  db.query('SELECT * FROM users WHERE id = ' + req.params.id)\n  return x\n}\n```",
-   "assertions": [
+  "skill": "code-review",
+  "_calibration": "Behavioral fixtures incl. the U2 golden-adversarial pair (reliability-measurement, 2026-07-13). finding_floor is an enforcing mechanism since the 2026-07-13 cross-host calibration (internal/bench/reports/parity-count.json); these per-fixture n values are conservative floors derived from the fixture's planted-defect count. The golden-* pair is the review regression gate: the planted-injection diff must be flagged high/block, the benign look-alike must NOT be flagged as injection.",
+  "scenarios": [
     {
-     "kind": "finding_floor",
-     "n": 2
+      "id": "diff-with-multiple-issues",
+      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nfunction pay(amount) {\n  var x = amount\n  eval(userInput)\n  db.query('SELECT * FROM users WHERE id = ' + req.params.id)\n  return x\n}\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 2
+        },
+        {
+          "kind": "contains",
+          "value": "eval"
+        }
+      ]
     },
     {
-     "kind": "contains",
-     "value": "eval"
-    }
-   ]
-  },
-  {
-   "id": "clean-diff-few-findings",
-   "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nexport function add(a: number, b: number): number {\n  return a + b\n}\n```",
-   "assertions": [
-    {
-     "kind": "finding_floor",
-     "n": 0
-    }
-   ]
-  },
-  {
-   "id": "golden-sqli-must-block",
-   "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low):\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ' + req.params.id).then(r => res.json(r));\n});\n```",
-   "assertions": [
-    {
-     "kind": "contains",
-     "value": "injection"
+      "id": "clean-diff-few-findings",
+      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nexport function add(a: number, b: number): number {\n  return a + b\n}\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 0
+        }
+      ]
     },
     {
-     "kind": "finding_floor",
-     "n": 1,
-     "pattern": "(?i)critical|high|block"
-    }
-   ]
-  },
-  {
-   "id": "golden-benign-lookalike-no-injection",
-   "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low). If it is clean, say 'no findings':\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]).then(r => res.json(r));\n});\n```",
-   "assertions": [
-    {
-     "kind": "not_contains",
-     "value": "SQL injection"
+      "id": "golden-sqli-must-block",
+      "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low):\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ' + req.params.id).then(r => res.json(r));\n});\n```",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "injection"
+        },
+        {
+          "kind": "finding_floor",
+          "n": 1,
+          "pattern": "(?i)critical|high|block"
+        }
+      ]
     },
     {
-     "kind": "not_contains",
-     "value": "sql injection"
+      "id": "golden-benign-lookalike-no-injection",
+      "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low). If it is clean, say 'no findings':\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]).then(r => res.json(r));\n});\n```",
+      "assertions": [
+        {
+          "kind": "not_contains",
+          "value": "SQL injection"
+        },
+        {
+          "kind": "not_contains",
+          "value": "sql injection"
+        }
+      ]
+    },
+    {
+      "id": "golden-spec-gap-correct-but-wrong",
+      "_why": "The scenario the corpus had no shape for. Correct, clean, typed, tested — and it does not do what the criterion asked. Before the spec judge joined the default path all five judges returned green on exactly this class, which is the miss this fixture records rather than merely describes. Its pair below is the negative control: same criterion, an implementation that DOES satisfy it, so a judge that flags every diff as non-compliant fails one of the two.",
+      "prompt": "ACCEPTANCE CRITERION: \"Retries use exponential backoff, so the delay between attempts grows.\"\n\nReview this diff against the criterion above and state, for the criterion, one of SATISFIED / PARTIAL / MISSING with the hunk and the test that proves it:\n```ts\n/** Retry with a delay between attempts. */\nexport async function retry<T>(fn: () => Promise<T>, attempts = 3, delayMs = 100): Promise<T> {\n  let last: unknown;\n  for (let i = 0; i < attempts; i += 1) {\n    try {\n      return await fn();\n    } catch (err) {\n      last = err;\n      await new Promise((r) => setTimeout(r, delayMs));\n    }\n  }\n  throw last;\n}\n```\n```ts\nit('retries three times then rethrows', async () => {\n  let n = 0;\n  await expect(retry(async () => { n += 1; throw new Error('x'); })).rejects.toThrow('x');\n  expect(n).toBe(3);\n});\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 1
+        },
+        {
+          "kind": "contains",
+          "value": "backoff"
+        }
+      ]
+    },
+    {
+      "id": "golden-spec-gap-negative-control",
+      "_why": "Negative control for the pair above, on the SAME criterion. A judge that reports non-compliance on every diff would pass the fixture above for the wrong reason; this one fails it. The pair is what makes the spec axis falsifiable rather than merely present.",
+      "prompt": "ACCEPTANCE CRITERION: \"Retries use exponential backoff, so the delay between attempts grows.\"\n\nReview this diff against the criterion above and state, for the criterion, one of SATISFIED / PARTIAL / MISSING with the hunk and the test that proves it:\n```ts\nexport async function retry<T>(fn: () => Promise<T>, attempts = 3, baseMs = 100): Promise<T> {\n  let last: unknown;\n  for (let i = 0; i < attempts; i += 1) {\n    try {\n      return await fn();\n    } catch (err) {\n      last = err;\n      await new Promise((r) => setTimeout(r, baseMs * 2 ** i));\n    }\n  }\n  throw last;\n}\n```\n```ts\nit('grows the delay between attempts', async () => {\n  const waits: number[] = [];\n  vi.spyOn(global, 'setTimeout').mockImplementation(((cb: () => void, ms: number) => { waits.push(ms); cb(); return 0 as never; }) as never);\n  await expect(retry(async () => { throw new Error('x'); }, 3, 100)).rejects.toThrow();\n  expect(waits).toEqual([100, 200, 400]);\n});\n```",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "SATISFIED"
+        }
+      ]
+    },
+    {
+      "id": "golden-spec-no-criteria-must-not-pass",
+      "_why": "Step 1.3, and the case where inferring the spec from the diff is most tempting: an ad-hoc review with no criteria at all. A judge that infers the requirement from the change always finds the change compliant, so SATISFIED here is the circularity failure and not a lenient reading. The expected outcome is an explicit no-criteria verdict.",
+      "prompt": "No acceptance criteria were supplied for this review.\n\nReview this diff against its acceptance criteria and report the criteria-source state first, then any per-criterion verdicts:\n```ts\nexport function slugify(s: string): string {\n  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');\n}\n```",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "not_provided"
+        },
+        {
+          "kind": "not_contains",
+          "value": "SATISFIED"
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }
