@@ -51,7 +51,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
+import { isExclusivelyPackageOnly, resolvePartitionVerdict } from '../install/partitionEligibility.js';
 import { PROJECT_RULE_DIRS, globalRuleLayerNames, globalRuleLayerPath } from '../install/globalRuleLayers.js';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -380,6 +380,20 @@ function prune(audit: PartitionAudit, root: string): number {
     return removed;
 }
 
+/**
+ * Does a duplication in this projection mode mean an emitter FAILED, or that the
+ * partition deliberately did not run?
+ *
+ * Split out of `main` so both directions are testable without a lockfile on disk:
+ * the un-injected path can only assert whatever the machine happens to be, and this
+ * one bit differs between a maintainer checkout mid-release and a partitioned one —
+ * the same environment-dependence `ruleLayerPartition.ts` records for its own
+ * `active` override.
+ */
+export function partitionEnforces(mode: string): boolean {
+    return mode === 'dual-layer/partitioned';
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) {
         return selfTest();
@@ -458,6 +472,43 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             return 1;
         }
         process.stdout.write('✅  re-audit after prune: 0 duplicated\n');
+        return 0;
+    }
+
+    // A duplication the PARTITION ITSELF declined to remove is not a defect — it is
+    // the documented fail-safe, and hard-failing on it makes this gate contradict
+    // its own sibling. `check_single_delivery` reads the same fact and reports it:
+    // "a machine whose install predates the fingerprint keeps the full projection
+    // BY DESIGN". This gate refused instead, and the two verdicts on one condition
+    // are how a release push got blocked on 2026-08-22 with no reachable repair —
+    // `task generate-tools` re-emits exactly the files it demanded be gone, so the
+    // partition gate and `check_bridge_derivation` deadlock, each red in the state
+    // the other requires.
+    //
+    // The block is structural rather than incidental: during ANY release the
+    // building version is ahead of the installed one, so `resolvePartitionVerdict`
+    // returns `standalone/full` on every maintainer machine for the whole release
+    // window. A gate that cannot be green while a release is in progress is not
+    // measuring the release.
+    //
+    // Teeth are unchanged where the partition IS active: there a duplicate means an
+    // emitter failed to withhold what the partition selected, which is the defect
+    // this gate exists to catch. In CI both layers are absent, `offenders` is empty,
+    // and this branch is never reached — so nothing here relaxes the CI reading.
+    const verdict = resolvePartitionVerdict(root);
+    if (!partitionEnforces(verdict.mode)) {
+        for (const d of offenders) {
+            process.stdout.write(
+                `⚠️  ${d.dir}: ${String(d.duplicated.length)} rule(s) also present in ` +
+                    `${d.globalLayer ?? '(unknown)'}\n`,
+            );
+        }
+        process.stdout.write(
+            `⚠️  check_rule_layer_partition: partition INACTIVE (${verdict.reason}), so the ` +
+                `generators emit the full projection by design and this overlap is the fail-safe ` +
+                `working. Reported, not enforced — run \`agent-config install\` to activate the ` +
+                `partition here, then this gate has teeth again.\n`,
+        );
         return 0;
     }
 

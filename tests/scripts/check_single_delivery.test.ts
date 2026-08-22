@@ -222,4 +222,25 @@ describe('unknown family in the project layer', () => {
         mkdirSync(join(root, 'p', 'alpha'), { recursive: true });
         expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['alpha', 'zeta']);
     });
+
+    it('does NOT report `worktrees` — host state, not a generator-emitted family', () => {
+        // 2026-08-22: this gate refused a release push over `.claude/worktrees/`,
+        // the maintainer's gitignored git-worktree root, telling the agent to add
+        // it to TYPES — advice that could not be taken, because it is not an
+        // artefact family. See HOST_OWNED in the gate.
+        rule(layer('g', 'rules'), 'a.md');
+        rule(layer('p', 'rules'), 'b.md');
+        mkdirSync(join(root, 'p', 'worktrees', 'some-branch'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual([]);
+        expect(main(args())).toBe(0);
+    });
+
+    it('still reports a NEIGHBOURING unknown family beside `worktrees` (sensitivity)', () => {
+        // Without this, the exclusion above could be passing because detection is
+        // off on this tree rather than because one name is excluded.
+        rule(layer('g', 'rules'), 'a.md');
+        mkdirSync(join(root, 'p', 'worktrees'), { recursive: true });
+        mkdirSync(join(root, 'p', 'widgets'), { recursive: true });
+        expect(evaluate(join(root, 'g'), join(root, 'p')).unknownFamilies).toEqual(['widgets']);
+    });
 });

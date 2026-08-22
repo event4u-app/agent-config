@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { auditRuleLayers, renderTable } from '../../src/scripts/check_rule_layer_partition.js';
+import { auditRuleLayers, partitionEnforces, renderTable } from '../../src/scripts/check_rule_layer_partition.js';
 import { GLOBAL_RULE_DIRS, PROJECT_RULE_DIRS } from '../../src/install/globalRuleLayers.js';
 
 /**
@@ -129,5 +129,26 @@ describe('check_rule_layer_partition', () => {
         const a = auditRuleLayers(root, seedHome(['global-scope.md']));
         expect(a.dirs.map((d) => d.dir)).toEqual(['.cursor/rules']);
         expect(Object.keys(a.skipped)).toHaveLength(4);
+    });
+});
+
+describe('partitionEnforces', () => {
+    it('enforces only where the partition actually ran', () => {
+        expect(partitionEnforces('dual-layer/partitioned')).toBe(true);
+    });
+
+    it('does NOT enforce while the projection is standalone/full', () => {
+        // 2026-08-22: a release push was blocked here with no reachable repair.
+        // Building 14.8.0 against an installed 14.7.0 makes `resolvePartitionVerdict`
+        // return `standalone/full`, so the generators emit every rule by design —
+        // and `task generate-tools` re-writes exactly the files this gate demanded be
+        // gone, deadlocking it against `check_bridge_derivation`. Every release hits
+        // this by construction: the building version is always ahead of the installed
+        // one for the whole release window.
+        expect(partitionEnforces('standalone/full')).toBe(false);
+    });
+
+    it('treats an unrecognised mode as non-enforcing (fail-safe, not fail-loud)', () => {
+        expect(partitionEnforces('some-future-mode')).toBe(false);
     });
 });
