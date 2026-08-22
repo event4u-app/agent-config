@@ -159,6 +159,21 @@ jobs:
       - name: Verify the archive index is regenerated
         run: task check-archive-index
 
+      # Registered in the job that `main protection` requires, deliberately.
+      # A guard that only exists in a workflow file the candidate branch
+      # supplies is bypassable by a branch that predates it; a required check
+      # runs from the merge ref, so a stale branch cannot re-add the dashboard
+      # and judge itself green. Same reason the archive-index step above sits
+      # here rather than only in `task ci`.
+      #
+      # The NARROW task, not `roadmap-progress-check`: the full gate also
+      # asserts estate-wide conditions over roadmaps an unrelated PR never
+      # touched, and behind a required check that makes any pre-existing estate
+      # defect a merge block on every PR. It did, the first time this step was
+      # wired. Those conditions keep running in `task ci`.
+      - name: Verify the roadmap dashboard is not committed
+        run: task roadmap-dashboard-untracked-check
+
       - name: Verify dist == rewrite(src) byte-for-byte
         run: task check-condensation
 

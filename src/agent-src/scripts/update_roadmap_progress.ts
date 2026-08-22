@@ -64,7 +64,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
-import { evaluateDashboardOnDisk, parseModeToken, type DashboardMode } from './dashboard_mode.js';
+import {
+    evaluateDashboardOnDisk,
+    parseModeToken,
+    reportCheckVerdict,
+    type DashboardMode,
+} from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1218,7 +1223,7 @@ const _PROG = 'update_roadmap_progress.py';
 function _usage(): string {
     return (
         `usage: ${_PROG} [-h] [--check] [--tracked-mode | --untracked-mode]\n` +
-        `       [--archive | --no-archive] [--repo-root REPO_ROOT]\n`
+        `       [--archive | --no-archive] [--repo-root REPO_ROOT] [--dashboard-only]\n`
     );
 }
 
@@ -1227,12 +1232,21 @@ interface Args {
     mode: DashboardMode;
     archive: boolean;
     repo_root: string;
+    /**
+     * Assert ONLY this artefact's own state — tracked / absent / stale — not
+     * the estate-wide conditions `--check` also carries. Two obligations, two
+     * blast radii: why that split exists, and what it cost when it did not,
+     * is on the `roadmap-dashboard-untracked-check` task in
+     * `taskfiles/content.yml`.
+     */
+    dashboard_only: boolean;
 }
 
 function _parseArgs(argv: readonly string[]): Args {
     let check = false;
     let mode: DashboardMode = 'tracked';
     let archive = false;
+    let dashboard_only = false;
     let repo_root = process.cwd();
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -1250,6 +1264,9 @@ function _parseArgs(argv: readonly string[]): Args {
             i += 1;
         } else if (parseModeToken(tok) !== null) {
             mode = parseModeToken(tok) as DashboardMode;
+            i += 1;
+        } else if (tok === '--dashboard-only') {
+            dashboard_only = true;
             i += 1;
         } else if (tok === '--archive') {
             archive = true;
@@ -1277,7 +1294,10 @@ function _parseArgs(argv: readonly string[]): Args {
         // rather than silently letting one win.
         emitError('argument --archive: not allowed with --check');
     }
-    return { check, mode, archive, repo_root };
+    if (dashboard_only && !check) {
+        emitError('argument --dashboard-only: only meaningful with --check');
+    }
+    return { check, mode, archive, repo_root, dashboard_only };
 }
 
 /**
@@ -1365,40 +1385,17 @@ function main(argv?: readonly string[]): number {
 
     if (args.check) {
         const rel = _relPosix(repo_root, target);
-        const verdict = evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel });
-        const stale = verdict.stale;
-        if (verdict.error !== null) process.stderr.write(verdict.error);
-        if (complete.length) {
-            process.stderr.write(
-                '❌  Completed roadmaps are still in `agents/roadmaps/` — ' +
-                    'move them to `agents/roadmaps/archive/` (per the ' +
-                    '`roadmap-progress-sync` rule):\n',
-            );
-            for (const r of complete) {
-                process.stderr.write(`      - ${r.rel}  (${r.done}/${r.total_active} done)\n`);
-            }
-        }
-        if (pending.length) {
-            process.stderr.write(
-                '❌  Iron Law 3 — roadmaps with unresolved `[~]` deferred ' +
-                    'items must NOT auto-archive. Resolve via `roadmap-management § 4b` ' +
-                    '(spawn follow-up, restore, or cancel):\n',
-            );
-            for (const r of pending) {
-                process.stderr.write(
-                    `      - ${r.rel}  (${r.done}/${r.total_active} done · ` +
-                        `${r.deferred} deferred)\n`,
-                );
-            }
-        }
-        if (gated.length) {
-            _warn_merge_gated();
-        }
-        if (stale || complete.length || pending.length) {
-            return 1;
-        }
-        process.stdout.write(verdict.ok ?? '');
-        return 0;
+        const r = reportCheckVerdict({
+            verdict: evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel }),
+            complete,
+            pending,
+            dashboardOnly: args.dashboard_only,
+            warnMergeGated: _warn_merge_gated,
+            gatedCount: gated.length,
+        });
+        if (r.stderr) process.stderr.write(r.stderr);
+        if (r.stdout) process.stdout.write(r.stdout);
+        return r.rc;
     }
     fs.writeFileSync(target, new_text, { encoding: 'utf-8' });
     process.stdout.write(
