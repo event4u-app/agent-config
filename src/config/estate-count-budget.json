@@ -17,7 +17,7 @@
   },
   "baseline": {
     "active_roadmaps": 3,
-    "later_roadmaps": 57,
+    "later_roadmaps": 58,
     "open_blockers": 26
   },
   "baseline_history": [
@@ -755,6 +755,13 @@
       "later_roadmaps": 57,
       "open_blockers": 26,
       "why": "RAISED by 2 on later_roadmaps only, and only on the parked side. An inbox drain of 25 dropped artefacts produced 20 authored roadmaps plus 2 that must NOT be active work: road-to-composite-dispatch-topology is gated by the standing one-orchestration-claim-at-a-time rule and, more decisively, by its own instrument \u2014 the telemetry it would measure captured 0.27 percent and no post-hook replacement rate has ever been recorded, so a measurement roadmap on it would measure nothing; road-to-regulatory-radar asks an owner-reserved question that ADR-238 already answered for a sibling domain, namely whether this package carries decaying domain parameters at all, and it names no owner and no refresh cadence, which Gate 2 of the domain-adoption gates requires. Parking is the honest disposition for both and it is what grows this number. The other two metrics are unchanged and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays 3 because all 20 authored files ship status draft, which collect() excludes, and open_blockers stays 26 for the same reason \u2014 the 30-odd blockers those drafts carry will charge this ratchet on the day any of them flips to ready, which is the maintainer's decision and not this change's."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 3,
+      "later_roadmaps": 58,
+      "open_blockers": 26,
+      "why": "RAISED by 1 on later_roadmaps only, and only on the parked side. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, which was carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps returns to 3 because the authored roadmap archived in the same change, and open_blockers returns to 26 because the one blocker this change created moved to later/ with the phases it gates, where collect() does not count it."
     }
   ],
   "target": {
