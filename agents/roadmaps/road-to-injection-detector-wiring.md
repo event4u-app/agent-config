@@ -224,9 +224,11 @@ saying too much.
 
   So the argument is recorded here rather than resolved, which AC-7 names as
   sufficient: *"a proposal that was surfaced and left open is a discharged
-  obligation; a proposal that was quietly dropped is not."* The question file is
-  `agents/runtime/council/questions/adr-123-action-boundary.md` — reusable
-  verbatim the moment a seat is available.
+  obligation; a proposal that was quietly dropped is not."* The question put to
+  the council is the argument and both counters written out below — it is stated
+  here rather than linked, because council question files are gitignored and
+  auto-pruned, so a path to one rots into a dead reference. What a later reader
+  needs to re-ask it is in this blocker.
 
   **The argument, so the next reader meets it and not a flat refusal.**
   ADR-123 §2 reasons in part that this package supervises no tool calls. It
