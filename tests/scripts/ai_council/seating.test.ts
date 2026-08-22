@@ -15,6 +15,7 @@ import {
     checkModelAdmissibility,
     familyOf,
     freezeSeating,
+    readSeatConstraints,
     resolveSeating,
 } from '../../../src/scripts/ai_council/seating.js';
 
@@ -137,5 +138,38 @@ describe('admissibility — the source of the id, not the id itself', () => {
         // Indistinguishable from a real one at review time, which is exactly
         // why the check is on the SOURCE and not on the string.
         expect(checkModelAdmissibility(member('anthropic', 'claude-sonnet-9-2')).admissible).toBe(false);
+    });
+});
+
+describe('readSeatConstraints — absent is no constraint, malformed fails closed', () => {
+    it('an absent block is no constraint', () => {
+        expect(readSeatConstraints(null)).toEqual({});
+        expect(readSeatConstraints(undefined)).toEqual({});
+        expect(readSeatConstraints({})).toEqual({});
+    });
+
+    it('reads min_families from either the block or its wrapper', () => {
+        expect(readSeatConstraints({ min_families: 2 })).toEqual({ min_families: 2 });
+        expect(readSeatConstraints({ seat_constraints: { min_families: 3 } })).toEqual({ min_families: 3 });
+    });
+
+    it('a malformed value fails CLOSED, never back to absent', () => {
+        // A run that declared a diversity floor and silently got none is the
+        // exact silent fallback the degradation line exists to prevent, so this
+        // throws rather than returning {}.
+        for (const bad of [0, -1, 1.5, '2', true, []]) {
+            expect(() => readSeatConstraints({ min_families: bad }), String(bad)).toThrow();
+        }
+        expect(() => readSeatConstraints('nope')).toThrow();
+    });
+
+    it('lives here rather than on CouncilConfig, and the reason is a ratchet', () => {
+        // config.ts is 705 lines over the source-size line, and
+        // check_source_size_budget counts only that excess — so the 39 lines
+        // this feature first added there were a straight +39 against a
+        // shrink-only baseline, which the gate calls "a defect, not a fix".
+        // Extraction is the sanctioned repair. Asserted so a future move back
+        // into config.ts fails here first.
+        expect(typeof readSeatConstraints).toBe('function');
     });
 });

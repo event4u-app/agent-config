@@ -30,6 +30,48 @@ export function familyOf(member: MemberConfig): string {
     return member.name;
 }
 
+/**
+ * Read the optional `seat_constraints:` block out of a raw council config.
+ *
+ * DELIBERATELY NOT A FIELD ON `CouncilConfig`, and the reason is a ratchet
+ * rather than a design preference. `config.ts` is 2,205 lines — 705 over the
+ * 1,500-line source-size line — and `check_source_size_budget` counts only the
+ * excess above that line, so the 39 lines this feature first added there were a
+ * straight +39 against a shrink-only baseline. The gate's own message is
+ * explicit that raising the baseline is "a defect, not a fix". Extraction is the
+ * sanctioned repair, and this file is 169 lines, so the same code costs nothing
+ * here.
+ *
+ * THE TRADE-OFF, stated rather than buried: validation moves from LOAD time to
+ * READ time. A malformed `min_families` no longer fails the moment the config
+ * is parsed; it fails when a caller asks for the constraints. Today that
+ * difference is unobservable — Phase 2 ships the DECLARATION and no caller
+ * reads it yet — but it is a real change in when a bad config is caught, and
+ * whoever wires the first caller should call this at run start so the failure
+ * lands before any seat is used.
+ *
+ * Fails CLOSED on a malformed value rather than falling back to absent: a run
+ * that declared a diversity floor and silently got none is the exact silent
+ * fallback the degradation line exists to prevent.
+ */
+export function readSeatConstraints(raw: unknown, label = 'seat_constraints'): SeatConstraints {
+    if (raw === null || raw === undefined) return {};
+    if (typeof raw !== 'object' || Array.isArray(raw)) {
+        throw new TypeError(`${label} must be a mapping (got ${typeof raw}).`);
+    }
+    const block = (raw as Record<string, unknown>)['seat_constraints'] ?? raw;
+    if (block === null || block === undefined) return {};
+    if (typeof block !== 'object' || Array.isArray(block)) {
+        throw new TypeError(`${label} must be a mapping (got ${typeof block}).`);
+    }
+    const mf = (block as Record<string, unknown>)['min_families'];
+    if (mf === null || mf === undefined) return {};
+    if (typeof mf !== 'number' || !Number.isInteger(mf) || mf < 1) {
+        throw new TypeError(`${label}.min_families must be an integer >= 1 when set (got ${String(mf)}).`);
+    }
+    return { min_families: mf };
+}
+
 export interface SeatConstraints {
     /**
      * Minimum distinct provider families the run wants seated.
