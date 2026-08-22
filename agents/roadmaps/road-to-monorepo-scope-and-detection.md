@@ -1,7 +1,7 @@
 ---
 complexity: structural
-status: draft
-estate_offset_exempt: "Ships status: draft so it charges neither active_roadmaps nor open_blockers until the maintainer flips it to ready — the flip is the estate decision, taken by the owner and not by this external session. A genuine addition: the defect is reproduced at the pinned commit with a live detector run (a real monorepo resolves to plain), and no active roadmap covers stack detection, so there is nothing to offset against without an unreviewed disposition. Of the two decisions this roadmap raises, one is decided in-text from evidence in the tree (both yaml and js-yaml are already runtime dependencies) and one is posture-matched to react-shadcn-ui; neither is filed as a blocker."
+status: ready
+estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate decision this key deferred to the owner has now been taken, for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction; the file files no blockers, so open_blockers is unchanged. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft so it charges neither active_roadmaps nor open_blockers until the maintainer flips it to ready — the flip is the estate decision, taken by the owner and not by this external session. A genuine addition: the defect is reproduced at the pinned commit with a live detector run (a real monorepo resolves to plain), and no active roadmap covers stack detection, so there is nothing to offset against without an unreviewed disposition. Of the two decisions this roadmap raises, one is decided in-text from evidence in the tree (both yaml and js-yaml are already runtime dependencies) and one is posture-matched to react-shadcn-ui; neither is filed as a blocker."
 execution:
   mode: phase-checkpoints
 ---

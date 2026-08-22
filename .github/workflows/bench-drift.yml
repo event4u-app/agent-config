@@ -20,6 +20,12 @@ on:
       - ".github/workflows/bench-drift.yml"
   workflow_dispatch:
 
+# Write scope justified (road-to-ci-supply-chain-integrity 1.3, 2026-08-22):
+#   pull-requests: write — the "Sticky comment" step posts the bench-drift
+#   report onto the PR (marocchino/sticky-pull-request-comment). Nothing here
+#   writes code. No pull_request_target anywhere in this tree (verified, 0
+#   hits), so a fork PR gets the read-only fork token cap and this block
+#   reads wider than the exposure actually is.
 permissions:
   contents: read
   pull-requests: write
@@ -33,9 +39,11 @@ jobs:
     name: Bench drift (warn-only)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         # bench_drift_check / bench_baseline_ready / bench_run are now
         # TypeScript; the dispatcher runs them via tsx.
         with:
@@ -131,7 +139,7 @@ jobs:
 
       - name: Post / update PR comment
         if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88  # v3.0.5
         with:
           header: bench-drift
           path: /tmp/comment.md

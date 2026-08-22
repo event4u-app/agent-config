@@ -63,7 +63,14 @@ export default [
                 },
             ],
             '@typescript-eslint/consistent-type-imports': 'error',
-            '@typescript-eslint/no-explicit-any': 'warn',
+            // 'error', not 'warn', since 2026-08-22 (road-to-ci-supply-chain-integrity
+            // 2.2). The count was 0 across 1,177 files and `lint:ts` now carries
+            // --max-warnings 0, so at this instant 'warn' and 'error' are
+            // behaviourally identical — which is exactly why the promotion is free
+            // and why it is worth making: it removes the tier that would start
+            // growing unobserved the moment --max-warnings is ever dropped from the
+            // npm script. A warn tier with no cap is a counter nobody reads.
+            '@typescript-eslint/no-explicit-any': 'error',
         },
     },
     {

@@ -76,6 +76,16 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# Write scope justified (road-to-ci-supply-chain-integrity 1.3, 2026-08-22):
+#   contents: write      — the release job tags and publishes.
+#   pull-requests: write — it closes / comments on the release PR.
+#   actions: write       — it dispatches the follow-up workflow.
+# The pull_request trigger is gated to `types: [closed]` (see the `on:` block
+# above), so this never runs on an open fork PR's head. No
+# pull_request_target in this tree, so even that path would be token-capped.
+# This is the one block worth narrowing later; narrowing it means splitting
+# the job, which is a change of shape rather than a permissions edit, and it
+# is recorded here as a decision NOT taken rather than left unstated.
 permissions:
   contents: write
   pull-requests: write
@@ -132,8 +142,9 @@ jobs:
           echo "resume=$resume" >> "$GITHUB_OUTPUT"
 
       - name: Check out main
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
           ref: main
           fetch-depth: 0
           fetch-tags: true
@@ -145,7 +156,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: '20'
           cache: 'npm'
