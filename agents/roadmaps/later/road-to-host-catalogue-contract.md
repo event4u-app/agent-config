@@ -1,7 +1,7 @@
 ---
 complexity: lightweight
 status: later
-estate_growth_exempt: "Replaces agents/roadmaps/stubs/road-to-host-aware-skill-projection.md, deleted in the same change on an AI council's 2/2 instruction to ABSORB that stub rather than defer to it: its step 1.4 asserted the primary host has no measured truncation pressure, which the host's own budget event refutes (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20). The automatic later/ allowance is keyed on parking an ACTIVE roadmap and deliberately does not cover a later/ file arriving from elsewhere, which is exactly this case: a stub relocating, not new estate. Net roadmap count across the change is unchanged, one stub out and one later/ file in, and the active side falls by one because the roadmap that decided it archived here too. Owner maintainer, review_by 2027-02-22."
+estate_growth_exempt: "Replaces the road-to-host-aware-skill-projection stub (path omitted deliberately: it is deleted in this same change, so a path to it is a dead reference check_references refuses) on an AI council's 2/2 instruction to ABSORB that stub rather than defer to it: its step 1.4 asserted the primary host has no measured truncation pressure, which the host's own budget event refutes (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20). The automatic later/ allowance is keyed on parking an ACTIVE roadmap and deliberately does not cover a later/ file arriving from elsewhere, which is exactly this case: a stub relocating, not new estate. Net roadmap count across the change is unchanged, one stub out and one later/ file in, and the active side falls by one because the roadmap that decided it archived here too. Owner maintainer, review_by 2027-02-22."
 execution:
   mode: phase-checkpoints
 ---
@@ -11,7 +11,10 @@ execution:
 > produce on its own: a catalogue observation taken against a **named host
 > build**. Owner: maintainer. Review by: **2027-02-22**.
 >
-> **Provenance.** Absorbed from `agents/roadmaps/stubs/road-to-host-aware-skill-projection.md`
+> **Provenance.** Absorbed from the `road-to-host-aware-skill-projection` stub,
+> which this same change DELETES — so it is named and not linked: a path to a
+> file the change removes is a dead reference by construction, and
+> `check_references` refuses it.
 > (deleted in the same change) by the Phase 3.1 disposition of
 > `road-to-catalog-and-projection-economy`, decided by AI council on 2026-08-22
 > — **2/2 convergent** on ABSORB, with the instruction to eliminate the stub as
