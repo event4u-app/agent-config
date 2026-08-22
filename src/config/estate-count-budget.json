@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 4,
     "later_roadmaps": 55,
-    "open_blockers": 34
+    "open_blockers": 32
   },
   "baseline_history": [
     {
@@ -685,6 +685,13 @@
       "later_roadmaps": 55,
       "open_blockers": 34,
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-drain-commands is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker merge-authority, open on origin/main, is resolved here -- checked against the trunk rather than taken from the branch's prose. Worth a note given what this run is: merge-authority is the blocker about who may press merge, and it is closed in the same run whose every merge needed a fresh human authorization. later_roadmaps unchanged at 55 and nothing was parked."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 32,
+      "why": "Walk-down earned by resolving BOTH Class-3 blockers on `road-to-evidence-based-adr-governance` -- `owner-autonomy-batch` and `authority-coupling-decision` -- on a 2-of-2 convergent AI-council pass (2026-08-22). open_blockers 34 -> 32 is exactly those two; active_roadmaps is unchanged because the roadmap is NOT archived: 13 steps remain genuinely open (2.4, 3.4, 4.3, 4.4 and the acceptance criteria), so archiving it would have been the silent-green this repository has refused before.\n\nBoth are real dispositions rather than dropped items, and the distinction the council insisted on is the reason they count: each row is closed as `AUTHORITY UNAVAILABLE -- FLOOR PRESERVED`, not as `RE-AFFIRMED (no)`. The first records an operational act a council may take; the second would assert a policy rejection no owner made. `commit-policy.md:37` and ADR-005 section 1 both remain operative, grade-derived authority stays disabled, and all three owner-reserved policy questions are transferred to `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` with per-question reopening conditions.\n\nMerged onto main's lineage first and re-measured from the tree rather than carrying numbers forward, per ADR-239-no-union-merge-for-ratchet-baselines. No offset taken and none due: this change disposes of no roadmap and creates none."
     }
   ],
   "target": {
