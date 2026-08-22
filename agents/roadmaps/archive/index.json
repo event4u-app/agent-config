@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 550,
+  "count": 551,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2354,6 +2354,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-demand-gate-audience-followup",
+      "title": "Road to Demand-Gate Audience — Follow-up",
+      "disposition": "closed-with-cancellations",
+      "phases": 0,
+      "steps": {
+        "open": 0,
+        "done": 2,
+        "deferred": 0,
+        "cancelled": 4
+      },
+      "verdict": null,
+      "status": "draft"
     },
     {
       "slug": "road-to-demand-gate-audience",
