@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**550 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 200 · completed 257 · completed-with-deferrals 26 · not-extractable 34
+**551 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 202 · completed 256 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -214,6 +214,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-doctor-global-only-readiness`](road-to-doctor-global-only-readiness.md) | Road to `doctor` Global-Only Readiness | completed | 1 | 4/4 | _not extractable_ |
 | [`road-to-domain-soundness`](road-to-domain-soundness.md) | Road to domain soundness — prove or honestly scope the non-forged, non-coding domains | completed | 4 | 15/15 | _not extractable_ |
 | [`road-to-drafting-protocol`](road-to-drafting-protocol.md) | Roadmap: Drafting Protocol | completed | 7 | 3/3 | _not extractable_ |
+| [`road-to-drain-commands`](road-to-drain-commands.md) | Road to drain commands | closed-with-cancellations | 6 | 37/39 | _not extractable_ |
 | [`road-to-ecosystem-harvest-bug-security-rigor`](road-to-ecosystem-harvest-bug-security-rigor.md) | Roadmap: Ecosystem-Harvest — Bug & Security Rigor | completed | 2 | 11/11 | _not extractable_ |
 | [`road-to-ecosystem-harvest-document-skills`](road-to-ecosystem-harvest-document-skills.md) | Roadmap: Ecosystem-Harvest — Document-Generation Skills | closed-with-cancellations | 2 | 10/11 | _not extractable_ |
 | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | Roadmap: Ecosystem-Harvest — Domain Watch (gated verticals) | closed-with-cancellations | 3 | 6/8 | _not extractable_ |
@@ -469,7 +470,6 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-single-delivery-closure`](road-to-single-delivery-closure.md) | Road to single delivery closure — the two families the partition never reached | completed | 3 | 16/16 | _not extractable_ |
 | [`road-to-single-delivery`](road-to-single-delivery.md) | Road to single delivery — one artefact, one layer, no duplicates | completed | 6 | 21/21 | _not extractable_ |
 | [`road-to-single-install-source-of-truth`](road-to-single-install-source-of-truth.md) | Roadmap: Single Install Source-of-Truth — finish the `--apply-payload` bridge | completed-with-deferrals | 6 | 21/24 | _not extractable_ |
-| [`road-to-single-rule-layer`](road-to-single-rule-layer.md) | Road to a single rule layer | completed | 5 | 16/16 | _not extractable_ |
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |
 | [`road-to-skill-description-measurement`](road-to-skill-description-measurement.md) | Roadmap: Measure the de-collided skill descriptions | closed-with-cancellations | 1 | 0/4 | _not extractable_ |
 | [`road-to-skill-ecosystem-authoring-discipline`](road-to-skill-ecosystem-authoring-discipline.md) | Road to authoring discipline — forced artifacts, named biases, and a removal signal | closed-with-cancellations | 6 | 53/54 | _not extractable_ |
@@ -480,6 +480,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-source-first-frontend`](road-to-source-first-frontend.md) | Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation | closed-with-cancellations | 6 | 16/18 | _not extractable_ |
 | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
+| [`road-to-standing-context-40k`](road-to-standing-context-40k.md) | Road to standing context 40k — the registered destination, given a route | closed-with-cancellations | 5 | 3/9 | _not extractable_ |
 | [`road-to-starlight-project-docs`](road-to-starlight-project-docs.md) | Roadmap: Starlight project documentation | archived-with-open-steps | 9 | 31/38 | _not extractable_ |
 | [`road-to-stop-gate-honesty`](road-to-stop-gate-honesty.md) | Road to stop-gate honesty — a blocking gate earns a number | completed | 3 | 7/7 | _not extractable_ |
 | [`road-to-structural-linter-reform`](road-to-structural-linter-reform.md) | Road to Structural Linter Reform | completed | 4 | 14/14 | _not extractable_ |

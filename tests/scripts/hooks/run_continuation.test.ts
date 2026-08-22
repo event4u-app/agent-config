@@ -462,14 +462,35 @@ describe('extractVerify — both forms the tree actually writes', () => {
         // roadmap invalidates, and an assertion that never ran the matcher over
         // the text it had just gone to the trouble of loading.
         //
-        // Now it scans the active tree for a real line and parses THAT. Immune
-        // to archival, and strictly stronger: a malformed line in a shipped
-        // roadmap fails here instead of passing a substring check.
+        // Now it scans the roadmap tree for a real line and parses THAT:
+        // strictly stronger than a substring check, since a malformed line in a
+        // shipped roadmap fails here.
+        //
+        // THE SCAN IS RECURSIVE, AND THAT IS THE ARCHIVAL-IMMUNITY. The previous
+        // version scanned `agents/roadmaps` FLAT and claimed immunity it did not
+        // have: it had only moved the fragility from one named file to "any
+        // active file", and archiving the last such file empties the corpus just
+        // as renaming the old one did. Measured 2026-08-22 while archiving
+        // `road-to-standing-context-40k`: its two done-note lines were the ONLY
+        // command-bearing `verify:` declarations in the entire active tree, so an
+        // ordinary, correct archival took the count to 0 and red this test — the
+        // same defect one level up. Archival MOVES a file within this tree
+        // (`archive/`, `later/`, `stubs/` all live under it), so recursing over
+        // the tree is immune by construction rather than by luck: 78 lines across
+        // archive/ and later/ at the time of the change, all 78 parseable.
         const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const mdFiles: string[] = [];
+        const walk = (d: string): void => {
+            for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+                const full = path.join(d, e.name);
+                if (e.isDirectory()) walk(full);
+                else if (e.name.endsWith('.md')) mdFiles.push(full);
+            }
+        };
+        walk(dir);
         const lines: string[] = [];
-        for (const f of fs.readdirSync(dir)) {
-            if (!f.endsWith('.md')) continue;
-            for (const line of fs.readFileSync(path.join(dir, f), 'utf8').split('\n')) {
+        for (const f of mdFiles) {
+            for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
                 // The COMMAND-BEARING declaration form, which is what
                 // `extractVerify` exists to parse. Two exclusions, both
                 // deliberate:
@@ -488,7 +509,7 @@ describe('extractVerify — both forms the tree actually writes', () => {
                 if (t.startsWith('`verify:`') && /^`verify:`\s*`/.test(t)) lines.push(line);
             }
         }
-        expect(lines.length, 'no roadmap in the active tree carries a `verify:` line').toBeGreaterThan(0);
+        expect(lines.length, 'no roadmap in the roadmap tree carries a `verify:` line').toBeGreaterThan(0);
         for (const line of lines) {
             expect(extractVerify(line), line.trim()).not.toBeNull();
         }

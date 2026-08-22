@@ -281,7 +281,7 @@ batches:
           roadmap says the cohort it added is in batch one, and it is in that
           cohort.
 
-      - file: agents/roadmaps/road-to-standing-context-40k.md
+      - file: agents/roadmaps/archive/road-to-standing-context-40k.md
         verdict: EXECUTE
         moved_to: null
         reason: >-

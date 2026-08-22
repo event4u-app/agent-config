@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 550,
+  "count": 551,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2662,6 +2662,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-drain-commands",
+      "title": "Road to drain commands",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 37,
+        "deferred": 0,
+        "cancelled": 2
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-ecosystem-harvest-bug-security-rigor",
@@ -6234,20 +6248,6 @@
       "status": "active"
     },
     {
-      "slug": "road-to-single-rule-layer",
-      "title": "Road to a single rule layer",
-      "disposition": "completed",
-      "phases": 5,
-      "steps": {
-        "open": 0,
-        "done": 16,
-        "deferred": 0,
-        "cancelled": 0
-      },
-      "verdict": null,
-      "status": "ready"
-    },
-    {
       "slug": "road-to-skill-catalogue-budget",
       "title": "Road to a measured skill-catalogue budget — Codex as the second host",
       "disposition": "completed",
@@ -6383,6 +6383,20 @@
         "done": 28,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-standing-context-40k",
+      "title": "Road to standing context 40k — the registered destination, given a route",
+      "disposition": "closed-with-cancellations",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 3,
+        "deferred": 0,
+        "cancelled": 6
       },
       "verdict": null,
       "status": null

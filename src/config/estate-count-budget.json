@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 7,
+    "active_roadmaps": 4,
     "later_roadmaps": 55,
-    "open_blockers": 36
+    "open_blockers": 34
   },
   "baseline_history": [
     {
@@ -645,11 +645,53 @@
       "why": "WALKED DOWN by 1 active and nothing else: road-to-estate-drawdown is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). Fitting, since it is the roadmap this ratchet was registered to serve. open_blockers unchanged at 36 and later_roadmaps unchanged at 55, which together are the check that nothing was bought by relocating an open decision: the two items the roadmap could not finish went to stubs created in this same change (road-to-draft-status-ratchet-boundary, road-to-estate-triage-remaining-batches), each with its own probe, and a stub is not a park."
     },
     {
-      "at": "2026-08-22",
-      "active_roadmaps": 7,
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "active_roadmaps 24 -> 23 and open_blockers 62 -> 61, both walked down by the close of road-to-standing-context-40k. NOTHING IN THE REPOSITORY EARNED EITHER DROP, and the two are one accounting event rather than two: the roadmap left the active tree for archive/ and its one blocker (b-rules-efficiency-signal) left the active estate with it, reappearing as an item in stubs/road-to-instructions-loaded-observer.md that this metric does not scan. No question was answered and no work finished -- the roadmap closed with outcome state `transferred`, five of its nine lines moved to two stubs and one sibling roadmap, and the registered 40k destination is not reached. The blocker's own Correction B had already concluded it was a transfer under the framework's rule 4; PR #1484 held the `Status: open` token only because the roadmap was still active, so writing `resolved` here applies a recorded disposition rather than making a new one. later_roadmaps is unchanged at 52 on purpose: the council explicitly rejected parking this roadmap in later/, on the ground that its four open lines shared no producer and three unrelated resume triggers in one parked file is the ownerless queue the framework warns against. For whoever merges next: main is moving fast and this file collides the same way every time. Keep every history entry from both sides and RE-MEASURE the baseline against the merged tree -- never adopt one side's number. Measured on this branch against d0fad2ccd."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "MERGE RECONCILIATION, and the number is MEASURED against the merged tree rather than taken from either side. Both sides walked open_blockers 62 -> 61 for a different blocker: origin/main for road-to-subagent-lifecycle-integrity's raw-capture-needs-host-env, this branch for road-to-standing-context-40k's b-rules-efficiency-signal. Neither number describes the merged tree, which reads 60 = 62 - 1 - 1. Adopting one side's 61 would have claimed a count no tree has, and would have left a -1 drawdown for the next PR to fail on. active_roadmaps stays 23: this branch's archival is the only one in the merge. NOTHING IN THE REPOSITORY EARNED THE DROP on either side -- both blockers left the active estate by transfer to a stub this metric does not scan. Every history entry from both sides is preserved; none was collapsed. For whoever merges next: keep every entry and RE-MEASURE; never adopt one side's number."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 22,
+      "later_roadmaps": 52,
+      "open_blockers": 60,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-standing-context-40k merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 22, 'later_roadmaps': 52, 'open_blockers': 60}, from {'active_roadmaps': 23, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 5,
       "later_roadmaps": 55,
-      "open_blockers": 36,
-      "why": "GREW by 1 active: road-to-single-rule-layer is added by this branch. It is not a discretionary addition \u2014 it closes a measured live regression that ADR-236 was accepted to prevent. Measured 2026-08-22 in a freshly generated worktree with the partition ACTIVE: three of the five rule emitters (cursor .mdc, windsurf, augment) never consult isExclusivelyPackageOnly, so they write 100, 100 and 103 global-only rules into project directories whose global layers were verified to already carry all 103; and this checkout's own .claude/rules holds 77 pre-partition stale symlinks, duplicating 286147 bytes of rule prose into every session here. Nothing guards it: check_single_delivery hardcodes the two .claude paths and its own docstring records that it compares nothing in CI. open_blockers unchanged at 36 and later_roadmaps unchanged, so no open decision was relocated to buy this."
+      "open_blockers": 35,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-standing-context-40k is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker b-rules-efficiency-signal, open on origin/main, is resolved here -- checked against the trunk rather than read off the branch's prose. later_roadmaps unchanged at 55: the two items it could not finish went to stubs created in this same change (road-to-instructions-loaded-observer, road-to-standing-rule-delivery-per-machine), each with its own probe, so the open work stays counted where a probe can decide it instead of being parked."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 5,
+      "later_roadmaps": 55,
+      "open_blockers": 35,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE, then re-measured -- main moved from 66b3dc993 to c298a6aba while this branch was being built (PR #1505, drain/road-to-estate-drawdown, landed in that window). main's history is kept whole (89 entries, baseline 6/55/36) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -1 active and -1 open blocker, both earned by closing `road-to-drain-commands` (37 done / 2 cancelled / 0 open / 0 deferred) and archiving it. The blocker decrement is `merge-authority` moving to Status: resolved -- closed as NOT AUTHORIZED IN THIS ROADMAP by a 2-of-2 convergent AI-council pass (2026-08-22), which is a real disposition rather than a dropped item: steps 4.4 and 4.7 are `[-]` cancelled, `--merge` is REMOVED from `/roadmap:process-full` rather than left inert so an archived roadmap leaves no latent executable authority behind a documented switch, and ADR-239 gains a dated Disposition section with an explicit non-rejection clause plus the reopening condition (owner approval AND a target-bound, head-SHA-bound, tamper-resistant, agent-unwritable, kill-switch-subject authorization).\n\nNo offset is taken and none is due: this change disposes of one roadmap and creates none. 5 and 35 are the measured trunk-plus-this-change values and are now the numbers that must walk down."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 34,
+      "why": "WALKED DOWN by 1 active and 1 blocker. road-to-drain-commands is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker merge-authority, open on origin/main, is resolved here -- checked against the trunk rather than taken from the branch's prose. Worth a note given what this run is: merge-authority is the blocker about who may press merge, and it is closed in the same run whose every merge needed a fresh human authorization. later_roadmaps unchanged at 55 and nothing was parked."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 34,
+      "why": "NET ZERO, and the number is MEASURED against the merged tree rather than carried from either side. road-to-single-rule-layer was authored AND archived in this same change, so it never joins the active estate: it opened at 7 on this branch's base, origin/main independently walked the floor to 4, and the merged tree measures 4 because the roadmap this branch added is in archive/. An earlier revision of this entry recorded 'GREW by 1 active' and was true only between the roadmap landing and its closure hours later \u2014 leaving it would have raised a floor nothing in the tree justifies, which is the silent-give-back this ratchet exists to refuse. What the change did to the estate is nothing; what it did to the repository is close a live ADR-236 regression on four of five hosts."
     }
   ],
   "target": {
