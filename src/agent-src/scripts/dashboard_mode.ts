@@ -39,6 +39,18 @@ export interface DashboardStateInput {
     current: boolean;
     /** Repo-relative path, for the messages. */
     rel: string;
+    /**
+     * How to regenerate, for the stale/missing messages. Defaults to the
+     * dashboard's own command. A second caller — `build_archive_index --check`
+     * — reuses this table for a different generated artefact, and a message
+     * telling that reader to run the dashboard generator would be wrong.
+     */
+    regen?: string;
+    /**
+     * What the artefact is called in the "deliberately does not commit the X"
+     * hint. Defaults to `dashboard` so every existing message is byte-identical.
+     */
+    noun?: string;
 }
 
 export interface DashboardStateVerdict {
@@ -50,8 +62,11 @@ export interface DashboardStateVerdict {
     ok: string | null;
 }
 
+// The SOURCE path, not `.augment/scripts/…`: that tree is a gitignored
+// projection built by `task sync`, so the advice failed outright in a fresh
+// worktree and in any CI step ordered before the sync.
 const REGEN =
-    'Run `node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts` ' +
+    'Run `./scripts-run src/agent-src/scripts/update_roadmap_progress` ' +
     'to regenerate (or `task roadmap-progress` in Taskfile projects).';
 
 /**
@@ -66,6 +81,8 @@ const REGEN =
  */
 export function evaluateDashboardState(inp: DashboardStateInput): DashboardStateVerdict {
     const { mode, present, trackedInGit, current, rel } = inp;
+    const regen = inp.regen ?? REGEN;
+    const noun = inp.noun ?? 'dashboard';
 
     if (mode === 'untracked' && trackedInGit) {
         // Migration incomplete: declared untracked, still carried by git.
@@ -86,9 +103,9 @@ export function evaluateDashboardState(inp: DashboardStateInput): DashboardState
                 stale: true,
                 error:
                     `❌  ${rel} is missing. ` +
-                    REGEN.replace('to regenerate', 'to generate it') +
+                    regen.replace('to regenerate', 'to generate it') +
                     ' If this repository deliberately does not commit the ' +
-                    'dashboard, pass `--untracked-mode`.\n',
+                    `${noun}, pass \`--untracked-mode\`.\n`,
                 ok: null,
             };
         }
@@ -101,7 +118,7 @@ export function evaluateDashboardState(inp: DashboardStateInput): DashboardState
     }
 
     if (!current) {
-        return { stale: true, error: `❌  ${rel} is stale. ${REGEN}\n`, ok: null };
+        return { stale: true, error: `❌  ${rel} is stale. ${regen}\n`, ok: null };
     }
     return { stale: false, error: null, ok: `✅  ${rel} is up to date.\n` };
 }
@@ -117,6 +134,8 @@ export function evaluateDashboardOnDisk(opts: {
     repo_root: string;
     rendered: string;
     rel: string;
+    regen?: string;
+    noun?: string;
 }): DashboardStateVerdict {
     const present = fs.existsSync(opts.target);
     return evaluateDashboardState({
@@ -125,7 +144,64 @@ export function evaluateDashboardOnDisk(opts: {
         trackedInGit: opts.mode === 'untracked' && isTrackedInGit(opts.target, opts.repo_root),
         current: present && fs.readFileSync(opts.target, { encoding: 'utf-8' }) === opts.rendered,
         rel: opts.rel,
+        ...(opts.regen === undefined ? {} : { regen: opts.regen }),
+        ...(opts.noun === undefined ? {} : { noun: opts.noun }),
     });
+}
+
+/** One roadmap row, as far as the estate report below needs it. */
+export interface EstateRow {
+    rel: string;
+    done: number;
+    total_active: number;
+    deferred: number;
+}
+
+/**
+ * The `--check` report: the artefact's own verdict, then the estate-wide
+ * conditions — completed-but-unarchived, and Iron Law 3 deferred items.
+ *
+ * `dashboardOnly` drops the estate half. Two obligations with two blast radii:
+ * the artefact verdict is about ONE file and is safe behind a required status
+ * check, while the estate conditions are about roadmaps an unrelated change
+ * never touched, so requiring them turns any pre-existing estate defect into a
+ * merge block on every PR. It did, on 2026-08-22.
+ *
+ * Extracted from the generator so the report is a pure function of the verdict
+ * and two lists — and because the generator sits exactly on its 1500-line
+ * source ceiling, where the honest way to add a feature is to take lines out.
+ */
+export function reportCheckVerdict(inp: {
+    verdict: DashboardStateVerdict;
+    complete: readonly EstateRow[];
+    pending: readonly EstateRow[];
+    dashboardOnly: boolean;
+    warnMergeGated: () => void;
+    gatedCount: number;
+}): { rc: number; stdout: string; stderr: string } {
+    const { verdict, dashboardOnly } = inp;
+    const complete = dashboardOnly ? [] : inp.complete;
+    const pending = dashboardOnly ? [] : inp.pending;
+    let err = verdict.error ?? '';
+    if (complete.length) {
+        err +=
+            '❌  Completed roadmaps are still in `agents/roadmaps/` — ' +
+            'move them to `agents/roadmaps/archive/` (per the ' +
+            '`roadmap-progress-sync` rule):\n';
+        for (const r of complete) err += `      - ${r.rel}  (${r.done}/${r.total_active} done)\n`;
+    }
+    if (pending.length) {
+        err +=
+            '❌  Iron Law 3 — roadmaps with unresolved `[~]` deferred ' +
+            'items must NOT auto-archive. Resolve via `roadmap-management § 4b` ' +
+            '(spawn follow-up, restore, or cancel):\n';
+        for (const r of pending) {
+            err += `      - ${r.rel}  (${r.done}/${r.total_active} done · ${r.deferred} deferred)\n`;
+        }
+    }
+    if (!dashboardOnly && inp.gatedCount > 0) inp.warnMergeGated();
+    const rc = verdict.stale || complete.length > 0 || pending.length > 0 ? 1 : 0;
+    return { rc, stdout: rc === 0 ? (verdict.ok ?? '') : '', stderr: err };
 }
 
 /** `--tracked-mode` / `--untracked-mode` → the mode, or null for any other token. */

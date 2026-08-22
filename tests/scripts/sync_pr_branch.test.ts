@@ -151,10 +151,14 @@ describe('generated vs authored', () => {
 });
 
 describe('the conflict report names a per-class resolution', () => {
+    // The generated example is `hook_manifest.json` and not the archive index
+    // on purpose: since 2026-08-22 the archive index and the dashboard are
+    // generated AND untracked, so they carry a different instruction and would
+    // make this fixture test two classes at once.
     const plan = {
         exit: 1 as const,
         message: 'merge of origin/main hit 3 conflict(s).',
-        generated: ['agents/roadmaps/archive/index.json'],
+        generated: ['src/scripts/hook_manifest.json'],
         remeasured: ['src/config/gate-violation-baselines.json'],
         authored: ['agents/roadmaps/stubs/README.md'],
         scanned: 1,
@@ -190,6 +194,26 @@ describe('the conflict report names a per-class resolution', () => {
         // resolutions come before the one that needs a human.
         expect(out.indexOf('GENERATED')).toBeLessThan(out.indexOf('REMEASURED'));
         expect(out.indexOf('REMEASURED')).toBeLessThan(out.indexOf('AUTHORED'));
+    });
+
+    it('sends an untracked-by-design conflict to the deletion, never to --ours', () => {
+        // The regression this exists to stop, in one assertion: a branch created
+        // before the 2026-08-22 cutover hits `modify/delete` on these paths, and
+        // the generic generated advice (`git checkout --ours`) has no side to
+        // check out — following it re-adds the file, which is how PR #1505 put
+        // the dashboard back on `main` a day after it was first untracked.
+        const out = renderConflictReport({
+            ...plan,
+            generated: ['agents/roadmaps-progress.md', 'agents/roadmaps/archive/INDEX.md'],
+        });
+        const section = out.slice(out.indexOf('UNTRACKED BY DESIGN'), out.indexOf('REMEASURED'));
+        expect(section).toContain('TAKE THE DELETION');
+        expect(section).toContain('git rm --cached');
+        expect(section).toContain('agents/roadmaps-progress.md');
+        expect(section).toContain('agents/roadmaps/archive/INDEX.md');
+        expect(section).not.toContain('checkout --ours');
+        // …and the class it was split out of is not also emitted for them.
+        expect(out).not.toContain('GENERATED (');
     });
 
     it('emits no class section when that class is empty', () => {

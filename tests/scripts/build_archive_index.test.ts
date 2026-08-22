@@ -29,6 +29,7 @@ import {
     renderMarkdown,
     tally,
 } from '../../src/scripts/build_archive_index.js';
+import { evaluateDashboardState } from '../../src/agent-src/scripts/dashboard_mode.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -181,9 +182,96 @@ describe('the CLI CI actually runs', () => {
         }
     });
 
-    it('is up to date against the real archive — the committed index is not stale', () => {
-        const r = run(REPO_ROOT, ['--check', '--quiet']);
+    // `--untracked-mode`, because that is the mode this repository runs: the
+    // index is not committed, so a clean CI checkout has no file on disk and
+    // the default tracked mode would report it "out of date" against nothing.
+    // The mode's own table still compares a copy that IS present against a
+    // fresh render, so this stays a freshness assertion either way — it is not
+    // weakened by the flag, it is pointed at the state that actually exists.
+    it('is up to date against the real archive — a present index is not stale', () => {
+        const r = run(REPO_ROOT, ['--check', '--untracked-mode', '--quiet']);
         expect(r.stdout).toMatch(/^scanned: \d+$/m);
         expect(r.status).toBe(0);
+    });
+});
+
+/**
+ * `--untracked-mode`. The index is no longer committed here, and the failure
+ * this guards is the one that already happened once to the dashboard: a branch
+ * created before the untrack carries the file and a merge puts it back.
+ *
+ * The tracked case is asserted against the pure table rather than the CLI on
+ * purpose — staging a file into the real repository's index from a test to
+ * prove a red is exactly the mutation `gate-scripts-that-mutate-the-tree`
+ * forbids, and the table is where the verdict is actually decided.
+ */
+describe('--untracked-mode', () => {
+    const REL = 'agents/roadmaps/archive/INDEX.md';
+
+    it('FAILS when the artefact is still in the git index, and names the fix', () => {
+        const v = evaluateDashboardState({
+            mode: 'untracked',
+            present: true,
+            trackedInGit: true,
+            current: true,
+            rel: REL,
+            regen: 'Run `task build-archive-index` to regenerate.',
+            noun: 'archive index',
+        });
+        expect(v.stale).toBe(true);
+        expect(v.error).toContain('is still tracked by git');
+        expect(v.error).toContain(`git rm --cached ${REL}`);
+    });
+
+    it('passes when the artefact is absent — the declared state, not a skip', () => {
+        const v = evaluateDashboardState({
+            mode: 'untracked',
+            present: false,
+            trackedInGit: false,
+            current: false,
+            rel: REL,
+        });
+        expect(v.stale).toBe(false);
+        expect(v.ok).toContain('is not committed here');
+    });
+
+    it('still fails a PRESENT but stale copy — untracked is not unchecked', () => {
+        const v = evaluateDashboardState({
+            mode: 'untracked',
+            present: true,
+            trackedInGit: false,
+            current: false,
+            rel: REL,
+            regen: 'Run `task build-archive-index` to regenerate.',
+            noun: 'archive index',
+        });
+        expect(v.stale).toBe(true);
+        expect(v.error).toContain('is stale');
+        // The caller's own regeneration command, not the dashboard's — a second
+        // artefact reusing this table must not be told to run the wrong tool.
+        expect(v.error).toContain('task build-archive-index');
+        expect(v.error).not.toContain('update_roadmap_progress');
+    });
+
+    it('leaves every default-mode message byte-identical without the new fields', () => {
+        const v = evaluateDashboardState({
+            mode: 'tracked',
+            present: false,
+            trackedInGit: false,
+            current: false,
+            rel: 'agents/roadmaps-progress.md',
+        });
+        expect(v.error).toContain('deliberately does not commit the dashboard');
+        expect(v.error).toContain('update_roadmap_progress');
+    });
+
+    it('the CLI runs the untracked table against the real repository', () => {
+        const r = run(REPO_ROOT, ['--check', '--untracked-mode']);
+        expect(r.status).toBe(0);
+        // Both halves are named whether they are present-and-fresh or absent —
+        // the two verdicts differ, and a clean CI checkout produces the second.
+        expect(r.stdout).toContain('agents/roadmaps/archive/INDEX.md');
+        expect(r.stdout).toContain('agents/roadmaps/archive/index.json');
+        expect(r.stdout).toMatch(/is up to date|is not committed here/);
     });
 });

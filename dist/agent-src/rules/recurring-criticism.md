@@ -107,4 +107,4 @@ inflate it, so it is not claimed — skipping this rule is caught by nothing.
 - [`decision-revisit-gate`](decision-revisit-gate.md) — the other entrance; owns the five steps and the owner-reserved routing this rule reuses instead of restating. Separate file only because that one sits four lines under the 200-line cap.
 - [`self-repair-loop`](self-repair-loop.md) — the single-occurrence intake; this rule is what its `occurrences` counter is for.
 - [`active-remediation`](active-remediation.md) — the terminal "leave it" this rule does not override (see `collision_ok`).
-- [`/analyze:inbox`](../domains/analysis-workbench/analyze/inbox/command.md) § Phase 4c — the artifact-side detection that routes here.
+- [`/analyze:inbox`](../commands/analyze/inbox.md) § Phase 4c — the artifact-side detection that routes here.

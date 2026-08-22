@@ -131,8 +131,14 @@ tasks:
 
   check-archive-index:
     silent: true
-    desc: Verify the archive index matches a fresh build (fails on drift)
-    cmd: ./scripts-run src/scripts/build_archive_index --check {{.QUIET_FLAG}}
+    # `--untracked-mode`: this repository does NOT commit the archive index —
+    # both halves are written by one `build_archive_index` call, so every open
+    # branch collided on them (49 of the last 120 merge commits each, and the
+    # single most frequent Consistency failure). Untracked is not unchecked: a
+    # copy present on disk is still compared against a fresh render, and one
+    # still in the git index fails naming `git rm --cached`.
+    desc: Verify a present archive index is fresh, and fail if it is still tracked (CI gate)
+    cmd: ./scripts-run src/scripts/build_archive_index --check --untracked-mode
 
   compile-corpus:
     silent: true
@@ -270,7 +276,10 @@ tasks:
     # `--archive`: a completed roadmap is moved to agents/roadmaps/archive/ here
     # rather than reported as a warning nobody acts on. `roadmap-progress-check`
     # deliberately does NOT pass it — a CI gate must not mutate its own subject.
-    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --archive
+    # Source path, not `.augment/scripts/…`: that tree is a gitignored
+    # projection `task sync` builds, so the projection form fails outright in
+    # a fresh worktree and in any CI step ordered before `task sync`.
+    cmd: ./scripts-run src/agent-src/scripts/update_roadmap_progress --archive
 
   roadmap-progress-check:
     silent: true
@@ -280,8 +289,19 @@ tasks:
     # still compared against a fresh render, and one still in the git index
     # fails naming `git rm --cached`.
     desc: Fail if a present agents/roadmaps-progress.md is stale, or if it is still tracked (for CI)
-    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check --untracked-mode
+    cmd: ./scripts-run src/agent-src/scripts/update_roadmap_progress --check --untracked-mode
 
+  roadmap-dashboard-untracked-check:
+    silent: true
+    # The NARROW half of `roadmap-progress-check`, and the only half that
+    # belongs behind a required status check. `--dashboard-only` asserts this
+    # artefact's own state — tracked / absent / stale — and skips the
+    # estate-wide conditions (completed-but-unarchived, Iron Law 3), which are
+    # about roadmaps an unrelated PR never touched. Wiring the full gate into
+    # the required job turned a pre-existing deferred item on `main` into a
+    # merge block on every PR; measured 2026-08-22 on PR #1520.
+    desc: Fail if the roadmap dashboard is tracked or stale (narrow; for the required CI job)
+    cmd: ./scripts-run src/agent-src/scripts/update_roadmap_progress --check --untracked-mode --dashboard-only
   check-roadmap-trackable:
     silent: true
     desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)

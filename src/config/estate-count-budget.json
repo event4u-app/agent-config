@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 4,
+    "active_roadmaps": 3,
     "later_roadmaps": 55,
     "open_blockers": 26
   },
@@ -727,6 +727,20 @@
       "later_roadmaps": 55,
       "open_blockers": 26,
       "why": "REBASED ONTO THE TRUNK'S LINEAGE (third time on this branch -- main moved through PR #1517, then #1495 and #1523 while this branch was open). main's history is kept whole (100 entries, baseline 4/55/28) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -2 open blockers, both on road-to-evidence-based-adr-governance: `owner-autonomy-batch` and `authority-coupling-decision`, resolved on a 2-of-2 convergent AI-council pass. Each is closed as `AUTHORITY UNAVAILABLE -- FLOOR PRESERVED` rather than `RE-AFFIRMED (no)` -- the first records an operational act a council may take, the second would assert a policy rejection no owner made. `commit-policy.md:37` and ADR-005 section 1 both remain operative and grade-derived authority stays disabled; the three owner-reserved policy questions are transferred to agents/roadmaps/stubs/road-to-owner-authority-decisions.md with per-question reopening conditions.\n\nactive_roadmaps is unchanged and that is deliberate: the roadmap is NOT archived, because 13 steps remain genuinely open (2.4, 3.4, 4.3, 4.4 and the acceptance criteria). Archiving it to buy the number down would be the silent-green this ledger's own 67 -> 69 entry names as the incentive the ratchet must never create."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 3,
+      "later_roadmaps": 55,
+      "open_blockers": 28,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE (second time on this branch -- main moved through #1517, then #1495 and #1523, while this branch waited on review). main's history is kept whole and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -1 active, earned by closing `road-to-condensed-link-repair` (6 done / 1 cancelled-as-null / 0 open / 0 deferred) and archiving it. open_blockers is unchanged: this roadmap carried none.\n\nThe cancelled item is AC-2, closed as an HONEST NULL rather than weakened -- it required both links to resolve in `src/` AND in the projection, and `docs/` exists in neither tree, so no implementation satisfies it. Replacement criterion AC-2R was approved by the same 2-of-2 AI-council ruling and is met. AC-3 was held deferred until workflow run 32546466190 proved the newly wired `check-condensed-paths` step ran green remotely -- closed on the observed run, not on the wiring.\n\nNo offset taken and none due: one roadmap disposed, none created."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 3,
+      "later_roadmaps": 55,
+      "open_blockers": 26,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-condensed-link-repair is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). open_blockers unchanged at 26 and later_roadmaps unchanged at 55 \u2014 nothing was parked and no blocker moved, so the drawdown is the archival alone and is not padded with a closure this change did not earn."
     },
     {
       "at": "2026-08-22",
