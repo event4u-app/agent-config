@@ -77,8 +77,47 @@ function flag(argv: string[], name: string): string | null {
     return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
 }
 
+/**
+ * Resolve the repository to operate on. `--root` > `AGENT_CONFIG_PROJECT_ROOT` >
+ * this module's own tree.
+ *
+ * The middle rung is the whole point, and its absence was a confused deputy:
+ * `_dispatch.bash` parses `--root` GLOBALLY, strips it from argv, and exports
+ * `AGENT_CONFIG_PROJECT_ROOT` (`:1655`) — then this engine read neither and fell
+ * back to its own module path. So `agent-config code-graph build --root <other
+ * repo>` silently indexed THIS package. The dispatcher made the decision and the
+ * engine substituted its own, which is why every consumer-facing invocation was
+ * wrong about which repository it had just read.
+ *
+ * `realpathSync` rather than `resolve` alone: a symlinked root must normalise to
+ * what will actually be walked, or the path a caller sees in the output is not
+ * the path that was indexed. Fail-loud on a root that does not exist — a silent
+ * fallback to the package tree is the defect this function exists to remove, and
+ * reintroducing it for a typo'd path would be the same bug wearing a smaller
+ * hat.
+ *
+ * Deliberately NOT touching `DEFAULT_CACHE`, which is anchored to `REPO_ROOT`
+ * for the same reason and is a separate decision: it is a WRITE path, with its
+ * own ownership, cleanup, concurrency and multi-repo namespacing questions.
+ * Council 2026-08-22, both seats, explicitly out of scope here.
+ */
+function resolveRoot(argv: string[]): string {
+    const explicit = flag(argv, '--root');
+    const fromDispatcher = process.env['AGENT_CONFIG_PROJECT_ROOT'];
+    const candidate =
+        explicit ?? (fromDispatcher !== undefined && fromDispatcher !== '' ? fromDispatcher : REPO_ROOT);
+    try {
+        return fs.realpathSync(path.resolve(candidate));
+    } catch {
+        // Returned unresolved on purpose: every caller checks existence and
+        // prints the path it was given, which is more useful in the error than
+        // a normalised form of a path that does not exist.
+        return path.resolve(candidate);
+    }
+}
+
 async function cmdBuild(argv: string[]): Promise<number> {
-    const root = flag(argv, '--root') ?? REPO_ROOT;
+    const root = resolveRoot(argv);
     const out = argv.includes('--out') ? flag(argv, '--out') : DEFAULT_CACHE;
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -122,7 +161,7 @@ function cmdValidate(argv: string[]): number {
 
 function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err: string } {
     const explicit = flag(argv, '--graph');
-    const root = flag(argv, '--root') ?? REPO_ROOT;
+    const root = resolveRoot(argv);
     if (explicit) {
         if (!fs.existsSync(explicit)) return { err: `graph not found: ${explicit}` };
         return { g: loadGraph(explicit, path.relative(REPO_ROOT, explicit)), note: '' };
@@ -179,7 +218,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
     const budget = budgetOf(argv);
     if (kind === 'affected' && flag(argv, '--since')) {
-        const root = flag(argv, '--root') ?? REPO_ROOT;
+        const root = resolveRoot(argv);
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);
         const merged: QueryResult = { source: r.g.source, seeds: [], lines: [], truncated: false, recommended_reads: [] };
         const perSeed: QueryResult[] = [];
@@ -216,7 +255,7 @@ function isFlagValue(argv: string[], token: string): boolean {
 }
 
 function cmdDetect(argv: string[]): number {
-    const root = flag(argv, '--root') ?? REPO_ROOT;
+    const root = resolveRoot(argv);
     if (flag(argv, '--format') === 'json') {
         // Machine-readable three-state verdict (Phase 2). Existing human-text
         // output below is unchanged for existing consumers.
@@ -316,7 +355,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
 }
 
 function cmdRefresh(argv: string[]): number {
-    const root = flag(argv, '--root') ?? REPO_ROOT;
+    const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? DEFAULT_CACHE;
     const budgetSeconds = budgetSecondsOf(argv);
     if (!fs.existsSync(root)) {
