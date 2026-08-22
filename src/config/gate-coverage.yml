@@ -368,8 +368,21 @@ gates:
     min_scanned: 20
     corpus: "candidate rows (REVIEW-NOW / SUPERSEDE (candidate)) across docs/decisions/adr-evidence-sweep-*.md (26 at baseline, in one artifact)"
     status: enforced
-    no_canary_reason: >-
-      the violation this gate detects is the ABSENCE of a routing row for a candidate, and the canary harness is create-only: planting a file cannot remove a row that is already there, and planting a new candidate row would require editing the sweep artifact rather than creating a path. Discrimination is proven by the gate's own `--self-test` instead — 6 cases, 4 rejecting, covering the no-section, unrouted, dateless and empty-route branches.
+    canary:
+      class: unrouted-candidate
+      path: docs/decisions/adr-evidence-sweep-zz-canary-probe.md
+      content: |
+        # ADR evidence sweep — canary probe
+
+        | Record | Disposition | Why |
+        |---|---|---|
+        | ADR-9999 | REVIEW-NOW | canary probe row |
+
+        ## Candidate routing
+
+        | Record | Disposition | Route | Dated follow-up |
+        |---|---|---|---|
+        | ADR-9999 | REVIEW-NOW | council | when we get to it |
     note: >
       The floor is 20 rather than 26 because a candidate LEAVING the population
       is the point of the sweep: every disposition that lands takes its row out
