@@ -134,14 +134,19 @@ pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md))
 ## 3. Resolve conflicts by class, never by taste
 
 Conflicts between queued PRs are expected, not exceptional: in this repository
-every roadmap PR touches `agents/roadmaps-progress.md` and
-`src/config/estate-count-budget.json`, so each merge re-conflicts every
-remaining PR. Resolve semantically, by these enumerated classes:
+roadmap PRs touch the same handful of shared paths, so each merge can
+re-conflict every remaining PR. Resolve semantically, by these enumerated
+classes.
+
+`src/config/estate-count-budget.json` used to be the second-worst offender here
+and no longer belongs in any class below: ADR-243 removed its stored baseline, so
+it changes on a policy decision rather than once per roadmap touch. A conflict in
+it now means two humans edited the same policy sentence — read both sides.
 
 | Class | Files | Resolution |
 |---|---|---|
 | Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
-| Generated artefacts | `agents/roadmaps-progress.md` · `src/config/estate-count-budget.json` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
+| Generated artefacts | `agents/roadmaps-progress.md` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
 | Archive move vs. edit | `agents/roadmaps/{archive,later,skipped}/**` — one side renamed or deleted, the other edited | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
 | Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
 
@@ -169,7 +174,6 @@ regenerate. Exclude those paths before deciding:
 ```bash
 git diff origin/<base>...HEAD --stat -- . \
   ':(exclude)agents/roadmaps-progress.md' \
-  ':(exclude)src/config/estate-count-budget.json' \
   ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
 ```
 

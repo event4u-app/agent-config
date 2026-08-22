@@ -105,14 +105,21 @@ const GENERATED = [
  * because the result looks measured either way. So this class NAMES the
  * resolution and stops. The human runs it, with the result in front of them.
  *
- * Both members conflict in 7 of the 7 open PRs measured for
- * road-to-merge-hotspot-drawdown. Neither is gitignorable: an untracked baseline
- * is a baseline no PR diff can be compared against, which deletes the ratchet.
+ * `gate-violation-baselines.json` conflicted in 7 of the 7 open PRs measured for
+ * road-to-merge-hotspot-drawdown, and it is not gitignorable: its counts are not
+ * a function of the tree, so the committed number is the only "before" side that
+ * exists.
+ *
+ * `estate-count-budget.json` USED to be the other member and is deliberately not
+ * listed any more (ADR-243). Its metrics ARE a function of the tree, so
+ * `check_estate_count` measures the floor at the base ref instead of storing it,
+ * and the file now carries policy only. A conflict in it is an ordinary AUTHORED
+ * one — two humans editing the same policy sentence — and telling the reader to
+ * "re-run the measurement" for that would name a resolution the file no longer
+ * has. Removing the row is the point of the change, not an oversight: the row
+ * described a conflict that no longer occurs.
  */
-const REMEASURED = [
-    'src/config/estate-count-budget.json',
-    'src/config/gate-violation-baselines.json',
-];
+const REMEASURED = ['src/config/gate-violation-baselines.json'];
 
 function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {
     const r = spawnSync(cmd, [...args], {
