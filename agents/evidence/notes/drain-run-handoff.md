@@ -66,6 +66,11 @@ applies — a stub would be a copy of it under another name.
   needed — six parallel union merges once produced two competing tables and
   non-rendering markdown, and the index had drifted stale within a day of its
   last repair. Add the stub file; that is the whole procedure now.
+  **This note is no longer the only thing holding it.** It was, and it lost:
+  a merge restored the table on 2026-08-22 against this exact paragraph.
+  `check_no_stub_inventory_table` now refuses the reintroduction in CI
+  (`rule-backstops.yml`), so a conflict resolution that keeps a table fails
+  the build instead of relying on someone reading this.
 - A **scope-bound** completion-review or `original-review` artefact citing a
   moved roadmap path gets a per-line `ref-ignore` marker, never a rewrite —
   rewriting falsifies what was reviewed at that scope.

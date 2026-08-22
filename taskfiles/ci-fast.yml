@@ -1594,6 +1594,11 @@ tasks:
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: ./scripts-run src/scripts/check_no_roadmap_refs
 
+  check-no-stub-inventory-table:
+    silent: true
+    desc: agents/roadmaps/stubs/README.md must not carry an inventory table of its own directory
+    cmd: ./scripts-run src/scripts/check_no_stub_inventory_table {{.QUIET_FLAG}}
+
   lint-documented-commands:
     silent: true
     desc: Every documented package command in shipped skill/rule/command docs resolves (reachability bug class; road-to-reachable-code-memory Phase 1)
