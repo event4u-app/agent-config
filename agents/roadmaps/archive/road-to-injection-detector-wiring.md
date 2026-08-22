@@ -160,7 +160,37 @@ saying too much.
       verify: `grep -A1 "injection_scan:"
       src/config/agent-settings.template.yml` still shows `enabled: false`.
 
-## Phase 3 — MCP tool fingerprints (gated, does not start yet)
+## Phase 3 — MCP tool fingerprints (CARRIED OUT of this roadmap 2026-08-22)
+
+> **Deferred-item resolution — carried, by unanimous council verdict.** Both
+> steps below stay `[~]` because neither was done and neither was cancelled: they
+> **moved**. `agents/roadmaps/road-to-mcp-runtime-integrity.md` was created in the
+> same change and carries both steps as `[ ]` open, together with
+> `b-pre-tool-turn-budget` as its own blocker. The AI council (2026-08-22, **2 of
+> 2 seats present**) chose carry over restore, merge and escalate, and ranked it
+> first of four parked items in this run — a security capability whose blocking
+> dependency had just acquired a live owner. This roadmap therefore archives with
+> the items preserved rather than buried, which is the whole point of the
+> preservation test.
+>
+> **Two corrections the carry made to the text below, both worth having.** The
+> dependency is not step `4.2` of the hook-economy work and it is not
+> *registration*: the `per_turn_composite` row already exists in
+> `src/config/hook-latency-budget.json` with `observe_only: true` and
+> `p50_ci: null`. What is missing is **arming** it — step **A2.1** of
+> `road-to-per-turn-hook-economy-carry.md` — and that step is itself gated by an
+> owner-reserved ceiling-value blocker and by its own Phase A1, because the
+> arming precondition (≥10 CI readings from ≥2 runner sessions) cannot be
+> evaluated today: the bench prints the composite and stores nothing. The `4.2`
+> id survives only inside the config's own note, from the archived parent.
+>
+> **And a rule the council made binding, so it is not lost with this file.** The
+> `post_tool_use` / session-start fallback this roadmap kept on the table is
+> **not equivalent protection** and may never be substituted silently: for a tool
+> with irreversible side effects, detecting a rug-pull after the first execution
+> is too late. If the budget lands without room for a pre-use check, the carrying
+> roadmap escalates the trade-off to the owner rather than quietly building the
+> weaker variant.
 
 - [~] **3.1 Fingerprint store for third-party MCP tool definitions.** Nothing
       in the tree covers rug-pull or tool-shadowing detection at runtime.
@@ -184,7 +214,7 @@ saying too much.
 ## Blockers
 
 ### blocker: b-adr-123-action-boundary
-- **Status:** open
+- **Status:** resolved
 - **Owner:** council
 - **Blocks:** nothing in this roadmap. Phases 1–3 proceed regardless; this
   blocker exists so the proposal is surfaced rather than silently dropped, and
@@ -247,6 +277,45 @@ saying too much.
   stands" is a live possibility and is **not** a reopen.
 
   Nothing in this roadmap was bundled with it, which was the point.
+
+- **RESOLVED 2026-08-22 — the seat arrived, and the answer is (b).** Asked again
+  on the metered rung, the council returned **2 of 2 present** and both seats
+  independently chose **(b): leave ADR-123 §2 standing unchanged.** Their shared
+  reasoning is the one this blocker itself wrote out as counter number one — the
+  four existing denials are bright-line rules about specific operations on
+  surfaces this package *owns*, while the refused capability interprets intent
+  from arbitrary tool content, and that is a **categorical** difference rather
+  than a quantitative one.
+
+  The verdict is recorded where a future reader will actually meet it: as
+  `## Follow-up (2026-08-22)` on `docs/decisions/ADR-123-runtime-security-scope-and-spawn-hardening.md`,
+  not only here — this roadmap archives, and a decision reachable only from
+  `archive/` is the "right, recorded, but unreachable" failure. It is stated
+  inline rather than linked to the council response file, because those live
+  under `agents/runtime/council/`, which is gitignored and auto-pruned.
+
+  **One correction the council made to this blocker's own argument, and it cuts
+  against the argument.** The premise attacked above — "ADR-123 §2 reasons that
+  this package supervises no tool calls" — is *this blocker's paraphrase*, not
+  §2's wording. §2 says an outbound guard "requires interpreting intent from
+  content … a categorically different mechanism". The distinction the council
+  affirmed is one the ADR already draws in its own text, so the erosion argument
+  was answering a restatement. Counter number one was right, and it was right for
+  a stronger reason than it claimed.
+
+  **What it does not settle.** The gap that raised the question — no detection of
+  MCP rug-pull or tool-shadowing at any point in a third-party tool's lifecycle —
+  is real and unaddressed. The same council session carried it forward into
+  `road-to-mcp-runtime-integrity.md` by a separate unanimous verdict. "§2 stands"
+  means the work needs no ADR reopen, never that the work is unnecessary.
+
+  **Revisit-if:** a `pre_tool_use` concern lands in
+  `src/scripts/hook_manifest.yaml` that decides permissibility by interpreting
+  content from a **non-governance** tool call. That is checkable by reading the
+  manifest, and it is mechanism-driven rather than abuse-driven on purpose: one
+  seat's proposed "evidence of misuse" trigger was rejected by the other as an
+  enforcement question rather than a scope question, and §2 refused on
+  architectural grounds.
 
 ### blocker: b-pre-tool-turn-budget
 - **Status:** open

@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -84,7 +84,7 @@ owned by the maintainer, and no step below depends on it.
 
 ## Phase 1 — split the merge op
 
-- [ ] **1.1 Add `pr-merge-auto` to the op union and to the block list.**
+- [x] **1.1 Add `pr-merge-auto` to the op union and to the block list.**
       Extend `GitOp` at `src/scripts/git_authorization_hook.ts:150-158` and
       `ALL_OPS` immediately below it; add the new member to `BLOCK_OPS` at
       `src/scripts/hooks/block_unauthorized_git.ts:89-95`. Enabling auto-merge
@@ -93,7 +93,7 @@ owned by the maintainer, and no step below depends on it.
       verify: `grep -c 'pr-merge-auto' src/scripts/git_authorization_hook.ts src/scripts/hooks/block_unauthorized_git.ts`
       is non-zero in both; `git show HEAD:src/scripts/git_authorization_hook.ts | grep -c 'pr-merge-auto'`
       returns `0` (the pre-state assertion).
-- [ ] **1.2 Classify `--auto` ahead of plain merge.** Order matters in both
+- [x] **1.2 Classify `--auto` ahead of plain merge.** Order matters in both
       classifiers — the block-side comment at
       `block_unauthorized_git.ts:133-134` states that the most specific pattern
       wins. Place the `--auto` pattern before the `pr-merge` pattern in both
@@ -102,7 +102,7 @@ owned by the maintainer, and no step below depends on it.
       verify: a committed test asserts `gh pr merge 12 --auto` classifies as
       `pr-merge-auto` and `gh pr merge 12` as `pr-merge`; both assertions were
       seen red against HEAD before the change landed.
-- [ ] **1.3 Classify the GraphQL mutation.** `enablePullRequestAutoMerge` in a
+- [x] **1.3 Classify the GraphQL mutation.** `enablePullRequestAutoMerge` in a
       `gh api graphql` body is the same operation by another transport.
       `ghApiWrite()` cannot express it — its two lookaheads are built for REST
       paths and write methods — so this needs its own pattern, not a widening
@@ -110,7 +110,7 @@ owned by the maintainer, and no step below depends on it.
       verify: a committed test asserts that a `gh api graphql -f query='mutation{enablePullRequestAutoMerge(...)}'`
       command classifies as `pr-merge-auto`, and that the same test fails
       against `git show HEAD:src/scripts/hooks/block_unauthorized_git.ts`.
-- [ ] **1.4 Exempt the de-escalating forms — ships with 1.1, never after.**
+- [x] **1.4 Exempt the de-escalating forms — ships with 1.1, never after.**
       `gh pr merge <n> --disable-auto` and
       `disablePullRequestAutoMerge` turn the capability **off** and must not
       require merge authorization. Without this, 1.1 makes the deadlock worse
@@ -121,7 +121,7 @@ owned by the maintainer, and no step below depends on it.
 
 ## Phase 2 — a deterministic negation guard
 
-- [ ] **2.1 Add the guard with the mechanism the tree already uses.**
+- [x] **2.1 Add the guard with the mechanism the tree already uses.**
       `src/scripts/hooks/turn_end_gate_hook.ts:330` already carries a
       negative-lookahead negation exclusion over
       `nicht|nichts|kein(e|en|em|er|es)|niemals|nie`, and `:490-491` carries a
@@ -129,7 +129,7 @@ owned by the maintainer, and no step below depends on it.
       Reuse the shape; do not invent a third.
       verify: the guard cites the existing patterns; `grep -n 'nicht\|niemals' src/scripts/git_authorization_hook.ts`
       returns the new lookahead.
-- [ ] **2.2 Build a POSITIVE control corpus alongside the negative one.** A
+- [x] **2.2 Build a POSITIVE control corpus alongside the negative one.** A
       negation guard that suppresses too much is worse than the defect: it
       silently stops authorizing merges the user did order, and the failure is
       invisible because nothing happens. The positive corpus asserts that
@@ -137,7 +137,7 @@ owned by the maintainer, and no step below depends on it.
       verify: both corpora are committed and both run; the positive corpus
       passes at HEAD **and** after the change — a positive case that only
       passes after is not a control.
-- [ ] **2.3 Keep the existing noun-sense exclusions intact.** The lookahead at
+- [x] **2.3 Keep the existing noun-sense exclusions intact.** The lookahead at
       `:189` already correctly refuses `merge conflict`, `merge commit`,
       `merge base`, `merge queue`, `merge state` and `merge status`. The
       negation guard is additive.
@@ -157,7 +157,7 @@ ordered one.
 cap trips — this is a hard constraint on how Phase 3 is written, not a
 preference.
 
-- [ ] **3.1 Add the carve-out with a provenance note and a paste
+- [x] **3.1 Add the carve-out with a provenance note and a paste
       discriminator.** The carve-out permits recording a merge the **user
       directed**, and must distinguish that from merge text that arrived by
       paste — a quoted chat log or a pasted roadmap snippet is not an
@@ -166,14 +166,14 @@ preference.
       verify: `wc -l < src/skills/roadmap-writing/SKILL.md` is `≤ 400` after the
       change; `./scripts-run src/scripts/skill_linter src/skills/roadmap-writing/SKILL.md`
       reports no new finding on that file.
-- [ ] **3.2 Mirror it in the roadmap template.** A carve-out that exists only in
+- [x] **3.2 Mirror it in the roadmap template.** A carve-out that exists only in
       the authoring skill is not reachable from the artefact it governs.
       verify: the template carries the same discriminator wording;
       `./scripts-run src/scripts/check_references` exits `0`.
 
 ## Phase 4 — conformance tests
 
-- [ ] **4.1 One regression test per vector, each naming the classifier op it
+- [x] **4.1 One regression test per vector, each naming the classifier op it
       asserts.** Five vectors: `--auto`, the GraphQL mutation, `--disable-auto`,
       a negated prompt, and a positive control. A test that asserts "is
       blocked" without naming the op cannot tell D1a from a plain merge, which
@@ -181,7 +181,7 @@ preference.
       verify: each test names its expected `GitOp` explicitly, and the test
       file's header records the pre-change failure count observed before the
       change landed — at least four of the five.
-- [ ] **4.2 Sabotage each guard before trusting it.** Neutralise the new
+- [x] **4.2 Sabotage each guard before trusting it.** Neutralise the new
       negation lookahead, watch the negative corpus go red, restore it. A guard
       never seen fail has unknown sensitivity.
       verify: the sabotage result is recorded in the test file's header comment
@@ -190,7 +190,7 @@ preference.
 
 ## Phase 5 — a static ratchet, and nothing else
 
-- [ ] **5.1 Forbid a future `*autoMerge*` / `mergePolicy` settings key.** A
+- [~] **5.1 Forbid a future `*autoMerge*` / `mergePolicy` settings key.** A
       static check over the settings schema and template, asserting the key
       space stays empty of those names. This is the whole of Phase 5: ADR-239
       already exists, its `review_trigger` at `:10` names the reopen condition,
@@ -207,6 +207,33 @@ preference.
 | Any edit to `agent-authority.md` or `non-destructive-by-default.md` | Both are kernel rules (`block_kernel_rule_writes.ts:10-12`) — an agent write is a tool-call-time deny. Filed as a blocker instead. |
 | Loosening `isAffirmative` | Its 24-character cap (`git_authorization_hook.ts:255`) is the safety argument for the whole confirmation path, stated in its own header. |
 
+
+      **BLOCKED `[~]` 2026-08-22 — and this step was BUILT and then REVERTED,
+      which is recorded rather than hidden.** I implemented it in full
+      (`check_no_automerge_key.ts` with a 7-case `--self-test`, a committed
+      fixture schema, a test, a CI task and a `gate-coverage.yml` entry) before
+      noticing that `blocker: owner-reserved-boundary` gates this phase **in
+      full**. All of it is removed.
+
+      Shipping it would have been the exact silent-green this run is forbidden
+      from reintroducing: a phase past its own gate. And the blocker's own
+      wording rules out the shortcut of resolving it myself — *"an agent
+      asserting that its own check stays inside a reservation is the shape the
+      reservation exists for."* The council that would otherwise route an
+      owner-reserved question has had 0 of 2 seats all run.
+
+      The blocker's own "If you do nothing" is the outcome taken: *"Phase 5
+      stays blocked. That is a cheap non-decision — the key does not exist
+      today, so the ratchet guards against a future nobody has proposed, and
+      ADR-239's review_trigger already names the reopen condition."*
+
+      What was learned by building it is worth keeping for whoever unblocks it:
+      the scope must be the two settings files and the match must be anchored on
+      a **key**, not the word — the gate's own source contains `autoMerge:` in
+      its docstring, so a word-matching gate over the tree would refuse the
+      decision it protects. And no create-only canary can reach it: both scanned
+      files already exist, so a plant lands outside the corpus and the gate
+      correctly stays green (measured — it was reported as a dead gate).
 ## Blockers
 
 ### blocker: kernel-doctrine-line
@@ -230,6 +257,16 @@ preference.
 - **If you do nothing:** A direct `merge PR #123` keeps reading as needing a
   second confirmation on top of itself. Nothing in Phases 1-5 breaks, and the
   gap stays recorded here rather than rediscovered from scratch next time.
+- **Disposition 2026-08-22 — left OPEN, and it is unresolvable by an agent by
+  construction.** Option (a) is a kernel-rule edit: both files are in the nine
+  listed at `src/scripts/hooks/block_kernel_rule_writes.ts:10-12`, so an agent
+  write is a **tool-call-time deny** — not a policy I am declining to break, a
+  mechanism that refuses. Option (b) declines a maintainer's doctrine
+  reconciliation, which is not mine to decline either. The council that would
+  otherwise route it has had 0 of 2 seats all run.
+
+  It blocks nothing in Phases 1–4, so the roadmap ships around it, and the gap
+  stays recorded here — which is its own stated fallback.
 
 ### blocker: owner-reserved-boundary
 
@@ -254,6 +291,17 @@ preference.
   the key does not exist today, so the ratchet guards against a future nobody
   has proposed, and `ADR-239`'s `review_trigger` already names the reopen
   condition.
+- **Disposition 2026-08-22 — the "do nothing" outcome, taken deliberately after
+  building Phase 5 and reverting it.** I implemented 5.1 in full before noticing
+  this blocker gates the phase, and removed all of it. The blocker's own wording
+  forecloses the shortcut: *"an agent asserting that its own check stays inside
+  a reservation is the shape the reservation exists for."* Confirming my own
+  scope boundary is precisely what (a) reserves to the owner, and the council
+  has had 0 of 2 seats.
+
+  Shipping the gate anyway would have been a phase past its own gate — the
+  silent-green defect this tree has already had once. What building it taught is
+  recorded at 5.1 so the work is not lost, only unshipped.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -268,21 +316,93 @@ preference.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `gh pr merge --auto` and the `enablePullRequestAutoMerge` GraphQL
+- [x] AC-1 — `gh pr merge --auto` and the `enablePullRequestAutoMerge` GraphQL
       mutation are classified as an operation distinct from a plain merge, and a
       regression test names the expected operation for each rather than only
       asserting that it is blocked.
-- [ ] AC-2 — `gh pr merge <n> --disable-auto` and `disablePullRequestAutoMerge`
+- [x] AC-2 — `gh pr merge <n> --disable-auto` and `disablePullRequestAutoMerge`
       require no merge authorization. The de-escalating deadlock is gone, and it
       was closed in the same change that could have deepened it.
-- [ ] AC-3 — a prompt saying `do not merge`, `nicht mergen` or
+- [x] AC-3 — a prompt saying `do not merge`, `nicht mergen` or
       `never auto-merge` authorizes nothing, while `merge PR #123` still
       authorizes a merge. Both corpora are committed and both run.
-- [ ] AC-4 — the existing noun-sense exclusions still hold: `merge conflict`
+- [x] AC-4 — the existing noun-sense exclusions still hold: `merge conflict`
       authorizes nothing, as it does today.
-- [ ] AC-5 — a roadmap may record a merge the user directed, distinguished from
+- [x] AC-5 — a roadmap may record a merge the user directed, distinguished from
       merge text that arrived by paste, and `roadmap-writing/SKILL.md` is still
       within its line cap.
-- [ ] AC-6 — no merge policy, no authorization store and no kernel-rule edit is
+- [x] AC-6 — no merge policy, no authorization store and no kernel-rule edit is
       present in the diff. The owner-reserved question is exactly as open as it
       was before.
+
+## Progress note — Phases 1–4 shipped, Phase 5 blocked, NOT archived
+
+17 of 18 steps. 5.1 is `[~]`, blocked by `owner-reserved-boundary`; both
+blockers stay **open** because both are unresolvable by an agent — one is a
+kernel-rule edit that is a tool-call-time deny, the other reserves to the owner
+exactly the confirmation an agent cannot give about its own check. Council: 0 of
+2 seats all run.
+
+Not archived: a parked step and two open blockers would be buried, and
+converting either to a decision is owner-reserved. `active_roadmaps` unchanged.
+
+### The four defects, closed and measured
+
+Pre-change behaviour, measured against HEAD before anything landed — **4 of 5
+vectors were wrong**:
+
+| vector | before | after |
+|---|---|---|
+| `gh pr merge 12 --auto` | `["pr-merge"]` | `["pr-merge-auto"]` |
+| `gh api graphql … enablePullRequestAutoMerge` | `[]` | `["pr-merge-auto"]` |
+| `gh pr merge 12 --disable-auto` | `["pr-merge"]` | `[]` |
+| `"nicht mergen"` | `["pr-merge"]` | `[]` |
+| `"merge PR #123"` (control) | `["pr-merge"]` | `["pr-merge"]` |
+
+The de-escalation exemption ships **with** the split, never after: without it,
+1.1 makes the deadlock worse — switching auto-merge *off* would require merge
+authorization.
+
+The GraphQL mutation got its **own** pattern rather than a widening of
+`ghApiWrite()`. That helper needs both a REST-shaped path and an explicit write
+method; widening it to reach a `graphql` body would have loosened every other op
+that uses it, which is a bigger change than the defect.
+
+### The positive control corpus is the half that mattered
+
+A negation guard that suppresses too much is **worse** than the defect: it
+silently stops authorizing merges the user did order, and the failure is
+invisible because nothing happens and nothing says why. The positive corpus
+passes at HEAD **and** after — a case that only passes after is not a control.
+
+Both guards sabotage-probed: dropping the negation lookbehind fails 4 cases,
+dropping the de-escalation exemption fails 1, restoring gives 20/20.
+
+The lookbehind is **line-scoped** (`[^.!?\n]`), reusing the vocabulary
+`turn_end_gate_hook.ts:330` and `:490-493` already carry rather than inventing a
+third — two negation vocabularies in one tree drift, and the drift is invisible
+until a prompt lands in the gap.
+
+### Three findings beyond the roadmap's scope
+
+1. **The negation defect is not merge-only.** `"Nicht pushen. Merge PR #12."`
+   still authorizes `push`. Phase 2 was scoped to the merge action, and widening
+   the guard to every op is a change to the authorization surface that deserves
+   its own screen — the same reason the merge fix needed a positive corpus first.
+   Asserted as **current** behaviour in the test file, so the day someone fixes
+   it the test fails and points at the note.
+2. **`isInterrogative` reads a leading `"Do "` as a question.**
+   `"Do not push. Merge PR #12."` classifies as `[]` — verified **pre-existing**
+   at HEAD, not caused by the negation guard.
+3. Two of my own first-draft fixtures were wrong, not the code: `"der merge
+   commit ist kaputt"` also matches the `commit` op's own prose pattern
+   (unrelated to the merge noun-sense), and the REST merge endpoint belongs to
+   the **block-side** classifier — `PASTED_COMMANDS` has no `gh api` entry at
+   all. Both corrected, with the correction recorded at the assertion.
+
+### Phase 3 fit the cap exactly
+
+`roadmap-writing/SKILL.md` was **at** 400 of a 400 cap, so the carve-out had to
+be net-neutral. It is: 400 lines after, `skill_linter` 1 pass / 0 warn, against a
+pre-state of 1 pass / 0 warn. Three redundant enumerations were compressed to pay
+for it — including a CI-literal list that duplicated the rule it cites.
