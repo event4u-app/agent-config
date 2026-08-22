@@ -45,6 +45,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { evaluateDashboardOnDisk, parseModeToken, type DashboardMode } from '../agent-src/scripts/dashboard_mode.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
@@ -390,6 +391,39 @@ export function main(argv: readonly string[]): number {
     const json = renderJson(entries);
 
     if (argv.includes('--check')) {
+        // `--untracked-mode` is the same three-state table the dashboard's
+        // `--check` already runs, on a second generated artefact: in-index is a
+        // failure, absent is the declared state, present is still compared
+        // against a fresh render. Untracked never means unchecked. The table
+        // itself lives in `dashboard_mode.ts` and is imported rather than
+        // restated, so the two artefacts cannot drift into different verdicts
+        // for the same observable state.
+        const mode: DashboardMode =
+            argv.map(parseModeToken).find((m) => m !== null) ?? 'tracked';
+        if (mode === 'untracked') {
+            let failed = false;
+            for (const [abs, rel, rendered] of [
+                [mdPath, `${ARCHIVE_REL}/${INDEX_MD}`, md],
+                [jsonPath, `${ARCHIVE_REL}/${INDEX_JSON}`, json],
+            ] as const) {
+                const v = evaluateDashboardOnDisk({
+                    mode,
+                    target: abs,
+                    repo_root: ROOT,
+                    rendered,
+                    rel,
+                    regen: 'Run `task build-archive-index` to regenerate.',
+                    noun: 'archive index',
+                });
+                if (v.stale) {
+                    failed = true;
+                    process.stderr.write(v.error ?? '');
+                } else if (!quiet && v.ok !== null) {
+                    process.stdout.write(v.ok);
+                }
+            }
+            return failed ? 1 : 0;
+        }
         const stale = [
             _read(mdPath) === md ? null : `${ARCHIVE_REL}/${INDEX_MD}`,
             _read(jsonPath) === json ? null : `${ARCHIVE_REL}/${INDEX_JSON}`,

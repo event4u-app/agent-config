@@ -39,6 +39,18 @@ export interface DashboardStateInput {
     current: boolean;
     /** Repo-relative path, for the messages. */
     rel: string;
+    /**
+     * How to regenerate, for the stale/missing messages. Defaults to the
+     * dashboard's own command. A second caller — `build_archive_index --check`
+     * — reuses this table for a different generated artefact, and a message
+     * telling that reader to run the dashboard generator would be wrong.
+     */
+    regen?: string;
+    /**
+     * What the artefact is called in the "deliberately does not commit the X"
+     * hint. Defaults to `dashboard` so every existing message is byte-identical.
+     */
+    noun?: string;
 }
 
 export interface DashboardStateVerdict {
@@ -50,8 +62,11 @@ export interface DashboardStateVerdict {
     ok: string | null;
 }
 
+// The SOURCE path, not `.augment/scripts/…`: that tree is a gitignored
+// projection built by `task sync`, so the advice failed outright in a fresh
+// worktree and in any CI step ordered before the sync.
 const REGEN =
-    'Run `node node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts` ' +
+    'Run `./scripts-run src/agent-src/scripts/update_roadmap_progress` ' +
     'to regenerate (or `task roadmap-progress` in Taskfile projects).';
 
 /**
@@ -66,6 +81,8 @@ const REGEN =
  */
 export function evaluateDashboardState(inp: DashboardStateInput): DashboardStateVerdict {
     const { mode, present, trackedInGit, current, rel } = inp;
+    const regen = inp.regen ?? REGEN;
+    const noun = inp.noun ?? 'dashboard';
 
     if (mode === 'untracked' && trackedInGit) {
         // Migration incomplete: declared untracked, still carried by git.
@@ -86,9 +103,9 @@ export function evaluateDashboardState(inp: DashboardStateInput): DashboardState
                 stale: true,
                 error:
                     `❌  ${rel} is missing. ` +
-                    REGEN.replace('to regenerate', 'to generate it') +
+                    regen.replace('to regenerate', 'to generate it') +
                     ' If this repository deliberately does not commit the ' +
-                    'dashboard, pass `--untracked-mode`.\n',
+                    `${noun}, pass \`--untracked-mode\`.\n`,
                 ok: null,
             };
         }
@@ -101,7 +118,7 @@ export function evaluateDashboardState(inp: DashboardStateInput): DashboardState
     }
 
     if (!current) {
-        return { stale: true, error: `❌  ${rel} is stale. ${REGEN}\n`, ok: null };
+        return { stale: true, error: `❌  ${rel} is stale. ${regen}\n`, ok: null };
     }
     return { stale: false, error: null, ok: `✅  ${rel} is up to date.\n` };
 }
@@ -117,6 +134,8 @@ export function evaluateDashboardOnDisk(opts: {
     repo_root: string;
     rendered: string;
     rel: string;
+    regen?: string;
+    noun?: string;
 }): DashboardStateVerdict {
     const present = fs.existsSync(opts.target);
     return evaluateDashboardState({
@@ -125,6 +144,8 @@ export function evaluateDashboardOnDisk(opts: {
         trackedInGit: opts.mode === 'untracked' && isTrackedInGit(opts.target, opts.repo_root),
         current: present && fs.readFileSync(opts.target, { encoding: 'utf-8' }) === opts.rendered,
         rel: opts.rel,
+        ...(opts.regen === undefined ? {} : { regen: opts.regen }),
+        ...(opts.noun === undefined ? {} : { noun: opts.noun }),
     });
 }
 
