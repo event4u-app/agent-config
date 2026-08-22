@@ -77,7 +77,7 @@
         "build:mcp-catalog": "./scripts-run src/scripts/build_mcp_catalog --write --strict",
         "build": "npm run build:cli && npm run build:install-bundle && npm run build:hooks && npm run build:mcp-bundle && npm run build:cli-delegate && npm run build:ui",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
-        "lint:ts": "eslint --cache 'src/**/*.ts'",
+        "lint:ts": "eslint --cache --max-warnings 0 'src/**/*.ts'",
         "test:ts": "vitest run",
         "lint:publint": "publint",
         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
