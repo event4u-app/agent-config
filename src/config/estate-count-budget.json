@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 3,
     "later_roadmaps": 55,
-    "open_blockers": 34
+    "open_blockers": 28
   },
   "baseline_history": [
     {
@@ -687,11 +687,46 @@
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-drain-commands is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker merge-authority, open on origin/main, is resolved here -- checked against the trunk rather than taken from the branch's prose. Worth a note given what this run is: merge-authority is the blocker about who may press merge, and it is closed in the same run whose every merge needed a fresh human authorization. later_roadmaps unchanged at 55 and nothing was parked."
     },
     {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 59,
+      "why": "open_blockers 65 -> 59: all SIX open blockers of road-to-per-turn-hook-economy resolved on the autonomous drain run, every one under AI-council disposition D (decide now; 2/2 quorum, anthropic + openai; record agents/evidence/council/drain-blocker-dispositions-b.md). Four of the six were SPLIT verdicts and each dissent is recorded at its blocker and inline at the step it touches. The trunk recorded the same six answers independently via road-to-estate-drawdown's consolidated decision sheet, and the merge kept both records: the sheet's `Answer: ACCEPTED` line states the choice, this branch's `Resolution` paragraph states what shipped for it. They agree because they read the same council record.\\n\\nRead the -6 honestly, because it hides three different kinds of movement. FOUR were discharged by shipped code: b-stdin-read-failure-policy (a failed payload read now DENIES on a block-capable slot carrying a fail-closed blocking concern, where it previously allowed silently), b-injection-scan-unwrap-security (output contract written first, then the unwrap narrowed against 14 fixtures; restoring the pre-fix extraction fails 11 of them), b-payload-read-parse-dominates (a read-and-exit bench cell that produced the number the roadmap had been assuming: ~70 percent of the large-payload delta is the dispatcher's own read plus parse, 69 and 74 percent over two rounds at --runs 50), and b-stop-async-split-prerequisites' P3 (three state files made safe under concurrent dispatch; pre-fix survival measured against 8 real processes at 3 of 96 log lines, 3 of 24 increments, 1 of 8 rollups). ONE is a decline with no code by design (b-guard-tool-partition, option (c): the zero-dispatch goal is abandoned, the Phase 4 measurement and the in-process tools: filter retained). ONE is a decision to NOT set a number for one release (b-per-turn-composite-bar, option (b)): the composite row stays observe-only and now carries its arming procedure and precondition, so there is still no ceiling on the per-turn cost and that is deliberate rather than forgotten.\\n\\nactive_roadmaps unchanged at 25 and later_roadmaps unchanged at 52, and both are load-bearing rather than incidental. The parent was NOT archived (out of scope for this run) even though its count_open reached 0, so it stays in the active tree. And its three Phase-0 steps were TRANSFERRED rather than cancelled -- to agents/roadmaps/stubs/road-to-per-turn-hook-economy-host-repro.md, which sits under stubs/ and is therefore counted by neither metric. That is the honest shape of a capability-gated transfer: it moves no number, which is exactly why the stub carries the three criteria verbatim, the complete moved list, and a named producer (the reporter of the original slowdown, on their own machine at the version installed when they reported it) with three probes measured on the transfer date as the wrong-machine control -- AGENT_CONFIG_HOOKS_ISOLATED unset, installed 14.6.0, and zero turn-end-gate refusal records against a schema that carries no refusal counter at all."
+    },
+    {
+      "at": "2026-08-20",
+      "active_roadmaps": 25,
+      "later_roadmaps": 52,
+      "open_blockers": 58,
+      "why": "open_blockers 64 -> 58, RE-ANCHORED AT MERGE. Measured at the merged tree rather than taken from either side: main had walked to 64 for its own closures while this branch walked to 59 for the six per-turn-hook-economy decisions, and 58 is what the merged tree actually reads. Adopting one side's number would have claimed a figure describing no tree. Every history entry from both sides is preserved; none was collapsed. The -6 on this branch mixes three kinds of movement and is not six pieces of finished work: four blockers were discharged by shipped code, one was a decline (the guard-tool partition, where the decision is that nothing ships), and one was a decision NOT to set a number (the composite bar, marked observe-only for a release). The transfer of steps 0.1-0.3 moves NO metric at all, because agents/roadmaps/stubs/ is counted by neither active_roadmaps nor open_blockers. Also worth recording rather than deduplicating: the trunk reached the SAME six decisions independently through road-to-estate-drawdown's consolidated decision sheet, because both read the same council record. The merge kept both, so each blocker now carries the sheet's choice and this branch's account of what shipped for it."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 24,
+      "later_roadmaps": 52,
+      "open_blockers": 55,
+      "why": "RE-MEASURED AT MERGE, not argued. Branch drain/road-to-per-turn-hook-economy merged origin/main during the autonomous roadmap-drain run; the trunk had moved (sibling drain PRs archiving roadmaps and resolving blockers in parallel), so neither side's numbers described the merged tree. These values are what `check_estate_count` MEASURED after the merge: {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 55}, from {'active_roadmaps': 24, 'later_roadmaps': 52, 'open_blockers': 61}. No part of the drop is attributed to this branch, deliberately: its own earned share is recorded in its roadmap and its PR body, and crediting a parallel session's drawdown to this change is exactly how a ratchet loosens without anyone noticing. Walked DOWN only \u2014 this entry never raises a number, and a lower measurement is the new ceiling."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 55,
+      "why": "WALKED DOWN by 6 blockers, all on road-to-per-turn-hook-economy and each verified open on origin/main and resolved on this branch rather than taken from the branch's prose: b-per-turn-composite-bar, b-stdin-read-failure-policy, b-guard-tool-partition, b-payload-read-parse-dominates, b-injection-scan-unwrap-security, b-stop-async-split-prerequisites. Two further blockers on the same roadmap (b-payload-mis-nested-readers, b-concern-load-taxes-every-slot) were already resolved on the trunk and are deliberately excluded from the delta. active_roadmaps stays 23 and later_roadmaps 52 on purpose: the roadmap reaches 11/11 done but carries 2 unresolved [~] deferred items, so Iron Law 3 refuses the archive and the regen correctly left it in the active tree. One of those items (4.2) states in its own text that the bar is the maintainer's to pre-register, so resolving them is not an agent call and they were NOT flipped to make the count fall."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 28,
+      "why": "WALKED DOWN by 6 blockers, all on road-to-per-turn-hook-economy and each verified open on origin/main and resolved here: b-per-turn-composite-bar, b-stdin-read-failure-policy, b-guard-tool-partition, b-payload-read-parse-dominates, b-injection-scan-unwrap-security, b-stop-async-split-prerequisites. Two further blockers on the same roadmap were already resolved on the trunk and are excluded. active_roadmaps stays 4 ON PURPOSE and this is the honest half: the roadmap reaches 11/11 done but carries 2 unresolved [~] items, so Iron Law 3 refuses the archive and the regen left it in the active tree. Item 4.2 states in its own text that the bar is the maintainer's to pre-register, so those boxes were NOT flipped to let the file archive itself. later_roadmaps unchanged at 55."
+    },
+    {
       "at": "2026-08-22",
       "active_roadmaps": 3,
       "later_roadmaps": 55,
-      "open_blockers": 34,
-      "why": "REBASED ONTO THE TRUNK'S LINEAGE, then re-measured -- main moved to eb1e0b866 while this branch was open. main's history is kept whole (95 entries, baseline 4/55/34) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -1 active, earned by closing `road-to-condensed-link-repair` (6 done / 1 cancelled-as-null / 0 open / 0 deferred) and archiving it. open_blockers is unchanged: this roadmap carried none.\n\nThe cancelled item is AC-2, closed as an HONEST NULL rather than weakened -- it required both links to resolve in `src/` AND in the projection, and `docs/` exists in neither tree, so no implementation satisfies it. Replacement criterion AC-2R was approved by the same 2-of-2 AI-council ruling and is met. AC-3 was held deferred until workflow run 32546466190 on this PR's head proved the newly wired `check-condensed-paths` step ran green remotely -- closed on the observed run, not on the wiring.\n\nNo offset taken and none due: one roadmap disposed, none created."
+      "open_blockers": 28,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE (second time on this branch -- main moved through #1517, then #1495 and #1523, while this branch waited on review). main's history is kept whole and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -1 active, earned by closing `road-to-condensed-link-repair` (6 done / 1 cancelled-as-null / 0 open / 0 deferred) and archiving it. open_blockers is unchanged: this roadmap carried none.\n\nThe cancelled item is AC-2, closed as an HONEST NULL rather than weakened -- it required both links to resolve in `src/` AND in the projection, and `docs/` exists in neither tree, so no implementation satisfies it. Replacement criterion AC-2R was approved by the same 2-of-2 AI-council ruling and is met. AC-3 was held deferred until workflow run 32546466190 proved the newly wired `check-condensed-paths` step ran green remotely -- closed on the observed run, not on the wiring.\n\nNo offset taken and none due: one roadmap disposed, none created."
     }
   ],
   "target": {

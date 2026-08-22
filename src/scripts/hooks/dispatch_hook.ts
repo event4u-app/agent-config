@@ -41,6 +41,7 @@ import {
   atomic_write_json,
   feedback_dir,
   is_replay_mode,
+  update_json_under_lock,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
 import { shapeAndRecord, type ConcernMessage } from "./injection_budget.js";
@@ -48,11 +49,15 @@ import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
   clearHookStdinOverride,
-  readFd0ToEnd,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
+import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
+export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
+import { _py_json_dumps } from './py_json_dumps.js';
+import { _fallback_yaml } from './fallback_yaml.js';
+export { _fallback_yaml } from './fallback_yaml.js';
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -145,6 +150,16 @@ interface Args {
   dry_run: boolean;
   project_dir: string;
   min_version: number;
+  /**
+   * Measurement-only: read stdin, build the envelope, exit. See `--read-exit`.
+   *
+   * OPTIONAL, unlike `dry_run` beside it, and the asymmetry is deliberate: this
+   * flag exists for one bench cell, so every caller that constructs an `Args`
+   * by hand — eight test fixtures across three files — would otherwise have to
+   * name a field it has no opinion about. `_parse_args` still sets it
+   * explicitly, so the production path never reads an absent value.
+   */
+  read_exit?: boolean;
 }
 
 function _resolve_session_id(envelope: JsonObject): string {
@@ -234,63 +249,6 @@ export function _load_yaml(p: string): JsonObject {
   return _isObject(data) ? data : {};
 }
 
-/**
- * Indent-aware mini-parser for the manifest's flat shape only.
- * Handles: scalars, `key: null`, `key: true/false`, `key: [a, b]`.
- * Drops comments + blank lines. Two-space indent assumed.
- *
- * Ported verbatim from the Python `_fallback_yaml` so the parser unit
- * tests have an exact twin; runtime prefers `_load_yaml` above.
- */
-export function _fallback_yaml(text: string): JsonObject {
-  const root: JsonObject = {};
-  const stack: Array<[number, JsonObject]> = [[-1, root]];
-  for (const raw of text.split("\n")) {
-    const line = raw.split("#", 1)[0]!.replace(/\s+$/, "");
-    if (!line.trim()) {
-      continue;
-    }
-    const indent = line.length - line.replace(/^ +/, "").length;
-    while (stack.length > 0 && stack[stack.length - 1]![0] >= indent) {
-      stack.pop();
-    }
-    const parent = stack.length > 0 ? stack[stack.length - 1]![1] : root;
-    const body = line.trim();
-    if (!body.includes(":")) {
-      continue;
-    }
-    const idx = body.indexOf(":");
-    const key = body.slice(0, idx).trim();
-    const val = body.slice(idx + 1).trim();
-    if (!val) {
-      const newObj: JsonObject = {};
-      parent[key] = newObj;
-      stack.push([indent, newObj]);
-    } else {
-      const lower = val.toLowerCase();
-      if (lower === "null" || lower === "~" || lower === "") {
-        parent[key] = null;
-      } else if (lower === "true") {
-        parent[key] = true;
-      } else if (lower === "false") {
-        parent[key] = false;
-      } else if (val.startsWith("[") && val.endsWith("]")) {
-        const inner = val.slice(1, -1).trim();
-        parent[key] = inner
-          ? inner
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s)
-          : [];
-      } else if (/^-?\d+$/.test(val)) {
-        parent[key] = parseInt(val, 10);
-      } else {
-        parent[key] = val.replace(/^['"]+|['"]+$/g, "");
-      }
-    }
-  }
-  return root;
-}
 
 interface ConcernDef extends JsonObject {
   name: string;
@@ -478,97 +436,6 @@ export function _resolve_concerns(
   return out;
 }
 
-// Python json.dumps(record, indent=2) byte-for-byte (ensure_ascii=True).
-function _py_json_dumps(value: unknown, indent: number): string {
-  const pad = " ".repeat(indent);
-  const escapeString = (s: string): string => {
-    let out = '"';
-    for (const ch of s) {
-      const code = ch.codePointAt(0) as number;
-      switch (ch) {
-        case '"':
-          out += '\\"';
-          break;
-        case "\\":
-          out += "\\\\";
-          break;
-        case "\n":
-          out += "\\n";
-          break;
-        case "\r":
-          out += "\\r";
-          break;
-        case "\t":
-          out += "\\t";
-          break;
-        case "\b":
-          out += "\\b";
-          break;
-        case "\f":
-          out += "\\f";
-          break;
-        default:
-          if (code < 0x20 || code > 0x7e) {
-            if (code > 0xffff) {
-              const c = code - 0x10000;
-              const hi = 0xd800 + (c >> 10);
-              const lo = 0xdc00 + (c & 0x3ff);
-              out +=
-                "\\u" +
-                hi.toString(16).padStart(4, "0") +
-                "\\u" +
-                lo.toString(16).padStart(4, "0");
-            } else {
-              out += "\\u" + code.toString(16).padStart(4, "0");
-            }
-          } else {
-            out += ch;
-          }
-      }
-    }
-    return out + '"';
-  };
-  const render = (v: unknown, depth: number): string => {
-    if (v === null || v === undefined) return "null";
-    if (typeof v === "boolean") return v ? "true" : "false";
-    if (typeof v === "number") {
-      if (!Number.isFinite(v)) {
-        if (Number.isNaN(v)) return "NaN";
-        return v > 0 ? "Infinity" : "-Infinity";
-      }
-      return String(v);
-    }
-    if (typeof v === "string") return escapeString(v);
-    const curPad = pad.repeat(depth + 1);
-    const closePad = pad.repeat(depth);
-    if (Array.isArray(v)) {
-      if (v.length === 0) return "[]";
-      return (
-        "[\n" +
-        v.map((item) => curPad + render(item, depth + 1)).join(",\n") +
-        "\n" +
-        closePad +
-        "]"
-      );
-    }
-    if (typeof v === "object") {
-      const obj = v as Record<string, unknown>;
-      const keys = Object.keys(obj);
-      if (keys.length === 0) return "{}";
-      return (
-        "{\n" +
-        keys
-          .map((k) => curPad + escapeString(k) + ": " + render(obj[k], depth + 1))
-          .join(",\n") +
-        "\n" +
-        closePad +
-        "}"
-      );
-    }
-    throw new TypeError(`Object of type ${typeof v} is not JSON serializable`);
-  };
-  return render(value, 0);
-}
 
 /**
  * Write the raw stdin payload to a capture directory when
@@ -1020,12 +887,53 @@ function _write_feedback(
     }),
   };
   try {
-    atomic_write_json(path.join(fb_dir, "summary.json"), summary);
+    // P3 of `b-stop-async-split-prerequisites` (council 2026-08-20, option (a)).
+    //
+    // WAS: one `summary.json` per session, published by `atomic_write_json`.
+    // The publish is atomic and that was never the problem — the PATH is one,
+    // so two dispatches in the same session (parallel tool calls on this host,
+    // or two platforms installed into one workspace) both wrote it and the later
+    // rename discarded the earlier rollup entirely. Evidence loss, silent.
+    //
+    // The fix is the per-invocation discriminator the blocker names, held INSIDE
+    // one file rather than fanned out across per-invocation filenames. Both
+    // were considered and the file-per-invocation form was refused on growth:
+    // the feedback tree is not pruned, so a 200-tool-call session would leave
+    // 200 rollups per session dir, and capping THAT needs a directory scan on
+    // the hot path. A capped list needs one locked read-modify-write, which is
+    // the same primitive `rule-trips.json` now uses for the same reason.
+    //
+    // `invocation` is pid + monotonic clock: unique per dispatch without a
+    // shared counter, and ordered within one process.
+    const invocation = `${String(process.pid)}-${process.hrtime.bigint().toString()}`;
+    update_json_under_lock<JsonObject>(path.join(fb_dir, "summary.json"), (loaded) => {
+      const priorRaw = (loaded as JsonObject)["invocations"];
+      const prior = Array.isArray(priorRaw) ? priorRaw : [];
+      const next = [...prior, { invocation, ...summary }];
+      return {
+        schema_version: 2,
+        session_id,
+        // Newest last, oldest dropped — the same rotation direction
+        // `dispatch-issues.jsonl` uses, so a reader learns one convention.
+        invocations: next.slice(Math.max(0, next.length - SUMMARY_INVOCATION_CAP)),
+      };
+    });
   } catch (exc) {
     const msg = exc instanceof Error ? exc.message : String(exc);
     process.stderr.write(`dispatch_hook: summary write failed: ${msg}\n`);
   }
 }
+
+/**
+ * How many invocation rollups one session's `summary.json` retains.
+ *
+ * 20, matching nothing in particular and stated as such: the file is a human
+ * debugging surface, twenty dispatches is more than a reader scrolls, and the
+ * value exists to bound growth rather than to preserve a measured window.
+ * `dispatch-issues.jsonl` caps at 200 because it holds FAILURES, which are rare;
+ * this holds every dispatch, which is not.
+ */
+export const SUMMARY_INVOCATION_CAP = 20;
 
 /**
  * Checkable-rule trip counting (road-to-credible-install Phase 6, scoped P3
@@ -1051,28 +959,38 @@ function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): voi
     const workspace = String(envelope["workspace_root"] || process.cwd());
     const state_dir = path.join(workspace, "agents", "runtime", "state");
     const target = path.join(state_dir, "rule-trips.json");
-    fs.mkdirSync(state_dir, { recursive: true });
-    let doc: JsonObject = { schema_version: 1, concerns: {} };
-    try {
-      const parsed = JSON.parse(fs.readFileSync(target, "utf-8")) as JsonObject;
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) doc = parsed;
-    } catch {
-      /* absent or corrupt → fresh counter file */
-    }
-    const concerns = (doc["concerns"] ?? {}) as Record<string, JsonObject>;
     const today = _now_iso().slice(0, 10);
-    for (const e of tripped) {
-      const name = String(e["concern"]);
-      const prev = (concerns[name] ?? { block: 0, warn: 0 }) as JsonObject;
-      concerns[name] = {
-        block: (Number(prev["block"]) || 0) + (e["exit_code"] === EXIT_BLOCK ? 1 : 0),
-        warn: (Number(prev["warn"]) || 0) + (e["exit_code"] === EXIT_WARN ? 1 : 0),
-        last_trip: today,
-      };
-    }
-    doc["schema_version"] = 1;
-    doc["concerns"] = concerns;
-    atomic_write_json(target, doc);
+    // P3 of `b-stop-async-split-prerequisites` (council 2026-08-20, option (a)).
+    // The read used to sit OUTSIDE the lock: `readFileSync` here,
+    // `atomic_write_json` there. `atomic_write_json` makes the PUBLISH atomic
+    // and says nothing about load → increment → publish, so two concurrent
+    // dispatchers both loaded `block: 3`, both computed 4, and one trip
+    // vanished. `update_json_under_lock` holds all three steps under one lock,
+    // which is the primitive that already exists for exactly this shape.
+    //
+    // The worse form is a lost FIELD, not a lost increment: this mutator
+    // republishes the whole `concerns` map, so a counter another dispatcher
+    // wrote in between would be reverted rather than merely missed.
+    update_json_under_lock<JsonObject>(target, (loaded) => {
+      const doc: JsonObject = { schema_version: 1, concerns: {}, ...(loaded as JsonObject) };
+      const concernsRaw = doc["concerns"];
+      const concerns = (
+        _isObject(concernsRaw) ? concernsRaw : {}
+      ) as Record<string, JsonObject>;
+      for (const e of tripped) {
+        const name = String(e["concern"]);
+        const prevRaw = concerns[name];
+        const prev = (_isObject(prevRaw) ? prevRaw : { block: 0, warn: 0 }) as JsonObject;
+        concerns[name] = {
+          block: (Number(prev["block"]) || 0) + (e["exit_code"] === EXIT_BLOCK ? 1 : 0),
+          warn: (Number(prev["warn"]) || 0) + (e["exit_code"] === EXIT_WARN ? 1 : 0),
+          last_trip: today,
+        };
+      }
+      doc["schema_version"] = 1;
+      doc["concerns"] = concerns;
+      return doc;
+    });
   } catch {
     /* fail-open — counters are observability, never dispatch-critical */
   }
@@ -1087,6 +1005,7 @@ function _parse_args(argv: string[]): Args {
     dry_run: false,
     project_dir: "",
     min_version: 0,
+    read_exit: false,
   };
   let sawPlatform = false;
   let sawEvent = false;
@@ -1109,6 +1028,9 @@ function _parse_args(argv: string[]): Args {
         break;
       case "--dry-run":
         args.dry_run = true;
+        break;
+      case "--read-exit":
+        args.read_exit = true;
         break;
       case "--project-dir":
         args.project_dir = argv[++i] ?? "";
@@ -1176,6 +1098,44 @@ export function main(argv?: string[]): number {
     }
   }
 
+  // ── `--read-exit`: the transport-isolation cell ─────────────────────────────
+  //
+  // `b-payload-read-parse-dominates`, option (a), council 2026-08-20 (2/2
+  // quorum): "add a same-fixture dispatcher cell that reads stdin and exits
+  // immediately, reporting its own latency and its share of the large-payload
+  // delta".
+  //
+  // WHY IT LIVES IN THE DISPATCHER rather than in a standalone probe script.
+  // The term being isolated is `readFd0ToEnd` + one `JSON.parse` of the same
+  // payload, and it must be measured through the SAME process shape as the
+  // slot it is a share of — same interpreter, same bundle, same spawn. A
+  // separate probe would have to re-implement the audited retrying reader, and
+  // a copy of that reader is precisely the drift `hook_stdin` was consolidated
+  // to remove. Bundle load does not vary with payload size, so it cancels in
+  // the large-minus-small delta, which is the number the option asks for.
+  //
+  // Measurement-only, and it exits BEFORE the manifest load, the concern
+  // resolution and every concern — so it can neither run a guard nor suppress
+  // one. Same exposure `--dry-run` already carries: reaching it requires
+  // editing the installed hook command, and anyone who can do that can delete
+  // the hook instead.
+  if (args.read_exit === true) {
+    const probe = tty.isatty(0) ? { text: "", failure: null } : stdinReadFailure();
+    if (probe.failure !== null) {
+      process.stderr.write(`dispatch_hook: --read-exit read failed: ${probe.failure}\n`);
+      return EXIT_ALLOW;
+    }
+    // The parse is the half of the term under test, so it must actually happen
+    // and its result must be observable — otherwise a future optimiser could
+    // elide it and the cell would silently measure the read alone.
+    const envelope = _build_envelope(args, probe.text);
+    process.stderr.write(
+      `dispatch_hook: --read-exit ok (${probe.text.length} chars, ` +
+        `${Object.keys(_isObject(envelope["payload"]) ? envelope["payload"] : {}).length} payload keys)\n`,
+    );
+    return EXIT_ALLOW;
+  }
+
   if (!EVENT_VOCABULARY.has(args.event)) {
     process.stderr.write(
       `dispatch_hook: unknown event '${args.event}'; allowed: ` +
@@ -1208,7 +1168,9 @@ export function main(argv?: string[]): number {
   // below throws EAGAIN on any payload above the pipe buffer and silently
   // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
   // see readFd0ToEnd's header in hooks/hook_stdin.ts.
-  const payload_text = tty.isatty(0) ? "" : _readStdin();
+  const read = tty.isatty(0) ? { text: "", failure: null } : stdinReadFailure();
+  const payload_text = read.text;
+  _stdin_read_failed = read.failure;
   if (_stdin_read_failed !== null) {
     // NEVER silent: an empty envelope reached from a failed read means every
     // guard on this event evaluated nothing. The exit code is unchanged (see
@@ -1252,6 +1214,21 @@ export function main(argv?: string[]): number {
 
   if (concerns.length === 0) {
     return EXIT_ALLOW; // platform unsupported / fallback-only / empty slot
+  }
+
+  // `b-stdin-read-failure-policy` option (c). Placed HERE, not at the read:
+  // the decision needs the resolved concern list, because the whole question is
+  // whether a fail-closed blocking guard was among the ones that just ran
+  // blind. Before the dry-run branch it would turn a plan printer into a
+  // refusal; after the chain it would spend the chain first.
+  if (_stdin_read_failed !== null) {
+    const deny = denyOnStdinFailure(args.platform, args.event, concerns, _stdin_read_failed);
+    if (deny !== null) {
+      const emission = emitFor(args.platform, args.event, "block", [deny.reason], EXIT_BLOCK);
+      if (emission.stdout) process.stdout.write(emission.stdout);
+      if (emission.stderr) process.stderr.write(emission.stderr);
+      return emission.exit;
+    }
   }
 
   const envelope = _build_envelope(args, payload_text);
@@ -1447,24 +1424,14 @@ function _sortedRepr(s: ReadonlySet<string>): string {
  * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
  * is an allow, emitted silently. Found by the R2 review.
  *
- * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
- * decision is unchanged. Turning a failed read into a DENY is a policy change on
- * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
- * improvised here: an unreadable payload on a block-capable event arguably must
- * refuse, and that call is the maintainer's.
+ * The failure is LOUD (stderr + a dispatch issue) on every slot, and since
+ * `b-stdin-read-failure-policy` was decided (council 2026-08-20, option (c)) it
+ * also DENIES — but only where a deny is honoured and a fail-closed blocking
+ * concern was among the ones that ran blind. See `denyOnStdinFailure` for the
+ * policy and for why the two broader options were refused.
  */
 let _stdin_read_failed: string | null = null;
 
-function _readStdin(): string {
-  try {
-    // Reads to EOF and retries on EAGAIN rather than treating it as empty
-    // input; shared with the concern-side reader so both paths cannot drift.
-    return readFd0ToEnd();
-  } catch (exc) {
-    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
-    return "";
-  }
-}
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
 // every module shares the bundle's `import.meta.url` (declare at top of file).
