@@ -30,6 +30,7 @@ function member(name: string, enabled: boolean, model = 'm'): MemberConfig {
         model_ladder: [],
         participate_low_impact: true,
         prompt_cache_ttl: '5m',
+    verified_at: null,
     };
 }
 

@@ -144,121 +144,6 @@ export class CouncilConfigError extends Error {
     }
 }
 
-// ── Python-format helpers (byte-faithful error messages) ───────────
-
-/** Python `repr()` for a string scalar (single-quoted, escaped). */
-function _pyReprStr(s: string): string {
-    const hasSingle = s.includes("'");
-    const hasDouble = s.includes('"');
-    const quote = hasSingle && !hasDouble ? '"' : "'";
-    let body = s
-        .replace(/\\/g, '\\\\')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t');
-    if (quote === "'") {
-        body = body.replace(/'/g, "\\'");
-    } else {
-        body = body.replace(/"/g, '\\"');
-    }
-    return `${quote}${body}${quote}`;
-}
-
-/** Python `repr()` for a float value (shortest round-trip, `N.0` for ints). */
-function _pyReprFloat(value: number): string {
-    if (Number.isInteger(value) && Number.isFinite(value)) {
-        return `${value}.0`;
-    }
-    if (value === Infinity) {
-        return 'inf';
-    }
-    if (value === -Infinity) {
-        return '-inf';
-    }
-    if (Number.isNaN(value)) {
-        return 'nan';
-    }
-    return String(value);
-}
-
-/**
- * Python `repr()` for an arbitrary parsed value. Floats are tracked via
- * `_FLOAT` so int-valued floats render `N.0`; bare numbers render as
- * Python ints (no decimal). Mirrors `{value!r}` formatting.
- */
-function _pyRepr(value: unknown): string {
-    if (value instanceof _Float) {
-        return _pyReprFloat(value.value);
-    }
-    if (value === null || value === undefined) {
-        return 'None';
-    }
-    if (typeof value === 'boolean') {
-        return value ? 'True' : 'False';
-    }
-    if (typeof value === 'string') {
-        return _pyReprStr(value);
-    }
-    if (typeof value === 'number') {
-        return String(value);
-    }
-    if (Array.isArray(value)) {
-        return `[${value.map((v) => _pyRepr(v)).join(', ')}]`;
-    }
-    if (typeof value === 'object') {
-        const parts: string[] = [];
-        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-            parts.push(`${_pyReprStr(k)}: ${_pyRepr(v)}`);
-        }
-        return `{${parts.join(', ')}}`;
-    }
-    return String(value);
-}
-
-/** Wrapper marking a number that should `repr()` as a Python float. */
-class _Float {
-    constructor(readonly value: number) {}
-}
-
-/** Mark `n` so `_pyRepr` renders it with a Python float repr (`N.0`). */
-function _f(n: number): _Float {
-    return new _Float(n);
-}
-
-/** Python `type(value).__name__`. */
-function _pyTypeName(value: unknown): string {
-    if (value === null || value === undefined) {
-        return 'NoneType';
-    }
-    if (typeof value === 'boolean') {
-        return 'bool';
-    }
-    if (typeof value === 'number') {
-        return Number.isInteger(value) ? 'int' : 'float';
-    }
-    if (typeof value === 'string') {
-        return 'str';
-    }
-    if (Array.isArray(value)) {
-        return 'list';
-    }
-    if (typeof value === 'object') {
-        return 'dict';
-    }
-    return typeof value;
-}
-
-/** Python `sorted(set_of_strings)` rendered as a list repr `['a', 'b']`. */
-function _sortedListRepr(items: Iterable<string>): string {
-    const sorted = [...items].sort();
-    return `[${sorted.map((s) => _pyReprStr(s)).join(', ')}]`;
-}
-
-/** Python `oct(mode)` → `0o600`-shaped string. */
-function _pyOct(mode: number): string {
-    return `0o${mode.toString(8)}`;
-}
-
 // ── Python int()/float() coercion + isinstance helpers ─────────────
 
 /**
@@ -432,6 +317,19 @@ export interface MemberConfig {
      * the falsification condition that gates ever enabling `'1h'`.
      */
     readonly prompt_cache_ttl: '5m' | '1h';
+    /**
+     * Optional `YYYY-MM-DD` stamp: the date this member's `model:` pin was last
+     * checked against the provider's own surface. `null` when unset.
+     *
+     * Exists because a hard pin cannot notice its own age. The starter template
+     * shipped `claude-sonnet-4-5` on an enabled member with nothing in the file
+     * able to flag it — and `check_council_pin_staleness` reads exactly this
+     * field. A member on a vendor sentinel (`codex-default`, or an alias like
+     * `sonnet` that the provider documents as "the latest model") needs no
+     * stamp: it cannot go stale, which is why the gate exempts it rather than
+     * demanding a date nobody would refresh.
+     */
+    readonly verified_at: string | null;
 }
 
 /**
@@ -635,6 +533,15 @@ export type QuorumMinPresent = number;
 
 export type { FallbackConfig } from './fallback_config.js';
 import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
+import {
+    _f,
+    _pyOct,
+    _pyRepr,
+    _pyReprFloat,
+    _pyReprStr,
+    _pyTypeName,
+    _sortedListRepr,
+} from './py_format.js';
 
 export interface CouncilConfig {
     readonly enabled: boolean;
@@ -1916,6 +1823,55 @@ function _build_member(
     // untouched here) OR as a mapping carrying `ttl`. '5m' is the
     // permanent default; see docs/contracts/ai-council-config.md
     // § Prompt cache TTL for the falsification condition on '1h'.
+    // A malformed date fails CLOSED. A stamp is a claim about when a human
+    // last looked; accepting `2026-13-45` or `soon` would make the staleness
+    // gate report on a string it cannot compare, which is worse than no stamp.
+    const verified_at_raw = _get(cfg, 'verified_at', null);
+    let verified_at: string | null = null;
+    if (verified_at_raw !== null && verified_at_raw !== undefined) {
+        // The stamp must be a QUOTED string, and the reason is a measured
+        // fail-open rather than a style preference.
+        //
+        // YAML 1.1 resolves an unquoted `2026-08-22` to a Date. Accepting that
+        // and normalising it back with `toISOString()` was the first
+        // implementation, and it LAUNDERED impossible dates: the loader silently
+        // rolls `2026-13-45` over to 2027-02-14, so the calendar check below saw
+        // a valid date and the malformed input passed. Verified against a real
+        // config, not reasoned about.
+        //
+        // A Date is therefore rejected with the fix in the message. That keeps
+        // the impossible-date case failing CLOSED, which is the only direction
+        // worth defending here: a stamp is a claim about attention, and a
+        // silently corrected claim is worse than a rejected one.
+        if (verified_at_raw instanceof Date) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at must be QUOTED — write ` +
+                    `verified_at: "YYYY-MM-DD". Unquoted, YAML parses it as a date and ` +
+                    `silently rolls impossible values over (2026-13-45 becomes 2027-02-14), ` +
+                    `which would let a malformed stamp through.`,
+            );
+        }
+        const coerced = verified_at_raw;
+        if (typeof coerced !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(coerced)) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at must be a 'YYYY-MM-DD' string when set ` +
+                    `(got ${_pyRepr(verified_at_raw)}).`,
+            );
+        }
+        const [y, m, d] = coerced.split('-').map((x) => Number(x));
+        const probe = new Date(Date.UTC(y as number, (m as number) - 1, d as number));
+        if (
+            probe.getUTCFullYear() !== y ||
+            probe.getUTCMonth() + 1 !== m ||
+            probe.getUTCDate() !== d
+        ) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at is not a real calendar date ` +
+                    `(got ${_pyRepr(verified_at_raw)}).`,
+            );
+        }
+        verified_at = coerced;
+    }
     const prompt_cache_raw = _get(cfg, 'prompt_cache', null);
     let prompt_cache_ttl: '5m' | '1h' = '5m';
     if (prompt_cache_raw !== null && prompt_cache_raw !== undefined && !_isBool(prompt_cache_raw)) {
@@ -1947,6 +1903,7 @@ function _build_member(
         participate_low_impact: participate_raw,
         tier,
         prompt_cache_ttl,
+        verified_at,
     };
 }
 
