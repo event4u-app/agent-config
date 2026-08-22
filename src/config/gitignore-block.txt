@@ -2,8 +2,21 @@
 # install). After the Phase-5 migration the entire `.augment/`, `.claude/`,
 # `.cursor/` trees live under `~/.event4u/agent-config/`; consumers carry
 # only `agents/overrides/`. Pre-Phase-5 entries kept as a defence-in-depth
-# ignore list for legacy installs that have not migrated yet — Phase 5
-# unstages them on first migrate run.
+# ignore list for legacy installs that have not migrated yet.
+#
+# CORRECTED 2026-08-21 (road-to-merge-hotspot-drawdown 2.2): this header used to
+# end "— Phase 5 unstages them on first migrate run", and NOTHING DOES. Verified
+# on the live tree: `cmd_migrate.ts` refreshes this block
+# (`_update_gitignore`, :619-647) and performs no git index operation of any
+# kind, and no executable path anywhere in the repo runs `git rm --cached` —
+# `check_tracked_but_ignored.ts:80` and `check_no_local_settings_committed.ts:85`
+# only PRINT the command, and `/sync-gitignore:fix` states in as many words that
+# git-ops are user-owned and must not be run automatically. So an entry added
+# here ignores a path for the future and leaves an already-committed file
+# tracked; a consumer who has committed it must unstage it themselves. The false
+# claim mattered because a consumer-rollout plan was built on it as precedent:
+# an auto-unstage would be a new mechanism AND a deliberate reversal of the
+# user-owned-git-ops design, not an extension of something already shipped.
 .augment/skills/
 .augment/commands/
 .augment/guidelines/

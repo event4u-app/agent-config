@@ -25,6 +25,32 @@ Use this skill when:
 
 ## Procedure: Resolve merge conflicts
 
+### 0. Classify before resolving — and never start in the GitHub web editor
+
+A `CONFLICTING` PR is not a signal to open the web editor. **The web editor
+cannot tell generated from authored**, so it presents a mechanical regeneration
+and a real human decision as the same three-way merge — which is how a generated
+file gets hand-merged into a state matching neither branch.
+
+So classify locally first, before resolving anything. Sort every conflicted path
+into three classes, because the correct resolution differs per class and only one
+of them is a judgement call:
+
+| Class | What it is | Resolution |
+|---|---|---|
+| **generated** | a build output, an index, a compiled manifest — anything a generator writes from a source in the tree | re-run the generator. **Never mix hunks**, and note that a *clean* auto-merge of a generated file is still wrong: it can produce a file matching neither branch |
+| **remeasured** | a baseline, budget, or ratchet number a CI gate compares against | re-run the measurement on the merged tree and record what it says. Two branches legitimately measured two different trees, so there is no side to take — and picking one is how a ratchet silently loosens |
+| **authored** | prose, source, config a human wrote | a human decision — read both sides. This is what the rest of this skill is about |
+
+Getting the class wrong is the expensive direction: hand-merging a generated
+file, or picking a side on a measured one, both produce a plausible-looking file
+that no branch ever had. If the project ships a tool that does this
+classification, run it before touching the conflict; where it does not, the
+three-way sort above is still the first step.
+
+This is a checklist item, not a gate — nothing enforces it
+(road-to-merge-hotspot-drawdown 4.3).
+
 ### 1. Understand the situation
 
 Before touching any conflict:

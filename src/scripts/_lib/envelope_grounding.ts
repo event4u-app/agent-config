@@ -160,7 +160,17 @@ export function readLastVerify(root: string, session_id: string | null): string 
         const command = typeof rec['command'] === 'string' ? rec['command'] : null;
         if (!command) return null;
         const at = typeof rec['at'] === 'string' ? rec['at'] : 'unknown time';
-        return `${command} @ ${at} (no exit status is recorded anywhere)`.slice(0, MAX_FIELD_CHARS);
+        // Collapse whitespace BEFORE slicing. A recorded command is whatever
+        // the operator ran, and a heredoc (`git commit -F - <<'MSG'`) records a
+        // multi-line string — so slicing to 200 chars kept the newlines, and
+        // `validateRecycleEnvelope`'s `isShortLine` rejects any value containing
+        // one. The result was that `session:recycle` refused its OWN
+        // machine-collected field: composing a valid envelope was impossible
+        // whenever the previous verification command spanned more than one line,
+        // and the error named `last_verify` without hinting that the composer
+        // had not supplied it. Reproduced 2026-08-21 on a 512-char heredoc.
+        const flat = `${command} @ ${at} (no exit status is recorded anywhere)`.replace(/\s+/g, ' ').trim();
+        return flat.slice(0, MAX_FIELD_CHARS);
     } catch {
         return null;
     }

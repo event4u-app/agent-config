@@ -39,7 +39,7 @@ plus a lifecycle field.
       than one data point.
 - [ ] The re-run instrument is a committed harness someone other than its author
       can run (the reproduce path from
-      [`road-to-solution-minimalism`](../road-to-solution-minimalism.md)
+      [`road-to-solution-minimalism`](../archive/road-to-solution-minimalism.md)
       Phase 3 is the candidate).
 - [ ] A decision on the staleness window with a stated basis — host model
       generations shipping per year, not a round number picked for looking

@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**200 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**201 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -119,6 +119,7 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 - `fix-seeder` — Scan seeder data files for broken foreign key references — find constants used without getReference() and f…
 - `git-pr-create` — Create a GitHub PR with structured description from Jira ticket and code changes
 - `git-pr-create-description-only` — Generate a PR description as a copyable markdown block — used standalone or by create-pr
+- `git-pr-merge` — Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, s…
 - `prepare-for-review` — Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to…
 
 ## Platform & domain surfaces

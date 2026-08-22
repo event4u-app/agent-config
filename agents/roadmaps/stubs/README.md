@@ -9,15 +9,9 @@ complexity: lightweight
 > so cross-references from the deployment-posture document and the
 > archived `road-to-internal-ai-os-deployment.md` resolve.
 
-This directory holds two classes of file, and **none of them is
-active work**. The **org-mode stubs** in § Current stubs are
-*empty-named placeholders*: each enumerates the prerequisites a
-future maintainer (or external contributor with funding) must
-satisfy before the stub can be promoted to an active roadmap. The
-**drain-run transfers** in § Drain-run transfers are the opposite
-shape — already-specified work moved out of an active roadmap
-because it needs an external act — and they are gated by their own
-per-item probes, not by the shared criteria below.
+This directory holds two classes of file, and **none of them is active work** —
+see § The two classes. The stub files themselves are the inventory; this file
+carries only what is true of all of them.
 
 The stubs live under `stubs/` (not `agents/roadmaps/*.md` directly)
 so they do not register with `task lint-roadmap-complexity` and do
@@ -25,41 +19,36 @@ not appear on `agents/roadmaps-progress.md`. Promotion to active
 status moves the file up one directory and adds the complexity
 frontmatter expected by the linter.
 
-## Current stubs
+## The two classes
 
-| Stub | Triggers org-mode surface | Gates |
-|---|---|---|
-| [`road-to-team-sso.md`](road-to-team-sso.md) | SSO / OIDC sign-on | Recruited customer + funded security audit |
-| [`road-to-central-policy.md`](road-to-central-policy.md) | Central policy enforcement | SSO must land first |
-| [`road-to-team-context.md`](road-to-team-context.md) | Team-shared overrides server | Small-team-recipe (git overrides) hits scale limits |
-| [`road-to-internal-connectors.md`](road-to-internal-connectors.md) | OAuth connectors (Google, Slack, M365) | Org customer agrees to per-connector scope review |
-| [`road-to-worktree-lifecycle.md`](road-to-worktree-lifecycle.md) | Governed `/worktree:*` command cluster | ≥3 real demand signals + overlap check vs existing skills |
-| [`road-to-council-visibility.md`](road-to-council-visibility.md) | `--council` in-flow verdicts + report format | Orchestration prove-or-drop resolved + ≥2 usage asks |
+This directory holds two structurally different classes of stub, and the
+distinction decides which gates apply.
 
-## Drain-run transfers
+**Org-mode stubs** are *empty-named placeholders*: each enumerates the
+prerequisites a future maintainer (or external contributor with funding) must
+satisfy before it can be promoted. They are **demand-gated** — the work is
+buildable today and the open question is whether it *should* be built. They are
+governed by § Promotion criteria (shared).
 
-A second, structurally different class of stub, with a different origin and
-different gates. These are **not** speculative future surfaces and they were not
-created by Phase 9 of the employee-product roadmap — they are work that was
-already planned and specified in an active roadmap, then transferred out when an
-autonomous drain run reached it and found it needed something no repository
-automation can supply: a live host session, a repo secret, a repo-admin write, a
-legal signature, another human, or a capability nobody is building. The parent
-roadmap closes against an explicit outcome state (`transferred`), so a completed
-roadmap can never be read as an achieved goal.
+**Drain-run transfers** are the opposite shape. They were not created
+speculatively: they are work that was already planned and specified in an active
+roadmap, then transferred out when an autonomous drain run reached it and found
+it needed something no repository automation can supply — a live host session, a
+repo secret, a repo-admin write, a legal signature, another human, or a
+capability nobody is building. The parent roadmap closes against an explicit
+outcome state (`transferred`), so a completed roadmap can never be read as an
+achieved goal. They are **capability-gated**: the scope decision is already
+made, the work is wanted, and the only thing missing is an environment the run
+did not have. They are governed by their own probe, never by the shared
+criteria.
 
-The distinction that decides which gates apply: the stubs in **§ Current stubs**
-are **demand-gated** — the work is buildable today and the open question is
-whether it *should* be built. A drain-run transfer is **capability-gated** — the
-scope decision is already made, the work is wanted, and the only thing missing is
-an environment the run did not have.
-
-Each entry carries the framework's three-point stub-integrity check — the
-original criterion **verbatim**, the complete list of dependent steps moved, and
-a **named producer with a detection probe** (never "when some subsystem exists",
-which names nobody) — plus the probe's measured baseline on the transfer date, so
-a later reader can tell real movement from noise, and any reasoning that would
-otherwise die with the parent.
+**The per-stub table below was reintroduced during a merge.** The trunk
+replaced it with the paragraphs above, which explain the CLASS but name no
+stub; a tree-wide grep found these twelve rows in no other file, and each
+carries a parent roadmap, an outcome state and a re-entry probe that the
+prose does not. Restored rather than dropped because the loss looked
+incidental and is cheap to reverse; if the removal was deliberate, delete
+this section and say so here.
 
 | Stub | Transferred from | Outcome state | Re-entry gate (its own probe, baseline at transfer) |
 |---|---|---|---|
@@ -73,44 +62,88 @@ otherwise die with the parent.
 | [`road-to-org-telemetry-enablement.md`](road-to-org-telemetry-enablement.md) | [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 3 (`dpo-signoff`), 2026-08-20 | `transferred` | 1 item: a written internal data-protection outcome covering the Class-A field list **and** the disclosure line is linked from ADR-233 (measured FAIL — ADR-233 exists and is indexed, `grep -c "sign-off"` returns 0). Producer: the named internal data-protection reviewer. Its four measurement items are gated by the sink stub as well; both must clear |
 | [`road-to-solution-minimalism-full-tier-run.md`](road-to-solution-minimalism-full-tier-run.md) | [`road-to-solution-minimalism.md`](../road-to-solution-minimalism.md) Phase 3 + the full-tier AC, 2026-08-20 | `transferred` | 3 items, all gated on one paid sweep: ≥ 30 corpus tasks declaring `repo` + `sha` (**1**) · a `Gate verdict:` in `docs/benchmark.md` from a pinned report with a non-empty `sha` (**none**; 0 full-tier runs ever) · that verdict carrying all four pre-registered endpoints (all four implemented, 0 reports rendered). Blocked by an absent credential and by a Hard Floor that a 2026-08-14 pre-authorisation does not clear |
 | [`road-to-subagent-payload-capture.md`](road-to-subagent-payload-capture.md) | [`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md) Phase 0 Steps 2+4 raw-payload halves (Phase 4 Step 1 blocked by, not moved), 2026-08-20 | `transferred` | P1-P4 in the stub: a captured `SubagentStop` payload, a captured in-subagent `PreToolUse` payload, their field lists recorded, and the `AGENT_HOOK_CAPTURE_DIR` setting absent again afterwards (P1/P2 directory does not exist · P3 absent · P4 correctly no match today). Producer: the host owner, one time-boxed fresh session, under the 7 containment requirements in the stub — the capture writes payloads verbatim and "remove it afterwards" is not a kill switch |
+| [`road-to-estate-triage-remaining-batches.md`](road-to-estate-triage-remaining-batches.md) | [`road-to-estate-drawdown.md`](../archive/road-to-estate-drawdown.md) steps 2.1 + 2.2 + AC-2, 2026-08-21 | `transferred` | 1 probe: files in the active tree and `later/` with no `- file:` / `moved_to:` row in `agents/decisions/estate-triage-dispositions.yml` reaches **0** (**71** at the council's decision commit `52cfb4bb8` — 24 active, 47 `later/`; **70** on the merged tree, one file having left the denominator by being archived untriaged, which is the failure mode the stub names). Producer: the repository maintainer, **independently of the abandoned Phase-4 pass** (a binding condition of the council's confirmation). AC-2's ceiling clause is separately unsatisfiable — T1's `target` is read by nothing — so the probe can reach 0 with that clause still open. Batches carry a snapshot commit and skip PR-held files with a recorded reason |
+| [`road-to-draft-status-ratchet-boundary.md`](road-to-draft-status-ratchet-boundary.md) | [`road-to-estate-drawdown.md`](../archive/road-to-estate-drawdown.md) target T2 (anti-regrowth), 2026-08-21 | `transferred` | 2 clauses, either branch resolves: the raw active-file count and the gate's `active_roadmaps` **agree** (measured **26 vs 23**, a gap of **3**, at transfer — three `status: draft` files opt themselves out at `update_roadmap_progress.ts:91,284,747,815`), **or** `estate-count-budget.json` records a written decision naming `draft` (0 matches). Producer: the repository maintainer, who owns the estate metric. Not fixed in the parent because changing a shipped gate's counting semantics plus its committed baseline may fall under Rule 3; the observe-only rollout, baseline migration and rollback criteria are inside the transferred scope |
 | [`road-to-standing-rule-delivery-per-machine.md`](road-to-standing-rule-delivery-per-machine.md) | [`road-to-standing-context-40k.md`](../archive/road-to-standing-context-40k.md) step 0.1 + AC-0, 2026-08-21 | `transferred` | Per machine in the affected set: `task dev:standing-rule-delivery` exits 0, or a dated exemption note. Measured 2026-08-21 — maintainer machine **non-zero at 197,358 tok / 110,000 cap (179.4 %)**, 91 rules in both layers with 6 divergent, up **+21,004 tok** from the 2026-08-08 reading; colleague machines **no reading exists** and none can be taken from here. The remedy on every machine, the maintainer's own included, is a per-machine settings write — a Rule 3 host-env act |
 | [`road-to-instructions-loaded-observer.md`](road-to-instructions-loaded-observer.md) | [`road-to-standing-context-40k.md`](../archive/road-to-standing-context-40k.md) steps 3.0 + 3.1 + blocker `b-rules-efficiency-signal`, 2026-08-21 | `transferred` | 3 merged items (framework rule 5 — one evidence chain). (1) Bind the event: `grep -c '"instructions_loaded"' src/scripts/hooks/dispatch_hook.ts` and `grep -c 'InstructionsLoaded' src/scripts/hook_manifest.yaml` (**0** / **0**) — now buildable, because the host capability was **measured present** at Claude Code 2.1.238 (exact-token 9, in the host's own event enum, `executeInstructionsLoadedHooks` + `hasInstructionsLoadedHook`, payload `load_reason` / `trigger_file_path` / `parent_file_path`), overturning the parent's refuted-premise reading. (2) A producer for the `rules_carried` pair: `dispatch_economy_report` reports `envelopes with pair` > 0 (**0**, `no data`; settled by #1484, not reopened). (3) Decide the fork, gated on (2). Kill switch required on (1) |
 
 ```
-THE SHARED PROMOTION CRITERIA IN THE NEXT SECTION — RECRUITED CUSTOMER, FUNDED
-SECURITY AUDIT, ADR SIGN-OFF — DO **NOT** GOVERN A DRAIN-RUN TRANSFER.
+THE SHARED PROMOTION CRITERIA BELOW — RECRUITED CUSTOMER, FUNDED SECURITY
+AUDIT, ADR SIGN-OFF — DO **NOT** GOVERN A DRAIN-RUN TRANSFER.
 A TRANSFER IS PROMOTED BY ITS OWN NAMED PROBE RETURNING TRUE. NOTHING ELSE.
 ```
+
 Applying a recruited customer or a funded security audit to a capability-gated
 transfer is a category error: there is no customer to recruit for a tool surface
 that simply is not connected, and no audit clears a missing capability. Promote
 **per item**, not per file, and delete a stub when its last item is gone.
 
-Two qualifications, because the short version of that paragraph is false in two
-different directions.
+**A transfer crossing no *new* surface is not a transfer crossing no Hard
+Floor.** Some pending acts here — a repo-admin ruleset write, a
+branch-protection change — **are** Hard-Floor actions in their own right, and
+each such stub says so.
 
-**A transfer crossing no *new* surface is not a transfer crossing no Hard Floor.**
-Some pending acts here — a repo-admin ruleset write, a branch-protection change —
-**are** Hard-Floor actions in their own right, and the third row is exactly that
-case: a repository-administration setting is a `non-destructive-by-default`
-trigger, which is precisely why the council could only transfer it. Being exempt
-from the org-mode promotion gates does not exempt the act. When a human performs
-it, it needs its own this-turn approval naming the exact object, exactly as it
-would have inside the parent roadmap.
-
-**A gate is not always a measurement.** For that same row the gate is the
+**A gate is not always a measurement.** For such a row the gate is the
 *authority* itself, exercised by a named human — not a number anyone can read.
 Requiring a recruited customer and a funded audit before a maintainer may edit
 their own repository settings would gate on nothing and make the stub unclosable.
 
 Framework of record for drain-run dispositions:
 [`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)
-and its batch-B sibling.
+and its batch-B sibling. That pointer is kept here deliberately: it is the only
+central path to where disposition B and the numbered rules are formally defined,
+and most transfer stubs do not link it themselves.
+
+## What every stub carries — and why this file no longer lists them
+
+Each stub carries the framework's three-point stub-integrity check: the original
+criterion **verbatim**, the complete list of dependent steps moved, and a **named
+producer with a detection probe** (never "when some subsystem exists", which
+names nobody) — plus the probe's measured baseline on the transfer date, so a
+later reader can tell real movement from noise, and any reasoning that would
+otherwise die with the parent. Council disposition **B — transferred**,
+2026-08-20 (anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2) for
+the always-on-orchestration set; see each parent roadmap for the others.
+
+Where several stubs come from one roadmap, that is deliberate and merging them
+was refused: two host-probe cases can look adjacent while probing different
+mechanisms against different telemetry streams, and the council assigned them
+separate re-entry producers. One stub per distinct evidence gap; a merged stub
+would have one probe standing in for two facts.
+
+**The inventory is the directory listing, not a table in this file.** Until
+2026-08-21 this file carried two index tables — 6 demand-gated rows and 27
+transfer rows. They were deleted, and the reason is measured rather than
+stylistic:
+
+- The tables were an **authored append surface**: every transfer added a row by
+  hand, and the file conflicted in **every** open PR GitHub reported
+  `CONFLICTING`. It was the largest *authored* conflict path in the repository —
+  everything above it in the ranking is generated.
+- They **duplicated** the stubs. All 33 rows were checked cell by cell against
+  their stub file before deletion; every measured number in every row was
+  already there. Two facts that were not literally spelled out — one `grep -c`
+  result and one parent item number — were written into their stubs first.
+- The index **did not stay true**. It had drifted stale within a day of its own
+  last repair, missing a stub created that same afternoon. An index that lies is
+  worse than no index, because a reader trusts it.
+- An earlier repair had already had to fix *two competing tables and
+  non-rendering markdown* produced by six parallel union merges. That is the
+  failure mode of a hand-maintained index under concurrent work, and it does not
+  get better with more rules.
+
+To see what is here, list the directory:
+
+```bash
+ls agents/roadmaps/stubs/*.md
+# or, with each stub's first heading:
+head -n 20 agents/roadmaps/stubs/road-to-*.md | grep -E '^(==>|# )'
+```
 
 ## Promotion criteria (shared)
 
-Governs the **demand-gated** stubs in § Current stubs only — never a drain-run
-transfer, which names its own probe above. Any such stub may move from `stubs/`
+Governs the **demand-gated** org-mode stubs only — never a drain-run transfer,
+which names its own probe in its own file (§ The two classes). Any such stub may move from `stubs/`
 to `agents/roadmaps/` only when **all three** of these are true:
 
 1. A real first customer has been recruited and is named in
@@ -122,3 +155,15 @@ to `agents/roadmaps/` only when **all three** of these are true:
 
 Until then, the answer to "team X when?" is the cancelled-with-reason
 matrix in [`docs/deploy/team-deployment-posture.md`](../../../docs/deploy/team-deployment-posture.md).
+
+### Closing a drain-run transfer — either direction counts
+
+A drain-run transfer is promoted when **its own probe reads positive**, and
+**closed when its criterion is satisfied in either direction** — including the
+honest-null direction, where one is registered. Two of the six carry such a null
+already: the point-of-action carrier's "no discriminator is publishable", and the
+auto-dispatch gate's "telemetry says auto-fire adds nothing and the gate stays
+recommend-only". **A measured null closes a stub as legitimately as shipped work
+does**, and saying so is what keeps a probe-gated stub from becoming the parking
+lot the disposition framework's fifth disposition (`E — abandon`) exists to
+avoid.

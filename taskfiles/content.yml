@@ -274,8 +274,13 @@ tasks:
 
   roadmap-progress-check:
     silent: true
-    desc: Fail if agents/roadmaps-progress.md is stale (for CI)
-    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check
+    # `--untracked-mode`: this repository does NOT commit the dashboard (it is a
+    # local convenience view, and the #1 merge-conflict path at 830 commits in
+    # 60 days). Untracked is not unchecked — a dashboard present on disk is
+    # still compared against a fresh render, and one still in the git index
+    # fails naming `git rm --cached`.
+    desc: Fail if a present agents/roadmaps-progress.md is stale, or if it is still tracked (for CI)
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check --untracked-mode
 
   check-roadmap-trackable:
     silent: true

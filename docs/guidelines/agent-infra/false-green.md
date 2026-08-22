@@ -1,6 +1,6 @@
 # False Green — the ways a passing result can be wrong here
 
-> Nine failure modes, each with the detection command that distinguishes "found nothing" from "looked at nothing". Every one is drawn from this repository's own history, not from a generic checklist.
+> Eleven failure modes, each with the detection command that distinguishes "found nothing" from "looked at nothing". Every one is drawn from this repository's own history, not from a generic checklist.
 
 _Origin: `road-to-skill-ecosystem-gate-integrity` Phase 3. The recurring shape is not that a gate reports a wrong finding — it is that a gate reports **no** finding for a reason unrelated to the property it guards, and no output distinguishes the two cases._
 
@@ -127,6 +127,52 @@ empty rendered template equals an absent target file. The gate reports
 **Structural fix:** assert both sides exist and are well-formed BEFORE
 comparing. Two absences are the absence of a comparison, not the presence of a
 match. The estate-wide audit is below.
+
+### 10. Hook-bypass override
+
+The gate never ran because the hook that runs it was disabled for that
+invocation. `git commit --no-verify` (and its short `-n` form) skips every
+pre-commit hook; `core.hooksPath` repointed at an empty directory skips them
+permanently and silently. Both produce a commit that looks exactly like a
+commit whose hooks passed. The same shape reaches the runtime hook layer: a
+concern bound in the manifest is still inert on a host that does not honour a
+deny, so "the guard is registered" is not "the guard fired".
+
+<!-- example-fence-allow: git-no-verify -- the fence teaches how to DETECT the core.hooksPath bypass; the forbidden form has to appear for the diagnostic to be readable, and every line here is a read-only query -->
+```bash
+git config --get core.hooksPath                       # empty = repo default, good
+./scripts-run src/scripts/hooks/block_no_verify --help # the tool-call guard
+agent-config hooks:status                             # per-host bindings, not the manifest
+```
+
+**Structural fix:** the bypass is blocked at tool-call time by
+`block-no-verify` on the one host that honours a deny, and the authoritative
+gate is remote CI, which no local override can skip. Never read a local green
+as evidence when the hook path was overridden — re-run in CI, or run the gate
+directly rather than through the hook.
+
+### 11. Cached-green reuse
+
+The green belongs to a different input than the one being judged. Three real
+shapes here. A gate that reads `dist/agent-src/` passes against a **stale
+projection** while the `src/` change it was meant to judge is not in the tree it
+scanned — the recorded trap is a worktree whose stale `dist` faked generator
+drift, and its mirror, a golden capture reading `dist` where the assertion was
+about `src`. A count ratchet sits inside its limit for so long that "within
+budget" stops meaning anything, which is why a baseline carries an expiry at
+all. And the conversational form: trusting a verification run earlier in the
+same session, after the tree has moved underneath it.
+
+```bash
+bash src/scripts/condense.sh --changed        # dist != rewrite(src) => the scan root is stale
+./scripts-run src/scripts/check_condensation --summary   # byte-exactness dist vs rewrite(src)
+```
+
+**Structural fix:** regenerate before judging (`task sync` then
+`task generate-tools`, in that order), and treat a baseline unchanged past
+`STALE_AFTER_DAYS` (56, `_lib/gate_baseline.ts:39`) as suppression rather than
+as headroom. A completion claim rests on a run made **after** the last edit, not
+on the freshest run you happen to remember.
 
 ## The audited sync/parity gates
 

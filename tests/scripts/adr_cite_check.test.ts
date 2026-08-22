@@ -1,18 +1,88 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+    CITATION_ROOTS,
     PARTIAL_COVERAGE,
+    LOW_EVIDENCE_NOTICE,
     SURFACES_NOT_SCANNED,
     amendment_blocks,
+    basis_ref_kind,
     cite_check,
+    cited_refs,
     normalise_ref,
     parse_frontmatter,
     trigger_state,
+    unresolved_basis_refs,
 } from '../../src/scripts/adr_cite_check.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * Run the REAL binary over a fixture tree, the way CI calls it.
+ *
+ * In-process calls cannot see argv parsing, the entry guard, or the
+ * `scanned:`/exit-code contract — and those are exactly the layers the CI wiring
+ * added, so they are the layers that need testing.
+ */
+function runCli(root: string, args: readonly string[]): { code: number; out: string } {
+    const tsx = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
+    const res = spawnSync(tsx, [path.join(REPO_ROOT, 'src/scripts/adr_cite_check.ts'), ...args], {
+        cwd: REPO_ROOT,
+        encoding: 'utf-8',
+        maxBuffer: 64 * 1024 * 1024,
+        env: { ...process.env, ADR_CITE_CHECK_ROOT: root },
+    });
+    return { code: res.status ?? 1, out: `${res.stdout ?? ''}${res.stderr ?? ''}` };
+}
+
+/** An ADR frontmatter block with the two axes, for the shadow-mode cases. */
+function adrWithAxes(opts: {
+    num: string;
+    status: string;
+    kind: string;
+    strength: string;
+    discovery?: string;
+    basis?: string;
+    evidenceBasis?: readonly string[];
+    reopenPolicy?: string;
+    protectedDimensions?: readonly string[];
+}): string {
+    return [
+        '---',
+        `adr: ${String(Number(opts.num))}`,
+        `status: ${opts.status}`,
+        'date: 2026-08-21',
+        `decision: axes-probe-${opts.num}`,
+        'review_trigger: >-',
+        '  Reopen when the premise this recorded stops holding.',
+        'provenance:',
+        `  kind: ${opts.kind}`,
+        '  decision_makers: [probe]',
+        '  human_directed: false',
+        '  agentic_mode: council',
+        'evidence:',
+        `  strength: ${opts.strength}`,
+        ...(opts.discovery !== undefined ? [`  discovery: ${opts.discovery}`] : []),
+        ...(opts.evidenceBasis === undefined
+            ? ['  basis: []']
+            : ['  basis:', ...opts.evidenceBasis.map((b) => `    - ${b}`)]),
+        ...(opts.basis !== undefined ? [`authority_basis: ${opts.basis}`] : []),
+        ...(opts.reopenPolicy !== undefined ? [`reopen_policy: ${opts.reopenPolicy}`] : []),
+        ...(opts.protectedDimensions !== undefined
+            ? [`protected_dimensions: [${opts.protectedDimensions.join(', ')}]`]
+            : []),
+        '---',
+        '',
+        'Body.',
+        '',
+    ].join('\n');
+}
 
 /**
  * A throwaway decision corpus. The tests assert the tool's behaviour, never the
@@ -258,12 +328,375 @@ describe('cite_check', () => {
         expect(r?.file ?? '').not.toContain('docs/adrs');
     });
 
-    it('publishes both the unscanned surfaces and the partial one', () => {
-        expect(PARTIAL_COVERAGE.join(' ')).toContain('docs/adrs');
+    it('publishes an EMPTY partial-coverage list — the gap closed, the shape did not', () => {
+        // The entry that lived here said per-area records carry no frontmatter,
+        // which stopped being true on 2026-08-21; its replacement was prose
+        // denying partial coverage inside a field named for it. The constant is
+        // kept because `partial_coverage` is a published `--json` key (asserted
+        // in the CLI block below) — an empty list is the honest value.
+        expect(PARTIAL_COVERAGE).toEqual([]);
     });
 
     it('publishes the surfaces it deliberately does not scan', () => {
         expect(SURFACES_NOT_SCANNED.length).toBeGreaterThan(0);
         expect(SURFACES_NOT_SCANNED.join(' ')).toContain('docs/contracts/adr-');
+    });
+});
+
+describe('the two descriptive axes at cite time', () => {
+    it('surfaces provenance, evidence, discovery and authority_basis on a graded record', () => {
+        write('docs/decisions/ADR-300-graded.md', adrWithAxes({ num: '300', status: 'accepted', kind: 'mixed', strength: 'E3', basis: 'owner_intent' }));
+        const [r] = cite_check(['ADR-300'], root);
+        expect(r?.provenance_kind).toBe('mixed');
+        expect(r?.provenance_agentic_mode).toBe('council');
+        expect(r?.evidence_strength).toBe('E3');
+        expect(r?.authority_basis).toBe('owner_intent');
+    });
+
+    it('leaves every axis absent on a record that carries none — an ungraded ADR is not a weakly graded one', () => {
+        const [r] = cite_check(['ADR-020'], root);
+        expect(r?.provenance_kind).toBeUndefined();
+        expect(r?.evidence_strength).toBeUndefined();
+        expect(r?.authority_effect).toBeUndefined();
+    });
+});
+
+describe('trigger_state — `unclassified` is no condition, not an unknown one', () => {
+    it('maps the transitional value to `none`', () => {
+        expect(trigger_state({ review_trigger: 'unclassified' })).toBe('none');
+        expect(trigger_state({ review_trigger: 'Unclassified' })).toBe('none');
+    });
+
+    it('still maps a real condition to `indeterminate`', () => {
+        expect(trigger_state({ review_trigger: 'Reopen when PSR-12 is withdrawn' })).toBe('indeterminate');
+    });
+
+    it('still maps an absent trigger to `none`', () => {
+        expect(trigger_state({})).toBe('none');
+    });
+});
+
+describe('authority_effect: disabled-shadow-mode', () => {
+    /**
+     * The literal is load-bearing (council ruling): no grade authorizes anything
+     * in this change, so the output reports a DISABLED effect rather than
+     * asserting a provisional permission that does not exist. These cases plant
+     * each axis combination and assert the block fires or does not — a check
+     * never seen red has unknown sensitivity.
+     */
+    it('fires on accepted + E0 — planted here on an agentic record, which the predicate never reads', () => {
+        write('docs/decisions/ADR-301-e0.md', adrWithAxes({ num: '301', status: 'accepted', kind: 'agentic', strength: 'E0', discovery: 'incomplete' }));
+        const [r] = cite_check(['ADR-301'], root);
+        expect(r?.authority_effect).toBe('disabled-shadow-mode');
+    });
+
+    it('fires on accepted + E1 — same, provenance is not part of the condition', () => {
+        write('docs/decisions/ADR-302-e1.md', adrWithAxes({ num: '302', status: 'accepted', kind: 'agentic', strength: 'E1' }));
+        const [r] = cite_check(['ADR-302'], root);
+        expect(r?.authority_effect).toBe('disabled-shadow-mode');
+    });
+
+    it('does NOT fire on E2 — the grade is where the line sits', () => {
+        write('docs/decisions/ADR-303-e2.md', adrWithAxes({ num: '303', status: 'accepted', kind: 'agentic', strength: 'E2' }));
+        const [r] = cite_check(['ADR-303'], root);
+        expect(r?.evidence_strength).toBe('E2');
+        expect(r?.authority_effect).toBeUndefined();
+    });
+
+    it('DOES fire on a human E0 with no owner claim — the notice is about evidence, not authorship', () => {
+        // This case asserted the OPPOSITE until 2026-08-21. The predicate gated
+        // on `provenance.kind === 'agentic'`, which withheld the notice from
+        // every thin HUMAN record. Caught in neutral review: the notice states
+        // that a record does not by itself establish its alternatives invalid,
+        // and that is a claim about EVIDENCE strength — a human snapshot has
+        // exactly as little of it. The real exemption is `owner_intent`, tested
+        // next; the provenance gate was reaching for that and grabbing a
+        // correlate, since most owner-intent records happen to be human-made.
+        write('docs/decisions/ADR-306-human-e0.md', adrWithAxes({ num: '306', status: 'accepted', kind: 'human', strength: 'E0', discovery: 'incomplete' }));
+        const [r] = cite_check(['ADR-306'], root);
+        expect(r?.provenance_kind).toBe('human');
+        expect(r?.authority_effect).toBe('disabled-shadow-mode');
+    });
+
+    it('does NOT fire on an owner_intent record — its alternatives are foreclosed by ownership, not by evidence', () => {
+        write('docs/decisions/ADR-307-owner.md', adrWithAxes({ num: '307', status: 'accepted', kind: 'human', strength: 'E0', discovery: 'complete', basis: 'owner_intent' }));
+        const [r] = cite_check(['ADR-307'], root);
+        expect(r?.authority_basis).toBe('owner_intent');
+        expect(r?.evidence_strength).toBe('E0');
+        expect(r?.authority_effect).toBeUndefined();
+    });
+
+    it('does NOT fire on a superseded record — it is not a live lock at all', () => {
+        write('docs/decisions/ADR-305-dead-e0.md', adrWithAxes({ num: '305', status: 'superseded', kind: 'agentic', strength: 'E0', discovery: 'incomplete' }));
+        const [r] = cite_check(['ADR-305'], root);
+        expect(r?.verdict).toContain('NOT A LIVE LOCK');
+        expect(r?.authority_effect).toBeUndefined();
+    });
+
+    it('does NOT fire when the axes are absent — silence is not a grade', () => {
+        const [r] = cite_check(['ADR-001'], root);
+        expect(r?.authority_effect).toBeUndefined();
+    });
+
+    it('prints the block verbatim, and only for the record that carries the effect', () => {
+        write('docs/decisions/ADR-306-e0.md', adrWithAxes({ num: '306', status: 'accepted', kind: 'agentic', strength: 'E0', discovery: 'incomplete' }));
+        write('docs/decisions/ADR-307-e2.md', adrWithAxes({ num: '307', status: 'accepted', kind: 'agentic', strength: 'E2' }));
+        const fired = runCli(root, ['ADR-306']);
+        expect(fired.out).toContain(LOW_EVIDENCE_NOTICE);
+        expect(fired.out).toContain('does not by itself');
+        const quiet = runCli(root, ['ADR-307']);
+        expect(quiet.out).not.toContain('disabled-shadow-mode');
+    });
+});
+
+describe('the reserved-authority reads — evidence.basis, reopen_policy, protected_dimensions', () => {
+    /**
+     * `decision-revisit-gate` step 2 tells an agent to read a record's basis and
+     * its reserved dimensions from this tool. Until 2026-08-21 the tool printed
+     * neither: `CiteResult` had no field for `evidence.basis` and `render()`
+     * emitted no `reopen_policy` / `protected_dimensions` — so two of the reads
+     * the rule delegated here were not performable from here at all.
+     */
+    const withBasis = {
+        num: '401',
+        status: 'accepted',
+        kind: 'mixed',
+        strength: 'E3',
+        discovery: 'complete',
+        reopenPolicy: 'owner',
+        protectedDimensions: ['purpose', 'governance'],
+        evidenceBasis: [
+            'docs/decisions/ADR-001-precondition-shipped.md',
+            'docs/decisions/ADR-999-never-written.md',
+            'https://example.invalid/paper (2026-08-21)',
+            'claim:some-registered-claim',
+        ],
+    } as const;
+
+    it('carries evidence.basis verbatim and flags only the repo path that is gone', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const [r] = cite_check(['ADR-401'], root);
+        expect(r?.evidence_basis).toEqual([...withBasis.evidenceBasis]);
+        // Exactly one entry: the missing repo path. The URL is not fetched and
+        // the `claim:` id is not resolved, so neither may appear here.
+        expect(r?.evidence_basis_unresolved).toEqual(['docs/decisions/ADR-999-never-written.md']);
+    });
+
+    it('prints each basis ref with a found / MISSING / not-checked marker', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const { out } = runCli(root, ['ADR-401']);
+        expect(out).toContain('evidence_basis   4 ref(s), 1 unresolved:');
+        expect(out).toContain('[found] docs/decisions/ADR-001-precondition-shipped.md');
+        expect(out).toContain('[MISSING] docs/decisions/ADR-999-never-written.md');
+        expect(out).toContain('[not checked: url] https://example.invalid/paper');
+        expect(out).toContain('[not checked: claim] claim:some-registered-claim');
+    });
+
+    it('prints the declared reopen_policy and every protected dimension', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const [r] = cite_check(['ADR-401'], root);
+        expect(r?.reopen_policy).toBe('owner');
+        expect(r?.reopen_policy_defaulted).toBe(false);
+        expect(r?.protected_dimensions).toEqual(['purpose', 'governance']);
+        const { out } = runCli(root, ['ADR-401']);
+        expect(out).toContain('reopen_policy    owner (declared)');
+        expect(out).toContain('protected dims   purpose, governance');
+    });
+
+    it('resolves an ABSENT reopen_policy to unclassified and says it was defaulted', () => {
+        // `adr-layout § Reopen authority`: absent → `unclassified`, never
+        // `owner`. Printing a blank would make the reader re-derive a default
+        // the contract already fixed; printing `unclassified` unmarked would
+        // hide that nobody classified it.
+        write('docs/decisions/ADR-402-unclassified.md', adrWithAxes({ num: '402', status: 'accepted', kind: 'human', strength: 'E2' }));
+        const [r] = cite_check(['ADR-402'], root);
+        expect(r?.reopen_policy).toBe('unclassified');
+        expect(r?.reopen_policy_defaulted).toBe(true);
+        expect(r?.protected_dimensions).toEqual([]);
+        const { out } = runCli(root, ['ADR-402']);
+        expect(out).toContain('reopen_policy    unclassified (absent → default)');
+        expect(out).toContain('protected dims   — (none declared)');
+        expect(out).toContain('evidence_basis   — (none recorded)');
+    });
+
+    it('emits all four fields in --json, not only in the human render', () => {
+        write('docs/decisions/ADR-401-basis.md', adrWithAxes(withBasis));
+        const { out, code } = runCli(root, ['ADR-401', '--json']);
+        expect(code).toBe(0);
+        const payload = JSON.parse(out) as {
+            results: {
+                evidence_basis?: string[];
+                evidence_basis_unresolved?: string[];
+                reopen_policy?: string;
+                reopen_policy_defaulted?: boolean;
+                protected_dimensions?: string[];
+            }[];
+        };
+        const rec = payload.results[0];
+        expect(rec?.evidence_basis).toHaveLength(4);
+        expect(rec?.evidence_basis_unresolved).toEqual(['docs/decisions/ADR-999-never-written.md']);
+        expect(rec?.reopen_policy).toBe('owner');
+        expect(rec?.reopen_policy_defaulted).toBe(false);
+        expect(rec?.protected_dimensions).toEqual(['purpose', 'governance']);
+    });
+
+    it('classifies a ref shape without fetching or resolving anything', () => {
+        expect(basis_ref_kind('https://example.invalid/x')).toBe('url');
+        expect(basis_ref_kind('http://example.invalid/x')).toBe('url');
+        expect(basis_ref_kind('claim:foo-bar')).toBe('claim');
+        expect(basis_ref_kind('docs/decisions/ADR-001-x.md')).toBe('path');
+        expect(basis_ref_kind('src/scripts/x.ts:44-51')).toBe('path');
+    });
+
+    it('strips a trailing note and a line anchor before the existence check', () => {
+        // Both shapes occur in the corpus; neither is part of the filename, and
+        // checking the unstripped string would report every one of them missing.
+        const found = unresolved_basis_refs(
+            [
+                'docs/decisions/ADR-001-precondition-shipped.md:12-20',
+                'docs/decisions/ADR-001-precondition-shipped.md (2026-08-21)',
+            ],
+            root,
+        );
+        expect(found).toEqual([]);
+    });
+});
+
+describe('cited_refs — the CI corpus', () => {
+    it('discovers a citation from every declared root', () => {
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-cites-'));
+        for (const [i, r] of CITATION_ROOTS.entries()) {
+            fs.mkdirSync(path.join(tree, r), { recursive: true });
+            fs.writeFileSync(path.join(tree, r, 'f.md'), `See ADR-1${String(i)}0.\n`, 'utf-8');
+        }
+        const found = cited_refs(tree);
+        expect(found).toHaveLength(CITATION_ROOTS.length);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('does not discover the template placeholders the corpus really contains', () => {
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-cites-'));
+        fs.mkdirSync(path.join(tree, 'src', 'rules'), { recursive: true });
+        // `ADR-0N` is live in producing-the-review.md; without the boundary
+        // guard it is discovered as a citation to `ADR-0` and reds the gate.
+        // `ADR-082-410-one-click-relaunch.md` is a live filename reference;
+        // without the letter-initial area rule it is discovered as area `082`.
+        fs.writeFileSync(
+            path.join(tree, 'src', 'rules', 'r.md'),
+            'ADR-0N and ADR-NNN and [ADR-082](ADR-082-410-one-click-relaunch.md)\n',
+            'utf-8',
+        );
+        expect(cited_refs(tree)).toEqual(['ADR-082']);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+});
+
+describe('the CI gate — exit codes and the scanned: line', () => {
+    /** A minimal tree: one ADR, one citing rule. */
+    function corpus(citation: string | null): string {
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-gate-'));
+        fs.mkdirSync(path.join(tree, 'docs', 'decisions'), { recursive: true });
+        fs.mkdirSync(path.join(tree, 'src', 'rules'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tree, 'docs', 'decisions', 'ADR-001-probe.md'),
+            '---\nstatus: accepted\ndate: 2026-08-21\ndecision: probe\n---\n\nBody.\n',
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(tree, 'src', 'rules', 'r.md'),
+            citation === null ? 'No decision is named here.\n' : `See ${citation}.\n`,
+            'utf-8',
+        );
+        return tree;
+    }
+
+    it('emits the machine-readable count exactly once, and only that line matches', () => {
+        const tree = corpus('ADR-001');
+        const { out, code } = runCli(tree, ['--cited']);
+        const hits = out.split('\n').filter((l) => /^scanned: \d+$/.test(l));
+        expect(hits).toEqual(['scanned: 1']);
+        expect(code).toBe(0);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('exits 0 when every citation resolves', () => {
+        const tree = corpus('ADR-001');
+        expect(runCli(tree, ['--cited']).code).toBe(0);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('exits non-zero on an unresolvable citation — the condition the gate fails on', () => {
+        const tree = corpus('ADR-993');
+        const { code, out } = runCli(tree, ['--cited']);
+        expect(code).not.toBe(0);
+        expect(out).toContain('UNRESOLVED');
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('exits non-zero rather than green when the citation roots name no ADR at all', () => {
+        // The dead-scan-root shape: a moved or emptied citation root must not
+        // present as a clean run over nothing.
+        const tree = corpus(null);
+        const { code, out } = runCli(tree, ['--cited']);
+        expect(code).not.toBe(0);
+        expect(out).toContain('scan scope is');
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('carries the ledger tally in --json instead of printing it beside the payload', () => {
+        const tree = corpus('ADR-001');
+        const { out, code } = runCli(tree, ['--cited', '--json']);
+        expect(code).toBe(0);
+        expect(out).not.toContain('scanned: ');
+        const payload = JSON.parse(out) as { ledger?: { planned: number; failed: number } };
+        expect(payload.ledger?.planned).toBe(1);
+        expect(payload.ledger?.failed).toBe(0);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('still emits the partial_coverage key in --json, now empty, so a consumer does not break', () => {
+        // Removing the KEY would be a breaking change to this published shape;
+        // removing the dead ENTRY is not. This pins the distinction.
+        const tree = corpus('ADR-001');
+        const { out, code } = runCli(tree, ['--cited', '--json']);
+        expect(code).toBe(0);
+        const payload = JSON.parse(out) as Record<string, unknown>;
+        expect(Object.keys(payload)).toContain('partial_coverage');
+        expect(payload.partial_coverage).toEqual([]);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
+
+    it('still refuses a bare call with no refs and no --cited', () => {
+        expect(runCli(root, []).code).toBe(2);
+    });
+
+    it('delivers a large --json payload whole through a pipe, not the first 64 KB', () => {
+        // A real defect on this branch, not a hypothetical: `process.exit()`
+        // tore the process down before Node flushed an async stdout, so the
+        // 167 KB real-corpus payload arrived at a parser as exactly 65,536
+        // bytes. `runCli` reads through a pipe, so this case can see it; the
+        // one-record case above cannot, which is why it is separate.
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-big-'));
+        fs.mkdirSync(path.join(tree, 'docs', 'decisions'), { recursive: true });
+        fs.mkdirSync(path.join(tree, 'src', 'rules'), { recursive: true });
+        const padding = 'x'.repeat(400);
+        const refs: string[] = [];
+        for (let i = 1; i <= 200; i += 1) {
+            const num = String(i).padStart(3, '0');
+            refs.push(`ADR-${num}`);
+            fs.writeFileSync(
+                path.join(tree, 'docs', 'decisions', `ADR-${num}-probe.md`),
+                `---\nstatus: accepted\ndate: 2026-08-21\ndecision: probe-${num}\nreview_trigger: >-\n  ${padding}\n---\n\nBody.\n`,
+                'utf-8',
+            );
+        }
+        fs.writeFileSync(path.join(tree, 'src', 'rules', 'r.md'), `${refs.join(' ')}\n`, 'utf-8');
+
+        const { out, code } = runCli(tree, ['--cited', '--json']);
+        expect(code).toBe(0);
+        expect(out.length).toBeGreaterThan(65536);
+        const payload = JSON.parse(out) as { results: unknown[] };
+        expect(payload.results).toHaveLength(200);
+        fs.rmSync(tree, { recursive: true, force: true });
     });
 });

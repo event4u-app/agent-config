@@ -16,13 +16,10 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
 
 // ^ADR-(\d{3})-([a-z0-9-]+)\.md$
 const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
-// ^---\n(.*?)\n---  (DOTALL)
-const FM = /^---\n([\s\S]*?)\n---/;
-// ^([a-z_]+):\s*(.+?)\s*$  (MULTILINE)
-const FIELD = /^([a-z_]+):[ \t]*(.+?)[ \t]*$/gm;
 /**
  * The index used to render `| # | Title | Status | Date | Supersedes |`, which
  * is forward-only: a dead ADR showed `superseded | —` and the reader learned it
@@ -39,19 +36,6 @@ type Meta = Record<string, string>;
 interface Row extends Meta {
     // Numbered rows carry num/slug/path; legacy rows carry path (+ meta).
     [k: string]: string;
-}
-
-/** Mirror Python `str.strip(" \"'")` — strip listed chars from both ends. */
-function _stripChars(s: string, chars: string): string {
-    let start = 0;
-    let end = s.length;
-    while (start < end && chars.includes(s[start] as string)) {
-        start += 1;
-    }
-    while (end > start && chars.includes(s[end - 1] as string)) {
-        end -= 1;
-    }
-    return s.slice(start, end);
 }
 
 /** Mirror Python `str.title()`: cap first letter of each alphabetic run, lower the rest. */
@@ -106,22 +90,18 @@ function _pyPathJoin(d: string, child: string): string {
     return base === '.' ? child : `${base}/${child}`;
 }
 
-/** Mirror `fm(t)` — parse the leading `---` frontmatter block into a dict. */
+/**
+ * Parse the leading `---` frontmatter block into a dict.
+ *
+ * Delegates to the shared reader (`_lib/adr_frontmatter.ts`). This was the
+ * weakest of the three parsers it replaces — a scalar-only regex that matched
+ * neither a key with an empty value nor an indented line, so `provenance:` and
+ * `evidence:` would have read as ABSENT here while the other two readers folded
+ * them into a string. Silently absent on the surface that renders the public
+ * index is the failure mode the extraction exists to prevent.
+ */
 function fm(t: string): Meta {
-    const m = FM.exec(t);
-    if (!m) {
-        return {};
-    }
-    const out: Meta = {};
-    const body = m[1] as string;
-    FIELD.lastIndex = 0;
-    let f: RegExpExecArray | null;
-    while ((f = FIELD.exec(body)) !== null) {
-        const k = f[1] as string;
-        const v = f[2] as string;
-        out[k] = _stripChars(v, ' "\'');
-    }
-    return out;
+    return (readAdrFrontmatterScalars(t) ?? {}) as Meta;
 }
 
 /** `sorted(d.glob("ADR-*.md"))` — flat children matching ADR-*.md, lexically sorted. */

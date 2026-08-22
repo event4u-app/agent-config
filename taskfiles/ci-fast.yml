@@ -133,6 +133,24 @@ tasks:
       # both are no-ops — a fresh checkout has no bundle.
       - ./scripts-run src/scripts/rebuild_hook_bundle
       - ./scripts-run src/scripts/check_hook_bundle_freshness
+      # Byte-equivalence behind the mtime check. The freshness gate compares
+      # ORDERING (every source older than the bundle); this compares BYTES
+      # (the bundle is what these sources produce). An mtime-preserving edit,
+      # a `touch` on the bundle, or a `cp -p` restore passes the first and
+      # fails the second — demonstrated 2026-08-21 with an edit that changed
+      # the dispatcher's digest while leaving its size and mtime untouched.
+      # NOT claimed: that the mtime gate missed the 2026-08-21 incident. It is
+      # pre-push and was not run; an ordinary edit would have reddened it.
+      # LOCAL-ONLY BY CONSTRUCTION: dist/hooks/ is untracked, so CI has no
+      # bundle to compare and declares a no-op. A green CI says nothing about
+      # the bundle a maintainer is actually executing — which is precisely the
+      # blind spot that cost the 2026-08-21 drain run its first hour.
+      # Cost, measured rather than assumed like its neighbours here: 0.27s /
+      # 0.27s / 0.26s over three consecutive runs (esbuild bundles this tree in
+      # ~22ms; the rest is process start). It runs unconditionally rather than
+      # only when the healer reports staleness, because staleness is exactly
+      # the mtime inference this gate exists to distrust.
+      - ./scripts-run src/scripts/check_hook_bundle_content
       - ./scripts-run src/scripts/lint_regression
       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
       # forms are sub-second here (0.44s --changed / 0.52s --all, measured
@@ -663,6 +681,30 @@ tasks:
     silent: true
     desc: "ADR frontmatter gate — required fields, valid status, and a named `review_trigger` CONDITION (not a cadence) on every ADR dated 2026-07-25 or later. Earlier ADRs warn; grandfathering is by date, not an allowlist (road-to-enforcement-proof P4.1-P4.4)"
     cmd: ./scripts-run src/scripts/check_adr_frontmatter
+
+  check-adr-citations:
+    silent: true
+    desc: "ADR citation gate — every `ADR-NNN` named in src/rules, src/skills, src/domains or docs resolves to a real decision record; an unresolvable citation FAILS. NOT registered in gate-coverage.yml — the manifest keys on a name prefix this script does not carry, so registering it reddened gate_population.test.ts; the row and its reasoning sit in gate-coverage.yml where the entry would have been, and the cost is that this gate has no minimum-scan floor (road-to-evidence-based-adr-governance 2.3, which is also where the finding that no workflow ran this tool at all is recorded)"
+    cmd: ./scripts-run src/scripts/adr_cite_check --cited
+
+  check-adr-evidence-census:
+    silent: true
+    desc: "ADR evidence-census freshness — regenerates the proposal artifact to a temp path and FAILS if it differs from the committed agents/evidence/analysis/adr-evidence-census-2026-08.md. The census itself is proposal-only and never a gate; this target gates only the artifact's freshness, because AC-2 and AC-3 of road-to-evidence-based-adr-governance rest on those rows and, until this existed, the census was wired into nothing at all — no workflow step, no task target, no manifest row, no stated exemption (completion-review finding 8). NOT registered in src/config/gate-coverage.yml: gate_population.matchesGatePattern classifies on a name prefix (lint|check|audit|skill|verify_) and evidence_census.ts carries none of them, so a row there would red gate_population.test.ts — the same two-gates-disagree case already documented for adr_cite_check. Consequence: this step runs with no minimum-scan floor of its own, though the census asserts its own scan scope internally"
+    cmd: |
+      set -eu
+      tmp="$(mktemp)"
+      trap 'rm -f "$tmp"' EXIT
+      ./scripts-run src/scripts/adr/evidence_census --out "$tmp" >/dev/null
+      if ! diff -u agents/evidence/analysis/adr-evidence-census-2026-08.md "$tmp"; then
+        echo "❌  adr-evidence-census: the committed artifact is stale. Run ./scripts-run src/scripts/adr/evidence_census and commit the result." >&2
+        exit 1
+      fi
+      echo "✅  adr-evidence-census: committed artifact matches a fresh run"
+
+  check-new-adr-evidence:
+    silent: true
+    desc: "New-ADR evidence gate — a decision record ADDED on this branch with `status: accepted` must carry `provenance.kind`, `evidence.strength` and an `## Evidence` section. Closes the first clause of AC-5 of road-to-evidence-based-adr-governance, which had no mechanism: `check_adr_frontmatter.check_descriptive_axes` validates the SHAPE of an axis that is present and a single-file linter has no notion of NEW, so a fresh record with none of the three passed every gate. Diff-scoped (`--diff-filter=A` vs the resolved base ref), so a branch that adds no record exits 0 — the pre-existing 147 accepted records are deliberately out of scope, same reasoning as lint_evidence_artifacts. `authority_basis: owner_intent` governs authority, never disclosure, and exempts nothing. Registered in src/config/gate-coverage.yml with an inert `min_scanned: 0` floor plus a real `--self-test`, because for a gate whose usual reading is zero added records only a self-test can prove the verdict still moves"
+    cmd: ./scripts-run src/scripts/check_new_adr_evidence
 
   check-subagent-floor:
     silent: true
