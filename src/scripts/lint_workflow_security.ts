@@ -22,7 +22,7 @@
  *
  * The MEDIUM tier's original wording read "third-party actions … (first-party
  * actions/* are skipped)". Corrected 2026-08-22: the first-party exemption is
- * GONE (see FIRST_PARTY_OWNERS below), so the parenthetical documented an
+ * GONE (see the removal note below), so the parenthetical documented an
  * exemption that no longer exists — a false claim in a tracked artefact, which
  * is the defect class the change that removed it was written to repair. The
  * TIERS are untouched; only the description of what MEDIUM covers now matches
@@ -694,7 +694,6 @@ export {
     ALLOWLIST_PATH,
     ALLOWLIST_CAP,
     DANGEROUS_TRIGGERS,
-    FIRST_PARTY_OWNERS,
     _setWorkflowsDirForTest,
     _setAllowlistPathForTest,
     load_allowlist,
