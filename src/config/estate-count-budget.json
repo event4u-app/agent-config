@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 4,
     "later_roadmaps": 55,
-    "open_blockers": 28
+    "open_blockers": 26
   },
   "baseline_history": [
     {
@@ -725,7 +725,14 @@
       "at": "2026-08-22",
       "active_roadmaps": 4,
       "later_roadmaps": 55,
-      "open_blockers": 28,
+      "open_blockers": 26,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE (third time on this branch -- main moved through PR #1517, then #1495 and #1523 while this branch was open). main's history is kept whole (100 entries, baseline 4/55/28) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -2 open blockers, both on road-to-evidence-based-adr-governance: `owner-autonomy-batch` and `authority-coupling-decision`, resolved on a 2-of-2 convergent AI-council pass. Each is closed as `AUTHORITY UNAVAILABLE -- FLOOR PRESERVED` rather than `RE-AFFIRMED (no)` -- the first records an operational act a council may take, the second would assert a policy rejection no owner made. `commit-policy.md:37` and ADR-005 section 1 both remain operative and grade-derived authority stays disabled; the three owner-reserved policy questions are transferred to agents/roadmaps/stubs/road-to-owner-authority-decisions.md with per-question reopening conditions.\n\nactive_roadmaps is unchanged and that is deliberate: the roadmap is NOT archived, because 13 steps remain genuinely open (2.4, 3.4, 4.3, 4.4 and the acceptance criteria). Archiving it to buy the number down would be the silent-green this ledger's own 67 -> 69 entry names as the incentive the ratchet must never create."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 26,
       "why": "NET ZERO, and the number is MEASURED against the merged tree rather than carried from either side. road-to-single-rule-layer was authored AND archived in this same change, so it never joins the active estate: it opened at 7 on this branch's base, origin/main independently walked the floor to 4 active and 28 open blockers while this branch was being built, and the merged tree measures both because the roadmap this branch added is in archive/. Re-anchored at the second merge per ADR-239: main's lineage is kept whole (100 entries) and only this branch's delta rides on top, measured from the tree rather than carried from either side. An earlier revision of this entry recorded 'GREW by 1 active' and was true only between the roadmap landing and its closure hours later \u2014 leaving it would have raised a floor nothing in the tree justifies, which is the silent-give-back this ratchet exists to refuse. What the change did to the estate is nothing; what it did to the repository is close a live ADR-236 regression on four of five hosts."
     }
   ],
