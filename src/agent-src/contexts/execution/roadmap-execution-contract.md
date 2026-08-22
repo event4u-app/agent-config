@@ -164,17 +164,11 @@ preservation test in that rule already splits them the same way:
 **Optional for every complexity, including `structural`.** Absent means *not
 declared*, which is a different claim from "there is no requirement". Nothing
 fails for omitting it, and no gate enforces it — the only consumer is a listing
-inventory (`check_requirements_trace`) that exits 0 always.
+inventory (`check_requirements_trace`) that exits 0 always. Requiredness is
+deliberately **not** decided here (AI council 2/2, 2026-08-22): deciding it
+before the listing phase has produced a count is deciding it on intuition.
 
-**Requiredness is deliberately NOT decided here.** AI council 2/2, 2026-08-22:
-deciding it before the listing phase has produced a single count is deciding it
-on intuition. Any later transition to required needs its own record, and
-existing roadmaps must not retroactively fail.
-
-#### A repeated ROW, not three flat fields
-
-This is the council's substantive correction to the shape, and it changes the
-field rather than annotating it:
+A repeated **row**, not three flat fields:
 
 ```yaml
 traceability:
@@ -182,69 +176,24 @@ traceability:
     acceptance_id: pointer-under-line-cap
     evidence_refs:
       - src/scripts/dispatch_r2_reviewer.ts
-      - tests/scripts/report_envelope_rate.test.ts
 ```
 
-Three flat top-level fields would have been **countable but not traceable**: with
-more than one requirement, more than one acceptance criterion and a shared pool
-of refs, the relation is an ambiguous many-to-many and no reader can say which
-evidence discharged which criterion. A gate over flat fields can report a
-populated count while providing no dependable trace. The row is what carries the
-relation.
+Three flat top-level fields would be **countable but not traceable**: with more
+than one requirement and a shared pool of refs the relation is an ambiguous
+many-to-many, so a gate could report a populated count while providing no
+dependable trace. The row carries the relation.
 
-#### Both grammars are reused, not invented
+Both grammars are reused, never invented — the claim-ledger kebab slug
+(`docs/CLAIMS.md` § Entry schema) for the two ids, and the envelope ref-token
+rule (`_lib/subagent_response.ts`) for `evidence_refs`: ref tokens, never
+bodies.
 
-- `requirement_id` and `acceptance_id` take the **claim-ledger kebab slug** form
-  (`docs/CLAIMS.md` § Entry schema).
-- `evidence_refs` takes the **envelope ref-token rule**
-  (`_lib/subagent_response.ts`): ref tokens, never bodies. An entry containing a
-  newline is invalid, by the same rule that rejects it on a finding.
-
-Three fields is exactly the size at which inventing a private format feels
-cheaper than reading two existing ones. Both sources are named so a divergence
-shows up as a diff against a cited grammar.
-
-#### Identity semantics — stated, because a slug grammar does not imply them
-
-- **Namespace:** the roadmap file. Two roadmaps MAY use the same
-  `requirement_id` when they reference the same external requirement; within one
-  file an id is unique.
-- **Cardinality:** one row is one `(requirement, acceptance)` pair with its
-  evidence. A requirement with two criteria is two rows.
-- **Renames:** ids are content-addressed, not path-addressed — moving or renaming
-  a roadmap does not change them.
-
-#### Revision semantics — when a ref is evaluated
-
-**At the current head, always.** A ref that resolved at declaration time and no
-longer resolves is `unresolved`, and that is the intended reading rather than a
-defect in the reading: evidence that has been deleted is exactly what a
-traceability inventory exists to surface. The consequence is stated rather than
-discovered: **a completed roadmap can move from resolved to unresolved with no
-roadmap edit**, because the tree moved under it.
-
-#### What "gate" means here, of the three things it could mean
-
-The council named three unresolved senses. Exactly one ships:
-
-| Sense | Status |
-|---|---|
-| **Listing** declarations | **ships** — inventory, exit 0 always |
-| **Resolving** references | ships as part of the listing, reported as a count |
-| **Enforcing** roadmap validity | **does not ship**, and does not ship until the relation model above has been exercised on a real corpus |
-
-#### The `[AC:<id>]` prefix on a `verify:` line
-
-A `verify:` line may carry a leading `[AC:<acceptance_id>]` to bind that check to
-a criterion.
-
-**Nothing parses `verify:` lines structurally today** — verified 2026-08-22: a
-grep across `src/scripts/*.ts` finds the template prose emitted by
-`new_roadmap.ts` and one comment in `lint_evidence_artifacts.ts`, and nothing
-else. Both halves of that matter. **Nothing breaks**, because there is no parser
-to break. And **there is nothing to build on** either: the inventory below is
-the first structural reader of those lines, so any claim about `[AC:…]` coverage
-rests entirely on it.
+Identity semantics, revision semantics, the three senses of "gate" and the
+`[AC:<id>]` convention — including the verified fact that nothing parses
+`verify:` lines structurally today — are in
+[`guideline:agent-infra/traceability-field-mechanics`](../../../../docs/guidelines/agent-infra/traceability-field-mechanics.md).
+They are not optional reading: a slug grammar does not imply a namespace, and
+`evidence_refs` are syntactically safe tokens rather than verified evidence.
 
 ## 3. Grants activated by acceptance
 
