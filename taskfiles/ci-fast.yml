@@ -687,6 +687,16 @@ tasks:
     desc: "Fail on a high-confidence secret in the changed set (diff vs origin/main + untracked) — the non-bypassable CI net behind the secret-vcs-guard rule (secret_detector)"
     cmd: ./scripts-run src/scripts/check_secret_leak
 
+  check-secret-leak-pack:
+    silent: true
+    desc: "Fail on a high-confidence secret in what actually SHIPS — the npm pack payload, including shipped-but-gitignored paths (dist/cli/**) that every git-backed mode of the sibling gate cannot reach by construction. An additive mode nothing calls is indistinguishable from no mode at all, which is why this task exists rather than only the flag (road-to-publish-boundary-evidence Phase 2)"
+    cmd: ./scripts-run src/scripts/check_secret_leak --pack
+
+  check-publish-surface:
+    silent: true
+    desc: "Publish-surface drift gate — package.json files[] and .npmignore resolve to a committed artefact, so a change to what ships is a diff a reviewer reads instead of a silent change. files[] is an ALLOWLIST and overrides .npmignore for anything under an included root, which is why the artefact also reports which .npmignore patterns the live payload contradicts (road-to-publish-boundary-evidence Phase 3)"
+    cmd: ./scripts-run src/scripts/check_publish_surface
+
   check-claims:
     silent: true
     desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"

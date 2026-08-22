@@ -838,6 +838,30 @@ export function parse_census(md: string): Map<string, number | null> {
     if (gateCol < 0 || cs.length <= Math.max(gateCol, unitCol)) continue;
     const idm = /`([A-Za-z0-9_.-]+)`/.exec(cs[gateCol] as string);
     if (idm === null) continue;
+    // A row the census could not extract a root for is NOT a row that read
+    // nothing — the two are indistinguishable in the units column, which prints
+    // `**0**` for both, and conflating them produced a false `census_stale`
+    // disagreement on every dynamically-scoped gate. `check_secret_leak`
+    // resolves its corpus by spawning `git diff` / `npm pack`, and
+    // `check_no_roadmap_refs` likewise: a static root extractor finds nothing to
+    // count, so the canary correctly reds them while the census correctly says
+    // 0, and the comparison then calls a correct pair a defect.
+    //
+    // `null` already means "no measurable count" here and is already skipped by
+    // the disagreement check, so this maps the un-extractable case onto the
+    // meaning it always had.
+    if (/\(none extracted\)/.test(line)) {
+      // Left UNSET, not set to `null`. The disagreement check treats
+      // `undefined` as "not censused — nothing to disagree with" and `null` as
+      // "censused and read nothing", which is a stale row. An un-extractable
+      // root is the first, not the second: nothing was measured, so there is no
+      // measurement to disagree with the canary about.
+      //
+      // Setting `null` here was tried first and made it WORSE — it turned every
+      // dynamically-scoped gate into a fresh false `census_stale`, six of them
+      // at once. The distinction between the two absences is the whole fix.
+      continue;
+    }
     const raw = cs[unitCol] as string;
     const num = /(\d[\d,]*)/.exec(raw.replace(/\*/g, ''));
     out.set(idm[1] as string, num === null ? null : Number((num[1] as string).replace(/,/g, '')));
