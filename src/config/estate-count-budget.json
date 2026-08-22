@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 59,
     "open_blockers": 62
   },
@@ -790,6 +790,13 @@
       "later_roadmaps": 59,
       "open_blockers": 62,
       "why": "WALKED DOWN on two axes by the close of road-to-carrier-unicode-strip. active 25 -> 24 is the archive at zero open and zero deferred steps; open_blockers 64 -> 62 is its two blockers RESOLVED rather than parked. Both were implementer-owned option picks whose recommended branch was taken after checking the other: carrier-strip-script-property took (b) and the fixture now records which Unicode blocks are tested and which are not, with the argument that the predicate errs toward preservation so an untested script cannot be corrupted; carrier-strip-wiring-point took (b) only after searching for (a) and finding that the two consumers of the humanizer skill (docs/contracts/write-engine.md:109 and src/domains/gtm-marketing/humanize/command.md:62) are agent-carried prose calling no function, so citing either as a wiring would have been the defined-but-not-wired failure that blocker names. later_roadmaps does not move; nothing was parked. NOTE FOR THE MERGE: this is the fourth drain branch to walk active 25 -> 24 against its own base (PRs #1532, #1534, #1536 are the others). Four independent -1s do not compose into -1; the last to land must re-measure against the merged tree."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "RE-MEASURED AT A MERGE, not a new drawdown \u2014 road-to-carrier-unicode-strip. This branch archived one roadmap and walked its own numbers; origin/main then gained PR #1534's archive and walked active 25 -> 24 independently, so the merged tree measures 23. Set from the measurement rather than carried forward from either side. open_blockers does not move: main's 62 and this branch's 62 are the same drop counted once. Fourth application of this correction today, which is a fact about how many drain branches were open at once rather than about the ratchet -- and it is exactly the pattern the earlier entries predicted for whichever branch landed later."
     }
   ],
   "target": {
