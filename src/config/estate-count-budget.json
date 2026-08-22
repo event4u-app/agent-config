@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 5,
+    "active_roadmaps": 4,
     "later_roadmaps": 55,
     "open_blockers": 35
   },
@@ -671,6 +671,13 @@
       "later_roadmaps": 55,
       "open_blockers": 35,
       "why": "WALKED DOWN by 1 active and 1 blocker. road-to-standing-context-40k is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here) and its single blocker b-rules-efficiency-signal, open on origin/main, is resolved here -- checked against the trunk rather than read off the branch's prose. later_roadmaps unchanged at 55: the two items it could not finish went to stubs created in this same change (road-to-instructions-loaded-observer, road-to-standing-rule-delivery-per-machine), each with its own probe, so the open work stays counted where a probe can decide it instead of being parked."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 35,
+      "why": "Walk-down earned by closing `road-to-condensed-link-repair` (6 done / 1 cancelled-as-null / 0 open) and archiving it. active_roadmaps 5 -> 4 is that one archival; open_blockers is unchanged because this roadmap carried none.\n\nThe cancelled item is AC-2, closed as an HONEST NULL rather than weakened: it required both links to resolve in `src/` AND in the projection, and `docs/` exists in neither tree, so no implementation satisfies it. A replacement criterion AC-2R was approved by the same 2-of-2 AI-council ruling and is met. AC-3 was held `[~]` until workflow run 32546466190 on this PR's head proved the newly wired `check-condensed-paths` step ran green remotely -- closed on the run, not on the wiring.\n\nNo offset is taken and none is due: this change disposes of one roadmap and creates none."
     }
   ],
   "target": {

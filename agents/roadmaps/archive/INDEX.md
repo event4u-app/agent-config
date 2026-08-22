@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**550 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 201 · completed 256 · completed-with-deferrals 26 · not-extractable 34
+**551 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 202 · completed 256 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -164,6 +164,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-competitive-borrow`](road-to-competitive-borrow.md) | Roadmap: Competitive Borrow | closed-with-cancellations | 4 | 23/35 | _not extractable_ |
 | [`road-to-completion-loop`](road-to-completion-loop.md) | Road to the completion loop — measure "delivered less than was asked" before refusing on it | closed-with-cancellations | 3 | 5/8 | _not extractable_ |
 | [`road-to-composition-ratchet`](road-to-composition-ratchet.md) | Road to composition ratchet — stop the falsifiability dilution without resurrecting the skill-DAG | completed | 2 | 7/7 | _not extractable_ |
+| [`road-to-condensed-link-repair`](road-to-condensed-link-repair.md) | Road to condensed-link repair | closed-with-cancellations | 1 | 6/7 | _not extractable_ |
 | [`road-to-configurable-modules`](road-to-configurable-modules.md) | Road to configurable modules — project-driven module paths and per-module agent folders | closed-with-cancellations | 5 | 40/42 | _not extractable_ |
 | [`road-to-conformance-round5`](road-to-conformance-round5.md) | Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class | completed | 6 | 31/31 | _not extractable_ |
 | [`road-to-conformance-round6`](road-to-conformance-round6.md) | Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started | closed-with-cancellations | 6 | 33/34 | _not extractable_ |

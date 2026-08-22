@@ -182,12 +182,18 @@ unexamined. Verdict on each existing row, and one row added:
       DELIVERED path (11/11 rule-to-command links) and by not linking ADRs at
       all (4/4 references). Both links are now followable from
       `dist/agent-src/rules/`, which the Goal names as the one that matters. -->
-- [~] AC-3 — **PENDING REMOTE VERIFICATION.** The wiring is complete and green
-      locally; "that workflow is green" is only observable from this PR's CI run,
-      so the council (2 of 2, 2026-08-22) ruled it pending rather than met, and
-      explicitly ruled that roadmap closure must not block on the merge. Closed
-      by the successful run; if the workflow cannot run, the reason is recorded
-      under this criterion's own explicit alternative.
+- [x] AC-3 — **MET, observed remotely.** The council (2 of 2, 2026-08-22) ruled
+      this pending-until-observed rather than met-on-wiring, so it was held `[~]`
+      until the run existed and is closed on the run, not on the intent.
+      Evidence: workflow run **32546466190** on this PR, head
+      `408c05d5d431dc68f3d161661f3fb6733171b202` (verified equal to the PR head,
+      so the green is this code's and not a stale run's). Job "Sync + Generate
+      Tools Consistency" — **success**; the step "Verify projected rule links
+      resolve" ran `task check-condensed-paths`, and the "CI ↔ local gate parity"
+      step lists `check_condensed_paths` among the gates it sees. The step's
+      presence in the log is what closes this, not the job's colour: a green job
+      whose new step was skipped would have satisfied the criterion's letter and
+      not its point.
       Original text: The gate is either wired into a green remote workflow, or this
       roadmap records the reason it stays local-only.
       <!-- Wired (see 1.3). Closes on the first green Consistency run of the
