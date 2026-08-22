@@ -214,6 +214,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-doctor-global-only-readiness`](road-to-doctor-global-only-readiness.md) | Road to `doctor` Global-Only Readiness | completed | 1 | 4/4 | _not extractable_ |
 | [`road-to-domain-soundness`](road-to-domain-soundness.md) | Road to domain soundness — prove or honestly scope the non-forged, non-coding domains | completed | 4 | 15/15 | _not extractable_ |
 | [`road-to-drafting-protocol`](road-to-drafting-protocol.md) | Roadmap: Drafting Protocol | completed | 7 | 3/3 | _not extractable_ |
+| [`road-to-drain-commands`](road-to-drain-commands.md) | Road to drain commands | closed-with-cancellations | 6 | 37/39 | _not extractable_ |
 | [`road-to-ecosystem-harvest-bug-security-rigor`](road-to-ecosystem-harvest-bug-security-rigor.md) | Roadmap: Ecosystem-Harvest — Bug & Security Rigor | completed | 2 | 11/11 | _not extractable_ |
 | [`road-to-ecosystem-harvest-document-skills`](road-to-ecosystem-harvest-document-skills.md) | Roadmap: Ecosystem-Harvest — Document-Generation Skills | closed-with-cancellations | 2 | 10/11 | _not extractable_ |
 | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | Roadmap: Ecosystem-Harvest — Domain Watch (gated verticals) | closed-with-cancellations | 3 | 6/8 | _not extractable_ |
