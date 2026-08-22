@@ -24,14 +24,29 @@ complexity: structural
 > External claims carry their source. Anything marked *(proposal)* is this
 > roadmap's own suggestion, never a foundation to cross-cite.
 
-## Outcome — drain run 2026-08-20
+## Outcome — drain runs 2026-08-20 and 2026-08-22
 
-> **Archived does not mean achieved, and this roadmap is not archived.** Four
-> steps remain open on purpose: each is a measurement window or an undecided
-> design question, and a `[x]` on any of them would be evidence nobody observed.
-> The operator's three symptoms are **instrumented, not fixed** — every guard
-> this roadmap shipped is shadow or capture-only by design, so nothing here has
-> yet refused a single spawn or recovered a single lost return.
+> **Archived does not mean achieved.** This roadmap now closes, and exactly one
+> of its four remaining steps closed by being *built*. The other three are
+> `[-]` — descoped to two stubs on a 2/2 convergent council verdict, because
+> each would have shipped a mechanism on an undecided premise. Read the `[-]`
+> glyphs as the record they are: the operator's three symptoms remain
+> **instrumented, not fixed**. Every guard this roadmap shipped is shadow or
+> capture-only by design, so nothing here has yet refused a single spawn or
+> recovered a single lost return.
+
+### What the 2026-08-22 close-out did
+
+| Step | Disposition | On what |
+|---|---|---|
+| Phase 2 Step 4 — near-miss / foreign-object split | **`[x]` built** | five-way verdict, `field_hits` on the row, best-candidate selection, sensitivity-verified fixtures |
+| Phase 2 Step 2 — `subagent-return-gate` | **`[-]` transferred** | `no_message` = 0/1,751, no disk writer, `ok` = 0 — no primary channel to fall back from |
+| Phase 2 Step 3 — its snapshot tests | **`[-]` cancelled with Step 2** | nothing to snapshot without the mechanism |
+| Phase 7 Step 1 — `do_not_touch` guard | **`[-]` transferred** | (c) matching semantics and (d) publication point both undecided; council declined to decide either by default |
+
+Successors: [`stubs/road-to-subagent-return-gate.md`](stubs/road-to-subagent-return-gate.md)
+and [`stubs/road-to-do-not-touch-guard.md`](stubs/road-to-do-not-touch-guard.md).
+Council record: [`subagent-lifecycle-closeout-2026-08-22.md`](../evidence/council/subagent-lifecycle-closeout-2026-08-22.md).
 
 Per phase, in the framework's four outcome states.
 
@@ -39,12 +54,12 @@ Per phase, in the framework's four outcome states.
 |---|---|---|
 | 0 — spikes | **transferred** (partly) | Steps 1, 3 closed. Steps 2, 4: both assertion halves **answered** from shipped instruments (§ B2-B4); only the verbatim-payload halves moved to [`stubs/road-to-subagent-payload-capture.md`](stubs/road-to-subagent-payload-capture.md). |
 | 1 — measure | **narrowed** | Steps 1-3 shipped. Step 4 publishes **three of four** baseline columns plus a fifth the step never named; the envelope-return column is now measurable *forward* because the four-way split landed, and has no reading yet. |
-| 2 — return channel | **narrowed** | Step 1 (contract addendum) shipped earlier. Step 2's part (i) — the four-way verdict split — landed here, so its fallback condition is expressible for the first time; the concern itself stays gated on a post-split window. Step 3 waits on the concern. |
+| 2 — return channel | **transferred** (Steps 2, 3) + **satisfied** (Steps 1, 4) | Step 1 (contract addendum) shipped earlier. Step 2's part (i) — the verdict split — landed 2026-08-20 and Step 4 extended it to five-way on 2026-08-22. The concern and its tests are **transferred**: the post-split window arrived and read `no_message` = 0 of 1,751, so the branch they key on has never fired. |
 | 3 — containment | **satisfied**, and its falsifier now evaluated | All three steps shipped shadow-first. The Step 1 falsifier **does not fire**: 96 `would_deny` at the widest candidate over 325 dispatches (§ B6), so the guard is not removed. |
 | 4 — role axis | **transferred** (Step 1) + **satisfied** (Steps 2, 3) | Step 3's invariant test landed, and found the neighbouring test had no sensitivity to the guard it was named after. Step 1 is gated on Phase 0 Step 4 and closes against the stub. The phase falsifier cannot run — recorded, not pending. |
 | 5 — tier routing | **satisfied**, as a published null | Step 2's before/after pair is unbuildable by the named instrument (the ledger carries no tier) and cannot have moved (nothing reads the resolver's output). The falsifier's publish-and-stop branch is taken **on a derivation, never on a measured distribution** (§ B5). |
 | 6 — frontend | **abandoned here** (superseded) | Unchanged: both steps file into `road-to-frontend-skill-application` via SFF. |
-| 7 — `do_not_touch` guard | **narrowed** | Condition (a) is **met by measurement** — 6 of 13 envelopes carry the field — so the phase falsifier is **refuted** and the guard is not cancelled. (b)'s preferred cheap route turned out not to exist, and a fourth condition (d) surfaced. Two named design decisions now block it, not a missing producer. |
+| 7 — `do_not_touch` guard | **transferred** | Condition (a) is **met by measurement** — 6 of 13 envelopes carry the field — so the phase falsifier stays **refuted** and this is a transfer, not the cancellation that falsifier describes. (b)'s preferred route does not exist and (d) surfaced; on 2026-08-22 the council declined to decide (c) or (d) by default, so the mechanism moves to a stub with both as its promotion probe. |
 
 **What the drain run added that was not on the plan.** Three corrections to the
 roadmap's own text, each recorded at its step: the `last_assistant_message` half
@@ -52,10 +67,12 @@ of Phase 0's falsifier note was wrong (the ledger *could* see it); Phase 7's
 per-turn-cost citation was stale by six lines; and Phase 2 Step 2's join
 availability is 8.0 %, not "not always available".
 
-**The four still-open items, and what each waits on.** Phase 1 Step 4 — one
-column, one window. Phase 2 Step 2 — a pre-registered threshold off that window.
-Phase 2 Step 3 — the concern Step 2 would ship. Phase 7 Step 1 — decisions (c)
-and (d). None of the four waits on the transferred capture.
+**The four items that were still open on 2026-08-20, and how each closed on
+2026-08-22.** Phase 1 Step 4 had in fact already landed — the narrative naming
+it open was stale against its own checkbox, and is corrected here. Phase 2
+Step 4 was buildable and was built. Phase 2 Steps 2 and 3, and Phase 7 Step 1,
+were the three genuine forks; all three descoped. None of the four waited on the
+transferred capture, and none of them still does.
 
 ## Context / What is verified
 
@@ -501,7 +518,7 @@ mechanism (pre-register the threshold before reading the number).
       **Does not close Phase 2.** Steps 2 and 3 stay open and stay gated: the
       concern needs the three-way `no_message` / `no_envelope` / `ok` verdict
       split, and that split needs the Phase-1 baseline this step does not.
-- [ ] **Step 2:** `subagent-return-gate` concern on `subagent_stop` *(proposal)*,
+- [-] **Step 2:** `subagent-return-gate` concern on `subagent_stop` *(proposal)*,
       **command type only** (#20221 excludes prompt-type): parse
       `last_assistant_message` with `validateResponse`; on failure, look for
       the Step-1 disk envelope; if found, inject its path via
@@ -546,10 +563,36 @@ mechanism (pre-register the threshold before reading the number).
       `response-envelope.json` (Phase 2 Step 1 (ii) says so in the contract
       itself), so on today's tree the `no_message` branch would find no file and
       fall through to the block path on its first firing.
-- [ ] **Step 3:** Snapshot tests under `tests/hooks/` for all four paths
+
+      **DESCOPED 2026-08-22 — transferred to
+      [`stubs/road-to-subagent-return-gate.md`](stubs/road-to-subagent-return-gate.md).**
+      AI council 2/2 convergent under blind peer review
+      ([`subagent-lifecycle-closeout-2026-08-22.md`](../evidence/council/subagent-lifecycle-closeout-2026-08-22.md)
+      § Decision 1). Three measured facts, none of them a scheduling problem:
+      `no_message` = **0 of 1,751** post-split stops, so the branch this concern
+      keys on has never fired since the instrument could see it; nothing writes
+      the disk envelope it would consult; and `ok` = **0** over the same window,
+      so there is no working primary channel for a fallback to fall back *from*.
+      Both seats also rejected the "ship only the writer" middle option in the
+      same terms — a writer is not a narrower mechanism, it is a new persistence
+      and provenance boundary with no observed need.
+      **Reopens on:** a reproducible `no_message` where allowing parent
+      completion produced an incorrect "done" — which reopens *investigation*,
+      never enforcement; the stub carries the four further conditions on any
+      enforcing version.
+      **One inference NOT carried:** one seat read the 8.0 % start↔stop join
+      rate as proof `agent_id` is an unsafe blocking key; the other refused the
+      step, since that figure measures failure to recover *start-side metadata*.
+      The narrower reading is recorded, in the stub and here.
+- [-] **Step 3:** Snapshot tests under `tests/hooks/` for all four paths
       (ok / disk-fallback / block-once / release), per the manifest's own
       concern checklist (`hook_manifest.yaml:10-14`).
-- [ ] **Step 4:** Split `fail` into a near-miss and a foreign object, because
+
+      **CANCELLED 2026-08-22 with Step 2**, and for no reason of its own: these
+      are the snapshot tests *of* the concern Step 2 would ship, and they have
+      nothing to snapshot without it. They move with the mechanism to
+      [`stubs/road-to-subagent-return-gate.md`](stubs/road-to-subagent-return-gate.md).
+- [x] **Step 4:** Split `fail` into a near-miss and a foreign object, because
       today's bucket holds no contract attempts at all. The verdict union is
       four-way at `subagent_ledger_hook.ts:200` and the classifier at `:246`
       reports `fail` for any decoded object `validateResponse` rejects, with
@@ -576,6 +619,36 @@ mechanism (pre-register the threshold before reading the number).
       fallback **robustness** rather than a fix for an observed production
       defect — the branch it keys on has never fired.
       <!-- verify: `git show HEAD:src/scripts/hooks/subagent_ledger_hook.ts | grep -c foreign_object` returns 0 while the working copy returns at least 1; a fixture asserting `{"a":1}` classifies as `foreign_object` and `{"summary":"x"}` as `fail` fails against the pre-change classifier -->
+
+      **LANDED 2026-08-22.** The verdict union is five-way at
+      `subagent_ledger_hook.ts:200`; `classifyEnvelope` emits `foreign_object`
+      for a decoded object carrying none of the five required contract fields
+      and keeps `fail` for one or more; `field_hits` rides beside `error_count`
+      on the `ParseVerdict` and lands on the ledger row as
+      `envelope_field_hits`. The field list is **not** a second copy — the
+      classifier counts against `RESPONSE_REQUIRED_FIELDS` exported from
+      `subagent_response.ts`, beside the validator that defines it, so the two
+      cannot drift.
+      **One thing the step did not name, decided here.** Candidate selection
+      changed from first-failure to **most-contract-shaped**. First-match was
+      safe while every failure was one bucket; with the split it is not, because
+      a leading `{"note":1}` would report `foreign_object` for a message that
+      also carried a real attempt — the same masking defect the valid-envelope
+      search already guards against, one register down. A fixture pins it.
+      **Optional fields deliberately excluded from the count** (`artifact_paths`,
+      `assumptions`): including them would break the equivalence the split was
+      calibrated on — `error_count: 5` ⇔ zero required fields present — so an
+      object carrying only `assumptions` reads as foreign. Recorded as a known
+      edge in the exported docstring, not left implicit.
+      **Correction to this step's own text**, raised by the closing council: the
+      6 `fail` rows in the post-split window are described here as foreign
+      objects using the vocabulary that did not yet exist when they were
+      recorded. They were written by the pre-split classifier; under the
+      five-way one they would read `foreign_object`. The count is right, the
+      label on those historical rows is not.
+      **Sensitivity verified, not assumed:** neutralising both halves of the
+      mechanism (the ternary and the best-candidate selection) turns three of
+      the new fixtures red; restoring it returns 34/34.
 
 **Falsifier.** Post-flip envelope return rate does not improve against the
 Phase-1 baseline over an equal window → the mechanism is dead weight; revert
@@ -867,7 +940,7 @@ than in `road-to-per-turn-hook-economy` because the unblocker is lifecycle-owned
 — the field contract and its producers — while hook cost is an acceptance
 condition on shipping, not the thing that is missing.
 
-- [ ] **Step 1:** `do_not_touch` write-guard — a `pre_tool_use` concern
+- [-] **Step 1:** `do_not_touch` write-guard — a `pre_tool_use` concern
       (advisory, `fail_closed: false`, modelled on `block-kernel-rule-writes`
       and `reread-guard`) that warns when a write targets a path the current
       recycle envelope listed under `do_not_touch`.
@@ -940,6 +1013,30 @@ condition on shipping, not the thing that is missing.
       matcher is the same defect class as the unchecked field its own source
       closed.
       <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
+
+      **DESCOPED 2026-08-22 — transferred to
+      [`stubs/road-to-do-not-touch-guard.md`](stubs/road-to-do-not-touch-guard.md).**
+      AI council 2/2 convergent under blind peer review
+      ([`subagent-lifecycle-closeout-2026-08-22.md`](../evidence/council/subagent-lifecycle-closeout-2026-08-22.md)
+      § Decision 2). This is a transfer, **not** the cancellation the phase
+      falsifier describes: (a) stays discharged and the falsifier stays refuted.
+      What moves is the mechanism, on (c) and (d) — both still undecided, and
+      the council declined to decide either by default. Choosing a matcher now
+      would silently choose the policy language, and inferring an entry's type
+      from a trailing slash is the same defect as the `isPathRef` shape
+      confusion this step already names. On (d) the consumed file is struck from
+      the option set outright, on a narrower ground than staleness: a successful
+      current-session consumption can leave a current-session consumed file, so
+      the defect is **indeterminate provenance** — the reader cannot tell which
+      it holds.
+      **They descope together.** (c) cannot be validated without (d) supplying
+      test data, so shipping (c) first would canonise semantics for data that
+      cannot reach enforcement.
+      **Two conditions carried to the stub rather than decided here:** the
+      authority boundary (a subagent-authored field constraining the *parent's*
+      writes — the council named this the most important unresolved issue, and
+      it is neither (c) nor (d)), and a hook-latency reading, since this would
+      join a chain already running 11-12 concerns.
 
 **Falsifier.** Condition (a) is still unmet after a full measurement window in
 which envelopes were written and none carried a `do_not_touch` entry → the field
