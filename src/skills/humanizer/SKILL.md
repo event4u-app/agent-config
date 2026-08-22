@@ -73,7 +73,8 @@ human voice there; do not inject personality or restructure it.
    (degrade, do not skip the audit).
 5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when
    the operator explicitly asks for a carrier strip. `stripCarrierUnicode`
-   (`src/scripts/detect_ai_tells.ts`) removes a hidden-Unicode codepoint only
+   (`node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts`, the same
+   path step 5 invokes) removes a hidden-Unicode codepoint only
    when the codepoints on **both** sides are ASCII or absent; anything adjacent
    to a non-ASCII character is preserved, so an emoji ZWJ sequence and a
    complex-script joiner survive byte-identically.
@@ -216,7 +217,8 @@ do not infer a segment from the draft you were asked to edit.
   voice fingerprint that uses dashes overrides even that.
 - Do NOT shorten or restructure as a side effect — same coverage in,
   same coverage out.
-- Do NOT reach for `_sanitize` (`src/scripts/lint_hidden_unicode.ts`) or any
+- Do NOT reach for `_sanitize`
+  (`node_modules/@event4u/agent-config/src/scripts/lint_hidden_unicode.ts`) or any
   `NFKC` pass on a deliverable. It drops **every** `_classify`-flagged codepoint
   unconditionally, and its class list contains `U+200C` and `U+200D` — so a
   blind pass destroys emoji ZWJ sequences and complex-script joiners. It is a
