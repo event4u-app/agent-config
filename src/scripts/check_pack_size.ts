@@ -98,6 +98,126 @@ export function skillBytes(files: readonly PackFile[]): { perSkill: Record<strin
 }
 
 /** Every violation, as human-readable lines. Empty array means green. */
+/**
+ * Content classes the published payload is checked for.
+ *
+ * The gap this closes: before it, the tarball was measured by SIZE and by build
+ * correctness, and by nothing that read what the files ARE. A payload can be
+ * comfortably under budget and still ship compiled tests, an IDE directory, or
+ * a credential-shaped file.
+ *
+ * `limit: 0` is a hard class — nothing of that shape may ship. A positive limit
+ * is a RATCHET: the number was measured, not chosen, and it may only walk down.
+ * The distinction is in `measured_in`, which every entry carries, because the
+ * same `npm pack` reports a fifth of the source maps in an unbuilt worktree as
+ * in a built one. A threshold with no stated tree reads as drift the first time
+ * someone runs it from a fresh checkout.
+ */
+interface ContentClass {
+    id: string;
+    /** Matches a payload path. */
+    match: (p: string) => boolean;
+    /** 0 = must not ship at all. > 0 = shrink-only ratchet. */
+    limit: number;
+    /** Which tree the limit was measured in, and when. */
+    measured_in: string;
+    /**
+     * True when the class only exists in a BUILT tree.
+     *
+     * This is the difference between a check and a false pass. `npm pack
+     * --dry-run --ignore-scripts` on a clean checkout — which is the condition
+     * `pack-size-budget.json` declares for its own numbers — produces no
+     * `dist/cli/**` at all, so a source-map count of 22 sails under a limit of
+     * 120 while measuring a fifth of the payload. Reported NOT MEASURABLE
+     * instead, on the same principle as the dead-scope assertion above: a check
+     * that could not run is not a clean bill.
+     */
+    requires_build: boolean;
+    why: string;
+}
+
+/**
+ * Was this payload produced from a built tree?
+ *
+ * Keyed on the payload itself rather than on the filesystem, so it describes
+ * the thing being judged instead of the machine judging it.
+ */
+function payloadIsBuilt(files: readonly PackFile[]): boolean {
+    return files.some((f) => f.path.startsWith('dist/cli/'));
+}
+
+const CONTENT_CLASSES: readonly ContentClass[] = [
+    {
+        id: 'compiled-test-artefact',
+        requires_build: true,
+        match: (p) => /\.(test|spec)\.(js|js\.map|d\.ts)$/.test(p),
+        limit: 0,
+        measured_in: 'built main checkout, 2026-08-22: 8 `.test.js` + 8 `.test.js.map` were shipping before the `files[]` negations landed',
+        why: "a compiled test's output has no consumer-facing purpose; council 2026-08-22 decision (b') strips BOTH the JS and its map, because stripping only the maps left the compiled tests themselves in the tarball",
+    },
+    {
+        id: 'credential-shaped',
+        requires_build: false,
+        match: (p) => /(^|\/)\.env(\.|$)|\.pem$|(^|\/)id_(rsa|ed25519)$|\.p12$|\.pfx$/.test(p),
+        limit: 0,
+        measured_in: 'built main checkout, 2026-08-22: 0 present',
+        why: 'a clean class with no check is indistinguishable from a class nobody looked at — and this one is worth a canary precisely because it is empty today',
+    },
+    {
+        id: 'ide-metadata',
+        requires_build: false,
+        match: (p) => /(^|\/)\.(idea|vscode)\//.test(p),
+        limit: 0,
+        measured_in: 'built main checkout, 2026-08-22: 0 present',
+        why: 'same reason as the credential class: empty and unchecked is not the same as empty and verified',
+    },
+    {
+        id: 'source-map',
+        requires_build: true,
+        match: (p) => p.endsWith('.js.map'),
+        limit: 120,
+        measured_in: 'built worktree, 2026-08-22, AFTER the compiled-test negations: 120 product maps (128 total minus 8 test maps)',
+        why: "a product source map is a consumer debugging affordance — proper line mapping and stepping over shipped JS — so council 2026-08-22 kept the 119/120 product maps and refused a blanket zero. Recorded as a PROVISIONAL measured ratchet, not an architectural constant: nothing here establishes that any consumer debugs the shipped JS, and nothing establishes they do not",
+    },
+];
+
+/**
+ * Count each content class in the payload and report over-limit classes.
+ *
+ * Returns one error string per violating class, with the offending paths — the
+ * count alone tells a reader a rule broke and not which file broke it.
+ */
+export function classifyPayload(files: readonly PackFile[]): string[] {
+    const out: string[] = [];
+    const built = payloadIsBuilt(files);
+    for (const c of CONTENT_CLASSES) {
+        if (c.requires_build && !built) continue;
+        const hits = files.filter((f) => c.match(f.path)).map((f) => f.path);
+        if (hits.length <= c.limit) continue;
+        const shown = hits.slice(0, 8);
+        out.push(
+            `content class \`${c.id}\`: ${String(hits.length)} entr${hits.length === 1 ? 'y' : 'ies'} ` +
+                `exceeds its limit of ${String(c.limit)} (measured in: ${c.measured_in}) — ` +
+                `${shown.join(', ')}${hits.length > shown.length ? `, +${String(hits.length - shown.length)} more` : ''}. ` +
+                `Why this class is checked: ${c.why}`,
+        );
+    }
+    return out;
+}
+
+/** Per-class counts, for the green-path report. */
+export function payloadClassCounts(
+    files: readonly PackFile[],
+): Array<{ id: string; count: number; limit: number; measurable: boolean }> {
+    const built = payloadIsBuilt(files);
+    return CONTENT_CLASSES.map((c) => ({
+        id: c.id,
+        count: files.filter((f) => c.match(f.path)).length,
+        limit: c.limit,
+        measurable: built || !c.requires_build,
+    }));
+}
+
 export function evaluate(budget: PackSizeBudget, pack: PackResult): string[] {
     const errors: string[] = [];
 
@@ -199,7 +319,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         throw err;
     }
 
-    const errors = evaluate(budget, pack);
+    const errors = [...evaluate(budget, pack), ...classifyPayload(pack.files)];
     const { perSkill, total } = skillBytes(pack.files);
     if (argv.includes('--json')) {
         process.stdout.write(
@@ -216,6 +336,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             `${Object.keys(perSkill).length} skills, largest share ` +
             `${Math.max(...Object.values(perSkill).map((b) => (b / total) * 100)).toFixed(2)}%\n`,
     );
+    // Printed on the GREEN path on purpose. A class that is clean and silent is
+    // indistinguishable from a class nobody checks, which is the whole reason
+    // two of these four are limit-0 over an empty set today.
+    for (const c of payloadClassCounts(pack.files)) {
+        const verdict = c.measurable
+            ? `${String(c.count)} / ${c.limit === 0 ? 'must be 0' : `${String(c.limit)} max`}`
+            : 'NOT MEASURABLE — this payload has no dist/cli/**, so the tree is unbuilt and the class is out of view';
+        process.stdout.write(`    content class ${c.id}: ${verdict}\n`);
+    }
     return 0;
 }
 
