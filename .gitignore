@@ -107,6 +107,19 @@ __pycache__/
 # consumer rollout is carried separately.
 /agents/roadmaps-progress.md
 
+# Generated archive index — both halves are written by one
+# `build_archive_index` call from the archived roadmap tree, so neither is ever
+# hand-authored and every open branch collided on them (49 of the last 120 merge
+# commits each, and the most frequent single Consistency failure). `task
+# check-archive-index` runs `--untracked-mode`: a copy present on disk is still
+# compared against a fresh render, and one still in the index fails.
+#
+# Repository-local ON PURPOSE, like the dashboard entry above: not in
+# `src/config/gitignore-block.txt`, because a tracked -> untracked transition
+# cannot be made atomic across independently versioned consumer repositories.
+/agents/roadmaps/archive/INDEX.md
+/agents/roadmaps/archive/index.json
+
 # Generated Augment Code projection of dist/agent-src/ (rebuilt by `task sync`)
 /.augment/
 

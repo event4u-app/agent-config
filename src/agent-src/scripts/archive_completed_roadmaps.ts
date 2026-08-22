@@ -398,10 +398,13 @@ function _regen_dashboard(root: string, dry_run: boolean): void {
     // Python: `_run([sys.executable, str(script)], root)`; the twin spawns the
     // dashboard generator twin through the same `tsx` runtime, cwd=root.
     _runTwin(root, script);
-    const dash = path.join(root, 'agents', 'roadmaps-progress.md');
-    if (_isFile(dash)) {
-        _run(['git', 'add', '--', 'agents/roadmaps-progress.md'], root);
-    }
+    // The dashboard is NOT staged. It is gitignored in this repository, and
+    // `git add -- <ignored-path>` exits 1 with "The following paths are ignored"
+    // -- a code `_run` returns and this call site discarded, so the previous
+    // `git add` here was a silent no-op from the moment the file was untracked
+    // (2026-08-21) and nothing objected. Regenerating it is still correct; the
+    // developer reads it on disk, and `task roadmap-progress-check` compares a
+    // present copy against a fresh render.
 }
 
 /**
