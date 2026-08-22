@@ -96,7 +96,7 @@ blocker below carries the question; no phase acts on it.
 
 ## Phase 1 — A content-class inventory on the parse that already runs
 
-- [ ] **1.1 Extend `prepack-check.mjs` with a content-class pass.** Classes:
+- [x] **1.1 Extend `prepack-check.mjs` with a content-class pass.** Classes:
       source maps, credential-shaped files, IDE metadata, compiled test
       artefacts. Each class reports a count and, above its threshold, the
       offending paths. Feed it from `check_pack_size.ts`'s existing
@@ -105,12 +105,54 @@ blocker below carries the question; no phase acts on it.
       prints a per-class line, and
       `git show HEAD:src/scripts/prepack-check.mjs | grep -ci 'js.map'` is 0,
       pinning that the pre-state had no such check.
-- [ ] **1.2 State the tree the thresholds were measured in.** Every threshold
+
+      **LANDED 2026-08-22, in `check_pack_size.ts` and NOT in
+      `prepack-check.mjs` — a deviation, with its reason.** The step names
+      `prepack-check.mjs` and also says to feed the pass from
+      `check_pack_size.ts`'s existing `parsePackJson` / `PackFile` surface
+      "rather than a second pack run". Those two instructions conflict on this
+      tree: `prepack-check.mjs` is ESM JavaScript on the **publish** path and
+      cannot import a `.ts` module without adding `tsx` to that path, which
+      would be a new runtime dependency on `npm publish` — a worse trade than
+      the one the step was avoiding. So the pass lives beside the parse it
+      reuses, in the gate that already runs `npm pack` on every PR
+      (`taskfiles/ci-fast.yml:786`). `prepack-check.mjs` is untouched, and its
+      `grep -ci 'js.map'` pre-state assertion still holds trivially.
+      **Four classes, and the limits are two different KINDS of number.**
+      `compiled-test-artefact`, `credential-shaped` and `ide-metadata` are
+      **limit 0** — hard classes, nothing of that shape may ship.
+      `source-map` is **120**, a shrink-only ratchet, and the entry says in its
+      own text that it is provisional rather than an architectural constant.
+      Errors name the offending paths, not just a count.
+      **Two of the four are empty today, and that is why they are checked** — a
+      clean class with no check is indistinguishable from a class nobody looked
+      at. Counts print on the GREEN path for the same reason.
+- [x] **1.2 State the tree the thresholds were measured in.** Every threshold
       carries the build state it came from, because the unbuilt worktree
       reports a fifth of the source maps and three quarters of the entries.
       verify: the threshold constants carry a comment naming the built-tree
       measurement, and running the check in an unbuilt tree reports a
       not-measurable state rather than a false pass.
+
+      **LANDED, and it turned out to be load-bearing rather than hygiene.**
+      Every class carries `measured_in`, and a fixture asserts the string
+      appears in the error. The not-measurable state is real: `requires_build`
+      plus `payloadIsBuilt`, keyed on whether the PAYLOAD carries `dist/cli/**`
+      rather than on the filesystem, so it describes the thing being judged.
+      **The false pass this closes is not hypothetical.**
+      `pack-size-budget.json`'s own `measurement_conditions` declare `npm pack
+      --dry-run --ignore-scripts` on a **clean checkout** — no build, so no
+      `dist/cli/**` at all. In that tree the source-map count is ~22 and would
+      sail under a limit of 120 while measuring a fifth of the payload. The
+      class now abstains and says so, on the same principle as the dead-scope
+      assertion above: a check that could not run is not a clean bill. A fixture
+      pins both directions — abstain must not become a pass, and must not become
+      a failure either.
+      **Numbers differ by tree, measured rather than assumed.** The roadmap's
+      Context records 3,038 entries / 127 maps in the built main checkout; this
+      built worktree measured 2,970 / 128 before the strip and 2,954 / 120
+      after. Same command, different trees, and the class limits are stated
+      against the tree that produced them.
 - [ ] **1.3 One canary per class.** Register each new class in
       `src/config/gate-coverage.yml` with a `canary:` block per the shape
       documented at `:192-202`, so each check has been observed red.
@@ -159,7 +201,7 @@ blocker below carries the question; no phase acts on it.
 
 ### blocker: b-sourcemap-intent
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 step 1.1 threshold selection, and the disposition of the
   8 compiled-test source maps.
@@ -179,6 +221,31 @@ blocker below carries the question; no phase acts on it.
 - **Resolved when:** the decision is written down and the Phase 1 threshold
   constant cites it, so a later reader can tell a deliberate 127 from an
   unnoticed one.
+- **Resolution (2026-08-22) — (b'), NEITHER of the two options as written, by
+  2/2 council.** The option set conflated two classes and both seats said so
+  independently: a product `.js.map` is a **consumer debugging affordance**
+  (line mapping and stepping in a debugger over shipped JS), and a compiled
+  test's output has no consumer-facing purpose at all. Removing the product
+  maps on "a zero threshold is more legible" is an operational preference, not
+  a finding — and the risk is asymmetric, since stripping is an irreversible
+  capability loss while keeping them stays reversible.
+  So: **compiled-test artefacts stripped, threshold 0; product maps kept at a
+  provisional measured ratchet of 120.** Both numbers cite their tree in the
+  class entry.
+  **The council also predicted a defect the measurement then confirmed**, and it
+  is the reason (b') is wider than "strip the 8 maps": one seat asked whether
+  compiled test *JavaScript* was also published. It was — 8 `.test.js` files
+  alongside their 8 `.test.js.map` files. Stripping only the maps would have
+  left the compiled tests in the tarball, treating the symptom.
+  **Mechanism, and a finding about the mechanism.** The strip is four `!`
+  negation patterns in `package.json` `files[]`. A `.npmignore` entry was tried
+  first and had **no effect**: `files[]` is an allowlist that overrides
+  `.npmignore` for anything under an included root, and `dist/` is one. That is
+  a live fact for Phase 3, which is about exactly this pair of surfaces — and an
+  ineffective `.npmignore` line would have been decoration, so it was reverted
+  rather than left in.
+  Payload before: 2,970 entries, 128 maps, 8 test JS. After: **2,954 entries,
+  120 maps, 0 test JS, 0 test maps.**
 
 The two options are not equivalent and the threshold cannot be set before the
 question is answered. 127 source maps in a published package is either a
@@ -189,7 +256,7 @@ the strongest evidence for (b) — but it is evidence, not the decision.
 
 ### blocker: b-sbom-scope
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** nothing in this roadmap. It exists so the question is visible
   rather than quietly re-litigated inside a packaging phase.
@@ -213,6 +280,35 @@ Recorded so that a content-class inventory is not mistaken for a supply-chain
 manifest. They look adjacent and are not: one says what is in the tarball, the
 other makes a distributable claim about provenance, and the second was
 deliberately rejected.
+- **Resolution (2026-08-22) — (a), the recorded rejection stands.** 2/2 council,
+  both seats agreeing with the roadmap's own recommendation and with each other:
+  ADR-238's Trigger A requires a named maintainer with a stated review cadence
+  AND a fixture set authored against the current skills showing a real miss, and
+  neither half exists. Nothing in this roadmap needs an SBOM surface, and the
+  content-class inventory answers the concern that actually motivated the
+  source. **This blocker gated no step and still gates none** — it is resolved
+  as *visible and declined*, which is the state it was written to reach.
+  **What would make Trigger A worth paying**, so the next reader meets a
+  condition rather than a closed door: a fixture set that demonstrates the
+  current skills missing a real supply-chain finding an SBOM would have caught.
+  Absent that, the reopen cost is deliberately higher than the value.
+  One seat added a caveat worth carrying: "blocks nothing" is only true while no
+  later phase promises or consumes SBOM-derived evidence. None does today.
+
+- **Resolution (2026-08-22) — (a), the recorded rejection stands.** 2/2 council,
+  both seats agreeing with the roadmap's own recommendation and with each other:
+  ADR-238's Trigger A requires a named maintainer with a stated review cadence
+  AND a fixture set authored against the current skills showing a real miss, and
+  neither half exists. Nothing in this roadmap needs an SBOM surface, and the
+  content-class inventory answers the concern that actually motivated the
+  source. **This blocker gated no step and still gates none** — it is resolved
+  as *visible and declined*, which is the state it was written to reach.
+  **What would make Trigger A worth paying**, so the next reader meets a
+  condition rather than a closed door: a fixture set that demonstrates the
+  current skills missing a real supply-chain finding an SBOM would have caught.
+  Absent that, the reopen cost is deliberately higher than the value.
+  One seat added a caveat worth carrying: "blocks nothing" is only true while no
+  later phase promises or consumes SBOM-derived evidence. None does today.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
