@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 3,
+    "active_roadmaps": 2,
     "later_roadmaps": 57,
     "open_blockers": 26
   },
@@ -755,6 +755,13 @@
       "later_roadmaps": 57,
       "open_blockers": 26,
       "why": "RAISED by 2 on later_roadmaps only, and only on the parked side. An inbox drain of 25 dropped artefacts produced 20 authored roadmaps plus 2 that must NOT be active work: road-to-composite-dispatch-topology is gated by the standing one-orchestration-claim-at-a-time rule and, more decisively, by its own instrument \u2014 the telemetry it would measure captured 0.27 percent and no post-hook replacement rate has ever been recorded, so a measurement roadmap on it would measure nothing; road-to-regulatory-radar asks an owner-reserved question that ADR-238 already answered for a sibling domain, namely whether this package carries decaying domain parameters at all, and it names no owner and no refresh cadence, which Gate 2 of the domain-adoption gates requires. Parking is the honest disposition for both and it is what grows this number. The other two metrics are unchanged and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays 3 because all 20 authored files ship status draft, which collect() excludes, and open_blockers stays 26 for the same reason \u2014 the 30-odd blockers those drafts carry will charge this ratchet on the day any of them flips to ready, which is the maintainer's decision and not this change's."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 2,
+      "later_roadmaps": 57,
+      "open_blockers": 26,
+      "why": "Walked 3 -> 2 by the Iron-Law-3 closure of road-to-per-turn-hook-economy. The gate demanded it: it reported 'un-walked tightening: active_roadmaps measured 2 under a baseline of 3', and a loose ratchet silently permits the gain to be given back. The tightening is real and one-sided -- the roadmap moved to archive/, and its two deferred items were CARRIED into road-to-per-turn-hook-economy-carry rather than dropped, which ships status: draft and therefore adds nothing to any of the three metrics today. That is also the honest limit of this walk-down: the carry file holds three open blockers, so flipping it to ready charges open_blockers +3 against a baseline of 26, and whoever does that owes an offset. Two of the three are owner-reserved by council verdict (the p50_ci ceiling value; choosing the recorded cancellation dissent) and the third is capability-gated on a live host session, so none of them is agent-closable from here."
     }
   ],
   "target": {
