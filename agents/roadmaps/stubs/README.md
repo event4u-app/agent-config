@@ -128,6 +128,7 @@ never seen and which the restore's own note miscounted as part of its twelve.
 
 **If you are resolving a conflict on this file, the resolution without a table
 is the correct one.**
+
 To see what is here, list the directory:
 
 ```bash
