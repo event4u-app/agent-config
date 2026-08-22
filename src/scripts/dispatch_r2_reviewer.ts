@@ -698,6 +698,44 @@ function isoSeconds(d: Date): string {
     return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
+/**
+ * The return-envelope POINTER — one line-shaped field, delivered on the
+ * dominant dispatch path.
+ *
+ * ## Why a pointer and not the contract
+ *
+ * 240 chars is not a round number: it is `MAX_RESPONSE_LINE_CHARS`
+ * (`_lib/subagent_response.ts`), so the pointer is one line-shaped field by the
+ * contract's own measure. Inlining the shape would put a fourth copy of it in
+ * the tree, and a fourth copy is how the contract came to have three
+ * inconsistent states.
+ *
+ * ## Why THIS dispatcher
+ *
+ * `road-to-subagent-envelope-adoption` step 1.1 says the dominant path, "and it
+ * does not fan out to both". The dominant path is **not answerable from the
+ * ledger** — 1,725 of 1,845 post-split stops carry a null `agent_type`, which is
+ * the 8 % start↔stop join rate recorded elsewhere, so no stop can be attributed
+ * to a dispatcher. Decided on invocation surface instead: this file is wired
+ * into `/create-pr` and read by three gates (`check_completion_review`,
+ * `lint_evidence_artifacts`, `probe_review_binding_drift`), while
+ * `team_dispatch` sits behind an ai_team host flag and one `/team delegate`
+ * command. It is also the leg with ZERO prior contract hits, so the dominant
+ * path and the absent one are the same file.
+ *
+ * ## What it does not change
+ *
+ * The findings table stays the artefact — the gates read the file, not the
+ * envelope. Per the four-boundary separation in the response contract, this
+ * touches the DELIVERY boundary only: what the final message is. It adds no
+ * lifecycle status and does not alter the body schema.
+ */
+export const RETURN_ENVELOPE_POINTER =
+    'Final message = the return envelope and nothing else: ' +
+    '{summary, handoff, confidence, findings, risks}. Shape + the ' +
+    'write-to-disk-first rule: contexts/execution/subagent-response-contract.md. ' +
+    'The findings table stays a file.';
+
 function reviewerPrompt(args: {
     slug: string;
     headSha: string;
@@ -780,6 +818,10 @@ function reviewerPrompt(args: {
         '```markdown',
         `**Honest-null:** 0 findings, scope ${args.scopeHash}, reviewed <YYYY-MM-DD>`,
         '```',
+        '',
+        '## Return channel',
+        '',
+        RETURN_ENVELOPE_POINTER,
         '',
     ].join('\n');
 }
