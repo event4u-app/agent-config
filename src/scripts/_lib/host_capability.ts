@@ -120,11 +120,65 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  * host identity a hook/dispatch envelope carries).
  *
  * Each row is partial: an omitted field stays at the `SAFE_DEFAULT` `false`
- * when the row is applied. Claude Code is the one host this roadmap's
- * transcript evidence measured spawning and running subagents concurrently
- * (`Agent` tool dispatch, parallel tool-use blocks); polling and a separate
- * quota pool were never observed, so they stay `false` — add a field only
- * once it is itself observed, never by inference.
+ * when the row is applied — and an ABSENT field is the record for "never
+ * looked", which is a different state from a field written as `false`
+ * deliberately. Add a field only once it is itself observed, never by
+ * inference.
+ *
+ * ## Rows are written under the observation protocol
+ *
+ * `contexts/execution/host-capability-manifest.md` § Observation protocol states
+ * the per-field criterion and the four-part citation (host · host version ·
+ * transcript or artefact reference · date). A row without all four is not
+ * admissible, and no row may be filled from a host's documentation.
+ *
+ * ## REACHABILITY, 2026-08-22 — one of eight, and the other seven are recorded
+ *
+ * `hook_manifest.yaml` declares eight platform keys. Reachable means a real
+ * session can be started on the host, not that it is installable in principle.
+ *
+ *   - `claude`   — REACHABLE. Row below, re-cited under the protocol.
+ *   - `augment`  — not reachable from this session: a different editor host, no
+ *                  session available to the running agent.
+ *   - `cowork`   — not reachable from this session, same reason.
+ *   - `cursor`   — not reachable from this session, same reason.
+ *   - `cline`    — not reachable from this session, same reason.
+ *   - `windsurf` — not reachable from this session, same reason.
+ *   - `gemini`   — not reachable from this session, same reason.
+ *   - `copilot`  — not reachable from this session, same reason; additionally
+ *                  `fallback_only` in the manifest.
+ *
+ * The seven have **no row**, so every field resolves to the safe default and
+ * `describeHostCapabilities` reports its source as `default`. That is the
+ * "never looked" state, and it is the honest one — a recorded silence rather
+ * than a table with gaps that reads as a table of negatives.
+ *
+ * ## The `claude` row, RE-CITED rather than grandfathered
+ *
+ * The row predated the protocol. Both its fields are now carried on transcript
+ * evidence, so it is brought up to the new shape rather than marked
+ * grandfathered — which was the other permitted disposition and would have left
+ * it looking like it passed a protocol it never ran.
+ *
+ * `subagent_spawn: true` — OBSERVED. claude (Claude Code, Opus 5 1M session,
+ *   2026-08-22). `agents/runtime/state/subagent-ledger/2026-08.jsonl`: **445**
+ *   `subagent_start` records, and **420** stops carrying a measured
+ *   `duration_ms` — i.e. 420 child legs whose start and stop pair, which is the
+ *   criterion (a measurable child duration, not an inferred one).
+ *
+ * `parallel_spawn: true` — OBSERVED. Same host, session and artefact.
+ *   **6,168** of 6,388 stop records carry `concurrent_open >= 2`, with a
+ *   maximum of **30** concurrently open children. Overlapping intervals at one
+ *   instant, which is the criterion — not two children in sequence.
+ *
+ * `status_polling`, `separate_quota_pool`, `worker_respawn` — **absent from the
+ *   row, and that is deliberate.** The ledger does not instrument any of the
+ *   three, so this is "never looked", NOT "observed absent". They stay at the
+ *   safe default and report `default` provenance. Writing any of them as an
+ *   explicit `false` would claim a measurement nobody took.
+ *
+ * `agent_teams` — out of scope for a row by construction; see its own field
+ *   doc comment and the protocol section.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
     claude: { subagent_spawn: true, parallel_spawn: true },

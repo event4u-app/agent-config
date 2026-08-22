@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 24,
+    "active_roadmaps": 23,
     "later_roadmaps": 59,
-    "open_blockers": 64
+    "open_blockers": 63
   },
   "baseline_history": [
     {
@@ -783,6 +783,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 63,
+      "why": "WALKED DOWN by the close of road-to-host-capability-observations: active 24 -> 23 on the archive, open_blockers 64 -> 63 on its single blocker RESOLVED. b-host-access resolved as BOTH of its options, which its own recommendation says are not exclusive per host: (a) for the one reachable host and (b) for the other seven. Worth recording what that close actually produced, because the numbers alone would overstate it: the registry still holds exactly ONE row. What changed is that the row is now CITED under a written protocol -- 445 subagent starts and 420 paired child durations for subagent_spawn, 6,168 of 6,388 stops at concurrent_open >= 2 for parallel_spawn, both from the live ledger -- and that the seven other declared platforms are recorded as unreachable-with-reason rather than as undifferentiated silences. Three of the six fields on the one reachable host remain unobserved because nothing instruments them. So the honest summary is one cited row and seven recorded silences, against one uncited row and seven undifferentiated ones, and the roadmap's step 2.2 closes [-] because its subject was ADDITIONAL rows and there were none to add."
     }
   ],
   "target": {
