@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 <!-- analyzed: 2026-08-22 | pin: 1dba34c8 (v14.8.0) | corpus: 9,654 lines / 10 sessions -->
 # Analysis — the 14.8.0 reviewer corpus, triaged
 
