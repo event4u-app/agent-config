@@ -1214,6 +1214,11 @@ tasks:
     desc: Enforce the roadmap ## Blockers contract — required fields present, blocked-by references resolve (templates/roadmaps.md rule 20)
     cmd: ./scripts-run src/scripts/lint_roadmap_blockers {{.QUIET_FLAG}}
 
+  lint-adr-sweep-routing:
+    silent: true
+    desc: Every REVIEW-NOW / SUPERSEDE (candidate) row in an ADR evidence sweep carries a route and a dated follow-up (road-to-evidence-based-adr-governance 3.4)
+    cmd: ./scripts-run src/scripts/lint_adr_sweep_routing
+
   lint-roadmap-later-disposition:
     silent: true
     desc: Enforce the later/ disposition — status:later roadmaps live under agents/roadmaps/later/, and every later/ roadmap records a resume condition
