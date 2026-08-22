@@ -169,9 +169,16 @@ permanent, stated non-goal.
       **LANDED — 6 cases, 11 assertions, and the blocker resolved as (b).**
       `tests/scripts/strip_carrier_unicode.test.ts` drives all six from the JSON
       and adds AC-1's single combined input plus the codepoint-offset case.
-      Carriers in the fixture file are written as literal characters with an
-      escape-form note, because a fixture whose payload is invisible in review
-      is a fixture nobody can check.
+      **Carriers are written as `\u` escapes in the JSON and as `U+XXXX`
+      notation in the prose fixture — never as literal characters.** The first
+      version used literals and `lint_hidden_unicode` refused it with **20
+      blocking findings**, correctly: a tracked file carrying real carriers is
+      exactly what that gate exists to stop, and its own header says a teaching
+      doc "writes `U+200B` as text". The JSON escapes decode at parse time so
+      the tests still receive the real characters. The fixture's own `$comment`
+      had *claimed* escapes while the file used literals — a false statement in
+      the artefact, caught by CI rather than by review, and corrected with the
+      reason recorded.
       **`carrier-strip-script-property` → (b):** `recorded_limitation` in the
       JSON names the tested blocks (Arabic/Persian, emoji ZWJ) and states
       plainly that Indic, Thai, Khmer, Myanmar and Mongolian are **untested** —
