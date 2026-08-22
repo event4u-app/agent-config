@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 4,
     "later_roadmaps": 55,
-    "open_blockers": 28
+    "open_blockers": 26
   },
   "baseline_history": [
     {
@@ -720,6 +720,13 @@
       "later_roadmaps": 55,
       "open_blockers": 28,
       "why": "WALKED DOWN by 6 blockers, all on road-to-per-turn-hook-economy and each verified open on origin/main and resolved here: b-per-turn-composite-bar, b-stdin-read-failure-policy, b-guard-tool-partition, b-payload-read-parse-dominates, b-injection-scan-unwrap-security, b-stop-async-split-prerequisites. Two further blockers on the same roadmap were already resolved on the trunk and are excluded. active_roadmaps stays 4 ON PURPOSE and this is the honest half: the roadmap reaches 11/11 done but carries 2 unresolved [~] items, so Iron Law 3 refuses the archive and the regen left it in the active tree. Item 4.2 states in its own text that the bar is the maintainer's to pre-register, so those boxes were NOT flipped to let the file archive itself. later_roadmaps unchanged at 55."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 4,
+      "later_roadmaps": 55,
+      "open_blockers": 26,
+      "why": "REBASED ONTO THE TRUNK'S LINEAGE (third time on this branch -- main moved through PR #1517, then #1495 and #1523 while this branch was open). main's history is kept whole (100 entries, baseline 4/55/28) and only this branch's delta rides on top, per ADR-239-no-union-merge-for-ratchet-baselines: take main's lineage, re-measure from the tree, never carry the numbers forward.\n\nThis branch's contribution is -2 open blockers, both on road-to-evidence-based-adr-governance: `owner-autonomy-batch` and `authority-coupling-decision`, resolved on a 2-of-2 convergent AI-council pass. Each is closed as `AUTHORITY UNAVAILABLE -- FLOOR PRESERVED` rather than `RE-AFFIRMED (no)` -- the first records an operational act a council may take, the second would assert a policy rejection no owner made. `commit-policy.md:37` and ADR-005 section 1 both remain operative and grade-derived authority stays disabled; the three owner-reserved policy questions are transferred to agents/roadmaps/stubs/road-to-owner-authority-decisions.md with per-question reopening conditions.\n\nactive_roadmaps is unchanged and that is deliberate: the roadmap is NOT archived, because 13 steps remain genuinely open (2.4, 3.4, 4.3, 4.4 and the acceptance criteria). Archiving it to buy the number down would be the silent-green this ledger's own 67 -> 69 entry names as the incentive the ratchet must never create."
     }
   ],
   "target": {

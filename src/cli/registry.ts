@@ -74,6 +74,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
     { name: 'gates', disposition: 'delegate', synopsis: 'Open decisions that need you, as actions — owner-filtered roadmap blockers; --all, --json, --reply, --pending (staged requires_confirmation actions).' },
     { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },
+    { name: 'adr:effective', disposition: 'delegate', synopsis: "Effective state of one ADR: status, Decision verbatim, clauses its own amendments superseded, active amendments, axes, trigger state. Authorizes nothing." },
     { name: 'affected', disposition: 'delegate', synopsis: 'Artefacts related to <artefact> via the discovery relation-graph (BFS).' },
     { name: 'graph-explain', disposition: 'delegate', synopsis: 'Seed on a <concept>, expand 2 hops over the discovery relation-graph with a node budget.' },
     { name: 'benchmark', disposition: 'delegate', synopsis: 'Report context-token reduction vs the full always-loaded projection.' },

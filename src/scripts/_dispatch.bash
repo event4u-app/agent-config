@@ -238,6 +238,12 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
                              (capability area → coverage → backing skills/commands → gaps).
                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
+  adr:effective              Effective state of one decision record: status, the
+                             Decision section verbatim, clauses its own amendments
+                             superseded, active amendments, provenance, evidence,
+                             review trigger and trigger state. Read-only, and it
+                             authorizes nothing. Exit 1 when the record still
+                             asserts what its own amendment retired. Flag: --json
   settings:check             Validate .agent-settings.yml against the YAML-subset contract
                              (docs/contracts/settings-sync-yaml-subset.md). Read-only.
                              Exit 0 clean, 1 finding(s), 2 file absent / unreadable.
@@ -752,6 +758,10 @@ cmd_capabilities_index() {
   local script
   script="$(resolve_script "src/scripts/generate_capabilities_index.ts")"
   exec_ts "$script" "$@"
+}
+
+cmd_adr_effective() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_adr_effective.ts" "$@"
 }
 
 cmd_first_run() {
@@ -1451,6 +1461,7 @@ main() {
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
     gates)                   cmd_gates "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;
+    adr:effective)           cmd_adr_effective "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
     keys:install-anthropic)  cmd_keys_install_anthropic "$@" ;;
     keys:install-openai)     cmd_keys_install_openai "$@" ;;
