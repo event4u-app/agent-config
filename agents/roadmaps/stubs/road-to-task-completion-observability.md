@@ -67,6 +67,61 @@ the telemetry contract explicitly declines to add
 (`orchestration-telemetry.md:109-120`, the two-field cap and its
 `Revisit-if: a verification harness exists`).
 
+## A candidate definition for the quality columns — recorded, not resolved
+
+The third row above says `first_pass_success` and `escalated` are not
+payload-derivable at any slot, and that verdict stands. An inbox draft drained
+2026-08-22 offers a concrete counter-proposal worth preserving rather than
+leaving to be re-derived later. It is recorded here as a **candidate answer with
+its falsifier attached** — not as a resolution, and not as a new promotion gate.
+
+**The candidate — a deterministic episode close.** The contract defines
+`first_pass_success` over the parent adopting the work product with no
+scope-relevant modification and no corrective follow-up "within the same task
+scope" (`orchestration-telemetry.md:86-107`); the unbounded phrase is that
+scope. Replace it with a boundary a machine can find: an episode closes at the
+**first of** { the next dispatch, a parent edit to a file the return named, a
+corrective prompt to the same subagent id, session stop }. Everything before the
+boundary is the adoption window the definition currently lacks.
+
+**Its falsifier, carried from the same draft.** If more than ~20 % of episodes
+close only on `session stop`, the definition is too loose — a boundary that
+usually fires when the session ends is measuring the session, not the adoption.
+That is decidable over a recorded corpus, which is what makes the candidate
+worth keeping rather than merely plausible.
+
+**What it does not change.** It does not make a hook able to write the columns;
+the third row is definitional and a boundary rule does not move it. It bears on
+whether the model-carried emit can be made *reliable*, which is one of the two
+producers P2 already names.
+
+**Re-derived 2026-08-22 — the corpus moved and no verdict did.** The audit
+ledger now holds **715 rows / 699 orchestration lines** across both months. In
+the current month: **698** orchestration lines with **0** non-null on
+`task_class`, `dispatch_mode`, `first_pass_success` and `escalated`, and
+`spawn_count ≥ 2` still **0**. `dispatch_mode` is 0 across **both** months.
+The only row carrying quality columns remains the single 2026-07 line the
+transfer baseline already records. Against that baseline's 570, the corpus grew
+by ~128 lines and every field verdict is unchanged — the movement test the
+baseline section states, applied once more and answered the same way.
+
+**Sequencing constraint — this sits BEHIND the envelope work, never beside it.**
+`first_pass_success` is defined over the parent ADOPTING a *returned* work
+product, so it presupposes a return there is something to adopt. Valid envelopes
+measure **zero**: `ok` is 0 across 1,751 post-split `subagent_stop` records in
+the live subagent ledger (`subagent_ledger_hook.ts:200` for the verdict union;
+`no_envelope` 1,745, `fail` 6, `no_message` 0). Until a return channel delivers
+a validated envelope at a non-zero rate, an episode-close boundary would be
+timing a window around nothing. So this candidate is promoted only after the
+return-gate work in
+[`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md)
+Phase 2, not in parallel with it.
+
+One correction to the draft, so a later reader does not chase it: it names a
+`result_consumed` field as the definition's subject, and no such identifier
+exists in this tree — `grep -rn result_consumed src/` returns nothing. The
+constraint above is therefore written against the contract's own wording.
+
 ## Re-entry producer and detection probes
 
 Promotion is not "when someone builds it". The producer is named, and each

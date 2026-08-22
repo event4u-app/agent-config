@@ -37,6 +37,12 @@ figures are corrected here and the episode is left recorded, because it is a
 small live demonstration of why the probe below is written as a **comparison**
 rather than as a pinned number.
 
+**Re-measured 2026-08-22: 23 files, `active_roadmaps 3` — a gap of 20.** The
+transfer reading (26 / 23, gap 3) is kept above rather than overwritten, because
+the two readings together are the argument: the gap is not a stable property of
+the tree, it is whatever the draft set happens to be that day, and it grew by a
+factor of nearly seven in one day without the defect changing at all.
+
 ## The mechanism, with file:line
 
 `check_estate_count` reads the dashboard's own parser rather than scraping its
@@ -124,18 +130,33 @@ so the probe is satisfied by either branch resolving.
 ```bash
 # Clause 1 — does the gate's population still exclude drafts?
 #   Compares the raw file count against what the gate counts.
-ls agents/roadmaps/*.md | wc -l                        # 26 at transfer
+ls agents/roadmaps/*.md | wc -l                        # 26 at transfer; 23 on 2026-08-22
 ./scripts-run src/scripts/check_estate_count | grep active_roadmaps
-#   -> "active_roadmaps       23  (baseline 23, +0)" at transfer
-#   The DIFFERENCE (3) is the defect. Both absolutes drift with every archival.
+#   -> "active_roadmaps       23  (baseline 23, +0)" at transfer; baseline 3 on 2026-08-22
+#   The DIFFERENCE is the defect: 3 at transfer, 20 on 2026-08-22.
+#   Both absolutes drift with every archival, and so does the gap.
 
 # Clause 2 — is there a written decision either way?
-grep -rn "draft" src/config/estate-count-budget.json    # 0 matches at transfer
+#   A DEDICATED KEY, never a substring test. `grep -c draft` on this file
+#   returned 4 at transfer, not the 0 this stub first claimed, and 13 on
+#   2026-08-22 — every match is prose or the `non-draft` in the
+#   active_roadmaps definition, which entered 2026-08-18 (6f808e6b8), three
+#   days before this stub was written. A substring cannot tell a recorded
+#   decision from a history entry that mentions the word.
+python3 -c "import json; d = json.load(open('src/config/estate-count-budget.json')); \
+raise SystemExit(0 if 'draft_roadmaps_gated' in d else 1)"
+#   -> exit 1 (key absent) at transfer and on 2026-08-22. Exit 0 is the decision.
+#   Whoever takes the fix names the key; `draft_roadmaps_gated` is the proposal,
+#   and any dedicated key satisfies the clause as long as it is not prose.
 ```
 
-**Measured 2026-08-21: 26 files, gate counts 23 — a gap of 3 — and the budget
-file records nothing about drafts (0 matches).** Re-entry completes when the two
-numbers agree **or** the budget file carries a decision naming `draft`.
+**Measured 2026-08-21: 26 files, gate counts 23 — a gap of 3 — and no dedicated
+decision key.** The stub's original clause-2 figure, *"0 matches at transfer"*,
+was **never true**: the measured value was 4, which is exactly the false
+confidence a substring probe buys and the reason clause 2 now reads a key. The
+wrong figure is corrected rather than deleted, on the same principle § The defect
+applies to its own two stale absolutes. Re-entry completes when the two counts
+agree **or** the budget file carries a dedicated key deciding `draft`.
 
 The first clause is deliberately a *comparison* rather than a fixed number: the
 raw count and the gate count both move as the estate drains, and only their

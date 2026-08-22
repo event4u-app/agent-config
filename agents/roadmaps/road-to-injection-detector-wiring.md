@@ -1,7 +1,6 @@
 ---
-estate_offset_exempt: "Authored by the 2026-08-22 inbox drain, which consumed 25 dropped artefacts carrying 53 pre-written roadmap drafts in one pass. It ships status: draft, so it is not active work and moves none of the three gated metrics; there is nothing yet to offset. The offset alternatives all cost more than this line: no active roadmap sits at zero open steps, so archiving buys nothing; parking these in later/ is what the estate register calls burial and would hide twenty verified defect sets behind a disposition nobody reviews; and terminating another session's roadmap would be a judgement about their work rather than mine. The blockers these drafts carry will charge this ratchet on the day the maintainer flips one to ready, which is the point at which an offset is a real decision. Charged as one reviewable line, per this gate's own instruction."
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -178,7 +177,7 @@ saying too much.
       check that must run before a tool call is `pre_tool_use`, whose CI budget
       is `p95_ci: 175` (`src/config/hook-latency-budget.json`) and whose
       measured readings in this tree are 141–148 ms
-      (`agents/roadmaps/road-to-per-turn-hook-economy.md:270`, `:296`) — i.e.
+      (`agents/roadmaps/archive/road-to-per-turn-hook-economy.md:270`, `:296`) — i.e.
       the slot is already close to its cap before anything is added.
       verify: blocked — see `b-pre-tool-turn-budget`.
 
@@ -215,7 +214,7 @@ saying too much.
 
 ### blocker: b-pre-tool-turn-budget
 - **Status:** open
-- **Owner:** `agents/roadmaps/road-to-per-turn-hook-economy.md`
+- **Owner:** `agents/roadmaps/archive/road-to-per-turn-hook-economy.md`
 - **Blocks:** Phase 3 entirely. Phases 1 and 2 are unaffected — they touch a
   `post_tool_use` hook whose budget row is `any_hook_event` (`p95_ci: 250`).
 - **What to do:** pick exactly one — (a) wait for that roadmap's step 4.2 to

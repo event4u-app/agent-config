@@ -549,6 +549,33 @@ mechanism (pre-register the threshold before reading the number).
 - [ ] **Step 3:** Snapshot tests under `tests/hooks/` for all four paths
       (ok / disk-fallback / block-once / release), per the manifest's own
       concern checklist (`hook_manifest.yaml:10-14`).
+- [ ] **Step 4:** Split `fail` into a near-miss and a foreign object, because
+      today's bucket holds no contract attempts at all. The verdict union is
+      four-way at `subagent_ledger_hook.ts:200` and the classifier at `:246`
+      reports `fail` for any decoded object `validateResponse` rejects, with
+      `error_count` = the rejected candidate's error count. A five-fixture probe
+      of `classifyEnvelope` re-run on the drain date shows what that count
+      means: `{"a":1}` → `fail` / 5 errors, `{"summary":"x"}` → `fail` / 4,
+      `{"summary":"x","status":"ok"}` → `fail` / 4, a fenced `{"tool":…}` → 5,
+      prose → `no_envelope`. So `error_count: 5` is exactly "zero contract
+      fields present", and every recorded `fail` carries it: re-derived over the
+      live month ledger (7,282 rows, 6,315 stops) the all-time `fail` histogram
+      is `{5: 27}` — every one — and over the post-split window (from the first
+      `no_envelope` at 2026-08-21T01:23:41Z, 1,751 stops) the counts are `ok` 0,
+      `no_message` 0, `no_envelope` 1,745, `fail` 6, again `{5: 6}`. Phase 1
+      Step 4 reads that all-5 pattern as "one recurring answer shape"; the probe
+      says which shape it is — a **foreign object**, a fenced tool call or a
+      prose-embedded JSON blob, never a malformed envelope attempt. The
+      consequence is a gate consequence: a threshold read off `fail` today is a
+      threshold over a bucket containing zero contract attempts, so it can
+      neither rise nor fall for the reason its name suggests. Emit
+      `foreign_object` for zero contract fields and keep `fail` for one or more,
+      and record `field_hits` beside `error_count` so the boundary is auditable
+      from the row rather than re-derived from a probe. Note also that
+      `no_message` = 0 across 1,751 post-split stops makes the Step-2 disk
+      fallback **robustness** rather than a fix for an observed production
+      defect — the branch it keys on has never fired.
+      <!-- verify: `git show HEAD:src/scripts/hooks/subagent_ledger_hook.ts | grep -c foreign_object` returns 0 while the working copy returns at least 1; a fixture asserting `{"a":1}` classifies as `foreign_object` and `{"summary":"x"}` as `fail` fails against the pre-change classifier -->
 
 **Falsifier.** Post-flip envelope return rate does not improve against the
 Phase-1 baseline over an equal window → the mechanism is dead weight; revert
@@ -1008,7 +1035,7 @@ shape check stand on their own and are unaffected.
   its payload fields now have observed answers. Only Phase 4 does.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Reopening cancelled work on a clause that cannot lift | product | V2 argues the 2026-08-07 stopping rule's reopen condition is deadlocked and therefore reopens two cancelled items on production evidence instead. That reasoning is correct and is also exactly the shape a scope-creep argument takes — "the lock cannot fire, so I am free". If the deadlock reading is wrong, this roadmap re-proposes work a council already refused | The reopen is confined to the two items whose clause is provably dead (envelope wiring, SubagentStop concern) and explicitly does NOT revive the orchestrator-first content verdict, which is restated as a non-goal; the deadlock claim carries its own file:line evidence on both halves so a reviewer can refute it in one read | Phase 1 |
