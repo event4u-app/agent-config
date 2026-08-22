@@ -28,6 +28,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runSelfTest } from './_lib/gate_self_test.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUDGET_PATH = path.join(REPO_ROOT, 'src', 'config', 'pack-size-budget.json');
@@ -283,7 +284,103 @@ function readPack(argv: readonly string[]): PackResult {
     return parsePackJson(stdout);
 }
 
+/**
+ * Per-class discrimination, proven rather than asserted.
+ *
+ * WHY THIS EXISTS AND THE CANARY DOES NOT COVER IT. `gate-coverage.yml` carries
+ * `canary?: CanarySpec` — exactly ONE recipe per gate id, not a list (see
+ * `check_gate_coverage.ts`'s entry shape). The roadmap step behind this asked
+ * for "one canary per class", which the register cannot express. Two of the four
+ * classes cannot be planted through it at all: `compiled-test-artefact` is
+ * excluded from the payload by the `files[]` negations that fixed it, so a plant
+ * never ships and never reds, and `source-map` needs 121 files in a BUILT tree.
+ *
+ * So the register gets the one canary it can hold — the credential-shaped plant,
+ * chosen because that class is empty today and an empty unchecked class is
+ * indistinguishable from one nobody looked at — and every class is proven red
+ * here, over a synthetic payload, deterministically and with no pack run.
+ *
+ * A test file was the alternative and is weaker: the non-adopter ratchet in
+ * `check_gate_coverage` requires a NEW registered gate to carry a `--self-test`
+ * or an exemption, and a self-test drives the gate's own decision function
+ * rather than a copy of it.
+ */
+function packFiles(...paths: readonly string[]): PackFile[] {
+    return paths.map((path) => ({ path, size: 1 }));
+}
+
+/** A payload that looks built, so `requires_build` classes do not abstain. */
+function builtPayload(...paths: readonly string[]): PackFile[] {
+    return packFiles('dist/cli/agent-config.js', ...paths);
+}
+
+function selfTest(): number {
+    // NOT under `dist/cli/` — that prefix is exactly what `payloadIsBuilt`
+    // keys on, so maps placed there would make an "unbuilt" fixture built and
+    // the abstain case would test nothing. Found by the case failing, which is
+    // the self-test doing its job on its own fixtures.
+    const maps = (n: number): string[] =>
+        Array.from({ length: n }, (_, i) => `dist/hooks/chunk-${String(i)}.js.map`);
+    return runSelfTest({
+        gate: 'check_pack_size',
+        minCases: 9,
+        minRejectCases: 5,
+        cases: [
+            {
+                name: 'credential-shaped: a .pem in the payload is refused',
+                expect: 'reject',
+                run: () => (classifyPayload(packFiles('src/scripts/x.pem')).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'credential-shaped: a dotted .env form is refused',
+                expect: 'reject',
+                run: () => (classifyPayload(packFiles('src/config/.env.production')).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'ide-metadata: a .vscode entry is refused',
+                expect: 'reject',
+                run: () => (classifyPayload(packFiles('src/scripts/.vscode/settings.json')).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'compiled-test-artefact: a shipped .test.js is refused',
+                expect: 'reject',
+                run: () => (classifyPayload(builtPayload('dist/cli/a.test.js')).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'source-map: one over the measured ratchet is refused',
+                expect: 'reject',
+                run: () => (classifyPayload(builtPayload(...maps(121))).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'source-map: the ratchet boundary itself passes',
+                expect: 'accept',
+                run: () => (classifyPayload(builtPayload(...maps(120))).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'a plain payload passes — the classes are not firing on everything',
+                expect: 'accept',
+                run: () => (classifyPayload(packFiles('src/scripts/x.ts', 'README.md')).length > 0 ? 1 : 0),
+            },
+            {
+                // The false pass 1.2 closed. An unbuilt payload carries a fifth
+                // of the source maps, so a build-gated class must ABSTAIN there
+                // rather than report clean — and must not report a failure
+                // either, or every clean-checkout run would red.
+                name: 'unbuilt payload: build-gated classes abstain, not pass and not fail',
+                expect: 'accept',
+                run: () => (classifyPayload(packFiles(...maps(121))).length > 0 ? 1 : 0),
+            },
+            {
+                name: 'unbuilt payload: a build-INDEPENDENT class still fires',
+                expect: 'reject',
+                run: () => (classifyPayload(packFiles('src/scripts/id_rsa')).length > 0 ? 1 : 0),
+            },
+        ],
+    });
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     let budget: PackSizeBudget;
     let pack: PackResult;
     try {
@@ -318,6 +415,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
         throw err;
     }
+
+    // The coverage register requires an enforced gate to report what it
+    // inspected, and it is the same reason `assertScanned` runs above: a verdict
+    // with no denominator cannot be told apart from a verdict over nothing.
+    // Printed on EVERY path, including the failing one, so a reader of a red run
+    // still knows the population it was red over.
+    process.stdout.write(`scanned: ${String(pack.files.length)}\n`);
 
     const errors = [...evaluate(budget, pack), ...classifyPayload(pack.files)];
     const { perSkill, total } = skillBytes(pack.files);

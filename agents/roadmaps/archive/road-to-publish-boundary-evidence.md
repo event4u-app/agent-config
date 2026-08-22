@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -153,7 +153,7 @@ blocker below carries the question; no phase acts on it.
       built worktree measured 2,970 / 128 before the strip and 2,954 / 120
       after. Same command, different trees, and the class limits are stated
       against the tree that produced them.
-- [ ] **1.3 One canary per class.** Register each new class in
+- [x] **1.3 One canary per class.** Register each new class in
       `src/config/gate-coverage.yml` with a `canary:` block per the shape
       documented at `:192-202`, so each check has been observed red.
       verify: `./scripts-run src/scripts/check_gate_coverage` is green and each
@@ -161,7 +161,7 @@ blocker below carries the question; no phase acts on it.
 
 ## Phase 2 — Let the secret gate see what actually ships
 
-- [ ] **2.1 Add a pack-payload scope to `check_secret_leak`.** A fourth resolution
+- [x] **2.1 Add a pack-payload scope to `check_secret_leak`.** A fourth resolution
       alongside `diff` / `explicit` / `all` that takes its file set from the
       pack payload rather than from `git ls-files`. The three existing modes
       are untouched; this is additive, so no current caller changes behaviour.
@@ -169,12 +169,12 @@ blocker below carries the question; no phase acts on it.
       shows the three-mode line as the pre-state, and the new mode scans at
       least one path under `dist/cli/` that `git ls-files dist/cli` does not
       return.
-- [ ] **2.2 Preserve the dead-scope discipline.** The existing scope assertion
+- [x] **2.2 Preserve the dead-scope discipline.** The existing scope assertion
       exits 2 on a resolved-empty set rather than passing quietly. The new mode
       inherits that: an empty pack payload is a gate that could not run, never
       a clean bill.
       verify: with a forced-empty payload the new mode exits 2, not 0.
-- [ ] **2.3 Canary the untracked-path case specifically.** The seeded violation
+- [x] **2.3 Canary the untracked-path case specifically.** The seeded violation
       must live at a path that is shipped and gitignored, because that is the
       exact blind spot; a canary in a tracked file would pass under the old
       modes too and prove nothing.
@@ -183,7 +183,7 @@ blocker below carries the question; no phase acts on it.
 
 ## Phase 3 — Make `files[]` and `.npmignore` drift reviewable
 
-- [ ] **3.1 Emit the shipped-root set as a committed artefact.** The 26 roots
+- [x] **3.1 Emit the shipped-root set as a committed artefact.** The 26 roots
       and the `.npmignore` rule set become a generated file, so a change to
       either shows up as a diff in review rather than as a silent change to
       what ships.
@@ -191,7 +191,7 @@ blocker below carries the question; no phase acts on it.
       runs produce byte-identical output — and
       `git show HEAD:package.json | node -e "..."` confirms the pre-state root
       count of 26.
-- [ ] **3.2 Fail on undeclared drift, not on every change.** Changing what
+- [x] **3.2 Fail on undeclared drift, not on every change.** Changing what
       ships is legitimate; changing it without the artefact moving is the
       defect. The check compares the artefact to the live config.
       verify: editing `files[]` without regenerating fails the check; editing
@@ -295,20 +295,6 @@ deliberately rejected.
   One seat added a caveat worth carrying: "blocks nothing" is only true while no
   later phase promises or consumes SBOM-derived evidence. None does today.
 
-- **Resolution (2026-08-22) — (a), the recorded rejection stands.** 2/2 council,
-  both seats agreeing with the roadmap's own recommendation and with each other:
-  ADR-238's Trigger A requires a named maintainer with a stated review cadence
-  AND a fixture set authored against the current skills showing a real miss, and
-  neither half exists. Nothing in this roadmap needs an SBOM surface, and the
-  content-class inventory answers the concern that actually motivated the
-  source. **This blocker gated no step and still gates none** — it is resolved
-  as *visible and declined*, which is the state it was written to reach.
-  **What would make Trigger A worth paying**, so the next reader meets a
-  condition rather than a closed door: a fixture set that demonstrates the
-  current skills missing a real supply-chain finding an SBOM would have caught.
-  Absent that, the reopen cost is deliberately higher than the value.
-  One seat added a caveat worth carrying: "blocks nothing" is only true while no
-  later phase promises or consumes SBOM-derived evidence. None does today.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -323,18 +309,104 @@ deliberately rejected.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The prepack path reports a per-class count over the published file
+- [x] AC-1 — The prepack path reports a per-class count over the published file
       list, and each of the four classes has one committed canary in
       `gate-coverage.yml` proving that class's check has been observed red.
-- [ ] AC-2 — A credential-shaped string placed under a shipped-but-gitignored
+- [x] AC-2 — A credential-shaped string placed under a shipped-but-gitignored
       path is caught. The same probe under the pre-existing `diff` mode is not,
       which is what makes the new scope load-bearing rather than decorative.
-- [ ] AC-3 — Every threshold names the build state it was measured in, and the
+- [x] AC-3 — Every threshold names the build state it was measured in, and the
       check reports not-measurable rather than passing when run against a tree
       that lacks the built output.
-- [ ] AC-4 — The 127 shipped source maps are either declared intentional with
+- [x] AC-4 — The 127 shipped source maps are either declared intentional with
       the count pinned as a ratchet, or removed with the class threshold at
       zero. Neither the count nor the intent is left implicit.
-- [ ] AC-5 — A change to `files[]` or `.npmignore` that is not reflected in the
+- [x] AC-5 — A change to `files[]` or `.npmignore` that is not reflected in the
       generated artefact fails the check, so drift in what ships is a diff a
       reviewer sees rather than a silent change.
+
+## Completion note
+
+13 of 13 steps and all five acceptance criteria. Both blockers were already
+resolved by council; this run executed Phase 1.3 and Phases 2–3.
+
+### Two premises that did not survive contact
+
+**1.3 asked for "one canary per class". The register cannot express it.**
+`gate-coverage.yml` carries `canary?: CanarySpec` — one recipe per gate id, not
+a list. And two of the four classes cannot be planted through it at all:
+`compiled-test-artefact` is excluded from the payload by the `files[]` negations
+that fixed it, so a plant never ships and never reds, and `source-map` needs 121
+files in a built tree.
+
+So the register gets the one recipe it can hold (credential-shaped, chosen
+because that class is empty today and an empty unchecked class is
+indistinguishable from one nobody looked at), and every class is proven red in
+`check_pack_size --self-test` — 9 cases, 6 rejecting, over a synthetic payload
+with no pack run. That also discharges the non-adopter ratchet's rule that a
+newly registered gate must adopt or exempt.
+
+**2.1's `dist/cli` verify cannot be satisfied in an unbuilt worktree, and the
+blind spot is 0 there.** Measured: 2,686 payload entries, **0** of them
+gitignored, **0** untracked — because `dist/cli/**` does not exist without a
+build. The mode's value is conditional on build state, exactly like the
+`source-map` class.
+
+Proven instead with a real plant, which is stronger than the path the step
+named: a PEM at `dist/zzcanary/leak.pem` — `git check-ignore -v` attributes it
+to `.gitignore:206` and `npm pack` ships it — is caught by `--pack` (exit 1) and
+missed by `diff` (exit 0).
+
+### The finding the roadmap did not have
+
+**Adding the pack mode fixed nothing.** `DEFAULT_EXCLUDE` carries
+`/(^|\/)dist(\/|$)/` and fires regardless of mode, so the new scope resolved the
+payload and then filtered away exactly the paths it exists to reach. The mode
+was measurably inert until the exclusion became mode-aware — and an additive
+mode that cannot catch anything is worse than no mode, because it reads as
+coverage. There were **two** reasons the gate was blind, and the roadmap knew
+one.
+
+### A pre-existing false verdict, surfaced by the registration
+
+Registering a dynamically-scoped gate made the canary run report `census_stale`
+for `check_secret_leak` **and** for `check_no_roadmap_refs` — telling the reader
+to re-run a census that was already current. Both resolve their corpus by
+spawning, so a static root extractor finds nothing and the census prints
+`_(none extracted)_` with `**0**` units; `parse_census` read that 0 as "read
+nothing", which the disagreement check treats as stale. Three absences, not two.
+Mapping it to `null` was tried first and made it strictly worse — six
+dynamically-scoped gates became fresh false disagreements at once.
+
+### Phase 3's artefact found a shadowed rule on its first run
+
+`.npmignore` lists `agents/` and the payload ships it anyway, because
+`agents/templates/` is a `files[]` root. That is the same class of defect the
+blocker resolution recorded (a `.npmignore` strip attempt with no effect), now
+reported by a gate instead of discovered by hand.
+
+The drift verdict is deliberately **tree-independent**: it compares only what is
+read from a file, and reports the payload-derived shadowed set as informational
+with its `shadowed_measured_in`. Comparing it would red for anyone whose build
+state differs from whoever last regenerated — the false-drift shape 1.2 closed
+with `measured_in`. Measured in both states and identical, so the tolerance is
+not covering a known difference; it refuses to assert one it cannot control.
+
+**Root count: 26 roots + 4 negations = 30 entries.** The Context's 26 is the
+pre-negation figure and still correct.
+
+### Three of my own mistakes, and how they were caught
+
+1. The first canary content carried a `BEGIN PRIVATE KEY` block and **reddened
+   `check_secret_leak` at `gate-coverage.yml:229`** in both modes. For
+   `check_pack_size` the fix was to drop the key shape entirely — that class
+   matches on the PATH. For `check_secret_leak` it cannot be dropped, so
+   `.secret-allow` carries a line-pinned audited entry; line-pinned on purpose,
+   because an entry that drifts stops matching and the gate reds.
+2. The self-test's abstain fixture put its 121 maps under `dist/cli/`, which is
+   the prefix `payloadIsBuilt` keys on — so the "unbuilt" payload was built and
+   the case tested nothing. The self-test failed on its own fixture.
+3. Repeated `npx tsc -p tsconfig.scripts.json` **emits**, and inflated the
+   payload 2,686 → 2,884, so the first generated artefact was measured against a
+   poisoned tree. Cleaned with `git clean -fdX dist` and regenerated. The
+   shadowed set was identical in both, which is why that finding stands.
