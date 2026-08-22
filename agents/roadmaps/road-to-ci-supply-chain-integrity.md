@@ -171,7 +171,7 @@ closed at the zero it currently sits at.
 - **What to do:** pick exactly one — (a) adopt an external pinned workflow
   linter and retire the overlapping in-tree rules in
   `src/scripts/lint_workflow_security.ts`, (b) extend the in-tree linter with
-  the `persist-credentials` rule as step 1.5 describes, or (c) decline both and
+  the `persist-credentials` rule as step 1.5 describes, or (c) decline both and <!-- ref-ignore -->
   record that 1.2 ships with no regression net.
 - **Recommendation:** (b). The in-tree linter already carries a council-locked
   severity model (`src/scripts/lint_workflow_security.ts:15-22`) and an

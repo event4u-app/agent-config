@@ -16,8 +16,8 @@ execution:
 
 Two independent gaps, both confirmed, both cheap.
 
-**No shared vocabulary file exists.** `docs/CONCEPTS.md`, `docs/concepts.md`
-and `docs/glossary.md` are all absent, and a recursive search of `docs/` for
+**No shared vocabulary file exists.** `docs/CONCEPTS.md`, `docs/concepts.md` <!-- ref-ignore -->
+and `docs/glossary.md` are all absent, and a recursive search of `docs/` for <!-- ref-ignore -->
 `*concept*` / `*glossar*` returns nothing. Terms whose local meaning diverges
 from the general technical sense — rule *tier*, *layer* versus *projection*, the
 two distinct things "delivery" names — are each defined in the artefact that
@@ -48,7 +48,7 @@ obvious one and find it defined once with a pointer to the artefact that owns
 it; and every PR either exercises a gate against a planted defect without
 touching the tree, or names that gate as lacking a negative control.
 
-## Phase 1 — `docs/CONCEPTS.md`
+## Phase 1 — `docs/CONCEPTS.md` <!-- ref-ignore -->
 
 - [ ] **1.1 Author `docs/CONCEPTS.md` with a hard inclusion rule.** A term
       earns an entry only when its meaning **here** diverges from its general
@@ -141,9 +141,9 @@ touching the tree, or names that gate as lacking a negative control.
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** the long-term disposition of `docs/CONCEPTS.md`
+- **Blocks:** the long-term disposition of `docs/CONCEPTS.md` <!-- ref-ignore -->
 - **Class:** 3
-- **What to do:** pick exactly one — (a) keep `docs/CONCEPTS.md` as a standalone
+- **What to do:** pick exactly one — (a) keep `docs/CONCEPTS.md` as a standalone <!-- ref-ignore -->
   file, or (b) after two consecutive audits cite it zero times, fold its entries
   into the orientation section of
   `docs/contracts/package-self-orientation.md` and delete the standalone.
@@ -161,7 +161,7 @@ touching the tree, or names that gate as lacking a negative control.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | `docs/CONCEPTS.md` becomes a second source of truth | implementation | An entry restates a definition, the owning artefact changes, and the two drift — leaving a reader confidently wrong | 1.1 requires a `file:line` pointer per entry and forbids the file from defining anything; entries are one paragraph of divergence-only prose | Phase 1 — `docs/CONCEPTS.md` |
+| 1 | `docs/CONCEPTS.md` becomes a second source of truth | implementation | An entry restates a definition, the owning artefact changes, and the two drift — leaving a reader confidently wrong | 1.1 requires a `file:line` pointer per entry and forbids the file from defining anything; entries are one paragraph of divergence-only prose | Phase 1 — `docs/CONCEPTS.md` | <!-- ref-ignore -->
 | 2 | The non-mutating mode is not a faithful invocation | implementation | An in-memory input exercises a code path the real gate does not take, so a green negative control proves nothing | 2.1 asserts the gate's own decision path and the same argv shape; 2.3 forces gates that cannot be faithfully invoked into a recorded reason rather than a false pass | Phase 2 — A non-mutating negative-control mode |
 | 3 | `pending` rows are read as covered | product | A report listing 27 gates as pending alongside 16 exercised can be skimmed as "43 checked" | 2.2 requires the two counts to be reported separately and to reconcile against the manifest total, so the gap is arithmetic rather than a footnote | Phase 2 — A non-mutating negative-control mode |
 | 4 | The file collects settled terms instead of divergent ones | product | A glossary of everything is a glossary nobody reads, and its review cost grows without bound | The inclusion rule in 1.1 is the whole control, and the readership blocker sets a falsifiable demotion condition rather than leaving the question open | Context |

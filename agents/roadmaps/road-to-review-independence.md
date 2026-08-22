@@ -62,7 +62,7 @@ always-loaded rule mis-states its own enforcement in both directions).
 |---|---|
 | A second fresh-reviewer spawn shape | `dispatch_r2_reviewer.ts` already is one — see Context. Building a sibling would create two definitions of "what a review is bound to". |
 | Blinding the council chairman | **Already shipped and pinned.** `blind_chairman: true` is the default (`src/scripts/council_cli.ts:3561`), the opt-out is `--no-blind-chairman` (`:3630`), the contract records the adoption basis and the mandatory de-anonymization map (`docs/contracts/ai-council-config.md:813`), and reverting the default fails `tests/scripts/ai_council_blind_review.test.ts:286-288`. |
-| A new `review-independence` rule | The obligation belongs on the rule that already owns it (`src/rules/evaluator-independence.md`, 144 lines, well under the 200-line cap). |
+| A new `review-independence` rule | The obligation belongs on the rule that already owns it (`src/rules/evaluator-independence.md`, 144 lines, well under the 200-line cap). | <!-- ref-ignore -->
 
 ### Coordination constraint — `judge-synthesis` is not this roadmap's file
 
