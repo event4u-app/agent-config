@@ -60,7 +60,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     adr_files,
-    amendment_blocks,
     normalise_ref,
     parse_frontmatter,
     trigger_state,
