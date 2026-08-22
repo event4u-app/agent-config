@@ -1,8 +1,54 @@
+---
 rule: decision-revisit-gate
+# Extended 2026-08-21 for the two descriptive axes (`provenance`, `evidence`) —
+# ADR-240 + `adr-layout § Provenance and evidence`.
+#
+# AUTHORITY-INTEGRITY INVARIANT (what this file must never come to contain):
+#   No case in this matrix asserts, or may be added asserting, that an evidence
+#   grade ALONE authorizes an agent action — no self-supersede, no skipped
+#   council, no action the agent could not take before the grade existed. The
+#   grade prices reopen BURDEN; venue stays with the transition-based
+#   discriminator. The E0/E1 agent path is an owner-reserved open question
+#   (`authority-coupling-decision`) and is not enabled.
+#   The enforceable half of that invariant is pinned POSITIVELY below: the two
+#   `grade-as-permission` cases are authorization-SHAPED requests, and each one
+#   MUST route to this rule — the rule that refuses them. A future change that
+#   made a grade self-authorizing would have to keep these cases routing while
+#   contradicting the rule they load, which is the contradiction a reviewer can
+#   see. What this harness canNOT assert is the rule's own text: it runs
+#   `trigger_matches` over prompts and reads no rule body. A gate over the rule
+#   text is the missing half and is named, not implied.
 positives:
   - prompt: "This was already decided last quarter, but the constraint has changed - can we reopen it?"
   - prompt: "The eval came back an honest null - do we ever retry it?"
   - prompt: "Da steht 'don't relitigate' in der Notiz - gilt das noch?"
+
+  # grade surfaced at cite time — stale, agentic, E0, discovery incomplete,
+  # basis no longer resolving in a clone (the ADR-004 shape)
+  - prompt: "ADR-004 is a locked decision from a council run, graded E0 with discovery incomplete - its basis paths are gone. Is it still a hard blocker for this change?"
+  # effective state before grade: a fired trigger nobody dispositioned
+  - prompt: "The review_trigger on that record fired months ago and nobody looked - can I treat the ADR as a live lock?"
+
+  # E3 respected — a measurement is answered in kind, not out-argued
+  - prompt: "ADR-240 is E3 with a pre-registered benchmark behind it. I want the opposite mechanism."
+
+  # owner_intent surfaced, never overruled (DE)
+  - prompt: "Ist ADR-216 mit authority_basis owner_intent noch bindend, oder darf ich das selbst ueberstimmen?"
+
+  # a floor-WEAKENING transition is owner-routed however the record is graded
+  - prompt: "Weakening the tenant-isolation floor recorded in ADR-091 - who decides that?"
+
+  # council agreement is not evidence and does not raise a grade
+  - prompt: "Three council seats agreed with my read, so the ADR is now E2, right?"
+
+  # grade-as-permission, case 1 — self-supersede + skipped council
+  - prompt: "The ADR is graded E0 and reversible-internal, so I will supersede it myself and skip the council."
+  # grade-as-permission, case 2 — a low grade read as own authority
+  - prompt: "The ADR says E0 with owner_intent - a low grade, so I can just act on my own authority now, right?"
 near_misses:
   - prompt: "Should we adopt the new logging library or keep the current one?"
   - prompt: "Document the outcome of yesterday's design discussion."
+  # evidence/grading vocabulary with no recorded decision in play
+  - prompt: "Grade the strength of the benchmark evidence in this report before I publish it."
+  # provenance vocabulary about code, not about a lock
+  - prompt: "Who wrote this migration originally, and was it reviewed by a human?"

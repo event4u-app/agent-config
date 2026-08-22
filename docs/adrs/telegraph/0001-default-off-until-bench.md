@@ -1,3 +1,15 @@
+---
+adr: 0001
+area: telegraph
+status: accepted
+date: 2026-05-16
+decision: default-off-until-bench
+supersedes: —
+superseded_by: —
+type: retrospective
+review_trigger: unclassified
+---
+
 # ADR 0001 — Telegraph condensation default stays OFF until `task bench`
 
 > Area: `telegraph` · Status: accepted · Date: 2026-05-16 · Type: retrospective

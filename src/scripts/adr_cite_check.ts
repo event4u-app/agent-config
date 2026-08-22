@@ -33,19 +33,71 @@
  * trigger grammar as a prerequisite for exactly this reason. An `indeterminate`
  * result means: this may not be presented as an unqualified lock — route it.
  *
+ * It also prints the two descriptive axes (`provenance`, `evidence`) and
+ * `authority_basis`, and for an accepted E0/E1 record that does NOT carry
+ * `authority_basis: owner_intent` it prints
+ * `authority_effect: disabled-shadow-mode` — see LOW_EVIDENCE_NOTICE.
+ * Provenance is deliberately NOT part of that condition: the notice is about
+ * evidence strength, and a human snapshot has exactly as little of it.
+ *
+ * It prints three more record fields, so that a revisit read can be performed
+ * from this tool instead of from the file by hand: `evidence.basis` verbatim
+ * (with a `[found]` / `[MISSING]` marker on the refs that are repo paths — a
+ * URL and a `claim:` id are printed and never checked), the RESOLVED
+ * `reopen_policy` marked declared-or-defaulted, and `protected_dimensions`.
+ *
+ * What it deliberately does not print: whether the proposed transition is
+ * reversible. That is a property of the PROPOSAL, not of the record, so no
+ * reader of an ADR file can supply it — the citer does.
+ * Shadow mode means exactly what the word says: the axes are surfaced, and no
+ * grade changes who may act (`adr-layout § Provenance and evidence`).
+ *
  * Usage:
  *   ./scripts-run src/scripts/adr_cite_check ADR-211
  *   ./scripts-run src/scripts/adr_cite_check ADR-001 ADR-035 --json
+ *   ./scripts-run src/scripts/adr_cite_check --cited        # the CI gate
+ *
+ * `--cited` is the CI invocation: it resolves every ADR citation found in
+ * `src/rules/`, `src/skills/`, `src/domains/` and `docs/` against the corpus
+ * and reds when one points nowhere. Until it existed no workflow ran this tool
+ * at all — only a test imported it — so every "enforced at cite time" claim
+ * about this file was model-carried.
  *
  * Exit codes: 0 every reference resolved · 1 at least one did not · 2 usage.
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+    type AdrFrontmatter,
+    authorityBasisOf,
+    evidenceOf,
+    isLowEvidenceAccepted,
+    provenanceOf,
+    readAdrFrontmatter,
+    readAdrFrontmatterScalars,
+} from './_lib/adr_frontmatter.js';
+import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
+
+/**
+ * The tree the corpus mode reads, overridable for `--self-test`.
+ *
+ * The self-test drives the REAL binary — argv parsing, entry guard and all —
+ * over a synthetic tree, which is the whole point of the harness
+ * (`_lib/gate_self_test.ts`): an in-process call would skip exactly the layers
+ * that have silently no-opped in this repository before. Driving it needs one
+ * seam, and this is it.
+ */
+function scan_root(): string {
+    return process.env['ADR_CITE_CHECK_ROOT'] ?? REPO_ROOT;
+}
 
 /**
  * The surfaces a decision can live on. Six exist in this tree; this tool reads
@@ -67,7 +119,9 @@ const REPO_ROOT = path.resolve(_HERE, '..', '..');
  * about, committed by this very file. It resolves by path and by the
  * `ADR-<area>-NNNN` citation form now; a BARE number still cannot address one,
  * because per-area numbering restarts per area and five files here are `0001`.
- * See `PARTIAL_COVERAGE` for what a per-area hit does and does not carry.
+ * A per-area hit now carries the same metadata as a flat one: all seven
+ * records gained YAML frontmatter on 2026-08-21, so `PARTIAL_COVERAGE` is
+ * empty and no residual limit is claimed for this surface.
  */
 export const ADR_DIRS = ['docs/decisions', 'docs/adrs'] as const;
 
@@ -78,17 +132,22 @@ export const SURFACES_NOT_SCANNED = [
 ] as const;
 
 /**
- * Partial coverage, stated because a silent partial is the failure this tool
- * exists to avoid: `docs/adrs/<area>/` resolves by PATH and by the
- * `ADR-<area>-NNNN` citation form, but those files carry a quote-block header
- * rather than YAML frontmatter, so `status` / `review_trigger` / the link
- * fields read as absent. A per-area result is an accurate location and an
- * honestly empty metadata set — never a claim that the fields are empty in the
- * document.
+ * Partial coverage — empty, and the KEY is kept deliberately.
+ *
+ * The single entry this held is gone. It said `docs/adrs/<area>/` resolves by
+ * PATH and by the `ADR-<area>-NNNN` citation form while those files carry a
+ * quote-block header rather than YAML, so `status` / `review_trigger` / the
+ * link fields read as absent. All seven per-area records carry real
+ * frontmatter as of 2026-08-21, so that gap closed — and its replacement text
+ * was prose asserting the absence of partial coverage inside a field named for
+ * its presence, plus a "remove on the next pass" TODO, shipped into `--json`.
+ *
+ * The key stays. `partial_coverage` is a published output shape (see the
+ * `--json` payload), so removing it breaks any consumer that reads it, while
+ * an empty list states exactly what is true: no partial coverage is known
+ * today. This is the place to record the next one.
  */
-export const PARTIAL_COVERAGE = [
-    'docs/adrs/<area>/ — resolves, but the header is a quote block, not YAML: metadata reads empty',
-] as const;
+export const PARTIAL_COVERAGE: readonly string[] = [];
 
 /** A trigger state. `none` means the ADR never recorded a reopen condition. */
 export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired';
@@ -110,9 +169,90 @@ export interface CiteResult {
     amendment_blocks: string[];
     /** Other ADR files whose text names this one. */
     referenced_by: string[];
+    /** `provenance.kind` — who decided. Absent when the record carries no axis. */
+    provenance_kind?: string;
+    /** `provenance.agentic_mode` — descriptive shape of an agentic decision. */
+    provenance_agentic_mode?: string;
+    /** `evidence.strength` — E0–E4, claim-relative. */
+    evidence_strength?: string;
+    /** `evidence.discovery` — `complete` | `incomplete`; required on E0. */
+    evidence_discovery?: string;
+    /**
+     * `evidence.basis` — the refs the grade rests on, VERBATIM.
+     *
+     * Present only when the record declares at least one. The tool prints them;
+     * whether each one still supports the claim is the citer's read, not a
+     * verdict this file may issue.
+     */
+    evidence_basis?: string[];
+    /**
+     * The subset of `evidence_basis` that looks like a repo path and does NOT
+     * exist in this checkout — the one existence question that is cheap and
+     * decidable here. A URL or a `claim:` id is never listed: liveness of a URL
+     * needs the network, and a claim id resolves against the claim registry,
+     * neither of which this tool touches. Set (possibly empty) whenever
+     * `evidence_basis` is set, so an empty list means "checked, all present"
+     * rather than "not checked".
+     */
+    evidence_basis_unresolved?: string[];
+    /** `authority_basis` — `evidence` (default) or `owner_intent`. */
+    authority_basis?: string;
+    /**
+     * `reopen_policy`, RESOLVED — `directional` | `owner` | `unclassified`.
+     *
+     * Never blank on a resolved record: `adr-layout § Reopen authority` states
+     * that an absent field resolves to `unclassified`, and printing a blank
+     * would make an agent re-derive a default the contract already fixed.
+     * `reopen_policy_defaulted` says which of the two it was, because
+     * "nobody classified this" and "someone classified it as unclassified" are
+     * the same value and not the same fact.
+     */
+    reopen_policy?: string;
+    /** True when `reopen_policy` was absent and resolved to `unclassified`. */
+    reopen_policy_defaulted?: boolean;
+    /**
+     * `protected_dimensions` — the reserved interests this record touches.
+     * Empty list when the record declares none; that is not the same as
+     * "no dimension is reserved for the transition being proposed", which is a
+     * property of the proposal and outside anything a record can say.
+     */
+    protected_dimensions?: string[];
+    /**
+     * What the axes say a cite-time reader may draw from this record.
+     *
+     * Present only as `disabled-shadow-mode`, and only for an accepted E0/E1
+     * record that does NOT carry `authority_basis: owner_intent`.
+     *
+     * Provenance is deliberately NOT part of that condition, and this docstring
+     * said "accepted + agentic + E0/E1" after the predicate had stopped
+     * checking provenance — caught in completion review. The notice is about
+     * evidence strength, which a human snapshot has exactly as little of; the
+     * real exemption is an owner purpose statement, whose alternatives are
+     * foreclosed by ownership rather than by evidence.
+     *
+     * The literal is deliberate: no grade authorizes anything here, so the
+     * field reports a *disabled* effect rather than asserting a permission
+     * that does not exist. Whether one ever may is Phase 7's open question.
+     */
+    authority_effect?: string;
     /** Why this may or may not be cited as a live lock. */
     verdict: string;
 }
+
+/**
+ * The block printed for a record whose own metadata says it may not establish
+ * that the alternatives remain invalid.
+ *
+ * Emitted verbatim and unindented so the whole block is greppable as one
+ * literal — the string `disabled-shadow-mode` is the load-bearing token and a
+ * reader (or a downstream check) must be able to match it without knowing this
+ * renderer's indentation.
+ */
+export const LOW_EVIDENCE_NOTICE = [
+    'authority_effect: disabled-shadow-mode',
+    'This record documents the prior choice. It does not by itself',
+    'establish that alternatives remain invalid.',
+].join('\n');
 
 /**
  * A parsed citation. `area` is null for the flat surface.
@@ -175,33 +315,141 @@ export function adr_files(repo_root: string = REPO_ROOT): string[] {
     return ADR_DIRS.flatMap((d) => walk_md(path.join(repo_root, d)));
 }
 
+// ---------------------------------------------------------------------------
+// The CI corpus: every ADR the tree cites at someone.
+//
+// WHAT THE GATE FAILS ON, and why it is this and not something else.
+//
+// A malformed axis (`evidence.strength: E9`, an E0 with no `discovery`) is
+// already `check_adr_frontmatter`'s job, and duplicating it here would buy a
+// second red for one defect while leaving this gate's real subject unguarded.
+// The condition only THIS tool computes is an **unresolvable citation**: a
+// rule, skill, domain or doc that names `ADR-NNN` where no decision record
+// carries that number on a scanned surface. That is a live defect class in this
+// tree — a lock cited by number that a reader cannot open is the same
+// false-absence failure `verdict_for` was written for, seen from the citing
+// side — and `cite_check` already decides it (`resolved: false` → exit 1).
+//
+// So the CI invocation resolves every citation in `src/rules/`, `src/skills/`,
+// `src/domains/` and `docs/` against the corpus, and reds when any one of them
+// points nowhere.
+// ---------------------------------------------------------------------------
+
+/** The trees whose ADR citations the CI invocation resolves. */
+export const CITATION_ROOTS = ['src/rules', 'src/skills', 'src/domains', 'docs'] as const;
+
+const CITATION_FILE_EXTS = new Set(['.md', '.ts', '.yml', '.yaml']);
+
+/**
+ * A citation, in the two forms `normalise_ref` can resolve.
+ *
+ * The trailing `(?![0-9A-Za-z])` rejects the template placeholders the corpus
+ * really contains — `ADR-0N` in `producing-the-review.md` and `ADR-206`, which
+ * would otherwise be discovered as a citation to `ADR-0`.
+ *
+ * The per-area alternative requires the area to START with a letter, which is
+ * what `normalise_ref`'s own `byArea` pattern requires and is not cosmetic:
+ * without it, the filename reference `ADR-082-410-one-click-relaunch.md` is
+ * discovered as `ADR-082-410` (area `082`), and prose like a dated sweep name
+ * would be discovered as a citation to an area that does not exist — a
+ * manufactured red. A per-area citation whose area contains a hyphen is
+ * therefore NOT discovered by this scan; all six live areas are single words,
+ * and `normalise_ref` still resolves such a citation when it is passed
+ * explicitly. Stated rather than left as a silent narrowing.
+ */
+const CITATION_RE = /ADR-(?:[a-z][a-z0-9]*-\d{1,4}|\d{1,4})(?![0-9A-Za-z])/g;
+
+function walk_citable(dir: string): string[] {
+    if (!fs.existsSync(dir)) return [];
+    const out: string[] = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) out.push(...walk_citable(full));
+        else if (CITATION_FILE_EXTS.has(path.extname(entry.name))) out.push(full);
+    }
+    return out.sort();
+}
+
+/** Every distinct ADR reference the citation roots name, sorted. */
+export function cited_refs(repo_root: string = REPO_ROOT): string[] {
+    const found = new Set<string>();
+    for (const root of CITATION_ROOTS) {
+        for (const file of walk_citable(path.join(repo_root, root))) {
+            for (const m of fs.readFileSync(file, 'utf-8').matchAll(CITATION_RE)) {
+                found.add(m[0]);
+            }
+        }
+    }
+    return [...found].sort();
+}
+
 /**
  * Minimal frontmatter reader — folded (`>-`) values are joined, which the
  * corpus needs: every `review_trigger` in it is a folded multi-line string.
  */
+/**
+ * Read the leading `---` block.
+ *
+ * Delegates to the shared reader (`_lib/adr_frontmatter.ts`); this function was
+ * one of the three divergent copies that reader replaces. Kept as a named
+ * export because the test suite imports it.
+ */
 export function parse_frontmatter(text: string): Record<string, string> | null {
-    if (!text.startsWith('---\n')) return null;
-    const end = text.indexOf('\n---\n', 4);
-    if (end === -1) return null;
-    const out: Record<string, string> = {};
-    let key: string | null = null;
-    for (const raw of text.slice(4, end).split('\n')) {
-        const line = raw.replace(/\s+$/, '');
-        if (!line || line.trimStart().startsWith('#')) continue;
-        if (/^\s/.test(line) && key !== null) {
-            out[key] = `${out[key]} ${line.trim()}`.trim();
-            continue;
-        }
-        const idx = line.indexOf(':');
-        if (idx === -1) continue;
-        key = line.slice(0, idx).trim();
-        out[key] = line
-            .slice(idx + 1)
-            .trim()
-            .replace(/^["'](.*)["']$/, '$1')
-            .replace(/^>-?$/, '');
+    return readAdrFrontmatterScalars(text);
+}
+
+/**
+ * `protected_dimensions` off the shared reader's node, narrowed — not parsed.
+ *
+ * The field is written inline (`protected_dimensions: [governance]`), so the
+ * shared reader hands it back under `nested` as a string list. This only
+ * narrows that node; adding a second parser for a field one reader already
+ * reads is how the tree ended up with three divergent ADR parsers.
+ */
+export function protected_dimensions_of(fm: AdrFrontmatter): string[] {
+    const node = fm.nested['protected_dimensions'];
+    if (Array.isArray(node)) return node;
+    if (typeof node === 'string' && node !== '') return [node];
+    return [];
+}
+
+/**
+ * Which `evidence.basis` refs are repo paths that are not there any more.
+ *
+ * Deliberately narrow. A ref is checked ONLY when it looks like a repo-relative
+ * path — no scheme, no `claim:` prefix. A trailing `(YYYY-MM-DD)` access note
+ * and a `:LINE` / `:LINE-LINE` anchor are stripped before the check, because
+ * both appear in the corpus and neither is part of the filename.
+ *
+ * What this does NOT do, stated because the difference is the whole point: it
+ * does not fetch a URL, does not resolve a `claim:` id against the claim
+ * registry, and does not judge whether a ref that EXISTS still supports the
+ * grade. "The file is present" is the only claim made.
+ */
+export function unresolved_basis_refs(basis: readonly string[], repo_root: string): string[] {
+    const missing: string[] = [];
+    for (const ref of basis) {
+        if (basis_ref_kind(ref) !== 'path') continue;
+        if (!fs.existsSync(path.join(repo_root, basis_ref_path(ref)))) missing.push(ref);
     }
-    return out;
+    return missing;
+}
+
+/** `url` and `claim` refs are printed and never checked; `path` refs are. */
+export function basis_ref_kind(ref: string): 'url' | 'claim' | 'path' {
+    const t = ref.trim();
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return 'url';
+    if (/^claim:/i.test(t)) return 'claim';
+    return 'path';
+}
+
+/** Strip a trailing `(note)` and a `:LINE[-LINE]` anchor off a path-shaped ref. */
+function basis_ref_path(ref: string): string {
+    return ref
+        .trim()
+        .replace(/\s*\([^)]*\)\s*$/, '')
+        .replace(/:\d+(-\d+)?$/, '')
+        .trim();
 }
 
 /**
@@ -229,6 +477,14 @@ export function amendment_blocks(body: string): string[] {
 export function trigger_state(fm: Record<string, string>): TriggerState {
     const t = (fm['review_trigger'] ?? '').trim();
     if (t === '') return 'none';
+    // The transitional migration value records that no condition has been
+    // written yet, so it is `none` rather than `indeterminate`. Mapping it to
+    // `indeterminate` would report "a condition exists, its state is unknown"
+    // for a record that has no condition at all — the opposite of what the
+    // staging is for, and indistinguishable at a glance from a real trigger
+    // nobody has evaluated. Found in completion review; the field did not
+    // exist in this file's corpus when the mapping was written.
+    if (t.toLowerCase() === 'unclassified') return 'none';
     return 'indeterminate';
 }
 
@@ -305,6 +561,26 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
 
         const text = contents.get(match) ?? '';
         const fm = parse_frontmatter(text) ?? {};
+        // The two nested axes need the structured reader; `parse_frontmatter`
+        // folds them back to a string for scalar-only callers. `null` here is
+        // the honest answer for a record predating the axes — no longer for a
+        // per-area record: all seven carry real frontmatter as of 2026-08-21
+        // and read through exactly the same path as a flat one.
+        const structured = readAdrFrontmatter(text);
+        const provenance = structured === null ? null : provenanceOf(structured);
+        const evidence = structured === null ? null : evidenceOf(structured);
+        const basis = structured === null ? null : authorityBasisOf(structured);
+        const evidence_basis = evidence?.basis ?? [];
+        // `adr-layout § Reopen authority`: absent resolves to `unclassified`,
+        // and deliberately NOT to `owner` — fail-closed there would encode the
+        // existing blockage into the schema. A record with no frontmatter at
+        // all resolves the same way, for the same reason.
+        const declared_policy = fm['reopen_policy'];
+        const reopen_policy =
+            declared_policy !== undefined && declared_policy !== '' ? declared_policy : 'unclassified';
+        const reopen_policy_defaulted = declared_policy === undefined || declared_policy === '';
+        const protected_dimensions = structured === null ? [] : protected_dimensions_of(structured);
+        const provisional = structured !== null && isLowEvidenceAccepted(structured);
         const bodyStart = text.indexOf('\n---\n', 4);
         const body = bodyStart === -1 ? text : text.slice(bodyStart + 5);
 
@@ -337,6 +613,29 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
             ...(fm['amended_by'] !== undefined ? { amended_by: fm['amended_by'] } : {}),
             amendment_blocks: amendment_blocks(body),
             referenced_by,
+            ...(provenance?.kind !== undefined && provenance.kind !== null
+                ? { provenance_kind: provenance.kind }
+                : {}),
+            ...(provenance?.agenticMode !== undefined && provenance.agenticMode !== null
+                ? { provenance_agentic_mode: provenance.agenticMode }
+                : {}),
+            ...(evidence?.strength !== undefined && evidence.strength !== null
+                ? { evidence_strength: evidence.strength }
+                : {}),
+            ...(evidence?.discovery !== undefined && evidence.discovery !== null
+                ? { evidence_discovery: evidence.discovery }
+                : {}),
+            ...(evidence_basis.length > 0
+                ? {
+                      evidence_basis,
+                      evidence_basis_unresolved: unresolved_basis_refs(evidence_basis, repo_root),
+                  }
+                : {}),
+            ...(basis !== null ? { authority_basis: basis } : {}),
+            reopen_policy,
+            reopen_policy_defaulted,
+            protected_dimensions,
+            ...(provisional ? { authority_effect: 'disabled-shadow-mode' } : {}),
         };
         return { ...partial, verdict: verdict_for(partial) };
     });
@@ -363,37 +662,230 @@ function render(results: CiteResult[]): string {
             lines.push(`  amendments       ${String(r.amendment_blocks.length)}: ${r.amendment_blocks.join(' · ')}`);
         if (r.referenced_by.length > 0)
             lines.push(`  referenced by    ${String(r.referenced_by.length)} other ADR(s): ${r.referenced_by.join(', ')}`);
+
+        // The two descriptive axes. Printed for every resolved record, absent
+        // or not: "the axis is missing" is itself the thing a citer needs to
+        // see — a record with no grade has not been assessed, which is not the
+        // same as a record assessed as weak.
+        const provenanceLine = r.provenance_kind ?? '— (no provenance axis)';
+        const mode = r.provenance_agentic_mode !== undefined ? `  ·  mode ${r.provenance_agentic_mode}` : '';
+        lines.push(`  provenance       ${provenanceLine}${mode}`);
+        lines.push(
+            `  evidence         ${r.evidence_strength ?? '— (ungraded)'}` +
+                `  ·  discovery ${r.evidence_discovery ?? '—'}`,
+        );
+        lines.push(`  authority_basis  ${r.authority_basis ?? '— (absent → evidence)'}`);
+
+        // The basis refs, verbatim, one per line with an existence marker. A
+        // grade with no readable basis is the thing a citer has to see, so the
+        // absent case prints too rather than dropping the line.
+        if (r.evidence_basis === undefined || r.evidence_basis.length === 0) {
+            lines.push('  evidence_basis   — (none recorded)');
+        } else {
+            const unresolved = new Set(r.evidence_basis_unresolved ?? []);
+            lines.push(
+                `  evidence_basis   ${String(r.evidence_basis.length)} ref(s), ` +
+                    `${String(unresolved.size)} unresolved:`,
+            );
+            for (const ref of r.evidence_basis) {
+                const kind = basis_ref_kind(ref);
+                const marker =
+                    kind !== 'path'
+                        ? `[not checked: ${kind}]`
+                        : unresolved.has(ref)
+                          ? '[MISSING]'
+                          : '[found]';
+                lines.push(`                     ${marker} ${ref}`);
+            }
+        }
+
+        // The two reserved-authority fields, printed together because the
+        // routing question reads them together. `protected_dimensions` names
+        // what the RECORD reserves; whether a given transition weakens one is a
+        // property of the proposal and is nothing this tool can print.
+        const policyNote = r.reopen_policy_defaulted === true ? ' (absent → default)' : ' (declared)';
+        const dims =
+            r.protected_dimensions !== undefined && r.protected_dimensions.length > 0
+                ? r.protected_dimensions.join(', ')
+                : '— (none declared)';
+        lines.push(`  reopen_policy    ${r.reopen_policy ?? 'unclassified'}${policyNote}`);
+        lines.push(`  protected dims   ${dims}`);
         lines.push(`  →  ${r.verdict}`);
+        // Verbatim + unindented, on purpose: see LOW_EVIDENCE_NOTICE.
+        if (r.authority_effect === 'disabled-shadow-mode') lines.push(LOW_EVIDENCE_NOTICE);
     }
     return lines.join('\n');
 }
 
+
+/**
+ * `--self-test` — drives the REAL binary over synthetic trees.
+ *
+ * Not optional for a new gate: `gate-self-test:registered-non-adopters`
+ * (`check_gate_coverage.list_self_test_non_adopters`) is a shrink-only count
+ * over the enforced manifest, so registering this gate without a self-test
+ * would raise it and red CI. That ratchet is working as designed — the cheapest
+ * moment to prove a gate discriminates is when it is written, and an enforced
+ * `scanned:` floor only proves the gate READ something.
+ *
+ * Both reject cases were run by hand before they were written down, and both
+ * were seen red: a planted `ADR-993` citation exited 1, and a citation root
+ * with no ADR reference in it exited 1 through `DeadScopeError`. A case never
+ * seen red has unknown sensitivity.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'acc-'));
+
+    /** Build a tree with one flat ADR and one citing rule; return its root. */
+    const mk = (adr: string | null, citation: string | null): string => {
+        const root = fs.mkdtempSync(path.join(tmp, 'root-'));
+        fs.mkdirSync(path.join(root, 'docs', 'decisions'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src', 'rules'), { recursive: true });
+        if (adr !== null) {
+            fs.writeFileSync(
+                path.join(root, 'docs', 'decisions', `ADR-${adr}-probe.md`),
+                `---\nstatus: accepted\ndate: 2026-08-21\ndecision: probe\n---\n\n# Probe\n`,
+                'utf-8',
+            );
+        }
+        fs.writeFileSync(
+            path.join(root, 'src', 'rules', 'probe.md'),
+            citation === null ? '# Probe\n\nNo decision is named here.\n' : `# Probe\n\nSee ${citation}.\n`,
+            'utf-8',
+        );
+        return root;
+    };
+
+    const run = (root: string): number => {
+        process.env['ADR_CITE_CHECK_ROOT'] = root;
+        try {
+            return runGateCli(REPO_ROOT, 'src/scripts/adr_cite_check.ts', ['--cited'], REPO_ROOT);
+        } finally {
+            delete process.env['ADR_CITE_CHECK_ROOT'];
+        }
+    };
+
+    try {
+        return runSelfTest({
+            gate: 'adr_cite_check',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a citation whose ADR exists passes',
+                    expect: 'accept',
+                    run: () => run(mk('001', 'ADR-001')),
+                },
+                {
+                    name: 'a citation to an ADR that does not exist is rejected — the gate\'s whole subject',
+                    expect: 'reject',
+                    run: () => run(mk('001', 'ADR-993')),
+                },
+                {
+                    name: 'citation roots that name no ADR at all are rejected as a dead scope, never green',
+                    expect: 'reject',
+                    run: () => run(mk('001', null)),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
-    const refs = argv.filter((a) => !a.startsWith('--'));
-    if (refs.length === 0) {
+    if (argv.includes('--self-test')) return selfTest();
+    const corpus_mode = argv.includes('--cited');
+    const explicit = argv.filter((a) => !a.startsWith('--'));
+    if (!corpus_mode && explicit.length === 0) {
         process.stderr.write(
             'usage: adr_cite_check <ADR-NNN> [ADR-NNN …] [--json]\n' +
-                '       evaluate a decision before citing it as a reason not to act\n',
+                '       adr_cite_check --cited [--json]\n' +
+                '       evaluate a decision before citing it as a reason not to act\n' +
+                '       --cited: resolve every ADR citation in ' +
+                `${CITATION_ROOTS.join(', ')} (the CI gate)\n`,
         );
         return 2;
     }
 
-    const results = cite_check(refs);
+    const root = scan_root();
+    const refs = corpus_mode ? cited_refs(root) : explicit;
+    const results = cite_check(refs, root);
+
+    // The ledger and the `scanned:` line exist only in corpus mode, and the
+    // asymmetry is deliberate. In explicit-ref mode the refs come from argv, so
+    // there is no scan scope to assert and a published count would be a floor
+    // under a constant — the false-count shape `gate-coverage.yml` rejects. In
+    // corpus mode the denominator is real: it collapses to 0 if either the
+    // citation roots or the decision surfaces move, which is exactly the
+    // dead-scan-root failure the assertion is for.
+    let ledger: GateLedger | null = null;
+    if (corpus_mode) {
+        ledger = new GateLedger('adr_cite_check');
+        ledger.plan(refs);
+        for (const r of results) {
+            if (r.resolved) ledger.complete(r.ref);
+            else ledger.fail(r.ref, 'citation resolves to no decision record');
+        }
+    }
+
     if (as_json) {
+        // The tally rides in the payload rather than on stdout: printing the
+        // ledger line beside the JSON would break every parser of this mode.
         process.stdout.write(
             JSON.stringify(
                 {
                     results,
                     surfaces_not_scanned: SURFACES_NOT_SCANNED,
                     partial_coverage: PARTIAL_COVERAGE,
+                    ...(ledger !== null ? { ledger: ledger.finalize() } : {}),
                 },
                 null,
                 2,
             ) + '\n',
         );
     } else {
-        process.stdout.write(render(results) + '\n');
+        // Corpus mode renders only the unresolved records. The full per-record
+        // surfacing is 178 records × ~10 lines today — a CI step that prints
+        // 1,900 lines of green hides the one red line that matters, and the
+        // surfacing exists for a human citing ONE decision, not for the gate.
+        // `--json` still carries every record for a machine consumer.
+        const shown = corpus_mode ? results.filter((r) => !r.resolved) : results;
+        if (corpus_mode) {
+            process.stdout.write(
+                `ADR citations: ${String(results.length)} distinct reference(s) across ` +
+                    `${CITATION_ROOTS.join(', ')} · ` +
+                    `${String(results.filter((r) => !r.resolved).length)} unresolved\n`,
+            );
+        }
+        if (shown.length > 0) process.stdout.write(render(shown) + '\n');
+        if (ledger !== null) {
+            try {
+                // The count is references RESOLVED AGAINST the corpus, not the
+                // subset that resolved successfully — deliberately the same
+                // number the ledger's own `scanned=` reports, because two
+                // different values printed under the same word is the drift
+                // `reportScanned` was written to prevent. It still guards both
+                // roots: a moved citation root drops this to 0 and throws
+                // here, and a moved decision surface makes every reference
+                // unresolved, which reds on exit 1 below with 178 failures in
+                // the ledger. Neither failure can present as green.
+                reportScanned({
+                    gate: 'adr_cite_check',
+                    scanned: results.length,
+                    units: 'cited ADR reference(s)',
+                    roots: [...CITATION_ROOTS, ...ADR_DIRS],
+                });
+            } catch (exc) {
+                if (exc instanceof DeadScopeError) {
+                    process.stderr.write(`❌  ${exc.message}\n`);
+                    return 1;
+                }
+                throw exc;
+            }
+            ledger.report();
+        }
     }
 
     const unresolved = results.filter((r) => !r.resolved);
@@ -408,17 +900,26 @@ function main(argv: string[]): number {
 }
 
 // Main-guard (realpath-compared, mirrors the repo convention).
+//
+// `process.exitCode`, never `process.exit()` — and the difference is a real
+// defect this change would otherwise have shipped. `--cited --json` writes a
+// ~167 KB payload; `process.exit()` tears the process down before Node has
+// flushed an async stdout, so piping that mode into a parser delivered exactly
+// 65,536 bytes and a JSONDecodeError, while redirecting to a file delivered all
+// of it. Measured before the fix, on this branch. Setting the code and letting
+// the process end naturally flushes first. Twenty-odd sibling gates already use
+// this shape (`audit_skill_overlap`, `apply_modules_config`, …).
 if (process.argv[1] !== undefined) {
     try {
         const here = fs.realpathSync(fileURLToPath(import.meta.url));
         const argv1 = fs.realpathSync(path.resolve(process.argv[1]));
         if (here === argv1) {
-            process.exit(main(process.argv.slice(2)));
+            process.exitCode = main(process.argv.slice(2));
         }
     } catch {
         const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
         if (import.meta.url === argvUrl) {
-            process.exit(main(process.argv.slice(2)));
+            process.exitCode = main(process.argv.slice(2));
         }
     }
 }

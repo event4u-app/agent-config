@@ -133,6 +133,61 @@ describe('readLastVerify — the reader now resolves the path the producer write
         });
     });
 
+    /**
+     * The multi-line case, and it is the one that mattered in practice.
+     *
+     * A recorded command is whatever the operator ran, and a heredoc — the
+     * ordinary shape for `git commit -F - <<'MSG'` — records a multi-line
+     * string. The pre-fix reader sliced to MAX_FIELD_CHARS and kept the
+     * newlines, so `validateRecycleEnvelope`'s `isShortLine` rejected the value
+     * and `session:recycle` refused its OWN machine-collected field. Composing a
+     * valid envelope was impossible whenever the previous verification command
+     * spanned more than one line, and the error named `last_verify` without
+     * hinting that the composer had not supplied it.
+     *
+     * Reproduced 2026-08-21 against a real 512-char heredoc in this repository.
+     */
+    it('flattens a multi-line command — a heredoc must not produce an unusable field', () => {
+        withRoot((root) => {
+            const rel = statePathFor('session-heredoc');
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            const multiline = ["git commit -q -F - <<'MSG'", 'feat: a subject', '', 'A body line.', 'MSG'].join('\n');
+            fs.writeFileSync(
+                path.join(root, rel),
+                JSON.stringify({
+                    session_id: 'session-heredoc',
+                    last_verification: { command: multiline, tool: 'Bash', at: '2026-08-21T10:00:00Z' },
+                }),
+                'utf-8',
+            );
+            const line = readLastVerify(root, 'session-heredoc');
+            expect(line).not.toBeNull();
+            // The property the envelope validator actually checks.
+            expect(line).not.toContain('\n');
+            // Flattened, not truncated at the first newline — the command stays
+            // identifiable, which is the whole point of the field.
+            expect(line).toContain('git commit');
+            expect(line).toContain('feat: a subject');
+            expect(line).toContain('2026-08-21T10:00:00Z');
+        });
+    });
+
+    it('collapses a run of whitespace rather than leaving a ragged field', () => {
+        withRoot((root) => {
+            const rel = statePathFor('session-ragged');
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            fs.writeFileSync(
+                path.join(root, rel),
+                JSON.stringify({
+                    session_id: 'session-ragged',
+                    last_verification: { command: 'task   ci\t\t--verbose\n', tool: 'Bash', at: '2026-08-21T10:00:00Z' },
+                }),
+                'utf-8',
+            );
+            expect(readLastVerify(root, 'session-ragged')).toContain('task ci --verbose @');
+        });
+    });
+
     it('returns null for a session whose producer state does not exist', () => {
         withRoot((root) => {
             expect(readLastVerify(root, 'session-with-no-state')).toBeNull();

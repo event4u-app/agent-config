@@ -86,17 +86,52 @@ In `auto` mode, flip to `on` for the rest of the conversation when the user expr
 
 Algorithm and speech-act heuristic: [`autonomy-detection.md`](autonomy-detection.md). Anchor phrases (DE+EN), no-flip patterns, counter-examples, trivial-vs-blocking taxonomy, commit-policy summary, and named failure modes: this file + [`autonomy-examples.md`](autonomy-examples.md).
 
-## Task-scope — two autonomy shapes
+## Task-scope — three autonomy shapes
 
 Depth for the rule's task-scope Iron Law (`NEW TASK → FRESH CONFIRMATION`).
-Two distinct autonomy shapes — keep them apart:
+Three distinct autonomy shapes — keep them apart:
 
 | Shape | Trigger | Scope |
 |---|---|---|
 | **Conversation-wide trivial-question suppression** | "stop asking on trivial steps, just work" — no deliverable named. | Sticky for the rest of the conversation. Suppresses trivial workflow questions only; never lifts blocking, Hard Floor, or [`scope-control`](../../rules/scope-control.md) gates. |
 | **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab", "do PROJ-123 end-to-end" — a deliverable / artifact / ticket is named. | Bound to **that** task. Ends when the task ends. Does **not** authorize starting a new, distinct task autonomously. |
+| **Set-scoped autonomous execution** | An accepted execution contract whose pre-scan **enumerated** a closed, ordered set of deliverables — the set members are named on the contract screen before the single Accept. | Bound to **that enumerated set**. The loop may move from one listed member to the next without a new contact. A member not on the accepted list is a new task and needs fresh confirmation. |
 
 Litmus test: does the directive name (or unambiguously point to) a single concrete deliverable? Yes → task-scoped, scope ends with the deliverable. No → conversation-wide, trivial-question suppression only.
+
+Set-scoped is the same litmus applied to a **list** instead of a single item, and
+it is deliberately the narrowest thing that makes a set run possible:
+
+```
+SET-SCOPED AUTONOMY IS BOUNDED BY THE ENUMERATION THE USER SAW.
+A MEMBER ON THE ACCEPTED LIST IS CONTINUATION. ANYTHING ELSE IS A NEW TASK,
+AND `NEW TASK → FRESH CONFIRMATION` APPLIES TO IT VERBATIM.
+THE SET IS CLOSED AT ACCEPT TIME AND NEVER GROWS DURING THE RUN.
+```
+
+Four conditions, all of which must hold before a run may claim set scope. They
+exist because "a set" is exactly the phrasing under which an unbounded backlog
+could be smuggled in as one authorization:
+
+1. **Enumerated before Accept.** Every member is printed on the contract screen
+   — name, branch, and its own artifact count. A set the user did not read is
+   not a set they authorized.
+2. **Closed.** The list cannot grow after Accept. A roadmap discovered mid-run
+   is a new task, not a late set member; it waits.
+3. **Ordered, with independence declared.** The contract states the order and
+   which members carry no declared dependency, because that is what decides
+   whether the loop may continue past a failure (see
+   [`roadmap-process-loop § 3d`](roadmap-process-loop.md)).
+4. **One contract, one Accept.** Set scope is granted by the same single Accept
+   as any other mode. It is never inferred from the fact that several roadmaps
+   happen to be open.
+
+What set scope does **not** touch: the Hard Floor, the locked decision classes,
+the kernel-edit soak, and every
+[`scope-control`](../../rules/scope-control.md) gate. It removes the *re-ask
+between listed members* and nothing else — a set run that reaches a Hard-Floor
+action stops there exactly as a single-task run would.
+
 
 When the user later issues a **new** request — different ticket, different roadmap, different artifact, different feature — treat it as a fresh task. Re-confirm autonomy for the new scope before:
 

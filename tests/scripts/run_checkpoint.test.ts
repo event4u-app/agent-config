@@ -638,7 +638,18 @@ describe('countRoadmap — a phase span survives its own sub-headings', () => {
         const files = fs
             .readdirSync(dir)
             .filter((n) => n.endsWith('.md') && n.startsWith('road-to-'));
-        expect(files.length).toBeGreaterThan(10);
+        // Corpus guard, not an estate-size assertion. It must fail when the root
+        // moves or the filter matches nothing — both give 0 — and must NOT fail
+        // because archival shrank the active tree.
+        //
+        // Was 10, then 5. Both were wrong in the same way: `check_estate_count`
+        // forbids growth, so this corpus can only shrink, and any absolute floor
+        // above 0 is met eventually. A review provoked it — with 6 files at the
+        // top level and a floor of 5, archiving one roadmap redded this test.
+        // `> 0` detects exactly the named failure and cannot rot. A genuinely
+        // empty corpus still reds, which is correct: the assertion below would
+        // then pass vacuously, and that is what this guard exists to prevent.
+        expect(files.length).toBeGreaterThan(0);
         const falseCompletions: string[] = [];
         for (const name of files) {
             const body = fs.readFileSync(path.join(dir, name), 'utf-8');

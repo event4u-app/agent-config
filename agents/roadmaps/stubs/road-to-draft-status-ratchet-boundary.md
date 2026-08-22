@@ -61,9 +61,9 @@ ratcheted `active_roadmaps` count, and (c) carrying no triage verdict row.
 
 | File | `status` |
 |---|---|
-| `agents/roadmaps/road-to-conformance-round7-followup.md` | `draft` |
+| `agents/roadmaps/later/road-to-conformance-round7-followup.md` | `draft` |
 | `agents/roadmaps/road-to-demand-gate-audience-followup.md` | `draft` |
-| `agents/roadmaps/road-to-plan-gates-measurement.md` | `draft` |
+| `agents/roadmaps/later/road-to-plan-gates-measurement.md` | `draft` |
 
 Naming them is not the same as fixing it. The drain-run handoff note had already
 flagged the shape — *"`draft` becomes a permanent hiding place"* — and the note
