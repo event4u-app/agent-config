@@ -50,6 +50,7 @@ function mem(name: string, enabled = true, pli = true): MemberConfig {
         binary: null,
         model_ladder: [],
         prompt_cache_ttl: '5m',
+    verified_at: null,
     };
 }
 

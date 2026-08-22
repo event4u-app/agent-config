@@ -45,6 +45,7 @@ import {
     AnthropicCliClient,
     assertCacheBreakpointOrder,
     CliClient,
+    DEFAULT_ANTHROPIC_CLI_MODEL,
     DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_CLI_TIMEOUT_SECONDS,
     DEFAULT_GEMINI_MODEL,
@@ -191,6 +192,18 @@ describe('clients — _is_reasoning_model', () => {
 describe('clients — module constants', () => {
     it('mirrors the Python defaults', () => {
         expect(DEFAULT_ANTHROPIC_MODEL).toBe('claude-sonnet-4-5');
+        // The CLI default is asserted on its PROPERTY rather than its value: it
+        // must be a vendor alias for "the latest model in a band", never a dated
+        // id. A value assertion here would have to be edited on every refresh
+        // and would therefore never fail for the reason that matters — a dated
+        // id creeping back into the code default, which is precisely how the
+        // stale pin survived in the template for as long as it did.
+        //
+        // The API default above is DELIBERATELY still a dated id and is not part
+        // of this: `/v1/messages` takes model ids, not CLI aliases, so `sonnet`
+        // would 404 there. That path keeps a real staleness surface and this
+        // change does not close it.
+        expect(DEFAULT_ANTHROPIC_CLI_MODEL).toMatch(/^(fable|opus|sonnet|haiku)$/);
         expect(DEFAULT_OPENAI_MODEL).toBe('gpt-4o');
         expect(DEFAULT_GEMINI_MODEL).toBe('gemini-2.5-pro');
         expect(DEFAULT_XAI_MODEL).toBe('grok-4');
@@ -576,7 +589,7 @@ describe('clients — CLI command construction', () => {
         });
         const r = client.ask('SYS', 'USER', 100);
         expect(calls[0]!.cmd).toEqual([
-            '/bin/echo', '--print', '--output-format', 'json', '--model', 'claude-sonnet-4-5',
+            '/bin/echo', '--print', '--output-format', 'json', '--model', 'sonnet',
             '--tools', '', '--append-system-prompt', 'SYS',
         ]);
         expect(calls[0]!.stdin).toBe('USER');

@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **716 public artefacts** shipped by
+Consumer-facing catalog of all **717 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (290)
+## Skills (291)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -151,6 +151,7 @@ are excluded.
 | skill | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) | official | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-injection-defense`](../dist/agent-src/skills/judge-injection-defense/SKILL.md) | official | When scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates. |
 | skill | [`judge-security-auditor`](../dist/agent-src/skills/judge-security-auditor/SKILL.md) | official | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
+| skill | [`judge-spec-compliance`](../dist/agent-src/skills/judge-spec-compliance/SKILL.md) | official | Use when a diff needs a requirement review — does it satisfy every stated acceptance criterion — dispatched by /review-changes, /do-and-judge, /judge. Never infers criteria from the diff. |
 | skill | [`judge-synthesis`](../dist/agent-src/skills/judge-synthesis/SKILL.md) | official | Use to consolidate multiple already-run judge verdicts into one report — consensus, conflicts, must-fix/should-fix with per-judge provenance. Consume-only, no opaque score, never auto-gates. |
 | skill | [`judge-test-coverage`](../dist/agent-src/skills/judge-test-coverage/SKILL.md) | official | Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'. |
 | skill | [`laravel`](../dist/agent-src/skills/laravel/SKILL.md) | official | Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`. |
@@ -593,7 +594,7 @@ are excluded.
 | command | [`research-deep`](../dist/agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research-report`](../dist/agent-src/commands/research/report.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
 | command | [`review`](../dist/agent-src/commands/review.md) | cluster: review | Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
-| command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
+| command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts |
 | command | [`review-routing`](../dist/agent-src/commands/review/routing.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
 | command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it). |
 | command | [`roadmap-ai-council`](../dist/agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |

@@ -268,6 +268,45 @@ function _getStr(d: Dict, key: string, dflt: string): string {
     return String(v);
 }
 
+/**
+ * What the runtime hooks actually DO, in four states and no others.
+ *
+ * The four: `detects` (it looks and reports nothing a host reads), `warns` (it
+ * reports through the host, and the host may ignore it), `blocks` (it can
+ * refuse), and `not-enforceable-on-host` (the slot does not exist there).
+ *
+ * WHY THIS BLOCK EXISTS. `CAPABILITIES.yaml` carried no prompt-injection entry
+ * at all, and saying nothing is a different defect from saying too much: a
+ * reader looking for injection coverage found absence, which reads as "not
+ * covered" rather than as "a warn-only scanner exists and ships off". This is
+ * the constructive half of a source proposal whose other half — "remove claims
+ * that equate a warn-hook with prevention" — had nothing to remove.
+ *
+ * `blocks` is never legal for the injection scanner on ANY host, and the value
+ * is DERIVED from `hook_manifest.yaml` rather than typed here: `fail_closed:
+ * false` plus `severity: advisory` is what makes it `warns`, so a manifest edit
+ * that gave it teeth would have to change this row too. A hand-written `blocks`
+ * would be the coverage inflation `untrusted-input-defense` refuses, one file
+ * over.
+ */
+function _runtime_enforcement_lines(): string[] {
+    return [
+        'runtime_enforcement:',
+        '  # Four states, and no others: detects | warns | blocks | not-enforceable-on-host.',
+        '  # Derived from src/scripts/hook_manifest.yaml (fail_closed + severity), never',
+        '  # hand-written — a manifest row that gained teeth would have to change this one.',
+        '  - hook: injection-scan',
+        '    slot: post_tool_use',
+        '    state: warns',
+        '    default: off',
+        '    blocks_legal_on_any_host: false',
+        '    reason: ' +
+            _scalar(
+                'fail_closed: false + severity: advisory in hook_manifest.yaml — it reports through the host and cannot refuse, so it warns and never blocks. Ships enabled: false; the detector was measured at 99.00% recall and a 0.85% false-positive rate over internal/bench/corpora/encoding-channels/ before any default flip is even discussable.',
+            ),
+    ];
+}
+
 export function build(): string {
     const packs = _load_packs();
     const skillMap = _skill_packs();
@@ -359,6 +398,8 @@ export function build(): string {
             lines.push(`      commands: ${_flow_list(rec.commands)}`);
         }
     }
+    lines.push('');
+    lines.push(..._runtime_enforcement_lines());
     lines.push('');
     lines.push('gaps:');
     if (gaps.length > 0) {

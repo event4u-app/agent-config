@@ -85,6 +85,68 @@ export function sanitize_text(s: string): string {
     return out.length > MAX_FIELD_CHARS ? out.slice(0, MAX_FIELD_CHARS) : out;
 }
 
+/**
+ * Report the INVISIBLE layer without removing it.
+ *
+ * `sanitize_text` above strips four channels — hidden-instruction vectors
+ * (bidi, zero-width, tag, deprecated-format, private-use-area, per `_classify`),
+ * strippable control chars, and invisible fillers. Stripping is the right
+ * disposition for a retrieval path that is about to hand text to a model.
+ *
+ * It is the WRONG disposition for a reporting surface. A warn-only PostToolUse
+ * hook must not rewrite what the agent already read, so it cannot call
+ * `sanitize_text` at all — and `scan_encoding_findings` is the VISIBLE-layer
+ * twin and deliberately says nothing about these four. Measured over the frozen
+ * corpus before this function existed: `deprecated-format`, `private-use-area`,
+ * `control-char` and `invisible-filler` reported **0 of 20 each** through the
+ * reporting API while `sanitize_text` changed **20 of 20** for every one of
+ * them. So the layer had a reporting blind spot exactly where its stripping was
+ * perfect, and a consumer that may not strip was blind to a quarter of the
+ * channel set.
+ *
+ * The published 99.00 % recall figure is the STRIPPING pipeline's. The reporting
+ * half alone measured 72.33 %. Both numbers are correct about different things,
+ * and conflating them is what made "import the measured layer and get 15
+ * channels" read as true.
+ *
+ * Additive by construction: nothing that exists changes behaviour, and the
+ * predicates are the SAME ones `sanitize_text` uses — not copies — so a channel
+ * cannot become strippable without becoming reportable in the same edit.
+ */
+export function scan_invisible_findings(s: string): EncodingFinding[] {
+    const out: EncodingFinding[] = [];
+    const seen = new Set<string>();
+    const add = (channel: string, cp: number): void => {
+        const key = `${channel}:${cp}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push({
+            channel,
+            detail: `U+${cp.toString(16).toUpperCase().padStart(4, '0')} in the invisible layer`,
+        });
+    };
+    for (const ch of s) {
+        const cp = ch.codePointAt(0);
+        if (cp === undefined) continue;
+        const classified = _classify(cp);
+        if (classified !== null) {
+            // `_classify` already names the channel; reuse its label rather than
+            // re-deriving one, so the hook's output and the authoring-time
+            // linter's speak the same vocabulary.
+            add(typeof classified === 'string' ? classified : 'hidden-instruction', cp);
+            continue;
+        }
+        if (_isStrippableControl(cp)) {
+            add('control-char', cp);
+            continue;
+        }
+        if (_INVISIBLE_FILLERS.has(cp)) {
+            add('invisible-filler', cp);
+        }
+    }
+    return out;
+}
+
 // ---------------------------------------------------------------------------
 // Visible-layer scanner — FLAG ONLY, never rewrites
 // ---------------------------------------------------------------------------
