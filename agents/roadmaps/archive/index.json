@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 552,
+  "count": 553,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
