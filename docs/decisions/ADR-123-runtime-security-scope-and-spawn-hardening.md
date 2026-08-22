@@ -193,3 +193,59 @@ Pinned in `tests/scripts/ai_council/spawn_env.test.ts`
 `docs/threat-model.md` row i. **If a later change denies these variables, those
 tests must flip — and flipping them is the signal that this decision is being
 reversed deliberately rather than by accident.**
+
+## Follow-up (2026-08-22) — §2's scope line was put to the council and stands
+
+> **Accepted · 2026-08-22 · AI council, 2 of 2 seats present, unanimous (b).**
+> **Nothing in the Decision above changes.** This section records what was
+> asked, what was answered, and what the answer does and does not license.
+
+`road-to-injection-detector-wiring` carried an open blocker whose declared owner
+was the council: it argued §2's empirical rationale had eroded and that the scope
+line should be reopened. The ground was that this package **does** supervise tool
+calls — four times, at `pre_tool_use`: `block-no-verify`
+(`src/scripts/hook_manifest.yaml:143`), `block-kernel-rule-writes` (`:160`),
+`block-config-weakening` (`:176`) and `block-unauthorized-git` (`:357`) — a
+mechanism difference the ADR did not weigh.
+
+The question could not be answered when it was first authored: both seats sat at
+50/50 requests, the run returned `0/2 present · INCONCLUSIVE`, and $0.00 was
+spent. It was recorded as an open blocker rather than resolved, which is why it
+survived to be asked again. Asked on the metered rung on 2026-08-22 it returned
+**2 of 2 present**, and both seats independently chose **(b) — leave §2
+standing** on the same reasoning: the four existing denials are bright-line rules
+about specific operations on specific surfaces this package *owns* (its git
+operations, its kernel rules, its own config), while the refused capability
+interprets intent from arbitrary tool content. That is a **categorical**
+difference, not a quantitative one, and it is decisive.
+
+**One correction to the argument itself, which strengthens the outcome.** The
+premise the reopen attacked — "this package supervises no tool calls" — is the
+**roadmap's paraphrase**, not §2's wording. §2 says an outbound command guard
+"requires interpreting intent from content … a runtime **enforcement** layer, a
+categorically different mechanism", and locates the *general* permissibility
+layer in the consumer's tool-execution boundary. So the distinction both seats
+affirmed is one §2 already draws in its own text. The erosion argument was
+answering a restatement, and the restatement was the loose part.
+
+**What this does NOT license.** It is not a finding that the tree needs no
+runtime integrity capability. The specific gap that raised the question — no
+detection of MCP rug-pull or tool-shadowing at any point in a third-party tool's
+lifecycle — is real, is unaddressed, and is carried forward in its own roadmap by
+the same council session's separate verdict. Nothing here says that work is
+unnecessary; it says the work does not require reopening §2.
+
+**Revisit-if** (checkable, mechanism-driven rather than abuse-driven): a
+`pre_tool_use` concern lands in `src/scripts/hook_manifest.yaml` that decides
+permissibility by interpreting content from a **non-governance** tool call — that
+is, one whose target is not this package's own git, kernel-rule, config or
+authorization surface. At that point §2 is being crossed in practice and the
+scope line must be re-decided rather than reinterpreted. The three original
+`revisit-if` triggers (`ADR-123:73-79`) are unaffected and remain the only other
+doors.
+
+One seat wanted this interpretation recorded as mandatory, on the ground that a
+premise nobody has tested leaves the decision's forward binding ambiguous — if
+§2 forbade "any mechanism that denies a tool call" it would already be violated,
+and no reader could tell whether a future change breaches it. That is the reason
+this section exists rather than a blocker line in an archived roadmap.
