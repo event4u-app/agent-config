@@ -77,18 +77,28 @@ describe('generated vs authored', () => {
         expect(isGenerated('agents/roadmaps/archive/INDEX.md.bak')).toBe(false);
     });
 
-    it('classifies the two ratchet baselines as REMEASURED, not generated and not authored', () => {
-        // road-to-merge-hotspot-drawdown 1.2. Both conflict in 7 of 7 open PRs.
-        // A baseline records what a tree MEASURED, so there is no side to take
-        // (authored) and no file to re-render (generated) -- the resolution is
-        // to re-run the measurement on the merged tree.
-        for (const rel of ['src/config/estate-count-budget.json', 'src/config/gate-violation-baselines.json']) {
-            expect(isRemeasured(rel)).toBe(true);
-            // The three buckets are mutually exclusive: a baseline that also read
-            // as generated would be handed a `git checkout --ours` instruction,
-            // which is exactly the pick-a-side that loosens a ratchet.
-            expect(isGenerated(rel)).toBe(false);
-        }
+    it('classifies the stored ratchet baseline as REMEASURED, not generated and not authored', () => {
+        // road-to-merge-hotspot-drawdown 1.2. A baseline records what a tree
+        // MEASURED, so there is no side to take (authored) and no file to
+        // re-render (generated) -- the resolution is to re-run the measurement on
+        // the merged tree.
+        const rel = 'src/config/gate-violation-baselines.json';
+        expect(isRemeasured(rel)).toBe(true);
+        // The three buckets are mutually exclusive: a baseline that also read as
+        // generated would be handed a `git checkout --ours` instruction, which is
+        // exactly the pick-a-side that loosens a ratchet.
+        expect(isGenerated(rel)).toBe(false);
+    });
+
+    it('no longer calls the estate budget a measured baseline — ADR-243', () => {
+        // The file carries POLICY only since ADR-243: `check_estate_count`
+        // measures its floor at the base ref instead of reading a stored number.
+        // "Re-run the measurement" would name a resolution the file no longer
+        // has, and a conflict in it is now an ordinary authored one.
+        const rel = 'src/config/estate-count-budget.json';
+        expect(isRemeasured(rel)).toBe(false);
+        expect(isGenerated(rel)).toBe(false);
+        expect(classifyConflicts([rel]).authored).toEqual([rel]);
     });
 
     it('does NOT claim a neighbouring config file is a measured baseline', () => {
@@ -120,7 +130,9 @@ describe('generated vs authored', () => {
             ['agents/roadmaps-progress.md', 'generated'],
             ['agents/roadmaps/archive/INDEX.md', 'generated'],
             ['agents/roadmaps/archive/index.json', 'generated'],
-            ['src/config/estate-count-budget.json', 'remeasured'],
+            // Was `remeasured` until ADR-243 removed its stored baseline; the
+            // path still conflicts occasionally, now as ordinary policy prose.
+            ['src/config/estate-count-budget.json', 'authored'],
             ['src/config/gate-violation-baselines.json', 'remeasured'],
             ['agents/roadmaps/stubs/README.md', 'authored'],
         ];

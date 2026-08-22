@@ -171,6 +171,20 @@ measured and the per-gate split stays the leading design, gated as above.
 was the maintainer's original question and the answer is unambiguous — the
 committed number *is* the mechanism.
 
+> **Amendment — 2026-08-22 · narrowed for one file (ADR-243).** The last clause
+> is true of `gate-violation-baselines.json` and was over-general. Where a
+> metric is a **function of the tree**, the base ref's own tree carries the one
+> property that made the stored number a ratchet — the change under review
+> cannot rewrite it — so the floor can be MEASURED there instead of stored.
+> `estate-count-budget.json`'s three metrics are such functions, and ADR-243
+> removed its `baseline` accordingly; it now carries policy only and is no
+> longer in `REMEASURED`. Nothing else here changes: this record's block on
+> `merge=union` and every other line-based driver stands unqualified, ADR-243
+> needs no driver, and `gate-violation-baselines.json` — whose counts are not a
+> function of the tree — stays tracked and stays re-measured. The question this
+> alternative answers ("may the ratchet be deleted") was answered correctly;
+> what was too broad was the reason, not the refusal.
+
 ## Evidence
 
 | Claim | Basis |
