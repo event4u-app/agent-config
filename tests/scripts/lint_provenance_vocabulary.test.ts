@@ -419,22 +419,31 @@ describe('lint_provenance_vocabulary — rule 4 over the real corpus', () => {
         expect(entry?.count).toBe(live.length);
     });
 
-    it('detects every record the doctrine names, in the position it names', () => {
-        const found = new Set(live.map((v) => `${v.file.split('/').pop() ?? ''}`));
+    it('still detects the owner-reserved records, which no agent may edit', () => {
+        // These two are owner PURPOSE statements. Their only legitimate fix is
+        // `authority_basis: owner_intent`, which is an owner ruling — so they
+        // stay detected on purpose, and a run that "fixes" them by rewording
+        // the purpose has exceeded its authority.
+        const found = new Set(live.map((v) => v.file.split('/').pop() ?? ''));
         for (const record of [
             'ADR-107-legal-domain-pack-adoption.md',
             'ADR-108-open-source-forever-no-commercial-tier.md',
-            'ADR-122-adversarial-verification-council.md',
-            'ADR-124-embedded-engine-doctrine.md',
-            'ADR-208-dist-agent-src-keep-forever.md',
         ]) {
             expect(found.has(record), `${record} should be detected`).toBe(true);
         }
-        // ADR-208 is the canonical case and must fire in all three positions.
-        const adr208 = live.filter((v) => v.file.includes('ADR-208'));
-        expect(adr208.some((v) => v.msg.includes('`decision:` slug'))).toBe(true);
-        expect(adr208.some((v) => v.msg.includes("record's title"))).toBe(true);
-        expect(adr208.some((v) => v.msg.includes("record's decision"))).toBe(true);
+    });
+
+    it('is silent on the three records 4.3 repaired, in every position', () => {
+        // The other half of the fence, and the one that would rot first: these
+        // three were the agent-executable set and each was repaired by taking
+        // ADR-240 § 6's escape — a reopen condition in place of a permanence
+        // claim. Asserting ABSENCE is what stops the wording from drifting back;
+        // the baseline count alone would not notice a swap of one record for
+        // another at the same total.
+        for (const record of ['ADR-122', 'ADR-124', 'ADR-208']) {
+            const hits = live.filter((v) => v.file.includes(record));
+            expect(hits.map((v) => `${v.file}:${v.line}`), `${record} should be clean`).toEqual([]);
+        }
     });
 
     it('stays silent on every verified describing position in the corpus', () => {
