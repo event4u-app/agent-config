@@ -182,8 +182,14 @@ describe('the CLI CI actually runs', () => {
         }
     });
 
+    // `--untracked-mode`, because that is the mode this repository runs: the
+    // index is not committed, so a clean CI checkout has no file on disk and
+    // the default tracked mode would report it "out of date" against nothing.
+    // The mode's own table still compares a copy that IS present against a
+    // fresh render, so this stays a freshness assertion either way — it is not
+    // weakened by the flag, it is pointed at the state that actually exists.
     it('is up to date against the real archive — a present index is not stale', () => {
-        const r = run(REPO_ROOT, ['--check', '--quiet']);
+        const r = run(REPO_ROOT, ['--check', '--untracked-mode', '--quiet']);
         expect(r.stdout).toMatch(/^scanned: \d+$/m);
         expect(r.status).toBe(0);
     });
@@ -262,7 +268,10 @@ describe('--untracked-mode', () => {
     it('the CLI runs the untracked table against the real repository', () => {
         const r = run(REPO_ROOT, ['--check', '--untracked-mode']);
         expect(r.status).toBe(0);
+        // Both halves are named whether they are present-and-fresh or absent —
+        // the two verdicts differ, and a clean CI checkout produces the second.
         expect(r.stdout).toContain('agents/roadmaps/archive/INDEX.md');
         expect(r.stdout).toContain('agents/roadmaps/archive/index.json');
+        expect(r.stdout).toMatch(/is up to date|is not committed here/);
     });
 });
