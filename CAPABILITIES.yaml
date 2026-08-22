@@ -70,9 +70,9 @@ capability_areas:
       size_class: "small"
       coverage: moderate
       skill_count: 0
-      command_count: 4
+      command_count: 5
       skills: []
-      commands: ["git-commit", "git-commit-in-chunks", "git-pr-create", "git-pr-create-description-only"]
+      commands: ["git-commit", "git-commit-in-chunks", "git-pr-create", "git-pr-create-description-only", "git-pr-merge"]
     - id: history-discipline
       label: "History Discipline"
       description: "Audit/change history done right — audit coverage on declared scopes, cheapest-sufficient tier selection (default row-level audit log; event sourcing only by waiver), audit-table hygiene, privacy + reliability interlocks."
@@ -307,6 +307,17 @@ capability_areas:
       command_count: 8
       skills: ["activation-design", "customer-research", "discovery-interview", "voc-extract"]
       commands: ["knowledge", "knowledge-cross-repo", "knowledge-forget", "knowledge-ingest", "knowledge-list", "research", "research-deep", "research-report"]
+
+runtime_enforcement:
+  # Four states, and no others: detects | warns | blocks | not-enforceable-on-host.
+  # Derived from src/scripts/hook_manifest.yaml (fail_closed + severity), never
+  # hand-written — a manifest row that gained teeth would have to change this one.
+  - hook: injection-scan
+    slot: post_tool_use
+    state: warns
+    default: off
+    blocks_legal_on_any_host: false
+    reason: "fail_closed: false + severity: advisory in hook_manifest.yaml — it reports through the host and cannot refuse, so it warns and never blocks. Ships enabled: false; the detector was measured at 99.00% recall and a 0.85% false-positive rate over internal/bench/corpora/encoding-channels/ before any default flip is even discussable."
 
 gaps:
   []  # every in-use capability area has at least one backing artefact

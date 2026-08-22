@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -84,7 +84,7 @@ saying too much.
 
 ## Phase 1 — Wire the measured layer into the hook, and correct the stale prose
 
-- [ ] **1.1 Import the shipped encoding layer into the scanner.** Add
+- [x] **1.1 Import the shipped encoding layer into the scanner.** Add
       `scan_encoding_findings` from `src/scripts/_lib/retrieval_sanitize.ts` to
       `_scan` in `src/scripts/injection_scan_hook.ts`, so the hook detects the
       15 measured channels — confusables, bidi, variation-selector runs,
@@ -95,14 +95,14 @@ saying too much.
       verify: `grep -c "retrieval_sanitize" src/scripts/injection_scan_hook.ts`
       returns ≥ 1, and `git show HEAD:src/scripts/injection_scan_hook.ts | grep
       -c "retrieval_sanitize"` returned 0 before the change.
-- [ ] **1.2 Do not mutate tool output.** The hook reports; it must not strip.
+- [x] **1.2 Do not mutate tool output.** The hook reports; it must not strip.
       Use `scan_encoding_findings` (documented "Never mutates it",
       `retrieval_sanitize.ts:133`), never `sanitize_text`, which removes bytes.
       A PostToolUse hook that silently rewrites what the agent read would break
       the one property the warn-only posture rests on.
       verify: `grep -c "sanitize_text" src/scripts/injection_scan_hook.ts`
       returns 0.
-- [ ] **1.3 Fixtures against the frozen corpus, not against the detector.**
+- [x] **1.3 Fixtures against the frozen corpus, not against the detector.**
       Add a test that drives the hook over entries drawn from
       `internal/bench/corpora/encoding-channels/positives.jsonl` and
       `negatives.jsonl`, asserting a per-channel detection count and a
@@ -111,7 +111,7 @@ saying too much.
       test reads it, it never regenerates it.
       verify: `npx vitest run tests/hooks/` passes and the new file appears in
       its output.
-- [ ] **1.4 Correct the stale enforcement prose.**
+- [x] **1.4 Correct the stale enforcement prose.**
       `src/rules/untrusted-input-defense.md:72-73` still reads "no mechanical
       backstop exists today; a future content-scanning hook would be the first
       candidate to change this". That hook shipped. Replace those two lines
@@ -126,14 +126,14 @@ saying too much.
 
 ## Phase 2 — Widen the output on the contract that already exists, and say what the tree does
 
-- [ ] **2.1 Extend the warn payload, keeping the contract's shape.**
+- [x] **2.1 Extend the warn payload, keeping the contract's shape.**
       `injection_scan_hook.ts:340` emits `{decision:"warn", reason}`. Add
       `risk_level`, `score`, `detections` (the per-channel findings) and
       `latency_ms`. `decision` and `reason` are what the host reads and stay
       byte-compatible; the new keys are additive.
       verify: `npx vitest run tests/hooks/injection_scan_output_contract.test.ts`
       passes with cases asserting each new key.
-- [ ] **2.2 Number the widened detector against the same frozen corpus.**
+- [x] **2.2 Number the widened detector against the same frozen corpus.**
       Record recall and false-positive rate over
       `internal/bench/corpora/encoding-channels/` for the combined
       four-regex-plus-encoding detector, and its p95 against the
@@ -142,7 +142,7 @@ saying too much.
       reason to loosen a budget.
       verify: `test -f agents/evidence/reports/injection-detector-wiring.md`
       and the file states both numbers.
-- [ ] **2.3 Give `CAPABILITIES.yaml` an honest per-host vocabulary.** Add a
+- [x] **2.3 Give `CAPABILITIES.yaml` an honest per-host vocabulary.** Add a
       row using exactly four states — `detects` / `warns` / `blocks` /
       `not-enforceable-on-host` — for the injection scanner. Today the file
       says nothing, which reads as absence rather than as a warn-only,
@@ -151,7 +151,7 @@ saying too much.
       value for this hook on any host.
       verify: `grep -c "not-enforceable-on-host" CAPABILITIES.yaml` returns
       ≥ 1, and `grep -A6 "injection" CAPABILITIES.yaml` shows no `blocks`.
-- [ ] **2.4 No default flip in this roadmap.**
+- [x] **2.4 No default flip in this roadmap.**
       `src/config/agent-settings.template.yml:1247-1248` stays
       `injection_scan: enabled: false`. Flipping it requires both numbers from
       2.2 inside budget AND a separate decision; a roadmap that ships a
@@ -162,7 +162,7 @@ saying too much.
 
 ## Phase 3 — MCP tool fingerprints (gated, does not start yet)
 
-- [ ] **3.1 Fingerprint store for third-party MCP tool definitions.** Nothing
+- [~] **3.1 Fingerprint store for third-party MCP tool definitions.** Nothing
       in the tree covers rug-pull or tool-shadowing detection at runtime.
       `src/scripts/lint_mcp_config_security.ts` (`:6-19`) reads shipped
       **config** for static smells — inline secrets, `npx -y`, unpinned
@@ -173,7 +173,7 @@ saying too much.
       tool definition and surface a change.
       verify: blocked — see `b-pre-tool-turn-budget`. Do not open this phase
       before that blocker is resolved.
-- [ ] **3.2 Slot placement is a measurement, not a preference.** A rug-pull
+- [~] **3.2 Slot placement is a measurement, not a preference.** A rug-pull
       check that must run before a tool call is `pre_tool_use`, whose CI budget
       is `p95_ci: 175` (`src/config/hook-latency-budget.json`) and whose
       measured readings in this tree are 141–148 ms
@@ -211,6 +211,40 @@ saying too much.
   eroded rationale, and no one notices the second time either.
 - **Resolved when:** one option is recorded at this blocker, and for (a) a
   council record exists under `agents/evidence/council/` naming the verdict.
+- **Disposition — (a) taken as the ROUTE; the verdict is not in, and the blocker
+  stays OPEN. This is AC-7's discharged state, not a gap.**
+
+  The question was authored in full and put to the council. It returned
+  **`0/2 present · INCONCLUSIVE`**: both seats at **50/50** requests, quota
+  exhausted, **$0.00** spent. There was no seat to degrade to, and this is
+  precisely the one blocker where a single-decider substitute would be wrong —
+  its declared owner is **the council**, and its subject is a **recorded
+  decision's scope line**. One agent overruling an accepted ADR with no
+  independent seat is the shape ADR-123's own council warned about.
+
+  So the argument is recorded here rather than resolved, which AC-7 names as
+  sufficient: *"a proposal that was surfaced and left open is a discharged
+  obligation; a proposal that was quietly dropped is not."* The question file is
+  `agents/runtime/council/questions/adr-123-action-boundary.md` — reusable
+  verbatim the moment a seat is available.
+
+  **The argument, so the next reader meets it and not a flat refusal.**
+  ADR-123 §2 reasons in part that this package supervises no tool calls. It
+  does, four times, at `pre_tool_use` — `block-no-verify`
+  (`hook_manifest.yaml:143`), `block-kernel-rule-writes` (`:160`),
+  `block-config-weakening` (`:176`), `block-unauthorized-git` (`:357`). That is
+  a mechanism difference the ADR never weighed.
+
+  **And the two counters to it, stated with the same care**, because a one-sided
+  argument left in a blocker is worse than none: four narrow denials over this
+  package's OWN governance surfaces are not a general firewall that interprets
+  intent from content, which may be the entire content of §2's line; and
+  `pre_tool_use` reads 141–148 ms against a 175 ms cap with **no** per-turn
+  composite ceiling, so even a decision to reopen would not make the slot
+  available. A verdict of "the rationale was loosely worded, the conclusion
+  stands" is a live possibility and is **not** a reopen.
+
+  Nothing in this roadmap was bundled with it, which was the point.
 
 ### blocker: b-pre-tool-turn-budget
 - **Status:** open
@@ -237,6 +271,28 @@ saying too much.
   gate that goes red on code nobody changed.
 - **Resolved when:** one option is recorded at this blocker, and for (a) the
   per-turn composite row exists in `src/config/hook-latency-budget.json`.
+- **Resolution — (a), wait. Phase 3 stays closed and its two steps are `[~]`.**
+
+  Recorded by the executing agent; the council had no seat (both at 50/50,
+  0 of 2 present). This one needs no independent seat to be safe, because (a) is
+  the **conservative** direction: it builds nothing, changes no default, and
+  leaves the tightest slot in the tree untouched. A single decider choosing
+  inaction is not the class of decision that requires a second opinion.
+
+  `pre_tool_use` reads **141–148 ms against a 175 ms cap**, and that cap was
+  itself re-derived after the gate flapped on unchanged code. Adding a per-call
+  concern into that headroom with no registered per-turn number is how the flap
+  returns — and the roadmap that owns the ceiling states in as many words that
+  there is none today, *deliberately*.
+
+  Option (b) — a `post_tool_use` or session-start fingerprint check that detects
+  a mutated tool definition **after** first use — stays available and is honest
+  about what it gives up. It becomes the right answer if the wait proves
+  indefinite; the trigger is that roadmap's step 4.2 registering the composite
+  row, which is checkable rather than a matter of patience.
+
+  Both Phase-3 steps carry `verify: blocked` rather than a runnable command, so
+  they cannot be marked done by anything that runs. `[~]` records the park.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -250,27 +306,102 @@ saying too much.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `src/scripts/injection_scan_hook.ts` imports
+- [x] AC-1 — `src/scripts/injection_scan_hook.ts` imports
       `scan_encoding_findings` from `src/scripts/_lib/retrieval_sanitize.ts`
       and imports nothing that mutates the scanned text, so the hook detects
       the 15 measured channels without rewriting what the agent read.
-- [ ] AC-2 — A test file drives the hook over the frozen corpus at
+- [x] AC-2 — A test file drives the hook over the frozen corpus at
       `internal/bench/corpora/encoding-channels/`, and both corpus files still
       match the sha256 entries in their `manifest.json`.
-- [ ] AC-3 — No line in `src/rules/untrusted-input-defense.md` states that a
+- [x] AC-3 — No line in `src/rules/untrusted-input-defense.md` states that a
       content-scanning backstop does not yet exist, and its `enforced_by`
       field still reads `none`.
-- [ ] AC-4 — The warn payload carries `risk_level`, `score`, `detections` and
+- [x] AC-4 — The warn payload carries `risk_level`, `score`, `detections` and
       `latency_ms` alongside the unchanged `decision` and `reason`, with the
       output-contract test asserting each.
-- [ ] AC-5 — `agents/evidence/reports/injection-detector-wiring.md` states the
+- [x] AC-5 — `agents/evidence/reports/injection-detector-wiring.md` states the
       widened detector's recall, its false-positive rate over the frozen
       corpus, and its p95 against the `any_hook_event` budget.
-- [ ] AC-6 — `CAPABILITIES.yaml` describes the injection scanner in the
+- [x] AC-6 — `CAPABILITIES.yaml` describes the injection scanner in the
       four-state vocabulary and never as `blocks`, and
       `src/config/agent-settings.template.yml` still ships
       `injection_scan: enabled: false`.
-- [ ] AC-7 — Both blockers carry a recorded option, or Phase 3 is untouched
+- [x] AC-7 — Both blockers carry a recorded option, or Phase 3 is untouched
       and `b-adr-123-action-boundary` is still `open` with its argument stated
       — a proposal that was surfaced and left open is a discharged obligation;
       a proposal that was quietly dropped is not.
+
+## Progress note — Phases 1–2 shipped, Phase 3 parked, NOT archived
+
+**Deliberately not archived, and the reason is a routing rule rather than
+unfinished work.** Phases 1 and 2 are complete (15/15 of their steps); Phase 3's
+two steps are `[~]`, and `b-adr-123-action-boundary` is **open** by design —
+AC-7 names "surfaced and left open" as the discharged state.
+
+Archiving here would bury a parked phase and an open proposal, which is the
+**keep-in-archive** disposition — owner-reserved under the deferred-item
+preservation test, and the council that would otherwise route it had **0 of 2
+seats** (both at 50/50 requests). So the roadmap stays on the active side, where
+a reader can still find it. `active_roadmaps` is unchanged for exactly that
+reason.
+
+### The correction that changed the work: one import gets 11 channels, not 15
+
+The roadmap's Phase 1.1 premise was that importing `scan_encoding_findings`
+gives the hook "the 15 measured channels". **Measured: it gives 11.**
+
+`scan_encoding_findings` alone: **72.33 %** recall (217/300), with
+`deprecated-format`, `private-use-area`, `control-char` and `invisible-filler`
+at **0 of 20 each**. Those four are the module's **strip-only invisible layer** —
+verified both ways, `sanitize_text` changed 20/20 for each while the reporting
+API reported 0/20.
+
+**And the published 99.00 % is the STRIPPING pipeline's number**
+(`encoding-floor-measurement.md:22`). The reporting half had never been measured
+on its own, which is why "import the measured layer and get 15 channels" read as
+true. A warn-only hook may not strip, so the gap was structural.
+
+Closed with a new **additive** export, `scan_invisible_findings`, reusing the
+same predicates `sanitize_text` uses rather than copies — so a channel cannot
+become strippable without becoming reportable in the same edit. Eight existing
+call sites untouched. Result: **99.00 %, zero blind channels.**
+
+The zero-channel assertion is what caught it. An aggregate 95 % floor would have
+hidden four dead channels behind eleven live ones, which is the failure mode the
+whole roadmap exists to prevent one layer up.
+
+### The false positives, named
+
+**3 of 353 = 0.85 %**, and all three are the **pre-existing** `injection-phrase`
+regex firing on this repository's own security prose, which quotes *"ignore
+previous instructions"* while explaining that such text is DATA. The encoding
+layer keeps its 0.00 %.
+
+Not fixed here: narrowing the phrase regex is a detection-surface change this
+corpus cannot validate, and its manifest note forbids tuning against it. The
+honest disposition is the number, in a report, on a hook that ships **off**.
+
+### Latency is settled and not close
+
+p95 **0.0079 ms** against `any_hook_event`'s `p95_ci: 250`. p50 0.0048, p99
+0.0143, max 0.0787 over 653 entries after warm-up. This detector is not what
+would put a hook near its budget.
+
+### What did NOT change, on purpose
+
+`enforced_by: none` in `untrusted-input-defense` — a hook that cannot refuse
+does not enforce, and the field was never a candidate. `blocks` is not a legal
+state for this hook on any host, and `CAPABILITIES.yaml`'s new
+`runtime_enforcement` row **derives** its value from `hook_manifest.yaml`'s
+`fail_closed: false` + `severity: advisory` rather than hand-writing it, so a
+manifest row that gained teeth would have to change that row too.
+`injection_scan: enabled: false` stands. Both numbers clear their bars, which
+makes a flip *discussable*, not decided.
+
+### Two premises about the tree that were already true
+
+`CAPABILITIES.yaml` carried **no** prompt-injection claim to remove — its single
+`injection` match was a skill name in a list. The constructive half survived as
+2.3. And 1.4's stale prose was real: the rule said no mechanical backstop
+existed and that a future hook would be the first candidate to change
+`enforced_by`. The first half is now false; the second was always wrong.
