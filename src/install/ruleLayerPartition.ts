@@ -63,6 +63,21 @@ export interface PartitionRulesOptions {
     readonly userHome?: string;
     /** Where the kept-full notice goes. Silent when omitted. */
     readonly announce?: (message: string) => void;
+    /**
+     * Override the partition-active decision instead of reading `installed.lock`.
+     *
+     * Split out for the reason `partitionEligibility.ts` states about its own
+     * `personaWithheldFor`: "so the decision is testable in BOTH directions". A
+     * test over the un-injected path can only assert whatever the machine happens
+     * to be — and this one bit differs between a maintainer checkout (installed,
+     * so active) and CI (nothing installed, so inactive), which made the first
+     * version of `rule_partition_per_host.test.ts` green locally and red on every
+     * CI shard. That is the environment-dependent gate this whole change exists to
+     * remove, reproduced in its own test suite.
+     *
+     * Production callers omit it.
+     */
+    readonly active?: boolean;
 }
 
 /**
@@ -75,7 +90,8 @@ export interface PartitionRulesOptions {
  */
 export function partitionRulesForDir(opts: PartitionRulesOptions): string[] {
     const { toolDir, rules, projectRoot, rulesSource } = opts;
-    if (!partitionActive(projectRoot)) {
+    const active = opts.active ?? partitionActive(projectRoot);
+    if (!active) {
         return [...rules];
     }
     const toolId = toolIdForProjectRuleDir(toolDir);

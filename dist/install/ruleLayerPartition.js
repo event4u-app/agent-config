@@ -58,7 +58,8 @@ import { hostLayerCarries, toolIdForProjectRuleDir } from './globalRuleLayers.js
  */
 export function partitionRulesForDir(opts) {
     const { toolDir, rules, projectRoot, rulesSource } = opts;
-    if (!partitionActive(projectRoot)) {
+    const active = opts.active ?? partitionActive(projectRoot);
+    if (!active) {
         return [...rules];
     }
     const toolId = toolIdForProjectRuleDir(toolDir);
