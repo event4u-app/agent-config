@@ -1,0 +1,57 @@
+{
+  "$comment": "Fixtures for stripCarrierUnicode (detect_ai_tells.ts). Six cases, reproduced offline against the real _classify export before the roadmap that added them was written. Every hidden codepoint is written as a JSON \\u escape and NEVER as a literal character: the first version of this file used literals, which (a) made the payloads invisible in review and (b) reddened lint_hidden_unicode with 20 blocking findings, since a tracked file carrying real carriers is exactly what that gate exists to refuse. JSON.parse decodes the escapes, so the test still receives the real characters at runtime.",
+  "recorded_limitation": {
+    "what": "The complex-script preservation cases are a CURATED BLOCK SET, not a Unicode Script-property lookup.",
+    "tested_blocks": [
+      "Arabic/Persian (U+0600-U+06FF)",
+      "emoji ZWJ sequences (U+1F400-U+1FAFF joined by U+200D)"
+    ],
+    "untested": "Indic (Devanagari, Bengali, Tamil, ...), Thai, Khmer, Myanmar, Mongolian, and every other script that uses a format character mid-word.",
+    "why_this_is_acceptable": "The predicate errs toward PRESERVATION: a carrier is removed only when both neighbours are ASCII, so a format character inside a non-ASCII word is preserved whatever its script. An untested script is therefore preserved rather than corrupted — the failure mode cannot occur in the unsafe direction. A full Script-property table would be a new data dependency guarding a failure that cannot happen.",
+    "what_would_change_this": "A script whose format characters legitimately appear between two ASCII characters. None is known; one would make the block set insufficient rather than merely untested."
+  },
+  "cases": [
+    {
+      "name": "ASCII-flanked zero-width space is removed",
+      "input": "the\u200bword",
+      "expect_out": "theword",
+      "expect_removed": 1,
+      "expect_preserved": 0
+    },
+    {
+      "name": "ASCII-flanked right-to-left override is removed",
+      "input": "safe\u202efile.txt",
+      "expect_out": "safefile.txt",
+      "expect_removed": 1,
+      "expect_preserved": 0
+    },
+    {
+      "name": "ASCII-flanked Unicode-tag codepoint is removed",
+      "input": "a\udb40\udc41b",
+      "expect_out": "ab",
+      "expect_removed": 1,
+      "expect_preserved": 0
+    },
+    {
+      "name": "emoji ZWJ sequence survives byte-identically",
+      "input": "👨\u200d💻 ships it",
+      "expect_out": "👨\u200d💻 ships it",
+      "expect_removed": 0,
+      "expect_preserved": 1
+    },
+    {
+      "name": "Persian ZWNJ survives byte-identically",
+      "input": "می\u200cخواهم",
+      "expect_out": "می\u200cخواهم",
+      "expect_removed": 0,
+      "expect_preserved": 1
+    },
+    {
+      "name": "clean prose is a no-op, and the strip is idempotent",
+      "input": "Nothing hidden here — just prose with an em dash.",
+      "expect_out": "Nothing hidden here — just prose with an em dash.",
+      "expect_removed": 0,
+      "expect_preserved": 0
+    }
+  ]
+}
