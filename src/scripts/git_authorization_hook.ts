@@ -153,6 +153,19 @@ export type GitOp =
   | "branch"
   | "pr-create"
   | "pr-merge"
+  /**
+   * Enabling auto-merge. Its OWN op, not a plain merge and not nothing.
+   *
+   * Irreversible in the same sense a merge is: it commits the outcome to a
+   * condition the agent does not control, and the merge then happens with
+   * nobody in the loop. Before this split, `gh pr merge --auto` classified
+   * identically to a plain merge (the pattern is `\bgh\s+pr\s+merge\b`, and
+   * `--auto` is invisible to it), and the GraphQL mutation classified as
+   * NOTHING — `ghApiWrite()` needs a REST path and a write method, and
+   * `gh api graphql -f query='mutation{enablePullRequestAutoMerge...}'` has
+   * neither.
+   */
+  | "pr-merge-auto"
   | "tag"
   | "release"
   | "publish";
@@ -163,6 +176,7 @@ export const ALL_OPS: readonly GitOp[] = [
   "branch",
   "pr-create",
   "pr-merge",
+  "pr-merge-auto",
   "tag",
   "release",
   "publish",
@@ -185,8 +199,29 @@ const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     op: "pr-create",
     re: /\b(erstell(e|en)?|mach(e|en)?|leg(e|en)?\s+an|(er)?(ö|oe)ffne|open|create|raise|aufmachen)\b[^.\n]{0,30}\b(pr|pull[- ]request)\b|\b(pr|pull[- ]request)\b[^.\n]{0,20}\b(erstellen|aufmachen|anlegen|(er)?(ö|oe)ffnen)\b/i,
   },
-  // `merge` as an ACTION, never as the noun in "merge conflict" / "merge commit".
-  { op: "pr-merge", re: /\b(merge|merg(e|en|st|t)|zusammenf(ü|ue)hren|reinmergen)\b(?!\s*[- ]?(conflict|konflikt|commit|base|queue|state|status))/i },
+  // `merge` as an ACTION, never as the noun in "merge conflict" / "merge commit",
+  // and never under a NEGATION.
+  //
+  // The negation half closes a measured defect: probed directly against
+  // `classifyAuthorization`, "nicht mergen", "don't merge this" and
+  // "never auto-merge" each returned ["pr-merge"] — a prompt saying DO NOT
+  // MERGE authorized a merge. The noun-sense lookahead was never a negator.
+  //
+  // The lookBEHIND is line-scoped by `[^.!?\n]` on purpose, the same scoping
+  // `turn_end_gate_hook.ts` uses for its own negation exclusion (`:330`) and
+  // its negated-claim window (`:490-493`). A sentence boundary ends a
+  // negation's reach: "Do not push. Merge PR #12." is two instructions, and a
+  // guard that let the first suppress the second would silently stop
+  // authorizing merges the user DID order — the failure mode that is worse
+  // than the defect, because nothing happens and nothing says why.
+  //
+  // Reusing that vocabulary rather than inventing a third is deliberate: two
+  // negation vocabularies in one tree drift, and the drift is invisible until
+  // a prompt lands in the gap between them.
+  {
+    op: "pr-merge",
+    re: /(?<!\b(nicht|nichts|kein(e|en|em|er|es)?|niemals|nie|no|not|dont|don't|never|without|ohne)\b[^.!?\n]{0,30})\b(merge|merg(e|en|st|t)|zusammenf(ü|ue)hren|reinmergen)\b(?!\s*[- ]?(conflict|konflikt|commit|base|queue|state|status))/i,
+  },
   // A tag is an ACTION here — bare "Tag" is the German word for day, and
   // "Version" is an ordinary noun. Both authorized a BLOCK op before this.
   { op: "tag", re: /\b(tagge(n|st)?|tag\s+(setzen|anlegen|erstellen)|git\s+tag|--tags|--follow-tags)\b/i },
@@ -267,10 +302,20 @@ export function isAffirmative(prose: string): boolean {
 }
 
 /** Executable commands a user may paste, mapped to the op they authorize. */
-const PASTED_COMMANDS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
+const PASTED_COMMANDS: ReadonlyArray<{ op: GitOp | null; re: RegExp }> = [
   { op: "publish", re: /\bnpm\s+publish\b/i },
   { op: "tag", re: /\bgit\s+push\s+[^\n]*--tags\b|\bgit\s+tag\s+-a\b/i },
   { op: "release", re: /\bgh\s+release\s+create\b/i },
+  // ORDER IS LOAD-BEARING: the auto variants precede the plain merge, because
+  // the first match wins and `gh pr merge 12 --auto` also matches the plain
+  // pattern. Same rule the block-side table states for `git push --tags`.
+  //
+  // The DE-ESCALATING forms come first of all, and they map to no op at all:
+  // `--disable-auto` and `disablePullRequestAutoMerge` turn the capability OFF.
+  // Requiring merge authorization to switch auto-merge off is a live deadlock,
+  // and it is why this cannot ship after the split rather than with it.
+  { op: null, re: /\bgh\s+pr\s+merge\b[^\n]*--disable-auto\b|\bdisablePullRequestAutoMerge\b/i },
+  { op: "pr-merge-auto", re: /\bgh\s+pr\s+merge\b[^\n]*--auto\b|\benablePullRequestAutoMerge\b/i },
   { op: "pr-merge", re: /\bgh\s+pr\s+merge\b/i },
   { op: "pr-create", re: /\bgh\s+pr\s+create\b/i },
   { op: "push", re: /\bgit\s+push\b/i },
@@ -355,10 +400,15 @@ export function classifyAuthorization(prompt: string): {
     }
     for (const line of _commandLines(fence)) {
       for (const { op, re } of PASTED_COMMANDS) {
-        if (re.test(line)) {
+        if (!re.test(line)) continue;
+        // FIRST MATCH WINS, and the table is ordered most-specific-first. A
+        // de-escalating form carries `op: null` — it matched, so no later
+        // pattern may claim the line, and it authorizes nothing.
+        if (op !== null) {
           authorized.add(op);
           evidence[op] = `pasted command: "${line.slice(0, 80)}"`;
         }
+        break;
       }
     }
   }

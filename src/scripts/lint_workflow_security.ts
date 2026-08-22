@@ -17,8 +17,17 @@
  *            permissions: write-all;
  *            npm install / npm ci without --ignore-scripts in a
  *            pull_request_target workflow.
- *   MEDIUM — third-party actions pinned by mutable tag instead of full SHA
- *            (first-party actions/* are skipped).
+ *   MEDIUM — actions pinned by mutable tag instead of full SHA;
+ *            an actions/checkout step that keeps its credential.
+ *
+ * The MEDIUM tier's original wording read "third-party actions … (first-party
+ * actions/* are skipped)". Corrected 2026-08-22: the first-party exemption is
+ * GONE (see the removal note below), so the parenthetical documented an
+ * exemption that no longer exists — a false claim in a tracked artefact, which
+ * is the defect class the change that removed it was written to repair. The
+ * TIERS are untouched; only the description of what MEDIUM covers now matches
+ * the code. Re-tiering the locked model is a separate decision, recorded as
+ * unresolved in agents/evidence/analysis/workflow-security-net-degraded-decision.md.
  *
  * Script-injection detection (regex-based) is intentionally deferred — it
  * requires an AST-aware pass to avoid false positives on quoted / escaped
@@ -53,8 +62,23 @@ function _setAllowlistPathForTest(p: string): void {
 // Triggers that expose the repository token to untrusted pull-request context
 const DANGEROUS_TRIGGERS: ReadonlySet<string> = new Set(['pull_request_target', 'workflow_run']);
 
-// First-party action owners — mutable tags on these are acceptable
-const FIRST_PARTY_OWNERS: ReadonlySet<string> = new Set(['actions', 'github']);
+// REMOVED 2026-08-22 (road-to-ci-supply-chain-integrity 1.4). This was
+// `FIRST_PARTY_OWNERS = {'actions', 'github'}` and it exempted first-party
+// owners from the mutable-tag rule. The premise — "mutable tags on these are
+// acceptable" — is the one a supply-chain rule cannot hold: a first-party tag
+// is still a mutable pointer, and `actions/checkout@v7` moving under the repo
+// is the same class of event as any other owner's tag moving.
+//
+// What it cost, measured before removal: 100 of the 112 unpinned references in
+// this tree were first-party, so the gate saw 12 of 112 defects and reported
+// green on the rest. An exemption sized like that is not an exemption, it is
+// the rule being off.
+//
+// The removal ships in the SAME change as the 112 pins, and in that order:
+// pin first, then lift, so the transition is red-then-green inside one
+// reviewable diff. Reverting the pins locally must make this gate exit
+// non-zero — that is the assertion that the gate can still see the defect,
+// which a green-only check cannot make.
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -262,13 +286,33 @@ function _mutable_third_party_actions(doc: JsonObject, _workflow_name: string): 
             if (!uses || !uses.includes('@')) {
                 continue;
             }
-            const at = uses.indexOf('@');
-            const action_ref = uses.slice(0, at);
-            const pin = uses.slice(at + 1);
-            const owner = action_ref.includes('/') ? (action_ref.split('/')[0] as string) : action_ref;
-            if (FIRST_PARTY_OWNERS.has(owner.toLowerCase())) {
-                continue;
+            // `actions/checkout` leaves the repository token in the runner's git
+            // config for the rest of the job unless told not to. Measured before
+            // this rule existed: 0 of 50 checkouts in this tree set the flag, so
+            // every job carried a usable credential it did not need.
+            //
+            // `true` is a legitimate answer — two jobs here push — so the rule
+            // asks for the key to be PRESENT, not for a particular value. An
+            // explicit `true` is a reviewable decision; a missing key is an
+            // ambient one, and only the second is a finding.
+            if (uses.slice(0, uses.indexOf('@')).toLowerCase() === 'actions/checkout') {
+                const withObj = _asObject(stepObj['with'] as JsonValue);
+                const hasKey =
+                    withObj !== null &&
+                    Object.prototype.hasOwnProperty.call(withObj, 'persist-credentials');
+                if (!hasKey) {
+                    findings.push({
+                        severity: 'MEDIUM',
+                        rule: 'persist-credentials',
+                        detail:
+                            'actions/checkout without an explicit persist-credentials — ' +
+                            'the repository token stays in the runner git config for the rest of the job',
+                        location: `job:${job_name}/step:${i + 1}`,
+                    });
+                }
             }
+            const at = uses.indexOf('@');
+            const pin = uses.slice(at + 1);
             // A full SHA pin is 40 hex chars; anything else is mutable
             if (pin.length === 40 && [...pin.toLowerCase()].every((c) => '0123456789abcdef'.includes(c))) {
                 continue;
@@ -650,7 +694,6 @@ export {
     ALLOWLIST_PATH,
     ALLOWLIST_CAP,
     DANGEROUS_TRIGGERS,
-    FIRST_PARTY_OWNERS,
     _setWorkflowsDirForTest,
     _setAllowlistPathForTest,
     load_allowlist,

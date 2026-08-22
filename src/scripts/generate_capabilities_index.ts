@@ -302,7 +302,7 @@ function _runtime_enforcement_lines(): string[] {
         '    blocks_legal_on_any_host: false',
         '    reason: ' +
             _scalar(
-                'fail_closed: false + severity: advisory in hook_manifest.yaml — it reports through the host and cannot refuse, so it warns and never blocks. Ships enabled: false; the detector was measured at 99.00% recall and a 0.85% false-positive rate over internal/bench/corpora/encoding-channels/ before any default flip is even discussable.',
+                'fail_closed: false + severity: advisory in hook_manifest.yaml — it reports through the host and cannot refuse, so it warns and never blocks. Ships enabled: false; the detector was measured at 99.00% recall and a 0.85% false-positive rate over internal/bench/corpora/encoding-channels/ before any default flip is even discussable.<!-- claim:injection-scan-corpus-rates -->',
             ),
     ];
 }

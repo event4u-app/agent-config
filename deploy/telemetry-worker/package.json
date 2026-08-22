@@ -10,8 +10,8 @@
         "test": "node --import tsx --test tests/*.test.mjs"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^5.20260731.1",
-        "tsx": "^4.23.1",
+        "@cloudflare/workers-types": "^5.20260819.1",
+        "tsx": "^4.23.12",
         "typescript": "^7.0.2"
     },
     "publishConfig": {

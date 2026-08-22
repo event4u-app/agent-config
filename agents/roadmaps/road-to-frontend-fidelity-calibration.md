@@ -11,6 +11,11 @@ execution:
 > superset of the earlier three and is what this roadmap is built from. Every
 > `file:line` below was re-verified against HEAD on 2026-08-22; the source
 > pinned a v14.6.0 tree and several of its line numbers had drifted.
+>
+> **Phase 9 merged in.** Phase 9 arrived via `/analyze:inbox` on 2026-08-22 from
+> a dropped inbox roadmap (bundle: `ENC1:NgLuS2TsKFfTMquCWiotCstSx1LRuo5uOQTKUhaqqlbH7zuJlj2dceHNTYDHx9cU+15GBb26H3ckGP6G1VFnB3ALaLG50vjXFxbUyS6YdlhSPvodiSU28bTranG/NJC712AmDHAbsXY8vtDIf0L4s0V3HXaA1nmttP8JnfBc`) — four
+> verified survivors plus two one-line items. What was dropped, and why, is
+> recorded at Phase 9 rather than here.
 
 ## Goal
 
@@ -288,6 +293,98 @@ Runs in parallel with Phase 3; depends only on Phase 1.
       verify: `./scripts-run src/scripts/skill_linter` is green and the persona
       count is unchanged, or the deprecation candidate is named in this file.
 
+## Phase 9 — Scroll-driven narrative surfaces
+
+Depends only on Phase 1. The render-dependent half of 9.4 additionally needs a
+page-reaching capture primitive; that is not a new obstacle and gets no blocker
+here — `agents/roadmaps/road-to-frontend-power.md:334` (step E3.2) resolves
+`b-page-capture-primitive` as option (a) and is the resolver this phase
+references.
+
+**Why the rest of that source is not landing.** The bundle it came from is a
+16-phase, 96-step plan carrying no `verify:` line on any step, no `Source:`, and
+no `estate_offset_exempt`, so it cannot pay its own estate charge; four of its
+claims were already false at its own drafting SHA, and one step "respects" a
+convergence ceiling that Phase 6 of *this* roadmap has yet to build, which is a
+sequencing error rather than a dependency. Its renderer phases would have this
+package own a scroll conductor, a video loader and a WebGL renderer, colliding
+with the "No app runtime" line in `CLAUDE.md`. What survived verification is the
+six steps below and nothing else.
+
+**Dropped, one line each.** Its Phases 3, 5 and 6 (normalized scroll conductor,
+video scrub renderer, WebGL renderer) are that app-runtime collision and are
+dropped whole. Its Phase 8 is dropped whole because
+`agents/roadmaps/road-to-chained-clip-continuity-and-provider-truth.md` already
+owns that exact scope and landed in the same run. Its "no Three.js guidance
+exists" premise is false — `src/skills/design-intelligence/data/stacks/threejs.csv`
+carries 54 lines (one header, 53 rows) across 13 `Category` values. Its "no
+scrub patterns exist" premise is false —
+`src/skills/design-intelligence/data/motion.csv:7` carries
+`scroll, pin, scrub, storytelling, scrollytelling` with a pinned scrub snippet,
+and `:14-15` add parallax scrub.
+
+- [ ] **9.1 A story-beat ledger and a style-bible schema, hosted in `wireframe`.**
+      The one cleanly unmet gap:
+      `grep -rilE 'beat ledger|story ledger|style bible' src/` returns zero paths
+      today, verified 2026-08-22. Land the schema under `src/skills/wireframe/`,
+      the skill that already owns the low-fidelity artefact, and the guidance row
+      under `src/skills/design-intelligence/data/landing.csv`. Do not create a
+      skill to hold a schema.
+      verify: that same grep returns at least one path under
+      `src/skills/wireframe/`, the schema parses via
+      `npx tsx -e "JSON.parse(require('fs').readFileSync('<path>','utf8'))"`, and
+      `ls src/skills | wc -l` is unchanged.
+- [ ] **9.2 Renderer selection is a third row in the `fe-design` mode table, not
+      a new owner.** `src/skills/fe-design/SKILL.md:20-23` is a two-row table
+      naming who owns the UI write; the renderer axis becomes a third row there.
+      Grounding routes through machinery that already exists —
+      `src/skills/corpus-grounding/scripts/decision_engine.ts:269`
+      (`search_stack`), whose stack corpus already carries `threejs.csv` among 16
+      stacks — and the axis is recorded beside the existing register read at
+      `src/skills/design-intelligence/references/context-and-registers.md:28`.
+      `fe-design` stays the owner and no second frontend executor is declared.
+      verify: `grep -c 'search_stack' src/skills/fe-design/SKILL.md` is non-zero,
+      that mode table has exactly three body rows, and `ls src/skills | wc -l` is
+      unchanged.
+- [ ] **9.3 `prefers-reduced-motion` becomes a presentation mode, not
+      `animation: none`.** It appears in 11 files under `src/` today — verified
+      2026-08-22; the source claimed 18 — and in every one of them as a check,
+      including `src/ui/tokens.css`, `src/scripts/lint_design_quality.ts` and
+      `src/skills/design-review/SKILL.md:74`. `src/skills/accessibility-auditor/`
+      names it zero times. Extend that skill and `design-review` with what the
+      surface presents *instead of* motion, which is the half no file carries.
+      verify: `grep -ric 'reduced.motion' src/skills/accessibility-auditor/` is
+      non-zero where it is zero today, and
+      `grep -rl 'prefers-reduced-motion' src/ | wc -l` is at least 12.
+- [ ] **9.4 A scroll evidence artefact the existing review consumes.**
+      `src/skills/design-review/references/verification-automation.md:9-52`
+      captures screenshots and diffs them by eye, emitting no machine-readable
+      artefact. Extend that file with the artefact schema — scroll position, beat
+      id, and the element states asserted at that position — and have
+      `design-review` read it. Build no parallel verifier beside it.
+      verify: `grep -c 'scroll' src/skills/design-review/references/verification-automation.md`
+      is non-zero, `grep -c 'visually diff the screenshots'` on the same file
+      still reports 1, and `ls src/skills/design-review/references | wc -l` is
+      unchanged.
+- [ ] **9.5 Scroll-storytelling trigger fixtures go into the existing evals
+      file.** `src/skills/fe-design/evals/triggers.json` is the only file in that
+      directory and returns zero `scroll` hits today. The should-trigger and
+      should-not-trigger rows land there. This is a fixture addition — not a rule
+      and not a phase of its own.
+      verify: `ls src/skills/fe-design/evals | wc -l` still reports 1, and
+      `grep -c scroll src/skills/fe-design/evals/triggers.json` is non-zero.
+- [ ] **9.6 Anti-generic art direction is one slop row plus one corpus row.**
+      One row in `src/scripts/design_slop_rules.ts` on the `copy` engine — the
+      engine `slop-cp1-em-dash` and `slop-cp2-buzzword` already use — because a
+      CSS engine cannot see subject matter: the detectable surface is the brief's
+      own wording, never the render. Plus one guidance row in
+      `src/skills/design-intelligence/data/stacks/threejs.csv` under an existing
+      `Category` value. `slop-c3-dark-glow` (`:549`) already covers the CSS
+      neon-glow tell and is not duplicated. This is never a rule.
+      verify: `grep -c 'id: "slop-' src/scripts/design_slop_rules.ts` is exactly
+      one higher than its pre-state, `wc -l` on `threejs.csv` reports 55, and
+      `ls src/rules | wc -l` is unchanged.
+
 ## Blockers
 
 ### blocker: b-page-capture-primitive
@@ -358,6 +455,7 @@ question is answered before the code is written, not after.
 | 3 | Every interesting dimension turns out to need a rendered page | implementation | The blocker below already gates one fixture class; if it gates all of them the roadmap has a contract and no measurement | Phase 1 classifies each row as measurable / blocked / unmeasurable before any detector is written, so the shape is known at Phase 1 rather than Phase 3 | Phase 1 — Inventory what is measured versus what is asserted |
 | 4 | The wireframe discriminator over-fires | product | A maturity axis read too eagerly downgrades a finished comp to a structure mandate, which is a fidelity regression wearing a fix's clothes | The near-miss fixture is authored before the behaviour (0.1) and pinned in the routing matrix (0.3); the rule's own § Routing already requires this | Phase 0 — Separate artefact maturity from artefact mandate |
 | 5 | Value-level provenance restates the chain that already ships | implementation | Duplicating `design-fidelity-mechanics.md:181-241` splits one contract across two places and they drift | 2.2 adds a section beside the existing block and links it; the verify asserts the pre-state block is untouched | Phase 2 — A fidelity contract with per-value provenance |
+| 6 | The narrative schema ships and no review reads it | implementation | 9.1 lands a beat ledger and 9.4 lands an evidence artefact; if `design-review` never consumes either, this phase adds two shapes and no check — the same producer-without-consumer defect as W4, inverted | 9.4 extends the file the review already loads rather than adding a verifier beside it, and its verify asserts the existing diff step is still present | Phase 9 — Scroll-driven narrative surfaces |
 
 ## Acceptance Criteria
 
@@ -380,3 +478,10 @@ question is answered before the code is written, not after.
       floor remains in neither skill.
 - [ ] AC-7 — Rendered visual quality has exactly one named owner, or the
       absence of one is recorded as a deliberate null with its reason.
+- [ ] AC-8 — Scroll-driven narrative work has a beat/style schema and a
+      machine-readable scroll evidence artefact that the existing `design-review`
+      flow reads, with no new skill, no new verifier and no new rule added to
+      carry them.
+- [ ] AC-9 — Renderer selection is a row in the `fe-design` mode table and
+      `fe-design` is still the owner of the ad-hoc UI write. No second frontend
+      executor exists.

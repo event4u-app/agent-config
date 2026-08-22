@@ -412,6 +412,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-29
 
+### claim: injection-scan-corpus-rates
+- claim: The `injection-scan` post_tool_use detector measures 99.00% recall (297/300) and a 0.85% false-positive rate (3/353) over the frozen corpus at `internal/bench/corpora/encoding-channels/`. Both figures are properties of THAT corpus and not of tool output in the wild — the evidence report says so itself: web fetches and MCP responses are a different distribution, so the 0.85% predicts nothing about a repository whose tool output is largely prose about prompt injection. Distinct from `encoding-floor-text-layer-only`, which measures the stripping pipeline at a 0.00% false-positive rate over a different scope; the number here belongs to the reporting half, which had never been measured separately before. The detector ships `enabled: false` and warn-only, so neither figure is a claim that anything is blocked.
+- kind: quant
+- evidence: agents/evidence/reports/injection-detector-wiring.md#The numbers
+- status: backed
+- last_verified: 2026-08-22
+
 ### claim: governance-aggregation-refusal-invariance
 - claim: The council aggregation cannot be steered against a refusal. Pre-registered spike S0.1 measured that it WAS classification-steerable — `w_total` counted only members whose stance line parsed, so a refusal phrased as prose left the quorum and made consensus easier: steering margin 0.6667 (margin -0.25 parsed vs +0.4167 unparsed) with the outcome flipping from no-consensus to Adopt. High severity because the direction was the dangerous one. Fixed in the same change: a member who responded counts toward the quorum whether or not its stance parsed, and the post-fix steering margin is exactly 0. The divergence signal is an observation and is asserted never to reach the scoring path. No observed attack prompted this; the expected outcome was a null and it was pre-registered as such before the run.
 - kind: quant

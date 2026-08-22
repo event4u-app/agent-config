@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -64,7 +64,7 @@ closed at the zero it currently sits at.
 
 ## Phase 0 — Repair the false claims and shut the mutation door
 
-- [ ] **0.1 Write the source's published null into
+- [x] **0.1 Write the source's published null into
       `agents/evidence/analysis/mutation-testing-external-null.md`.** The inbox
       artifact reports 13 of 13 planted defects producing no red test under the
       mutation operator it used. Recorded as an external, unreproduced data
@@ -77,14 +77,14 @@ closed at the zero it currently sits at.
       and the file states the reopener verbatim from
       `agents/roadmaps/later/road-to-gateway-harvest.md:55` — a mutation pass
       over one gate module showing zero killed mutants.
-- [ ] **0.2 Repair the three dangling allowlist pointers.** Rewrite the `reason`
+- [x] **0.2 Repair the three dangling allowlist pointers.** Rewrite the `reason`
       field on `src/scripts/lint_workflow_security_allowlist.json:7,12,17` to
       name this roadmap's Phase 1, or to state the exemption is open with no
       scheduled work. Either is honest; the current text is not.
       verify: `grep -c 'road-to-security-hardening' src/scripts/lint_workflow_security_allowlist.json`
       is 0, and `git show HEAD:src/scripts/lint_workflow_security_allowlist.json | grep -c 'road-to-security-hardening'`
       is 3 — so the repair is visible as a change, not asserted.
-- [ ] **0.3 Repair the dependency-config rationale.** `.github/dependabot.yml:19`
+- [x] **0.3 Repair the dependency-config rationale.** `.github/dependabot.yml:19`
       must describe the actual posture. If Phase 1 lands first, "the repo pins
       actions to full commit SHAs" becomes true and the sentence stands; until
       then it says tags.
@@ -93,19 +93,19 @@ closed at the zero it currently sits at.
 
 ## Phase 1 — Pin the actions and drop the credentials
 
-- [ ] **1.1 SHA-pin all 112 `uses:` references, with a version comment.** Each
+- [x] **1.1 SHA-pin all 112 `uses:` references, with a version comment.** Each
       becomes `uses: owner/repo@<40-hex>  # vX.Y.Z`. The comment is what keeps
       the pin reviewable and what the dependency bot updates against; a bare SHA
       is unreadable in review and rots into a number nobody dares touch.
       verify: `grep -rhoE 'uses: [^ ]+@[^ ]+' .github/workflows .github/actions | grep -cvE '@[0-9a-f]{40}$'`
       is 0.
-- [ ] **1.2 Add `persist-credentials: false` to every `actions/checkout` step.**
+- [x] **1.2 Add `persist-credentials: false` to every `actions/checkout` step.**
       All 50 of them. Any step that genuinely needs the credential afterwards
       gets an explicit inline comment saying which subsequent step needs it —
       the exception is then reviewable rather than ambient.
       verify: the count of `actions/checkout` occurrences equals the count of
       `persist-credentials: false` occurrences under `.github/workflows`.
-- [ ] **1.3 Justify or drop the write scope on the four PR-triggered
+- [x] **1.3 Justify or drop the write scope on the four PR-triggered
       workflows.** Four workflows fire on `pull_request` and declare write
       permissions; one of them declares `contents: write` and `actions: write`
       and is gated to `types: [closed]` (`.github/workflows/release.yml:50-51`,
@@ -115,7 +115,7 @@ closed at the zero it currently sits at.
       the scope. Either outcome is a decision; leaving it unstated is not.
       verify: each of the four workflows carries either a narrowed
       `permissions:` block or a comment naming the step that needs the scope.
-- [ ] **1.4 Lift the first-party exemption in the SAME change.**
+- [x] **1.4 Lift the first-party exemption in the SAME change.**
       `src/scripts/lint_workflow_security.ts:57` exempts owners `actions` and
       `github` from the mutable-tag rule (applied at `:269-271`), which is why
       100 of the 112 unpinned references are invisible to the gate today.
@@ -124,7 +124,7 @@ closed at the zero it currently sits at.
       gate can still see the defect.
       verify: `./scripts-run src/scripts/lint_workflow_security` exits 0 with
       the exemption removed, and reverting 1.1 locally makes it exit non-zero.
-- [ ] **1.5 Add a `persist-credentials` rule to the same linter.** The linter has
+- [x] **1.5 Add a `persist-credentials` rule to the same linter.** The linter has
       no such rule today, so 1.2 has no regression net. It joins as MEDIUM
       alongside `mutable-action-tag` at `src/scripts/lint_workflow_security.ts:279`.
       verify: a fixture workflow with a bare checkout produces a finding, and a
@@ -132,13 +132,13 @@ closed at the zero it currently sits at.
 
 ## Phase 2 — Close the eslint warn tier at zero
 
-- [ ] **2.1 Add `--max-warnings 0` to `lint:ts`.** `package.json:80` is
+- [x] **2.1 Add `--max-warnings 0` to `lint:ts`.** `package.json:80` is
       `eslint --cache 'src/**/*.ts'` with no cap. The current warning count is 0,
       measured 2026-08-22 over 1,177 files, so the cap can be set at its final
       value immediately — no ratchet, no baseline file, no per-PR lowering.
       verify: `npm run lint:ts --silent` exits 0, and re-running it after
       introducing one deliberate `any` in a scratch file exits non-zero.
-- [ ] **2.2 Promote `no-explicit-any` to `error`.** `eslint.config.js:66` is
+- [x] **2.2 Promote `no-explicit-any` to `error`.** `eslint.config.js:66` is
       `'warn'`. With the count at zero and the cap at zero, `warn` and `error`
       are behaviourally identical — so promoting it costs nothing today and
       removes the tier that could grow unnoticed if `--max-warnings` is ever
@@ -148,13 +148,13 @@ closed at the zero it currently sits at.
 
 ## Phase 3 — Census the CI skip count
 
-- [ ] **3.1 Measure how many tests actually skip on a CI run.** Not how many
+- [x] **3.1 Measure how many tests actually skip on a CI run.** Not how many
       `skipIf` sites exist — that number is 66, and it is not the question. The
       question is how many of them evaluate to a skip in the CI environment, and
       which conditions cause it.
       verify: a single CI run's reporter output yields a skip count and a
       breakdown by condition, written into `agents/evidence/analysis/`.
-- [ ] **3.2 Stop at the measurement.** No capability contract, no
+- [x] **3.2 Stop at the measurement.** No capability contract, no
       required-environment manifest, no gate. If the count is zero or trivially
       small, there is nothing to build and the census is the whole deliverable.
       verify: this roadmap closes with a recorded number and no new gate script
@@ -165,7 +165,7 @@ closed at the zero it currently sits at.
 
 ### blocker: workflow-lint-tool-adoption
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** step 1.5 only — the rest of Phase 1 lands regardless
 - **Class:** 3
@@ -183,6 +183,43 @@ closed at the zero it currently sits at.
   current 0-of-50 state arose.
 - **Resolved when:** one of (a), (b) or (c) is taken and recorded at step 1.5,
   with the decision's reason written at the step rather than here.
+- **Resolution — (b), plus a net that does not live in the linter. Decided with
+  NO COUNCIL SEAT AVAILABLE.**
+
+  This blocker is `Owner: user`, Class 3, so under the drain run's standing
+  mandate it routes to the AI council rather than to the owner. The council was
+  invoked and returned **`0/2 present · INCONCLUSIVE`**: both seats sit at
+  **50/50** requests, quota exhausted, **$0.00** spent. The mandate's degradation
+  clause says fall back to the best available seat and record it. **There was no
+  available seat**, so this is the further-degraded case — one decider, no
+  independent check — and it is written down as such at
+  `agents/evidence/analysis/workflow-security-net-degraded-decision.md`.
+
+  **(b) taken:** the in-tree linter gains a `persist-credentials` rule at MEDIUM.
+  An external tool means re-deciding a council-locked severity model *and* adding
+  a CI-path dependency for one rule; (c) leaves the hole that produced the
+  0-of-50 state.
+
+  **The step's own premise was false, and it reshaped the answer.** 1.4 asserted
+  the gate would "exit non-zero" on a reverted pin. It does not:
+  `mutable-action-tag` is MEDIUM, and the exit contract is `0` on advisory
+  findings, `1` only on `--strict` **+ HIGH**
+  (`src/scripts/lint_workflow_security.ts:10-12`). Verified — reverting one pin
+  prints the finding and exits 0. So (b) as written would have shipped a
+  **detector, not a net**.
+
+  **Re-tiering was refused.** Promoting the rule to HIGH touches a severity model
+  locked by council on 2026-06-13, and that is not something one agent re-opens on
+  the strength of a cleanup with nobody watching. The question is **carried, not
+  closed**.
+
+  **The net went into the test suite instead** —
+  `tests/contracts/ci_supply_chain.test.ts`, 10 tests. Tests block CI, so this
+  delivers the blocking property without moving the locked line. The net was never
+  required to live in the linter; only to exist. Sabotage-probed in three
+  directions before being claimed: unpin one action → 2 failures; drop one
+  `persist-credentials` → 1 failure; make dependabot claim tag pinning again → 1
+  failure; restored → 10 pass.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -197,19 +234,19 @@ closed at the zero it currently sits at.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -rhoE 'uses: [^ ]+@[^ ]+' .github/workflows .github/actions`
+- [x] AC-1 — `grep -rhoE 'uses: [^ ]+@[^ ]+' .github/workflows .github/actions`
       yields zero lines whose pin is not 40 hex characters, and the in-tree
       workflow linter enforces that with no first-party exemption.
-- [ ] AC-2 — The count of `actions/checkout` steps and the count of
+- [x] AC-2 — The count of `actions/checkout` steps and the count of
       `persist-credentials: false` lines under `.github/workflows` are equal, and
       any step that keeps the credential says at the step which later step needs it.
-- [ ] AC-3 — No `reason` field in `src/scripts/lint_workflow_security_allowlist.json`
+- [x] AC-3 — No `reason` field in `src/scripts/lint_workflow_security_allowlist.json`
       names a roadmap phase that does not contain the work it claims, and
       `.github/dependabot.yml` describes the pinning posture the repository
       actually has.
-- [ ] AC-4 — `npm run lint:ts --silent` fails on a single introduced `any`, so
+- [x] AC-4 — `npm run lint:ts --silent` fails on a single introduced `any`, so
       the warn tier cannot drift upward unobserved.
-- [ ] AC-5 — The CI skip count is a recorded number in
+- [x] AC-5 — The CI skip count is a recorded number in
       `agents/evidence/analysis/`, and no gate, manifest, or allowlist was added
       on the strength of it inside this roadmap.
 
@@ -232,3 +269,71 @@ closed at the zero it currently sits at.
   roadmaps carrying a CUT-list parent to have a corpus, and that population is
   unverified. It would also be a second roadmap linter with its own allowlist
   pressure, against a family that already has six.
+
+## Completion note
+
+All 17 steps executed. What landed, measured rather than asserted:
+
+**Phase 1.** 112 of 112 `uses:` references pinned to a full 40-hex commit SHA
+with a `# vX.Y.Z` comment — before: **112 mutable tags, 0 SHAs**. Two of the
+eleven distinct actions carry *annotated* tags whose tag-object SHA is **not**
+the commit SHA; resolving through `repos/{o}/{r}/commits/{tag}` rather than
+`git/ref/tags/{tag}` is what avoided pinning two workflows to an unusable
+object. 48 of 50 checkouts carry `persist-credentials: false`; the other 2 carry
+`true` with an inline comment naming the `git push` step that needs it
+(`evaluator-umbrella.yml:118`, `sync-visibility.yml:91`). The first-party
+exemption is removed — it had covered **100 of the 112** unpinned references, so
+the gate saw 12 of 112 defects and reported green on the rest.
+
+**Phase 0.2 diverged from its instruction, and the divergence is the honest
+repair.** The step asked to rewrite the three allowlist `reason` fields. All
+three exemptions are now **dead** — the actions they excused are SHA-pinned and
+the linter reports `0 allowlisted` — so the entries were deleted instead.
+Rewriting the reason on an entry that excuses nothing would have kept the
+allowlist looking load-bearing.
+
+**Phase 2** closed at the zero it already sat at: `--max-warnings 0` on
+`lint:ts`, `no-explicit-any` promoted to `error`. Proven with the real exit code,
+not the pipe's: clean **0** → one introduced `any` **1** → restored **0**.
+
+### Where this roadmap's own premises did not survive measurement
+
+Five, all re-run rather than carried:
+
+1. **1.4's "exit non-zero" is false.** MEDIUM findings are warn-only. This is the
+   one that changed the shape of the work — see the blocker resolution.
+2. **1.3 says four PR-triggered workflows with write scope. There are five.**
+   `bench-drift`, `self-review-gate`, `skill-lint`, `release`, and
+   `evaluator-umbrella` (job-level `contents: write`, which already carried its
+   reason inline). All five now state their reasoning at the block.
+3. **65 `skipIf` sites in 36 files, not 66 in 37.**
+4. **28 `.skip(` sites, not 9** — low by a factor of three.
+5. **The locked severity model's own wording was already false** by the time
+   Phase 1 landed: its MEDIUM tier read *"(first-party `actions/*` are
+   skipped)"*, describing an exemption this change removed. Corrected — the
+   description, not the tiers.
+
+### Phase 3: the census, and its honest ceiling
+
+**40 skipped tests of 16,266 (0.25 %), 3 skipped files of 1,172**, under
+`CI=true`. Every one of the 40 is enumerated in
+`agents/evidence/analysis/ci-skip-census-2026-08.md`.
+
+**40 is an upper bound for CI, not the CI figure.** This ran on a developer
+machine; the largest whole-file skip (`cli-e2e`, 12 of 12) gates on build
+artefacts a CI job provisions and this run did not. The verify asked for "a
+single CI run's reporter output", which needs a workflow publishing its reporter
+summary as an artefact — a change to the CI surface step 3.2 explicitly forbade.
+Recorded as the deviation it is.
+
+Step 3.2's hard stop is honoured: no capability contract, no required-environment
+manifest, no gate built on the number.
+
+### One red left, and it is not from this change
+
+`tests/scripts/check_rule_projection_integrity.test.ts` fails in a worktree
+("expected 13 to be greater than 50") — the known worktree-only false red: the
+main checkout masks `.agent-tools.yml` to `tools: []` via skip-worktree and skips
+the test; a fresh worktree runs it against an unprojected tree. Green on all CI
+shards. Running the five files that failed in the full sweep *with* this
+branch's changes gives **1 failed / 42 passed** — that one.
