@@ -853,21 +853,22 @@ requirements traceability while their current owners exist.
 | Runtime evidence composition | partial / stack-specific | unify here |
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
 
-| Rank | Risk | Failure mode | Mitigation |
-|---|---|---|---|
-| 1 | Assurance theater | More green badges create more confidence without catching more defects | frozen corpus, false-verified metric, ablations before enforcement |
-| 2 | Duplicate AC mechanisms | umbrella reimplements TDD/review/traceability | explicit ownership table + no-dup acceptance criteria |
-| 3 | Tool sprawl | AC installs fashionable tools beside project-native equivalents | capability-first registry + prefer-existing rule |
-| 4 | Mutation cargo cult | universal MSI threshold becomes the goal | changed-surface probes, survivor findings, no universal core threshold |
-| 5 | Cost explosion | every change triggers browser + mutation + multiple reviewers | R0-R4 risk selection + measured incremental value |
-| 6 | Correlated agent errors | multiple agents repeat the same mistaken premise | independence metadata + deterministic oracles + spec-first only if measured |
-| 7 | Legacy lockout | old repos can never become "agent-ready" | changed-surface ratchet + explicit grandfathered debt |
-| 8 | Silent degradation | unavailable tool is skipped while final result still says verified | degraded verdict is schema-visible; no silent skip |
-| 9 | Readiness score gaming | teams optimize a scalar | vector is source of truth; critical capability floors override score |
-| 10 | Risk classifier drift | semantic model over-classifies or misses sensitive changes | deterministic signals first + benchmarked ambiguity path |
-| 11 | Stale evidence | capability existed last month but command/config is broken now | evidence freshness + proof command + re-discovery triggers |
-| 12 | Human role ambiguity | "high assurance" is read as automatic merge authority | merge/risk-acceptance remains separate user-governance concern |
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Assurance theater | product | More green badges create more confidence without catching more defects | frozen corpus, false-verified metric, ablations before enforcement | Phase 8 — evaluation before stronger enforcement |
+| 2 | Duplicate AC mechanisms | implementation | umbrella reimplements TDD/review/traceability | explicit ownership table + no-dup acceptance criteria | Phase 0 — inventory and overlap contract |
+| 3 | Tool sprawl | implementation | AC installs fashionable tools beside project-native equivalents | capability-first registry + prefer-existing rule | Phase 3 — capability bootstrap |
+| 4 | Mutation cargo cult | product | universal MSI threshold becomes the goal | changed-surface probes, survivor findings, no universal core threshold | P5 — test sensitivity beats raw coverage |
+| 5 | Cost explosion | product | every change triggers browser + mutation + multiple reviewers | R0-R4 risk selection + measured incremental value | Phase 2 — risk-to-assurance policy engine |
+| 6 | Correlated agent errors | implementation | multiple agents repeat the same mistaken premise | independence metadata + deterministic oracles + spec-first only if measured | P6 — independent verification is risk-conditioned |
+| 7 | Legacy lockout | product | old repos can never become "agent-ready" | changed-surface ratchet + explicit grandfathered debt | P4 — changed-surface ratchet for legacy |
+| 8 | Silent degradation | implementation | unavailable tool is skipped while final result still says verified | degraded verdict is schema-visible; no silent skip | P8 — no silent degradation |
+| 9 | Readiness score gaming | product | teams optimize a scalar | vector is source of truth; critical capability floors override score | P2 — readiness is a vector |
+| 10 | Risk classifier drift | implementation | semantic model over-classifies or misses sensitive changes | deterministic signals first + benchmarked ambiguity path | Phase 2 — risk-to-assurance policy engine |
+| 11 | Stale evidence | implementation | capability existed last month but command/config is broken now | evidence freshness + proof command + re-discovery triggers | Evidence contract |
+| 12 | Human role ambiguity | product | "high assurance" is read as automatic merge authority | merge/risk-acceptance remains separate user-governance concern | Phase 6 — assurance verdict and autonomy ceiling |
 
 ## Acceptance Criteria
 
