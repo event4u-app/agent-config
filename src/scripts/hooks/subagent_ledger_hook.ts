@@ -112,7 +112,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { validateResponse } from '../_lib/subagent_response.js';
+import { countContractFields, validateResponse } from '../_lib/subagent_response.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 
@@ -197,7 +197,7 @@ function extractParentId(payload: JsonObject, ownId: string | null): string | nu
     return null;
 }
 
-export type EnvelopeParse = 'ok' | 'fail' | 'no_message' | 'no_envelope';
+export type EnvelopeParse = 'ok' | 'fail' | 'foreign_object' | 'no_message' | 'no_envelope';
 
 /**
  * The retired fifth value. Records written before 2026-08-20 carry `absent`,
@@ -212,16 +212,49 @@ export type EnvelopeParse = 'ok' | 'fail' | 'no_message' | 'no_envelope';
  */
 export const RETIRED_ENVELOPE_PARSE = 'absent';
 
+/**
+ * READING THE HISTORICAL WINDOW — the caveat, not a version field.
+ *
+ * A verdict records conformance to the shape that was canonical **when the row
+ * was written**, and that shape was reconciled on 2026-08-22
+ * (`subagent-response-contract.md` § The canonical shape). Before that date one
+ * contract existed in three mutually inconsistent states: the spawn contract's
+ * rule (f), a narrower JSON injected by `team_dispatch.ts:297`, and the
+ * validator's five required fields. Nothing recorded which one a given row was
+ * judged against, because until the reconciliation there was no single answer.
+ *
+ * So a row from the 2026-08 window must NOT be read as conforming — or as
+ * failing to conform — to the reconciled shape. What it says is narrower: the
+ * classifier at the time either found a `validateResponse`-passing object or did
+ * not. As it happens the two agree for every row in that window, because the
+ * count is **0 of 1,845** and a rate of zero is the same number under either
+ * reading — but that is a property of this particular window, not of the
+ * comparison, and the next window will not have it.
+ *
+ * Deliberately a comment and not a `contract_version` field. Adding one would
+ * be honest going forward and would still say nothing about the rows already on
+ * disk, which are the rows this caveat exists for. A council seat asked for the
+ * field; it is the right next step and it is not this one, because a field
+ * stamped from today cannot retro-tag yesterday.
+ */
+
 export interface ParseVerdict {
     verdict: EnvelopeParse;
     /** Count of validator errors. A COUNT — the messages never leave this function. */
     error_count: number;
+    /**
+     * How many of the five REQUIRED contract fields the judged candidate
+     * carried. Recorded beside the error count so the `fail` / `foreign_object`
+     * boundary is auditable from the row itself rather than re-derived from a
+     * probe — which is how the split's own premise had to be established.
+     */
+    field_hits: number;
 }
 
 /**
  * Classify a subagent's final message against the response-envelope contract.
  *
- * Four outcomes, and every boundary between them separates two defects with
+ * Five outcomes, and every boundary between them separates two defects with
  * two different fixes:
  *
  *   - `no_message` — the host delivered no `last_assistant_message` at all
@@ -232,8 +265,21 @@ export interface ParseVerdict {
  *     the overwhelmingly common case: subagents answer in prose. It is not a
  *     channel failure, and a fallback keyed on it would fire on nearly every
  *     dispatch.
- *   - `fail` — an object arrived and did not satisfy `validateResponse`.
+ *   - `fail` — an object arrived, carried at least one required contract
+ *     field, and did not satisfy `validateResponse`. A near-miss: someone
+ *     aimed at the envelope and got it wrong.
+ *   - `foreign_object` — an object arrived and carried NONE of the required
+ *     fields. A fenced tool call, or a prose-embedded JSON blob: it never
+ *     aimed at the envelope at all.
  *   - `ok` — an object arrived and validated.
+ *
+ * The last two used to be one value, `fail`, and the collapse had the same
+ * shape as the `absent` one below it. Re-derived over the live month ledger
+ * (7,282 rows, 6,315 stops) the all-time `fail` histogram was `{5: 27}` —
+ * every recorded `fail` carried `error_count: 5`, which is exactly "zero
+ * required fields present". So the bucket a threshold would be read off held
+ * no contract attempts at all, and could neither rise nor fall for the reason
+ * its name suggests.
  *
  * The first two used to be one value, `absent`. Over the first measured window
  * that collapse read 25 of 25 `absent` — including the #58109 control arm that
@@ -244,21 +290,37 @@ export interface ParseVerdict {
  * column, and Phase 2's fallback condition, expressible at all.
  */
 export function classifyEnvelope(message: string | null): ParseVerdict {
-    if (message === null || !message.trim()) return { verdict: 'no_message', error_count: 0 };
+    if (message === null || !message.trim()) {
+        return { verdict: 'no_message', error_count: 0, field_hits: 0 };
+    }
 
     const candidates = _jsonObjectCandidates(message);
-    if (candidates.length === 0) return { verdict: 'no_envelope', error_count: 0 };
+    if (candidates.length === 0) return { verdict: 'no_envelope', error_count: 0, field_hits: 0 };
 
     // A message may carry several object-shaped spans. The envelope is the one
-    // that validates, so a `fail` is only reported once every candidate has
-    // been tried — otherwise a stray leading `{}` would mask a valid envelope.
+    // that validates, so a failure verdict is only reported once every
+    // candidate has been tried — otherwise a stray leading `{}` would mask a
+    // valid envelope.
+    //
+    // Among failures the MOST contract-shaped candidate wins, not the first
+    // one met. First-match was safe while every failure was one bucket; with
+    // the near-miss split it is not, because a leading `{"note":1}` would
+    // report `foreign_object` for a message that also carried a real attempt —
+    // the same masking defect one register down.
     let best: ParseVerdict | null = null;
     for (const candidate of candidates) {
         const result = validateResponse(candidate);
-        if (result.valid) return { verdict: 'ok', error_count: 0 };
-        if (best === null) best = { verdict: 'fail', error_count: result.errors.length };
+        const fieldHits = countContractFields(candidate);
+        if (result.valid) return { verdict: 'ok', error_count: 0, field_hits: fieldHits };
+        if (best === null || fieldHits > best.field_hits) {
+            best = {
+                verdict: fieldHits === 0 ? 'foreign_object' : 'fail',
+                error_count: result.errors.length,
+                field_hits: fieldHits,
+            };
+        }
     }
-    return best ?? { verdict: 'no_envelope', error_count: 0 };
+    return best ?? { verdict: 'no_envelope', error_count: 0, field_hits: 0 };
 }
 
 /**
@@ -685,6 +747,9 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
         start_seen: rec !== null,
         envelope_parse: parse.verdict,
         envelope_error_count: parse.error_count,
+        // Beside the count, never instead of it: the count says how wrong the
+        // candidate was, this says whether it was aimed at the envelope.
+        envelope_field_hits: parse.field_hits,
         concurrent_open: countOpen(root),
     });
 }

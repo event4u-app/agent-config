@@ -31,6 +31,86 @@ orchestrator synthesises and re-verifies.
   chars (~3k tokens against a measured ~251k spawn floor). Constants + checks:
   `src/scripts/_lib/subagent_response.ts`.
 
+## The canonical shape, and the three-way divergence it resolves
+
+**Reconciled 2026-08-22** (`road-to-subagent-envelope-adoption` Phase 0, AI
+council 2/2 convergent). One contract existed in three mutually inconsistent
+states, and the ledger's `0 valid envelopes of 1,845 stops` could not be cited
+as evidence about any one of them, because a reader had to assume which.
+
+```
+THE BODY SCHEMA IS `validateResponse`'S FIVE REQUIRED FIELDS. PRODUCERS CONVERGE
+ON IT; THE VALIDATOR IS NOT WIDENED TO THE UNION OF WHAT PRODUCERS HAPPEN TO SEND.
+```
+
+Direction chosen: **narrow the contract to what the validator already accepts**,
+not widen the validator. Widening makes every future divergence legal by
+construction, which is how one contract came to have three states.
+
+### Per-field divergence, one row per field
+
+| Field | spawn-contract (f) | `team_dispatch` model JSON (`:297`) | `subagent_response.ts` validator | `dispatch_r2_reviewer` |
+|---|---|---|---|---|
+| `summary` | — (not a field clause) | present | **required** | silent |
+| `handoff` | — | **absent** | **required** | silent |
+| `confidence` | — | **absent** | **required** (`low\|medium\|high`) | silent |
+| `findings` | — | present, `{severity, evidence, suggested_fix, location}` | **required**, `{title, evidence_refs?, mutating?}` | silent |
+| `risks` | — | **absent** | **required** | silent |
+| `artifact_paths` | — | absent | optional | silent |
+| `assumptions` | — | absent | optional | silent |
+| `status` | — | present, 3 model values | **not a body field** | silent |
+
+An empty cell is a finding, not a pass. `dispatch_r2_reviewer` is silent on
+every row — 1,292 lines with **0** hits for `envelope`, `DONE_WITH_CONCERNS`,
+`response.contract` or `response_contract`.
+
+### Four boundaries, because "the contract" was conflating them
+
+The council's sharpest correction: schema, lifecycle state, delivery and
+classification were being treated as one thing.
+
+1. **Body schema** — the five required fields above, plus the two optional ones.
+2. **Lifecycle frame** — `DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` from a
+   model, plus `BLOCKED` orchestrator-side only (`team_dispatch.ts:391`'s
+   `_MODEL_STATUSES` is the three-value set a model may send). **Not a body
+   field**, which is why narrowing the body does not delete it.
+3. **Delivery protocol** — serialize once, persist that exact serialization,
+   then emit the identical value as the final text-only message. This is
+   spawn-contract rule (f), and it **survives the narrowing**: its two clauses
+   are delivery invariants, not fields, so they were never candidates for the
+   validator's five.
+4. **Classification** — validate and record against an explicit contract and
+   classifier version.
+
+### Who owns the delivery protocol — and it is not the model
+
+`team_dispatch.ts:280` asks a **read-only** model with no command or filesystem
+access to return its review JSON. That model **cannot** satisfy "disk copy
+written first", so rule (f) is an impossible prompt obligation for this
+producer. The trusted dispatcher owns it: parse the producer's response, project
+it into the canonical body, add the lifecycle frame, write the durable copy,
+then emit the identical serialized value.
+
+Recorded rather than implemented here — the projection adapter is a mechanism
+this roadmap's Phase 1 does not ship, and saying so is cheaper than a contract
+clause nobody can satisfy.
+
+### The validator is not the reason the rate is zero
+
+Checked directly on 2026-08-22, because "zero valid envelopes over 1,845 stops"
+has three possible causes and they need separating: a validator that rejects
+valid input, producers that do not emit the fields, or a shape nobody can
+produce.
+
+`validateResponse` was run by hand against a minimal envelope
+(`{summary, handoff, confidence, findings: [], risks: []}`) and a rich one
+(with `findings[{title, evidence_refs, mutating}]` and `artifact_paths`).
+**Both validate.** The `team_dispatch` model shape fails on four of five.
+
+So the contract is implementable and the validator is correct; the rate is zero
+because producers do not emit the shape. That removes the precondition one
+council seat set before any narrowing.
+
 ## Durable copy — the envelope on disk before the message
 
 ```
