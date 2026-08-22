@@ -51,6 +51,7 @@ import {
     roadmapPath,
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
+import { findQuotaParked, type QuotaParkedMarker } from './_lib/quota_parked.js';
 import {
     LIVE_SPAWN_REFUSAL,
     planResume,
@@ -80,6 +81,7 @@ export type Disposition =
     | 'no-roadmap'
     | 'roadmap-unreadable'
     | 'complete'
+    | 'quota-parked'
     | 'budget-exhausted'
     | 'relaunchable';
 
@@ -246,6 +248,21 @@ export function classify(
             reason: 'no open steps remain — the run finished, the session just never said so',
         };
     }
+    // Before the relaunch cap, and the order is load-bearing in one direction
+    // only: a parked run that has also spent its relaunches should still read
+    // as parked, because "waiting for a reset" is the cause and "spent three
+    // relaunches" is a consequence of it. Reported the other way round, an
+    // operator sees a run that failed repeatedly rather than one that keeps
+    // meeting the same wall.
+    const parked = findQuotaParked(repoRoot, rec.session_id);
+    if (parked !== null) {
+        return {
+            ...base,
+            disposition: 'quota-parked',
+            open_steps: counts.open,
+            reason: quotaParkedReason(parked, counts.open),
+        };
+    }
     if (base.relaunches >= MAX_RELAUNCHES_PER_RUN) {
         return {
             ...base,
@@ -262,6 +279,23 @@ export function classify(
         open_steps: counts.open,
         reason: `${counts.open} open step(s) remain and the session is gone`,
     };
+}
+
+/**
+ * The one sentence a human acts on for a parked run.
+ *
+ * It states the reset time is unknown rather than omitting it, and rather than
+ * guessing an interval. There is no reset-time parser and there will not be one
+ * until a verified error string exists to pin a fixture against — see
+ * `later/road-to-billing-cliff-detection.md`. An omitted unknown reads as "no
+ * wait needed"; a guessed interval reads as a fact.
+ */
+export function quotaParkedReason(m: QuotaParkedMarker, open: number): string {
+    return (
+        `plan quota exhausted on ${m.providers.join(', ')} since ${m.parked_at} — ` +
+        `${open} open step(s) remain; the run is waiting, not broken. ` +
+        `Reset time unknown (no parser: no verified error string yet).`
+    );
 }
 
 export interface ScanOptions {
@@ -434,10 +468,21 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
 
     const dead = candidates.filter((c) => c.disposition !== 'alive');
     const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');
+    const quotaParked = candidates.filter((c) => c.disposition === 'quota-parked');
     lines.push(
         `  sessions: ${candidates.length} registered · ${candidates.length - dead.length} alive · ` +
-            `${relaunchable.length} relaunchable`,
+            `${relaunchable.length} relaunchable` +
+            (quotaParked.length > 0 ? ` · ${quotaParked.length} quota-parked` : ''),
     );
+    // Named on its own line, not folded into the relaunchable count, because
+    // the two call for opposite responses: a relaunchable run wants a session,
+    // a parked one wants time. Suppressed at zero so the ordinary digest does
+    // not carry a line about a state nothing is in.
+    for (const c of quotaParked) {
+        lines.push(
+            `  parked:   ${c.roadmap ?? '-'} — ${c.reason}`,
+        );
+    }
 
     const budget = readBudget(repoRoot, now);
     lines.push(
