@@ -328,6 +328,28 @@ describe('parse_census — column-position-agnostic', () => {
         expect(parse_census(md).get('lint_gamma')).toBeNull();
     });
 
+    it('a row with no extractable root is NOT censused — three absences, not two', () => {
+        // `undefined` (not censused), `null` (censused, read nothing) and a
+        // number are three different states, and the disagreement check acts on
+        // the first two in opposite ways: `undefined` is skipped, `null` is a
+        // stale row. A gate that resolves its corpus dynamically — spawning
+        // `git diff` or `npm pack` — has no static root to extract, so the
+        // census prints `_(none extracted)_` and `**0**` for it. Reading that as
+        // `null` reported every such gate as stale the moment its canary
+        // correctly went red; reading it as 0 did the same. It is neither.
+        const dyn = [
+            '| Gate | Root | Kind | Units | Declared by |',
+            '|---|---|---|---:|---|',
+            '| `lint_dynamic` | _(none extracted)_ | absent | **0** | `—` |',
+            '| `lint_real_zero` | `src/e` | corpus | 0 | literal |',
+        ].join('\n');
+        const m = parse_census(dyn);
+        expect(m.has('lint_dynamic'), 'un-extractable must not be censused at all').toBe(false);
+        // The counter-test: a genuine zero over a REAL root still reports 0, or
+        // this change would have silenced the dead-scope signal it must keep.
+        expect(m.get('lint_real_zero')).toBe(0);
+    });
+
     it('a census with a different column order still parses', () => {
         const reordered = [
             '| Units | Gate | Status |',
