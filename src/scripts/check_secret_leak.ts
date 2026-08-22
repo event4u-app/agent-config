@@ -38,6 +38,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runSelfTest } from './_lib/gate_self_test.js';
 import { scanText, type SecretFinding } from './_lib/secret_detector.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -107,8 +108,34 @@ function isAllowed(rel: string, lineno: number, allow: readonly AllowEntry[]): b
     return allow.some((a) => a.file === rel && (a.line === null || a.line === lineno));
 }
 
-function isExcluded(rel: string): boolean {
-    return DEFAULT_EXCLUDE.some((rx) => rx.test(rel));
+/** `dist/` — excluded everywhere EXCEPT the pack scope. See `isExcluded`. */
+const DIST_EXCLUDE: RegExp = /(^|\/)dist(\/|$)/;
+
+function isExcluded(rel: string, mode: Mode = 'diff'): boolean {
+    return DEFAULT_EXCLUDE.some((rx) => {
+        // The `dist/` exclusion is the SECOND reason this gate could not see
+        // what ships, and it fires regardless of mode. Mode enumeration was the
+        // first: every git-backed mode walks the git tree, and `dist/cli/**` is
+        // gitignored while `dist/` is a `files[]` root. Adding the pack scope
+        // alone fixed nothing measurable — the payload resolved and then this
+        // filter threw away exactly the paths the scope exists to reach.
+        // Verified: a key-shaped string planted at `dist/zzcanary/leak.txt`
+        // (`git check-ignore -v` names `.gitignore:206`, and `npm pack` ships
+        // it) was missed by the new mode until this branch existed.
+        //
+        // Kept for every OTHER mode, because there the exclusion is right:
+        // `dist/` is a byte-for-byte projection of `src/`, which is scanned at
+        // its own path, so scanning the copy adds no coverage. In the pack scope
+        // the question is different — not "is this content somewhere else in the
+        // repo" but "does this content SHIP" — and for an untracked shipped path
+        // there is no other path to have scanned it at.
+        //
+        // The cost is a duplicate finding for a TRACKED dist file. That is not a
+        // false positive: a projection is byte-identical to its source, so a
+        // finding there is a finding in `src/` too.
+        if (mode === 'pack' && rx.source === DIST_EXCLUDE.source) return false;
+        return rx.test(rel);
+    });
 }
 
 /** Fast binary sniff — a NUL byte in the first 8 KiB means "not text". */
@@ -132,7 +159,48 @@ function gitLines(root: string, args: readonly string[]): string[] {
     return res.stdout.split('\n').filter((l) => l.trim() !== '');
 }
 
-export type Mode = 'diff' | 'all' | 'explicit';
+export type Mode = 'diff' | 'all' | 'explicit' | 'pack';
+
+/**
+ * `pack` exists because the other three cannot see a large part of what ships.
+ *
+ * Every one of them enumerates the GIT tree — `git diff`, `git ls-files`, or an
+ * explicit path list a caller derived from one. `dist/` is a `files[]` root and
+ * `dist/cli/**` is gitignored (`.gitignore:206` is `/dist/*`, and
+ * `git check-ignore -v dist/cli/agent-config.js` names that line), so those
+ * paths are shipped and untracked at the same time and this gate could not
+ * reach them **by construction** — not by misconfiguration.
+ *
+ * Additive on purpose: no existing caller changes behaviour, and the three
+ * git-backed modes are untouched.
+ */
+export function packPayloadFiles(root: string): string[] {
+    const out = spawnSync('npm', ['pack', '--dry-run', '--ignore-scripts', '--json'], {
+        cwd: root,
+        encoding: 'utf-8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    if (out.status !== 0 || typeof out.stdout !== 'string') {
+        // Returning [] would hand the scope assertion an empty set, which it
+        // already treats as a gate that could not run — the right verdict, and
+        // reached without inventing a second failure path.
+        return [];
+    }
+    const i = out.stdout.indexOf('[');
+    if (i < 0) return [];
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(out.stdout.slice(i));
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed) || parsed.length === 0) return [];
+    const first = parsed[0] as { files?: { path?: unknown }[] };
+    const files = Array.isArray(first.files) ? first.files : [];
+    return files
+        .map((f) => (typeof f.path === 'string' ? f.path : ''))
+        .filter((pth) => pth !== '');
+}
 
 /**
  * Resolve the file set.
@@ -154,6 +222,9 @@ export function resolveFiles(
     }
     if (mode === 'all') {
         return gitLines(root, ['ls-files']);
+    }
+    if (mode === 'pack') {
+        return packPayloadFiles(root);
     }
     const base = opts.base ?? 'origin/main';
     // An unresolvable base is a scan of NOTHING, not a clean scan.
@@ -191,7 +262,7 @@ export function scanRepo(
     const applyExcludes = mode !== 'explicit';
     const hits: LeakHit[] = [];
     for (const rel of resolveFiles(root, mode, opts)) {
-        if (applyExcludes && isExcluded(rel)) {
+        if (applyExcludes && isExcluded(rel, mode)) {
             continue;
         }
         const abs = path.join(root, rel);
@@ -220,6 +291,7 @@ export function scanRepo(
 interface Args {
     json: boolean;
     all: boolean;
+    pack: boolean;
     base: string | undefined;
     paths: string[];
 }
@@ -228,6 +300,7 @@ function parseArgs(argv: readonly string[]): Args {
     const paths: string[] = [];
     let json = false;
     let all = false;
+    let pack = false;
     let base: string | undefined;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] as string;
@@ -235,13 +308,17 @@ function parseArgs(argv: readonly string[]): Args {
             json = true;
         } else if (a === '--all') {
             all = true;
+        } else if (a === '--pack') {
+            pack = true;
         } else if (a === '--base') {
             base = argv[++i];
         } else if (a === '-h' || a === '--help') {
             _stdout(
-                'usage: check_secret_leak [paths...] [--all] [--base <ref>] [--json]\n' +
+                'usage: check_secret_leak [paths...] [--all] [--pack] [--base <ref>] [--json]\n' +
                     '  default → scans files changed vs origin/main + untracked (shift-left).\n' +
                     '  --all   → scans the whole tracked tree.\n' +
+                    '  --pack  → scans the npm pack payload, INCLUDING shipped-but-gitignored\n' +
+                    '            paths the three git-backed modes cannot reach.\n' +
                     '  paths   → scans exactly those paths (excludes skipped).\n' +
                     '  Exit 1 on a high-confidence leak.\n',
             );
@@ -253,7 +330,7 @@ function parseArgs(argv: readonly string[]): Args {
             paths.push(a);
         }
     }
-    return { json, all, base, paths };
+    return { json, all, pack, base, paths };
 }
 
 function _stdout(s: string): void {
@@ -263,9 +340,73 @@ function _stderr(s: string): void {
     process.stderr.write(s);
 }
 
+/**
+ * Discrimination, over the one property this branch added.
+ *
+ * The pack scope's whole value is that it reaches paths the git-backed modes
+ * cannot, and it was measurably INERT when first written: the mode resolved the
+ * payload and `DEFAULT_EXCLUDE`'s `dist/` rule then filtered away exactly those
+ * paths. A self-test over `isExcluded` is therefore not a formality here — it
+ * pins the difference between the mode working and the mode existing.
+ *
+ * Deliberately over the pure predicate rather than over a spawned `npm pack`:
+ * the canary in `gate-coverage.yml` already drives the real binary end to end
+ * with a real plant, and duplicating that here would add a pack run per case
+ * for no additional evidence.
+ */
+function selfTest(): number {
+    return runSelfTest({
+        gate: 'check_secret_leak',
+        minCases: 7,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'pack scope does NOT exclude dist/ — the blind spot it exists for',
+                expect: 'reject',
+                run: () => (isExcluded('dist/cli/agent-config.js', 'pack') ? 0 : 1),
+            },
+            {
+                name: 'diff scope DOES exclude dist/ — a projection scanned at its source',
+                expect: 'accept',
+                run: () => (isExcluded('dist/cli/agent-config.js', 'diff') ? 0 : 1),
+            },
+            {
+                name: 'all scope also still excludes dist/ — untouched by this change',
+                expect: 'accept',
+                run: () => (isExcluded('dist/agent-src/rules/x.md', 'all') ? 0 : 1),
+            },
+            {
+                // The exclusion carve-out is `dist/` ONLY. If it leaked into the
+                // other rules the pack scope would start reading test fixtures,
+                // which legitimately hold secret-shaped strings.
+                name: 'pack scope still excludes tests/ — the carve-out is dist-only',
+                expect: 'accept',
+                run: () => (isExcluded('tests/fixtures/x.txt', 'pack') ? 0 : 1),
+            },
+            {
+                name: 'pack scope still excludes node_modules/',
+                expect: 'accept',
+                run: () => (isExcluded('node_modules/x/index.js', 'pack') ? 0 : 1),
+            },
+            {
+                name: 'pack scope reaches a second dist subtree, not just dist/cli',
+                expect: 'reject',
+                run: () => (isExcluded('dist/hooks/dispatch.js', 'pack') ? 0 : 1),
+            },
+            {
+                name: 'a shipped non-dist path is scanned in every mode',
+                expect: 'reject',
+                run: () => (isExcluded('src/scripts/x.ts', 'pack') || isExcluded('src/scripts/x.ts', 'diff') ? 0 : 1),
+            },
+        ],
+    });
+}
+
 export function main(argv?: readonly string[]): number {
-    const args = parseArgs(argv ?? process.argv.slice(2));
-    const mode: Mode = args.paths.length > 0 ? 'explicit' : args.all ? 'all' : 'diff';
+    const rawArgv = argv ?? process.argv.slice(2);
+    if (rawArgv.includes('--self-test')) return selfTest();
+    const args = parseArgs(rawArgv);
+    const mode: Mode = args.pack ? 'pack' : args.paths.length > 0 ? 'explicit' : args.all ? 'all' : 'diff';
 
     // Scope assertion, deliberately here and not inside `scanRepo`: that export
     // is called directly by tests and other callers against arbitrary roots, and
@@ -280,6 +421,11 @@ export function main(argv?: readonly string[]): number {
     // re-thrown untouched to preserve it.
     try {
         const targets = resolveFiles(REPO_ROOT, mode, { explicit: args.paths, base: args.base });
+        // The coverage register requires an enforced gate to report what it
+        // inspected. Printed before the assertion so a dead scope still tells
+        // the reader the number it died on, which is the one number that
+        // distinguishes "resolved nothing" from "resolved and filtered".
+        _stdout(`scanned: ${String(targets.length)}\n`);
         assertScanned({
             gate: 'check_secret_leak',
             scanned: targets.length,
@@ -289,9 +435,15 @@ export function main(argv?: readonly string[]): number {
                     ? ['git ls-files']
                     : mode === 'explicit'
                       ? ['<explicit path arguments>']
-                      : [`git diff --name-only --diff-filter=ACMR ${args.base ?? 'origin/main'}`, 'git ls-files --others --exclude-standard'],
-            // `all` and `explicit` carry no reason: zero tracked files, or zero
-            // named paths, is blindness in a repo that has content.
+                      : mode === 'pack'
+                        ? ['npm pack --dry-run --ignore-scripts payload (package.json files[])']
+                        : [`git diff --name-only --diff-filter=ACMR ${args.base ?? 'origin/main'}`, 'git ls-files --others --exclude-standard'],
+            // `all`, `explicit` and `pack` carry no reason: zero tracked files,
+            // zero named paths, or an empty pack payload is blindness in a repo
+            // that has content. `pack` inherits the strict path by omission
+            // rather than by a new branch — an empty payload means a botched
+            // `files[]` or a pack that resolved nothing, which is the loudest
+            // possible signal and the opposite of a clean bill.
             ...(mode === 'diff'
                 ? {
                       allowEmpty:
@@ -317,7 +469,9 @@ export function main(argv?: readonly string[]): number {
     if (args.json) {
         _stdout(JSON.stringify({ check: 'secret-leak', count: hits.length, hits }, null, 2) + '\n');
     } else if (hits.length === 0) {
-        _stdout('✅  check_secret_leak: no high-confidence secret found in the tracked tree.\n');
+        _stdout(
+            `✅  check_secret_leak: no high-confidence secret found in ${mode === 'pack' ? 'the npm pack payload' : 'the tracked tree'}.\n`,
+        );
     } else {
         _stderr(`❌  check_secret_leak: ${hits.length} high-confidence secret finding(s):\n`);
         for (const h of hits) {
