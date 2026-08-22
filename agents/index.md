@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **716 artefacts** in this package.
+Maintainer-facing index of all **717 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -631,7 +631,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (107)
+## Guidelines (108)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -696,6 +696,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`systems-thinking`](../docs/guidelines/agent-infra/systems-thinking.md) | agent-infra |  |
 | guideline | [`tool-description-as-policy`](../docs/guidelines/agent-infra/tool-description-as-policy.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
+| guideline | [`traceability-field-mechanics`](../docs/guidelines/agent-infra/traceability-field-mechanics.md) | agent-infra |  |
 | guideline | [`untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
 | guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |

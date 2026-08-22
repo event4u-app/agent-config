@@ -20,21 +20,28 @@
  *
  * TWO CHECKS, ONE GATE
  * --------------------
- * **T2, the ratchet.** The committed baseline in
- * `src/config/estate-count-budget.json` walks down only. Growth in any gated
- * count is a policy failure (exit 1) that names the metric, the baseline and the
- * live number. A count BELOW the baseline is ALSO a failure (exit 1) — an
- * un-walked tightening — because a lower measurement becomes the new ceiling
- * rather than becoming unused headroom, and a gate that only warned about it is
- * how the headroom survived to be spent. The one exemption is a metric raised in
- * the same change with a recorded reason AND a new baseline equal to the live
- * count; an over-raise fails here rather than in the next change.
+ * **T2, the ratchet.** The floor is not stored — it is MEASURED on the base
+ * ref's own tree, with the same functions that measure HEAD. Growth in any gated
+ * count above that floor is a policy failure (exit 1) naming the metric, the
+ * floor and the live number. A count BELOW the floor is a drawdown and simply
+ * passes: there is no stored number left to leave stale.
  *
- * Corrected 2026-08-19. This paragraph documented the below-baseline case as
- * green and pointed at `check_preamble_payload_budget` for the shape, while
- * `check_estate_count.test.ts` asserted the committed budget EQUALS the live
- * tree — so the gate, its own test, and this header described three positions on
- * one state.
+ * Changed 2026-08-22 (ADR-243). Until then the floor lived in
+ * `src/config/estate-count-budget.json` as a committed `baseline` object, and
+ * that made the file the most-conflicted non-generated path in the repository —
+ * 7 of 7 `CONFLICTING` open PRs on 2026-08-21, and 39 of 43 non-merge commits in
+ * a 60-day window moving it. Two whole failure classes came from the storage
+ * rather than from the policy, and both are now unrepresentable: a baseline left
+ * ABOVE the truth (headroom a later change could spend, which this file used to
+ * fail on as an "un-walked tightening"), and a baseline left BELOW it when main
+ * archived a roadmap without walking the number, which reddened every branch
+ * that merged main. The budget file's own final history entry recorded exactly
+ * that incident.
+ *
+ * What the storage did buy was an authorisation path for legitimate growth: a
+ * raise carrying a recorded reason. That is replaced by
+ * `estate_growth_exempt: <reason>`, a frontmatter line that must be ADDED in the
+ * change that needs it — see § THE THREE WAYS THE ESTATE MAY LEGITIMATELY GROW.
  *
  * **T3, one-in-one-out.** A change that adds an active roadmap archives, parks
  * or merges one in the same change — or the added file carries an explicit
@@ -42,6 +49,62 @@
  * in the diff of the very commit that claims it. This half is diff-scoped: it
  * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no
  * roadmap it legitimately finds nothing to weigh.
+ *
+ * THE THREE WAYS THE ESTATE MAY LEGITIMATELY GROW
+ * -----------------------------------------------
+ * A floor measured off the base ref is exact, so unlike a lagging stored number
+ * it leaves no incidental headroom. Every legitimate increase therefore needs a
+ * named path, and there are three:
+ *
+ * 1. **An addition that cannot be offset** — `estate_offset_exempt: <reason>` in
+ *    the added roadmap's frontmatter, unchanged from T3. It now also raises the
+ *    `active_roadmaps` allowance by one, because under an exact floor the
+ *    addition would otherwise fail the count half with no green path.
+ * 2. **Parking** — a roadmap moved from the active top level into `later/` in the
+ *    same change raises the `later_roadmaps` allowance by one. Parking relocates
+ *    estate rather than creating it, so it needs no authorisation; what the
+ *    allowance does NOT cover is a `later/` file appearing from nowhere.
+ * 3. **Anything else** — `estate_growth_exempt: <reason>` added, in this change,
+ *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical
+ *    case is a blocker discovered while doing the work: `open_blockers` rises,
+ *    nothing was archived, and the reason belongs next to the blocker.
+ *
+ * Two properties of that third path are load-bearing. It is **diff-scoped**: the
+ * line must be ADDED between base and HEAD, so a claim cannot be left in a file
+ * to authorise every later change — the banking failure a stored baseline had.
+ * And it is deliberately **unbounded**, which the stored baseline could not
+ * afford: a raise there had to land exactly on the measurement or the surplus was
+ * inherited by the next change, where nobody could act on it. Here the next
+ * change's floor IS this change's measurement, so there is no surplus to inherit
+ * and a bound would buy nothing.
+ *
+ * WHY THE FLOOR IS MAIN'S TIP AND NOT THE MERGE BASE
+ * --------------------------------------------------
+ * The floor is measured at the base ref's TIP, so a branch that is behind main
+ * reads as growth until it syncs. That is deliberate, and the alternative is
+ * worse: against the merge base, two branches each adding one roadmap are both
+ * green and main ends up two higher than either of them ever measured. A ratchet
+ * whose floor is a common ancestor is not a ratchet on the trunk.
+ *
+ * On a GitHub PR build this costs nothing — the checkout IS the merge result and
+ * `resolveBaseRef` returns `HEAD^1`, the base tip, so the comparison is
+ * merged-tree against current main. Locally, a stale branch reads as growth it
+ * did not cause, and the remedy is the sync it already owed. Note what that
+ * replaced: the stored baseline produced the same obligation as a MERGE CONFLICT
+ * in a config file, resolved by hand, four times in one afternoon on
+ * 2026-08-21 — and resolved wrongly it silently returned another change's
+ * drawdown.
+ *
+ * WHY A MISSING BASE REF FAILS RATHER THAN SKIPS
+ * ---------------------------------------------
+ * `resolveBaseRef` has a ladder (origin/main, then the merge commit's first
+ * parent) precisely because the obvious answer is unavailable on a shallow PR
+ * build. When it still resolves nothing there is no floor at all, and a
+ * shrink-only gate with no floor passes everything — so this exits 1 and says
+ * so, rather than reporting a green it cannot back. `--base <ref>` is the
+ * explicit escape, and it is what the self-test fixtures use. Deliberately NOT
+ * gated on `CI`/`GITHUB_ACTIONS`: a gate that convicts on the runner and waves
+ * locally teaches contributors that its red is an environment artefact.
  *
  * WHY THE COUNTS ARE READ FROM THE DASHBOARD'S OWN PARSER
  * -------------------------------------------------------
@@ -52,6 +115,11 @@
  * exactly the two numbers the dashboard header prints. A gate that re-derived
  * them could disagree with the dashboard, and then the reader has to decide
  * which one lied.
+ *
+ * The same function measures the BASE side, over a scratch copy of the base
+ * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a
+ * second implementation would let the two sides disagree about one tree, which
+ * is the failure this section already argues against, one level up.
  *
  * `later/` is counted from the filesystem because parked roadmaps are
  * deliberately outside `collect()`'s corpus — they are estate all the same, and
@@ -83,11 +151,20 @@ import {
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import { materialiseSubtree } from './_lib/base_tree.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
 const BUDGET_REL = path.join('src', 'config', 'estate-count-budget.json');
 const ROADMAPS_REL = path.join('agents', 'roadmaps');
+/**
+ * The same path as a git pathspec.
+ *
+ * `ROADMAPS_REL` is `path.sep`-joined for filesystem reads; a pathspec must be
+ * POSIX or it matches nothing on Windows — silently, and a pathspec matching
+ * nothing is how the floor becomes zero.
+ */
+const ROADMAPS_POSIX = 'agents/roadmaps';
 
 /** The three gated counts. Each is a metric the budget file defines in prose. */
 export interface EstateCounts {
@@ -101,13 +178,6 @@ export type MetricName = keyof EstateCounts;
 export const METRICS: readonly MetricName[] = ['active_roadmaps', 'later_roadmaps', 'open_blockers'];
 
 export interface EstateBudget {
-    baseline: EstateCounts;
-    /**
-     * The audit trail a raise is read from. Each entry records the metrics it set
-     * and WHY in a real sentence; a raise whose newest entry carries no `why`, or
-     * whose `why` does not name the metric's new value, is refused.
-     */
-    baseline_history?: Array<Partial<EstateCounts> & { at?: string; why?: string }>;
     /**
      * `applies_above_active: null` ⇒ one-in-one-out is unconditional.
      *
@@ -120,11 +190,14 @@ export interface EstateBudget {
     one_in_one_out: { applies_above_active: number | null };
 }
 
-/** One growth finding — a gated count that rose above its committed baseline. */
+/** One gated count that rose above the floor measured at the base ref. */
 export interface GrowthFinding {
     metric: MetricName;
-    baseline: number;
+    /** The base ref's own measurement — never a number anyone typed. */
+    floor: number;
     live: number;
+    /** Growth this change may make without an `estate_growth_exempt` claim. */
+    allowance: number;
 }
 
 /** How a change touched the active roadmap tree, as git reports it. */
@@ -135,44 +208,45 @@ export interface OffsetLedger {
     offsets: string[];
     /** Added files carrying an `estate_offset_exempt:` reason, with the reason. */
     exempt: Array<{ file: string; reason: string }>;
+    /**
+     * The subset of `offsets` that went to `later/`.
+     *
+     * Tracked separately because parking is the one offset that RAISES another
+     * gated count: active falls by one and later rises by one, which under an
+     * exact floor is growth in `later_roadmaps` unless this allowance exists.
+     * Kept out of a general "any offset raises any allowance" rule on purpose —
+     * an archived roadmap must not buy a new `later/` file.
+     */
+    parked: string[];
 }
 
-/**
- * A baseline number this change RAISED, and whether it carries its reason.
- *
- * The whole point of a ratchet is that the change under review cannot silence it
- * by editing the number, so the "before" side is read from the base ref with
- * `git show <baseRef>:<path>` — the one reading of the baseline this commit
- * cannot rewrite. Same argument `_lib/ratchet_base_ref`'s header makes for entry
- * sets, applied to a count.
- */
-export interface RaiseFinding {
-    metric: MetricName;
-    from: number;
-    to: number;
-    /** A raise WITH a reason is legal and reported; without one it fails. */
-    reason: string | null;
+/** An `estate_growth_exempt:` reason ADDED to a roadmap in this change. */
+export interface GrowthClaim {
+    /** The roadmap the claim was added to, as git reports the path. */
+    file: string;
+    reason: string;
 }
 
 export interface EstateVerdict {
     counts: EstateCounts;
-    baseline: EstateCounts;
+    /** The base ref's measurement, or `null` when it could not be taken. */
+    floor: EstateCounts | null;
+    /** The ref the floor was measured at, for the reader and for `--json`. */
+    floorRef: string | null;
+    /** `null` when the floor was measured; a stated reason otherwise. */
+    floorSkipReason: string | null;
+    /** Growth with no allowance and no claim covering it — this is what fails. */
     growth: GrowthFinding[];
     /**
-     * Counts strictly below their baseline — every one of them, exempt or not.
-     * Kept whole so a `--json` consumer can still tell "nothing is below
-     * baseline" from "something is, and a bounded reasoned raise exempted it".
+     * Growth an `estate_growth_exempt` claim authorised.
+     *
+     * Reported rather than dropped: a `--json` consumer must be able to tell
+     * "nothing grew" from "something grew and a claim covered it", which is the
+     * same distinction the old verdict kept `tightened` whole for.
      */
-    tightened: GrowthFinding[];
-    /**
-     * The subset of `tightened` that FAILS: below baseline with no bounded
-     * reasoned raise covering it. This is what `withinBudget` reads.
-     */
-    unwalked: GrowthFinding[];
-    /** Baselines raised against the base ref, each with its reason or `null`. */
-    raises: RaiseFinding[];
-    /** `null` when the raise check could not run; the reason is printed either way. */
-    raiseSkipReason: string | null;
+    authorisedGrowth: GrowthFinding[];
+    /** The claims found in this change's diff, with their reasons. */
+    claims: GrowthClaim[];
     /** `null` when the diff half could not run; the reason is printed either way. */
     offsets: OffsetLedger | null;
     offsetSkipReason: string | null;
@@ -299,6 +373,11 @@ function isDisposed(rel: string): boolean {
     return /^agents\/roadmaps\/(archive|later|skipped|stubs)\//.test(norm);
 }
 
+/** A roadmap parked for later — the one disposition that grows another count. */
+function isParked(rel: string): boolean {
+    return rel.split(path.sep).join('/').startsWith('agents/roadmaps/later/');
+}
+
 /**
  * Read the exemption reason a newly added roadmap declares, if any.
  *
@@ -329,6 +408,7 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
     const added: string[] = [];
     const offsets: string[] = [];
     const exempt: Array<{ file: string; reason: string }> = [];
+    const parked: string[] = [];
     for (const line of nameStatus.split('\n')) {
         if (line.trim() === '') continue;
         const cols = line.split('\t');
@@ -338,6 +418,7 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
             const to = cols[2] ?? '';
             if (isActiveTopLevel(from) && isDisposed(to)) {
                 offsets.push(from);
+                if (isParked(to)) parked.push(to);
             } else if (isDisposed(from) && isActiveTopLevel(to)) {
                 added.push(to);
             }
@@ -359,7 +440,42 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
             exempt.push({ file, reason });
         }
     }
-    return { added, offsets, exempt };
+    return { added, offsets, exempt, parked };
+}
+
+/**
+ * The `estate_growth_exempt:` reasons this change ADDS, read from the patch.
+ *
+ * Read from the diff rather than from the file, and that is the point: a claim
+ * sitting in a roadmap authorises nothing on a later change, so an exemption
+ * cannot be banked the way surplus in a stored baseline could. It also means a
+ * newly added roadmap and an edited one need no separate handling — in a
+ * `base...HEAD` patch both arrive as `+` lines.
+ *
+ * `--unified=0` keeps context lines out, so a claim that merely sits NEAR an
+ * edited line is not read as added. Deliberately tolerant of leading whitespace
+ * and of quoted values, matching `exemptionReason`; deliberately NOT tolerant of
+ * an empty reason, because an exemption whose reason is blank is the silent
+ * exception the key exists to replace.
+ */
+export function growthClaims(patch: string): GrowthClaim[] {
+    const out: GrowthClaim[] = [];
+    let file = '';
+    for (const line of patch.split('\n')) {
+        // `+++ b/<path>` names the file the following `+` lines belong to. The
+        // `/dev/null` form is a deletion, which cannot carry a claim.
+        const head = /^\+\+\+ b\/(.+)$/.exec(line);
+        if (head !== null) {
+            file = (head[1] ?? '').trim();
+            continue;
+        }
+        if (!line.startsWith('+') || line.startsWith('+++')) continue;
+        const m = /^\+\s*estate_growth_exempt:\s*(.+?)\s*$/.exec(line);
+        if (m === null) continue;
+        const reason = (m[1] ?? '').trim().replace(/^["']|["']$/g, '').trim();
+        if (reason !== '') out.push({ file, reason });
+    }
+    return out;
 }
 
 export function evaluate(
@@ -373,67 +489,36 @@ export function evaluate(
     } catch (err) {
         throw new Error(`${BUDGET_REL} is unreadable: ${(err as Error).message}`);
     }
-    if (budget.baseline === undefined) {
-        throw new Error(`${BUDGET_REL} carries no "baseline" object.`);
+    // The file no longer carries a number, so it carries only policy — and a
+    // missing policy object is still a could-not-run rather than a pass. A gate
+    // that treats an unreadable config as "nothing to enforce" is the silent-pass
+    // shape this file argues against everywhere else.
+    if (budget.one_in_one_out === undefined) {
+        throw new Error(`${BUDGET_REL} carries no "one_in_one_out" object.`);
     }
 
     const counts = countEstate(repoRoot);
-    const growth: GrowthFinding[] = [];
-    const tightened: GrowthFinding[] = [];
-    for (const metric of METRICS) {
-        const baseline = budget.baseline[metric];
-        const live = counts[metric];
-        if (typeof baseline !== 'number') {
-            throw new Error(`${BUDGET_REL} baseline is missing the "${metric}" metric.`);
-        }
-        if (live > baseline) growth.push({ metric, baseline, live });
-        else if (live < baseline) tightened.push({ metric, baseline, live });
-    }
-
     const baseRef = opts.baseRef ?? resolveBaseRef(repoRoot);
 
-    // The RAISE check — the half that makes this a ratchet rather than a number.
-    //
-    // Comparing the live count against a baseline the same commit may edit is not
-    // a ratchet: the cheapest way past the growth check above is to type a bigger
-    // number. So the "before" side is read from the base ref, which is the one
-    // reading of the baseline this change cannot rewrite, and a raise is legal
-    // only when the newest `baseline_history` entry carries a real reason AND
-    // records the metric at its new value.
-    const raises: RaiseFinding[] = [];
-    let raiseSkipReason: string | null = null;
+    // The FLOOR — measured, never read. `git show <ref>:<path>` gave the old
+    // stored number the one property that made it a ratchet: the change under
+    // review cannot rewrite the base side. The base ref's TREE has that same
+    // property, and unlike a number nobody has to remember to update it.
+    let floor: EstateCounts | null = null;
+    let floorSkipReason: string | null = null;
     if (baseRef === null || baseRef === undefined) {
-        raiseSkipReason = 'no base ref resolved — a baseline raise cannot be detected, so the ratchet half is unproven on this run';
+        floorSkipReason =
+            'no base ref resolved (no origin/main, no merge-commit parent) — the floor cannot be measured';
     } else {
-        const show = git(['show', `${baseRef}:${BUDGET_REL.split(path.sep).join('/')}`], repoRoot);
-        if (!show.ok) {
-            // Absent at base and mistyped-path look identical, so this is stated
-            // rather than assumed either way. On the commit that INTRODUCES the
-            // budget this is the correct and expected reading.
-            raiseSkipReason = `${BUDGET_REL} does not exist at ${baseRef} — treated as the introducing change, so no raise is possible`;
-        } else {
-            let baseBudget: EstateBudget | null = null;
-            try {
-                baseBudget = JSON.parse(show.stdout) as EstateBudget;
-            } catch {
-                baseBudget = null;
-            }
-            if (baseBudget === null || baseBudget.baseline === undefined) {
-                raiseSkipReason = `${BUDGET_REL} at ${baseRef} is unparseable — raise undetectable`;
+        const base = materialiseSubtree(repoRoot, baseRef, ROADMAPS_POSIX);
+        try {
+            if (base.error !== null || base.files === 0) {
+                floorSkipReason = `could not read ${ROADMAPS_POSIX} at ${baseRef} — ${base.error ?? 'no files'}`;
             } else {
-                const newest = (budget.baseline_history ?? []).at(-1) ?? {};
-                for (const metric of METRICS) {
-                    const before = baseBudget.baseline[metric];
-                    const after = budget.baseline[metric];
-                    if (typeof before !== 'number' || after <= before) continue;
-                    const why = typeof newest.why === 'string' ? newest.why.trim() : '';
-                    // The reason must belong to THIS raise: an entry that records a
-                    // different number is an older reason being reused, which is the
-                    // silent-reset shape RATCHET_RESET_KEY's header warns about.
-                    const namesMetric = newest[metric] === after;
-                    raises.push({ metric, from: before, to: after, reason: why !== '' && namesMetric ? why : null });
-                }
+                floor = countEstate(base.root);
             }
+        } finally {
+            fs.rmSync(base.root, { recursive: true, force: true });
         }
     }
 
@@ -442,6 +527,7 @@ export function evaluate(
     // argues against, and the count half above still ran.
     let offsets: OffsetLedger | null = null;
     let offsetSkipReason: string | null = null;
+    const claims: GrowthClaim[] = [];
     if (baseRef === null || baseRef === undefined) {
         offsetSkipReason = 'no base ref resolved (no origin/main, no merge-commit parent) — one-in-one-out not evaluated';
     } else {
@@ -460,6 +546,11 @@ export function evaluate(
                 }
             });
         }
+        const patch = git(
+            ['diff', '--unified=0', '--find-renames', `${baseRef}...HEAD`, '--', ROADMAPS_REL],
+            repoRoot,
+        );
+        if (patch.ok) claims.push(...growthClaims(patch.stdout));
     }
 
     const threshold = budget.one_in_one_out?.applies_above_active ?? null;
@@ -471,77 +562,55 @@ export function evaluate(
         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
     }
 
-    // A metric RAISED in this same change with a recorded reason is a deliberate
-    // ceiling rather than an un-walked tightening — the raise is the reviewed act
-    // the ratchet exists to permit, and without an exemption the failure below
-    // would make a legal raise unsatisfiable, since a raise puts the baseline
-    // above the live count by construction.
-    //
-    // BOUNDED at `to === live`, and the bound is the whole of it. Round 2 finding
-    // 1: unbounded, the exemption re-opened the defect this change exists to
-    // close, one commit later. A raise could bank arbitrary headroom and exit 0;
-    // the NEXT change carries no raise, so nothing exempts the still-below-
-    // baseline metric, and that change plus main fail on drift they did not
-    // cause. Requiring the raise to land ON the measurement means every legal
-    // state leaves `baseline == live`, so a later change cannot inherit the debt —
-    // and an over-raise fails in the change that types it, which is the only
-    // place anyone can act on it.
-    //
-    // A raise recorded WITHOUT a reason is not exempt at all; it already fails on
-    // its own account below, and exempting it here would let the reason
-    // requirement be skipped by overshooting.
-    const boundedRaise = new Set(
-        raises.filter((r) => r.reason !== null && r.to === counts[r.metric]).map((r) => r.metric),
-    );
+    // The allowances, one metric at a time and never a blanket rule. An exempt
+    // addition and a parked roadmap are the two increases the existing policy
+    // already sanctions, and under an exact floor each needs its own headroom or
+    // the sanctioned act has no green path. `open_blockers` gets none: nothing in
+    // the policy sanctions a new blocker, so it takes the claim path or nothing.
+    const allowance: Record<MetricName, number> = {
+        active_roadmaps: offsets?.exempt.length ?? 0,
+        later_roadmaps: offsets?.parked.length ?? 0,
+        open_blockers: 0,
+    };
 
-    // When the raise half could not run, the information that separates a
-    // deliberate ceiling from forgotten headroom is ABSENT, so this check reports
-    // rather than convicts — the same permissive reading the raise half itself
-    // takes on the same missing input (round 2 finding 4). Failing here while the
-    // raise half skips would refuse a legal reasoned raise with no green path,
-    // and would treat one missing fact two opposite ways inside one gate.
-    const tighteningProvable = raiseSkipReason === null;
-    const unwalked = tighteningProvable ? tightened.filter((t) => !boundedRaise.has(t.metric)) : [];
+    const over: GrowthFinding[] = [];
+    if (floor !== null) {
+        for (const metric of METRICS) {
+            const live = counts[metric];
+            const allowed = floor[metric] + allowance[metric];
+            if (live > allowed) {
+                over.push({ metric, floor: floor[metric], live, allowance: allowance[metric] });
+            }
+        }
+    }
+    // A claim authorises the growth in THIS change and nothing beyond it. It is
+    // read from the patch, so it cannot be inherited; see `growthClaims`.
+    const authorisedGrowth = claims.length > 0 ? over : [];
+    const growth = claims.length > 0 ? [] : over;
 
     return {
         counts,
-        baseline: budget.baseline,
+        floor,
+        floorRef: baseRef ?? null,
+        floorSkipReason,
         growth,
-        tightened,
-        unwalked,
-        raises,
-        raiseSkipReason,
+        authorisedGrowth,
+        claims,
         offsets,
         offsetSkipReason,
         unpaid,
-        // `tightened` is a FAILURE, not an advisory, and this is the second thing
-        // it has been. Until 2026-08-19 it printed "free tightening" and left
-        // `withinBudget` true, while `check_estate_count.test.ts` asserted the
-        // committed budget equals the live tree — so the gate and its own test
-        // disagreed about the same state. The consequence was measured rather than
-        // theorised: a drawdown PR passed `task preflight` locally (this gate,
-        // exit 0) and reddened CI (that test, exit 1) every single time, and on
-        // 2026-08-18 it reddened `main` itself in run 32173675197, after which
-        // every subsequent PR failed on drift it had not caused. That is the
-        // permanently-red shape the budget file's own `67 -> 69` history entry
-        // describes from the other direction.
-        //
-        // Failing here is also the STRONGER reading of this gate's purpose: the
-        // file says in as many words that a lower measurement is the new ceiling
-        // and not headroom to spend later. A baseline left above the truth is
-        // exactly that headroom, and a gate that only warns about it is how the
-        // headroom survives to be spent.
-        withinBudget:
-            growth.length === 0 &&
-            unpaid === 0 &&
-            unwalked.length === 0 &&
-            raises.every((r) => r.reason !== null),
+        // No floor is a FAILURE, not a skip, and it is the one place this gate
+        // convicts on a missing input. The other halves can report "unproven" and
+        // still leave a meaningful verdict behind; the count half IS the verdict,
+        // so with no floor a green here would assert something nothing measured.
+        // A shrink-only gate whose floor is absent passes every possible tree.
+        withinBudget: floorSkipReason === null && growth.length === 0 && unpaid === 0,
     };
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 9;
-const SELF_TEST_MIN_REJECT = 6;
+const SELF_TEST_MIN_CASES = 12;
+const SELF_TEST_MIN_REJECT = 8;
 
 /**
  * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -557,24 +626,35 @@ function selfTest(): number {
     const script = path.join('src', 'scripts', 'check_estate_count.ts');
     const roots: string[] = [];
 
-    /** A budget body; `why` is what makes a raise against the base ref legal. */
-    const budgetJson = (active: number, later: number, why?: string): string => {
-        const baseline = { active_roadmaps: active, later_roadmaps: later, open_blockers: 0 };
-        return `${JSON.stringify(
-            {
-                baseline,
-                ...(why === undefined ? {} : { baseline_history: [{ at: 'fixture', ...baseline, why }] }),
-                one_in_one_out: { applies_above_active: null },
-            },
-            null,
-            4,
-        )}\n`;
-    };
+    /**
+     * The budget body — POLICY ONLY since ADR-243.
+     *
+     * There is no number in it any more, which is why the raise cases the old
+     * self-test carried are gone rather than ported: with nothing stored, "raise
+     * the baseline with no reason" is not a state a change can reach.
+     */
+    const budgetJson = (): string =>
+        `${JSON.stringify({ one_in_one_out: { applies_above_active: null } }, null, 4)}\n`;
+
+    const roadmap = (name: string, extra = ''): string =>
+        `# Roadmap: ${name}\n\n## Phase 1\n\n- [ ] **1.1** s\n${extra}`;
+
+    /** An open blocker — no `Status: resolved` prefix, so it counts as open. */
+    const BLOCKER = '\n## Blockers\n\n### Blocker: fixture\n\n- **Status:** open\n';
 
     const fixture = (opts: {
         roadmaps: number;
-        baseline: { active: number; later: number };
         after: (dir: string) => void;
+        base?: string;
+        /**
+         * Build the repo with NO trunk branch, which is the only way to reach the
+         * no-floor case: `resolveBaseRef` falls back to a LOCAL `main` after
+         * origin/main, so merely omitting `--base` still resolves one. Measured —
+         * the first version of this case expected a reject and got exit 0.
+         */
+        trunkless?: boolean;
+        /** Runs before the BASE commit, so a case can seed the base tree. */
+        before?: (dir: string) => void;
     }): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ec-selftest-'));
         roots.push(dir);
@@ -585,21 +665,23 @@ function selfTest(): number {
         const g = (...args: string[]): void => {
             spawnSync('git', args, { cwd: dir, encoding: 'utf-8' });
         };
-        g('init', '-q', '-b', 'main');
+        g('init', '-q', '-b', opts.trunkless === true ? 'wip' : 'main');
         g('config', 'user.email', 'selftest@local');
         g('config', 'user.name', 'selftest');
         g('config', 'commit.gpgsign', 'false');
         for (let i = 0; i < opts.roadmaps; i++) {
-            put(`agents/roadmaps/road-to-${String(i)}.md`, `# Roadmap: R${String(i)}\n\n## Phase 1\n\n- [ ] **1.1** s\n`);
+            put(`agents/roadmaps/road-to-${String(i)}.md`, roadmap(`R${String(i)}`));
         }
-        put('src/config/estate-count-budget.json', budgetJson(opts.baseline.active, opts.baseline.later));
+        put('src/config/estate-count-budget.json', budgetJson());
+        opts.before?.(dir);
         g('add', '-A');
         g('commit', '-qm', 'base');
         g('checkout', '-qb', 'feat/x');
         opts.after(dir);
         g('add', '-A');
         g('commit', '-qm', 'change');
-        return runGateCli(repo, script, ['--base', 'main'], dir);
+        const argv = opts.base === undefined ? [] : ['--base', opts.base];
+        return runGateCli(repo, script, argv, dir);
     };
 
     const write = (dir: string, rel: string, body: string): void => {
@@ -607,105 +689,62 @@ function selfTest(): number {
         fs.writeFileSync(path.join(dir, rel), body, 'utf-8');
     };
 
+    const mv = (dir: string, from: string, to: string): void => {
+        fs.mkdirSync(path.join(dir, path.dirname(to)), { recursive: true });
+        spawnSync('git', ['mv', from, to], { cwd: dir, encoding: 'utf-8' });
+    };
+
     const cases: SelfTestCase[] = [
         {
-            name: 'baseline match → accept',
+            name: 'estate unchanged against the base tree → accept',
             expect: 'accept',
-            run: () => fixture({ roadmaps: 3, baseline: { active: 3, later: 0 }, after: () => undefined }),
+            run: () => fixture({ roadmaps: 3, base: 'main', after: () => undefined }),
         },
         {
-            name: 'active count grows past the baseline → reject',
+            // The floor is now exact, so this case no longer depends on anyone
+            // having typed the right number at the base commit.
+            name: 'active count grows above the base-tree floor → reject',
             expect: 'reject',
             run: () =>
                 fixture({
                     roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
-                    after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n'),
+                    base: 'main',
+                    after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N')),
                 }),
         },
         {
-            name: 'addition with no offset in the same change → reject',
-            expect: 'reject',
-            run: () =>
-                fixture({
-                    // Baseline is 4 AT THE BASE COMMIT, not raised on the branch, so
-                    // the ratchet and raise halves both pass and only the offset
-                    // half can fail — otherwise this case would pass for another
-                    // check's reason.
-                    roadmaps: 3,
-                    baseline: { active: 4, later: 0 },
-                    after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n'),
-                }),
-        },
-        {
-            // The bypass an R2 review found in the first version: the estate is
-            // untouched and only the NUMBER moves, which satisfies the growth half
-            // by construction. Proven at the CLI, because the working-tree read
-            // that allowed it was in the CLI's own evaluate().
-            name: 'baseline raised with no recorded reason → reject',
+            // Isolating the one-in-one-out half needs the COUNT half satisfied,
+            // and under an exact floor the only way to add a roadmap and stay at
+            // the floor is a claim. So the claim is what buys the isolation the
+            // old fixture bought with a pre-raised baseline.
+            name: 'addition with a growth claim but no offset → reject (one-in-one-out)',
             expect: 'reject',
             run: () =>
                 fixture({
                     roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
-                    after: (dir) => write(dir, 'src/config/estate-count-budget.json', budgetJson(9, 9)),
-                }),
-        },
-        {
-            // Round 2 finding 1: this case used to expect ACCEPT, which pinned an
-            // over-raise of +6 as legal. A reason makes a raise reviewable; it does
-            // not make banked headroom safe, and the banked headroom is inherited by
-            // the next change, where nobody can act on it.
-            name: 'raise WITH a reason but overshooting the measurement → reject',
-            expect: 'reject',
-            run: () =>
-                fixture({
-                    roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
+                    base: 'main',
                     after: (dir) =>
                         write(
                             dir,
-                            'src/config/estate-count-budget.json',
-                            budgetJson(9, 9, 'fixture: a deliberate re-baseline, recorded so the ratchet can see it'),
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_growth_exempt: fixture — isolates one-in-one-out from the count half\n---\n\n' +
+                                roadmap('N'),
                         ),
                 }),
         },
         {
-            // The green path the bound must leave open, or the exemption would be
-            // unsatisfiable and a legal raise impossible. The addition carries
-            // `estate_offset_exempt` so the one-in-one-out half cannot be the reason
-            // this case passes or fails.
-            name: 'raise WITH a reason landing ON the measurement → accept',
+            name: 'addition carrying estate_offset_exempt → accept',
             expect: 'accept',
             run: () =>
                 fixture({
                     roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
-                    after: (dir) => {
+                    base: 'main',
+                    after: (dir) =>
                         write(
                             dir,
                             'agents/roadmaps/road-to-new.md',
-                            '---\nestate_offset_exempt: fixture — isolates the raise half from one-in-one-out\n---\n\n# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n',
-                        );
-                        write(
-                            dir,
-                            'src/config/estate-count-budget.json',
-                            budgetJson(4, 0, 'fixture: raised to the measurement, which is what a bounded raise looks like'),
-                        );
-                    },
-                }),
-        },
-        {
-            // Round 2 finding 11: the rejection class this change adds had no
-            // contributor-facing case, so the truncation floor could not notice it
-            // going missing — which is the whole job of this self-test.
-            name: 'count below baseline with no raise → reject (un-walked tightening)',
-            expect: 'reject',
-            run: () =>
-                fixture({
-                    roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
-                    after: (dir) => fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-2.md')),
+                            '---\nestate_offset_exempt: fixture — the addition that cannot be offset\n---\n\n' + roadmap('N'),
+                        ),
                 }),
         },
         {
@@ -714,16 +753,112 @@ function selfTest(): number {
             run: () =>
                 fixture({
                     roadmaps: 3,
-                    baseline: { active: 3, later: 0 },
+                    base: 'main',
                     after: (dir) => {
-                        write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n');
-                        fs.mkdirSync(path.join(dir, 'agents/roadmaps/archive'), { recursive: true });
-                        spawnSync('git', ['mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md'], {
-                            cwd: dir,
-                            encoding: 'utf-8',
-                        });
+                        write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N'));
+                        mv(dir, 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md');
                     },
                 }),
+        },
+        {
+            // Parking is the case an exact floor would otherwise forbid outright:
+            // active falls by one and later rises by one, and without the parking
+            // allowance the sanctioned drawdown action fails the gate.
+            name: 'parking a roadmap into later/ → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) => mv(dir, 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/later/road-to-2.md'),
+                }),
+        },
+        {
+            // The other side of that allowance, and the reason it is keyed on
+            // parking rather than on "any offset": a later/ file that nothing was
+            // parked into is estate arriving for free.
+            name: 'a later/ roadmap appearing from nowhere → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) => write(dir, 'agents/roadmaps/later/road-to-parked.md', roadmap('P')),
+                }),
+        },
+        {
+            name: 'a new open blocker with no claim → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) => write(dir, 'agents/roadmaps/road-to-1.md', roadmap('R1', BLOCKER)),
+                }),
+        },
+        {
+            name: 'a new open blocker WITH a growth claim → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-1.md',
+                            '---\nestate_growth_exempt: fixture — a blocker discovered while doing the work\n---\n\n' +
+                                roadmap('R1', BLOCKER),
+                        ),
+                }),
+        },
+        {
+            // An exemption whose reason is blank is the silent exception the key
+            // exists to replace, so a bare marker must not authorise anything.
+            name: 'a growth claim with an empty reason → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) =>
+                        write(dir, 'agents/roadmaps/road-to-1.md', '---\nestate_growth_exempt:\n---\n\n' + roadmap('R1', BLOCKER)),
+                }),
+        },
+        {
+            // The anti-banking property, and the reason claims are read from the
+            // PATCH rather than from the file. A claim sitting in a roadmap at the
+            // base commit authorises nothing here: a stored baseline could be
+            // over-raised once and spent by every later change, and the whole
+            // point of reading the diff is that this shape has no equivalent.
+            name: 'a claim already present at base authorises nothing → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-1.md',
+                            '---\nestate_growth_exempt: fixture — banked at base, must not carry over\n---\n\n' +
+                                roadmap('R1'),
+                        ),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-1.md',
+                            '---\nestate_growth_exempt: fixture — banked at base, must not carry over\n---\n\n' +
+                                roadmap('R1', BLOCKER),
+                        ),
+                }),
+        },
+        {
+            // The class that replaces the old "raise with no reason" case: with no
+            // stored number, the way to silence this gate is to deny it a floor.
+            name: 'no base ref resolvable → reject (no floor is not a pass)',
+            expect: 'reject',
+            run: () => fixture({ roadmaps: 3, trunkless: true, after: () => undefined }),
         },
         {
             name: 'emptied roadmap root → reject (dead scope, not a pass)',
@@ -731,7 +866,7 @@ function selfTest(): number {
             run: () =>
                 fixture({
                     roadmaps: 1,
-                    baseline: { active: 0, later: 0 },
+                    base: 'main',
                     after: (dir) => fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-0.md')),
                 }),
         },
@@ -804,25 +939,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const ledger = new GateLedger(GATE);
-    ledger.plan([...METRICS, 'baseline_raise', 'one_in_one_out']);
+    ledger.plan([...METRICS, 'floor', 'one_in_one_out']);
     for (const metric of METRICS) {
+        // Round 2 finding 3, kept: a metric is recorded ONCE here, for whichever
+        // way it actually failed, so the ledger cannot show a green completeness
+        // record beside a red exit. With no floor there is no per-metric verdict
+        // to record at all, which is a skip rather than a completion.
         const bad = verdict.growth.find((g) => g.metric === metric);
-        // Round 2 finding 3: the un-walked-tightening class exited 1 while this
-        // loop reported every metric complete, so the ledger — the stderr audit
-        // surface, and the only one `--json` carries — showed a fully green
-        // completeness record beside a red exit. A metric is recorded once, here,
-        // for whichever way it actually failed.
-        const stale = verdict.unwalked.find((t) => t.metric === metric);
-        if (bad !== undefined) ledger.fail(metric, `${metric} grew ${bad.baseline} → ${bad.live}`);
-        else if (stale !== undefined)
-            ledger.fail(metric, `${metric} un-walked: ${stale.live} under a baseline of ${stale.baseline}`);
+        if (verdict.floor === null) ledger.skip(metric, 'precondition_unmet');
+        else if (bad !== undefined) ledger.fail(metric, `${metric} grew ${bad.floor} → ${bad.live}`);
         else ledger.complete(metric);
     }
-    const unreasoned = verdict.raises.filter((r) => r.reason === null);
-    if (verdict.raiseSkipReason !== null) ledger.skip('baseline_raise', 'precondition_unmet');
-    else if (unreasoned.length > 0)
-        ledger.fail('baseline_raise', `${String(unreasoned.length)} raise(s) with no recorded reason`);
-    else ledger.complete('baseline_raise');
+    if (verdict.floorSkipReason !== null) ledger.fail('floor', verdict.floorSkipReason);
+    else ledger.complete('floor');
     if (verdict.offsets === null) ledger.skip('one_in_one_out', 'precondition_unmet');
     else if (verdict.unpaid > 0) ledger.fail('one_in_one_out', `${String(verdict.unpaid)} unpaid addition(s)`);
     else ledger.complete('one_in_one_out');
@@ -838,63 +967,61 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     for (const metric of METRICS) {
         const live = verdict.counts[metric];
-        const base = verdict.baseline[metric];
+        const base = verdict.floor?.[metric];
+        if (base === undefined) {
+            process.stdout.write(`  ${metric.padEnd(18)} ${String(live).padStart(5)}  (floor unmeasured)\n`);
+            continue;
+        }
         const delta = live - base;
         const sign = delta >= 0 ? '+' : '';
         process.stdout.write(
-            `  ${metric.padEnd(18)} ${String(live).padStart(5)}  (baseline ${String(base)}, ${sign}${String(delta)})\n`,
+            `  ${metric.padEnd(18)} ${String(live).padStart(5)}  (floor ${String(base)} at ${verdict.floorRef ?? '?'}, ${sign}${String(delta)})\n`,
         );
     }
     if (verdict.offsets !== null) {
         const o = verdict.offsets;
         process.stdout.write(
             `  ${'this change'.padEnd(18)}  +${String(o.added.length)} active / -${String(o.offsets.length)} disposed` +
+                `${o.parked.length > 0 ? `, ${String(o.parked.length)} parked` : ''}` +
                 `${o.exempt.length > 0 ? `, ${String(o.exempt.length)} exempt` : ''}\n`,
         );
     } else if (verdict.offsetSkipReason !== null) {
         process.stdout.write(`  ⚠️  ${verdict.offsetSkipReason}\n`);
     }
-    if (verdict.raiseSkipReason !== null) {
-        process.stdout.write(`  ⚠️  ${verdict.raiseSkipReason}\n`);
+    for (const c of verdict.claims) {
+        process.stdout.write(`  ↑ growth claimed in ${c.file}: ${c.reason.slice(0, 120)}\n`);
     }
-    for (const r of verdict.raises.filter((x) => x.reason !== null)) {
+    for (const g of verdict.authorisedGrowth) {
         process.stdout.write(
-            `  ↑ baseline raised with a recorded reason: ${r.metric} ${String(r.from)} → ${String(r.to)}\n` +
-                `    ${(r.reason as string).slice(0, 120)}\n`,
+            `  ↑ ${g.metric} grew ${String(g.floor)} → ${String(g.live)}, authorised by the claim above\n`,
         );
     }
 
-    for (const t of verdict.unwalked) {
+    if (verdict.floorSkipReason !== null) {
         process.stderr.write(
-            `❌  un-walked tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
-                `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
-                '    not headroom to spend later. This is a one-number edit plus one appended\n' +
-                '    `baseline_history` entry, and it belongs in the change that earned the lower\n' +
-                '    measurement. Failing here rather than warning is deliberate: this gate and\n' +
-                "    `check_estate_count.test.ts` used to disagree about this exact state, so a\n" +
-                '    drawdown passed preflight and reddened CI — and once it reached the trunk,\n' +
-                '    every later PR failed on drift it had not caused.\n',
+            `❌  no floor: ${verdict.floorSkipReason}.\n` +
+                "    This gate compares the estate against the base ref's own tree, so with no base\n" +
+                '    ref there is nothing to compare against — and a shrink-only gate with no floor\n' +
+                '    passes every possible tree, which is why this is a failure and not a warning.\n' +
+                '    Fetch the base (`git fetch origin main`) or name it explicitly:\n' +
+                '        ./scripts-run src/scripts/check_estate_count --base origin/main\n',
         );
     }
 
     for (const g of verdict.growth) {
+        const allow = g.allowance > 0 ? ` (+${String(g.allowance)} allowed here)` : '';
         process.stderr.write(
-            `❌  the roadmap estate grew: ${g.metric} ${String(g.baseline)} → ${String(g.live)}.\n` +
-                '    The estate does not walk down by itself, which is the defect this ratchet\n' +
-                `    exists for. Either close/park/archive enough to get back under the baseline, or\n` +
-                `    raise it in ${BUDGET_REL} with the reason written as a real sentence in the\n` +
-                '    same commit — a number change on its own is what a ratchet is built to refuse.\n',
+            `❌  the roadmap estate grew: ${g.metric} ${String(g.floor)} → ${String(g.live)}${allow}.\n` +
+                `    The floor is the measurement at ${verdict.floorRef ?? 'the base ref'}, not a number in a\n` +
+                '    config — so there is no number to edit and nothing to walk. The estate does not\n' +
+                '    walk down by itself, which is the defect this ratchet exists for. Either close,\n' +
+                '    park or archive enough to get back to the floor, or claim the growth where it\n' +
+                '    happened: add `estate_growth_exempt: <reason>` to the frontmatter of a roadmap\n' +
+                '    this change touches. The claim is read from the diff, so it authorises this\n' +
+                '    change and no later one, and the reason is a real sentence or it does not count.\n',
         );
     }
-    for (const r of unreasoned) {
-        process.stderr.write(
-            `❌  baseline raised with no recorded reason: ${r.metric} ${String(r.from)} → ${String(r.to)}.\n` +
-                `    Read from the base ref, so editing the number in this commit cannot hide it —\n` +
-                '    which is the whole difference between a ratchet and a number. A raise is legal,\n' +
-                `    and it costs one appended \`baseline_history\` entry in ${BUDGET_REL} carrying\n` +
-                `    \`"${r.metric}": ${String(r.to)}\` and a \`why\` written as a real sentence.\n`,
-        );
-    }
+
     if (verdict.unpaid > 0 && verdict.offsets !== null) {
         process.stderr.write(
             `❌  ${String(verdict.unpaid)} new active roadmap(s) with no offset in the same change.\n` +

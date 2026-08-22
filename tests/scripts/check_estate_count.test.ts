@@ -8,7 +8,26 @@
  * gate-that-scans-nothing shape this repository has already recorded.
  *
  * Every case below runs the real script against a real throwaway git repo, so
- * the diff half is exercised through `git diff` rather than through a stub.
+ * the diff half is exercised through `git diff` rather than through a stub, and
+ * the floor is measured off a real base ref rather than read from a fixture
+ * number.
+ *
+ * REWRITTEN 2026-08-22 (ADR-243). The floor used to be a committed `baseline`
+ * object in `src/config/estate-count-budget.json`; it is now MEASURED on the base
+ * ref's own tree. Three describe-blocks changed shape rather than disappearing,
+ * and the mapping is written down here because a deleted test looks the same as
+ * a forgotten one:
+ *
+ * - "FAILS on a count below baseline" → INVERTED into "a drawdown is green". The
+ *   un-walked-tightening class exists only because a stored number can be left
+ *   above the truth; with no stored number the state is unreachable, and the test
+ *   that pins the inversion is the one below asserting a drawdown passes.
+ * - The five raise-check cases → REPLACED by the growth-claim cases. With nothing
+ *   stored, "raise the baseline with no reason" is not a state a change can
+ *   reach; the authorisation it provided is now `estate_growth_exempt`.
+ * - "the committed budget matches the live tree" → became a floor-vacuity guard
+ *   (`--base HEAD`), because the old assertion compared two numbers and there is
+ *   now only one.
  */
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -17,7 +36,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { classifyDiff, exemptionReason } from '../../src/scripts/check_estate_count.js';
+import { classifyDiff, exemptionReason, growthClaims } from '../../src/scripts/check_estate_count.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_estate_count.ts');
@@ -43,8 +62,15 @@ function write(root: string, rel: string, body: string): void {
     fs.writeFileSync(abs, body, 'utf-8');
 }
 
-function roadmap(title: string, opts: { blockers?: number | undefined; exempt?: string | undefined } = {}): string {
-    const fm = opts.exempt === undefined ? '' : `---\nestate_offset_exempt: ${opts.exempt}\n---\n\n`;
+function roadmap(
+    title: string,
+    opts: { blockers?: number | undefined; exempt?: string | undefined; claim?: string | undefined } = {},
+): string {
+    const fmLines = [
+        ...(opts.exempt === undefined ? [] : [`estate_offset_exempt: ${opts.exempt}`]),
+        ...(opts.claim === undefined ? [] : [`estate_growth_exempt: ${opts.claim}`]),
+    ];
+    const fm = fmLines.length === 0 ? '' : `---\n${fmLines.join('\n')}\n---\n\n`;
     const blockers = Array.from({ length: opts.blockers ?? 0 }, (_unused, i) =>
         [
             '',
@@ -60,38 +86,19 @@ function roadmap(title: string, opts: { blockers?: number | undefined; exempt?: 
 }
 
 /**
- * A budget file.
+ * The budget file — POLICY ONLY.
  *
- * `reason` appends a `baseline_history` entry recording these exact numbers, which
- * is what makes a RAISE against the base ref legal. Omitting it is how a test
- * asserts the bare-raise refusal — the shape the first version of this gate
- * allowed, and which its own fixtures used to make the growth half pass.
+ * It carries no number since ADR-243, which is why this helper no longer takes
+ * counts. A fixture that wants a different floor changes the TREE at the base
+ * commit, which is the whole point of the change under test.
  */
-function budget(
-    counts: { active: number; later: number; blockers: number },
-    above: number | null = null,
-    reason?: string,
-): string {
-    const baseline = {
-        active_roadmaps: counts.active,
-        later_roadmaps: counts.later,
-        open_blockers: counts.blockers,
-    };
-    return `${JSON.stringify(
-        {
-            schema_version: 1,
-            baseline,
-            ...(reason === undefined ? {} : { baseline_history: [{ at: '2026-08-18', ...baseline, why: reason }] }),
-            one_in_one_out: { applies_above_active: above },
-        },
-        null,
-        4,
-    )}\n`;
+function budget(above: number | null = null): string {
+    return `${JSON.stringify({ schema_version: 2, one_in_one_out: { applies_above_active: above } }, null, 4)}\n`;
 }
 
-const RAISE_REASON = 'deliberate re-baseline for this fixture, recorded so the ratchet can see it';
+const CLAIM = 'fixture — a real sentence, so the claim counts';
 
-/** A repo with `n` active roadmaps and a baseline that matches them exactly. */
+/** A repo with `n` active roadmaps committed on `main`, checked out on a branch. */
 function initRepo(n = 3, opts: { later?: number; blockers?: number; above?: number | null } = {}): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'estate-count-'));
     tmpDirs.push(dir);
@@ -105,14 +112,7 @@ function initRepo(n = 3, opts: { later?: number; blockers?: number; above?: numb
     for (let i = 0; i < (opts.later ?? 0); i++) {
         write(dir, `agents/roadmaps/later/parked-${String(i)}.md`, roadmap(`P${String(i)}`));
     }
-    write(
-        dir,
-        'src/config/estate-count-budget.json',
-        budget(
-            { active: n, later: opts.later ?? 0, blockers: n * (opts.blockers ?? 0) },
-            opts.above ?? null,
-        ),
-    );
+    write(dir, 'src/config/estate-count-budget.json', budget(opts.above ?? null));
     git(dir, 'add', '-A');
     git(dir, 'commit', '-qm', 'base');
     git(dir, 'checkout', '-qb', 'feat/change');
@@ -136,25 +136,28 @@ function commitAll(dir: string, msg: string): void {
 }
 
 describe('check_estate_count — the ratchet direction', () => {
-    it('is green when every count sits exactly at its baseline', () => {
+    it('is green when every count sits exactly at the measured floor', () => {
         const repo = initRepo(3);
         const res = run(repo, ['--base', 'main']);
         expect(res.status, res.stderr).toBe(0);
         expect(res.stdout).toContain('scanned: 3');
         expect(res.stdout).toContain('estate within its ratchet');
+        // The floor is reported WITH the ref it came from: a reader who cannot
+        // see which tree was measured cannot check the verdict.
+        expect(res.stdout).toMatch(/active_roadmaps\s+3\s+\(floor 3 at main, \+0\)/);
     });
 
-    it('is RED when the active count grows above the baseline', () => {
+    it('is RED when the active count grows above the floor', () => {
         const repo = initRepo(3);
-        // Adding a roadmap without touching the baseline is growth. This is the
-        // direction that had no gate at all before this file.
+        // Adding a roadmap is growth against the base tree — and unlike the
+        // stored-baseline version, no number had to be correct for this to fire.
         write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
         commitAll(repo, 'add a roadmap');
         const res = run(repo, ['--base', 'main']);
         expect(res.status).toBe(1);
         expect(res.stderr).toContain('the roadmap estate grew: active_roadmaps 3 → 4');
-        // The message names the two legal exits, not just the failure.
-        expect(res.stderr).toContain('raise it in src/config/estate-count-budget.json');
+        // The message names the legal exit, not just the failure.
+        expect(res.stderr).toContain('estate_growth_exempt');
     });
 
     it('is RED when the open-blocker count grows, independently of the file count', () => {
@@ -171,55 +174,32 @@ describe('check_estate_count — the ratchet direction', () => {
         expect(res.stderr).toContain('open_blockers 2 → 3');
     });
 
-    // Inverted 2026-08-19. This used to assert exit 0 on an un-walked tightening,
-    // which put the gate in direct contradiction with the `unit surface` case
-    // below ("the committed budget matches the live tree"): the same state was a
-    // pass here and a failure there. Measured consequence, not a tidiness
-    // argument — a drawdown change passed `task preflight` and reddened CI every
-    // time, and on 2026-08-18 it reddened `main` in run 32173675197, after which
-    // every later PR failed on drift it had not caused.
-    it('FAILS on a count below baseline until the baseline is walked down', () => {
+    // The INVERSION of the old "FAILS on a count below baseline" case, and the
+    // single clearest thing the derived floor buys. That failure class existed
+    // because a stored number could be left above the truth, leaving headroom a
+    // later change could spend; it reddened `main` itself in run 32173675197 on
+    // 2026-08-18, after which every later PR failed on drift it had not caused.
+    // With the floor measured there is no number to leave stale, so a drawdown is
+    // simply a drawdown.
+    it('is GREEN on a drawdown, with nothing to walk and nothing to record', () => {
         const repo = initRepo(3);
         fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
         commitAll(repo, 'archive one');
         const res = run(repo, ['--base', 'main']);
-        expect(res.status, res.stdout).toBe(1);
-        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 2 under a baseline of 3');
-    });
-
-    it('does NOT convict on tightening when the raise half could not run', () => {
-        // Round 2 finding 4: the exemption is derived from the raise half, so when
-        // that half skips there is no way to tell a deliberate ceiling from
-        // forgotten headroom. Convicting anyway would refuse a legal reasoned raise
-        // with no green path, and would read one missing fact two opposite ways
-        // inside one gate — the raise half skips permissively on exactly this input.
-        const repo = initRepo(3);
-        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
-        commitAll(repo, 'archive one');
-        const res = run(repo, ['--base', 'does-not-exist']);
-        expect(res.status, res.stderr).toBe(0);
-        expect(res.stderr).not.toContain('un-walked tightening');
-    });
-
-    it('goes green once the walked baseline matches the tightened measurement', () => {
-        // The other half of the inversion: failing on tightening must be
-        // satisfiable by the one-number edit the message asks for, or it is a
-        // gate with no green path.
-        const repo = initRepo(3);
-        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 2, later: 0, blockers: 0 }));
-        commitAll(repo, 'archive one and walk the baseline in the same change');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status, res.stderr).toBe(0);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stdout).toMatch(/active_roadmaps\s+2\s+\(floor 3 at main, -1\)/);
+        // The class is gone, not renamed: no wording about walking a baseline
+        // survives anywhere in the output.
+        expect(res.stderr).not.toContain('un-walked');
+        expect(`${res.stdout}${res.stderr}`).not.toContain('baseline');
     });
 
     it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {
         // The failure this guards: move agents/roadmaps/ and every count is 0,
-        // which is trivially under any baseline. Exit 1 would assert the estate
+        // which is trivially under any floor. Exit 1 would assert the estate
         // grew; exit 2 says the gate could not run.
         const repo = initRepo(1);
         fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-0.md'));
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 0, later: 0, blockers: 0 }));
         commitAll(repo, 'empty the estate');
         const res = run(repo, ['--base', 'main']);
         expect(res.status).toBe(2);
@@ -234,17 +214,111 @@ describe('check_estate_count — the ratchet direction', () => {
         expect(res.status).toBe(2);
         expect(res.stderr).toContain('unreadable');
     });
+
+    it('exits 2 when the budget carries no policy object', () => {
+        // The file holds nothing but policy now, so an empty one is a
+        // could-not-run rather than "nothing to enforce".
+        const repo = initRepo(2);
+        write(repo, 'src/config/estate-count-budget.json', '{}\n');
+        commitAll(repo, 'empty the budget');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('one_in_one_out');
+    });
+});
+
+describe('check_estate_count — the floor', () => {
+    it('FAILS when no base ref resolves — a shrink-only gate with no floor passes everything', () => {
+        // The class that replaces the old bare-raise refusal: with nothing stored,
+        // the way to silence this gate is to deny it a floor. The old gate reported
+        // "unproven" and exited 0 on this input, which under a measured floor would
+        // be a green over an unevaluated verdict.
+        const repo = initRepo(2);
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
+        commitAll(repo, 'add one');
+        git(repo, 'branch', '-D', 'main');
+        const res = run(repo);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(1);
+        expect(res.stderr).toContain('no floor');
+        // The remedy is named, and it is the flag the fixtures themselves use.
+        expect(res.stderr).toContain('--base origin/main');
+        // The diff half still reports its own skip rather than vanishing.
+        expect(res.stdout).toContain('one-in-one-out not evaluated');
+        expect(res.stdout).toContain('precondition_unmet');
+    });
+
+    it('FAILS rather than measuring zero when the base ref has no roadmap subtree', () => {
+        // The silent-zero shape `_lib/base_tree` exists to refuse: an absent
+        // subtree, a typo and an export-ignore all produce an empty read, and a
+        // floor of 0 is a green light for unbounded growth.
+        const repo = initRepo(2);
+        const res = run(repo, ['--base', 'HEAD:agents']);
+        expect(res.status).toBe(1);
+        expect(res.stderr).toContain('no floor');
+    });
+
+    it('measures the floor off the tree, so an edited budget file cannot move it', () => {
+        // The property that made the old design a ratchet at all — the change under
+        // review cannot rewrite the "before" side — restated for the new one. Here
+        // the fixture tries the old bypass: touch nothing but the config.
+        const repo = initRepo(3);
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
+        write(repo, 'src/config/estate-count-budget.json', `${JSON.stringify({ schema_version: 2, baseline: { active_roadmaps: 99 }, one_in_one_out: { applies_above_active: null } }, null, 4)}\n`);
+        commitAll(repo, 'add a roadmap and type a big number');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, res.stdout).toBe(1);
+        expect(res.stderr).toContain('active_roadmaps 3 → 4');
+    });
+});
+
+describe('check_estate_count — growth claims', () => {
+    it('accepts growth a claim added in this change authorises, and prints the reason', () => {
+        const repo = initRepo(3, { blockers: 1 });
+        write(repo, 'agents/roadmaps/road-to-0.md', roadmap('R0', { blockers: 2, claim: CLAIM }));
+        commitAll(repo, 'discover a blocker and claim it');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stdout).toContain('growth claimed in agents/roadmaps/road-to-0.md');
+        expect(res.stdout).toContain(CLAIM);
+        expect(res.stdout).toContain('authorised by the claim above');
+    });
+
+    it('refuses a claim that was already in the file at base — no banking', () => {
+        // The anti-banking property, and the reason claims are read from the PATCH
+        // rather than from the file. A stored baseline could be over-raised once and
+        // spent by every later change; this shape has no equivalent.
+        const repo = initRepo(2);
+        git(repo, 'checkout', '-q', 'main');
+        write(repo, 'agents/roadmaps/road-to-0.md', roadmap('R0', { claim: CLAIM }));
+        commitAll(repo, 'bank a claim at base');
+        git(repo, 'checkout', '-q', 'feat/change');
+        git(repo, 'merge', '-q', 'main');
+        write(repo, 'agents/roadmaps/road-to-0.md', roadmap('R0', { blockers: 1, claim: CLAIM }));
+        commitAll(repo, 'spend the banked claim');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, res.stdout).toBe(1);
+        expect(res.stderr).toContain('open_blockers 0 → 1');
+    });
+
+    it('refuses a bare claim marker with no reason', () => {
+        const repo = initRepo(2);
+        write(repo, 'agents/roadmaps/road-to-0.md', `---\nestate_growth_exempt:\n---\n\n${roadmap('R0', { blockers: 1 })}`);
+        commitAll(repo, 'claim nothing');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(1);
+        expect(res.stderr).toContain('open_blockers 0 → 1');
+    });
 });
 
 describe('check_estate_count — one-in-one-out', () => {
     it('is RED on an addition with no offset in the same change', () => {
         const repo = initRepo(3);
-        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
-        // Raise the baseline so the ratchet half passes and the failure can only
-        // come from the offset half — otherwise this test would pass for the
-        // wrong reason.
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, null, RAISE_REASON));
-        commitAll(repo, 'add a roadmap, raise the baseline');
+        // The addition carries a growth claim so the COUNT half passes and the
+        // failure can only come from the offset half — otherwise this test would
+        // pass for the wrong reason. The old fixture bought that isolation with a
+        // pre-raised baseline, which no longer exists.
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { claim: CLAIM }));
+        commitAll(repo, 'add a roadmap and claim the growth');
         const res = run(repo, ['--base', 'main']);
         expect(res.status).toBe(1);
         expect(res.stderr).not.toContain('the roadmap estate grew');
@@ -263,31 +337,50 @@ describe('check_estate_count — one-in-one-out', () => {
         expect(res.stdout).toContain('+1 active / -1 disposed');
     });
 
-    it('counts a park into later/ as an offset, and later/ growth is then the ratchet’s business', () => {
+    it('lets a park pay for an addition AND covers the later/ growth it causes', () => {
         const repo = initRepo(3, { later: 1 });
         write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
         git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/later/road-to-2.md');
-        // later/ goes 1 → 2, so the ratchet must be told AND the raise must carry
-        // its reason — parking is exactly the move that shrinks the active count
-        // while resolving nothing, so it costs a recorded sentence. The offset
-        // half is satisfied either way; the two halves answer different questions
-        // and this fixture pins that they do not shadow each other.
-        write(
-            repo,
-            'src/config/estate-count-budget.json',
-            budget({ active: 3, later: 2, blockers: 0 }, null, 'parked road-to-2 pending its resume condition'),
-        );
+        // later/ goes 1 → 2. Under a stored baseline that cost a recorded raise;
+        // under a measured floor it is covered by the parking allowance, because
+        // parking relocates estate rather than creating it. The offset half is
+        // satisfied either way, and the two halves still answer different
+        // questions — this fixture pins that they do not shadow each other.
         commitAll(repo, 'add one, park one');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
-        expect(res.stdout).toContain('+1 active / -1 disposed');
-        expect(res.stdout).toContain('baseline raised with a recorded reason: later_roadmaps 1 → 2');
+        expect(res.stdout).toContain('+1 active / -1 disposed, 1 parked');
+        expect(res.stdout).toMatch(/later_roadmaps\s+2\s+\(floor 1 at main, \+1\)/);
+    });
+
+    it('refuses a later/ roadmap that no park in this change accounts for', () => {
+        // The other side of that allowance, and the reason it is keyed on parking
+        // rather than on any offset: a later/ file nothing was parked into is
+        // estate arriving for free.
+        const repo = initRepo(3, { later: 1 });
+        write(repo, 'agents/roadmaps/later/parked-new.md', roadmap('P-new'));
+        commitAll(repo, 'grow later/ from nowhere');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(1);
+        expect(res.stderr).toContain('later_roadmaps 1 → 2');
+    });
+
+    it('does not let an ARCHIVE move buy a new later/ file', () => {
+        // Keyed on parking, not on offsets: archiving one roadmap and adding a
+        // parked one is a swap the allowance must not cover.
+        const repo = initRepo(3, { later: 1 });
+        fs.mkdirSync(path.join(repo, 'agents/roadmaps/archive'), { recursive: true });
+        git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md');
+        write(repo, 'agents/roadmaps/later/parked-new.md', roadmap('P-new'));
+        commitAll(repo, 'archive one, add a parked one');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, res.stdout).toBe(1);
+        expect(res.stderr).toContain('later_roadmaps 1 → 2');
     });
 
     it('treats un-parking a later/ roadmap as an addition, not as a neutral move', () => {
         const repo = initRepo(3, { later: 1 });
         git(repo, 'mv', 'agents/roadmaps/later/parked-0.md', 'agents/roadmaps/road-to-unparked.md');
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, null, RAISE_REASON));
         commitAll(repo, 'un-park one');
         const res = run(repo, ['--base', 'main']);
         expect(res.status).toBe(1);
@@ -298,47 +391,29 @@ describe('check_estate_count — one-in-one-out', () => {
     it('accepts an addition carrying an estate_offset_exempt reason in its frontmatter', () => {
         const repo = initRepo(3);
         write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'incident follow-up, nothing to trade' }));
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, null, RAISE_REASON));
         commitAll(repo, 'add an exempt roadmap');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
         expect(res.stdout).toContain('1 exempt');
+        // The exemption must raise the COUNT allowance too, or the sanctioned
+        // un-offsettable addition would fail the other half with no green path.
+        expect(res.stdout).toMatch(/active_roadmaps\s+4\s+\(floor 3 at main, \+1\)/);
     });
 
     it('is inert below a registered active ceiling, and live above it', () => {
         // T3 applies "while the active count sits above target". With a ceiling
-        // registered ABOVE the live count the lint must not fire; the same
-        // change with the ceiling below it must.
+        // registered ABOVE the live count the lint must not fire; the same change
+        // with the ceiling below it must. Both fixtures claim the growth so the
+        // count half cannot be the reason either way.
         const inert = initRepo(3, { above: 10 });
-        write(inert, 'agents/roadmaps/road-to-new.md', roadmap('New'));
-        write(
-            inert,
-            'src/config/estate-count-budget.json',
-            budget({ active: 4, later: 0, blockers: 0 }, 10, RAISE_REASON),
-        );
+        write(inert, 'agents/roadmaps/road-to-new.md', roadmap('New', { claim: CLAIM }));
         commitAll(inert, 'add one under the ceiling');
         expect(run(inert, ['--base', 'main']).status).toBe(0);
 
         const live = initRepo(3, { above: 2 });
-        write(live, 'agents/roadmaps/road-to-new.md', roadmap('New'));
-        write(live, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, 2, RAISE_REASON));
+        write(live, 'agents/roadmaps/road-to-new.md', roadmap('New', { claim: CLAIM }));
         commitAll(live, 'add one over the ceiling');
         expect(run(live, ['--base', 'main']).status).toBe(1);
-    });
-
-    it('reports the diff half as skipped rather than passing when no base ref resolves', () => {
-        const repo = initRepo(2);
-        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 3, later: 0, blockers: 0 }));
-        commitAll(repo, 'add one');
-        git(repo, 'branch', '-D', 'main');
-        const res = run(repo);
-        // Green on the count half, but the skip is PRINTED and ledgered — an
-        // unevaluated check that reports nothing is the silent pass this gate's
-        // own header argues against.
-        expect(res.status, res.stderr).toBe(0);
-        expect(res.stdout).toContain('one-in-one-out not evaluated');
-        expect(res.stdout).toContain('precondition_unmet');
     });
 });
 
@@ -351,6 +426,7 @@ describe('check_estate_count — unit surface', () => {
                 'R100\tagents/roadmaps/road-to-c.md\tagents/roadmaps/archive/road-to-c.md',
                 'R100\tagents/roadmaps/later/road-to-d.md\tagents/roadmaps/road-to-d.md',
                 'R100\tagents/roadmaps/road-to-e.md\tagents/roadmaps/road-to-e2.md',
+                'R100\tagents/roadmaps/road-to-p.md\tagents/roadmaps/later/road-to-p.md',
                 'M\tagents/roadmaps/road-to-f.md',
                 'A\tagents/roadmaps/archive/road-to-g.md',
                 'A\tsrc/scripts/unrelated.ts',
@@ -358,7 +434,14 @@ describe('check_estate_count — unit surface', () => {
             () => null,
         );
         expect(out.added.sort()).toEqual(['agents/roadmaps/road-to-a.md', 'agents/roadmaps/road-to-d.md']);
-        expect(out.offsets.sort()).toEqual(['agents/roadmaps/road-to-b.md', 'agents/roadmaps/road-to-c.md']);
+        expect(out.offsets.sort()).toEqual([
+            'agents/roadmaps/road-to-b.md',
+            'agents/roadmaps/road-to-c.md',
+            'agents/roadmaps/road-to-p.md',
+        ]);
+        // Parking is a SUBSET of offsets, reported by its destination: it is the
+        // one offset that raises another gated count.
+        expect(out.parked).toEqual(['agents/roadmaps/later/road-to-p.md']);
         // A top-level rename is neither an addition nor an offset, a modify is
         // not an addition, and neither an archive-only add nor a non-roadmap
         // path is in scope at all.
@@ -376,123 +459,52 @@ describe('check_estate_count — unit surface', () => {
         expect(exemptionReason('# R\n')).toBeNull();
     });
 
-    it('the committed budget matches the live tree, so the gate ships green', () => {
-        // Vacuity guard on the registration itself: a baseline that did not
-        // match the tree at registration would make the gate red on arrival,
-        // which teaches the reader to ignore it.
-        const res = run(REPO_ROOT, ['--json', '--base', 'origin/main']);
+    it('growthClaims reads ADDED lines only, and attributes each to its file', () => {
+        const patch = [
+            'diff --git a/agents/roadmaps/road-to-a.md b/agents/roadmaps/road-to-a.md',
+            '--- a/agents/roadmaps/road-to-a.md',
+            '+++ b/agents/roadmaps/road-to-a.md',
+            '@@ -1,0 +2 @@',
+            '+estate_growth_exempt: a blocker surfaced while doing the work',
+            'diff --git a/agents/roadmaps/road-to-b.md b/agents/roadmaps/road-to-b.md',
+            '--- a/agents/roadmaps/road-to-b.md',
+            '+++ b/agents/roadmaps/road-to-b.md',
+            '@@ -2 +2 @@',
+            '-estate_growth_exempt: a reason being REMOVED authorises nothing',
+            '+something else',
+        ].join('\n');
+        const out = growthClaims(patch);
+        expect(out).toEqual([
+            { file: 'agents/roadmaps/road-to-a.md', reason: 'a blocker surfaced while doing the work' },
+        ]);
+    });
+
+    it('growthClaims refuses an empty reason and ignores the +++ header line', () => {
+        // `+++ b/...` starts with `+` and must never be read as a claim line; an
+        // empty reason is the silent exception the key exists to replace.
+        expect(growthClaims('+++ b/estate_growth_exempt: x\n')).toEqual([]);
+        expect(growthClaims('+++ b/agents/roadmaps/r.md\n+estate_growth_exempt:\n')).toEqual([]);
+        expect(growthClaims('+++ b/agents/roadmaps/r.md\n+estate_growth_exempt: "quoted"\n')).toEqual([
+            { file: 'agents/roadmaps/r.md', reason: 'quoted' },
+        ]);
+    });
+
+    it('is green against its own repository with the floor taken at HEAD', () => {
+        // Vacuity guard on the change itself: the gate must not ship red on the
+        // tree it lands in. Measured at HEAD rather than at origin/main on purpose
+        // — a branch that is behind main legitimately reads as growth (see the
+        // gate's own § WHY THE FLOOR IS MAIN'S TIP), and a test that depends on
+        // remote freshness is a test that fails for the wrong reason.
+        const res = run(REPO_ROOT, ['--json', '--base', 'HEAD']);
         expect(res.status, res.stderr).toBe(0);
-        const v = JSON.parse(res.stdout.replace(/^scanned: \d+\n/, '')) as {
+        const v = JSON.parse(res.stdout) as {
             counts: Record<string, number>;
-            baseline: Record<string, number>;
+            floor: Record<string, number> | null;
             growth: unknown[];
         };
         expect(v.growth).toEqual([]);
-        expect(v.counts['active_roadmaps']).toBe(v.baseline['active_roadmaps']);
-    });
-});
-
-describe('check_estate_count — the raise check (R2 finding 1, high)', () => {
-    // The high finding: the first version read the baseline from the WORKING TREE,
-    // so the cheapest way past the growth half was to type a bigger number — while
-    // the gate's own failure text said "a number change on its own is what a
-    // ratchet is built to refuse". The reviewer found the bypass demonstrated by
-    // this very file's own fixtures, which raised the baseline bare.
-
-    it('REFUSES a bare baseline raise, even when the live count is under it', () => {
-        const repo = initRepo(3);
-        // Nothing about the estate changes. Only the number does, and the growth
-        // half is therefore satisfied — which is exactly the bypass.
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 9, later: 9, blockers: 9 }));
-        commitAll(repo, 'quietly raise the baseline');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status).toBe(1);
-        expect(res.stderr).toContain('baseline raised with no recorded reason: active_roadmaps 3 → 9');
-        // Every raised metric is named, not just the first.
-        expect(res.stderr).toContain('later_roadmaps 0 → 9');
-        expect(res.stderr).toContain('open_blockers 0 → 9');
-        // And the message names the legal path rather than only refusing.
-        expect(res.stderr).toContain('baseline_history');
-    });
-
-    // Round 2 finding 1 inverted this: it expected exit 0 for a raise to 5 against
-    // a live count of 3, which pinned +2 of banked headroom as legal. A reason
-    // makes a raise REVIEWABLE; it does not make headroom safe, and the headroom is
-    // inherited by the next change, where nobody can act on it — the same
-    // permanently-red trunk this gate change exists to close.
-    it('REFUSES a raise that carries a reason but overshoots the live measurement', () => {
-        const repo = initRepo(3);
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 5, later: 0, blockers: 0 }, null, RAISE_REASON));
-        commitAll(repo, 'raise with a reason, past the measurement');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status, res.stdout).toBe(1);
-        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 3 under a baseline of 5');
-    });
-
-    it('accepts a raise whose reason is recorded AND whose new baseline is the live count', () => {
-        // The green path the bound has to leave open. The addition carries
-        // `estate_offset_exempt` so one-in-one-out cannot be why this passes.
-        const repo = initRepo(3);
-        write(
-            repo,
-            'agents/roadmaps/road-to-new.md',
-            '---\nestate_offset_exempt: fixture — isolates the raise half\n---\n\n# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n',
-        );
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, null, RAISE_REASON));
-        commitAll(repo, 'grow by one and raise onto the measurement');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
-        expect(res.stdout).toContain('baseline raised with a recorded reason: active_roadmaps 3 → 4');
-    });
-
-    it('REFUSES a raise whose reason records a different number — a reused older entry', () => {
-        // The subtler bypass: append a history entry, then keep raising the
-        // baseline past what that entry records. The reason then belongs to an
-        // earlier raise, which is the silent-reset shape RATCHET_RESET_KEY warns
-        // about.
-        const repo = initRepo(3);
-        const stale = JSON.stringify(
-            {
-                schema_version: 1,
-                baseline: { active_roadmaps: 7, later_roadmaps: 0, open_blockers: 0 },
-                baseline_history: [{ at: '2026-08-18', active_roadmaps: 5, why: RAISE_REASON }],
-                one_in_one_out: { applies_above_active: null },
-            },
-            null,
-            4,
-        );
-        write(repo, 'src/config/estate-count-budget.json', `${stale}\n`);
-        commitAll(repo, 'raise past the recorded reason');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status).toBe(1);
-        expect(res.stderr).toContain('active_roadmaps 3 → 7');
-    });
-
-    it('REFUSES a raise whose reason is whitespace — a bare marker is not a reason', () => {
-        const repo = initRepo(3);
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 5, later: 0, blockers: 0 }, null, '   '));
-        commitAll(repo, 'raise with an empty why');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status).toBe(1);
-        expect(res.stderr).toContain('no recorded reason');
-    });
-
-    it('reports the raise half as unproven, not passed, when the budget is absent at base', () => {
-        // The introducing commit. Absent-at-base and mistyped-path are
-        // indistinguishable, so this is stated rather than assumed either way.
-        const repo = initRepo(3);
-        git(repo, 'rm', '-q', 'src/config/estate-count-budget.json');
-        commitAll(repo, 'drop it at head');
-        git(repo, 'checkout', '-q', 'main');
-        git(repo, 'rm', '-q', 'src/config/estate-count-budget.json');
-        commitAll(repo, 'drop it at base too');
-        git(repo, 'checkout', '-q', 'feat/change');
-        write(repo, 'src/config/estate-count-budget.json', budget({ active: 3, later: 0, blockers: 0 }));
-        commitAll(repo, 'introduce the budget');
-        const res = run(repo, ['--base', 'main']);
-        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
-        expect(res.stdout).toContain('does not exist at main');
-        expect(res.stdout).toContain('no raise is possible');
+        expect(v.floor).not.toBeNull();
+        expect(v.counts['active_roadmaps']).toBe((v.floor as Record<string, number>)['active_roadmaps']);
     });
 });
 
@@ -504,19 +516,13 @@ describe('check_estate_count — the metric corrections (R2 findings 3, 4, 6)', 
         const repo = initRepo(2, { blockers: 2 });
         fs.mkdirSync(path.join(repo, 'agents/roadmaps/later'), { recursive: true });
         git(repo, 'mv', 'agents/roadmaps/road-to-1.md', 'agents/roadmaps/later/road-to-1.md');
-        write(
-            repo,
-            'src/config/estate-count-budget.json',
-            budget({ active: 1, later: 1, blockers: 4 }, null, 'parked one, its blockers still count'),
-        );
         commitAll(repo, 'park a roadmap with blockers');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
         // 4 blockers before, 4 after — the park moved them, it did not resolve them.
         // Matched by regex, not by exact padding: a column-width change is not a
         // behaviour change and must not red this.
-        expect(res.stdout).toMatch(/open_blockers\s+4\s+\(baseline 4, \+0\)/);
-        expect(res.stdout).not.toContain('free tightening: open_blockers');
+        expect(res.stdout).toMatch(/open_blockers\s+4\s+\(floor 4 at main, \+0\)/);
     });
 
     it('charges un-stubbing as an addition — stubs/ is a recognised disposition', () => {
@@ -527,11 +533,7 @@ describe('check_estate_count — the metric corrections (R2 findings 3, 4, 6)', 
         write(repo, 'agents/roadmaps/stubs/road-to-stub.md', roadmap('Stub'));
         commitAll(repo, 'add a stub at base-ish');
         git(repo, 'mv', 'agents/roadmaps/stubs/road-to-stub.md', 'agents/roadmaps/road-to-stub.md');
-        write(
-            repo,
-            'src/config/estate-count-budget.json',
-            budget({ active: 4, later: 0, blockers: 0 }, null, 'promoted a stub'),
-        );
+        write(repo, 'agents/roadmaps/road-to-stub.md', roadmap('Stub', { claim: CLAIM }));
         commitAll(repo, 'un-stub it');
         const res = run(repo, ['--base', 'main']);
         expect(res.status).toBe(1);
@@ -540,14 +542,14 @@ describe('check_estate_count — the metric corrections (R2 findings 3, 4, 6)', 
     });
 
     it('does not count later/README.md as a parked roadmap', () => {
-        // Finding 6. The first version listed *.md, so the baseline described N
+        // Finding 6. The first version listed *.md, so the count described N
         // roadmaps plus a README — inconsistent with the active side's own filter.
         const repo = initRepo(2, { later: 1 });
         write(repo, 'agents/roadmaps/later/README.md', '# Parked roadmaps\n\nWhat this directory is for.\n');
         commitAll(repo, 'document the later dir');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
-        expect(res.stdout).toMatch(/later_roadmaps\s+1\s+\(baseline 1, \+0\)/);
+        expect(res.stdout).toMatch(/later_roadmaps\s+1\s+\(floor 1 at main, \+0\)/);
     });
 });
 
@@ -559,9 +561,14 @@ describe('check_estate_count — argv and output contracts (R2 findings 2, 7)', 
         const repo = initRepo(3);
         const res = run(repo, ['--base', 'main', '--json']);
         expect(res.status, res.stderr).toBe(0);
-        const parsed = JSON.parse(res.stdout) as { counts: Record<string, number>; raises: unknown[] };
+        const parsed = JSON.parse(res.stdout) as {
+            counts: Record<string, number>;
+            claims: unknown[];
+            floorRef: string;
+        };
         expect(parsed.counts['active_roadmaps']).toBe(3);
-        expect(parsed.raises).toEqual([]);
+        expect(parsed.claims).toEqual([]);
+        expect(parsed.floorRef).toBe('main');
         // The count is not lost — it moves to stderr, where the coverage guard
         // also reads it.
         expect(res.stderr).toContain('scanned: 3');
