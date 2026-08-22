@@ -36,9 +36,11 @@ start. The sibling roadmap's council pass took exactly this reading.
 
 ## Resume trigger
 
-**All five** verdict files exist under `agents/evidence/billing-cliff/`:
-`phase1-s1.md` … `phase1-s5.md`, each naming its surface as gate-grade,
-warning-grade, or null. The completeness is the trigger, not any single probe:
+**All six** verdict files exist under `agents/evidence/billing-cliff/`:
+`phase1-s1.md` … `phase1-s6.md`, each naming its surface as gate-grade,
+warning-grade, or null. S-6 was added on 2026-08-22 with its headless half
+already recorded null at `claude` v2.1.239 — the file is still required,
+because the interactive half is unanswered and is the half that would matter. The completeness is the trigger, not any single probe:
 a partial set cannot answer "is there a gate-grade surface", and resuming on
 one positive would start Phases 2–3 against a signal whose alternatives were
 never measured.
@@ -97,9 +99,22 @@ attempt from re-deriving it.
       hook-visible event known to exist.
       **S-5 the claude.ai usage endpoint** — expect positive but inadmissible
       as a dependency, recorded for evidence only.
-      verify: five verdict files exist, each naming its surface as gate-grade,
+      **S-6 a Claude Code usage command** (`/usage` or equivalent) — the
+      HEADLESS half is already answered and needs no boundary: `claude --help`
+      at **v2.1.239** lists thirteen subcommands (`agents`, `auth`,
+      `auto-mode`, `doctor`, `gateway`, `import`, `install`, `mcp`, `plugin`,
+      `project`, `setup-token`, `ultrareview`, `update`) and no `usage` among
+      them, and no usage / quota / limit / rate flag. Recorded **null
+      (headless, v2.1.239)** by `/analyze:inbox` on 2026-08-22 — do not
+      re-probe it, re-probe only whether a LATER version added one. The
+      INTERACTIVE half stays open and is the reason this row exists: a TUI
+      `/usage` would carry quota and both reset times without a model call,
+      which is strictly the best probe if it is reachable at all. Expect
+      positive interactively.
+      verify: six verdict files exist, each naming its surface as gate-grade,
       warning-grade or null, and each stating whether the pre-registered
-      expectation held.
+      expectation held. S-6's may be written from the recorded headless null
+      plus one interactive check; the other five need the boundary.
 
 ## Phase 2 — Stop-slot concern: halt the drain at the cliff
 
@@ -150,7 +165,7 @@ Conditional on Phase 1 producing a gate-grade signal. Unstarted on a null.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Five verdict files exist under `agents/evidence/billing-cliff/`,
+- [ ] AC-1 — Six verdict files exist under `agents/evidence/billing-cliff/`,
       one per surface, each naming a grade and whether the pre-registered
       expectation held.
 - [ ] AC-2 — If any surface is gate-grade, an autonomous drain crossing the
