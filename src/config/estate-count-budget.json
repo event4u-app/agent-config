@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 19,
+    "active_roadmaps": 18,
     "later_roadmaps": 59,
-    "open_blockers": 55
+    "open_blockers": 53
   },
   "baseline_history": [
     {
@@ -867,6 +867,20 @@
       "later_roadmaps": 59,
       "open_blockers": 55,
       "why": "WALKED DOWN active 20 -> 19 and open_blockers 57 -> 55 by the close of road-to-subagent-envelope-adoption: the roadmap archives at zero open steps and its two blockers are resolved. Restated against the floor main moved to while this branch was open, because the ratchet reads the stored number and the branch entry was written against an older base."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 21,
+      "later_roadmaps": 59,
+      "open_blockers": 57,
+      "why": "RE-STATED against the floor origin/main moved to while branch drain/road-to-requirements-traceability-minimal was open. Moves: active_roadmaps 22 -> 21; open_blockers 59 -> 57. This branch's own drain work is described in the entry it added before the merge; this entry exists only because every drain branch walks the SAME ratchet file, so each one conflicts on it as soon as a sibling merges. Resolved onto MAIN's side and then re-measured against the merged tree - never by carrying this branch's earlier figures forward, which would book a sibling's gain a second time. A lower measurement is the new ceiling, not headroom to spend later."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 18,
+      "later_roadmaps": 59,
+      "open_blockers": 53,
+      "why": "WALKED DOWN active 19 -> 18 and open_blockers 55 -> 53 by the close of road-to-requirements-traceability-minimal: the roadmap archives at zero open steps and its two blockers are resolved. Restated against the floor main moved to while this branch was open, because the ratchet reads the stored number and the branch entry was written against an older base."
     }
   ],
   "target": {

@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **715 public artefacts** shipped by
+Consumer-facing catalog of all **716 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -646,7 +646,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (107)
+## Guidelines (108)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -711,6 +711,7 @@ are excluded.
 | guideline | [`systems-thinking`](../docs/guidelines/agent-infra/systems-thinking.md) | agent-infra |  |
 | guideline | [`tool-description-as-policy`](../docs/guidelines/agent-infra/tool-description-as-policy.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
+| guideline | [`traceability-field-mechanics`](../docs/guidelines/agent-infra/traceability-field-mechanics.md) | agent-infra |  |
 | guideline | [`untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
 | guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |
