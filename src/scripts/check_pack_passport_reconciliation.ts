@@ -45,6 +45,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runSelfTest } from './_lib/gate_self_test.js';
 import { censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -141,7 +142,74 @@ export function renderRanking(ps: readonly Passport[]): string {
     return `${lines.join('\n')}\n`;
 }
 
+/**
+ * Discrimination over the two pure units — the parser and the ratio.
+ *
+ * This script exits 0 on every path by design (it is a report, not a gate), so
+ * no planted file can make it red and the canary harness cannot prove anything
+ * about it. The `scanned:` floor is the one thing about it that CAN break, and
+ * a self-test is what proves the two functions behind the number actually
+ * discriminate rather than returning something shaped like an answer.
+ */
+function selfTest(): number {
+    const yaml = [
+        'artefact_count: 3',
+        'token_passport:',
+        '  basis: chars/4',
+        '  catalog_tokens: 20',
+        '  commands_tokens: 5',
+        '  other_tokens: 1',
+        '  rules_tokens: 10',
+        '  total_tokens: 36',
+    ].join('\n');
+    return runSelfTest({
+        gate: 'check_pack_passport_reconciliation',
+        minCases: 6,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'a manifest with a passport parses every field',
+                expect: 'reject',
+                run: () => {
+                    const p = readPassport('x', yaml);
+                    return p !== null && p.rules_tokens === 10 && p.total_tokens === 36 ? 1 : 0;
+                },
+            },
+            {
+                name: 'a manifest with NO passport returns null, not a zero passport',
+                expect: 'accept',
+                run: () => (readPassport('x', 'artefact_count: 3\n') === null ? 0 : 1),
+            },
+            {
+                name: 'an exact match is in band',
+                expect: 'accept',
+                run: () => (reconcile(100, 100, 'b').inBand ? 0 : 1),
+            },
+            {
+                name: 'a 9 % gap is in band and an 11 % gap is not',
+                expect: 'reject',
+                run: () => (reconcile(109, 100, 'b').inBand && !reconcile(111, 100, 'b').inBand ? 1 : 0),
+            },
+            {
+                // The denominator is the CENSUS, the side with the independent
+                // measurement. Dividing by the pack sum would let a passport
+                // that measured almost nothing report a small gap — which is
+                // exactly the failure this repo's own measurement produced.
+                name: 'the denominator is the census, not the pack sum',
+                expect: 'reject',
+                run: () => (Math.abs(reconcile(1, 100, 'b').gapPct - 0.99) < 1e-9 ? 1 : 0),
+            },
+            {
+                name: 'both sides zero is in band; a sum against a zero census is not',
+                expect: 'accept',
+                run: () => (reconcile(0, 0, 'b').inBand && !reconcile(5, 0, 'b').inBand ? 0 : 1),
+            },
+        ],
+    });
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     const passports = collectPassports();
     try {
         assertScanned({
