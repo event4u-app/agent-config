@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
+    "active_roadmaps": 22,
     "later_roadmaps": 59,
-    "open_blockers": 63
+    "open_blockers": 59
   },
   "baseline_history": [
     {
@@ -786,10 +786,45 @@
     },
     {
       "at": "2026-08-22",
+      "active_roadmaps": 24,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on two axes by the close of road-to-code-graph-extractor-defect. active 25 -> 24 is the archive at zero open and zero deferred steps; open_blockers 64 -> 62 is its two blockers RESOLVED. b-bench-repo-pinning resolved (a) on evidence -- all four pre-registered truth-file hashes match exactly and all three repo clones resolve, so Phase 1 is reproducible; it is nonetheless unrun, for the unrelated reason that the Phase 0 pre-falsifier fired. b-code-graph-default-flip resolved (a) by 2/2 council: the reachability repair lands as an independent bug fix, with code_graph.enabled, the registered null and DEFAULT_CACHE all explicitly out of scope. Note that this roadmap ARCHIVES WITHOUT ACHIEVING ITS GOAL, and the glyphs say so: three steps [x], six [-]. The extraction defect was real and is repaired; the pre-falsifier then established it is NOT the cause of the retrieval null, which is the honest-null closing state the roadmap registered for itself before any repair. NOTE FOR THE MERGE: the fifth drain branch to walk active 25 -> 24 against its own base (PRs #1532, #1534, #1536, #1537 are the others); five independent -1s do not compose, so the last to land must re-measure."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN active 24 -> 23 on the sync with main, not on work this PR did: road-to-evidence-based-adr-governance was archived by #1534 without walking the baseline, so main landed measured 23 against a stored 24 and every branch merging main inherited the red. Recorded here because this is the first change to merge that main state, and the gate's own remediation note says the walk belongs in the change that carries the lower measurement rather than in a follow-up."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 25,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on open_blockers only, 64 -> 62, by resolving both blockers of road-to-publish-boundary-evidence. active_roadmaps does NOT move and must not be read as an oversight: that roadmap is only PARTLY drained -- Phase 1 steps 1.1 and 1.2 landed, and 1.3 plus Phases 2 and 3 are still open -- so it stays in the active tree and its PR is explicitly partial. Recording that here because every other entry in this history pairs a blocker drop with an archive, and a reader scanning for the pattern would otherwise assume the archive was forgotten. Both resolutions are council-ratified 2/2: b-sourcemap-intent took (b'), which is NEITHER of the two options as written -- the option set conflated a consumer debugging affordance (product source maps, kept at a provisional ratchet of 120) with valueless compiled-test output (stripped, threshold 0) -- and b-sbom-scope took (a), leaving a prior council's rejection standing under ADR-238 Trigger A, whose two halves both remain unmet."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 60,
+      "why": "WALKED DOWN open_blockers 62 -> 60 on the merge resolution: this PR resolves both blockers of road-to-publish-boundary-evidence, and the branch entry it carried was written against the pre-merge baseline of 64. Rewritten here against main's walked 62 rather than left as a stale delta, because the ratchet reads the stored number and not the history prose."
+    },
+    {
+      "at": "2026-08-22",
       "active_roadmaps": 23,
       "later_roadmaps": 59,
       "open_blockers": 63,
-      "why": "LOWERED on both counted metrics by the drain of road-to-spec-axis-in-review: the roadmap was executed to 17/17 and archived inside this one change, so active_roadmaps walks 24 -> 23, and its single blocker (spec-source-binding) was RESOLVED rather than parked, so open_blockers walks 64 -> 63. Resolved, not carried: an AI council took option (c) \u2014 criteria are read only when explicitly supplied, plus a third `supplied_unparseable` error state neither offered option carried \u2014 and the choice is recorded at the blocker with the degradation (1 of 2 seats; the second returned an empty response) named rather than smoothed over. later_roadmaps is untouched: nothing was parked. Walked in the change that earned it, per this gate's own instruction, and measured against the floor origin/main stands at while this branch is open \u2014 not against the figure the branch started from."
+      "why": "WALKED DOWN by the close of road-to-host-capability-observations: active 24 -> 23 on the archive, open_blockers 64 -> 63 on its single blocker RESOLVED. b-host-access resolved as BOTH of its options, which its own recommendation says are not exclusive per host: (a) for the one reachable host and (b) for the other seven. Worth recording what that close actually produced, because the numbers alone would overstate it: the registry still holds exactly ONE row. What changed is that the row is now CITED under a written protocol -- 445 subagent starts and 420 paired child durations for subagent_spawn, 6,168 of 6,388 stops at concurrent_open >= 2 for parallel_spawn, both from the live ledger -- and that the seven other declared platforms are recorded as unreachable-with-reason rather than as undifferentiated silences. Three of the six fields on the one reachable host remain unobserved because nothing instruments them. So the honest summary is one cited row and seven recorded silences, against one uncited row and seven undifferentiated ones, and the roadmap's step 2.2 closes [-] because its subject was ADDITIONAL rows and there were none to add."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 59,
+      "open_blockers": 59,
+      "why": "WALKED DOWN active 23 -> 22 and open_blockers 60 -> 59 by the close of road-to-host-capability-observations: the roadmap archives at zero open steps and its one blocker is resolved. The branch carried the same walk against its own pre-merge base of 24/64, so the numbers are restated here against main's already-walked 23/60 rather than left as a stale delta."
     }
   ],
   "target": {
