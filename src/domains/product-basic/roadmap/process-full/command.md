@@ -175,8 +175,8 @@ contract.
 
 **Mergeability is per-PR against a recorded base, never a queue property.**
 When every PR in the estate touches the same generated files — in this
-repository `agents/roadmaps-progress.md` and
-`src/config/estate-count-budget.json` — making PR *n* mergeable against base
+repository `agents/roadmaps-progress.md` and the archive index — making PR *n*
+mergeable against base
 SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
 Report "mergeable against base `<SHA>`", never "the queue is mergeable".
 
