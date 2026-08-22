@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
+    "active_roadmaps": 22,
     "later_roadmaps": 59,
-    "open_blockers": 60
+    "open_blockers": 59
   },
   "baseline_history": [
     {
@@ -811,6 +811,13 @@
       "later_roadmaps": 59,
       "open_blockers": 60,
       "why": "WALKED DOWN open_blockers 62 -> 60 on the merge resolution: this PR resolves both blockers of road-to-publish-boundary-evidence, and the branch entry it carried was written against the pre-merge baseline of 64. Rewritten here against main's walked 62 rather than left as a stale delta, because the ratchet reads the stored number and not the history prose."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 59,
+      "open_blockers": 59,
+      "why": "BOTH counted metrics LOWERED by the drain of road-to-ci-supply-chain-integrity; nothing parked, nothing raised. RE-STATED against the floor origin/main moved to while this branch was open, after an estate-budget merge conflict was resolved onto main's side rather than by carrying this branch's earlier figures. active_roadmaps 23 -> 22: the roadmap was executed to 17/17 and archived inside this one change. open_blockers 60 -> 59: its blocker workflow-lint-tool-adoption was RESOLVED, not carried. That resolution is the one a later reader should treat differently from the rest - it was taken with NO council seat available at all (both seats 50/50 requests, 0 of 2 present, $0.00 spent) on an Owner:user Class-3 blocker, so it is a single-decider decision and is recorded with its degradation at agents/evidence/analysis/workflow-security-net-degraded-decision.md. The conservative half is deliberate: the council-locked severity model was NOT re-tiered and the regression net went into the test suite instead, so no locked line moved while nobody was watching."
     }
   ],
   "target": {
