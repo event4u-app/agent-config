@@ -55,7 +55,11 @@
         "LICENSE",
         "MIGRATION.md",
         "README.md",
-        "llms.txt"
+        "llms.txt",
+        "!dist/**/*.test.js",
+        "!dist/**/*.test.js.map",
+        "!dist/**/*.spec.js",
+        "!dist/**/*.spec.js.map"
     ],
     "bin": {
         "agent-config": "dist/cli/agent-config.js"

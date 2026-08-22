@@ -306,6 +306,93 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 if (body) for (const c of namedChildren(body)) walk(c, classId, id);
                 return;
             }
+            // Modern TS declares most of its functions as bindings, not as
+            // `function` statements. Before this case the extractor produced
+            // NO node for `export const f = () => {}` or
+            // `const g = function () {}`, which is the measured cause of the
+            // 170-vs-13,428 TS/PHP symbol gap: the six handled kinds simply do
+            // not cover the dominant declaration form.
+            //
+            // Scoped deliberately to bindings whose value IS a function. A
+            // `const x = 3` is data, not a symbol this graph answers questions
+            // about, and emitting a node per constant would inflate the count
+            // without improving recall — which is the cosmetic-improvement
+            // failure the phase falsifier exists to catch.
+            case 'lexical_declaration':
+            case 'variable_declaration': {
+                for (const d of namedChildren(n)) {
+                    if (d.type !== 'variable_declarator') continue;
+                    const value = d.childForFieldName('value');
+                    if (!value || (value.type !== 'arrow_function' && value.type !== 'function_expression')) {
+                        continue;
+                    }
+                    const nm = nameField(d) ?? '<anon>';
+                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    out.nodes.push({
+                        id,
+                        label: nm,
+                        kind: classId ? 'method' : 'function',
+                        source_file: file,
+                        source_location: loc(d),
+                    });
+                    out.rawEdges.push({
+                        sourceId: classId ?? fileId,
+                        relation: 'member',
+                        targetName: nm,
+                        confidenceHint: 'EXTRACTED',
+                    });
+                    // Walk the body under the BINDING's scope, so a call inside
+                    // an arrow function attributes to that function rather than
+                    // to the enclosing file — the same treatment
+                    // `function_declaration` gets.
+                    //
+                    // `walk(body)` and not `namedChildren(body)`: an
+                    // expression-bodied arrow (`() => helper()`) has the CALL
+                    // itself as its body, so descending one level first steps
+                    // straight past it and the edge is lost. The sibling cases
+                    // can iterate children because a `statement_block` is never
+                    // the interesting node; here it often is.
+                    const body = value.childForFieldName('body');
+                    if (body) walk(body, classId, id);
+                }
+                // Non-function declarators still need walking for their calls.
+                for (const d of namedChildren(n)) {
+                    if (d.type !== 'variable_declarator') continue;
+                    const value = d.childForFieldName('value');
+                    if (value && (value.type === 'arrow_function' || value.type === 'function_expression')) {
+                        continue;
+                    }
+                    walk(d, classId, scopeId);
+                }
+                return;
+            }
+            // `class C { m = () => 1 }` — a class property holding a function.
+            // Emitted as a `method`, the same kind `method_definition` emits,
+            // because it is one to every caller.
+            case 'public_field_definition': {
+                const value = n.childForFieldName('value');
+                const nm = nameField(n) ?? '<anon>';
+                if (value && (value.type === 'arrow_function' || value.type === 'function_expression')) {
+                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    out.nodes.push({
+                        id,
+                        label: nm,
+                        kind: 'method',
+                        source_file: file,
+                        source_location: loc(n),
+                    });
+                    out.rawEdges.push({
+                        sourceId: classId ?? fileId,
+                        relation: 'member',
+                        targetName: nm,
+                        confidenceHint: 'EXTRACTED',
+                    });
+                    const body = value.childForFieldName('body');
+                    if (body) walk(body, classId, id);
+                    return;
+                }
+                break;
+            }
             case 'new_expression': {
                 const ctor = n.childForFieldName('constructor');
                 if (ctor && (ctor.type === 'identifier' || ctor.type === 'type_identifier' || ctor.type === 'member_expression'))
