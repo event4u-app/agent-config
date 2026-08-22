@@ -592,8 +592,8 @@ gates:
 
   - id: lint_plan_risk_register
     argv: []
-    min_scanned: 5
-    corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
+    min_scanned: 1
+    corpus: "ready roadmap files under agents/roadmaps/ top level (6 as of 2026-08-21; 19 at the original baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
     note: >
       Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
@@ -636,6 +636,18 @@ gates:
       have reddened CI for the exact reason this entry says is the wrong thing to
       detect. 5 keeps the root-moved / scanner-blind signal (both scan 0) and
       stops the number from needing a commit per archived roadmap.
+
+      Lowered again 5 → 1, and this time the SHAPE changed rather than the
+      number. 5 was picked to have headroom and did not: the drain took the
+      corpus to 6, so a review provoked the red by archiving one roadmap. The
+      lesson is that no absolute floor survives here — this gate's sibling
+      `check_estate_count` forbids growth, so the corpus can only shrink and any
+      floor above 0 is met eventually. 1 is the smallest value that still
+      distinguishes "the scanner read something" from "the root moved or the
+      scope is dead", which is the only thing this field was ever asked to
+      detect. Revisit-if the gate gains a way to express "non-empty" directly,
+      or if a drop to 0 is ever traced to a scanner defect rather than to an
+      empty corpus.
 
   - id: check_estate_count
     argv: []
