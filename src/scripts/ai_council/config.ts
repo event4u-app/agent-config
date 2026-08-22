@@ -83,6 +83,7 @@ import * as budget from './cli_call_budget.js';
 // Converting it to a value import — or adding any other runtime import from
 // quorum into config — creates a real ESM cycle in the loader's init path.
 import { OPENAI_CLI_VENDOR_DEFAULT } from './clients.js';
+import type { SeatConstraints } from './seating.js';
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
 const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
@@ -543,6 +544,28 @@ import {
     _sortedListRepr,
 } from './py_format.js';
 
+/**
+ * Parse the optional `seat_constraints:` block.
+ *
+ * Fails CLOSED on a malformed value rather than falling back to absent: a run
+ * that declared a diversity floor and silently got none is the exact silent
+ * fallback Phase 2.4 exists to prevent.
+ */
+function _build_seat_constraints(raw: unknown, name = 'seat_constraints'): SeatConstraints {
+    if (raw === null || raw === undefined) return {};
+    if (!_isDict(raw)) {
+        throw new CouncilConfigError(`${name} must be a mapping (got ${_pyTypeName(raw)}).`);
+    }
+    const mf = _get(raw, 'min_families', null);
+    if (mf === null || mf === undefined) return {};
+    if (typeof mf !== 'number' || !Number.isInteger(mf) || mf < 1) {
+        throw new CouncilConfigError(
+            `${name}.min_families must be an integer >= 1 when set (got ${_pyRepr(mf)}).`,
+        );
+    }
+    return { min_families: mf };
+}
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -553,6 +576,20 @@ export interface CouncilConfig {
     readonly cli_call_budget: CliCallBudgetConfig;
     readonly quorum: QuorumSetting;
     readonly quorum_min_present: QuorumMinPresent;
+    /**
+     * Optional per-run seat declaration (road-to-council-seat-selection Phase 2).
+     *
+     * ABSENT is the default and means today's behaviour exactly: ask-all, no
+     * constraint, no degradation line. Asserted by a test rather than intended —
+     * an extension that is inert when unused has to be provable, or the claim is
+     * just a comment.
+     *
+     * Carries MISSION, never RANK. `tier` above keeps its single documented
+     * meaning as a chairman-selection input; the resolved
+     * `b-ladder-order-benchmark-spend` blocker forbids any band-ordering claim
+     * without a cited benchmark, and nothing here reads `tier`.
+     */
+    readonly seat_constraints: SeatConstraints;
     readonly fallback: _FallbackConfig;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
@@ -808,6 +845,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const quorum_min_present = _build_quorum_min_present(
         _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
     );
+    const seat_constraints = _build_seat_constraints(_get(raw, 'seat_constraints', null));
     const fallback = buildFallback(_get(raw, 'fallback', {}), _FALLBACK_DEPS);
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
@@ -859,6 +897,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         cli_call_budget,
         quorum,
         quorum_min_present,
+        seat_constraints,
         fallback,
         necessity_classifier,
         model_downgrade,
