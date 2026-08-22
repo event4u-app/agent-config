@@ -432,6 +432,19 @@ export interface MemberConfig {
      * the falsification condition that gates ever enabling `'1h'`.
      */
     readonly prompt_cache_ttl: '5m' | '1h';
+    /**
+     * Optional `YYYY-MM-DD` stamp: the date this member's `model:` pin was last
+     * checked against the provider's own surface. `null` when unset.
+     *
+     * Exists because a hard pin cannot notice its own age. The starter template
+     * shipped `claude-sonnet-4-5` on an enabled member with nothing in the file
+     * able to flag it — and `check_council_pin_staleness` reads exactly this
+     * field. A member on a vendor sentinel (`codex-default`, or an alias like
+     * `sonnet` that the provider documents as "the latest model") needs no
+     * stamp: it cannot go stale, which is why the gate exempts it rather than
+     * demanding a date nobody would refresh.
+     */
+    readonly verified_at: string | null;
 }
 
 /**
@@ -1916,6 +1929,55 @@ function _build_member(
     // untouched here) OR as a mapping carrying `ttl`. '5m' is the
     // permanent default; see docs/contracts/ai-council-config.md
     // § Prompt cache TTL for the falsification condition on '1h'.
+    // A malformed date fails CLOSED. A stamp is a claim about when a human
+    // last looked; accepting `2026-13-45` or `soon` would make the staleness
+    // gate report on a string it cannot compare, which is worse than no stamp.
+    const verified_at_raw = _get(cfg, 'verified_at', null);
+    let verified_at: string | null = null;
+    if (verified_at_raw !== null && verified_at_raw !== undefined) {
+        // The stamp must be a QUOTED string, and the reason is a measured
+        // fail-open rather than a style preference.
+        //
+        // YAML 1.1 resolves an unquoted `2026-08-22` to a Date. Accepting that
+        // and normalising it back with `toISOString()` was the first
+        // implementation, and it LAUNDERED impossible dates: the loader silently
+        // rolls `2026-13-45` over to 2027-02-14, so the calendar check below saw
+        // a valid date and the malformed input passed. Verified against a real
+        // config, not reasoned about.
+        //
+        // A Date is therefore rejected with the fix in the message. That keeps
+        // the impossible-date case failing CLOSED, which is the only direction
+        // worth defending here: a stamp is a claim about attention, and a
+        // silently corrected claim is worse than a rejected one.
+        if (verified_at_raw instanceof Date) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at must be QUOTED — write ` +
+                    `verified_at: "YYYY-MM-DD". Unquoted, YAML parses it as a date and ` +
+                    `silently rolls impossible values over (2026-13-45 becomes 2027-02-14), ` +
+                    `which would let a malformed stamp through.`,
+            );
+        }
+        const coerced = verified_at_raw;
+        if (typeof coerced !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(coerced)) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at must be a 'YYYY-MM-DD' string when set ` +
+                    `(got ${_pyRepr(verified_at_raw)}).`,
+            );
+        }
+        const [y, m, d] = coerced.split('-').map((x) => Number(x));
+        const probe = new Date(Date.UTC(y as number, (m as number) - 1, d as number));
+        if (
+            probe.getUTCFullYear() !== y ||
+            probe.getUTCMonth() + 1 !== m ||
+            probe.getUTCDate() !== d
+        ) {
+            throw new CouncilConfigError(
+                `members.${name}.verified_at is not a real calendar date ` +
+                    `(got ${_pyRepr(verified_at_raw)}).`,
+            );
+        }
+        verified_at = coerced;
+    }
     const prompt_cache_raw = _get(cfg, 'prompt_cache', null);
     let prompt_cache_ttl: '5m' | '1h' = '5m';
     if (prompt_cache_raw !== null && prompt_cache_raw !== undefined && !_isBool(prompt_cache_raw)) {
@@ -1947,6 +2009,7 @@ function _build_member(
         participate_low_impact: participate_raw,
         tier,
         prompt_cache_ttl,
+        verified_at,
     };
 }
 
