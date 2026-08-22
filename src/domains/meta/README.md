@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 298
+- **artefacts**: 299
 
 ## Commands (153)
 
@@ -112,7 +112,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`research-deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.
 - **`research-report`** — Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime.
 - **`review`** — Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
-- **`review-changes`** — Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
+- **`review-changes`** — Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
@@ -238,7 +238,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
-## Skills (74)
+## Skills (75)
 
 - **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -271,6 +271,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`judge-code-quality`** — Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge.
 - **`judge-injection-defense`** — Use when scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates.
 - **`judge-security-auditor`** — Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge.
+- **`judge-spec-compliance`** — Use when a diff needs a requirement review — does it satisfy every stated acceptance criterion — dispatched by /review-changes, /do-and-judge, /judge. Never infers criteria from the diff.
 - **`judge-synthesis`** — Use to consolidate multiple already-run judge verdicts into one report — consensus, conflicts, must-fix/should-fix with per-judge provenance. Consume-only, no opaque score, never auto-gates.
 - **`judge-test-coverage`** — Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'.
 - **`learning-to-rule-or-skill`** — Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
