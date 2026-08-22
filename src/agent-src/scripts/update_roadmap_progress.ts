@@ -64,7 +64,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
-import { evaluateDashboardOnDisk, parseModeToken, type DashboardMode } from './dashboard_mode.js';
+import {
+    evaluateDashboardOnDisk,
+    parseModeToken,
+    reportCheckVerdict,
+    type DashboardMode,
+} from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1218,8 +1223,7 @@ const _PROG = 'update_roadmap_progress.py';
 function _usage(): string {
     return (
         `usage: ${_PROG} [-h] [--check] [--tracked-mode | --untracked-mode]\n` +
-        `       [--dashboard-only]\n` +
-        `       [--archive | --no-archive] [--repo-root REPO_ROOT]\n`
+        `       [--archive | --no-archive] [--repo-root REPO_ROOT] [--dashboard-only]\n`
     );
 }
 
@@ -1229,19 +1233,11 @@ interface Args {
     archive: boolean;
     repo_root: string;
     /**
-     * Assert ONLY the dashboard artefact's own state — tracked / absent /
-     * stale — and not the estate-wide conditions `--check` also carries
-     * (completed-but-unarchived, Iron Law 3 deferred items).
-     *
-     * It exists because those are two different obligations with two different
-     * blast radii. The artefact check is about THIS file and belongs in the job
-     * `main protection` requires, so a branch cannot re-add the dashboard the
-     * way one did on 2026-08-21. The estate checks are about roadmaps this
-     * change never touches, and putting them behind a required check turns any
-     * pre-existing estate defect into a merge block on every unrelated PR —
-     * which is exactly what happened the first time this step was wired: a
-     * deferred item in `road-to-per-turn-hook-economy`, already on `main` and
-     * untouched here, blocked this PR. They keep running in `task ci`.
+     * Assert ONLY this artefact's own state — tracked / absent / stale — not
+     * the estate-wide conditions `--check` also carries. Two obligations, two
+     * blast radii: why that split exists, and what it cost when it did not,
+     * is on the `roadmap-dashboard-untracked-check` task in
+     * `taskfiles/content.yml`.
      */
     dashboard_only: boolean;
 }
@@ -1389,40 +1385,17 @@ function main(argv?: readonly string[]): number {
 
     if (args.check) {
         const rel = _relPosix(repo_root, target);
-        const verdict = evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel });
-        const stale = verdict.stale;
-        if (verdict.error !== null) process.stderr.write(verdict.error);
-        if (!args.dashboard_only && complete.length) {
-            process.stderr.write(
-                '❌  Completed roadmaps are still in `agents/roadmaps/` — ' +
-                    'move them to `agents/roadmaps/archive/` (per the ' +
-                    '`roadmap-progress-sync` rule):\n',
-            );
-            for (const r of complete) {
-                process.stderr.write(`      - ${r.rel}  (${r.done}/${r.total_active} done)\n`);
-            }
-        }
-        if (!args.dashboard_only && pending.length) {
-            process.stderr.write(
-                '❌  Iron Law 3 — roadmaps with unresolved `[~]` deferred ' +
-                    'items must NOT auto-archive. Resolve via `roadmap-management § 4b` ' +
-                    '(spawn follow-up, restore, or cancel):\n',
-            );
-            for (const r of pending) {
-                process.stderr.write(
-                    `      - ${r.rel}  (${r.done}/${r.total_active} done · ` +
-                        `${r.deferred} deferred)\n`,
-                );
-            }
-        }
-        if (!args.dashboard_only && gated.length) {
-            _warn_merge_gated();
-        }
-        if (stale || (!args.dashboard_only && (complete.length || pending.length))) {
-            return 1;
-        }
-        process.stdout.write(verdict.ok ?? '');
-        return 0;
+        const r = reportCheckVerdict({
+            verdict: evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel }),
+            complete,
+            pending,
+            dashboardOnly: args.dashboard_only,
+            warnMergeGated: _warn_merge_gated,
+            gatedCount: gated.length,
+        });
+        if (r.stderr) process.stderr.write(r.stderr);
+        if (r.stdout) process.stdout.write(r.stdout);
+        return r.rc;
     }
     fs.writeFileSync(target, new_text, { encoding: 'utf-8' });
     process.stdout.write(

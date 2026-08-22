@@ -603,9 +603,15 @@ describe('update_roadmap_progress — intent', () => {
         // joined it, so pin both lines rather than only the first.
         expect(ts.stderr.split('\n').slice(0, 2)).toEqual([
             'usage: update_roadmap_progress.py [-h] [--check] [--tracked-mode | --untracked-mode]',
-            '       [--archive | --no-archive] [--repo-root REPO_ROOT]',
+            '       [--archive | --no-archive] [--repo-root REPO_ROOT] [--dashboard-only]',
         ]);
         expect(ts.stderr).toContain('unrecognized arguments: --bogus');
+    });
+
+    it('--dashboard-only without --check is refused, not silently ignored', () => {
+        const ts = runTs(['--dashboard-only'], tmp);
+        expect(ts.status, 'exit').toBe(2);
+        expect(ts.stderr).toContain('only meaningful with --check');
     });
 
     it('--help → exit 0, usage token present', () => {
