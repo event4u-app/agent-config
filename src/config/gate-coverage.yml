@@ -222,6 +222,8 @@ gates:
     min_scanned: 180
     corpus: "gates reachable from the `ci` / `consistency` task roots (220 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      whole-graph: it parses every gate invocation in the task roots at once, so a planted file has no property to violate — the defect it detects is a MISSING edge, which cannot be planted.
     note: >
       Floor set below the live count on purpose: the registered set legitimately
       shrinks when a gate is retired, and a floor pinned at today's exact number
@@ -235,6 +237,8 @@ gates:
     min_scanned: 0
     corpus: "the five project rule directories that receive a projected tree (.claude/rules, .cursor/rules, .clinerules, .windsurf/rules, .augment/rules)"
     status: enforced
+    no_canary_reason: >-
+      cross-tree: the violation is one rule appearing in two projected trees, so it needs both trees, not a file.
     note: >
       `min_scanned: 0` is the honest floor and not the false-count shape this file
       rejects elsewhere. This gate compares a project rule directory against its
@@ -257,6 +261,8 @@ gates:
     min_scanned: 100
     corpus: "rule files under src/rules/ (117 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      whole-corpus census: it reports an aggregate over every rule; a single planted rule moves a number rather than producing a red.
     note: >
       Floor set below the live count so a legitimate rule retirement does not red
       the gate that watches activation. It is still far above a collapse: if the
@@ -350,6 +356,8 @@ gates:
     min_scanned: 8
     corpus: "declared human-authored suppression surfaces (10 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      cross-file: a suppression is a violation only against the declared surface that authorises it, so the pair is the unit.
     note: >
       The denominator is the INVENTORY, not the entry count — the gate's job is
       that every suppression surface is accounted for, and a surface list that
@@ -360,6 +368,21 @@ gates:
     min_scanned: 20
     corpus: "candidate rows (REVIEW-NOW / SUPERSEDE (candidate)) across docs/decisions/adr-evidence-sweep-*.md (26 at baseline, in one artifact)"
     status: enforced
+    canary:
+      class: unrouted-candidate
+      path: docs/decisions/adr-evidence-sweep-zz-canary-probe.md
+      content: |
+        # ADR evidence sweep — canary probe
+
+        | Record | Disposition | Why |
+        |---|---|---|
+        | ADR-9999 | REVIEW-NOW | canary probe row |
+
+        ## Candidate routing
+
+        | Record | Disposition | Route | Dated follow-up |
+        |---|---|---|---|
+        | ADR-9999 | REVIEW-NOW | council | when we get to it |
     note: >
       The floor is 20 rather than 26 because a candidate LEAVING the population
       is the point of the sweep: every disposition that lands takes its row out
@@ -385,12 +408,16 @@ gates:
     min_scanned: 90
     corpus: "src/rules/*.md frontmatters (111 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      pairwise: a collision needs two rules, and which two is the finding — a single planted file collides with nothing.
 
   - id: lint_rule_skill_pack_reach
     argv: ["--quiet"]
     min_scanned: 90
     corpus: "src/rules/*.md frontmatters joined against src/skills packs and the pack registry (116 rules at baseline)"
     status: enforced
+    no_canary_reason: >-
+      join: rule frontmatter against the skills tree and the pack registry; a planted rule needs a matching planted pack graph to be judged.
     note: >
       Advisory on findings, enforced on COVERAGE: the gate exits 0 while its
       unreachable-route set is non-empty (12 at introduction), so only this
@@ -403,6 +430,8 @@ gates:
     min_scanned: 380
     corpus: "src/ ↔ dist/agent-src/ .md pairs (429 at baseline: 111 rules + 318 skills)"
     status: enforced
+    no_canary_reason: >-
+      byte-equality between src/ and dist/agent-src/ pairs — the property is a relation between two trees, not a file.
 
   - id: check_augment_description_cap
     argv: []
@@ -513,6 +542,8 @@ gates:
     min_scanned: 340
     corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (360 measured 2026-08-13: 109 CI + 251 local)"
     status: enforced
+    no_canary_reason: >-
+      whole-graph: it parses every workflow and taskfile invocation and reports gates present in one set and absent from the other.
     note: >
       Registered 2026-08-02. It already emitted the contract line on every path,
       including the failing one — it was simply never listed, the same omission
@@ -560,6 +591,8 @@ gates:
     unavailable_exit: 2
     corpus: "built HTML pages under site/dist (25 content sources at baseline)"
     status: enforced
+    no_canary_reason: >-
+      needs the BUILT site under site/dist, which does not exist until a build runs; already reported `unavailable` when absent.
     note: >
       Registered 2026-07-30 after it was caught reporting green over a stale build —
       6 pages against 25 content sources, every source newer than the newest page.
@@ -589,6 +622,8 @@ gates:
     min_scanned: 1200
     corpus: "all .md under src/ + dist/agent-src/ plus the shipped root files (1,566 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      a planted file would be judged, but the gate is a broad scan whose baseline is the corpus size — a single red proves the matcher fires, which its own fixtures already do.
     note: >
       SCAN_DIRS named the retired authoring root, so the entire src/ tree —
       more than half the corpus — was skipped and an identifier authored there
@@ -599,6 +634,8 @@ gates:
     min_scanned: 800
     corpus: ".md under the scanned roots plus memory YAML (1,043 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      a planted broken reference is judged, but every target must exist in the real tree for the resolver to be faithful; an isolated fixture makes every reference broken.
     note: >
       src/ was absent from every reference-resolution candidate list, so a link
       resolvable only under the source of truth was reported BROKEN. The
@@ -610,6 +647,8 @@ gates:
     min_scanned: 400
     corpus: "src/rules + src/skills + src/agent-src/commands + docs/guidelines .md (533 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      thresholds are computed across the whole corpus; a single planted artefact has no population to exceed.
     note: >
       A collapse below the floor would mean the gate stopped reading the tree
       that states extraction thresholds, so a bare or diverging threshold
@@ -620,6 +659,8 @@ gates:
     min_scanned: 5
     corpus: "src/agent-src/profiles/*.yml (6 seed profiles at baseline)"
     status: enforced
+    no_canary_reason: >-
+      join: a profile is judged against the persona set it names, so both sides are needed.
     note: >
       Fewer than 5 profiles scanned would mean the gate stopped reading the
       seed-profile dir, so a defaults.personas id that resolves to no persona
@@ -630,6 +671,8 @@ gates:
     min_scanned: 200
     corpus: "src/skills/*/SKILL.md (288 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      ratio gate: the 15% rich-skill cap is a property of the corpus, so one planted skill cannot cross it.
     note: >
       A collapse below the floor would mean the gate stopped reading the skills
       tree, so a rich-tagged skill without its justification section (or a cap
@@ -640,6 +683,8 @@ gates:
     min_scanned: 350
     corpus: "skills / rules / commands .md actually judged (368 of 438 enumerated; the rest carry a declared exemption the ledger names)"
     status: enforced
+    no_canary_reason: >-
+      the allowlist is line-keyed against real files, so a planted file has no allowlist anchor and the exemption path goes untested.
     note: >
       Its human summary prints "N hits across M files", where M is files WITH
       HITS — 0 on a clean run. Reading that as coverage is precisely how a
@@ -653,6 +698,8 @@ gates:
     min_scanned: 1
     corpus: "ready roadmap files under agents/roadmaps/ top level (6 as of 2026-08-21; 19 at the original baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
     status: enforced
+    no_canary_reason: >-
+      a planted roadmap is judged, but the gate reads the ready-roadmap population to decide scope; an isolated file changes what it scans.
     note: >
       Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
@@ -740,6 +787,8 @@ gates:
     min_scanned: 1
     corpus: "findings artefacts under agents/evidence/reviews/ + the current-diff evaluation (1 at baseline — the evaluation itself; artefact count grows with gated PRs)"
     status: enforced
+    no_canary_reason: >-
+      git-dependent: it evaluates the current diff against a base ref.
     note: >
       Gate R2 (docs/contracts/plan-review-gates.md § 2). HONEST LIMIT, stated
       because a floor that cannot fail is exactly the false green this file
@@ -767,6 +816,8 @@ gates:
     min_scanned: 7
     corpus: "archived round records — `*-review.md` under agents/evidence/reviews/, excluding live `*.findings.md` (9 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      git-dependent in effect: it reads archived round records whose identity comes from the committed tree, and its own scan-scope guard fails on an empty corpus.
     note: >
       Contract § 2.7. Unlike the R2 entry above, this floor is genuinely
       trippable: the corpus is 9 frozen records and archived records are not
@@ -796,6 +847,8 @@ gates:
     min_scanned: 250
     corpus: "src/skills/*/SKILL.md (288 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      join: a handoff is a link from one skill to another, so the target skill must exist to judge the link.
     note: >
       The argv here is load-bearing, not decoration. Taskfile injects `--quiet`
       (QUIET_FLAG) and this gate read `args[0]` as a positional path, so the CI
@@ -810,6 +863,8 @@ gates:
     min_scanned: 540
     corpus: "names across src/rules + src/skills + src/agent-src + src/domains/**/command.md (621 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      collision gate across four roots at once; one planted name collides with nothing.
     note: >
       Counts NAMES, not files — the scan-scope census counts files under the same
       roots, so the two artefacts legitimately report different numbers here.
@@ -819,12 +874,16 @@ gates:
     min_scanned: 540
     corpus: "artefacts carrying frontmatter across the discovery roots (619 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      a planted artefact is judged, but the gate reports adoption across the discovery roots, so the number rather than a red is the output.
 
   - id: audit_skill_overlap
     argv: ["--quiet", "--print-table", "--strict"]
     min_scanned: 250
     corpus: "src/skills/*/SKILL.md compared pairwise (288 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      pairwise over 288 skills; overlap needs a corpus, and which pair is the finding.
     note: >
       `--strict` is part of the CI invocation and can exit non-zero on a real
       overlap finding. The guard reads the count independently of the exit code —
@@ -835,6 +894,8 @@ gates:
     min_scanned: 90
     corpus: "src/rules/*.md (111 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      a planted rule IS judgeable — this entry is a genuine authoring gap rather than a structural one, and is the first candidate if the mode is ever built.
     note: >
       Emits on stderr, not stdout: `--format json` owns this gate's stdout and a
       count written there would corrupt the payload. The guard reads both streams.
@@ -856,6 +917,8 @@ gates:
     min_scanned: 3
     corpus: "the three named inputs it cross-checks — src/cli/registry.ts, src/config/evaluator-budgets.json, internal/bench/reports/evaluator-measurements.json"
     status: enforced
+    no_canary_reason: >-
+      git-dependent cross-check of three named committed inputs; the property is their agreement, not any one file.
     note: >
       Registered because its count became REAL, not to pad the manifest. The
       gate always printed a hardcoded `scanned: 3`; hardening derived it from
@@ -869,6 +932,8 @@ gates:
     min_scanned: 100
     corpus: "leaf keys in src/config/agent-settings.template.yml (140 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      the only possible violation is a MODIFICATION of two tracked files (a key added to the template, or a row removed from the contract) and the canary harness is create-only by design. Discrimination is proven by the gate's own `--self-test` instead — six rejecting cases including the dead-scan-root one.
     note: >
       Floor set well below the live 140 so retiring a settings key does not red
       the change that retires it, but high enough that the collapse this file
@@ -1068,6 +1133,8 @@ gates:
     min_scanned: 1
     corpus: "rows of the `docs/MIGRATION.md` scheduled-deprecations table (3 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      discrimination is proven by the gate's own `--self-test` (10 cases, 6 rejecting) driving the real binary, which covers the due-at-the-cut case a create-only canary could not express.
     note: >
       `argv` carries `--quiet` because that is what the task passes: the
       Taskfile resolves `{{.QUIET_FLAG}}` to `--quiet` unless
@@ -1097,6 +1164,8 @@ gates:
     min_scanned: 900
     corpus: "TypeScript sources — src/**/*.ts excluding *.d.ts and *.test.ts, the same two kinds _lib/gate_population excludes (1,063 at baseline)"
     status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only and this gate's violation is a MODIFICATION — a file crossing its line ceiling. Discrimination is proven by the gate's own `--self-test`, including a boundary case and a dead scan root.
     # No `canary:` recipe, and the reason is the canary contract's own shape
     # rather than a gap. The violation this gate detects is a file OVER 1,500
     # lines, so a create-only recipe would have to inline 1,501 lines of content
@@ -1116,6 +1185,8 @@ gates:
     min_scanned: 1
     corpus: "the guarded watch list — agents/roadmaps/stubs/README.md (1 file; the whole scope, not a sample)"
     status: enforced
+    no_canary_reason: >-
+      the guarded path already EXISTS, so a create-only canary cannot plant the violation. Discrimination is proven by the gate's own `--self-test`.
     # No `canary:` recipe: the guarded path already EXISTS, and the canary
     # contract is create-only. A recipe would have to mutate a tracked file
     # rather than plant one, which the contract does not express. The gate

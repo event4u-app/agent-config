@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 21,
+    "active_roadmaps": 18,
     "later_roadmaps": 59,
-    "open_blockers": 57
+    "open_blockers": 53
   },
   "baseline_history": [
     {
@@ -828,10 +828,59 @@
     },
     {
       "at": "2026-08-22",
+      "active_roadmaps": 24,
+      "later_roadmaps": 58,
+      "open_blockers": 64,
+      "why": "WALKED DOWN by one, and by an archive rather than a reclassification. road-to-subagent-lifecycle-integrity reached zero open steps and zero deferred items and was archived in the same change, so collect() no longer counts it. The other two numbers do not move and the reason is worth stating, because both could have been misread as free: its single blocker (raw-capture-needs-host-env) was already Status: resolved before this change, so open_blockers had never counted it; and the two successors this close-out created are STUBS under agents/roadmaps/stubs/, which the active-roadmap metric does not walk and which are not later/ parks either. Nothing was moved to later/ to buy this down. The drawdown is real: three of the four closing steps are [-] descopes on a 2/2 convergent council verdict, recorded in agents/evidence/council/subagent-lifecycle-closeout-2026-08-22.md, and the descope is visible in the archived file's glyphs rather than dressed as completion."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 21,
+      "later_roadmaps": 59,
+      "open_blockers": 59,
+      "why": "WALKED DOWN active 22 -> 21 by the close of road-to-subagent-lifecycle-integrity: the roadmap archives at zero open steps, an archive rather than a reclassification. Restated against main's already-walked 22 because the branch entry was written against its own pre-merge base and the ratchet reads the stored number, not the history prose."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 21,
+      "later_roadmaps": 59,
+      "open_blockers": 57,
+      "why": "RE-STATED against the floor origin/main moved to while branch drain/road-to-governance-vocabulary-and-negative-controls was open. Moves: active_roadmaps 22 -> 21; open_blockers 59 -> 57. This branch's own drain work is described in the entry it added before the merge; this entry exists only because every drain branch walks the SAME ratchet file, so each one conflicts on it as soon as a sibling merges. Resolved onto MAIN's side and then re-measured against the merged tree - never by carrying this branch's earlier figures forward, which would book a sibling's gain a second time. A lower measurement is the new ceiling, not headroom to spend later."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 20,
+      "later_roadmaps": 59,
+      "open_blockers": 57,
+      "why": "WALKED DOWN active 21 -> 20 and open_blockers 59 -> 57 by the close of road-to-governance-vocabulary-and-negative-controls: the roadmap archives at zero open steps and its two blockers are resolved. Restated against the floor main moved to while this branch was open, because the ratchet reads the stored number and the branch entry was written against an older base."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 21,
+      "later_roadmaps": 59,
+      "open_blockers": 57,
+      "why": "RE-STATED against the floor origin/main moved to while branch drain/road-to-subagent-envelope-adoption was open. Moves: active_roadmaps 22 -> 21; open_blockers 59 -> 57. This branch's own drain work is described in the entry it added before the merge; this entry exists only because every drain branch walks the SAME ratchet file, so each one conflicts on it as soon as a sibling merges. Resolved onto MAIN's side and then re-measured against the merged tree - never by carrying this branch's earlier figures forward, which would book a sibling's gain a second time. A lower measurement is the new ceiling, not headroom to spend later."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 19,
+      "later_roadmaps": 59,
+      "open_blockers": 55,
+      "why": "WALKED DOWN active 20 -> 19 and open_blockers 57 -> 55 by the close of road-to-subagent-envelope-adoption: the roadmap archives at zero open steps and its two blockers are resolved. Restated against the floor main moved to while this branch was open, because the ratchet reads the stored number and the branch entry was written against an older base."
+    },
+    {
+      "at": "2026-08-22",
       "active_roadmaps": 21,
       "later_roadmaps": 59,
       "open_blockers": 57,
       "why": "RE-STATED against the floor origin/main moved to while branch drain/road-to-requirements-traceability-minimal was open. Moves: active_roadmaps 22 -> 21; open_blockers 59 -> 57. This branch's own drain work is described in the entry it added before the merge; this entry exists only because every drain branch walks the SAME ratchet file, so each one conflicts on it as soon as a sibling merges. Resolved onto MAIN's side and then re-measured against the merged tree - never by carrying this branch's earlier figures forward, which would book a sibling's gain a second time. A lower measurement is the new ceiling, not headroom to spend later."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 18,
+      "later_roadmaps": 59,
+      "open_blockers": 53,
+      "why": "WALKED DOWN active 19 -> 18 and open_blockers 55 -> 53 by the close of road-to-requirements-traceability-minimal: the roadmap archives at zero open steps and its two blockers are resolved. Restated against the floor main moved to while this branch was open, because the ratchet reads the stored number and the branch entry was written against an older base."
     }
   ],
   "target": {
