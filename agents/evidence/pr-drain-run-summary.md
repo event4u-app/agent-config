@@ -313,6 +313,6 @@ pushed SHA. Established as local, **not root-caused**.
   tests — the fix is that a push is its own step after a green read, never the
   same one.
 - **The authorization ledger is replaced by every user turn.** A bare continue-only reply
-  reply wipes a standing merge authorization, and a background task-notification
+  wipes a standing merge authorization, and a background task-notification
   containing the word "merge" can refresh the ledger without any human having
   spoken. Neither was acted on.
