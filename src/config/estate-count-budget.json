@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 23,
+    "active_roadmaps": 22,
     "later_roadmaps": 59,
-    "open_blockers": 58
+    "open_blockers": 59
   },
   "baseline_history": [
     {
@@ -816,8 +816,15 @@
       "at": "2026-08-22",
       "active_roadmaps": 23,
       "later_roadmaps": 59,
-      "open_blockers": 58,
-      "why": "open_blockers 60 -> 58 by a PARTIAL drain of road-to-council-seat-selection: both of its blockers (b-ladder-order-benchmark-spend, b-provider-model-listing) are RESOLVED, nothing carried. active_roadmaps is UNCHANGED and that is deliberate - Phase 1 of 3 shipped and the roadmap is intentionally NOT archived, so it stays on the active side where it belongs. Booking an archive here would have been the dishonest half of a partial drain. Both resolutions were taken with NO council seat available (both seats 50/50 requests, 0 of 2 present, $0.00 spent) on Owner:maintainer blockers, so each is a single-decider decision recorded as one at the blocker itself; the ordering blocker was resolved in its conservative direction (drop the claim) precisely because option (a) needed vendor spend the exhausted quota could not supply."
+      "open_blockers": 63,
+      "why": "WALKED DOWN by the close of road-to-host-capability-observations: active 24 -> 23 on the archive, open_blockers 64 -> 63 on its single blocker RESOLVED. b-host-access resolved as BOTH of its options, which its own recommendation says are not exclusive per host: (a) for the one reachable host and (b) for the other seven. Worth recording what that close actually produced, because the numbers alone would overstate it: the registry still holds exactly ONE row. What changed is that the row is now CITED under a written protocol -- 445 subagent starts and 420 paired child durations for subagent_spawn, 6,168 of 6,388 stops at concurrent_open >= 2 for parallel_spawn, both from the live ledger -- and that the seven other declared platforms are recorded as unreachable-with-reason rather than as undifferentiated silences. Three of the six fields on the one reachable host remain unobserved because nothing instruments them. So the honest summary is one cited row and seven recorded silences, against one uncited row and seven undifferentiated ones, and the roadmap's step 2.2 closes [-] because its subject was ADDITIONAL rows and there were none to add."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 22,
+      "later_roadmaps": 59,
+      "open_blockers": 59,
+      "why": "WALKED DOWN active 23 -> 22 and open_blockers 60 -> 59 by the close of road-to-host-capability-observations: the roadmap archives at zero open steps and its one blocker is resolved. The branch carried the same walk against its own pre-merge base of 24/64, so the numbers are restated here against main's already-walked 23/60 rather than left as a stale delta."
     }
   ],
   "target": {
