@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # The unattended-spawn refusal's reopen condition has fired
 
 **Measured 2026-08-22** on the maintainer checkout
