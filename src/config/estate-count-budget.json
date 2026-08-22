@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 3,
-    "later_roadmaps": 57,
-    "open_blockers": 26
+    "active_roadmaps": 26,
+    "later_roadmaps": 58,
+    "open_blockers": 64
   },
   "baseline_history": [
     {
@@ -755,6 +755,13 @@
       "later_roadmaps": 57,
       "open_blockers": 26,
       "why": "RAISED by 2 on later_roadmaps only, and only on the parked side. An inbox drain of 25 dropped artefacts produced 20 authored roadmaps plus 2 that must NOT be active work: road-to-composite-dispatch-topology is gated by the standing one-orchestration-claim-at-a-time rule and, more decisively, by its own instrument \u2014 the telemetry it would measure captured 0.27 percent and no post-hook replacement rate has ever been recorded, so a measurement roadmap on it would measure nothing; road-to-regulatory-radar asks an owner-reserved question that ADR-238 already answered for a sibling domain, namely whether this package carries decaying domain parameters at all, and it names no owner and no refresh cadence, which Gate 2 of the domain-adoption gates requires. Parking is the honest disposition for both and it is what grows this number. The other two metrics are unchanged and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays 3 because all 20 authored files ship status draft, which collect() excludes, and open_blockers stays 26 for the same reason \u2014 the 30-odd blockers those drafts carry will charge this ratchet on the day any of them flips to ready, which is the maintainer's decision and not this change's."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 26,
+      "later_roadmaps": 58,
+      "open_blockers": 64,
+      "why": "RAISED on all three, and this entry exists so that the raise is the whole accounting rather than twenty copies of it. Two things happened. First, the 20 roadmaps PR #1529 added hours earlier shipped status draft, which collect() excludes, so they sat in the active tree while the gated number read 3 \u2014 the exact shape stubs/road-to-draft-status-ratchet-boundary.md registers as a defect and had measured at a gap of 3. An external review pointed at that stub, the gap was re-measured at 20, and the maintainer decided the honest disposition is to stop using the hole: all 20 are now status ready, their per-file estate_offset_exempt keys are deleted, and their 32 blockers count. The raw file count and the gated count now agree, which satisfies clause 1 of that stub's own re-entry probe for the first time since it was written. Second, this drain adds 3 active roadmaps with 6 blockers and parks 1 in later/. So active_roadmaps 3 -> 26 is 20 files becoming visible plus 3 arriving, later_roadmaps 57 -> 58 is the single park, and open_blockers 26 -> 64 is 32 becoming countable plus 6 arriving. Nothing was archived to buy this down and nothing could be: no active roadmap sits at zero open steps with zero deferred items \u2014 the one file at zero open steps, road-to-per-turn-hook-economy, carries two deferred [~] steps, so roadmap-progress-sync Iron Law 3 forbids a silent archive and its deferred-resolution gate must run first. Three claims from the superseded exemption text are withdrawn here rather than left in twenty files: that the charge was one reviewable line (the gate charges per addition), that parking in later/ is what this register calls burial (this register names draft as the hiding place, and because open_blockers spans active and later/, parking would have made those blockers countable rather than hidden), and that no active roadmap sits at zero open steps (one does; the reason it cannot be archived is the deferred items, not the step count)."
     }
   ],
   "target": {
