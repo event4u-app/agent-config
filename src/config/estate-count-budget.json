@@ -18,7 +18,7 @@
   "baseline": {
     "active_roadmaps": 25,
     "later_roadmaps": 59,
-    "open_blockers": 64
+    "open_blockers": 62
   },
   "baseline_history": [
     {
@@ -776,6 +776,13 @@
       "later_roadmaps": 59,
       "open_blockers": 64,
       "why": "RAISED by 1 on later_roadmaps only, and only on the parked side, RE-STATED against the floor origin/main moved to while this branch was open. road-to-billing-cliff-gate was authored, delivered and archived inside this one change, so it never rests on the active side; what remains is its detection half, carried into later/road-to-billing-cliff-detection.md because every probe it needs requires a live plan account driven to its own quota boundary and one of them needs an unofficial endpoint. An AI council decided that carry 2/2 over keeping it open and over cancelling it, and required a named owner plus a 2027-02-22 review date so the parked file cannot become indefinite debt. The other two metrics are unchanged FROM THE MERGED FLOOR and that is the reviewer's check that this is a park and not a smuggled expansion: active_roadmaps stays where the inbox-harvest entry above put it because the roadmap this branch authored archived in the same change, and open_blockers stays there because the one blocker this branch created moved to later/ with the phases it gates, where collect() does not count it. The pre-merge version of this entry read 3 / 58 / 26 against a 57 floor; it is replaced rather than kept because two entries for one change would read as two raises."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 25,
+      "later_roadmaps": 59,
+      "open_blockers": 62,
+      "why": "WALKED DOWN on open_blockers only, 64 -> 62, by resolving both blockers of road-to-publish-boundary-evidence. active_roadmaps does NOT move and must not be read as an oversight: that roadmap is only PARTLY drained -- Phase 1 steps 1.1 and 1.2 landed, and 1.3 plus Phases 2 and 3 are still open -- so it stays in the active tree and its PR is explicitly partial. Recording that here because every other entry in this history pairs a blocker drop with an archive, and a reader scanning for the pattern would otherwise assume the archive was forgotten. Both resolutions are council-ratified 2/2: b-sourcemap-intent took (b'), which is NEITHER of the two options as written -- the option set conflated a consumer debugging affordance (product source maps, kept at a provisional ratchet of 120) with valueless compiled-test output (stripped, threshold 0) -- and b-sbom-scope took (a), leaving a prior council's rejection standing under ADR-238 Trigger A, whose two halves both remain unmet."
     }
   ],
   "target": {
