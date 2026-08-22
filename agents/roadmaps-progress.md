@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change. A repository that does not commit this file has no git history for it — regenerate to see the current state.
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers in the active tree, **9** need you → `agent-config gates`
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers in the active tree, **9** need you → `agent-config gates`
 
 ## Overall
 
-**72 / 112 steps done · 64%**
+**69 / 105 steps done · 66%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
@@ -20,8 +20,7 @@
 | 2 | [road-to-drain-commands.md](roadmaps/road-to-drain-commands.md) | 6 | 39 | 8 | 29 | 2 | 0 | [1](#blockers-road-to-drain-commands) | ████████░░ 78% |
 | 3 | [road-to-evidence-based-adr-governance.md](roadmaps/road-to-evidence-based-adr-governance.md) | 7 | 34 | 15 | 16 | 3 | 0 | [2](#blockers-road-to-evidence-based-adr-governance) | █████░░░░░ 52% |
 | 4 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 5 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 4 | 3 | 1 | 1 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 43% |
-| 6 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
+| 5 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 4 | 13 | 0 | 5 | 0 | ████████░░ 76% |
 
 ---
 
@@ -317,34 +316,6 @@
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
 _2 blockers resolved._
-
-### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
-
-**Road to standing context 40k — the registered destination, given a route** — 3 / 7 done (43%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Rule out the double-delivery layer first | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 1 | Pull the lever that already exists | ✅ done | 0 | 1 | 0 | 1 | 100% |
-| 2 | Shrink the structural payload without touching reach | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Give rules a runtime carrier, or retire the dead triggers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
-| 4 | Per-turn injection aggregate | ✅ done | 0 | 2 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-standing-context-40k"></a>
-**Blockers**
-
-- **b-rules-efficiency-signal** (owner: maintainer) — blocks Phase 3 step 3.1 only. Step 3.0's observer is repo work and proceeds without it.
-  - **Recommendation:** **land step 3.0's observer first and re-date this blocker against it.** The fork cannot be decided today in either direction: option (a) needs a demand signal that does not exist, and option (b) would delete trigger frontmatter on the *absence* of a measurement rather than on a measured null — which is the unbacked-claim failure this repo gates against. The observer converts the metric from an emitter simulation into a per-session ground truth, and it is repo work needing no decision.
-  - **If you do nothing:** roughly a hundred `type: auto` rules keep carrying `triggers:` blocks that no runtime consumer reads on this host — documentation presenting itself as mechanism — and the fork stays open indefinitely, which is the third state AC-3 explicitly forbids. - **Correction B, 2026-08-20 — the window is unfilled because NOTHING PRODUCES THE FIELD, not because no sessions occurred.** Kept alongside Correction A rather than replacing it: A found step 3.0's named filler unavailable, B finds that no *other* filler exists either, so the two together are why this cannot converge by waiting. Evidence, all re-run today and cited at step 3.1's `decision 2026-08-20:` comment: `dispatch_economy_report` prints **`no data`** for `rules_efficiency`, never `0.00`; the telemetry contract states `null` = *not measured* for both fields; `orchestration_record_hook.ts` — the concern that fires per dispatch — contains **zero** occurrences of either field name in any branch; and the audit log holds **579 orchestration lines for 2026-08 with `rules_carried` null on 579 of 579, zero numeric**. Abundant dispatch with the field absent on every line is a property of the code, not of the sessions. **By the disposition framework's own rule 4 ("instrument broken → `B`") this is a TRANSFER, not a measured null**, and it is recorded as one here even though the recorded disposition was `C`. The recording half of `C` still stands and is still applied: the clause licenses it and the window genuinely is unfilled. - **Recorded resolution 2026-08-20 (checkpoint only — this blocker stays OPEN).** Council disposition `C`, outcome `narrowed`, from [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md). The `rules_efficiency` window is hereby recorded **unfilled**: 0 envelopes carrying the pair, median quota unreadable, low-quota bar (< 0.2) not evaluable. Step 3.0's observer is **preserved** (still `[ ]`, premise unchanged). The fork is **re-dated to 2026-09-17**. No retriever work starts before the pre-registered comparison against `src/scripts/_lib/lexical_index.ts`. **The new date is a checkpoint, not a forecast** — per Correction B nothing in the tree will fill this window by 2026-09-17 or any later date without a producer, so a bare re-date on that day would be the parking-lot failure the framework's rule 1 names. No metric file was edited and no line was appended to fill the window; the emptiness is reported as found. - **Re-entry producer + probe (the transfer half, per framework rule 6).** Producer: whatever first writes a numeric `rules_carried`/`rules_used` pair — either the worker thin projection of `road-to-token-economy-dispatch` Phase 3 (whose own `projection_quality.status` still reads `armed-awaiting-projection`), or an explicit extension of `orchestration_record_hook.buildRecordInput` to emit the pair. Probe, one command and mechanically decidable: `./scripts-run src/scripts/dispatch_economy_report` reports `envelopes with pair` **> 0** for `rules_efficiency`. Until that reads non-zero, neither fork arm has evidence: (a) has no demand signal, and (b) would delete trigger frontmatter on an absence-of-measurement rather than a measured null — the unbacked-claim failure this repository gates against.
-  - **What to do:**
-    the fork needs the registered `rules_efficiency` metric in
-    `dispatch-economy-metrics.json` to have accumulated enough sessions to read
-    against its low-quota bar. Either wait for the observer from step 3.0 to fill
-    it, or record here that the window is unfilled and re-date the fork — which is
-    itself progress, per the same discipline the telemetry-count gates use. Do not
-    build a retriever before the comparison against `src/scripts/_lib/lexical_index.ts`
-    that `later/road-to-deferred-rule-retriever` pre-registered.
-  - **Resolved when:** the metric reads against its bar and the fork resolves to (a) or (b), or the window is recorded as unfilled with a new date.
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
