@@ -124,9 +124,17 @@ required for this risk?" It does not implement another reviewer.
 
 ### Existing requirements-traceability roadmap — dependency, not duplicate
 
-`agents/roadmaps/road-to-requirements-traceability-minimal.md` already proposes
-optional requirement / acceptance / evidence references plus a listing gate and
-a measured adoption decision.
+`agents/roadmaps/archive/road-to-requirements-traceability-minimal.md` already
+proposes optional requirement / acceptance / evidence references plus a listing
+gate and a measured adoption decision.
+
+> **Overtaken, 2026-08-22 (`/analyze:inbox`).** That roadmap COMPLETED and was
+> archived between this bundle's pin (`572e147cc`) and today — the path is
+> corrected to `archive/`. This section's framing ("dependency, not duplicate")
+> therefore reads differently than when it was written: the dependency is on a
+> landed capability rather than on a sibling proposal, so the blocker below that
+> waits for its "final measured disposition" can be closed by reading the
+> archived roadmap instead of waiting for it.
 
 **Consequence:** this roadmap must not make traceability universally mandatory
 before that roadmap has measured whether the proposed shape produces signal.
@@ -931,7 +939,7 @@ requirements traceability while their current owners exist.
 - **Owner:** maintainer
 - **Blocks:** Phase 8.5 and any new blocking policy not already a hard safety floor
 - **What to do:** commit a pre-registration file at
-  `src/config/assurance-threshold-budget.json` carrying one entry per dimension,
+  `src/config/assurance-threshold-budget.json` <!-- ref-ignore --> carrying one entry per dimension,
   each with a number and the measurement that produced it, before the comparison
   run. The dimension set is exactly four and is closed here:
   1. `false_verified_rate` — a change the harness reports verified that is not.

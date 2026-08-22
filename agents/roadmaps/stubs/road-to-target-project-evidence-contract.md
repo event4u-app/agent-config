@@ -20,7 +20,7 @@ re-reading the transcript. "Tests passed" is the whole contract.
 ## Proposed — one artefact per change, gate-generated, agent-annotated
 
 *Proposal.* `agents/evidence/changes/<sha>.evidence.json`, validated by a
-schema committed beside `src/config/assurance-policy.json`. Fields the
+schema committed beside `src/config/assurance-policy.json` <!-- ref-ignore -->. Fields the
 **gate runner** writes (the agent may not): `risk_class` and its
 derivation, test results with flaky flags, diff-scoped mutation result
 incl. survivors, static/SAST findings as baseline delta, architecture
