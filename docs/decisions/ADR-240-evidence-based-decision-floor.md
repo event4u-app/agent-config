@@ -292,7 +292,7 @@ counter-position, and Phase 6's interruption metric is what would vindicate it.
 ## References
 
 - `docs/contracts/adr-layout.md` § Provenance and evidence, § The reopen record
-- `agents/roadmaps/road-to-evidence-based-adr-governance.md`
+- `agents/roadmaps/archive/road-to-evidence-based-adr-governance.md`
 - `docs/decisions/adr-reopen-sweep-2026-08.md`
 - `docs/decisions/engine-reclassification-2026-07.md`
 - ADR-237 — capability-before-role; the doctrine the blocker lane applies

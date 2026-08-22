@@ -363,6 +363,17 @@ gates:
       that every suppression surface is accounted for, and a surface list that
       collapsed to nothing must not read as "no suppressions to check".
 
+  - id: lint_adr_sweep_routing
+    argv: []
+    min_scanned: 20
+    corpus: "candidate rows (REVIEW-NOW / SUPERSEDE (candidate)) across docs/decisions/adr-evidence-sweep-*.md (26 at baseline, in one artifact)"
+    status: enforced
+    note: >
+      The floor is 20 rather than 26 because a candidate LEAVING the population
+      is the point of the sweep: every disposition that lands takes its row out
+      of the count, so a tight floor would red on the gate working. It is far
+      above a collapse — a scan that stopped seeing the artifact reports 0.
+
   - id: lint_trigger_collisions
     argv: []
     min_scanned: 90

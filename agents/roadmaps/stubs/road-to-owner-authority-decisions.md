@@ -98,6 +98,49 @@ switch defined after the fact is a word. Reopening requires **all** of:
 If enabled it ships default-off, per-transition, and never lets one party both
 assign the grade and classify the transition as `reversible-internal`.
 
+## Unresolved decision 4 — five permanence claims that are owner purpose, not mechanism
+
+**Added 2026-08-22 by `road-to-evidence-based-adr-governance` 4.3**, which split
+`lint_provenance_vocabulary:permanence-language` along authority and found the
+split does not follow the row boundary. Six of the eleven hits were mechanism
+decisions and were repaired in that step by taking ADR-240 § 6's escape — a
+reopen condition in place of a permanence claim. These five are not that shape:
+
+| Record | Line | The claim |
+|---|---|---|
+| ADR-107 | `:37` | "commercial (Pro-tier) ship would require licen…" — `forever` in the Decision |
+| ADR-108 | `:5` | `decision:` slug `open-source-forever-no-commercial-tier` |
+| ADR-108 | `:12` | title — "The suite is open-source forever; no commercial / Pro tier" |
+| ADR-108 | `:24` | Decision — "There is no commercial tier, now or in the future" |
+| ADR-108 | `:29` | Decision — "Liability disclaimer is permanent" |
+
+**Why an agent must not touch them.** These are statements of what the project
+*is for*, and the owner-reserved table in `decision-revisit-gate` routes exactly
+this class to the owner: purpose, licensing posture, and a public liability
+commitment. ADR-240 names the discharge — record `authority_basis: owner_intent`,
+which the gate's own baseline note calls "an owner ruling, not an agent edit" —
+and the ruling is the whole decision. An agent that reworded the purpose to clear
+a lint would have changed the project's declared posture to make a gate green,
+which is the inversion this stub exists to prevent.
+
+**What the decision actually is, and it is one line per record:** does this
+record's permanence claim stand as owner intent (→ `authority_basis:
+owner_intent`, lint clear, claim intact), or is it a mechanism decision that
+should carry a reopen condition instead (→ the § 6 escape, as the other six
+took)? Not "should the project stay open-source" — nothing here proposes that,
+and the drain run did not put it to the council.
+
+**A regression test pins the current state in both directions.**
+`tests/scripts/lint_provenance_vocabulary.test.ts` asserts these two records
+stay DETECTED and the three repaired ones stay clean. So a run that "fixes"
+ADR-107 or ADR-108 by rewording turns that test red — the fence is deliberate,
+and it is the reason the owner ruling cannot be quietly pre-empted.
+
+**Cost of not deciding:** the baseline sits at 5 with zero headroom, so the gate
+keeps working for every new record; nothing degrades. The 56-day expiry on the
+entry is the real clock — if the number has not moved by then, the gate fails
+until someone decides whether the doctrine is real.
+
 ## Blocking cost — recorded as `unknown`, deliberately
 
 The parent required that each non-`yes` row record its blocking cost "as sourced
@@ -119,6 +162,10 @@ Why each is unknown rather than zero:
   count exists to report.
 - **Decision 2** — no judge-ranked competitive run occurred in the window, so
   ADR-005 § 1 was never reached.
+- **Decision 4** — the five records block no work at all today: the ratchet is
+  green at 5 and shrink-only, so the claims cost nothing until the expiry. That
+  is a real zero for `blocked_items` and is still recorded as an observation
+  rather than folded into the `unknowns`, because it was measured.
 
 **"No cost was observed" is not "the cost is zero."** Both dimensions are
 unmeasured, and a blocking cost may trigger reconsideration but never establishes
@@ -126,5 +173,6 @@ that a decision is wrong.
 
 ## Reopens when
 
-An explicit owner ruling on any of the three, independently of the others. Each
-is severable; none implies the others.
+An explicit owner ruling on any of the four, independently of the others. Each
+is severable; none implies the others — and Decision 4 is severable per RECORD,
+so a ruling on ADR-108 does not settle ADR-107.

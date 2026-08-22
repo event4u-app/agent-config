@@ -19,6 +19,7 @@ import {
     revokeBillingGrant,
 } from './billing_grant.js';
 import { renderBillingGateLines } from './council_fallback_posture.js';
+import { writeQuotaParked } from './quota_parked.js';
 
 export interface BillingCliDeps {
     readonly repoRoot: string;
@@ -105,8 +106,16 @@ export function revokeBilling(runId: string, d: BillingCliDeps): number {
  * Silent when nothing parked, so the caller needs no branch.
  */
 export function printBillingGate(parked: readonly string[], d: BillingCliDeps): void {
+    const runId = currentRunId();
+    // Record before rendering. A parked round is the one moment this repository
+    // KNOWS plan quota is exhausted without needing a host signal, and the
+    // printed line reaches whoever is watching the terminal — which for an
+    // autonomous drain is nobody. The marker is what survives to the next
+    // `run:supervise` report. Skipped when no run id resolves: a marker with a
+    // fabricated key is worse than none, because nothing would ever match it.
+    if (parked.length > 0 && runId !== null) writeQuotaParked(d.repoRoot, runId, parked);
     for (const line of renderBillingGateLines(parked, {
-        runId: currentRunId() ?? '<run-id>',
+        runId: runId ?? '<run-id>',
         estimatedUsd: null,
     })) {
         d.stdout(`${line}\n`);
