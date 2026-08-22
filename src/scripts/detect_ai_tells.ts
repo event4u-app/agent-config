@@ -111,6 +111,93 @@ export function scanHiddenUnicode(text: string): HiddenUnicodeFinding[] {
   }));
 }
 
+/** One codepoint the strip considered, and what it decided. */
+export interface CarrierRecord {
+  /** `U+XXXX` form, so a record is readable without decoding. */
+  codepoint: string;
+  /** The class `_classify` returned — never a second class list. */
+  cls: string;
+  /** Codepoint index (not UTF-16 index) in the input. */
+  offset: number;
+  disposition: "removed" | "preserved";
+  /** Why it was preserved. `null` when removed. */
+  reason: string | null;
+}
+
+export interface CarrierStripResult {
+  out: string;
+  removed: number;
+  preserved: number;
+  records: CarrierRecord[];
+}
+
+/**
+ * Remove hidden-Unicode carriers from OUTPUT prose — context-aware, opt-in.
+ *
+ * ## Why this is not `_sanitize`
+ *
+ * `lint_hidden_unicode._sanitize` drops every `_classify`-flagged codepoint
+ * unconditionally and then applies `NFKC`. That is correct for its own callers —
+ * it repairs a source FILE — and it is wrong for a deliverable, because
+ * `_ZERO_WIDTH` contains `0x200C` and `0x200D`. A blind pass therefore destroys
+ * emoji ZWJ sequences and complex-script joiners, which are legitimate content.
+ * This function keeps `_classify` as the single source of truth for *what is a
+ * candidate* and adds exactly one predicate for *whether to remove it*.
+ *
+ * ## The predicate
+ *
+ * A flagged codepoint is removed only when the codepoints on BOTH sides are
+ * ASCII (`< 0x80`) or absent. A carrier between two ASCII characters is doing
+ * no linguistic work; one adjacent to any non-ASCII character might be a
+ * joiner, so it stays.
+ *
+ * Deliberately conservative, and the asymmetry is the point: the failure mode
+ * is a preserved carrier, never a corrupted word. That makes this a HYGIENE
+ * pass and not a security control — the injection vector is covered on the
+ * INGESTION side by `scanHiddenUnicode`, whose contract is to warn and never
+ * strip, and which this function does not touch.
+ *
+ * Not a detector-evasion tool: it removes invisible characters and alters no
+ * visible prose. That exclusion is permanent.
+ */
+export function stripCarrierUnicode(text: string): CarrierStripResult {
+  const cps = [...text].map((ch) => ch.codePointAt(0) ?? 0);
+  const kept: string[] = [];
+  const records: CarrierRecord[] = [];
+  let removed = 0;
+  let preserved = 0;
+
+  for (let i = 0; i < cps.length; i += 1) {
+    const cp = cps[i] as number;
+    const cls = _classify(cp);
+    if (cls === null) {
+      kept.push(String.fromCodePoint(cp));
+      continue;
+    }
+    // `undefined` at either end is "absent", which counts as ASCII-side: a
+    // carrier at a boundary has no neighbour to be joining.
+    const before = cps[i - 1];
+    const after = cps[i + 1];
+    const asciiSide = (n: number | undefined): boolean => n === undefined || n < 0x80;
+    const strip = asciiSide(before) && asciiSide(after);
+    records.push({
+      codepoint: `U+${cp.toString(16).toUpperCase().padStart(4, "0")}`,
+      cls,
+      offset: i,
+      disposition: strip ? "removed" : "preserved",
+      reason: strip ? null : "adjacent to a non-ASCII codepoint — may be a joiner",
+    });
+    if (strip) {
+      removed += 1;
+    } else {
+      preserved += 1;
+      kept.push(String.fromCodePoint(cp));
+    }
+  }
+
+  return { out: kept.join(""), removed, preserved, records };
+}
+
 interface Thresholds {
   maxHard: number;
   maxScore: number;
