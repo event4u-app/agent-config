@@ -90,6 +90,19 @@ export interface GateSpec {
   /** Absent = this gate has no canary recipe; reported, never hidden. */
   canary?: CanarySpec;
   /**
+   * Why this entry has no `canary:` recipe — REQUIRED when one is absent.
+   *
+   * The measurement that forced this field: over 44 enforced entries, only
+   * 20 of 44 by a wide detector (and 13 by a narrow one) can be invoked over an
+   * injected path at all, so a non-mutating in-memory negative-control mode
+   * would cover under half the manifest. Rather than build a per-PR step named
+   * "negative controls" that exercises a minority, the gap is REPORTED — and a
+   * reported gap is only honest if every row carries its reason. A silently
+   * absent row reads as coverage, which is the exact failure this whole file
+   * exists to prevent, one level up.
+   */
+  no_canary_reason?: string;
+  /**
    * Exit code meaning "my prerequisite is absent, so I inspected nothing" — e.g.
    * check_site_links exits 2 when the site is unbuilt or stale. Without this the
    * guard reads that as `silent` and fails, which would make it red on every machine
@@ -120,6 +133,13 @@ export interface GateResult {
   message: string;
 }
 
+function _require_str(v: unknown, field: string, id: string, i: number): string {
+  if (typeof v !== 'string' || v.trim() === '') {
+    throw new Error(`gates[${String(i)}] (${id}): ${field} must be a non-empty string`);
+  }
+  return v;
+}
+
 function _require_int(v: unknown, id: string, i: number): number {
   const n = Number(v);
   if (!Number.isInteger(n)) {
@@ -147,6 +167,16 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
     if (!Number.isInteger(min) || min < 0) {
       throw new Error(`gates[${i}] (${id}): min_scanned must be a non-negative integer`);
     }
+    if (
+      String(e['status'] ?? 'enforced') === 'enforced' &&
+      e['canary'] === undefined &&
+      e['no_canary_reason'] === undefined
+    ) {
+      throw new Error(
+        `gates[${String(i)}] (${id}): an enforced entry with no 'canary:' recipe must carry ` +
+          `'no_canary_reason:' — a silently absent negative control reads as coverage`,
+      );
+    }
     const status = String(e['status'] ?? 'enforced');
     if (status !== 'enforced' && status !== 'pending') {
       throw new Error(`gates[${i}] (${id}): status must be 'enforced' or 'pending'`);
@@ -162,6 +192,9 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
         : { unavailable_exit: _require_int(e['unavailable_exit'], id, i) }),
       ...(e['note'] === undefined ? {} : { note: String(e['note']) }),
       ...(e['canary'] === undefined ? {} : { canary: _require_canary(e['canary'], id, i) }),
+      ...(e['no_canary_reason'] === undefined
+        ? {}
+        : { no_canary_reason: _require_str(e['no_canary_reason'], 'no_canary_reason', id, i) }),
     };
   });
 }
@@ -338,6 +371,39 @@ const ICON: Record<Verdict, string> = {
   unavailable: '⚠️',
 };
 
+/**
+ * Report which enforced gates carry a negative control and which do not.
+ *
+ * OBSERVABILITY, NEVER PROOF — and the distinction is the whole point of the
+ * wording below. A `canary:` recipe DECLARED is not a recipe RUN: the mutating
+ * `--canary` path plants a real file and is deliberately off the per-PR
+ * workflow, so on a normal PR the "with recipe" number describes what COULD be
+ * exercised, not what was. Reporting it as though it were coverage would be the
+ * inflation this file exists to prevent, one level up from where it prevents it.
+ *
+ * The two populations are reported separately on purpose: whether a gate can be
+ * invoked over an injected path and whether it has a recipe are different facts,
+ * and an earlier draft of this work conflated them.
+ */
+function report_negative_control_inventory(specs: readonly GateSpec[]): void {
+  const enforced = specs.filter((s) => s.status === 'enforced');
+  const withRecipe = enforced.filter((s) => s.canary !== undefined);
+  const without = enforced.filter((s) => s.canary === undefined);
+  process.stdout.write(
+    `\nnegative controls: ${String(withRecipe.length)} of ${String(enforced.length)} enforced ` +
+      `entries carry a \`canary:\` recipe · ${String(without.length)} do not\n`,
+  );
+  // The arithmetic is the guard against skimming: two numbers that reconcile
+  // against the enforced total cannot be read as "all of them checked".
+  process.stdout.write(
+    `  ⚠️  declared, not run — the mutating --canary path is operator-invoked and off the per-PR workflow, ` +
+      `so no negative control ran here.\n`,
+  );
+  for (const s of without) {
+    process.stdout.write(`  · ${s.id}: ${s.no_canary_reason ?? '(no reason recorded)'}\n`);
+  }
+}
+
 export function main(argv: readonly string[]): number {
   const wantJson = argv.includes('--format') && argv[argv.indexOf('--format') + 1] === 'json';
   const listOnly = argv.includes('--list');
@@ -455,6 +521,7 @@ export function main(argv: readonly string[]): number {
       `⚠️  ${String(pending.length)} gate(s) are listed but NOT enforced — this guard's coverage is partial by declaration.\n`,
     );
   }
+  report_negative_control_inventory(specs);
   const hardening = report_hardening_ratchet();
   const selfTest = report_self_test_ratchet();
   if (failed.length > 0) {

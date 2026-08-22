@@ -127,9 +127,32 @@ describe('load_manifest — the guard must not become the thing it catches', () 
     });
 
     it('parses argv so CI-identical invocation is declarable (design rule 2)', () => {
-        withManifest('gates:\n  - id: g\n    argv: ["--all"]\n    min_scanned: 1\n', (f) => {
-            expect(load_manifest(f)[0]?.argv).toEqual(['--all']);
+        withManifest(
+            'gates:\n  - id: g\n    argv: ["--all"]\n    min_scanned: 1\n    no_canary_reason: fixture\n',
+            (f) => {
+                expect(load_manifest(f)[0]?.argv).toEqual(['--all']);
+            },
+        );
+    });
+
+    it('refuses an enforced entry with neither a canary recipe nor a recorded reason', () => {
+        // The silently-absent row is the failure this file exists to prevent,
+        // one level up: 28 of 44 enforced entries have no negative control, and
+        // a report that omits them reads as coverage. The reason is data, not
+        // prose in a `note:` — four entries already carried the explanation
+        // there and the inventory could not print any of them.
+        withManifest('gates:\n  - id: g\n    min_scanned: 1\n', (f) => {
+            expect(() => load_manifest(f)).toThrow(/no_canary_reason/);
         });
+    });
+
+    it('accepts an enforced entry carrying a canary recipe instead of a reason', () => {
+        withManifest(
+            'gates:\n  - id: g\n    min_scanned: 1\n    canary:\n      class: c\n      path: p.md\n      content: x\n',
+            (f) => {
+                expect(load_manifest(f)[0]?.no_canary_reason).toBeUndefined();
+            },
+        );
     });
 });
 
