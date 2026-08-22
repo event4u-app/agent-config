@@ -264,7 +264,7 @@ export {
 } from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
-import { commandsWithheld, isExclusivelyPackageOnly, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { commandsWithheld, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
 import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
