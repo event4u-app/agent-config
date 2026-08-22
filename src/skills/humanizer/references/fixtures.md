@@ -68,3 +68,53 @@ The two targets diverge on every axis — a draft matched to A is not a draft
 matched to B. Sample B is also a case where the dash-density default is
 **suppressed**: the fingerprint genuinely writes in dashes, so the fingerprint
 wins (SKILL § voice precedence).
+
+## Fixture 3 — carrier strip, and what "preserved" looks like (step 5b)
+
+The point of this fixture is the **preserved** half. A reader who only sees
+carriers disappear cannot tell a conservative predicate from a blind one, and a
+blind one corrupts emoji and complex-script text. So the input carries both.
+
+**Input** (carriers shown as escapes; they are invisible in the real string):
+
+```
+the​word 👨‍💻 می‌خواهم safe‮file
+```
+
+- `​` between `e` and `w` — ASCII on both sides.
+- `‍` joining two emoji — non-ASCII on both sides.
+- `‌` inside a Persian word — non-ASCII on both sides.
+- `‮` between `e` and `f` — ASCII on both sides.
+
+**Output:**
+
+```
+theword 👨‍💻 می‌خواهم safefile
+```
+
+**Audit line:**
+
+```
+carrier strip: removed 2 (zero-width 1, bidi-control 1) · preserved 2
+  · U+200B  zero-width     offset 3   removed
+  · U+200D  zero-width     offset 10  preserved — adjacent to a non-ASCII codepoint, may be a joiner
+  · U+200C  zero-width     offset 15  preserved — adjacent to a non-ASCII codepoint, may be a joiner
+  · U+202E  bidi-control   offset 26  removed
+```
+
+Three things a reader should take from this:
+
+1. **`U+200B` and `U+200D` are the same class** — both `zero-width` — and get
+   opposite dispositions. The class is not the decision; the neighbours are.
+   Any strip keyed on class alone destroys the emoji.
+2. **Offsets are codepoint indices, not UTF-16 units.** The emoji before
+   `U+200D` is a surrogate pair, so a UTF-16 index would report a different
+   number and the audit line would be wrong for exactly the inputs this
+   predicate exists to protect.
+3. **A preservation always carries its reason.** An unexplained preservation
+   would be indistinguishable from a bug; the reason is what makes the
+   conservative branch auditable rather than merely quiet.
+
+Re-running the strip over the output changes nothing — `removed 0 · preserved 2`.
+Idempotence is a property of the predicate, not a coincidence: the two survivors
+still have non-ASCII neighbours the second time round.
