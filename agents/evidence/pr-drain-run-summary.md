@@ -6,7 +6,7 @@ One autonomous run, driven by a merge queue. Scope: every open PR in this
 repository at the time of each recompute, merged one at a time, each synced onto
 the `main` that the previous merge had just moved.
 
-**Result: 28 merged, 1 closed as superseded, 1 deferred with a written
+**First pass: 28 merged, 1 closed as superseded, 1 deferred with a written
 diagnosis, 9 arrived after the cutoff and were not processed.**
 
 The run held one rule above throughput, and it is the reason several rows below
@@ -192,3 +192,127 @@ and the ledger is a single-window grant.
   uncommitted changes, which invalidated one "measure on plain `main`" reading
   before that was noticed. All later measurements were taken inside per-PR
   worktrees.
+
+---
+
+# Second pass — queue drained to zero (2026-08-22)
+
+The run above stopped at 28 with #1495 deferred and nine PRs arrived-after-cutoff.
+This pass closes it out. **Total merged by this session: 39. Open PRs at the final
+recompute: zero.**
+
+## Merged in the second pass
+
+| PR | Sync conflicts | Resolution class | CI iters | Disposition |
+|---|---|---|---|---|
+| #1516 | none (own branch) | — | 2 | merged `66b3dc993` |
+| #1513 | both archive indexes | regenerated | 1 | merged `fdf878dbc` |
+| #1505 | stubs/README · dashboard · a stub's refs | table restored · regenerated · repointed | 1 | merged `c298a6aba` |
+| #1504 | dashboard | regenerated | 1 | merged `176bc9e02` |
+| #1517 | estate budget · dashboard | history-append · regenerated | 2 | merged `eb1e0b866` |
+| #1495 | dashboard · stubs/README | regenerated · union | 3 | merged `4dd26a832` |
+| #1518 | both archive indexes | regenerated | 1 | merged `038453c33` |
+| #1522 | none | — | 2 | merged `f59024cfd` |
+| #1519 | estate budget · dashboard | history-append · regenerated | 1 | merged `49339720c` |
+| #1520 | 3× modify/delete + dashboard | **delete wins** (see below) | 1 | merged `4c810eea7` |
+| #1521 | 3× modify/delete + estate budget | **delete wins**, mirrored | 1 | merged `7d3b8b07f` |
+
+Merged by the second session in parallel, not by this one: #1506, #1507, #1509,
+#1511, #1512, #1523 and the 1508/1510 pair.
+
+## #1495 — the twice-deferred PR, and what it took
+
+The blocker was never the feature: `src/scripts/hooks/dispatch_hook.ts` sits at
+**exactly 1500** lines on main — deliberately pinned at the source ceiling — and
+the PR added 192 lines, so `check_source_size_budget` redded and raising the
+baseline is what that gate itself calls a defect.
+
+Three **pure** blocks moved out: `py_json_dumps.ts` (91 lines),
+`stdin_failure_policy.ts` (81), `fallback_yaml.ts` (57). Final: 1468, with 32
+lines of margin. Three rather than the two that merely clear the ceiling —
+two land the file at exactly 1500, back on the cliff, which is the zero-margin
+shape this very run had just finished fixing elsewhere.
+
+**The near-miss is the part worth recording.** The first attempt carried
+`let _stdin_read_failed` out of the module: the block boundary began 18 lines too
+early, and unrelated syntax errors in another block masked it. Moving that state
+would have silently detached the flag from the call site that writes it, in the
+dispatcher every tool call passes through. It was caught by checking where the
+declaration actually sat before the second attempt, and the extraction script now
+refuses any block containing it.
+
+Verified in both directions rather than argued, because this file carries the
+deny-capable guards: a benign Bash payload through the dispatcher exits 0, and
+`git commit --no-verify` still exits 2 with `block-no-verify: BLOCKED`.
+
+## The two mirrored modify/delete resolutions
+
+#1520 removes three generated artifacts from the git index — that is its entire
+purpose. `main` had merely regenerated them, so keeping main's versions would have
+reverted the change one commit after writing it: **the deletion wins.** One PR
+later, #1521 hit the same conflict from the opposite side (main had by then
+untracked them, the branch had modified them) and the deletion won again, this
+time because untracking is now the trunk's decision.
+
+Same rule, opposite sides, and neither is the drain's usual "regenerate" answer.
+Worth stating because a resolver that always regenerates would have quietly
+undone #1520.
+
+## Two gate contradictions resolved rather than papered over
+
+**`gate_baseline.test.ts` vs a zero-count entry (#1522).** The test asserts every
+shipped baseline entry records real debt (`count > 0`);
+`lint_roadmap_blockers:decidability` had been legitimately walked to 0 with a note
+saying "zero is now the ceiling". Both were right. Removing the entry is not a
+loosening: `evaluateGate` treats a missing entry as `ok: actual === 0`
+(gate_baseline.ts:139-142) — the same ceiling the note asked for, and stricter
+than a stored 0 someone could later edit upward. Proved by appending an
+undecidable blocker (gate exits 1) and restoring the file (exits 0). The note is
+dated history, so it moved to a `retired` block rather than being deleted.
+
+**The corpus floors, corrected against my own earlier claim (#1516).** A neutral
+review provoked the failure my own commit message had denied: with 6 roadmaps at
+the top level and floors of 5, archiving one roadmap redded two tests. The number
+was never the defect — `check_estate_count` forbids growth, so the corpus only
+shrinks and any absolute floor above 0 is met eventually. Floors are now `> 0` and
+`min_scanned: 1`; a genuinely empty corpus still reds, which is the vacuous-
+assertion case the guards exist for.
+
+## What the neutral review found, and what remains open
+
+A cross-check over the first pass's own threshold changes refuted three claims
+this run had made about itself: the floor-of-5 durability (above), a commit
+message attributing a pointer removal to `319d33936` when it fell at
+`cafb8a255`, and a `corpus:` string still reading "19 at baseline" against a real
+count of 6. All three are fixed; the misattribution stands corrected here because
+the commit message cannot be.
+
+**Still open and owner-reserved:** `decision-revisit-gate` left
+`check_rule_stub_ceiling`'s scope at `cafb8a255` while growing 2186 → 8020 chars
+against a 545-token ceiling, and its migration ledger
+(`agents/decisions/rule-migrations/decision-revisit-gate.yml`) is now an orphan no
+gate objects to. A new ceiling either reds CI immediately or bakes in 3.7× growth
+— which is why it is not decided here.
+
+**Still open, environmental:** the same commit passes `skill_route_hook.test.ts`
+21/21 in a fresh worktree and fails 2 in the long-lived one, with CI green on the
+pushed SHA. Established as local, **not root-caused**.
+
+**Unchanged from the first pass:** the unpaired `<<<<<<< HEAD` on
+`docs/contracts/settings-classes.md:323`, invisible to
+`check_no_conflict_markers` because it only fires on a start/end pair.
+
+## Process notes from the second pass
+
+- **A parallel session merged #1523 mid-sync.** The sync work was wasted and the
+  push re-created a branch the merge had deleted; it was left in place rather than
+  deleted unasked.
+- **Two self-inflicted errors, both recorded.** A `git checkout -B` onto a dirty
+  tree silently skipped a merge (caught by a `behind: 8` reading that should have
+  been 0). And testing and pushing in one command sent a push out with two red
+  tests — the fix is that a push is its own step after a green read, never the
+  same one.
+- **The authorization ledger is replaced by every user turn.** A bare continue-only reply
+  wipes a standing merge authorization, and a background task-notification
+  containing the word "merge" can refresh the ledger without any human having
+  spoken. Neither was acted on.
