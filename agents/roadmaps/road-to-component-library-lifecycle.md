@@ -6,6 +6,14 @@ execution:
   mode: phase-checkpoints
 ---
 # Road to component library lifecycle
+> **Source anonymisation (`source-confidentiality`).** External harvest sources
+> are referenced as `Source A`…`Source M` rather than by org/repo name: this
+> tree must not record which third-party packages seeded an idea. The real
+> identifiers, their pinned revisions and their licences remain in the consumed
+> inbox copy under `agents/tmp.old/`, which is gitignored and therefore
+> maintainer-reachable only. Tool and product names used as *integration
+> targets* (Nx, Turborepo, Storybook, shadcn, Base UI) are unaffected — naming a
+> tool this package works with is not derivation-attribution.
 
 > **Source:** `agents/tmp.old/component-library/road-to-component-library-lifecycle.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
@@ -15,8 +23,8 @@ execution:
 > `event4u-app/agent-config` @ `12cb7fe383ddae09479d26f3fcd4328070194c15`
 > (v14.8.0). External sources read at a pinned state: Storybook 10.5 docs
 > (`docs/ai/mcp/overview`, `docs/ai/best-practices`, fetched 2026-08-22),
-> `nrwl/nx-ai-agents-config` @ `aa363e4` (`skills/nx-generate/SKILL.md`
-> § Library Buildability), `vercel-labs/vercel-plugin` @ `c4a1c4e`
+> `Source A (an external monorepo agent-config suite, MIT)` @ `aa363e4` (`skills/nx-generate/SKILL.md`
+> § Library Buildability), `Source C (an external plugin repo carrying a component-CLI skill, Apache-2.0)` @ `c4a1c4e`
 > (`skills/shadcn/SKILL.md` § Build, § View/Info/Docs), and the
 > `ui.shadcn.com/docs/monorepo` page. Inverted harvest (ADR-211 C/D): phases
 > start from confirmed gaps in this tree. Anything marked **proposal** is this

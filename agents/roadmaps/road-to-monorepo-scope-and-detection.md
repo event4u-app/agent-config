@@ -6,6 +6,14 @@ execution:
   mode: phase-checkpoints
 ---
 # Road to monorepo scope and detection
+> **Source anonymisation (`source-confidentiality`).** External harvest sources
+> are referenced as `Source A`…`Source M` rather than by org/repo name: this
+> tree must not record which third-party packages seeded an idea. The real
+> identifiers, their pinned revisions and their licences remain in the consumed
+> inbox copy under `agents/tmp.old/`, which is gitignored and therefore
+> maintainer-reachable only. Tool and product names used as *integration
+> targets* (Nx, Turborepo, Storybook, shadcn, Base UI) are unaffected — naming a
+> tool this package works with is not derivation-attribution.
 
 > **Source:** `agents/tmp.old/component-library/road-to-monorepo-scope-and-detection.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
@@ -14,9 +22,9 @@ execution:
 > **Source:** external deep-analysis session, 2026-08-22, against
 > `event4u-app/agent-config` @ `12cb7fe383ddae09479d26f3fcd4328070194c15`
 > (v14.8.0). Every `file:line` below was read at that commit. External sources
-> were cloned and pinned: `nrwl/nx-ai-agents-config` @ `aa363e4` (MIT),
-> `vercel/turborepo` @ `ef1ef92` (MIT, `skills/turborepo/SKILL.md`),
-> `vercel-labs/vercel-plugin` @ `c4a1c4e` (Apache-2.0, `skills/shadcn/SKILL.md`).
+> were cloned and pinned: `Source A (an external monorepo agent-config suite, MIT)` @ `aa363e4` (MIT),
+> `Source B (an external monorepo build-tool repo, MIT)` @ `ef1ef92` (MIT, `skills/turborepo/SKILL.md`),
+> `Source C (an external plugin repo carrying a component-CLI skill, Apache-2.0)` @ `c4a1c4e` (Apache-2.0, `skills/shadcn/SKILL.md`).
 > Harvest form is inverted (ADR-211 C/D): every phase starts from a defect
 > confirmed in this tree and pulls in a source only where the source closes it.
 > Anything marked **proposal** is this session's own design, not an adopted
@@ -243,7 +251,7 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       fallback; `check_references` green; `ls src/rules | wc -l` is unchanged
       by this roadmap.
 - [ ] **3.4 Harvest the Turborepo anti-pattern list — selectively.**
-      From `vercel/turborepo` `skills/turborepo/SKILL.md` § Critical
+      From `Source B (an external monorepo build-tool repo, MIT)` `skills/turborepo/SKILL.md` § Critical
       Anti-Patterns (`:218-735`), take only the rows that a review judge can
       detect by reading a diff: root scripts bypassing turbo (`:250`),
       `prebuild` that builds siblings (`:292`), `&&`-chained turbo tasks

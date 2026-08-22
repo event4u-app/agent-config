@@ -6,6 +6,14 @@ execution:
   mode: phase-checkpoints
 ---
 # Road to repo playbooks
+> **Source anonymisation (`source-confidentiality`).** External harvest sources
+> are referenced as `Source A`…`Source M` rather than by org/repo name: this
+> tree must not record which third-party packages seeded an idea. The real
+> identifiers, their pinned revisions and their licences remain in the consumed
+> inbox copy under `agents/tmp.old/`, which is gitignored and therefore
+> maintainer-reachable only. Tool and product names used as *integration
+> targets* (Nx, Turborepo, Storybook, shadcn, Base UI) are unaffected — naming a
+> tool this package works with is not derivation-attribution.
 
 > **Source:** `agents/tmp.old/component-library/road-to-repo-playbooks.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
@@ -13,7 +21,7 @@ execution:
 
 > **Source:** external deep-analysis session, 2026-08-22, against
 > `event4u-app/agent-config` @ `12cb7fe383ddae09479d26f3fcd4328070194c15`
-> (v14.8.0). External sources pinned: `nrwl/nx-ai-agents-config` @ `aa363e4`
+> (v14.8.0). External sources pinned: `Source A (an external monorepo agent-config suite, MIT)` @ `aa363e4`
 > (`skills/nx-generate/SKILL.md` § Key Principles, § 2 "prefer the local
 > workspace generator"), turborepo.dev `docs/guides/ai` (task `description`,
 > `turbo gen`), and agentbrisk.com "AI Coding Agents in Monorepos" (2026-04-20,

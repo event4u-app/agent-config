@@ -10,6 +10,14 @@ research_pin:
 estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready — that flip is the estate decision and it is not an external session's to take. Nothing to offset against: no active roadmap covers assurance-readiness discovery, and archiving an unrelated one to pay for this would be an unreviewed disposition dressed up as bookkeeping. Landed by /analyze:inbox with its claims re-verified at 577bdbf88 (all nine mutation/architecture tool names still return 0 files in src/)."
 ---
 # Road to Agentic Engineering Assurance
+> **Source anonymisation (`source-confidentiality`).** External harvest sources
+> are referenced as `Source A`…`Source M` rather than by org/repo name: this
+> tree must not record which third-party packages seeded an idea. The real
+> identifiers, their pinned revisions and their licences remain in the consumed
+> inbox copy under `agents/tmp.old/`, which is gitignored and therefore
+> maintainer-reachable only. Tool and product names used as *integration
+> targets* (Nx, Turborepo, Storybook, shadcn, Base UI) are unaffected — naming a
+> tool this package works with is not derivation-attribution.
 
 > **Source:** `agents/tmp.old/robert-c-martin/road-to-agentic-engineering-assurance.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
@@ -1040,11 +1048,11 @@ https://infection.github.io/2026/01/14/whats-new-in-0.32.3/
 
 Useful implementation ideas, not normative sources:
 
-- `longcipher/pb-spec` — strict RED/GREEN/REFACTOR/MUTATE and changed-code mutation.
-- `joshft/correctless` — agent separation, adversarial QA and dynamic rigor.
-- `MadeByTokens/bon-cop-bad-cop` — isolated test/code/reviewer roles and mutation.
-- `pedrofuentes/agents-template` — quality gates and multi-reviewer "Sentinel".
-- `obra/superpowers` and related forks — evidence-over-claims, TDD and review
+- `Source I` — strict RED/GREEN/REFACTOR/MUTATE and changed-code mutation.
+- `Source J` — agent separation, adversarial QA and dynamic rigor.
+- `Source K` — isolated test/code/reviewer roles and mutation.
+- `Source L` — quality gates and multi-reviewer "Sentinel".
+- `Source M` and related forks — evidence-over-claims, TDD and review
   decomposition.
 
 These are reference patterns. AC should harvest mechanisms only when they fit
