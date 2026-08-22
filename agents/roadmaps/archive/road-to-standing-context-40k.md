@@ -13,24 +13,50 @@ execution:
 
 ---
 
-## Outcome — checkpoint closed 2026-08-20, outcome state `narrowed`
+## Outcome — closed 2026-08-21, outcome state `transferred`
 
-**Archived does not mean achieved, and this roadmap is not archived.** The
-registered destination — 40k median standing context — is **not reached and is
-not claimed**. What closed on 2026-08-20 is one blocker checkpoint. Of the nine
-lines: three done, **four still open**, one deferred (`3.1`, the fork), one
-cancelled as a tracking line (`1.2`). Six were open when this run started and
-**no line moved to done** — the run's product is a corrected disposition and four
-preconditions **re-verified against the tree today** rather than inherited from
-an earlier note.
+**Archived does not mean achieved.** The registered destination — 40k median
+standing context — is **not reached and is not claimed**. What closed on
+2026-08-21 is the *ownership* question, by per-step council disposition: every
+remaining lever now has a named producer and a probe, and none of them is this
+roadmap. Of the nine lines: three done, one cancelled as a tracking line, and
+**five transferred** (`0.1`, `2.1`, `2.2`, `3.0`, `3.1`).
 
-| Phase | Outcome | Where it stands |
+**No line closed by execution, and the measured position moved the wrong way
+while this file was open.** The preamble payload reads **134,635 tok against a
+102,520 baseline (+32,115)** where D-1 below records ~23k at registration, and
+the maintainer machine's delivered rule prose reads **197,358 tok against a
+110,000 cap**, up **21,004** from the 2026-08-08 reading. Both figures were taken
+2026-08-21 and both are in
+[`standing-context-40k-host-and-machine-probes.md`](../../evidence/investigations/standing-context-40k-host-and-machine-probes.md).
+
+Council record, 2/2 quorum:
+[`standing-context-40k-disposition.md`](../../evidence/council/standing-context-40k-disposition.md).
+Two of its four questions split, and on both the narrower answer was adopted with
+the dissent recorded.
+
+| Phase | Outcome | Where it went |
 |---|---|---|
-| 0 — rule out double delivery | **transferred** | 0.1 names hardware an agent cannot reach plus a per-machine settings write. Unchanged, stays `[ ]`. |
-| 1 — pull the lever that exists | **narrowed** | 1.1 landed. 1.2's owner closed 2026-08-20 with its machinery `satisfied` **opt-in**; the default flip is transferred to the release maintainer, so the tracking line is discharged here. AC-1 is *not* met — below. |
-| 2 — shrink the structural payload | **transferred** | 2.1 and 2.2 share one unmet sequencing precondition, re-verified today: the `norm:` pin does not exist in schema, script, or any rule. |
-| 3 — runtime carrier or retire the triggers | **narrowed** | 3.0's host premise stays refuted. 3.1's fork stays open, re-dated to 2026-09-17, on a **corrected** ground: an absent producer, not an unfilled window. |
+| 0 — rule out double delivery | **transferred** | `0.1`'s maintainer reading was **executed** 2026-08-21 (red). AC-0's population is the team and every remedy is a Rule 3 settings write, so the line moved to [`road-to-standing-rule-delivery-per-machine`](../stubs/road-to-standing-rule-delivery-per-machine.md). |
+| 1 — pull the lever that exists | **narrowed** | `1.1` landed 2026-08-19. `1.2`'s default flip is owned by the release maintainer. AC-1 is *not* met — below. |
+| 2 — shrink the structural payload | **transferred** | `2.1` + `2.2` to [`road-to-cost-parity-1-rule-payload-diet`](../road-to-cost-parity-1-rule-payload-diet.md) Phase 3, which owns the `norm:` precondition **and** the mechanism. Unanimous. |
+| 3 — runtime carrier or retire the triggers | **transferred** | `3.0`'s premise is **overturned by measurement** — the host does carry the event. `3.0`, `3.1` and the blocker merged into [`road-to-instructions-loaded-observer`](../stubs/road-to-instructions-loaded-observer.md). |
 | 4 — per-turn injection aggregate | **satisfied** | Both steps landed 2026-08-19; AC-4 met and evidenced at the step. |
+
+**The one substantive reversal is step 3.0, and it is a correction of this file's
+own record.** Twice this roadmap wrote that 3.0 rests on a *refuted* premise. It
+does not. The tree-side facts it cited are all still true — the event is in no
+`EVENT_VOCABULARY`, in no `native_event_aliases` row, and the two modules naming
+it document it as unbound — but those are statements about **this suite's
+bindings**, and the host-side question was never asked. Asked on 2026-08-21 at
+Claude Code **2.1.238**, by the identical exact-token method that justified the
+`SubagentStart` / `SubagentStop` rows: `InstructionsLoaded` reads **9**, sits
+inside the host's **own hook-event enum**, has `executeInstructionsLoadedHooks`
+and `hasInstructionsLoadedHook` in the binary, and carries the payload fields
+`load_reason` / `trigger_file_path` / `parent_file_path` — the load-reason matcher
+this step described before anyone measured it. The step still does not close: its
+`verify:` asks for a received event, and a string table is not one. What changed
+is that the work is **buildable**, where before it had no route.
 
 **AC-1 is narrowed, not met, and the number in circulation is the wrong one.**
 AC-1 asks for the census on a scoped consumer install "measured with the
@@ -44,9 +70,20 @@ naive tag read)"* — a ~3.6× overstatement — while its Outcome table still r
 Independently, no consumer install is scoped **by default**, so the population
 AC-1 measures does not yet exist.
 
+**AC-2 is not met and its metric was mis-identified until this close.** The
+gate that carries the word "always" — `check_always_budget`, reading 29,466 /
+49,000 chars — measures **exactly the nine locked kernel rules**, which
+`block-kernel-rule-writes` protects blocking and fail-closed, and its extended
+ratchet sits at 60,252 / 60,254: **two characters of headroom**. No
+agent-editable file is in that gate's corpus, so a condense pass cannot move it
+in either direction. The metric AC-2 speaks to is the preamble payload above,
+where project-scope rules are **119,481 of 134,635 = 88.7 %** — so Phase 2 was
+aimed at the dominant term, and the transfer moves it to the roadmap that owns
+the pin.
+
 **AC-3 forbids a third state, and the third state is what holds.** The fork is
-neither (a) nor (b). That is recorded openly with a date and a named producer
-rather than resolved by picking a side the evidence does not support.
+neither (a) nor (b). It is transferred with its blocker rather than resolved by
+picking a side the evidence does not support.
 
 ## 0. The defect, stated first
 
@@ -126,20 +163,40 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 The cheapest decisive check in this roadmap, and the one that can close the
 colleague's report on its own.
 
-- [ ] **0.1** Run the standing-rule-delivery dev task on the maintainer machine
+- [-] **0.1** Run the standing-rule-delivery dev task on the maintainer machine
       and on each affected colleague machine. A red result means the machine
       predates the installer gate: apply the `claudeMdExcludes` suppression for the
       unchosen layer — one settings entry, no deletion of anything.
       `verify:` the task's own output, recorded per machine with its date.
-      **NOT executed 2026-08-19 — human action, by the step's own wording.** "On
-      the maintainer machine and on each affected colleague machine" names
-      hardware an agent cannot reach, and the remedy is a settings write per
-      machine. This is a `/roadmap:next` disqualifier (a blocker whose resolution
-      is a human ACTION), recorded here so the next screen does not re-derive it.
-      **Re-verified 2026-08-20 — unchanged, and no council disposition covers
-      it.** The drain-run dispositions transferred several host- and
-      machine-bound items, but none of them is this one, so it is not silently
-      absorbed elsewhere. Stays `[ ]`: an agent cannot read a colleague's machine.
+      **EXECUTED on the maintainer machine 2026-08-21, and TRANSFERRED 2026-08-21
+      — council disposition B, outcome state `transferred`, 2/2 quorum.**
+      The half an agent can reach was taken rather than declined a third time.
+      `task dev:standing-rule-delivery` on the maintainer machine, 2026-08-21:
+      **RED — 197,358 tok / 110,000 cap (179.4 %)**; global 115 files / 115,781 tok,
+      project 92 files / 81,577 tok, **91 rules in both layers (85 duplicate, 6
+      divergent)**. Against the 176,354 tok recorded 2026-08-08 in
+      `check_standing_rule_delivery.ts`'s own docblock that is **+21,004 tok in
+      thirteen days** — the double delivery is not merely unfixed, it grew, and 6
+      of the 91 doubled rules are *divergent*: same basename, different content in
+      the two layers. Full reading:
+      [`standing-context-40k-host-and-machine-probes.md`](../../evidence/investigations/standing-context-40k-host-and-machine-probes.md) § 2.
+      **Why that does not close the line, on two independent grounds.** (1) AC-0's
+      population is *"every machine in the team"*; one dated red reading is
+      evidence, not satisfaction. (2) Every remedy — including the one on the
+      maintainer's own machine — is a `claudeMdExcludes` settings write, i.e. a
+      host-env modification, and the framework's Rule 3 is categorical: the
+      council may record its preference and may not record the act as done.
+      The council split on (1): the anthropic seat would have read this line
+      `narrowed` with the measurement obligation discharged. Dissent recorded in
+      the council file; the transferred work is identical either way.
+      Moved with its remedy and AC-0 to
+      [`road-to-standing-rule-delivery-per-machine`](../stubs/road-to-standing-rule-delivery-per-machine.md).
+      Producer: **`matze4u`**, with each machine's own owner running locally —
+      the team is enumerated in no artefact under `agents/`, which the stub states
+      rather than substituting a role label. Probe, per machine:
+      `task dev:standing-rule-delivery` exits 0, or a dated exemption note.
+      Baseline at transfer: maintainer **non-zero**; colleague machines **no
+      reading exists**.
 - **AC-0:** every machine in the team reports under the governed cap on that gate,
   or carries a dated exemption note saying why it does not.
 
@@ -172,7 +229,7 @@ colleague's report on its own.
       and discharged by an appended note carrying all four required facts. The
       condition — *"Resume when P2.1 of `road-to-rule-delivery-integrity` closes"* —
       was satisfied **2026-08-08** by
-      [`skill-catalogue-description-delivery.md`](../evidence/analysis/skill-catalogue-description-delivery.md)
+      [`skill-catalogue-description-delivery.md`](../../evidence/analysis/skill-catalogue-description-delivery.md)
       (parent roadmap archived 2026-08-09, `259039157`, which is what the
       machine-decidable probe reports FIRED on). **No resumption event followed for
       eleven days:** `git log` over the parked file since 2026-08-08 returns zero
@@ -201,7 +258,7 @@ colleague's report on its own.
       current default and ship opt-in until the human benchmark passes*, and a
       re-entry probe: *"merged settings diff plus attached census, or a dated
       opt-in decision in the release record"*
-      ([`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md)).
+      ([`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)).
       A shipped-default flip is also a Hard-Floor action under
       `non-destructive-by-default`, so it could never have closed here autonomously
       regardless of the disposition. There is no interlock left to carry: `[-]`
@@ -214,7 +271,7 @@ colleague's report on its own.
 The revert proved the nineteen must stay **unconditional**. It did not prove their
 **bodies** must stay their current length.
 
-- [ ] **2.1** Condense pass over the unconditional set only, prioritised by body
+- [-] **2.1** Condense pass over the unconditional set only, prioritised by body
       size, with the routing matrix as the unchanged hard gate: reach is pinned,
       prose is not. The per-rule norm line from
       `road-to-cost-parity-1-rule-payload-diet` is the snapshot anchor — sequence
@@ -222,26 +279,44 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       before any prose shrinks.
       `verify:` routing matrix green; the diff contains zero `triggers:` edits,
       machine-checkable by byte-comparing every `triggers:` block.
-      **NOT executed 2026-08-19 — its own sequencing condition is unmet, and this
-      is a one-command check rather than a reading of intent.** The step says to
-      sequence condensation *after* the per-rule norm lint exists, so the
-      obligation sentence is pinned before any prose shrinks. That lint is
-      `road-to-cost-parity-1-rule-payload-diet` step 3.1, still `[ ]`, and no
-      `norm`-pinning script exists under `src/scripts/`. Condensing first would
-      shrink prose with nothing holding the obligation — precisely the ordering
-      this step was written to prevent.
-      **Re-verified 2026-08-20 — precondition still unmet, checked three ways
-      rather than re-read from the note above.** (1) `road-to-cost-parity-1-rule-payload-diet`
-      steps 3.1 *and* 3.2 (the drift lint) are both still `[ ]`. (2) `src/scripts/`
-      contains no script whose name matches `norm`. (3) The field does not exist
-      where it would have to: `src/scripts/schemas/rule.schema.json` declares no
-      `norm` property, and **zero** files in `src/rules/` carry a `norm:`
-      frontmatter key. Stays `[ ]`.
+      **TRANSFERRED 2026-08-21 — council disposition B, outcome state
+      `transferred`, unanimous 2/2.** The precondition was re-checked three ways
+      on `d0fad2ccd` and is still unmet: (1) `road-to-cost-parity-1-rule-payload-diet`
+      steps `3.1` (the `norm:` field) and `3.2` (the drift lint) are both `[ ]`;
+      (2) no script under `src/scripts/` matches `norm`; (3) the field exists
+      nowhere it would have to — `rule.schema.json` declares no `norm` property
+      and **0 of 119** rules carry a `norm:` key.
+      **The receiving roadmap owns the mechanism, not only the precondition**, and
+      that is why the step moves rather than waits: its Phase 3 holds `3.1` the
+      pin, `3.2` the drift lint, `3.3` verbatim preservation of prohibitions,
+      `3.4` the marker-delimited `norm` / `rationale` / `examples` split, and
+      `3.5c` the payload-delta measurement before the phase commits. Its `3.5`
+      additionally excludes the nine kernel rules from all of `3.1`–`3.4`.
+      Keeping a duplicate line here would mean two roadmaps racing one corpus.
+      **Both seats refused a re-scope to something executable now**, on the same
+      ground: condensing prose before the obligation is mechanically pinned
+      recreates exactly the softening the sequencing condition exists to prevent.
+      Producer: **[`road-to-cost-parity-1-rule-payload-diet`](../road-to-cost-parity-1-rule-payload-diet.md)
+      Phase 3**, maintainer `matze4u`. Probe, mechanically decidable:
+      `grep -c '"norm"' src/scripts/schemas/rule.schema.json` > 0 **and**
+      `grep -rlE '^norm:' src/rules/ | wc -l` > 0 **and** `3.2`'s drift lint
+      exists. Baseline at transfer 2026-08-21: **0 · 0 · absent**.
+      **The payload numbers, taken before any change, so a later reader can tell
+      movement from noise.** `check_preamble_payload_budget`: **134,635 tok
+      against a 102,520 baseline (+32,115; ceiling 107,646) — red**, of which
+      project-scope rules are **119,481 = 88.7 %**. `check_always_budget` reads
+      29,466 / 49,000 chars but its corpus is exactly the nine locked kernel
+      rules at two characters of extended headroom, so it is not this step's
+      metric and cannot be moved by an agent at all. And **4 of 113** projected
+      rule files carry any frontmatter — 109 load unconditionally — so on this
+      carrier a frontmatter change costs ~0 bytes and only body prose is worth
+      moving. Full record:
+      [`standing-context-40k-host-and-machine-probes.md`](../../evidence/investigations/standing-context-40k-host-and-machine-probes.md) §§ 3–5.
 
   > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
   > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
   > exact BPE, largest residue first. Full table with its per-rule criterion:
-  > [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
+  > [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
   > **Regenerate rather than trust it** — a table written into another roadmap
   > ages with the corpus, and a stale prioritisation is worse than none because it
   > looks authoritative:
@@ -261,6 +336,22 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   > | `architecture` | 873 | 82 |
   > | `roadmap-progress-sync` | 839 | 585 |
   > | `git-history-discipline` | 836 | 369 |
+  >
+  > **REGENERATED 2026-08-21, and the table above drifted — which is the argument
+  > for the instruction rather than against the table.** Re-run on `d0fad2ccd`
+  > (`./scripts-run src/scripts/check_rule_stub_ceiling --report`): **43** rules
+  > declaring a migrated body, **17,269** residue tokens over a **7,816** floor,
+  > out of 25,084 body tokens — against 44 / 17,383 / 7,463 / 24,845 above. The
+  > ordering changed at rank 6: `roadmap-progress-sync` moved to 912 residue on a
+  > floor that grew 585 → 1,273, and `legal-safety-floor` (736) entered the top
+  > band, which is the rule
+  > `rule-body-migration-inventory.md` already named as the exemplar its six
+  > safety-floor siblings have not had. Two figures moved by less than 2 %
+  > (`context-hygiene` 2,229 → 2,252) and one set membership changed.
+  > **This regeneration is preparation, not execution** — the council drew that
+  > line explicitly, and it closes nothing. It travels with the transfer as an
+  > input, and the receiving roadmap should regenerate again rather than cite it:
+  > the drift measured here is thirteen days' worth.
   >
   > Two bounds on reading it. The split is a **judgment with a mechanical
   > criterion**, published per rule so a row can be disputed without discarding
@@ -283,21 +374,33 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   > each move's effect is visible per rule instead of only in the aggregate
   > census. Re-anchor that baseline in the same commit as any move. 2.2 already
   > binds `preservation-guard`; nothing here restates its method.
-- [ ] **2.2** Move long rationale and history sections out of rule bodies into
+- [-] **2.2** Move long rationale and history sections out of rule bodies into
       linked context or guideline files, which load on demand rather than every
       session. The `preservation-guard` contract binds here: every passage moves,
       none is deleted, and Iron Law headings survive verbatim at their level.
       `verify:` the condensation gate is green and each moved passage is reachable
       from its rule by a link.
-      **NOT executed 2026-08-19 — same sequencing as 2.1, for the same reason.**
-      Moving rationale out of a rule body is a `preservation-guard` transform over
-      the same corpus 2.1 condenses, and it shares 2.1's precondition: with no
-      norm-line pinned, "which passage is the obligation" is a judgement per rule
-      rather than a checkable field, and `preservation-guard`'s every-passage-stays
-      rule cannot distinguish a legitimate move from a quiet softening. Sequence
-      it behind 2.1, not beside it.
-      **Re-verified 2026-08-20 alongside 2.1 — same three checks, same verdict.**
-      Stays `[ ]`.
+      **TRANSFERRED 2026-08-21 alongside 2.1 — council disposition B, outcome
+      state `transferred`, unanimous 2/2.** Same producer, same probe, same
+      baseline; the two steps move together because they share one precondition
+      and one corpus, and splitting them would put a `preservation-guard`
+      transform and the condensation it depends on in different roadmaps.
+      The three precondition checks are re-run at 2.1 and are unchanged.
+      **The measurement that makes this step the sharper half of the pair.**
+      **4 of 113** projected rule files carry any frontmatter, so 109 arrive
+      unconditionally and a frontmatter edit costs ~0 bytes on this carrier —
+      moving *body* prose is the only lever 2.2 has, and it is the lever
+      `preservation-guard` constrains hardest: every passage moves, none is
+      deleted, Iron Law headings survive verbatim at their level. The regenerated
+      residue table above bounds what is available (**17,269** tokens across 43
+      rules that already declare a migration), and the receiving roadmap's `3.4`
+      is the marker-delimited split that makes "which passage is the obligation"
+      a checkable field instead of a per-rule judgement.
+      One constraint the receiving roadmap must carry and this file did not state:
+      a move's destination has to be measured first. `check_depth_budget` counts
+      FILES over its 16,000-char per-file ceiling, so appending rationale to a
+      guideline that is already near it turns a legitimate move into a fifth
+      over-ceiling file and reds the gate.
 - **AC-2:** the unconditional-corpus token count falls against the committed
   census bucket; routing matrix green; zero trigger edits in the diff.
 
@@ -311,41 +414,70 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 > pre-registered comparison against the shipped lexical core. The fork below is
 > restated accordingly.
 
-- [ ] **3.0** Register the `InstructionsLoaded` observer first. The host fires that
+- [-] **3.0** Register the `InstructionsLoaded` observer first. The host fires that
       event per loaded `CLAUDE.md` / `.claude/rules/*.md` with a load-reason
       matcher, which turns "rules carried" from an emitter simulation into a
       per-session ground-truth count — exactly the demand-signal datum the
       retriever's own gate reads. Decide the fork *after* the observer has data.
       `verify:` the observer records a load event with its reason on this tree.
-      **NOT executed 2026-08-19, and the reason is a refuted premise rather than
-      effort.** This step reads "the host fires that event" as given. Nothing in
-      this tree establishes it: `InstructionsLoaded` appears in no
-      `EVENT_VOCABULARY` (`dispatch_hook.ts:99-110`, ten events, not this one),
-      in no `native_event_aliases` row for any platform, and
-      `check_standing_rule_delivery.instructionsLoadedRecord`'s own docblock calls
-      it "a host feature this suite does not yet bind" while returning a path that
-      is *expected* not to exist. So "register the observer" is not a binding task
-      today — it is first a host-capability question, and binding an event whose
-      existence was never confirmed is designing against an assumption, which
-      `source-discovery-gate` forbids by name.
-      **What would close it:** one recorded observation that the installed host
+      **PREMISE OVERTURNED BY MEASUREMENT 2026-08-21, and TRANSFERRED the same
+      day — council disposition B, outcome state `transferred`, 2/2 quorum.**
+      Read the two halves separately, because the earlier notes above got the
+      boundary wrong and this correction is the point.
+      **The refutation was about this tree, never about the host.** Every
+      tree-side fact recorded above is still true: `InstructionsLoaded` is in no
+      `EVENT_VOCABULARY` (ten events), in no `native_event_aliases` row, and the
+      two modules that name it document it as unbound. Those are statements about
+      **this suite's bindings**. The step's own claim — *"the host fires that
+      event"* — was never probed on the host, and the step itself named the probe
+      that would settle it: *"one recorded observation that the installed host
       emits the event (version-stamped, like the `subagent_start`/`subagent_stop`
-      evidence that justified those two rows), *then* the vocabulary + alias +
-      platform-row change, *then* the concern. Until the first exists the rest is
-      speculative wiring.
-      **Re-verified 2026-08-20, and PRESERVED per the council disposition.**
-      `EVENT_VOCABULARY` in `src/scripts/hooks/dispatch_hook.ts` still lists ten
-      events and `InstructionsLoaded` is not among them; the only mentions of the
-      name in `src/` are `check_standing_rule_delivery.ts` and `routing_doctor.ts`,
-      both of which document it as *unbound* and print a filesystem-projection
-      caveat in its absence. The disposition's instruction to "preserve Step 3.0's
-      observer" is discharged by leaving this step and its analysis intact —
-      nothing here is deleted or downgraded. Stays `[ ]`.
-      **Consequence for the blocker below:** its Recommendation says to land this
-      observer first and re-date the fork against it. That recommendation is not
-      actionable as written, so the fork stays open on a *different* ground than
-      the one recorded there — see the correction in the blocker itself.
-- [~] **3.1** Fork, stated so it cannot be half-done. **(a)** Execute
+      evidence that justified those two rows)."*
+      **That observation now exists.** Claude Code **2.1.238**, same exact-token
+      method as the 2.1.229 extract that justified the two subagent rows
+      (`strings -a <binary> | grep -c '^<token>$'`), control set reproduced in the
+      same run: `InstructionsLoaded` reads **9**. Three findings go further than a
+      bare string — it is a member of the host's **own hook-event enum**, next to
+      `ConfigChange` / `CwdChanged` / `FileChanged` / `TaskCreated`; the binary
+      carries `executeInstructionsLoadedHooks` and `hasInstructionsLoadedHook`;
+      and its payload fields are `load_reason`, `trigger_file_path`,
+      `parent_file_path` — the load-reason matcher this step described *before*
+      anyone measured it. Full record with the control table:
+      [`standing-context-40k-host-and-machine-probes.md`](../../evidence/investigations/standing-context-40k-host-and-machine-probes.md) § 1.
+      **The step still does not close, and the council was explicit about why.**
+      Its `verify:` asks that *"the observer records a load event with its
+      reason on this tree"*. A string table proves the event exists to bind; it
+      does not prove a bound concern receives a fire, and binding takes effect at
+      session start, so the fire is necessarily a later session. The openai seat
+      volunteered this as the call it would resist most strongly — *"treating
+      exact binary strings as sufficient to split or discharge 3.0"* — and that is
+      why the anthropic seat's split (mark 3.0 satisfied on the observation,
+      transfer only the binding) was **not** adopted. Dissent recorded in the
+      council file, and it is the reason the measurement is preserved here as a
+      correction of record rather than discarded with the step.
+      **`D` — build the binding in that same change — was refused on Rule 3, not
+      on cost.** Registration emits install settings, so it changes what the
+      installer writes into a consumer's `.claude/settings.json`. The known cost
+      is separately real: a ~24-file test surface on `hook_manifest.yaml`, and a
+      bound slot with no concern in it is a surface with no consumer.
+      Moved with 3.1 and the blocker into
+      [`road-to-instructions-loaded-observer`](../stubs/road-to-instructions-loaded-observer.md),
+      merged under the framework's rule 5 because the three share one evidence
+      chain: the observer produces the datum the fork reads. Producer:
+      **`matze4u`** — this is a single-maintainer repository (**1** distinct
+      reviewer over the trailing 90 days), so a separate "hook-architecture owner"
+      would be a role label naming nobody. Probe:
+      `grep -c '"instructions_loaded"' src/scripts/hooks/dispatch_hook.ts` and
+      `grep -c 'InstructionsLoaded' src/scripts/hook_manifest.yaml`, baseline at
+      transfer **0 · 0**. The council requires a kill switch on the binding:
+      independently removable, rolled back on hook failures, duplicate events,
+      material session-start regression, or unexplained test breakage.
+      **Consequence for the blocker, and it is a real change.** Its Correction A
+      declared the "land the observer first" Recommendation unavailable *because
+      the host capability was unestablished*. That ground is now measured false,
+      so the Recommendation has a route for the first time. Correction B is
+      untouched: nothing writes the `rules_carried` pair today.
+- [-] **3.1** Fork, stated so it cannot be half-done. **(a)** Execute
       `later/road-to-deferred-rule-retriever` when its `rules_efficiency` gate
       converts, lexical-core comparison first, per its own text. **(b)** If the
       demand signal never materialises on a sustained basis, record the null and
@@ -405,6 +537,26 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       2026-09-17 date is a checkpoint re-date and NOT a prediction that data will
       arrive. The fork's real gate is a producer for the pair — see the blocker's
       Correction B and its re-entry probe. -->
+      **TRANSFERRED 2026-08-21 — council disposition B, outcome state
+      `transferred`, 2/2 quorum.** The fork moves with the blocker it is blocked
+      on and with the observer that would decide it, into
+      [`road-to-instructions-loaded-observer`](../stubs/road-to-instructions-loaded-observer.md)
+      as one stub under the framework's rule 5 — the three are one evidence chain,
+      not three independent items. Nothing above is retracted: the 2026-08-20
+      recording stands, the window is still unfilled, and the probe was re-run
+      2026-08-21 with the same reading (`envelopes with pair=0 · no data`).
+      **What the transfer adds is a route where the re-date was not one.** The
+      comment above says plainly that 2026-09-17 is a checkpoint and not a
+      forecast, because nothing in the tree fills the window without a producer.
+      A bare re-date on that day would be the parking-lot failure the framework's
+      rule 1 names, so the stub is gated on a producer rather than on a date:
+      `dispatch_economy_report` reporting `envelopes with pair` > 0. Three
+      candidate producers are named there — the two from Correction B, plus the
+      observer from 3.0, which Correction A had ruled out on a host-capability
+      ground that is now measured false.
+      Neither arm gains evidence in the meantime, and that is unchanged: (a) has
+      no demand signal, and (b) would delete trigger frontmatter on an *absence*
+      of measurement rather than a measured null.
 - **AC-3:** either (a) ships behind the registered gate with a pre-registered
   adoption metric, or (b) a dated null closes the fork. No third state.
 
@@ -505,7 +657,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 ## Blockers
 
 ### blocker: b-rules-efficiency-signal
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 — consent-once (wait for the observer, or record the window unfilled and re-date)
 - **Blocks:** Phase 3 step 3.1 only. Step 3.0's observer is repo work and proceeds
@@ -555,7 +707,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   still applied: the clause licenses it and the window genuinely is unfilled.
 - **Recorded resolution 2026-08-20 (checkpoint only — this blocker stays OPEN).**
   Council disposition `C`, outcome `narrowed`, from
-  [`drain-blocker-dispositions-a.md`](../evidence/council/drain-blocker-dispositions-a.md).
+  [`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md).
   The `rules_efficiency` window is hereby recorded **unfilled**: 0 envelopes
   carrying the pair, median quota unreadable, low-quota bar (< 0.2) not evaluable.
   Step 3.0's observer is **preserved** (still `[ ]`, premise unchanged). The fork
@@ -578,6 +730,28 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   (a) has no demand signal, and (b) would delete trigger frontmatter on an
   absence-of-measurement rather than a measured null — the unbacked-claim failure
   this repository gates against.
+- **Closed 2026-08-21 as `Status: resolved` · Outcome state: `transferred`.**
+  Read both halves of that line: the token is the only one
+  `lint_roadmap_blockers` (`:193`) reads as closed, and the outcome state is the
+  real state. **Nothing here reopens or re-argues the disposition** settled in
+  PR #1484 (merged 2026-08-20). Two facts, and neither is new reasoning:
+  (1) **Correction B above already concludes this is a transfer.** In its own
+  words: *"By the disposition framework's own rule 4 ('instrument broken → `B`')
+  this is a TRANSFER, not a measured null."* It already names the producer and a
+  one-command probe. That is a complete disposition-`B` record; what had not
+  happened was writing the closed token.
+  (2) **#1484 held the token open because the roadmap stayed active** and this
+  blocker was a checkpoint inside it. The 2026-08-21 council closed the roadmap
+  by per-step disposition, so the blocker closes with it rather than being
+  orphaned in an archived file. The window is **still unfilled** — re-probed
+  2026-08-21, `envelopes with pair=0 · median quota=— · no data`, unchanged. No
+  metric file was edited and nothing was appended to fill it.
+  The producer, the probe, and both Corrections move verbatim to
+  [`road-to-instructions-loaded-observer`](../stubs/road-to-instructions-loaded-observer.md)
+  § Item 2, where a **third** candidate producer now exists: step 3.0's observer,
+  which Correction A had ruled out on a host-capability ground that is measured
+  false as of 2026-08-21. Probe at the stub, baseline at transfer: `envelopes with
+  pair` **0**.
 - **Resolved when:** the metric reads against its bar and the fork resolves to (a)
   or (b), or the window is recorded as unfilled with a new date.
 
