@@ -1,5 +1,7 @@
 # Council disposition — road-to-subagent-lifecycle-integrity close-out
 
+<!-- evidence-type: analysis -->
+
 **Date:** 2026-08-22 · **Members:** 2/2 present (anthropic, openai) ·
 **Mode:** `design`, depth `deep`, blind peer review ·
 **Cost:** $0.0511 actual.
