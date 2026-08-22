@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 7,
+    "active_roadmaps": 6,
     "later_roadmaps": 55,
     "open_blockers": 36
   },
@@ -622,6 +622,27 @@
       "later_roadmaps": 55,
       "open_blockers": 36,
       "why": "REBASED ONTO THE TRUNK'S WALK-DOWN (FIFTH time on this branch -- main moved five times across the review rounds, twice while CI was running on this branch). Re-measured from the tree: with main's file in place `check_estate_count` reported `active_roadmaps 7 (baseline 6, +1)` and `open_blockers 36 (baseline 34, +2)`, which is exactly this branch's contribution. main's lineage is kept whole (85 history entries, baseline 6/55/34) and only that delta rides on top, giving 7/55/36.\n\nFive identical resolutions is worth naming as a PATTERN rather than five accidents: the trunk is being drained continuously, a CI cycle here takes about twenty minutes, and main moved 45 commits during the last one. The drain's own run summary records the same shape from the other side -- 'the merge-authorization window is shorter than a drain takes'. So this conflict is structural for any branch that is not merged within one CI cycle, and the resolution is mechanical each time: take main's lineage, re-measure the delta, never carry the numbers. The one time they were carried, the entry shipped a `why` naming 12 -> 13 while its own field read 10.\n\nThe +2 open blockers are both on road-to-evidence-based-adr-governance and both are maintainer decisions put in front of the maintainer rather than drift: `owner-autonomy-batch` (three Hard-Floor rulings the source instruction did not authorize) and `authority-coupling-decision` (whether an independently validated evidence grade may ever reduce authorization burden -- deferred on a unanimous two-seat council ruling that fusing evidence metadata with authority is the design's central defect, because the party assigning the grade would also be the party gaining authority from it AND would be self-classifying the transition as reversible-internal). The active_roadmaps side is covered by the roadmap's own estate_offset_exempt, which records why no one-in-one-out offset is taken: the other active roadmaps belong to other sessions, and this ledger's own 67 -> 69 entry names 'closing someone else's work to buy the number back' as the incentive the ratchet must never create. 7 and 36 are the measured trunk-plus-this-change values and are now the numbers that must walk down."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 23,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "WALKED DOWN by 1 active roadmap: road-to-estate-drawdown archived, all eight steps terminal. EARNED vs BANKED, because the trunk moved under this branch and the split matters: this change earned the ENTIRE -1 on active_roadmaps and NONE of the movement on the other two. When this branch fast-forwarded to 52cfb4bb8 the tree measured exactly 24/52/61, i.e. already at the baseline the trunk had just set, so open_blockers 62->61 was the previous entry's drawdown and not this one's. later_roadmaps unchanged at 52 -- nothing was parked. open_blockers unchanged at 61 and that is the honest number even though this change closed a roadmap: its single blocker b-consolidated-decision-sheet was ALREADY resolved on the trunk by PR #1492, so archiving the file removed no open record from the count. ACCOUNTING WARNING, recorded rather than absorbed: two of the five closures were TRANSFERS into agents/roadmaps/stubs/, which neither metric counts -- steps 2.1 and 2.2 plus AC-2 went to road-to-estate-triage-remaining-batches.md, and the draft-status ratchet hole went to road-to-draft-status-ratchet-boundary.md. So a reader must not read -1 active as -1 unit of work: the stub carries a probe measured at 71 untriaged files, and 71 files of scope left the counted estate by being renamed rather than by being done. That is exactly the accounting move this history array exists to make visible."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 22,
+      "later_roadmaps": 52,
+      "open_blockers": 61,
+      "why": "MERGE RESOLUTION, and the number is MEASURED on the merged tree rather than taken from either side. Both sides of this conflict had independently walked active_roadmaps to 23 and BOTH were right about their own tree: the trunk archived road-to-session-closeout, this branch archived road-to-estate-drawdown. Adopting either 23 would have silently banked one archival and lost the other, which is why this array is resolved by union and the baseline by re-measurement. EARNED vs BANKED on the -2 from 24: exactly HALF is this branch's. This change earned the road-to-estate-drawdown archival; the road-to-session-closeout archival arrived from origin/main in the same merge and is banked, not earned. later_roadmaps 52 and open_blockers 61 are unchanged by both sides. baseline_history: 39 entries on this branch + 2 trunk-only entries = 41 before this one; every entry from both sides is kept, because a dropped entry is a lost reason and the array is append-only. The stubs accounting warning from this branch's previous entry still stands and is not restated: two closures were transfers into agents/roadmaps/stubs/, which neither metric counts, so 71 files of triage scope left the counted estate by being renamed rather than finished."
+    },
+    {
+      "at": "2026-08-21",
+      "active_roadmaps": 6,
+      "later_roadmaps": 55,
+      "open_blockers": 36,
+      "why": "WALKED DOWN by 1 active and nothing else: road-to-estate-drawdown is archived by this branch (under agents/roadmaps/ on main, under agents/roadmaps/archive/ here). Fitting, since it is the roadmap this ratchet was registered to serve. open_blockers unchanged at 36 and later_roadmaps unchanged at 55, which together are the check that nothing was bought by relocating an open decision: the two items the roadmap could not finish went to stubs created in this same change (road-to-draft-status-ratchet-boundary, road-to-estate-triage-remaining-batches), each with its own probe, and a stub is not a park."
     }
   ],
   "target": {

@@ -19,30 +19,66 @@ execution:
 
 ---
 
-## Outcome — per phase, as of 2026-08-20
+## Outcome — per phase, as of 2026-08-21 · **CLOSED**
 
-**This roadmap is NOT archived and must not be: six of its eight steps are still
-open.** The section exists because a phase can be *finished* in several different
-ways, and only one of them is "achieved". Stated plainly, because this campaign's own
-risk 1 is drawdown by burial: **archived does not mean achieved.** When this file
-eventually closes, it closes against the outcome states below — `satisfied`,
-`narrowed`, `transferred`, `abandoned` — not against a completion percentage. A reader
-who sees it in `archive/` should read this section first and should not infer that the
-estate reached T1's ceiling.
+**This roadmap is now archived, and archived does NOT mean achieved.** Read this
+section before anything else in the file. All eight steps are terminal — four
+`[x]`, four `[-]` — and the file closes against the outcome states below, never
+against a completion percentage. **The estate did not reach T1's ceiling; T1 never
+had a registered ceiling to reach.** One of this campaign's five acceptance
+criteria is met, one is narrowed, one is transferred and two are abandoned.
+
+The section header used to read *"This roadmap is NOT archived and must not be:
+six of its eight steps are still open."* That sentence was true when it was
+written and is kept here in quotation rather than deleted, because the campaign's
+own risk 1 is **drawdown by burial** and a reader deserves to see that the file
+went from "must not be archived" to archived — and to be able to check, from the
+table below, whether anything was buried on the way.
+
+**What closed the six steps, in one line each, so the reader does not have to
+trust the table:** two were measured empty and accepted as nulls (1.1, 1.2), two
+were moved out verbatim into a stub with a named producer and a measured probe
+(2.1, 2.2), one was abandoned because the council declined the path it is defined
+over (4.1), and one was already done (0.2, on the prior run). Every one of the six
+cites a council decision recorded in
+[`drain-estate-drawdown-residue`](../../evidence/council/drain-estate-drawdown-residue.md)
+or its batch-A/batch-B predecessors. **No step was closed by executing the work it
+describes.** That is the honest headline of this campaign and it is stated at the
+top rather than left to be inferred from the table.
 
 | Phase | State | What actually happened |
 |---|---|---|
 | **0 — one sitting, N answers** | **satisfied** | 0.1 generated the sheet (prior run). 0.2 answered it: option (a), per the council, applied per row over the live 21 — 7 accepted, 1 overridden, 12 transferred, 1 answered. The sheet now records the option because the generator reads it from a non-derived record. **AC-0 narrowed:** maintainer time consumed was zero and the two largest-unblock items are dispositioned, but *"most of the user-owned blockers terminal"* is not met — the criterion conflated *answered* with *terminal*. |
-| **1 — execute everything runnable** | **abandoned as written** | Not blocked — **empty**. Measured: 44 open blockers in the active tree, **0 class-0 and 0 class-1**. Phase 1 acts only on those two classes, so there is nothing for `gates --execute` to clear and no class-1 tranche to schedule at any budget. 1.1 stays `[ ]` rather than being marked green on a vacuous `verify:`. **AC-1 not met**, and not reachable by this mechanism. |
-| **2 — triage sweep** | **narrowed, untouched here** | Batch 1 (ten files) landed on a prior run. This change is not a batch: 2.1 caps a batch at ten roadmaps and one PR, and mixing a second batch into a decision-sheet answer would break that ceiling and collide with parallel drain runs. Ten of 32 active files carry a verdict; **AC-2 not met.** |
+| **1 — execute everything runnable** | **abandoned** (1.1) + **narrowed** (1.2) | Not blocked — **empty**. Re-measured 2026-08-21 at `52cfb4bb8`: 35 open blockers in the active tree and 25 in `later/`, **0 class-0 and 0 class-1 among all 60**. Phase 1 acts only on those two classes, so there was nothing to clear and no tranche to schedule at any budget. **1.1 → `[-]`, disposition `C`, outcome `abandoned`** — its sibling gate has since been discharged (that roadmap is archived with its sweep committed), so the step ended with a delivered precondition and an empty subject; `[-]` not `[x]`, because zero blockers were cleared. **1.2 → `[x]`, disposition `A`, outcome `narrowed`** — the budget mechanism shipped (caps, receipt ledger, schema, tests) and its one named item was already transferred in batch A, so nothing is open; no tranche ever ran. **AC-1 abandoned.** |
+| **2 — triage sweep** | **transferred** | Batch 1 (ten files) landed on a prior run and is the only batch that ran. Measured 2026-08-21: **71 of 80** files in the active tree and `later/` carry no verdict row — eight further PRs at 2.1's own ten-file ceiling. **2.1, 2.2 and AC-2 → transferred verbatim** into [`stubs/road-to-estate-triage-remaining-batches.md`](../stubs/road-to-estate-triage-remaining-batches.md), producer the maintainer, probe `untriaged → 0` measured at **71**. Narrowing instead would have dropped 71 files with nothing holding them, which is risk 1 firing on this file. AC-2's ceiling clause is separately unsatisfiable — T1 has no registered ceiling. **AC-2 transferred, not met.** |
 | **3 — the ratchet lands** | **satisfied** | 3.1 and AC-3 were met on 2026-08-18: `check_estate_count` plus the budget file, green at the baseline, red against fixtures in both directions. Unchanged by this run except for one baseline walk-**down** recorded below. |
-| **4 — the recurring pass** | **transferred** | 4.1's blocker is `b-delegate-gate-maintainer-profile`, the one default this run pulled out of option (a). The delegate path the pass runs on is now **explicitly not authorised** — by decision, not omission: the council's batch-B row keeps `allow_delegate: false`. 4.1 moves from "waiting on a sibling step" to "waiting on a named human". **AC-4 not met.** |
+| **4 — the recurring pass** | **abandoned** | 4.1's blocker is `b-delegate-gate-maintainer-profile`, the one default the prior run pulled out of option (a), and the council's batch-B row keeps `allow_delegate: false` — so the delegate path the pass is defined over is **explicitly not authorised, by decision rather than omission**. Escalated 2026-08-21 from `transferred` to **`abandoned`** (disposition `E`), on a **split 1/1 council with the dissent recorded**: a stub whose re-entry probe is "`allow_delegate` became true" re-enters only by reversing the council's own adopted choice, which is the parking lot disposition `E` exists to prevent. Every capability the pass would have composed is hand-invocable today; what is abandoned is the scheduled delegated-write automation. **AC-4 abandoned.** This is a user-reserved drop taken under the run's standing delegation — reverse it by restoring 4.1 to `[ ]`. |
 
 **Estate effect of this run: none on the two counts that matter, and one blocker
 closed.** Active roadmaps 32 → 32; `later/` 52 → 52; open blockers 70 → 69, the single
 closure being `b-consolidated-decision-sheet` itself. The ratchet baseline is walked
 down to match, with a history entry — a tightening that is not re-registered becomes a
 ceiling nobody is held to.
+
+**Estate effect of the CLOSING run (2026-08-21), kept separate from the note above
+rather than overwriting it.** Active roadmaps **24 → 23** — this file, and nothing
+else. `later/` **52 → 52**; open blockers **61 → 61**. The blocker count does not
+move even though a roadmap closed, and the reason is worth stating: this file's
+only blocker was already resolved on the trunk by PR #1492, so archiving it
+removed no open record. The ratchet baseline is walked down to 23 with a
+`baseline_history` entry that splits **earned from banked** — this change earned
+the entire −1 on active and none of the movement on the other two metrics, which
+the trunk had already booked.
+
+**And the −1 is not −1 unit of work, which is the number a reader should distrust
+first.** Two of the five closures are **transfers into `agents/roadmaps/stubs/`**,
+a directory **neither metric counts**. Steps 2.1, 2.2 and AC-2 left with a probe
+measured at **71 untriaged files**; the `draft`-status ratchet hole left with its
+own two-clause probe. So 71 files of scope departed the counted estate by being
+**renamed, not finished**. The campaign's own risk 1 is drawdown by burial, and
+this is the shape it would take here — which is why the stub probes are
+falsifiable, the producer is named, and the number is written into the ratchet's
+history rather than left in the delta.
 
 **What a reader should take from this.** The campaign's premise was that the estate
 carries a large stock of decidable-but-uncourriered blockers. Answering the whole
@@ -165,7 +201,7 @@ sibling roadmap — it is runnable with today's tooling.**
       valid answer.** The answers are then appended into each roadmap file at its
       blocker as the decision record — by the agent, not by the human.
       - **Done 2026-08-20.** Answered **option (a)** by the AI council
-        ([drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md),
+        ([drain-blocker-dispositions-b](../../evidence/council/drain-blocker-dispositions-b.md),
         row `b-consolidated-decision-sheet | D | satisfied`, both seats convergent).
         Note that (a) is itself an **override of this roadmap's own rendered
         default**, which recommended (c); recorded as such rather than presented as
@@ -229,7 +265,7 @@ sibling roadmap — it is runnable with today's tooling.**
 
 ### Phase 1 — Execute everything runnable
 
-- [ ] **1.1** Once the sibling's classification sweep lands, `gates --execute`
+- [-] **1.1** Once the sibling's classification sweep lands, `gates --execute`
       clears every class-0 blocker: time-window checks, telemetry-count gates, and
       stale-artifact deletions. Where a window is genuinely unfilled, **the blocker
       is re-dated, which is also progress** — an honest "not yet, and here is the
@@ -245,7 +281,39 @@ sibling roadmap — it is runnable with today's tooling.**
         scanned nothing is the gate-that-scans-nothing failure this package keeps
         finding. The honest count is the deliverable here, per the step's own "an
         honest 'not yet, and here is the count' beats an open gate nobody probed".
-- [~] **1.2** Class-1 tranche under the budget ledger, highest-unblock first: the
+      - **Closed 2026-08-21 — disposition `C` (accept-null), outcome state
+        `abandoned`.** Council decision, both seats confirming in round 2:
+        [`drain-estate-drawdown-residue`](../../evidence/council/drain-estate-drawdown-residue.md)
+        row 1. `[-]` rather than `[x]`, and the distinction is the whole point:
+        the criterion says *"clears every class-0 blocker"* and **zero were
+        cleared**, so `satisfied` would have been a false claim about work done.
+        Disposition `C` because the framework's Rule 4 maps
+        instrument-ran-and-answered-zero to `C` categorically, and `E` does not fit
+        a mechanism that shipped with 23 fixture tests.
+      - **The gate this step opens with has been discharged, which is a change
+        since the note above.** 1.1 reads *"Once the sibling's classification sweep
+        lands"*. The sibling is `road-to-gate-autonomy`, and it is **archived** —
+        its step 1.2 is `[x]` and the sweep artefact is committed at
+        `agents/evidence/analysis/gate-class-sweep-2026-08-17.md`. So this step
+        was never waiting on a producer at the end; it had a delivered
+        precondition and an empty subject.
+      - **Four probes, four tree states, one answer.** 49-blocker sweep
+        (2026-08-17: twelve classified 0/1, then **reclassified** after each was
+        read in full and none could carry an honest `Run:`); 44 (2026-08-20);
+        42 (2026-08-20); 35 active + 25 `later/` (2026-08-21, two independent
+        instruments). Zero class-0 every time. Measurements and the reconciliation
+        of the one-row instrument delta:
+        [`estate-drawdown-residue-probe-2026-08-21`](../../evidence/analysis/estate-drawdown-residue-probe-2026-08-21.md).
+      - **The claim is bounded to a snapshot, not asserted as an invariant**, and
+        that bound is an adopted council objection rather than a hedge. The
+        dissenting seat held that twelve entries having been reclassified once
+        proves classification is *mutable*, so a zero reading cannot prove future
+        class-0 work impossible. Correct. What is claimed: **at `52cfb4bb8` on
+        2026-08-21 the class-0 population is empty**, and the sibling's step 1.3
+        established the emptiness is the outcome of reading every candidate rather
+        than a window that fills. If a future change repopulates class 0, the
+        mechanism is shipped and waiting.
+- [x] **1.2** Class-1 tranche under the budget ledger, highest-unblock first: the
       live trigger eval — one run, two blockers, three waiting roadmaps — then the
       bench-spend items up to the weekly cap.
       - **`b-consolidated-decision-sheet` no longer blocks this — 2026-08-20 — and
@@ -259,6 +327,43 @@ sibling roadmap — it is runnable with today's tooling.**
         (a), caps USD 5 per run and USD 25 per rolling seven days — but that
         authorises a *shape*: no spend is possible until its settings keys and ledger
         path exist, which is that roadmap's own work. Stays `[~]`.
+      - **Closed 2026-08-21 — disposition `A` (re-scope), outcome state
+        `narrowed`.** Council decision, both seats confirming in round 2
+        ([row 2](../../evidence/council/drain-estate-drawdown-residue.md)). The step
+        is recorded as **two halves separately**, which is the adopted instruction
+        rather than a presentation choice: one word covering both would hide that
+        they ended in different states.
+      - **Half one — the mechanism: discharged.** The note above says *"no spend is
+        possible until its settings keys and ledger path exist"*. They exist.
+        `src/config/agent-settings.template.yml:605-612` carries
+        `gate_budget.max_cost_per_run_usd: 5` and
+        `max_cost_per_rolling_7d_usd: 25` — exactly the two figures the council
+        authorised on `b-gate-budget-preauth`;
+        `src/agent-src/scripts/gate_budget.ts:43` writes the append-only receipt
+        ledger at `agents/runtime/state/gate-budget-ledger.jsonl`;
+        `src/server/schemas/settings.ts:208` carries the schema entry; and
+        `tests/scripts/gate_budget.test.ts` covers it. **That sentence in the note
+        above is now stale and is left standing on purpose** — it is what was true
+        on 2026-08-20, and overwriting it would erase the movement.
+      - **Half two — the named work: already transferred, and NOT re-stubbed.** The
+        live trigger eval this step names by name is the pair
+        `skill-activation-window` + `human-gated-live-trigger-eval`, which the
+        council dispositioned **B / transferred** into **one** human-gated stub in
+        batch A ([rows 40 and 61](../../evidence/council/drain-blocker-dispositions-a.md)).
+        No second stub was created for it here. Both seats reached that
+        independently — one citing Rule 5 (duplicate-evidence merging) by name, the
+        other saying to reference the existing transfer rather than duplicate it —
+        and a second stub over the same evidence gap is precisely what Rule 5
+        exists to prevent.
+      - **Half three — the population: empty.** Zero class-1 blockers of 60 open
+        records across the active tree and `later/`, same measurement as 1.1. So
+        even with the mechanism shipped and the caps authorised, there is no
+        tranche to schedule at any budget.
+      - **What `narrowed` means here, stated so it cannot be read as done:** the
+        original criterion asked for a *tranche to run*. No tranche ran, and none
+        exists to run. What is discharged is the mechanism plus the disposition of
+        the one named item. `[x]` records that nothing about this step is open,
+        deferred, or waiting — not that a tranche was executed.
 - **AC-1:** open blockers materially below the starting 38; every resolution carries
   its evidence append; the ledger shows spend inside its caps.
   **Not met, and the mechanism it depended on is empty.** 44 open blockers in the
@@ -266,10 +371,19 @@ sibling roadmap — it is runnable with today's tooling.**
   this phase acts on, hold **zero** blockers between them, so no amount of running
   this phase moves the number. That is the honest-null shape this roadmap's own
   § Honest-null consequence describes, arriving in Phase 1 rather than Phase 2.
+  **Outcome state `abandoned`, 2026-08-21** — not met, and not meetable by this
+  mechanism. Re-measured at `52cfb4bb8`: 35 open blockers in the active tree and
+  25 in `later/`, **zero class-0 and zero class-1 among all 60**. The first clause
+  did move in the right direction since the note above (44 → 35 in the active
+  tree), and **none of that movement is this phase's** — it came from the
+  concurrent per-roadmap drain PRs, which is exactly why the clause is recorded as
+  not met rather than claimed. The third clause, *"the ledger shows spend inside
+  its caps"*, is unreachable for the same reason: the ledger and both caps ship
+  (see 1.2), and there was never a class-1 entry to spend on.
 
 ### Phase 2 — Triage sweep over the whole estate, in batches, with terminal verdicts
 
-- [ ] **2.1** Batches of at most ten roadmaps, one PR each, one verdict per file
+- [-] **2.1** Batches of at most ten roadmaps, one PR each, one verdict per file
       from a **closed vocabulary**: **EXECUTE** (remaining steps are agent-workable
       now — schedule into the recurring pass) · **FINISH-THIN** (nearly done; close
       the tail and ship the closure) · **MERGE-INTO-OWNER** (scope owned elsewhere;
@@ -280,13 +394,48 @@ sibling roadmap — it is runnable with today's tooling.**
       not-adopted register).
       `verify:` each batch PR carries one verdict row per file, and no file leaves a
       batch without one.
-- [ ] **2.2** Sequencing: the active tree first, `later/` second, oldest-untouched
+- [-] **2.2** Sequencing: the active tree first, `later/` second, oldest-untouched
       first within each. **The seven roadmaps this cohort added are in the first
       batch, not exempt from it.** The council may decide MERGE-versus-ARCHIVE calls
       inside its configured reversible class; EXECUTE-versus-ARCHIVE on anything with
       shipped surface stays a maintainer call on the sheet.
       `verify:` the batch order is recorded, and every council-decided verdict names
       the class it was decided under.
+      - **Both transferred 2026-08-21 — disposition `B`, outcome state
+        `transferred`.** Council decision, both seats confirming in round 2
+        ([row 3](../../evidence/council/drain-estate-drawdown-residue.md)). Carrier:
+        [`stubs/road-to-estate-triage-remaining-batches.md`](../stubs/road-to-estate-triage-remaining-batches.md),
+        which holds 2.1, 2.2 and **AC-2** verbatim.
+      - **Why transferred rather than narrowed, in one number.** 71 of the 80 files
+        in the active tree and `later/` carry **no verdict row** (24 active, 47
+        `later/`), measured 2026-08-21 at `52cfb4bb8`. At 2.1's own ten-file
+        ceiling that is **eight further pull requests**, and this change is one.
+        AC-2 covers every one of those 71 files, so narrowing the criterion to
+        "the batch form was proven" would have dropped 71 files with nothing
+        holding them — this roadmap's own **risk 1, drawdown by burial**, firing on
+        this roadmap.
+      - **A second reason AC-2 cannot close as written, independent of the
+        batches.** Its middle clause requires *"the active count reaches T1's
+        registered ceiling"*, and **there is no registered ceiling**: step 3.1
+        recorded that T1's proposed 15/12 sit in the budget file under `target` and
+        are read by nothing, because this roadmap says the numbers and the window
+        belong to the maintainer. That clause is unsatisfiable by construction, so
+        the stub's probe can reach zero with AC-2 still open, and the stub says so.
+      - **The producer is the maintainer, independently of Phase 4** — a binding
+        condition the council attached to its confirmation, not a stylistic
+        choice. The draft of the stub had named the Phase-4 recurring pass as an
+        alternate producer; 4.1 is **abandoned** below, so that naming would have
+        pointed at something that no longer exists. It was removed.
+      - **The stub's probe can fall without a batch running, and the stub warns
+        about it.** Roughly 25 concurrent per-roadmap drain PRs were open against
+        `main` on the transfer date, each archiving one roadmap out of the
+        denominator. A falling count is not batch progress.
+      - **That warning fired inside this change.** The probe read **71** at
+        `52cfb4bb8`, the commit the council decided against, and **70** on the
+        merged tree this closure ships in — `origin/main` archived
+        `road-to-session-closeout`, which carried no verdict row, so it left the
+        denominator untriaged. Both readings are recorded in the stub: 71 as the
+        decision-time figure, 70 as the live baseline. Nothing was triaged.
       - **Untouched by this run, deliberately — 2026-08-20.** 2.1 caps a batch at ten
         roadmaps and one PR, and this change is not a triage batch: it answers a
         decision sheet. Adding a second batch on top would break 2.1's own one-PR
@@ -297,6 +446,16 @@ sibling roadmap — it is runnable with today's tooling.**
 - **AC-2:** every file in the estate carries a terminal verdict row; the active count
   reaches T1's registered ceiling; **no closure lands without its house-form
   artifacts.**
+  **Outcome state `transferred`, 2026-08-21** — moved verbatim into
+  [`stubs/road-to-estate-triage-remaining-batches.md`](../stubs/road-to-estate-triage-remaining-batches.md)
+  with 2.1 and 2.2. Clause 1 is **not met**: 71 of 80 files in the active tree and
+  `later/` carry no verdict row. Clause 2 is **unsatisfiable as written** — T1 has
+  no registered ceiling, because step 3.1 recorded that the proposed 15/12 live
+  under `target` and are read by nothing. Clause 3 **holds for the one batch that
+  ran** — batch 1's six PARK-PROBEABLE verdicts each carry a resume condition, a
+  probe and its verdict-at-parking, and its two DECISION-SHEET rows name their
+  blocker ids. The stub's probe covers clause 1 and explicitly cannot discharge
+  clause 2.
 
 > **Batch 1 landed 2026-08-19** — `agents/decisions/estate-triage-dispositions.yml`,
 > ten verdict rows, the register's first batch. 2.1 and 2.2 stay `[ ]` on purpose:
@@ -379,7 +538,7 @@ sibling roadmap — it is runnable with today's tooling.**
 
 ### Phase 4 — The recurring agent pass, so this never regrows
 
-- [~] **4.1** A scheduled agent run over the delegate path executes, in order: the
+- [-] **4.1** A scheduled agent run over the delegate path executes, in order: the
       fired-trigger probe from the sibling's Phase 4, then `gates --execute` over
       classes 0 and 1, then a draft of the next decision-sheet delta if class-2 items
       accumulated, then a one-paragraph estate report — counts, deltas, spend — the
@@ -395,8 +554,51 @@ sibling roadmap — it is runnable with today's tooling.**
         step is blocked on a maintainer-owned transfer. Recorded here because it moves
         4.1 from "waiting for a sibling step" to "waiting for a named human", which is
         a different kind of open.
+      - **Closed 2026-08-21 — disposition `E` (abandon), outcome state
+        `abandoned`. Council SPLIT 1/1; the dissent is recorded and stands.**
+        [Row 5](../../evidence/council/drain-estate-drawdown-residue.md). It had to be
+        resolved: `[~]` is a deferral, and Iron Law 3 forbids archiving a roadmap
+        with one open.
+      - **Adopted (openai seat):** *"The council explicitly declined the required
+        delegate path, so transferring this specification would create a zombie
+        obligation whose re-entry condition reverses an adopted decision."* A stub
+        whose re-entry probe is "`allow_delegate` became true" would re-enter only
+        by reversing the council's own batch-B choice of (b). That is the parking
+        lot the framework created disposition `E` to prevent — *"without it,
+        permanently-infeasible work is forced into stubs that become parking lots
+        while completion percentages report success."*
+      - **Dissent (anthropic seat), recorded:** `B / transferred` — batch B recorded
+        the blocker as `narrowed`, not `abandoned`, so the entry stays alive and
+        re-enters when a maintainer authorises `allow_delegate`. Not adopted,
+        because `narrowed` describes the **blocker's** disposition — option (b)
+        adopted instead of (a) — and not this step's viability. The blocker was
+        narrowed; the step defined over the option that was **declined** lost its
+        subject. Both seats did agree the item is **separate** from the Phase-2
+        stub, so no merge was made.
+      - **Nothing capable is lost, and that is checked rather than asserted.** Each
+        of the four actions the pass would have composed exists today and is
+        hand-invocable: `resume_probe` (used by triage batch 1), `gates --execute`
+        (shipped, 23 fixture tests — and zero subjects, per 1.1), `gates --sheet`,
+        and `check_estate_count` for the one-paragraph count report. What is
+        abandoned is the **scheduled delegated-write automation** — precisely and
+        only the thing the council declined.
+      - **Authority note.** `abandoned` drops an item, so Iron Law 3's preservation
+        test routes it to the **user**, never the council. It was taken by the
+        council under this drain run's standing delegation, the same delegation
+        `drain-blocker-dispositions-a` records for all 44 blockers. Recorded so the
+        chain is visible: a maintainer who disagrees reverses this by restoring 4.1
+        to `[ ]`, and nothing else in this change depends on it.
 - **AC-4:** several consecutive reports exist; the open-blocker count is flat or
   falling across them; maintainer reading time per period is the one report.
+  **Outcome state `abandoned`, 2026-08-21** — abandoned with 4.1, which it is
+  wholly defined over. **Zero** reports exist and none will, because the pass that
+  would emit them runs on a delegate path the council declined. Recorded honestly
+  against a temptation worth naming: the open-blocker count **is** falling (44 → 35
+  in the active tree since 2026-08-20), so the middle clause could be presented as
+  satisfied. It is not — the clause asks for the count to be flat or falling
+  *across the reports*, and with no reports there is nothing to measure it across.
+  A metric moving for unrelated reasons is not evidence for a criterion about an
+  instrument that was never built.
 
 ## Blockers
 
@@ -429,7 +631,7 @@ sibling roadmap — it is runnable with today's tooling.**
   runs, so verdicts land, but every DECISION-SHEET verdict routes back to this same
   unanswered sheet.
 - **Answer:** **option (a) — accept all rendered defaults**, decided by the AI council
-  in [drain-blocker-dispositions-b](../evidence/council/drain-blocker-dispositions-b.md)
+  in [drain-blocker-dispositions-b](../../evidence/council/drain-blocker-dispositions-b.md)
   (row `b-consolidated-decision-sheet | D | satisfied`, both seats convergent). This
   **overrides** the `Recommendation:` above, which argued for (c); the override is the
   council's, and the reason (c) was preferred — that accept-all includes the

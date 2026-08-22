@@ -263,6 +263,14 @@ batches:
             fire; and `dispatch-issues.jsonl` is written with no lock and no
             tmp+rename, i.e. corruption-capable.
 
+      # The path is deliberately the pre-archival one: this column is
+      # documented above as "repo-relative path as it stood at triage", and
+      # a verdict row is terminal + append-only. `roadmap:progress` rewrote it
+      # to `archive/` when the file was archived on 2026-08-21; reverted,
+      # because editing a terminal row in place falsifies what was triaged on
+      # 2026-08-19 and the register's own header forbids it ("revisiting one is
+      # a new row with a `supersedes:` key ... never an edit in place").
+      # The file now lives at agents/roadmaps/archive/road-to-estate-drawdown.md
       - file: agents/roadmaps/road-to-estate-drawdown.md
         verdict: EXECUTE
         moved_to: null
