@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 status: later
+estate_growth_exempt: "Replaces agents/roadmaps/stubs/road-to-host-aware-skill-projection.md, deleted in the same change on an AI council's 2/2 instruction to ABSORB that stub rather than defer to it: its step 1.4 asserted the primary host has no measured truncation pressure, which the host's own budget event refutes (agents/evidence/analysis/scoped-projection-host-delivery.md:19-20). The automatic later/ allowance is keyed on parking an ACTIVE roadmap and deliberately does not cover a later/ file arriving from elsewhere, which is exactly this case: a stub relocating, not new estate. Net roadmap count across the change is unchanged, one stub out and one later/ file in, and the active side falls by one because the roadmap that decided it archived here too. Owner maintainer, review_by 2027-02-22."
 execution:
   mode: phase-checkpoints
 ---
