@@ -65,7 +65,7 @@ Re-verified against the tree on 2026-08-22.
   is an egress risk."* That is why the capture below is a maintainer errand with
   a containment protocol, never automation.
 - **The parent roadmap answered its assertion halves and must not be reopened.**
-  `agents/roadmaps/road-to-subagent-lifecycle-integrity.md` is active with three
+  `agents/roadmaps/archive/road-to-subagent-lifecycle-integrity.md` is active with three
   open steps — Phase 2 Step 2 (line 504), Phase 2 Step 3 (line 549), Phase 7
   Step 1 (line 843). Its findings are recorded in
   `agents/evidence/investigations/subagent-lifecycle-drain-close.md`:

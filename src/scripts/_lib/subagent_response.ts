@@ -65,6 +65,42 @@ export interface SubagentResponse {
 
 const CONFIDENCE: ReadonlySet<string> = new Set<Confidence>(['low', 'medium', 'high']);
 
+/**
+ * The five fields `validateResponse` REQUIRES. Exported so the ledger's
+ * classifier counts contract fields against the validator's own list rather
+ * than a second copy that can drift from it.
+ *
+ * The optional fields (`artifact_paths`, `assumptions`) are deliberately NOT
+ * here. The boundary this list defines is "did the author aim at the envelope
+ * at all", and it is calibrated against a recorded measurement: every `fail`
+ * in the live ledger carries `error_count: 5`, which is exactly the count of
+ * required-field errors an object with none of them produces. Counting an
+ * optional field as a hit would break that equivalence, so an object carrying
+ * only `assumptions` reads as foreign — recorded here as a known edge, not as
+ * an oversight.
+ */
+export const RESPONSE_REQUIRED_FIELDS: readonly string[] = [
+    'summary',
+    'handoff',
+    'confidence',
+    'findings',
+    'risks',
+];
+
+/**
+ * How many required contract fields are PRESENT on a decoded object.
+ *
+ * Presence, never validity: a `summary: 123` is a contract attempt with a
+ * wrong type, which is a different defect from a fenced tool call that never
+ * aimed at the envelope. That distinction is the whole point of the count —
+ * `validateResponse` already reports the type errors.
+ */
+export function countContractFields(input: unknown): number {
+    if (input === null || typeof input !== 'object') return 0;
+    const r = input as Record<string, unknown>;
+    return RESPONSE_REQUIRED_FIELDS.filter((k) => Object.hasOwn(r, k)).length;
+}
+
 export interface ValidationResult {
     valid: boolean;
     errors: string[];
