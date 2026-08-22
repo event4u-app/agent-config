@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**549 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 200 · completed 256 · completed-with-deferrals 26 · not-extractable 34
+**550 archived roadmaps** · archived-with-open-steps 33 · closed-with-cancellations 200 · completed 257 · completed-with-deferrals 26 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -469,6 +469,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-single-delivery-closure`](road-to-single-delivery-closure.md) | Road to single delivery closure — the two families the partition never reached | completed | 3 | 16/16 | _not extractable_ |
 | [`road-to-single-delivery`](road-to-single-delivery.md) | Road to single delivery — one artefact, one layer, no duplicates | completed | 6 | 21/21 | _not extractable_ |
 | [`road-to-single-install-source-of-truth`](road-to-single-install-source-of-truth.md) | Roadmap: Single Install Source-of-Truth — finish the `--apply-payload` bridge | completed-with-deferrals | 6 | 21/24 | _not extractable_ |
+| [`road-to-single-rule-layer`](road-to-single-rule-layer.md) | Road to a single rule layer | completed | 5 | 16/16 | _not extractable_ |
 | [`road-to-skill-catalogue-budget`](road-to-skill-catalogue-budget.md) | Road to a measured skill-catalogue budget — Codex as the second host | completed | 4 | 23/23 | _not extractable_ |
 | [`road-to-skill-description-measurement`](road-to-skill-description-measurement.md) | Roadmap: Measure the de-collided skill descriptions | closed-with-cancellations | 1 | 0/4 | _not extractable_ |
 | [`road-to-skill-ecosystem-authoring-discipline`](road-to-skill-ecosystem-authoring-discipline.md) | Road to authoring discipline — forced artifacts, named biases, and a removal signal | closed-with-cancellations | 6 | 53/54 | _not extractable_ |

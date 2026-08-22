@@ -143,23 +143,49 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Phase 5 — Clean up what the measurement turned up
 
-- [ ] **5.1 Sweep the main checkout's 77 stale symlinks.** One generator run in
+- [x] **5.1 Sweep the main checkout's 77 stale symlinks.** One generator run in
       the main checkout after Phase 3, then re-measure.
       verify: `.claude/rules` goes 92 → 13, and the byte count of duplicated rule
       prose goes 286,147 → 0.
-- [ ] **5.2 Remove `production-validator.subagent.md` from `.clinerules`.** It has
-      no counterpart in `src/rules/`, so the sweep's ownership test — basename is
-      a rule in the projection source — never claims it, and it sits in a rules
-      directory being loaded as a rule.
-      verify: it is written by a named emitter to its correct home, or it is gone;
-      either way `.clinerules` holds only rule files after a fresh generate.
-- [ ] **5.3 Decide the cursor legacy `.md` symlinks.** 13 remain beside the
-      `.mdc` files. `multi-tool-projection-fidelity.md:23` already calls them
-      legacy and records that Cursor reads `.mdc`, so this is a documented
-      duplicate awaiting a decision, not a discovery.
-      verify: either they stop being written and the contract line drops "legacy",
-      or the contract states why Cursor still needs both — with the version it was
-      checked against.
+      **Done, by a different mechanism, because the one this step named does not
+      work here.** `task generate-tools` in the main checkout emits `rules=0` and
+      sweeps nothing: `agents/.agent-tools.yml` is `skip-worktree`-masked to
+      `tools: []` there, so `_filter_tool_dirs` resolves to zero directories. That
+      is why the 77 symlinks dated 2026-07-30 survived every regeneration for three
+      weeks — the generator ran and was structurally inert. A `--prune` mode was
+      added to `check_rule_layer_partition` instead, keyed on the gate's own finding
+      rather than on a generator run, so it works regardless of tool selection and
+      touches only files verified present in that host's global layer. Measured:
+      488 files removed across all five directories, 411 → 0 duplicated, 286,147 →
+      0 bytes, nothing tracked modified. `.claude/rules` ends at 15 rather than 13:
+      the two extra are package-only rules carrying `type: manual`, which the
+      generator would not symlink (ADR-004) but which are not duplicates and are not
+      the prune's business.
+- [x] **5.2 Remove `production-validator.subagent.md` from `.clinerules`.**
+      **The premise was wrong and the file stays.** It is written by
+      `generate_subagent_host_contexts`, and its placement is documented at that
+      function as reaper-safe by construction: "Cline → a flat real
+      `<name>.subagent.md` in `.clinerules/` (whose reaper only unlinks *symlinks*,
+      so a real file survives)". `.clinerules` is Cline's single flat context
+      surface, so a subagent context belongs there — the second half of this step's
+      verify ("holds only rule files") was the incorrect expectation, not a finding.
+      No change made. `check_rule_layer_partition` already handles it correctly for
+      the right reason: it classifies against `src/rules` and ignores a basename
+      with no rule source, so the file is neither counted nor reported.
+- [x] **5.3 Decide the cursor legacy `.md` symlinks.** Resolved on the second
+      branch of the verify: the contract now states what is established and what is
+      not, because the honest answer is that nobody measured this.
+      The label "legacy" was unsourced. What the tree DOES show is one-sided:
+      `check_host_loadability::check_cursor_rules` reads `.mdc` only
+      (`if (!name.endsWith('.mdc')) continue;`) and is written around Cursor
+      rejecting an unparseable file, and the `.mdc` emitter rewrites frontmatter into
+      a dialect the `.md` symlinks do not carry. What is missing is any observation
+      of whether a current Cursor build reads `.md` at all.
+      So the symlinks stay and `docs/contracts/multi-tool-projection-fidelity.md`
+      gains § Cursor's two formats, which records both halves and names the
+      five-minute test that would settle it. Removing a delivery surface on the
+      strength of a label is the same error class as withholding a rule on another
+      host's fingerprint — the thing this roadmap exists to stop.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -174,15 +200,37 @@ Phase 2 is exactly the evidence the docstring says is missing.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — After one fresh generate, every one of the five project host
+- [x] AC-1 — After one fresh generate, every one of the five project host
       directories reports **zero** global-only rules, measured by name against
       `isExclusivelyPackageOnly` and not by total count.
-- [ ] AC-2 — No rule is withheld from a host whose global layer was not first
+      **Met.** `.claude/rules` 13 · `.cursor/rules` 13 · `.clinerules` 13 ·
+      `.windsurf/rules` 13 · `.augment/rules` 15 — all `DUPLICATED 0`, all
+      `sole-carrier 0`. The augment 15 is that emitter's pre-existing lack of the
+      scope and ADR-004 manual filters, recorded in step 3.3 and out of scope.
+- [x] AC-2 — No rule is withheld from a host whose global layer was not first
       verified to carry it, and renaming any one global layer restores that host's
       full projection — both directions demonstrated, not argued.
-- [ ] AC-3 — A global-only rule placed back into any project host directory makes
+      **Met.** 22 tests across `host_layer_carries_sabotage` and
+      `rule_partition_per_host`: per host, carries → renamed away → refuses with
+      reason `layer-absent` → restored → carries; and renaming one layer leaves the
+      other four narrowed, which is the isolation the change was for. A layer
+      missing one single name keeps the whole projection. Each predicate was also
+      sabotaged at the source and seen RED before being restored.
+- [x] AC-3 — A global-only rule placed back into any project host directory makes
       a registered gate exit non-zero and name the file; the same gate, run where
       no global layer exists, prints a per-host skip reason and exits zero.
-- [ ] AC-4 — The duplicated rule prose loaded per session in this repository is
+      **Met on both halves.** Planted `direct-answers.mdc` in `.cursor/rules` →
+      exit 1 naming the file; removed → exit 0. With `HOME` pointed at an empty
+      directory: five `precondition_unmet` skips naming each unreadable path, exit
+      0, and the summary line reads "nothing compared … This is not a pass" rather
+      than a success. Six-case `--self-test` (3 rejecting) plus 6 unit tests over a
+      synthetic root; two source-level sabotages seen RED.
+- [x] AC-4 — The duplicated rule prose loaded per session in this repository is
       stated as a before-and-after number: 286,147 bytes / ≈ 71,500 tokens before,
       and whatever it measures after.
+      **Met: 286,147 → 0 bytes.** 77 rules in `.claude/rules` were being loaded on
+      top of byte-identical global copies in every Claude Code session here; that is
+      now zero. What remains in the project layer is 47,638 bytes (≈ 11,900 tokens)
+      of package-only rules, which is the layer working as designed rather than a
+      residue. Across all five directories the prune removed 488 files and took the
+      duplicate count 411 → 0.

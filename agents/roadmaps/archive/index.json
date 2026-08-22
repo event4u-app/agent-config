@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 549,
+  "count": 550,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -6232,6 +6232,20 @@
       },
       "verdict": null,
       "status": "active"
+    },
+    {
+      "slug": "road-to-single-rule-layer",
+      "title": "Road to a single rule layer",
+      "disposition": "completed",
+      "phases": 5,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-skill-catalogue-budget",

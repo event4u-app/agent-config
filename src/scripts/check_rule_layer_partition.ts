@@ -330,11 +330,62 @@ function selfTest(): number {
     });
 }
 
+/**
+ * `--prune`: delete exactly the files this gate reports as duplicated.
+ *
+ * ## Why a gate ships a repair at all
+ *
+ * The documented repair is `task generate-tools`, and on this repository's own main
+ * checkout that command is **structurally inert**: `agents/.agent-tools.yml` is
+ * `skip-worktree`-masked to `tools: []`, so `_filter_tool_dirs` resolves to zero
+ * directories and the generator writes nothing AND sweeps nothing. Measured
+ * 2026-08-22: a full `task generate-tools` there emitted `rules=0` and left all 77
+ * stale symlinks in `.claude/rules` exactly where they were — dated 2026-07-30,
+ * i.e. from before the partition existed. That is why those 77 survived every
+ * regeneration for three weeks, and why "just regenerate" is not an answer for
+ * anyone whose tool selection is masked or narrow.
+ *
+ * So the sweep is keyed on the gate's own finding rather than on a generator run:
+ * a file is removed only when it is in a project rule directory, classifies as
+ * global-scope, and THAT host's global layer was read and verified to hold it. The
+ * `sole-carrier` column exists precisely to keep this honest — a rule the global
+ * layer does not have is never touched, in any mode.
+ *
+ * It is opt-in and prints every path. A gate that deletes by default is a gate
+ * nobody dares run.
+ */
+function prune(audit: PartitionAudit, root: string): number {
+    let removed = 0;
+    for (const d of audit.dirs) {
+        for (const name of d.duplicated) {
+            // Both spellings: the symlink trees write `.md`, the cursor emitter
+            // `.mdc`, and `.cursor/rules` holds both for the same rule.
+            for (const candidate of [name, `${name.slice(0, -3)}.mdc`]) {
+                const abs = path.join(root, d.dir, candidate);
+                try {
+                    fs.lstatSync(abs);
+                } catch {
+                    continue;
+                }
+                fs.unlinkSync(abs);
+                process.stdout.write(`  removed ${d.dir}/${candidate}\n`);
+                removed += 1;
+            }
+        }
+    }
+    process.stdout.write(
+        `✅  pruned ${String(removed)} duplicated rule file(s) — each one verified present ` +
+            `in its host's global layer first\n`,
+    );
+    return removed;
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) {
         return selfTest();
     }
     const report = argv.includes('--report');
+    const doPrune = argv.includes('--prune');
     const root = process.cwd();
     const audit = auditRuleLayers(root);
 
@@ -392,6 +443,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 (skips > 0 ? `; ${String(skips)} skipped (reasons above)` : '') +
                 `\n`,
         );
+        return 0;
+    }
+
+    if (doPrune) {
+        prune(audit, root);
+        // Re-audit rather than trusting the removal: the point of the mode is to
+        // reach zero, and asserting it from the same read that planned the deletion
+        // would prove only that the plan was executed.
+        const after = auditRuleLayers(root);
+        const left = after.dirs.reduce((n, d) => n + d.duplicated.length, 0);
+        if (left > 0) {
+            process.stderr.write(`❌  ${String(left)} duplicate(s) still present after prune\n`);
+            return 1;
+        }
+        process.stdout.write('✅  re-audit after prune: 0 duplicated\n');
         return 0;
     }
 
