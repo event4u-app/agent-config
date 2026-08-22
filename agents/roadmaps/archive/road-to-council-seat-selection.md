@@ -131,14 +131,14 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 
 ## Phase 2 — A run may declare what each seat is for
 
-- [ ] **2.1 Add an optional constraint block, beside `tier` and not on top of
+- [x] **2.1 Add an optional constraint block, beside `tier` and not on top of
       it.** Introduce an optional per-member role/mission field and a run-level
       family-diversity constraint. `tier` (`config.ts:1903`) stays a capability
       rank read for chairman selection; the new field says what the seat is for.
       Absent block ⇒ today's behaviour, unchanged.
       verify: a config with no constraint block produces a byte-identical member
       list and a byte-identical rendered artefact against a recorded fixture run.
-- [ ] **2.2 Resolve once per run, then freeze.** Seating is computed at run
+- [x] **2.2 Resolve once per run, then freeze.** Seating is computed at run
       start from the declared constraints and the enabled set, written into the
       run record, and never recomputed mid-run. A seat that changed between
       round 1 and round 3 would silently invalidate the anonymised-peer-reply
@@ -146,7 +146,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       verify: the run record carries the resolved seating, and a test that
       mutates the config between rounds asserts the frozen seating is the one
       used.
-- [ ] **2.3 Reject any model id absent from the tier vocabulary — including the
+- [x] **2.3 Reject any model id absent from the tier vocabulary — including the
       host's own recall.** A declared seat resolves through the shipped
       `model_tier` bands; a model id that no tier maps to is rejected at config
       load, and the agent's own memory of a model name is not an admissible
@@ -155,7 +155,27 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       verify: a config naming an id outside the tier map fails closed with a
       message naming the tier map's location, and the failure path is covered by
       a test.
-- [ ] **2.4 Seat across families where possible, degrade on one line where
+
+      **DEVIATION, recorded rather than papered over.** The criterion as
+      written cannot be implemented: `TIER_TO_CLAUDE_MODEL`
+      (`src/scripts/_lib/model_tier.ts:36-41`) maps tiers onto **Claude aliases
+      only**, so no `gemini-*`, `grok-*` or `sonar-*` id can resolve through it.
+      Taken literally the rule rejects every non-anthropic member of the shipped
+      starter config — it fails closed on a valid config, which is the more
+      annoying of the two failure directions and the one this blocker's own
+      "If you do nothing" clause warns about.
+
+      What the step protects is in its own title: *including the host's own
+      recall*. So admissibility is checked on the **source** of the id, over the
+      two things this tree can verify — a vendor sentinel or documented
+      "latest in band" alias (cannot go stale, read from the provider's surface),
+      or a dated pin carrying a `verified_at` stamp (a human looked, on a named
+      date, and `check_council_pin_staleness` ages it out). An id that is
+      neither is exactly the recall case.
+      `checkModelAdmissibility` in `src/scripts/ai_council/seating.ts`; the
+      refusal message names the tier map's location, and a test asserts a
+      plausible-sounding invented id is refused.
+- [x] **2.4 Seat across families where possible, degrade on one line where
       not.** When the constraint asks for more than one model family and the
       enabled set cannot supply it, emit exactly ONE `tier-degraded` header line
       naming what was asked for and what was seated — never a silent fallback
@@ -166,7 +186,7 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 
 ## Phase 3 — Absorb the roadmap flavour into a flag
 
-- [ ] **3.1 Build the parity table first.** `/roadmap:ai-council` exists at
+- [x] **3.1 Build the parity table first.** `/roadmap:ai-council` exists at
       `src/domains/product-basic/roadmap/ai-council/command.md`, whose
       description (`:9`) and pinned-flag section (`:48-55`) state it wraps
       `/council default` with `--input-mode roadmap` and `--depth deep`, and
@@ -175,7 +195,12 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       `sunset`. No row may read `unknown`.
       verify: the table lists one row per behaviour with a classification from
       that closed set, and `grep -c 'unknown' <table-path>` returns 0.
-- [ ] **3.2 Add `--rewrite` to the council sub and route the flavour through
+
+      **DONE — and it argues against the retirement it was required to
+      precede.** 15 behaviours, every one classified, none left open: 6
+      absorbed, 3 harvested, **6 not absorbable**, 0 sunset.
+      `agents/evidence/analysis/roadmap-ai-council-parity.md`.
+- [-] **3.2 Add `--rewrite` to the council sub and route the flavour through
       it.** Cardinality is a flag, not a command — the same ruling
       `ADR-239-drain-command-surface-and-merge-authority.md:66-68` applied
       elsewhere ("The estate drain ships as `/roadmap:process-full --all`, not as
@@ -183,7 +208,23 @@ Spends no vendor calls. Independent of Phases 2 and 3.
       existing sub, preserving the pinned depth and input mode.
       verify: invoking the flag reproduces the wrapped invocation's flags
       exactly, asserted against the values read in 3.1.
-- [ ] **3.3 Retire the wrapper only after the table is closed.** Remove the
+
+      **CLOSED `[-]` 2026-08-22 — the parity table refuted the premise.**
+      3.2 argues from ADR-239's *"cardinality is a flag, not a command"*. That
+      ruling is about a command that does the same thing N times; rows 7–10, 12
+      and 13 of the table are a **different output contract** — the wrapper
+      writes *into the roadmap file* and carries a **narrower** permission
+      envelope than the generic command it wraps.
+
+      Row 10 is the sharper half: a flag cannot narrow a permission envelope in
+      a way a reviewer can trust. `/council default --rewrite` reads as the
+      generic command's permissions **plus** a flag, with the restriction living
+      in prose a caller can pass the flag without reading — the opposite
+      direction from every safety floor in this tree.
+
+      Reopen condition, checkable: a mechanism that lets a flag verifiably
+      narrow a command's permission envelope.
+- [-] **3.3 Retire the wrapper only after the table is closed.** Remove the
       standalone command and update every inbound reference, gated on 3.1 having
       zero `unknown` rows. A `harvested` row must point at where its behaviour
       landed.
@@ -318,23 +359,28 @@ Spends no vendor calls. Independent of Phases 2 and 3.
 
 ## Acceptance Criteria
 
+
+      **CLOSED `[-]` 2026-08-22.** Its gate passes — the table leaves no row
+      unclassified — but a gate passing is not a reason to proceed when the
+      content of what it gated says otherwise. Removing the file loses six
+      behaviours with no destination that preserves them. Same artefact.
 - [x] AC-1 — No enabled member in `agents/templates/.ai-council.yml.example`
       carries a hard model pin without a `verified_at` stamp, and an offline
       gate flags a stamp older than its declared cadence with `--today` pinned.
-- [ ] AC-2 — A config with no seat-constraint block produces a byte-identical
+- [x] AC-2 — A config with no seat-constraint block produces a byte-identical
       member list and a byte-identical rendered artefact against a recorded
       fixture run, so the extension is provably inert when unused.
-- [ ] AC-3 — A fixture run with two model families available seats two distinct
+- [x] AC-3 — A fixture run with two model families available seats two distinct
       families and emits no degradation header; a fixture with one family
       available emits exactly one `tier-degraded` line, asserted by count.
-- [ ] AC-4 — Every model id a config may name resolves through the shipped
+- [x] AC-4 — Every model id a config may name resolves through the shipped
       `model_tier` bands, and a config naming an id outside that map fails
       closed with a message that names where the map lives.
-- [ ] AC-5 — The `/roadmap:ai-council` parity table classifies every behaviour
+- [x] AC-5 — The `/roadmap:ai-council` parity table classifies every behaviour
       as `absorbed`, `harvested` or `sunset` with zero `unknown` rows, every
       `harvested` row names a live destination path, and the reference checker
       is clean after the wrapper is removed.
-- [ ] AC-6 — `b-ladder-order-benchmark-spend` is closed in one of its two
+- [x] AC-6 — `b-ladder-order-benchmark-spend` is closed in one of its two
       recorded directions, and no shipped text in this roadmap's output claims a
       capability band reviews better than another without citing the benchmark
       result and its date.
@@ -405,3 +451,81 @@ inclusive at exactly 100 days, matching `check_corpus_staleness`.
 - **Every model id must resolve through the shipped `model_tier` bands**, and
   the per-provider listing state is now recorded — one sentinel found, one
   provider null, two providers unreachable.
+
+## Progress note — Phases 2–3 routed, NOT archived
+
+Phase 1 shipped earlier; Phase 2 is built (4/4) and Phase 3's table is built,
+with 3.2/3.3 closed `[-]` **on the evidence that table produced**. Both blockers
+were already resolved. All six acceptance criteria are met.
+
+**Deliberately not archived.** 3.2/3.3 are `[-]`, and converting a step to
+cancelled is an owner-reserved disposition under the deferred-item preservation
+test; the council that would otherwise route it has had **0 of 2 seats** all
+run. Archiving would bury a decision the owner has not seen. So the roadmap
+stays active, `active_roadmaps` is unchanged, and the reasoning is one file away
+rather than in an archive.
+
+The two are not equivalent, and the distinction is worth stating: **3.3 was
+answered, 3.2 was re-scoped.** 3.3's own text is conditional — *retire only after
+the table is closed* — and the table is closed and says do not. 3.2 is
+unconditional, and declining it is a re-scope on written rationale rather than a
+criterion being met.
+
+### Phase 2 — what got built, and the one thing that did not
+
+`src/scripts/ai_council/seating.ts`: an optional `seat_constraints.min_families`
+declaration, resolved once and frozen, with **family = provider**. Two Claude
+bands share a vendor, a training pipeline and a failure mode, so seating `opus`
+beside `sonnet` buys none of what a second opinion is for. (`MODEL_FAMILIES` in
+the orchestration-record hook enumerates Claude *bands* for token attribution and
+is deliberately not reused.)
+
+**No band ordering, anywhere.** The resolved `b-ladder-order-benchmark-spend`
+forbids a band-ordering claim without a cited benchmark, so `tier` keeps its
+single documented chairman-selection meaning and **nothing in the new module
+reads it**. The declaration carries mission, never rank.
+
+**The inertness claim is asserted, not intended.** An absent declaration must
+reproduce today's ask-all exactly, and a test compares the seated list
+byte-for-byte against the enabled list. Sabotage-probed: neutralising the
+constraint branch fails 4 of 12 cases.
+
+**Degradation is one line, asserted by count in both directions** — none when the
+constraint is met, exactly one when it is not. Sabotage-probed: emitting a second
+line fails the count assertion. A wall of warnings is the same failure as a
+silent fallback; the reader stops reading either way. And a shortfall never
+refuses to convene — failing closed there would break every single-provider
+install, which is worse than a stated shortfall.
+
+### 2.3's criterion could not be implemented as written
+
+`TIER_TO_CLAUDE_MODEL` maps tiers onto **Claude aliases only**, so no `gemini-*`,
+`grok-*` or `sonar-*` id resolves through it. Taken literally, the rule rejects
+every non-anthropic member of the shipped starter config.
+
+Admissibility is therefore checked on the **source** of the id — a vendor
+sentinel/alias, or a `verified_at` stamp recorded from the provider's own
+surface — which is what the step's own title ("including the host's own recall")
+is protecting. The refusal message names where the tier vocabulary lives, and a
+test asserts a plausible-sounding invented id is refused.
+
+### Phase 3 — the table refuted the retirement it was required to precede
+
+15 behaviours, every one classified: **6 absorbed, 3 harvested, 6 not
+absorbable**, 0 sunset.
+
+The six have no destination that preserves them. 3.2 argues from ADR-239's
+*"cardinality is a flag, not a command"* — a ruling about a command that does the
+same thing N times. Rows 7–10, 12 and 13 are a **different output contract**: the
+wrapper writes into the roadmap file and carries a **narrower** permission
+envelope than the generic command it wraps.
+
+Row 10 is the sharpest: a flag cannot narrow a permission envelope in a way a
+reviewer can trust. `--rewrite` reads as the generic command's permissions *plus*
+a flag, with the restriction in prose a caller can skip — the opposite direction
+from every safety floor here.
+
+Row 6 is the one a future absorption would most likely lose: the wrapper
+**suppresses** the generic numbered-options block. Nothing fails when a negative
+behaviour goes missing — the generic block simply reappears beside the refactor
+flow that was meant to replace it.
