@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 22,
+    "active_roadmaps": 23,
     "later_roadmaps": 59,
-    "open_blockers": 61
+    "open_blockers": 60
   },
   "baseline_history": [
     {
@@ -800,10 +800,17 @@
     },
     {
       "at": "2026-08-22",
-      "active_roadmaps": 22,
+      "active_roadmaps": 25,
       "later_roadmaps": 59,
-      "open_blockers": 61,
-      "why": "BOTH counted metrics LOWERED by the drain of road-to-ci-supply-chain-integrity; nothing parked, nothing raised. active_roadmaps 23 -> 22: the roadmap was executed to 17/17 and archived inside this one change. open_blockers 62 -> 61: its blocker workflow-lint-tool-adoption was RESOLVED, not carried. That resolution is the one worth flagging to a later reader - it was taken with NO council seat available (both seats 50/50, 0 of 2 present, $0.00 spent), so it is a single-decider decision on an Owner:user Class-3 blocker, recorded with its degradation at agents/evidence/analysis/workflow-security-net-degraded-decision.md. The conservative half of that decision is deliberate: the council-locked severity model was NOT re-tiered, and the regression net went into the test suite instead, so no locked line moved while nobody was watching. Measured against the floor origin/main stands at while this branch is open."
+      "open_blockers": 62,
+      "why": "WALKED DOWN on open_blockers only, 64 -> 62, by resolving both blockers of road-to-publish-boundary-evidence. active_roadmaps does NOT move and must not be read as an oversight: that roadmap is only PARTLY drained -- Phase 1 steps 1.1 and 1.2 landed, and 1.3 plus Phases 2 and 3 are still open -- so it stays in the active tree and its PR is explicitly partial. Recording that here because every other entry in this history pairs a blocker drop with an archive, and a reader scanning for the pattern would otherwise assume the archive was forgotten. Both resolutions are council-ratified 2/2: b-sourcemap-intent took (b'), which is NEITHER of the two options as written -- the option set conflated a consumer debugging affordance (product source maps, kept at a provisional ratchet of 120) with valueless compiled-test output (stripped, threshold 0) -- and b-sbom-scope took (a), leaving a prior council's rejection standing under ADR-238 Trigger A, whose two halves both remain unmet."
+    },
+    {
+      "at": "2026-08-22",
+      "active_roadmaps": 23,
+      "later_roadmaps": 59,
+      "open_blockers": 60,
+      "why": "WALKED DOWN open_blockers 62 -> 60 on the merge resolution: this PR resolves both blockers of road-to-publish-boundary-evidence, and the branch entry it carried was written against the pre-merge baseline of 64. Rewritten here against main's walked 62 rather than left as a stale delta, because the ratchet reads the stored number and not the history prose."
     }
   ],
   "target": {
