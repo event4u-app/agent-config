@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
+argument-hint: "[roadmap] [--all] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -110,8 +110,8 @@ command already does.
    never assumed. One roadmap = one branch = one PR, the existing invariant
    iterated, not a new one.
 
-**What `--all` can and cannot promise while `--merge` is gated, stated plainly
-because the honest version is weaker than the obvious one.** Nothing in the run
+**What `--all` can and cannot promise, stated plainly because the honest
+version is weaker than the obvious one.** Nothing in the run
 merges, so the default does not advance because of this run, and every PR after
 the first is mergeable *against the base recorded when it was prepared* rather
 than against the base after its predecessors land. In a repository where every
@@ -136,37 +136,42 @@ base in, resolve conflicts by that command's four enumerated classes, drive the
 required checks green on the pushed head. **This is unconditional** — a bare
 `/roadmap:process-full` delivers a mergeable PR, not merely an open one, and
 waiting on that remote CI is part of the run per the Iron Law below. It is
-stated here rather than under `--merge` because a reader who never passes the
-flag still gets it.
+the whole of what this command delivers: there is no flag that carries it
+further, and § Merging below says why.
 
-### `--merge` — NOT YET ACTIVE: merging is owner-gated
-
-```
-`--merge` IS SPECIFIED HERE AND IS NOT ACTIVE. THE RUN STOPS AT
-MERGEABLE-AND-OPEN WHETHER OR NOT THE FLAG IS PASSED, AND SAYS SO.
-ACTIVATING IT NEEDS THE OWNER DECISION RECORDED IN THE `merge-authority`
-BLOCKER OF `road-to-drain-commands` — NOT A COMMAND EDIT.
-```
-
-Why it is specified but inert: the canonical loop states "**merge is out of
-scope in every mode — always conversational**"
-([`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival)),
-and ADR-237 § 4 excludes merging from the invocation grant with the words "no
-invocation extends it". A command cannot reinterpret either from below. Three
-independent reviews reached the same verdict: the AI council (Q1, 2026-08-21),
-the committed `road-to-gate-preauth-authorization` stub, and the runtime guard
-that refused the contract edit when this roadmap first attempted it.
-
-When the blocker resolves, `--merge` merges via
-[`/pr:merge`](../../../git/pr/merge/command.md)'s merge step, under its
-immutable target manifest, its head-SHA check, and its kill-switch list. Until
-then the flag is accepted, reported as inert, and changes nothing.
+### Merging — out of scope, cancelled rather than deferred
 
 ```
-AND WHEN IT DOES ACTIVATE: ON OUTCOME `blocked`, `--merge` IS IGNORED.
-AN INVARIANT, NOT A DEFAULT — A PARTIAL-PROGRESS PR SAYS SO IN ITS FIRST
-LINE (ADR-237) AND IS NEVER AUTO-MERGED, HOWEVER THE RUN WAS INVOKED.
+THIS COMMAND NEVER MERGES. THERE IS NO FLAG THAT MAKES IT MERGE.
+THE RUN ENDS AT MERGEABLE-AND-OPEN, ALWAYS, AND SAYS SO.
+A FUTURE MERGE CAPABILITY NEEDS A NEW ROADMAP AND AN OWNER RULING —
+NOT A COMMAND EDIT, AND NOT A FLAG THAT ALREADY SITS HERE INERT.
 ```
+
+A `--merge` flag was specified here and has been **removed**. The
+`merge-authority` blocker of `road-to-drain-commands` closed as *not authorized
+in this roadmap*: activating the flag would have lowered
+[`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md)'s
+per-turn confirmation floor for a production-branch merge, which
+[`decision-revisit-gate`](../../../../rules/decision-revisit-gate.md)'s
+owner-reserved table reserves to the owner. No owner ruling was available to the
+run that closed the roadmap, and an AI-council pass (2/2 convergent, 2026-08-22)
+ruled that a council may cancel an unauthorized implementation but may not
+manufacture the owner decision. The policy question is therefore **undecided,
+not rejected** — see
+[ADR-239](../../../../../docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md)
+§ Disposition.
+
+The flag was removed rather than left inert deliberately: an archived roadmap
+must not leave latent executable authority behind a documented switch.
+
+Three independent findings stand behind the safety requirement, and any future
+attempt starts from them rather than re-deriving them: the AI council's Q1
+verdict (2026-08-21 — mergeability-only until authorization is target-bound and
+tamper-resistant), the committed `road-to-gate-preauth-authorization` stub (an
+authorization the agent can write is not an authorization), and the runtime
+guard that refused this roadmap's own attempt to edit the canonical loop
+contract.
 
 **Mergeability is per-PR against a recorded base, never a queue property.**
 When every PR in the estate touches the same generated files — in this
@@ -174,14 +179,6 @@ repository `agents/roadmaps-progress.md` and
 `src/config/estate-count-budget.json` — making PR *n* mergeable against base
 SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
 Report "mergeable against base `<SHA>`", never "the queue is mergeable".
-
-**The design the blocker decides on, stated so the decision is concrete.** The
-flag would authorise the merge without *storing* an authorization: it consumes
-the per-session ledger entry the user's own prompt text already wrote on
-`UserPromptSubmit` — a signal the agent cannot forge — and creates no grant
-store. When that window closes with work left, the run stops and reports per
-[`/pr:merge` § 7](../../../git/pr/merge/command.md). Widening
-`LEDGER_MAX_AGE_MS` is forbidden practice either way.
 
 ### `--worktree` — isolate the workspace
 
@@ -242,9 +239,8 @@ estate-queue exhaustion (always), a
 [`/pr:merge` § 8](../../../git/pr/merge/command.md) kill switch (always — that
 section arms its checks during **preparation**, not only before a merge, which
 is what keeps them reachable while the merge step is gated), and
-authorization-window expiry — which is **unreachable while `--merge` is
-gated**, because the run then performs no `BLOCK_OPS` operation for the
-window to govern. Three conditions, one of them currently inert, and this
+authorization-window expiry — which is **unreachable in this command**,
+because it never performs a `BLOCK_OPS` operation for the window to govern. Three conditions, one of them currently inert, and this
 table is the only place the set is stated.
 
 Nothing here widens a run without `--all`: it still has exactly the six

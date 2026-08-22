@@ -281,7 +281,14 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       the loop continues.
       verify: the distinction between intra-roadmap halts and inter-roadmap
       continuation is explicit.
-- [~] **4.4 `--merge` semantics.** <!-- blocked-by: merge-authority --> Delivery: on outcome `complete`, open the PR
+- [-] **4.4 `--merge` semantics — CANCELLED (owner authorization unavailable).**
+      Cancelled per the `merge-authority` resolution above: lowering the
+      `non-destructive-by-default` per-turn confirmation floor is owner-reserved
+      and no owner ruling was reachable from the autonomous run that closed this
+      roadmap. `--merge` is removed, not left inert. The unconditional half —
+      deliver a *mergeable* PR, never merely an open one — landed and is stated
+      under § Delivery of the command. The cancelled design, kept for whoever
+      reopens it: Delivery: on outcome `complete`, open the PR
       as today, then run the Phase 3 preparation loop on it so the deliverable
       is a **mergeable** PR rather than merely an open one. With `--merge`,
       merge it via the Phase 3 merge step, under the Phase 3 target-manifest,
@@ -300,7 +307,13 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
       `/worktree:create` in full, including its § 4b seeding allow/deny list;
       one worktree, re-branched per roadmap; `/worktree:cleanup` at end of run.
       verify: the section delegates rather than restating the list.
-- [~] **4.7 Amend the canonical loop's merge sentence.** <!-- blocked-by: merge-authority -->
+- [-] **4.7 Amend the canonical loop's merge sentence — CANCELLED (owner
+      authorization unavailable).** Cancelled per the `merge-authority`
+      resolution above. `roadmap-process-loop.md:642` is **unchanged**: merge
+      stays out of scope in every mode, with no exception. The runtime guard
+      refused this very edit when the roadmap first attempted it, which is one
+      of the three independent findings the resolution cites. The cancelled
+      design, kept for whoever reopens it:
       `src/agent-src/contexts/execution/roadmap-process-loop.md:642` reads
       "**Merge is out of scope in every mode — always conversational.**" That
       is a second load-bearing text `--merge` contradicts, and overriding it
@@ -394,7 +407,7 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ### blocker: merge-authority
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 3 — owner-reserved governance amendment
 - **Blocks:** steps 4.4 and 4.7 — activating `--merge` on
@@ -423,6 +436,30 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
   declines, in which case 4.4 and 4.7 are cancelled, the flag is removed from
   the `argument-hint`, and both command files keep only their
   mergeability-delivery half.
+- **Resolution (2026-08-22):** closed as **not authorized in this roadmap** —
+  the second branch's mechanics, with its label corrected. Neither declared
+  branch fired: the owner neither accepted nor declined, the owner was absent,
+  because this roadmap was carried to completion by a fully autonomous drain
+  with no owner round-trip available. An AI-council pass decided the
+  disposition (2 of 2 seats convergent, 2026-08-22, response recorded under
+  `agents/runtime/council/responses/`; options put to it were (a) take the
+  declared decline branch, (b) defer and park the roadmap, (c) cancel
+  operationally under an explicit authority-unavailable framing — **(c) won on
+  both seats**). Its reasoning: a council may refuse to ship unauthorized
+  functionality, but recording an *absence* as a *decline* would fabricate
+  satisfaction of a terminal condition and would establish that a council can
+  settle an owner-reserved question merely by running autonomously. What landed:
+  4.4 and 4.7 are `[-]` cancelled; `--merge` is removed from the `argument-hint`
+  (`src/domains/product-basic/roadmap/process-full/command.md:10`) and from the
+  command body, whose merge section now states that no flag makes it merge
+  (§ *Merging — out of scope, cancelled rather than deferred*); the flag was
+  removed rather than left inert so an archived roadmap leaves no latent
+  executable authority behind a documented switch; and
+  `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md`
+  § Disposition records the closure with an explicit non-rejection clause.
+  **The policy question is undecided, not rejected** — reopening requires owner
+  approval plus an accepted design whose authorization is target-bound,
+  head-SHA-bound, tamper-resistant, agent-unwritable, and kill-switch-subject.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-21 | reviewer: claude/host -->
@@ -437,36 +474,52 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `LEDGER_MAX_AGE_MS` is `30 * 60 * 1000` in the guard source, no
+- [x] AC-1 — `LEDGER_MAX_AGE_MS` is `30 * 60 * 1000` in the guard source, no
       temporary-widening marker remains anywhere in the guard, and a rebuild of
       the hook bundle from that source carries the restored value. The bundle
       itself is untracked, so the source and the rebuild are the checkable
       surface — not a committed artefact.
-- [ ] AC-2 — An mtime-preserving edit to a bundled hook source fails the
+- [x] AC-2 — An mtime-preserving edit to a bundled hook source fails the
       content-equivalence gate while passing the mtime check; both outcomes are
       demonstrated, not asserted. The gate's header states that it is
       local-only because `dist/hooks/` is untracked.
-- [ ] AC-3 — `/pr:merge` exists at `src/domains/git/pr/merge/command.md`, is
+- [x] AC-3 — `/pr:merge` exists at `src/domains/git/pr/merge/command.md`, is
       registered in the locked cluster registry, and specifies the immutable
       target manifest, the enumerated conflict classes, the bounded CI-repair
       halt list, the kill-switch set, the no-rollback rule, and the closed
       disposition set of its summary artifact.
-- [ ] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree`.
+- [x] AC-4 — `/roadmap:process-full` accepts `--all` and `--worktree`.
       **Weakened after R2 (finding 8), because the original wording was not
       satisfiable:** an `--all` hand-off is one immediately-mergeable PR plus
       N−1 *prepared* ones, each needing a re-sync at merge time — while
       `--merge` is gated nothing merges, so the base never advances and every
       PR after the first is mergeable only against the base recorded when it
       was prepared. The command says this in those words rather than promising
-      "N mergeable PRs". `--merge` is specified, marked inert, and points at
-      the `merge-authority` blocker.
-- [ ] AC-5 — No new command named `process-all` exists anywhere in the tree,
+      "N mergeable PRs".
+      **Re-scoped 2026-08-22 by the `merge-authority` resolution above (AI
+      council, 2/2 convergent).** The original tail read "`--merge` is
+      specified, marked inert, and points at the `merge-authority` blocker".
+      With that blocker closed as *not authorized in this roadmap*, an inert
+      documented flag would be latent executable authority inside an archived
+      roadmap, so the criterion is now: **`--merge` is absent** from the
+      `argument-hint` and from the command body, and the command's merge
+      section states that no flag makes it merge and that a future capability
+      needs a new roadmap plus an owner ruling.
+- [x] AC-5 — No new command named `process-all` exists anywhere in the tree,
       and no new authorization store exists in `src/scripts/hooks/`. No shipped
-      path merges anything while the `merge-authority` blocker is open: both
-      command files state the gate in a block a reader cannot miss.
-- [ ] AC-6 — `/roadmap:next` is byte-identical: it still never merges.
-- [ ] AC-7 — An accepted ADR records the merge-authority decision, cites
+      path merges anything.
+      **Re-scoped 2026-08-22 by the `merge-authority` resolution above.** The
+      original clause was conditional — "while the `merge-authority` blocker is
+      open" — which would have expired the criterion the moment the blocker
+      closed. The blocker closed as *not authorized*, so the condition is now
+      unconditional: no shipped path merges anything, and
+      `/roadmap:process-full` states that in a block a reader cannot miss
+      (§ *Merging — out of scope, cancelled rather than deferred*).
+      `/pr:merge` keeps its own § 9 merge step unreachable from any autonomous
+      path.
+- [x] AC-6 — `/roadmap:next` is byte-identical: it still never merges.
+- [x] AC-7 — An accepted ADR records the merge-authority decision, cites
       ADR-237 § 4 and the `road-to-gate-preauth-authorization` stub, and names
       the two properties a future persistent grant would need.
-- [ ] AC-8 — The command, cluster, frontmatter and roadmap gates pass on the
+- [x] AC-8 — The command, cluster, frontmatter and roadmap gates pass on the
       changed files, and both new eval fixtures load under the existing loader.

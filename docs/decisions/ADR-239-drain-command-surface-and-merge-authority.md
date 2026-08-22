@@ -148,6 +148,61 @@ no bundle, so a green CI cannot speak for the bundle a maintainer runs.
   routed to the blocker instead. The operator may well grant it; an agent
   writing the amendment that authorises its own merge is what must not happen.
 
+## Disposition — 2026-08-22, autonomous roadmap closure
+
+This section is **appended, not a rewrite**: the Decision above records what was
+proposed and why the question was routed to a blocker. This records how that
+blocker actually closed.
+
+**Outcome: `--merge` was removed. The policy question is undecided, not rejected.**
+
+`road-to-drain-commands` was carried to completion by a fully autonomous drain
+that had no owner round-trip available. Steps 4.4 (`--merge` semantics) and 4.7
+(amend the canonical loop's merge sentence) are marked `[-]` **cancelled** with
+this rationale:
+
+> Lowering `non-destructive-by-default`'s per-turn confirmation floor for a
+> production-branch merge is owner-reserved
+> ([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+> § owner-reserved set). Owner authorization was structurally unavailable to the
+> autonomous run. Reopening requires owner approval **and** an accepted design
+> whose authorization is target-bound, head-SHA-bound, tamper-resistant,
+> agent-unwritable, and subject to the kill-switch set.
+
+**Why this is not the blocker's "decline" branch.** The blocker declared two
+terminal branches, accept and decline, both predicated on an owner act. Neither
+fired: the owner neither accepted nor declined, the owner was *absent*. An AI
+council pass (2 of 2 seats convergent, 2026-08-22, recorded under
+`agents/runtime/council/responses/`) ruled that recording an absence as a
+decline would fabricate satisfaction of a terminal condition and would set the
+precedent that a council can settle an owner-reserved question merely by running
+autonomously. The council's authority here is **operational** — it may refuse to
+ship unauthorized functionality — and not **policy**: it cannot make the ruling
+ADR-237 § 4 reserves.
+
+Two decisions are therefore separated on purpose:
+
+| Decision | Who made it | Status |
+|---|---|---|
+| This roadmap will not implement `--merge` | AI council, 2026-08-22 | **settled** |
+| Preauthorized merge authority is granted or refused | owner | **open** |
+
+**Why the flag was removed rather than left inert.** An archived roadmap must
+not leave latent executable authority behind a documented switch. `--merge` is
+gone from the `argument-hint` and from the command body; the command's merge
+section now states that no flag makes it merge and that a future capability
+needs a new roadmap plus an owner ruling.
+
+**Explicit non-rejection.** This disposition does not constitute owner rejection
+of preauthorized merging. It closes the current implementation path pending an
+owner authorization that the autonomous process could not obtain.
+
+**What still ships, unchanged.** `/pr:merge` exists and does the expensive half —
+base sync, the four enumerated conflict classes, driving required checks green,
+the immutable target manifest, the kill-switch set, the no-rollback rule. Its
+merge step stays unreachable from any autonomous path. `/roadmap:process-full`
+delivers a *mergeable* PR unconditionally, with or without `--all`.
+
 ## References
 
 - [`ADR-237`](ADR-237-end-to-end-execution-authority.md) § 4 — the exclusion this record does not extend.
