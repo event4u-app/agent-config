@@ -19,7 +19,20 @@ const CONCEPTS = path.join(REPO, 'docs', 'CONCEPTS.md');
  * Risk 1 of the roadmap that authored it names exactly this. This test is the
  * mechanism; the prose rule alone is not one.
  */
-const REF = /`([A-Za-z0-9_./-]+\.(?:md|ts|yml|json))(?::(\d+)(?:-(\d+))?)?`/g;
+/**
+ * A POINTER LINE: a line whose entire content is one backticked reference.
+ *
+ * Deliberately not "every backticked path in the file". The first version
+ * matched prose too, and CI caught what that costs: the `projection` entry
+ * enumerates the generated trees — `dist/agent-src/`, `.augment/`, …,
+ * `GEMINI.md` — and `GEMINI.md` is GENERATED and untracked, so it exists in a
+ * working tree and not in a fresh checkout. The test passed locally and failed
+ * on CI for a file that was never a pointer.
+ *
+ * The file's own convention is the right anchor: each entry carries its owner
+ * as a standalone reference line. Prose may name any path it likes.
+ */
+const POINTER_LINE = /^`([A-Za-z0-9_./-]+\.(?:md|ts|yml|json))(?::(\d+)(?:-(\d+))?)?`$/;
 
 interface Ref {
     file: string;
@@ -27,9 +40,10 @@ interface Ref {
 }
 
 function refs(): Ref[] {
-    const text = fs.readFileSync(CONCEPTS, 'utf-8');
     const out: Ref[] = [];
-    for (const m of text.matchAll(REF)) {
+    for (const raw of fs.readFileSync(CONCEPTS, 'utf-8').split('\n')) {
+        const m = POINTER_LINE.exec(raw.trim());
+        if (m === null) continue;
         out.push({ file: m[1] as string, line: m[2] === undefined ? null : Number(m[2]) });
     }
     return out;
@@ -89,5 +103,21 @@ describe('docs/CONCEPTS.md — every pointer resolves', () => {
         // Sensitivity fence for the check above: if every reference degraded to
         // a bare path, the line assertion would pass vacuously forever.
         expect(refs().filter((r) => r.line !== null).length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('every concept heading is followed by a pointer line', () => {
+        // The property the narrowed regex could otherwise lose: if an entry
+        // stopped carrying its owner, `refs()` would simply return fewer rows
+        // and every assertion above would still pass. This is what keeps the
+        // file an index rather than a definition.
+        const lines = fs.readFileSync(CONCEPTS, 'utf-8').split('\n');
+        const orphans: string[] = [];
+        for (let i = 0; i < lines.length; i += 1) {
+            const h = lines[i] as string;
+            if (!h.startsWith('## ') || h === '## Flagged ambiguities') continue;
+            const window = lines.slice(i + 1, i + 4).map((l) => l.trim());
+            if (!window.some((l) => POINTER_LINE.test(l))) orphans.push(h);
+        }
+        expect(orphans).toEqual([]);
     });
 });

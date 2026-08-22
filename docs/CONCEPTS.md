@@ -69,14 +69,17 @@ weaker claim.
 
 ## evidence
 
-Two unrelated things share the word, and neither is wrong.
+`docs/contracts/adr-layout.md:164`
 
-1. **The ADR frontmatter axis** — `docs/contracts/adr-layout.md:164`. A grade
-   `E0`–`E4` describing how well-sourced a decision is. `E0` is *opinion*,
-   including unanimous council convergence: agreement is not evidence.
-2. **The directory** — `agents/evidence/`. Records produced by investigations,
-   councils, reviews and measurements. A file living there carries no grade and
-   asserts nothing about the ADR axis.
+Two unrelated things share the word, and neither is wrong. The **ADR frontmatter
+axis** is the one the pointer above owns: a grade `E0`–`E4` describing how
+well-sourced a decision is, where `E0` is *opinion* — including unanimous
+council convergence, because agreement is not evidence.
+
+The **directory** `agents/evidence/` is the other, and it has no owning contract
+because it is a filing location rather than a concept: records produced by
+investigations, councils, reviews and measurements live there, and a file
+sitting in it carries no grade and asserts nothing about the ADR axis.
 
 The reading to avoid: "it is in `agents/evidence/`, so it is evidence" in the
 graded sense. The two never meet.
