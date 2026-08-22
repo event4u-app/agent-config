@@ -71,6 +71,34 @@ human voice there; do not inject personality or restructure it.
    `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --stdin --fail`
    on the final draft. No runtime → the step-3 audit is the fallback
    (degrade, do not skip the audit).
+5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when
+   the operator explicitly asks for a carrier strip. `stripCarrierUnicode`
+   (`node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts`, the same
+   path step 5 invokes) removes a hidden-Unicode codepoint only
+   when the codepoints on **both** sides are ASCII or absent; anything adjacent
+   to a non-ASCII character is preserved, so an emoji ZWJ sequence and a
+   complex-script joiner survive byte-identically.
+   **Why opt-in.** A default strip is a silent edit to the operator's
+   deliverable, which step 6's factual-integrity guard forbids for every other
+   kind of edit. Without an explicit request this step does not run and the
+   output is byte-identical to what the skill produces without it.
+   **This is the OUTPUT direction, and it does not touch step 0.** Step 0 scans
+   *ingested* input and surfaces findings as a warning — it never strips, because
+   there the hidden characters are an injection vector and removing them destroys
+   the evidence. Here the prose is the suite's own output and the operator has
+   asked. Two directions, two policies; reading them as one is the mistake this
+   paragraph exists to prevent.
+   **Hygiene, not a security control.** The predicate is deliberately
+   conservative, so a carrier adjacent to any non-ASCII character survives. The
+   injection vector stays covered by step 0.
+   **Emit the audit line** — `removed` and `preserved` counts, the classes
+   removed, and the reason for each preservation. An unexplained preservation is
+   the interesting half: it is what tells the operator the predicate fired
+   conservatively rather than failed. A strip with no audit line is a silent
+   edit wearing a step number.
+   Worked before/after: [`references/fixtures.md`](references/fixtures.md)
+   Fixture 3. Cases: [`evals/strip_fixtures.json`](evals/strip_fixtures.json).
+
 6. **Deterministic self-check + factual-integrity guard.** Re-scan the
    final draft against the [`anti-aiisms.md`](references/anti-aiisms.md)
    self-validation thresholds (dash density, consecutive-staccato cap,
@@ -189,6 +217,17 @@ do not infer a segment from the draft you were asked to edit.
   voice fingerprint that uses dashes overrides even that.
 - Do NOT shorten or restructure as a side effect — same coverage in,
   same coverage out.
+- Do NOT reach for `_sanitize`
+  (`node_modules/@event4u/agent-config/src/scripts/lint_hidden_unicode.ts`) or any
+  `NFKC` pass on a deliverable. It drops **every** `_classify`-flagged codepoint
+  unconditionally, and its class list contains `U+200C` and `U+200D` — so a
+  blind pass destroys emoji ZWJ sequences and complex-script joiners. It is a
+  file-repair path and correct for its own callers; on prose it corrupts the
+  text it was pointed at. Step 5b exists precisely because that shortcut is one
+  import away and looks like the same job.
+- Do NOT add a statistical-watermark rewrite or any detector-evasion mode. That
+  exclusion already stands below and this skill's carrier strip does not weaken
+  it: the strip removes invisible characters and alters no visible prose.
 
 ## Gotcha
 

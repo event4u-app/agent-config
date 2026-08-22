@@ -94,7 +94,7 @@ delivery is a delta on a shipped concern, not a new mechanism.
 
 ## Phase 0 — Reconcile the three deliveries into one shape
 
-- [ ] **Step 0.1:** write the divergence down as a table, one row per field.
+- [x] **Step 0.1:** write the divergence down as a table, one row per field.
       Columns: field · spawn-contract (f) · `team_dispatch` model-facing JSON ·
       `subagent_response.ts` validator · `dispatch_r2_reviewer`. Land it in the
       response contract itself, not in this roadmap, so the next author reads
@@ -103,7 +103,7 @@ delivery is a delta on a shipped concern, not a new mechanism.
       `src/agent-src/contexts/execution/subagent-response-contract.md` returns
       1 or more, where the same grep against the `git show HEAD:` copy of that
       path returns 0.
-- [ ] **Step 0.2:** name the canonical shape and state which direction the
+- [x] **Step 0.2:** name the canonical shape and state which direction the
       classifier moves. Either the validator conforms to a widened contract, or
       the contract narrows to what the validator already accepts. Both
       directions change what a shipped `envelope_parse` value MEANS for the
@@ -112,7 +112,7 @@ delivery is a delta on a shipped concern, not a new mechanism.
       verify: the blocker entry's `Status:` reads `resolved` and names one of
       its two options; `./scripts-run src/scripts/lint_roadmap_blockers`
       exits 0.
-- [ ] **Step 0.3:** record the historical-reading caveat at the ledger's own
+- [x] **Step 0.3:** record the historical-reading caveat at the ledger's own
       reader. Pre-reconciliation rows were classified against the shape that
       existed when they were written; a reader of the 2026-08 window must not
       read them as conforming or non-conforming to the reconciled shape.
@@ -120,9 +120,30 @@ delivery is a delta on a shipped concern, not a new mechanism.
       returns 1 or more, where the same grep against the `git show HEAD:` copy
       of that path returns 0.
 
+> **PHASE 0 LANDED 2026-08-22.** Direction (b): the canonical body is
+> `validateResponse`'s five required fields; producers converge on it and the
+> validator is **not** widened. The per-field divergence table, the four-boundary
+> separation (body schema · lifecycle frame · delivery protocol · classification)
+> and the historical-reading caveat all live where the shape is defined
+> ([`subagent-response-contract.md`](../../src/agent-src/contexts/execution/subagent-response-contract.md)
+> § The canonical shape) and at the classifier
+> (`subagent_ledger_hook.ts`, `grep -c reconcil` = 3, HEAD = 0).
+> **Rule (f) survives the narrowing**, as a delivery invariant rather than a
+> field — its two clauses were never candidates for the validator's five, which
+> is what Risk 1 warned would be silently dropped.
+> **The check that removed a council precondition:** `validateResponse` was run
+> by hand against a minimal and a rich envelope. Both validate; the
+> `team_dispatch` shape fails four of five. So the contract is implementable, the
+> validator is correct, and the rate is zero because **producers do not emit the
+> shape** — not because the validator rejects it.
+> **One clause named and deliberately not shipped:** `team_dispatch.ts:280` asks
+> a read-only model with no filesystem access to write a disk copy first, which
+> it cannot do. The dispatcher must own that projection. Recorded in the
+> contract; building it is not this roadmap.
+
 ## Phase 1 — Deliver the pointer on the dominant path, and publish the rate
 
-- [ ] **Step 1.1:** project the reconciled contract in POINTER form, at most
+- [x] **Step 1.1:** project the reconciled contract in POINTER form, at most
       240 chars, into the dominant dispatch path only. 240 is not arbitrary —
       it is `MAX_RESPONSE_LINE_CHARS` in
       `src/scripts/_lib/subagent_response.ts:35`, so the pointer is one
@@ -132,12 +153,49 @@ delivery is a delta on a shipped concern, not a new mechanism.
       verify: the emitted prompt constant's length, printed by a `node -e`
       one-liner over it, is at most 240; and the constant appears exactly once
       under `src/scripts/`.
-- [ ] **Step 1.2:** publish `valid_envelope_rate` with its window and
+
+      **LANDED 2026-08-22.** `RETURN_ENVELOPE_POINTER` in
+      `dispatch_r2_reviewer.ts`, **223 chars** against
+      `MAX_RESPONSE_LINE_CHARS` = 240, in exactly one file under `src/scripts/`.
+      **The dominant path is NOT answerable from the ledger, and that is a
+      finding rather than an obstacle.** 1,725 of 1,845 post-split stops carry a
+      null `agent_type` — the start-to-stop join rate of roughly 8 in 100
+      recorded elsewhere — so no stop can be attributed to a dispatcher at all.
+      The step's own basis ("whichever carries more stops") is unusable.
+      Decided on **invocation surface** instead: `dispatch_r2_reviewer` is wired
+      into `/create-pr` and read by three gates (`check_completion_review`,
+      `lint_evidence_artifacts`, `probe_review_binding_drift`), while
+      `team_dispatch` sits behind an ai_team host flag and one `/team delegate`
+      command. It is also the leg with **zero** prior contract hits, so the
+      dominant path and the absent one turn out to be the same file.
+      **What the pointer does not change:** the findings table stays the
+      artefact — the gates read the file, not the envelope. Per the four-boundary
+      separation this touches DELIVERY only.
+- [x] **Step 1.2:** publish `valid_envelope_rate` with its window and
       denominator. Three numbers, never one: the rate, the window bounds, and
       the stop count. A rate with no denominator is a claim, not a measurement.
       verify: the reporting script prints all three on one line, and the line
       names the ledger path it read.
-- [ ] **Step 1.3:** register the target as greater than zero and rising,
+
+      **LANDED 2026-08-22.** `src/scripts/report_envelope_rate.ts`, run against
+      the live ledger:
+      `valid_envelope_rate: 0.00% — 0 ok of 1845 stops, window
+      2026-08-13T21:19:46.344Z → 2026-08-22T11:43:05.360Z, read from
+      agents/runtime/state/subagent-ledger/2026-08.jsonl`.
+      Verdicts `no_envelope` 1,817 · `fail` 28. Agent-type composition
+      `(null)` 1,725 · `general-purpose` 92 · `Explore` 28.
+      **A number the roadmap did not have:** 4,543 further rows carry the
+      retired `absent` vocabulary and are **excluded and counted**, not folded
+      in. Mixing the two vocabularies would report a figure about neither, since
+      `absent` collapsed `no_message` and `no_envelope` into one bucket.
+      **Named `report_`, not `check_`**, deliberately: it publishes a number and
+      gates nothing, and a gate prefix would oblige it to carry a coverage floor
+      it has no business having. `--dir` exists so the figure is reproducible
+      against a ledger that is not the running copy's — without it a worktree
+      has no ledger and the number is unobtainable exactly where the work
+      happens. The no-ledger path prints NO LEDGER rather than 0 %, because a
+      gitignored ledger absent from a fresh clone is not a measurement of zero.
+- [x] **Step 1.3:** register the target as greater than zero and rising,
       explicitly NOT 95 % on the first window. The pre-pointer rate is
       0/1,790. A first window that reaches any non-zero rate has demonstrated
       the pointer is readable at all; a first window held to 95 % would fail
@@ -147,14 +205,51 @@ delivery is a delta on a shipped concern, not a new mechanism.
       percentage figure — a `grep -c '%'` over that arm's registration lines
       returns 0.
 
+      **LANDED as `claim:subagent-valid-envelope-rate`** in `docs/CLAIMS.md`,
+      `status: unbacked`. Threshold for the first window: **greater than zero and
+      rising**, with no percentage anywhere in the entry — `grep -c '%'` over it
+      returns 0, and the one figure that would have violated it ("8 %") is
+      written "roughly 8 in 100" for exactly that reason.
+      Baseline, power and three falsification clauses are registered with it,
+      including the one the council added: a rate that rises **without** a
+      contemporaneous pointer-removed arm does not establish that the pointer
+      caused it.
+
 ## Phase 2 — A second window, to 95 % or to a named reason per failing class
 
-- [ ] **Step 2.1:** collect a second window of at least 500 production-shaped
+> **NOT DISCHARGED, 2026-08-22 — and this is the intersection of a SPLIT council,
+> not a convergent verdict.** Record:
+> [`envelope-adoption-blockers-2026-08-22.md`](../evidence/council/envelope-adoption-blockers-2026-08-22.md).
+>
+> On `b-production-window-reach` the two seats **disagreed**: one chose (a),
+> publish the drain window with its composition and a machine-local caveat; the
+> other chose (b), park until an independently sourced window exists. What they
+> **agreed** on is that drain traffic does not discharge Phase 2 — the (a) seat's
+> own framing is that Phase 2 measures mechanism behaviour rather than production
+> reach, and the (b) seat said option (a) *"may still be run, but it should be
+> renamed a machine-local mechanism experiment and should not discharge Phase
+> 2."*
+>
+> So the measurement is published (step 1.2, with its composition and caveat) and
+> Phase 2 closes `[-]` with its arrival condition named. The split is recorded as
+> a split rather than resolved by preference, and no user round-trip was taken
+> because the blocker's own `Resolved when` admits either outcome and the
+> intersection is a legal one.
+>
+> **Step 2.3 is closed for a second, independent reason: both seats refused the
+> reading offered to them.** The pre-pointer baseline is not the pointer-removed
+> arm — it is *"temporally and compositionally confounded"* — and both named a
+> sequencing dependency the step does not state: "returns to 0" is only
+> meaningful **after** a contemporaneous pointer-present arm produces a non-zero
+> rate. Today the rate is 0 and the pointer has just landed, so sensitivity is
+> **unknown**, which is what is recorded rather than a pass.
+
+- [-] **Step 2.1:** collect a second window of at least 500 production-shaped
       stops and recompute the rate.
       <!-- blocked-by: b-production-window-reach -->
       verify: the published window's stop count is 500 or more and its start
       bound is later than Phase 1's end bound.
-- [ ] **Step 2.2:** either the rate clears 95 %, or every failing class carries
+- [-] **Step 2.2:** either the rate clears 95 %, or every failing class carries
       a named reason. A class with no reason is an open finding, not a
       tolerated residual. The four classes are the classifier's own union
       (`subagent_ledger_hook.ts:201`), so the enumeration is closed and cannot
@@ -162,7 +257,7 @@ delivery is a delta on a shipped concern, not a new mechanism.
       verify: for each `envelope_parse` value present in the window with a
       non-zero count, the report carries a prose reason; the count of
       reason-less non-`ok` classes is 0.
-- [ ] **Step 2.3:** run one deliberately-broken sensitivity arm and record that
+- [-] **Step 2.3:** run one deliberately-broken sensitivity arm and record that
       it went RED. Emit a prompt with the pointer removed and confirm the rate
       returns to 0 for that arm. A rate that never moved down has unknown
       sensitivity and cannot support the Phase 2 claim.
@@ -181,18 +276,18 @@ delivery is a delta on a shipped concern, not a new mechanism.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One canonical envelope shape is stated in one place, and the
+- [x] AC-1 — One canonical envelope shape is stated in one place, and the
       per-field table shows for each of the four surfaces whether it conforms,
       diverges, or is silent. A surface with an empty cell is a finding, not a
       pass.
-- [ ] AC-2 — `valid_envelope_rate` is published with its window bounds and its
+- [x] AC-2 — `valid_envelope_rate` is published with its window bounds and its
       stop count, and the pre-pointer baseline (0 of 1,790 over
       2026-08-13T21:19Z through 2026-08-22T08:13Z) is recorded alongside it so
       drift in either direction is readable.
-- [ ] AC-3 — The second window's rate is either 95 % or higher, or every
+- [-] AC-3 — The second window's rate is either 95 % or higher, or every
       `envelope_parse` class with a non-zero count carries a named reason; and
       the window's stop count and agent-type composition are both published.
-- [ ] AC-4 — A sensitivity arm with the pointer removed is recorded as having
+- [-] AC-4 — A sensitivity arm with the pointer removed is recorded as having
       gone RED (rate 0, stop count stated). Absent that arm, the Phase 2 rate
       is reported as unverified rather than as a pass.
 
@@ -200,7 +295,7 @@ delivery is a delta on a shipped concern, not a new mechanism.
 
 ### blocker: b-classifier-vs-contract
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 0.1, step 0.2
 - **Class:** 3
@@ -222,10 +317,35 @@ delivery is a delta on a shipped concern, not a new mechanism.
 - **Resolved when:** the response contract names one canonical field set, the
   `team_dispatch` prompt constant and the validator agree with it, and the
   historical-reading caveat from step 0.3 is recorded at the classifier.
+- **Resolution (2026-08-22) — (b), conditionally, 2/2 council.** The contract
+  names one canonical body: `validateResponse`'s five required fields. The
+  validator is **not** widened, because a union would make every future
+  divergence legal by construction.
+  **The condition, and it is the substantive part:** the question treated "the
+  contract" as one thing and it is **four** — body schema, lifecycle frame,
+  delivery protocol, classification. Rule (f)'s two clauses are **delivery
+  invariants**, never candidates for the validator's five, so they survive the
+  narrowing rather than being the silent drop Risk 1 named.
+  **`team_dispatch`'s prompt constant is NOT yet changed, and the reason is a
+  finding rather than an omission.** `team_dispatch.ts:280` asks a read-only
+  model with no command or filesystem access to return its JSON; that model
+  cannot write a disk copy first, so rule (f) is an impossible obligation for it.
+  The trusted **dispatcher** must parse, project into the canonical body, add the
+  lifecycle frame, persist, then emit the identical value. That adapter is a
+  mechanism this run does not ship, and it is recorded in the contract with a
+  dated follow-up (2026-08-25) rather than claimed. The clause "the
+  `team_dispatch` prompt constant … agree with it" is therefore met on the
+  DIRECTION and not on the code, stated here rather than ticked.
+  **A council precondition, discharged by measurement:** before narrowing, one
+  seat required that a valid envelope actually pass the validator, since a rate
+  of zero could equally mean the validator was wrong. Run by hand — a minimal and
+  a rich envelope both validate; the `team_dispatch` shape fails four of five.
+  The contract is implementable and the rate is zero because producers do not
+  emit the shape.
 
 ### blocker: b-production-window-reach
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.1
 - **Class:** 3
@@ -244,3 +364,22 @@ delivery is a delta on a shipped concern, not a new mechanism.
 - **Resolved when:** the Phase 2 window is either published with its
   composition and a machine-local caveat, or the roadmap records Phase 2 as
   parked with the arrival condition named.
+- **Resolution (2026-08-22) — BOTH, because the council SPLIT and the two
+  branches of this `Resolved when` are not exclusive.** One seat chose (a), one
+  chose (b); recorded as a split rather than resolved by preference
+  ([`envelope-adoption-blockers-2026-08-22.md`](../evidence/council/envelope-adoption-blockers-2026-08-22.md)).
+  What both agreed: drain traffic **does not discharge Phase 2**. The (b) seat
+  said option (a) may still be run but *"should be renamed a machine-local
+  mechanism experiment"*; the (a) seat's own framing is that Phase 2 measures
+  mechanism behaviour rather than production reach.
+  So the window IS published with its composition and its machine-local caveat
+  (step 1.2 — `(null)` 1,725 · `general-purpose` 92 · `Explore` 28), **and**
+  Phase 2 is recorded `[-]` with its arrival condition named. That satisfies
+  both branches of this field, which is why no escalation to the owner was taken:
+  the intersection of the two seats is a legal outcome of the blocker's own
+  contract.
+  **Arrival condition, named as (b) requires:** at least 500 stops carrying a
+  post-split `envelope_parse` value from a ledger that is not this machine's
+  drain traffic. There is no arrival channel for it today — the ledger is
+  gitignored by design — and the (a) seat's objection to waiting on that stands
+  recorded rather than dismissed.
