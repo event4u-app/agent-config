@@ -1,0 +1,32 @@
+{
+  "_comment": "Growth-only ratchet over the LIVE population of the requirement-to-acceptance-to-evidence inventory (src/scripts/check_requirements_trace.ts). MEASURED AT REGISTRATION, NEVER A TARGET. What each number counts: `unlinked` is a declared trace row with no evidence ref at all; `unresolved` is an evidence ref that does not resolve at the CURRENT head; `dangling_ac` is an `[AC:<id>]` annotation on a verify line with no matching acceptance_id in the same file; `malformed` is an id that is not the reused claim-ledger kebab slug. All four may only walk DOWN. Population is `live` — the active corpus only. The fixture population (synthetic inputs that test the reader) and any frozen cohort (which may include archived files) are deliberately NOT in scope here: a maintainer-authored fixture is evidence about the reader rather than about uptake, and a count over archived roadmaps cannot fall, which would make the ratchet meaningless. Note the interaction the inventory's own header states: a completed roadmap can move from resolved to unresolved with no roadmap edit, because refs are evaluated at head. That is the intended reading and it means this ratchet can red on a deletion elsewhere in the tree — which is the point, not a defect.",
+  "schema_version": 1,
+  "owner": "maintainer",
+  "review_by": "2027-08-22",
+  "registered_at": "2026-08-22",
+  "population": "live",
+  "baseline": {
+    "unlinked": 0,
+    "unresolved": 0,
+    "dangling_ac": 0,
+    "malformed": 0
+  },
+  "measured_at_registration": {
+    "corpus": 25,
+    "files_declaring": 1,
+    "rows": 3,
+    "linked": 3,
+    "refs": 7,
+    "note": "One file declares, and it is this mechanism's own roadmap — dogfooded per its step 0.3 before any other roadmap was asked to carry the fields. Adoption is therefore 1 of 25 and is NOT evidence of uptake: a mechanism's author using it is the floor, not a signal. The three roadmaps step 2.1 originally named for dogfooding were all archived by sibling pull requests in the same drain run before any window opened, which is why the population model above exists at all."
+  },
+  "baseline_history": [
+    {
+      "at": "2026-08-22",
+      "unlinked": 0,
+      "unresolved": 0,
+      "dangling_ac": 0,
+      "malformed": 0,
+      "why": "Registered at the measured live reading on the commit that shipped the inventory. All four are zero because exactly one file declares and its refs all resolve — which is a fact about a corpus of one declarer, not a clean bill over 25 roadmaps. Shrink-only from here: a new trace row with no evidence ref, a ref that stops resolving, a dangling [AC:] annotation or a non-slug id each red this immediately, with no headroom. The honest limit is that a ratchet at zero over a single declarer cannot distinguish compliance from non-adoption, which is exactly the distinction the roadmap's own falsifier set is written to keep separate."
+    }
+  ]
+}

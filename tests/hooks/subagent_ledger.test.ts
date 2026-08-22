@@ -135,6 +135,7 @@ describe('subagent-ledger — start/stop correlation', () => {
         expect(stop.start_seen).toBe(true);
         expect(typeof stop.duration_ms).toBe('number');
         expect(stop.envelope_parse).toBe('ok');
+        expect(stop.envelope_field_hits).toBe(5);
     });
 
     it('records a stop whose start was never seen as start_seen:false, not duration 0', () => {
@@ -327,7 +328,7 @@ describe('subagent-ledger — envelope classification', () => {
     const valid = { summary: 's', handoff: 'h', confidence: 'high', findings: [], risks: [] };
 
     it('reports ok for a valid bare envelope', () => {
-        expect(classifyEnvelope(JSON.stringify(valid))).toEqual({ verdict: 'ok', error_count: 0 });
+        expect(classifyEnvelope(JSON.stringify(valid))).toEqual({ verdict: 'ok', error_count: 0, field_hits: 5 });
     });
 
     it('reports ok for a valid envelope inside a fenced json block', () => {
@@ -338,6 +339,41 @@ describe('subagent-ledger — envelope classification', () => {
         const verdict = classifyEnvelope('{"summary":"s"}');
         expect(verdict.verdict).toBe('fail');
         expect(verdict.error_count).toBeGreaterThan(0);
+    });
+
+    it('separates a near-miss from a foreign object (Phase 2 Step 4)', () => {
+        // The boundary the split exists to draw, in its two canonical cases.
+        // Before the split both of these were `fail`, so every recorded `fail`
+        // in the live ledger carried `error_count: 5` — the bucket held zero
+        // contract attempts, and a threshold read off it could not move for
+        // the reason its name suggests.
+        const foreign = classifyEnvelope('{"a":1}');
+        expect(foreign.verdict).toBe('foreign_object');
+        expect(foreign.field_hits).toBe(0);
+
+        const nearMiss = classifyEnvelope('{"summary":"x"}');
+        expect(nearMiss.verdict).toBe('fail');
+        expect(nearMiss.field_hits).toBe(1);
+    });
+
+    it('reads a fenced tool call as foreign, not as a failed envelope', () => {
+        const msg = '```json\n{"tool":"Read","input":{"path":"a.ts"}}\n```';
+        expect(classifyEnvelope(msg).verdict).toBe('foreign_object');
+    });
+
+    it('picks the MOST contract-shaped candidate, not the first failing one', () => {
+        // Sensitivity fence for the selection change: under first-match this
+        // reports `foreign_object`, because `{"note":1}` is met first and the
+        // real attempt behind it never judged. The masking defect the valid-
+        // envelope search already guards against, one register down.
+        const verdict = classifyEnvelope('{"note":1} then: {"summary":"x","handoff":"h"}');
+        expect(verdict.verdict).toBe('fail');
+        expect(verdict.field_hits).toBe(2);
+    });
+
+    it('records field_hits on every verdict, including the message-less ones', () => {
+        expect(classifyEnvelope(null).field_hits).toBe(0);
+        expect(classifyEnvelope('prose only').field_hits).toBe(0);
     });
 
     it('separates a missing message from a message carrying no envelope', () => {

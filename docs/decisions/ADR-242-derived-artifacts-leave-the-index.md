@@ -80,7 +80,22 @@ untrack is cheap and the decision to make it stick is the whole problem.
 `agents/roadmaps/archive/INDEX.md`, `agents/roadmaps/archive/index.json`.
 
 **Two artifacts fail test 1 and stay tracked:** `src/config/estate-count-budget.json`
-and `src/config/gate-violation-baselines.json`. ADR-241 established their churn
+and `src/config/gate-violation-baselines.json`.
+
+> **Amendment — 2026-08-22 · this record's second reopen trigger fired
+> (ADR-243).** That trigger reads: *"a ratchet baseline is shown to be
+> reconstructible from the tree alone at the merge point, since that is the one
+> property whose absence keeps the two baselines tracked."* It was shown, for
+> `estate-count-budget.json` only: all three of its metrics are pure functions
+> of `agents/roadmaps/`, so `check_estate_count` now measures its floor on the
+> base ref's tree and the file carries policy without a number. The sentence
+> below — *"a ratchet is a record of what a tree measured, not a function of the
+> tree"* — describes a ratchet whose metric is not tree-derived, which
+> `gate-violation-baselines.json` is and the estate counts are not. That file
+> still fails test 1 and stays tracked, unchanged. Note the direction: the
+> estate budget did not become eligible for UNTRACKING under the two tests here
+> — it is still tracked, and still not reconstructible as an artifact. What
+> changed is that the number inside it stopped being needed. ADR-241 established their churn
 is not append-shaped, so no merge driver resolves them; `sync_pr_branch.ts:110`
 states the other half — *"an untracked baseline is a baseline no PR diff can be
 compared against, which deletes the ratchet."* A ratchet is a record of what a
