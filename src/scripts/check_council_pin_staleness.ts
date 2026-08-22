@@ -33,7 +33,11 @@
  * (unparsable config, bad --today, or a dead scan scope).
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
+
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+import { runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 /** Days before a stamped pin is called stale. */
 export const CADENCE_DAYS = 100;
@@ -151,41 +155,77 @@ export function parseMembers(text: string): { member: string; model: string; ver
 
 function selfTest(): number {
     const T = '2026-08-22';
-    const cases: [string, string, string | null, Verdict][] = [
-        ['a sentinel needs no stamp', 'codex-default', null, 'sentinel'],
-        ['a vendor alias needs no stamp', 'sonnet', null, 'sentinel'],
-        ['a dated pin with no stamp is unstamped', 'gemini-2.5-pro', null, 'unstamped'],
-        ['a stamp inside the cadence is fresh', 'gemini-2.5-pro', '2026-08-01', 'fresh'],
-        ['a stamp past the cadence is stale', 'gemini-2.5-pro', '2026-01-01', 'stale'],
+    let seq = 0;
+    // Each case drives the REAL gate over a real fixture, so what is asserted is
+    // the exit code rather than an internal verdict. Reject == the gate refuses.
+    const probe = (body: string): number => {
+        seq += 1;
+        const file = path.join(os.tmpdir(), `pin-staleness-selftest-${String(process.pid)}-${String(seq)}.yml`);
+        fs.writeFileSync(file, body, 'utf-8');
+        try {
+            return main(['--file', file, '--today', T]);
+        } catch (err) {
+            // Mirror the entrypoint: a dead scan scope exits 2 there, so a case
+            // asserting "must not pass" has to observe the same code rather than
+            // an exception the harness would read as a broken test.
+            if (err instanceof DeadScopeError) return 2;
+            throw err;
+        } finally {
+            fs.rmSync(file, { force: true });
+        }
+    };
+    const member = (model: string, stamp: string | null): string =>
+        `members:\n  m:\n    enabled: true\n    model: ${model}\n` +
+        (stamp === null ? '' : `    verified_at: "${stamp}"\n`);
+
+    const cases: SelfTestCase[] = [
+        { name: 'a sentinel needs no stamp', expect: 'accept', run: () => probe(member('codex-default', null)) },
+        { name: 'a vendor alias needs no stamp', expect: 'accept', run: () => probe(member('sonnet', null)) },
+        {
+            name: 'a dated pin with no stamp is advisory, not a failure',
+            expect: 'accept',
+            run: () => probe(member('gemini-2.5-pro', null)),
+        },
+        {
+            name: 'a stamp inside the cadence is fresh',
+            expect: 'accept',
+            run: () => probe(member('gemini-2.5-pro', '2026-08-01')),
+        },
         // 100 exactly is fresh; 101 is not. A cadence met on the day it comes
         // due is met — the same boundary `check_corpus_staleness` uses.
-        ['the cadence boundary is inclusive', 'gemini-2.5-pro', '2026-05-14', 'fresh'],
-        ['a future stamp is its own class, not "very fresh"', 'gemini-2.5-pro', '2027-01-01', 'future-date'],
-        ['an impossible date is malformed, not stale', 'gemini-2.5-pro', '2026-02-30', 'malformed'],
-        ['a non-date is malformed', 'gemini-2.5-pro', 'soon', 'malformed'],
+        {
+            name: 'the cadence boundary is inclusive',
+            expect: 'accept',
+            run: () => probe(member('gemini-2.5-pro', '2026-05-14')),
+        },
+        {
+            name: 'a stamp past the cadence is refused',
+            expect: 'reject',
+            run: () => probe(member('gemini-2.5-pro', '2026-01-01')),
+        },
+        {
+            name: 'a future stamp is refused, not read as very fresh',
+            expect: 'reject',
+            run: () => probe(member('gemini-2.5-pro', '2027-01-01')),
+        },
+        {
+            name: 'an impossible date is refused, not treated as stale',
+            expect: 'reject',
+            run: () => probe(member('gemini-2.5-pro', '2026-02-30')),
+        },
+        { name: 'a non-date is refused', expect: 'reject', run: () => probe(member('gemini-2.5-pro', 'soon')) },
+        {
+            name: 'a member with no model: leaves an empty scan and must not pass',
+            expect: 'reject',
+            run: () => probe('members:\n  m:\n    enabled: true\n'),
+        },
     ];
-    let pass = 0;
-    let fail = 0;
-    for (const [name, model, stamp, want] of cases) {
-        const got = classify('m', model, stamp, true, T).verdict;
-        if (got === want) pass += 1;
-        else {
-            fail += 1;
-            console.error(`❌ ${name}: want ${want}, got ${got}`);
-        }
-    }
-    // The parser is the other half that can silently return nothing.
-    const parsed = parseMembers(
-        'members:\n  anthropic:\n    enabled: true\n    model: sonnet\n  gemini:\n    enabled: false\n    model: gemini-2.5-pro\n    verified_at: 2026-08-22\n',
-    );
-    if (parsed.length === 2 && parsed[1]?.verified_at === '2026-08-22' && parsed[0]?.enabled === true) {
-        pass += 1;
-    } else {
-        fail += 1;
-        console.error(`❌ parseMembers: got ${JSON.stringify(parsed)}`);
-    }
-    process.stdout.write(`check_council_pin_staleness --self-test: ${pass} pass, ${fail} fail\n`);
-    return fail === 0 ? 0 : 1;
+    return runSelfTest({
+        gate: 'check_council_pin_staleness',
+        cases,
+        minCases: 10,
+        minRejectCases: 5,
+    });
 }
 
 function main(argv: string[]): number {
@@ -209,12 +249,6 @@ function main(argv: string[]): number {
         return 2;
     }
     const members = parseMembers(fs.readFileSync(file, 'utf-8'));
-    if (members.length === 0) {
-        // A dead scan scope is a usage error, never a pass. "0 stale pins" over
-        // 0 members read is the failure this exit code exists to separate.
-        process.stderr.write(`no members with a model: read from ${file} — dead scan scope\n`);
-        return 2;
-    }
     const rows = members.map((m) => classify(m.member, m.model, m.verified_at, m.enabled, today));
     const bad = rows.filter((r) => r.verdict === 'stale' || r.verdict === 'future-date' || r.verdict === 'malformed');
     const unstamped = rows.filter((r) => r.verdict === 'unstamped');
@@ -225,7 +259,16 @@ function main(argv: string[]): number {
             `  ${r.verdict.padEnd(11)} ${r.member.padEnd(12)} ${r.model.padEnd(20)} ${age}${r.enabled ? '' : '  (disabled)'}\n`,
         );
     }
-    process.stdout.write(`scanned: ${rows.length}\n`);
+    // Assert the scope and publish the count in one call: a dead scan scope is a
+    // usage error, never a pass, and "0 stale pins" over 0 members read is the
+    // failure this separates. reportScanned emits the number the assertion just
+    // accepted, so the published count cannot drift from the validated one.
+    reportScanned({
+        gate: 'check_council_pin_staleness',
+        scanned: rows.length,
+        units: 'council member(s) with a model:',
+        roots: [file],
+    });
     if (bad.length > 0) {
         process.stdout.write(
             `❌  ${bad.length} pin(s) need attention (cadence ${CADENCE_DAYS}d). A stamp records when a human last\n` +
@@ -245,5 +288,13 @@ function main(argv: string[]): number {
 }
 
 if (process.argv[1] !== undefined && process.argv[1].includes('check_council_pin_staleness')) {
-    process.exit(main(process.argv.slice(2)));
+    try {
+        process.exit(main(process.argv.slice(2)));
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`${err.message}\n`);
+            process.exit(2);
+        }
+        throw err;
+    }
 }

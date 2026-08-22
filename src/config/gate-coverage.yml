@@ -411,6 +411,25 @@ gates:
       registration: the active estate is being drained deliberately and is
       expected to shrink, so a tight floor would red on the drain working.
 
+  - id: check_council_pin_staleness
+    argv: []
+    min_scanned: 3
+    corpus: "council members carrying a `model:` in agents/templates/.ai-council.yml.example (5 at registration, 2026-08-22)"
+    status: enforced
+    no_canary_reason: >-
+      the harness is create-only and this gate reads ONE fixed path
+      (agents/templates/.ai-council.yml.example), so no planted file lands inside
+      its scan scope — making it red means EDITING that template, which the
+      harness does not do. Discrimination is proven by the gate's own
+      `--self-test` instead: 10 cases across the fresh, stale, future-date,
+      malformed, unstamped and vendor-sentinel branches.
+    note: >
+      Floor 3 against 5 at registration: the template's member list is a shipped
+      artifact rather than a draining corpus, but an exact floor would red on a
+      legitimate trim of one member. Collapse is covered more strictly from the
+      other side — `reportScanned` raises DeadScopeError at 0 members, before
+      this floor is consulted at all.
+
   - id: lint_trigger_collisions
     argv: []
     min_scanned: 90
