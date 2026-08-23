@@ -19,8 +19,16 @@
  * That pre-state proof is stronger than the eval run the roadmap asked for,
  * not weaker. A model run showing a miss is one sample of a stochastic
  * process; "no judge on the panel reads a criterion" is a structural fact
- * about the file, and it is checked below against the merge-base rather than
+ * about the file, and it is checked below against a PINNED commit rather than
  * against a remembered claim.
+ *
+ * WHY A PINNED COMMIT AND NOT THE MERGE-BASE. The first version resolved the
+ * pre-state with `git merge-base origin/main HEAD`. That is correct exactly
+ * once — on the branch, before the merge. Afterwards `origin/main` IS `HEAD`,
+ * the merge-base is the post-change commit, and the assertion "no judge read a
+ * requirement" fails against the very change it was written to justify. It did:
+ * Node Tests shard 4/4 went red on `main` the moment #1554 landed. A pre-state
+ * is a fact about one commit, so it is addressed by that commit's id.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -41,29 +49,23 @@ function read(p: string): string {
 }
 
 /**
- * The command file as it stood before this branch, or null when the base ref
- * is unreachable (a shallow clone, a detached CI checkout). Null SKIPS the
- * pre-state assertion rather than passing it — an unreachable base is "not
- * measured", never "no drift".
+ * The command file at the commit immediately BEFORE the spec judge landed
+ * (`6af4d14ec^`), or null when that object is unreachable (a shallow clone, a
+ * detached CI checkout). Null SKIPS the pre-state assertion rather than
+ * passing it — an unreachable pre-state is "not measured", never "no drift".
  */
+const PRE_SPEC_JUDGE_COMMIT = 'd1861bad2d276e78268d5515444b9ef36897dda2';
+
 function commandFileAtBase(): string | null {
-    for (const base of ['origin/main', 'main']) {
-        try {
-            const mergeBase = execFileSync('git', ['merge-base', base, 'HEAD'], {
-                cwd: ROOT,
-                encoding: 'utf-8',
-                stdio: ['ignore', 'pipe', 'ignore'],
-            }).trim();
-            return execFileSync(
-                'git',
-                ['show', `${mergeBase}:src/domains/engineering-base/review/changes/command.md`],
-                { cwd: ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
-            );
-        } catch {
-            continue;
-        }
+    try {
+        return execFileSync(
+            'git',
+            ['show', `${PRE_SPEC_JUDGE_COMMIT}:src/domains/engineering-base/review/changes/command.md`],
+            { cwd: ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
+        );
+    } catch {
+        return null;
     }
-    return null;
 }
 
 /**
@@ -79,8 +81,14 @@ describe('spec axis — the pre-state that made it necessary', () => {
     it('no judge on the pre-change panel read a requirement (deterministic miss proof)', () => {
         const before = commandFileAtBase();
         if (before === null) {
-            // Unreachable base: not measured. Say so; do not assert a pass.
-            console.warn('review_spec_axis: base ref unreachable — pre-state assertion skipped, NOT satisfied');
+            // Unreachable pre-state: not measured. Say so; do not assert a pass.
+            // Expected in a shallow CI checkout (`actions/checkout` defaults to
+            // fetch-depth 1 and this workflow does not raise it), where the
+            // pinned object is simply absent. The current-state assertions
+            // below are the ones that can regress, and they run everywhere.
+            console.warn(
+                `review_spec_axis: ${PRE_SPEC_JUDGE_COMMIT.slice(0, 9)} unreachable (shallow clone) — pre-state assertion skipped, NOT satisfied`,
+            );
             return;
         }
         const rows = judgeTableRows(before);
