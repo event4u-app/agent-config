@@ -284,25 +284,82 @@ export function bucket_by_threshold(
  * missing required keys are skipped silently — extraction is best-
  * effort, never raises.
  */
-export function parse_findings_response(
+/**
+ * How extraction went — step 2.2 of `road-to-council-evidence-integrity`.
+ *
+ * `parse_findings_response` returns `[]` for three different situations, and a caller
+ * that only sees the array cannot tell them apart:
+ *
+ * - `parsed` — the answer was read. The array may still be empty, and an empty array
+ *   from a readable answer is a RESULT ("this member found nothing").
+ * - `empty` — the member said nothing at all. Nothing to parse, nothing to re-ask.
+ * - `parse_failed` — the member said something and no parser could read it. This is the
+ *   one that used to be indistinguishable from "found nothing", so an unparseable answer
+ *   counted as a clean zero-findings review.
+ */
+export type FindingsParseOutcome = 'parsed' | 'empty' | 'parse_failed';
+
+export interface FindingsExtraction {
+    readonly findings: Finding[];
+    readonly outcome: FindingsParseOutcome;
+}
+
+/**
+ * The discriminated form. `parse_findings_response` is the compatibility wrapper.
+ *
+ * Kept as two functions rather than changing the existing signature: the array-returning
+ * form has callers, and a silent shape change is how a best-effort parser becomes a
+ * silent one again.
+ */
+export function parse_findings_outcome(
     text: string,
     opts: { source: string },
-): Finding[] {
+): FindingsExtraction {
     const source = opts.source;
+    if (text.trim() === '') {
+        return { findings: [], outcome: 'empty' };
+    }
     const array = _extract_json_array(text);
     if (!array) {
-        return [];
+        // An EMPTY JSON array is a readable answer meaning "I found nothing", and
+        // `_extract_json_array`'s pattern cannot represent it: `_BARE_ARRAY_SRC` requires
+        // at least one `{...}` object, so `[]` falls through to the no-match branch.
+        //
+        // Without this, a member answering correctly with `[]` would be classified
+        // `parse_failed` and trigger a re-ask — a PAID call for a perfectly good answer,
+        // and a `parse_empty_rate` inflated by the members who followed the schema most
+        // literally. Found by the step-2.1 test asserting `'[]' -> parsed`.
+        //
+        // Deliberately narrow: only a bare (optionally fenced) empty array, nothing else.
+        // Widening the extractor's own regex would change what
+        // `parse_findings_response` and `parse_scores_response` accept, which is a
+        // behaviour change this step did not ask for.
+        if (/(^|[\s`])\[\s*\](\s|`|$)/.test(text)) {
+            return { findings: [], outcome: 'parsed' };
+        }
+        return { findings: [], outcome: 'parse_failed' };
     }
     let parsed: unknown;
     try {
         parsed = JSON.parse(array);
     } catch {
-        // json.JSONDecodeError → []
-        return [];
+        return { findings: [], outcome: 'parse_failed' };
     }
     if (!Array.isArray(parsed)) {
-        return [];
+        return { findings: [], outcome: 'parse_failed' };
     }
+    return { findings: _collect_findings(parsed, source), outcome: 'parsed' };
+}
+
+export function parse_findings_response(
+    text: string,
+    opts: { source: string },
+): Finding[] {
+    return parse_findings_outcome(text, opts).findings;
+}
+
+/** Item-level collection. Items missing required keys are skipped — best-effort by design. */
+function _collect_findings(parsed: readonly unknown[], source: string): Finding[] {
     const out: Finding[] = [];
     for (const item of parsed) {
         if (!_isPlainObject(item)) {
