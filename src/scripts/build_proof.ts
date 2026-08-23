@@ -24,7 +24,11 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { REPO, LEDGER_REL, load_ledger, pointer_unresolved } from './check_claims.js';
-import { collect as collectEnforcement, summarise as summariseEnforcement } from './check_enforcement_coverage.js';
+import {
+    collect as collectEnforcement,
+    denominator_line as enforcementDenominatorLine,
+    summarise as summariseEnforcement,
+} from './check_enforcement_coverage.js';
 import { collectSkillGaps } from './check_skill_gaps.js';
 import { loadRows as loadComparisonRows } from './check_comparison.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
@@ -414,6 +418,13 @@ function render(): string {
                 `${s.blocking} blocking (${s.blocking_pct}%) · ${s.observer} observer · ` +
                 `${s.local_only} local-only · ${s.undeclared} undeclared (no \`enforced_by\` yet).`,
         );
+        L.push('');
+        // The denominator, WITH the frame that produced it. Until 2026-08-23 the
+        // tree published five figures for this one property because every one was
+        // quoted without saying which population it was taken over. This line is
+        // the single sanctioned statement of it, and `check_enforcement_denominator`
+        // reds when a published doc restates a count instead of citing this block.
+        L.push(`\`${enforcementDenominatorLine(s.frames)}\``);
         L.push('');
         L.push('| Rule | Effective level | Declared backstop(s) |');
         L.push('|---|---|---|');

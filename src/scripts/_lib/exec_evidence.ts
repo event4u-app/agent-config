@@ -53,6 +53,13 @@ export const ALLOWLIST_PREFIXES: readonly (readonly string[])[] = [
     // under `--check`; same deterministic, model-free class as its neighbours.
     ['update_counts'],
     ['check_enforcement_coverage'],
+    // The denominator half of the same property. `check_enforcement_coverage`
+    // PUBLISHES the number; this one refuses a second, hand-written copy of it
+    // in a published doc — so its exit code IS the verdict for
+    // `claim:enforcement-undeclared-denominator`, not merely evidence that some
+    // report exists. Read-only, deterministic, model-free, and already run in
+    // CI (`rule-backstops.yml`) for its own reasons.
+    ['check_enforcement_denominator'],
     ['check_token_regression'],
     ['lint_agent_security'],
     ['measure_lexical_ranking'],
