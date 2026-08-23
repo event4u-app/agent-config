@@ -119,7 +119,7 @@ import {
     _setdefault,
 } from './py_parity.js';
 
-import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
+import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block, deterministic_shuffle_indices } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
 import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
@@ -1449,15 +1449,37 @@ export function run_debate(
  */
 export class PeerReviewResult {
     responses: CouncilResponse[];
+    /**
+     * PER-REVIEWER label→source attribution — the authoritative mapping.
+     *
+     * Keyed by `provider:model`, because that is the identity `by_source` uses and the
+     * identity a quote in the artefact has to resolve against. Added by step 1.2 of
+     * `road-to-council-evidence-integrity`: each reviewer sees a DIFFERENT
+     * self-filtered subset, and `anonymize_responses` restarts its label counter per
+     * call, so `Response-A` means a different member for every reviewer. One map
+     * cannot express that.
+     */
+    label_to_source_by_reviewer: Map<string, Map<string, string>>;
+    /**
+     * Flat compatibility view — the LAST reviewer's mapping, kept only because
+     * `council_cli.ts:1480` serialises this field and `:1492` reads it back.
+     *
+     * It is wrong for any reviewer but the last, and it is retained rather than
+     * removed so the serialisation contract does not break in the same change that
+     * fixes the attribution. Read `label_to_source_by_reviewer` for anything that
+     * resolves a quote.
+     */
     label_to_source: Map<string, string>;
     persona_labels: Map<string, string>;
 
     constructor(args: {
         responses: CouncilResponse[];
+        label_to_source_by_reviewer?: Map<string, Map<string, string>>;
         label_to_source: Map<string, string>;
         persona_labels: Map<string, string>;
     }) {
         this.responses = args.responses;
+        this.label_to_source_by_reviewer = args.label_to_source_by_reviewer ?? new Map();
         this.label_to_source = args.label_to_source;
         this.persona_labels = args.persona_labels;
     }
@@ -1537,12 +1559,23 @@ export function run_peer_review(
 
     const persona_labels = new Map<string, string>(opts.persona_labels ?? []);
     const review_responses: CouncilResponse[] = [];
-    // ── final label_to_source map captured from the LAST member call
-    // so the renderer / JSON dump has the deterministic A/B mapping.
-    // Each member sees a different N-1 subset (self filtered), but the
-    // ordering of `by_source` stays stable, so the label assignment is
-    // deterministic per artefact run.
-    let last_label_to_source = new Map<string, string>();
+    // ── What is deterministic here, and what is NOT — corrected 2026-08-23 (step 1.3).
+    //
+    // DETERMINISTIC: the iteration order of `by_source`, and therefore the input order
+    // handed to `anonymize_responses`. Two runs over the same config produce the same
+    // per-reviewer mapping.
+    //
+    // NOT deterministic ACROSS REVIEWERS, and this is what the old comment got wrong by
+    // calling it "the deterministic A/B mapping": every reviewer receives a different
+    // self-filtered subset, and `anonymize_responses` restarts its label counter on each
+    // call (`consensus.ts:437`). So `Response-A` denotes a DIFFERENT member for every
+    // reviewer, by construction. A single map cannot express that, and the one that used
+    // to live here was overwritten per reviewer — so the artefact carried the last
+    // reviewer's mapping for every quote in it.
+    //
+    // `by_reviewer` is the authoritative structure. `last_label_to_source` survives only
+    // as the serialised compatibility field (`council_cli.ts:1480`/`:1492`).
+    const label_to_source_by_reviewer = new Map<string, Map<string, string>>();
 
     for (const reviewer of members) {
         const scorer = `${reviewer.name}:${reviewer.model}`;
@@ -1558,13 +1591,31 @@ export function run_peer_review(
         if (others_pairs.length === 0) {
             continue;
         }
-        const [anon_text, label_to_source] = anonymize_responses(others_pairs, {
+        // Step 1.5 — SEEDED order, not input order.
+        //
+        // Before this, `others_pairs` reached `anonymize_responses` in `by_source`
+        // iteration order, so which member became `Response-A` was a pure function of
+        // config order: identical across runs AND inferable from position. That is the
+        // leak `blind_review.ts:52-54` already argues against for its own path ("which
+        // pair becomes `Response-A` is not simply input order, so position alone leaks
+        // nothing") — the two paths contradicted each other in code until now.
+        //
+        // Seed = the original ask plus the deliberation bodies. Run-scoped and
+        // REPLAYABLE from the artefact's own contents; never `Math.random`, never
+        // `Date`, because a label order nobody can reproduce makes the de-anonymization
+        // block unverifiable. The reviewer is deliberately NOT in the seed: one shuffle
+        // per run, so a reader comparing two reviewers' critiques of the same member is
+        // comparing the same label.
+        const shuffle_seed = [opts.original_ask ?? '', ...[...by_source.values()].map((r) => r.text)].join('\0');
+        const order = deterministic_shuffle_indices(shuffle_seed, others_pairs.length);
+        const shuffled_pairs = order.map((i) => others_pairs[i]!);
+        const [anon_text, label_to_source] = anonymize_responses(shuffled_pairs, {
             persona_labels,
         });
         if (anon_text.size === 0) {
             continue;
         }
-        last_label_to_source = label_to_source;
+        label_to_source_by_reviewer.set(scorer, label_to_source);
         const question = new CouncilQuestion({
             mode: 'prompt',
             user_prompt: build_peer_review_user_prompt(anon_text),
@@ -1579,9 +1630,17 @@ export function run_peer_review(
         review_responses.push(...reviewed);
     }
 
+    // DERIVED after the loop, never assigned inside it (step 1.2's verify is a grep for
+    // exactly that). The compatibility field is the last reviewer's mapping, and deriving
+    // it here rather than accumulating it makes that explicit: nothing in the loop
+    // pretends to maintain a run-wide map.
+    const reviewer_maps = [...label_to_source_by_reviewer.values()];
+    const flat_compat = reviewer_maps.length === 0 ? new Map<string, string>() : reviewer_maps[reviewer_maps.length - 1]!;
+
     return new PeerReviewResult({
         responses: review_responses,
-        label_to_source: last_label_to_source,
+        label_to_source_by_reviewer,
+        label_to_source: flat_compat,
         persona_labels,
     });
 }
