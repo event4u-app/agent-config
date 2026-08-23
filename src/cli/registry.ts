@@ -45,6 +45,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
     { name: 'rtk:detect', disposition: 'native', synopsis: 'rtk (Rust Token Killer) presence + identity readout — contract: docs/contracts/rtk-detection.md.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
+    { name: 'ui:audit', disposition: 'native', synopsis: 'Inventory a UI tree into agents/runtime/state/ui-audit.json (Class A; the artefact ui-audit-gate reads).' },
+    { name: 'ui:render', disposition: 'native', synopsis: 'Headless capture at desktop / 375px / 320px into agents/runtime/state/render/ (Class A; no process survives).' },
     { name: 'config', disposition: 'native', synopsis: 'Open the configuration GUI (global by default; --project for the project surface).' },
     { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI (alias of config).' },
     { name: 'install', disposition: 'native', synopsis: 'Open the install wizard (UI server, lands on Step 1 / AI tools).' },
