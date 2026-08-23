@@ -868,6 +868,164 @@ describe('orchestrator — run_peer_review', () => {
         expect(r.responses.map((x) => x.text)).toEqual(['crit-A', 'crit-B']);
         expect(r.label_to_source.size).toBeGreaterThan(0);
     });
+
+    it("self filtered — each reviewer's Response-A maps to a DIFFERENT source", () => {
+        // THE RED TEST (step 1.1). `expect(size).toBeGreaterThan(0)` above cannot see a
+        // collision, which is exactly why the defect survived: three reviewers each
+        // receive a self-filtered subset, so `anonymize_responses` restarts its label
+        // counter and every reviewer's `Response-A` points at a different member — but
+        // the orchestrator kept ONE map and overwrote it per reviewer, so the artefact
+        // carried the LAST reviewer's mapping for every quote.
+        //
+        // The assertion is on the LABEL, not on a count: a per-reviewer structure whose
+        // `Response-A` entries collapse to one source is the defect, whatever its size.
+        const members = [
+            new Mock('anthropic', 'claude-sonnet-4-5', { text: 'crit-A' }),
+            new Mock('openai', 'gpt-4o', { text: 'crit-B' }),
+            new Mock('gemini', 'gemini-2', { text: 'crit-C' }),
+        ];
+        const delib = [
+            new CouncilResponse({ provider: 'anthropic', model: 'claude-sonnet-4-5', text: 'pos A' }),
+            new CouncilResponse({ provider: 'openai', model: 'gpt-4o', text: 'pos B' }),
+            new CouncilResponse({ provider: 'gemini', model: 'gemini-2', text: 'pos C' }),
+        ];
+        const r = run_peer_review(members, delib);
+
+        // Per-reviewer attribution exists at all.
+        expect(r.label_to_source_by_reviewer).toBeDefined();
+        expect(r.label_to_source_by_reviewer.size).toBe(3);
+
+        // And the `Response-A` a reviewer saw is NOT the same source for all three. With
+        // self-filtering over a stable order, no reviewer's own answer can be their
+        // Response-A, so at least two distinct sources must appear.
+        const firsts: string[] = [];
+        for (const [, m] of r.label_to_source_by_reviewer) {
+            const a = [...m.entries()].find(([label]) => label.endsWith('A'));
+            expect(a, 'every reviewer has a Response-A').toBeDefined();
+            firsts.push(a![1]);
+        }
+        expect(new Set(firsts).size).toBeGreaterThan(1);
+
+        // A reviewer never reviews itself — the property self-filtering exists for, and
+        // the one a last-wins map silently violated for two of the three.
+        for (const [reviewer, m] of r.label_to_source_by_reviewer) {
+            expect([...m.values()]).not.toContain(reviewer);
+        }
+    });
+});
+
+describe('orchestrator — run_peer_review label order', () => {
+    // Step 1.4. Two properties, asserted together because they live in the same nine
+    // lines and cannot be landed independently without a conflict:
+    //
+    //   (a) REPLAYABLE — identical inputs produce identical labels. The seed is the ask
+    //       plus the deliberation bodies, never Math.random and never Date, so a run is
+    //       reproducible from its own artefact.
+    //   (b) NOT INPUT ORDER — across distinct seeds, more than one permutation occurs.
+    //       Before 1.5 the label assignment was a pure function of config order, so a
+    //       reader could infer which member said what from position alone. That is the
+    //       leak `blind_review.ts:52-54` already argues against for its own path — the
+    //       two paths contradicted each other in code until this landed.
+    const mkMembers = (): Mock[] => [
+        new Mock('anthropic', 'claude-sonnet-4-5', { text: 'crit-A' }),
+        new Mock('openai', 'gpt-4o', { text: 'crit-B' }),
+        new Mock('gemini', 'gemini-2', { text: 'crit-C' }),
+        new Mock('xai', 'grok-2', { text: 'crit-D' }),
+    ];
+    const mkDelib = (salt: string): CouncilResponse[] => [
+        new CouncilResponse({ provider: 'anthropic', model: 'claude-sonnet-4-5', text: `pos A ${salt}` }),
+        new CouncilResponse({ provider: 'openai', model: 'gpt-4o', text: `pos B ${salt}` }),
+        new CouncilResponse({ provider: 'gemini', model: 'gemini-2', text: `pos C ${salt}` }),
+        new CouncilResponse({ provider: 'xai', model: 'grok-2', text: `pos D ${salt}` }),
+    ];
+    /** The label→source mapping of the FIRST reviewer, as a stable string. */
+    const perm = (salt: string, ask: string): string => {
+        const r = run_peer_review(mkMembers(), mkDelib(salt), { original_ask: ask });
+        const first = [...r.label_to_source_by_reviewer.values()][0]!;
+        return [...first.entries()].map(([l, src]) => `${l}=${src}`).join('|');
+    };
+
+    it('is replayable — identical inputs produce identical labels', () => {
+        expect(perm('x', 'the ask')).toBe(perm('x', 'the ask'));
+    });
+
+    it('is NOT input order — distinct seeds produce more than one permutation', () => {
+        // Eight distinct seeds, per the step. The assertion is on the SET of observed
+        // permutations, not on a count of runs: a count would pass against a constant.
+        const seen = new Set<string>();
+        for (let i = 0; i < 8; i += 1) {
+            seen.add(perm(`salt-${String(i)}`, `ask-${String(i)}`));
+        }
+        expect(
+            seen.size,
+            `only one permutation observed across 8 seeds: ${[...seen][0] ?? '(none)'}`,
+        ).toBeGreaterThan(1);
+    });
+});
+
+describe('orchestrator — extraction re-ask is bounded at ONE', () => {
+    // Step 2.2. The bound is the point: a re-ask is a PAID call, and an unbounded retry
+    // turns one unparseable answer into open-ended spend.
+    /** A member whose successive answers come from a scripted list. */
+    class Scripted extends ExternalAIClient {
+        calls = 0;
+        constructor(
+            name: string,
+            model: string,
+            private readonly script: readonly string[],
+        ) {
+            super();
+            this.name = name;
+            this.model = model;
+            this.billable = true;
+        }
+        ask(): CouncilResponse {
+            const text = this.script[Math.min(this.calls, this.script.length - 1)] ?? '';
+            this.calls += 1;
+            return new CouncilResponse({ provider: this.name, model: this.model, text });
+        }
+    }
+
+    const delib = (p: string, m: string): CouncilResponse =>
+        new CouncilResponse({ provider: p, model: m, text: 'a deliberation body' });
+
+    it('unparseable then valid → ONE extra call, outcome parsed-after-reask', () => {
+        const m = new Scripted('anthropic', 'c', [
+            'I will not answer in JSON.',
+            '[{"id":"f1","text":"a real finding"}]',
+        ]);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        // 1 extraction + 1 re-ask, and then the scoring pass. What is bounded is the
+        // RE-ASK, so assert the outcome and that the re-ask happened exactly once by
+        // checking the recorded outcome rather than a raw call count that scoring inflates.
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-after-reask');
+        expect(r.findings.map((f) => f.id)).toEqual(['f1']);
+    });
+
+    it('unparseable twice → outcome parse_failed, and NOT a second re-ask', () => {
+        const m = new Scripted('anthropic', 'c', [
+            'still prose',
+            'more prose, no JSON here either',
+            '[{"id":"never","text":"reached"}]',
+        ]);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parse_failed');
+        // The third scripted answer is valid. If the loop re-asked more than once it
+        // would have reached it and produced a finding — so an empty finding set is the
+        // assertion that the bound holds, and it fails loudly if the bound is removed.
+        expect(r.findings).toEqual([]);
+    });
+
+    it('an EMPTY answer is not re-asked — a second silence buys nothing', () => {
+        const m = new Scripted('anthropic', 'c', ['', '[{"id":"f9","text":"x"}]']);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        // The transport-level guard skips an empty deliberation before extraction, so the
+        // member is never asked and records no outcome at all. Asserted rather than
+        // assumed, because "empty is not re-asked" and "empty is not reached" are
+        // different reasons for the same observation.
+        expect(r.parse_outcomes.get('anthropic:c')).not.toBe('parsed-after-reask');
+        expect(r.findings).toEqual([]);
+    });
 });
 
 describe('orchestrator — run_consensus_scoring', () => {

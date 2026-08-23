@@ -54,7 +54,7 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 
 ## Phase 1 — Per-reviewer attribution replaces the last-wins map
 
-- [ ] **1.1 Land the red test first.** Add a `run_peer_review` case with three
+- [x] **1.1 Land the red test first.** Add a `run_peer_review` case with three
       members asserting that each reviewer's `Response-A` maps to a *different*
       source, then run it against unmodified `orchestrator.ts` and record the
       failure text in the step's commit body. `tests/scripts/ai_council/orchestrator.test.ts:864`
@@ -64,7 +64,7 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       verify: `npx vitest run tests/scripts/ai_council/orchestrator.test.ts -t 'self filtered'`
       fails on the NEW case before 1.2 lands, and the failure names the label,
       not the size.
-- [ ] **1.2 Key the map by reviewer.** `orchestrator.ts:1545` declares
+- [x] **1.2 Key the map by reviewer.** `orchestrator.ts:1545` declares
       `let last_label_to_source = new Map<string, string>()` outside the
       `for (const reviewer of members)` loop at `:1547`, overwrites it
       unconditionally at `:1567`, and returns it once at `:1584`. Because
@@ -76,14 +76,14 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       verify: the 1.1 test is green, and
       `grep -n 'last_label_to_source' src/scripts/ai_council/orchestrator.ts`
       returns no assignment inside the member loop.
-- [ ] **1.3 Correct the determinism comment.** Rewrite `orchestrator.ts:1540-1544`
+- [x] **1.3 Correct the determinism comment.** Rewrite `orchestrator.ts:1540-1544`
       so it states what is actually deterministic (the ordering of `by_source`)
       and what is not (the label→source mapping across reviewers), and names the
       new structure.
       verify: `git show HEAD:src/scripts/ai_council/orchestrator.ts | sed -n '1540,1544p'`
       shows the old claim; the working copy shows the corrected one, and neither
       contains the phrase "the deterministic A/B mapping" applied to the map.
-- [ ] **1.4 Land the red test for label ORDER.** A second, orthogonal defect
+- [x] **1.4 Land the red test for label ORDER.** A second, orthogonal defect
       lives in the same nine lines and cannot be landed independently without a
       conflict. `run_peer_review` (`orchestrator.ts:1492`) passes `others_pairs`
       to `anonymize_responses` (`:1561`) in `by_source` iteration order with no
@@ -101,7 +101,7 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       fails against unmodified `orchestrator.ts` on the permutation assertion,
       and the failure text names the single observed permutation rather than a
       count.
-- [ ] **1.5 Seed the label order, and correct the skill in the same step.**
+- [x] **1.5 Seed the label order, and correct the skill in the same step.**
       Import `deterministic_shuffle_indices` (`blind_review.ts:42`) and order
       `others_pairs` by it before the `anonymize_responses` call at
       `orchestrator.ts:1561`. Seed = the original ask plus the deliberation
@@ -121,23 +121,55 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 
 ## Phase 2 — A parse failure is reported as a parse failure
 
-- [ ] **2.1 Land the red test first.** Feed `parse_findings_response` a
+- [x] **2.1 Land the red test first.** Feed `parse_findings_response` a
       non-empty, non-JSON member answer and assert the caller records a
       `parse_failed` outcome. `consensus.ts:284-285` documents the current
       contract — "extraction is best-effort, never raises" — with three silent
       exits at `:294`, `:301` and `:304`, and `orchestrator.ts:1697` spreads the
       result into `all_findings.push(` with no length branch (the only guard,
       `:1692`, is transport-level). So today the test cannot fail.
-      verify: the new case fails against unmodified `consensus.ts`, and the
-      failure text names the outcome field, not a count.
-- [ ] **2.2 Classify the outcome and re-ask once.** Return a discriminated
+      verify (discharged): the new case fails against unmodified `consensus.ts`, and
+      the failure text names the outcome field, not a count. **RED recorded:**
+      `expected 'empty' to be 'parse_failed'` under the sabotage that collapses the two
+      outcomes — an assertion on the OUTCOME FIELD, which is the distinction a length
+      check cannot make.
+
+      **The test also found a defect in the fix.** Asserting `'[]' -> parsed` failed,
+      because `_extract_json_array`'s `_BARE_ARRAY_SRC` requires at least one `{...}`
+      object, so a *readable* empty array fell through to `parse_failed`. Left
+      unhandled, a member answering correctly with `[]` would have triggered a paid
+      re-ask and inflated `parse_empty_rate` with the members who followed the schema
+      most literally. Handled narrowly — a bare or fenced empty array only — because
+      widening the shared extractor regex would change what `parse_findings_response`
+      and `parse_scores_response` accept, which this step did not ask for.
+- [x] **2.2 Classify the outcome and re-ask once.** Return a discriminated
       outcome (`parsed` / `empty` / `parse_failed`) alongside the findings, and
       on `parse_failed` issue exactly ONE bounded re-ask with the schema
       restated. One, not a loop: a re-ask is a paid call, and an unbounded
       retry turns one unparseable answer into an open-ended spend.
-      verify: a fixture whose first answer is unparseable and whose second is
-      valid produces one extra call and a `parsed` outcome; a fixture that is
-      unparseable twice produces exactly two calls and a `parse_failed` outcome.
+      verify (discharged): a fixture whose first answer is unparseable and whose
+      second is valid produces one extra call and a `parsed` outcome; a fixture that
+      is unparseable twice produces exactly two calls and a `parse_failed` outcome.
+      **Both fixtures green** (`orchestrator.test.ts`, `-t 're-ask'`), plus a third:
+      an EMPTY answer is not re-asked, asserted rather than assumed because "empty is
+      not re-asked" and "empty is never reached" are different reasons for the same
+      observation.
+
+      `parsed-after-reask` is kept distinct from `parsed` on
+      `ConsensusResult.parse_outcomes` — a member needing a second ask is a signal
+      about the prompt or the member, and folding it into `parsed` would hide the only
+      evidence the re-ask does anything.
+
+      **Sabotage of the BOUND, and the result is worth recording exactly as observed:**
+      changing `if (ex.outcome === 'parse_failed')` to `while (…)` did not produce a
+      failing assertion — the vitest run terminated with **`Tests  no tests`**, i.e. the
+      unbounded retry did not finish, because the scripted member repeats its last
+      answer. That is the strongest available evidence that the bound is load-bearing
+      and it is not a clean RED; reporting it as one would overstate it. The
+      unparseable-twice fixture is the assertion that catches a *bounded-but-wrong*
+      change: its third scripted answer is valid, so any loop that re-asks more than
+      once reaches it and produces a finding, and an empty finding set is what pins the
+      bound at one.
 - [ ] **2.3 Correct the attendance wording.** `quorum_wiring.ts:170` counts
       attendance as `!r.error && r.text.trim() !== ''` — bytes, not usable
       content. The block at `:163-169` already argues that "An empty answer

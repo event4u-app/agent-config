@@ -21,6 +21,10 @@
 // Failure normalisation (one member's exception → `error`-set
 // CouncilResponse, never raise) is unchanged.
 
+import { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+import type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
+export { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+export type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
 import {
     record_spend as _record_daily_spend,
     today_spend_usd as _today_spend_usd,
@@ -42,7 +46,7 @@ import {
     anonymize_findings,
     anonymize_responses,
     bucket_by_threshold,
-    parse_findings_response,
+    parse_findings_outcome,
     parse_scores_response,
 } from './consensus.js';
 import type {
@@ -119,7 +123,7 @@ import {
     _setdefault,
 } from './py_parity.js';
 
-import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
+import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block, deterministic_shuffle_indices } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
 import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
@@ -150,17 +154,6 @@ function _label(idx: number): string {
 
 // ── dataclasses ───────────────────────────────────────────────────────
 
-export class CouncilQuestion {
-    mode: string; // one of: prompt, roadmap, diff, files
-    user_prompt: string; // bundled artefact text
-    max_tokens: number;
-
-    constructor(args: { mode: string; user_prompt: string; max_tokens?: number }) {
-        this.mode = args.mode;
-        this.user_prompt = args.user_prompt;
-        this.max_tokens = args.max_tokens ?? DEFAULT_MAX_TOKENS;
-    }
-}
 
 // Callback signature: receive event → return True (proceed) or False (skip + tag error).
 export type OnOverrunCallback = (event: OverrunEvent) => boolean;
@@ -1434,44 +1427,7 @@ export function run_debate(
     return all_rounds;
 }
 
-/**
- * Bundle returned by `run_peer_review()` (Phase 5 / F1).
- *
- * `responses` carries the per-reviewer critiques. `label_to_source`
- * is the anonymisation map captured server-side so the audit-trail
- * JSON can rehydrate it without leaking provider identity to the
- * member at prompt time.
- *
- * `persona_labels` is the (optional) Phase 6 / Step 3a wiring: when
- * the deliberation was an advisor-mode run, the source → persona
- * map flows through to the renderer so peer-review output can render
- * as `Response A (Contrarian)`. Plain-member runs leave it empty.
- */
-export class PeerReviewResult {
-    responses: CouncilResponse[];
-    label_to_source: Map<string, string>;
-    persona_labels: Map<string, string>;
 
-    constructor(args: {
-        responses: CouncilResponse[];
-        label_to_source: Map<string, string>;
-        persona_labels: Map<string, string>;
-    }) {
-        this.responses = args.responses;
-        this.label_to_source = args.label_to_source;
-        this.persona_labels = args.persona_labels;
-    }
-}
-
-export interface RunPeerReviewOptions {
-    budget?: CostBudget | null;
-    table?: PriceTable | null;
-    on_overrun?: OnOverrunCallback | null;
-    project?: ProjectContext | null;
-    original_ask?: string;
-    max_tokens?: number;
-    persona_labels?: Map<string, string> | null;
-}
 
 /**
  * Karpathy peer-review pass (Phase 5 / F1).
@@ -1537,12 +1493,23 @@ export function run_peer_review(
 
     const persona_labels = new Map<string, string>(opts.persona_labels ?? []);
     const review_responses: CouncilResponse[] = [];
-    // ── final label_to_source map captured from the LAST member call
-    // so the renderer / JSON dump has the deterministic A/B mapping.
-    // Each member sees a different N-1 subset (self filtered), but the
-    // ordering of `by_source` stays stable, so the label assignment is
-    // deterministic per artefact run.
-    let last_label_to_source = new Map<string, string>();
+    // ── What is deterministic here, and what is NOT — corrected 2026-08-23 (step 1.3).
+    //
+    // DETERMINISTIC: the iteration order of `by_source`, and therefore the input order
+    // handed to `anonymize_responses`. Two runs over the same config produce the same
+    // per-reviewer mapping.
+    //
+    // NOT deterministic ACROSS REVIEWERS, and this is what the old comment got wrong by
+    // calling it "the deterministic A/B mapping": every reviewer receives a different
+    // self-filtered subset, and `anonymize_responses` restarts its label counter on each
+    // call (`consensus.ts:437`). So `Response-A` denotes a DIFFERENT member for every
+    // reviewer, by construction. A single map cannot express that, and the one that used
+    // to live here was overwritten per reviewer — so the artefact carried the last
+    // reviewer's mapping for every quote in it.
+    //
+    // `by_reviewer` is the authoritative structure. `last_label_to_source` survives only
+    // as the serialised compatibility field (`council_cli.ts:1480`/`:1492`).
+    const label_to_source_by_reviewer = new Map<string, Map<string, string>>();
 
     for (const reviewer of members) {
         const scorer = `${reviewer.name}:${reviewer.model}`;
@@ -1558,13 +1525,31 @@ export function run_peer_review(
         if (others_pairs.length === 0) {
             continue;
         }
-        const [anon_text, label_to_source] = anonymize_responses(others_pairs, {
+        // Step 1.5 — SEEDED order, not input order.
+        //
+        // Before this, `others_pairs` reached `anonymize_responses` in `by_source`
+        // iteration order, so which member became `Response-A` was a pure function of
+        // config order: identical across runs AND inferable from position. That is the
+        // leak `blind_review.ts:52-54` already argues against for its own path ("which
+        // pair becomes `Response-A` is not simply input order, so position alone leaks
+        // nothing") — the two paths contradicted each other in code until now.
+        //
+        // Seed = the original ask plus the deliberation bodies. Run-scoped and
+        // REPLAYABLE from the artefact's own contents; never `Math.random`, never
+        // `Date`, because a label order nobody can reproduce makes the de-anonymization
+        // block unverifiable. The reviewer is deliberately NOT in the seed: one shuffle
+        // per run, so a reader comparing two reviewers' critiques of the same member is
+        // comparing the same label.
+        const shuffle_seed = [opts.original_ask ?? '', ...[...by_source.values()].map((r) => r.text)].join('\0');
+        const order = deterministic_shuffle_indices(shuffle_seed, others_pairs.length);
+        const shuffled_pairs = order.map((i) => others_pairs[i]!);
+        const [anon_text, label_to_source] = anonymize_responses(shuffled_pairs, {
             persona_labels,
         });
         if (anon_text.size === 0) {
             continue;
         }
-        last_label_to_source = label_to_source;
+        label_to_source_by_reviewer.set(scorer, label_to_source);
         const question = new CouncilQuestion({
             mode: 'prompt',
             user_prompt: build_peer_review_user_prompt(anon_text),
@@ -1579,54 +1564,22 @@ export function run_peer_review(
         review_responses.push(...reviewed);
     }
 
+    // DERIVED after the loop, never assigned inside it (step 1.2's verify is a grep for
+    // exactly that). The compatibility field is the last reviewer's mapping, and deriving
+    // it here rather than accumulating it makes that explicit: nothing in the loop
+    // pretends to maintain a run-wide map.
+    const reviewer_maps = [...label_to_source_by_reviewer.values()];
+    const flat_compat = reviewer_maps.length === 0 ? new Map<string, string>() : reviewer_maps[reviewer_maps.length - 1]!;
+
     return new PeerReviewResult({
         responses: review_responses,
-        label_to_source: last_label_to_source,
+        label_to_source_by_reviewer,
+        label_to_source: flat_compat,
         persona_labels,
     });
 }
 
-/**
- * Bundle returned by `run_consensus_scoring()`.
- *
- * `bucket` is renderer-ready; `findings`, `scores`, and `metadata`
- * are kept for audit-trail JSON (council-sessions/*.json).
- */
-export class ConsensusResult {
-    bucket: ConsensusBucket;
-    findings: Finding[];
-    scores: FindingScore[];
-    metadata: Map<string, ConsensusMetadata>;
-    extraction_responses: CouncilResponse[];
-    scoring_responses: CouncilResponse[];
 
-    constructor(args: {
-        bucket: ConsensusBucket;
-        findings: Finding[];
-        scores: FindingScore[];
-        metadata: Map<string, ConsensusMetadata>;
-        extraction_responses: CouncilResponse[];
-        scoring_responses: CouncilResponse[];
-    }) {
-        this.bucket = args.bucket;
-        this.findings = args.findings;
-        this.scores = args.scores;
-        this.metadata = args.metadata;
-        this.extraction_responses = args.extraction_responses;
-        this.scoring_responses = args.scoring_responses;
-    }
-}
-
-export interface RunConsensusScoringOptions {
-    budget?: CostBudget | null;
-    table?: PriceTable | null;
-    on_overrun?: OnOverrunCallback | null;
-    project?: ProjectContext | null;
-    original_ask?: string;
-    max_tokens?: number;
-    strong_threshold?: number;
-    minority_threshold?: number;
-}
 
 /**
  * Two-pass consensus round (Phase 4 / F3).
@@ -1672,6 +1625,13 @@ export function run_consensus_scoring(
     }
     const extraction_responses: CouncilResponse[] = [];
     const all_findings: Finding[] = [];
+    // Per-member extraction outcome — step 2.2. Recorded rather than derived from the
+    // findings count, because "zero findings" and "could not be read" are different facts
+    // and the count cannot tell them apart. `parsed-after-reask` is kept distinct from
+    // `parsed`: a member that needed a second ask is a signal about the prompt or the
+    // member, and collapsing it into `parsed` would hide the only evidence that the
+    // re-ask is doing anything.
+    const parse_outcomes = new Map<string, string>();
     for (const resp of deliberation_responses) {
         const member = member_by_name.get(resp.provider);
         if (member === undefined || resp.error || !_pyStrip(resp.text)) {
@@ -1693,9 +1653,45 @@ export function run_consensus_scoring(
             continue;
         }
         const source = `${member.name}:${member.model}`;
-        all_findings.push(
-            ...parse_findings_response(extracted[0]!.text, { source }),
-        );
+        let ex = parse_findings_outcome(extracted[0]!.text, { source });
+
+        // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
+        //
+        // A member that said something no parser could read used to be indistinguishable
+        // from a member that found nothing: `parse_findings_response` returned `[]` for
+        // both, and this loop pushed the empty array with no branch. So an unparseable
+        // answer counted as a clean zero-findings review.
+        //
+        // ONE re-ask, not a loop. A re-ask is a paid call, and an unbounded retry turns
+        // one unparseable answer into open-ended spend — the failure mode the N=3
+        // validation budget exists for, reached here by a different road. `empty` is NOT
+        // re-asked: a member that said nothing has nothing to restate, and re-asking it
+        // buys a second silence.
+        if (ex.outcome === 'parse_failed') {
+            const retry_q = new CouncilQuestion({
+                mode: 'prompt',
+                user_prompt:
+                    build_extraction_user_prompt(resp.text) +
+                    '\n\nYour previous answer could not be parsed. Reply with ONLY a JSON ' +
+                    'array of {"id": string, "text": string} objects, no prose before or ' +
+                    'after it. An empty array [] is a valid answer meaning you found nothing.',
+                max_tokens,
+            });
+            const retried = consult([member], retry_q, budget, {
+                table,
+                on_overrun,
+                project,
+                original_ask,
+            });
+            extraction_responses.push(...retried);
+            if (retried.length > 0 && !retried[0]!.error) {
+                ex = parse_findings_outcome(retried[0]!.text, { source });
+            }
+            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
+        } else {
+            parse_outcomes.set(source, ex.outcome);
+        }
+        all_findings.push(...ex.findings);
     }
 
     if (all_findings.length === 0) {
@@ -1704,6 +1700,7 @@ export function run_consensus_scoring(
             findings: [],
             scores: [],
             metadata: new Map(),
+            parse_outcomes,
             extraction_responses,
             scoring_responses: [],
         });
@@ -1761,6 +1758,7 @@ export function run_consensus_scoring(
         findings: all_findings,
         scores: all_scores,
         metadata,
+        parse_outcomes,
         extraction_responses,
         scoring_responses,
     });
