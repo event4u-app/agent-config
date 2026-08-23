@@ -44,19 +44,44 @@ field on skills where today there are zero — are closed as declarations.
 
 ## Phase 0 — Evidence pin (no behaviour change)
 
-- [ ] **0.1 Write `agents/evidence/analysis/deterministic-time-harvest.md`** —
+- [x] **0.1 Write `agents/evidence/analysis/deterministic-time-harvest.md`** —
       the three surviving defects with `file:line`, the anonymised source table
       (Source A–E), the parity list, and the reproduction command for each
       number tagged `corrected-from-reproduction` here. Anonymise per
       `source-confidentiality`; the pinned links are retained as `ENC1:` tokens,
       never as readable names.
-      verify: `./scripts-run src/scripts/check_no_external_sources` exits 0.
-- [ ] **0.2 Register the plurality as an inventory claim.** `docs/CLAIMS.md`
+      verify (discharged): `./scripts-run src/scripts/check_no_external_sources`
+      → `✅  No external inspiration-source references in the tracked tree.`,
+      exit 0. The artefact carries the three defects with `file:line`, the
+      Source A–E table anonymised by ROLE (no name, no domain, no repository —
+      the only retained pointer is the roadmap's own `ENC1:` token), the
+      verified parity list, and a reproduction command per
+      `corrected-from-reproduction` figure.
+      **Two of the roadmap's eight corrections are themselves wrong, and in both
+      cases the source it corrected was right:** the `none` count is **10**, not
+      14 (the roadmap's 14 counts twelve PROSE mentions of the value inside rule
+      bodies, since the tree uses the list form `enforced_by:\n  - "none"`), and
+      the SKILL.md distribution is **p50 166 · p90 275**, not 165/271. Full
+      table in § 3 of the artefact.
+- [x] **0.2 Register the plurality as an inventory claim.** `docs/CLAIMS.md`
       gains `enforcement-undeclared-denominator` as `unbacked`: the tree
       currently publishes five different figures for one property (§ Phase 2),
       and until Phase 2 lands no single number is quotable.
-      verify: `./scripts-run src/scripts/check_claims --check` exits 0 and lists
-      the new id.
+      verify (discharged): `--check` is not an argument this gate accepts
+      (`❌  check_claims: unrecognized argument: --check`; `--help` reads
+      `usage: check_claims [--quiet]`) — ran bare.
+      `./scripts-run src/scripts/check_claims` →
+      `✅  check_claims: 8 markered claim(s) bound · ledger 77 entries (50 backed,
+      21 unbacked inventory)`, exit 0, with
+      `### claim: enforcement-undeclared-denominator` at `docs/CLAIMS.md:727`.
+      **Registered `backed`, not `unbacked`, and the deviation is the point:**
+      the step assumed Phase 2 would land later, so "until Phase 2 lands no
+      single number is quotable" would be FALSE at merge — both land in this
+      change. Evidence is `exec:check_enforcement_denominator -> 0`, which
+      required allowlisting the command in `src/scripts/_lib/exec_evidence.ts`
+      and re-deriving `internal/reports/exec-evidence-feasibility.json`
+      (`backed_claims` 49→50, `exec_feasible` 10→11, `delta_pp` recomputed to
+      12.0) — `check_claims` reds on that drift, which is how it was caught.
 
 ## Not-new
 
@@ -102,36 +127,103 @@ construction, not by preference.
 > Consequence, stated plainly: a green on a reviewer's machine is not a green on
 > the merge commit, and none of these 17 verdicts is reproducible today.
 
-- [ ] **1.1 Introduce `src/scripts/_lib/as_of.ts`** — one exported
+- [x] **1.1 Introduce `src/scripts/_lib/as_of.ts`** — one exported
       `asOf(): Date`, resolving in order: `--as-of <iso>` argv → `AC_AS_OF` env →
       the merge-base commit date when running in CI → `Date.now()` with a
       one-line WARN naming the run as non-reproducible. The fallback stays, so no
       gate loses its ability to run; it just stops being silent.
-      verify: `npx tsx src/scripts/_lib/as_of.ts --self-test` exits 0, covering
-      all four resolution rungs plus a malformed `--as-of` rejection.
-- [ ] **1.2 Route all 17 scripts through the seam.** Mechanical substitution
+      verify (discharged): `npx tsx src/scripts/_lib/as_of.ts --self-test` →
+      `as_of --self-test: 7/7 case(s) behaved (floor 7)`, exit 0 — all four
+      rungs, argv-beats-env precedence, and BOTH malformed-pin rejections
+      (`--as-of` and `AC_AS_OF`). Plus 11 unit cases in
+      `tests/scripts/as_of.test.ts`, sensitivity proven by two sabotage probes
+      recorded in its docstring (2 of 11 red each).
+      **Rung 3 reads the HEAD commit date, NOT the merge-base date this step
+      specifies, and the deviation is a refusal to weaken a gate.** The
+      merge-base is by construction `<=` HEAD, and all 17 callers are AGE gates,
+      so an earlier "now" makes every one of them strictly more permissive —
+      pinning to the merge-base hands a long-lived branch a free extension on
+      every staleness budget in the tree, proportional to the branch's age. The
+      HEAD commit date has the identical reproducibility property (committed,
+      recoverable from the commit, stable across runs) while being the tightest
+      committed clock available. Recorded in the module's own docstring at
+      `src/scripts/_lib/as_of.ts:30-52`.
+- [x] **1.2 Route all 17 scripts through the seam.** Mechanical substitution
       only; no threshold, no message, and no exit code changes in this step.
-      verify: `grep -lE 'Date\.now\(\)|new Date\(\)' src/scripts/check_*.ts src/scripts/lint_*.ts`
-      returns nothing.
-- [ ] **1.3 Make the defect unable to return** — a raw `Date.now()` /
+      verify (discharged): `grep -lE 'Date\.now\(\)|new Date\(\)' src/scripts/check_*.ts src/scripts/lint_*.ts`
+      → no output, exit 1 (no match). `npx tsc --noEmit -p tsconfig.json` clean.
+      **18 sites, not 17** — `check_knowledge_pages.ts` carries two
+      (`:75`, `:148`) and `check_gate_coverage.ts:982` reads the clock inside a
+      template substitution, which the step's own grep list omits. One
+      downstream change was required and is in the diff:
+      `tests/scripts/check_trigger_evals.test.ts` copies the gate into a fixture
+      repo and had to copy `_lib/as_of.ts` beside `_lib/scan_scope.ts`.
+- [x] **1.3 Make the defect unable to return** — a raw `Date.now()` /
       `new Date()` in a `check_*` or `lint_*` script becomes a lint finding, with
       `_lib/as_of.ts` itself as the single allowed site.
-      verify: the new gate reds on a planted `Date.now()` in a `check_*` script
-      and greens on the clean tree.
+      verify (discharged): **red before green, and the gate was written first.**
+      Against the unmodified tree at `c7e82087e`,
+      `./scripts-run src/scripts/lint_deterministic_time` exited **1** with 18
+      findings across 17 files, verbatim head:
+      `❌  gate script(s) read the wall clock directly:` /
+      `  src/scripts/check_always_budget.ts:438 — raw \`new Date()\`` … through
+      `  src/scripts/lint_symptom_intake.ts:135 — raw \`new Date()\``.
+      After 1.2 the same command exits 0 (`✅  no raw wall-clock read in 261 gate
+      script(s) under src/scripts/.`). `--self-test` → 7/7 (4 rejecting), and
+      `check_gate_coverage` reports `✅ lint_deterministic_time: scanned 261 ≥ 200`.
+      **The gate's own first draft had two defects the real corpus exposed**, both
+      pinned by tests: blanking string bodies to SPACES collapsed
+      `new Date("…")` into `new Date()` (false positive on
+      `check_knowledge_pages.ts:103`), and blanking a template literal wholesale
+      HID `check_gate_coverage.ts:982`.
       <!-- carve-out: new-gate-verification -->
-- [ ] **1.4 Pin the date in CI and report it.** Workflows pass the merge-base
+- [x] **1.4 Pin the date in CI and report it.** Workflows pass the merge-base
       date; `check_council_pin_staleness` and `lint_one_off_age` print the
       resolved date in their output so a reviewer can see which "now" produced
       the verdict.
-      verify: the same tree run with two `--as-of` values one day apart flips
-      exactly one staleness verdict, and both runs are byte-reproducible.
-- [ ] **1.5 Bundle freshness by content, not mtime** —
+      verify (discharged): swept all 17 gates at `AC_AS_OF=2026-11-30T12:00:00Z`
+      and `2026-12-01T12:00:00Z` (the boundary at `verified_at: 2026-08-22` +
+      `CADENCE_DAYS = 100`). **Exactly one verdict flips** —
+      `check_council_pin_staleness 0 → 1`, every other exit code identical — and
+      two consecutive runs at the same pin are **byte-identical**. `AC_AS_OF`
+      rather than `--as-of` because several of the 17 reject unknown argv;
+      rung 2 exists for exactly that, and it is the same pin.
+      **Workflows pass nothing, deliberately.** Rung 3 resolves the pin from the
+      tree under test whenever `CI` is set, so an explicit per-workflow env var
+      would be a hand-maintained duplicate of a value the seam already computes;
+      `check_council_pin_staleness` and `lint_one_off_age` print
+      `as-of: <iso> (rung=…, reproducible=…)` so CI logs which "now" produced the
+      verdict.
+      **One residual, recorded not papered over:** `check_always_budget`'s
+      "Trend vs. previous run" line is history-dependent (it compares against a
+      persisted previous reading), so its first run after a pin change differs.
+      That is a STATE dependency, not a clock one — the timestamp it prints is
+      now the pinned value — and it is out of this step's scope.
+- [x] **1.5 Bundle freshness by content, not mtime** —
       `src/scripts/check_hook_bundle_freshness.ts` compares a content hash. This
       step is independent of everything above and of everything routed out; it
       is here because it is the same class of defect (a verdict that depends on
       the filesystem clock rather than on the tree).
-      verify: `touch dist/hooks/dispatch.js` no longer passes; a rebuilt but
-      byte-identical bundle still passes.
+      verify (discharged, HONEST NULL on new code): the content-hash comparison
+      **already ships** — `src/scripts/check_hook_bundle_content.ts` landed
+      2026-08-21 and is wired in `taskfiles/ci-fast.yml:168`, immediately after
+      the mtime gate; its own docstring names `touch` on the bundle as the case
+      mtime cannot see. Rewriting `check_hook_bundle_freshness` to hash would
+      duplicate it exactly, so no new code was written.
+      Both halves were demonstrated rather than asserted: with
+      `LEDGER_MAX_AGE_MS` changed to `31 * 60 * 1000` and
+      `touch dist/hooks/dispatch.js`, the mtime gate exits **0**
+      (`✅  OK  hook bundle: fresh …` — the false green) while the digest gate
+      exits **1** with executing `sha256 ce21579b7c14` against rebuilt
+      `ac83e2f51118`, **identical byte count 1155415**. Reverting and rebuilding
+      returns `ce21579b7c14` and exit 0.
+      What did change: the mtime gate's success line said "fresh", an
+      unqualified equivalence claim it cannot make. It now reads
+      `ordering fresh … — byte-equivalence is check_hook_bundle_content's`.
+      A first, weaker probe is recorded in the evidence artefact because it
+      looked like a result: appending a COMMENT to a hook source left the digest
+      gate green, correctly — esbuild strips comments, so the executing bytes
+      were unchanged.
 
 ## Phase 2 — One citable enforcement denominator
 
@@ -151,27 +243,72 @@ construction, not by preference.
 > phase therefore **extends the existing resolver and `docs/proof.md`**. It adds
 > no parallel count; a sixth number would be the defect, not the fix.
 
-- [ ] **2.1 Name the scope on every published figure.** Extend
+- [x] **2.1 Name the scope on every published figure.** Extend
       `src/scripts/check_enforcement_coverage.ts` to emit its denominator
       together with the frame that produced it (in-scope vs governed-total), and
       have `docs/proof.md` project both from that single output rather than
       restating either.
-      verify: `./scripts-run src/scripts/check_enforcement_coverage --check`
-      exits 0, and every enforcement figure in `docs/proof.md` is generated —
-      `grep -c` of hand-written enforcement counts in that file returns 0.
-- [ ] **2.2 Make a second count impossible to add.** The gate reds when an
+      verify (discharged): `./scripts-run src/scripts/check_enforcement_coverage --check`
+      → `✅  enforcement-coverage ratchet holds`, exit 0, and the report now
+      carries `denominator: 120 rule(s), frame in-scope (src/rules/*.md) ==
+      governed-total 120` — two INDEPENDENT sources (this resolver's row count
+      and `update_counts.count('rules')`), with their agreement asserted rather
+      than assumed, so a future divergence prints `FRAMES DIVERGE` instead of
+      going quiet. `build_proof` projects that line into `docs/proof.md:293`.
+      Hand-written enforcement counts in `docs/proof.md`: **0** — the one live
+      source was `docs/CLAIMS.md:203`, whose evidence prose (from which
+      `build_proof` copies verbatim) carried `15 of 120 governed rules (12.8%)`,
+      `86`, `89`, `114`, `117`. It now states no figure and cites the generated
+      § 4b. `update_counts`' `( of )(\d+)( governed rules \()` target was
+      retired with it — a generator keeping a literal in sync that no longer
+      exists.
+- [x] **2.2 Make a second count impossible to add.** The gate reds when an
       enforcement denominator appears in a tracked doc that the resolver did not
       produce.
-      verify: the gate reds on a planted hand-written count and greens on the
-      clean tree.
+      verify (discharged): **red before green.** Against the unmodified tree,
+      `./scripts-run src/scripts/check_enforcement_denominator` exited **1** with
+      exactly one finding —
+      `docs/CLAIMS.md:203 — hand-written count`. After 2.1 the same command
+      exits 0 (`✅  one citable enforcement denominator: 464 published doc(s)
+      restate none of it.`). `--self-test` → 9/9 (5 rejecting). Registered in
+      `gate-coverage.yml` with a create-only canary and `min_scanned: 200…350`.
+      **The gate does not compare values, deliberately:** a hand-written figure
+      that is correct today is how the plurality returned each previous time, so
+      the RESTATEMENT is the finding, not the disagreement. The canary body
+      therefore carries a CORRECT figure — a value-checking gate would pass it.
+      `docs/decisions/` and `docs/archive/` are excluded (a dated record must not
+      be rewritten to today's number) and any file declaring `GENERATED by` is
+      exempt, because that IS the projection.
       <!-- carve-out: new-gate-verification -->
-- [ ] **2.3 Retire the bare `"none"` value.** `enforced_by: "none"` becomes
+- [x] **2.3 Retire the bare `"none"` value.** `enforced_by: "none"` becomes
       `instruction-only: <reason>` — a rule that is honour-system must say *why*,
       one line each, for the 14 that currently say `none`
       (`corrected-from-reproduction`; the source says 10). A reason is a triage
       record, not a pass.
-      verify: the resolver reds on a bare `instruction-only` with no reason, and
-      `grep -c 'enforced_by: *"\?none' src/rules/*.md` returns 0.
+      verify (discharged, with one descope): `grep -c 'enforced_by: *"\?none'
+      src/rules/*.md` returns **0 for every file**. A bare `instruction-only`
+      resolves to `missing` with the note *"a reason is a triage record, not a
+      pass"*, which the `--check` ratchet reds on (`missing > baseline`), and the
+      schema pattern `instruction-only: *[^ ].*` rejects it at
+      `validate_frontmatter` as well — two layers.
+      **The count is 10, not 14** (`corrected-from-reproduction` on the
+      correction itself): the 14 came from an any-line grep that matches twelve
+      PROSE mentions inside rule bodies, because the tree declares the value in
+      the LIST form `enforced_by:\n  - "none"`. **9 of the 10 were migrated**,
+      each with a one-line reason; the twelve prose mentions were migrated with
+      them, and three rules whose prose already claimed `enforced_by: none`
+      while declaring nothing (`decision-revisit-gate`, `missing-skill-recovery`,
+      `recurring-criticism`) now carry the declaration their text asserted.
+      Resolver after: `declared 34 → 37 · undeclared 86 → 83 · blocking 15 ·
+      missing 0`, ratchet holds.
+      **DESCOPED — `non-destructive-by-default` keeps `none`, and it cannot not.**
+      It is a kernel rule: `block_kernel_rule_writes` denies the agent write with
+      no agent-accessible override, and `scope-control` § Kernel-rule edits
+      requires its own PR with a ≥ 24 h soak that no autonomous mandate lifts.
+      Retiring the value from the schema outright would therefore make a CI-green
+      tree unreachable for any agent, so `none` stays legal with that single
+      reason recorded in the schema. Stub:
+      `agents/roadmaps/stubs/road-to-kernel-instruction-only-migration.md`.
 
 ## Phase 3 — Write scope on skills, as a declaration
 
@@ -187,18 +324,52 @@ construction, not by preference.
 > "the field stays documentation" closes nothing this roadmap can act on, so it
 > is named as a follow-up in § Routed elsewhere rather than held open here.
 
-- [ ] **3.1 Optional frontmatter shape** —
+- [x] **3.1 Optional frontmatter shape** —
       `scope: {read: [glob], write: [{pattern, access}]}` with `access` in a
       closed enum, plus `verification: {command | reason}` so a skill can record
       an honest null at declaration level. `skill_linter` validates shape only;
       absence stays legal.
-      verify: `./scripts-run src/scripts/skill_linter` reds on an `access` value
-      outside the enum and greens on a skill that declares nothing.
-- [ ] **3.2 Declare it for the skills that shell out** — the `execution:`
+      verify (discharged): on a fixture declaring `access: "clobber"` →
+      `ERROR schema_enum: $.scope.write[0].access – Value 'clobber' is not one of
+      ['create', 'write', 'append', 'delete']`, exit 2. The same fixture with
+      `access: "write"` → `Summary: 1 pass, 0 warn, 0 fail`, exit 0. A skill
+      declaring nothing (`src/skills/check-refs/SKILL.md` unmodified) → exit 0;
+      absence stays legal. Two further shapes are refused by a new
+      `lint_scope_declaration` check: `scope_verification_both` and
+      `scope_verification_missing`.
+      **`verification: {command | reason}` ships as TWO sibling keys**
+      (`verification_command` / `verification_reason`), and the reason is
+      measured rather than stylistic: this repo's frontmatter parser reads
+      map → list → map (how `triggers[].keyword` works) but FLATTENS
+      map → map → scalar, so a nested `verification.reason` parses as
+      `scope.verification = ""` plus a stray `scope.reason` and the schema then
+      rejects a correctly-written declaration. A field the parser cannot read is
+      a field nothing validates. Exactly-one-of is enforced by the linter check,
+      since JSON Schema cannot express it in the subset this validator
+      implements.
+- [x] **3.2 Declare it for the skills that shell out** — the `execution:`
       cohort, since those are the ones with a write path at all. Census recorded
       in the Phase 0 evidence artefact; no behaviour change.
-      verify: the declared count equals `grep -lc '^execution:' src/skills/*/SKILL.md | wc -l`,
-      and `./scripts-run src/scripts/skill_linter` exits 0.
+      verify (discharged): `grep -l '^scope:' src/skills/*/SKILL.md | wc -l` →
+      **52**; `grep -l '^execution:' src/skills/*/SKILL.md | wc -l` → **52**.
+      `./scripts-run src/scripts/skill_linter --all` →
+      `Summary: 444 pass, 0 warn, 0 fail, 444 total`, exit 0.
+      **The step's parenthetical is wrong and it changed how this was executed:**
+      the `execution:` cohort is NOT the shell-out cohort. Of the 52, **22** are
+      `type: manual` with no handler, **21** are `assisted` + `internal`, and
+      only **9** are `assisted` + `shell`. `runtime-safety` is explicit that a
+      skill with no handler is instructional only, so 43 of the 52 have no write
+      path of their own and the accurate declaration is an empty `write` list
+      plus a stated reason — not an invented glob. The 9 shell skills carry a
+      DERIVED scope: `adr-create` → `docs/decisions/ADR-*.md` (create) +
+      `INDEX.md` (write), verified by its own command; `react-shadcn-ui` →
+      `components/ui/**` (create) + `components.json` (write), from the skill's
+      own verification step; `file-editor` and `quality-tools` → `**` (write),
+      because the target IS the caller's argument and a narrower glob would be
+      false rather than tighter; `check-refs`, `md-language-check`,
+      `lint-skills`, `rtk-output-filtering`, `token-optimizer` → `write: []`,
+      each with the grep that establishes it read-only.
+      Also `0 of 292`, not 0/291 — the denominator moved with the tree.
 
 ## Routed elsewhere — not phases here
 
@@ -284,21 +455,100 @@ red the estate ratchet for a decision this roadmap does not own.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -lE 'Date\.now\(\)|new Date\(\)' src/scripts/check_*.ts src/scripts/lint_*.ts`
-      returns nothing, and `src/scripts/_lib/as_of.ts` is the single site that
-      reads the wall clock.
-- [ ] AC-2 — the same tree, given the same `--as-of`, produces byte-identical
-      output from all 17 scripts on two different machines; CI logs the pinned
-      date it used.
-- [ ] AC-3 — exactly one enforcement denominator is quotable, it comes from
-      `check_enforcement_coverage`, and `docs/proof.md` restates none of it by
-      hand; `enforced_by: "none"` appears in zero rules.
-- [ ] AC-4 — the number of `execution:` skills declaring no `scope:` is 0, and
-      `skill_linter` rejects a malformed `access` value.
-- [ ] AC-5 — each of the four § Routed elsewhere items is present in its named
-      destination (the stub's ADR question, the payload-diet roadmap, the
-      `supply-chain-intake` pitfalls section, the `skill-writing` line), and none
-      of them is a phase in this file.
-- [ ] AC-6 — this roadmap shipped no vault surface: a grep of the diff it
-      produces finds no `.obsidian/` path, no wikilink convention, and no pack
-      directory for an external note-taking tool.
+- [x] AC-1 — met. The grep returns nothing (exit 1, no match), and
+      `src/scripts/_lib/as_of.ts` is the single sanctioned reader;
+      `lint_deterministic_time` refuses a return across 261 gate scripts, with a
+      `// wall-clock-required: <reason>` escape whose reason is mandatory (a bare
+      marker is still a finding) for the one legitimate case — measuring elapsed
+      duration, where real time is the subject rather than a threshold input.
+- [~] AC-2 — met on this machine, and the two-machine half is UNMEASURABLE from
+      here rather than met. Two consecutive runs of all 17 at the same pin are
+      **byte-identical**, and the boundary sweep flips exactly one verdict
+      (step 1.4). CI logs the pin: `check_council_pin_staleness` and
+      `lint_one_off_age` print `as-of: <iso> (rung=…, reproducible=…)`, and rung 3
+      resolves it from the tree under test whenever `CI` is set.
+      **"On two different machines" was not run and cannot be by one agent on
+      one host** — claiming it from a single machine would be the fabricated
+      evidence this repository's own doctrine forbids. What IS established is
+      narrower than the criterion and is stated as such: every one of the 17 now
+      takes its INSTANT from one memoised resolver whose inputs are argv, an env
+      var, and a committed commit date — none of them machine-local. That is not
+      the same as machine-independent output, and residual 2 below is the
+      measured proof that it is not.
+      **The council was asked to re-scope this clause and could not answer** —
+      `council_cli run … --confirm` returned `INCONCLUSIVE`, both members
+      `cli_quota_exhausted` (anthropic 53/50, openai 50/50) with
+      `api_on_quota: off`, so no metered fallback fired. Cost $0.0000. Question and
+      response sit at
+      `agents/runtime/council/{questions,responses}/ac2-two-machine-rescope.md`
+      (gitignored, machine-local). A no-quorum council is an escalation condition
+      per `roadmap-progress-sync` Iron Law 3, so this criterion is left in front of
+      the owner rather than self-resolved, and this roadmap is NOT archived.
+
+      **Two residuals, and the second is a real defect the pin EXPOSED rather than
+      introduced.**
+
+      1. `check_always_budget` prints a "Trend vs. previous run" line read from a
+         persisted previous reading, so its FIRST run after a pin change differs.
+         A state dependency, not a clock one; no pin can remove it.
+      2. **The seam pins the INSTANT; it does not pin the CALENDAR.** Measured at
+         `AC_AS_OF=2026-11-30T23:30:00Z` with `TZ` varied and everything else
+         held: **2 of the 17 change their output** between `UTC` and
+         `Pacific/Kiritimati` (+14) — `check_memory` (85 lines, every age shifts a
+         day) and `check_trigger_evals` (69 lines, likewise) — because both
+         convert the pinned instant to a LOCAL calendar date via
+         `getFullYear() / getMonth() / getDate()` instead of the `getUTC*` twins.
+         Two more read the calendar the same way and did not differ at this
+         particular instant (`check_beta_review_markers:190`,
+         `check_proposal:369`), which makes them latent rather than clean.
+         `UTC` vs `Pacific/Honolulu` (-10) differs only in `check_gate_coverage`'s
+         sub-probe count (`check_references: scanned 1535` vs `1536`) — a probe
+         wobble, NOT a timezone finding, named so it is not miscounted as one.
+         Deliberately NOT fixed here: step 1.2 is "mechanical substitution only —
+         no threshold, no message, and no exit code changes", and local → UTC
+         flips a verdict at a day boundary by construction. Four one-line changes
+         across four production gates, and they belong to whoever resolves this
+         criterion — which is why it stays open and this roadmap stays active
+         rather than being archived around it.
+- [x] AC-3 — met, with one descope named in the criterion's own last clause.
+      The denominator is quotable exactly once, from `check_enforcement_coverage`,
+      and it now carries the frame that produced it
+      (`denominator: 120 rule(s), frame in-scope (src/rules/*.md) ==
+      governed-total 120`, two independent sources with their agreement
+      asserted). `docs/proof.md` restates none of it by hand — the one live
+      hand-written source, `docs/CLAIMS.md:203`, states no figure now, and
+      `check_enforcement_denominator` reds on a restatement anywhere in the 464
+      published docs.
+      `enforced_by: "none"` appears in **one** rule, not zero:
+      `non-destructive-by-default`, a kernel rule
+      `block_kernel_rule_writes` denies the agent write to and whose edit
+      `scope-control` binds to its own PR plus a ≥ 24 h soak. Descoped to
+      [`stubs/road-to-kernel-instruction-only-migration.md`](stubs/road-to-kernel-instruction-only-migration.md);
+      the other nine are migrated and the schema records that single survival
+      with its reason.
+- [x] AC-4 — met. `grep -l '^execution:' src/skills/*/SKILL.md | wc -l` → 52 and
+      `grep -l '^scope:' src/skills/*/SKILL.md | wc -l` → 52, so the residual is
+      **0**. `skill_linter` rejects an out-of-enum `access`
+      (`ERROR schema_enum: $.scope.write[0].access – Value 'clobber' is not one of
+      ['create', 'write', 'append', 'delete']`) and, via the new
+      `lint_scope_declaration` check, a declaration carrying both or neither
+      verification key. `--all` → `444 pass, 0 warn, 0 fail`.
+- [x] AC-5 — met; each pointer resolves in its named destination and none is a
+      phase here. (1) `stubs/road-to-gate-preauth-authorization.md` gains
+      § Open ADR question — where the plan hash lives, framed as ADR-239's named
+      precondition rather than a relitigation, and correcting this roadmap's
+      "uncommitted only" reading: the constant IS `30 * 60 * 1000` at
+      `src/scripts/hooks/block_unauthorized_git.ts:527`, but the guard's own
+      docstring at `:506-525` records the widening WAS committed and left there.
+      (2) `road-to-standing-payload-diet.md` gains § Received by reference, with
+      the ownership boundary and the two figures re-measured rather than carried —
+      `p50 166 · p90 275` reproduces the SOURCE and refutes this roadmap's
+      165/271, and no sum reproduces because none of the three states its corpus
+      definition. (3) `supply-chain-intake` gains a `## Known pitfalls` section —
+      *name-similarity is not provenance*. (4) `skill-writing` gains the
+      scope-exclusion clause idiom.
+- [x] AC-6 — met. `git diff origin/main -- .` matched **0** occurrences of
+      `.obsidian/` or a `[[wikilink]]`, `git diff --name-only origin/main` names
+      no such path, and `src/packs/` gained no directory (unchanged at its
+      pre-branch set). The § Not-new mechanism-match holds: nothing here reopens
+      the 2026-07-07 vault-integration REJECT.
