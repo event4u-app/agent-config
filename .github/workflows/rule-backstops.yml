@@ -282,6 +282,26 @@ jobs:
       - name: Kernel-override audit
         run: ./scripts-run src/scripts/lint_override_kernel_guard --strict
 
+      # Step 1.5 of road-to-override-efficacy-proof. Registered here under
+      # CI-IDENTICAL argv — the same `npx vitest run <file>` a contributor types —
+      # so a local pass and a CI pass mean the same thing. The file is also picked
+      # up by the sharded Node Tests job, and that is exactly why the explicit
+      # registration is worth its two lines: a shard split, a filter change or a
+      # path move could stop running it with nothing failing, and this
+      # reachability check is the one thing standing between "the override is
+      # delivered" and an unfalsifiable claim that it is.
+      - name: Override reachability (delivery, not efficacy)
+        run: npx vitest run tests/scripts/override_reachability.test.ts
+
+      # Same step: the precedence table is GENERATED, so a stale committed copy is
+      # a silent lie about the tree. Regenerating and diffing is the freshness
+      # check; `--write-table` writes in place and the diff is the assertion.
+      - name: Override precedence table is fresh
+        run: |
+          ./scripts-run src/scripts/lint_override_kernel_guard \
+            --write-table agents/evidence/reports/override-precedence-table.md
+          git diff --exit-code -- agents/evidence/reports/override-precedence-table.md
+
       - name: ADR frontmatter + review_trigger
         run: ./scripts-run src/scripts/check_adr_frontmatter
 
