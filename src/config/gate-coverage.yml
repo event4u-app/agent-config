@@ -42,11 +42,11 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 278 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 279 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-23 and it returns 278).
-# **55 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 52 of those 55 are listed below.** The manifest is
+# re-run 2026-08-23 and it returns 279).
+# **56 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 53 of those 56 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~19 % of the population.
 #
@@ -57,11 +57,20 @@
 # already carried 51 rows and the population function already returned 277: six
 # scripts and seven rows had landed since 2026-08-22 without touching this text.
 # Derivation, so the next reader checks rather than trusts:
-# `grep -c '^  - id:' src/config/gate-coverage.yml` returns 52; every listed row
+# `grep -c '^  - id:' src/config/gate-coverage.yml` returns 53; every listed row
 # is an emitter, because a row that did not emit could carry no floor; the same
 # THREE emitters remain deliberately unlisted (`lint_evidence_artifacts`,
 # `adr_cite_check`, `check_new_adr_evidence`, each with its reason at the place
-# its row would have sat); 52 + 3 = 55. The population comes from the function.
+# its row would have sat); 53 + 3 = 56. The population comes from the function.
+#
+# RE-RECOUNTED on the same day, after a rebase, and the re-count is the point:
+# `check_no_automerge_key` and `check_pack_conformance_fixture` landed in two
+# separate changes hours apart, and the first change's prose (52 / 55 / 278) was
+# CORRECT when written and stale by one on each axis the moment the second
+# rebased onto it. Adding one to each figure would have been right here by
+# accident; it was recomputed anyway, because "right by accident" is
+# indistinguishable in a diff from the arithmetic-on-prose this paragraph
+# forbids.
 #
 # RECOUNTED on 2026-08-22, and it was wrong on every figure before the recount —
 # which is the fourth time, and the reason this paragraph keeps asking to be
@@ -1470,3 +1479,35 @@ gates:
       floor under a constant can never trip — the false-count shape this manifest
       rejects. 304 keys collapses to 0 if either root moves, which is what the
       floor is for.
+  - id: check_pack_conformance_fixture
+    argv: ["--quiet"]
+    min_scanned: 12
+    corpus: "(fixture, gate) assertions over `tests/fixtures/pack-conformance/` — 3 fixture-provable gates × (1 conformant fixture + 3 seeded twins) = 12 on 2026-08-23"
+    status: enforced
+    no_canary_reason: >-
+      The corpus is a committed fixture and every violation this gate can have IS
+      a seeded violation — the three twins under
+      `tests/fixtures/pack-conformance/twins/` are the negative control, already
+      committed and already asserted. A create-only plant would have to add a
+      FOURTH twin, which the harness would not know about and would therefore
+      ignore. Discrimination is proven instead by the gate's own `--self-test`
+      (5 cases, 2 rejecting, including a missing-fixture probe that must exit 2)
+      and by three recorded sabotage probes in
+      `tests/scripts/check_pack_conformance_fixture.test.ts` — a conformant-fixture
+      break, an orthogonality break (a twin reddening two gates), and a neutered
+      twin that reds none. Real exit codes captured directly, never through a
+      pipe.
+    note: >
+      The floor is an ASSERTION count, not a file count. It is exactly
+      `provable_gates × (1 + twins)`, so adding a twin without wiring it — or
+      losing one of the three injection seams — moves the number and the floor
+      catches it. A file count would not: the fixture directory can grow while
+      the harness quietly stops driving a gate.
+
+      This gate is deliberately PARTIAL and says so in its own success line
+      ("PARTIAL as designed: 3 of 6"). Three of the six pack-fitness gates cannot
+      be driven from a fixture — `lint_pack_first_win` pins argv-ignoring as an
+      ADR-200 port-fidelity guarantee, `lint_pack_dependencies` derives its pack
+      home from `import.meta.url`, and `prove_pack_extractable` resolves a pack
+      by name under the real `src/packs/`. Raising this gate's coverage by
+      pretending otherwise is the manufactured green this file exists to prevent.

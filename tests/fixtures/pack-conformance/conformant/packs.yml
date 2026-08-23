@@ -1,0 +1,14 @@
+# Canonical fixture pack vocabulary. Layout-neutral: the harness projects this
+# file into each gate's own expected location (see the fixture README).
+#
+# `fx-alpha` requires `fx-beta`, so an alpha -> beta link is declared and legal.
+# `core` is always installed, so a link into it can never dangle.
+- id: core
+  requires: []
+  risk_class: low
+- id: fx-alpha
+  requires: [fx-beta]
+  risk_class: low
+- id: fx-beta
+  requires: []
+  risk_class: low

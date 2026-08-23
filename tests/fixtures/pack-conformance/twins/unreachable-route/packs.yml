@@ -1,0 +1,12 @@
+# Overlay: `fx-alpha` no longer requires `fx-beta`, so the rule's route is
+# unreachable. Identical to the cross-pack twin's vocabulary — the two twins
+# differ in WHICH artefact reaches across, not in the graph.
+- id: core
+  requires: []
+  risk_class: low
+- id: fx-alpha
+  requires: []
+  risk_class: low
+- id: fx-beta
+  requires: []
+  risk_class: low
