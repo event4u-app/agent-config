@@ -209,45 +209,180 @@ Work aimed there lands in the guideline.
 
 ## Phase 1 — Inventory what is measured versus what is asserted
 
-- [ ] **1.1 Enumerate every fidelity assertion in the frontend surface.**
+- [x] **1.1 Enumerate every fidelity assertion in the frontend surface.**
       One table: the claim, its `file:line`, and whether anything downstream can
       falsify it. The three known rows (320 px floor, visual diff, token
       violation) are the seed, not the answer.
-      verify: the artefact exists under `agents/evidence/analysis/` and every
-      row's `file:line` resolves — `while read f l; do sed -n "${l}p" "$f"; done`
-      over the table produces no empty line.
-- [ ] **1.2 Classify each row: measurable, measurable-but-blocked, or
+      verify (discharged): the artefact exists at
+      `agents/evidence/analysis/frontend-fidelity-assertion-inventory.md` and every row's
+      `file:line` resolves — the `sed -n "${l}p"` sweep over all 17 distinct citations in
+      the table produced **no empty line**. **Both halves hold.**
+
+      **13 rows, not the 3 seeds.** The three known rows are A1/A2 (320 px floor), A4
+      (visual diff) and A5 (`token_violation` consumed with no producer). Ten more came
+      out of the sweep, and two of them changed what later phases have to do.
+
+      **The sweep found the detector this roadmap assumed did not exist.** W4 reads
+      "`token_violation` is consumed but never produced by a detector". The consumer is
+      real (`polish.ts:31`), and so is a producer nobody wired:
+      `src/skills/design-tokens/scripts/tokens.ts:415` (`scanFile`) already emits
+      `kind: 'token_violation'` for every raw hex / px / rem literal, and
+      `src/skills/design-tokens/SKILL.md:79` documents that it does and says to "wire it
+      into review/polish runs". Nothing does. **The defect is the wiring, not the
+      absence** — recorded as row A6, and it is what narrows step 3.1 from "write a
+      detector" to "connect two things that already exist".
+
+      Four rows classify as `measurable-but-blocked` and every one of them names
+      `b-page-capture-primitive`. That is the shape risk #3 in the register warned about
+      — but it did not materialise: six rows are `measurable` with no page needed, so a
+      measurement channel exists that the blocker does not reach.
+
+      Three rows are `unmeasurable` and are stated as this roadmap's own scope cut rather
+      than carried: A7 (a value's *source citation* is prose beside the value, invisible
+      to a detector), A12 (`grep` proves a `prefers-reduced-motion` block exists, never
+      that it presents an alternative) and A13 (no persona owns rendered visual quality).
+
+- [x] **1.2 Classify each row: measurable, measurable-but-blocked, or
       unmeasurable.** "Blocked" must name the blocker id below.
       Unmeasurable rows are the roadmap's own scope cut and are recorded as
       such, not carried.
-      verify: every row carries one of the three labels and every `blocked` row
-      names a `### blocker:` slug that exists in this file.
+      verify (discharged): every one of the 13 rows carries exactly one of the three
+      labels (6 `measurable`, 4 `measurable-but-blocked`, 3 `unmeasurable` — the counts
+      sum to 13 and are published in the artefact's § Counts), and every `blocked` row
+      names `b-page-capture-primitive`, a `### blocker:` slug that exists in this file.
+      **Both hold.**
+
+      **All four blocked rows name the same slug, and that is a finding rather than a
+      coincidence.** A4 (visual diff), A9 (preview prerequisite), A10 (44×44 touch
+      targets) and A11 (rendered contrast composites) fail for one reason: each needs a
+      computed box or a pixel off a rendered page. One capability gates the whole class.
+
+      `b-detector-license-verification` appears in **no** `Blocker` cell, deliberately.
+      It gates the *implementation* of A6's detector, not the *classification* of any
+      claim — and A6 classifies `measurable` on the strength of a producer that already
+      exists in this tree (`tokens.ts:415`), which is exactly the option-(b) own-analysis
+      path that blocker resolved to. A blocker that constrains how a row is built does
+      not make the row unmeasurable, and recording it as though it did would inflate the
+      blocked count from 4 to 5.
+
+      **The unmeasurable rows are cut here, not deferred.** Each carries its own
+      paragraph in the artefact's § The three scope cuts saying what a detector would
+      have to see and cannot. A7 in particular is the row that keeps step 3.2 honest:
+      the prose channel stays *because* the claim it carries is not measurable, not as a
+      courtesy to the existing text.
 
 ## Phase 2 — A fidelity contract with per-value provenance
 
-- [ ] **2.1 Define the measurement sheet schema.** A per-element artefact:
+- [x] **2.1 Define the measurement sheet schema.** A per-element artefact:
       selector, dimension, expected value, observed value, source of the
       expectation. It is the artefact W3 says does not exist.
-      verify: the schema file exists and
-      `npx tsx -e "JSON.parse(require('fs').readFileSync('<path>','utf8'))"`
-      parses, or the equivalent for the chosen format.
-- [ ] **2.2 Extend the existing precedence chain with value-level
+      verify (discharged): the schema exists at
+      `src/scripts/schemas/fidelity-measurement-sheet.schema.json` and
+      `npx tsx -e "JSON.parse(...)"` parses it — top-level keys
+      `$schema,$id,title,description,type,required,additionalProperties,properties`.
+      **Parses.**
+
+      **W3's premise re-verified before the schema was written, not assumed from the
+      roadmap.** `grep -rilE 'measurement.sheet|per-element measurement' src/ docs/`
+      returned zero paths, so this is a new shape rather than a second copy of one.
+
+      The five required row fields are the step's five: `selector`, `dimension`,
+      `expected`, `observed`, `expectation_source`. A sixth is required that the step did
+      not name — **`status`**, a four-member enum — because without it the artefact
+      cannot express the two states this roadmap actually produces: `unspecified` (the
+      expectation source is silent, so there is nothing to deviate from) and `unmeasured`
+      (the dimension is blocked, and the row records that it was not skipped silently).
+      A sheet that can only say match-or-deviation would force a blocked dimension to be
+      absent, which is the exact indistinguishability step 3.3 exists to prevent.
+
+      `dimensions[]` is the half that makes AC-3 checkable rather than argued: every
+      entry is `shipped` or `null`, and `null` **requires** a four-field `null_record`
+      (falsifier · unavailable capability · affected claims · reopening condition). The
+      `affected_claims` array is required for the reason the `b-page-capture-primitive`
+      resolution already recorded — *a null that does not enumerate what it covers is
+      indistinguishable from a matrix that never had those rows.*
+
+      `expectation_source.kind` is a five-member enum ordered by authority, which is the
+      2.2 half landing in the schema rather than beside it.
+
+      Two traps avoided, both recorded in this tree already: `enum` not `const` for the
+      version pin (`validate_frontmatter.ts` enforces `enum` and **silently ignores**
+      `const`, so a `const` would be a pin nothing checks — the same note
+      `review-findings.schema.json` carries), and this is deliberately **not** a findings
+      format: `review-findings.schema.json` owns findings. A sheet is the measurement; a
+      finding is what someone decided about it.
+
+- [x] **2.2 Extend the existing precedence chain with value-level
       provenance.** `docs/guidelines/design-fidelity-mechanics.md:232` already
       carries the finding-level flag; add the value-level field beside it and
       say plainly that the coarse flag stays the default. Do not restate the
       chain at `:181-241` — link it.
-      verify: `git show HEAD:docs/guidelines/design-fidelity-mechanics.md |
-      grep -c 'partition_artifact_covered'` shows the pre-state, and the new
-      text adds a section rather than editing that block.
-- [ ] **2.3 Pre-register the falsifiers, before any measurement ships.** For
+      verify (discharged): `git show HEAD:docs/guidelines/design-fidelity-mechanics.md |
+      grep -c 'partition_artifact_covered'` reports the pre-state **1**; the working tree
+      reports **2**, the increment being the new section's single reference. And the
+      existing block is proven untouched rather than argued: `diff` of lines 171–232
+      between `git show HEAD:` and the working tree is **empty — byte-identical**.
+
+      **The chain is linked, not restated.** The new § Value-level provenance opens by
+      saying the block above stays the default and that every consumer of
+      `artifact_covered` — `partition_artifact_covered` and the ceiling check it feeds —
+      is unchanged. The only reason the word appears a second time in the file at all is
+      that one sentence naming what is unchanged.
+
+      Two boundaries are stated because leaving them implicit is how risk #5 in the
+      register (*"value-level provenance restates the chain that already ships"*) would
+      land: the row-level `artifact_covered` mirror is **optional, defaulted-absent, and
+      read by no gate**, and the `kind` ordering is *a mirror, not a second source of
+      truth* — a `kind` that disagreed with the block above would be a schema defect, not
+      a competing chain.
+
+      **The file had 1,945 chars of headroom against the 16,000 depth ceiling, and the
+      section used 1,450 of them.** Final size 15,505. Phase 0's own note warned this file
+      was ~100 chars from the ceiling; commit `a6e082976` had since trimmed it to 14,055,
+      so the headroom existed — but it was *measured before writing*, not assumed, because
+      `check_depth_budget` is a shrink-only ratchet where a fifth over-ceiling file reds.
+      It still reports 4 violations at baseline. **495 chars remain: the next addition to
+      this file needs its own file.**
+
+- [x] **2.3 Pre-register the falsifiers, before any measurement ships.** For
       each dimension Phase 3 will measure, write down now what result would
       make it worthless — a number that varies across two runs on identical
       input, a number no finding can be derived from, a number that disagrees
       with the agent verdict more often than it agrees. A dimension whose
       falsifier fires is cut in Phase 3, not defended.
-      verify: the falsifier list is committed and dated before the first
-      Phase 3 step is checked off — `git log --diff-filter=A --format=%H -1
-      -- <falsifier-path>` predates the Phase 3 commits.
+      verify (discharged): the falsifier list is committed at
+      `agents/evidence/analysis/frontend-fidelity-preregistered-falsifiers.md` in the
+      commit that closes Phase 2, and **no Phase 3 step is checked off in that commit or
+      any earlier one** — so `git log --diff-filter=A --format=%H -1 -- <falsifier-path>`
+      predates every Phase 3 commit by construction, not by luck. The ordering is the
+      reason Phase 2 is committed as its own chunk.
+
+      **Three generic falsifiers, given ids so a null can name one:** `F1-unstable` (a
+      different number across two runs on identical input), `F2-inert` (no finding can be
+      derived from it — risk #1 in the register), `F3-disagrees` (disagrees with the agent
+      verdict *more often than it agrees*; the majority clause matters, because a number
+      that is sometimes surprising is the number working).
+
+      **A fourth falsifier had to be invented, and inventing it is the honest move rather
+      than a gap in the roadmap's wording.** F1–F3 all presuppose that a run can be
+      attempted. For the `render-diff` dimension no run can be, because
+      `b-page-capture-primitive` resolved to option (b). Scoring it `F1-unstable` would
+      claim two runs happened. So it gets **`F0-uncapturable`** — *the capability the
+      measurement requires is not available on the host the fixtures run on* — stated here,
+      before Phase 3, so the cut is not a post-hoc rationalisation of a measurement nobody
+      tried.
+
+      One dimension-specific falsifier is pre-registered too: **`F4-unscoped`** on
+      `token-literal`. The dimension is *a raw literal **where the audit found a token***.
+      A detector that flags every literal in the tree measures a wider claim than the one
+      Phase 1 classified as measurable — so the wider behaviour is pre-registered as a
+      failure, before the detector that could exhibit it exists.
+
+      **A prediction is recorded, so Phase 3 can be scored rather than narrated:** of four
+      dimensions, exactly one ships (`token-literal`); `viewport-floor` resolves as a
+      coverage fix and not a measurement; `render-diff` is cut on `F0-uncapturable`;
+      `reduced-motion-alternative` is cut on `F2-inert`. Writing the expected outcome down
+      first is what makes 3.3 a check instead of a summary.
 
 ## Phase 3 — One deterministic measurement channel
 
@@ -342,17 +477,60 @@ Runs in parallel with Phase 3; depends only on Phase 2.
 
 Runs in parallel with Phase 3; depends only on Phase 1.
 
-- [ ] **8.1 Decide where the lens lives.** `frontend-engineer.md:60` declines
+- [x] **8.1 Decide where the lens lives.** `frontend-engineer.md:60` declines
       it deliberately and that line stays. Either an existing persona takes the
       rendered-visual lens explicitly, or the roadmap records that no persona
       does and the skill layer is the only owner.
-      verify: `grep -rn 'render' src/agent-src/personas/*.md` shows the lens
-      claimed in exactly one file, or the Phase 1 artefact records the null.
-- [ ] **8.2 Do not create a persona to hold one lens.**
+      verify (discharged): the second branch. `grep -rn 'render' src/agent-src/personas/*.md`
+      shows the word in **two** files and the lens claimed in **neither** — so the Phase 1
+      artefact records the null, at
+      `agents/evidence/analysis/frontend-fidelity-assertion-inventory.md` § Phase 8 null.
+      **Recorded as row A13 and as a named section.**
+
+      **Both near-owners decline the lens in their own words, which is why this is a null
+      and not a gap nobody looked at.** `frontend-engineer.md:60` — *"Do NOT chase styling
+      unless it correlates with a state or render bug"*: the lens is render
+      **correctness**. `design-director.md:16` — composition and colour must *"serve the
+      brief and the active brand, not whether the render technically succeeded"*: the
+      lens is art direction against a brand.
+
+      Together they answer *why it renders wrong* and *whether it is on brand*. Neither
+      answers *does the rendered page look right*. That lens is owned by the skill layer
+      — `design-review` and `accessibility-auditor` — and by no persona.
+
+      **The step's `grep` is not satisfiable by its own first branch, and saying so is
+      part of the discharge.** "The lens claimed in exactly one file" cannot be read off
+      a bare `grep -rn 'render'`: the word appears 20 times across the two personas above,
+      every occurrence about state/hydration/art-direction. A verify whose first branch
+      is unreachable by construction resolves to its second branch, and the second branch
+      is the one that was true anyway.
+
+      The null carries a **reopening condition** rather than being closed forever: if a
+      persona is added or retired in the design domain for an unrelated reason, the lens
+      is re-offered to the surviving set before a new persona is considered.
+
+- [x] **8.2 Do not create a persona to hold one lens.**
       `src/rules/persona-governance.md`'s per-domain cap governs; a new
       specialist requires a deprecation candidate when the domain is full.
-      verify: `./scripts-run src/scripts/skill_linter` is green and the persona
-      count is unchanged, or the deprecation candidate is named in this file.
+      verify (discharged): `./scripts-run src/scripts/skill_linter --all` → **446 pass,
+      0 warn, 0 fail**, and the persona count is **unchanged at 30** files under
+      `src/agent-src/personas/`. No deprecation candidate is named because no persona
+      was created. **Both hold.**
+
+      **Nothing was built here, and that is the step succeeding.** 8.1 resolved to the
+      null, so the only way to fail 8.2 was to invent a `visual-qa` persona to hold the
+      lens the null just recorded — precisely the move `src/rules/persona-governance.md:43`
+      prices: a new specialist in a full domain requires a deprecation candidate.
+
+      The domain already carries `design-director` (art direction) and
+      `frontend-engineer` (render correctness). Adding a third to cover the seam between
+      them would have cost a deprecation of one of the two, and neither is worth spending
+      on a lens the skill layer already owns and exercises.
+
+      **Bare `skill_linter` with no argument prints "No matching skill/rule files found"
+      and exits 0** — a green that scans nothing, which is this repository's recorded
+      false-green shape. The run above passes `--all` and reports a denominator (446), so
+      the green is a measurement rather than an empty sweep.
 
 ## Phase 9 — Scroll-driven narrative surfaces
 
