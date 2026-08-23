@@ -420,6 +420,15 @@ async function _run_http_leg(target: string): Promise<number> {
     return failed;
 }
 
+/**
+ * The turnkey stdio surface's tool names, code-point sorted and joined.
+ * Kept as a literal rather than imported from `src/cli/` so this maintainer
+ * script does not take a build dependency on the CLI bundle; the CLI-side
+ * source of truth is `LITE_TOOLS` in `src/cli/mcp/dispatch.ts`, and
+ * `tests/scripts/mcp_lite_tools.test.ts` pins that side.
+ */
+const LITE_TOOL_NAMES_EXPECTED = 'read_skill,suggest_skill_for_task';
+
 /** ALL skill+command prompt metas (uncapped — for full-set parity). */
 function _local_prompts_all(): Record<string, unknown>[] {
     const [prompts] = load_all_prompts();
@@ -438,7 +447,8 @@ function _local_resources_all(): Record<string, unknown>[] {
  * Compares the FULL SUBSET the turnkey surface serves (skill/command prompts,
  * rule/guideline resources — contexts excluded by design) via cursor
  * pagination, on name/kind/uri keys, and asserts the read-only boundary
- * (`tools/list` empty). Skips with a note if the binary isn't built.
+ * (the two read-only discovery tools and nothing else). Skips with a note if
+ * the binary isn't built.
  */
 function _run_node_leg(cli: string): number {
     if (!_exists(cli)) {
@@ -473,13 +483,29 @@ function _run_node_leg(cli: string): number {
         _subset_resources(_normalize_resources({ resources: _local_resources_all() })),
         _subset_resources(_normalize_resources({ resources: nodeResources })),
     );
-    if (nodeTools.length > 0) {
+    // Phase 1.1 of `road-to-skill-delivery-over-mcp`: the turnkey surface now
+    // serves exactly two read-only discovery tools, and this leg is where risk 6
+    // ("two implementations diverge silently") stops being a claim. Both names
+    // are checked, not counted — a count would pass on the wrong pair.
+    //
+    // `suggest_skill_for_task` is shared with the kernel and both now compute
+    // their score through the single `src/shared/skillRanking.ts` formula.
+    // `read_skill` is lite-only and deliberately NARROWER than the kernel's
+    // `read_resource_body`: it resolves a skill NAME through the content tree's
+    // uri map and can reach nothing else.
+    const nodeToolNames = nodeTools
+        .map((t) => String(t.name ?? ''))
+        .sort(_cmpCodePoints)
+        .join(',');
+    if (nodeToolNames !== LITE_TOOL_NAMES_EXPECTED) {
         process.stdout.write(
-            `❌  node tools/list: expected empty (read-only), got ${nodeTools.length}\n`,
+            `❌  node tools/list: expected exactly [${LITE_TOOL_NAMES_EXPECTED}], got [${nodeToolNames}]\n`,
         );
         failed += 1;
     } else {
-        process.stdout.write('✅  node tools/list: empty (read-only, ADR-085)\n');
+        process.stdout.write(
+            `✅  node tools/list: ${LITE_TOOL_NAMES_EXPECTED} (read-only discovery, ADR-085 + Phase 1.1)\n`,
+        );
     }
     process.stdout.write(
         `${`${failed ? '' : 'node-stdio parity OK '}(${path.basename(cli)})`.trim()}\n`,

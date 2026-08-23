@@ -7,11 +7,22 @@
  * the multi-channel-consistency guarantee in ADR-085. If you change a shape
  * here, change it there too (and the Python kernel `scripts/mcp_server/`).
  *
- * Read-only: `tools/list` is empty and `tools/call` returns the
- * `not_implemented` envelope. Execution (the `full` kernel) is deferred per
- * ADR-085 § Phase-2 trigger. Pure — no I/O, no clock, no stdout.
+ * Read-only, and still read-only after Phase 1.1 of
+ * `road-to-skill-delivery-over-mcp`: `tools/list` now returns exactly TWO
+ * discovery tools — `suggest_skill_for_task` and `read_skill` — both of which
+ * only read the in-memory content tree. Execution (the `full` kernel) remains
+ * deferred per ADR-085 § Phase-2 trigger, and every other tool name still gets
+ * the `not_implemented` envelope. Pure — no I/O, no clock, no stdout.
+ *
+ * WHY THESE TWO AND NOT MORE. The turnkey server is small enough to load
+ * upfront (Claude Code defers MCP tool definitions only above ~10% of context),
+ * so every tool here is standing cost in every session. `LITE_TOOLS_TOKEN_CAP`
+ * below is that budget, asserted in `tests/scripts/mcp_lite_tools.test.ts`.
+ * `list_skills` is deliberately absent: the host already lists the names, and a
+ * 290-name tool result is the context cost this whole surface exists to avoid.
  */
 
+import { rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
 import { entriesOfKind } from './content.js';
 
@@ -135,7 +146,140 @@ function readResource(tree: ContentTree, uri: string): unknown | null {
     };
 }
 
-/** Read-only lite surface: no executable tools. ADR-085 defers `full`. */
+/**
+ * Server `instructions` (Phase 1.2).
+ *
+ * The AAIF Skills-over-MCP working group's June-2026 experiments found models
+ * routinely ignoring skills served over MCP and reaching for tools instead, and
+ * found that a server-side instruction nudge helped. This is that nudge, and it
+ * is the ONE positive finding from that work applied here — its decay with
+ * context length is a measurement (Phase 4.3), not something this paragraph
+ * fixes. Derived from the Iron Law of `rules/missing-skill-recovery.md`.
+ */
+export const INSTRUCTIONS =
+    'This server indexes the full skill catalogue, including skills the host ' +
+    'listed without a description or did not list at all. A skill missing from ' +
+    'the catalogue still exists: ask by task with suggest_skill_for_task, then ' +
+    'read the winner with read_skill. Never conclude that no skill covers a ' +
+    'task from the list you were shown.';
+
+/** Standing-context budget for the two tool definitions, in tokens (chars/4). */
+export const LITE_TOOLS_TOKEN_CAP = 600;
+/** Byte cap on `INSTRUCTIONS`, so the nudge cannot grow into a preamble. */
+export const INSTRUCTIONS_BYTE_CAP = 400;
+
+/**
+ * The two discovery tools. Read-only, shell-free, and pure over the content
+ * tree — `read_skill` resolves a NAME through the tree's uri map and never
+ * joins a path, so directory traversal is not merely rejected but unexpressible.
+ */
+export const LITE_TOOLS: readonly Record<string, unknown>[] = [
+    {
+        name: 'suggest_skill_for_task',
+        description:
+            'Rank skills against a free-form task description. Use when the ' +
+            'skill you need is not in the catalogue the host delivered, so ' +
+            'asking by name is impossible and asking by task is not. Returns ' +
+            'names, scores and personas only — never bodies.',
+        inputSchema: {
+            type: 'object',
+            required: ['task'],
+            properties: {
+                task: { type: 'string', description: 'The task to match skills against.' },
+                limit: { type: 'integer', minimum: 1, default: 5, description: 'Max results. Default 5.' },
+            },
+            additionalProperties: false,
+        },
+        annotations: { readOnlyHint: true },
+    },
+    {
+        name: 'read_skill',
+        description:
+            'Return one skill body by name, as listed by suggest_skill_for_task.',
+        inputSchema: {
+            type: 'object',
+            required: ['name'],
+            properties: { name: { type: 'string', description: 'Skill name.' } },
+            additionalProperties: false,
+        },
+        annotations: { readOnlyHint: true },
+    },
+];
+
+const LITE_TOOL_NAMES: ReadonlySet<string> = new Set(LITE_TOOLS.map((t) => t.name as string));
+
+/** Chars/4 over the served `tools/list` payload — the figure the cap is on. */
+export function liteToolsTokenCost(): number {
+    return Math.round(JSON.stringify({ tools: LITE_TOOLS }).length / 4);
+}
+
+/** MCP `tools/call` success shape: text content plus the structured result. */
+function toolTextResult(payload: unknown): Record<string, unknown> {
+    return {
+        content: [{ type: 'text', text: JSON.stringify(payload) }],
+        structuredContent: payload,
+        isError: false,
+    };
+}
+
+function rankableSkills(tree: ContentTree): RankableSkill[] {
+    return entriesOfKind(tree, ['skill']).map((e) => ({
+        name: e.name,
+        description: e.description,
+        personas: e.personas ?? [],
+        triggerText: e.trigger_text ?? [],
+    }));
+}
+
+/**
+ * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
+ * `suggestions[]` of `{skill, score, personas}` — so a consumer that learned the
+ * shape on one server does not have to relearn it on the other. `tiers` is
+ * Phase 3.3's field and reports `unknown` until a tier file is wired in.
+ */
+function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>): Record<string, unknown> {
+    const task = typeof params.task === 'string' ? params.task.trim() : '';
+    if (!task) return { status: 'error', error: 'params.task is required', suggestions: [] };
+    const rawLimit = typeof params.limit === 'number' ? Math.floor(params.limit) : 5;
+    const limit = Math.max(1, rawLimit);
+    const skills = rankableSkills(tree);
+    if (skills.length === 0) {
+        return { status: 'no_catalogue', suggestions: [], tiers: 'unknown' };
+    }
+    const rows = rankSkills(task, skills).slice(0, limit);
+    return {
+        status: 'ok',
+        skills_indexed: skills.length,
+        tiers: 'unknown',
+        suggestions: rows.map((r) => ({ skill: r.name, score: r.score, personas: r.personas })),
+    };
+}
+
+/** `read_skill`. Name lookup through the uri map; no path is ever constructed. */
+function readSkill(tree: ContentTree, params: Record<string, unknown>): Record<string, unknown> {
+    const name = typeof params.name === 'string' ? params.name.trim() : '';
+    if (!name) return { status: 'error', error: 'params.name is required' };
+    // Structurally unnecessary — the lookup is a map hit on `skill://<name>` and
+    // cannot escape anywhere — but rejected explicitly so a reader does not have
+    // to reconstruct that argument, and so a future path-based backend inherits
+    // the guard rather than the hole.
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) {
+        return { status: 'error', error: 'skill name must not contain a path separator' };
+    }
+    const entry = tree.uris[`skill://${name}`];
+    if (!entry || entry.kind !== 'skill') {
+        return { status: 'not_found', name };
+    }
+    return {
+        status: 'ok',
+        name: entry.name,
+        description: entry.description,
+        source: entry.source,
+        body: entry.body,
+    };
+}
+
+/** Read-only lite surface: only the two discovery tools. ADR-085 defers `full`. */
 function notImplementedEnvelope(name: string): Record<string, unknown> {
     return {
         code: 'not_implemented',
@@ -165,6 +309,7 @@ export function dispatch(
                     tools: { listChanged: false },
                 },
                 serverInfo: { name: identity.name, version: identity.version },
+                instructions: INSTRUCTIONS,
             });
 
         case 'ping':
@@ -193,10 +338,18 @@ export function dispatch(
             return rpcResult(id, r);
         }
         case 'tools/list':
-            return rpcResult(id, { tools: [] });
+            return rpcResult(id, { tools: LITE_TOOLS });
         case 'tools/call': {
             const name = typeof params.name === 'string' ? params.name : '';
             if (!name) return rpcError(id, RPC_INVALID_PARAMS, 'params.name is required');
+            if (LITE_TOOL_NAMES.has(name)) {
+                const args = (params.arguments ?? {}) as Record<string, unknown>;
+                const payload =
+                    name === 'suggest_skill_for_task'
+                        ? suggestSkillForTask(tree, args)
+                        : readSkill(tree, args);
+                return rpcResult(id, toolTextResult(payload));
+            }
             const env = notImplementedEnvelope(name);
             // Mirror the Worker: -32601 with the envelope in `data`; consumers
             // drive logic off `error.data.code`, never the wire message.

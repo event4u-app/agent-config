@@ -34,6 +34,10 @@ export interface ContentEntry {
     kind: EntryKind;
     /** `text/markdown` for resources; omitted for prompts. */
     mime_type?: string;
+    /** Frontmatter `personas:` — the ranker's persona-match term source. */
+    personas?: string[];
+    /** `triggers[].keyword` + `triggers[].phrase` text. Indexed only on request. */
+    trigger_text?: string[];
 }
 
 export interface ContentTree {
@@ -61,6 +65,36 @@ function parseFrontmatter(raw: string): { fm: Record<string, unknown>; body: str
 
 function str(v: unknown, fallback = ''): string {
     return typeof v === 'string' ? v : fallback;
+}
+
+/** Frontmatter `personas:` — a bare string counts as a one-element list. */
+function personaList(v: unknown): string[] {
+    if (typeof v === 'string') return v ? [v] : [];
+    if (!Array.isArray(v)) return [];
+    return v.filter((x): x is string => typeof x === 'string');
+}
+
+/**
+ * `triggers[].keyword` + `triggers[].phrase` as plain text.
+ *
+ * `file_pattern`, `path_prefix` and `command` are deliberately excluded: they
+ * are match *mechanisms*, not prose, and folding a glob into a keyword index
+ * would put tokens like `blade` and `php` on every skill that happens to watch a
+ * path. `reason` is excluded for the same reason it exists — it documents the
+ * trigger for a human, it is not part of what the trigger matches.
+ */
+function triggerText(v: unknown): string[] {
+    if (!Array.isArray(v)) return [];
+    const out: string[] = [];
+    for (const item of v) {
+        if (!item || typeof item !== 'object') continue;
+        const rec = item as Record<string, unknown>;
+        for (const key of ['keyword', 'phrase']) {
+            const val = rec[key];
+            if (typeof val === 'string' && val) out.push(val);
+        }
+    }
+    return out;
 }
 
 /** Recursively collect `*.md` files under `dir` (empty if `dir` is absent). */
@@ -97,6 +131,13 @@ function makeEntry(
         kind,
     };
     if (kind === 'rule' || kind === 'guideline') entry.mime_type = MIME_MARKDOWN;
+    // Ranking inputs — only skills are ranked, so only skills carry them.
+    if (kind === 'skill') {
+        const personas = personaList(fm.personas);
+        if (personas.length > 0) entry.personas = personas;
+        const triggers = triggerText(fm.triggers);
+        if (triggers.length > 0) entry.trigger_text = triggers;
+    }
     return entry;
 }
 

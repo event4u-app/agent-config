@@ -96,9 +96,12 @@ describe('agent-config mcp-server (stdio e2e)', () => {
         expect(resources.every((r) => r.uri.startsWith('rule://') || r.uri.startsWith('guideline://'))).toBe(true);
     });
 
-    it('tools/list is empty + tools/call is not_implemented (read-only)', () => {
+    it('tools/list is the two discovery tools + an unknown tool is not_implemented', () => {
         const tools = responses().find((r) => r.id === 4)!;
-        expect((tools.result as { tools: unknown[] }).tools).toEqual([]);
+        expect((tools.result as { tools: { name: string }[] }).tools.map((t) => t.name).sort()).toEqual([
+            'read_skill',
+            'suggest_skill_for_task',
+        ]);
         const call = responses().find((r) => r.id === 5)!;
         const data = (call.error as { data: { code: string } }).data;
         expect(data.code).toBe('not_implemented');
