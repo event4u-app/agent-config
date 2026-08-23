@@ -56,8 +56,28 @@ recursive `find -iname`, so it already covers `later/`, `stubs/` and `archive/`
 probe is the semantic half.
 
 Naming an overlap is **required**, not optional, and it is coordination rather
-than content generation — see the amended rule below. Zero hits is a real
-answer: record the probe's `scanned:` line as the justification and continue.
+than content generation — see the amended rule below.
+
+**Then write the `relates:` block from the hits** (template rule 18). One
+numbered-options question per hit — `extends` / `supersedes` / `depends` /
+`disjoint` — and the relation is never inferred: `extends` and `supersedes` rest
+on the same lexical evidence and are opposite decisions, so guessing manufactures
+the reflex-empty failure in a louder form. A `depends` answer mirrors into
+`depends:` in the same edit.
+
+Zero hits needs no question — it is fully determined, so write it silently:
+
+```bash
+agent-config roadmap:context --relates    # prints the block, ready to paste
+```
+
+```yaml
+relates: []   # scanned: 716 roadmap file(s), 0 sibling hits
+```
+
+The `scanned:` count is what separates *somebody looked and found nothing* from
+*nobody looked*; without it the empty list carries no information and is worse
+than an absent field.
 
 ### 1. Determine location
 

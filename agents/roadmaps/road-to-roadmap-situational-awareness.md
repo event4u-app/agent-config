@@ -4,6 +4,18 @@ status: draft
 execution:
   mode: phase-checkpoints
 depends: []
+# One row per relation this roadmap's own "Related, not duplicated" section
+# names. The probe found ZERO keyword hits (scanned: 716 roadmap file(s) across
+# active/later/stubs/archive, 0 sibling hits) — both rows below are
+# author-identified, which is exactly why the field is not `[]`: an empty list
+# would have been true about the probe and false about the roadmap.
+relates:
+  - slug: road-to-merge-hotspot-drawdown
+    relation: disjoint
+    note: "archived; it addressed WHICH files conflict, this addresses WHEN the agent learns they are in flight"
+  - slug: road-to-team-context
+    relation: disjoint
+    note: "a stub for a team-shared context SERVER (identity, multi-user); this touches no server and no identity model"
 drafted_against: 33d7f74af
 drafted_at: 2026-08-22
 estate_offset_exempt: "An /analyze:inbox run consumes inbox notes and closes no roadmap, so this change carries no completed roadmap to retire against the addition."
@@ -162,28 +174,28 @@ byte-identical records.
 roadmaps carry it, and `/roadmap:create` fills it from probe hits.
 **Rollback:** remove the gate check; the field degrades to optional metadata.
 
-- [ ] **4.1 Add `relates:` to the template beside `depends:`** (rule 18): a
+- [x] **4.1 Add `relates:` to the template beside `depends:`** (rule 18): a
       list of `{slug, relation: extends|supersedes|depends|disjoint, note}`.
       `depends` entries mirror into `depends:` so the set-contract edge source
       stays the one already defined at `roadmap-process-loop.md:318`.
-      verify: `./scripts-run src/scripts/lint_roadmap_complexity --quiet` exits 0 with the field present, and a fixture declaring `relation: maybe` reds.
-- [ ] **4.2 New non-draft roadmaps require the block, ratcheted not
+      verify (discharged): the field is present on THIS roadmap's own frontmatter (two `disjoint` rows for `road-to-merge-hotspot-drawdown` and `road-to-team-context`), and `./scripts-run src/scripts/lint_roadmap_complexity --quiet` → exit 0, `2 lightweight · 13 structural · 0 untagged · 15 total`. The `relation: maybe` fixture reds with the exact message `unknown relates[].relation 'maybe' — allowed: extends | supersedes | depends | disjoint (templates/roadmaps.md rule 18)`; six cases in `tests/scripts/lint_roadmap_complexity.test.ts` (22 passed). Two checks the step did not ask for but rule 18's own text requires: a `relates:` block with rows but no `relation:` key reds, and a `relation: depends` row that does **not** mirror into `depends:` reds — otherwise `relates:` becomes a second dependency source and the set contract has two. Sensitivity proven: removing the `_check_relates(fm, problems)` call turned **3 tests red** (`expected [] to deeply equal [ Array(1) ]`); restored from a `cp` backup, green at 22/22. **Drift:** the step's own `relates: []` example is honest only with the probe's `scanned:` line attached, so the template requires it and the linter accepts the inline-empty form.
+- [x] **4.2 New non-draft roadmaps require the block, ratcheted not
       retroactive.** A `relates:` block — an explicit `relates: []` carrying
       the probe's `scanned:` line as justification counts — is required for
       files added or edited after the check lands. The 22 existing roadmaps
       are held at their measured state, the ratchet pattern the blocker linter
       already uses.
-      verify: `./scripts-run src/scripts/check_roadmap_trackable` exits 0 on the tree unchanged, and a newly added fixture roadmap with no block reds.
+      verify (discharged): `./scripts-run src/scripts/check_roadmap_trackable` → exit 0, `✅ 9 active roadmap(s)` + `✅ check_roadmap_trackable:relates: 9 violation(s) at baseline, age 0d`. The RED state was observed first, before the baseline existed: `❌ check_roadmap_trackable:relates: 9 violation(s) and no recorded baseline`, naming all nine files. Ratchet recorded in `src/config/gate-violation-baselines.json` (`count: 9`, `landed: 2026-08-23`) using the existing `checkRatchet` helper — **not** a new baseline file, so no new suppression gate is introduced. Four end-to-end cases in `tests/scripts/check_roadmap_trackable.test.ts` run the real CLI over fixture trees: 9-without → green at baseline, **10-without → exit 1 with `10 violation(s) against a baseline of 9`**, 9-without + 3-with → green, and `declares_relates` is presence-only. Sensitivity proven: hardcoding `no_relates` to `[]` turned 2 tests red (`expected +0 to be 1`); restored, 12/12. **Drift from the step's premise:** the population is **9 active non-draft**, not 22 — the tree carries 15 active roadmaps of which 6 are `status: draft`, and the drafted figure was measured before that. The baseline is therefore 9.
 - [~] **4.3 Retro-tag the 22 existing roadmaps with `relates: []`.** <!-- deferred: an estate-wide write across 22 tracked files; owner-reserved, and no analysis exists to invent edges -->
       Held deferred deliberately: this is a write over the whole active estate
       and produces no evidence, so it waits for an explicit go rather than
       riding an autonomous run.
       verify: when taken up — a frontmatter grep for `relates:` across the active set reports zero files missing it.
-- [ ] **4.4 `/roadmap:create` fills the table from the probe's hits**, one
+- [x] **4.4 `/roadmap:create` fills the table from the probe's hits**, one
       numbered-options question per hit (extends / supersedes / depends /
       disjoint). Zero hits → `relates: []` written silently with the probe's
       `scanned:` line as the justification.
-      verify: a create eval fixture with one sibling hit produces a roadmap whose `relates:` names that sibling; a fixture with zero hits produces `relates: []` plus the `scanned:` line.
+      verify (discharged): **the step names a harness that does not exist** — there is no create eval, and `tests/eval/` carries only `corpus-dev.yaml`, `corpus-non-dev.yaml`, `trigger-coverage.yaml`, `nudge-interference/`, `orchestration-matrix/`, `routing-matrix/`. Substituted a deterministic mechanism for a model-in-the-loop one, which is a stronger discharge and not a weaker one: `relatesRowsFromHits` / `emptyRelatesBlock` in `roadmap_context.ts` render the block, `--relates` prints it ready to paste, and four cases assert exactly the step's two fixtures — one sibling hit produces `- slug: road-to-sibling` with its relation, and zero hits produces `relates: []   # scanned: 716 roadmap file(s), 0 sibling hits`. A fourth case round-trips the emitted block through `_check_relates` so the emitter cannot drift from the validator. One deliberate design call the step left open: the **relation is never inferred** — `extends` and `supersedes` rest on identical lexical evidence and are opposite decisions, so an unanswered hit is emitted with an `UNANSWERED` note rather than guessed or silently dropped. `/roadmap:create` § 0b carries the numbered-options obligation and the silent zero-hit path.
 
 ## Phase 5 — Mid-run refresh and enumerated reactions
 

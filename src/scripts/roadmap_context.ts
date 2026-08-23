@@ -535,6 +535,52 @@ export function registerOwnedPaths(records: readonly unknown[]): Map<string, str
     return out;
 }
 
+/** The four relations rule 18 allows. Closed set — an unknown value reds the lint. */
+export const RELATES_RELATIONS = ['extends', 'supersedes', 'depends', 'disjoint'] as const;
+export type RelatesRelation = (typeof RELATES_RELATIONS)[number];
+
+/**
+ * The `relates: []` frontmatter line for a probe that found nothing.
+ *
+ * Fully determined, which is why it is emitted rather than asked about: zero
+ * hits leaves nothing for a numbered question to be about. The `scanned:` count
+ * rides along because that is what separates "somebody looked and found
+ * nothing" from "nobody looked" — the whole absent-versus-empty distinction
+ * template rule 18 rests on.
+ */
+export function emptyRelatesBlock(scanned: number): string {
+    return `relates: []   # scanned: ${scanned} roadmap file(s), 0 sibling hits`;
+}
+
+/**
+ * The `relates:` frontmatter block for a probe that found hits.
+ *
+ * One row per hit. The RELATION is not inferred: `answers` carries the choice
+ * for each slug, because "extends" and "supersedes" are the same lexical
+ * evidence and opposite decisions — guessing would manufacture the reflex-empty
+ * failure in a louder form. A hit with no answer is emitted with its own note
+ * saying so rather than silently dropped, so an unanswered question cannot
+ * disappear into a clean-looking block.
+ */
+export function relatesRowsFromHits(
+    hits: readonly KeywordHit[],
+    answers: ReadonlyMap<string, RelatesRelation>,
+): string {
+    if (hits.length === 0) return 'relates: []';
+    const lines = ['relates:'];
+    for (const h of hits) {
+        const rel = answers.get(h.slug);
+        lines.push(`  - slug: ${h.slug}`);
+        lines.push(`    relation: ${rel ?? 'disjoint'}`);
+        lines.push(
+            rel === undefined
+                ? `    note: "UNANSWERED — probe hit in ${h.dir}/ on [${h.matched.join(' ')}]; confirm the relation"`
+                : `    note: "probe hit in ${h.dir}/ on [${h.matched.join(' ')}]"`,
+        );
+    }
+    return lines.join('\n');
+}
+
 /** The human report. One compact block — a refresh runs at every phase boundary. */
 export function renderText(ctx: RoadmapContext): string {
     const L: string[] = [];
@@ -596,7 +642,7 @@ function readOwnedPathsFile(p: string): Map<string, string[]> {
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--help') || argv.includes('-h')) {
         process.stdout.write(
-            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json]\n',
+            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json] [--relates]\n',
         );
         return 0;
     }
@@ -611,6 +657,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         roadmap: at('--roadmap'),
         ...(ownedFile !== null ? { ownedPaths: readOwnedPathsFile(ownedFile) } : {}),
     });
+    if (argv.includes('--relates')) {
+        // The frontmatter block, ready to paste. Zero hits is fully determined
+        // and printed as-is; hits print with every relation UNANSWERED, because
+        // that is a question for the author and not something to infer.
+        process.stdout.write(
+            ctx.hits.length === 0
+                ? `${emptyRelatesBlock(ctx.scanned.roadmaps)}\n`
+                : `${relatesRowsFromHits(ctx.hits, new Map())}\n`,
+        );
+        return 0;
+    }
     process.stdout.write(
         argv.includes('--json') ? `${JSON.stringify(ctx, null, 2)}\n` : renderText(ctx),
     );

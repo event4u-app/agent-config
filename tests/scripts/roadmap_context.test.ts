@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     citedPaths,
+    emptyRelatesBlock,
     computeOverlaps,
     enumerateRoadmaps,
     inboxNames,
@@ -23,6 +24,7 @@ import {
     parsePrList,
     probe,
     registerOwnedPaths,
+    relatesRowsFromHits,
     renderText,
     roadmapTailBranches,
     slugKeywords,
@@ -296,5 +298,55 @@ describe('registerOwnedPaths — the pre-scan set becomes readable, never re-der
                 source: 'pre-scan',
             },
         ]);
+    });
+});
+
+describe('relates: emission — road-to-roadmap-situational-awareness § 4.4', () => {
+    it('zero hits produces relates: [] carrying the scanned: line', () => {
+        expect(emptyRelatesBlock(716)).toBe(
+            'relates: []   # scanned: 716 roadmap file(s), 0 sibling hits',
+        );
+        expect(relatesRowsFromHits([], new Map())).toBe('relates: []');
+    });
+
+    it('one sibling hit produces a row naming that sibling', () => {
+        const hits = [
+            { slug: 'road-to-sibling', path: 'agents/roadmaps/later/road-to-sibling.md', dir: 'later' as const, matched: ['cache', 'warmth'] },
+        ];
+        const block = relatesRowsFromHits(hits, new Map([['road-to-sibling', 'extends' as const]]));
+        expect(block).toBe(
+            [
+                'relates:',
+                '  - slug: road-to-sibling',
+                '    relation: extends',
+                '    note: "probe hit in later/ on [cache warmth]"',
+            ].join('\n'),
+        );
+    });
+
+    it('an unanswered hit is emitted and LABELLED, never silently dropped', () => {
+        const hits = [
+            { slug: 'road-to-sibling', path: 'p', dir: 'active' as const, matched: ['x'] },
+        ];
+        const block = relatesRowsFromHits(hits, new Map());
+        expect(block).toContain('road-to-sibling');
+        expect(block).toContain('UNANSWERED');
+    });
+
+    it('the emitted block is accepted by the relates: linter', async () => {
+        const lint = await import('../../src/scripts/lint_roadmap_complexity.js');
+        const problems: string[] = [];
+        lint._check_relates(
+            `complexity: lightweight\n${relatesRowsFromHits(
+                [{ slug: 'road-to-s', path: 'p', dir: 'active' as const, matched: ['x'] }],
+                new Map([['road-to-s', 'supersedes' as const]]),
+            )}`,
+            problems,
+        );
+        expect(problems).toEqual([]);
+
+        const empty: string[] = [];
+        lint._check_relates(`complexity: lightweight\n${emptyRelatesBlock(9)}`, empty);
+        expect(empty).toEqual([]);
     });
 });
