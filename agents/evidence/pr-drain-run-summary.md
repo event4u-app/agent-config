@@ -428,3 +428,77 @@ was preferred over writing into a tree another session holds.
 - **Two transient classifier denials** on `gh pr merge` and `gh pr checkout`
   cleared on an immediate identical retry. No authorization window was spent on
   them.
+
+# Fourth pass — 2026-08-23
+
+A one-PR pass under the same whole-run merge authorization and the same 6 h
+ledger TTL as the third. `#1572` arrived after the third pass's last recompute,
+from a parallel session. **Queue drained to zero: 1 merged, 0 closed, 0 deferred,
+0 terminal.**
+
+## Step 0 — the premise was verified again, on the same terms
+
+`dist/hooks/dispatch.js:26076` reads `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3`; the
+only surviving `30 * 60 * 1e3` is `WALL_CLOCK_ARMS_MS[2]`, unrelated. Guard source
+and bundle were not touched by this pass. All work ran in a dedicated worktree
+(`../ac-drain-rm5`, `node_modules` cloned with APFS `cp -c`) so the peer session
+holding `main` in the primary checkout kept its own index and working tree.
+
+## Merged
+
+| # | PR | Sync conflicts | Resolution class | CI iters | Disposition |
+|---|---|---|---|---|---|
+| 1 | #1572 | `.github/workflows/rule-backstops.yml` · `Taskfile.yml` | union (both sides additive) | 1 | merged `fc6bddf2e` |
+
+Both conflicts were the same shape: each side had appended one gate step, and the
+merge base carried neither. `HEAD` added `grade_target_readiness --self-test`,
+`origin/main` added `check_composite_arming --self-test`, in the workflow and in
+`Taskfile.yml`'s `preflight` list. Union keeps both; `taskfiles/content.yml`
+auto-merged and was checked to define both task names before the commit landed.
+
+**No edit was dropped.** No generated artifact collided — neither
+`agents/roadmaps-progress.md` nor `src/config/estate-count-budget.json` was in the
+PR's diff, so nothing needed regenerating.
+
+## The push was refused once, and the refusal was right
+
+`git push` failed the pre-push preflight on `check_pr_ci_current`: PR head
+`a8bc43476` was not reachable from the local branch. That commit is a
+`Merge branch 'main' into drain/rm5` made server-side — a GitHub *Update branch*
+press — after the worktree had been created from a stale local `drain/rm5` at
+`228ac9f8b`. It was merged in rather than forced over, exactly as the gate's own
+message instructs.
+
+The merge produced **no content change** (`git diff ca95fdfd8 HEAD` empty): the
+local merge of `origin/main` had already reached the same tree, so this was a
+history-only merge whose sole purpose was making the PR head reachable. Worth
+recording because "clean auto-merge of a generated file is still wrong" is the
+usual hazard here, and an empty diff is the evidence that this was not that case.
+
+## The authorization detector, and what it did not read
+
+The run brief carried an explicit whole-run authorization in German prose. The
+session ledger was written on time and within TTL
+(`agents/state/git-authorization/<session>.json`, `detected_at 06:52:24Z`) and
+came out `authorized: []`, so `gh pr merge` was blocked as unauthorized. The TTL
+was not the cause and neither was staleness: the phrase never classified.
+
+The block was resolved the way the guard prescribes — one numbered-options ask,
+answered `1` — and the confirmation path recorded
+`pr-merge: confirmation of the refused pr-merge`. Two facts fall out, both worth
+keeping: a long prose authorization is not a substitute for the short
+confirmation the detector recognises, and an authorization cannot be collected
+through a tool-side prompt, because the classifier reads the `user_prompt_submit`
+text and a tool result never reaches it.
+
+## Process notes
+
+- **`gh pr merge` reported `already merged`** while failing to delete the local
+  branch (it was checked out in this pass's own worktree). Disposition was
+  confirmed from `gh pr view --json state,mergeCommit` and from
+  `git log origin/main`, never from the merge command's exit — the same rule the
+  third pass recorded for `#1568`.
+- **One transient classifier denial** on `git merge origin/main` cleared on an
+  immediate identical retry.
+- **CI settled green on the first and only run**: 33 checks, no flake, no
+  iteration. `ci_settle` was the single waiter; no second watcher was started.
