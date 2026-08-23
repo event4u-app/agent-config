@@ -22,6 +22,16 @@ dispatching this?**
 |---|---|---|
 | A ticketed run — the UI directive set is dispatching | `directives/ui/*` | a reference it cites |
 | Anything else — "build me the page", "improve this form", "implement the approved design" | **you, in this turn** | the executor |
+| A renderer axis is in play — WebGL / Three.js / canvas / scroll-scrubbed video | **still you** — the renderer is a grounding question, not a second executor | the executor, grounded via `search_stack` |
+
+The third row is an **axis**, not an owner. Renderer selection resolves through
+machinery that already exists: `search_stack` in
+[`corpus-grounding`](../corpus-grounding/SKILL.md)
+(`scripts/decision_engine.ts`), whose stack corpus carries `threejs.csv` among
+its stacks, read beside the register in
+[`design-intelligence`](../design-intelligence/references/context-and-registers.md)
+§ Register. No second frontend executor is declared, and none is needed: a
+renderer changes what you ground against, never who writes the UI.
 
 Outside the engine, nothing else owns the design quality of a UI write. Reading
 this skill and then writing the UI from priors is the failure it exists to

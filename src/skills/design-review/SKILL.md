@@ -72,6 +72,14 @@ A **live preview URL** is required for testing.
   structural open/close ~200–500 ms) — the timing source of truth; do not restate
   a competing band set here. Every animated transition also carries a
   `prefers-reduced-motion` alternative (M5 / Q4).
+- **Reduced motion is a presentation, not a suppression.** Check what the
+  surface shows *instead of* the motion, not that a
+  `prefers-reduced-motion` block exists — the block is greppable and says
+  nothing. A reveal presents its content at the final state; a scrubbed
+  sequence presents each beat at its resting state; only decoration is
+  correctly removed. `animation: none` over a reveal leaves the content
+  invisible. Verdict table:
+  [`accessibility-auditor`](../accessibility-auditor/SKILL.md) § 2.
 - Test keyboard navigation (Tab, Enter, Escape, Arrow keys).
 - Verify form submission and error recovery.
 
@@ -93,6 +101,11 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 `min-width` actually breaks.
 
 - Take screenshots at each viewport.
+- **Scroll-driven surface** — read the `scroll_evidence` artefact
+  ([`references/verification-automation.md`](references/verification-automation.md)
+  § Scroll evidence) and report every sample whose asserted `state` and
+  `observed` disagree as a finding. An empty `samples` array is a recorded null,
+  not a pass.
 - Check layout shifts, overflow, and content reflow.
 - Verify touch targets are at least 44x44px on mobile.
 

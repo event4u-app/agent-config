@@ -934,18 +934,49 @@ scrub patterns exist" premise is false —
 `scroll, pin, scrub, storytelling, scrollytelling` with a pinned scrub snippet,
 and `:14-15` add parallax scrub.
 
-- [ ] **9.1 A story-beat ledger and a style-bible schema, hosted in `wireframe`.**
+- [x] **9.1 A story-beat ledger and a style-bible schema, hosted in `wireframe`.**
       The one cleanly unmet gap:
       `grep -rilE 'beat ledger|story ledger|style bible' src/` returns zero paths
       today, verified 2026-08-22. Land the schema under `src/skills/wireframe/`,
       the skill that already owns the low-fidelity artefact, and the guidance row
       under `src/skills/design-intelligence/data/landing.csv`. Do not create a
       skill to hold a schema.
-      verify: that same grep returns at least one path under
-      `src/skills/wireframe/`, the schema parses via
-      `npx tsx -e "JSON.parse(require('fs').readFileSync('<path>','utf8'))"`, and
-      `ls src/skills | wc -l` is unchanged.
-- [ ] **9.2 Renderer selection is a third row in the `fe-design` mode table, not
+      verify (discharged): `grep -rilE 'beat ledger|story ledger|style bible' src/` now
+      returns **one path**, and it is under `src/skills/wireframe/` —
+      `src/skills/wireframe/references/story-beat-ledger.schema.json`. It parses via
+      `npx tsx -e "JSON.parse(...)"`. `ls src/skills | wc -l` is **294, unchanged**.
+      **All three hold.**
+
+      **The gap was re-verified before filling it:** the same grep returned **zero** paths
+      on this branch's base, so this is a new shape rather than a second copy of one.
+
+      **Both halves live in one file on purpose.** A ledger is what happens in order; a
+      style bible is what holds still throughout. Split across two files, a beat can
+      reference a style that no longer exists. The split *inside* the schema is the load-
+      bearing one: a property that changes per beat belongs on the beat, not in the bible.
+
+      **Hosted in `wireframe` because a beat ledger IS a low-fidelity artefact** — one
+      axis further along than a static skeleton — and that skill already owns the class.
+      No skill was created to hold a schema, which is what the step forbids and what the
+      unchanged 294 proves.
+
+      Three fields the step did not ask for, each closing a hole this roadmap opened
+      elsewhere:
+
+      - `beats[].maturity` (`wireframe` | `comp`) — so a ledger cannot be handed over as a
+        pixel spec **by omission**. Phase 0 made maturity an axis the routing layer reads;
+        an artefact that carries beats and no maturity would default to `comp` and inherit
+        a 1:1 mandate over greys nobody chose.
+      - `style_bible.reduced_motion_presentation` — the schema half of step 9.3. A beat
+        carrying `motion` obliges the bible to say what replaces it.
+      - `enters_at` accepts **null**, because at wireframe stage no layout exists yet and
+        an honest null beats a fabricated scroll offset.
+
+      The guidance row is `landing.csv` row **35, "Scroll-Driven Narrative"** — 8 columns,
+      no ragged rows, and the manifest carries only file paths and column names, so a row
+      addition has no downstream surface to sync.
+
+- [x] **9.2 Renderer selection is a third row in the `fe-design` mode table, not
       a new owner.** `src/skills/fe-design/SKILL.md:20-23` is a two-row table
       naming who owns the UI write; the renderer axis becomes a third row there.
       Grounding routes through machinery that already exists —
@@ -954,37 +985,129 @@ and `:14-15` add parallax scrub.
       stacks — and the axis is recorded beside the existing register read at
       `src/skills/design-intelligence/references/context-and-registers.md:28`.
       `fe-design` stays the owner and no second frontend executor is declared.
-      verify: `grep -c 'search_stack' src/skills/fe-design/SKILL.md` is non-zero,
-      that mode table has exactly three body rows, and `ls src/skills | wc -l` is
-      unchanged.
-- [ ] **9.3 `prefers-reduced-motion` becomes a presentation mode, not
+      verify (discharged): `grep -c 'search_stack' src/skills/fe-design/SKILL.md` → **2**
+      (non-zero), the mode table has **exactly three body rows**, and
+      `ls src/skills | wc -l` is **294, unchanged**. **All three hold.**
+
+      **The row says "still you".** The renderer axis is a *grounding* question, not a
+      second executor: `| A renderer axis is in play — WebGL / Three.js / canvas /
+      scroll-scrubbed video | **still you** — the renderer is a grounding question, not a
+      second executor | the executor, grounded via search_stack |`. A sentence beneath the
+      table states it in the other direction too — *a renderer changes what you ground
+      against, never who writes the UI* — because a third row in an ownership table is
+      exactly where a second owner would sneak in.
+
+      Grounding routes through machinery that already exists: `search_stack` in
+      `src/skills/corpus-grounding/scripts/decision_engine.ts:269`, whose stack corpus
+      carries `threejs.csv`, read beside the register at
+      `src/skills/design-intelligence/references/context-and-registers.md` § Register.
+      Nothing new was built to select a renderer.
+
+      **A counting trap, recorded because the next reader will hit it:** `awk` over the
+      table piped to `grep -c '^| '` reports **4**, not 3 — the separator row
+      `|---|---|---|` starts with `|-`, not `| `, so it is excluded while the header is
+      not. Body rows are `4 - 1`. The "exactly three body rows" claim above is counted
+      off the file, not off that pipe.
+
+- [x] **9.3 `prefers-reduced-motion` becomes a presentation mode, not
       `animation: none`.** It appears in 11 files under `src/` today — verified
       2026-08-22; the source claimed 18 — and in every one of them as a check,
       including `src/ui/tokens.css`, `src/scripts/lint_design_quality.ts` and
       `src/skills/design-review/SKILL.md:74`. `src/skills/accessibility-auditor/`
       names it zero times. Extend that skill and `design-review` with what the
       surface presents *instead of* motion, which is the half no file carries.
-      verify: `grep -ric 'reduced.motion' src/skills/accessibility-auditor/` is
-      non-zero where it is zero today, and
-      `grep -rl 'prefers-reduced-motion' src/ | wc -l` is at least 12.
-- [ ] **9.4 A scroll evidence artefact the existing review consumes.**
+      verify (discharged): `grep -ric 'reduced.motion' src/skills/accessibility-auditor/`
+      sums to **3** where it was **0**, and `grep -rl 'prefers-reduced-motion' src/ | wc -l`
+      is **14**, at least 12. **Both hold.**
+
+      **The half no file carried is *what the surface presents instead*.** The word appears
+      in 11 files at base and in every one as a **check** — `src/ui/tokens.css`,
+      `src/scripts/lint_design_quality.ts`, `src/skills/design-review/SKILL.md:74`. None
+      said what should be there when the motion is gone.
+
+      `accessibility-auditor` § 2 gains a fifth checklist whose opening line is the point:
+      *"audit the PRESENTATION, not the presence of the query."* A four-row verdict table
+      maps what the motion carries to what must replace it:
+
+      | reveal → the content at its **final** state | scrubbed sequence → each beat at its
+      **resting** state | transition → an instant state change, still announced |
+      decoration → **nothing; removal is correct** |
+
+      **Decoration being the only removal case is why `animation: none` is wrong so
+      often** — it is right for exactly one of four rows and reads as right for all of
+      them. The one-question form is in the text: *if the motion never plays, is the
+      content still there and still understandable?*
+
+      `design-review` gets the compressed form beside its existing M5/Q4 line, pointing at
+      the table rather than restating it — one contract, not two.
+
+      **This closes the PROSE half of inventory row A12 and deliberately not the
+      measurement half.** A12 stays `unmeasurable`, and the `reduced-motion-alternative`
+      dimension stays a recorded null on `F2-inert` in the Phase 3 sheet: `grep` proves a
+      block exists, and nothing available here reads the declarations inside it to tell a
+      presented alternative from a suppression. Closing the prose half does not license
+      claiming the measurement.
+
+- [x] **9.4 A scroll evidence artefact the existing review consumes.**
       `src/skills/design-review/references/verification-automation.md:9-52`
       captures screenshots and diffs them by eye, emitting no machine-readable
       artefact. Extend that file with the artefact schema — scroll position, beat
       id, and the element states asserted at that position — and have
       `design-review` read it. Build no parallel verifier beside it.
-      verify: `grep -c 'scroll' src/skills/design-review/references/verification-automation.md`
-      is non-zero, `grep -c 'visually diff the screenshots'` on the same file
-      still reports 1, and `ls src/skills/design-review/references | wc -l` is
-      unchanged.
-- [ ] **9.5 Scroll-storytelling trigger fixtures go into the existing evals
+      verify (discharged): `grep -c 'scroll'
+      src/skills/design-review/references/verification-automation.md` → **4** (non-zero),
+      `grep -c 'visually diff the screenshots'` on the same file → **1** (unchanged), and
+      `ls src/skills/design-review/references | wc -l` → **2, unchanged**. **All three
+      hold.**
+
+      **The existing eye-diff step is untouched, which the third assertion is there to
+      prove.** `:16` still reads *"Compare — visually diff the screenshots, flag
+      regressions"*. The new section sits above it and is explicit about being the
+      machine-readable **half** of that comparison, not its replacement.
+
+      The artefact is `scroll_evidence` on the review envelope: `scroll` position,
+      `beat_id`, and per-element `state` vs `observed`. `beat_id` references the 9.1
+      ledger, which is what makes a sample checkable **against an intent** rather than
+      against a remembered screenshot — a row whose `state` and `observed` disagree is a
+      finding, and two runs of the file can be diffed. The embedded example is asserted to
+      be valid JSON, not just fenced.
+
+      **"Have `design-review` read it" was made true rather than asserted.** The step's own
+      verify does not check the consumer, so risk #6 in the register (*"the narrative
+      schema ships and no review reads it"*) would have survived a green. `design-review`
+      Phase 2 now carries the read beside the viewport sweep, with the disagreement rule
+      and the null rule: **an empty `samples` array is a recorded null, not a pass.**
+
+      **No verifier was built beside it**, per the step: the async verifier already on that
+      page captures the samples in the pass that captures the screenshots, and the sampling
+      positions come from the ledger's `enters_at` values rather than an arbitrary scroll
+      grid. Where no capture primitive exists the samples are absent and the verdict is
+      static-scoped through `verdict_scope` from step 7.1 — the two phases join up instead
+      of each inventing a way to say "nothing rendered".
+
+- [x] **9.5 Scroll-storytelling trigger fixtures go into the existing evals
       file.** `src/skills/fe-design/evals/triggers.json` is the only file in that
       directory and returns zero `scroll` hits today. The should-trigger and
       should-not-trigger rows land there. This is a fixture addition — not a rule
       and not a phase of its own.
-      verify: `ls src/skills/fe-design/evals | wc -l` still reports 1, and
-      `grep -c scroll src/skills/fe-design/evals/triggers.json` is non-zero.
-- [ ] **9.6 Anti-generic art direction is one slop row plus one corpus row.**
+      verify (discharged): `ls src/skills/fe-design/evals | wc -l` still reports **1**, and
+      `grep -c scroll src/skills/fe-design/evals/triggers.json` → **4** where it was **0**.
+      The file still parses. **Both hold.**
+
+      Three rows into the existing file, no new file and no new rule: two
+      should-trigger (*"build the scroll-driven story section for the launch page"*,
+      *"make the hero pin and scrub through three beats as you scroll"*) and one
+      should-NOT-trigger.
+
+      **The should-not row is the one that earns its place.** *"the scroll position resets
+      when I navigate back — fix the restoration bug"* is a state/restoration defect and
+      belongs to the `frontend-engineer` lens, not to design. Without it, the word
+      `scroll` alone would route every scroll bug to a design skill — the over-broad
+      trigger this repo's own routing discipline keeps catching. The file's `description`
+      records that reasoning inline, so a later editor cannot read the row as noise and
+      delete it.
+
+- [x] **9.6 Anti-generic art direction is one slop row plus one corpus row.**
       One row in `src/scripts/design_slop_rules.ts` on the `copy` engine — the
       engine `slop-cp1-em-dash` and `slop-cp2-buzzword` already use — because a
       CSS engine cannot see subject matter: the detectable surface is the brief's
@@ -992,9 +1115,44 @@ and `:14-15` add parallax scrub.
       `src/skills/design-intelligence/data/stacks/threejs.csv` under an existing
       `Category` value. `slop-c3-dark-glow` (`:549`) already covers the CSS
       neon-glow tell and is not duplicated. This is never a rule.
-      verify: `grep -c 'id: "slop-' src/scripts/design_slop_rules.ts` is exactly
-      one higher than its pre-state, `wc -l` on `threejs.csv` reports 55, and
-      `ls src/rules | wc -l` is unchanged.
+      verify (discharged): `grep -c 'id: "slop-' src/scripts/design_slop_rules.ts` → **25**,
+      exactly one higher than the pre-state **24**. `wc -l` on `threejs.csv` → **55**.
+      `ls src/rules | wc -l` → **120, unchanged** — this is never a rule. **All three hold.**
+
+      **`slop-cp6-generic-art-direction`, on the `copy` engine**, and the reason is in the
+      code comment: a CSS engine cannot see subject matter — `transform: translateZ()`
+      looks identical whether it moves a product or a glowing orb. The detectable surface
+      is the brief's own wording, never the render. A test asserts the rule is on `copy`
+      and **not** on `css`, so the engine choice cannot drift.
+
+      Mechanism is `STOCK_RENDER_SUBJECTS`, a phrase list beside `BUZZWORDS` — the same
+      mechanism CP2 already ships **backed**, applied to art direction instead of prose,
+      with the same delete-test: swap the phrase for what the product actually shows and
+      the brief says more. `slop-c3-dark-glow` (`:549`) covers the CSS neon-glow tell and
+      is not duplicated.
+
+      **A parity invariant the step does not mention had to be paid.**
+      `lint_design_antipattern_parity` requires every registry `catalogId` to have a
+      catalog entry **and** a detector-status row in
+      `docs/guidelines/design-antipatterns.md`. Adding the rule alone would have reddened
+      it. CP6 now has both rows; the gate reports **46 entries classified, 25
+      detector-backed** (was 45/24). `check_depth_budget` still reports **4 violations at
+      baseline** — `design-antipatterns.md` was already over the ceiling, so the count did
+      not move and no fifth file appeared.
+
+      **Sabotage-proven:** forcing the detector to return an empty hit list takes **2**
+      assertions red. Restored, 5/5. Two of the five are near-misses that must stay
+      silent: a brief naming a real subject (*"the assembled chassis rotates, one component
+      highlighted per beat"*) and a technique-only brief (*"WebGL with instanced meshes"*)
+      — because naming WebGL is not the defect, **defaulting the subject** is.
+
+      One limitation is documented rather than hidden: the rule fires on prose that
+      *argues against* the pattern, since the phrase is present either way. The test
+      asserts that behaviour explicitly instead of pretending it does not happen.
+
+      **A `wc -l` trap, recorded:** the first version of the corpus row used multi-line
+      `Code Good` / `Code Bad` cells. Valid CSV, 54 data rows — and `wc -l` reported **57**,
+      failing a verify that counts physical lines. The row was rewritten single-line.
 
 ## Blockers
 
@@ -1115,29 +1273,47 @@ question is answered before the code is written, not after.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A greyscale handover no longer resolves to a pixel mandate, and a
+- [x] AC-1 — A greyscale handover no longer resolves to a pixel mandate, and a
       finished comp still does. Both directions are pinned by a committed
       fixture pair whose near-miss was authored first.
-- [ ] AC-2 — At least one fidelity dimension is decided by a number a gate
+      **Met.** `daf-wireframe-not-pixel` routes to a structure mandate and `daf-wireframe-near-miss` still routes strictly; the near-miss was authored first and its baseline recorded as PASS-vacuously (0.1). `design_fidelity_routing.test.ts` → 29/29, and softening the artefact-not-prose clause takes it red.
+
+- [x] AC-2 — At least one fidelity dimension is decided by a number a gate
       reads, and that number opens a polish round through the mechanism that
       already exists rather than a new one beside it.
-- [ ] AC-3 — Every dimension named in the Phase 2 schema is either shipped with
+      **Met.** `token-literal` is decided by a detector, not by judgement: the seeded fixture emits 2 findings and its paired clean fixture 0. The number opens exactly one polish round through `polish.ts:94-100`, and the same findings marked `artifact_covered: true` open zero via `partition_artifact_covered` at `:142`. `polish.ts` is byte-identical to HEAD — no mechanism was added beside the existing one.
+
+- [x] AC-3 — Every dimension named in the Phase 2 schema is either shipped with
       a measurement or recorded as a null naming the pre-registered falsifier
       that fired. The two sets together account for the whole schema.
-- [ ] AC-4 — The strict mode table in `src/rules/design-fidelity.md` is
+      **Met, and checked by script rather than by eye.** The Phase 2 schema accounts for 4 dimensions; 2 shipped with measured rows (`token-literal`, `viewport-floor`) + 2 recorded nulls (`render-diff` → `F0-uncapturable`, `reduced-motion-alternative` → `F2-inert`) = 4. Each null names its pre-registered falsifier and enumerates the claims it covers (A4/A9/A10/A11 and A12). `ajv` validates the sheet, and two deliberate corruptions are rejected.
+
+- [x] AC-4 — The strict mode table in `src/rules/design-fidelity.md` is
       byte-for-byte what it is at HEAD, and no `daf-*` fixture that existed
       before this roadmap had its expected verdict edited.
-- [ ] AC-5 — The ad-hoc path carries a stated round ceiling and a stated stop
+      **Met, in the strongest available form.** `diff` of `src/rules/design-fidelity.md` against `git show origin/main:` is **empty — the whole file is byte-identical**, so the strict mode table is too. No pre-existing `daf-*` id disappeared (`comm -23` empty, 50 → 52 with two additions) and `git diff --stat` over the fixture expectations is empty.
+
+- [x] AC-5 — The ad-hoc path carries a stated round ceiling and a stated stop
       condition in the same paragraph, so a single-pass review is a choice
       rather than the only available shape.
-- [ ] AC-6 — The 320 px floor is either measured or withdrawn. An asserted-only
+      **Met.** `fe-design` step 5 states a ceiling of **2** and a stop-on-null condition **in the same paragraph** — asserted mechanically by splitting the skill on blank lines and requiring the block containing `at most **2 rounds**` to contain `no new finding`. A fixture pair scores both outcomes through `polish.run`; moving the stop condition out of the paragraph takes the assertion red.
+
+- [x] AC-6 — The 320 px floor is either measured or withdrawn. An asserted-only
       floor remains in neither skill.
-- [ ] AC-7 — Rendered visual quality has exactly one named owner, or the
+      **Met, by measurement rather than withdrawal.** `src/skills/design-review/SKILL.md` Phase 2 now tests four viewports including `| Floor | 320px |`, so the floor `fe-design:88,213` asserts is in the set a reviewer is told to test. Neither skill carries an asserted-only floor. What still needs a page — whether a given surface passes at 320px — is a recorded null under `b-page-capture-primitive`, not an assertion.
+
+- [x] AC-7 — Rendered visual quality has exactly one named owner, or the
       absence of one is recorded as a deliberate null with its reason.
-- [ ] AC-8 — Scroll-driven narrative work has a beat/style schema and a
+      **Met as a deliberate null.** No persona owns rendered visual quality: `frontend-engineer.md:60` declines it for state/render correctness, `design-director.md:16` for brand art direction. The skill layer (`design-review`, `accessibility-auditor`) is the only owner. Recorded with its reason and a reopening condition in the Phase 1 artefact § Phase 8 null; the persona count is unchanged at 30 and `skill_linter --all` is 446/0/0.
+
+- [x] AC-8 — Scroll-driven narrative work has a beat/style schema and a
       machine-readable scroll evidence artefact that the existing `design-review`
       flow reads, with no new skill, no new verifier and no new rule added to
       carry them.
-- [ ] AC-9 — Renderer selection is a row in the `fe-design` mode table and
+      **Met.** The beat/style schema lives under `src/skills/wireframe/references/`, the scroll evidence artefact extends the file `design-review` already loads, and `design-review` Phase 2 reads it with a stated disagreement rule and a stated null rule. Counts unchanged: **294** skills, **120** rules, **2** files in `design-review/references/`, **1** in `fe-design/evals/`. No new skill, no new verifier, no new rule.
+
+- [x] AC-9 — Renderer selection is a row in the `fe-design` mode table and
       `fe-design` is still the owner of the ad-hoc UI write. No second frontend
       executor exists.
+      **Met.** Renderer selection is the third row of the `fe-design` mode table, and the row itself says **"still you"** — grounded via `search_stack`, which already exists. A sentence below the table states the same in the other direction: a renderer changes what you ground against, never who writes the UI. `fe-design` remains the owner and no second frontend executor exists.
+

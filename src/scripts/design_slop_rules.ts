@@ -175,6 +175,35 @@ const BUZZWORDS = [
   "leverage",
 ];
 
+/**
+ * Stock render subjects — the default thing an image or 3D model becomes when
+ * nobody decided what it should be about.
+ *
+ * Same mechanism as `BUZZWORDS` (CP2), applied to art direction instead of
+ * prose: each entry names a *visual* that carries no subject matter. The
+ * delete-test is the same one — swap the phrase for the product's actual
+ * subject and the brief says more, which is the proof it said nothing.
+ *
+ * On the `copy` engine deliberately. A CSS engine cannot see subject matter:
+ * `transform: translateZ()` looks identical whether it moves a product or a
+ * glowing orb. The only detectable surface is the brief's own wording.
+ */
+const STOCK_RENDER_SUBJECTS = [
+  "floating abstract shapes",
+  "abstract floating shapes",
+  "gradient mesh",
+  "glowing orb",
+  "glowing orbs",
+  "floating particles",
+  "particle field",
+  "abstract 3d shape",
+  "abstract 3d shapes",
+  "futuristic hud",
+  "digital landscape",
+  "flowing ribbons",
+  "liquid metal blob",
+];
+
 // ---------------------------------------------------------------------------
 // The registry
 // ---------------------------------------------------------------------------
@@ -414,6 +443,25 @@ export const SLOP_RULES: SlopRule[] = [
         return [{ line: 1, snippet: `buzzwords: ${hits.join(", ")}` }];
       }
       return [];
+    },
+  },
+  {
+    id: "slop-cp6-generic-art-direction",
+    catalogId: "CP6",
+    severity: "P2",
+    engines: ["copy"],
+    description: "Stock render subject named in a brief instead of the product's own subject matter",
+    message:
+      "This names a default visual, not a subject — swap it for what the product " +
+      "actually shows and the brief says more (CP6).",
+    detect: ({ content, ext }) => {
+      const text = visibleText(content, ext);
+      const lower = text.toLowerCase();
+      const hits = STOCK_RENDER_SUBJECTS.filter((s) => lower.includes(s));
+      if (hits.length === 0) {
+        return [];
+      }
+      return [{ line: 1, snippet: hits.slice(0, 3).join(", ") }];
     },
   },
   {

@@ -80,6 +80,25 @@ on `<html>`, predictable navigation across pages.
 `<footer>`), heading order without skips, ARIA only when no native
 element exists, custom widgets follow ARIA-APG patterns.
 
+**Reduced motion — audit the PRESENTATION, not the presence of the
+query.** A `prefers-reduced-motion` block is easy to grep and proves
+nothing: `animation: none` on a scroll-revealed section leaves the
+content invisible, and a scrubbed sequence with its motion removed
+leaves the story untold. So the finding is about what the surface
+shows **instead**:
+
+| Motion carries | Reduced-motion presentation | Failure |
+|---|---|---|
+| A reveal (content fades/slides in) | The content at its **final** state, visible from the start | `opacity: 0` left standing — the content never appears |
+| A scrubbed sequence (scroll drives progress) | Each beat at its **resting** state, reachable by ordinary scrolling | Motion disabled and the beats collapse onto each other |
+| A transition between states | An instant state change, still announced | The state changes with no perceivable feedback |
+| Decoration (parallax, drift, ambient) | Nothing — removal is the correct presentation | — |
+
+Decoration is the only case where removal is the answer, which is why
+`animation: none` reads as correct so often and is wrong so often. Ask
+per block: *if the motion never plays, is the content still there and
+still understandable?* Record the answer, not the query.
+
 ### 3. Run the keyboard pass
 
 `Tab` from page start: every interactive element receives focus,

@@ -50,6 +50,29 @@ export const SEVERITY_ORDER: Record<string, number> = {
 /** R4 a11y default severity floor. */
 export const DEFAULT_SEVERITY_FLOOR = 'moderate';
 
+/**
+ * Marker on a review finding that flags a hardcoded design value.
+ *
+ * Deliberately re-declared rather than imported from `polish.ts`: the two
+ * directives are siblings with no dependency edge between them, and
+ * `token_violation_kinds_agree` in the Phase 3 test pins the two literals
+ * equal so the duplication cannot drift silently.
+ */
+export const TOKEN_VIOLATION_KIND = 'token_violation';
+
+/** A finding produced by a deterministic check, not by an agent's judgement. */
+export const DETECTOR_CHANNEL = 'detector';
+
+/**
+ * A finding produced by an agent reading the surface.
+ *
+ * Named here only so the two channels are readable side by side. The prose
+ * channel (`tailwind-engineer` § arbitrary values) is unchanged by the
+ * detector — the detector is additive, and a finding that carries no
+ * `channel` at all predates the split and is treated as judgement.
+ */
+export const JUDGEMENT_CHANNEL = 'judgement';
+
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     {
         code: 'review_envelope_missing',
@@ -151,10 +174,14 @@ export function run(state: DeliveryState): StepResult {
         return a11y_halt;
     }
 
+    _apply_token_detector(state, r);
+
     const preview_halt = _apply_preview_gate(state, r);
     if (preview_halt !== null) {
         return preview_halt;
     }
+
+    _stamp_verdict_scope(r);
 
     return new StepResult({ outcome: Outcome.SUCCESS });
 }
@@ -370,6 +397,193 @@ function _synthesize_a11y_findings(findings: Any[], actionable: Any[]): void {
         });
         existing.add(key);
     }
+}
+
+/**
+ * Return the audit token category whose bucket holds `value`, or null.
+ *
+ * This predicate IS the pre-registered scope of the measured dimension: "a raw
+ * literal where the audit found a token". A value the audit holds no token for
+ * is outside it and is never emitted — the `F4-unscoped` falsifier
+ * (`agents/evidence/analysis/frontend-fidelity-preregistered-falsifiers.md`)
+ * fires on a detector that flags every literal instead.
+ *
+ * Membership is tested with `Object.values(bucket).includes(value)`, the exact
+ * predicate `polish._classify_token_violations` uses. Sharing the predicate is
+ * what makes every detector-produced finding classify as `matched` downstream,
+ * so the detector channel can never trip the token-extraction halt.
+ */
+function _audit_token_category(tokens: Record<string, Any>, value: string): string | null {
+    for (const category of Object.keys(tokens)) {
+        const bucket = tokens[category];
+        if (_isDict(bucket) && Object.values(bucket).includes(value)) {
+            return category;
+        }
+    }
+    return null;
+}
+
+/** Return `state.ui_audit.design_tokens` as a dict, or `{}`. */
+function _audit_design_tokens(state: DeliveryState): Record<string, Any> {
+    const audit = _pyTruthy(state.ui_audit) ? state.ui_audit : {};
+    if (!_isDict(audit)) {
+        return {};
+    }
+    const tokens = _pyTruthy(audit['design_tokens']) ? audit['design_tokens'] : {};
+    return _isDict(tokens) ? tokens : {};
+}
+
+/** Dedup key for a detector finding — one per measured site and value. */
+function _tokenKeyOf(file: Any, line: Any, value: Any): string {
+    return `${String(file)}\u0000${String(line)}\u0000${String(value)}`;
+}
+
+/**
+ * Append `token_violation` findings from the detector envelope.
+ *
+ * Mirrors `_synthesize_a11y_findings`: the review skill writes the raw scan
+ * into `state.ui_review.tokens.violations`, and this turns the in-scope subset
+ * into findings the polish gate already knows how to act on. Deduped by
+ * `(file, line, value)`, so re-running the step is idempotent.
+ *
+ * Returns the number of findings appended.
+ */
+function _synthesize_token_findings(
+    findings: Any[],
+    violations: Any[],
+    tokens: Record<string, Any>,
+): number {
+    const existing = new Set<string>();
+    for (const f of findings) {
+        if (_isDict(f) && f['kind'] === TOKEN_VIOLATION_KIND) {
+            existing.add(_tokenKeyOf(f['file'], f['line'], f['value']));
+        }
+    }
+    let added = 0;
+    for (const v of violations) {
+        if (!_isDict(v)) {
+            continue;
+        }
+        const value = v['value'];
+        if (typeof value !== 'string') {
+            continue;
+        }
+        const category = _audit_token_category(tokens, value);
+        if (category === null) {
+            continue;
+        }
+        const key = _tokenKeyOf(v['file'], v['line'], value);
+        if (existing.has(key)) {
+            continue;
+        }
+        findings.push({
+            kind: TOKEN_VIOLATION_KIND,
+            channel: DETECTOR_CHANNEL,
+            category,
+            value,
+            file: v['file'] ?? null,
+            line: v['line'] ?? null,
+            detector_type: v['type'] ?? null,
+        });
+        existing.add(key);
+        added += 1;
+    }
+    return added;
+}
+
+/**
+ * Turn the detector envelope into findings, and take the review off clean.
+ *
+ * Never halts. An absent envelope is not an error: the detector is one channel
+ * of two, and a run that did not scan is a run with nothing measured — which is
+ * exactly what the `render_ok` gate below refuses to let pass silently for the
+ * render channel, and what a null record covers for a blocked dimension.
+ */
+function _apply_token_detector(state: DeliveryState, review: Record<string, Any>): void {
+    const raw = review['tokens'];
+    if (!_isDict(raw)) {
+        return;
+    }
+    const violations = raw['violations'];
+    if (!Array.isArray(violations) || violations.length === 0) {
+        return;
+    }
+    const findings = review['findings'];
+    if (!Array.isArray(findings)) {
+        return;
+    }
+    const added = _synthesize_token_findings(
+        findings as Any[],
+        violations as Any[],
+        _audit_design_tokens(state),
+    );
+    if (added > 0) {
+        review['review_clean'] = false;
+    }
+}
+
+/**
+ * Render-dependent checks, and the blocker that gates each of them.
+ *
+ * Named here so a static-scoped verdict can enumerate what it did NOT do.
+ * "Scope the verdict to what was statically checked and say so" is only
+ * readable if the unrun half is written down too — an enumerated `checks_run`
+ * with no `checks_not_run` beside it reads as a complete review.
+ */
+export const RENDER_DEPENDENT_CHECKS: ReadonlyArray<string> = [
+    'viewport-sweep',
+    'touch-target-size',
+    'rendered-contrast',
+    'screenshot-diff',
+];
+
+/** The blocker slug every render-dependent check is gated behind. */
+export const RENDER_BLOCKER = 'b-page-capture-primitive';
+
+/**
+ * Stamp the verdict scope onto the review envelope.
+ *
+ * W6: `design-review` makes browser automation a hard prerequisite and, below
+ * it, describes a static path in prose with no artefact recording which checks
+ * actually ran. This writes that artefact.
+ *
+ * Every field is DERIVED from the envelope — nothing is invented. A check is
+ * listed as run because the envelope carries its evidence, never because a
+ * skill said it ran. `scope` is always stamped, so an unscoped verdict is not a
+ * shape this step can leave behind.
+ */
+function _stamp_verdict_scope(review: Record<string, Any>): void {
+    const raw_preview = review['preview'];
+    const preview: Record<string, Any> = _isDict(raw_preview) ? raw_preview : {};
+    const rendered = preview['render_ok'] === true;
+
+    const checks_run: string[] = ['findings-review'];
+    const a11y = review['a11y'];
+    if (_isDict(a11y) && Array.isArray(a11y['violations'])) {
+        checks_run.push('a11y-axe');
+    }
+    const tokens = review['tokens'];
+    if (_isDict(tokens) && Array.isArray(tokens['violations'])) {
+        checks_run.push('token-detector');
+    }
+    if (rendered) {
+        checks_run.push(...RENDER_DEPENDENT_CHECKS);
+    }
+
+    const scope: Record<string, Any> = {
+        scope: rendered ? 'render' : 'static',
+        render_available: rendered,
+        checks_run,
+    };
+    if (!rendered) {
+        scope['checks_not_run'] = [...RENDER_DEPENDENT_CHECKS];
+        scope['blocker'] = RENDER_BLOCKER;
+        const reason = preview['skip_reason'];
+        scope['skip_reason'] = typeof reason === 'string' && reason.length > 0
+            ? reason
+            : RENDER_BLOCKER;
+    }
+    review['verdict_scope'] = scope;
 }
 
 /** BLOCKED halt — audit declared a baseline but review has no a11y. */
