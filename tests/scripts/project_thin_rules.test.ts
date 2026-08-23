@@ -57,9 +57,12 @@ describe('project_thin_rules — pure surface', () => {
         const kernel = ptr.kernel_ids();
         let kernelFull = 0;
         let thinned = 0;
+        const noTrigger = ptr.no_trigger_ids();
         for (const [name, text] of map) {
             const stem = name.replace(/\.md$/, '');
-            if (kernel.has(stem)) {
+            if (kernel.has(stem) || noTrigger.has(stem)) {
+                // Kernel AND the no-trigger residue keep their full body: a rule
+                // the router cannot fire is a rule no hook can put back.
                 kernelFull += 1;
             } else {
                 // thinned entries are the one-line pointer
@@ -70,9 +73,24 @@ describe('project_thin_rules — pure surface', () => {
         expect(kernelFull).toBeGreaterThan(0);
         expect(thinned).toBeGreaterThan(0);
     });
+    it('keeps every no-trigger rule full-bodied, never a pointer', () => {
+        const map = ptr.build_thin();
+        const noTrigger = ptr.no_trigger_ids();
+        expect(noTrigger.size).toBeGreaterThan(0);
+        for (const id of noTrigger) {
+            const text = map.get(`${id}.md`);
+            if (text === undefined) continue; // out of scope in this projection
+            expect(text).not.toContain('Routed rule — load the body on trigger-match.');
+        }
+    });
     it('measure returns the full key set with consistent arithmetic', () => {
         const m = ptr.measure();
-        expect(m.rules_total).toBe(m.kernel_full + m.non_kernel_thinned);
+        // Three-way split since road-to-trigger-delivered-rule-bodies 1.3: the
+        // no-trigger residue is neither kernel nor thinned, and folding it into
+        // either count is what would hide it.
+        expect(m.rules_total).toBe(m.kernel_full + m.non_kernel_thinned + m.no_trigger_full);
+        expect(m.no_trigger_full).toBe(m.no_trigger_ids.length);
+        expect(m.no_trigger_gpt).toBeGreaterThan(0);
         expect(m.saved_gpt).toBe(m.eager_gpt - m.thin_gpt);
         expect(typeof m.saved_pct).toBe('number');
         expect(typeof m.token_method).toBe('string');
