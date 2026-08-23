@@ -351,12 +351,12 @@ export function selfTest(): number {
 
     const cases: SelfTestCase[] = [
         {
-            name: `rejects a planted ${PATTERNS[0].shown} in a check_ script`,
+            name: `rejects a planted ${PATTERNS[0]?.shown ?? ''} in a check_ script`,
             expect: 'reject',
             run: () => run({ 'check_planted.ts': rawNow }),
         },
         {
-            name: `rejects a planted bare ${PATTERNS[1].shown} in a lint_ script`,
+            name: `rejects a planted bare ${PATTERNS[1]?.shown ?? ''} in a lint_ script`,
             expect: 'reject',
             run: () => run({ 'lint_planted.ts': rawNew }),
         },

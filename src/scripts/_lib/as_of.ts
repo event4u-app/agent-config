@@ -105,7 +105,7 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 /** `--as-of <iso>` / `--as-of=<iso>`; `undefined` when the flag is absent. */
 function readArgvPin(argv: readonly string[]): string | undefined {
     for (let i = 0; i < argv.length; i += 1) {
-        const arg = argv[i];
+        const arg = argv[i] ?? '';
         if (arg === '--as-of') return argv[i + 1] ?? '';
         if (arg.startsWith('--as-of=')) return arg.slice('--as-of='.length);
     }
