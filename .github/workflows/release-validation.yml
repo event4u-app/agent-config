@@ -64,6 +64,7 @@ on:
       # re-trigger the job whose whole purpose is to catch that drift.
       - '.claude-plugin/marketplace.json'
       - '.augment-plugin/marketplace.json'
+      - '.augment-plugin/plugin.json'
       - 'src/scripts/install.ts'  # what release-install-e2e exercises
       - 'src/scripts/release.ts'
       - 'agents/evidence/release-findings/**'  # `finding-dispositions` reads it
@@ -290,11 +291,24 @@ jobs:
           set -euo pipefail
           pkg=$(jq -r '.version' package.json)
           mp=$(jq -r '.metadata.version' .claude-plugin/marketplace.json)
+          # The Augment twins. Both were in `paths:` above while NO job read
+          # them, so a drift there re-triggered this workflow and then nothing
+          # looked at the file — a trigger without a reader. Every version field
+          # is enumerated because the two manifests nest differently:
+          # plugin.json has one, marketplace.json has three.
+          ap=$(jq -r '.version' .augment-plugin/plugin.json)
+          am_top=$(jq -r '.version' .augment-plugin/marketplace.json)
+          am_meta=$(jq -r '.metadata.version' .augment-plugin/marketplace.json)
+          am_plugins=$(jq -r '[.plugins[].version] | unique | join(",")' .augment-plugin/marketplace.json)
           target="${HEAD_REF#release/}"
-          echo "head_ref:            $HEAD_REF"
-          echo "package.json:        $pkg"
-          echo "marketplace.json:    $mp"
-          echo "release target:      $target"
+          echo "head_ref:                        $HEAD_REF"
+          echo "package.json:                    $pkg"
+          echo "claude marketplace.json:         $mp"
+          echo "augment plugin.json:             $ap"
+          echo "augment marketplace.json:        $am_top"
+          echo "augment marketplace metadata:    $am_meta"
+          echo "augment marketplace plugins[]:   $am_plugins"
+          echo "release target:                  $target"
           fail=0
           if [ -n "$HEAD_REF" ] && [ "$HEAD_REF" != "$target" ] && [ "$pkg" != "$target" ]; then
             echo "::error::package.json version ($pkg) does not match release branch ($target)."
@@ -308,6 +322,18 @@ jobs:
             echo "::error::package.json ($pkg) and marketplace.json ($mp) disagree."
             fail=1
           fi
+          for pair in \
+            ".augment-plugin/plugin.json:version:$ap" \
+            ".augment-plugin/marketplace.json:version:$am_top" \
+            ".augment-plugin/marketplace.json:metadata.version:$am_meta" \
+            ".augment-plugin/marketplace.json:plugins[].version:$am_plugins" ; do
+            got="${pair##*:}"
+            field="${pair%:*}"
+            if [ "$got" != "$pkg" ]; then
+              echo "::error::${field} ($got) does not match package.json ($pkg)."
+              fail=1
+            fi
+          done
           # Pack manifests carry no `version:` field — the package version is the
           # single version, so there is no per-pack pin to keep in lockstep. The
           # loop removed here globbed `packages/`, a directory that does not
@@ -316,7 +342,7 @@ jobs:
             echo "Run \`task release\` from main; do not hand-edit version pins."
             exit 1
           fi
-          echo "✅  Every version reference agrees on $pkg"
+          echo "✅  Every version reference agrees on $pkg (claude + both augment manifests)"
 
       - name: Check project-template pin matches package.json.version
         run: |

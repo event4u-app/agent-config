@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "_comment": "Written by `./scripts-run src/scripts/lint_handoffs --census-json`. Do not hand-edit — regenerate it. The collector is `collect_body_links`, the same one the gate scans with, so the published figure and the gate verdict cannot drift apart. `dead_links` uses the gate predicate (a target absent from the live SKILL.md set), NOT the Reproduction B.1 grep — see `links_matched_by_gate` for why the two differ and which dead link the grep was blind to.",
+  "commit": "9c4f5bff4170c196ab3a1cfc612bde120252c5eb",
+  "total_links_skill_md": 959,
+  "total_links_any_dir": 972,
+  "links_matched_by_gate": 948,
+  "files_with_skill_md_link": 207,
+  "files_with_any_relative_link": 226,
+  "skills_total": 294,
+  "dead_links": [],
+  "undeclared_in_requires": 940,
+  "skills_declaring_requires": 5,
+  "scoped_survivors": 223,
+  "scoped_pruned": 71,
+  "scoped_dangles": [
+    {
+      "survivor": "brand-identity",
+      "target": "logo-generation"
+    },
+    {
+      "survivor": "brand-to-tokens",
+      "target": "logo-generation"
+    },
+    {
+      "survivor": "bug-analyzer",
+      "target": "feature-planning"
+    },
+    {
+      "survivor": "complexity-first-planning",
+      "target": "feature-planning"
+    },
+    {
+      "survivor": "data-handling-judgment",
+      "target": "contracts-cognition"
+    },
+    {
+      "survivor": "decision-record",
+      "target": "rice-prioritization"
+    },
+    {
+      "survivor": "decision-record",
+      "target": "stakeholder-tradeoff"
+    },
+    {
+      "survivor": "doc-coauthoring",
+      "target": "humanizer"
+    },
+    {
+      "survivor": "docx-authoring",
+      "target": "spreadsheet-authoring"
+    },
+    {
+      "survivor": "evaluate-llm-feature",
+      "target": "prompt-validator"
+    },
+    {
+      "survivor": "evaluate-llm-feature",
+      "target": "prompt-validator"
+    },
+    {
+      "survivor": "html-deck",
+      "target": "canvas-design"
+    },
+    {
+      "survivor": "html-deck",
+      "target": "canvas-design"
+    },
+    {
+      "survivor": "pdf-tools",
+      "target": "spreadsheet-authoring"
+    },
+    {
+      "survivor": "privacy-review",
+      "target": "contracts-cognition"
+    },
+    {
+      "survivor": "readme-writing",
+      "target": "humanizer"
+    },
+    {
+      "survivor": "readme-writing-package",
+      "target": "humanizer"
+    },
+    {
+      "survivor": "reasoning-orchestrator",
+      "target": "feature-planning"
+    },
+    {
+      "survivor": "refine-prompt",
+      "target": "refine-ticket"
+    },
+    {
+      "survivor": "refine-prompt",
+      "target": "refine-ticket"
+    },
+    {
+      "survivor": "refine-prompt",
+      "target": "refine-ticket"
+    },
+    {
+      "survivor": "refine-prompt",
+      "target": "refine-ticket"
+    },
+    {
+      "survivor": "screenshot-hygiene",
+      "target": "image-analyser"
+    },
+    {
+      "survivor": "screenshot-hygiene",
+      "target": "image-editing"
+    }
+  ],
+  "survivors_with_dangle": 17
+}

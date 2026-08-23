@@ -1,0 +1,15 @@
+# Case: greenfield
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: greenfield
+prompt: "Start a status page for the API. Nothing exists yet."
+authority:
+  surface_mode: read
+  register: product
+  change_intent: new-world
+  reference_maturity: null
+note: |
+  Genuine greenfield: no incumbent, no reference. Distinguishes from `no-design-md-coherent-incumbent` by the absence of any prior surface.
+files:
+  - .gitkeep

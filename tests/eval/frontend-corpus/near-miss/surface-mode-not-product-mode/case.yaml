@@ -1,0 +1,27 @@
+# Case: surface-mode-not-product-mode
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: surface-mode-not-product-mode
+prompt: "Make the investor one-pager land harder."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Surface mode is per-surface and must not be read off PRODUCT.md.
+
+  The trap: the repository is a product with a PRODUCT.md declaring the product
+  register, so a naive run resolves `register: product` and applies dense,
+  utilitarian defaults to a persuade surface — flattening exactly the surface
+  whose whole job is impression.
+
+  PASS: `surface_mode: persuade`, `register: brand`, resolved from the surface
+  brief; PRODUCT.md is byte-identical after the run.
+  FAIL: `register: product` inherited from PRODUCT.md, or PRODUCT.md mutated to
+  record the brand surface.
+files:
+  - PRODUCT.md
+  - brief.md
+  - one-pager.html

@@ -54,8 +54,6 @@ Do NOT use when:
   [`security-audit`](../security-audit/SKILL.md)
 * The concern is end-to-end authorization enforcement — route to
   [`authz-review`](../authz-review/SKILL.md)
-* The concern is output/log leakage on an existing API — route to
-  [`data-exposure-review`](../data-exposure-review/SKILL.md)
 * The concern is implementing the controls once identified — route to
   [`security`](../security/SKILL.md)
 
@@ -224,7 +222,6 @@ run tests**.
   A05 Security Misconfiguration — cross-reference when naming abuse cases.
   [owasp.org/Top10/](https://owasp.org/Top10/)
 - [`authz-review`](../authz-review/SKILL.md),
-  [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`security`](../security/SKILL.md),
   [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
 - Prompt-injection / agent-config defense: [`untrusted-input-defense`](../../rules/untrusted-input-defense.md),

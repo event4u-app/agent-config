@@ -28,7 +28,7 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
 enforced_by:
-  - "none"
+  - "hook:design-pass"
 collision_ok:
   # The "component" and "design token" entries were removed with their triggers
   # (2026-08-17): a collision note for a trigger that no longer exists is an
@@ -100,20 +100,32 @@ OUTSIDE THE WORK ENGINE, THE AUDIT OBLIGATION IS MODEL-CARRIED.
 NEVER CLAIM THE AUDIT RAN AS IF IT WERE VERIFIED.
 ```
 
-`state.ui_audit` exists only inside the work-engine dispatcher, so only there
-is "the audit ran" a *checked* fact. A chat session cannot verify it: "I ran
-`existing-ui-audit` first" is self-report, and self-report is not enforcement —
-the same honesty boundary `security-sensitive-stop` and
-`untrusted-input-defense` state for their own obligations. So this rule ships
-`enforced_by: none` outside the dispatcher, deliberately, rather than pretending
-a satisfiable-by-assertion condition is a gate.
+`agent-config ui:audit` now writes `agents/runtime/state/ui-audit.json`, so the
+artefact this rule used to lack exists, and `design_pass_hook.ts` reads it —
+which is why `enforced_by:` names `hook:design-pass` instead of `none`. Three
+limits, because naming a script is not the same as closing the gap:
 
-What that leaves, and it is the useful part: run
-[`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
-component because reuse beats duplication — not because a check will catch you.
-Full enforcement requires the dispatcher (or the `frontend-design` pack once
-pack-scoped rule projection is enabled; that flip is a maintainer decision,
-never an automated one).
+1. **Freshness, not existence.** The check is "an artefact newer than the
+   target". A stale artefact is worse than a missing one — it looks like
+   evidence.
+2. **Default-OFF, and the stop verdict is REPORTED, not enforced.**
+   `hooks.design_pass.enabled` ships `false`. When on, a missing artefact warns
+   on `post_tool_use` and is reported at `stop` as *would block*. It does not
+   refuse: the concern is `severity: advisory`, and an advisory EXIT_BLOCK is
+   downgraded by the dispatcher — so claiming a refusal would be inert. Making
+   it real needs an entry in `concern_severity.test.ts`'s blocking allowlist,
+   which that file calls a security-relevant decision; it is transferred with
+   the default flip.
+3. **The greenfield asymmetry stays open.** `_lib/ui_surface.ts` is a PATH
+   predicate — measured recall 20/23, all three misses being a UI *request*
+   with no UI *file* yet — so this gate cannot fire on the first write of a new
+   surface. After the write it can, which is why the carrier is on
+   `post_tool_use`.
+
+Run [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
+component because reuse beats duplication. What changed is that a check can now
+catch you — on a host that binds the slot, with the setting on, and not on the
+very first file of a new surface.
 
 **A runtime carrier now exists, and it does not change the verdict.** The
 `ui-route-nudge` PreToolUse concern warns once on a UI write with no design

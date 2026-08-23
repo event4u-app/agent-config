@@ -358,7 +358,7 @@ Runs in parallel with Phase 3; depends only on Phase 1.
 
 Depends only on Phase 1. The render-dependent half of 9.4 additionally needs a
 page-reaching capture primitive; that is not a new obstacle and gets no blocker
-here — `agents/roadmaps/road-to-frontend-power.md:334` (step E3.2) resolves
+here — `agents/roadmaps/archive/road-to-frontend-power.md:334` (step E3.2) resolves
 `b-page-capture-primitive` as option (a) and is the resolver this phase
 references.
 
@@ -496,6 +496,22 @@ render-dependent fixture this roadmap would add.
   render-dependent fixtures stay gated behind this blocker, and step 3.3's null record
   must **name every dimension that was cut** — a null that does not enumerate what it
   covers is indistinguishable from a matrix that never had those rows.
+
+  **Reopening condition FIRED, 2026-08-23.** The null's own reopening condition is
+  "a capture primitive is confirmed available". One is:
+  `agent-config ui:render` (`src/cli/commands/uiRender.ts`), landed by
+  `road-to-frontend-power` step E3.1 — Class A, headless, desktop / 375 px /
+  320 px, DOM plus computed styles plus screenshot per viewport, verified by
+  execution against `tests/eval/frontend-corpus/cases/supplied-runnable-html/`
+  (three viewports, `verification: verified`, and a real 320 px overflow found).
+
+  This does **not** retroactively score anything, and the null stands as
+  recorded. What it does is discharge the *capability* half: the render-dependent
+  dimensions may return to the Phase 2 matrix, and `daf-source-over-screenshot`
+  moves from skipped-for-want-of-a-primitive to unscored-pending-an-eval-run.
+  Step 3.3's enumeration obligation is untouched — a null that does not name what
+  it covers is still indistinguishable from a matrix that never had those rows,
+  and that is this roadmap's own work to close.
 ### blocker: b-detector-license-verification
 
 - **Status:** resolved
