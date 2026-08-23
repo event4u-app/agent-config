@@ -6,7 +6,7 @@ visibility: internal
 cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
-argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]"
+argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--no-calibrate] [--image-provider <id>] [--video-provider <id>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
@@ -20,7 +20,7 @@ packs:
 
 # /video:from-script
 
-`/video:from-script <path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
+`/video:from-script <path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--no-calibrate] [--image-provider <id>] [--video-provider <id>]`
 
 Drives a Markdown script through the full pipeline. Provider flags
 override the `<default-image-provider>` / `<default-video-provider>`
@@ -89,8 +89,53 @@ For each scene blueprint:
    `0`). When `--max-spend-usd` is set and the summed estimate exceeds
    it, hard-block before the first live call — confirmation does not
    override the cap.
-3. Call the image adapter (`run` subcommand) N times where N =
+3. **Calibration probe (default on; `--no-calibrate` skips).** Before the
+   batch, render exactly **one** still and **one** clip, then read the
+   `charged_usd` the pipeline already writes to
+   `<project>/scenes/<id>/cost.json` and print one line:
+
+   ```
+   calibration: modeled $0.0800/s · charged $0.1100/s · +37.5 % · extrapolated batch $4.40 (modeled $3.20)
+   ```
+
+   Re-confirm **only** when the charged figure exceeds the modeled one by
+   more than **25 %**. Under that, print the line and continue — a
+   calibration that interrupts on every run is a confirmation nobody reads.
+
+   This folds into the existing `lib/operator-pick.sh` moment rather than
+   adding a gate of its own, so the operator sees the calibration line at
+   the checkpoint they were already stopping at.
+
+   `charged: null` is **not** `0`: an unpriceable or not-yet-charged scene
+   prints `charged: null`, extrapolates nothing, and never re-confirms. A
+   modeled figure is only ever corrected by a measured one.
+
+   Every reading appends one row to
+   `agents/evidence/ai-video/cost-ledger.jsonl` — see § Cost ledger below.
+   The read-back itself is not new: `lib/resume-scan.sh` already reads
+   `cost.json .charged_usd` and sums it as `spent_usd`. What is new is that
+   the number now **feeds back**: before this, money spent was recorded and
+   never read into the model it contradicted.
+
+4. Call the image adapter (`run` subcommand) N times where N =
    `<tuning/best-of-n>` (default 1).
+
+### 5b. Cost ledger — the only route from charged to modeled
+
+`manifest.cost_per_second_usd` is a **modeled** estimate. It may be
+re-modeled only from measured charges, and only with the rows it averaged
+cited in the same diff:
+
+```bash
+# one row per (adapter, model) reading, append-only
+{"adapter":"fal","model":"fal-ai/ltx-2/text-to-video","modeled":0.16,"charged":0.21,"date":"2026-08-23"}
+```
+
+`lint_adapter_tier --cost-diff <base-ref>` **warns** when a manifest's
+`cost_per_second_usd` changed in a diff that adds no ledger row. A warning,
+not a failure: re-modelling an estimate is a legitimate human act. Doing it
+silently *after* a live run measured the real charge is not — that is the
+moment a guess becomes a contradicted measurement.
 
 ### 6. Operator pick (best-of-N checkpoint)
 
