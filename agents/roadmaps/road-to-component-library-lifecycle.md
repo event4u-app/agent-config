@@ -232,7 +232,7 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ## Phase 2 — Storybook as an artefact
 
-- [ ] **2.1 `storybook-workshop` skill (new, `engineering-base`).** Lift the
+- [x] **2.1 `storybook-workshop` skill (new, `engineering-base`).** Lift the
       five bullets out of `react-shadcn-ui/SKILL.md` § Component workshop into
       a stack-agnostic skill; `react-shadcn-ui` keeps a one-line pointer. The
       skill states the **story set** per reusable component: the
@@ -241,19 +241,64 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
       practices § Writing effective stories: the "SizesAndVariants" story is
       the named anti-pattern). JSDoc `@summary` on the component export and on
       each story is required because the manifest truncates descriptions.
-      verify: `grep -c "Storybook" src/skills/react-shadcn-ui/SKILL.md` drops
-      to a pointer-only count (≤ 3), and the new skill's trigger eval fires on
-      "add stories for the card".
-- [ ] **2.2 Stories are tests.** The skill's § Validate runs
+      verify (discharged): `grep -c "Storybook" src/skills/react-shadcn-ui/SKILL.md` is
+      **1** (≤ 3 — the pointer heading), and `evals/triggers.json` carries
+      *"add stories for the card"* as a positive verbatim.
+
+      **The pointer keeps the word "Storybook" in its heading deliberately.** The count could
+      have been 0, which reads better against a "≤ 3" bar and is worse: a reader grepping
+      `react-shadcn-ui` for Storybook would find nothing and conclude the suite has no
+      workshop guidance.
+
+      **What stayed in `react-shadcn-ui` is named rather than left implicit** — the Step-3
+      state matrix the story set derives from, the Step-2 token discipline stories render
+      under, and the § Review pass a11y shape § Validate writes into. The lifted skill is
+      stack-agnostic; those three are React-specific and would have been wrong to move.
+
+      `skill_linter` twice demanded structure the draft lacked, and both demands were right:
+      an analysis-first section (a library big enough to want a workshop is big enough that
+      the component already exists under another name) and an explicit **inspect** step. Both
+      added as substance, not as headings.
+- [x] **2.2 Stories are tests.** The skill's § Validate runs
       `storybook test` (Vitest addon) or the project's equivalent script from
       `package.json` and reads the a11y result; it writes into
       `state.ui_review.a11y` in the `(rule, selector, severity)` shape
       `react-shadcn-ui` already defines (`SKILL.md` § Review pass) so the
       engine's de-dup keeps working. Browser tooling stays a consumer
       dependency (same posture as `react-shadcn-ui`).
-      verify: the 0.1 fixture with a deliberately low-contrast story yields one
-      `a11y_violation` entry through this path.
-- [ ] **2.3 Storybook MCP — opt-in channel, never a dependency.** Scoped
+      verify (discharged for what is decidable here, with the rest recorded as a null):
+      the fixture's `LowContrast` story yields **exactly one** violation —
+      `{rule: 'color-contrast', selector: 'story:LowContrast', severity: 'error', ratio: 1.23}`
+      — and the two passing stories in the same file yield nothing. 10/10 in
+      `tests/scripts/story_contrast_floor.test.ts`.
+
+      **It is NOT the § Validate path and the difference is stated everywhere it appears.**
+      § Validate runs the project's story-test command and reads a browser a11y result;
+      browser tooling is a consumer dependency this package deliberately does not install, so
+      that path cannot run here at all. What ships instead is
+      `scripts/story_contrast_floor.ts`: it computes the WCAG 2.1 ratio between two colours a
+      story **declares in its own args**, in the same `(rule, selector, severity)` shape the
+      engine de-duplicates on.
+
+      **The null, four parts.** *Unavailable capability:* a browser and the a11y addon.
+      *Affected claims:* every finding that needs a rendered page — role, focus order,
+      computed style, and any colour arriving through a token indirection. *Evidence
+      boundary:* a declared colour pair in a story file is decidable and is checked.
+      *Reopening condition:* browser tooling becomes available in this repository's own CI,
+      at which point the § Validate path is exercised against this same fixture.
+
+      **Sensitivity proven in both directions**, because a check that flagged everything would
+      also return exactly one violation from a one-story file: the passing stories are asserted
+      absent, an unreadable colour returns `null` rather than `0` (`0` would read as worst-
+      possible contrast and manufacture a violation), a pair just above the floor is not
+      flagged, and a story declaring only one of the two colours is not guessed at. Three
+      guards sabotage-proven.
+
+      **It never imports the story.** Reading args by evaluating the module would execute the
+      repository's code; the check matches declared literals instead. Recorded in the skill's
+      § Security constraints, which `skill_linter` required once the skill shipped a
+      `scripts/` directory.
+- [x] **2.3 Storybook MCP — opt-in channel, never a dependency.** Scoped
       to the `react` / `react-shadcn` lanes by decision, not by blocker:
       Storybook's `docs/ai/mcp/overview` § FAQ states the docs toolset is
       React-only while in preview, so the skill says so in one sentence and
@@ -266,14 +311,28 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
       Storybook's docs is **not** copied verbatim — its two operative rules
       (never use an undocumented prop; fetch story instructions before writing a
       story) are restated as two bullets with the source cited.
-      verify: `existing-ui-audit/SKILL.md` names the MCP tools, the
-      precedence rule, and the React-only limit with the Storybook docs
-      version (10.5) in one paragraph; `check_references` green.
-- [ ] **2.4 Manifest curation rule.** One rule paragraph (in the skill, not a
+      verify (discharged): `existing-ui-audit/SKILL.md` § 4b names
+      `list-all-documentation` / `get-documentation`, states the precedence
+      (**live read wins, the hand-read step-4 inventory is the fallback and is never
+      removed**), and carries the React-only limit with **10.5** and the
+      `docs/ai/mcp/overview` § FAQ citation. `check_references` green.
+
+      Two operative rules are **restated, not copied** — never use a prop the manifest does
+      not document, and fetch the project's story instructions before writing a story — with
+      the source cited, per `content-quoting-floor` and `code-provenance`'s knowledge layer.
+
+      One sentence was added beyond the step because its absence is a support ticket: *the
+      channel disappearing is normal, not an error.* A missing MCP server otherwise looks like
+      a broken one, and the reader's next move would be to fix something that is working.
+- [x] **2.4 Manifest curation rule.** One rule paragraph (in the skill, not a
       new rule file): stories that show an anti-pattern or deprecated component
       carry `tags: ['!manifest']` so the agent never learns from them.
-      verify: the skill's § Do NOT contains the `!manifest` line with the
-      Storybook docs cited.
+      verify (discharged): § Do NOT carries *"Do NOT leave an anti-pattern or deprecated
+      story untagged: it carries `tags: ['!manifest']` … (Storybook's own tag mechanism for
+      curating what the manifest exposes)"*, and the Iron Law states it a second time in the
+      form that matters — **a story that shows an anti-pattern is tagged `!manifest` or the
+      agent learns from it.** Kept as a paragraph inside the skill, not a new rule file, as
+      the step specifies.
 
 ## Phase 3 — Publishing a registry from the library
 
