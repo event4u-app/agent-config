@@ -260,18 +260,18 @@ carries a repository fingerprint. **Rollback:** set the cadence default to
 and the `--all` ordering divergence is either recorded as intentional or
 retracted. **Rollback:** both are single-line prose reverts.
 
-- [ ] **6.1 Reconcile the loop's size-budget line with reality.**
+- [x] **6.1 Reconcile the loop's size-budget line with reality.**
       `roadmap-process-loop.md:11` declares `Size budget: ≤ 4,000 chars`; the
       file is 47,115 bytes. 11.8× is not a typo, it is a dead budget. Either
       split the long sections into a referenced context doc, or restate the
       budget with the measured number and say why it moved.
-      verify: a one-line check — the declared budget on `:11`, if any, is greater than or equal to the file's byte count.
-- [ ] **6.2 Record the `--all` ordering divergence as intentional, or pull
+      verify (discharged): the one-line check run against the tree — `declared=57000 actual=56144 ok=True`. Took the step's second option (restate with the measured number and say why it moved) rather than the first (split into a referenced context doc): splitting the canonical autonomous-execution loop into fragments is a large change with its own risk, and the step that found this asked for hygiene. The note states four things the bare number cannot: the old 4,000 described nothing (11.8× at 47,115 bytes, a dead budget rather than a typo), why this file is not shaped like its `≤ 3,000` / `≤ 6,000` siblings, that the figure is a **ratchet and not a target**, and — plainly — that **nothing enforces the line**, so a future edit can falsify it exactly as the 4,000 was falsified. A new gate was deliberately not added: one local gate trips three separate ratchets in this repo, which is a poor trade for a hygiene item, and a true declaration with a stated enforcement boundary beats a false one even though it is worth less than a check.
+- [x] **6.2 Record the `--all` ordering divergence as intentional, or pull
       the ranking.** `corrected-from-reproduction`: `--all` already states its
       reason ("because they convert soonest") and cites `next`'s live-screen
       rule in the same block, so the step is a recorded exception clause
       naming `next`'s severity-first doctrine — not a bug fix.
-      verify: `process-full/command.md` § 2 either names `next`'s ranking doctrine as an explicit exception with its reason, or no longer orders by progress at all.
+      verify (discharged): took the first branch. `process-full/command.md` § 2 now names `/roadmap:next § 3`'s Iron Law **verbatim** (*"RANK BY DEFECT SEVERITY, NEVER BY PERCENT-DONE OR STEP COUNT … the Goodhart move this package's own discipline forbids"*) and records the divergence as a scoped exception with its reason: the two answer different questions. `next` **selects one** roadmap and can be gamed by a cheap-to-finish file; `--all` has already committed to draining the whole estate, so every member runs and the ranking decides only the order in which finished work becomes reviewable. Under a total drain the Goodhart pressure is absent **by construction** — there is nothing to pick, so the proxy cannot be optimised against. The exception is explicitly scoped to `--all`; a single-roadmap invocation selects nothing and inherits `next`'s doctrine unchanged. The step's `corrected-from-reproduction` note was right that the divergence was already reasoned; what was missing was naming the doctrine it diverges from, which is what a reader hitting the two files needs.
 
 ## Pre-registered measurement (ADR-054)
 

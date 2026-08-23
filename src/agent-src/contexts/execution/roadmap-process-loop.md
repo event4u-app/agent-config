@@ -8,7 +8,29 @@ resolution, commit-step pre-scan, halt conditions, and archival check.
 The three command files are thin wrappers that bind only the **scope
 delta**.
 
-**Size budget:** ≤ 4,000 chars.
+**Size budget:** ≤ 57,000 chars — restated from the original 4,000.
+
+The old figure described nothing: the file measured 47,115 bytes against it, a
+factor of 11.8, so it was a dead budget rather than a typo. Restated at the
+measured size rather than split, because splitting a contract this load-bearing
+into referenced fragments is a large change with its own risk, and the step that
+found this asked for hygiene.
+
+**Why it moved:** this file is not a page a reader skims but the canonical
+autonomous-execution loop — roadmap discovery, cadence resolution, the step loop,
+the flip-guard, the halt list, the terminal outcomes, and the archival check. The
+original 4,000 was inherited from the sibling context docs (`≤ 3,000`, `≤ 6,000`)
+without asking whether the same shape applied.
+
+**Read it as a ratchet, not a target.** A budget that rises whenever the file
+does is not a budget. It may fall; raising it again needs the same kind of note
+as this one.
+
+**Nothing enforces this line**, and saying so is the point: no gate reads it, so
+it is a declaration a future edit can falsify exactly as the 4,000 was falsified.
+A true declaration with a stated enforcement boundary is worth more than a false
+one, and less than a check — the same `enforced_by: none` honesty the rules in
+this tree state about their own obligations.
 
 ## 1. Resolve roadmap
 
