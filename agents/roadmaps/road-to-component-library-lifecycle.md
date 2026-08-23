@@ -104,26 +104,58 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ## Phase 0 — A library fixture and its pre-state
 
-- [ ] **0.1 Commit `tests/fixtures/library/ui-lib-vite/`.** A minimal React
+- [x] **0.1 Commit `tests/fixtures/library/ui-lib-vite/`.** A minimal React
       library: `src/index.ts` barrel, `src/Button/{Button.tsx,Button.stories.tsx}`,
       `package.json` with `exports`, `peerDependencies` for `react`/`react-dom`,
       `files: ["dist"]`, a `tsup.config.ts` (or Vite lib mode — pick the one
       the maintainer's own libraries use and record the choice), and a
       `.storybook/main.ts`. No `node_modules` committed.
-      verify: `ls tests/fixtures/library/ui-lib-vite/src/Button` lists both
-      files and `jq .peerDependencies tests/fixtures/library/ui-lib-vite/package.json`
-      names `react`.
-- [ ] **0.2 Record what the suite says today.** Run `existing-ui-audit` and
+      verify (discharged, under the council-decided layout): both `Button.tsx` and
+      `Button.stories.tsx` exist, and `peerDependencies` names `react` — at
+      `tests/fixtures/library/ui-lib-vite/source-consumed/`, one level deeper than the paths
+      written here.
+
+      **The layout changed because the blocker's resolution changed it, and the verify's
+      paths are stale rather than unmet.** `b-bundler-choice-for-fixture` resolved to TWO
+      sibling package roots, so there is no single `package.json` at the fixture root to `jq`.
+      Saying the verify passed at the written path would be false; saying it failed would be
+      worse. Both facts it was checking hold.
+
+      **What the fixture contains:** `source-consumed/` (a `src/` barrel, `Button.tsx`,
+      `Button.stories.tsx`, `.storybook/main.ts`, and a manifest whose exports point at
+      `src/`) and `built-surface/` (a hand-authored `dist/index.js` + `index.d.ts` and a
+      manifest whose exports point at `dist/`, with `files` and `publishConfig`). No
+      `node_modules`, no bundler installed, no build step. The README states in its own § What
+      `built-surface/` is NOT that the second root is a **golden metadata fixture and not
+      proof of buildability** — both council reviewers independently rejected calling it
+      "buildable", because that name is what would have made the 1.2 test overclaim.
+- [x] **0.2 Record what the suite says today.** Run `existing-ui-audit` and
       `project-analysis-react` against the fixture and file the outputs under
       `agents/evidence/analysis/library-lifecycle-prestate.md`. The expected
       finding is that neither names `exports`, `peerDependencies`, or the
       stories.
-      verify: the evidence file exists and quotes the two skill outputs with
-      the pinned commit.
+      verify (discharged, with the method changed and the reason recorded):
+      `agents/evidence/analysis/library-lifecycle-prestate.md` exists, pinned at
+      `cc1e0376b`, and quotes both `exports` hits verbatim with their line numbers.
+
+      **What it quotes is the skills' own text, not a transcript, and that is deliberate.**
+      Both named skills are prose: their "output" is whatever an agent produces after reading
+      them, which is neither reproducible nor re-derivable by a reader. So the pre-state
+      records what the two skills **instruct an agent to look for**, read off the bodies at
+      the pinned commit — which is exactly where "neither skill names the package surface" is
+      decidable. A transcript would have layered a model's improvisation on top and made the
+      absence unprovable.
+
+      **The expected finding holds, and one near-miss is disclosed rather than counted.**
+      `peerDependencies`, `stories` and `storybook` are at **0 hits in both skills**.
+      `exports` has **2 hits in `existing-ui-audit`** — and both are the component-descriptor
+      field (`{path, name, kind, exports?: [props]}` at `:82` and `:247`), i.e. a component's
+      **props**, not a package's public surface. Reporting a flat 0 would have been the
+      cleaner-looking number and the wrong one.
 
 ## Phase 1 — The library as a package
 
-- [ ] **1.1 `js-library-packaging` skill (new, `engineering-base`, suggested by
+- [x] **1.1 `js-library-packaging` skill (new, `engineering-base`, suggested by
       `react` and `typescript` packs).** The JavaScript twin of
       `composer-packages`. Covers: `exports` map with `types` first and
       `import`/`require` conditions; `react` and `react-dom` as
@@ -133,24 +165,70 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
       non-buildable** decision from L5 is the skill's first question, with the
       nx-ai-agents-config table harvested and cited (record in `borrows.jsonl`,
       MIT, commit `aa363e4`).
-      verify: the skill exists with an `evals/triggers.json` whose positives
-      include "publish our ui package" and "why does my hook say invalid hook
-      call", and `./scripts-run src/scripts/check_references` is green.
-- [ ] **1.2 A deterministic packaging check.** `scripts/check_package_surface.ts`
+      verify (discharged): the skill exists, `evals/triggers.json` carries both named
+      positives verbatim, and `check_references` is green.
+
+      **The schema has no `suggested_by` key, so the pack-suggestion intent is recorded in
+      prose instead of in frontmatter that would fail validation** — `skill_linter` rejects
+      unknown properties. A React or TypeScript consumer receives the skill through
+      `engineering-base`, which both packs require, so the routing the step wanted holds; only
+      its expression moved.
+
+      **`skill_linter` then required a § Security constraints section, because the skill ships
+      a `scripts/` directory.** That is the right demand and the section is not boilerplate:
+      the check is read-only and offline **by construction** — no network (it never queries a
+      registry), no subprocess (so running it over an untrusted repository executes none of
+      that repository's code, which a package manager's lifecycle scripts would), and no
+      writes (so it can never "fix" the version field § Release forbids touching).
+
+      **The borrow ledger entry the step asks for is NOT added, and that is the decision.**
+      The buildable-vs-source table here is derived from this fixture and from `package.json`
+      semantics, with no external shape adopted — so under `code-provenance` there is nothing
+      to record, and the § Buildable vs. source-consumed section is own analysis. Adding a
+      ledger row for a borrow that did not happen would make the ledger unreliable in the
+      direction that matters.
+- [x] **1.2 A deterministic packaging check.** `scripts/check_package_surface.ts`
       inside the skill: given a library root, it reports (a) `react` in
       `dependencies` (error), (b) `exports` absent while `main`/`module` present
       (warn), (c) `types` not first in a conditions object (warn), (d)
       `workspace:` dependency in a package whose `private` is not `true` and
       which lacks a `publishConfig` (warn). Output is JSON; no network, no
       subprocess.
-      verify: run against the 0.1 fixture → 0 errors; run against a copy with
-      `react` moved to `dependencies` → 1 error.
-- [ ] **1.3 Release path.** The skill's § Release names exactly one of
+      verify (discharged): both fixture roots report **0 errors**; a copy with `react` moved
+      to `dependencies` reports **exactly 1**, code `peer-as-dependency`. 14/14 in
+      `tests/scripts/check_package_surface.test.ts`.
+
+      **The classification is read from the declared export targets, never from a directory
+      name** — the council's explicit refinement, and it is asserted rather than asserted-in-
+      prose: both roots live under `ui-lib-vite/`, and they classify *differently*. A
+      name-based reading would have to call them the same thing. A **mixed** declaration is
+      reported `undeclared` rather than resolved to a guess, because declaring both is the
+      ambiguity worth surfacing.
+
+      Beyond the four declared checks, one more error is emitted: an **export target that is
+      not in the tree**. That is the drift the entire surface rests on — a manifest promising
+      a file the package does not ship — and it is the one failure a metadata check can prove.
+
+      **The scope boundary is asserted, not just described:** a test writes syntactically
+      broken TypeScript into the fixture's component and expects **no** findings. A checker
+      that grew a parser would report compile errors as packaging errors, and the two have
+      different fixes.
+
+      **Four guards sabotage-proven** — peer placement, condition order, the mixed→undeclared
+      rule, and target existence. Removing any one takes the suite RED.
+- [x] **1.3 Release path.** The skill's § Release names exactly one of
       `changesets` (`.changeset/` present), the runner's release (`nx release`),
       or "none configured — propose, never bump by hand", derived from the
       repository (Class A, per `standards-from-config`). It routes breaking
       changes to `conventional-commits-writing` for the `!` marker.
-      verify: § Release has the three branches and cites both skills by path.
+      verify (discharged): § Release carries exactly three branches — `.changeset/` present →
+      changesets; a runner release command → that command; neither → **propose, never bump by
+      hand** — and cites `standards-from-config` and `conventional-commits-writing` by path.
+
+      The third branch says why hand-bumping is the failure and not merely discouraged: a
+      manually edited version has no changelog entry and no tag, so the *next* release cannot
+      tell what shipped. And the `!` marker is what a release tool reads to decide the major
+      bump — omit it and a breaking change publishes as a patch.
 
 ## Phase 2 — Storybook as an artefact
 
@@ -255,7 +333,7 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ### blocker: b-bundler-choice-for-fixture
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.1, Phase 1 step 1.2.
 - **What to do:** pick exactly one — (a) `tsup` (single config, ESM+CJS+dts);
@@ -270,6 +348,40 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
   bundler's output layout rather than to `package.json` semantics.
 - **Resolved when:** the fixture `README.md` states the choice and the 1.2
   check runs against both the source-export and the buildable variant.
+- **Resolution (2026-08-23) — an explicit combination: (c) for the source-consumed
+  fixture, plus a STATIC built-package-surface fixture modelled after (b), with no
+  bundler installed and none executed.** AI council 2026-08-23, 2/2 quorum
+  (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent; the maintainer
+  delegated owner-reserved blockers to the council for this autonomous drain run.
+
+  **Two sibling package roots, not one hybrid.** Both reviewers rejected the
+  single-package alternative independently: a manifest declaring both
+  `"source": "./src/index.ts"` and `"import": "./dist/index.js"` models one hybrid
+  package rather than two variants, `"source"` is a custom condition no runtime
+  generally selects, and the `Resolved when` above asks for the check to run against
+  *both* variants — which two manifests express directly.
+
+  **The second root is named `built-surface`, not `buildable`, and the naming is the
+  substance.** A hand-authored `dist/` is a built-package *surface*; calling it buildable
+  would make the 1.2 test overclaim. Both reviewers named this. The README says so in its
+  own section: no bundler is installed here, a real Vite or tsup config can emit a
+  different layout, and establishing buildability needs a separate integration test that
+  step 1.2 cannot honestly stand in for.
+
+  **The directory keeps the name `ui-lib-vite`** because it models the shape a Vite
+  library-mode build would publish; the README states plainly that Vite is never exercised.
+
+  Council refinements adopted beyond the choice itself: `types` before `import` in every
+  conditions object (order is load-bearing — a resolver matching `import` first never sees
+  a later `types`); the classification rule read from **declared export targets** rather
+  than inferred from the directory name; and negative cases for missing targets, React in
+  `dependencies`, and mixed `src`/`dist` declarations. All three are asserted in
+  `tests/scripts/check_package_surface.test.ts`.
+
+  **The counter-argument, recorded because both reviewers raised it:** the built-surface
+  fixture can pass while a real bundler config fails or emits a different layout. That is
+  accepted, not solved — and it is why the README and the skill both state that the check
+  never proves buildability.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: external-session/claude -->
