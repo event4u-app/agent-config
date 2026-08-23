@@ -35,6 +35,50 @@ lookup, and assess the four 95%-conditions against the seed.
 - **Explicit user bypass** ("just write it") → skip the gate for this turn;
   count the bypass.
 
+### 0b. Context probe — before step 1
+
+```bash
+agent-config roadmap:context
+```
+
+Run it before gathering any content, and surface its hits to the user as ONE
+list:
+
+- an `agents/tmp/` inbox note on the same topic (names only — the probe never
+  reads the bodies);
+- a sibling roadmap in `later/`, `stubs/`, `archive/` or the active set whose
+  slug or title shares the topic;
+- an open PR touching the paths the new roadmap would cite.
+
+This is the axis step 6's collision check cannot reach. That check is a
+recursive `find -iname`, so it already covers `later/`, `stubs/` and `archive/`
+— **lexically**. Same topic under a different name passes it clean, and the
+probe is the semantic half.
+
+Naming an overlap is **required**, not optional, and it is coordination rather
+than content generation — see the amended rule below.
+
+**Then write the `relates:` block from the hits** (template rule 18). One
+numbered-options question per hit — `extends` / `supersedes` / `depends` /
+`disjoint` — and the relation is never inferred: `extends` and `supersedes` rest
+on the same lexical evidence and are opposite decisions, so guessing manufactures
+the reflex-empty failure in a louder form. A `depends` answer mirrors into
+`depends:` in the same edit.
+
+Zero hits needs no question — it is fully determined, so write it silently:
+
+```bash
+agent-config roadmap:context --relates    # prints the block, ready to paste
+```
+
+```yaml
+relates: []   # scanned: 716 roadmap file(s), 0 sibling hits
+```
+
+The `scanned:` count is what separates *somebody looked and found nothing* from
+*nobody looked*; without it the empty list carries no information and is worse
+than an absent field.
+
 ### 1. Determine location
 
 Ask the user (in their language) where the roadmap should be created:
@@ -313,6 +357,11 @@ Failure modes covered by this hard stop:
 ### Rules
 
 - **Do NOT auto-generate content** — always ask the user for input.
+- **Naming an overlap is coordination, not content generation, and it is
+  required.** The rule above governs the roadmap's *substance*; it never
+  licenses staying silent about a sibling roadmap, an inbox note, or an open PR
+  that step 0b's probe surfaced. Report every hit, let the user decide what it
+  means, and write the outcome into the `relates:` block (template rule 18).
 - **Do NOT commit or push.**
 - **Do NOT offer execution after save** — Step 11 is a hard stop.
   Execution starts on a later turn with an explicit execution verb

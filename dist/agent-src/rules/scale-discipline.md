@@ -46,6 +46,8 @@ INDEXES SHIP WITH THE QUERIES THAT NEED THEM. READS ARE BOUNDED.
 MIGRATIONS ARE REVERSIBLE. APPEND-ONLY TABLES DECLARE RETENTION.
 THE SYNC HANDLER DOES ONLY: VALIDATE → PERSIST → DISPATCH → RESPOND.
 MUST-NOT-LOSE WORK GOES THROUGH A DURABLE QUEUE, AFTER COMMIT.
+EVERY FINITE RESOURCE ON A PRODUCTION PATH HAS A KNOWN CEILING AND
+QUANTIFIED HEADROOM. AN UNQUANTIFIED CEILING IS NOT HEADROOM.
 A HEURISTIC FINDING IS ADVICE, NEVER A CI FAILURE.
 EVERY WAIVER CARRIES A NON-EMPTY REASON.
 ```
@@ -81,6 +83,22 @@ EVERY WAIVER CARRIES A NON-EMPTY REASON.
 - **R-A11 commit-ordering** — async dispatch that reads mutated state
   fires after commit (Laravel `afterCommit` / `ShouldDispatchAfterCommit`;
   generic: transactional outbox).
+- **R-A12 finite-resource readiness** — a change that consumes a
+  **finite, exhaustible** resource on a production path names that
+  resource's **ceiling** and its **headroom at expected peak**. R-A7
+  covers unbounded *growth* of append-only tables; this covers *exhaustion*
+  of a fixed budget, which fails differently: growth degrades, exhaustion
+  stops. In scope — connection-pool slots, worker/thread slots, file
+  descriptors, disk, memory, inode count, third-party API quota and
+  rate-limit budget, per-plan managed-service caps. A ceiling that cannot
+  be stated is `unknown`, never "probably fine", and an unquantified
+  ceiling is not headroom — *advice tier* (no spike; `lint_persistence`
+  cannot read a third-party quota).
+
+  **Saturation is the readiness question.** Utilisation against a known
+  ceiling is the one predictive signal — the other three Golden Signals
+  report what already happened. Where the ceiling belongs to an upstream
+  provider, its rate-limit headers are the source, not an estimate.
 
 ## When NOT to fire
 
@@ -96,4 +114,10 @@ EVERY WAIVER CARRIES A NON-EMPTY REASON.
   audit tables fall under R-A7 here.
 - [`architecture`](architecture.md) — thin handlers; this rule is its
   persistence-shaped enforcement.
+- [`logging-monitoring`](../skills/logging-monitoring/SKILL.md) — defines
+  saturation as a Golden Signal; R-A12 is where that signal is asked for at
+  review time rather than after an incident.
+- [`operational-readiness`](../skills/operational-readiness/SKILL.md) —
+  consumes R-A12 as one typed input; a resource with no known ceiling is a
+  red there, never an amber.
 - `src/scripts/lint_persistence.ts` — the deterministic backstop.

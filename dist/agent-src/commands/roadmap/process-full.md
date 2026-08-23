@@ -98,6 +98,20 @@ command already does.
    `archive/` and `stubs/` are out of scope.
 2. **Order the queue.** Roadmaps at or above 10 % checkbox progress first, in
    **descending** progress — nearly-done first, because they convert soonest.
+
+   **This is a recorded exception to [`/roadmap:next` § 3](../next/command.md),
+   not an oversight.** That command's Iron Law is explicit: *"RANK BY DEFECT
+   SEVERITY, NEVER BY PERCENT-DONE OR STEP COUNT … picking by checkbox count is
+   the Goodhart move this package's own discipline forbids."* This step orders by
+   exactly that. The two are not in conflict because they answer different
+   questions: `next` **selects one** roadmap out of many and must not be gamed by
+   a cheap-to-finish file, while `--all` has already committed to draining the
+   **whole** estate — every member runs, so the ranking decides only the order in
+   which finished work becomes reviewable, never what gets done. Under a total
+   drain the Goodhart pressure is absent by construction: there is nothing to
+   pick, so a proxy cannot be optimised against.
+   The exception is scoped to `--all`. A single-roadmap invocation of this
+   command selects nothing and inherits `next`'s doctrine unchanged.
    Roadmaps below 10 % are appended after, ascending by declared `complexity:`
    tier (lightweight → bounded → structural), tiebreak ascending total
    checkbox count. Both buckets need a **total** order or two runs over the

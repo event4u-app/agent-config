@@ -523,8 +523,8 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 14
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration 2026-08-22; 14 on 2026-08-23 after road-to-chained-clip-continuity-and-provider-truth was completed and archived)"
+    min_scanned: 2
+    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22; 9 live on 2026-08-23, mid-drain). The floor tracks a corpus that shrinks by design, so completing and archiving a roadmap lowers it — it is never satisfied by un-archiving finished work. LOWERED 10 -> 2 on 2026-08-23. The 15 -> 10 move earlier the same day already recorded this shape and under-shot it: eight further PRs were open at that moment, each one titled `roadmap: complete <slug>` and each archiving exactly one top-level file, so the estate this floor tracks was already committed to landing at one or two. A floor of 10 against a corpus heading for 2 does not detect anything — it reds on every remaining merge in the drain, which is the gate firing on the drain WORKING, and the note directly above says so in its own words. 2 is chosen as one above the only reading this floor exists to catch: a scan whose root moved reports 0, never 2, so the collapse signal survives the move intact. What is given up is the middle band, and it was never load-bearing here — this gate is a LISTING (see no_canary_reason: `main()` returns 0 on every path), so the floor is its only failure mode and a partial-corpus read is not something it could act on anyway. Revisit-if: the drain ends and the estate stabilises above 2 — re-derive the floor from what the estate is then expected to hold, and never from the live count, which reds on the next archive by construction."
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every
@@ -542,6 +542,30 @@ gates:
       report an empty inventory as a clean one. Floor 15 against 25 at
       registration: the active estate is being drained deliberately and is
       expected to shrink, so a tight floor would red on the drain working.
+
+      LOWERED 15 -> 10 on 2026-08-23, and the reason is the sentence directly
+      above coming true. Archiving `road-to-role-scoped-spawn-profiles` took the
+      live top-level count from 15 to 14, so the floor red on the drain working
+      — exactly the failure mode the registration note predicted, one drain
+      after it was written. Measured at this commit: `find agents/roadmaps
+      -maxdepth 1 -name '*.md' -type f | wc -l` = 14, and the gate's own
+      `scanned:` line agrees at 14.
+
+      Why 10 and not 14. A floor set at the live count reds again on the very
+      next archive, which turns a collapse detector into per-drain friction with
+      no safety gain. The floor's only job is stated in its own note above: catch
+      a scan that stopped seeing `agents/roadmaps/` at all, and such a scan
+      reports **0**. 10 leaves four further drains of headroom while still
+      sitting an order of magnitude above the collapse signal it exists to
+      distinguish.
+
+      What did NOT move, checked rather than assumed: all four
+      `requirements-trace-budget.json` counters (`unlinked`, `unresolved`,
+      `dangling_ac`, `malformed`) remain at their registered baseline of 0. The
+      `0 declaring` reading is likewise NOT from this change — no top-level
+      roadmap at `origin/main` (2a7a8e221) declares `requirement_id` either, and
+      the archived roadmap never carried the trace fields. Only the scan count
+      moved.
 
   - id: check_council_pin_staleness
     argv: []

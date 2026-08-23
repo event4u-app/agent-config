@@ -141,6 +141,8 @@ const _HERE = fileURLToPath(import.meta.url);
 
 import {
     ArgparseExit,
+    AUGMENT_MARKETPLACE_JSON,
+    AUGMENT_PLUGIN_JSON,
     CHANGELOG,
     CalledProcessError,
     GH_PR_BODY_LIMIT,
@@ -154,6 +156,8 @@ import {
     REPO_ROOT,
     REPO_SLUG,
     SystemExitError,
+    set_augment_manifest_version,
+    set_marketplace_version,
 } from './release_env.js';
 import type { RunResult } from './release_publication.js';
 // Re-export surface for the six names tests import from `release.js` and that
@@ -805,17 +809,6 @@ function set_lockfile_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
 }
 
-/** Update `metadata.version`; preserve 2-space indentation + UTF-8. */
-function set_marketplace_version(p: string, version: string): void {
-    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
-    // data.setdefault("metadata", {})["version"] = version — preserve key order.
-    if (!(typeof data['metadata'] === 'object' && data['metadata'] !== null && !Array.isArray(data['metadata']))) {
-        data['metadata'] = {};
-    }
-    (data['metadata'] as Record<string, unknown>)['version'] = version;
-    fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
-}
-
 function set_template_pin(p: string, version: string): void {
     // Rewrite the single `agent_config_version:` line in place, preserving the
     // rest of the YAML byte-for-byte. Quoted value to match the existing pin
@@ -1273,11 +1266,13 @@ function execute(
             _step(
                 2,
                 total,
-                'Bump package.json + package-lock.json + marketplace.json + template pin, prepend CHANGELOG',
+                'Bump package.json + package-lock.json + marketplace manifests + template pin, prepend CHANGELOG',
             );
             set_package_version(PACKAGE_JSON, plan.target);
             set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
+            set_augment_manifest_version(AUGMENT_PLUGIN_JSON, plan.target);
+            set_augment_manifest_version(AUGMENT_MARKETPLACE_JSON, plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);
         }

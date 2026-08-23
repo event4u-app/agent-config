@@ -29,11 +29,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const ROADMAP_ROOT = 'agents/roadmaps';
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // --- Replicated from .augment/scripts/update_roadmap_progress.py ------------
 // CHECKBOX_RE = re.compile(r"^\s*[-*]\s+\[([ xX~\-])\]\s", re.MULTILINE)
@@ -221,6 +223,25 @@ function violations_for(p: string): string[] {
     return out;
 }
 
+/**
+ * Does this roadmap declare a `relates:` block?
+ *
+ * `road-to-roadmap-situational-awareness` § 4.2. `depends:` was defined in the
+ * template and its measured adoption was **0** — a field nothing requires is a
+ * field nobody writes. So the wider relation field is required, but RATCHETED:
+ * the roadmaps that predate the check are held at their measured count and a
+ * NEW one without the block pushes the count above it.
+ *
+ * Presence only. Whether the declared relations are legal is
+ * `lint_roadmap_complexity`'s `_check_relates`, and whether an empty list is
+ * honest is the pre-save self-check in `roadmap-writing` — a gate cannot tell a
+ * genuinely-empty `relates: []` from a reflex one, and pretending otherwise
+ * would be the worse failure.
+ */
+export function declares_relates(p: string): boolean {
+    return parse_frontmatter(fs.readFileSync(p, 'utf-8')).has('relates');
+}
+
 function main(): number {
     if (!_isDir(ROADMAP_ROOT)) {
         process.stderr.write(`❌  ${ROADMAP_ROOT} not found — run from project root.\n`);
@@ -244,8 +265,9 @@ function main(): number {
         }
         throw exc;
     }
+    const active = find_active_roadmaps(ROADMAP_ROOT);
     const findings: string[] = [];
-    for (const p of find_active_roadmaps(ROADMAP_ROOT)) {
+    for (const p of active) {
         findings.push(...violations_for(p));
     }
     if (findings.length > 0) {
@@ -259,11 +281,33 @@ function main(): number {
         );
         return 1;
     }
-    const count = find_active_roadmaps(ROADMAP_ROOT).length;
+    // The `relates:` ratchet. Reported separately from trackability because the
+    // two are different obligations: one keeps a roadmap visible to the
+    // dashboard, this one keeps its relations to sibling work declared.
+    const no_relates = active.filter((p) => !declares_relates(p));
+    const verdict = checkRatchet({
+        gate: 'check_roadmap_trackable:relates',
+        actual: no_relates.length,
+        repoRoot: REPO_ROOT,
+    });
+    if (!verdict.ok) {
+        process.stderr.write(`❌  ${verdict.message}\n`);
+        for (const p of no_relates) {
+            process.stderr.write(`    ${p}: no \`relates:\` block in the frontmatter\n`);
+        }
+        process.stderr.write(
+            '\n    Run `agent-config roadmap:context` and write one row per hit\n' +
+                "    ({slug, relation: extends|supersedes|depends|disjoint, note}), or an\n" +
+                "    explicit `relates: []` carrying the probe's `scanned:` line as its\n" +
+                '    justification. See templates/roadmaps.md rule 18.\n',
+        );
+        return 1;
+    }
     if (!QUIET) {
         process.stdout.write(
-            `✅  ${count} active roadmap(s) — all parseable, all phases have checkboxes.\n`,
+            `✅  ${active.length} active roadmap(s) — all parseable, all phases have checkboxes.\n`,
         );
+        process.stdout.write(`✅  ${verdict.message}\n`);
     }
     return 0;
 }
@@ -296,6 +340,7 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 }
 
 export {
+    REPO_ROOT,
     ROADMAP_ROOT,
     CHECKBOX_RE,
     PHASE_RE,

@@ -88,10 +88,29 @@ assumptions:
   `skill-route` push hook stays primary.
 - **R2 (Claude Code Tool Search, docs + #19890):** MCP tool definitions are
   deferred only above ~10% of context. A small server loads upfront. The
-  kernel server's allowlist descriptions measure ≈1,972 tok (chars/4 over
-  `tools.ts`), so registering it as-is to fix D3 would *add* standing cost.
-  The surface this roadmap registers must be ≤3 tools and its cost a gated
-  number.
+  kernel server's allowlist descriptions measure **2,257 tok** (exact
+  cl100k_base BPE via `_lib/token_count.ts` over the `description:` string
+  literals of `src/scripts/mcp_server/tools.ts`, `+`-concatenations joined;
+  chars/4 proxy 2,582), and **3,256 tok** across
+  `src/scripts/mcp_server/*.ts` (proxy 3,796) — so registering it as-is to fix
+  D3 would *add* standing cost. The surface this roadmap registers must be ≤3
+  tools and its cost a gated number.
+
+  **The figure was ≈1,972 tok and that number does not reproduce; it is
+  corrected here rather than re-asserted.** Its origin is unrecovered: neither
+  chars/4 over the whole of `tools.ts` (20,401 tok), nor over the `ALLOWLIST`
+  object span alone (6,323 tok), nor over the description text (2,582 proxy /
+  2,257 exact) lands on it, so no method reproducing it was found and the drift
+  is recorded as unexplained instead of attributed to a guess. **A
+  proposed replacement of "685 tok over `tools.ts` descriptions, 1,144 across
+  `mcp_server/*.ts`" was also rejected, and the reason is the reusable
+  lesson:** both figures reproduce exactly under a `description:` regex that
+  stops at the FIRST string fragment, and nearly every description in that
+  file is written as a `'…' + '…' + '…'` concatenation — so that method
+  measures the first line of each description and silently discards the rest.
+  It would have replaced a figure ~1.1x low with one ~3.3x low, in the same
+  direction. Any re-measurement must join the continuations; the direction of
+  this risk is unchanged and its magnitude is larger, never smaller.
 
 ## Phase 0 — Pin the host model and the baseline before touching delivery
 
@@ -241,12 +260,24 @@ Not executable today. Carried so it is not re-proposed as new.
       verify: a dated line in this file per check; the step's checkbox can only be ticked with a spec URL that says "merged".
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
+<!-- risk-review: v1 | reviewed: 2026-08-23 | reviewer: drain/skill-link-integrity -->
+
+> **Re-review 2026-08-23, forced by the R2 figure correction and genuinely
+> performed rather than stamped.** The only change to this file was replacing a
+> token figure at three sites (the R2 prose, the R2 row below, and the matching
+> acceptance criterion). Every risk row was re-read against it. **No row changes
+> rank, type, or mitigation, and R2's direction is unchanged — it is
+> STRENGTHENED:** the corrected standing cost is 2,257 tok, higher than the
+> ~1,972 the row previously claimed, so "registering the kernel server as-is
+> would add standing cost" holds by a wider margin and the ≤600-tok cap in 1.1
+> is if anything more necessary. No phase heading, no checkbox, and no
+> acceptance-criterion COUNT moved; only that one number, and the method behind
+> it, are now reproducible. Nothing else in this roadmap was touched.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Models ignore skills served over MCP | product | The AAIF WG measured models going straight to tools and ignoring served skills, with adherence declining further as context grew — a pull-only delivery path would ship a catalogue nothing reads | The deterministic `skill-route` push hook stays primary and 1.2 adds the WG's one positive finding as server `instructions`; 4.3 measures the adherence decay by context bucket instead of assuming the nudge holds | Phase 4 — The falsifier (pre-registered; decides the default) |
-| 2 | The registered server costs more standing context than tiering saves | implementation | MCP tool definitions are deferred only above ~10% of context, so a small server loads upfront; registering the kernel server as-is would add its ≈1,972-tok allowlist surface to every session | 0.2 records that figure and the Tool Search threshold as a metric row so "registering it is free" cannot be re-asserted, and 1.1 caps the two-tool surface at ≤600 tok asserted in a test | Phase 1 — Make the promised tool reachable on the default path |
+| 2 | The registered server costs more standing context than tiering saves | implementation | MCP tool definitions are deferred only above ~10% of context, so a small server loads upfront; registering the kernel server as-is would add its 2,257-tok allowlist surface (exact cl100k_base BPE over the `description:` literals of `mcp_server/tools.ts`, continuations joined; 3,256 tok across `mcp_server/*.ts`) to every session | 0.2 records that figure and the Tool Search threshold as a metric row so "registering it is free" cannot be re-asserted, and 1.1 caps the two-tool surface at ≤600 tok asserted in a test | Phase 1 — Make the promised tool reachable on the default path |
 | 3 | The host listing-budget model is upstream prose, not repo measurement | implementation | Fill order and wrapper overhead are documented behaviour rather than something this tree measured, and every tier decision in Phase 2 inherits whatever the model gets wrong | 0.1 names which assumptions are upstream prose and pins the model against the 2026-08-08 sampled projection — five bare and three described — recording disagreement as a known gap rather than suppressing it | Phase 0 — Pin the host model and the baseline before touching delivery |
 | 4 | Tiering makes a skill unreachable rather than merely undescribed | product | Tier B is projected only into the server content tree, so on a host that never calls the tool a Tier B skill goes from bare-but-listed to absent — strictly worse than the defect being fixed | `legacy-all` stays the default and `tiered` is opt-in behind a Human Gate until 4.4 decides on evidence; 2.2 asserts that `tier_a_count + tier_b_count` equals the full projected catalogue | Phase 2 — Tier the projection against the modelled budget |
 | 5 | The tier split oscillates with observed usage | implementation | A skill that flips between Tier A and Tier B across installs makes the agent's memory of where it found a skill unreliable, and the flip is invisible after the fact | 2.1 writes `model_inputs` and the fallback actually used into `skill-tiers.json` so a tier is explicable; hysteresis is added only if 4.2 observes flipping, not pre-emptively | Phase 2 — Tier the projection against the modelled budget |
@@ -262,7 +293,7 @@ Not executable today. Carried so it is not re-proposed as new.
 - [ ] The catalogue's host-side fate is *predicted* per skill before install,
       with the model's assumptions named (0.1, 2.1).
 - [ ] The registered server's standing cost is a measured, pinned number ≤ 600
-      tok, and the kernel server's ≈1,972-tok cost is recorded as the reason
+      tok, and the kernel server's 2,257-tok cost is recorded as the reason
       it is not the one registered (0.2, 1.1).
 - [ ] The ranker indexes `triggers:` and its matrix hit rate is recorded
       before and after (0.3, 3.1).

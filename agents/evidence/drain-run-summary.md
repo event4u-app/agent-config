@@ -458,3 +458,142 @@ council decision, and re-scoping.
   `road-to-agentic-engineering-assurance` (53), `road-to-trigger-delivered-rule-bodies` (34),
   `road-to-roadmap-situational-awareness` (29), `road-to-role-scoped-spawn-profiles` (28),
   `road-to-skill-delivery-over-mcp` (25), and `road-to-council-evidence-integrity` 2.3–5.
+
+---
+
+# Run D — 2026-08-23 (full-estate drain, 15 roadmaps)
+
+The run that emptied the active estate. Every roadmap at the top level of
+`agents/roadmaps/` on the day was taken to a PR; the seed table in the mandate
+was **entirely stale** (36 named roadmaps, none of which existed) and the queue
+was recomputed from the live tree before anything started.
+
+## Headline
+
+- **15 roadmaps, 14 PRs opened** (#1593–#1605) plus one merged before the run
+  began (#1592). One further PR (#1606) records a defect found on the way.
+- **13 of 14 orchestrated by subagents, one in-session.** All fourteen reached
+  **zero failing checks**.
+- **Every red CI check in this run was a stale generated artefact or a floor the
+  trunk had already lowered.** Not one was a defect in the roadmap work itself.
+  That is the finding worth carrying forward, and it is stated as an
+  observation about this run rather than a law.
+
+## Pull requests
+
+| PR | Roadmap | Closure |
+|---|---|---|
+| #1592 | role-scoped-spawn-profiles | 28/28 (11 done, 17 descoped) — merged during the run |
+| #1593 | agentic-engineering-assurance | 53/53 (32 done, 21 descoped), archived |
+| #1594 | roadmap-situational-awareness | 26/29 — **not archived**, 3 deferred items held under Iron Law 3 |
+| #1595 | observability-plate | 20/20, archived |
+| #1596 | standing-payload-diet | 18/19, archived |
+| #1597 | council-evidence-integrity | 22/22, archived (in-session, not delegated) |
+| #1598 | chained-clip-continuity-and-provider-truth | 30/30, archived |
+| #1599 | skill-link-integrity-and-manifest-sync | 24/24, archived |
+| #1600 | skill-delivery-over-mcp | 22/25, outcome `measured-null` |
+| #1601 | frontend-fidelity-calibration | 36/36, archived |
+| #1602 | monorepo-scope-and-detection | 24/24, archived |
+| #1603 | frontend-power | 60/60 (45 done, 15 descoped), archived |
+| #1604 | deterministic-time-in-gates | 17/18 — **not archived**, AC-2 left open for the owner |
+| #1605 | trigger-delivered-rule-bodies | 34/34, archived |
+| #1606 | — | stub recording the language-pin defect (below) |
+
+## Council decisions
+
+Convergent verdicts (2/2 quorum):
+
+- **#1597 `b-probe-channel-decision`** — a **named hybrid** over the blocker's
+  own (a)/(b): a continuous argv-construction gate plus a deliberately invoked
+  live canary, never in CI. Both seats independently required filesystem state
+  as the oracle rather than model prose. The openai seat **rejected** the
+  anthropic seat's 90-day recheck cadence as invented policy; version-invalidation
+  replaced it.
+- **#1595 shape** — three responsibility-split skills over an in-place
+  extension, overruling the blocker's own recommendation.
+- **#1595 fixtures** — committed contract pairs in the verdict-owning skill.
+- **#1596 both blockers** — scope the contended rules out; scope the claim to
+  same machine **and** same projection state.
+- **#1598 `trace-visibility-decision`** — `local-only`, decided *by the council*
+  on the ground that reaffirming an existing floor is not a floor transition.
+- **#1601 both blockers** — recorded nulls for render-dependent dimensions;
+  detector derived independently rather than borrowed.
+- **#1603 `b-pack-reach-weight`** — keep `suggests:`, scope the claim (ADR-245).
+- **#1592 `b-maintainer-run-capture`** — capture refused; the seats diverged on
+  AC-1 and the divergence is recorded rather than smoothed.
+- **#1593** — three questions, all convergent, including thresholds committed
+  with every value explicitly `null` rather than a number invented.
+
+**Inconclusive councils — five, and they are the run's weakest point.** CLI
+quota was exhausted (anthropic 53/50, openai 50/50), so five questions returned
+0/2 or 1/2 present: #1594 cadence key, #1599 removal-path re-scope, #1600
+`.mcp.json` ownership, #1604 AC-2 two-machine clause, #1605 both blockers
+(1 of 2 answering). Every one was recorded as a null and decided on tree
+evidence or left with the owner — none was reported as convergence. #1604's
+criterion stays open **because** a no-quorum council is an escalation condition.
+
+## Descopes
+
+Recorded per PR; the substantial ones:
+
+- **#1603** — three stubs (live measurements across 8 hosts, default flips,
+  detector promotions); two steps abandoned outright with reasons.
+- **#1600** — live arm needs ≥40 real interactive sessions across two install
+  configurations; scripted prompts would measure a script, not a model.
+- **#1598** — six honest nulls; the frame-lock probe and seam collection need
+  paid renders *and two blind human raters*. Step 4.3 recorded **UNDECIDED**,
+  not H0: with no data, "no threshold reaches 0.8 precision" would be a claim
+  about measurements that do not exist.
+- **#1593** — Phase 5 cut outright (no deploy platform, and the grader prints
+  that reason in every report).
+- **#1592** — 13 steps to a stub carrying the measured 22.1 % ceiling, so nobody
+  promotes it on the token axis alone.
+
+## Findings beyond the roadmaps
+
+- **The language pin follows the paste when the typed lead is short** (#1606).
+  `classify` falls through to the whole body when the lead scores below
+  `MIN_MARKERS`, so `Fix this file.` over a German paragraph pins `de`, and the
+  mirror case pins `en`. Adding a document heading does **not** help, which
+  rules out the paste-stripping explanation. The function's own docstring claims
+  the opposite, unqualified. Filed as a stub, not fixed: it is a behavioural
+  surface on every turn on every host.
+- **The token cap dragged `js-tiktoken` into every hook dispatch** (#1605) —
+  `pre_tool_use` p95 202 ms → 62 ms after moving the cap to bytes.
+- **`design-pass-stop` was declared advisory while returning `EXIT_BLOCK`**
+  (#1603), which the dispatcher downgrades — a refusal that would have shipped
+  inert.
+- **`parse-blueprint.sh` could not read piped stdin on Linux** (#1598) —
+  pre-existing, and untested until this branch added the test.
+- **Two of a roadmap's own `corrected-from-reproduction` figures were themselves
+  wrong** (#1604), and the source they "corrected" was right.
+
+## Process defects in the run itself
+
+Recorded because they cost real time and recurred:
+
+1. **Regenerating `dist/` on a branch behind `main` deletes other people's
+   merged work.** Hit twice in-session before it was written down: `task sync`
+   rebuilds from the working tree's `src/`, so every skill the trunk added
+   meanwhile is regenerated out of existence and `git add -A` stages the
+   deletions as if they were yours. The tell is a diffstat far larger than the
+   change. Merge (or rebase) **before** regenerating, never after.
+2. **A gate's own remedy line can be wrong.** `check_artefact_count_messaging`
+   says to run `update_counts`, which reports "already in sync" and does not
+   touch `CAPABILITIES.yaml`; the correct generator is named in that file's own
+   `meta.generated_by`.
+3. **`check_requirements_trace`'s floor tracked the active roadmap count**, so
+   every successful completion turned it red. Lowered 15 → 10 with the reason
+   written into the corpus field and stated as a judgement, not a measurement.
+4. **A stash probe popped a foreign session's stash.** Recovered without loss —
+   git keeps the entry on a conflicted pop — but the probe was the wrong tool.
+
+## Honest limits of this record
+
+- Counts and closures are as reported by each PR at the time of writing; four
+  PRs were still settling their last checks.
+- The five inconclusive councils mean five questions this run answered without
+  the multi-seat check the mandate asked for. They are listed above rather than
+  folded into the convergent set.
+- `#1594` and `#1604` are deliberately **not** archived and their open items are
+  owner-facing, so the active estate is not empty by design.
