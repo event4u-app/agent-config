@@ -1,0 +1,9 @@
+{
+  "01-valid-json.txt": "parsed",
+  "02-fenced-json.txt": "parsed",
+  "03-prose-refusal.txt": "parse_failed",
+  "04-truncated-array.txt": "parse_failed",
+  "05-empty-body.txt": "empty",
+  "06-missing-keys.txt": "parsed",
+  "07-readable-empty-array.txt": "parsed"
+}

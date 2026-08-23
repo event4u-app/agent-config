@@ -82,8 +82,10 @@ import { classifyCliFailure, type AbsentReason } from './ai_council/transport_re
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
+    annotateRenderedQuorum,
     _format_quorum_line,
     _postRunQuorum,
+    stanceAgreementOf,
     _quorum_min_present_from,
     _quorum_setting_from,
 } from './ai_council/quorum_wiring.js';
@@ -165,7 +167,7 @@ import {
     render_deanonymization_block,
     with_chairman_fields,
 } from './ai_council/blind_review.js';
-import { tally_stances } from './ai_council/stance_tally.js';
+import { tallyFromResponses } from './ai_council/stance_tally.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
@@ -2657,6 +2659,9 @@ function cmd_run(
     // with 3 configured members where 2 fail to construct and 1 answers emits
     // `{total: 1, present: 1}` and reads as full attendance.
     const configured_total = quorum_out.result?.total ?? null;
+    // Hoisted above the post-run emit so agreement rides the same line as attendance.
+    const stance_tally_result = tallyFromResponses(responses, stance_tally_on);
+    const stance_agreement = stanceAgreementOf(stance_tally_result);
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
@@ -2667,6 +2672,7 @@ function cmd_run(
     // skips already went out under `phase: 'pre_run'` from `build_members`,
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
+        ...(stance_agreement === undefined ? {} : { stanceAgreement: stance_agreement }),
         command: 'run',
         // Whether the roster actually shrank — see `dispatch_shape`. Without
         // this the line is byte-identical to a configured one-member council,
@@ -2698,13 +2704,7 @@ function cmd_run(
     // the payload in the first place). `buildHandoffFromStanceTally` returns
     // the honest all-null envelope when stance tally never ran or split, so
     // this is always additive, never a fabricated decision.
-    const handoff: HandoffEnvelope = buildHandoffFromStanceTally(
-        stance_tally_on
-            ? tally_stances(
-                  responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
-              )
-            : null,
-    );
+    const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
     const persona_labels = build_persona_labels(advisor_plans, billable);
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
@@ -2718,6 +2718,8 @@ function cmd_run(
         { persona_labels },
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
+    // Rendered attendance, re-derived after the parser. The event does not move.
+    quorum_out.result = annotateRenderedQuorum(quorum_out.result, consensus?.parse_outcomes);
     const chairman = _maybe_run_chairman(
         ai_cfg,
         question,
