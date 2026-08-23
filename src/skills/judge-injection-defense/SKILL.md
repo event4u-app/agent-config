@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: judge-injection-defense
-description: "Use when scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates."
+description: "When scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates."
 domain: quality
 workspaces:
   - agent-config-maintainer

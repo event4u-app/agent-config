@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: secrets-management
-description: "Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized."
+description: "When picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI and Kubernetes — decision framework, provider deep-dives externalized."
 domain: devops
 status: active
 refresh_trigger: "A cited provider deprecates an auth method, OR External Secrets Operator ships a major version with breaking CRD changes, OR ≥30% of cited scanner tools change their gate semantics."

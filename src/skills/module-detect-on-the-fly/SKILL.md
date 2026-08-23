@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: module-detect-on-the-fly
-description: "Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference."
+description: "When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference."
 domain: process
 workspaces:
   - agent-config-maintainer

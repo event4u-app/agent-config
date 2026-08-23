@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: scene-expander
-description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director."
+description: "When expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director."
 personas:
   - hollywood-director
 domain: product

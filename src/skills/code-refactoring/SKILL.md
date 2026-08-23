@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: code-refactoring
-description: "Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools."
+description: "When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools."
 domain: engineering
 workspaces:
   - engineering

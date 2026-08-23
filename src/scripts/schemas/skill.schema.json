@@ -25,8 +25,8 @@
     "description": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 220,
-      "description": "Trigger phrase; ≤ 200 chars recommended, 220 is the ceiling (lean-initial-context: descriptions load eagerly via progressive disclosure). Over-cap is a soft warning, not a hard fail — a warning window so authors adapt."
+      "maxLength": 200,
+      "description": "Trigger phrase; the ceiling is 200 chars, measured. Lowered from 220 on 2026-08-22 because 220 described no artefact that existed: across all 290 skills the distribution was median 181 / p75 189 / max 200, with ZERO over 200, so the 20 chars above the recommended line were dead headroom a future author could fill with no gate objecting. p75 = 189 is the recorded soft target; 200 is the hard line. Descriptions load eagerly via progressive disclosure, so every char here is standing cost on every spawn."
     },
     "compatibility": {
       "type": "string",

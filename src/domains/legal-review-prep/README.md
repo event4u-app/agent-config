@@ -17,6 +17,6 @@ NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not
 
 - **`contract-review`** — Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'.
 - **`dpa-review`** — Use when reviewing a DPA as controller or processor against GDPR Art. 28 — GREEN/YELLOW/RED gap frame, never a final call. Triggers on "review this DPA", "check this DPA".
-- **`legal-intake-triage`** — Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'.
-- **`legal-practice-profile`** — Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on "set up legal", "legal profile".
+- **`legal-intake-triage`** — When triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'.
+- **`legal-practice-profile`** — When setting up the legal pack — captures jurisdiction, role, escalation and playbook into a plain-prose profile every legal skill reads. Triggers on "set up legal", "legal profile".
 - **`nda-triage`** — Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'.

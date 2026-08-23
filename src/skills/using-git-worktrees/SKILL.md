@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: using-git-worktrees
-description: "Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'."
+description: "When starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'."
 domain: process
 workspaces:
   - engineering
