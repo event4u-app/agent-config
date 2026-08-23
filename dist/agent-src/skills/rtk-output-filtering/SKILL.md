@@ -34,8 +34,13 @@ agent-config's own figure is **33% overall, 0-57% per command**, and it is a
 **single spot-measurement from 2026-07-28: one repo, one macOS machine, an
 8-command corpus.** It has **not** been superseded by a wider run, and the
 widened re-bench is **deferred** — `road-to-terminal-token-economy` steps
-3.2-3.4, deferred by AI council on 2026-08-23 because Phase 2 has not yet chosen
-the wrapper mechanism, so a re-bench today would measure the wrong subject.
+3.2-3.4. **The reason changed on 2026-08-23 and the label is updated with it:** the
+original deferral was ordering (Phase 2 had not chosen the wrapper mechanism, so a
+re-bench would measure the wrong subject). Phase 2 has now chosen — the existing
+warn-only nudge — so that objection is discharged. What defers it now is the
+re-bench's own registered design, which requires **at least two machines**, and only
+one is reachable. A one-machine re-bench would reproduce exactly the narrowness the
+widening exists to fix. AI council 2026-08-23, 2/2 convergent, on both readings.
 
 Treat it as an order of magnitude for *that* corpus, never as this package's
 general claim. Verbose commands (`git status`, `git log`, `ls -la`) save ~55%;
