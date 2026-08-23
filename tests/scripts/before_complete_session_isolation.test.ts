@@ -148,6 +148,54 @@ describe('a stale file carrying a foreign id is reset, not inherited', () => {
         // this session never made — the sharpest form of the shared-state bug.
         expect(s['ci_last']).toBe(null);
     });
+
+    /**
+     * The NEGATIVE control the reset never had, and the invariant that makes
+     * B1.2 of `road-to-per-turn-hook-economy-carry` unreachable.
+     *
+     * That step describes a race: the reset writes `ci_last = null` while the
+     * turn-end gate reads the same state, flipping it from "CI observed
+     * unsettled" to "no CI observed, therefore allow". The audit of 2026-08-23
+     * found the race not reachable at this commit for three independent
+     * reasons, and the third is the only one nothing pinned: the reset fires
+     * ONLY when the envelope's `session_id` differs from the persisted one, and
+     * in a per-session file that cannot happen for the session that owns it.
+     * (The other two: the publish is an atomic rename under a lock, so no torn
+     * read exists; and `readCiSettled` refuses a foreign file via
+     * `ownsSessionState`, already covered above.)
+     *
+     * Without this case the reset's test suite asserts only that it DOES clear,
+     * so widening its condition — dropping the id comparison, or resetting on
+     * every turn boundary — would make the race real again and stay green. That
+     * is the regression this pins.
+     *
+     * Sabotage-proven 2026-08-23: making the reset unconditional takes this RED
+     * while every other case in this file stays green.
+     */
+    it('does NOT clear the CI witness for the session that owns the file', () => {
+        const target = path.join(tmp, statePathFor('s-own'));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                session_id: 's-own',
+                verifications_this_session: 3,
+                ci_last: { at: '2026-08-23T00:00:00+00:00', pending: 2, settled: false },
+            }),
+        );
+
+        run(JSON.stringify({ event: 'user_prompt_submit', session_id: 's-own', payload: {} }), {
+            consumer_root: tmp,
+        });
+
+        const s = readState('s-own');
+        const ci = s['ci_last'] as { settled?: boolean } | null;
+        // `settled: false` is the value whose loss is unsafe: nulling it reads
+        // downstream as "no CI observed", which is the ALLOW direction.
+        expect(ci).not.toBe(null);
+        expect(ci?.settled).toBe(false);
+    });
 });
 
 describe('housekeeping', () => {
