@@ -1,0 +1,223 @@
+{
+  "_comment": "Assurance capability registry — the ONE canonical answer to 'which assurance capability does which surface own, and what is its state'. Phase 0.1 / 0.2 / 0.3 of road-to-agentic-engineering-assurance, and the artefact its blocker `sibling-roadmap-dispositions` resolves against. THIS IS NOT A SECOND GRADER. Exactly one grader exists in this tree — src/scripts/grade_target_readiness.ts — and every capability whose state can be read off a target repository declares the dimension id of that grader which produces it, in `projection`. A capability with `projection: null` is one no shipped probe reads; its state is `unknown` or it is a process obligation owned by a skill, and either way nothing here grades it. TWO AXES, DECLARED PER ENTRY, because conflating them was a real defect in the umbrella roadmap's own premise: `axis: target` is a property of the user's repository that AC is installed into, which is what grade_target_readiness measures; `axis: self` is a property of THIS package's own tests and reviews, which is what the three sibling roadmaps measured. The umbrella's Phase 4 asked to 'consume the sibling dispositions' for capabilities it had also listed as target-repository capabilities — those are different questions with different answers, so the axis is a required field rather than a note. STATE VOCABULARY is exactly four values and is closed: available | missing | degraded | unknown. `unknown` means nobody measured; `missing` means measured absent; `degraded` means present with a named limitation that is recorded in `limitations`. There is no fifth state and adding one is a contract change, not an entry edit.",
+  "schema_version": 1,
+  "owner": "maintainer",
+  "review_by": "2027-08-23",
+  "registered_at": "2026-08-23",
+  "grader": {
+    "path": "src/scripts/grade_target_readiness.ts",
+    "dimensions": 10,
+    "knockouts": ["test-presence", "static-analysis", "security-supply-chain", "ci-enforcement"],
+    "note": "Grades 0 Absent / 1 Present / 2 Enforced-in-CI / 3 Independent-and-diff-scoped, verdict `min` over the four knockouts, printed as `L<n> — bound by <dimension>`. Emits no aggregate figure — a test greps its own output for `%` and `/100`. `null` is 'this tool cannot tell' and is NOT a zero; on a knockout it binds at L0 with its reason printed."
+  },
+  "state_vocabulary": ["available", "missing", "degraded", "unknown"],
+  "capabilities": {
+    "unit-test": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "test-presence",
+      "state": "available",
+      "rationale": "A test-runner config (vitest/jest/phpunit/pest/pytest) is probed and the 1 → 2 distinction is whether CI blocks on it.",
+      "evidence": "tests/scripts/grade_target_readiness.test.ts — presence asserted in tests/fixtures/target-repos/full, absence in ci-absent",
+      "revisit_if": "the probe stops distinguishing a present runner from an absent one on the committed fixtures"
+    },
+    "integration-test": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "test-presence",
+      "state": "unknown",
+      "rationale": "No shipped probe separates integration tests from unit tests; both collapse into the test-presence dimension. Recorded as unknown rather than folded into unit-test, because 'we cannot tell them apart' is not 'they are both present'.",
+      "evidence": "src/scripts/grade_target_readiness.ts — the test-presence probe reads runner configs only; no directory or marker convention distinguishes the two",
+      "revisit_if": "a probe lands that reads a test-suite split (a runner project/suite config, or a conventional directory) on the committed fixtures"
+    },
+    "e2e-test": {
+      "axis": "target",
+      "owner_surface": "none",
+      "projection": null,
+      "state": "unknown",
+      "rationale": "No probe exists. `playwright` and `cypress` return zero occurrences in the grader.",
+      "evidence": "grep -oiE 'playwright|cypress' src/scripts/grade_target_readiness.ts → no match, 2026-08-23",
+      "revisit_if": "an e2e probe ships with fixture coverage for presence AND absence"
+    },
+    "behavior-spec": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "behaviour-contract",
+      "state": "available",
+      "rationale": "AGENTS.md / openapi.yaml / CONTRACT.md presence is probed as the repository's declared behavioural contract.",
+      "evidence": "tests/scripts/grade_target_readiness.test.ts — graded > 0 in the full fixture, 0 in the python fixture",
+      "revisit_if": "the contract probe is widened to a form whose absence the fixtures no longer distinguish"
+    },
+    "test-red-evidence": {
+      "axis": "self",
+      "owner_surface": "src/skills/test-driven-development/SKILL.md",
+      "projection": null,
+      "state": "available",
+      "rationale": "A process obligation, not a repository artefact: an observed failing test is a fact about a run, and no repository scan can recover it. Owned by the TDD skill's RED → GREEN → REFACTOR cycle, which this roadmap explicitly does not duplicate.",
+      "evidence": "src/skills/test-driven-development/SKILL.md:140 — 'Each case from the list then gets its own RED → GREEN cycle'",
+      "revisit_if": "a durable RED-run identifier is emitted somewhere a later reader can check, at which point this becomes projectable"
+    },
+    "mutation-sensitivity": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "test-strength",
+      "state": "degraded",
+      "limitations": [
+        "detection only — the grader reads stryker/infection/mutmut config presence and never runs a mutation pass",
+        "no universal min-MSI constant exists here and none may be added (AC-8)",
+        "a tool-assisted rig for THIS package was refused on measured grounds by the sibling roadmap"
+      ],
+      "rationale": "Config presence is detected; sensitivity is never measured by this tree. For AC's own suite the manual control-inversion probe in testing-anti-patterns is the substitute, and it is a named substitute rather than a silent one.",
+      "evidence": "src/skills/testing-anti-patterns/SKILL.md:185 — 'No mutation-testing rig required: comment the control out, run that one spec, put it back.' · agents/roadmaps/archive/road-to-test-independence-and-mutation-evidence.md — rig REFUSED (measured), 10 hand probes in minutes",
+      "revisit_if": "a mutation adapter ships that runs a changed-surface pass and reports survivors and timeouts separately"
+    },
+    "property-test": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "test-strength",
+      "state": "available",
+      "rationale": "fast-check and Hypothesis are probed as property-based libraries.",
+      "evidence": "src/scripts/grade_target_readiness.ts — 'fast-check' and 'hypothesis' tokens present; asserted > 0 in the full fixture",
+      "revisit_if": "the probe stops distinguishing a present property library from an absent one"
+    },
+    "static-analysis": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "static-analysis",
+      "state": "degraded",
+      "limitations": [
+        "PHP and JS/TS only — on a Python-primary target the dimension is `not detectable`, never 0, and binds at L0 because it is a knockout",
+        "quality-tools ships no Python mode body"
+      ],
+      "rationale": "The limitation is recorded rather than rounded up: a 0 would claim the target lacks static analysis, and a Python target may well run mypy while the tool cannot tell.",
+      "evidence": "src/skills/quality-tools/SKILL.md:33-36 — PHP and JS/TS mode rows only; grep -ci python → 0 · tests/scripts/grade_target_readiness.test.ts:118-119 — toBeNull() with a paired not.toBe(0)",
+      "revisit_if": "a Python mode body lands in quality-tools/references/ and the grader probes it"
+    },
+    "type-check": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "static-analysis",
+      "state": "degraded",
+      "limitations": [
+        "not separable from static-analysis — tsconfig.json, phpstan.neon and psalm.xml all feed one dimension",
+        "inherits the Python not-detectable limitation"
+      ],
+      "rationale": "Folded into static-analysis by the shipped grader. Recorded as its own capability with a shared projection rather than deleted, because the policy vocabulary distinguishes them even though the probe does not.",
+      "evidence": "src/scripts/grade_target_readiness.ts — tsconfig / phpstan / psalm tokens all under the static-analysis dimension",
+      "revisit_if": "a probe separates type checking from lint/static analysis on the committed fixtures"
+    },
+    "architecture-constraint": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "architecture-gates",
+      "state": "available",
+      "rationale": ".dependency-cruiser.* and deptrac.yaml are probed; non-knockout.",
+      "evidence": "src/scripts/grade_target_readiness.ts — 'dependency-cruiser' and 'deptrac' tokens; asserted > 0 in the full fixture and 0 in python",
+      "revisit_if": "the probe stops distinguishing presence from absence on the fixtures"
+    },
+    "dependency-audit": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "security-supply-chain",
+      "state": "available",
+      "rationale": "Lockfile presence plus a blocking audit step in CI; the 1 → 2 distinction is whether the audit job can fail the build.",
+      "evidence": "tests/scripts/grade_target_readiness.test.ts — the full fixture reports 'lockfile; SAST config; audit runs in CI' at grade 2, ci-absent reports 'no blocking audit step' at grade 1",
+      "revisit_if": "the CI-blocking heuristic is replaced by per-job YAML attribution and the coarse reading changes a fixture grade"
+    },
+    "secret-scan": {
+      "axis": "target",
+      "owner_surface": "none",
+      "projection": null,
+      "state": "unknown",
+      "rationale": "No probe exists. gitleaks, trufflehog and detect-secrets return zero occurrences in the grader. Distinct from this package's own secret hygiene, which is a different axis and separately owned.",
+      "evidence": "grep -oiE 'gitleaks|trufflehog|detect-secrets' src/scripts/grade_target_readiness.ts → no match, 2026-08-23",
+      "revisit_if": "a secret-scan probe ships with fixture coverage for presence AND absence"
+    },
+    "security-scan": {
+      "axis": "target",
+      "owner_surface": "src/scripts/grade_target_readiness.ts",
+      "projection": "security-supply-chain",
+      "state": "available",
+      "rationale": "Semgrep and bandit configs are probed under the security-supply-chain knockout.",
+      "evidence": "src/scripts/grade_target_readiness.ts — 'semgrep' and 'bandit' tokens; the python fixture reports 'no SAST config'",
+      "revisit_if": "the SAST probe stops distinguishing presence from absence on the fixtures"
+    },
+    "runtime-probe": {
+      "axis": "target",
+      "owner_surface": "agents/roadmaps/stubs/road-to-target-project-bootstrap-enforce.md",
+      "projection": "runtime-verification",
+      "state": "unknown",
+      "rationale": "Out of scope by design, and the grader says so in its own output rather than grading a 0. Cut with a stated reason by the sibling roadmap: runtime verification needs a deploy platform this package does not own.",
+      "evidence": "src/scripts/grade_target_readiness.ts:270 — notDetectable: 'needs a deploy platform this tool does not own' · agents/roadmaps/archive/road-to-target-project-assurance-readiness.md — 'Runtime verification (canary/flags/rollback) | Needs a deploy platform AC does not own; stubbed, not planned.'",
+      "revisit_if": "this package gains a deploy or runtime surface it owns, at which point the dimension stops being not-detectable"
+    },
+    "visual-regression": {
+      "axis": "target",
+      "owner_surface": "none",
+      "projection": null,
+      "state": "unknown",
+      "rationale": "No probe exists. percy and chromatic return zero occurrences in the grader.",
+      "evidence": "grep -oiE 'percy|chromatic' src/scripts/grade_target_readiness.ts → no match, 2026-08-23",
+      "revisit_if": "a visual-regression probe ships with fixture coverage for presence AND absence"
+    },
+    "independent-test-author": {
+      "axis": "self",
+      "owner_surface": "agents/roadmaps/archive/road-to-test-independence-and-mutation-evidence.md",
+      "projection": null,
+      "state": "unknown",
+      "rationale": "AI council 2026-08-23, 2/2 convergent, pick (1a). The sibling's pre-registered outcome is `unmeasurable-here` — the third pre-registered state, explicitly NOT a null and NOT a refutation: the measurement did not run because the run lacked a subagent dispatch primitive. `unknown` is exactly 'nobody measured' in this vocabulary. It must never be read back as evidence against spec-first authorship, and policy may not select it until the measurement runs.",
+      "evidence": "agents/evidence/analysis/test-independence-unmeasurable.md · agents/roadmaps/archive/road-to-test-independence-and-mutation-evidence.md — the 'Sibling disposition' table written for this blocker to consume",
+      "shipped_mechanism": "a `test_authorship` envelope field, default `unknown`",
+      "revisit_if": "a subagent dispatch primitive ships AND the sibling's pre-registered corpus, grader and threshold are re-run — the pre-registration fixed them in advance so a later run re-runs rather than redesigns"
+    },
+    "independent-review": {
+      "axis": "self",
+      "owner_surface": "agents/roadmaps/archive/road-to-review-independence.md",
+      "projection": null,
+      "state": "degraded",
+      "limitations": [
+        "single-member: one reviewer, one model family",
+        "derived independence pair is `provisional` / `single-pass`",
+        "src/scripts/self_review_gate.ts:471 hardcodes independenceFields(['anthropic'])",
+        "check_review_schema reports `scanned: 1` in this repository today — a corpus of one, which cannot be distinguished from a conforming corpus"
+      ],
+      "rationale": "AI council 2026-08-23, 2/2 convergent, pick (2b). The fresh-context dispatcher shipped and routes the default review path, so the capability is real; the family axis one member cannot supply is a named limitation, so it is degraded rather than available. Recording it degraded is what keeps P8's floor checkable: a same-context review is never presentable as an independent one.",
+      "evidence": "src/scripts/dispatch_r2_reviewer.ts — emits independence: single-member / fresh · agents/roadmaps/archive/road-to-review-independence.md — blocker second-ci-provider-key resolved option (b)",
+      "revisit_if": "self_review_gate.ts stops hardcoding a single provider AND either multi-family routing is measured or single-family parity is measured"
+    },
+    "requirement-trace": {
+      "axis": "self",
+      "owner_surface": "src/scripts/check_requirements_trace.ts",
+      "projection": null,
+      "state": "degraded",
+      "limitations": [
+        "adoption is 1 of 25 active roadmaps, and the single declarer is the mechanism's own roadmap",
+        "enforcement is parked under two fired falsifiers",
+        "demonstrated value is not evaluable — no documented sample exists"
+      ],
+      "falsifiers": {
+        "no_opportunity": "fired",
+        "no_adoption": "fired",
+        "poor_resolution": "not_fired",
+        "no_demonstrated_value": "not_evaluable"
+      },
+      "rationale": "AI council 2026-08-23, 2/2 convergent, pick (3b). The schema ships and resolves deterministically, so the mechanism works; but two of four pre-registered falsifiers have FIRED and enforcement is parked under them, so `available` would launder a parked outcome into a positive one — which is precisely the failure the blocker's `If you do nothing` names. A traceability capability that cannot demonstrate value over the corpus it was built to serve is degraded in delivered capability even when its code is defect-free.",
+      "evidence": "agents/roadmaps/archive/road-to-requirements-traceability-minimal.md — Phase 2 disposition, live reading 3 rows / 3 linked / 0 unlinked / 0 unresolved over 25 active roadmaps with 1 declaring · src/config/requirements-trace-budget.json — shrink-only ratchet at all-zero",
+      "revisit_if": "adoption reaches >= 3 eligible active roadmaps, OR >= 1 non-maintainer-prompted roadmap adopts the fields, OR the `no_demonstrated_value` falsifier transitions from not_evaluable to a measured state"
+    },
+    "evidence-binding": {
+      "axis": "both",
+      "owner_surface": "agents/roadmaps/stubs/road-to-target-project-evidence-contract.md",
+      "projection": "evidence-traceability",
+      "state": "degraded",
+      "limitations": [
+        "per-dimension evidence strings exist on the target axis and are now asserted, but there is no aggregate per-change evidence record",
+        "verify-completion-evidence produces prose — json, schema and machine return 0 occurrences in that skill",
+        "the aggregate schema is transferred, not built"
+      ],
+      "rationale": "The target axis binds every graded dimension to an evidence string, and that invariant is now pinned by a spec rather than merely true. The aggregate per-change record the umbrella's Phase 4.5 and Phase 6 describe is a transferred successor, so the capability is partially present and its gap is named.",
+      "evidence": "tests/scripts/grade_target_readiness.test.ts — the '1.3 evidence binding' block; sabotage-probed both ways · src/skills/verify-completion-evidence/SKILL.md — 0 occurrences of json/schema/machine",
+      "revisit_if": "the evidence-contract stub is promoted and an aggregate per-change record ships"
+    }
+  }
+}
