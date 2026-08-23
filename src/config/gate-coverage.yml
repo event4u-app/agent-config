@@ -297,6 +297,26 @@ gates:
     no_canary_reason: >-
       the violation is a MODIFICATION, not a creation: this gate reds when package.json `files[]` or `.npmignore` changes and the committed artefact does not, and the canary contract is create-only. A planted FILE cannot move either surface — the closest it gets is changing the payload-derived shadowed set, which is informational and deliberately excluded from the drift verdict, so a plant would leave the gate green and be reported as dead. Discrimination is proven by the gate's own `--self-test` (8 cases, 5 rejecting) over the pattern matcher, and end to end by hand: editing `files[]` alone exits 1, regenerating exits 0, editing `.npmignore` alone exits 1, restoring exits 0.
 
+  - id: check_pack_passport_reconciliation
+    argv: []
+    min_scanned: 15
+    corpus: "the generated token_passport block in every src/packs/*/pack.yaml (17 at registration)"
+    status: enforced
+    no_canary_reason: >-
+      this is a LISTING, not an enforcement: `main()` returns 0 on every path by design, so no planted file can make it red and the harness's "caught the planted defect" observation is unreachable by construction. It is registered for its `scanned:` floor, which is the one thing about it that CAN break — a passport block that stops being generated, or a packs root that moves. Discrimination is proven by the gate's own `--self-test` (6 cases, 3 rejecting) over the two pure units behind the number: the passport parser and the reconciliation ratio.
+    note: >
+      Registered because it emits the `scanned:` contract line, and a test in
+      this tree requires every emitter to be registered — it caught this entry
+      being absent, which is the coverage register working as intended.
+
+      It exits 0 on a large gap ON PURPOSE. The ±10 % band it was specified with
+      assumed packs roughly PARTITION the tree; measured, `dependencies` claims
+      4 skills and 0 rules against 291 and 118, so gaps of 84 % and above are a
+      property of the tree rather than a defect. A gate red by construction gets
+      disabled rather than fixed, so this reports coverage instead. The condition
+      that would make the exit code follow the band — pack coverage approaching
+      the tree — is recorded in docs/contracts/pack-token-passport.md.
+
   - id: check_gate_completeness
     argv: []
     min_scanned: 180

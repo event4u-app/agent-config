@@ -14,4 +14,11 @@ size_class: medium
 suggests:
 - product-discovery
 surface_tier: core
+token_passport:
+  basis: chars/4
+  catalog_tokens: 529
+  commands_tokens: 0
+  other_tokens: 0
+  rules_tokens: 1337
+  total_tokens: 1866
 trust_level_default: professional

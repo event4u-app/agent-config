@@ -14,4 +14,11 @@ size_class: medium
 suggests:
 - ai-video
 surface_tier: lab
+token_passport:
+  basis: chars/4
+  catalog_tokens: 291
+  commands_tokens: 0
+  other_tokens: 0
+  rules_tokens: 3032
+  total_tokens: 3323
 trust_level_default: experimental

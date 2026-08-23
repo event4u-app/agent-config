@@ -16,4 +16,11 @@ requires: []
 size_class: large
 suggests: []
 surface_tier: lab
+token_passport:
+  basis: chars/4
+  catalog_tokens: 526
+  commands_tokens: 0
+  other_tokens: 0
+  rules_tokens: 3115
+  total_tokens: 3641
 trust_level_default: experimental

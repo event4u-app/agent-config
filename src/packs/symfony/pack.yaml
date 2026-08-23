@@ -14,4 +14,11 @@ requires:
 size_class: medium
 suggests: []
 surface_tier: core
+token_passport:
+  basis: chars/4
+  catalog_tokens: 101
+  commands_tokens: 0
+  other_tokens: 0
+  rules_tokens: 246
+  total_tokens: 347
 trust_level_default: professional

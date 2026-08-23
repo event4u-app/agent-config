@@ -11,4 +11,11 @@ owner:
 requires: []
 suggests: []
 surface_tier: core
+token_passport:
+  basis: chars/4
+  catalog_tokens: 0
+  commands_tokens: 0
+  other_tokens: 51927
+  rules_tokens: 0
+  total_tokens: 51927
 trust_level_default: core

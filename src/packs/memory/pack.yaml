@@ -18,4 +18,11 @@ requires:
 size_class: small
 suggests: []
 surface_tier: core
+token_passport:
+  basis: chars/4
+  catalog_tokens: 0
+  commands_tokens: 12841
+  other_tokens: 0
+  rules_tokens: 0
+  total_tokens: 12841
 trust_level_default: core

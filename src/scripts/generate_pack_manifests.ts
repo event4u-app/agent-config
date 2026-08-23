@@ -48,6 +48,17 @@ type Dict = Record<string, unknown>;
 
 interface Artefact {
     path: string;
+    /**
+     * On-disk byte size, captured where the ABSOLUTE path is still known.
+     *
+     * `path` above is a LOGICAL relative path whose root differs per collection
+     * mode, so it cannot be stat'd later. A first version of the token passport
+     * did exactly that, and every `statSync` threw into a catch that returned 0
+     * — 17 packs generated an all-zero passport that would then have
+     * "reconciled" against nothing. Carrying the number from the one place it
+     * is knowable removes the failure mode rather than handling it.
+     */
+    bytes: number;
     name: string;
     description: string;
     category: string;
@@ -143,8 +154,15 @@ function _artefact_record(p: string, logicalRel: string, fm: Dict): Artefact {
         : path.basename(p) === 'SKILL.md'
           ? path.basename(path.dirname(p))
           : _stem(p);
+    let bytes = 0;
+    try {
+        bytes = fs.statSync(p).size;
+    } catch {
+        bytes = 0;
+    }
     return {
         path: logicalRel,
+        bytes,
         name,
         description: _pyStrip(_pyTruthy(fm.description) ? String(fm.description) : ''),
         category: _category_from_logical(logicalRel),
@@ -247,6 +265,65 @@ function _category_from_logical(logicalRel: string): string {
  * Build the pack.yaml meta dict. Mirrors `_build_pack_yaml`. Insertion
  * order here is irrelevant — `_py_safe_dump` sorts keys (sort_keys=True).
  */
+/**
+ * What this pack contributes to the STANDING session payload.
+ *
+ * Derivation, tokenizer and reconciliation target are fixed by
+ * `docs/contracts/pack-token-passport.md`, written before the first passport
+ * was generated — a number whose derivation is undocumented becomes a figure
+ * people quote without being able to reproduce.
+ *
+ * `chars/4`, deliberately, because that is the basis
+ * `preamble-payload-budget.json` declares and `preamble_byte_census.ts` uses. A
+ * passport measured with an exact tokenizer could not be reconciled against a
+ * census measured with a proxy without the gap between the two METHODS reading
+ * as a discrepancy in the packs.
+ *
+ * The catalog line is built the same way `censusSkillsCatalog` builds it —
+ * `- <name>: <description>\n` — rather than approximated, so the two sides of
+ * the reconciliation are counting the same string.
+ *
+ * It measures the STANDING contribution only. A skill body loaded on invocation
+ * is a runtime cost and is not here; the residual bucket (tool definitions +
+ * dispatch prompt) is not attributable to a pack at all. Both are stated in the
+ * contract, which is where the number lives.
+ */
+function _token_passport(artefacts: readonly Artefact[]): Dict {
+    const tok = (chars: number): number => Math.round(chars / 4);
+    let ruleChars = 0;
+    let catalogChars = 0;
+    let commandChars = 0;
+    let otherChars = 0;
+    for (const a of artefacts) {
+        if (a.category === 'skill') {
+            catalogChars += `- ${a.name}: ${a.description}\n`.length;
+            continue;
+        }
+        if (a.category === 'rule') ruleChars += a.bytes;
+        else if (a.category === 'command') commandChars += a.bytes;
+        // Everything else a pack CLAIMS — contexts, personas, presets,
+        // profiles, user-types. Counted, because a pack that claims 47
+        // artefacts and reports 0 tokens is worse than no passport: it reads as
+        // "this pack is free" when it means "the three named buckets do not
+        // cover what this pack holds". Measured: `core` claims 47 artefacts and
+        // none of them is a rule, a skill or a command — `src/agent-src/`
+        // carries no `rules/` or `skills/` subtree at all.
+        else otherChars += a.bytes;
+    }
+    const rules_tokens = tok(ruleChars);
+    const catalog_tokens = tok(catalogChars);
+    const commands_tokens = tok(commandChars);
+    const other_tokens = tok(otherChars);
+    return {
+        basis: 'chars/4',
+        rules_tokens,
+        catalog_tokens,
+        commands_tokens,
+        other_tokens,
+        total_tokens: rules_tokens + catalog_tokens + commands_tokens + other_tokens,
+    };
+}
+
 function _build_pack_yaml(pid: string, vocab: Record<string, Dict>, artefacts: Artefact[]): Dict {
     const meta = vocab[pid] ?? {};
     const label = _pyTruthy(meta.label)
@@ -276,6 +353,7 @@ function _build_pack_yaml(pid: string, vocab: Record<string, Dict>, artefacts: A
             ? (meta.trust_level_default as unknown)
             : 'core',
         artefact_count: artefacts.length,
+        token_passport: _token_passport(artefacts),
     };
     if (_isPlainObject(meta.onboarding)) {
         out.onboarding = meta.onboarding;

@@ -15,4 +15,11 @@ size_class: medium
 suggests:
 - frontend-design
 surface_tier: core
+token_passport:
+  basis: chars/4
+  catalog_tokens: 1087
+  commands_tokens: 0
+  other_tokens: 0
+  rules_tokens: 486
+  total_tokens: 1573
 trust_level_default: professional
