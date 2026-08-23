@@ -1,11 +1,11 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 parent_roadmap: road-to-injection-detector-wiring
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Carried, not added, and the offset is exact: one roadmap out, one in. The Iron-Law-3 closure gate refuses to archive a roadmap with unresolved [~] items, and `road-to-injection-detector-wiring` is complete apart from the two Phase-3 steps this file carries — so its archival and this file are the two halves of one deferred-resolution change, and neither is coherent without the other. The move was not performed by this file's author: at authoring time the parent still carried a second open blocker sitting with the council. That blocker is now resolved — the council returned 2/2 and chose (b), leave ADR-123 section 2 standing — and the parent IS moved to archive/ in this same change, so the conditional this reason originally carried is discharged rather than pending: the offset is real and in the diff. This file also ships status: draft, so it charges no active_roadmaps until the flip to ready, which is the day the offset is a real decision rather than bookkeeping. Parking the two steps in later/ was rejected by the AI council (2026-08-22, 2/2): the estate register calls that burial, and the carried outcome is a security capability whose blocking dependency has just acquired a live owner."
-estate_growth_exempt: "Growth is one open blocker and nothing else: b-per-turn-composite-ceiling, carried forward from the parent roadmap's b-pre-tool-turn-budget rather than newly discovered. While this file is status: draft the blocker is dormant and charges open_blockers nothing; it charges +1 on the day the maintainer flips this file to ready, which is the same posture the sibling carry roadmap records for its own blockers. The estate is not learning about a new gate either way — it is keeping a gate visible that the parent's archival would otherwise bury. Its owner is the composite-ceiling decision in `road-to-per-turn-hook-economy-carry`, owner-reserved by council verdict, so this is exactly the kind of decision the register exists to keep in front of the owner. No blocker was added, weakened, or resolved here; only where it is recorded changed."
+estate_growth_exempt: "FLIPPED TO READY AND ARCHIVED IN THE SAME CHANGE, 2026-08-23 — so the flip charges nothing it did not already discharge. The +1 open_blockers this reason reserved for flip day does not land: b-per-turn-composite-ceiling is RESOLVED in this same change (AI council 2026-08-23, 2/2 convergent), so the blocker is closed on the day it would have become visible. The +1 active_roadmaps is offset by this file moving to archive/ in the same commit, net 0. The flip is not a promotion to active work: it is the only way a completed roadmap becomes archivable at all, because update_roadmap_progress skips drafts in collect() and therefore never archives one. Original reason, kept as history: Growth is one open blocker and nothing else: b-per-turn-composite-ceiling, carried forward from the parent roadmap's b-pre-tool-turn-budget rather than newly discovered. While this file is status: draft the blocker is dormant and charges open_blockers nothing; it charges +1 on the day the maintainer flips this file to ready, which is the same posture the sibling carry roadmap records for its own blockers. The estate is not learning about a new gate either way — it is keeping a gate visible that the parent's archival would otherwise bury. Its owner is the composite-ceiling decision in `road-to-per-turn-hook-economy-carry`, owner-reserved by council verdict, so this is exactly the kind of decision the register exists to keep in front of the owner. No blocker was added, weakened, or resolved here; only where it is recorded changed."
 ---
 # Road to MCP runtime integrity
 
@@ -105,7 +105,7 @@ plainly that **rug-pull protection remains absent and the protection level is
 zero**. The full reasoning, both seats' disagreement, and the named collection
 milestone are at the blocker below.
 
-- [ ] **1.1 Fingerprint store for third-party MCP tool definitions.** <!-- blocked-by: b-per-turn-composite-ceiling -->
+- [x] **1.1 Fingerprint store for third-party MCP tool definitions.**
       Record a stable hash per connected third-party tool definition — name,
       description, input schema — and surface a mismatch against the recorded
       value. The store is keyed by server plus tool name so a renamed tool reads
@@ -114,11 +114,41 @@ milestone are at the blocker below.
       package's own consumer catalog is already covered by
       `src/scripts/audit_mcp_tools.ts` and duplicating it would produce two
       sources of truth for the same tools.
-      verify: `npx vitest run tests/scripts/mcp_tool_fingerprint.test.ts` passes
-      with a case where a changed description yields a mismatch, a case where an
-      unchanged definition yields none, and a case where a first sighting is
-      recorded silently.
-- [ ] **1.2 Choose the slot by measurement, not by preference.** <!-- blocked-by: b-per-turn-composite-ceiling -->
+      verify (discharged): `npx vitest run tests/scripts/mcp_tool_fingerprint.test.ts`
+      passes with a case where a changed description yields a mismatch, a case
+      where an unchanged definition yields none, and a case where a first sighting
+      is recorded silently.
+
+      **SHIPPED 2026-08-23** as `src/scripts/mcp_tool_fingerprint.ts` +
+      `tests/scripts/mcp_tool_fingerprint.test.ts` (12 cases green). Unblocked
+      from `b-per-turn-composite-ceiling` by AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent: the blocker gates the
+      SLOT, and this step's verify is a unit test that needs no slot and no
+      ceiling. Building it does not pre-empt the slot decision — see the null
+      recorded at 1.2 and the module header, which states that the store is bound
+      to **no hook slot at all** precisely so wiring it into one stays a visible
+      decision.
+
+      Digest covers `name`, `description` and `inputSchema` over a canonical form
+      with object keys sorted at every depth — without that the digest
+      fingerprints the serialiser's key order, and a server reordering its own
+      schema keys would read as a rug-pull. Arrays keep their order, because
+      reordering `required` IS a definition change. Keyed by server plus tool name
+      with `/` and `%` escaped, so `('a/b','c')` and `('a','b/c')` cannot collide
+      onto one key. A mismatch does **not** re-baseline the stored digest: silently
+      re-baselining would make the second read of a mutated tool report
+      `unchanged`, which is the one outcome a rug-pull must never produce. A
+      malformed store reads as empty, never as a mismatch — one bad write must not
+      become an alert on the whole catalog. Read-modify-write under one lock
+      (`update_json_under_lock`), same primitive and same reason as
+      `rule-trips.json`. PII-exclusion-by-construction: server id, tool name, hex
+      digest, ISO day — no field can hold the description text or the schema, and
+      a test asserts the mutated description never reaches the report line.
+
+      **Each of the three named behaviours is sabotage-proven:** re-baselining on
+      mismatch → RED; dropping the key sort → RED (a reordered-but-identical
+      definition reads as a mismatch); reporting first sightings → RED. Restored,
+      12/12 green.
+- [-] **1.2 Choose the slot by measurement, not by preference. NULL — the ceiling never armed.**
       Measure the added p95 of a fingerprint lookup in `pre_tool_use` against
       the armed per-turn composite ceiling, and record the reading. A
       fingerprint comparison is nominally an O(1) hash lookup, and nominal is
@@ -128,9 +158,30 @@ milestone are at the blocker below.
       is armed. A number that does not clear the armed ceiling is a finding that
       routes to the blocker's escalation path, never a reason to loosen a
       budget.
-      verify: `test -f agents/evidence/reports/mcp-fingerprint-slot-measurement.md`
+      verify (superseded): `test -f agents/evidence/reports/mcp-fingerprint-slot-measurement.md`
       and the file states the measured added p95, the composite value it was
       measured against, and the armed `p50_ci` it was compared to.
+
+      **RECORDED AS A NULL 2026-08-23**, AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. The third of those three
+      numbers does not exist and cannot be produced here: `A2.1` of
+      `road-to-per-turn-hook-economy-carry` — the arming step this roadmap's
+      blocker named as its dependency, down to the precondition that gates it —
+      was itself closed as an honest null on this same date, because
+      `check_composite_arming` reports **n = 0** and CI never commits readings
+      back, so the reading store cannot fill inside one change. The dependency did
+      not merely fail to arrive on time; it was measured and found structurally out
+      of reach.
+
+      The report exists at the named path and carries the null in four parts —
+      unavailable capability, affected claims, evidence boundary, reopening
+      condition — including the sentence the roadmap's own council required:
+      **rug-pull protection remains absent and the protection level is zero.**
+      No `post_tool_use` and no session-start variant was built instead; that is
+      the substitution `## The no-silent-downgrade rule` forbids without an
+      owner-recorded trade-off.
+
+      *Reopening condition:* `check_composite_arming` reports armable, the ceiling
+      carries a number, and 1.2 is then taken exactly as written above.
 
 **Exit criteria.** A test asserts mismatch, no-mismatch and first-sighting
 behaviour; the measurement report exists and names its three numbers.
@@ -162,7 +213,7 @@ tool the check exists for.
 ## Blockers
 
 ### blocker: b-per-turn-composite-ceiling
-- **Status:** open
+- **Status:** resolved
 - **Owner:** the composite-ceiling decision in
   `agents/roadmaps/road-to-per-turn-hook-economy-carry.md` — its step **A2.1**
   and the blocker `b-composite-ceiling-value` that gates it, which both council
@@ -191,6 +242,36 @@ tool the check exists for.
   `src/config/hook-latency-budget.json` carries a numeric `p50_ci` and
   `observe_only: false` — or option (b) is recorded at this blocker with the
   owner's chosen side of the trade-off.
+- **Resolution (2026-08-23) — neither (a) nor (b) as written; the wait ENDED
+  rather than continued, and the roadmap closes around it.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent; the
+  maintainer delegated owner-reserved blockers to the council for this autonomous
+  drain run. Option (a) was "wait, and the wait is now bounded". That bound was
+  the named collection milestone — Phase A1 of
+  `road-to-per-turn-hook-economy-carry`, "unblocked buildable work … what starts
+  the reading clock". **A1 is now built and closed, and it produced n = 0:** the
+  store exists, the predicate evaluates, and no CI run commits readings into it,
+  so `A2.1` closed as an honest null and the ceiling will not arm from that
+  roadmap at all. Continuing to "wait" on a milestone that has already been
+  reached without producing the input is the indefinite park under a new name that
+  this file's own Risk 2 names.
+
+  Option (b) was also declined: it asks the owner to choose between accepting
+  first-call risk and provisioning budget, and neither side of that trade-off is
+  decidable while the number the decision would be measured against is absent.
+  Escalating an undecidable trade-off is not an escalation.
+
+  **What was done instead.** Step 1.1 was unblocked and built: the blocker gates
+  the SLOT, and 1.1's verify is a unit test needing no slot and no ceiling. Step
+  1.2 is recorded as a null with its four parts, at the path AC-2 names. No
+  after-use variant was built — the store is bound to no hook slot, and the module
+  header says so, so wiring it in later is a visible decision rather than a
+  default. **Rug-pull protection remains absent and the protection level is zero**,
+  which is the statement this blocker's own council required of any disposition.
+
+  *Reopening condition:* `check_composite_arming` reports armable (>= 10 readings
+  from >= 2 distinct CI runner sessions) and the row carries a number — at which
+  point 1.2 is taken as written and the slot decision is a measurement rather than
+  a preference.
 - **Disposition 2026-08-23 — option (a) kept, the wait recorded, and the
   collection milestone named. AI council 2026-08-23, 2 of 2 seats present
   (anthropic/claude-sonnet-4-5, openai/codex-default), both convergent on (b3),
@@ -263,19 +344,33 @@ tool the check exists for.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a fingerprint store records a stable hash per connected
+- [x] AC-1 — a fingerprint store records a stable hash per connected
       third-party MCP tool definition, and a test asserts all three behaviours:
       a changed definition yields a mismatch, an unchanged one yields none, and
       a first sighting is recorded without a report.
-- [ ] AC-2 — `agents/evidence/reports/mcp-fingerprint-slot-measurement.md`
+      **Met 2026-08-23** by `src/scripts/mcp_tool_fingerprint.ts` and
+      `tests/scripts/mcp_tool_fingerprint.test.ts` — 12 cases, and each of the
+      three named behaviours seen RED under its own sabotage before restore.
+- [-] AC-2 — `agents/evidence/reports/mcp-fingerprint-slot-measurement.md`
       exists and states the measured added p95, the composite value it was
       measured against, and the armed `p50_ci` it was compared to. The slot was
       chosen from those numbers.
-- [ ] AC-3 — no `post_tool_use` or session-start fingerprint variant ships
+      **NULL 2026-08-23.** The file exists at that path and carries the null in
+      four parts, but it cannot state the third number: no `p50_ci` is armed, and
+      the arming step it depended on closed as its own honest null with n = 0. The
+      slot was therefore **not** chosen — which is the honest reading of this
+      criterion rather than a partial one, so it is marked cancelled rather than
+      met. Reopens with the ceiling.
+- [x] AC-3 — no `post_tool_use` or session-start fingerprint variant ships
       unless the owner-recorded trade-off from
       `## The no-silent-downgrade rule` is present at
       `b-per-turn-composite-ceiling`, naming which side was chosen and why.
       Falsified by a merged after-use check with no such record.
+      **Held 2026-08-23.** `grep -n fingerprint src/scripts/hook_manifest.yaml`
+      returns nothing: no fingerprint concern is bound to any slot, on any
+      platform. The store shipped by 1.1 has no hook binding and its module header
+      states the omission is deliberate, so this criterion is met by construction
+      rather than by an absence nobody checked.
 - [x] AC-4 — `b-per-turn-composite-ceiling` carries a recorded option, or Phase
       1 is untouched and the blocker is still open with its dependency named —
       a carried item whose gate is visible and checkable is a discharged
