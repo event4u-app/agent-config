@@ -299,11 +299,31 @@ that case to the ambiguity halt.
 
 ## Blockers
 
-None at authoring time. The two `[~]` items (4.3, 5.3) carry owner-reserved
-decisions in their deferral annotations rather than as blocker entries, because
-neither blocks another step in this roadmap: 4.3 is an estate-wide write with
-no dependants, and 5.3 is one reaction row inside a table whose other four rows
-land without it.
+None at authoring time, and none opened during execution. The `[~]` items carry
+owner-reserved decisions in their deferral annotations rather than as blocker
+entries, because none of them blocks another step in this roadmap: 4.3 is an
+estate-wide write with no dependants, and 5.3 is one reaction row inside a table
+whose other four rows landed without it.
+
+**Execution note (2026-08-23).** A third `[~]` appeared and it is the same
+decision seen from the other end: **AC-5**'s memo clause is only satisfiable once
+5.3 is taken up, so it is deferred with 5.3 rather than ticked. Two of its three
+clauses do hold and are evidenced at the criterion.
+
+**Why this roadmap does not auto-archive, deliberately.** `count_open` reached 0
+with `count_deferred == 3`, which is exactly the state Iron Law 3 of
+[`roadmap-progress-sync`](../../src/rules/roadmap-progress-sync.md) refuses to
+archive silently. Applying its preservation test: converting these to `[-]`, or
+keeping them in an archive as an intentional drop, are **user** dispositions, and
+the two mechanisms behind them are owner-reserved by the author's own annotations
+(an estate-wide write across tracked files; an autonomous run writing a
+completion marker into the source of truth). The AI council — the venue for a
+preserving disposition — was convened during this run and returned an honest
+null (`0/2 present, INCONCLUSIVE`, both members quota-exhausted). So the items
+stay `[~]`, the roadmap stays active, and the decision stays where it belongs.
+Manufacturing a follow-up stub to make the file archivable would be laundering
+deliberately-deferred work through a glyph, which is the failure that Iron Law
+exists to catch.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
@@ -319,19 +339,81 @@ land without it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `roadmap:context` exists as one script, is reachable from all five
+- [x] AC-1 — `roadmap:context` exists as one script, is reachable from all five
       `/roadmap:*` entry points, and no entry point still carries a
       hand-written screen block.
-- [ ] AC-2 — A roadmap already closed in an open PR on `origin/main` cannot be
+      **Evidence:** `src/scripts/roadmap_context.ts` + `roadmap:context` in
+      `src/cli/registry.ts` and `_dispatch.bash`. Named directly by
+      `roadmap-process-loop.md` (×3), `next/command.md`, `create/command.md`
+      and `roadmap-writing/SKILL.md`; the three `process-*` wrappers reach it
+      through the loop they load (4 loop references each). A grep for the
+      hand-written screen literals across the whole roadmap command surface
+      returns **two** hits, and neither is a screen block: `next:66` is the
+      exclusion table's *Source* column naming `gh pr list` as where the fact
+      comes from (the table 2.2 requires to stay unchanged), and loop `:89` is
+      the pre-existing claim-triggered merge-state clause that 2.1 deliberately
+      left in place beneath the new unconditional call.
+- [x] AC-2 — A roadmap already closed in an open PR on `origin/main` cannot be
       started by any `process-*` wrapper; the run reports the PR number and
       exits as a selection error.
-- [ ] AC-3 — `sessions:list` distinguishes slug, branch, and path collisions as
+      **Evidence:** specified in loop § 1's new `### Context probe` subsection,
+      which all three `process-*` wrappers load — the closed-in-an-open-PR
+      reading names the PR and stops, explicitly as a **selection error** rather
+      than a halt, so it touches neither the halt list nor the `blocked`
+      outcome. **Honesty boundary, stated because "cannot" overstates what prose
+      delivers:** the probe is deterministic once invoked and the invocation is
+      model-carried — risk-register rank 1 in this roadmap, and the reason 1.3
+      puts the boundary in the script header and at the end of every rendered
+      report. No gate fires the probe and none notices a skip.
+- [x] AC-3 — `sessions:list` distinguishes slug, branch, and path collisions as
       three separately labelled lines.
-- [ ] AC-4 — A newly added non-draft roadmap without a `relates:` block reds
-      `check_roadmap_trackable`; the 22 pre-existing files stay green.
-- [ ] AC-5 — The loop's halt list is byte-unchanged, and `superseded` appears
+      **Evidence:** `CollisionKind` is `'roadmap' | 'branch' | 'path'`, and
+      `path_overlap_lines` emits `PATH OVERLAP` as its own line, kept out of the
+      slug and branch reports. Pinned by `keeps the slug and branch labels
+      distinct from the path label`, which asserts the ordering
+      `['roadmap','branch','path']` — stop, coordinate, reorder — so the three
+      cannot silently collapse into one.
+- [x] AC-4 — A newly added non-draft roadmap without a `relates:` block reds
+      `check_roadmap_trackable`; the ~~22~~ **9** pre-existing files stay green.
+      **Evidence:** end-to-end over fixture trees through the real CLI — 10
+      files lacking the block → exit 1, `10 violation(s) against a baseline of
+      9`; 9 → exit 0 at baseline; 9 + 3 declaring it → exit 0. **Corrected
+      count:** the estate carries 15 active roadmaps of which 9 are non-draft,
+      not 22; the baseline is the measured 9.
+- [~] AC-5 — The loop's halt list is byte-unchanged, and `superseded` appears
       only as a terminal outcome with a memo, counted in the run report.
-- [ ] AC-6 — The probe's file-overlap output is asserted against a committed
+      <!-- deferred: the memo clause is bound to step 5.3, which is owner-reserved and deferred -->
+      **Two of three clauses hold, the third cannot.** Byte-unchanged: verified
+      by section-scoped diff against `origin/main` for both the halt list
+      (`HALT_LIST_BYTE_IDENTICAL`) and the forbidden-non-halt-reasons block
+      (`FORBIDDEN_REASONS_BYTE_IDENTICAL`). Terminal-outcome-only: all three
+      `superseded` hits (`:770`, `:773`, `:784`) fall inside the
+      Terminal-outcomes section, zero inside the halt list or the forbidden
+      list. **The memo clause is not met and cannot be**: a memo is written when
+      a step is *marked* `superseded-by`, which is step **5.3** — deferred as
+      owner-reserved. `superseded` currently exists as a **report** only, and the
+      loop prose says so in place so the two cannot be conflated later. Marked
+      `[~]` rather than `[x]` deliberately: ticking it would launder a clause
+      bound to deferred work, which is the failure Iron Law 3 of
+      `roadmap-progress-sync` exists to catch.
+- [x] AC-6 — The probe's file-overlap output is asserted against a committed
       fixture, so no acceptance check depends on a live PR number.
-- [ ] AC-7 — M1, M2, and M3 are recorded under `agents/evidence/analysis/` with
+      **Evidence:** `computeOverlaps` is pure over two in-test maps; the
+      `probe()` paths run over a temp roadmap tree with an injected `gh`
+      response. **No assertion in the 36-case suite names a live PR number**,
+      which is what stops it decaying the way D1b decayed — and the live
+      population did in fact drain to zero open PRs by execution day, so an
+      assertion pinned to #1546 would already be dead.
+- [x] AC-7 — M1, M2, and M3 are recorded under `agents/evidence/analysis/` with
       the pinned commit, including the null outcome if that is what occurs.
+      **Evidence:** `agents/evidence/analysis/situational-awareness-baselines.md`,
+      pinned to `origin/main` with both the short and full SHA and the context
+      fingerprint at measurement. **All three are nulls, and the record says so
+      rather than smoothing them:** M1 is **0/15** (the repository has zero open
+      PRs at all), M2 is **0 pairs** trivially for the same reason, and M3 is
+      **not yet taken** because it is defined over the next 10 runs *after*
+      Phase 5 lands and so cannot be measured in the change that lands it. The
+      M1 sequence 4/24 → 2/22 → 0/15 is recorded as the strongest available
+      evidence for D1b — the estate did not merely halve, it drained — together
+      with what that null does **not** license, since the denominator moved too
+      and the three figures are snapshots rather than one cohort.

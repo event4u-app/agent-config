@@ -1,5 +1,7 @@
 # Decision — step 5.1 re-scoped: a derived refresh trigger, not a settings key
 
+<!-- evidence-type: analysis -->
+
 - **Roadmap:** `road-to-roadmap-situational-awareness`, step 5.1
 - **Date:** 2026-08-23
 - **Resolver:** agent, on the tree's own deterministic evidence. **The AI council

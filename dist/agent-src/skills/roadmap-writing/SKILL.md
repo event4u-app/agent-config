@@ -51,8 +51,18 @@ dashboard-sync axis stays in `roadmap-management`.
 Authoring or materially rewriting a roadmap must go through
 Understand → Research → Draft per the
 [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
-rule. Inspect existing roadmaps under `agents/roadmaps/` for overlap
-or supersession before opening a new one. **Gate C first** — "write a
+rule. **Run the probe, do not eyeball the directory:**
+
+```bash
+agent-config roadmap:context
+```
+
+It reports sibling roadmaps on the same topic across all four roadmap
+directories, inbox notes, and open PRs on the cited paths — the semantic axis a
+filename scan cannot see. Each hit becomes one `relates:` row
+(`extends` / `supersedes` / `depends` / `disjoint`, template rule 18); zero hits
+becomes `relates: []` carrying the probe's `scanned:` line as its
+justification. **Gate C first** — "write a
 plan/roadmap" is a gated surface, so run
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
 before drafting (95%-conditions, marker, interview-or-degrade, C→R1 handoff).
@@ -311,6 +321,11 @@ to every roadmap you author.
 3. Are checkboxes present in every non-intro phase?
 4. Are exit criteria decidable, or vibe-based ("looks good")?
 5. Is content duplicated from another roadmap (supersession instead)?
+5b. Does the frontmatter carry a `relates:` block — one row per probe hit with
+   an `extends`/`supersedes`/`depends`/`disjoint` relation, or an explicit
+   `relates: []` whose note carries the probe's `scanned:` line? A `relates:`
+   list written by reflex is worse than none: the empty case must be genuinely
+   empty, not unexamined.
 6. Any human-gate steps or sign-off phases (§ 4c violation) —
    agent-verifiable check or structured blocker instead?
 7. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`
