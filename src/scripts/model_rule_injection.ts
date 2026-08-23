@@ -51,6 +51,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { LexicalIndex } from './_lib/lexical_index.js';
+import { gpt_tokens } from './_lib/token_count.js';
 import {
     allTierRules,
     kernelIds,
@@ -59,12 +60,22 @@ import {
     matchTierRules,
     pathCapableRuleIds,
     selectForInjection,
-    tokensOf,
     triggerlessRuleIds,
     type Router,
 } from './_lib/rule_injection.js';
 import { thin_entry } from './project_thin_rules.js';
-import { buildInjection } from './hooks/rule_inject_hook.js';
+import { CAP_BYTES, buildInjection } from './hooks/rule_inject_hook.js';
+
+/**
+ * Exact-BPE tokens, used ONLY for the price table and the distribution report.
+ *
+ * Selection is capped in bytes by `selectForInjection`, shared with the concern
+ * — see `_lib/rule_injection.ts`'s header for why the runtime path carries no
+ * tokenizer. Here the tokenizer IS the point and nothing is on a hot path.
+ */
+function tokensOf(text: string): number {
+    return gpt_tokens(text).tokens;
+}
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -334,17 +345,18 @@ export function injectedOverSession(
     router: Router,
     positives: CorpusCase[],
     turns: number,
-    cap: number,
+    capBytes: number,
 ): number {
     const seen = new Set<string>();
     let total = 0;
     for (const c of positives.slice(0, turns)) {
         const matches = matchTierRules(router, c.prompt, c.openFiles);
-        const sel = selectForInjection(REPO_ROOT, matches, cap);
+        const sel = selectForInjection(REPO_ROOT, matches, capBytes);
         for (const m of sel.selected) {
             if (seen.has(m.id)) continue;
             seen.add(m.id);
-            total += sel.bodyTokens.get(m.id) ?? 0;
+            const body = loadRuleBody(REPO_ROOT, m.id);
+            total += body === null ? 0 : tokensOf(body);
         }
     }
     return total;
@@ -386,6 +398,8 @@ export function runModel(corpusDir: string, honourOnly: boolean): ModelReport {
     }
     const p90 = quantile(uncapped, 0.9);
     const capTokens = Math.max(500, Math.ceil(p90 / 500) * 500);
+    // The SELECTION cap is the concern's, in bytes — one number, both arms.
+    const capBytes = CAP_BYTES;
 
     const matchedCounts = positives.map(
         (c) => matchTierRules(router, c.prompt, c.openFiles).length,
@@ -418,7 +432,10 @@ export function runModel(corpusDir: string, honourOnly: boolean): ModelReport {
         `  tokens p50=${quantile(uncapped, 0.5)} p90=${p90} p99=${quantile(uncapped, 0.99)} ` +
             `max=${quantile(uncapped, 1)} mean=${Math.round(mean(uncapped))}`,
     );
-    push(`  per-prompt cap = p90 rounded up to 500 = ${capTokens} tok`);
+    push(
+        `  per-prompt cap = p90 rounded up to 500 = ${capTokens} tok, applied as ` +
+            `${capBytes} B (the concern's CAP_BYTES — one selection, both arms)`,
+    );
     push('');
     push('── standing corpora (exact BPE over dist/agent-src/rules) ──');
     push(`  eager-all       ${standing.eagerTokens} tok`);
@@ -441,7 +458,7 @@ export function runModel(corpusDir: string, honourOnly: boolean): ModelReport {
         {
             name: 'delivery',
             standing: standing.thinTokens,
-            injectedFor: (t) => injectedOverSession(router, positives, t, capTokens),
+            injectedFor: (t) => injectedOverSession(router, positives, t, capBytes),
         },
     ];
     const price = (shapeIdx: number, turns: number, spawns: number): number => {
@@ -612,17 +629,10 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
     // (d) Delivery below eager at 50 turns x 5 spawns.
     const standing = standingCorpora(router);
     const rates = loadRates('sonnet');
-    const uncapped = positives.map((c) =>
-        matchTierRules(router, c.prompt, c.openFiles).reduce((a, m) => {
-            const b = loadRuleBody(REPO_ROOT, m.id);
-            return a + (b === null ? 0 : tokensOf(b));
-        }, 0),
-    );
-    const cap = Math.max(500, Math.ceil(quantile(uncapped, 0.9) / 500) * 500);
     const eagerUsd = sessionCostUsd(standing.eagerTokens, 0, 50, 5, rates);
     const deliveryUsd = sessionCostUsd(
         standing.thinTokens,
-        injectedOverSession(router, positives, 50, cap),
+        injectedOverSession(router, positives, 50, CAP_BYTES),
         50,
         5,
         rates,

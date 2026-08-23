@@ -24,6 +24,23 @@
  * rules are always active — this module filters them out by construction rather
  * than relying on a caller to remember.
  *
+ * IT IMPORTS NO TOKENIZER, AND THAT IS A HOT-PATH FACT RATHER THAN A STYLE
+ * CHOICE. `_lib/token_count.ts` resolves `js-tiktoken` AT MODULE LOAD, and the
+ * concern that imports this file is statically reachable from
+ * `concern_registry.ts` — so importing it here made every hook dispatch on
+ * every slot pay a tokenizer load for a concern that is default-OFF and emits
+ * nothing. Measured on this tree: unbinding the concern moved the
+ * `pre_tool_use` p95 from 202 ms to 196 ms, and the CI latency gate went red on
+ * the branch that introduced it while passing on main.
+ *
+ * So the runtime cap is in BYTES. That is not a weaker bound — it is the same
+ * bound in the unit the budget actually enforces: `hook-token-budget.json`
+ * measures "bytes of concern stdout payload fields", so the cap and its
+ * registered row are now the same number instead of two units that need a
+ * conversion factor to compare. The offline model keeps exact-BPE tokens for
+ * its price table, where the tokenizer is the point and nothing is on a hot
+ * path.
+ *
  * DETERMINISM IS THE CONTRACT, and the collision cases are the reason it needs
  * stating. Two triggers on the SAME rule collapse to one entry (a rule is
  * delivered once, however many of its triggers fired) while the trigger count
@@ -36,7 +53,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { gpt_tokens } from './token_count.js';
 import { match_prompt, type Router, type Trigger } from './router_match.js';
 
 export type { Router, Trigger };
@@ -159,47 +175,58 @@ export function loadRuleBody(repoRoot: string, id: string): string | null {
     return fs.readFileSync(p, 'utf8');
 }
 
-/** Exact-BPE token count where `js-tiktoken` resolves, documented proxy otherwise. */
-export function tokensOf(text: string): number {
-    return gpt_tokens(text).tokens;
+/**
+ * UTF-8 byte length — the runtime measure, dependency-free by design.
+ *
+ * Deliberately NOT a token count: see the header. Bytes are exact, need no
+ * tokenizer, and are the unit `hook-token-budget.json` enforces.
+ */
+export function bytesOf(text: string): number {
+    return Buffer.byteLength(text, 'utf8');
 }
 
 export interface SelectionResult {
     selected: TierRuleMatch[];
-    /** Matched but dropped because the token cap was reached. */
+    /** Matched but dropped because the byte cap was reached. */
     dropped: TierRuleMatch[];
-    /** Token sum of the selected bodies. */
-    tokens: number;
-    /** Per-rule body token counts, keyed by id, for every MATCHED rule. */
-    bodyTokens: Map<string, number>;
+    /** Byte sum of the selected bodies. */
+    bytes: number;
+    /** Per-rule body byte counts, keyed by id, for every MATCHED rule. */
+    bodyBytes: Map<string, number>;
 }
 
 /**
- * Apply the per-prompt token cap.
+ * Apply the per-prompt BYTE cap.
  *
  * Highest score first, router order as tie-break; a rule whose body would push
- * the running total past `capTokens` is dropped and the walk continues, so one
+ * the running total past `capBytes` is dropped and the walk continues, so one
  * oversized body cannot starve the rest. The returned `selected` list is
  * re-sorted back into router order — cap order is a budgeting concern, delivery
  * order is not.
+ *
+ * ONE selection for both callers. The offline model and the runtime concern
+ * call THIS function with THE SAME cap, so the set the price table prices is
+ * byte-for-byte the set the concern delivers. That is step 0.5's requirement,
+ * and expressing the cap in bytes makes it hold without a token/byte
+ * conversion sitting between the two arms.
  */
 export function selectForInjection(
     repoRoot: string,
     matches: TierRuleMatch[],
-    capTokens: number,
+    capBytes: number,
 ): SelectionResult {
-    const bodyTokens = new Map<string, number>();
+    const bodyBytes = new Map<string, number>();
     for (const m of matches) {
         const body = loadRuleBody(repoRoot, m.id);
-        bodyTokens.set(m.id, body === null ? 0 : tokensOf(body));
+        bodyBytes.set(m.id, body === null ? 0 : bytesOf(body));
     }
     const ranked = [...matches].sort((a, b) => b.score - a.score || a.order - b.order);
     const selected: TierRuleMatch[] = [];
     const dropped: TierRuleMatch[] = [];
     let total = 0;
     for (const m of ranked) {
-        const t = bodyTokens.get(m.id) ?? 0;
-        if (total + t > capTokens && selected.length > 0) {
+        const t = bodyBytes.get(m.id) ?? 0;
+        if (total + t > capBytes && selected.length > 0) {
             dropped.push(m);
             continue;
         }
@@ -208,5 +235,5 @@ export function selectForInjection(
     }
     selected.sort((a, b) => a.order - b.order);
     dropped.sort((a, b) => a.order - b.order);
-    return { selected, dropped, tokens: total, bodyTokens };
+    return { selected, dropped, bytes: total, bodyBytes };
 }

@@ -68,16 +68,28 @@ const EXIT_ALLOW = 0;
 const EXIT_WARN = 2;
 
 /**
- * Per-prompt injection ceiling, in exact-BPE tokens.
+ * Per-prompt injection ceiling, in UTF-8 BYTES.
  *
  * DERIVED, NOT PICKED: `model_rule_injection --corpus tests/eval/routing-matrix`
  * measured the matched-body-token distribution over the frozen labelled corpus
- * at p50 1,728 / p90 4,804 / p99 8,248 / max 12,957, and step 1.1 specifies
- * "the p90 from 0.4, rounded to 500". 4,804 rounds up to 5,000. Re-run that
- * command if the corpus or the bodies move; a cap copied from a stale
- * measurement is worse than no cap, because it looks derived.
+ * at p50 1,728 / p90 4,804 / p99 8,248 / max 12,957 exact-BPE tokens, and step
+ * 1.1 specifies "the p90 from 0.4, rounded to 500" — 4,804 rounds up to 5,000.
+ *
+ * BYTES rather than tokens, and the unit change is the point rather than a
+ * detail. `_lib/token_count.ts` resolves `js-tiktoken` at module load, so a
+ * token-capped concern drags a tokenizer into EVERY hook dispatch on every
+ * slot, for a concern that is default-OFF and emits nothing. Measured: 202 ms
+ * -> 196 ms on the `pre_tool_use` p95 when the concern is unbound entirely, and
+ * the CI latency gate went red on the branch that introduced it while passing
+ * on main. So the runtime cap is the same bound in the unit
+ * `hook-token-budget.json` already enforces — 5,000 tok at the ~4 bytes/token
+ * this corpus measures is 20,480 B, which is exactly this concern's registered
+ * row. Cap and budget row are now one number instead of two units.
+ *
+ * Re-run that command if the corpus or the bodies move; a cap copied from a
+ * stale measurement is worse than no cap, because it looks derived.
  */
-export const CAP_TOKENS = 5000;
+export const CAP_BYTES = 20480;
 
 /** Tools whose input names a file this concern can match path triggers against. */
 export const FILE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit', 'Read', 'MultiEdit']);
@@ -160,7 +172,7 @@ export function extractFilePath(payload: JsonObject): string | null {
 
 export interface Injection {
     rules: string[];
-    tokens: number;
+    bytes: number;
     body: string;
 }
 
@@ -189,7 +201,7 @@ export function buildInjection(
         (m) => !seen.has(m.id),
     );
     if (matches.length === 0) return null;
-    const sel = selectForInjection(root, matches, CAP_TOKENS);
+    const sel = selectForInjection(root, matches, CAP_BYTES);
     const parts: string[] = [];
     const ids: string[] = [];
     for (const m of sel.selected) {
@@ -199,7 +211,7 @@ export function buildInjection(
         parts.push(`<rule id="${m.id}" tier="${m.tier}">\n${body.trim()}\n</rule>`);
     }
     if (ids.length === 0) return null;
-    return { rules: ids, tokens: sel.tokens, body: parts.join('\n\n') };
+    return { rules: ids, bytes: sel.bytes, body: parts.join('\n\n') };
 }
 
 // ── main ─────────────────────────────────────────────────────────────────
@@ -276,7 +288,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     process.stdout.write(
         `${JSON.stringify({
             decision: 'warn',
-            reason: `rule-inject: ${injection.rules.length} rule body/bodies on ${slot} (${injection.tokens} tok)`,
+            reason: `rule-inject: ${injection.rules.length} rule body/bodies on ${slot} (${injection.bytes} B)`,
             additional_context: injection.body,
         })}\n`,
     );

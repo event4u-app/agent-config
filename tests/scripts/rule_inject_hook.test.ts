@@ -16,7 +16,7 @@ import {
     setHookStdinOverride,
 } from '../../src/scripts/hooks/hook_stdin.js';
 import {
-    CAP_TOKENS,
+    CAP_BYTES,
     gateOpen,
     main,
     readSeen,
@@ -280,7 +280,28 @@ describe('rule-inject — never blocks (1.5)', () => {
         fs.rmSync(root, { recursive: true, force: true });
     });
 
-    it('the per-prompt cap is the derived p90, not an invented number', () => {
-        expect(CAP_TOKENS).toBe(5000);
+    it('the per-prompt cap is the derived p90, expressed in the budget row\'s unit', () => {
+        // 5,000 exact-BPE tok (the measured p90 rounded up to 500) at the ~4
+        // bytes/token this corpus reads. Bytes, not tokens, so the concern's
+        // module graph carries no tokenizer into a dispatch it will not use —
+        // see the constant's own docstring.
+        expect(CAP_BYTES).toBe(20480);
+    });
+
+    it('carries no tokenizer in its module graph — the hot-path invariant', () => {
+        // `_lib/token_count.ts` resolves js-tiktoken AT MODULE LOAD, and this
+        // concern is statically reachable from concern_registry.ts, so an
+        // import here is paid by every dispatch on every slot. Asserted as a
+        // property of the source rather than trusted to review.
+        const lib = fs.readFileSync(
+            path.join(process.cwd(), 'src', 'scripts', '_lib', 'rule_injection.ts'),
+            'utf-8',
+        );
+        const hook = fs.readFileSync(
+            path.join(process.cwd(), 'src', 'scripts', 'hooks', 'rule_inject_hook.ts'),
+            'utf-8',
+        );
+        expect(lib).not.toMatch(/^import .*token_count/m);
+        expect(hook).not.toMatch(/^import .*token_count/m);
     });
 });
