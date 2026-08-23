@@ -202,6 +202,15 @@ jobs:
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
 
+      # The target-readiness grader has no repo corpus to scan — it grades a
+      # TARGET repository, so on this tree there is nothing to grade. What CI can
+      # prove is that it still DISCRIMINATES: knockout verdict is the min, an
+      # undetectable dimension stays null rather than 0, and the render emits no
+      # aggregate score. That is exactly what --self-test drives, over synthetic
+      # roots in a tmpdir.
+      - name: target-readiness grader discriminates (self-test)
+        run: ./scripts-run src/scripts/grade_target_readiness --self-test
+
       # The arming predicate has no corpus on this tree — the store accumulates
       # from CI runs over a release cycle. What CI can prove is that it still
       # REFUSES: 9 readings from 3 sessions and 12 from 1 are both not-armable

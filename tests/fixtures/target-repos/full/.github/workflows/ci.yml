@@ -1,0 +1,10 @@
+name: ci
+on: [pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npx vitest run
+      - run: npx tsc --noEmit
+      - run: npm audit --audit-level=high
+      - run: npx depcruise src
