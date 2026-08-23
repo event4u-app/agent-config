@@ -164,7 +164,7 @@ saying too much.
 
 > **Deferred-item resolution — carried, by unanimous council verdict.** Both
 > steps below stay `[~]` because neither was done and neither was cancelled: they
-> **moved**. `agents/roadmaps/road-to-mcp-runtime-integrity.md` was created in the
+> **moved**. `agents/roadmaps/archive/road-to-mcp-runtime-integrity.md` was created in the
 > same change and carries both steps as `[ ]` open, together with
 > `b-pre-tool-turn-budget` as its own blocker. The AI council (2026-08-22, **2 of
 > 2 seats present**) chose carry over restore, merge and escalate, and ranked it
