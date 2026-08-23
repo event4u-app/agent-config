@@ -90,6 +90,46 @@ Quoted exactly as it stands in the parent (where it carries `[-]`).
   `agents/runtime/state/gate-budget-ledger.jsonl` does not exist, so zero
   class-1 spends have been receipted.
 
+## Open ADR question — where the plan hash lives (added 2026-08-23)
+
+Routed here by
+[`road-to-deterministic-time-in-gates.md`](../road-to-deterministic-time-in-gates.md)
+§ Routed elsewhere rather than becoming a phase there, because this stub already
+owns the mechanism and a duplicate entry would red the estate ratchet for a
+decision the routing roadmap does not own.
+
+**The question.** Should a gate pre-authorisation be bound to its target by a
+`plan_sha256` + `plan_path` pair in the ledger entry, and if so, where does that
+pair live so the agent cannot write it?
+
+**Why it is a precondition and not a relitigation.** `docs/decisions/ADR-239`
+(~:79–90) records the council verdict as *mergeability-only until authorization
+is target-bound and tamper-resistant*. "Target-bound" is exactly what a plan
+hash supplies, so asking this addresses a **named** precondition of that verdict
+rather than reopening it.
+
+**Why it cannot simply be added to the ledger.** A `plan_sha256` in the ledger
+IS the failure this stub is about: `agents/runtime/state/` is agent-writable, so
+the plan file the hash covers sits on a path the agent controls, and the agent
+would be hashing its own consent. The only human-only write fence in the tree is
+the class-C settings route, which is the same fence § Transferred item already
+names for the authorisation itself.
+
+**What was checked, and one correction to the routing roadmap's premise.** That
+roadmap asserts the six-hour `LEDGER_MAX_AGE_MS` widening "exists only as an
+*uncommitted* edit in the maintainer's working tree". Reproduced 2026-08-23:
+`git show HEAD:src/scripts/hooks/block_unauthorized_git.ts` reads
+`30 * 60 * 1000` at `:527`, so the constant is at its correct value on the trunk
+— but the guard's own docstring at `:506-525` records that the widening *was*
+committed and left there before being restored. The value is right; the "never
+committed" reading is wrong, and the difference matters because a
+committed-then-reverted widening is a precedent this question has to price in.
+
+**Producer:** the same maintainer act § Transferred item names — a decision
+first, then a signed authorisation through the class-C route. No new probe: half
+1 of the existing probe already requires the authorisation artefact to be
+class-C, which a plan-hash binding would extend rather than replace.
+
 ## What this stub does NOT claim
 
 It does not claim the flag is nearly done. It does not claim the caps make the
