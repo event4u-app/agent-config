@@ -1,0 +1,65 @@
+{
+  "_comment": "PRE-REGISTRATION (resolution of `blocker: assurance-enforcement-thresholds` on agents/roadmaps/road-to-agentic-engineering-assurance.md). This file commits to a CLOSED four-dimension measurement framework and establishes that no new blocking assurance policy may be adopted while its applicable thresholds are null. The `registered_at` date is the pre-registration CUTOFF: any blocking assurance policy proposed after it is governed by these thresholds even while they remain null, and may not adopt blocking enforcement until the applicable ones are set. Each threshold is explicitly `null` — not absent — with a `set_when` clause naming the specific measurement run that will produce it, so 'committed' means 'present in a falsifiable state' rather than 'populated with a number'. That distinction is what resolves the contradiction in the blocker's own text, which asked in one line for 'a number and the measurement that produced it' and five lines later said 'the numbers stay unset until the corpus exists'. NO NUMBER IN THIS FILE WAS INVENTED. No benchmark corpus exists in this tree, so no measurement could have produced one, and a provisional number in a src/config/ file is read by later readers as derived — which is the failure this repository treats as worse than an honest gap. An enforcement gate is PROMISED, NOT SHIPPED: committing untested CI automation with nothing to test it against is how an argument-parser defect is discovered on the critical path, and there is no proposed blocking assurance policy in the tree today for it to run against. It is implemented when the first policy proposal arrives or Phase 8.5 begins, whichever comes first. The dimension set is closed: a fifth dimension requires schema_version 2 and re-registration. Decided by AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/gpt-4o), convergent on option (a); response at agents/runtime/council/responses/assur-q2-enforcement-thresholds.md.",
+  "schema_version": 1,
+  "owner": "maintainer",
+  "review_by": "2027-08-23",
+  "registered_at": "2026-08-23",
+  "review_by_note": "A calendar date, because every other budget config in src/config/ carries one and the gates read that shape. The council's preferred form — '90 days after the frozen benchmark corpus commit, or 2027-12-31, whichever is earlier' — is not a date and would not parse; the corpus-indexed condition it expresses is carried in `revisit_if` instead, which is where the council itself also put it.",
+  "threshold_setting_procedure": "A threshold may be set only after the measurement named in its `set_when` clause completes. If set from empirical data, that dimension's `_comment` must cite the percentile or delta and the run that produced it (e.g. 'P95 from ablation run 2026-04-12'). If set as a safety floor independent of any empirical distribution (e.g. false_verified_rate 0.0 for a zero-tolerance property), the `_comment` must state 'safety floor' and name the invariant (e.g. 'no credential in a commit message may pass verification'). A threshold citing neither an empirical derivation nor a named safety invariant is rejected on review. This specifies what must be true of a number, not who chairs the meeting that sets it: the blocker's `owner: maintainer` field assigns the VALUES to the maintainer, not the governance process.",
+  "dimension_applicability": {
+    "_comment": "Dimensions govern a policy by its OBSERVABLE characteristics, never by what its author claims about it. Without this section the four nulls together would form a universal 'no blocking policy may be adopted' constant — functionally a universal minimum threshold of infinity, which is exactly the vanity constant AC-8 forbids under another name. With it, a policy that asserts no empirical claim and no safety property is ungoverned and may be adopted without waiting for an ablation.",
+    "false_verified_rate": "Governs any policy that gates `done` — a false green would let a defective change through.",
+    "defect_catch_uplift": "Governs any policy whose own documentation uses `catch`, `detect`, `find` or `prevent` in reference to a defect class.",
+    "cost_budget": "Governs any policy that adds a gate step or invokes an external service.",
+    "false_positive_burden": "Governs any policy that can return red on a change.",
+    "safety_floor_exemption": "A policy asserting a hard safety property (e.g. 'no AWS key in any commit') is governed by false_verified_rate but NOT by defect_catch_uplift: it claims a red line, not a higher catch rate. Such a policy's `_comment` must state 'safety floor' and name the invariant. This is the AC-11 escape hatch — a hard safety property may block without an empirical uplift claim."
+  },
+  "dimensions": {
+    "false_verified_rate": {
+      "description": "Proportion of changes the harness reports verified that contain a defect, or violate a safety property the policy is supposed to catch.",
+      "threshold": null,
+      "measurement": null,
+      "set_when": "A frozen benchmark corpus exists (Phase 8.1) AND the false-confidence metric is instrumented (Phase 8.2) AND an ablation comparing assurance-on against assurance-off has completed (Phase 8.4).",
+      "blocks_enforcement": true,
+      "unit": "proportion (0.0-1.0)",
+      "direction": "lower_is_better",
+      "_comment": null
+    },
+    "defect_catch_uplift": {
+      "description": "Incremental defects caught with the assurance mechanism active, minus the baseline without it.",
+      "threshold": null,
+      "measurement": null,
+      "set_when": "A frozen benchmark corpus exists (Phase 8.1) AND an ablation comparing assurance-on against assurance-off has completed (Phase 8.4). The measurement is the delta in defect-catch count between the two arms.",
+      "blocks_enforcement": true,
+      "unit": "count_delta (integer, may be negative)",
+      "direction": "higher_is_better",
+      "_comment": null
+    },
+    "cost_budget": {
+      "description": "Wall-clock time and token cost per gated change.",
+      "threshold": null,
+      "measurement": null,
+      "set_when": "A frozen benchmark corpus exists (Phase 8.1) AND a cost/latency measurement run has completed (Phase 8.3). Note: cost is measurable independently of ablation completion, so this threshold can be set before the other three.",
+      "blocks_enforcement": true,
+      "unit": "composite: {p50_seconds, p50_tokens, p95_seconds, p95_tokens}",
+      "direction": "lower_is_better",
+      "_comment": null
+    },
+    "false_positive_burden": {
+      "description": "Reds raised by the mechanism that a maintainer overrides as not-a-defect.",
+      "threshold": null,
+      "measurement": null,
+      "set_when": "A frozen benchmark corpus exists (Phase 8.1) AND an ablation has completed (Phase 8.4) AND human labelling of flagged changes as true- or false-positive is complete. That last input is NOT a named Phase 8 step and is the same class of unobtainable input as the sibling roadmap's `blocker: b-human-risk-corpus`.",
+      "blocks_enforcement": true,
+      "unit": "count_per_100_changes (float)",
+      "direction": "lower_is_better",
+      "_comment": null
+    }
+  },
+  "revisit_if": [
+    "Any dimension's threshold is still null 90 days after the frozen benchmark corpus is committed.",
+    "A proposed blocking policy's observable characteristics map to no dimension under `dimension_applicability`.",
+    "Empirical data shows the four-dimension set is incomplete — a failure mode orthogonal to all four emerges.",
+    "The promised enforcement gate is removed or bypassed without bumping schema_version and re-registering."
+  ]
+}
