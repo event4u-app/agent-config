@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **727 artefacts** in this package.
+Maintainer-facing index of all **730 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (297)
+## Skills (299)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -180,6 +180,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`mobile-e2e-strategy`](../src/skills/mobile-e2e-strategy/SKILL.md) | official | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-detect-on-the-fly`](../src/skills/module-detect-on-the-fly/SKILL.md) | official | When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../src/skills/module-management/SKILL.md) | official | When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
+| skill | [`monorepo-workspace`](../src/skills/monorepo-workspace/SKILL.md) | official | Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed. |
 | skill | [`motion-choreographer`](../src/skills/motion-choreographer/SKILL.md) | official | When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../src/skills/multi-tenancy/SKILL.md) | official | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`nda-triage`](../src/skills/nda-triage/SKILL.md) | official | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
@@ -307,6 +308,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) | official | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) | official | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| skill | [`workspace-link`](../src/skills/workspace-link/SKILL.md) | official | Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
 ## Rules (119)
@@ -640,7 +642,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (109)
+## Guidelines (110)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -721,6 +723,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`gtm-handoff`](../docs/guidelines/gtm-handoff.md) | (root) |  |
+| guideline | [`monorepo-antipatterns`](../docs/guidelines/monorepo-antipatterns.md) | (root) |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
 | guideline | [`artisan-commands`](../docs/guidelines/php/artisan-commands.md) | php |  |
 | guideline | [`blade-ui`](../docs/guidelines/php/blade-ui.md) | php |  |

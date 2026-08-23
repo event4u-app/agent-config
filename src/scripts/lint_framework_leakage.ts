@@ -102,6 +102,11 @@ const CARVE_OUT_PATTERNS = [
     '^mobile-e2e',
     '^project-analysis-(laravel|symfony|nextjs|react|node-express|zend-laminas)',
     '^docker', '^aws-', '^grafana', '^playwright',
+    // JS/TS workspace tooling. Same class as `^composer-` one line up: a skill
+    // ABOUT a package manager cannot describe it without naming its manifest.
+    // `package.json` / `node_modules` in these two files is the subject, not a
+    // mandate that some unrelated project adopt Node.
+    '^monorepo-workspace$', '^workspace-link$',
     '^laravel-', '^docker-', '^symfony-', '^copilot-', '^devcontainer',
     '-routing$',
 ];

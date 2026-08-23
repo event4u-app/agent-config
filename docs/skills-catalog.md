@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **297 skills** available in this package, in alphabetical order.
+All **299 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_catalog`
@@ -177,6 +177,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`mobile-e2e-strategy`](../dist/agent-src/skills/mobile-e2e-strategy/SKILL.md) | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | [`module-detect-on-the-fly`](../dist/agent-src/skills/module-detect-on-the-fly/SKILL.md) | When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | [`module-management`](../dist/agent-src/skills/module-management/SKILL.md) | When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
+| [`monorepo-workspace`](../dist/agent-src/skills/monorepo-workspace/SKILL.md) | Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed. |
 | [`motion-choreographer`](../dist/agent-src/skills/motion-choreographer/SKILL.md) | When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | [`multi-tenancy`](../dist/agent-src/skills/multi-tenancy/SKILL.md) | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | [`nda-triage`](../dist/agent-src/skills/nda-triage/SKILL.md) | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
@@ -304,6 +305,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| [`workspace-link`](../dist/agent-src/skills/workspace-link/SKILL.md) | Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths. |
 | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
 ---
