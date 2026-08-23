@@ -3,6 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: "Growth is exactly one open blocker and nothing else: b-human-risk-corpus, added in this change. It is not a newly discovered gate — Phase 2 already cited a blocker (`spike-before-build`) that the file never defined, so the dependency was real and invisible; this change makes it visible and gives it an owner and a checkable `Resolved when`. active_roadmaps is unchanged (+0) and no roadmap was archived to pay for this. The AI council that took the disposition (2026-08-23, 2 rounds, 2 of 2 convergent) weighed the ratchet cost explicitly and judged it secondary: the ratchet is an accounting pressure, not evidence of completion, and must not determine whether actionable work is represented honestly. The alternative on the table was closing the roadmap by routing its measurement `unmeasurable-here`, which would have cost the estate nothing and would have both erased actionable work and diluted a precedent this tree relies on — that precedent covers a capability the tree lacks, and what is missing here is a human-supplied input. Paying +1 to keep the work visible is the cheaper error."
 estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 2026-08-22 — the estate decision this key deferred to the owner has now been taken, for every draft the previous /analyze:inbox run landed. What the key covers from here is the +1 active_roadmaps the flip itself creates, un-offset on that instruction; the file carries no blockers, so open_blockers is unchanged. The draft-era text that follows is kept as history and no longer describes this file: Ships status: draft, same terms as its parent road-to-agentic-engineering-assurance: no charge until the owner flips it, and no unrelated roadmap archived to pay for it. It is the parent's Phase 1 matrix carrier and has no active sibling covering target-repo readiness grading."
 ---
 # Road to target-project assurance readiness
@@ -170,7 +171,7 @@ Thresholds are written before any number is seen.
 0 new skills, 0 new commands. The matrix is a section of the existing
 analysis.
 
-- [ ] **1.1 Extend detection to the dimensions.** Add to the parallel
+- [x] **1.1 Extend detection to the dimensions.** Add to the parallel
       gather at `project/analyze/command.md:29-30`: test runner config
       (vitest/jest/phpunit/pest/pytest), mutation config (stryker.conf.*,
       infection.json*, setup.cfg/pyproject `[tool.mutmut]`), architecture
@@ -181,17 +182,60 @@ analysis.
       verify: a fixture target repo under `tests/fixtures/target-repos/`
       with each file present is detected; the same fixture with the file
       removed is not — both asserted by a vitest spec.
-- [ ] **1.2 Print the matrix with the binding dimension, never a score.**
+      **SHIPPED 2026-08-23 as a script, not a gather list, and the substitution is
+      the finding.** This step's verify requires that each dimension's presence be
+      detected **and its absence not be**, "both asserted by a vitest spec" — and
+      a gather list in `command.md` cannot be asserted by anything. So detection
+      lives in `src/scripts/grade_target_readiness.ts` and the command invokes it;
+      the command keeps the narrative and prints the output verbatim.
+
+      Ten dimensions probed in one pass: test-runner config
+      (vitest/jest/phpunit/pest/pytest), mutation config (`stryker.conf.*`,
+      `infection.json*`, `[tool.mutmut]`, `setup.cfg [mutmut]`), property-based
+      libraries (fast-check, Hypothesis), static analysis (`phpstan.neon`,
+      `psalm.xml`, `tsconfig.json`), architecture gates
+      (`.dependency-cruiser.*`, `deptrac.yaml`), SAST (`.semgrep*`, bandit),
+      lockfiles across five ecosystems, audit steps, `CODEOWNERS`, decision-record
+      directories — **and whether CI blocks on each**, which is the 1 → 2
+      distinction a hand-read gets wrong.
+
+      verify: `tests/scripts/grade_target_readiness.test.ts` asserts presence
+      across nine detectable dimensions in `tests/fixtures/target-repos/full/` and
+      absence in `ci-absent/`, whose only difference is that
+      `.github/workflows/` does not exist. 17 assertions pass.
+- [x] **1.2 Print the matrix with the binding dimension, never a score.**
       The output block gains a `READINESS` section:
       `L<n> — bound by <dimension>` followed by the ten rows. No
       percentage, no "x/100" anywhere in the template.
       verify: `grep -nE '/100|%' src/domains/engineering-base/project/analyze/command.md`
       over the new section returns nothing.
-- [ ] **1.3 Knockout semantics are tested, not described.** A fixture with
+      **SHIPPED 2026-08-23.** `command.md` gained a `READINESS` section that
+      prints the script's output verbatim, with three rules restated so the
+      template cannot undo what the script enforces: never emit an aggregate; the
+      level is the minimum over knockouts; `not detectable` is not `0`.
+
+      **This step's verify as written produces a FALSE POSITIVE, and that is
+      recorded rather than worked around.** `grep -nE '/100|%'` over the new
+      section matches the section's **own prohibition sentence** — *"No
+      percentage, no `x/100`"*. The rule forbidding a score is not a score. The
+      assertion is therefore scoped to what the template tells the agent to
+      **print** (the fenced display block) rather than to the prose governing it,
+      and a committed test carries that scoping with the reason attached, so the
+      next reader running the literal grep is not misled by the hit.
+- [x] **1.3 Knockout semantics are tested, not described.** A fixture with
       nine dimensions at 3 and `CI enforcement` at 0 must print `L0 — bound
       by CI enforcement`.
       verify: the vitest spec asserts exactly that string.
-- [ ] **1.4 Stack coverage honesty.** For Python targets, the matrix
+      **SHIPPED 2026-08-23.** `tests/fixtures/target-repos/ci-absent/` is `full/`
+      minus `.github/workflows/` — nine dimensions detectable, CI at 0 — and the
+      spec pins the exact string `L0 — bound by CI enforcement`.
+
+      Two further assertions, because pinning one string is not pinning the
+      semantics: the level equals the computed minimum over the four knockouts,
+      **and** the maximum over those same knockouts is strictly greater than the
+      level — so a `max` or a mean cannot pass. Sabotage-probed: flipping the
+      comparison to `max` reds **3 of 17**.
+- [x] **1.4 Stack coverage honesty.** For Python targets, the matrix
       prints `static analysis & types: not detectable — quality-tools has
       no Python mode` rather than 0, until the successor roadmap adds the
       mode. An undetectable dimension is a knockout: it binds at L0 with the
@@ -200,8 +244,25 @@ analysis.
 
 ## Phase 2 — risk class on every completion claim
 
-Gated by `blocker: spike-before-build` on 0.4.
+Gated by `blocker: b-human-risk-corpus`.
 
+**The citation this line used to carry — `blocker: spike-before-build` — did not
+exist.** The file shipped with no `## Blockers` section at all, so Phase 2 cited a
+gate nothing defined. Corrected 2026-08-23 to the blocker below, which is the real
+dependency: Phase 2 keys on a class the corpus never validated, and wiring it into
+every completion claim first would give a wrong class real authority (Risk 7).
+
+      **SHIPPED 2026-08-23, and this is the sharpest step in the phase.**
+      `tests/fixtures/target-repos/python/` grades
+      `static analysis & types: not detectable — quality-tools has no Python mode`
+      and **binds at L0** with the reason printed.
+
+      The distinction is load-bearing: the dimension is `null`, **not `0`**. A `0`
+      would claim the target lacks static analysis; it may well run mypy, and the
+      tool cannot tell. Sabotage-probed by grading it `0` instead of `null` — reds
+      **4 of 17**, and the Python case then reports a false absence, which is
+      exactly the defect this step exists to prevent. A dedicated assertion pins
+      `not.toBe(0)` alongside `toBeNull()` so the two cannot be conflated.
 - [ ] **2.1 `verify-completion-evidence` consumes the classifier.** A new
       step in the procedure of
       `src/skills/verify-completion-evidence/SKILL.md` runs
@@ -256,6 +317,69 @@ Ships regardless of 0.4.
 | Aggregate readiness score | The report's own anti-vanity rule; enforced by 1.2. |
 | Mutation rig for target projects | Successor stub; this roadmap only *detects* one. |
 | Evidence JSON contract | Successor stub; this roadmap only supplies the `risk_class` and `residual_risk` inputs. |
+
+## Blockers
+
+### blocker: b-human-risk-corpus
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 0 steps 0.1–0.4 · Phase 2 in full · Phase 3 step 3.1 (its
+  nightly drift metric has nothing to report against). Phase 1 is unaffected and
+  shipped.
+- **What to do:** supply the two inputs Phase 0 pre-registers and an agent cannot
+  produce — (1) **name the external target repository** that joins this tree's
+  commit range as the corpus; (2) supply **≥ 60 independently human-labelled
+  R0–R3 changes**, the labeller blind to the classifier, as
+  `agents/evidence/risk-corpus.jsonl` with `sha`, `label`, `labeller` per row.
+- **Resolved when:** both inputs exist — a named external repository, and ≥ 60
+  independently human-labelled changes. **The ≥ 0.80 agreement and ≥ 0.95
+  R3-recall figures are NOT part of this condition**: they evaluate the classifier
+  *after* the blocker clears, so folding them in here would make the blocker
+  un-closable until the experiment it gates has already succeeded. (Correction
+  supplied by the council; the first draft of this blocker had it wrong.)
+- **Recommendation:** supply the corpus. The pre-registration is already written
+  and frozen, so this is a data-collection task rather than a design one, and a
+  later run re-runs the measurement rather than redesigning it.
+- **If you do nothing:** Phase 1's matrix ships and is useful on its own; the risk
+  classifier is never built, so `verify-completion-evidence` keeps accepting prose
+  evidence with no computed class, and `test-driven-development` keeps routing by
+  *kind of task* rather than by blast radius — so a one-line auth change and a
+  one-line docstring change stay routed by the same rule.
+- **Disposition 2026-08-23 — AI council, 2 rounds, 2 of 2 convergent on (b) after
+  a 1–1 split.** Members: anthropic/claude-sonnet-4-5, openai/codex-default;
+  $0.053 + $0.036. Phase 1 ships; the classifier script does **not**; this blocker
+  is added; Phase 0, Phase 2 and the corpus-dependent part of Phase 3 stay open.
+  The roadmap does **not** close.
+
+  **Why `unmeasurable-here` was REFUSED, which is the part worth keeping.** One
+  seat proposed closing the roadmap by routing 0.4 as `unmeasurable-here` — the
+  third state `road-to-test-independence-and-mutation-evidence` established. The
+  other refuted it and the refutation carried both seats in round 2: that
+  precedent covers a **capability the tree does not have** (a subagent dispatch
+  primitive that did not exist). Here the validation procedure is well-defined and
+  executable; what is missing are **inputs only a human can supply**. So this is
+  *unmeasured pending maintainer input*, and closing the roadmap would both erase
+  actionable work and dilute a precedent this tree relies on — making
+  `unmeasurable-here` mean "nobody has yet" as well as "we could not".
+
+  `evaluator-independence` was read the same way: it bars the **authoring agent**
+  from validating its own classifier, not an independent human labeller. A bar on
+  self-validation is not a structural impossibility.
+
+  **Why the classifier script does not ship.** Its `--self-test` could establish
+  determinism and rule execution but not the *validity* that is 0.3's whole
+  purpose. Unvalidated, it is speculative production surface — the "mechanism
+  nobody can retire" the sibling roadmap's Risk 4 names. The seats also turned the
+  strongest argument for shipping it against itself: it has no authority until
+  Phase 2, and *"lack of authority also weakens the case for shipping it now"*.
+  The pre-registration's value — the rule definition frozen before the corpus
+  exists — is captured in this file's `## Proposed` section, which needs no code.
+
+  **One refinement recorded because it cuts against the estate ratchet.** Adding
+  this blocker charges `open_blockers` +1. Both seats judged that secondary: the
+  ratchet is *"an accounting pressure, not evidence of completion, and must not
+  determine whether actionable work is represented honestly."*
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
