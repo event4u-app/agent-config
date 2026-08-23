@@ -3,6 +3,9 @@ model_tier: lite
 name: md-language-check
 description: "Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone."
 domain: process
+scope:
+  write: []
+  verification_reason: "the declared command is a read-only checker: grep -c 'writeFileSync|mkdirSync|appendFileSync' src/scripts/check_md_language.ts returns 0. Absence of a write is not something a command can prove."
 execution:
   type: assisted
   handler: shell

@@ -3,6 +3,13 @@ model_tier: high
 name: adr-create
 description: "Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'."
 domain: process
+scope:
+  write:
+    - pattern: "docs/decisions/ADR-*.md"
+      access: "create"
+    - pattern: "docs/decisions/INDEX.md"
+      access: "write"
+  verification_command: "./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions"
 execution:
   type: assisted
   handler: shell

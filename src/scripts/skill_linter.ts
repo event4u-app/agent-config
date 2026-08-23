@@ -1325,6 +1325,67 @@ function lint_wing4_boundaries(text: string): Issue[] {
 }
 
 /**
+ * Shape check for the optional `scope:` write-scope declaration.
+ *
+ * WHAT IT CHECKS, and only this: when `scope:` is present it carries exactly ONE
+ * of `verification_command` / `verification_reason`. The `access` enum, the
+ * `pattern` shape and the closed key set are the JSON schema's job and are
+ * already enforced there; this covers the one constraint JSON Schema cannot
+ * express in the subset this repo's validator implements — "exactly one of these
+ * two optional siblings".
+ *
+ * WHY IT MATTERS THAT IT IS EXACTLY ONE. Neither is a formality. A declaration
+ * with NEITHER is a scope claim nobody can check and nobody has excused, which
+ * is the pro-forma field this whole shape exists to avoid. A declaration with
+ * BOTH reads as "verified, with an excuse attached" — and the excuse is the part
+ * a reader would act on, so the pair is strictly less informative than either
+ * alone.
+ *
+ * WHAT IT DOES NOT CHECK, stated plainly: whether the declared paths are the
+ * paths the skill actually writes. Nothing observes a skill's writes, so that
+ * half is model-carried and the field is a declaration, not a control.
+ */
+function lint_scope_declaration(frontmatter: string): Issue[] {
+    if (!/^scope:\s*$/m.test(frontmatter)) return [];
+    // Read the block: `scope:` plus every following indented line.
+    const lines = frontmatter.split('\n');
+    const start = lines.findIndex((l) => /^scope:\s*$/.test(l));
+    const block: string[] = [];
+    for (let i = start + 1; i < lines.length; i += 1) {
+        const line = lines[i] ?? '';
+        if (line.trim() === '') continue;
+        if (!/^\s/.test(line)) break;
+        block.push(line);
+    }
+    const hasCommand = block.some((l) => /^\s+verification_command:/.test(l));
+    const hasReason = block.some((l) => /^\s+verification_reason:/.test(l));
+    if (hasCommand && hasReason) {
+        return [
+            new Issue(
+                'error',
+                'scope_verification_both',
+                "scope: declares BOTH verification_command and verification_reason — exactly one. " +
+                    'A reason beside a command reads as a verified claim with an excuse attached, and the ' +
+                    'excuse is the half a reader would act on.',
+            ),
+        ];
+    }
+    if (!hasCommand && !hasReason) {
+        return [
+            new Issue(
+                'error',
+                'scope_verification_missing',
+                "scope: declares neither verification_command nor verification_reason — exactly one. " +
+                    'A scope claim with no command and no stated reason is unfalsifiable, which is the ' +
+                    'pro-forma field this declaration exists to avoid.',
+            ),
+        ];
+    }
+    return [];
+}
+
+
+/**
  * `frontmatter` is required, not defaulted. An R2 review finding: with
  * `frontmatter = ''` an omitted argument makes the runtime-requires check
  * FABRICATE its error rather than skip it, which is the wrong failure direction
@@ -1667,6 +1728,8 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
         if (execution !== null) {
             issues.push(...lint_execution_metadata(execution, frontmatter, text.replace(FRONTMATTER_PATTERN, '')));
         }
+
+        issues.push(...lint_scope_declaration(frontmatter));
 
         const tierMatch = TIER_PATTERN.exec(frontmatter);
         if (tierMatch && tierMatch[1] === 'senior') {

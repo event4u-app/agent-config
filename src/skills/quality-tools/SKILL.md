@@ -3,6 +3,11 @@ model_tier: medium
 name: quality-tools
 description: "Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned."
 domain: quality
+scope:
+  write:
+    - pattern: "**"
+      access: "write"
+  verification_reason: "the project's own formatters and fixers rewrite source in place, and WHICH paths is decided by the consumer's tool config rather than by this skill. A narrower glob would be a guess about a tree this package does not own."
 execution:
   type: assisted
   handler: shell

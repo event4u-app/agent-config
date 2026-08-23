@@ -3,6 +3,9 @@ model_tier: inherit
 name: skill-improvement-pipeline
 description: "Run the skill-improvement pipeline after a learning was detected — capture, classify, create, validate, apply; explicit request only."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal
