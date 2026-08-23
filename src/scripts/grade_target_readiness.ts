@@ -275,10 +275,14 @@ export function grade(root: string): Matrix {
     const knockouts = dims.filter((d) => d.knockout);
     const undetectable = knockouts.find((d) => d.grade === null);
     if (undetectable !== undefined) {
+        // `boundReason` is spread in conditionally rather than assigned
+        // `undefined`: under `exactOptionalPropertyTypes` an optional property
+        // and a property explicitly set to `undefined` are different types, and
+        // the second does not satisfy `boundReason?: string`.
         return {
             level: 0,
             boundBy: undetectable.label,
-            boundReason: undetectable.notDetectable,
+            ...(undetectable.notDetectable === undefined ? {} : { boundReason: undetectable.notDetectable }),
             dimensions: dims,
         };
     }
