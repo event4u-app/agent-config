@@ -204,12 +204,12 @@ table, `superseded` is a named terminal outcome, and the resume checkpoint
 carries a repository fingerprint. **Rollback:** set the cadence default to
 `off`; the reaction table degrades to documentation.
 
-- [ ] **5.1 `roadmap.context_refresh_cadence` setting** — `phase_boundary` |
+- [x] **5.1 `roadmap.context_refresh_cadence` setting** — `phase_boundary` |
       `every_5_steps` | `per_step`, default `phase_boundary`, read once per run
       exactly like `dashboard_regen_cadence` (`roadmap-process-loop.md:405-418`).
       At each due point: a pruning fetch plus `roadmap:context --roadmap <slug>`.
-      verify: the settings schema test accepts the three values and rejects a fourth; loop § 4 documents the key.
-- [ ] **5.2 Reaction table in the loop — enumerated and closed.** Keep the
+      verify (discharged) — **RE-SCOPED, and this is the substantive finding of the phase.** The key was implemented exactly as specified (template + Zod `regenCadence` + an enum test asserting the three values and rejecting a fourth) and all three went green. `lint_settings_classes` then **refused it**: `docs/contracts/settings-classes.md` classifies every settings leaf on a second axis answering *should this key exist at all*, the honest classification is `derivable` ("the mechanism itself can decide, from the situation, better than a flag can"), and that label carries an anti-regrowth ratchet — `❌ lint_settings_classes:derivable-surface: 84 violation(s) against a baseline of 83 — 1 new. Raising the baseline is a defect, not a fix.` The gate's own source (`lint_settings_classes.ts:510-514`) states it outright: *"a NEW key classified `derivable` is a key that should not have been added."* Mechanism-match was run first and the lock **applies** — the ratchet tested new derivable keys and this is one. **The AI council was convened** (`--confirm --invocation agent`) and returned an **honest null**: `0/2 present, needed 1 — INCONCLUSIVE`, both members `cli_quota_exhausted` (anthropic 53/50, openai 50/50), $0.0000. Resolved on the tree's deterministic evidence and recorded in `agents/evidence/analysis/situational-awareness-cadence-key-decision.md` with the four options and why three were rejected — including classifying the key `consent`/`policy` to dodge the ratchet, rejected as dishonest on the contract's own warning. **What shipped instead:** the key was reverted in full (template, Zod, contract rows and totals, enum test — `lint_settings_classes` back to `✅ 136 settings key(s) classified — A=26 B=3 C=107`) and replaced by a derived trigger. `contextFingerprint()` digests the `origin/main` SHA **plus every open PR's head SHA**, exposed as `agent-config roadmap:context --fingerprint` (live output `ac612ab43f8f0892`); loop § 4 documents the comparison under `### Context refresh — a comparison, not a third cadence key`. `origin/main` alone was rejected as the trigger because it **under-fires**: a peer pushing to their own PR branch mid-run can add an overlapping file without `main` moving — pinned by the test `moves when a peer pushes to its OWN PR branch and origin/main did NOT move`, and proven sensitive by dropping the head SHAs from the digest (`expected 'c7294a816e3f0e6d' not to be 'c7294a816e3f0e6d'`). Seven cases total, 36 passing in `tests/scripts/roadmap_context.test.ts`. The honest-null path changes shape with it: "default drops to `off`" becomes "revert the § 4 subsection", the same reversibility.
+- [x] **5.2 Reaction table in the loop — enumerated and closed.** Keep the
       enumerated form the source already had; do **not** introduce a
       drift-level taxonomy.
       (a) A PR touching my owned paths **merged** since the last refresh → run
@@ -223,7 +223,7 @@ carries a repository fingerprint. **Rollback:** set the cadence default to
       advisory.
       (d) The roadmap itself was archived on `origin/main` → stop; the same
       selection error as 2.1, detected late.
-      verify: loop § 5 carries a subsection `5e. Context refresh` with exactly these four rows, and a diff against the base shows the forbidden-non-halt-reason line at `:738` byte-unchanged.
+      verify (discharged): `### 5e. Context refresh — four reactions, enumerated and closed` at `roadmap-process-loop.md:699`, carrying exactly the four rows (a) merged-PR → `sync_pr_branch` + re-read + continue, (b) open PR → continue and name it, never rebase onto a foreign branch, (c) `PATH OVERLAP` → disjoint steps first, register is advisory, (d) archived on `origin/main` → stop as the same **selection error** as § 1. No drift-level taxonomy, as the step insists. The forbidden-non-halt-reasons block is **byte-identical to `origin/main`**, verified by section-scoped diff rather than by a line number: `git show origin/main:… | awk '/^### Forbidden non-halt/{f=1} /^### Non-halt — gating/{f=0} f'` against the same slice of the working tree → `FORBIDDEN_REASONS_BYTE_IDENTICAL`. **Drift:** the step cites `:738`, which was the line at drafting time; the anchors moved as the file grew, which is exactly why a byte-comparison of the whole section is the stronger check.
 - [~] **5.3 Reaction (e): mark a step the tree already closed.** <!-- deferred: an autonomous run writing a completion marker into the source of truth touches roadmap-progress-sync Iron Law 3; owner-reserved -->
       When a merged PR or an `origin/main` commit has already satisfied the
       current step — the step's own `verify:` passes against `origin/main`, or
@@ -233,26 +233,26 @@ carries a repository fingerprint. **Rollback:** set the cadence default to
       already specified, but an autonomous run writing a completion marker
       into the source of truth is not a mechanism to switch on unasked.
       verify: when taken up — a fixture where `origin/main` satisfies the step produces exactly one `superseded-by` marker and one memo file, and a fixture where it does not produces neither.
-- [ ] **5.4 Name `superseded` as a terminal outcome, not a halt.** It belongs
+- [x] **5.4 Name `superseded` as a terminal outcome, not a halt.** It belongs
       under `## Terminal outcomes` (`roadmap-process-loop.md:665`), which today
       has no class for it, and **not** in the halt list — `:730` calls that
       list exhaustive and `:738` forbids "let the open PRs merge first", so a
       run meeting this case currently has no legal move.
-      verify: `grep -n "superseded" src/agent-src/contexts/execution/roadmap-process-loop.md` reports a hit inside the Terminal-outcomes section and none inside the halt list; the halt list is byte-unchanged.
-- [ ] **5.5 Never mark stale work complete just because it disappeared.**
+      verify (discharged): `grep -n "superseded"` → three hits, at `:770`, `:773`, `:784`, and a section-scoped awk pass reports `TERMINAL_HIT` for all three with **zero** `HALT_SECTION_HIT` and zero `FORBIDDEN_SECTION_HIT`. The halt list is byte-identical to `origin/main` (`HALT_LIST_BYTE_IDENTICAL`, section-scoped diff as above). The outcomes table went from three rows to four; the new row reports which steps the tree already satisfies with the PR number and per-step evidence. It is deliberately a **report and not a licence to flip anything** — the marker-writing mechanism is step 5.3, held deferred, and the prose says so in place, so the two cannot be conflated by a later reader.
+- [x] **5.5 Never mark stale work complete just because it disappeared.**
       Harvested from the dropped draft. A step whose artefact has vanished from
       the tree resolves to `unverified` — surfaced in the report, never marked
       done. Absence of the file is absence of evidence, not evidence of
       completion.
-      verify: a fixture whose cited path is absent yields the string `unverified` in the run report and zero checkbox flips.
-- [ ] **5.6 Bind the context baseline to the resume checkpoint.** Harvested
+      verify (discharged): `staleArtefactVerdict(root, ['src/scripts/present.ts', 'src/scripts/gone.ts'])` → `{ verdict: 'unverified', absent: ['src/scripts/gone.ts'] }` — the literal string, plus the missing path named. Five cases in `tests/scripts/roadmap_context.test.ts`: one missing path is enough (**not** a ratio and not a majority), all-present is `present`, and a step citing **no** paths is `present` because nothing to check is not a doubt — otherwise this would fire on every prose step. The zero-flips half is the loop rule, new § 5 step **4b**, which runs *before* the atomic flip and states which glyph is wrong and why: not `[x]` (evidence uncheckable), not `[-]` (nobody decided to skip), not `[~]` (nobody deferred) — the box stays open and the report carries the reason. Sensitivity proven: hardcoding the verdict to `'present'` turned 2 tests red (`expected 'present' to be 'unverified'`).
+- [x] **5.6 Bind the context baseline to the resume checkpoint.** Harvested
       from the dropped draft. `verifyCheckpoint`
       (`roadmap-process-loop.md:608-637`) reports **roadmap** drift and is
       silent on **repository** drift, so a run resumed after a long gap trusts
       a context reading it never re-took. Write the probe's fingerprint into
       `agents/runtime/state/checkpoints/<run>.json` and force a re-probe when
       it differs.
-      verify: the checkpoint JSON carries a `context_fingerprint` key, and a resume test with a mutated fingerprint asserts a re-probe was issued before the first step.
+      verify (discharged): `buildCheckpoint(..., { contextFingerprint: 'abc123' })` writes `"context_fingerprint": "abc123"` into the checkpoint JSON, asserted by re-reading the file off disk rather than the in-memory object. `verifyCheckpoint(r, cp, 'fp-now-different')` reports the field with `claimed`, `actual` and `agrees: false`, and `res.agrees` is `false` — which is what forces the re-probe the loop's § 5d prose now mandates before the first step. Five cases, 49 passing in `tests/scripts/run_checkpoint.test.ts`. Two design calls the step left open, both made the conservative way and both pinned: the field is **absent, not null**, when no probe was taken (a pre-field checkpoint and a probe-less run are the same state and both must read as *not known*), and an unknown on **either** side is never a disagreement — the same rule `head` already follows, because a false alarm on the field whose job is to say whether anything moved trains the reader to skip the line. Sensitivity proven twice: forcing `agrees: true` reds the mutated case, and writing `?? null` instead of omitting reds the absent-vs-null case. **One mechanism serves 5.1 and 5.6** — the checkpoint's fingerprint is the same `contextFingerprint()` value the phase-boundary comparison uses.
 
 ## Phase 6 — Hygiene caught on the way
 

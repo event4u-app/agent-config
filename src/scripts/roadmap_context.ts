@@ -56,6 +56,8 @@ export interface PullRequestInfo {
     title: string;
     headRefName: string;
     files: string[];
+    /** Head commit of the PR branch. Feeds the refresh fingerprint. */
+    headRefOid?: string;
 }
 
 /** A roadmap file found in one of the four roadmap directories. */
@@ -113,6 +115,13 @@ export interface RoadmapContext {
     generated_at: string;
     network: 'live' | 'unavailable';
     roadmap: string | null;
+    /** `origin/main` at probe time, or `null` when the ref was unreadable. */
+    base_sha: string | null;
+    /**
+     * Stable digest of everything a refresh decision depends on. Compare, never
+     * parse: two probes with the same fingerprint saw the same world.
+     */
+    fingerprint: string;
     scanned: {
         prs: number;
         roadmaps: number;
@@ -181,11 +190,13 @@ export function parsePrList(raw: string): PullRequestInfo[] {
                 }
             }
         }
+        const oid = rec['headRefOid'];
         out.push({
             number: num,
             title: typeof rec['title'] === 'string' ? rec['title'] : '',
             headRefName: typeof rec['headRefName'] === 'string' ? rec['headRefName'] : '',
             files: files.sort(),
+            ...(typeof oid === 'string' && oid !== '' ? { headRefOid: oid } : {}),
         });
     }
     return out.sort((a, b) => a.number - b.number);
@@ -266,6 +277,45 @@ export function keywordHits(
         }
     }
     return out.sort((a, b) => b.matched.length - a.matched.length || a.slug.localeCompare(b.slug));
+}
+
+/**
+ * Stable digest of everything a refresh decision depends on.
+ *
+ * `road-to-roadmap-situational-awareness` § 5.1, as re-scoped: the roadmap asked
+ * for a `roadmap.context_refresh_cadence` enum and the tree's settings contract
+ * refused it — `derivable` is a deletion queue whose size may only fall, and a
+ * fixed beat is exactly the flag the contract says a mechanism should replace
+ * (`agents/evidence/analysis/situational-awareness-cadence-key-decision.md`).
+ * So the trigger is a comparison, not a cadence: re-probe when the world moved.
+ *
+ * **`origin/main` alone is not enough**, and this is the case a SHA-only trigger
+ * misses: a peer pushing to their OWN open PR branch mid-run can add a file that
+ * now overlaps this run's owned paths, and `origin/main` has not moved. So the
+ * PR head SHAs are in the digest too, at the cost of one extra `gh` field.
+ *
+ * Not a security hash — a cheap, order-independent digest. It is compared, never
+ * parsed, and a collision costs one skipped re-probe rather than a wrong answer.
+ */
+export function contextFingerprint(
+    base_sha: string | null,
+    prs: readonly PullRequestInfo[],
+): string {
+    const parts = [
+        `base:${base_sha ?? 'none'}`,
+        ...prs
+            .map((p) => `pr:${p.number}@${p.headRefOid ?? 'unknown'}`)
+            .sort((a, b) => a.localeCompare(b)),
+    ];
+    let h1 = 0x811c9dc5;
+    let h2 = 0x01000193;
+    const joined = parts.join('|');
+    for (let i = 0; i < joined.length; i++) {
+        const c = joined.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+        h2 = Math.imul(h2 + c, 0x85ebca6b) >>> 0;
+    }
+    return `${h1.toString(16).padStart(8, '0')}${h2.toString(16).padStart(8, '0')}`;
 }
 
 const CITED_PATH_RE = /`([A-Za-z0-9_][A-Za-z0-9_./-]*\/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+)`/g;
@@ -392,6 +442,38 @@ export function inboxNames(repoRoot: string): string[] {
     }
 }
 
+/** Verdict for a step whose cited artefacts were checked against the tree. */
+export type ArtefactVerdict = 'present' | 'unverified';
+
+/**
+ * Which of a step's cited paths are missing from the tree.
+ *
+ * `road-to-roadmap-situational-awareness` § 5.5, harvested from a dropped draft:
+ * **absence of the file is absence of evidence, not evidence of completion.** The
+ * failure mode is specific and quiet — a step cites an artefact, the artefact is
+ * gone, and "nothing to do here" reads identically to "already done". One of
+ * those is a closed step and the other is a lost one.
+ */
+export function absentCitedPaths(repoRoot: string, paths: readonly string[]): string[] {
+    return paths.filter((rel) => !fs.existsSync(path.join(repoRoot, rel))).sort();
+}
+
+/**
+ * `unverified` when ANY cited artefact is missing, `present` only when all are.
+ *
+ * Deliberately not a ratio and not a majority: one missing artefact is enough,
+ * because the whole point is that the step's evidence cannot be checked. A step
+ * with no cited paths is `present` — there was nothing to check, and inventing a
+ * doubt would fire this on every prose step.
+ */
+export function staleArtefactVerdict(
+    repoRoot: string,
+    paths: readonly string[],
+): { verdict: ArtefactVerdict; absent: string[] } {
+    const absent = absentCitedPaths(repoRoot, paths);
+    return { verdict: absent.length > 0 ? 'unverified' : 'present', absent };
+}
+
 export interface ProbeOptions {
     repoRoot: string;
     roadmap?: string | null;
@@ -418,10 +500,13 @@ export function probe(opts: ProbeOptions): RoadmapContext {
         '--limit',
         '100',
         '--json',
-        'number,title,headRefName,files',
+        'number,title,headRefName,headRefOid,files',
     ]);
     const online = prRun.code === 0 && fetched.code === 0;
     const open_prs = prRun.code === 0 ? parsePrList(prRun.stdout) : [];
+
+    const baseRun = exec('git', ['-C', root, 'rev-parse', 'origin/main']);
+    const base_sha = baseRun.code === 0 ? baseRun.stdout.trim() || null : null;
 
     const roadmaps = enumerateRoadmaps(root);
     const activeSlugs = roadmaps.filter((r) => r.dir === 'active').map((r) => r.slug);
@@ -471,6 +556,8 @@ export function probe(opts: ProbeOptions): RoadmapContext {
         generated_at: (opts.now ?? new Date()).toISOString(),
         network: online ? 'live' : 'unavailable',
         roadmap: subject,
+        base_sha,
+        fingerprint: contextFingerprint(base_sha, open_prs),
         scanned: {
             prs: open_prs.length,
             roadmaps: roadmaps.length,
@@ -621,6 +708,8 @@ export function renderText(ctx: RoadmapContext): string {
     L.push('inbox notes (names only, never contents):');
     if (ctx.inbox_files.length === 0) L.push('  (none)');
     for (const n of ctx.inbox_files) L.push(`  agents/tmp/${n}`);
+    L.push(`context fingerprint: ${ctx.fingerprint}  (base ${ctx.base_sha ?? 'unknown'})`);
+    L.push('A refresh re-probes when this value differs from the one the run holds.');
     L.push('');
     L.push('This probe is deterministic once invoked; the invocation is model-carried.');
     return `${L.join('\n')}\n`;
@@ -642,7 +731,7 @@ function readOwnedPathsFile(p: string): Map<string, string[]> {
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--help') || argv.includes('-h')) {
         process.stdout.write(
-            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json] [--relates]\n',
+            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json] [--relates] [--fingerprint]\n',
         );
         return 0;
     }
@@ -657,6 +746,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         roadmap: at('--roadmap'),
         ...(ownedFile !== null ? { ownedPaths: readOwnedPathsFile(ownedFile) } : {}),
     });
+    if (argv.includes('--fingerprint')) {
+        // Just the digest, for the loop's phase-boundary comparison and for the
+        // resume checkpoint's `context_fingerprint` (§ 5.6 — same value).
+        process.stdout.write(`${ctx.fingerprint}\n`);
+        return 0;
+    }
     if (argv.includes('--relates')) {
         // The frontmatter block, ready to paste. Zero hits is fully determined
         // and printed as-is; hits print with every relation UNANSWERED, because

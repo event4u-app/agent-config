@@ -15,7 +15,9 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    absentCitedPaths,
     citedPaths,
+    contextFingerprint,
     emptyRelatesBlock,
     computeOverlaps,
     enumerateRoadmaps,
@@ -28,6 +30,7 @@ import {
     renderText,
     roadmapTailBranches,
     slugKeywords,
+    staleArtefactVerdict,
     type Exec,
     type OverlapSource,
 } from '../../src/scripts/roadmap_context.js';
@@ -348,5 +351,106 @@ describe('relates: emission — road-to-roadmap-situational-awareness § 4.4', (
         const empty: string[] = [];
         lint._check_relates(`complexity: lightweight\n${emptyRelatesBlock(9)}`, empty);
         expect(empty).toEqual([]);
+    });
+});
+
+describe('contextFingerprint — the refresh trigger, re-scoped from a cadence enum', () => {
+    const pr = (n: number, oid: string, files: string[] = []) => ({
+        number: n,
+        title: 't',
+        headRefName: 'h',
+        files,
+        headRefOid: oid,
+    });
+
+    it('is stable for the same world', () => {
+        expect(contextFingerprint('abc', [pr(1, 'x')])).toBe(contextFingerprint('abc', [pr(1, 'x')]));
+    });
+
+    it('is order-independent across the PR list', () => {
+        expect(contextFingerprint('abc', [pr(1, 'x'), pr(2, 'y')])).toBe(
+            contextFingerprint('abc', [pr(2, 'y'), pr(1, 'x')]),
+        );
+    });
+
+    it('moves when origin/main moves', () => {
+        expect(contextFingerprint('abc', [pr(1, 'x')])).not.toBe(
+            contextFingerprint('def', [pr(1, 'x')]),
+        );
+    });
+
+    it('moves when a peer pushes to its OWN PR branch and origin/main did NOT move', () => {
+        // The case a SHA-only trigger misses, and the whole reason the PR head
+        // SHAs are in the digest.
+        expect(contextFingerprint('abc', [pr(1, 'x')])).not.toBe(
+            contextFingerprint('abc', [pr(1, 'x2')]),
+        );
+    });
+
+    it('moves when a PR opens or closes', () => {
+        expect(contextFingerprint('abc', [pr(1, 'x')])).not.toBe(
+            contextFingerprint('abc', [pr(1, 'x'), pr(2, 'y')]),
+        );
+    });
+
+    it('is defined with no PRs and no base ref', () => {
+        expect(contextFingerprint(null, [])).toMatch(/^[0-9a-f]{16}$/);
+    });
+
+    it('rides on the probe result and on --fingerprint', () => {
+        const exec: Exec = (cmd, args) => {
+            if (cmd === 'gh') {
+                return {
+                    code: 0,
+                    stdout: JSON.stringify([
+                        { number: 5, title: 't', headRefName: 'h', headRefOid: 'deadbeef', files: [] },
+                    ]),
+                };
+            }
+            if (args.includes('rev-parse')) return { code: 0, stdout: 'cafebabe\n' };
+            return { code: 0, stdout: '' };
+        };
+        const ctx = probe({ repoRoot: root, exec });
+        expect(ctx.base_sha).toBe('cafebabe');
+        expect(ctx.fingerprint).toBe(contextFingerprint('cafebabe', [
+            { number: 5, title: 't', headRefName: 'h', files: [], headRefOid: 'deadbeef' },
+        ]));
+        expect(renderText(ctx)).toContain(`context fingerprint: ${ctx.fingerprint}`);
+    });
+});
+
+describe('staleArtefactVerdict — a vanished artefact is unverified, never done', () => {
+    it('yields the literal string "unverified" and names the absent path', () => {
+        write('src/scripts/present.ts', 'x');
+        const got = staleArtefactVerdict(root, ['src/scripts/present.ts', 'src/scripts/gone.ts']);
+        expect(got.verdict).toBe('unverified');
+        expect(got.absent).toEqual(['src/scripts/gone.ts']);
+    });
+
+    it('is present only when every cited path exists', () => {
+        write('src/scripts/a.ts', 'x');
+        write('src/scripts/b.ts', 'x');
+        expect(staleArtefactVerdict(root, ['src/scripts/a.ts', 'src/scripts/b.ts']).verdict).toBe(
+            'present',
+        );
+    });
+
+    it('one missing path is enough — not a ratio, not a majority', () => {
+        for (const n of ['a', 'b', 'c']) write(`src/${n}.ts`, 'x');
+        expect(staleArtefactVerdict(root, ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts']).verdict).toBe(
+            'unverified',
+        );
+    });
+
+    it('a step citing no paths is present — nothing to check is not a doubt', () => {
+        expect(staleArtefactVerdict(root, [])).toEqual({ verdict: 'present', absent: [] });
+    });
+
+    it('absentCitedPaths returns the missing set, sorted', () => {
+        write('src/keep.ts', 'x');
+        expect(absentCitedPaths(root, ['src/z.ts', 'src/keep.ts', 'src/a.ts'])).toEqual([
+            'src/a.ts',
+            'src/z.ts',
+        ]);
     });
 });

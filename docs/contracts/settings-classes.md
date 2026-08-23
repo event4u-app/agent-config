@@ -257,6 +257,7 @@ It rose to 136 on 2026-08-20 when `road-to-gate-autonomy`'s
 first keys added to this contract since the deletions above, and both are C on
 test 1 (money).
 
+
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
 configurable value with a real default, so such keys count as leaves here — one row more than
