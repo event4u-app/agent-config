@@ -99,4 +99,10 @@ Any user-facing savings figure is **attributed to upstream** ("upstream
 reports 60–90% — their estimate") unless agent-config has published its own
 measurement. agent-config's scoped spot-measurement lives at
 [`internal/bench/rtk-savings/RESULTS.md`](../../internal/bench/rtk-savings/RESULTS.md)
-(2026-07-28: 33% overall on an 8-command corpus, 0–57% per command).
+(2026-07-28: 33% overall on an 8-command corpus, 0–57% per command, **one repo
+on one macOS machine**). That figure is **stale and not superseded**: the widened
+re-bench is `road-to-terminal-token-economy` steps 3.2–3.4, deferred by AI council
+on 2026-08-23 until Phase 2 chooses the wrapper mechanism. The label travels with
+the number by design — a scope stated only at the canonical definition does not
+survive being copied or summarised, which is how an unqualified "33 %" reaches a
+reader in the first place.
