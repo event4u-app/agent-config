@@ -31,15 +31,26 @@ afterEach(() => {
     fs.rmSync(project, { recursive: true, force: true });
 });
 
-function readMcpJson(): Record<string, any> {
-    return JSON.parse(fs.readFileSync(path.join(project, '.mcp.json'), 'utf8'));
+interface McpJson {
+    mcpServers?: Record<string, { command?: string; args?: string[] }>;
+    somethingElse?: unknown;
+}
+
+function readMcpJson(): McpJson {
+    return JSON.parse(fs.readFileSync(path.join(project, '.mcp.json'), 'utf8')) as McpJson;
+}
+
+/** The servers block, asserted present — every caller here has just written it. */
+function servers(): Record<string, { command?: string; args?: string[] }> {
+    const data = readMcpJson();
+    expect(data.mcpServers, '.mcp.json has no mcpServers block').toBeDefined();
+    return data.mcpServers!;
 }
 
 describe('ensure_mcp_bridge — a fresh install produces the entry', () => {
     it('creates .mcp.json with the documented npx entry', () => {
         ensure_mcp_bridge(project, false);
-        const data = readMcpJson();
-        expect(data.mcpServers[MCP_SERVER_KEY]).toEqual({
+        expect(servers()[MCP_SERVER_KEY]).toEqual({
             command: 'npx',
             args: ['-y', '@event4u/agent-config', 'mcp-server'],
         });
@@ -66,9 +77,8 @@ describe('ensure_mcp_bridge — a fresh install produces the entry', () => {
             JSON.stringify({ mcpServers: { 'their-server': { command: 'their-cmd' } } }, null, 2),
         );
         ensure_mcp_bridge(project, false);
-        const data = readMcpJson();
-        expect(data.mcpServers['their-server']).toEqual({ command: 'their-cmd' });
-        expect(data.mcpServers[MCP_SERVER_KEY].command).toBe('npx');
+        expect(servers()['their-server']).toEqual({ command: 'their-cmd' });
+        expect(servers()[MCP_SERVER_KEY]?.command).toBe('npx');
     });
 
     it('preserves unrelated top-level keys', () => {
