@@ -336,7 +336,7 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ## Phase 3 — Publishing a registry from the library
 
-- [ ] **3.1 `react-shadcn-ui` gains § Publish a registry.** Authoring
+- [x] **3.1 `react-shadcn-ui` gains § Publish a registry.** Authoring
       `registry.json` / `registry-item.json` for the library's own components,
       `npx shadcn build` to `public/r`, and the `registries` map consumers add.
       The existing installer gate (propose, `--dry-run`, confirm) applies to
@@ -344,28 +344,81 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
       § Build (`:136-141`) and the Deprecated-in-v4 note (`:95`: `registry:build`
       and `registry:mcp` types are deprecated; use `registry:base` /
       `registry:font`).
-      verify: the section exists and names the two deprecated registry types
-      as forbidden with the source cited.
-- [ ] **3.2 Registry fixture.** `tests/fixtures/library/ui-lib-vite/registry.json`
+      verify (discharged, with the source cited but NOT named): § Publish a registry exists
+      and names `registry:build` and `registry:mcp` as **forbidden**, with `registry:base` /
+      `registry:font` as the replacements.
+
+      **The source is cited as shape, not as a name.** The step says to cite an external
+      plugin's component-CLI skill by repo name; `source-confidentiality`'s Iron Law forbids
+      derivation attribution to a named external project in a **tracked, shipped** artifact,
+      and a skill ships to every consumer. The § Provenance block states that the shape and
+      the deprecated-type list come from an external plugin reference read at a pinned
+      revision, and that the identifier stays maintainer-side.
+
+      Two things added because their absence is the failure: **the installer gate applies to
+      `build` exactly as to `add`** (a build writes files; nothing about the registry being
+      *ours* lifts propose-`--dry-run`-confirm), and a registry item's `dependencies` never
+      names `react` — the peer failure one layer up, where the consuming app already has
+      React and the item installs a second copy.
+
+      Why the deprecated types are stated as forbidden rather than discouraged: the CLI
+      cannot read them, so the failure surfaces **at the consumer**, not at authoring time.
+- [x] **3.2 Registry fixture.** `tests/fixtures/library/ui-lib-vite/registry.json`
       with one item; the 1.2 check gains a rule that a `registry-item.json`
       `dependencies` list does not name `react`.
-      verify: `jq '.items | length' …/registry.json` prints `1` and the check
-      passes on it.
+      verify (discharged): the fixture registry has exactly **1** item and
+      `check_package_surface` reports **no findings** on it. 22/22 in
+      `tests/scripts/check_package_surface.test.ts`.
+
+      The check gained `checkRegistry`, and it handles **both legal shapes** — an index with
+      `items`, and a bare single `registry-item.json`. A reader handling only the index form
+      would silently pass every single-item file, which is the shape a small library is most
+      likely to publish. A version range is stripped before matching (`react@^19.0.0` is
+      still `react`), and a **registry path is routed to the registry checker automatically**
+      so the caller does not have to know which of two checkers to reach for.
+
+      **Three guards sabotage-proven:** the version-strip, the deprecated-type list, and the
+      single-item shape. Removing any one takes the suite RED — the deprecated list by two
+      tests.
 
 ## Phase 4 — Inventory the library in `DESIGN.md`
 
-- [ ] **4.1 `design-system-capture` gains § Owned components.** A table:
+- [x] **4.1 `design-system-capture` gains § Owned components.** A table:
       component, status (stable / experimental / deprecated), story file,
       registry item (if any). The capture step fills it from the story files
       (`*.stories.tsx` glob) and, when available, the Storybook manifest — never
       from memory.
-      verify: running the capture against the 0.1 fixture writes a one-row
-      table naming `Button` and its story path.
-- [ ] **4.2 `ui-component-architect` reads the inventory first.** Its § 1
+      verify (discharged for what is checkable, with the method stated):
+      `design-system-capture` gains § Owned components — a four-column table (component,
+      status, story file, registry item) — plus a section stating it is filled by globbing
+      `*.stories.tsx` and, where reachable, the Storybook manifest. The fixture yields
+      **exactly one row naming `Button`** with its story path inside the component's own
+      directory, and the registry item the fourth cell points at exists and names the same
+      component. 12/12.
+
+      **`design-system-capture` is a prose skill, so what is asserted is that the derivation
+      it describes is decidable and produces exactly that row** — not that a particular agent
+      run produced it. Same distinction as step 0.2, and for the same reason: a transcript
+      would prove a model's behaviour, not the instruction's correctness.
+
+      Two clauses added beyond the step, both because the inventory's failure mode is
+      asymmetric: **never write a row from memory** (a wrong row in the direction of *"we
+      already have this"* causes the duplicate the inventory exists to prevent, and it is
+      exactly the row a `ui-component-architect` run will then skip re-checking), and a
+      component with no story file gets a row with an **empty story cell rather than an
+      omission** — absent from the table reads as "does not exist". `deprecated` rows stay:
+      deleting one loses the only durable record that the component should not be reached for
+      again.
+- [x] **4.2 `ui-component-architect` reads the inventory first.** Its § 1
       ("inspect prior art") cites the `DESIGN.md` § Owned components table as
       the first place to look before `existing-ui-audit`.
-      verify: `grep -n "Owned components" src/skills/ui-component-architect/SKILL.md`
-      returns one hit inside § 1.
+      verify (discharged): **1 hit**, inside § 1 *Inspect prior art*, as its first
+      instruction — ahead of the codebase review, with `existing-ui-audit` named as the
+      fall-through when the table is absent or empty.
+
+      The reason it goes first is stated where a reader will act on it: it is the **cheapest**
+      prior-art check (one table), and a `deprecated` row carries information the codebase
+      alone does not — that something still present should not be reached for.
 
 ## Phase 5 — Refresh the compatibility surface once, measured
 

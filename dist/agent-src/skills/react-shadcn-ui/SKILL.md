@@ -164,6 +164,40 @@ registries / install-with-natural-language over MCP; configure per the
 dependency. Decision note: **CLI path = default + universal; MCP path = opt-in
 when the user has it configured; registry-JSON literacy underpins both.**
 
+## Publish a registry — the library as a source others install from
+
+The sections above **consume** a registry. This one **publishes** one: a component library in
+this repository can expose its own components the same way, so a consumer installs them with
+the tool they already use instead of copying files.
+
+1. **Author `registry.json`** at the library root — the index — and one
+   `registry-item.json` per exposed component, each naming its files, its
+   `registryDependencies`, and its `cssVars` when it carries token requirements.
+2. **Build** to `public/r` with the registry build command. **The installer gate applies
+   here exactly as it does to `add`**: propose it, run `--dry-run` first, and let the user
+   confirm. A build writes files, so nothing about it being "our own" registry lifts the
+   gate.
+3. **The consumer adds a `registries` map entry** pointing at the published index; from then
+   on `@ns/item` resolves through it.
+
+**Two registry item types are FORBIDDEN**, deprecated in v4: `registry:build` and
+`registry:mcp`. Use **`registry:base`** and **`registry:font`** instead. Writing either
+deprecated type produces an item the current CLI does not understand, and the failure surfaces
+at the consumer rather than at authoring time.
+
+**`dependencies` in a registry item never names `react` or `react-dom`.** They are peers of
+the consuming app, and a registry item that installs its own copy reproduces the "invalid hook
+call" failure one layer up — see
+[`js-library-packaging`](../js-library-packaging/SKILL.md). `check_package_surface` enforces
+this over a registry file.
+
+> **Provenance.** The registry-publishing shape and the deprecated-type list come from an
+> external plugin reference's component-CLI skill, read at a pinned revision. The source is
+> deliberately not named here, per
+> [`source-confidentiality`](../../rules/source-confidentiality.md): a shipped artifact does
+> not carry derivation attribution to a named external project. The identifier and revision
+> stay with the maintainer-side record.
+
 ## Procedure: render a shadcn/ui component for the design brief
 
 ### Step 0: Inspect

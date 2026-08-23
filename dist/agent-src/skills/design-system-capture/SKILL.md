@@ -68,7 +68,29 @@ should apply consistently across all UI tasks in this project. Unlike
 
 ## Design philosophy
 One sentence: [density/formality/complexity philosophy]
+
+## Owned components
+| Component | Status | Story file | Registry item |
+|---|---|---|---|
+| [Name] | stable \| experimental \| deprecated | [path to *.stories.tsx] | [registry item name, or —] |
 Example: "Information-dense dashboard; optimize for power users, not casual exploration."
+
+## Owned components — filled from the tree, never from memory
+
+The § Owned components table is populated by **globbing `*.stories.tsx`** (and, when a
+Storybook manifest is reachable, reading it — see
+[`storybook-workshop`](../storybook-workshop/SKILL.md) § MCP path). One row per component
+the project owns: its name, its status, its story file, and its registry item where the
+library publishes one.
+
+**Never write a row from memory.** A remembered component is exactly the row a reader will
+trust and a `ui-component-architect` run will then skip re-checking — an inventory that is
+wrong in the direction of "we already have this" causes the duplicate it exists to prevent.
+A component with no story file gets a row with an empty story cell, not an omission: absent
+from the table reads as "does not exist".
+
+`deprecated` rows stay in the table. Deleting one loses the only durable record that the
+component should not be reached for again.
 
 ## Visual system
 

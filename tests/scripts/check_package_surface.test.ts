@@ -5,6 +5,7 @@ import * as path from 'node:path';
 
 import {
     checkPackage,
+    checkRegistry,
     classify,
     exportTargets,
 } from '../../src/skills/js-library-packaging/scripts/check_package_surface';
@@ -133,5 +134,70 @@ describe('check_package_surface', () => {
             fs.writeFileSync(path.join(dir, 'src', 'Button', 'Button.tsx'), 'this is not typescript {{{', 'utf8');
             expect(checkPackage(dir).findings).toEqual([]);
         });
+    });
+});
+
+describe('checkRegistry — the library as a source others install from (3.2)', () => {
+    const REGISTRY = path.join(FIXTURE, 'registry.json');
+
+    const tmpRegistry = (doc: unknown): string => {
+        const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'registry-')), 'registry.json');
+        fs.writeFileSync(f, JSON.stringify(doc, null, 2), 'utf8');
+        return f;
+    };
+
+    it('the fixture registry has exactly one item and passes', () => {
+        const doc = JSON.parse(fs.readFileSync(REGISTRY, 'utf8')) as { items: unknown[] };
+        expect(doc.items).toHaveLength(1);
+        expect(checkRegistry(REGISTRY)).toEqual([]);
+    });
+
+    it('errors when a registry item lists react in dependencies', () => {
+        // The same two-copies-of-React failure as peer-as-dependency, one layer up: the
+        // consuming app already has React and the item installs a second.
+        const f = tmpRegistry({ items: [{ name: 'button', type: 'registry:ui', dependencies: ['react'] }] });
+        const codes = checkRegistry(f).map((x) => x.code);
+        expect(codes).toEqual(['registry-item-bundles-peer']);
+    });
+
+    it('strips a version range before matching the dependency name', () => {
+        const f = tmpRegistry({ items: [{ name: 'b', type: 'registry:ui', dependencies: ['react@^19.0.0'] }] });
+        expect(checkRegistry(f).map((x) => x.code)).toEqual(['registry-item-bundles-peer']);
+    });
+
+    it('errors on each deprecated v4 item type', () => {
+        for (const type of ['registry:build', 'registry:mcp']) {
+            const f = tmpRegistry({ items: [{ name: 'x', type, dependencies: [] }] });
+            const found = checkRegistry(f);
+            expect(found.map((x) => x.code), type).toEqual(['registry-item-deprecated-type']);
+            expect(found[0]?.message).toContain('registry:base');
+        }
+    });
+
+    it('accepts the replacement types', () => {
+        for (const type of ['registry:base', 'registry:font', 'registry:ui']) {
+            const f = tmpRegistry({ items: [{ name: 'x', type, dependencies: [] }] });
+            expect(checkRegistry(f), type).toEqual([]);
+        }
+    });
+
+    it('reads a single registry-item shape as well as an index', () => {
+        // Both are legal on disk; a reader handling only the index form would silently pass
+        // every single-item file.
+        const f = tmpRegistry({ name: 'lone', type: 'registry:mcp', dependencies: ['react-dom'] });
+        expect(checkRegistry(f).map((x) => x.code).sort()).toEqual([
+            'registry-item-bundles-peer',
+            'registry-item-deprecated-type',
+        ]);
+    });
+
+    it('routes a registry path through the registry checker, not the package checker', () => {
+        // Otherwise the caller has to know which of two checkers to reach for.
+        expect(checkRegistry(REGISTRY)).toEqual([]);
+        expect(checkPackage(path.dirname(REGISTRY)).findings.map((f) => f.code)).toContain('no-manifest');
+    });
+
+    it('reports an unreadable registry instead of throwing', () => {
+        expect(checkRegistry(path.join(os.tmpdir(), 'absent-registry.json')).map((x) => x.code)).toEqual(['no-registry']);
     });
 });

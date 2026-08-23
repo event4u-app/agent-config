@@ -95,3 +95,43 @@ describe('story_contrast_floor', () => {
         });
     });
 });
+
+describe('DESIGN.md § Owned components is derivable from the tree (4.1)', () => {
+    const LIB = path.join('tests', 'fixtures', 'library', 'ui-lib-vite', 'source-consumed', 'src');
+
+    /** The glob § Owned components is filled from: one row per *.stories.tsx. */
+    const storyFiles = (dir: string): string[] => {
+        const out: string[] = [];
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, e.name);
+            if (e.isDirectory()) out.push(...storyFiles(full));
+            else if (e.name.endsWith('.stories.tsx')) out.push(full);
+        }
+        return out.sort();
+    };
+
+    it('the fixture yields exactly one row, naming Button and its story path', () => {
+        // The verify says the capture "writes a one-row table naming Button and its story
+        // path". design-system-capture is a PROSE skill, so what is checkable here is that
+        // the derivation it describes is decidable and produces exactly that — not that a
+        // particular agent run produced it.
+        const files = storyFiles(LIB);
+        expect(files).toHaveLength(1);
+        const rel = files[0] as string;
+        expect(path.basename(rel)).toBe('Button.stories.tsx');
+        // The component name is the story file's own stem — the row's first cell.
+        expect(path.basename(rel).replace('.stories.tsx', '')).toBe('Button');
+        // And the story path is inside the component's own directory, which is what makes the
+        // row's third cell a real pointer rather than a guess.
+        expect(rel).toContain(path.join('Button', 'Button.stories.tsx'));
+    });
+
+    it('the registry item the fourth cell points at exists and names the same component', () => {
+        const reg = JSON.parse(
+            fs.readFileSync(path.join('tests', 'fixtures', 'library', 'ui-lib-vite', 'registry.json'), 'utf8'),
+        ) as { items: Array<{ name: string; files: Array<{ path: string }> }> };
+        expect(reg.items).toHaveLength(1);
+        expect(reg.items[0]?.name).toBe('button');
+        expect(reg.items[0]?.files[0]?.path).toContain('Button.tsx');
+    });
+});

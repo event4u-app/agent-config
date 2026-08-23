@@ -176,6 +176,52 @@ export const checkPackage = (root: string): SurfaceReport => {
     return { root, name, classification: classify(targets), findings };
 };
 
+/** Registry item types deprecated in v4 — writing one produces an item the CLI cannot read. */
+const DEPRECATED_ITEM_TYPES = ['registry:build', 'registry:mcp'] as const;
+
+/**
+ * Check a `registry.json` (or a single `registry-item.json`) published by a library.
+ *
+ * Same subject as the manifest checks: what the file DECLARES. A registry item that lists
+ * `react` in `dependencies` reproduces the two-copies-of-React failure one layer up — the
+ * consumer's app already has React, and the item installs a second.
+ */
+export const checkRegistry = (file: string): Finding[] => {
+    let doc: Record<string, unknown> = {};
+    try {
+        doc = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    } catch {
+        return [{ code: 'no-registry', severity: 'error', message: `no readable registry JSON at ${file}` }];
+    }
+    // Both shapes are legal: an index with `items`, or a single item.
+    const items = Array.isArray(doc['items']) ? (doc['items'] as unknown[]) : [doc];
+    const findings: Finding[] = [];
+    for (const raw of items) {
+        const item = asRecord(raw);
+        const name = typeof item['name'] === 'string' ? item['name'] : '(unnamed)';
+        const deps = Array.isArray(item['dependencies']) ? (item['dependencies'] as unknown[]) : [];
+        for (const d of deps) {
+            const dep = String(d).split('@')[0];
+            if (PEER_ONLY.includes(dep as (typeof PEER_ONLY)[number])) {
+                findings.push({
+                    code: 'registry-item-bundles-peer',
+                    severity: 'error',
+                    message: `registry item \`${name}\` lists \`${dep}\` in dependencies; the consuming app already has it, and installing a second copy is the same "invalid hook call" failure one layer up`,
+                });
+            }
+        }
+        const type = typeof item['type'] === 'string' ? item['type'] : '';
+        if (DEPRECATED_ITEM_TYPES.includes(type as (typeof DEPRECATED_ITEM_TYPES)[number])) {
+            findings.push({
+                code: 'registry-item-deprecated-type',
+                severity: 'error',
+                message: `registry item \`${name}\` uses \`${type}\`, deprecated in v4 — use \`registry:base\` or \`registry:font\``,
+            });
+        }
+    }
+    return findings;
+};
+
 const selfTest = (): number => {
     let failed = 0;
     const check = (label: string, cond: boolean): void => {
@@ -208,7 +254,13 @@ const main = (): number => {
         process.stderr.write('usage: check_package_surface <library-root> [...]\n');
         return 2;
     }
-    const reports = roots.map((r) => checkPackage(r));
+    // A path ending in a registry file is checked as a registry, not as a package root —
+    // otherwise the caller has to know which of two checkers to reach for.
+    const reports = roots.map((r) =>
+        /registry(-item)?\.json$/.test(r)
+            ? { root: r, name: null, classification: 'undeclared' as Classification, findings: checkRegistry(r) }
+            : checkPackage(r),
+    );
     process.stdout.write(`${JSON.stringify({ reports }, null, 2)}\n`);
     return reports.some((r) => r.findings.some((f) => f.severity === 'error')) ? 1 : 0;
 };
