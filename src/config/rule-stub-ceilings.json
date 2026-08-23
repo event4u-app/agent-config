@@ -20,7 +20,7 @@
     "devcontainer-routing": 128,
     "docker-commands": 79,
     "domain-adoption-policy": 497,
-    "framework-neutrality-in-generic-skills": 621,
+    "framework-neutrality-in-generic-skills": 636,
     "git-history-discipline": 1205,
     "improve-before-implement": 845,
     "laravel-routing": 126,
@@ -103,6 +103,13 @@
       "from": 1280,
       "to": 1491,
       "reason": "road-to-frontend-power E2.2 moved this rule's `enforced_by:` from `none` to `hook:design-pass`, because `agent-config ui:audit` now writes the artefact the rule previously had nothing to point at. +127 tokens, and every one of them is the SCOPE of that change rather than a description of the mechanism: the check is FRESHNESS not existence (a stale artefact looks like evidence, which is worse than a missing one), the carrier is default-OFF and warns before it blocks, and the greenfield asymmetry is NOT closed -- `_lib/ui_surface.ts` is a path predicate, measured recall 20/23 with all three misses being a UI request that has produced no UI file yet, so this gate cannot fire on the first write of a new surface. Condensed first, from +279 to +127, by cutting the narrative framing and the changed-in-both-directions paragraph. The three limits are what remains and they are the reason the raise is legitimate: a rule that newly claims a carrier and does not state where the carrier stops is a stronger claim than the tree supports, which is the exact over-claim this repository has already had to correct twice in the hook-architecture host table. Not pushed to the pointer target: `existing-ui-audit` is a SKILL describing how to run an audit, and the boundary of a gate's enforcement is an obligation-surface fact -- putting it there would file the limit where nobody reading the gate will find it. Amended in the same change, 1407 -> 1491 (+84): landing the carrier revealed that `design-pass-stop` is `severity: advisory` and the dispatcher enforces advisory as a CEILING, so an EXIT_BLOCK from it is downgraded and then mapped to exit 0. Claiming a block in this rule while the transport discards it would be the inert-refusal defect `run-continuation` already recorded once. Limit 2 therefore states what actually happens -- the stop verdict is REPORTED as would-block, not enforced -- and names what would make it real: an entry in concern_severity.test.ts's BLOCKING_ALLOWLIST, which that file calls a security-relevant decision and which would be the third turn-END refusal in the tree. That is a stronger reason to spend the tokens than the original raise had: a rule whose enforced_by names a carrier, and which does not say the carrier cannot refuse, is the over-claim this whole section exists to prevent."
+    },
+    {
+      "date": "2026-08-23",
+      "rule": "framework-neutrality-in-generic-skills",
+      "from": 621,
+      "to": 636,
+      "reason": "Two entries on the exempt list, +15 tokens: `^monorepo-workspace$` and `^workspace-link$`, the two skills road-to-monorepo-scope-and-detection adds. The list is not lookup material and cannot go to the pointer target: it is the rule's own ACTIVATION condition -- the gate decides from it whether an artefact is generic at all, so a rule whose exempt list lives elsewhere cannot answer its own first question. Every prior addition to that list moved this number for the same reason, and the alternative the gate offers (move prose to the pointer target) has nothing to move here: the two entries ARE the change. Raised rather than condensed because 15 tokens of pattern cannot be condensed without deleting one of the two patterns, which would make a framework-specific skill fail a rule it is exempt from."
     }
   ]
 }
