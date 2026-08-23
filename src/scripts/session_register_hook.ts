@@ -209,6 +209,8 @@ export interface RoadmapClaim {
     slug: string;
     written_at?: string;
     session_id?: string | null;
+    /** Repo-relative paths the claiming session declared it owns. */
+    paths?: string[];
 }
 
 function _is_replay_mode(): boolean {
@@ -227,9 +229,14 @@ function _read_claim_file(file: string): RoadmapClaim | null {
             return null;
         }
         const sid = rec['session_id'];
+        const raw_paths = rec['paths'];
+        const paths = Array.isArray(raw_paths)
+            ? raw_paths.filter((x): x is string => typeof x === 'string' && x.trim() !== '')
+            : [];
         return {
             slug: slug.trim(),
             ...(typeof sid === 'string' && sid.trim() !== '' ? { session_id: sid.trim() } : {}),
+            ...(paths.length > 0 ? { paths } : {}),
         };
     } catch {
         return null;
@@ -249,6 +256,8 @@ export interface ResolvedClaim {
     slug: string;
     /** Absolute path of the claim file this read came from. */
     path: string;
+    /** Repo-relative paths the claim declared, or absent when it declared none. */
+    paths?: string[];
 }
 
 /**
@@ -278,7 +287,13 @@ export function resolve_claim(
         for (const p of claim_read_paths(workspace_root, session_id)) {
             if (path.basename(p) === path.basename(ROADMAP_CLAIM_REL)) continue;
             const mine = _read_claim_file(p);
-            if (mine !== null) return { slug: mine.slug, path: p };
+            if (mine !== null) {
+                return {
+                    slug: mine.slug,
+                    path: p,
+                    ...(mine.paths !== undefined ? { paths: mine.paths } : {}),
+                };
+            }
         }
     }
     // The legacy per-WORKTREE file, in the same two locations. Unchanged in
@@ -313,7 +328,11 @@ export function resolve_claim(
     if (id !== '') {
         return null;
     }
-    return { slug: legacy.slug, path: legacy_path };
+    return {
+        slug: legacy.slug,
+        path: legacy_path,
+        ...(legacy.paths !== undefined ? { paths: legacy.paths } : {}),
+    };
 }
 
 /**
@@ -530,12 +549,13 @@ export function build_record(
     started_at: string,
     now: Date = new Date(),
 ): SessionRecord {
+    const claim = resolve_claim(workspace_root, session_id);
     const rec: SessionRecord = {
         session_id,
         platform,
         worktree: workspace_root,
         branch: current_branch(workspace_root),
-        roadmap_slug: read_claimed_slug(workspace_root, session_id),
+        roadmap_slug: claim?.slug ?? null,
         started_at,
         last_seen: iso_now(now),
     };
@@ -551,6 +571,12 @@ export function build_record(
             if (n > 0) nonZero[id] = n;
         }
         if (Object.keys(nonZero).length > 0) rec.turn_end_refusals = nonZero;
+    }
+    // road-to-roadmap-situational-awareness § 3.1 — the path axis, on exactly the
+    // terms above: only ever ADDS a field, so a session that declared no paths
+    // writes the record it wrote before this existed, byte for byte.
+    if (claim?.paths !== undefined && claim.paths.length > 0) {
+        rec.owned_paths = [...claim.paths].sort();
     }
     return rec;
 }

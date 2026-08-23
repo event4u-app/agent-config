@@ -70,37 +70,18 @@ else runs the loop.
    it, otherwise explicitly static-scoped, naming which checks actually ran.
    "Looks good" with neither scope named is a verdict without evidence.
 
-### The heuristics — here, not one hop away
+### The floors — pulled immediately before the write
 
-The load-bearing subset, inline so that "loaded" means the content is in
-context. Depth stays in [`references/design-patterns.md`](references/design-patterns.md).
+```
+PULL references/craft-floor.md IMMEDIATELY BEFORE THE WRITE, NOT AT SKILL LOAD.
+```
 
-1. **Audit outranks heuristic.** A token, primitive or convention the audit
-   found wins over anything on this list; say `[audit override]` when it does.
-2. **Reuse tokens, never raw values.** A hex, font or px literal where the
-   audit found a token is off-brand by construction.
-3. **All five states are designed.** `empty` is a helpful message, not a blank
-   region; `loading` prefers a skeleton over a spinner (it shows structure, so
-   it reads as faster); `error` says what to do next.
-4. **Labels are always visible.** No placeholder-only inputs.
-5. **Validate on blur and on submit**, never on every keystroke; the message
-   goes below the field and is specific.
-6. **Mobile-first, and 320 px actually works.** Default styles are the small
-   viewport; complexity is added at larger breakpoints, never removed at
-   smaller ones.
-7. **A11y minimums are non-negotiable:** 4.5:1 contrast for text (3:1 large),
-   every interactive element reachable by Tab, a visible focus ring, semantic
-   elements over `div`, and an `aria-label` wherever there is no visible text.
-8. **Every action gets feedback.** Users read silence as failure.
-9. **Prefer undo over a confirmation dialog** — confirmations get clicked
-   through; an undo affordance actually protects the user.
-10. **Tables:** numbers right-aligned, text left-aligned, a designed empty
-    state, and a sticky header on anything long enough to scroll.
-11. **No placeholder microcopy ships.** Lorem ipsum, `TODO`, and
-    `[Your text here]` are unfinished output, not drafts.
+Twelve universal floors that do not vary by mode, register, intent or stack.
+They were inline here until the delivery point moved: a floor read at skill-load
+time can be a compaction away from the write it governs (`ADR-227`).
 
-Before proposing a direction, run the anti-slop scan named under
-[Anti-slop discipline](#anti-slop-discipline) below.
+One precedence rule stays here because it is authority, not craft: **the audit
+outranks every heuristic.** Say `[audit override]` when it does.
 
 ## Positioning — reference inside the engine, executor outside it
 
@@ -212,13 +193,42 @@ When this skill's content is folded into a design brief or review:
 - Heuristics in this reference apply across stacks; do not promote them to project rules without checking the audit.
 - Mobile-first is not optional — every layout must work on 320px width.
 
+## Read the authority object — never re-infer it
+
+Read the resolved `ui_authority`
+([contract](../../../docs/contracts/ui-authority.md)) before the loop:
+`surface_mode`, `register`, `change_intent`, `reference_maturity`,
+`constraints`. This skill is a **declared consumer** — a second decision table
+beside the object is a drift surface, so do not re-derive any field.
+
+`surface_mode` sets density, hierarchy and expressiveness only, per
+[`design-modes`](../../../docs/guidelines/design-modes.md) § The second axis.
+
+```
+QUALITY FLOORS DO NOT VARY BY SURFACE MODE.
+A FLOOR THAT MOVES WITH THE MODE IS A PREFERENCE WEARING A FLOOR'S NAME.
+```
+
+### The source-led path
+
+`reference_maturity: runnable-artifact` → the artifact's own markup, CSS and JS
+is the data basis; adapting it is the **default** and a from-scratch
+re-derivation is a deviation. Sort every mechanic into `honoured` / `translated`
+/ `flagged`; one present, absent and unflagged is a **silent drop**, target zero.
+Procedure and the vanishing-mechanic classes:
+[`references/source-led-port.md`](references/source-led-port.md).
+
+Maturity is not decided here — it arrives on the authority object, and per-value
+provenance belongs to `road-to-frontend-fidelity-calibration` Phases 0 and 2.
+
 ## Anti-slop discipline
 
-Before proposing any UI layout, component, or aesthetic direction, pull
-[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
-and scan the Visual (V1–V7), Layout (L1–L8), and Quality-floors (Q1–Q12) sections.
-If the first-impulse design matches a listed pattern, either choose a different
-approach or explicitly invoke the override condition in the design brief.
+Before proposing a direction, scan the Visual (V1–V7) and Layout (L1–L8)
+sections of [`design-antipatterns`](../../../docs/guidelines/design-antipatterns.md).
+On a match, choose differently or invoke the entry's own override condition in
+the brief — every entry has one, and they are register-scoped. The Q* floors are
+in [`references/craft-floor.md`](references/craft-floor.md) instead of here, so
+they arrive at the write rather than at skill load.
 
 ## Do NOT
 

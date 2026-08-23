@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --sand: #efe7dc; --forest: #1d3f36; }
+  body { margin: 0; background: var(--sand); font-family: Fraunces, Georgia, serif; }
+  .hero { padding: 6rem 2rem; text-align: center; }
+  .hero h1 { margin: 0 0 1.5rem; font-size: 3.5rem; font-optical-sizing: auto; }
+  .cta { display: inline-block; height: 48px; line-height: 48px; padding: 0 2rem; border-radius: 999px; background: var(--forest); color: var(--sand); text-decoration: none; }
+  .reveal { opacity: 0; transform: translateY(12px); transition: opacity .4s, transform .4s; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<section class="hero"><h1 class="reveal">Grown, not assembled</h1><a class="cta" href="#more">See the range</a></section>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: 0.2 });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+</script>
+</body>
+</html>

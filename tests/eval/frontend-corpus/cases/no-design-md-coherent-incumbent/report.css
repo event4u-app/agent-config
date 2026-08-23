@@ -1,0 +1,4 @@
+.report { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #14181d; }
+.report__head { font-weight: 600; letter-spacing: -0.01em; }
+.report__cell { padding: 0.5rem 0.75rem; border-bottom: 1px solid #dfe3e8; }
+.report__cell--num { text-align: right; font-variant-numeric: tabular-nums; }

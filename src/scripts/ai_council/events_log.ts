@@ -63,8 +63,24 @@ import type { AbsentReason } from './transport_resolver.js';
  * boolean whose meaning depends on an unrecorded per-machine value is not a
  * measurement; recording the value is what makes the series comparable and a
  * zero reading attributable.
+ *
+ * v5 adds `stance_agreement` — whether the seats AGREED, which the log could
+ * not say at all before. `stance_tally.ts` wrote nothing: `grep -c appendEvent`
+ * on it returned 0 across 256 lines and it carried no import from this module,
+ * so its verdict reached the reader as rendered prose only and vanished with
+ * the artefact. The log could say who showed up and never whether they
+ * converged. It is a FIELD on the existing line rather than a new action, for
+ * the reason stated at `floor_would_hold` below: a new action is invisible to
+ * every consumer filtering `action === 'quorum_result'` and would split the
+ * attendance population in two, silently moving the denominator of all four
+ * registered metrics.
+ *
+ * A rate over `stance_agreement` must EXCLUDE v4-and-earlier lines rather than
+ * default them — they carry no such field and no honest value can be inferred
+ * for them. That is what the version bump is for; `quorum-attendance-budget.json`
+ * states the same obligation on the consumer side.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export type EventAction =
     | 'proceed'
@@ -308,6 +324,24 @@ export type QuorumCommand = 'run' | 'estimate' | 'debate';
  */
 export type QuorumDispatch = 'full' | 'single';
 
+/**
+ * Did the seats agree? Three states, deliberately not a boolean.
+ *
+ * `not_tallied` is the load-bearing one. Stance tallying is opt-in and off by
+ * default, so most passes never ask the question at all — and a boolean would
+ * force those passes to record `false`, which reads as "the seats disagreed".
+ * That is the exact "says something the run did not establish" failure this
+ * whole roadmap is about, so the absence of a tally is written as its own
+ * value rather than collapsed into the negative one.
+ *
+ * `split` is `StanceTallyResult.split` — no option cleared `CONSENSUS_FRACTION`
+ * of the weighted total. `consensus` is a non-null `StanceTallyResult.consensus`.
+ * Both come from `tally_stances`, never re-derived here: one definition of
+ * agreement, the discipline `solo` already follows by deferring to
+ * `isSoloConcluded`.
+ */
+export type StanceAgreement = 'consensus' | 'split' | 'not_tallied';
+
 export interface QuorumEventInput {
     readonly lens: string;
     readonly invocation: string;
@@ -324,6 +358,12 @@ export interface QuorumEventInput {
     readonly configuredTotal: number;
     readonly result: QuorumResult;
     readonly absent: readonly QuorumAbsence[];
+    /**
+     * Whether the seats agreed. Omitted by a caller that ran no stance tally,
+     * which is recorded on the line as `not_tallied` — see `StanceAgreement`
+     * for why that is a value rather than an absent key.
+     */
+    readonly stanceAgreement?: StanceAgreement;
     /**
      * Did the CALLER declare this pass gate-class? Declared, never inferred,
      * and it defaults to `false` — the fail-safe direction, because an
@@ -438,6 +478,11 @@ export function appendQuorumEvent(
                     minPresent,
                     input.configuredTotal,
                 ),
+                // Phase 3 — the agreement dimension, carried on the EXISTING
+                // line. Written unconditionally, including `not_tallied`: an
+                // absent key and a recorded "nobody asked" are different facts
+                // to a consumer, and only one of them is checkable.
+                stance_agreement: input.stanceAgreement ?? 'not_tallied',
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,

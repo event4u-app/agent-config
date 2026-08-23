@@ -1,6 +1,7 @@
 
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -89,6 +90,86 @@ describe('check_roadmap_trackable — replicated dashboard helpers', () => {
                 '# Roadmap\n\n## Phase 1.0 — Kickoff\n\n- [ ] a\n\n## Phase 4.1 — Sub track\n\n- [x] b\n',
             );
             expect(crt.violations_for(p)).toEqual([]);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The `relates:` ratchet — road-to-roadmap-situational-awareness § 4.2
+// ---------------------------------------------------------------------------
+
+describe('relates: ratchet — new roadmaps must declare relations, old ones are held', () => {
+    /** Baseline recorded when the check landed. Read from the committed file. */
+    const BASELINE = 9;
+
+    function tree(count_without_relates: number, count_with: number): string {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-relates-'));
+        const dir = path.join(tmp, 'agents', 'roadmaps');
+        fs.mkdirSync(dir, { recursive: true });
+        const body = '## Phase 1 — Do\n\n- [ ] a thing\n';
+        for (let i = 0; i < count_without_relates; i++) {
+            fs.writeFileSync(
+                path.join(dir, `road-to-old-${i}.md`),
+                `---\ncomplexity: lightweight\n---\n# Old ${i}\n\n${body}`,
+            );
+        }
+        for (let i = 0; i < count_with; i++) {
+            fs.writeFileSync(
+                path.join(dir, `road-to-new-${i}.md`),
+                `---\ncomplexity: lightweight\nrelates: []   # scanned: 0 hits\n---\n# New ${i}\n\n${body}`,
+            );
+        }
+        return tmp;
+    }
+
+    function run(cwd: string): { code: number; out: string } {
+        const r = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd, encoding: 'utf-8' });
+        return { code: r.status ?? -1, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+    }
+
+    it('declares_relates is presence-only — an empty list counts', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-dr-'));
+        try {
+            const a = path.join(tmp, 'a.md');
+            const b = path.join(tmp, 'b.md');
+            fs.writeFileSync(a, '---\nrelates: []\n---\n# a\n');
+            fs.writeFileSync(b, '---\ncomplexity: lightweight\n---\n# b\n');
+            expect(crt.declares_relates(a)).toBe(true);
+            expect(crt.declares_relates(b)).toBe(false);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('stays green at the baseline — pre-existing roadmaps are not retroactively broken', () => {
+        const tmp = tree(BASELINE, 0);
+        try {
+            const { code, out } = run(tmp);
+            expect(out).toContain(`${BASELINE} violation(s) at baseline`);
+            expect(code).toBe(0);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('reds when one MORE roadmap arrives without the block', () => {
+        const tmp = tree(BASELINE + 1, 0);
+        try {
+            const { code, out } = run(tmp);
+            expect(code).toBe(1);
+            expect(out).toContain(`${BASELINE + 1} violation(s) against a baseline of ${BASELINE}`);
+            expect(out).toContain('no `relates:` block in the frontmatter');
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('stays green when the new roadmap DOES declare the block', () => {
+        const tmp = tree(BASELINE, 3);
+        try {
+            expect(run(tmp).code).toBe(0);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }

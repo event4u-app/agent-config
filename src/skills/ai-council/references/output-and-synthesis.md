@@ -59,6 +59,37 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 output path convention — wire it into the package's CI pipeline so
 violations break the build.
 
+## Certainty vocabulary — one scale for evidence, and what the survivors measure
+
+```
+ONE SCALE DESCRIBES EVIDENCE QUALITY: confirmed | inferred | speculative.
+EVERY OTHER SURVIVING TERM MEASURES A DIFFERENT PROPERTY AND SAYS WHICH.
+NEVER INVENT A LENS-LOCAL SYNONYM FOR EVIDENCE QUALITY.
+```
+
+Six vocabularies described overlapping properties across `prompts.ts` and this
+skill, and the fix is deliberately **not** to collapse them into one: evidence
+quality and a member's certainty in a pick are different properties, and merging
+them would destroy information the stance line exists to carry. So one scale wins
+for evidence quality, and each survivor is named with the property it measures.
+
+| Term | Property it measures | Where |
+|---|---|---|
+| `confirmed` / `inferred` / `speculative` | **evidence quality** — how well a finding is supported (`confirmed` cites file:line or a metric; `inferred` is plausible from stated context; `speculative` has no citation) | every lens's finding metadata |
+| `CONFIDENCE: high\|med\|low` | **a member's certainty in its own pick** — not how good the evidence is, but how strongly that member backs the option it chose | the stance line |
+| `DEALBREAKER: yes\|no` | **whether the member would block on the alternative** — a veto, not a certainty | the stance line |
+| `roadmap-ready` / `needs-discovery` | **actionability** — is the finding concrete enough to land as a phase step | Top-10 / Supporting |
+| `needs-verification` | **provenance of the host agent's OWN inference** — the item was reasoned from context rather than read from a member response | Blind spots |
+| `unverified:` | **probe coverage of a mechanism claim** — argued, not measured. An authoring convention with no reader; see `procedure.md` | artefact prose |
+
+**Collapsed, and why.** `unverified-by-council` is gone: it described
+*corroboration* (how many reviewers engaged), which the `### Outliers` heading
+already states by construction — everything under it was raised by one reviewer
+and engaged with by none. A separate word for that invited it to be read as a
+fourth point on the evidence scale. `hypothesis` (the optimize lens's local
+synonym for `speculative`) is gone for the same reason: a lens-local synonym for
+a scale term is the mechanism by which one scale becomes four.
+
 ## Synthesis templates (lens-aware)
 
 The **Convergence / Divergence** slot in `council:render` output is

@@ -1,0 +1,6 @@
+{
+  "name": "mono-devdep-root",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "devDependencies": { "react": "^19.0.0", "vitest": "^2.0.0" }
+}
