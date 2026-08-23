@@ -80,6 +80,22 @@ declaration — the sibling's version range — never a resolver override.
 Re-run the failing command, not the editor. A resolved editor and a failing
 build is the exact state a `paths` patch produces, so the build is the probe.
 
+## Output format
+
+A workspace-link answer MUST contain, in order:
+
+1. **The unresolved import, named** — the importing workspace path, the imported
+   package `name` (not its directory), and the exact error text.
+2. **The declaration to add** — the `package.json` path, the section
+   (`dependencies` or `devDependencies`), and the `workspace:` form chosen, with
+   one sentence on why that form (private-and-unpublished → `workspace:*`;
+   published → `workspace:^`).
+3. **The install command for this repository's manager**, read from
+   `packageManager` / the lockfile rather than assumed.
+4. **The verification** — the failing build or test command re-run, not the
+   editor, plus its result. A resolved editor and a failing build is the state
+   a `paths` patch produces, so the build is the probe.
+
 ## Gotcha
 
 - Adding the dependency without re-running the install changes nothing: the

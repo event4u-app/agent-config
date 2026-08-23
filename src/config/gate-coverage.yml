@@ -513,8 +513,8 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 15
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22)"
+    min_scanned: 14
+    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22; 14 after road-to-monorepo-scope-and-detection archived at 17/17 on 2026-08-23)"
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every

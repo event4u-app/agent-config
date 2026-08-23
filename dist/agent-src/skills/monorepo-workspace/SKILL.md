@@ -92,6 +92,20 @@ never fake the output).
 
 ## Output format
 
+An orientation report MUST contain, in order:
+
+1. **The package manager**, with the source that decided it — `packageManager`
+   when declared, otherwise the lockfile filename. Two lockfiles is reported as
+   a finding, never resolved by picking one.
+2. **The workspace table** — one row per workspace: directory path, package
+   `name`, and its workspace-internal dependencies. Both the path and the name,
+   because the graph links on `name` and humans talk in paths.
+3. **The task runner and its tasks**, each task with its `description` field
+   when the config carries one, and its `dependsOn` when it has one.
+4. **A source line** naming which of the two paths produced the listing — the
+   runner's own (`turbo ls` / `nx show projects`) or the manifest walk. When it
+   was the manifest walk, the line also says that runner-inferred targets may be
+   missing.
 ```
 Package manager: pnpm@9.12.0   [package.json#packageManager]
 Workspaces (2)                 [pnpm-workspace.yaml#packages: apps/*, packages/*]
