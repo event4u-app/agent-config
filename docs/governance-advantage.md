@@ -33,7 +33,7 @@ the host lacks (a static host gives it no runtime attention guarantee, but a
 runtime-only system gives it nothing at all here). A runtime-only system contributes *nothing* on these hosts.
 
 ### 2. Intent routing, not a 500-artefact dump
-A prompt does not load all 292 skills. `dist/router.json` (114 routed rules, intent →
+A prompt does not load all 295 skills. `dist/router.json` (114 routed rules, intent →
 skill, keyword/phrase/path triggers) carries the right skill on intent. The
 governance value is *selection discipline* — the host gets the relevant rule
 set, not the whole catalogue as context ballast.
