@@ -124,7 +124,6 @@ import {
     derive_category_hits,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
-import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
 import {
     NEXT_SECTION_RE,
     extract_changelog_section,
@@ -169,7 +168,7 @@ export {
     _no_checks_action,
     _required_contexts_from_rules,
 } from './release_publication.js';
-import { _cap_body, commaGroup, jsonDumpsIndent, pyLen, pySlice, reEscape } from './release_env.js';
+import { _cap_body, jsonDumpsIndent, reEscape } from './release_env.js';
 import {
     _MERGE_UPDATE_ROUNDS,
     _branch_exists_local,

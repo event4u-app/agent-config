@@ -34,7 +34,6 @@ import {
     REPO_ROOT,
     SystemExitError,
     _cap_body,
-    commaGroup,
 } from './release_env.js';
 
 function die(msg: string, code = 2): never {
