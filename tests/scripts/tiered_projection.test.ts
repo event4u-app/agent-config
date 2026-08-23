@@ -18,6 +18,10 @@ import {
     _tier_b_advisory,
     type DeployResult,
 } from '../../src/scripts/install.js';
+// The feature itself lives in `_lib/mcp_bridge.ts`; `install.ts` forwards the
+// names above. Both surfaces are exercised: the forwarded ones here, and
+// `applyTieredPrune` — the branch install.ts actually calls — below.
+import { applyTieredPrune } from '../../src/scripts/_lib/mcp_bridge.js';
 import { computeTiers } from '../../src/scripts/compute_skill_tiers.js';
 import { loadContentTree } from '../../src/cli/mcp/content.js';
 import { dispatch } from '../../src/cli/mcp/dispatch.js';
@@ -160,5 +164,26 @@ describe('_tier_b_advisory — Phase 2.3, a recommendation and never a write', (
         expect(fs.readdirSync(root).sort()).toEqual(before);
         expect(fs.existsSync(path.join(root, 'settings.json'))).toBe(false);
         expect(fs.existsSync(path.join(root, '.claude'))).toBe(false);
+    });
+});
+
+describe('applyTieredPrune — the branch the installer actually calls', () => {
+    it('ships the full surface and WARNS when no split exists', () => {
+        const dr = { claude: [1, 0, 'deployed', ['/x/skills/a/SKILL.md']] as DeployResult };
+        const out = applyTieredPrune(dr, root, () => {
+            throw new Error('must not prune without a split');
+        });
+        expect(out.level).toBe('warn');
+        expect(out.deployResults).toBe(dr);
+        expect(out.message).toContain('shipping the full surface');
+    });
+
+    it('prunes and reports at info level when a split exists', () => {
+        writeTiers(JSON.stringify({ tier_a: ['a'], tier_b: ['b'] }));
+        const dr = { claude: [1, 0, 'deployed', []] as DeployResult };
+        const out = applyTieredPrune(dr, root, (d) => [2, d]);
+        expect(out.level).toBe('info');
+        expect(out.message).toContain('pruned 2 Tier-B skill artefact(s)');
+        expect(out.message).toContain('suggest_skill_for_task');
     });
 });

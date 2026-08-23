@@ -16,7 +16,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { MCP_SERVER_KEY, ensure_mcp_bridge } from '../../src/scripts/install.js';
+import { ensure_mcp_bridge } from '../../src/scripts/install.js';
+import { MCP_SERVER_KEY } from '../../src/scripts/_lib/mcp_bridge.js';
 import { check_mcp_json } from '../../src/scripts/mcp_render.js';
 import { _scan } from '../../src/scripts/lint_mcp_config_security.js';
 import { ScannedFile } from '../../src/scripts/_lib/security_lint.js';

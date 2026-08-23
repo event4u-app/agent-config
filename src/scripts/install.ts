@@ -74,6 +74,7 @@ import type * as YamlModule from 'yaml';
 import { build_merge_entries } from './_lib/json_pointers.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
+import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -1115,47 +1116,17 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
 
-/**
- * The project-scope MCP server entry Claude Code reads from `.mcp.json`.
- *
- * Shape is fixed by `docs/getting-started-local-stdio.md` — the documented
- * end-user path — so a consumer who followed the docs and a consumer who ran the
- * installer end up with the same entry rather than two that drift.
- */
-export const MCP_SERVER_KEY = 'agent-config';
-const MCP_BRIDGE_ENTRY = {
-    mcpServers: {
-        [MCP_SERVER_KEY]: {
-            command: 'npx',
-            args: ['-y', '@event4u/agent-config', 'mcp-server'],
-        },
-    },
-};
-
-/**
- * `.mcp.json` — the project-scope MCP config Claude Code reads.
- *
- * WHY THE INSTALLER OWNS THIS FILE AND `mcp_render` DOES NOT. `mcp_render`
- * projects the consumer's OWN root `mcp.json` onto per-tool configs by
- * overwriting them (`write_target`), which is correct for a file the renderer
- * generates in full and wrong for one the consumer also edits: a render would
- * delete both this entry and any server they added by hand. `merge_json_file`
- * writes only our key, records it as an RFC-6901 pointer in
- * `agents/installed-tools.lock`, and lets uninstall subtract exactly that key.
- * `mcp:check` validates the file without ever writing it.
- *
- * Default ON for `claude-code`, because `rules/missing-skill-recovery.md` makes
- * `suggest_skill_for_task` an Iron Law for every consumer and a rule that is
- * unfulfillable by default is a defect, not a feature. Opting out is the same
- * lever as every other bridge here — deselect the tool (`--tools`), which is the
- * gate the caller applies; `.agent-tools.yml` is deliberately NOT that lever, it
- * is a maintainer-side projection-generator allowlist the installer cannot see
- * and whose tool ids differ from `_VALID_TOOLS`.
- */
-function ensure_mcp_bridge(project_root: string, force: boolean): Record<string, unknown>[] {
-    const target = path.join(project_root, '.mcp.json');
-    return merge_json_file(target, MCP_BRIDGE_ENTRY, force, '.mcp.json');
-}
+// `.mcp.json` registration + the skill-tier projection lever live in
+// `_lib/mcp_bridge.ts`; only the call sites are here (see that module's header
+// for why). Names are forwarded so the export surface is unchanged.
+const ensure_mcp_bridge = mcp_bridge.makeEnsureMcpBridge(merge_json_file);
+const _resolve_tier_b = mcp_bridge.resolveTierB;
+const _tier_b_advisory = mcp_bridge.tierBAdvisory;
+const _prune_tier_b_modules = (
+    dr: Record<string, DeployResult>,
+    tier_b: ReadonlySet<string>,
+): [number, Record<string, DeployResult>] =>
+    _prune_modules_by(dr, mcp_bridge.tierBPrunePredicate(tier_b));
 
 const CURSOR_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string]> = [
     ['session_start', 'sessionStart'],
@@ -2514,7 +2485,7 @@ function _file_entry(p: string, kind: string, hash_content: boolean): Record<str
     };
 }
 
-type DeployResult = [number, number, string, string[]];
+type DeployResult = scoped_projection.DeployTuple;
 
 function _files_by_tool_from_deploy(
     deploy_results: Record<string, DeployResult>,
@@ -3439,91 +3410,10 @@ function _verify_deploy_targets(anchor: string, plan: ReadonlyArray<readonly [st
     return missing;
 }
 
-/**
- * Remove skills/commands matching `is_pruned` from a completed deploy.
- *
- * road-to-install-contract-stability Phase 2 Step 2 (generalized in
- * road-to-credible-install Phase 2 to back both the core-only lab prune and
- * the scoped-projection pack prune off the same mechanics). Skills are
- * pruned by whole directory (tier decided by the skill's `SKILL.md`
- * frontmatter); commands by file (own frontmatter). Rules / personas /
- * contexts / templates are core/shared and left intact. Returns
- * `[pruned_count, adjusted_results]` with the pruned paths removed from each
- * tool's `written_paths` so the manifest never records them.
- */
-function _prune_modules_by(
-    deploy_results: Record<string, DeployResult>,
-    is_pruned: (md_path: string) => boolean,
-): [number, Record<string, DeployResult>] {
-    let pruned = 0;
-    const adjusted: Record<string, DeployResult> = {};
-    for (const tool_id of Object.keys(deploy_results)) {
-        const [written, skipped, status, paths] = deploy_results[tool_id] as DeployResult;
-        const pruned_skill_dirs = new Set<string>();
-        for (const p of paths) {
-            const parts = p.split(path.sep);
-            if (parts.includes('skills')) {
-                const i = parts.indexOf('skills');
-                if (i + 1 < parts.length) {
-                    const skill_root = parts.slice(0, i + 2).join(path.sep);
-                    if (!pruned_skill_dirs.has(skill_root)) {
-                        const skillmd = path.join(skill_root, 'SKILL.md');
-                        if (pathExists(skillmd) && is_pruned(skillmd)) {
-                            pruned_skill_dirs.add(skill_root);
-                        }
-                    }
-                }
-            }
-        }
-        const keep: string[] = [];
-        const delete_files: string[] = [];
-        for (const p of paths) {
-            const parts = p.split(path.sep);
-            let is_target = false;
-            if (parts.includes('skills')) {
-                const i = parts.indexOf('skills');
-                if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
-                    is_target = true;
-                }
-            } else if (
-                parts.includes('commands') &&
-                path.extname(p) === '.md' &&
-                is_pruned(p)
-            ) {
-                is_target = true;
-            }
-            (is_target ? delete_files : keep).push(p);
-        }
-        for (const d of pruned_skill_dirs) {
-            fs.rmSync(d, { recursive: true, force: true });
-        }
-        for (const p of delete_files) {
-            if (p.split(path.sep).includes('commands') && pathExists(p)) {
-                try {
-                    fs.unlinkSync(p);
-                } catch {
-                    // OSError → swallow, mirroring the .py.
-                }
-            }
-        }
-        pruned += delete_files.length;
-        adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
-    }
-    return [pruned, adjusted];
-}
-
-/**
- * Remove lab-tier skills/commands from a completed deploy (core-only).
- *
- * road-to-install-contract-stability Phase 2 Step 2. Thin wrapper over
- * `_prune_modules_by` — see that function for the mechanics.
- */
-function _prune_lab_modules(
-    deploy_results: Record<string, DeployResult>,
-    lab_ids: Set<string>,
-): [number, Record<string, DeployResult>] {
-    return _prune_modules_by(deploy_results, (p) => surface_tiers.is_lab_artefact(p, lab_ids));
-}
+// The prune mechanics moved WHOLE into `_lib/scoped_projection.ts` beside the
+// predicate they consume — a pure move, names forwarded, no behaviour change.
+const _prune_modules_by = scoped_projection.prune_modules_by;
+const _prune_lab_modules = scoped_projection.prune_lab_modules;
 
 // --- Scoped-projection prune (road-to-credible-install Phase 2) ----------
 //
@@ -3591,12 +3481,10 @@ function _resolve_global_settings_path(): string | null {
  */
 function _resolve_scoped_projection(
     package_root: string,
-): { mode: ProjectionMode; active_packs: string[] } {
+): { mode: mcp_bridge.ProjectionMode; active_packs: string[] } {
     const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
     const projection = _isPlainObject(doc['projection']) ? (doc['projection'] as Record<string, unknown>) : {};
-    const raw = projection['mode'];
-    const mode: ProjectionMode =
-        raw === 'scoped' ? 'scoped' : raw === 'tiered' ? 'tiered' : 'legacy-all';
+    const mode = mcp_bridge.projectionModeOf(projection['mode']);
     const runtime = _isPlainObject(doc['runtime']) ? (doc['runtime'] as Record<string, unknown>) : {};
     const active_packs_raw = runtime['active_packs'];
     const active_packs = Array.isArray(active_packs_raw)
@@ -3689,87 +3577,6 @@ function _rule_filter_for_source(
  * non-empty AND has no intersection with `active_ids`. Untagged artefacts
  * (empty `packs:` frontmatter) are core/shared and always kept.
  */
-/**
- * The three projection modes.
- *
- * `legacy-all` ships everything and stays the default. `scoped` narrows to the
- * active packs. `tiered` (Phase 2.2 of `road-to-skill-delivery-over-mcp`) narrows
- * to the skills predicted to reach the model WITH their description, on the
- * theory that a skill the host lists bare is better served by the MCP recovery
- * tool than by a catalogue entry nobody can read.
- *
- * `tiered` is OPT-IN and stays opt-in until Phase 4.4 decides on evidence. The
- * reason is stated rather than implied: the split usually comes from an
- * ALPHABETICAL fallback order (`agents/runtime/metrics/skill-usage.jsonl` is
- * absent on most machines), and the one real host observation this repo has
- * disagrees with that fallback on four of eight sampled entries. Defaulting to
- * `tiered` would therefore hide skills on a prediction the tree itself can show
- * to be wrong — strictly worse than the bare-but-listed defect it fixes
- * (roadmap risk 4).
- */
-type ProjectionMode = 'scoped' | 'legacy-all' | 'tiered';
-
-/**
- * Tier B skill names, or `null` when no split exists on this machine.
- *
- * `null` is load-bearing: it means "nobody computed a split here", and a
- * `tiered` install that finds it must ship the FULL surface rather than prune
- * on an empty set — pruning on absence would delete the entire catalogue.
- */
-function _resolve_tier_b(package_root: string): ReadonlySet<string> | null {
-    const p = path.join(package_root, 'agents', 'runtime', 'state', 'skill-tiers.json');
-    if (!pathExists(p)) return null;
-    try {
-        const parsed = JSON.parse(readText(p)) as { tier_b?: unknown };
-        if (!Array.isArray(parsed.tier_b)) return null;
-        return new Set(parsed.tier_b.filter((n): n is string => typeof n === 'string'));
-    } catch {
-        return null;
-    }
-}
-
-/**
- * The consumer-side alternative to tiering, surfaced as a recommendation only.
- *
- * Claude Code's listing budget is settable: `skillListingBudgetFraction` raises
- * the fraction of the context window spent on skill DESCRIPTIONS, restoring them
- * at a measured token price instead of withholding skills from the catalogue.
- * That is the other lever, and for many consumers the better one — a description
- * they can read beats a tool call they have to make.
- *
- * Returns `null` unless a tier split exists AND Tier B is non-empty: with no
- * split there is nothing to recommend against, and an empty Tier B means the
- * host already describes everything. This function NEVER writes the consumer's
- * `settings.json` — the setting is theirs, the token cost is theirs, and an
- * installer that edited a host's own config to buy itself context would be
- * taking that decision in their name.
- */
-function _tier_b_advisory(package_root: string): string | null {
-    const tier_b = _resolve_tier_b(package_root);
-    if (tier_b === null || tier_b.size === 0) return null;
-    return (
-        `ℹ️  ${tier_b.size} skill(s) are predicted to reach the model WITHOUT their ` +
-        'description on a default 200k window.\n' +
-        '   Two levers, neither applied for you:\n' +
-        '   • raise `skillListingBudgetFraction` in your Claude Code settings — ' +
-        'restores descriptions at a token cost (100% delivery of this catalogue ' +
-        'measures ~14,408 tok)\n' +
-        '   • or set `projection.mode: tiered` to withhold them from the catalogue ' +
-        'and reach them via the MCP server instead (opt-in, still unproven — see ' +
-        'docs/mcp-server.md)'
-    );
-}
-
-/** Prune skills the host would list bare; they stay reachable over MCP. */
-function _prune_tier_b_modules(
-    deploy_results: Record<string, DeployResult>,
-    tier_b: ReadonlySet<string>,
-): [number, Record<string, DeployResult>] {
-    return _prune_modules_by(deploy_results, (md_path) =>
-        tier_b.has(path.basename(path.dirname(md_path))),
-    );
-}
-
 function _prune_scoped_modules(
     deploy_results: Record<string, DeployResult>,
     active_ids: ReadonlySet<string>,
@@ -3908,25 +3715,10 @@ function install_global(
     try {
         const { mode, active_packs } = _resolve_scoped_projection(package_root);
         if (mode === 'tiered') {
-            const tier_b = _resolve_tier_b(package_root);
-            if (tier_b === null || tier_b.size === 0) {
-                if (!state.QUIET) {
-                    warn(
-                        'projection.mode: tiered but no skill-tier split exists ' +
-                            '(agents/runtime/state/skill-tiers.json) — shipping the full surface. ' +
-                            'Run `agent-config` skill-tier computation first.',
-                    );
-                }
-            } else {
-                let tier_pruned: number;
-                [tier_pruned, deploy_results] = _prune_tier_b_modules(deploy_results, tier_b);
-                if (!state.QUIET) {
-                    info(
-                        `🧹 Tiered install: pruned ${tier_pruned} Tier-B skill artefact(s) — ` +
-                            'still reachable via the MCP server\'s suggest_skill_for_task / ' +
-                            'read_skill. Set projection.mode: legacy-all to restore the full surface.',
-                    );
-                }
+            const outcome = mcp_bridge.applyTieredPrune(deploy_results, package_root, _prune_modules_by);
+            deploy_results = outcome.deployResults;
+            if (!state.QUIET && outcome.message !== null) {
+                (outcome.level === 'warn' ? warn : info)(outcome.message);
             }
         }
         if (mode === 'scoped') {
