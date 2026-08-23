@@ -139,14 +139,14 @@ two is how a delivery check ends up being quoted as an efficacy claim.
       verify: `grep -n 'The completion message must name' agents/overrides/rules/verify-before-complete.md`
       resolves, and the pre-registration cites that line as its observable.
 
-- [ ] **2.3 Run the paired sessions.** Both arms, same corpus, same host, same
+- [~] **2.3 Run the paired sessions.** Both arms, same corpus, same host, same
       session shape. Record every pair, including the ones that produce nothing
       interesting — dropping uninteresting pairs is how a null becomes a
       positive.
       verify: the run artefact records a pair count equal to the pre-registered
       one, with no pair excluded post-hoc.
 
-- [ ] **2.4 Publish the number either way, with its honesty label.** A measured
+- [~] **2.4 Publish the number either way, with its honesty label.** A measured
       lift is a `PASS` row; no measurable difference is an `HONEST NULL` row and
       is equally publishable. `docs/benchmark.md` already carries at least eight
       `HONEST-NULL` / `HONEST NULL` sections, so the honest outcome has a
@@ -156,7 +156,7 @@ two is how a delivery check ends up being quoted as an efficacy claim.
       outcome is a null, and the new section carries a label from the existing
       vocabulary.
 
-- [ ] **2.5 Record what a null would mean, in the same commit as the null.** If
+- [~] **2.5 Record what a null would mean, in the same commit as the null.** If
       the override changes nothing measurable, the finding is that the layer
       costs prose in `override-system.md`, a lint, a registry and a contract for
       no observed effect — a live input to whether the layer is worth its
@@ -165,6 +165,34 @@ two is how a delivery check ends up being quoted as an efficacy claim.
       verify: the published section names the consequence explicitly, and
       `grep -n 'consequence' <the new benchmark section>` resolves.
 
+
+      **DEFERRED `[~]` 2026-08-23 — steps 2.3, 2.4 and 2.5, by AI council (b),
+      2 of 2 convergent.** Members anthropic/claude-sonnet-4-5,
+      openai/codex-default; $0.033. **Spend was pre-authorized for the run**, so
+      this is not a budget refusal — the deferral is on **population validity**:
+
+      > A paired-session run against the single real override in the tree produces
+      > a result about **that file**, not about override efficacy. Pre-authorized
+      > spend makes it affordable; it does not make it generalizable.
+
+      **The seats disagreed on one point and the disagreement sharpens the reopen
+      condition, so it is recorded rather than smoothed.** One argued that going
+      from one override to two *"changes the measurement class, not just
+      precision"*. The other refused that: *"n=2 remains weak and may add little if
+      the overrides are not **materially distinct**."* The reopen condition
+      therefore says **materially distinct**, not merely *second*.
+
+      The same seat named the honest alternative, which is a narrowing rather than
+      a spend: an explicitly scoped **n=1 case study** could still falsify the
+      mechanism or reveal instability — and that would be legitimate **only** if
+      the registered claim is deliberately narrowed to single-override reliability
+      or falsification, never presented as generalized efficacy.
+
+      Phases 1 and 3 are unaffected and are the delivery this roadmap ships. Per
+      the blocker's `Resolved when`, the Phase 3 report line must state that
+      **efficacy is unmeasured** — a reachability check proves the override is
+      delivered, discovered and named, and proves nothing about whether it changes
+      what the agent does.
 ## Phase 3 — Surface it where a reader already looks
 
 - [ ] **3.1 Add an override line to the doctor report.** The report already
@@ -188,7 +216,7 @@ two is how a delivery check ends up being quoted as an efficacy claim.
 ## Blockers
 
 ### blocker: b-paired-session-spend
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 — consent-once (paired agent sessions bill real model tokens)
 - **Blocks:** Phase 2 steps 2.3, 2.4 and 2.5. Step 2.1 is the pre-registration
@@ -216,6 +244,25 @@ two is how a delivery check ends up being quoted as an efficacy claim.
 - **Resolved when:** one of (a) or (b) is recorded at this blocker, and — for
   (b) — steps 2.3–2.5 are marked deferred and the Phase 3 report line states
   that efficacy is unmeasured.
+- **Resolution 2026-08-23 — (b), AI council, 2 of 2 convergent.** Steps 2.3-2.5
+  are `[~]` with the reasoning at 2.5. **Spend was pre-authorized and the
+  deferral is still correct**: both seats concluded that pre-authorized budget is
+  *"permission without reason"* and does not refute a population-validity
+  objection. n=1 buys a result about one file.
+
+  **The second half of `Resolved when` — the Phase 3 report line stating efficacy
+  is unmeasured — is NOT discharged here**, because Phase 3 has not been built.
+  Saying so is the point: the blocker is resolved as a *decision*, and the
+  *delivery* obligation it names travels with Phase 3. A blocker marked resolved
+  whose second clause was quietly dropped would be the silent-green this run is
+  forbidden from reintroducing.
+
+  **Reopen condition, sharpened by a recorded disagreement.** One seat held that
+  1 → 2 overrides *"changes the measurement class"*; the other refused that —
+  *"n=2 remains weak and may add little if the overrides are not materially
+  distinct"*. The condition is therefore a **materially distinct** second
+  override, or a claim deliberately narrowed to single-override reliability or
+  falsification.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
