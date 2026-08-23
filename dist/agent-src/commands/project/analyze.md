@@ -34,6 +34,27 @@ Gather in parallel:
 - Check for module roots (resolve via `scripts/_lib/agent_settings.ts::enumerate_modules()`; Laravel shape: `app/Modules/`), multi-tenant indicators (`customer_database`)
 - Read: `AGENTS.md`, `.github/copilot-instructions.md` (if exist)
 
+**Assurance dimensions — do NOT hand-detect these.** Run
+
+```bash
+./scripts-run src/scripts/grade_target_readiness --target <project root>
+```
+
+It probes the ten readiness dimensions in one pass — test-runner config
+(vitest/jest/phpunit/pest/pytest), mutation config (`stryker.conf.*`,
+`infection.json*`, `[tool.mutmut]`), property-based libraries, static analysis
+(`phpstan.neon`, `psalm.xml`, `tsconfig.json`), architecture gates
+(`.dependency-cruiser.*`, `deptrac.yaml`), SAST (`.semgrep*`, bandit),
+lockfiles, audit steps, `CODEOWNERS`, decision-record directories — **and
+whether CI actually blocks on each**, which is the 1 → 2 distinction a
+hand-read gets wrong: a job that exists is `Present`, a job that can fail the
+build is `Enforced-in-CI`.
+
+Hand-detecting these was tried and rejected: a gather list in this file cannot
+be asserted by a test, and step 1.1 of the source roadmap requires that each
+dimension's presence be detected **and its absence not be**, both pinned by a
+vitest spec. That spec is `tests/scripts/grade_target_readiness.test.ts`.
+
 Display:
 
 ```
@@ -57,6 +78,32 @@ TECH STACK:
   Search:      {Meilisearch / Algolia / none}
   Frontend:    {Vue / React / Blade / none}
   Testing:     {Pest / PHPUnit}
+
+───────────────────────────────────────────────
+READINESS  (verbatim from grade_target_readiness)
+───────────────────────────────────────────────
+
+  L{n} — bound by {dimension}
+
+  {the ten rows, exactly as the script printed them}
+
+**Print the script's output verbatim. Do not summarise it and do not compute
+anything from it.** Three rules, each of which the script already enforces and
+which this template must not undo:
+
+1. **Never emit an aggregate.** No percentage, no `x/100`, no mean, no letter
+   grade. A single number is the vanity metric this section exists to avoid, and
+   a ten-row vector with a binding dimension is the whole point of the format.
+2. **The level is the MINIMUM over the four knockout dimensions** — test presence
+   & types, static analysis & types, CI enforcement, security & supply chain.
+   Nine dimensions at 3 and one knockout at 0 is `L0`, not "mostly ready".
+3. **`not detectable` is not `0`.** A `0` claims the target lacks something; `not
+   detectable` says this tool cannot tell. For a Python target, static analysis
+   prints `not detectable — quality-tools has no Python mode`, and because that
+   dimension is a knockout it **binds at L0 with the reason shown**.
+
+Whether a missing gate then gets created in the target is out of scope here —
+this section grades, it does not install.
 
 ───────────────────────────────────────────────
 TOOLING:
