@@ -260,7 +260,19 @@ Not executable today. Carried so it is not re-proposed as new.
       verify: a dated line in this file per check; the step's checkbox can only be ticked with a spec URL that says "merged".
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: analyze-inbox -->
+<!-- risk-review: v1 | reviewed: 2026-08-23 | reviewer: drain/skill-link-integrity -->
+
+> **Re-review 2026-08-23, forced by the R2 figure correction and genuinely
+> performed rather than stamped.** The only change to this file was replacing a
+> token figure at three sites (the R2 prose, the R2 row below, and the matching
+> acceptance criterion). Every risk row was re-read against it. **No row changes
+> rank, type, or mitigation, and R2's direction is unchanged — it is
+> STRENGTHENED:** the corrected standing cost is 2,257 tok, higher than the
+> ~1,972 the row previously claimed, so "registering the kernel server as-is
+> would add standing cost" holds by a wider margin and the ≤600-tok cap in 1.1
+> is if anything more necessary. No phase heading, no checkbox, and no
+> acceptance-criterion COUNT moved; only that one number, and the method behind
+> it, are now reproducible. Nothing else in this roadmap was touched.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
