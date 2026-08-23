@@ -1,4 +1,8 @@
-# Autonomous drain run — 2026-08-23
+# Autonomous drain runs
+
+---
+
+# Run A — 2026-08-23 (earlier session)
 
 Machine-readable record of one autonomous roadmap-drain run. Every decision below
 was taken by the **AI council** under maintainer-delegated authority; none was
@@ -188,3 +192,171 @@ it parked `mcp-runtime-integrity`.
 re-baselined to pass.** Where a criterion could not be met it was deferred,
 descoped or parked with the reason and the reopening condition written at the
 place it acts.
+
+
+---
+
+# Run B — 2026-08-23 (this session)
+
+Machine-readable record of a second autonomous roadmap-drain run on the same day.
+Every decision below was taken by the **AI council** under maintainer-delegated
+authority. None was referred back to the user; none was taken by the executing agent
+alone on a question a roadmap reserves.
+
+## Headline
+
+- **10 pull requests** opened; **7 merged** during the run. The trunk moved under the
+  branches eight times and every branch was merged onto it rather than pushed behind it.
+- **8 roadmaps closed and archived.** 1 advanced by two full phases and deliberately
+  **left open** rather than closed on partial work.
+- **20 blockers resolved**, all by council. **0 questions to the user.**
+- **6 council sessions**, 2/2 quorum in every one, $0.19 total (subscription transport,
+  no metered spend). Quota after the run: 26/50 per member.
+- **4 carries into stubs**, each with a promotion criterion. **0 silent drops.**
+
+## Pull requests
+
+| PR | Roadmap | Outcome |
+|---|---|---|
+| #1577 | `road-to-per-turn-hook-economy-carry` | closed + archived · **merged** |
+| #1578 | `road-to-mcp-runtime-integrity` | closed + archived · **merged** |
+| #1579 | `road-to-release-publication-integrity` | closed at Phase 1 + archived · **merged** |
+| #1580 | `road-to-unowned-resume-conditions` | closed + archived · **merged** |
+| #1582 | `road-to-target-project-assurance-readiness` | closed on its null route + archived · **merged** |
+| #1583 | `road-to-override-efficacy-proof` | closed + archived · open, green |
+| #1584 | `road-to-terminal-token-economy` | closed + archived · **merged** |
+| #1585 | `road-to-review-independence` | closed + archived · open |
+| #1586 | `road-to-council-evidence-integrity` | **Phases 1–2 only, roadmap left open** · open |
+
+## Council decisions
+
+Session 1 — 18 blockers in one pass, 16 convergent, 2 split. Session 2 — both ties, both
+resolved. Sessions 3–6 — 9 further decisions, 2 of them re-evaluations of locks whose
+recorded condition had changed.
+
+| Blocker / question | Verdict | The load-bearing reason |
+|---|---|---|
+| `assurance-enforcement-thresholds` | defer Phase 8.5 | *nulls are not thresholds*: four unset numbers cannot support a blocking policy |
+| `sibling-roadmap-dispositions` | record live dispositions | "archived, no measured result" is a legitimate disposition |
+| `b-detector-license-verification` | own derivation | removes licensing ambiguity, executable without external evidence |
+| `b-page-capture-primitive` | recorded nulls | no verified capture primitive; cut the render-dependent dimensions |
+| `b-lifecycle-integrity-open-steps` | consume read-only | an archived roadmap's findings are frozen input |
+| `b-maintainer-run-capture` | decline the capture | no human at a keyboard; Phase 3 proceeds independently |
+| `b-bundler-choice-for-fixture` | `tsup` | purpose-built for the ESM+CJS+dts contract; familiarity ≠ purpose-fit |
+| `b-cli-flag-probe` | honest null | an absent binary is a null, never a silent skip |
+| `b-probe-channel-decision` | transcripts only, **partial** | proves argv correctness, not vendor honouring; `AC-5` narrowed |
+| `second-ci-provider-key` | single-member gate | no credential can be minted autonomously |
+| `sibling-ownership` | this roadmap owns the state | the roadmap that measures rotation is the only defensible owner |
+| `b-plate-vs-skill-sprawl` | named sibling skills | the size cap and the anti-sprawl rule both hold |
+| `b-behavioural-bench-spend` | fifteen rules out of scope | pre-authorized budget is *permission without a reason* |
+| `b-colleague-machine-readings` | single-machine scope in the header | one machine reachable |
+| `b-playbook-home-in-consumer-tree` | sixth context type | reuse the existing machinery |
+| `b-async-split-cancellation` | cancel the split | **≤ 3 ms of a 1186 ms composite** — 0.25 % |
+| `b-async-split-live-verification` | capability unavailable | no host carries the split config |
+| `b-composite-ceiling-value` | **(c) extend observe-only** | first chose (b), then found it unexecutable at n = 0 |
+| `b-stub-promotion-authority` | do not promote | an autonomous run does not override a deferred estate decision |
+| Phase-3 rotation spike | record the null | the corpus does not carry file order; a re-review confounds ordering with variance |
+| `b-ab-session-spend` (re-evaluated) | **deferral stands on a NEW condition** | the ordering objection was discharged; the ≥ 2-machine requirement is not |
+| rtk wrapper mechanism | warn-only | *"a host capability is not yet a safe dispatcher capability"* |
+
+Two splits went to a tiebreak and both converged. One verdict — `b-composite-ceiling-value`
+— was **overturned by the facts**: option (b) required a number derived from ≥ 10 readings
+and the store held **zero**, so the council was asked again and chose (c).
+
+## The two lock re-evaluations, because they are the pattern worth reusing
+
+`decision-revisit-gate` requires a lock whose recorded condition has changed to be
+**surfaced, not obeyed**. It fired twice, and both times the outcome differed:
+
+1. **`b-ab-session-spend`** was deferred on *ordering* — "Phase 2 has not chosen the
+   mechanism". Phase 2 chose **in the same change**, so the condition was discharged. Put
+   back to the council: the deferral **stood on a new condition** (the registration's own
+   ≥ 2-machine requirement). Amending the registration down to one machine was refused —
+   it lowers a bar written before any number was seen.
+2. **`b-per-turn-composite-ceiling`** was deferred on a *bounded wait* whose bound was a
+   named milestone. The milestone was reached and produced **n = 0**, so the wait had
+   already ended without delivering its input. Continuing to wait would have been the
+   indefinite park under a new name the roadmap's own risk register names.
+
+## Descopes, carries and transfers — 4, all with promotion criteria
+
+| Carried | To | What reopens it |
+|---|---|---|
+| override efficacy paired run (3 steps) | `stubs/road-to-override-efficacy-paired-run.md` | a **second** real override in the tree |
+| widened rtk re-bench (3 steps) | `stubs/road-to-rtk-rebench-run.md` | a **second machine**; a CI runner counts |
+| human risk corpus | `stubs/road-to-human-risk-corpus.md` | ≥ 60 human-labelled changes **and** R3 rate ≤ 0.40 |
+| ADR-134 expiry date | `stubs/road-to-adr-134-expiry.md` | the date is decided, succeeded, or lapses as a recorded finding |
+
+`stubs/` is excluded from `active_roadmaps`, so every carry is ratchet-compliant and costs
+the estate nothing. **No `[~]` was resolved by deletion.**
+
+## Defects found that no step asked for
+
+- **The host DOES support a transparent input rewrite.** Three sites asserted otherwise;
+  Claude Code 2.1.241 documents `updatedInput`, validates its schema and logs a fallback.
+  The shipped claim collapsed a fact about *our plumbing* into a claim about *the host* —
+  and was undated, which is why nobody could tell. All three corrected.
+- **Two of four P3 concurrency call sites were unpinned.** The suite proved the lock
+  *primitive* via inline worker re-implementations and never reached the real call sites;
+  sabotaging one left all three tests green.
+- **A doctor line contradicted its own strict gate.** A grep for a rule name in the
+  registry read `verify-before-complete` as unregistered — the name sits inside a
+  `justification:` block. Now parsed the way the audit parses it.
+- **`[]` was classified as a parse failure.** The shared extractor's regex requires an
+  object, so a member answering correctly with an empty array would have triggered a
+  **paid** re-ask. Found by a test asserting the fix, not by the step.
+- **Peer-review quotes resolved to the wrong source.** One label→source map was
+  overwritten per reviewer; the artefact carried the last reviewer's mapping for every
+  quote. The old assertion was on `size`, which cannot see a collision.
+- **A check id needed registering in two runner registries.** Registering one crashed on
+  the path this repository actually takes.
+
+## Own errors, recorded because they are the reusable part
+
+- **A grep-shaped verify is trapped by prose that quotes the token it forbids.** Hit four
+  times — `pull_request` in a workflow comment, `{{envelope}}` in a route, "in stable input
+  order" in a skill, `readFileSync` in a function's own explanation. Describe the token;
+  never quote it inside the scanned region.
+- **A baseline left one line loose is a red test.** `check_source_size_budget` warns
+  "ratchet is loose" and exits 0, so a local run looks fine — and a committed test asserts
+  `baseline == live total`. Learned from CI.
+- **A budget branch must resolve a baseline conflict onto MAIN's floor**, never its own,
+  or it silently gives back the other branch's gain.
+- **`npx tsc` on one file is not the project typecheck.** `exactOptionalPropertyTypes`
+  caught what the ad-hoc invocation missed. Use `task typecheck-ts`.
+- **`execFile` has no `input` option.** A test spawned eight dispatchers that all took the
+  no-envelope path and passed for the wrong reason.
+- **A predicted failure message is not an observed one.** A recorded RED said
+  `expected [] to include …`; the run printed `expected '' to contain …`. Corrected, because
+  a message nobody ran is indistinguishable from one that was.
+
+## What is NOT done, stated plainly
+
+**9 roadmaps remain open**, none of them touched by this run:
+`road-to-frontend-power` (60 steps) · `road-to-agentic-engineering-assurance` (53) ·
+`road-to-frontend-fidelity-calibration` (36) · `road-to-trigger-delivered-rule-bodies` (34) ·
+`road-to-chained-clip-continuity-and-provider-truth` (30) ·
+`road-to-roadmap-situational-awareness` (29) · `road-to-role-scoped-spawn-profiles` (28) ·
+`road-to-skill-delivery-over-mcp` (25) · plus the four remaining phases of
+`road-to-council-evidence-integrity`.
+
+The run stopped on **context exhaustion**, not on a blocker. Nothing above was left
+undone because it was impossible; the queue was longer than one session. Twelve of the
+twenty blockers those roadmaps carry are already council-resolved by session 1 of this
+run, so a successor starts from decided positions rather than open ones.
+
+**Defects that remain live and are named as such:** a `DERIVED_MARKER` can still reach a
+published release section (no guard ships — #1579 cleared all three refusal causes and
+promotion is the maintainer's call); rug-pull protection on third-party MCP tools remains
+absent at protection level zero; override efficacy and rtk savings remain unmeasured;
+`self_review_gate` remains single-member.
+
+## Verification standard applied throughout
+
+Every closed step's `verify:` was run, not asserted. Every new test was **seen RED** before
+its fix, or its insensitivity was recorded when the RED could not be produced — twice,
+honestly: a same-machine concurrency test that real dispatchers cannot make race, and a
+re-ask bound whose removal produced `Tests  no tests` rather than a failing assertion.
+Every null names the unavailable capability, the affected claims, the evidence boundary and
+the reopening condition — a shape the council adopted unanimously in session 1 and that was
+applied to all nine of them.
