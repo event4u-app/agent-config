@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "@fixture/ui-lib",
+  "homepage": "https://example.invalid/ui-lib",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "A single-action button. Owns its own focus ring.",
+      "files": [
+        {
+          "path": "source-consumed/src/Button/Button.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [],
+      "registryDependencies": []
+    }
+  ]
+}
