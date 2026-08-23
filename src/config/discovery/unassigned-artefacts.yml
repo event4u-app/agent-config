@@ -28,6 +28,8 @@
   reason: scaffold template for ticket-bundle tickets (ADR-101); carries no runtime frontmatter — emit-tickets fills it in per ticket
 - path: src/agent-src/templates/contexts.md
   reason: scaffold index for project contexts/
+- path: src/agent-src/templates/playbook.md
+  reason: scaffold for a Playbook context (ADR-244); its frontmatter is the PLAYBOOK'''s (task/scope/grade/invokes) and is shown in a fence, so the file itself carries none
 - path: src/agent-src/templates/contexts/auth-model.md
   reason: scaffold for project auth-model context
 - path: src/agent-src/templates/contexts/data-sensitivity.md

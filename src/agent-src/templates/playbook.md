@@ -1,3 +1,15 @@
+# Playbook Template
+
+Template for a **`Playbook` context** (ADR-244) — the sixth type, beside Module, Domain,
+Service, Integration and Infrastructure. It lives in the playbook home and reuses the
+`contexts.md` machinery; it is not a new artefact class.
+
+The frontmatter below is the **playbook's own**, shown in a fence rather than written as
+this file's frontmatter — a template whose example metadata is real metadata gets read as a
+declaration about the template, which is what `check_discovery_frontmatter` correctly
+objected to. `contexts.md` carries none for the same reason.
+
+```yaml
 ---
 task: "{one line — what this procedure accomplishes}"
 scope: "{a workspace path, e.g. packages/ui — or the literal `repo`}"
@@ -5,12 +17,11 @@ grade: "{configured | observed}"
 invokes:
   - "{script / turbo task / turbo generator id}"
 ---
+```
+
+## The body
 
 # Playbook: {task}
-
-> **A `Playbook` context** (ADR-244) — the sixth type, beside Module, Domain, Service,
-> Integration and Infrastructure. It lives in the playbook home and reuses the
-> `contexts.md` machinery; it is not a new artefact class.
 
 > **This is THIS repository's answer, and it outranks a shipped skill.** A shipped skill
 > is a generic answer to a generic question. A playbook encodes decisions this repository
