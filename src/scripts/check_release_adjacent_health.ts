@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { argv, env, exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { asOfMs } from './_lib/as_of.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 // src/scripts/check_release_adjacent_health.ts → two levels up is the repo root.
@@ -119,7 +120,7 @@ async function main(): Promise<number> {
             process.stderr.write(`✅  ${wf}: last completed run green\n`);
             continue;
         }
-        const ageHours = (Date.now() - Date.parse(run.updated_at)) / 3_600_000;
+        const ageHours = (asOfMs() - Date.parse(run.updated_at)) / 3_600_000;
         if (ageHours >= maxRedHours) {
             process.stdout.write(
                 `::error::release-adjacent workflow durably red: ${wf} — last completed run ` +

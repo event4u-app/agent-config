@@ -31,6 +31,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -154,7 +155,7 @@ export function main(): number {
         throw exc;
     }
     const errors: string[] = [];
-    const today = new Date().toISOString().slice(0, 10);
+    const today = asOf().toISOString().slice(0, 10);
     for (const abs of files) {
         const rel = path.relative(REPO_ROOT, abs);
         let doc: Record<string, unknown>;

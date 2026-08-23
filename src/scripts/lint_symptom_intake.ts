@@ -30,6 +30,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -132,7 +133,7 @@ function _now(): Date {
         const parsed = Date.parse(`${flag.slice('--now='.length)}T00:00:00Z`);
         if (!Number.isNaN(parsed)) return new Date(parsed);
     }
-    return new Date();
+    return asOf();
 }
 
 function main(): number {

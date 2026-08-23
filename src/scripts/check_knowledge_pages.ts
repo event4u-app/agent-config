@@ -29,6 +29,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned } from './_lib/scan_scope.js';
 
 const PROG = 'check_knowledge_pages.ts';
@@ -72,7 +73,7 @@ function bodyLineCount(body: string): number {
 }
 
 /** Lint a single page's already-read content. Pure — no filesystem access — for direct unit testing. */
-export function lintPage(relPath: string, content: string, today: Date = new Date()): Warning[] {
+export function lintPage(relPath: string, content: string, today: Date = asOf()): Warning[] {
     const warnings: Warning[] = [];
     const fm = readFrontmatter(content);
 
@@ -145,7 +146,7 @@ function countPages(knowledgeRoot: string): number {
     );
 }
 
-export function lintAll(knowledgeRoot: string, today: Date = new Date()): Warning[] {
+export function lintAll(knowledgeRoot: string, today: Date = asOf()): Warning[] {
     const warnings: Warning[] = [];
     for (const dir of TYPED_DIRS) {
         const scanDir = path.join(knowledgeRoot, dir);

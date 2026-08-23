@@ -24,6 +24,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOfMs } from './_lib/as_of.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const QUIET = process.argv.slice(2).includes('--quiet');
@@ -76,7 +77,7 @@ function check(): number {
     }
 
     const mtimeMs = fs.statSync(target).mtimeMs;
-    const age_days = (Date.now() - mtimeMs) / 86400000;
+    const age_days = (asOfMs() - mtimeMs) / 86400000;
     if (age_days > STALE_DAYS) {
         notes.push(
             `ℹ️  .augmentignore is ${Math.trunc(age_days)} days old (threshold: ${STALE_DAYS}) — ` +
