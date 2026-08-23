@@ -55,7 +55,10 @@ Stated up front so nobody promotes it on the strength of the finding alone:
    labelled population to measure false fires against.
 3. **The cost lands on the hot slot.** `pre_tool_use` carries the tightest
    latency cap (175 ms CI) and the tightest injection sum (2,048 B), and
-   `rule-inject` gate-open already reads p95 87.8 ms.
+   `rule-inject` gate-open reads p95 0.61 ms — small, but this slot is where a
+   regression is least affordable, and the concern already learned that lesson
+   once: its first cut read 87.8 ms because a token-based cap pulled a tokenizer
+   into every dispatch.
 
 ## What would have to be true to promote it
 

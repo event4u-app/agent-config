@@ -130,9 +130,12 @@ three offline endpoints already establish.
    the pointer arm that already scored 36.2 %, and hook-less hosts cannot run the
    concern at all — and it carries an unpriced activation charge: `rule-inject`'s
    registered 20,480-byte emission sits above the 4,096-byte `user_prompt_submit`
-   and 2,048-byte `pre_tool_use` slot sums, and its gate-open latency reads p95
-   87.8 ms against a 250 ms slot budget. Those two rows are the flip's cost and
-   the flip's run must pay them. The single council member's own hedge is recorded
+   and 2,048-byte `pre_tool_use` slot sums. Those two rows are the flip's cost and
+   the flip's run must pay them.
+   *(Latency is NOT part of that charge, and this sentence was corrected rather
+   than left standing: it read "gate-open latency reads p95 87.8 ms against a
+   250 ms slot budget" until the tokenizer was removed from the concern's module graph and the cap moved to bytes (see `_lib/rule_injection.ts`'s header), after which the same measurement reads **p95
+   0.61 ms**. The 87.8 ms was a tokenizer load, not delivery work.)* The single council member's own hedge is recorded
    with it: *"flag to owner for post-roadmap review given the authority question
    is genuinely close."*
 

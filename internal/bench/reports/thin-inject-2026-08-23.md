@@ -105,11 +105,19 @@ review given the authority question is genuinely close."*
 delivery mode is licensed as delivery-equivalent and cheaper — and the flip
 itself carries an unpaid activation charge that this run deliberately does not
 pay: `rule-inject`'s registered 20,480-byte emission sits above the
-4,096-byte `user_prompt_submit` and 2,048-byte `pre_tool_use` slot sums, and
-its gate-open latency reads p95 **87.8 ms** against a 250 ms slot budget against
-0.06–0.16 ms gate-closed. Those two rows are the flip's cost, the flip's run must
-pay them, and the authority question the single council member flagged is the
-owner's.
+4,096-byte `user_prompt_submit` and 2,048-byte `pre_tool_use` slot sums. Those
+two rows are the flip's cost, the flip's run must pay them, and the authority
+question the single council member flagged is the owner's.
+
+**Latency is no longer part of that charge, and the correction is recorded
+rather than the figure quietly swapped.** This section read "gate-open latency
+p95 **87.8 ms** against 0.06–0.16 ms gate-closed" when it was written. That
+87.8 ms was a `js-tiktoken` load, not delivery work: the cap was in exact-BPE
+tokens and `_lib/token_count.ts` resolves the tokenizer at module load, so the
+concern dragged it into every dispatch. With the cap moved to bytes the same
+measurement reads **p50 0.52 / p95 0.61 ms** gate-open and **p95 0.04–0.05 ms**
+gate-closed, and the whole-slot `pre_tool_use` p95 went 202 ms → 62 ms against a
+175 ms budget.
 
 `docs/CLAIMS.md` carries the entry, scoped to what these four endpoints
 license and nothing wider.

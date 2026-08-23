@@ -257,15 +257,28 @@ bytes under the shipped default. Timed in-process over 200 iterations per slot:
 
 | path | p50 | p95 | max |
 |---|---:|---:|---:|
-| `user_prompt_submit`, gate closed | 0.046 ms | 0.224 ms | 39.7 ms |
-| `pre_tool_use`, gate closed | 0.043 ms | 0.158 ms | 38.0 ms |
-| `user_prompt_submit`, gate OPEN | 8.6 ms | 87.8 ms | 320.2 ms |
+| `user_prompt_submit`, gate closed | 0.040 ms | 0.053 ms | 1.35 ms |
+| `pre_tool_use`, gate closed | 0.038 ms | 0.044 ms | 0.057 ms |
+| `user_prompt_submit`, gate OPEN | 0.519 ms | 0.614 ms | 2.32 ms |
 
-Gate-closed is ~0.1 % of the 250 ms any-slot budget. **Gate-open is not, and
-that is recorded here rather than in a footnote:** p95 87.8 ms is roughly 35 % of
-that budget and 50 % of the 175 ms `pre_tool_use` CI cap, dominated by exact-BPE
-tokenisation of every matched body. It is a cost the flip pays, not a cost this
-change pays, and it belongs in the flip's evidence.
+**These are the SECOND reading, and the first one is the finding.** The same
+three rows first measured 0.046 / 0.043 / **8.6 ms p50 with an 87.8 ms p95**, and
+the CI latency gate went red on the branch while passing on main. The cause was
+the cap's UNIT: it was in exact-BPE tokens, `_lib/token_count.ts` resolves
+`js-tiktoken` at module load, and `concern_registry.ts` imports the concern
+statically — so every hook dispatch on every slot paid a tokenizer load for a
+concern that is default-OFF and emits nothing. Whole-slot `pre_tool_use` p95 read
+**202 ms** against a 175 ms budget; with the cap moved to bytes it reads **62 ms**
+and the gate passes.
+
+Gate-closed is ~0.02 % of the 250 ms any-slot budget and gate-open ~0.25 % — the
+delivery work itself (match, read bodies, concatenate) is cheap, and the earlier
+reading was measuring a dependency rather than the work. A first attribution here
+was also wrong and is corrected in the same spirit: unbinding the concern from
+both manifest slots moved the slot p95 only 202 → 196 ms, which looked like "6 ms
+is mine". That probe was invalid — unbinding does not remove the STATIC registry
+import, so the tokenizer was still in the bundle being measured. The real figure
+was ~140 ms, and it was this concern's.
 
 The whole-dispatch readings from the same machine (`bench_hook_latency`,
 darwin, ~10 parallel sessions live) read `user_prompt_submit` p95 240 ms and
