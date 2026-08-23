@@ -161,9 +161,9 @@ export function computeTiers(opts: ComputeOptions = {}): TierSplit {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    const split = computeTiers({
-        skillsDir: argv.includes('--skills-dir') ? argv[argv.indexOf('--skills-dir') + 1] : undefined,
-    });
+    const dirIdx = argv.indexOf('--skills-dir');
+    const skillsDir = dirIdx >= 0 ? argv[dirIdx + 1] : undefined;
+    const split = computeTiers(skillsDir === undefined ? {} : { skillsDir });
     if (argv.includes('--json')) {
         process.stdout.write(`${JSON.stringify(split, null, 2)}\n`);
         return 0;

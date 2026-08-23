@@ -988,6 +988,7 @@ export interface MigrationEligibility {
         | 'observation-not-comparable'
         | 'no-truncation-observed'
         | 'already-scoped'
+        | 'already-tiered'
         | 'below-observed-skill-volume';
     /** Populated only when eligible, for the message. */
     droppedEntries?: number;
@@ -1010,11 +1011,17 @@ export interface MigrationEligibility {
  */
 export function migrationEligibility(
     host: string,
-    resolvedMode: 'scoped' | 'legacy-all',
+    resolvedMode: 'scoped' | 'legacy-all' | 'tiered',
     currentSkillCount: number,
     limits: ReadonlyMap<string, KnownHostLimit>,
 ): MigrationEligibility {
     if (resolvedMode === 'scoped') return { eligible: false, reason: 'already-scoped' };
+    // `tiered` already withholds skills from the native catalogue, so an offer to
+    // migrate to `scoped` has nothing to buy. It gets its OWN reason rather than
+    // reusing `already-scoped`: the two narrow on different axes (packs vs the
+    // host's listing budget), and a caller reading the reason should be able to
+    // tell which one the install is actually on.
+    if (resolvedMode === 'tiered') return { eligible: false, reason: 'already-tiered' };
     const limit = limits.get(host);
     if (limit === undefined) return { eligible: false, reason: 'no-observation-for-host' };
     if (limit.projectedSkills === null) return { eligible: false, reason: 'observation-not-comparable' };

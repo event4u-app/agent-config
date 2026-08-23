@@ -22,6 +22,7 @@ import {
 // names above. Both surfaces are exercised: the forwarded ones here, and
 // `applyTieredPrune` — the branch install.ts actually calls — below.
 import { applyTieredPrune } from '../../src/scripts/_lib/mcp_bridge.js';
+import { migrationEligibility } from '../../src/scripts/_lib/skill_catalogue.js';
 import { computeTiers } from '../../src/scripts/compute_skill_tiers.js';
 import { loadContentTree } from '../../src/cli/mcp/content.js';
 import { dispatch } from '../../src/cli/mcp/dispatch.js';
@@ -185,5 +186,21 @@ describe('applyTieredPrune — the branch the installer actually calls', () => {
         expect(out.level).toBe('info');
         expect(out.message).toContain('pruned 2 Tier-B skill artefact(s)');
         expect(out.message).toContain('suggest_skill_for_task');
+    });
+});
+
+describe('migrationEligibility — a tiered install is already narrowed', () => {
+    // Found by `task typecheck-ts`, not by `tsc -p tsconfig.json`, which does not
+    // apply the repo's `exactOptionalPropertyTypes` / strict settings: widening
+    // the projection union to three members left this call site narrowing to two.
+    // `tiered` gets its OWN reason rather than reusing `already-scoped` — the two
+    // narrow on different axes (packs vs the host's listing budget) and a caller
+    // reading the reason should be able to tell which one the install is on.
+    const limits = new Map();
+
+    it('reports already-tiered, distinct from already-scoped', () => {
+        expect(migrationEligibility('codex', 'tiered', 297, limits).reason).toBe('already-tiered');
+        expect(migrationEligibility('codex', 'tiered', 297, limits).eligible).toBe(false);
+        expect(migrationEligibility('codex', 'scoped', 297, limits).reason).toBe('already-scoped');
     });
 });
