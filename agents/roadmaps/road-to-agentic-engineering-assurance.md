@@ -100,7 +100,7 @@ parallel "mutation quality" doctrine.
 
 ### Existing test-independence / mutation roadmap — dependency, not duplicate
 
-`agents/roadmaps/road-to-test-independence-and-mutation-evidence.md` already
+`agents/roadmaps/archive/road-to-test-independence-and-mutation-evidence.md` already
 pre-registers an experiment for:
 
 - spec-first test authorship vs same-context blind spots;

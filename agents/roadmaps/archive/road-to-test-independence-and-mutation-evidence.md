@@ -137,19 +137,64 @@ before 0.4 records a routing decision.
       corpus, the grader and the threshold are already fixed by the
       pre-registration, so the re-run is not a redesign. Artefact:
       `agents/evidence/analysis/test-independence-unmeasurable.md`.
-- [~] **1.2 A tool-assisted variant of the existing hand-probe.** Placed beside
+- [-] **1.2 A tool-assisted variant of the existing hand-probe.** Placed beside
       the gate at `testing-anti-patterns/SKILL.md:171-185`, sharing its restore
       discipline verbatim — the mutation is a probe, never a change, and a
       deleted guard left deleted is a shipped vulnerability produced by a
       test-quality check.
       verify: the variant references the existing gate rather than restating
       it; `wc -l < src/skills/testing-anti-patterns/SKILL.md` stays under `400`.
-- [~] **1.3 Do not add a per-change mutation run.** Explicitly out of scope —
+
+      **CANCELLED `[-]` 2026-08-23 — AI council, 2 of 2 convergent, verdict (b).**
+      Not deferred and not refused on merit: the rig is **redundant**, and that is
+      a measured claim rather than a preference. `blocker:
+      mutation-tool-availability` set the criterion in advance — *"a rig is only
+      worth its maintenance if 0.3 shows a survivor count that hand-probing
+      cannot keep up with"* — and 0.3 ran **10 probes in minutes, 3 survivors,
+      every mutation restored, tree clean**. Hand-probing kept up.
+
+      The council's reasoning, which is sharper than the roadmap's own: a
+      follow-up stub would **preserve no mechanism the estate lacks**. The
+      capability ships at `testing-anti-patterns/SKILL.md:171-185`, and the
+      threshold detector ships as the mutation census — so a stub would be a
+      reminder to automate a system that demonstrably works by hand. The
+      exclusion table already forbids *"a replacement for the hand-mutation
+      gate"*, and the resolved blocker already chose to keep it.
+
+      **One refinement, recorded because it corrects the roadmap's own reopen
+      condition.** The roadmap named *"a survivor population too large to
+      hand-probe"*. One seat pointed out that the survivor **rate** is the wrong
+      trigger: a high rate stays manageable at low volume. The reopen condition
+      is therefore **absolute probe workload and time cost** — reopen when census
+      volume or required probing time makes reliable manual verification
+      impractical. That is a strictly better-specified threshold than the one it
+      replaces, and 10 probes in minutes is nowhere near it.
+- [x] **1.3 Do not add a per-change mutation run.** Explicitly out of scope —
       see *What this roadmap will not build*. Any mutation rig introduced here
       runs nightly, never per change.
       verify: no workflow triggered on `pull_request` invokes the rig —
       `grep -rn 'pull_request' .github/workflows/ | xargs -I{} true` and a
       targeted read of the added workflow confirm the schedule trigger.
+
+      **VERIFIED `[x]` 2026-08-23.** This is a negative criterion and it is
+      satisfied by construction now that 1.2 is cancelled: there is no rig to run
+      per change. Measured rather than assumed, three ways —
+
+      1. No rig in the tree: a grep for `stryker|mutmut|pitest|cosmic-ray|
+         mutation-?test` across `package.json`, `.github/workflows/`,
+         `taskfiles/`, `Taskfile.yml` and `src/scripts/` returns **0 files**.
+      2. No dependency: `0` mutation-testing entries across `dependencies` and
+         `devDependencies`.
+      3. No `pull_request` workflow invokes one. The grep over
+         `pull_request`-triggered workflows returned exactly one hit and it is a
+         **false positive** — `.github/workflows/release.yml:65` reads
+         `description: 'Preview only — no git/gh mutations'`, the word "mutations"
+         in the sense of git writes. Recorded because a future re-run will hit the
+         same false positive and should not read it as a rig.
+
+      The step was `[~]` because it was gated behind 1.2's tooling question. That
+      question is now answered (b), so the criterion is checkable and checked
+      rather than parked.
 
 ## Phase 2 — wire it severity-conditioned
 
@@ -313,14 +358,45 @@ something that keeps being answered.
 - [x] AC-6 — no mutation run is triggered per change; any rig that exists runs
       on a schedule.
 
-## Completion note — spike ran, one half opened, one half closed, Phase 3 shipped
+## Completion note — COMPLETE. Spike ran, one half opened, one half closed, Phase 3 shipped
 
-Phase 0 ran to a recorded route; both blockers are resolved; Phase 3 shipped.
-**Not archived**, and the reason is a routing rule: 1.2/1.3 are `[~]` parked on
-a measured "unnecessary at current probe cost", and archiving would bury a
-parked item — the **keep-in-archive** disposition, owner-reserved under the
-deferred-item preservation test, with the council at 0 of 2 seats. So the
-roadmap stays active and `active_roadmaps` is unchanged.
+Phase 0 ran to a recorded route; both blockers are resolved; Phase 3 shipped;
+**13 of 13 trackable steps closed, nothing parked.** Archived.
+
+**What changed on 2026-08-23 to make archival honest.** The previous run left the
+file active for a correct reason: 1.2 and 1.3 were `[~]`, and archiving a parked
+item is the **keep-in-archive** disposition, which the deferred-item preservation
+test reserves to the owner — with the council at 0 of 2 seats there was no route.
+This run has **2 of 2 seats**, and the maintainer delegated the class, so the
+parked items were resolved rather than buried:
+
+- **1.3 → `[x]`, verified.** Its criterion is a negative and is now checkable:
+  no rig, no dependency, no `pull_request` workflow invoking one. The single grep
+  hit is a false positive on the word "mutations" in `release.yml:65`.
+- **1.2 → `[-]`, cancelled by council (b), 2 of 2 convergent.** Redundant on the
+  measurement its own blocker pre-registered, not deferred. A stub would preserve
+  no mechanism the estate lacks. The reopen condition was **re-specified** by the
+  council from survivor *rate* to absolute probe *workload and time* — a high rate
+  is manageable at low volume, so the roadmap's own threshold was the wrong one.
+
+### Sibling disposition, for `blocker: sibling-roadmap-dispositions` to consume
+
+`road-to-agentic-engineering-assurance` carries `blocker:
+sibling-roadmap-dispositions`, which requires the **final measured disposition**
+of this roadmap, *"including null/parked outcomes"*. Recorded here so it can be
+consumed without re-deriving it:
+
+| Claim | Disposition | Evidence |
+|---|---|---|
+| Spec-first test authorship catches defects a same-context suite misses | **`unmeasurable-here`** — the third pre-registered state, NOT a null and NOT a refutation. Needed a subagent dispatch primitive the run lacked. | `agents/evidence/analysis/test-independence-unmeasurable.md` |
+| Negative tests nobody has watched fail constrain nothing | **PASS** — 30 % survivors of 10 hand probes, against a pre-registered threshold of > 10 % | `agents/evidence/analysis/mutation-census-2026-08.md` |
+| A tool-assisted mutation rig is worth its maintenance | **REFUSED (measured)** — hand-probing kept up: 10 probes in minutes, all restored | this file, step 1.2 |
+| Mechanism shipped either way | **`test_authorship` envelope field**, `unknown` as default | this file, steps 3.1/3.2 |
+
+The independence half must not be read back as evidence *against* spec-first
+authorship. `unmeasurable-here` means the measurement did not run, and the
+pre-registration fixed the corpus, grader and threshold in advance — so a later
+run with a dispatch primitive re-runs it rather than redesigning it.
 
 ### The pre-registration earned its place on the first outcome it met
 
