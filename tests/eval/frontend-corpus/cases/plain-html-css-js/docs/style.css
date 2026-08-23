@@ -1,0 +1,4 @@
+:root { --ink: #1b1b1f; --paper: #fbfbfd; }
+body { margin: 0; color: var(--ink); background: var(--paper); font-family: "Source Serif 4", Georgia, serif; }
+.sidebar { width: 15rem; border-right: 1px solid #e6e6ea; }
+.sidebar nav { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }

@@ -1,0 +1,16 @@
+# Case: shadcn-product-screen
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: shadcn-product-screen
+prompt: "Build the settings screen for the admin area using the existing shadcn primitives."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  shadcn is an installed design system; the incumbent primitives are the authority, not a fresh visual world.
+files:
+  - app/settings/page.tsx
+  - components/ui/button.tsx

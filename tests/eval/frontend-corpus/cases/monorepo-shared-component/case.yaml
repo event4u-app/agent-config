@@ -1,0 +1,16 @@
+# Case: monorepo-shared-component
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: monorepo-shared-component
+prompt: "Add a compact density option to the shared DataTable."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  The component is consumed by two apps; blast radius is the point, and the incumbent is authoritative.
+files:
+  - apps/admin/src/Orders.tsx
+  - packages/ui/src/DataTable.tsx

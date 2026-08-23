@@ -1,0 +1,16 @@
+# Case: full-stack-feature-with-ui
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: full-stack-feature-with-ui
+prompt: "Add CSV export to the reports page."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  A mixed change: most of the diff is backend. The UI half must still route, and the backend half must not be treated as a UI surface (`pages/api/` is excluded by `_lib/ui_surface.ts`).
+files:
+  - pages/api/reports/export.ts
+  - pages/reports.tsx

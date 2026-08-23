@@ -1,0 +1,15 @@
+# Case: supplied-runnable-html
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: supplied-runnable-html
+prompt: "Port this page into the app. Keep it exactly as it behaves now."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: preserve
+  reference_maturity: runnable-artifact
+note: |
+  Runnable source is present, so `design-fidelity`'s adopt-the-code default binds: adapting this markup is the default and a from-scratch re-derivation is the deviation.
+files:
+  - design.html
