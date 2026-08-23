@@ -580,6 +580,58 @@ export function perTurnComposite(
     };
 }
 
+/**
+ * A1.1 — append ONE composite reading to the durable store.
+ *
+ * The bench used to print the composite and discard it, which made
+ * `per_turn_composite.arming_precondition` ("at least 10 CI gate readings … from
+ * at least 2 distinct runner sessions") impossible to evaluate at all. This is
+ * the write half; `check_composite_arming.ts` is the read half.
+ *
+ * THE SESSION DISCRIMINATOR IS THE LOAD-BEARING FIELD, not the count. The
+ * precondition asks for two distinct runner SESSIONS because the instability it
+ * excludes was measured on ONE machine — a sibling metric read 44-157 % at n=12
+ * and 69-74 % at n=50 there — so twelve readings from one session is exactly the
+ * shape the floor rejects, and a bare counter cannot see the difference.
+ *
+ * A null composite is written as null rather than skipped. Dropping it silently
+ * would make the store's own length a lie about how many runs contributed, and
+ * the reader needs to distinguish "no run" from "a run whose slots were
+ * incomplete" — `perTurnComposite` returns null exactly because a composite over
+ * a subset reads LOW, and low is the direction that makes a ceiling look met.
+ */
+export function composeReadingRecord(
+    composite: { ms: number; parts: Record<string, number> } | null,
+    tool_calls: number,
+    env: NodeJS.ProcessEnv = process.env,
+): Record<string, unknown> {
+    // In CI a session is the workflow run on a given runner; locally it is the
+    // host plus the process's own start, so two consecutive local runs are
+    // distinguishable while one run's records stay grouped.
+    const ciRun = env['GITHUB_RUN_ID'];
+    const session =
+        ciRun !== undefined && ciRun !== ''
+            ? `gh-${ciRun}-${env['RUNNER_OS'] ?? os.platform()}-${env['GITHUB_RUN_ATTEMPT'] ?? '1'}`
+            : `local-${os.hostname()}-${String(process.pid)}`;
+    return {
+        composite_ms: composite === null ? null : composite.ms,
+        parts: composite === null ? null : composite.parts,
+        tool_calls,
+        session,
+        platform: `${os.platform()}-${os.arch()}`,
+        node: process.version,
+        commit: env['GITHUB_SHA'] ?? null,
+        run_id: ciRun ?? null,
+        recorded_at: new Date().toISOString(),
+    };
+}
+
+/** Append one JSONL record. Creates the file and its directory if absent. */
+export function appendReading(storePath: string, record: Record<string, unknown>): void {
+    fs.mkdirSync(path.dirname(storePath), { recursive: true });
+    fs.appendFileSync(storePath, `${JSON.stringify(record)}\n`, 'utf-8');
+}
+
 interface HistoryEntry {
     recorded_at: string;
     invocation_path: InvocationPath;
@@ -895,6 +947,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             : perTurnComposite(results, compositeCfg.tool_calls ?? 10);
     if (compositeCfg !== undefined) {
         const calls = compositeCfg.tool_calls ?? 10;
+        // A1.1: persist the reading BEFORE the ceiling comparison below, so a run
+        // that fails the gate still contributes its number. A store that only
+        // gets the passing runs is biased in the direction that makes a ceiling
+        // look met, which is the same bias the null-composite rule guards.
+        const recIdx = argv.indexOf('--record-composite');
+        if (recIdx >= 0) {
+            const dest = argv[recIdx + 1] ?? path.join(REPO_ROOT, 'agents', 'evidence', 'hook-composite-readings.jsonl');
+            appendReading(dest, composeReadingRecord(composite, calls));
+            process.stdout.write(`recorded composite reading → ${path.relative(REPO_ROOT, dest)}\n`);
+        }
         if (composite === null) {
             process.stdout.write(
                 `ℹ️  per-turn composite not computed — a slot the definition needs is missing from this run\n`,
