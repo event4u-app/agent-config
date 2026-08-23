@@ -1,0 +1,9 @@
+{
+  "$comment": "Fixture — see the sibling template. Carries the forbidden key as a JSON schema property so both corpus shapes are exercised.",
+  "type": "object",
+  "properties": {
+    "mergePolicy": {
+      "type": "string"
+    }
+  }
+}
