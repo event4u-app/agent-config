@@ -20,6 +20,50 @@ execution:
 > (authored in the same inbox drain as this file — reference it by slug, it is
 > not this roadmap's to name a path for).
 >
+> **Per-leg decidability, added 2026-08-23 by `road-to-unowned-resume-conditions`.
+> Both legs are OWNED. Neither is restated and neither is recorded permanent —
+> the conditions below are the ones parked on 2026-08-22, unchanged.**
+>
+> **Leg (a) — owned, and the earliest possible date is derived, not estimated.**
+> The ledger cannot hold its first entry until `road-to-standing-payload-diet`
+> steps **0.3, 0.4 and 0.5** land — 0.3 emits the per-PR delta against the
+> merge-base, 0.4 registers it in the gate ledger, 0.5 books the credit side so
+> the ledger is two-sided. At 2026-08-23 that roadmap is **0 of 19 steps closed**
+> and 0.3–0.5 are three of the nineteen, so the ledger holds **zero weeks**.
+> Four weeks of entries therefore cannot complete before **2026-09-20** — and
+> that date assumes all three steps land the same day this was written, which
+> nothing suggests. It is a floor, not a forecast: the real date is four weeks
+> after 0.5 lands, whenever that is. Owner: whoever carries the diet roadmap.
+>
+> **Leg (b) — owned, with the arrival channel named.** This leg was
+> **unreachable** at 2026-08-22 and the park did not say so: its producer
+> `road-to-subagent-envelope-adoption` was archived with Phase 2 and AC-3/AC-4 all
+> `[-]`, its last published rate is **0.00 % — 0 `ok` of 1,296 stops**, and its
+> own blocker recorded that ">= 500 stops … from a ledger that is not this
+> machine's drain traffic" had **"no arrival channel for it today"** because the
+> ledger is `agents/runtime/`, gitignored at `.gitignore:190`, with no workflow
+> ingesting it.
+>
+> The channel is now named: **`agents/roadmaps/stubs/road-to-org-telemetry-sink.md`**,
+> whose Phase 2 exit criterion is, verbatim, *"records written on a second machine
+> appear in the sink."* That is precisely the input leg (b) is missing, and it is
+> the only mechanism in this estate that produces it. That stub is itself gated on
+> the `sink-choice` decision — deliberately owner-reserved, because a telemetry
+> sink is a **standing egress** and configuring one is not an agent's call.
+>
+> So leg (b)'s chain is: `sink-choice` decided → the sink stands up → non-local
+> stops accumulate → 500 of them carry a post-split `envelope_parse` value → the
+> leg is measurable. **Owner: the maintainer, at `sink-choice`.** The condition
+> itself is untouched: `>= 95 % over >= 500 stops` still means what it meant, and
+> the outlet taken was *"name what would make the input arrive"* — not the
+> restatement outlet, which `decision-revisit-gate`'s owner-reserved table routes
+> to the owner and which no council or agent path may take.
+>
+> **What a reader can now tell, which was the goal:** (a) is owned and has a
+> derived floor date; (b) is owned and has a named channel behind one named
+> owner-reserved decision. Neither is unreachable and neither is silently
+> permanent.
+>
 > Parked rather than adopted, and parked rather than skipped: the program is not
 > wrong, it is early. Every one of its four sequenced items is either already
 > owned elsewhere, already parked as prior art, or demand-gated with no confirmed
