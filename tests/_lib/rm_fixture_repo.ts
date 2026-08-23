@@ -24,5 +24,34 @@ import { rmSync } from 'node:fs';
  * has somewhere to go instead of being diagnosed from scratch.
  */
 export function rmFixtureRepo(dir: string): void {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    // 20 x 100 ms, raised from 10 x 50 ms. The smaller budget was not enough:
+    // the same ENOTEMPTY came back on a later PR with this helper ALREADY in
+    // the stack trace, so 500 ms is inside the window a CI runner needs and
+    // 2 s is outside it on the evidence so far. A retry budget is a guess
+    // about somebody else's scheduler; it is raised on a measurement, and this
+    // sentence is the measurement.
+    rmSync(dir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 }
+
+/**
+ * Git config that stops the race instead of retrying through it.
+ *
+ * `rmFixtureRepo` above treats the SYMPTOM — it waits for git to finish. This
+ * removes the most common reason git is still working: `git commit` can trigger
+ * `gc --auto`, which detaches and keeps writing inside `.git` after the
+ * `spawnSync` that started it has already returned. With auto-gc and background
+ * maintenance off, that particular writer never exists.
+ *
+ * Not a replacement for the retry budget, and deliberately so: an index lock or
+ * a packed-refs rewrite can still be in flight, so the two layers cover
+ * different halves and neither makes the other redundant.
+ *
+ * Apply per fixture repo, right after `git init`:
+ *
+ *     for (const [k, v] of FIXTURE_GIT_CONFIG) git('config', k, v);
+ */
+export const FIXTURE_GIT_CONFIG: ReadonlyArray<readonly [string, string]> = [
+    ['gc.auto', '0'],
+    ['maintenance.auto', 'false'],
+    ['commit.gpgsign', 'false'],
+];

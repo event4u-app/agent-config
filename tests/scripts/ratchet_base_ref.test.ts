@@ -13,7 +13,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 
-import { rmFixtureRepo } from '../_lib/rm_fixture_repo.js';
+import { FIXTURE_GIT_CONFIG, rmFixtureRepo } from '../_lib/rm_fixture_repo.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -45,7 +45,11 @@ beforeEach(() => {
     git('init', '--quiet', '--initial-branch=main');
     git('config', 'user.email', 'test@example.com');
     git('config', 'user.name', 'Test');
-    git('config', 'commit.gpgsign', 'false');
+    // Stops the teardown race at its source rather than retrying through it:
+    // `git commit` can trigger a detached `gc --auto` that keeps writing inside
+    // `.git` after the spawn returns, which is what produced ENOTEMPTY here on
+    // three separate PRs. See FIXTURE_GIT_CONFIG.
+    for (const [k, v] of FIXTURE_GIT_CONFIG) git('config', k, v);
     mkdirSync(join(repo, 'src', 'config'), { recursive: true });
     writeBaseline('src/config/allow.json', ['a.md', 'b.md', 'c.md']);
     git('add', '-A');
