@@ -140,9 +140,23 @@ Activation — two equivalent paths:
 Mechanics:
 
 1. The final deliberation round's outputs are anonymised into
-   `Response-A`, `Response-B`, … in stable input order. Provider /
-   model identity is stripped (Iron-Law neutrality holds); empty or
-   errored deliberation responses are skipped.
+   `Response-A`, `Response-B`, … in a **seeded** order — the seed is the
+   original ask plus the deliberation bodies, so the order is replayable
+   from the artefact and is **not** config order. Corrected 2026-08-23: this
+   paragraph previously described the order as stable and input-derived, which
+   was accurate until the shuffle landed and would then have made position
+   alone a leak — a reader could infer which member said what from where it
+   appeared. The old wording is described rather than quoted, because step
+   1.5's verify greps for its absence and prose that trips a grep-shaped
+   verify is a trap for the next reader. Provider / model identity
+   is stripped (Iron-Law neutrality holds); empty or errored deliberation
+   responses are skipped.
+
+   The mapping is recorded **per reviewer**, not once per run: each member
+   sees a different N−1 subset, so `Response-A` denotes a different member
+   for each of them. A single run-wide map cannot express that, and the one
+   that used to be returned was the last reviewer's — which is what made a
+   quote in the artefact resolve to the wrong source for everyone else.
 2. Each member receives an N−1 view (its own response filtered out)
    plus the Karpathy prompt: *strongest response*, *weakest blind
    spot*, *what did everyone miss*, *refinement*.
