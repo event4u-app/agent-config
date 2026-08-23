@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **718 artefacts** in this package.
+Maintainer-facing index of all **719 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (291)
+## Skills (292)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -202,6 +202,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`php-service`](../src/skills/php-service/SKILL.md) | official | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`pipeline-strategy`](../src/skills/pipeline-strategy/SKILL.md) | official | Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'. |
 | skill | [`pixar-storyteller`](../src/skills/pixar-storyteller/SKILL.md) | official | Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director. |
+| skill | [`playbook-authoring`](../src/skills/playbook-authoring/SKILL.md) | official | Use when a repo has its own generators, scripts or turbo tasks and an agent reaches for a generic skill instead — derive a Playbook context (ADR-244) from the real config, graded by the tree. |
 | skill | [`playwright-architect`](../src/skills/playwright-architect/SKILL.md) | official | Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'. |
 | skill | [`playwright-testing`](../src/skills/playwright-testing/SKILL.md) | official | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../src/skills/po-discovery/SKILL.md) | official | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
