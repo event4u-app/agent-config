@@ -361,7 +361,11 @@ const selfTest = (): number => {
         check('build and test produced no playbook', !r.playbooks.some((p) => /build|test/.test(p.slug)));
     }
 
-    console.log(failed === 0 ? '✅  derive_playbooks: self-test passed' : `❌  derive_playbooks: ${failed} failure(s)`);
+    process.stdout.write(
+        failed === 0
+            ? '✅  derive_playbooks: self-test passed\n'
+            : `❌  derive_playbooks: ${failed} failure(s)\n`,
+    );
     return failed === 0 ? 0 : 1;
 };
 
@@ -379,19 +383,21 @@ const main = (): number => {
 
     const report = derive(root);
     if (report.playbooks.length === 0) {
-        console.log('derive_playbooks: no creation-shaped procedure found — nothing proposed.');
+        process.stdout.write('derive_playbooks: no creation-shaped procedure found — nothing proposed.\n');
     }
     for (const p of report.playbooks) {
         const target = path.join(home, `${p.slug}.md`);
-        console.log(`${p.grade === 'configured' ? '✅' : '⚠️ '} ${target}  grade=${p.grade}  invokes=[${p.steps.map((s) => s.invokes).join(', ')}]`);
+        process.stdout.write(
+            `${p.grade === 'configured' ? '✅' : '⚠️ '} ${target}  grade=${p.grade}  invokes=[${p.steps.map((s) => s.invokes).join(', ')}]\n`,
+        );
         if (!write) continue;
         fs.mkdirSync(home, { recursive: true });
         fs.writeFileSync(target, renderPlaybook(p), 'utf8');
     }
     for (const o of report.out_of_scope) {
-        console.log(`ℹ️  out of scope for this release: ${o} — reported, not guessed at (ADR-244)`);
+        process.stdout.write(`ℹ️  out of scope for this release: ${o} — reported, not guessed at (ADR-244)\n`);
     }
-    console.log(`scanned: ${report.playbooks.length}`);
+    process.stdout.write(`scanned: ${report.playbooks.length}\n`);
     return 0;
 };
 
