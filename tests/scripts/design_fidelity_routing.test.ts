@@ -75,6 +75,20 @@ interface Row {
      * `routes` and `baseline` differ is a behaviour change this roadmap made.
      */
     readonly baseline: boolean;
+    /**
+     * Which MANDATE the routed handover carries — the second axis, added by
+     * `road-to-frontend-fidelity-calibration` step 0.3.
+     *
+     * `pixel` is the 1:1 floor and the default: absent means `pixel`, so every
+     * pre-existing row keeps its exact meaning without being touched. `structure`
+     * is a handover whose own artefact declares itself low-fidelity, where the
+     * layout is the spec and the greys are not.
+     *
+     * A boolean `routes` cannot express this. Maturity is a property of the
+     * ARTEFACT and mandate a property of the INSTRUCTION, and the defect this
+     * roadmap names is exactly that the rule had one axis for two questions.
+     */
+    readonly mandate?: 'pixel' | 'structure';
 }
 
 /**
@@ -278,6 +292,35 @@ export const ROUTING_MATRIX: readonly Row[] = [
         routes: false,
         baseline: false,
     },
+    // --- Class 5: artefact MATURITY, not instruction mandate (step 0.3) ------
+    // The pair is committed together on purpose. The rule's § Routing requires a
+    // near-miss row per new trigger class, AND requires it to test the direction
+    // the new trigger opens — a row testing something already closed cannot catch
+    // the over-broadness being introduced.
+    {
+        id: 'daf-wireframe-not-pixel',
+        klass: 'en',
+        prompt: "Here's the wireframe for the settings screen — build it.",
+        open_files: ['wireframe.html'],
+        routes: true,
+        baseline: true,
+        // Routed before AND after: what changes is the mandate, not whether the
+        // rule fires. A row whose `baseline` and `routes` agree while its
+        // `mandate` is new is precisely the shape of this phase's change.
+        mandate: 'structure',
+    },
+    {
+        id: 'daf-wireframe-near-miss',
+        klass: 'en',
+        prompt: 'This replaces the wireframe we reviewed last week — build it 1:1.',
+        open_files: ['design.html'],
+        routes: true,
+        baseline: true,
+        // STRICT, and this row is the one that fails if the discriminator reads
+        // the prose instead of the artefact. The word is a reference to a
+        // previous artefact, not a declaration about this one.
+        mandate: 'pixel',
+    },
 ];
 
 describe('design-fidelity routing matrix', () => {
@@ -307,6 +350,53 @@ describe('design-fidelity routing matrix', () => {
     it('every prompt class the roadmap names has at least one row', () => {
         const classes = new Set(ROUTING_MATRIX.map((r) => r.klass));
         expect(classes).toEqual(new Set(['en', 'de', 'none']));
+    });
+
+    describe('maturity is a second axis, not a second trigger (step 0.3)', () => {
+        const RULE = path.join(REPO_ROOT, 'src', 'rules', 'design-fidelity.md');
+        const ruleText = (): string => fs.readFileSync(RULE, 'utf-8');
+
+        it('both rows of the new class are present, and they disagree on mandate', () => {
+            const structure = ROUTING_MATRIX.find((r) => r.id === 'daf-wireframe-not-pixel');
+            const nearMiss = ROUTING_MATRIX.find((r) => r.id === 'daf-wireframe-near-miss');
+            expect(structure, 'the wireframe class row').toBeDefined();
+            expect(nearMiss, 'the near-miss row').toBeDefined();
+            // Disagreeing on mandate while agreeing on `routes` IS the phase's change.
+            // Two rows that agreed on both would measure nothing new.
+            expect(structure!.routes).toBe(nearMiss!.routes);
+            expect(structure!.mandate).toBe('structure');
+            expect(nearMiss!.mandate).toBe('pixel');
+        });
+
+        it('absent mandate means pixel — every pre-existing row keeps its meaning', () => {
+            // The default is the STRICTER obligation, so adding the axis cannot have
+            // silently downgraded a row nobody touched.
+            for (const r of ROUTING_MATRIX) {
+                if (r.id.startsWith('daf-wireframe-')) continue;
+                expect(r.mandate, `${r.id} must not declare a mandate`).toBeUndefined();
+            }
+        });
+
+        it('the rule carries the discriminator, and reads the ARTEFACT not the prose', () => {
+            // The assertion that makes the near-miss row mean something. A
+            // discriminator that matched the prose would downgrade every finished
+            // handover mentioning its own history — and the near-miss prompt is
+            // exactly such a handover.
+            const t = ruleText();
+            expect(t).toContain('MATURITY IS A PROPERTY OF THE ARTEFACT');
+            expect(t).toContain('reads the ARTEFACT, never the prose');
+            // And the safe default is stated, not left to inference.
+            expect(t).toContain('it is treated as finished');
+        });
+
+        it('the near-miss prompt would be misclassified by a prose match', () => {
+            // Proves the near-miss row is guarding a REAL failure mode rather than a
+            // hypothetical one: the naive implementation does misfire on it.
+            const naive = (prompt: string): boolean => prompt.toLowerCase().includes('wireframe');
+            const nearMiss = ROUTING_MATRIX.find((r) => r.id === 'daf-wireframe-near-miss')!;
+            expect(naive(nearMiss.prompt)).toBe(true);
+            expect(nearMiss.mandate).toBe('pixel');
+        });
     });
 
     it('the matrix records at least one closed baseline gap per class', () => {
