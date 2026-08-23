@@ -152,8 +152,41 @@ function main(argv?: readonly string[]): number {
         else ledger.complete(name);
     }
 
+    // SECOND SURFACE — step 2.2 of road-to-review-independence. Until it existed, this
+    // gate scanned one directory with one producer in it, so `scanned: 1` meant "the only
+    // producer of this record agrees with itself". `dispatch_r2_reviewer` now emits the
+    // same record into its findings artefact, and those are checked here on the same
+    // terms: the independence pair must be internally consistent wherever it is written,
+    // or the derivation rule is advice rather than a contract.
+    //
+    // Only the independence check runs over this surface, not the release-findings schema
+    // — an R2 artefact is a different document and validating it against the ledger
+    // schema would report violations that are not violations.
+    const REVIEWS_DIR = path.join(process.cwd(), 'agents', 'evidence', 'reviews');
+    let reviewScanned = 0;
+    if (fs.existsSync(REVIEWS_DIR)) {
+        for (const name of fs.readdirSync(REVIEWS_DIR).filter((n) => n.endsWith('.md')).sort()) {
+            const text = fs.readFileSync(path.join(REVIEWS_DIR, name), 'utf-8');
+            const m = /<!--\s*(\{"review-independence".*?\})\s*-->/su.exec(text);
+            if (m === null) continue;
+            reviewScanned += 1;
+            let rec: Record<string, unknown>;
+            try {
+                rec = (JSON.parse(m[1]!) as { 'review-independence': Record<string, unknown> })[
+                    'review-independence'
+                ];
+            } catch (exc) {
+                problems.push(`${name}: unparseable review-independence block — ${String(exc)}`);
+                continue;
+            }
+            for (const v of independenceViolations(rec)) {
+                problems.push(`${name}: independence — ${v}`);
+            }
+        }
+    }
+
     ledger.finalize();
-    process.stderr.write(`scanned: ${files.length}\n`);
+    process.stderr.write(`scanned: ${String(files.length + reviewScanned)}\n`);
 
     if (problems.length > 0) {
         process.stdout.write(

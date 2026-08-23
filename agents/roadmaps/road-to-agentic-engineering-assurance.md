@@ -116,7 +116,7 @@ It does not re-specify its mechanism.
 
 ### Existing review-independence roadmap — dependency, not duplicate
 
-`agents/roadmaps/road-to-review-independence.md` already identifies a shipped
+`agents/roadmaps/archive/road-to-review-independence.md` already identifies a shipped
 fresh-context reviewer dispatcher and plans to route the default review path
 through it, while recording author/reviewer context relation.
 
