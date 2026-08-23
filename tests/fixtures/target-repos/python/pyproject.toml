@@ -1,0 +1,8 @@
+[project]
+name = "fixture-python"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mutmut]
+paths_to_mutate = "src/"
