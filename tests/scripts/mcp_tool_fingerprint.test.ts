@@ -15,6 +15,7 @@ import * as path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { McpToolDefinition } from '../../src/scripts/mcp_tool_fingerprint.js';
 import {
     FINGERPRINT_STORE,
     canonicalize,
@@ -91,8 +92,19 @@ describe('an unchanged definition yields no mismatch', () => {
     });
 
     it('treats an absent and an explicitly null description alike', () => {
-        const bare = { name: 't' };
-        const nulled = { name: 't', description: undefined, inputSchema: undefined };
+        const bare: McpToolDefinition = { name: 't' };
+        // A third-party server can send JSON `null` for a field the interface
+        // types as optional-string, so the cast describes real wire data rather
+        // than working around the type. Under `exactOptionalPropertyTypes` an
+        // explicit `undefined` is not assignable either, which is why this is not
+        // written with `description: undefined`.
+        const nulled = {
+            name: 't',
+            description: null,
+            inputSchema: null,
+        } as unknown as McpToolDefinition;
+        // A server toggling between absent and null has changed nothing the model
+        // can read; reporting it would be noise.
         expect(fingerprintDefinition(bare)).toBe(fingerprintDefinition(nulled));
     });
 });
