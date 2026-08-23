@@ -171,6 +171,16 @@ Work aimed there lands in the guideline.
       them. Recorded because it constrains what comes next: **any further maturity prose goes
       to the mechanics guideline, not to the rule.** There is no headroom left.
 
+      **The migration target had 735 chars of headroom, not the 1,347 the first pass used.**
+      `check_depth_budget` reds a FIFTH over-ceiling file, and `design-fidelity-mechanics.md`
+      sits at 15,265 against a 16,000-char ceiling — so the rule's own overflow lane is
+      nearly full. CI caught it on #1589 (`5 violation(s) against a baseline of 4`), not
+      preflight: the ratchet compares against `origin/main`, so the local run was green
+      until the branch was updated. The section was cut to the table plus two pointer
+      sentences (final file 15,892). Recorded because it constrains the same next step from
+      the other side: **the rule is at 200 lines AND its mechanics file is ~100 chars from
+      a ceiling** — further maturity prose needs its own file, not either of these two.
+
       One trap worth naming, hit while trimming: reflowing the paragraph moved *"it is
       treated as finished"* across a line break and took the 0.3 discriminator assertion RED.
       A `toContain` over a hand-wrapped rule is whitespace-sensitive — the asserted clause
