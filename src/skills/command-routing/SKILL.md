@@ -23,6 +23,9 @@ Triggered when user invokes a slash command. The `slash-command-routing-policy` 
 
 1. **Match command** — Find the command file in `.augment/commands/` or `agents/overrides/commands/`.
 2. **Infer inputs** — Before asking the user, try to infer values (see table below).
+2b. **List a matching playbook in the preamble.** If a playbook's `task` matches the
+   command's name, name it before the steps run — it is this repository's own procedure and
+   outranks a shipped one ([`playbook-precedence`](../../rules/playbook-precedence.md)).
 3. **Execute steps** — Follow the command steps in exact order.
 4. **Verify output** — Confirm expected result was produced (commit, PR, file change, etc.).
 

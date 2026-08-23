@@ -37,6 +37,13 @@ Before changing anything, read and understand:
 1. **Read `AGENTS.md`** — current content, line count, what's duplicated vs. unique.
 2. **Read `.github/copilot-instructions.md`** — same analysis.
 3. **Scan `.augment/`** — which skills, rules, and guidelines already cover topics from the files above.
+3b. **Scan the playbooks too, not only `.augment/`.** A `packages/<n>/AGENTS.md` may
+   duplicate a **playbook** rather than a shipped rule, and dedup against `.augment/` alone
+   misses it entirely — the content is not in `.augment/` at all. Run
+   `findRestatedSteps` (`src/scripts/derive_playbooks.ts`) over each workspace file: a line
+   carrying a playbook's `invokes` id outside a link is a restatement to replace with a
+   pointer. The same id **inside** a link label is the shape the contract wants — see
+   [`agents-md-thin-root` § Workspace files](../agents-md-thin-root/SKILL.md).
 4. **Identify duplication** — what content exists in both AGENTS.md and `.augment/`?
 
 Only after this analysis, proceed with optimization.
