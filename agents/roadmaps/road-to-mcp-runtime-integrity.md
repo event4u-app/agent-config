@@ -72,7 +72,7 @@ fail a build. The dependency is therefore arming, not registering.
 **Drift 2 — the owning step is renumbered, and it is not the whole story.** The
 parent named "step 4.2 of `road-to-per-turn-hook-economy`". That roadmap is
 archived and its two deferred items were themselves carried into
-`agents/roadmaps/road-to-per-turn-hook-economy-carry.md`, where the arming step
+`agents/roadmaps/archive/road-to-per-turn-hook-economy-carry.md`, where the arming step
 is **A2.1** ("Set `p50_ci` and flip `observe_only` to false"). The config's own
 note still calls this "the whole of step 4.2", which is where the old id
 survives. A2.1 is additionally gated by that roadmap's `b-composite-ceiling-value`,
@@ -164,7 +164,7 @@ tool the check exists for.
 ### blocker: b-per-turn-composite-ceiling
 - **Status:** open
 - **Owner:** the composite-ceiling decision in
-  `agents/roadmaps/road-to-per-turn-hook-economy-carry.md` — its step **A2.1**
+  `agents/roadmaps/archive/road-to-per-turn-hook-economy-carry.md` — its step **A2.1**
   and the blocker `b-composite-ceiling-value` that gates it, which both council
   seats placed with the owner independently.
 - **Blocks:** Phase 1 entirely — both steps. Nothing else in this roadmap is
