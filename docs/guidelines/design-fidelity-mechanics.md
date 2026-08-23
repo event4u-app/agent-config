@@ -178,6 +178,27 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
   a design. Brief silent on a region → surface the gap (`ask-when-uncertain`)
   or leave an honest placeholder; never invent filler to fill space.
 
+## Artefact maturity — the second axis
+
+Migrated from [`design-fidelity`](../../src/rules/design-fidelity.md) § Two axes, which
+holds the Iron Law and the two discriminator clauses. This is the lookup material.
+
+| The artefact declares | The spec is | The spec is NOT |
+|---|---|---|
+| low fidelity — greyscale, box-and-line, placeholder copy | layout · element set · hierarchy · states shown | greys · placeholder text · box borders · exact spacing |
+| finished — colour, real copy, real assets | everything visible (the rule's 1:1 floor, unchanged) | — |
+
+The citation the rule points at, in full — [`wireframe`](../../src/skills/wireframe/SKILL.md)
+§ Gotchas: *"The wireframe file tends to get promoted into hi-fi by incremental edits —
+don't. … the wireframe's greyscale skeleton hard-codes non-decisions."* A rule that routed
+a wireframe as a pixel spec would contradict the skill that produced it.
+
+**The near-miss is pinned, not assumed.** `daf-wireframe-near-miss` in `ROUTING_MATRIX`
+is a finished full-colour comp whose prose says *"this replaces the wireframe we reviewed
+last week"*, and the test asserts a naive `includes('wireframe')` DOES misfire on it — so
+the row guards a measured failure mode rather than a hypothetical one. Any future widening
+of the maturity trigger adds its own near-miss row first; that is the cheap half.
+
 ## Provided-artifact precedence
 
 ```
