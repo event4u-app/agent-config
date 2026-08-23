@@ -49,6 +49,23 @@ function validRepo(tmp: string): void {
             ],
         }),
     );
+    // The Augment twins. A valid repo shape carries them: both ship in the npm
+    // tarball (publish-surface.json roots) and both are version-synced to
+    // package.json, so their ABSENCE is a violation, not a not-applicable —
+    // that is the whole point of the rule they were added for.
+    write(
+        path.join(tmp, '.augment-plugin', 'plugin.json'),
+        JSON.stringify({ name: 'agent-config', version: '1.4.0' }),
+    );
+    write(
+        path.join(tmp, '.augment-plugin', 'marketplace.json'),
+        JSON.stringify({
+            name: 'event4u-agent-config',
+            version: '1.4.0',
+            metadata: { description: 'Test.', version: '1.4.0' },
+            plugins: [{ name: 'agent-config', version: '1.4.0', source: '.' }],
+        }),
+    );
 }
 
 function readMarketplace(tmp: string): Record<string, unknown> {

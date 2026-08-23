@@ -329,7 +329,7 @@ wait for their own failing tests.
   subagent cross-check) → [`test-case-discovery`](../test-case-discovery/SKILL.md)
 * Project type-checker / linter / formatter (PHPStan, ECS, Rector for PHP — tsc / eslint / prettier for TS — ruff / mypy for Python) → [`quality-tools`](../quality-tools/SKILL.md)
 * Full Pest conventions and Laravel test helpers → [`pest-testing`](../pest-testing/SKILL.md)
-* Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
+* Running tests inside Docker → [`/tests:execute`](../../domains/engineering-base/tests/execute/command.md)
 * Investigating why a test is failing for non-obvious reasons →
   [`systematic-debugging`](../systematic-debugging/SKILL.md)
 

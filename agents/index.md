@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **726 artefacts** in this package.
+Maintainer-facing index of all **727 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -433,7 +433,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (201)
+## Commands (202)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -498,6 +498,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`design-system-capture`](../src/domains/engineering-base/design-system/capture/command.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
 | command | [`design-system-generate`](../src/domains/engineering-base/design-system/generate/command.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |
 | command | [`design-system-import`](../src/domains/engineering-base/design-system/import/command.md) | cluster: design-system | Run an extraction tool's output through the three-lane adapter into the design-system.json contract, then hand it to the per-field confirmation import. |
+| command | [`design`](../src/domains/engineering-base/design/command.md) | cluster: design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
 | command | [`estimate-ticket`](../src/domains/product-basic/estimate-ticket/command.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`explain-run`](../src/domains/meta/explain-run/command.md) |  | Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'. |
 | command | [`feature`](../src/domains/engineering-base/feature/command.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |

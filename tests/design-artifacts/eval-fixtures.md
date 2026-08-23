@@ -472,6 +472,22 @@ the source from one that guessed well, which is the same limit
   arms score `daf-adhoc-port-coverage`, not this one. Recorded per the
   skip-with-caveat rule in § Notes rather than banked as a pass.
   Full write-up: `agents/evidence/analysis/source-first-frontend-phase1.md`.
+- **2026-08-23 — the skip reason is LIFTED. The primitive exists.**
+  `agent-config ui:render` (`src/cli/commands/uiRender.ts`, road-to-frontend-power
+  E3.1) is a page-reaching headless capture: three viewports, DOM plus computed
+  styles plus screenshot per viewport, Class A. Executed on
+  `tests/eval/frontend-corpus/cases/supplied-runnable-html/design.html` in this
+  session — `verification: verified`, eleven artefacts written, and it found a
+  genuine horizontal overflow at 320 px (scrollWidth 336 > 320).
+
+  **What that changes and what it does not.** The 2026-08-13 finding was
+  "primitive absent, so this fixture's dimension could not vary". The dimension
+  can vary now, so the fixture is no longer blocked. It is **not** thereby
+  scored: scoring it means running an agent through an artifact port and judging
+  the rung it chose, which is a live-session evaluation, not a repository
+  measurement. So this entry moves from SKIPPED-for-want-of-a-primitive to
+  UNSCORED-pending-an-eval-run — a different state, and the distinction is the
+  whole point of the skip-with-caveat rule.
 
 ### daf-adhoc-port-coverage
 - **primitive:** `static_inspect`

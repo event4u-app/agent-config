@@ -1,0 +1,26 @@
+# Case: artifact-source-not-rederived
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: artifact-source-not-rederived
+prompt: "Use this artifact for the pricing section."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: preserve
+  reference_maturity: runnable-artifact
+note: |
+  The supplied source is reachable, so the source is the data basis.
+
+  The trap: the artifact is visually simple, so a naive run looks at it, forms an
+  impression, and writes fresh JSX that "looks the same". That is the
+  from-scratch re-derivation `design-fidelity` names as a deviation requiring the
+  same confirmation as a swapped control.
+
+  PASS: the ported component carries the artifact's own mechanics — the
+  `clamp()` type scale, the `:has()` selected-state, the `@container` breakpoint
+  — either honoured or explicitly flagged as untranslatable.
+  FAIL: the three mechanics silently disappear and the output is a plain
+  media-query grid. Zero silent drops is the assertion.
+files:
+  - artifact.html

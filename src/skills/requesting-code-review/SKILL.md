@@ -60,7 +60,7 @@ Before asking anyone else:
 * Check for secrets in diff — API keys, connection strings, tokens
 * Check file-system side effects — generated files, lockfile churn,
   IDE configs, `.env` changes
-* Run the linter + tests (see [`verify-before-complete`](../verify-before-complete/SKILL.md))
+* Run the linter + tests (see [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md))
 * If you find issues → fix them, do **not** ship them and hope the
   reviewer flags them
 
@@ -192,7 +192,7 @@ When handing the review request to the reviewer (PR body, Slack, email):
 * Actually opening the PR → [`create-pr`](../../commands/create-pr.md)
 * Writing the commits themselves → [`commit`](../../commands/commit.md),
   [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md)
-* Verifying readiness → [`verify-before-complete`](../verify-before-complete/SKILL.md)
+* Verifying readiness → [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md)
 * Processing the feedback when it arrives → [`receiving-code-review`](../receiving-code-review/SKILL.md)
 
 ## Validation checklist

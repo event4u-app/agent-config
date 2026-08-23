@@ -1,0 +1,15 @@
+# Case: livewire-flux
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: livewire-flux
+prompt: "Make the seat-map component reflect live availability."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Livewire/Flux: the executor differs from Blade but the authority resolution must not.
+files:
+  - resources/views/livewire/seat-map.blade.php
