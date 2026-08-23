@@ -182,6 +182,38 @@ does not execute code, run tests, or touch the network**.
 * NEVER claim a dependency without a file:line citation from grep output
 * NEVER chase dependencies past 2nd order without explicit scope approval — flag and stop
 
+## Monorepo
+
+In a workspace repository the reach of an edit does not stop at the workspace
+that contains it. A file under `packages/ui` that three apps import has a blast
+radius of four workspaces, and the grep sweep above will not find the edge —
+the importing code says `@org/ui`, not a path.
+
+**Before editing a file in a workspace other workspaces depend on, name the
+affected set.** Ask the task runner, which computes it from the real graph:
+
+```bash
+# Turborepo — everything affected by the working tree vs the previous commit
+npx turbo run test --filter=...[HEAD^1]
+
+# Nx
+npx nx affected -t test
+```
+
+`...[HEAD^1]` is the dependents form: `...` ahead of the selector means "and
+everything that depends on it". Without it you get the changed package alone,
+which is the answer that looks right and misses the point.
+
+**With no runner installed**, walk it in reverse from the manifests: find the
+edited file's owning workspace `name`, then grep every other workspace's
+`package.json` for that name. Those are the first-order dependents; repeat once
+for second order, and stop there per the 2nd-order rule above.
+[`monorepo-workspace`](../monorepo-workspace/SKILL.md) § 4 prints that graph.
+
+Report the affected set as workspace names with the manifest that declares each
+edge, exactly as the reach table above reports file:line — an affected set
+without its citing edge is the same unverifiable claim in coarser units.
+
 ## References
 
 - **Martin Fowler — "Refactoring: Improving the Design of Existing Code"** (2018)
