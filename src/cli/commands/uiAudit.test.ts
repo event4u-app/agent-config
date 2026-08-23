@@ -4,6 +4,8 @@
  * filesystem path is covered by the CLI run recorded in the commit message.
  */
 import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import { COVERAGE_BUCKETS, buildArtefact, staleness } from './uiAudit.js';
 
@@ -17,8 +19,21 @@ describe('E2.1 — the artefact shape the work engine already expects', () => {
         for (const k of ['components_found', 'greenfield', 'audit_path']) expect(a).toHaveProperty(k);
     });
 
-    it('shares ONE coverage vocabulary with the work engine instead of copying it', () => {
-        expect([...COVERAGE_BUCKETS]).toEqual(['honoured', 'translated', 'flagged']);
+    it('shares ONE coverage vocabulary with the work engine — asserted against its source', () => {
+        // A hardcoded literal here would pass while the engine drifted, which is
+        // the failure this assertion exists to prevent. Read the engine's own
+        // declaration instead. A test-time read into the template tree is fine;
+        // a RUNTIME import is not (it breaks the published dist/cli bundle),
+        // which is why the constant is declared locally and pinned here.
+        const enginePath = path.resolve(
+            __dirname,
+            '../../agent-src/templates/scripts/work_engine/directives/ui/apply.ts',
+        );
+        const src = fs.readFileSync(enginePath, 'utf8');
+        const m = /COVERAGE_BUCKETS:\s*ReadonlyArray<string>\s*=\s*\[([^\]]*)\]/.exec(src);
+        expect(m, 'engine no longer declares COVERAGE_BUCKETS in the expected shape').not.toBeNull();
+        const engineBuckets = [...m![1]!.matchAll(/'([^']+)'/g)].map((x) => x[1]);
+        expect([...COVERAGE_BUCKETS]).toEqual(engineBuckets);
     });
 
     it('is non-empty on a real component', () => {

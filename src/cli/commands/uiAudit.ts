@@ -29,8 +29,23 @@ import * as path from 'node:path';
 
 import { isUiPath, isUiTreePath } from '../../scripts/_lib/ui_surface.js';
 
-/** Re-exported from the work engine so there is ONE vocabulary, not two. */
-export { COVERAGE_BUCKETS } from '../../agent-src/templates/scripts/work_engine/directives/ui/apply.js';
+/**
+ * The engine's coverage vocabulary, declared here rather than re-exported.
+ *
+ * A re-export from `agent-src/templates/scripts/work_engine/...` was tried
+ * first and reverted: it creates a RUNTIME edge from the shipped CLI into the
+ * work-engine TEMPLATE tree, which is projected to consumers rather than
+ * compiled into `dist/cli`. The published bundle then fails to resolve it at
+ * import time — caught by `agent-config roadmap:progress` throwing
+ * ERR_MODULE_NOT_FOUND on a clean tree.
+ *
+ * The one-vocabulary guarantee survives without the edge: `uiAudit.test.ts`
+ * reads the engine's own `apply.ts` and asserts this array equals it, so drift
+ * is a red test rather than two copies quietly diverging. A test-time read into
+ * the template tree is fine — the tests already read it; a runtime import is
+ * not.
+ */
+export const COVERAGE_BUCKETS: readonly string[] = ['honoured', 'translated', 'flagged'];
 
 export const ARTEFACT_REL = path.join('agents', 'runtime', 'state', 'ui-audit.json');
 
