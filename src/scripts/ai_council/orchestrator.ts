@@ -43,7 +43,6 @@ import {
     anonymize_responses,
     bucket_by_threshold,
     parse_findings_outcome,
-    parse_findings_response,
     parse_scores_response,
 } from './consensus.js';
 import type {
