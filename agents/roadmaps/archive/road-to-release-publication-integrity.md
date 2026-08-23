@@ -80,8 +80,8 @@ not implement the guard.
       `release.ts` **2,818 -> 2,030** (net **-788**); `release_publication.ts` 727
       and `release_env.ts` 238, both under the 1,500 ceiling and therefore
       contributing zero excess — which is why the total falls by exactly what left.
-      `check_source_size_budget` total excess **19,363 -> 18,575**; the gate
-      reported the ratchet loose and the baseline is lowered in the same change.
+      `check_source_size_budget` total excess **19,363 -> 18,574**; the gate
+      reported the ratchet loose and the baseline is lowered in the same change, set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a red test.
       Every moved public name resolves through the trailing `export {...}` block
       that was already there, and the six names tests import directly are
       re-exported with `export ... from` rather than imported, because they are not
@@ -254,8 +254,8 @@ annotated tag message in any case.
       artefact. *Reopening condition:* the stub is promoted.
 - [x] AC-2 — `release.ts` is net smaller than at `407915361`, measured by
       `check_source_size_budget`, or Phase 2 is recorded as not started.
-      **Met on BOTH limbs 2026-08-23.** `release.ts` is 2,818 -> 2,030 lines (net
-      -788) and `check_source_size_budget`'s total excess is 19,363 -> 18,575 with
+      **Met on BOTH limbs 2026-08-23.** `release.ts` is 2,818 -> 2,029 lines (net
+      -789) and `check_source_size_budget`'s total excess is 19,363 -> 18,575 with
       the baseline lowered in the same change; and Phase 2 is separately recorded
       as not started. The first limb is the load-bearing one: `release.ts` being
       over the ceiling is what refused the first attempt, and it is no longer the
