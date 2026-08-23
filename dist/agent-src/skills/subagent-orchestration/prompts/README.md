@@ -106,3 +106,28 @@ Every dispatchable mode named in `SKILL.md` § *The nine modes* maps to a
 prompt file in the table above (mode 8 is gated/experimental — its
 live-app rubric lives in the `subagent-modes-detail` context, not here);
 each prompt mentions all four status enum values.
+
+## The implementer envelope: hand it to a judge, never to a fresh reviewer
+
+Several templates here carry an `IMPLEMENTER ENVELOPE:` line — `do-and-judge.md:70` and
+`do-and-judge-two-stage.md:72` among them. **That is correct, and it is correct for a
+specific reason:** a judge is validating a *claim*. It needs to know what the implementer
+said it did, because the question is whether the diff supports the claim. Withholding the
+envelope from a judge makes it guess at the claim it is meant to test.
+
+**It is wrong for a fresh reviewer**, and the asymmetry is the whole point of that role. A
+fresh reviewer's value is a negative property: it has **no implementation context**, so it
+cannot inherit the author's framing of what the change is for or what counts as done.
+Handing it the envelope destroys exactly the property it was dispatched for — and it does
+so invisibly, because the output still looks like a review.
+
+So, for the next author of a template in this directory:
+
+```
+COPYING THE ENVELOPE LINE INTO A FRESH-REVIEWER TEMPLATE SILENTLY REMOVES
+THE ONE PROPERTY THAT MADE IT WORTH A SEPARATE DISPATCH.
+JUDGE -> ENVELOPE. FRESH REVIEWER -> DIFF AND SCOPE ONLY.
+```
+
+Recorded here rather than only in the route that consumes it (`/review:changes` § 4b-fresh)
+because the line is copied from *these* files, so this is where a reader meets it.

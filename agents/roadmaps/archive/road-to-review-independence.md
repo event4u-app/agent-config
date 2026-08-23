@@ -83,7 +83,7 @@ it goes first and why it is cheap: the rule is prose, it is not a kernel rule
 (the nine are listed in `src/scripts/hooks/block_kernel_rule_writes.ts:10-12`
 and this is not among them), and it sits at 144 lines.
 
-- [ ] **0.1 Correct the over-claim.** `src/rules/evaluator-independence.md:88-92`
+- [x] **0.1 Correct the over-claim.** `src/rules/evaluator-independence.md:88-92`
       says the concern *"**blocks** a dispatch whose prompt carries a pre-loaded
       verdict, and **blocks** a second self-scoped evaluation dispatch in the
       same turn; it **warns** on the first"*, and concludes *"items 1 and 4
@@ -97,7 +97,7 @@ and this is not among them), and it sits at 144 lines.
       warns and does not block.
       verify: `grep -c 'blocks a second' src/rules/evaluator-independence.md`
       returns `0`, and the rewritten paragraph names `EXIT_ALLOW`.
-- [ ] **0.2 Correct the under-claim.** The same rule at `:127-129` says
+- [x] **0.2 Correct the under-claim.** The same rule at `:127-129` says
       *"Items 2 and 3 … are **not** enforced by anything"*. Item 3 — recording
       the prompt with the verdict — **has** been enforced since
       `check_review_prompt_binding.ts` shipped. Narrow the sentence to item 2
@@ -107,14 +107,14 @@ and this is not among them), and it sits at 144 lines.
       verify: `grep -n 'check_review_prompt_binding' src/rules/evaluator-independence.md`
       returns at least one hit, and `grep -c 'Items 2 and 3' src/rules/evaluator-independence.md`
       returns `0`.
-- [ ] **0.3 Note the manifest's third reading.** `src/scripts/hook_manifest.yaml:380-385`
+- [x] **0.3 Note the manifest's third reading.** `src/scripts/hook_manifest.yaml:380-385`
       declares `severity: blocking` for `evidence-independence`, which is true
       of the item-1 path and false of the item-4 path. Add one sentence to the
       rule's enforcement section stating that the manifest severity describes
       the concern, not every branch inside it.
       verify: the sentence exists, and `sed -n '380,385p' src/scripts/hook_manifest.yaml`
       still shows `severity: blocking` (this step changes prose, not the manifest).
-- [ ] **0.4 Widen the spawn-payload gate to the shipped templates.**
+- [x] **0.4 Widen the spawn-payload gate to the shipped templates.**
       `src/scripts/lint_spawn_payload.ts` makes the *"NEVER BULK-DUMP CONTEXT
       INTO A SUBAGENT"* Iron Law deterministic, but its header (`:7-11`) scans
       exactly two surfaces: `tests/fixtures/**/*spawn*.json` and
@@ -142,7 +142,7 @@ subagents only when `subagents.max_parallel` is `≥ 5`. So on the common path,
 the party that wrote the diff also reads it, with the whole implementation
 context in scope.
 
-- [ ] **1.1 Add a fresh-reviewer route to `/review:changes`.** Not a new
+- [x] **1.1 Add a fresh-reviewer route to `/review:changes`.** Not a new
       mechanism — a call into `dispatch_r2_reviewer.ts` with the scope it
       already derives. The five in-session judges stay; the fresh reviewer is a
       sixth input whose distinguishing property is that it has no
@@ -150,7 +150,7 @@ context in scope.
       verify: `grep -n 'dispatch_r2_reviewer' src/domains/engineering-base/review/changes/command.md`
       returns at least one hit; `git show HEAD:src/domains/engineering-base/review/changes/command.md | grep -c dispatch_r2_reviewer`
       returns `0` (the pre-state assertion).
-- [ ] **1.2 State when the route is taken and when it is not.** A fresh
+- [x] **1.2 State when the route is taken and when it is not.** A fresh
       reviewer costs a dispatch. Name the condition in the command body rather
       than leaving it to judgement, and name what happens when dispatch is
       unavailable — the honest degraded answer, not a silent fallback to
@@ -158,7 +158,7 @@ context in scope.
       verify: the command body contains both the condition and the
       unavailable-path sentence; `./scripts-run src/scripts/check_references`
       exits `0`.
-- [ ] **1.3 Do not let the implementer envelope reach the fresh reviewer.**
+- [x] **1.3 Do not let the implementer envelope reach the fresh reviewer.**
       The existing judge prompts hand it over deliberately —
       `src/skills/subagent-orchestration/prompts/do-and-judge.md:70` is
       `IMPLEMENTER ENVELOPE: {{envelope}}`, and the two-stage spec judge does
@@ -185,7 +185,7 @@ Model family and author relation are different questions. A cross-family pair
 that both read the implementer's envelope is not independent in the sense that
 matters here.
 
-- [ ] **2.1 Add an author-relation axis to the existing type.** Extend
+- [x] **2.1 Add an author-relation axis to the existing type.** Extend
       `ReviewIndependence` (or add a sibling field on the same record) to
       record whether the reviewer shared the author's session and context.
       Preserve the file's own design rule, stated in its header at `:10-13`:
@@ -194,12 +194,12 @@ matters here.
       verify: `npx tsx --test tests/scripts/review_independence*.test.ts` passes,
       and a fixture asserting a same-session cross-family reviewer does **not**
       derive `accepted` is present and was seen red before the change landed.
-- [ ] **2.2 Give the type a second producer.** One producer is why
+- [x] **2.2 Give the type a second producer.** One producer is why
       `check_review_schema` reports `scanned: 1`. Make the finding verifier emit
       the same record, so the schema gate has more than one thing to check.
       verify: `./scripts-run src/scripts/check_review_schema` reports
       `scanned: 2` or more and exits `0`.
-- [ ] **2.3 Consensus confidence — REFERENCE ONLY, do not edit the file.**
+- [x] **2.3 Consensus confidence — REFERENCE ONLY, do not edit the file.**
       The natural home is `src/skills/judge-synthesis/SKILL.md`, which
       `road-to-spec-axis-in-review` owns. Record here what the field should
       carry and leave the edit to that roadmap, or hand this item to it.
@@ -217,20 +217,20 @@ shuffle (the `shuffle` hits there belong to council blind-review and to the
 trigger evaluator, which are different mechanisms). There is no rotation state
 and no streak state anywhere in the tree.
 
-- [ ] **3.1 Run the pre-registered independence spike BEFORE building rotation.**
+- [x] **3.1 Run the pre-registered independence spike BEFORE building rotation.**
       Register the threshold and the honest-null exit in writing before the
       measurement runs. The question: does rotating or shuffling reviewer order
       change the finding set on a frozen corpus of past reviews, by more than
       the pre-registered margin?
       verify: a pre-registration note exists under `agents/evidence/` with a
       threshold and a date **earlier than** the measurement artefact's date.
-- [ ] **3.2 If the spike passes, implement the shuffle its own prose specifies.**
+- [-] **3.2 If the spike passes, implement the shuffle its own prose specifies.**
       Deterministic seed per session, logged for replay, single-reviewer → no
       shuffle. Not a new mechanism — `src/scripts/ai_council/blind_review.ts:42`
       already exports `deterministic_shuffle_indices`.
       verify: the same seed produces the same order across two runs, asserted by
       a test; `grep -n 'deterministic_shuffle_indices' src/` shows the reuse.
-- [ ] **3.3 If the spike returns a null, say so and stop.** Write the null into
+- [x] **3.3 If the spike returns a null, say so and stop.** Write the null into
       `src/skills/code-review/SKILL.md` beside the prose, so the next reader
       knows the control was measured and not merely unimplemented.
       verify: the null is recorded at the prose it qualifies, with the artefact
@@ -245,14 +245,14 @@ this: a grep for `do not flag|at most minor|pre-judg|prejudg` across
 `src/skills/subagent-orchestration/` and `src/agent-src/contexts/execution/`
 returns **0**.
 
-- [ ] **4.1 One paragraph on the rule that already owns it.** A stop-rule on
+- [x] **4.1 One paragraph on the rule that already owns it.** A stop-rule on
       `src/rules/evaluator-independence.md`: the orchestrator states no
       expectation of the outcome in a prompt it writes for a judge of its own
       work. The rule's existing Iron Law already forbids authoring the verdict;
       this names the softer form that evades it.
       verify: the paragraph exists and the rule is still `≤ 200` lines —
       `wc -l < src/rules/evaluator-independence.md` prints a number under `200`.
-- [ ] **4.2 A `not_contains` check over captured judge prompts.** The prompts
+- [x] **4.2 A `not_contains` check over captured judge prompts.** The prompts
       are already persisted (`dispatch_r2_reviewer.ts:1221`), so the check reads
       an artefact that exists rather than requiring a new capture path. Warn
       only. State in the gate header what it cannot see — a paraphrase — exactly
@@ -264,7 +264,7 @@ returns **0**.
 
 ### blocker: sibling-ownership
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 in full; Phase 2.3
 - **What to do:** pick exactly one — (a) this roadmap owns the shared rotation
@@ -282,10 +282,24 @@ returns **0**.
   each assume the other owns the state, the spike never runs, and the shuffle
   prose at `code-review/SKILL.md:107-110` stays a specified control with no
   consumer — which is exactly the state it is in today.
+- **Resolution (2026-08-23) — option (a): this roadmap owns the rotation and streak
+  state.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent; the maintainer delegated owner-reserved blockers to the council
+  for this autonomous drain run. Rationale, one line as the `Resolved when` asks: the
+  roadmap that measures whether rotation does anything is the only defensible owner of
+  the state it would rotate, and a roadmap owning the state without owning the spike
+  would be building against an unmeasured control.
+
+  ~~(b) the rotation half of Phase 3 is dropped from this roadmap entirely and only the
+  spike (3.1) and the honest-null record (3.3) remain~~ — struck through rather than
+  deleted, per this blocker's own contract. Worth noting where it landed anyway: owning
+  the rotation is what let Phase 3 run the spike **and** record its null, and the outcome
+  is that only 3.1 and 3.3 shipped. So the losing option describes the same end state by
+  a different route — the difference is that under (a) the null is a measured result this
+  roadmap owns, and under (b) it would have been a scope cut.
 
 ### blocker: second-ci-provider-key
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2.2
 - **What to do:** pick exactly one — (a) provision a second provider credential
@@ -304,7 +318,32 @@ returns **0**.
   so the gate cannot distinguish a conforming corpus from a corpus of one, and
   the single-member state stays a side effect nobody chose rather than a
   recorded decision.
+- **Resolution (2026-08-23) — option (b): the gate stays single-member; Phase 2.2 is
+  scoped to a second producer that needs no second key.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. No second provider
+  credential exists in this environment and none can be minted autonomously, so (a) was
+  not decidable here.
 
+  **The second producer is `dispatch_r2_reviewer`**, which emits the independence record
+  into its findings artefact. Its values are derived rather than chosen: `single-member`
+  because the dispatch has one reviewer, `fresh` because a fresh subagent is what that
+  file dispatches and is the property the artefact exists to carry. The derived pair is
+  `provisional` / `single-pass` — and recording `provisional` on a *fresh* reviewer is the
+  honest reading, not a downgrade: one reviewer is one reviewer, and `accepted` needs the
+  family axis that one member cannot supply.
+
+  **The scanned count, as the `Resolved when` requires — whatever it is.** In this
+  repository `check_review_schema` still reports **`scanned: 1`**, and the reason is
+  ordering rather than a broken producer: every artefact under
+  `agents/evidence/reviews/` was written before the producer existed, so none carries the
+  block. The mechanism is proven end-to-end at **`scanned: 2`** against a temporary tree
+  holding one real artefact with the producer's exact block, and the count rises in this
+  repository on the first R2 artefact written after this change. Recorded as a fact rather
+  than rounded up: a gate reporting 1 is what a reader will see today.
+
+  What is NOT fixed: `self_review_gate.ts:471` still hardcodes
+  `independenceFields(['anthropic'])`, so the self-review gate remains single-member and
+  its own record still says `provisional`. That is the state (a) would have changed, and
+  it is unchanged.
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
 
@@ -318,24 +357,58 @@ returns **0**.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `src/rules/evaluator-independence.md` describes its enforcement
+- [x] AC-1 — `src/rules/evaluator-independence.md` describes its enforcement
       accurately in both directions: no claim that item 4 blocks, and no claim
       that item 3 is unenforced. Checkable by reading the two paragraphs against
       `evidence_independence.ts` and `check_review_prompt_binding.ts`.
-- [ ] AC-2 — the default `/review:changes` path reaches a reviewer that has no
+      **Met on all three readings.** The over-claim is corrected (item 1 blocks, item 4
+      returns `EXIT_ALLOW` and warns — with the code's own reason for it), the under-claim
+      is corrected (item 3 IS enforced by `check_review_prompt_binding`, cited with its
+      own omission-beats-substitution limit), and the manifest's `severity: blocking` is
+      explained as describing the concern rather than every branch inside it.
+- [x] AC-2 — the default `/review:changes` path reaches a reviewer that has no
       implementation context, and the command body says what happens when that
       dispatch is unavailable. A self-read presented as a review is no longer a
       silent outcome.
-- [ ] AC-3 — a review of record carries an author-relation property, and
+      **Met.** `/review:changes` § 4b-fresh routes to `dispatch_r2_reviewer` as a seventh
+      input whose distinguishing property is negative: no implementation context. The
+      condition is named (every PR-bound diff), the unavailable path is named
+      (`fresh_review: unavailable` with the reason, **never** a silent fallback to the
+      in-session judges), and the envelope asymmetry is documented where the line gets
+      copied from.
+- [x] AC-3 — a review of record carries an author-relation property, and
       `check_review_schema` has more than one producer to check, or the
       single-producer state is recorded as a decision rather than left as a
       side effect.
-- [ ] AC-4 — rotation either ships with a pre-registered measurement behind it,
+      **Met.** `IndependenceFields` now carries `context_relation`
+      (`fresh` / `same-session` / `unknown`), and BOTH derived fields follow from BOTH
+      axes: a same-session cross-family reviewer derives `provisional` / `single-pass`,
+      pinned by its own test. `dispatch_r2_reviewer` emits the record as a second producer,
+      and `check_review_schema` checks that surface — proven at `scanned: 2` against a
+      real artefact carrying the producer's exact block.
+- [x] AC-4 — rotation either ships with a pre-registered measurement behind it,
       or is recorded as a measured null beside the prose that specified it.
       Neither outcome leaves the prose silently unimplemented.
-- [ ] AC-5 — the diff adds **0 new skills and 0 new rules**. Verifiable as
+      **Met on the second limb — a pre-registered measurement that returned a null.**
+      `agents/evidence/review-rotation-prereg-and-null.md` fixes the > 15 % margin and the
+      honest-null exit BEFORE the outcome, and records the null with its four parts. The
+      null is written beside the prose it qualifies
+      (`src/skills/code-review/SKILL.md:112`), so the next reader meets a measured control
+      rather than an unimplemented one. Rotation does **not** ship, which is the correct
+      reading of "either … or".
+- [x] AC-5 — the diff adds **0 new skills and 0 new rules**. Verifiable as
       `git diff --name-only --diff-filter=A origin/main...HEAD -- src/skills/ src/rules/`
       being empty.
-- [ ] AC-6 — no path under `src/skills/judge-synthesis/` is modified by this
+      **Held.** `git diff --name-only --diff-filter=A origin/main...HEAD -- src/skills/ src/rules/`
+      is **empty**. One new script (`lint_judge_prompt_expectation.ts`) and one new
+      `_lib` axis, both extensions of existing surfaces; zero new skills and zero new
+      rules.
+- [x] AC-6 — no path under `src/skills/judge-synthesis/` is modified by this
       roadmap, so the sibling roadmap's ownership of that file is intact and no
       obligation is lost to a merge.
+
+      **Held.** `git diff --name-only origin/main...HEAD -- src/skills/judge-synthesis/`
+      is **empty**. Step 2.3's design is recorded at
+      `agents/evidence/consensus-confidence-field-spec.md` and handed to
+      `road-to-spec-axis-in-review` rather than implemented here — editing that skill from
+      this roadmap would be the cross-ownership drive-by the step forbids.
