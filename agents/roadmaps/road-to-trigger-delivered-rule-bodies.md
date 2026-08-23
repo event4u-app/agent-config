@@ -423,7 +423,7 @@ opt-in and the published table stays as the record.
 - [ ] **A3 — `road-to-per-turn-hook-economy-carry`: the count, not only the
       clock.** One step: `max_per_event` becomes a measured shrink-only floor
       per slot. HEAD on Claude reads 14/12/10/13/12.
-      verify: `grep -c "14/12/10/13/12\|max_per_event" agents/roadmaps/road-to-per-turn-hook-economy-carry.md` ≥ 1 and the step names the producing command.
+      verify: `grep -c "14/12/10/13/12\|max_per_event" agents/roadmaps/archive/road-to-per-turn-hook-economy-carry.md` ≥ 1 and the step names the producing command.
 - [ ] **A4 — `road-to-standing-payload-diet`: hook-enforced rules first.**
       Nine rules carry `enforced_by: hook:*` and re-describe in prose what
       their hook implements — `verify-before-complete`, `minimal-safe-diff`,
