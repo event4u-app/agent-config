@@ -37,6 +37,7 @@ import {
     type QuorumCommand,
     type QuorumDispatch,
     type QuorumEventPhase,
+    type StanceAgreement,
 } from './events_log.js';
 import { evaluateQuorum, formatAttendanceCaveats, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './quorum.js';
 import { absentReasonFromCliFailure, classifyCliFailure } from './transport_resolver.js';
@@ -117,6 +118,12 @@ export function _emitQuorumEvent(
          * absence is what the `false` on every line honestly records.
          */
         minPresent?: number;
+        /**
+         * Phase 3 — whether the seats agreed, when a stance tally ran.
+         * Omitted by every caller that ran none, which `appendQuorumEvent`
+         * records as `not_tallied` rather than as a bare `false`.
+         */
+        stanceAgreement?: StanceAgreement;
     },
 ): void {
     appendQuorumEvent({
@@ -128,6 +135,7 @@ export function _emitQuorumEvent(
         configuredTotal: ctx.configuredTotal ?? quorum.total,
         result: quorum,
         ...(ctx.minPresent !== undefined ? { minPresent: ctx.minPresent } : {}),
+        ...(ctx.stanceAgreement !== undefined ? { stanceAgreement: ctx.stanceAgreement } : {}),
         absent: absent.map(
             (a): QuorumAbsence => ({
                 member: String(a['member'] ?? ''),

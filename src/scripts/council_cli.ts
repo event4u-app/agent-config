@@ -2657,6 +2657,18 @@ function cmd_run(
     // with 3 configured members where 2 fail to construct and 1 answers emits
     // `{total: 1, present: 1}` and reads as full attendance.
     const configured_total = quorum_out.result?.total ?? null;
+    // Phase 3 — hoisted above the post-run emit so the agreement dimension can
+    // ride the SAME `quorum_result` line as attendance. It used to be computed
+    // inline at the `buildHandoffFromStanceTally` call below, which is after the
+    // emit; the tally is a pure function of `responses` and `responses` is
+    // already final here, so hoisting changes nothing about what is computed.
+    // Computed ONCE and reused below rather than run twice — two tallies over
+    // the same responses is two chances to disagree.
+    const stance_tally_result = stance_tally_on
+        ? tally_stances(
+              responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
+          )
+        : null;
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
@@ -2667,6 +2679,15 @@ function cmd_run(
     // skips already went out under `phase: 'pre_run'` from `build_members`,
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
+        // Whether the seats agreed, on the attendance line. `null` when no
+        // tally ran, which the event writes as `not_tallied` — a recorded
+        // "nobody asked", never a `false` that reads as disagreement.
+        stanceAgreement:
+            stance_tally_result === null
+                ? undefined
+                : stance_tally_result.consensus !== null
+                  ? 'consensus'
+                  : 'split',
         command: 'run',
         // Whether the roster actually shrank — see `dispatch_shape`. Without
         // this the line is byte-identical to a configured one-member council,
@@ -2698,13 +2719,7 @@ function cmd_run(
     // the payload in the first place). `buildHandoffFromStanceTally` returns
     // the honest all-null envelope when stance tally never ran or split, so
     // this is always additive, never a fabricated decision.
-    const handoff: HandoffEnvelope = buildHandoffFromStanceTally(
-        stance_tally_on
-            ? tally_stances(
-                  responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
-              )
-            : null,
-    );
+    const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
     const persona_labels = build_persona_labels(advisor_plans, billable);
     const peer_review = _maybe_run_peer_review(
         ai_cfg,

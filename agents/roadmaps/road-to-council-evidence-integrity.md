@@ -170,29 +170,87 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       change: its third scripted answer is valid, so any loop that re-asks more than
       once reaches it and produces a finding, and an empty finding set is what pins the
       bound at one.
-- [ ] **2.3 Correct the attendance wording.** `quorum_wiring.ts:170` counts
+- [x] **2.3 Correct the attendance wording.** `quorum_wiring.ts:170` counts
       attendance as `!r.error && r.text.trim() !== ''` — bytes, not usable
       content. The block at `:163-169` already argues that "An empty answer
       contributes nothing to a quorum by definition, whatever the transport
       thought of it"; extend that argument to a non-empty answer no parser can
       read, and render such a member as `present-unparsed` rather than folding
       it into `N/N present`.
-      verify: a fixture with two members, one unparseable, renders a banner that
-      does not read `2/2 present`, and the rendered string contains the
-      `present-unparsed` token.
-- [ ] **2.4 Ship the fixture corpus and the honest-gap row.** At least six
+      verify (discharged): `council_cli.test.ts`, `-t 'unparsed'` — five cases green.
+      **RED recorded** against unmodified code, two failures, and the second is the
+      one that matters: `AssertionError: expected 'council:quorum · 1/2 present,
+      needed …' to contain 'present-unparsed'` — the count was already right, the
+      WORD was missing, which is exactly the gap between "the numbers were always
+      there" and "a reader can tell what they mean".
+
+      **The DEGRADED sentence had to change too, and that was not in the step's
+      text.** It read `N member(s) did not answer` over `total - present`; an
+      unparsed member DID answer, so leaving it would have made the banner
+      contradict itself in the line written to stop a reader inferring
+      convergence. `quorum.ts::formatAttendanceCaveats` now owns both clauses over
+      disjoint counts (`silent = total - present - unparsed`), which also
+      mechanically discharges the "same sentence on purpose — so neither surface
+      can drift into being the softer one again" note that both renderers carried
+      as a hand-maintained duplicate.
+
+      **`unparsed` is omitted when zero, never defaulted to `0`.** Every existing
+      assertion over a `QuorumResult` is an exact-shape `toEqual` and the field
+      rides into `payload['quorum']`, so a defaulted key would be a silent
+      breaking change to a serialized surface for the common case. Pinned by its
+      own test rather than left to convention.
+
+      **The event log deliberately does NOT move.** `_postRunQuorum` runs before
+      findings parsing, so the post-run `quorum_result` event stays a
+      transport-level reading and every attendance rate computed over
+      `events.log` keeps its denominator; the rendered artefact is re-derived
+      after consensus via `withUnparsed` (`council_cli.ts`, right after
+      `_maybe_run_consensus`). That split is what AC-2 asks for — it says
+      *rendered* — and Phase 3 is where the log gains a field.
+- [x] **2.4 Ship the fixture corpus and the honest-gap row.** At least six
       recorded verbatim member responses — valid JSON, JSON in a fence, prose
       refusal, truncated array, empty body, JSON with missing required keys —
       committed as fixtures, plus a `parse_empty_rate` row that states what
       fraction of recorded answers reach `parse_failed` and states plainly that
       the denominator is the fixture corpus, not live traffic.
-      verify: the fixture directory holds six or more files, the rate row cites
-      the fixture count as its denominator, and the row is reproducible from a
-      command named in the row itself.
+      verify (discharged): `tests/fixtures/council-parse-corpus/` holds **seven**
+      recorded answers plus `expected.json` and a README; the `docs/CLAIMS.md` row
+      `claim:council-parse-outcome-corpus-rate` states `2/7 parse_failed, 1/7
+      empty, 4/7 parsed` with the corpus named as the denominator and
+      `./scripts-run src/scripts/council_parse_rate` named in the row itself;
+      `check_claims` green (50 backed).
+
+      **The corpus found a defect in its own first draft, and the fixtures were
+      corrected rather than the parser.** Fixtures 01 and 02 were written with a
+      `{severity, title, detail}` shape — plausible, and wrong: the prompt asks
+      for `{id, text}` (`prompts.ts:208`) and `_collect_findings` skips any item
+      missing either key, so both "valid JSON" fixtures scored `parsed` with
+      **zero findings**. A corpus whose valid cases yield nothing measures
+      nothing. Rewritten to the real schema; 01 now yields 2 findings, 02 yields 1.
+
+      **The mislabelled shape was kept as its own fixture, because it is a real
+      open case.** `06-missing-keys.txt` resolves `parsed` with zero findings —
+      indistinguishable in the outcome field from a member that genuinely found
+      nothing, which is the silent null this phase set out to close, surviving one
+      rung up. Phase 2 does not close it. It is pinned by a named test
+      (`parse_corpus.test.ts`, "the open case") so a later phase has a red to turn
+      green, rather than being left for someone to rediscover.
+
+      **Sensitivity demonstrated in both directions**, not assumed: sabotaging one
+      pin in `expected.json` made the reproducer exit 1 with `DRIFT
+      03-prose-refusal.txt: expected parsed, got parse_failed`; restoring it
+      returned exit 0.
+
+      **The rate row's exec pointer is the vitest form, not the script.**
+      `council_parse_rate` is not in `ALLOWLIST_PREFIXES` (`_lib/exec_evidence.ts:46`)
+      and adding it would mean registering a new CI gate — three ratchets — for a
+      run the node-tests job already performs. `exec:vitest run
+      tests/scripts/ai_council/parse_corpus.test.ts -> 0` re-runs the same scoring
+      over the same corpus through an already-allowlisted prefix.
 
 ## Phase 3 — Agreement becomes an additive field on `quorum_result`
 
-- [ ] **3.1 Confirm the asymmetry, then close it additively.**
+- [x] **3.1 Confirm the asymmetry, then close it additively.**
       `events_log.ts:382-448` (`appendQuorumEvent`) records attendance in
       sixteen fields — `threshold` `:400`, `total` `:402`, `present` `:403`,
       `solo` `:408`, `gate_class` `:410`, `verdict` `:396` among them — and
@@ -201,10 +259,17 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       at all. Its result reaches the reader as rendered text only, via
       `orchestrator.ts:1990` and `:1995`. So the log can say who showed up and
       never whether they agreed.
-      verify: `grep -c appendEvent src/scripts/ai_council/stance_tally.ts`
-      returns 0 before the change, and the phase's own test asserts the new
-      field is present on a `quorum_result` line.
-- [ ] **3.2 Add the dimension as a FIELD, never a new action.** The file's own
+      verify (discharged): `grep -c appendEvent src/scripts/ai_council/stance_tally.ts`
+      returns **0** — confirmed, and it still returns 0 after the change, which is
+      the correct outcome rather than an omission: the dimension rides the
+      existing `quorum_result` line, so `stance_tally.ts` acquires no writer and
+      stays a pure tally. `events_log.test.ts` asserts `rec.stance_agreement` on a
+      `quorum_result` line.
+
+      **RED recorded:** `expected undefined to be 'not_tallied'` against unmodified
+      `events_log.ts` — the assertion names the FIELD, which is what a line-count
+      or an action-name check could not have caught.
+- [x] **3.2 Add the dimension as a FIELD, never a new action.** The file's own
       reasoning at `:411-418` is binding here and is not being re-derived: a new
       action "is invisible to every consumer filtering
       `action === 'quorum_result'`, which would split the attendance population
@@ -213,9 +278,38 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       dimension on the existing line, bump the schema version, and record in
       `src/config/quorum-attendance-budget.json` that a rate computed over
       older-schema lines must exclude rather than assume the new field.
-      verify: a replay over a fixture log containing pre-change lines computes
-      the same four registered metrics as before, and the new field's rate
-      excludes those lines rather than defaulting them.
+      verify (discharged): `npx vitest run tests/scripts/ai_council/attendance_metrics.test.ts`
+      — six cases green over `tests/fixtures/council-events-schema-span/events.log`,
+      four v4 lines and three v5 lines plus two that must be excluded from every
+      rate (a `pre_run`/`estimate` line and a non-`quorum_result` action).
+
+      **The replay had to be BUILT, and that is the finding this step turned up.**
+      The four metrics were registered on 2026-08-10 and nothing in the tree ever
+      computed them, so "the four metrics reproduce unchanged" was a claim with no
+      instrument — a verify that could not have failed. `council_attendance_metrics.ts`
+      is that instrument; the step is not closeable without it.
+
+      **The exclusion is asserted in both directions**, because one direction is
+      not enough: `consensus_rate` is 1/3 over the three v5 lines, and explicitly
+      NOT 1/6 — the number a defaulting implementation produces. The mirror
+      assertion drops the v4 stratum entirely and requires the rate not to move.
+      **Sabotage demonstrated:** replacing the eligibility filter with `const
+      eligible = passes` failed both — `expected 6 to be 3` and `expected
+      0.3333… to be close to 0.1666…`.
+
+      Schema bumped 4 → 5, and the pre-existing `schema_version` assertion was
+      moved off its literal onto `SCHEMA_VERSION` so it cannot silently pin an old
+      version again. `src/config/quorum-attendance-budget.json` gains a
+      `stance_agreement_rate` block stating the exclusion rule, the privacy note
+      (a three-value closed vocabulary; deliberately no option LABEL, since option
+      labels are free-form member text and recording one would open the hole the
+      event type exists to refuse), and an honest gap: agreement is measured among
+      the members that answered and parsed, so `1/2 present · consensus` is one
+      voice agreeing with itself and the two fields must be read together.
+
+      Wiring: `tally_stances` is hoisted above the post-run emit in
+      `council_cli.ts` and reused by `buildHandoffFromStanceTally` — ONE tally, not
+      two, since two tallies over the same responses are two chances to disagree.
 
 ## Phase 4 — One certainty vocabulary, or an honest declaration of prose
 
