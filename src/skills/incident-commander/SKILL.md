@@ -143,3 +143,13 @@ Post-mortem owner: <role>
 - Do NOT close an incident without a post-mortem owner assigned.
 - Do NOT edit the timeline after the fact; corrections are new
   entries.
+
+## See also
+
+- [`alerting-doctrine`](../alerting-doctrine/SKILL.md) — what earned the page
+  that opened this incident, and the runbook contract the first responder reads.
+  A page arrives with an owner, a runbook and a first diagnostic step; if it did
+  not, that is a configuration defect to record in the post-mortem.
+- [`logging-monitoring`](../logging-monitoring/SKILL.md) — the signal posture the
+  incident is being diagnosed through, and why a `proposed` threshold is not a
+  breach.
