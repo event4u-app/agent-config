@@ -42,6 +42,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -298,6 +299,26 @@ function main(argv?: readonly string[]): number {
         );
         return 1;
     }
+    // Scope assertion. The unit is a READING, and zero of them is a dead scope
+    // rather than "nothing to report": a store that parsed to no records reads
+    // identically to a store nobody has written, and the second must not pass as
+    // the first. The missing-file case above already exits 1; this catches the
+    // present-but-empty and parsed-to-nothing cases.
+    try {
+        reportScanned({
+            gate: 'check_composite_arming',
+            scanned: readings.length,
+            units: 'composite reading(s)',
+            roots: [path.relative(REPO_ROOT, store) || store],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 1;
+        }
+        throw err;
+    }
+
     const v = evaluate(readings);
 
     if (args.includes('--publish')) {
