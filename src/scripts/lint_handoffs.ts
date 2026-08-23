@@ -479,6 +479,225 @@ export interface SkillLinkCensus {
     survivors_with_dangle: number;
 }
 
+// ── Scoped-dangle follow rate, on a guarded instrument ──────────────────────
+// Phase 4 of road-to-skill-link-integrity-and-manifest-sync. 24 links from 17
+// surviving skills point at a skill that `projection.mode: scoped` prunes. Is
+// that a defect, or behaviour the consumer opted into? The roadmap does not
+// pick; it records the metric that decides, and it guards the instrument FIRST
+// because an unguarded "zero read attempts" is not a null — it is a stopped
+// clock reported as evidence.
+
+/** Days back from `now` a record must fall in to count the instrument live. */
+export const DANGLE_WINDOW_DAYS = 30;
+
+/** Verdict on whether the usage store can answer anything at all. */
+export interface InstrumentVerdict {
+    instrument_live: boolean;
+    /** Why it is dead. Empty when live. */
+    reason: string;
+    /** Records parsed. 0 for a missing file. */
+    records: number;
+    /** Newest record timestamp, ISO, or null. */
+    newest: string | null;
+    /** Distinct `kind` values observed, sorted — see the follow-rate note. */
+    kinds: string[];
+    window_start: string;
+    window_end: string;
+}
+
+/**
+ * Guard the instrument before any count is read.
+ *
+ * A MISSING FILE AND A STALE FILE ARE BOTH DEAD, and both had to be handled
+ * because both occur: the store is gitignored and machine-local, so it is
+ * ABSENT in a fresh checkout or worktree, and in the parent checkout it holds
+ * 181 records that all carry the SAME timestamp from a single session on
+ * 2026-05-15. Either way a naive count returns zero and a phase closes as
+ * "harmless" on a measurement that never happened.
+ */
+export function instrument_verdict(
+    storePath: string,
+    now: Date = new Date(),
+    windowDays: number = DANGLE_WINDOW_DAYS,
+): InstrumentVerdict {
+    const end = now;
+    const start = new Date(end.getTime() - windowDays * 86_400_000);
+    const base = {
+        window_start: start.toISOString(),
+        window_end: end.toISOString(),
+    };
+    let text: string;
+    try {
+        text = fs.readFileSync(storePath, 'utf-8');
+    } catch {
+        return {
+            instrument_live: false,
+            // Repo-relative: this string lands in a COMMITTED metric row, and
+            // an absolute path would bake one machine's home directory into it.
+            reason:
+                `instrument absent — ${_isUnder(storePath, REPO) ? _relTo(storePath, REPO) : path.basename(storePath)}` +
+                ' does not exist (the store is gitignored and machine-local)',
+            records: 0,
+            newest: null,
+            kinds: [],
+            ...base,
+        };
+    }
+    let records = 0;
+    let newest: number | null = null;
+    let inWindow = 0;
+    const kinds = new Set<string>();
+    for (const line of text.split('\n')) {
+        if (line.trim() === '') continue;
+        let row: { ts?: unknown; kind?: unknown; slug?: unknown };
+        try {
+            row = JSON.parse(line) as typeof row;
+        } catch {
+            continue;
+        }
+        records += 1;
+        if (typeof row.kind === 'string') kinds.add(row.kind);
+        const t = typeof row.ts === 'string' ? Date.parse(row.ts) : NaN;
+        if (!Number.isNaN(t)) {
+            if (newest === null || t > newest) newest = t;
+            if (t >= start.getTime() && t <= end.getTime()) inWindow += 1;
+        }
+    }
+    const newestIso = newest === null ? null : new Date(newest).toISOString();
+    if (inWindow === 0) {
+        const age =
+            newest === null
+                ? 'no parseable timestamp in any record'
+                : `newest record is ${String(Math.floor((end.getTime() - newest) / 86_400_000))} days old (${String(newestIso)})`;
+        return {
+            instrument_live: false,
+            reason: `instrument dead — ${age}; no record inside the ${String(windowDays)}-day window`,
+            records,
+            newest: newestIso,
+            kinds: [...kinds].sort(),
+            ...base,
+        };
+    }
+    return {
+        instrument_live: true,
+        reason: '',
+        records,
+        newest: newestIso,
+        kinds: [...kinds].sort(),
+        ...base,
+    };
+}
+
+/** Event kinds that would represent an agent actually following a link. */
+export const FOLLOW_KINDS: ReadonlySet<string> = new Set(['read', 'read_attempt', 'follow']);
+
+/** The Phase-4 metric row. `attempts` is null whenever it was not measured. */
+export interface ScopedDangleFollowRate {
+    schema_version: 1;
+    _comment: string;
+    commit: string | null;
+    window_start: string;
+    window_end: string;
+    instrument: string;
+    instrument_live: boolean;
+    instrument_reason: string;
+    instrument_records: number;
+    instrument_newest: string | null;
+    instrument_kinds: string[];
+    /** Read attempts against a pruned slug. null = not measured. */
+    attempts: number | null;
+    /** Distinct pruned slugs with at least one attempt. null = not measured. */
+    pruned_targets_hit: string[] | null;
+    scoped_dangles: number;
+    survivors_with_dangle: number;
+    null_branch: string;
+    measured_branch: string;
+}
+
+/** Build the Phase-4 row. Guard first; count only if the guard passes. */
+export function scoped_dangle_follow_rate(
+    skills_dir: string,
+    package_root: string,
+    storePath: string,
+    commit: string | null = null,
+    now: Date = new Date(),
+): ScopedDangleFollowRate {
+    const census = skill_link_census(skills_dir, package_root, commit);
+    const v = instrument_verdict(storePath, now);
+    let attempts: number | null = null;
+    let hit: string[] | null = null;
+    if (v.instrument_live) {
+        // Same predicate as the census above, by construction: the pruned set
+        // comes from the census, which uses `is_pruned_under_scoped` — the
+        // function `install.ts` itself applies. Two definitions of "pruned"
+        // free to disagree is the defect, not the fix.
+        const prunedSlugs = new Set(census.scoped_dangles.map((d) => d.target));
+        const seen = new Set<string>();
+        let n = 0;
+        for (const line of fs.readFileSync(storePath, 'utf-8').split('\n')) {
+            if (line.trim() === '') continue;
+            let row: { ts?: unknown; kind?: unknown; slug?: unknown };
+            try {
+                row = JSON.parse(line) as typeof row;
+            } catch {
+                continue;
+            }
+            const t = typeof row.ts === 'string' ? Date.parse(row.ts) : NaN;
+            if (Number.isNaN(t) || t < Date.parse(v.window_start) || t > Date.parse(v.window_end)) {
+                continue;
+            }
+            if (typeof row.kind !== 'string' || !FOLLOW_KINDS.has(row.kind)) continue;
+            if (typeof row.slug !== 'string' || !prunedSlugs.has(row.slug)) continue;
+            n += 1;
+            seen.add(row.slug);
+        }
+        attempts = n;
+        hit = [...seen].sort();
+    }
+    return {
+        schema_version: 1,
+        _comment: DANGLE_COMMENT,
+        commit,
+        window_start: v.window_start,
+        window_end: v.window_end,
+        instrument: 'agents/runtime/metrics/skill-usage.jsonl',
+        instrument_live: v.instrument_live,
+        instrument_reason: v.reason,
+        instrument_records: v.records,
+        instrument_newest: v.newest,
+        instrument_kinds: v.kinds,
+        attempts,
+        pruned_targets_hit: hit,
+        scoped_dangles: census.scoped_dangles.length,
+        survivors_with_dangle: census.survivors_with_dangle,
+        null_branch:
+            'Zero attempts over a LIVE window closes the question as a published ' +
+            'null and the dangling links stay: a link to a pruned sibling is then ' +
+            'behaviour the consumer opted into by choosing `projection.mode: ' +
+            'scoped`, not a defect. A null over a DEAD window closes nothing and ' +
+            'is not permitted to be reported as one — that is what the guard is ' +
+            'for, and why `attempts` is null rather than 0 when the guard fails.',
+        measured_branch:
+            'A nonzero count promotes the fix: rewrite each dangling link in the ' +
+            'PROJECTED SKILL.md to name the slug and its pack instead of linking ' +
+            'it — source tree untouched, projection honest about itself, using ' +
+            'the same `is_pruned_under_scoped` predicate this counter uses so the ' +
+            'two cannot disagree.',
+    };
+}
+
+/** Provenance carried inside the Phase-4 row. */
+const DANGLE_COMMENT =
+    'Written by `./scripts-run src/scripts/lint_handoffs --scoped-dangle-json`. Do ' +
+    'not hand-edit — regenerate it. The instrument is guarded BEFORE any count is ' +
+    'read: `attempts` and `pruned_targets_hit` are null, never 0, whenever ' +
+    '`instrument_live` is false, because a stopped clock reporting zero is not a ' +
+    'null. Read `instrument_reason` first. NOTE ON KINDS: the store has only ever ' +
+    'recorded `kind: "exposure"`, and no event in FOLLOW_KINDS (`read`, ' +
+    '`read_attempt`, `follow`) is emitted anywhere in the tree — so even a LIVE ' +
+    'window could not answer this question today. Emitting a follow event is the ' +
+    'prerequisite this measurement is blocked on, and it is not in this roadmap.';
+
 /** Provenance carried inside the row, so a reader never has to find this file. */
 const CENSUS_COMMENT =
     'Written by `./scripts-run src/scripts/lint_handoffs --census-json`. Do not ' +
@@ -714,6 +933,15 @@ export function validate_handoff_open_questions(text: string): string | null {
     return null;
 }
 
+/** `git rev-parse HEAD`, or null outside a repository. */
+function _headCommit(): string | null {
+    try {
+        return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf-8' }).trim();
+    } catch {
+        return null;
+    }
+}
+
 export function main(argv?: readonly string[]): number {
     let skills_dir = SKILLS_DIR;
     // Positional-only: flags are NOT paths. Before this filter the CI invocation
@@ -728,20 +956,24 @@ export function main(argv?: readonly string[]): number {
     // new script: the census MUST be produced by the collector the gate scans
     // with, or the published figure and the verdict are free to drift, which
     // is the class of defect this whole roadmap is about.
+    if (rawArgs.includes('--scoped-dangle-json')) {
+        if (args.length > 0) {
+            skills_dir = _resolve(args[0] as string);
+        }
+        const row = scoped_dangle_follow_rate(
+            skills_dir,
+            REPO,
+            path.join(REPO, 'agents', 'runtime', 'metrics', 'skill-usage.jsonl'),
+            _headCommit(),
+        );
+        process.stdout.write(JSON.stringify(row, null, 2) + '\n');
+        return 0;
+    }
     if (rawArgs.includes('--census-json')) {
         if (args.length > 0) {
             skills_dir = _resolve(args[0] as string);
         }
-        let commit: string | null = null;
-        try {
-            commit = execFileSync('git', ['rev-parse', 'HEAD'], {
-                cwd: REPO,
-                encoding: 'utf-8',
-            }).trim();
-        } catch {
-            commit = null;
-        }
-        const census = skill_link_census(skills_dir, REPO, commit);
+        const census = skill_link_census(skills_dir, REPO, _headCommit());
         process.stdout.write(JSON.stringify(census, null, 2) + '\n');
         return 0;
     }
