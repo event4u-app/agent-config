@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **721 public artefacts** shipped by
+Consumer-facing catalog of all **722 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (292)
+## Skills (294)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -146,6 +146,7 @@ are excluded.
 | skill | [`incident-commander`](../dist/agent-src/skills/incident-commander/SKILL.md) | official | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../dist/agent-src/skills/jira-integration/SKILL.md) | official | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../dist/agent-src/skills/jobs-events/SKILL.md) | official | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
+| skill | [`js-library-packaging`](../dist/agent-src/skills/js-library-packaging/SKILL.md) | official | Use when a JavaScript/TypeScript package is consumed by another package — exports map, peer vs. direct dependencies, files allow-list, and whether it should be built at all. |
 | skill | [`judge-artifact-completeness`](../dist/agent-src/skills/judge-artifact-completeness/SKILL.md) | official | When scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates. |
 | skill | [`judge-bug-hunter`](../dist/agent-src/skills/judge-bug-hunter/SKILL.md) | official | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
 | skill | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) | official | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
@@ -286,6 +287,7 @@ are excluded.
 | skill | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) | official | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'. |
 | skill | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) | official | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../dist/agent-src/skills/standards-from-config/SKILL.md) | official | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
+| skill | [`storybook-workshop`](../dist/agent-src/skills/storybook-workshop/SKILL.md) | official | Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying. |
 | skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) | official | Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council). |
 | skill | [`supply-chain-intake`](../dist/agent-src/skills/supply-chain-intake/SKILL.md) | official | Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned |
 | skill | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) | official | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
@@ -649,7 +651,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (110)
+## Guidelines (109)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -675,7 +677,6 @@ are excluded.
 | guideline | [`domain-pack-architecture`](../docs/guidelines/agent-infra/domain-pack-architecture.md) | agent-infra |  |
 | guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
-| guideline | [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`false-green`](../docs/guidelines/agent-infra/false-green.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |

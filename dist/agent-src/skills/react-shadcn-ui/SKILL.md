@@ -164,6 +164,40 @@ registries / install-with-natural-language over MCP; configure per the
 dependency. Decision note: **CLI path = default + universal; MCP path = opt-in
 when the user has it configured; registry-JSON literacy underpins both.**
 
+## Publish a registry — the library as a source others install from
+
+The sections above **consume** a registry. This one **publishes** one: a component library in
+this repository can expose its own components the same way, so a consumer installs them with
+the tool they already use instead of copying files.
+
+1. **Author `registry.json`** at the library root — the index — and one
+   `registry-item.json` per exposed component, each naming its files, its
+   `registryDependencies`, and its `cssVars` when it carries token requirements.
+2. **Build** to `public/r` with the registry build command. **The installer gate applies
+   here exactly as it does to `add`**: propose it, run `--dry-run` first, and let the user
+   confirm. A build writes files, so nothing about it being "our own" registry lifts the
+   gate.
+3. **The consumer adds a `registries` map entry** pointing at the published index; from then
+   on `@ns/item` resolves through it.
+
+**Two registry item types are FORBIDDEN**, deprecated in v4: `registry:build` and
+`registry:mcp`. Use **`registry:base`** and **`registry:font`** instead. Writing either
+deprecated type produces an item the current CLI does not understand, and the failure surfaces
+at the consumer rather than at authoring time.
+
+**`dependencies` in a registry item never names `react` or `react-dom`.** They are peers of
+the consuming app, and a registry item that installs its own copy reproduces the "invalid hook
+call" failure one layer up — see
+[`js-library-packaging`](../js-library-packaging/SKILL.md). `check_package_surface` enforces
+this over a registry file.
+
+> **Provenance.** The registry-publishing shape and the deprecated-type list come from an
+> external plugin reference's component-CLI skill, read at a pinned revision. The source is
+> deliberately not named here, per
+> [`source-confidentiality`](../../rules/source-confidentiality.md): a shipped artifact does
+> not carry derivation attribution to a named external project. The identifier and revision
+> stay with the maintainer-side record.
+
 ## Procedure: render a shadcn/ui component for the design brief
 
 ### Step 0: Inspect
@@ -277,27 +311,17 @@ current state on the next polish round.
 
 When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
 
-## Component workshop (Storybook) — when the library is large enough
+## Component workshop (Storybook) — pointer
 
-The generic "isolate + document reusable components" principle lives in
-[`fe-design`](../fe-design/SKILL.md) § Component Architecture; this is the React
-carve-out for the tool-specific part.
+The workshop discipline (one concept per story, `@summary` on every export, stories run as
+tests, the `!manifest` tag, the opt-in MCP channel) lives in
+[`storybook-workshop`](../storybook-workshop/SKILL.md). It is stack-agnostic and was lifted
+out of here rather than duplicated beside it.
 
-- **When it pays off** — a real, growing shared-component library (roughly: more
-  than a handful of reused primitives, multiple consumers, ongoing UI work).
-  Storybook makes each component discoverable, reviewable in isolation, and
-  reused instead of re-invented. **Skip it** for a small surface of one-off
-  components — the setup + maintenance is not worth it yet.
-- **Story per reusable primitive, not per screen** — a story covers a component
-  and its states (default / loading / empty / error / dark), mirroring the
-  Step 3 state-coverage matrix. Screens are composed, not story-fied.
-- **Reuse the token layer** — stories render under the same semantic tokens +
-  `.dark` class; never hardcode a preview theme (same token discipline as Step 2).
-- **A11y in-workshop** — run the a11y addon so the isolation catches contrast /
-  role / focus issues before the component reaches a screen.
-- Do NOT let stories drift from the component API — a story that props-drills
-  values the component no longer accepts is stale documentation; keep them beside
-  the component and update them in the same change.
+What stays React-specific and therefore stays here: the state-coverage matrix in Step 3 that
+the story set is derived from, the token discipline of Step 2 that stories render under, and
+the `(rule, selector, severity)` a11y shape in § Review pass that the workshop's validate
+step writes into.
 
 ## Security constraints
 

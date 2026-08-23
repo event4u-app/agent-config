@@ -137,6 +137,23 @@ Read `components.json` for the registered style + base color, then read `package
 }
 ```
 
+### 4b. Prefer a live Storybook read over the hand-read inventory — when one is running
+
+When the project carries `@storybook/addon-mcp` **and** a Storybook is running, query it
+instead of reading files: `list-all-documentation` for the inventory, then `get-documentation`
+for the components that matter. **The live read wins; the hand-read inventory of step 4 is the
+fallback and is never removed** — an agent that cannot reach a running Storybook must still be
+able to inventory the library. The channel disappearing is normal, not an error.
+
+**React-only while the toolset is in preview.** Storybook's own MCP FAQ (docs **10.5**,
+`docs/ai/mcp/overview` § FAQ) states the documentation toolset supports React only during
+preview, so Vue, Angular, and Web Components take the file-read path. Stated here rather than
+discovered at runtime, because the failure otherwise looks like a broken MCP server.
+
+Discipline for what the live read returns is [`storybook-workshop`](../storybook-workshop/SKILL.md)'s
+— in particular: never use a prop the manifest does not document, and fetch the project's
+story instructions before writing a story.
+
 ### 5. List reusable patterns
 
 Categorize what already exists. Empty arrays are valid, never omit the keys.
