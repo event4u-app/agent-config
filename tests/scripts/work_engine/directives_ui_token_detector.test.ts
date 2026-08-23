@@ -6,6 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 import { run as reviewRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
 import {
+    RENDER_BLOCKER,
+    RENDER_DEPENDENT_CHECKS,
+} from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
+import {
     POLISH_CEILING,
     TOKEN_VIOLATION_KIND,
     partition_artifact_covered,
@@ -209,5 +213,102 @@ describe('Phase 6 — the ad-hoc loop has a declared ceiling and a null stop', (
         );
         expect(skill).toContain('daf-adhoc-converges');
         expect(skill).toContain('daf-adhoc-ceiling');
+    });
+});
+
+describe('Phase 7.1 — the static-scoped verdict is an artefact, not a promise', () => {
+    const RA = path.join(REPO_ROOT, 'tests', 'design-artifacts', 'fixtures', 'render-absent');
+
+    function scopeOf(name: string): Dict {
+        const payload = JSON.parse(fs.readFileSync(path.join(RA, name), 'utf8')) as Dict;
+        const st = new DeliveryState(payload as never);
+        reviewRun(st);
+        return ((st.ui_review as Dict)['verdict_scope'] ?? {}) as Dict;
+    }
+
+    it('a render-absent review emits an enumerated check list', () => {
+        const s = scopeOf('static-scoped.json');
+        expect(s['scope']).toBe('static');
+        expect(s['render_available']).toBe(false);
+        expect(Array.isArray(s['checks_run'])).toBe(true);
+        expect((s['checks_run'] as string[]).length).toBeGreaterThan(0);
+    });
+
+    it('it enumerates what did NOT run, and names the blocker', () => {
+        const s = scopeOf('static-scoped.json');
+        expect(s['checks_not_run']).toEqual([...RENDER_DEPENDENT_CHECKS]);
+        expect(s['blocker']).toBe(RENDER_BLOCKER);
+        expect(s['skip_reason']).toBe('b-page-capture-primitive');
+    });
+
+    it('no render-dependent check is claimed as run when nothing rendered', () => {
+        const run = scopeOf('static-scoped.json')['checks_run'] as string[];
+        for (const c of RENDER_DEPENDENT_CHECKS) {
+            expect(run).not.toContain(c);
+        }
+    });
+
+    it('the scope is ALWAYS stamped — an unscoped verdict is not a reachable shape', () => {
+        for (const f of ['static-scoped.json', 'render-present.json']) {
+            expect(scopeOf(f)['scope']).toBeTypeOf('string');
+        }
+    });
+
+    it('control: a rendered review scopes to render and claims the render checks', () => {
+        const s = scopeOf('render-present.json');
+        expect(s['scope']).toBe('render');
+        expect(s['render_available']).toBe(true);
+        expect(s['checks_run']).toEqual(
+            expect.arrayContaining([...RENDER_DEPENDENT_CHECKS]),
+        );
+        expect(s['checks_not_run']).toBeUndefined();
+        expect(s['blocker']).toBeUndefined();
+    });
+
+    it('checks_run is derived from envelope evidence, never asserted', () => {
+        // The static fixture carries a `tokens` envelope but no `a11y` one, so
+        // `token-detector` is listed and `a11y-axe` is not.
+        const run = scopeOf('static-scoped.json')['checks_run'] as string[];
+        expect(run).toContain('token-detector');
+        expect(run).not.toContain('a11y-axe');
+    });
+});
+
+describe('Phase 7.2 — render-dependent fixtures are registered SKIPPED, never absent', () => {
+    const REGISTER = path.join(REPO_ROOT, 'docs', 'guidelines', 'design-handover-extraction.md');
+    const RA = path.join(REPO_ROOT, 'tests', 'design-artifacts', 'fixtures', 'render-absent');
+
+    it('every render-absent fixture names the blocker as its skip reason', () => {
+        for (const name of ['static-scoped.json', 'render-present.json']) {
+            const raw = JSON.parse(fs.readFileSync(path.join(RA, name), 'utf8')) as Dict;
+            const text = JSON.stringify(raw);
+            expect(text).toContain(RENDER_BLOCKER);
+        }
+    });
+
+    it('each fixture id appears in the skip register — none silently absent', () => {
+        const reg = fs.readFileSync(REGISTER, 'utf8');
+        for (const id of [
+            'daf-source-over-screenshot',
+            'daf-render-absent-scoped',
+            'daf-render-absent-control',
+        ]) {
+            expect(reg).toContain(id);
+        }
+    });
+
+    it('the register states the reason on the same row as the id', () => {
+        const reg = fs.readFileSync(REGISTER, 'utf8');
+        const rows = reg.split('\n').filter((l) => l.startsWith('| `daf-'));
+        expect(rows.length).toBeGreaterThanOrEqual(3);
+        for (const row of rows) {
+            expect(row).toContain(RENDER_BLOCKER);
+        }
+    });
+
+    it('the probe result is recorded as a not-available line, not as an assumption', () => {
+        const reg = fs.readFileSync(REGISTER, 'utf8');
+        expect(reg).toContain('not-available: headless-browser-binary');
+        expect(reg).toMatch(/Probed, not assumed/);
     });
 });

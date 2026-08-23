@@ -762,19 +762,88 @@ Work aimed there lands in the guideline.
 
 Runs in parallel with Phase 3; depends only on Phase 2.
 
-- [ ] **7.1 Make the static-scoped verdict an artefact, not a promise.** When
+- [x] **7.1 Make the static-scoped verdict an artefact, not a promise.** When
       `src/skills/design-review/SKILL.md:35-41`'s prerequisites are unmet, the
       review emits the list of checks that actually ran. The rule already
       demands the scope be named; this makes it readable.
-      verify: on a render-absent fixture the review output contains an
-      enumerated check list and no unscoped verdict string.
-- [ ] **7.2 Gate the render-dependent fixtures behind the blocker.** Any
+      verify (discharged): on the render-absent fixture
+      (`tests/design-artifacts/fixtures/render-absent/static-scoped.json`) the review
+      output carries `verdict_scope` with `scope: "static"`, an enumerated
+      `checks_run` (`findings-review`, `token-detector`), an enumerated `checks_not_run`
+      (the four render-dependent checks) and the blocker slug — **and no unscoped verdict
+      string is reachable**: `scope` is stamped on every path, asserted over both the
+      render-absent and render-present fixtures. **Both halves hold**, 29/29.
+
+      **Red first.** The six assertions were run against `review.ts` with the
+      `_stamp_verdict_scope(r)` call removed — the pre-implementation state — and all six
+      failed (`6 failed | 19 passed`). Restored: 29/29.
+
+      **The artefact is derived, never asserted, and that is the load-bearing property.**
+      A check appears in `checks_run` because the envelope carries its evidence:
+      `token-detector` is listed only when `review.tokens.violations` is an array,
+      `a11y-axe` only when `review.a11y.violations` is. One assertion exists purely to pin
+      that — the static fixture carries a `tokens` envelope and no `a11y` one, so
+      `token-detector` is listed and `a11y-axe` is **not**. A skill claiming a check ran
+      cannot get it into the list.
+
+      **`checks_not_run` is the half that makes the scope honest.** An enumerated
+      `checks_run` with nothing beside it reads as a complete review. `RENDER_DEPENDENT_CHECKS`
+      names the four (`viewport-sweep`, `touch-target-size`, `rendered-contrast`,
+      `screenshot-diff`), and on the static path they land in `checks_not_run` with
+      `blocker: b-page-capture-primitive` — so the artefact says what it did, what it did
+      not do, and why.
+
+      **A control fixture ships beside it** (`daf-render-absent-control`, `render_ok: true`)
+      because without it the static branch could be the only branch and nothing would
+      notice: it asserts `scope: "render"`, the four checks moved into `checks_run`, and
+      `checks_not_run` / `blocker` **absent**. It carries its own honesty line — it
+      *synthesises* `render_ok` as state and does not render, so it proves the branch
+      exists and proves nothing about any render-dependent check working.
+
+      This is the rule `design-review-after-ui-write` states ("scope the verdict to what
+      was statically checked and say so") turned from prose into a readable field. It adds
+      no halt and no `AMBIGUITIES` entry — a scope stamp is not a gate.
+
+- [x] **7.2 Gate the render-dependent fixtures behind the blocker.** Any
       fixture in this roadmap that needs a page-reaching capture primitive is
       registered as SKIPPED with the blocker slug as its reason, following the
       precedent already recorded at
       `docs/guidelines/design-handover-extraction.md:74-80`.
-      verify: each such fixture's skip reason names
-      `b-page-capture-primitive`, and none is silently absent.
+      verify (discharged): each render-dependent fixture names `b-page-capture-primitive`
+      as its skip reason **in the fixture itself** (`_skip_reason`), and **none is silently
+      absent** — all three ids appear in the skip register at
+      `docs/guidelines/design-handover-extraction.md`, each on a table row that carries the
+      slug on the same row. Asserted mechanically: every `| \`daf-` row in that file must
+      contain the slug. **Both hold.**
+
+      **The precedent is followed rather than re-invented.**
+      `design-handover-extraction.md:74-80` already recorded `daf-source-over-screenshot`
+      as SKIPPED on 2026-08-13 "for want of a page-reaching capture primitive". That
+      section now carries a **skip register** — one table, the reason string stated once
+      instead of restated per fixture — with the 2026-08-13 row plus the two this roadmap
+      adds.
+
+      **The probe belongs in this step, and it changed what the register says.** A
+      `not-available:` line is only honest if someone tried: `command -v` finds no browser
+      on `PATH`; `agent-config mcp:available` reports `declared servers: none`; and the
+      `playwright` library **does** resolve in this tree — which reads as a capture
+      primitive until you run it. Launching chromium fails with *"Executable doesn't exist
+      at …/chromium_headless_shell-1234/chrome-headless-shell"*. Library present, **no
+      browser binary** → `not-available: headless-browser-binary`, recorded in the register
+      and in the blocker.
+
+      **`npx playwright install` was available and not run.** It would trade a named
+      unavailable capability for a host dependency nobody in this tree controls — the cost
+      the blocker's own § Recommendation prices — and `missing-tool-handling` forbids
+      installing a missing tool silently. The probe therefore **confirms** the council's
+      option (b) with execution evidence rather than overturning it.
+
+      **One fixture was made honest instead of the assertion being relaxed.** The register
+      listed the control fixture as SKIPPED while the file carried no skip reason, so the
+      first run of *"every render-absent fixture names the blocker"* went **RED**. The fix
+      was to put `_skip_reason` and an `_honesty` line into the fixture — it synthesises
+      `render_ok` and does not render — not to narrow the test to the fixtures that already
+      passed.
 
 ## Phase 8 — Name the owner of rendered visual quality
 
@@ -963,6 +1032,22 @@ render-dependent fixture this roadmap would add.
   recorded nulls and are cut from the Phase 2 matrix in step 3.3.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent.
   This environment has no verified page-reaching capture primitive wired to the fixture
   harness, so (a) is not decidable here.
+
+  **Probed 2026-08-23, and the probe is why (a) is closed rather than merely
+  unattractive.** The council decision predates the probe; execution evidence now
+  confirms it. `command -v` finds no browser on `PATH`, no MCP server is declared
+  (`agent-config mcp:available` → `declared servers: none`), and the one candidate that
+  looked like a primitive is not one: the `playwright` library **does** resolve in this
+  tree, and launching chromium fails with *"Executable doesn't exist at
+  …/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell"*.
+  Library present, **no browser binary installed** →
+  `not-available: headless-browser-binary`.
+
+  This is recorded rather than resolved by `npx playwright install` on purpose. Installing
+  a browser binary would make the fixture harness depend on a host capability nobody in
+  this tree controls — the exact cost the § Recommendation above prices — and
+  `missing-tool-handling` forbids installing a missing tool silently. The honest state is
+  a named unavailable capability, not a downloaded one.
 
   The null carries the four parts this run records for every null: *unavailable
   capability* — a page-reaching capture primitive on the host the fixtures run on;

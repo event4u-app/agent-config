@@ -80,6 +80,28 @@ the gap needs a fixture whose host actually has one; claiming a regression
 witness before then would be the fabrication this package's evidence discipline
 exists to prevent.
 
+### The skip register — every fixture gated on the same primitive
+
+`daf-source-over-screenshot` is no longer the only one, so the reason string is
+recorded once here rather than restated per fixture. Every row below is
+**SKIPPED** with `b-page-capture-primitive` as its reason, and none is silently
+absent:
+
+| Fixture | Registered | Reason |
+|---|---|---|
+| `daf-source-over-screenshot` | 2026-08-13 | `b-page-capture-primitive` |
+| `daf-render-absent-scoped` | 2026-08-23 | `b-page-capture-primitive` — its render-dependent assertions only; the static-scope assertions run and pass |
+| `daf-render-absent-control` | 2026-08-23 | `b-page-capture-primitive` — synthesises `render_ok: true` as state rather than rendering, and says so |
+
+**Probed, not assumed** (2026-08-23). The `playwright` library resolves in this
+tree, which reads as a capture primitive until you run it: launching chromium
+fails with *"Executable doesn't exist at
+…/chromium_headless_shell-1234/chrome-headless-shell"*. The library is present
+and **no browser binary is installed**, so the primitive is
+`not-available: headless-browser-binary`. Recorded as execution evidence because
+"playwright is in node_modules" is exactly the inference that would have made a
+fabricated witness look justified.
+
 ## See also
 
 - [`design-fidelity-mechanics`](design-fidelity-mechanics.md) — the data-basis ladder this operationalises, and the adopt-the-code duty that governs what you do with the extracted source.

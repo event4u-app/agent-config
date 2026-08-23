@@ -181,6 +181,8 @@ export function run(state: DeliveryState): StepResult {
         return preview_halt;
     }
 
+    _stamp_verdict_scope(r);
+
     return new StepResult({ outcome: Outcome.SUCCESS });
 }
 
@@ -518,6 +520,70 @@ function _apply_token_detector(state: DeliveryState, review: Record<string, Any>
     if (added > 0) {
         review['review_clean'] = false;
     }
+}
+
+/**
+ * Render-dependent checks, and the blocker that gates each of them.
+ *
+ * Named here so a static-scoped verdict can enumerate what it did NOT do.
+ * "Scope the verdict to what was statically checked and say so" is only
+ * readable if the unrun half is written down too — an enumerated `checks_run`
+ * with no `checks_not_run` beside it reads as a complete review.
+ */
+export const RENDER_DEPENDENT_CHECKS: ReadonlyArray<string> = [
+    'viewport-sweep',
+    'touch-target-size',
+    'rendered-contrast',
+    'screenshot-diff',
+];
+
+/** The blocker slug every render-dependent check is gated behind. */
+export const RENDER_BLOCKER = 'b-page-capture-primitive';
+
+/**
+ * Stamp the verdict scope onto the review envelope.
+ *
+ * W6: `design-review` makes browser automation a hard prerequisite and, below
+ * it, describes a static path in prose with no artefact recording which checks
+ * actually ran. This writes that artefact.
+ *
+ * Every field is DERIVED from the envelope — nothing is invented. A check is
+ * listed as run because the envelope carries its evidence, never because a
+ * skill said it ran. `scope` is always stamped, so an unscoped verdict is not a
+ * shape this step can leave behind.
+ */
+function _stamp_verdict_scope(review: Record<string, Any>): void {
+    const raw_preview = review['preview'];
+    const preview: Record<string, Any> = _isDict(raw_preview) ? raw_preview : {};
+    const rendered = preview['render_ok'] === true;
+
+    const checks_run: string[] = ['findings-review'];
+    const a11y = review['a11y'];
+    if (_isDict(a11y) && Array.isArray(a11y['violations'])) {
+        checks_run.push('a11y-axe');
+    }
+    const tokens = review['tokens'];
+    if (_isDict(tokens) && Array.isArray(tokens['violations'])) {
+        checks_run.push('token-detector');
+    }
+    if (rendered) {
+        checks_run.push(...RENDER_DEPENDENT_CHECKS);
+    }
+
+    const scope: Record<string, Any> = {
+        scope: rendered ? 'render' : 'static',
+        render_available: rendered,
+        checks_run,
+    };
+    if (!rendered) {
+        scope['checks_not_run'] = [...RENDER_DEPENDENT_CHECKS];
+        scope['blocker'] = RENDER_BLOCKER;
+        const reason = preview['skip_reason'];
+        scope['skip_reason'] = typeof reason === 'string' && reason.length > 0
+            ? reason
+            : RENDER_BLOCKER;
+    }
+    review['verdict_scope'] = scope;
 }
 
 /** BLOCKED halt — audit declared a baseline but review has no a11y. */
