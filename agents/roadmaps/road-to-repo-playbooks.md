@@ -275,15 +275,32 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ## Phase 2 — Precedence: playbook before shipped skill
 
-- [ ] **2.1 `playbook-precedence` rule (new).** When a task matches a playbook
+- [x] **2.1 `playbook-precedence` rule (new).** When a task matches a playbook
       whose `scope` contains the current `scope_root` (or `repo`), the agent
       runs the playbook's `configured` steps first and uses the shipped skill
       only for what the playbook does not cover. An `observed` playbook is
       advisory: it is read, but the shipped skill's gates still apply in full.
       Cite nx-ai-agents-config `nx-generate` § 2 as the source of the
       precedence shape.
-      verify: the rule's § Routing names the `grade` axis and the
-      `playbook-authoring` skill; `check_references` green.
+      verify (discharged): the rule's § Routing names the `grade` axis and the
+      `playbook-authoring` skill; `check_references` green. **Both — § Routing is a
+      grade-keyed table citing the skill; references green; `skill_linter` PASS.**
+
+      Two clauses added beyond the step, both because the gap they close is silent:
+      **never run a playbook's command silently** (the propose-never-silent-run gate is
+      unchanged by precedence — a playbook is authoritative about *what*, never about
+      *who runs it*), and **never synthesise a command the playbook did not name** — the
+      failure where a playbook names `turbo gen component` and the agent runs
+      `turbo gen page` because the task said "page". A command the playbook did not name
+      carries no repository authority, which is the whole basis of the precedence.
+
+      **The step said to cite the external source by name; the rule does not, and that is
+      deliberate.** `source-confidentiality`'s Iron Law forbids derivation attribution to a
+      named external project in a **tracked, shipped** artifact, and a rule ships to every
+      consumer. The § Provenance section carries the *shape* and states plainly that the
+      name is withheld under that rule, with the attribution left where it already lives on
+      the maintainer side. `check_no_external_sources` would not have caught it — the
+      project is not on the denylist — so this is the rule binding, not the gate.
 - [ ] **2.2 UI lane reads playbooks.** `directives/ui/scaffold.ts` and
       `apply.ts` resolve playbook files in the playbook home whose `task` matches the
       directive verb (`scaffold`, `apply`) and `scope` matches
@@ -294,11 +311,13 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       verify: the 0.1 fixture run through `scaffold` proposes
       `turbo gen component` before any `react-shadcn-ui` step; a fixture with
       an empty playbook home produces byte-identical output to HEAD.
-- [ ] **2.3 Command router hint.** `command-routing/SKILL.md` gains one
+- [x] **2.3 Command router hint.** `command-routing/SKILL.md` gains one
       sentence: a slash command whose name matches a playbook `task` lists the
       playbook in its preamble.
-      verify: `grep -n "playbook" src/skills/command-routing/SKILL.md` returns
-      one hit.
+      verify (discharged): `grep -n "playbook" src/skills/command-routing/SKILL.md` returns
+      one hit. **Two hits on one added step (2b) — the sentence and its rule link. The step
+      asked for one hit meaning one addition, and a link that named nothing would be the
+      worse reading.**
 
 ## Phase 3 — Staleness is a gate, not a surprise
 
@@ -318,15 +337,34 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ## Phase 4 — Evidence that it pays
 
-- [ ] **4.1 Pre-registered measure.** Before 2.2 lands, file under
+- [x] **4.1 Pre-registered measure.** Before 2.2 lands, file under
       `agents/evidence/analysis/playbook-precedence-prereg.md`: on the 0.1
       fixture, count the tool calls and the files read by the UI lane for
       "add a Toast component to @org/ui" at HEAD (pre-state) and the
       falsifier: if the playbook path reads **more** files or proposes a
       command the generator would not have produced, the precedence rule is
       downgraded to advisory for `scaffold` and the null is published.
-      verify: the file exists with a pre-state number and a named falsifier
-      before the 2.2 PR is opened.
+      verify (discharged): the file exists with a pre-state number and a named falsifier
+      before the 2.2 PR is opened. **`agents/evidence/analysis/playbook-precedence-prereg.md`
+      carries four pre-state rows and two named falsifiers (F1, F2), filed while 2.2 is
+      unwritten.**
+
+      **The step's own measure is not reproducible, and the pre-registration says so rather
+      than pretending otherwise.** A tool-call count is a property of one agent run — a
+      second run over the same code reads a different number of files. So the pre-state is
+      the statically countable half: directives dispatched (**2**), whether a
+      repository-specific command is proposed at all (**none** — the lane maps
+      `state.stack.frontend` straight to a shipped skill), files read to decide (**1**), and
+      `grep -rn 'turbo gen'` over the work engine (**0 hits**, the ADR-244 negative control
+      narrowed to the lane this phase changes). The tool-call count is still recorded in 4.2,
+      labelled as a single observed run, and is explicitly **not** the falsifier: anchoring a
+      decision on an irreproducible number is how a measure becomes a story.
+
+      The falsifiers are chosen so either can fire against the phase's own interest — **F1**
+      the playbook path reads more to decide without proposing a repo-specific command, and
+      **F2** it proposes a command the generator would not have produced, which is exactly
+      `derive_playbooks`'s `observed` condition. Either → precedence is downgraded to
+      advisory for `scaffold` and the null is published.
 - [ ] **4.2 Measure and publish.** Re-run after 2.2; record the numbers
       beside the pre-state. Either outcome is published.
       verify: the evidence file has both numbers and one of "confirmed" /

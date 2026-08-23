@@ -7,13 +7,13 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **id**: `engineering-base`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 120
+- **artefacts**: 121
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (30)
+## Rules (31)
 
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
@@ -36,6 +36,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`minimal-safe-diff`** — Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits or reformatting
 - **`non-destructive-by-default`** — Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass
 - **`output-discipline`** — No placeholder prose in generated code/UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint
+- **`playbook-precedence`** — A repository's own playbook outranks a shipped skill for the same task — run its configured steps first, and treat an observed playbook as advisory
 - **`prefer-enums-over-literals`** — Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after
 - **`scope-control`** — Scope control — no unsolicited architectural changes, refactors, or library replacements
 - **`secret-vcs-guard`** — Writing a credential into a tracked file or committing one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently

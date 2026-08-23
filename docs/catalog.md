@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **718 public artefacts** shipped by
+Consumer-facing catalog of all **719 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -320,7 +320,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (117)
+## Rules (118)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -402,6 +402,7 @@ are excluded.
 | rule | [`package-ci-checks`](../dist/agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../dist/agent-src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../dist/agent-src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
+| rule | [`playbook-precedence`](../dist/agent-src/rules/playbook-precedence.md) | auto | A repository's own playbook outranks a shipped skill for the same task — run its configured steps first, and treat an observed playbook as advisory |
 | rule | [`prefer-enums-over-literals`](../dist/agent-src/rules/prefer-enums-over-literals.md) | auto | Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after |
 | rule | [`preservation-guard`](../dist/agent-src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../dist/agent-src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
