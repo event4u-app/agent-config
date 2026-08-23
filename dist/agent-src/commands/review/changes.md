@@ -189,6 +189,56 @@ If picked **1**:
 
 If picked **2** → continue with internal judges only.
 
+### 4b-fresh. The fresh reviewer — the one input with no implementation context
+
+The six judges above all read **the same diff plus the task context**, and on the common
+path they run in-session: the party that wrote the diff also reads it, with the whole
+implementation context in scope. That is a self-review, and calling it a review is the
+defect `road-to-review-independence` exists to close.
+
+So a **seventh input** is added, and its distinguishing property is a negative one: it
+has **no implementation context**. Not a new mechanism —
+[`dispatch_r2_reviewer.ts`](../../../../scripts/dispatch_r2_reviewer.ts) already derives
+the scope and persists the prompt it sent:
+
+```bash
+./scripts-run src/scripts/dispatch_r2_reviewer --slug <slug> --base origin/main
+```
+
+The six in-session judges stay exactly as they are. This is an addition, not a
+replacement — a fresh reviewer is worse than a spec judge at spec compliance, and the
+point is not to be better at their job but to be uncontaminated by the author's framing.
+
+**When the route is taken.** Whenever the diff is going to a PR — i.e. every
+pre-PR review, which is what this command's own opening line describes itself as. It is
+skipped only for a diff that will not be proposed to anyone: a scratch branch, a probe,
+a measurement re-run.
+
+**When dispatch is unavailable — the honest degraded answer.** If a fresh dispatch cannot
+be made (no subagent primitive on this host, a spend ceiling, a dispatcher error), the
+review **says so in the report** and records `fresh_review: unavailable` with the reason.
+It does **not** fall back to the in-session judges and present the result as a review:
+
+```
+A SELF-REVIEW PRESENTED AS A REVIEW IS THE DEFECT, NOT THE DEGRADED MODE.
+NO FRESH REVIEWER -> THE REPORT SAYS SO. NEVER SILENTLY.
+```
+
+That wording is deliberate. A silent fallback is worse than a missing input, because the
+reader cannot tell which one they got — and this command's own `criteria_source` table
+already applies the same rule to a different input (`not_provided` is never a pass).
+
+**The implementer envelope does NOT reach this reviewer.** The judge prompts hand it over
+on purpose — `prompts/do-and-judge.md:70` carries an `IMPLEMENTER ENVELOPE:` line with the
+envelope placeholder — which is correct for a judge validating a claim and wrong for a
+reviewer whose entire value is not having the author's framing.
+
+The placeholder is described rather than written out here on purpose: step 1.3's verify is
+a grep for its **absence** from this route, and prose that trips a grep-shaped verify is a
+trap for the next reader. The asymmetry is stated in
+[`prompts/README.md`](../../../../skills/subagent-orchestration/prompts/README.md) so the
+next prompt author does not copy the envelope line into a fresh-reviewer template.
+
 ### 4c. Optional adversarial verification council (opt-in, high-risk)
 
 Read `subagents.adversarial_council` from `.agent-settings.yml` (default

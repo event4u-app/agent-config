@@ -109,6 +109,17 @@ coverage reads as full coverage.
   shuffled file order (deterministic seed per session, logged for replay) so
   a fixed order does not correlate their blind spots. Single-reviewer → no shuffle.
 
+**MEASURED, and the result is a null — 2026-08-23.** This control is prose and nothing in
+the package implements it. That is now true for a recorded reason rather than by
+omission: the pre-registered question — does rotating reviewer order change the finding set
+on a frozen corpus, by more than 15 % — **cannot be answered from the corpus that exists**.
+`agents/evidence/reviews/` holds 123 findings artefacts, and none of them records the file
+order it was produced under, so the counterfactual is not recoverable; re-running reviewers
+produces fresh judgements in which ordering is confounded with run-to-run variance. Full
+null, with its reopening condition: `agents/evidence/review-rotation-prereg-and-null.md`.
+A reduced-power crossover was considered and refused — it would risk a false closure on a
+control this paragraph still specifies.
+
 ## Before creating a PR
 
 1. When `quality.local_auto_run: true`: run the project's quality pipeline (see the stack carve-out for the exact commands — PHP: `quality-tools`) and tests via the project's runner (`make test`, `npm test`, `pytest`, `go test ./...`, or the project's wrapper script). Under the default (`false` / missing): skip both — remote CI on the PR is the gate.

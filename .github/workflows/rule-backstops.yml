@@ -302,6 +302,15 @@ jobs:
             --write-table agents/evidence/reports/override-precedence-table.md
           git diff --exit-code -- agents/evidence/reports/override-precedence-table.md
 
+      # road-to-review-independence step 4.2. Wired in BOTH directions on purpose: a gate
+      # that runs only in `task ci` is enforced nowhere remotely
+      # (`ci-parity:local-only`), and one that runs only here is a failure a contributor
+      # meets after pushing (`ci_only`). Warn-only, so this step never reds the job — the
+      # finding is the output, and a phrase list that could refuse a review would refuse
+      # its false positives too.
+      - name: Judge prompts state no expectation (warn-only)
+        run: ./scripts-run src/scripts/lint_judge_prompt_expectation --quiet
+
       - name: ADR frontmatter + review_trigger
         run: ./scripts-run src/scripts/check_adr_frontmatter
 

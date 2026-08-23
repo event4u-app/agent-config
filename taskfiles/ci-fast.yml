@@ -756,6 +756,11 @@ tasks:
     desc: "WARN-ONLY — makes the subagent-spawn-contract.md Iron Law (never bulk-dump context into a subagent) deterministic: per-tier payload size cap, no inline knowledge_refs bodies, no uncut >40-line file dumps, over JSON spawn fixtures + golden-transcript spawn payloads (road-to-lean-agent-init Phase 3). Promotion path: add --strict once caps hold across a clean observation window"
     cmd: ./scripts-run src/scripts/lint_spawn_payload
 
+  lint-judge-prompt-expectation:
+    silent: true
+    desc: "WARN-ONLY — warns when a CAPTURED judge prompt states an expectation of the outcome, the softer form of pre-judging that evidence_independence's verdict phrase list does not catch (road-to-review-independence step 4.2). Always exits 0: a phrase list that could refuse a review would refuse its false positives too. Cannot see a paraphrase, an omitted prompt package, or a substituted prompt — all three stated in the script header"
+    cmd: ./scripts-run src/scripts/lint_judge_prompt_expectation --quiet
+
   lint-pre-migration-refs:
     silent: true
     desc: "Fail on pre-migration install hints (pip install agent-config, python install.py, retired Python MCP entry) in shipped files — the doc-rot net from road-to-credible-install Phase 0 (ADR-200 retired the Python installer)"
@@ -1474,6 +1479,7 @@ tasks:
     silent: true
     desc: Run every visibility-as-code lint in sequence (topics + MCP registry + positioning) — R5 Phase 3.3
     cmds:
+
       - task: lint-topics-yaml
       - task: lint-mcp-registry-manifest
       - task: lint-positioning

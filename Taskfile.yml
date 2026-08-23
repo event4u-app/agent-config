@@ -128,6 +128,7 @@ tasks:
       - task: check-depth-budget
       - task: check-source-size-budget
       - task: lint-spawn-payload
+      - task: lint-judge-prompt-expectation
       - task: lint-pre-migration-refs
       - task: lint-consumer-internal-refs
       - task: lint-budget-ownership
