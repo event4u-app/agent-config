@@ -230,7 +230,7 @@ stays blocked, correctly, by `b-composite-ceiling-value`.
       `p50_ci` is written.
 ## Phase A2 — arming, and the part that is not ours
 
-- [ ] **A2.1 Set `p50_ci` and flip `observe_only` to false — MAINTAINER ACT.**
+- [-] **A2.1 Set `p50_ci` and flip `observe_only` to false — CANCELLED, honest null.**
       Blocked on `b-composite-ceiling-value`. Both council seats placed this with
       the owner independently. `codex-default`: *"Owner-reserved: selecting the
       ceiling; cancelling the bar; weakening the precondition; or permanently
@@ -238,9 +238,38 @@ stays blocked, correctly, by `b-composite-ceiling-value`.
       trivial — *"Setting p50_ci to a number and observe_only to false is the
       whole of step 4.2 — no code change is needed to arm it"* — which is exactly
       why the number is the whole decision.
-      verify: `hook-latency-budget.json` carries a numeric `p50_ci` for
-      `per_turn_composite`, `observe_only: false`, and a recorded basis naming
-      the n and the session count it came from.
+      verify (superseded — see the decision below): `hook-latency-budget.json`
+      carries a numeric `p50_ci` for `per_turn_composite`, `observe_only: false`,
+      and a recorded basis naming the n and the session count it came from.
+
+      **DECIDED 2026-08-23 — option (c), extend observe-only.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default),
+      convergent across two passes. Option (b) was chosen first and then found
+      **not executable**: its `Resolved when` requires *"the number with the n and
+      session count it was derived from"*, and
+      `./scripts-run src/scripts/check_composite_arming` reports *"no composite
+      store at `agents/evidence/hook-composite-readings.jsonl` … This is 'not
+      measured yet', which is NOT the same as 'armable'."* **n = 0.**
+
+      Arming it from local runs was considered and refused. The predicate would
+      have accepted them — `composeReadingRecord` gives each local invocation its
+      own `session` id by design (`bench_hook_latency.ts:610-615`) — but every
+      local session is **one machine**, which is precisely the under-sampling the
+      `MIN_SESSIONS = 2` floor was written to exclude. Satisfying the counter
+      while defeating its purpose is the silent-green this file's own Phase A1
+      exists to prevent.
+
+      **The null, in the four parts this run records for every null:**
+      · *unavailable capability* — a composite reading store with >= 10 readings
+        from >= 2 distinct CI runner sessions; CI never commits readings back, so
+        the store cannot fill inside one PR.
+      · *affected claims* — the per-turn composite carries no registered ceiling,
+        so D-1 stays measured-but-unbounded and nothing in the parent roadmap
+        ships against a target.
+      · *evidence boundary* — the distribution renderer, the predicate and the
+        store are all built and evaluable; only the readings are absent.
+      · *reopening condition* — `check_composite_arming` reports armable
+        (>= 10 readings / >= 2 sessions, from real CI runs), at which point
+        `b-composite-ceiling-value` is answered again with a number in hand.
 
 ## Track B — the Stop async split
 
@@ -287,7 +316,7 @@ correction, but a reader should not inherit the wrong reason.
 
 ## Phase B1 — cost the split, then land the two in-repo prerequisites
 
-- [ ] **B1.0 Produce the comparison neither seat could find.**
+- [x] **B1.0 Produce the comparison neither seat could find.**
       Both council seats independently noted that no cost-versus-benefit figure
       exists for this split: the dissent argues five prerequisites and three
       safety surfaces against a wall-clock saving nobody has measured, and
@@ -299,9 +328,39 @@ correction, but a reader should not inherit the wrong reason.
       remaining prerequisite cost as a diff estimate against B1.1-B1.3. Neither
       number decides anything; together they make
       `b-async-split-cancellation` answerable instead of rhetorical.
-      verify: a dated artefact carrying both figures and the method for each, and
-      the cancellation blocker's `What to do` cites it.
-- [ ] **B1.1 P1 — a parity contract that permits two entries on one native event.**
+      verify (discharged): a dated artefact carrying both figures and the method
+      for each, and the cancellation blocker's `What to do` cites it.
+
+      **SHIPPED 2026-08-23** as
+      `agents/evidence/reports/stop-async-split-cost-comparison.md`. Measured by
+      arm substitution on the `claude` `stop` list, rebuilding the bundle between
+      arms and restoring the manifest after (`git diff --stat` clean); n=50 per
+      run, 3 runs per arm, one machine.
+
+      | arm | `stop` list | p50 |
+      |---|---|---|
+      | as shipped | all 12 | 84 ms |
+      | sync-required only | `end-review-nudge`, `turn-end-gate`, `session-eol` | 81 ms |
+      | dispatcher floor | `[]` | 63 ms |
+      | control (`node -e 0`) | no dispatcher | 20 ms |
+
+      **The saving the split could buy is <= 3 ms per turn** (84 - 81), against a
+      registered composite of **1186 ms** on the same machine — **0.25 %**. The
+      slot is dominated by the 43 ms dispatcher fixed cost (63 - control), which
+      the split does not remove: an async group is a SECOND dispatcher
+      invocation, so it moves 3 ms of concern work off the critical path and adds
+      another 43 ms spawn beside it. Prerequisite cost: five items, three
+      touching correctness or safety surfaces, one not producible in this
+      repository at all.
+
+      **Correction the measurement forced.** This file says *"Eleven concerns
+      bind `stop` on claude"*. The manifest carries **twelve**
+      (`hook_manifest.yaml:958`) — `run-continuation` was added after the
+      classification was written and is on neither the sync-required nor the
+      async-capable list. So the 3 ms covers nine concerns, and the eight the
+      split targets cost some unseparated fraction of it. Recorded rather than
+      folded into either arm.
+- [-] **B1.1 P1 — a parity contract that permits two entries on one native event. CANCELLED.**
       `build_claude_hook_matrix` returns one command string per native event and
       `claude_hook_matrix_parity.test.ts` asserts exactly one group with exactly
       one command per event; the dispatcher's own `tools:`-filter header cites
@@ -309,10 +368,22 @@ correction, but a reader should not inherit the wrong reason.
       entries on `Stop`, which is a deliberate change to the type that carries
       the hook matrix into every claude consumer's settings — so the contract
       change ships with its own decision record, never as a test edit.
-      verify: the parity test asserts the NEW invariant explicitly, and a
-      generated consumer settings file carries two `Stop` groups whose union is
-      the eleven concerns.
-- [ ] **B1.2 P2 — remove the race that can make the turn-end gate ALLOW.**
+      verify (superseded): the parity test asserts the NEW invariant explicitly,
+      and a generated consumer settings file carries two `Stop` groups whose
+      union is the eleven concerns.
+
+      **CANCELLED 2026-08-23** with Phase B2. AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent.
+      The second half of that verify — a generated settings file carrying two
+      `Stop` groups — is producible only by the split, so the cancellation of B2
+      made it unreachable; and B1.1's whole stated purpose is *"A sync/async
+      split needs two entries on `Stop`"*, which B2.1 itself names as the
+      caller-less-function antipattern when landed alone. Landing the contract
+      permission on its own would change the type carried into **every** claude
+      consumer's `settings.json` for a benefit measured at <= 0.25 % that is now
+      not being taken.
+      *Reopening condition:* a decision to reinstate the async split, at which
+      point this is its first step again.
+- [x] **B1.2 P2 — the race that can make the turn-end gate ALLOW: audited, not reachable, now pinned.**
       `turn_end_gate_hook` reads `agents/state/verify-before-complete.json` for
       its completion-claim detector, and `verify-before-complete` is
       async-capable — so under a split the producer runs in a parallel process
@@ -321,10 +392,40 @@ correction, but a reader should not inherit the wrong reason.
       observed unsettled" to "no CI observed, therefore allow".
       `codex-default`: *"The race that could falsely allow completion is a
       correctness constraint, not merely an optimization concern."*
-      verify: a test that interleaves the reset and the gate read and asserts the
-      gate never reaches allow — proven by sabotage, i.e. seen RED against the
-      current ordering before the fix.
-- [ ] **B1.3 Audit P3's and P4's closure instead of inheriting it.**
+      verify (amended 2026-08-23, AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent): the three
+      grounds that make the race unreachable are verified in source, and the one
+      of them that nothing pinned is pinned by a sabotage-proven negative
+      control. The original wording — *"a test that interleaves the reset and the
+      gate read … seen RED against the current ordering before the fix"* —
+      demanded a RED against a defect the audit found absent, and an amendment
+      recorded in the open is the honest resolution rather than manufacturing
+      one.
+
+      **The audit, three independent grounds, each read at this commit:**
+      1. `before_complete_hook.ts:537` runs load -> update -> publish under ONE
+         lock (`update_json_under_lock`), published by tmp+rename — no torn or
+         partial read exists.
+      2. Producer and consumer both key state per session — writer
+         `statePathFor(session_id)` (`:512`), reader `ciStatePathFor(session_id)`
+         behind an `ownsSessionState` check (`turn_end_gate_hook.ts:437-446`) —
+         so a foreign session's reset is unreadable, not merely unlikely.
+      3. The reset fires only when the envelope's `session_id` differs from the
+         persisted one (`:362`). In a per-session file that cannot happen for the
+         session that owns it, so no ordering nulls a populated
+         `ci_last: {settled:false}` while that same session's gate reads it.
+
+      **What was missing, and now is not.** Grounds 1 and 2 were already pinned
+      (`tests/scripts/hooks/state_io.test.ts`, and *"each file records its own
+      owner"* in `before_complete_session_isolation.test.ts`). Ground 3 was
+      pinned in one direction only: the suite asserted the reset DOES clear, so
+      widening its condition — dropping the id comparison, or resetting every
+      turn boundary — would make the race real again and stay green. Added:
+      *"does NOT clear the CI witness for the session that owns the file"*, and
+      `settled: false` is deliberately the planted value, because nulling it
+      reads downstream as "no CI observed", which is the ALLOW direction.
+      **Sabotage-proven:** making the reset unconditional takes it RED (2 failed
+      / 30 passed); restored, 32/32 green.
+- [x] **B1.3 Audit P3's and P4's closure instead of inheriting it.**
       `codex-default` scored the claim that P3 and P4 are closed as inferred, not
       confirmed: *"Concrete files and mechanisms are named, but landed changes
       and verification results are absent."* P3 covered `dispatch-issues.jsonl`
@@ -333,30 +434,80 @@ correction, but a reader should not inherit the wrong reason.
       Re-verify all four against the merged tree before B1.1 lands, because the
       split is what makes those collisions reachable, and one of them is
       corruption-capable rather than merely lossy.
-      verify: per file, the current source shows the lock or the discriminator,
-      with a test that fails when it is removed.
+      verify (discharged): per file, the current source shows the lock or the
+      discriminator, with a test that fails when it is removed.
+
+      **The audit found a real gap, which is the point of auditing rather than
+      inheriting.** All four mechanisms are present in source —
+      `dispatch_issues.ts:206` (`update_text_under_lock` + a 200-entry cap),
+      `dispatch_hook.ts:974` (the rule-trips read inside
+      `update_json_under_lock`), `dispatch_hook.ts:910-918`
+      (`SUMMARY_INVOCATION_CAP`, newest-last rotation), and `bcbb0380b`'s lock
+      primitive itself. But **two of the four call sites were unpinned**:
+      `p3_state_concurrency.test.ts` drives an inline re-implementation of the
+      mutator inside a worker for the rule-trips and summary cases, so it proves
+      the PRIMITIVE and never reaches `_record_rule_trips` or the summary rollup.
+      Measured by sabotage 2026-08-23: hoisting the rule-trips read back outside
+      the lock at its real call site left all three of those tests GREEN. Only
+      the `dispatch-issues` case, which calls the production
+      `log_dispatch_issue`, went RED.
+
+      **Closed by `tests/hooks/p3_call_site_concurrency.test.ts`**, which spawns
+      eight real dispatcher processes and asserts on the files they write:
+      · summary rollups — sabotage-proven RED (replacing the `invocations` list
+        with a singular publish leaves 1 of 8);
+      · the rule-trips increment across eight dispatches — a plain
+        no-lost-increment regression check, and **stated as not a race proof**:
+        eight real dispatchers do not overlap inside a microsecond-long
+        read-modify-write, which is why the primitive test needs `Atomics.wait`
+        to reproduce it and why production code must not grow a delay for a test;
+      · therefore a **structural** pin on the rule-trips call site — the read must
+        not precede the lock and the increment must come from the callback
+        parameter — which is what this step's verify actually asks for, and which
+        the same sabotage takes RED.
+
+      Two false reds were hit building it and are recorded in the file's header so
+      they are not reintroduced: `execFile` has no `input` option (the payload
+      never reached stdin, so every dispatch took the no-envelope path), and a
+      naive substring check for `readFileSync` matched the function's own comment
+      explaining the pre-fix shape.
 
 ## Phase B2 — the split, behind a live-host check
 
-- [ ] **B2.1 Land the dispatcher-side subset filter and the manifest field.**
+- [-] **B2.1 Land the dispatcher-side subset filter and the manifest field. CANCELLED.**
       Testable in this repository; the emission half is not. It does not ship
       alone — landing the filter without the emission is a function with no
       caller, the antipattern this roadmap's own sibling rejected — so it lands
       with B2.2 or not at all.
-      verify: the filter selects exactly the eight async-capable concerns from
-      the manifest, and rejects a manifest that marks a `severity: blocking`
-      concern async.
-- [ ] **B2.2 P5 — the live-host artefact diff. HOST-OWNER ACT.**
+      verify (superseded): the filter selects exactly the eight async-capable
+      concerns from the manifest, and rejects a manifest that marks a
+      `severity: blocking` concern async.
+
+      **CANCELLED 2026-08-23**, AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent — option (b) of
+      `b-async-split-cancellation`. B1.0's measurement is the basis the blocker
+      asked for: <= 3 ms of a 1186 ms composite, 0.25 %, against five
+      prerequisites of which three touch correctness or safety and one is not
+      producible here. *Reopening condition:* a per-concern measurement showing
+      the eight concerns cost materially more than 3 ms on some host, or a
+      dispatcher change that removes the 43 ms fixed cost the split cannot
+      touch.
+- [-] **B2.2 P5 — the live-host artefact diff. CANCELLED with B2.1.**
       Blocked on `b-async-split-live-verification`. A live session with the split
       config installed, comparing artefacts against a synchronous run: every
       async concern still writes its disk artefact. Not observable from here.
-      verify: a dated record naming the host version, the eight artefacts found,
-      and any that were missing.
+      verify (superseded): a dated record naming the host version, the eight
+      artefacts found, and any that were missing.
+
+      **CANCELLED 2026-08-23** with B2.1, and `b-async-split-live-verification`
+      is resolved on its own second outlet — *"or the capability is recorded as
+      unavailable with the reason"*. Reason: no host carrying the split config is
+      reachable in this run, and the split is now cancelled, so there is no
+      config to install. *Reopening condition:* the same as B2.1's.
 
 ## Blockers
 
 ### blocker: b-composite-ceiling-value
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase A2 step A2.1 only. Phase A1 proceeds without it and produces
@@ -380,9 +531,22 @@ correction, but a reader should not inherit the wrong reason.
 - **Resolved when:** one option is recorded here, and for (a) or (b) the row in
   `hook-latency-budget.json` carries the number with the n and session count it
   was derived from.
+- **Resolution (2026-08-23):** **option (c) — extend observe-only.** AI council 2026-08-23, 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default),
+  convergent across two passes. (b) was chosen first and then found not
+  executable: `check_composite_arming` reports **n = 0** — no store at
+  `agents/evidence/hook-composite-readings.jsonl` — so no number can carry "the
+  n and session count it was derived from". Arming from local runs was refused:
+  the predicate would accept them, but every local session is one machine, which
+  is the under-sampling `MIN_SESSIONS = 2` exists to exclude. `observe_only`
+  stays `true`, `p50_ci` stays `null`, and the decision is recorded in
+  `hook-latency-budget.json` alongside the 2026-08-20 one it extends. Reopens
+  when the predicate reports armable from real CI readings. Owner delegation:
+  the maintainer routed owner-reserved blockers to the council for this
+  autonomous run; the reserved *transition* here is choosing a ceiling, and this
+  decision declines to choose one.
 
 ### blocker: b-async-split-cancellation
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing. It exists so the recorded dissent has a place to be
@@ -409,9 +573,22 @@ correction, but a reader should not inherit the wrong reason.
   standing council decision. Nothing is lost by leaving this open.
 - **Resolved when:** either "sequencing stands" or "cancelled, with the cost
   comparison" is recorded here.
+- **Resolution (2026-08-23):** **option (b) — cancel the split, keep the
+  prerequisites.** AI council 2026-08-23, 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. The cost comparison the
+  recommendation waited for is
+  `agents/evidence/reports/stop-async-split-cost-comparison.md`: the split can
+  move **<= 3 ms** off a **1186 ms** per-turn composite — **0.25 %** — while the
+  43 ms dispatcher fixed cost it cannot touch dominates the slot, and an async
+  group adds a second spawn beside it. Against that: five prerequisites, three on
+  correctness or safety surfaces, one not producible in this repository. So B2.1
+  and B2.2 are cancelled. B1.1 is cancelled **with** them, on a second decision
+  in the same session: its verify's second half is producible only by the split,
+  and landing the contract permission alone would change the type carried into
+  every claude consumer's `settings.json` for a benefit no longer being taken.
+  B1.2 and B1.3 are kept and are closed above — B1.3 on a real finding.
 
 ### blocker: b-async-split-live-verification
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 3 — capability-gated
 - **Blocks:** Phase B2 step B2.2, and therefore B2.1, which may not ship alone.
@@ -425,6 +602,15 @@ correction, but a reader should not inherit the wrong reason.
   today, since B1.2 closes a race that can make a refusal surface allow.
 - **Resolved when:** a dated live-session record exists, or the capability is
   recorded as unavailable with the reason.
+- **Resolution (2026-08-23):** **capability recorded unavailable**, the second
+  outlet. AI council 2026-08-23, 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. Reason, in the four parts this run
+  records for every null: *unavailable capability* — no host carrying the split
+  config is reachable in this run, and with B2 cancelled there is no config to
+  install; *affected claims* — nothing asserts that the eight async-capable
+  concerns still write their artefacts under `async: true`; *evidence boundary* —
+  the classification and the cost comparison are in-repo and done, the emission
+  behaviour is not observable from here at all; *reopening condition* — a
+  decision to reinstate the split, which makes B2.1 live again and this its gate.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -438,24 +624,57 @@ correction, but a reader should not inherit the wrong reason.
 
 ## Acceptance Criteria
 
-- [ ] AC-A1 — the arming precondition is **evaluable**: a command reads a durable
+- [x] AC-A1 — the arming precondition is **evaluable**: a command reads a durable
       store of composite readings and reports the counts against `>= 10 readings
       / >= 2 sessions`, naming the shortfall when it is not met. Evaluable, not
       met — meeting it takes CI runs this roadmap does not control.
-- [ ] AC-A2 — `per_turn_composite` in `hook-latency-budget.json` carries either a
+      **Met 2026-08-23:** `check_composite_arming` reads the store and reports
+      the shortfall by clause; run at this commit it prints "no composite store …
+      'not measured yet', which is NOT the same as 'armable'". Evaluable, and
+      honestly not met.
+- [x] AC-A2 — `per_turn_composite` in `hook-latency-budget.json` carries either a
       numeric `p50_ci` with `observe_only: false` and a recorded derivation basis,
       or a recorded owner decision at `b-composite-ceiling-value` choosing
       otherwise. Either satisfies this; an unanswered blocker does not.
-- [ ] AC-B0 — the cost comparison exists: a dated artefact stating the
+      **Met by the second limb 2026-08-23:** `b-composite-ceiling-value` records
+      option (c), extend observe-only, with n = 0 named as the insufficiency.
+- [x] AC-B0 — the cost comparison exists: a dated artefact stating the
       turn-end wall clock the eight async-capable concerns cost today and the
       estimated prerequisite cost of B1.1-B1.3, each with its method. It does not
       have to favour either path.
-- [ ] AC-B1 — the parity contract permits two entries on `Stop`, and the
-      turn-end-gate race is closed by a test that was seen RED against the
-      current ordering. P3's and P4's closure is re-verified against the merged
-      tree rather than inherited.
-- [ ] AC-B2 — either the eight async-capable concerns run async with a dated
+      **Met 2026-08-23:**
+      `agents/evidence/reports/stop-async-split-cost-comparison.md` — <= 3 ms
+      saving, four measured arms with their method, and the prerequisite cost as
+      a per-item diff estimate. It did in fact favour one path, which was not
+      required of it.
+- [x] AC-B1 — ~~the parity contract permits two entries on `Stop`~~, and the
+      turn-end-gate race is ~~closed by a test that was seen RED against the
+      current ordering~~ **audited as unreachable, with its one unpinned ground
+      pinned by a sabotage-proven negative control**. P3's and P4's closure is
+      re-verified against the merged tree rather than inherited.
+      **Amended 2026-08-23**, AI council 2026-08-23, 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent on both halves. The
+      parity clause is struck rather than deleted: it belonged to B1.1, cancelled
+      with the split. The race clause is amended because the audit found no
+      defect — three grounds verified in source — so no RED against the current
+      ordering exists to be seen; the negative control that pins ground 3 was
+      seen RED under sabotage instead. The third sentence is met in full, and it
+      is the one that found something: two of four call sites were unpinned, and
+      `tests/hooks/p3_call_site_concurrency.test.ts` closes both.
+- [x] AC-B2 — either the eight async-capable concerns run async with a dated
       live-host artefact diff, or `b-async-split-live-verification` records the
       capability as unavailable and Track B rests after B1 with that stated.
-- [ ] AC-0 — neither track's closure required amending the other. Falsified by
+      **Met by the second limb 2026-08-23:** the capability is recorded
+      unavailable with its reason, and Track B rests after B1 — which the blocker
+      itself called *"a legitimate resting state, and strictly better than
+      today"*, though for a reason the measurement changed: not because B1.2
+      closed a race, but because B1.3 found two unpinned call sites and closed
+      them.
+- [x] AC-0 — neither track's closure required amending the other. Falsified by
       any step in one track referencing a step in the other.
+      **Held 2026-08-23.** Track A closed on `b-composite-ceiling-value` alone
+      (option c, n = 0); Track B closed on `b-async-split-cancellation` and
+      `b-async-split-live-verification` alone. No A step's text references a B
+      step or the reverse, and the two were decided in one council pass without
+      either decision being an input to the other. The one-file shape's stated
+      `Revisit-if` — *"either track grows a step that has to reference the
+      other"* — did not fire.
