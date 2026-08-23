@@ -1,0 +1,11 @@
+# Overlay: identical to the conformant vocabulary except that `fx-alpha` no
+# longer requires `fx-beta`. One edge removed, one violation seeded.
+- id: core
+  requires: []
+  risk_class: low
+- id: fx-alpha
+  requires: []
+  risk_class: low
+- id: fx-beta
+  requires: []
+  risk_class: low
