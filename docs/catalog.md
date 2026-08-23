@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **722 public artefacts** shipped by
+Consumer-facing catalog of all **723 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -651,7 +651,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (109)
+## Guidelines (110)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -677,6 +677,7 @@ are excluded.
 | guideline | [`domain-pack-architecture`](../docs/guidelines/agent-infra/domain-pack-architecture.md) | agent-infra |  |
 | guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
+| guideline | [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`false-green`](../docs/guidelines/agent-infra/false-green.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |
