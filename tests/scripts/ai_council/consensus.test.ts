@@ -14,6 +14,7 @@ import {
     evidence_quality,
     Finding,
     FindingScore,
+    parse_findings_outcome,
     parse_findings_response,
     parse_scores_response,
 } from '../../../src/scripts/ai_council/consensus.js';
@@ -95,6 +96,38 @@ describe('consensus — bucket_by_threshold', () => {
 });
 
 describe('consensus — parsing', () => {
+    it('parse_findings_outcome: an unreadable non-empty answer is parse_failed, not empty', () => {
+        // THE RED TEST (step 2.1). `parse_findings_response` returned `[]` for three
+        // different situations and the caller could not tell them apart, so a member that
+        // said something no parser could read counted as a clean zero-findings review.
+        // The assertion is on the OUTCOME FIELD, not on a count — a length check cannot
+        // distinguish "found nothing" from "could not be read", which is the whole defect.
+        const r = parse_findings_outcome('I will not do this. It is not a good idea.', {
+            source: 'anthropic:m',
+        });
+        expect(r.outcome).toBe('parse_failed');
+        expect(r.findings).toEqual([]);
+    });
+
+    it('parse_findings_outcome: three situations, three outcomes', () => {
+        // The distinction the discriminated type exists for. An empty ARRAY from a
+        // READABLE answer is a result, and must not be confused with either sibling.
+        expect(parse_findings_outcome('', { source: 's' }).outcome).toBe('empty');
+        expect(parse_findings_outcome('   \n  ', { source: 's' }).outcome).toBe('empty');
+        expect(parse_findings_outcome('[]', { source: 's' }).outcome).toBe('parsed');
+        expect(parse_findings_outcome('{"id":"x"}', { source: 's' }).outcome).toBe('parse_failed');
+        expect(parse_findings_outcome('[{"id":"x","text":"y"}]', { source: 's' }).outcome).toBe(
+            'parsed',
+        );
+    });
+
+    it('parse_findings_response keeps its array shape for existing callers', () => {
+        // The compatibility wrapper. Changing the existing signature silently is how a
+        // best-effort parser becomes a silent one again.
+        expect(parse_findings_response('[{"id":"a","text":"t"}]', { source: 's' }).length).toBe(1);
+        expect(parse_findings_response('unreadable', { source: 's' })).toEqual([]);
+    });
+
     it('parse_findings_response: fenced + skip bad items', () => {
         const out = parse_findings_response(
             '```json\n[{"id":"x","text":" hi "},{"text":"no id"},{"id":"y","text":"ok"}]\n```',

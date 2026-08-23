@@ -42,6 +42,7 @@ import {
     anonymize_findings,
     anonymize_responses,
     bucket_by_threshold,
+    parse_findings_outcome,
     parse_findings_response,
     parse_scores_response,
 } from './consensus.js';
@@ -1656,6 +1657,22 @@ export class ConsensusResult {
     findings: Finding[];
     scores: FindingScore[];
     metadata: Map<string, ConsensusMetadata>;
+    /**
+     * Per-member extraction outcome, keyed by `provider:model` — step 2.2 of
+     * `road-to-council-evidence-integrity`.
+     *
+     * `parsed` · `parsed-after-reask` · `empty` · `parse_failed`. Recorded rather than
+     * derived from the findings count, because "found nothing" and "could not be read"
+     * are different facts and a count cannot tell them apart — which is exactly how an
+     * unparseable answer used to read as a clean zero-findings review.
+     *
+     * `parsed-after-reask` is deliberately distinct from `parsed`: a member needing a
+     * second ask is a signal about the prompt or the member, and folding it into `parsed`
+     * would hide the only evidence that the re-ask does anything.
+     *
+     * Additive and optional, so no existing constructor call changes.
+     */
+    parse_outcomes: Map<string, string>;
     extraction_responses: CouncilResponse[];
     scoring_responses: CouncilResponse[];
 
@@ -1664,6 +1681,7 @@ export class ConsensusResult {
         findings: Finding[];
         scores: FindingScore[];
         metadata: Map<string, ConsensusMetadata>;
+        parse_outcomes?: Map<string, string>;
         extraction_responses: CouncilResponse[];
         scoring_responses: CouncilResponse[];
     }) {
@@ -1671,6 +1689,7 @@ export class ConsensusResult {
         this.findings = args.findings;
         this.scores = args.scores;
         this.metadata = args.metadata;
+        this.parse_outcomes = args.parse_outcomes ?? new Map();
         this.extraction_responses = args.extraction_responses;
         this.scoring_responses = args.scoring_responses;
     }
@@ -1731,6 +1750,13 @@ export function run_consensus_scoring(
     }
     const extraction_responses: CouncilResponse[] = [];
     const all_findings: Finding[] = [];
+    // Per-member extraction outcome — step 2.2. Recorded rather than derived from the
+    // findings count, because "zero findings" and "could not be read" are different facts
+    // and the count cannot tell them apart. `parsed-after-reask` is kept distinct from
+    // `parsed`: a member that needed a second ask is a signal about the prompt or the
+    // member, and collapsing it into `parsed` would hide the only evidence that the
+    // re-ask is doing anything.
+    const parse_outcomes = new Map<string, string>();
     for (const resp of deliberation_responses) {
         const member = member_by_name.get(resp.provider);
         if (member === undefined || resp.error || !_pyStrip(resp.text)) {
@@ -1752,9 +1778,45 @@ export function run_consensus_scoring(
             continue;
         }
         const source = `${member.name}:${member.model}`;
-        all_findings.push(
-            ...parse_findings_response(extracted[0]!.text, { source }),
-        );
+        let ex = parse_findings_outcome(extracted[0]!.text, { source });
+
+        // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
+        //
+        // A member that said something no parser could read used to be indistinguishable
+        // from a member that found nothing: `parse_findings_response` returned `[]` for
+        // both, and this loop pushed the empty array with no branch. So an unparseable
+        // answer counted as a clean zero-findings review.
+        //
+        // ONE re-ask, not a loop. A re-ask is a paid call, and an unbounded retry turns
+        // one unparseable answer into open-ended spend — the failure mode the N=3
+        // validation budget exists for, reached here by a different road. `empty` is NOT
+        // re-asked: a member that said nothing has nothing to restate, and re-asking it
+        // buys a second silence.
+        if (ex.outcome === 'parse_failed') {
+            const retry_q = new CouncilQuestion({
+                mode: 'prompt',
+                user_prompt:
+                    build_extraction_user_prompt(resp.text) +
+                    '\n\nYour previous answer could not be parsed. Reply with ONLY a JSON ' +
+                    'array of {"id": string, "text": string} objects, no prose before or ' +
+                    'after it. An empty array [] is a valid answer meaning you found nothing.',
+                max_tokens,
+            });
+            const retried = consult([member], retry_q, budget, {
+                table,
+                on_overrun,
+                project,
+                original_ask,
+            });
+            extraction_responses.push(...retried);
+            if (retried.length > 0 && !retried[0]!.error) {
+                ex = parse_findings_outcome(retried[0]!.text, { source });
+            }
+            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
+        } else {
+            parse_outcomes.set(source, ex.outcome);
+        }
+        all_findings.push(...ex.findings);
     }
 
     if (all_findings.length === 0) {
@@ -1763,6 +1825,7 @@ export function run_consensus_scoring(
             findings: [],
             scores: [],
             metadata: new Map(),
+            parse_outcomes,
             extraction_responses,
             scoring_responses: [],
         });
@@ -1820,6 +1883,7 @@ export function run_consensus_scoring(
         findings: all_findings,
         scores: all_scores,
         metadata,
+        parse_outcomes,
         extraction_responses,
         scoring_responses,
     });

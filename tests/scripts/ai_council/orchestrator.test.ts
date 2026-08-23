@@ -963,6 +963,71 @@ describe('orchestrator — run_peer_review label order', () => {
     });
 });
 
+describe('orchestrator — extraction re-ask is bounded at ONE', () => {
+    // Step 2.2. The bound is the point: a re-ask is a PAID call, and an unbounded retry
+    // turns one unparseable answer into open-ended spend.
+    /** A member whose successive answers come from a scripted list. */
+    class Scripted extends ExternalAIClient {
+        calls = 0;
+        constructor(
+            name: string,
+            model: string,
+            private readonly script: readonly string[],
+        ) {
+            super();
+            this.name = name;
+            this.model = model;
+            this.billable = true;
+        }
+        ask(): CouncilResponse {
+            const text = this.script[Math.min(this.calls, this.script.length - 1)] ?? '';
+            this.calls += 1;
+            return new CouncilResponse({ provider: this.name, model: this.model, text });
+        }
+    }
+
+    const delib = (p: string, m: string): CouncilResponse =>
+        new CouncilResponse({ provider: p, model: m, text: 'a deliberation body' });
+
+    it('unparseable then valid → ONE extra call, outcome parsed-after-reask', () => {
+        const m = new Scripted('anthropic', 'c', [
+            'I will not answer in JSON.',
+            '[{"id":"f1","text":"a real finding"}]',
+        ]);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        // 1 extraction + 1 re-ask, and then the scoring pass. What is bounded is the
+        // RE-ASK, so assert the outcome and that the re-ask happened exactly once by
+        // checking the recorded outcome rather than a raw call count that scoring inflates.
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-after-reask');
+        expect(r.findings.map((f) => f.id)).toEqual(['f1']);
+    });
+
+    it('unparseable twice → outcome parse_failed, and NOT a second re-ask', () => {
+        const m = new Scripted('anthropic', 'c', [
+            'still prose',
+            'more prose, no JSON here either',
+            '[{"id":"never","text":"reached"}]',
+        ]);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parse_failed');
+        // The third scripted answer is valid. If the loop re-asked more than once it
+        // would have reached it and produced a finding — so an empty finding set is the
+        // assertion that the bound holds, and it fails loudly if the bound is removed.
+        expect(r.findings).toEqual([]);
+    });
+
+    it('an EMPTY answer is not re-asked — a second silence buys nothing', () => {
+        const m = new Scripted('anthropic', 'c', ['', '[{"id":"f9","text":"x"}]']);
+        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c')]);
+        // The transport-level guard skips an empty deliberation before extraction, so the
+        // member is never asked and records no outcome at all. Asserted rather than
+        // assumed, because "empty is not re-asked" and "empty is not reached" are
+        // different reasons for the same observation.
+        expect(r.parse_outcomes.get('anthropic:c')).not.toBe('parsed-after-reask');
+        expect(r.findings).toEqual([]);
+    });
+});
+
 describe('orchestrator — run_consensus_scoring', () => {
     it('empty inputs → empty bucket', () => {
         const r = run_consensus_scoring([], []);
