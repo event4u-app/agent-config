@@ -355,6 +355,7 @@ tasks:
       - task: check-council-config-location
       - task: lint-agents-layout
       - task: check-gitignore-freshness
+      - task: check-no-automerge-key
       - task: check-generator-output-coverage
       - task: check-tracked-but-ignored
       - task: check-generated-artefact-headers

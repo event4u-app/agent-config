@@ -332,6 +332,11 @@ tasks:
     desc: Fail if any consumer-scoped ignored path in agents-paths.yml is missing from gitignore-block.txt
     cmd: ./scripts-run src/scripts/check_gitignore_freshness {{.QUIET_FLAG}}
 
+  check-no-automerge-key:
+    silent: true
+    desc: Fail if the settings key space declares an auto-merge policy key (ADR-239 namespace ratchet)
+    cmd: ./scripts-run src/scripts/check_no_automerge_key {{.QUIET_FLAG}}
+
   check-generator-output-coverage:
     silent: true
     desc: Fail if any generator output root in condense.ts is not classified in agents-paths.yml or .gitignore
