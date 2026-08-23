@@ -1444,6 +1444,21 @@ gates:
   # honest close is the rename, in its own change, where 26 files of churn are
   # the subject rather than a side effect.
 
+  - id: check_standing_payload_delta
+    argv: ["--base", "HEAD", "--quiet"]
+    min_scanned: 3
+    corpus: "the three buckets `check_preamble_payload_budget` gates — projected rules, the preloaded skills catalog, the project CLAUDE.md hierarchy. The floor is the full set, not a fraction of it, because the population is fixed at three by the ratchet it reports beside: two of three measured is a moved root, not a legitimate deletion. `argv` carries `--base HEAD` because the gate needs SOME ref to diff and HEAD is the only one guaranteed to resolve in any checkout; CI passes the real merge-base."
+    status: enforced
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus: all three buckets are tracked
+      and always present, so a planted file lands outside them and the gate
+      correctly stays green. Same class as `check_no_automerge_key` and
+      `check_condensation`. Sensitivity is proven instead by `--self-test` (two
+      reject cases: an unreadable ref and a usage error) and by two recorded
+      sabotage probes in `tests/scripts/check_standing_payload_delta.test.ts` —
+      the one-sided-ledger probe and the symlink-hop probe, each with its
+      observed red count and verbatim assertion text.
+
   - id: check_no_automerge_key
     argv: ["--quiet"]
     min_scanned: 200
