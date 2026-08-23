@@ -37,6 +37,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { rank } from './skill_tools/score_skill_relevance.js';
+import type { RankOptions } from '../shared/skillRanking.js';
 
 export const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const LABELLED_CORPORA = ['tests/eval/corpus-dev.yaml', 'tests/eval/corpus-non-dev.yaml'];
@@ -141,12 +142,15 @@ function hitAt(rows: readonly (readonly [string, number, string[]])[], n: number
 export function measure(opts: { ranker: string; commit: string; skillsDir?: string; repo?: string }): RankerBaseline {
     const repo = opts.repo ?? REPO;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
+    // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
+    // into each skill's term source. Any other label measures v1.
+    const rankOpts: RankOptions = opts.ranker === 'keyword-v2' ? { includeTriggers: true } : {};
     const labelled = readLabelledPrompts(repo);
     let top1 = 0;
     let top3 = 0;
     const misses: string[] = [];
     for (const p of labelled) {
-        const rows = rank(p.prompt, skillsDir);
+        const rows = rank(p.prompt, skillsDir, rankOpts);
         if (hitAt(rows, 1, p.expected)) top1++;
         if (hitAt(rows, 3, p.expected)) top3++;
         else misses.push(p.id);
@@ -156,7 +160,7 @@ export function measure(opts: { ranker: string; commit: string; skillsDir?: stri
     let withResult = 0;
     let scoreSum = 0;
     for (const prompt of matrix) {
-        const rows = rank(prompt, skillsDir);
+        const rows = rank(prompt, skillsDir, rankOpts);
         if (rows.length > 0) {
             withResult++;
             scoreSum += rows[0]![1];

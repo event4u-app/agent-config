@@ -232,6 +232,20 @@ function rankableSkills(tree: ContentTree): RankableSkill[] {
 }
 
 /**
+ * Phase 3.3 — when the host already lists a skill WITH its description,
+ * returning it from the recovery tool is noise. Filter Tier A out if a split
+ * exists on this machine; return everything and say `tiers: unknown` if not.
+ *
+ * The filter deliberately does NOT apply when it would empty the result. A
+ * ranked list that went empty only because every match was Tier A is
+ * indistinguishable, to the caller, from "no skill covers this" — which is the
+ * exact wrong conclusion `missing-skill-recovery.md` exists to prevent.
+ */
+function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
+    return tree.tier_a ? 'tier-b-only' : 'unknown';
+}
+
+/**
  * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
  * `suggestions[]` of `{skill, score, personas}` — so a consumer that learned the
  * shape on one server does not have to relearn it on the other. `tiers` is
@@ -246,12 +260,18 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
     if (skills.length === 0) {
         return { status: 'no_catalogue', suggestions: [], tiers: 'unknown' };
     }
-    const rows = rankSkills(task, skills).slice(0, limit);
+    const all = rankSkills(task, skills);
+    const tiers = tierState(tree);
+    const tierA = tree.tier_a;
+    const filtered = tierA ? all.filter((r) => !tierA.has(r.name)) : all;
+    // Never let the tier filter turn a real match into an empty answer.
+    const kept = filtered.length > 0 ? filtered : all;
     return {
         status: 'ok',
         skills_indexed: skills.length,
-        tiers: 'unknown',
-        suggestions: rows.map((r) => ({ skill: r.name, score: r.score, personas: r.personas })),
+        tiers,
+        ...(tierA && filtered.length === 0 && all.length > 0 ? { tier_filter: 'bypassed-to-avoid-empty' } : {}),
+        suggestions: kept.slice(0, limit).map((r) => ({ skill: r.name, score: r.score, personas: r.personas })),
     };
 }
 

@@ -73,6 +73,41 @@ export function tokenize(text: string): Set<string> {
     return out;
 }
 
+/**
+ * Which `triggers[]` keys carry INDEXABLE PROSE.
+ *
+ * `file_pattern`, `path_prefix` and `command` are match *mechanisms*, not text a
+ * prompt is compared against: folding a glob in would put tokens like `blade` and
+ * `php` on every skill that merely watches a path. `reason` documents the trigger
+ * for a human and is not part of what it matches. The policy lives here because
+ * two different readers apply it to two different input shapes — parsed YAML
+ * objects in `src/cli/mcp/content.ts`, flat `key: "value"` lines in the
+ * frontmatter reader of `score_skill_relevance.ts` — and only the DECISION is
+ * shared, not the parsing.
+ */
+export const INDEXED_TRIGGER_KEYS: readonly string[] = ['keyword', 'phrase'];
+
+/**
+ * Trigger prose out of flat `key: "value"` frontmatter lines.
+ *
+ * The stdlib-only frontmatter reader in `score_skill_relevance.ts` flattens
+ *   triggers:
+ *     - phrase: "authorization check"
+ * to the single string `phrase: "authorization check"`, so this takes that shape
+ * rather than an object. Anything whose key is not indexable is dropped.
+ */
+export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
+    const out: string[] = [];
+    for (const line of lines) {
+        const m = /^([a-zA-Z_][\w-]*)\s*:\s*(.*)$/.exec(String(line).trim());
+        if (!m) continue;
+        if (!INDEXED_TRIGGER_KEYS.includes(m[1]!)) continue;
+        const value = m[2]!.trim().replace(/^["']|["']$/g, '');
+        if (value) out.push(value);
+    }
+    return out;
+}
+
 /** A skill as the ranker sees it. Deliberately not the body — see `rankSkills`. */
 export interface RankableSkill {
     name: string;

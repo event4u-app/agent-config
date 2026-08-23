@@ -13,6 +13,8 @@
  */
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+
+import { INDEXED_TRIGGER_KEYS } from '../../shared/skillRanking.js';
 import { join, resolve, basename, relative, sep } from 'node:path';
 import * as yaml from 'js-yaml';
 
@@ -43,6 +45,15 @@ export interface ContentEntry {
 export interface ContentTree {
     /** uri → entry. */
     uris: Record<string, ContentEntry>;
+    /**
+     * Skill names predicted to reach the model WITH their description (Tier A),
+     * read from `agents/runtime/state/skill-tiers.json` when it exists.
+     *
+     * `undefined` is not "no skills are Tier A" — it is "nobody computed a
+     * split on this machine", which is the default state, and the recovery tool
+     * reports it as `tiers: unknown` rather than silently filtering nothing.
+     */
+    tier_a?: ReadonlySet<string>;
 }
 
 const MIME_MARKDOWN = 'text/markdown';
@@ -77,11 +88,8 @@ function personaList(v: unknown): string[] {
 /**
  * `triggers[].keyword` + `triggers[].phrase` as plain text.
  *
- * `file_pattern`, `path_prefix` and `command` are deliberately excluded: they
- * are match *mechanisms*, not prose, and folding a glob into a keyword index
- * would put tokens like `blade` and `php` on every skill that happens to watch a
- * path. `reason` is excluded for the same reason it exists — it documents the
- * trigger for a human, it is not part of what the trigger matches.
+ * Which keys count is `INDEXED_TRIGGER_KEYS`, shared with the disk-side reader
+ * so the two cannot disagree about what a trigger contributes.
  */
 function triggerText(v: unknown): string[] {
     if (!Array.isArray(v)) return [];
@@ -89,7 +97,7 @@ function triggerText(v: unknown): string[] {
     for (const item of v) {
         if (!item || typeof item !== 'object') continue;
         const rec = item as Record<string, unknown>;
-        for (const key of ['keyword', 'phrase']) {
+        for (const key of INDEXED_TRIGGER_KEYS) {
             const val = rec[key];
             if (typeof val === 'string' && val) out.push(val);
         }
@@ -147,6 +155,26 @@ function makeEntry(
  * (a partial install still serves what is present). Never throws on a single
  * malformed file — that file is skipped with a stderr note.
  */
+/**
+ * Tier A names, or `undefined` when no split has been computed here.
+ *
+ * The file is gitignored and per-machine (`compute_skill_tiers` writes it), so
+ * absent is the common case and must stay distinguishable from empty. A
+ * malformed or unreadable file is also `undefined`: a half-read split would
+ * filter the wrong skills out of the one tool that exists to find them.
+ */
+export function loadTierA(packageRoot: string): ReadonlySet<string> | undefined {
+    const file = resolve(packageRoot, 'agents', 'runtime', 'state', 'skill-tiers.json');
+    if (!existsSync(file)) return undefined;
+    try {
+        const parsed = JSON.parse(readFileSync(file, 'utf8')) as { tier_a?: unknown };
+        if (!Array.isArray(parsed.tier_a)) return undefined;
+        return new Set(parsed.tier_a.filter((n): n is string => typeof n === 'string'));
+    } catch {
+        return undefined;
+    }
+}
+
 export function loadContentTree(packageRoot: string): ContentTree {
     const uris: Record<string, ContentEntry> = {};
     const add = (e: ContentEntry): void => {
@@ -191,7 +219,8 @@ export function loadContentTree(packageRoot: string): ContentTree {
         safe(() => add(makeEntry(f, 'guideline', 'guideline', fallback)), f);
     }
 
-    return { uris };
+    const tierA = loadTierA(packageRoot);
+    return tierA ? { uris, tier_a: tierA } : { uris };
 }
 
 /** All entries of the given kinds (insertion order). */

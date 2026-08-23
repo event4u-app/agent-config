@@ -38,7 +38,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // module so the pure stdio-lite dispatcher can share them instead of growing
 // a second copy (road-to-skill-delivery-over-mcp risk 6). Everything below is
 // the disk half — globbing, frontmatter, the CLI — which stays here.
-import { scoreSkill, tokenize as _sharedTokenize } from '../../shared/skillRanking.js';
+import {
+    scoreSkill,
+    skillTerms as _sharedSkillTerms,
+    tokenize as _sharedTokenize,
+    triggerTextFromFlatLines,
+    type RankOptions,
+} from '../../shared/skillRanking.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/skill_tools/score_skill_relevance.ts → parents[3] of the .py
@@ -136,6 +142,8 @@ export interface Skill {
     description: string;
     personas: string[];
     terms: Set<string>;
+    /** `triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2. */
+    triggerText: string[];
 }
 
 function _load_skills(skillsDir: string): Skill[] {
@@ -151,11 +159,16 @@ function _load_skills(skillsDir: string): Skill[] {
             personas = [personas];
         }
         const personaList = [...personas];
+        const rawTriggers = fm['triggers'];
+        const triggerText = Array.isArray(rawTriggers)
+            ? triggerTextFromFlatLines(rawTriggers as string[])
+            : [];
         skills.push({
             name,
             description: desc,
             personas: personaList,
             terms: _tokenize(name + ' ' + desc),
+            triggerText,
         });
     }
     return skills;
@@ -198,21 +211,29 @@ function _globSkillMd(root: string): string[] {
     return dirs.map((name) => path.join(root, name, 'SKILL.md'));
 }
 
-function _score(taskTerms: Set<string>, skill: Skill): number {
-    // Single-sourced in `src/shared/skillRanking.ts`. `skill.terms` is already
-    // `tokenize(name + ' ' + description)`, which is `skillTerms()` with
-    // `includeTriggers` off — the keyword-v1 term source, unchanged.
-    return scoreSkill(taskTerms, { name: skill.name, description: skill.description, personas: skill.personas }, skill.terms);
+function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): number {
+    // Single-sourced in `src/shared/skillRanking.ts`. Under keyword-v1 (the
+    // default) `skill.terms` is already `tokenize(name + ' ' + description)`, so
+    // the precomputed set is reused unchanged; keyword-v2 re-derives the term
+    // set with the skill's trigger prose folded in.
+    const rankable = {
+        name: skill.name,
+        description: skill.description,
+        personas: skill.personas,
+        triggerText: skill.triggerText,
+    };
+    const terms = opts.includeTriggers ? _sharedSkillTerms(rankable, opts) : skill.terms;
+    return scoreSkill(taskTerms, rankable, terms);
 }
 
 export type RankRow = [string, number, string[]];
 
-export function rank(task: string, skillsDir: string): RankRow[] {
+export function rank(task: string, skillsDir: string, opts: RankOptions = {}): RankRow[] {
     const taskTerms = _tokenize(task);
     const skills = _load_skills(skillsDir);
     const rows: RankRow[] = [];
     for (const s of skills) {
-        const score = _score(taskTerms, s);
+        const score = _score(taskTerms, s, opts);
         if (score > 0) {
             rows.push([s.name, score, [...s.personas]]);
         }
