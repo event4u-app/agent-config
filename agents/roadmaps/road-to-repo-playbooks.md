@@ -224,6 +224,27 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       third row states honest scope: those ecosystems are **not yet read**, so a playbook for
       them is written by hand against the grading rules. 0 hits, no allowlist entry added.
 
+      **A consumer install receives this skill and NOT the derivation script, and the first
+      draft told them to run it anyway.** `lint_consumer_internal_refs` caught it on #1588:
+      a bare `src/scripts/` path plus the maintainer-only `./scripts-run` dispatcher, both
+      broken the moment the package is installed. The skill now states the split — the
+      script exists maintainer-side, the consumer carries out the procedure **by hand
+      against the grading rules** — which is also why those rules, not the script, are the
+      substance of the skill. A skill that hands a consumer a command they do not have fails
+      on their first attempt.
+
+      **Adding one skill and one rule moved four generated surfaces.** `agents/reports/
+      skill-overlap.*` drifted, `CAPABILITIES.yaml` needed regenerating, and
+      `check_artefact_count_messaging` reported five count-shaped prose positions
+      (291→292 skills, 119→120 governed rules). Two of those are live counts and were
+      updated; one is a **generated** figure re-derived with `count_scoped_projection`
+      (220-of-291 → 221-of-292, and the stated reduction moved 25% → 24%); and one is a
+      **dated measurement** from 2026-08-12 that must NOT be rescaled — rewritten as *"the
+      then-119 governed-rule total"*, which is the same singular-noun escape the file
+      already uses for its token figures, and which the gate's `governed rules` pattern
+      deliberately does not match. Silently bumping a measured denominator to today's number
+      would have turned a measurement into a false claim.
+
       **A dropped `git stash` ate this note and the skill edits once.** Switching branches
       mid-step stashed uncommitted work; the pop reported *"The stash entry is kept"* and the
       entry was then dropped, taking the ecosystem-neutral rewrite and this whole block with

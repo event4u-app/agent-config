@@ -38,35 +38,38 @@ use our generator"*.
 
 ## Procedure
 
-1. **Derive, and write nothing yet.** Run the command below without `--write`. The output is
-   one line per candidate with its grade.
+1. **Derive, and write nothing yet.** Enumerate the sources in the scope table below and
+   list one candidate per repeated procedure, each with its grade — nothing written.
    - **Source of truth:** the repository's own task declarations — see the scope table below
      for which of them this release resolves.
    - **Verify:** every line printed names an id you can run by hand.
-2. **Read every proposal, including the graded-`observed` ones.** An `⚠️` line means an id
-   did not resolve — go look at the tree before deciding what it means.
+2. **Read every proposal, including the graded-`observed` ones.** An unresolved id means go
+   look at the tree before deciding what it means.
    - **Verify:** each `configured` proposal's `source_of_truth` points at a file you opened.
 3. **Drop the candidates that are not procedures.** A one-off, or a single command wearing a
    playbook's formatting, is a rename — delete it from the set.
    - **Verify:** every surviving candidate is something done repeatedly the same way.
-4. **Write, then read the written file.** Re-run with `--write` and open each result.
+4. **Write, then read the written file.** Write each surviving candidate, then open it.
    - **Verify:** the frontmatter `grade` matches what step 2 established, and a
      `configured` file has no step without an `invokes` entry.
 5. **Register the staleness expectation.** The `invokes` ids are what the Phase-3 check
    resolves; a playbook whose ids you cannot name is not finished.
-   - **Verify:** `./scripts-run src/scripts/derive_playbooks --self-test` passes.
+   - **Verify:** every written playbook's `invokes` list is non-empty, and each id can be
+     run by hand in the repository.
 
-## Run the derivation, then read it
+## The derivation — deterministic, and maintainer-side today
 
-```bash
-./scripts-run src/scripts/derive_playbooks --root .          # propose, write nothing
-./scripts-run src/scripts/derive_playbooks --root . --write  # write into the playbook home
-./scripts-run src/scripts/derive_playbooks --self-test        # the honesty arms
-```
+A `derive_playbooks` script implements the enumeration above in this package's own source
+tree. It is deterministic and makes no model call: it prints one line per proposal with its
+grade, and `⚠️  … grade=observed` is a signal to go look rather than a warning to dismiss.
 
-The script is deterministic and makes no model call. It prints one line per proposal with
-its grade, so an `⚠️  … grade=observed` line is the signal to go look rather than a warning
-to dismiss. Read every proposal before `--write`: the derivation finds *candidates*, and
+**It is not exposed as a consumer command.** A consumer install receives this skill and not
+that script, so in a consumer repository the procedure above is carried out **by hand
+against the grading rules below** — which is why those rules, not the script, are the
+substance of this skill. Saying so is the point: a skill that told a consumer to run a
+command they do not have would fail on their first attempt.
+
+Either way, read every proposal before writing: the derivation finds *candidates*, and
 whether a repeated procedure deserves a playbook is a judgement it does not make.
 
 ## Scope of the derivation — and what "not covered" means
