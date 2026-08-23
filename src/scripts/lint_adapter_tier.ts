@@ -19,6 +19,16 @@
  * checkable without publishing one request body. This gate is what makes the
  * index load-bearing rather than decorative.
  *
+ * cache-invalidation: the index carries no `v<N>` path segment on purpose. It
+ * is regenerated WHOLESALE from the local trace directory on every
+ * `smoke-trace.sh index` run — never merged into, never appended to — so there
+ * is no window in which a reader can hold a file written under an older shape.
+ * A version namespace exists to stop a stale cache being read after its
+ * producer changed; here the producer rewrites the whole file, this gate reads
+ * it in the same commit, and the five-field shape is asserted directly by
+ * `tests/scripts/ai_video_trace_index.test.ts`. Adding `v1/` would create a
+ * second path to keep in sync and buy nothing.
+ *
  * WHAT IT CHECKS — and the limit, stated rather than implied
  * ---------------------------------------------------------
  * 1. Every adapter header reading `stable` has at least one index row for its
@@ -90,6 +100,8 @@ export const ADAPTER_DIRS = [
     path.join('src', 'scripts', 'ai-image', 'adapters'),
 ] as const;
 export const MANIFEST_DIR = path.join('src', 'scripts', 'ai-video', 'lib', 'model-capabilities');
+// cache-invalidation: regenerated wholesale by `smoke-trace.sh index` on every
+// run, so no version namespace is needed — see the module docstring for why.
 export const INDEX_PATH = path.join('agents', 'evidence', 'ai-video', 'trace-index.json');
 
 export interface IndexRow {
