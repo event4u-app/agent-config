@@ -18,7 +18,6 @@ evidence:
   basis:
     - src/config/discovery/packs.yml
     - internal/bench/frontend-power/BASELINE-2026-08-23.md
-    - agents/runtime/council/questions/frontend-power-pack-reach.md
 review_trigger: >-
   Reopen on an intervention-arm measurement — not on an argument. Specifically:
   a measured frontend-enforcement benefit across `laravel` and `react` installs,
@@ -36,10 +35,16 @@ review_trigger: >-
 
 ## Status
 
-**accepted** — 2026-08-23. AI council, 2 of 2 seats, convergent on option (c).
-Record: `agents/runtime/council/questions/frontend-power-pack-reach.md` and its
-response. Resolves `b-pack-reach-weight` on
-`agents/roadmaps/archive/road-to-frontend-power.md`.
+**accepted** — 2026-08-23. AI council 2026-08-23, quorum 2/2
+(anthropic/claude-sonnet-4-5 + openai/codex-default), both seats exit 0,
+convergent on option (c). Resolves `b-pack-reach-weight` on
+`road-to-frontend-power` (now archived).
+
+The convergence is summarised inline rather than linked: council question and
+response files live under `agents/runtime/`, which is gitignored and auto-pruned
+after the retention window, so a path there is a reference that rots. The
+substance both seats agreed on is in § Decision and § Evidence below, which is
+what a later reader actually needs.
 
 ## Context
 

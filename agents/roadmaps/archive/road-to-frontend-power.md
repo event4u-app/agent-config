@@ -123,10 +123,10 @@ cannot reach, against a neighbouring decision that already chose the opposite).
 
 Two council runs, and their statuses differ:
 
-- **`b-pack-reach-weight`** — `agents/runtime/council/questions/frontend-power-pack-reach.md`.
-  **2 of 2 seats returned, convergent on option (c).** This is the verdict
-  ADR-245 rests on.
-- **Drain-run scope** — `frontend-power-drain-scope.md`. Attempted three times.
+- **`b-pack-reach-weight`** — AI council 2026-08-23, quorum 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default), both seats exit 0, convergent on option (c). This is the
+  verdict ADR-245 rests on. Summarised inline rather than linked: the question
+  and response files live under gitignored, auto-pruned `agents/runtime/`.
+- **Drain-run scope.** Attempted three times.
   Twice both seats returned `cli_quota_exhausted`; the third returned **1 of 2**
   (openai/codex-default; anthropic timed out at 290 s). Recorded as a
   single-seat verdict and **never as convergence** — § Council escalation
@@ -417,13 +417,27 @@ documentation and fixtures; reverting it reverts no behaviour.
       verify: the Q1 fixture blocks once with a continuation, the fixed file
       passes, a P2-only fixture never blocks, and a pass with the render
       artefact absent emits `verification: degraded`.
-      verify (discharged): a P0 blocks once at stop, a P2-only fixture never blocks
-      on either slot, and an absent render artefact yields `verification: degraded`
-      with a reason naming `ui:render`. The P0 set is closed to the four objective
-      floors (Q1/Q2/Q5/Q6) — text-overflow and viewport-edge are deliberately NOT in
-      it, because a static pass cannot see them and claiming otherwise is the false
-      block Risk 1 names. Probes: P1–P3 blocking → 3 failures; degradation forced to
-      verified → 2 failures.
+      verify (discharged), **and the discharge is narrower than the step's
+      wording**: a P0 is computed as blocked at stop, a P2-only fixture never
+      blocks on either slot, and an absent render artefact yields `verification:
+      degraded` with a reason naming `ui:render`. The P0 set is closed to the
+      four objective floors (Q1/Q2/Q5/Q6) — text-overflow and viewport-edge are
+      deliberately NOT in it, because a static pass cannot see them and claiming
+      otherwise is the false block Risk 1 names. Probes: P1–P3 blocking → 3
+      failures; degradation forced to verified → 2 failures.
+      **The refusal itself is REPORTED, not enforced, and that is a correction
+      found while landing it.** `design-pass-stop` is `severity: advisory`, and
+      the dispatcher enforces advisory as a ceiling — an EXIT_BLOCK from it is
+      downgraded to EXIT_WARN and then mapped to exit 0. Returning EXIT_BLOCK
+      would have shipped an INERT refusal whose every other assertion passed,
+      which is the defect `run-continuation` records in its own allowlist entry.
+      The code was matched to the declaration instead: the pass computes the P0
+      verdict and renders it as *would block at stop*. Making it real needs an
+      entry in `concern_severity.test.ts`'s `BLOCKING_ALLOWLIST`, which that file
+      calls a security-relevant decision and which would be the third turn-END
+      refusal in the tree — transferred to
+      [`stubs/road-to-frontend-power-default-flip`](../stubs/road-to-frontend-power-default-flip.md)
+      as probe reading 0, not taken unilaterally in a frontend change.
 - [-] **E1.4 Pack-scoped default-ON** for the carriers, after E1.5 produces its
       number. This is the intervention arm the 0.0 % measurement never had.
       verify: `agent-config hooks:status` reports the design concern ON in a
@@ -1083,9 +1097,7 @@ published numbers stay, which is the point.
 - **Resolved when:** the A6.1 ADR is accepted and names which of (a), (b) or
   (c) was chosen, with the standing-context cost of the chosen option.
 - **Resolution (2026-08-23) — option (c): keep `suggests:` and scope the claim.**
-  AI council, **2 of 2 seats returned, convergent**
-  (anthropic/claude-sonnet-4-5 + openai/codex-default). Question:
-  `agents/runtime/council/questions/frontend-power-pack-reach.md`. Recorded as
+  AI council 2026-08-23, quorum 2/2 (anthropic/claude-sonnet-4-5 + openai/codex-default), both seats exit 0, convergent on option (c). Recorded as
   `docs/decisions/ADR-245-frontend-design-pack-reach.md`, `status: accepted`,
   `reopen_policy: owner`. `src/config/discovery/packs.yml` is untouched by the
   commit that landed it, as the blocker requires.

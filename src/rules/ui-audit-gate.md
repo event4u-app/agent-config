@@ -108,9 +108,14 @@ limits, because naming a script is not the same as closing the gap:
 1. **Freshness, not existence.** The check is "an artefact newer than the
    target". A stale artefact is worse than a missing one — it looks like
    evidence.
-2. **Default-OFF, warn before block.** `hooks.design_pass.enabled` ships
-   `false`; when on, a missing artefact warns on `post_tool_use` and blocks at
-   `stop`. Turning it on is a maintainer decision.
+2. **Default-OFF, and the stop verdict is REPORTED, not enforced.**
+   `hooks.design_pass.enabled` ships `false`. When on, a missing artefact warns
+   on `post_tool_use` and is reported at `stop` as *would block*. It does not
+   refuse: the concern is `severity: advisory`, and an advisory EXIT_BLOCK is
+   downgraded by the dispatcher — so claiming a refusal would be inert. Making
+   it real needs an entry in `concern_severity.test.ts`'s blocking allowlist,
+   which that file calls a security-relevant decision; it is transferred with
+   the default flip.
 3. **The greenfield asymmetry stays open.** `_lib/ui_surface.ts` is a PATH
    predicate — measured recall 20/23, all three misses being a UI *request*
    with no UI *file* yet — so this gate cannot fire on the first write of a new

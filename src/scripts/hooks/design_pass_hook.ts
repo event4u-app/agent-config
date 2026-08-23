@@ -24,7 +24,20 @@
  *      write of a new surface, which is the write it most wants. After the
  *      write the file exists and the predicate answers.
  *
- * SEVERITY CONTRACT. P1-P3 are delivered and never block, on either slot —
+ * SEVERITY CONTRACT, AND THE HONEST LIMIT ON IT. The stop pass COMPUTES a P0
+ * verdict and reports it as "would block at stop". It does not return
+ * EXIT_BLOCK, because the concern is declared `severity: advisory` and the
+ * dispatcher enforces advisory as a CEILING — an EXIT_BLOCK from here would be
+ * downgraded to EXIT_WARN and then mapped to exit 0, i.e. an inert refusal that
+ * every other assertion about it would still pass. Shipping that is worse than
+ * not blocking, so the code matches the declaration.
+ *
+ * Making the refusal real means adding this to the BLOCKING_ALLOWLIST in
+ * `tests/hooks/concern_severity.test.ts`, whose own header says adding to it is
+ * a security-relevant decision — and this would be the third turn-END refusal
+ * in the tree. That is transferred with E1.4 rather than taken here.
+ *
+ * P1-P3 are delivered and never block, on either slot —
  * Risk 1 of the parent roadmap is that one false block on clean UI makes an
  * operator disable the carrier for good, which is the OFF state the 0.0 %
  * already recorded. Only P0 blocks, only at stop, and only the objective
@@ -48,7 +61,6 @@ import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 1;
 const EXIT_WARN = 2;
 const SETTINGS_FILE = '.agent-settings.yml';
 const STATE_REL = path.join('agents', 'runtime', 'state', 'design-pass-hook.json');
@@ -167,8 +179,12 @@ export function decide(
     const sig = (f: Finding): string => `${f.file}::${f.rule}::${f.line}`;
     const fresh = findings.filter((f) => !already.has(sig(f)));
 
-    // P0 blocks at stop only. On post_tool_use everything is delivery: a block
-    // mid-turn cannot be acted on without re-entering the same write.
+    // P0 is a stop-slot verdict only. On post_tool_use everything is delivery:
+    // a block mid-turn cannot be acted on without re-entering the same write.
+    //
+    // `blocked` is the COMPUTED verdict, not an exit code. `main` reports it and
+    // returns EXIT_WARN — see the severity note in the header for why an
+    // EXIT_BLOCK from an advisory concern would be inert rather than strict.
     const blocked = slot === 'stop' ? fresh.filter((f) => f.severity === 'P0') : [];
 
     // Graft 2. The absent render artefact is the honest degradation: two P0
@@ -240,7 +256,8 @@ export function render(result: PassResult): string {
     const lines: string[] = [];
     if (result.blocked.length) {
         lines.push(
-            `Design pass — ${result.blocked.length} P0 floor violation(s) must be fixed before this turn ends:`,
+            `Design pass — ${result.blocked.length} P0 floor violation(s) WOULD BLOCK at stop ` +
+                '(reported, not enforced: this concern is advisory — see its manifest note):',
         );
         for (const f of result.blocked) lines.push(`  ✗ [${f.catalogId}] ${f.file}:${f.line} — ${f.message}`);
     }
@@ -326,7 +343,10 @@ function main(): number {
     }
 
     process.stdout.write(`${JSON.stringify({ reason: render(result) })}\n`);
-    return result.blocked.length ? EXIT_BLOCK : EXIT_WARN;
+    // Deliberately EXIT_WARN even with a P0 verdict. EXIT_BLOCK is unreachable
+    // for an advisory concern (the dispatcher downgrades it), so returning it
+    // would claim a refusal the transport discards.
+    return EXIT_WARN;
 }
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {

@@ -48,10 +48,20 @@ describe('E1.1 — the post pass delivers and never blocks', () => {
     });
 });
 
-describe('E1.3 — P0 blocks at stop, and only P0', () => {
-    it('a P0 at stop blocks', () => {
+describe('E1.3 — P0 is a stop-slot verdict, and only P0', () => {
+    it('a P0 at stop is computed as blocked', () => {
         const r = decide('stop', [f('P0')], [], none, true);
         expect(r.blocked).toHaveLength(1);
+    });
+
+    it('the verdict is REPORTED as would-block, never claimed as enforced', () => {
+        // The concern is severity: advisory, and the dispatcher downgrades an
+        // advisory EXIT_BLOCK. Rendering "must be fixed" while the transport
+        // discards the refusal is the inert-block defect run-continuation
+        // already hit once. The wording carries the limit instead.
+        const out = render(decide('stop', [f('P0')], [], none, true));
+        expect(out).toMatch(/WOULD BLOCK at stop/);
+        expect(out).toMatch(/reported, not enforced/);
     });
 
     it('a P2-only fixture never blocks at stop', () => {

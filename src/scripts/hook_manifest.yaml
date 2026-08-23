@@ -232,6 +232,25 @@ concerns:
     fail_closed: false
     severity: advisory
     needs_payload_bodies: [input]
+  # `advisory`, and the code MATCHES the declaration rather than the prose.
+  #
+  # E1.3 specifies "P0 blocks at stop". Declaring `advisory` while returning
+  # EXIT_BLOCK would have shipped an INERT block: the dispatcher enforces
+  # advisory as a ceiling (`_is_advisory` downgrades EXIT_BLOCK to EXIT_WARN)
+  # and `host_semantics.emitFor` maps stop+warn to exit 0 — the exact defect
+  # `run-continuation` records in concern_severity.test.ts's allowlist, where
+  # `advisory` made a turn-end refusal do nothing while every other assertion
+  # about it passed.
+  #
+  # `blocking` is the honest declaration for a refusal, and it is NOT taken
+  # here: that allowlist says in its own header that adding to it is a
+  # security-relevant decision, and this would be the THIRD turn-END refusal in
+  # the tree — blast radius every session rather than one command. A frontend
+  # PR is not where that gets decided unilaterally, and the roadmap already
+  # transfers the sibling decision (turning this carrier ON at all) to the
+  # owner. So the pass COMPUTES the P0 verdict and reports it as
+  # "would block at stop", and the refusal itself is transferred with E1.4.
+  # `stubs/road-to-frontend-power-default-flip.md` carries it as a named gate.
   design-pass-stop:
     script: src/scripts/hooks/design_pass_hook.ts
     args: ['--slot', 'stop']

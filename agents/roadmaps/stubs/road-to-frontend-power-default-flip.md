@@ -38,10 +38,28 @@ complexity: lightweight
 | E1.4 pack-scoped default-ON | Phase E1 | A shipped-default flip. Also gated on E1.5's number, which is itself transferred. |
 | Z.3 the default-ON flip | Phase Z | The same flip, gated on Z.2's margin. Its verify is an ORDERING assertion between two commits, and one of them does not exist. |
 
+A third item moves here, discovered while landing the carrier rather than
+planned: **the P0 refusal itself.**
+
+`design-pass-stop` is declared `severity: advisory`, and the dispatcher enforces
+advisory as a ceiling — `_is_advisory` downgrades EXIT_BLOCK to EXIT_WARN and
+`host_semantics.emitFor` maps stop+warn to exit 0. So a concern that returned
+EXIT_BLOCK from here would run, log, inject its context, and let the turn end:
+an INERT refusal, with every other assertion about it still passing. That is the
+exact defect `run-continuation` records in its own allowlist entry.
+
+Rather than ship it, the code was matched to the declaration: the stop pass
+COMPUTES the P0 verdict and reports it as *would block at stop*. Making the
+refusal real means adding `design-pass-stop` to `BLOCKING_ALLOWLIST` in
+`tests/hooks/concern_severity.test.ts`, whose header states that adding to it is
+a security-relevant decision — and this would be the **third turn-END** refusal
+in the tree, blast radius every session rather than one command. A frontend
+change is not where that is decided unilaterally.
+
 Nothing else. The carrier itself **landed** and is `[x]` on the parent:
 `design-pass` is bound on six `post_tool_use` chains and `design-pass-stop` on
-seven `stop` chains. What is transferred is only the value of
-`hooks.design_pass.enabled`, which ships `false`.
+seven `stop` chains. What is transferred is the value of
+`hooks.design_pass.enabled` (which ships `false`) and the allowlist entry above.
 
 ## The distinction that keeps this honest
 
@@ -74,7 +92,13 @@ ADR-245's own `reopen_policy: owner` says so.
 
 - **Producer:** the **maintainer**, at a release gate. Not a session, not a
   council, not a probe.
-- **Probe — three readings, and all three must be positive:**
+- **Probe — four readings, and all four must be positive:**
+  0. Is `design-pass-stop` in `BLOCKING_ALLOWLIST`
+     (`tests/hooks/concern_severity.test.ts`) with its own recorded
+     justification answering the three questions that entry demands — scope,
+     `fail_closed`, and termination? Without it the flip enables a carrier whose
+     P0 verdict is reported and never enforced.
+- **Probe — the remaining three:**
   1. Does `internal/bench/frontend-power/` carry an E1.5 tiering result with a
      corpus digest? (The parent makes E1.4 explicitly "after E1.5 produces its
      number".)
