@@ -133,6 +133,34 @@ not as a finding.
 - Options (a) and (b) remain open to the **owner**, not to the council, and
   `reopen_policy: owner` records that.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| `frontend-design` is `suggests:` from both packs and has no `default_install` | `src/config/discovery/packs.yml:69` (`laravel`), `:107` (`react`), `:123-131` (the pack); read this session |
+| The weight reasoning is already recorded by the maintainer, not invented here | The inline comment at `packs.yml:69` — a `requires:` "would force the weight on every install". `owner_intent` provenance, surfaced rather than overruled |
+| An `engineering-base`-only install receives neither UI rule | Both rules declare `packs: [frontend-design]`; `lint_rule_skill_pack_reach` constrains rule→skill reach and not pack installation, so nothing else closes the gap |
+| The standing-context budget has two characters of headroom on a down-only ratchet | `check_always_budget`, run this session: extended 60,252 / 60,254 chars (100.0 %), "may only move DOWN" |
+| Choosing (c) costs zero standing-context characters | The same command, run after the change: 60,252 / 60,254, unchanged. No config touched |
+| There is no intervention-arm evidence for (a) or (b) | The 0.0 % baseline (`road-to-frontend-skill-application.md:23`) was taken with `design_slop.enabled: false` and `ui_route_nudge.enabled: false` in every measured store — a control arm with nothing to compare against |
+| The shipped detector produces no actionable finding on a 20-case frontend population today | `lint_design_slop --dir tests/eval/frontend-corpus --json`: 0 P0, 0 P1, 2 P2, `overThreshold: 0` (`internal/bench/frontend-power/BASELINE-2026-08-23.md`) |
+| (a) and (b) are owner-reserved rather than council-decidable | `agents/evidence/council/drain-blocker-dispositions-a.md` § Framework rule 3 — a shipped-default flip takes `B`, never `D` |
+
+The grade is **E2 — repeated and comparative**, and deliberately not higher.
+Every number above is a live measurement of *this* tree, taken twice where the
+claim is a delta (before and after, for the budget), and the reach consequence
+is read off two independent files rather than one. It is not E3: there is no
+external authority and no pre-registered benchmark behind the *choice* — the
+prereg in `internal/bench/frontend-power-PREREG.md` governs the enforcement
+metrics, not this weight decision.
+
+**What the evidence does NOT establish, stated so the grade is not read as more
+than it is.** It does not show that forcing `frontend-design` would fail. It
+shows that nothing here measures whether it would succeed, that the cost of
+finding out the expensive way is permanent against a ratchet at 100.0 %, and
+that the party who recorded the original weight reasoning is the owner. On that
+basis the reversible option wins; it does not win on being demonstrated better.
+
 ## References
 
 - `src/config/discovery/packs.yml:69`, `:107`, `:123-131`
