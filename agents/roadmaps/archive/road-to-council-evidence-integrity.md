@@ -1,0 +1,688 @@
+---
+complexity: lightweight
+status: ready
+execution:
+  mode: phase-checkpoints
+---
+
+# Road to council evidence integrity — attribution, parse outcomes, and the silent nulls between them
+
+> **Source:** `agents/tmp.old/claude-lying.txt` and `agents/tmp.old/turbovec.txt`
+> — two independent external analysis passes, drained 2026-08-22. They arrived
+> separately and land here as one roadmap because they converge on one surface:
+> `src/scripts/ai_council/`. Every `file:line` below was re-verified against the
+> worktree on the drain date; two drifted from the source analyses and are
+> written at their current lines with the drift noted.
+
+## Goal
+
+When this is finished, a council artefact cannot say something the run did not
+establish. A peer-review quote is attributable to the member who wrote it; a
+member who answered unparseably is reported as unparsed rather than as
+"0 findings"; whether the seats agreed leaves a line in the event log instead of
+only in rendered prose; one certainty vocabulary describes evidence quality
+instead of four; and every CLI member is spawned under the same agency bound,
+proven by a probe rather than by a flag being present in an argv array.
+
+## Context
+
+The five defects below share a shape and that is why they travel together: each
+one makes the council's output **look more settled than the run was**. Two are
+confirmed silent-null defects (Phases 1 and 2), one is an instrumentation gap
+(Phase 3), one is a vocabulary split (Phase 4), and one is an enforcement
+asymmetry (Phase 5). None of them errors. All of them are invisible from the
+artefact a reader gets.
+
+**The defect read as a feature, and the comment is why.** `orchestrator.ts:1540-1544`
+states the label map is "the deterministic A/B mapping" — true of the *ordering*
+of `by_source`, false of the *self-filter offset*, and the same block concedes
+"Each member sees a different N-1 subset (self filtered)" two lines above the
+claim it undercuts. A reader who trusted the comment had no reason to look
+further. Correcting that comment is part of Phase 1, not a courtesy.
+
+**Dropped from the source analyses, and why.** One pass proposed a
+"unique-insight slot" in every decision lens, on the observation that only the
+analysis lens carries `### Outliers` (`prompts.ts:316-319`, the sole hit for
+that heading in the file). The observation is correct — `default`, `pr` and
+`design`/`optimize` synthesis shapes have no slot for a lone finding, and
+`prompt` / `roadmap` / `diff` / `files` all collapse into `default`
+(`prompts.ts:358-361`). It is dropped anyway: it is purely additive, no
+confirmed defect is attached to it, and adding a section to four prompt
+templates on an aesthetic argument is exactly the change that costs paid runs to
+evaluate and cannot be falsified from the tree. It belongs in a lens-design
+roadmap with its own evidence, not smuggled in behind five real defects.
+
+## Phase 1 — Per-reviewer attribution replaces the last-wins map
+
+- [x] **1.1 Land the red test first.** Add a `run_peer_review` case with three
+      members asserting that each reviewer's `Response-A` maps to a *different*
+      source, then run it against unmodified `orchestrator.ts` and record the
+      failure text in the step's commit body. `tests/scripts/ai_council/orchestrator.test.ts:864`
+      currently asserts only `expect(r.label_to_source.size).toBeGreaterThan(0)`,
+      inside `it('each reviewer critiques others (self filtered)')` at `:853` —
+      a size assertion cannot see a collision, which is why the defect survived.
+      verify: `npx vitest run tests/scripts/ai_council/orchestrator.test.ts -t 'self filtered'`
+      fails on the NEW case before 1.2 lands, and the failure names the label,
+      not the size.
+- [x] **1.2 Key the map by reviewer.** `orchestrator.ts:1545` declares
+      `let last_label_to_source = new Map<string, string>()` outside the
+      `for (const reviewer of members)` loop at `:1547`, overwrites it
+      unconditionally at `:1567`, and returns it once at `:1584`. Because
+      `consensus.ts:437` restarts `let idx = 0` on every `anonymize_responses`
+      call over the self-filtered `others_pairs` built at `:1552-1557`, each
+      reviewer receives a different `Response-A`. Replace the single map with a
+      per-reviewer structure, keeping the flat map as a derived compatibility
+      view only if a consumer needs it.
+      verify: the 1.1 test is green, and
+      `grep -n 'last_label_to_source' src/scripts/ai_council/orchestrator.ts`
+      returns no assignment inside the member loop.
+- [x] **1.3 Correct the determinism comment.** Rewrite `orchestrator.ts:1540-1544`
+      so it states what is actually deterministic (the ordering of `by_source`)
+      and what is not (the label→source mapping across reviewers), and names the
+      new structure.
+      verify: `git show HEAD:src/scripts/ai_council/orchestrator.ts | sed -n '1540,1544p'`
+      shows the old claim; the working copy shows the corrected one, and neither
+      contains the phrase "the deterministic A/B mapping" applied to the map.
+- [x] **1.4 Land the red test for label ORDER.** A second, orthogonal defect
+      lives in the same nine lines and cannot be landed independently without a
+      conflict. `run_peer_review` (`orchestrator.ts:1492`) passes `others_pairs`
+      to `anonymize_responses` (`:1561`) in `by_source` iteration order with no
+      shuffle anywhere on the path:
+      `grep -rn 'deterministic_shuffle_indices' src/scripts/ai_council/` hits
+      `blind_review.ts:42` and returns nothing in `orchestrator.ts`. So label
+      assignment is a pure function of config order and identical across runs —
+      and it is ALSO inconsistent per reviewer, because the list is
+      self-filtered, so each reviewer's `Response-A` already points at a
+      different member. Both properties hold at once and the test pins both:
+      identical inputs produce identical labels today, and across at least eight
+      distinct run seeds at least two different permutations occur once 1.5
+      lands.
+      verify: `npx vitest run tests/scripts/ai_council/orchestrator.test.ts -t 'label order'`
+      fails against unmodified `orchestrator.ts` on the permutation assertion,
+      and the failure text names the single observed permutation rather than a
+      count.
+- [x] **1.5 Seed the label order, and correct the skill in the same step.**
+      Import `deterministic_shuffle_indices` (`blind_review.ts:42`) and order
+      `others_pairs` by it before the `anonymize_responses` call at
+      `orchestrator.ts:1561`. Seed = the original ask plus the deliberation
+      bodies — run-scoped and replayable, never `Math.random` and never `Date`.
+      `blind_review.ts:52-54` already argues the half this path is missing
+      ("which pair becomes `Response-A` is not simply input order, so position
+      alone leaks nothing"), so the two paths contradict each other in code
+      until this lands. `src/skills/ai-council/references/advanced-modes.md:143`
+      says labels are assigned "in stable input order" — accurate today, wrong
+      the moment the shuffle lands — so it is corrected in THIS step, never a
+      later one.
+      verify: the 1.4 permutation assertion is green;
+      `grep -c deterministic_shuffle_indices src/scripts/ai_council/orchestrator.ts`
+      returns at least 1; and
+      `git show HEAD:src/skills/ai-council/references/advanced-modes.md | grep -c 'in stable input order'`
+      returns 1 while the working copy returns 0.
+
+## Phase 2 — A parse failure is reported as a parse failure
+
+- [x] **2.1 Land the red test first.** Feed `parse_findings_response` a
+      non-empty, non-JSON member answer and assert the caller records a
+      `parse_failed` outcome. `consensus.ts:284-285` documents the current
+      contract — "extraction is best-effort, never raises" — with three silent
+      exits at `:294`, `:301` and `:304`, and `orchestrator.ts:1697` spreads the
+      result into `all_findings.push(` with no length branch (the only guard,
+      `:1692`, is transport-level). So today the test cannot fail.
+      verify (discharged): the new case fails against unmodified `consensus.ts`, and
+      the failure text names the outcome field, not a count. **RED recorded:**
+      `expected 'empty' to be 'parse_failed'` under the sabotage that collapses the two
+      outcomes — an assertion on the OUTCOME FIELD, which is the distinction a length
+      check cannot make.
+
+      **The test also found a defect in the fix.** Asserting `'[]' -> parsed` failed,
+      because `_extract_json_array`'s `_BARE_ARRAY_SRC` requires at least one `{...}`
+      object, so a *readable* empty array fell through to `parse_failed`. Left
+      unhandled, a member answering correctly with `[]` would have triggered a paid
+      re-ask and inflated `parse_empty_rate` with the members who followed the schema
+      most literally. Handled narrowly — a bare or fenced empty array only — because
+      widening the shared extractor regex would change what `parse_findings_response`
+      and `parse_scores_response` accept, which this step did not ask for.
+- [x] **2.2 Classify the outcome and re-ask once.** Return a discriminated
+      outcome (`parsed` / `empty` / `parse_failed`) alongside the findings, and
+      on `parse_failed` issue exactly ONE bounded re-ask with the schema
+      restated. One, not a loop: a re-ask is a paid call, and an unbounded
+      retry turns one unparseable answer into an open-ended spend.
+      verify (discharged): a fixture whose first answer is unparseable and whose
+      second is valid produces one extra call and a `parsed` outcome; a fixture that
+      is unparseable twice produces exactly two calls and a `parse_failed` outcome.
+      **Both fixtures green** (`orchestrator.test.ts`, `-t 're-ask'`), plus a third:
+      an EMPTY answer is not re-asked, asserted rather than assumed because "empty is
+      not re-asked" and "empty is never reached" are different reasons for the same
+      observation.
+
+      `parsed-after-reask` is kept distinct from `parsed` on
+      `ConsensusResult.parse_outcomes` — a member needing a second ask is a signal
+      about the prompt or the member, and folding it into `parsed` would hide the only
+      evidence the re-ask does anything.
+
+      **Sabotage of the BOUND, and the result is worth recording exactly as observed:**
+      changing `if (ex.outcome === 'parse_failed')` to `while (…)` did not produce a
+      failing assertion — the vitest run terminated with **`Tests  no tests`**, i.e. the
+      unbounded retry did not finish, because the scripted member repeats its last
+      answer. That is the strongest available evidence that the bound is load-bearing
+      and it is not a clean RED; reporting it as one would overstate it. The
+      unparseable-twice fixture is the assertion that catches a *bounded-but-wrong*
+      change: its third scripted answer is valid, so any loop that re-asks more than
+      once reaches it and produces a finding, and an empty finding set is what pins the
+      bound at one.
+- [x] **2.3 Correct the attendance wording.** `quorum_wiring.ts:170` counts
+      attendance as `!r.error && r.text.trim() !== ''` — bytes, not usable
+      content. The block at `:163-169` already argues that "An empty answer
+      contributes nothing to a quorum by definition, whatever the transport
+      thought of it"; extend that argument to a non-empty answer no parser can
+      read, and render such a member as `present-unparsed` rather than folding
+      it into `N/N present`.
+      verify (discharged): `council_cli.test.ts`, `-t 'unparsed'` — five cases green.
+      **RED recorded** against unmodified code, two failures, and the second is the
+      one that matters: `AssertionError: expected 'council:quorum · 1/2 present,
+      needed …' to contain 'present-unparsed'` — the count was already right, the
+      WORD was missing, which is exactly the gap between "the numbers were always
+      there" and "a reader can tell what they mean".
+
+      **The DEGRADED sentence had to change too, and that was not in the step's
+      text.** It read `N member(s) did not answer` over `total - present`; an
+      unparsed member DID answer, so leaving it would have made the banner
+      contradict itself in the line written to stop a reader inferring
+      convergence. `quorum.ts::formatAttendanceCaveats` now owns both clauses over
+      disjoint counts (`silent = total - present - unparsed`), which also
+      mechanically discharges the "same sentence on purpose — so neither surface
+      can drift into being the softer one again" note that both renderers carried
+      as a hand-maintained duplicate.
+
+      **`unparsed` is omitted when zero, never defaulted to `0`.** Every existing
+      assertion over a `QuorumResult` is an exact-shape `toEqual` and the field
+      rides into `payload['quorum']`, so a defaulted key would be a silent
+      breaking change to a serialized surface for the common case. Pinned by its
+      own test rather than left to convention.
+
+      **The event log deliberately does NOT move.** `_postRunQuorum` runs before
+      findings parsing, so the post-run `quorum_result` event stays a
+      transport-level reading and every attendance rate computed over
+      `events.log` keeps its denominator; the rendered artefact is re-derived
+      after consensus via `withUnparsed` (`council_cli.ts`, right after
+      `_maybe_run_consensus`). That split is what AC-2 asks for — it says
+      *rendered* — and Phase 3 is where the log gains a field.
+- [x] **2.4 Ship the fixture corpus and the honest-gap row.** At least six
+      recorded verbatim member responses — valid JSON, JSON in a fence, prose
+      refusal, truncated array, empty body, JSON with missing required keys —
+      committed as fixtures, plus a `parse_empty_rate` row that states what
+      fraction of recorded answers reach `parse_failed` and states plainly that
+      the denominator is the fixture corpus, not live traffic.
+      verify (discharged): `tests/fixtures/council-parse-corpus/` holds **seven**
+      recorded answers plus `expected.json` and a README; the `docs/CLAIMS.md` row
+      `claim:council-parse-outcome-corpus-rate` states `2/7 parse_failed, 1/7
+      empty, 4/7 parsed` with the corpus named as the denominator and
+      `./scripts-run src/scripts/council_parse_rate` named in the row itself;
+      `check_claims` green (50 backed).
+
+      **The corpus found a defect in its own first draft, and the fixtures were
+      corrected rather than the parser.** Fixtures 01 and 02 were written with a
+      `{severity, title, detail}` shape — plausible, and wrong: the prompt asks
+      for `{id, text}` (`prompts.ts:208`) and `_collect_findings` skips any item
+      missing either key, so both "valid JSON" fixtures scored `parsed` with
+      **zero findings**. A corpus whose valid cases yield nothing measures
+      nothing. Rewritten to the real schema; 01 now yields 2 findings, 02 yields 1.
+
+      **The mislabelled shape was kept as its own fixture, because it is a real
+      open case.** `06-missing-keys.txt` resolves `parsed` with zero findings —
+      indistinguishable in the outcome field from a member that genuinely found
+      nothing, which is the silent null this phase set out to close, surviving one
+      rung up. Phase 2 does not close it. It is pinned by a named test
+      (`parse_corpus.test.ts`, "the open case") so a later phase has a red to turn
+      green, rather than being left for someone to rediscover.
+
+      **Sensitivity demonstrated in both directions**, not assumed: sabotaging one
+      pin in `expected.json` made the reproducer exit 1 with `DRIFT
+      03-prose-refusal.txt: expected parsed, got parse_failed`; restoring it
+      returned exit 0.
+
+      **The rate row's exec pointer is the vitest form, not the script.**
+      `council_parse_rate` is not in `ALLOWLIST_PREFIXES` (`_lib/exec_evidence.ts:46`)
+      and adding it would mean registering a new CI gate — three ratchets — for a
+      run the node-tests job already performs. `exec:vitest run
+      tests/scripts/ai_council/parse_corpus.test.ts -> 0` re-runs the same scoring
+      over the same corpus through an already-allowlisted prefix.
+
+## Phase 3 — Agreement becomes an additive field on `quorum_result`
+
+- [x] **3.1 Confirm the asymmetry, then close it additively.**
+      `events_log.ts:382-448` (`appendQuorumEvent`) records attendance in
+      sixteen fields — `threshold` `:400`, `total` `:402`, `present` `:403`,
+      `solo` `:408`, `gate_class` `:410`, `verdict` `:396` among them — and
+      `stance_tally.ts` records nothing: `grep -c appendEvent` on that file
+      returns 0 across its 256 lines, and it has no import from `events_log.js`
+      at all. Its result reaches the reader as rendered text only, via
+      `orchestrator.ts:1990` and `:1995`. So the log can say who showed up and
+      never whether they agreed.
+      verify (discharged): `grep -c appendEvent src/scripts/ai_council/stance_tally.ts`
+      returns **0** — confirmed, and it still returns 0 after the change, which is
+      the correct outcome rather than an omission: the dimension rides the
+      existing `quorum_result` line, so `stance_tally.ts` acquires no writer and
+      stays a pure tally. `events_log.test.ts` asserts `rec.stance_agreement` on a
+      `quorum_result` line.
+
+      **RED recorded:** `expected undefined to be 'not_tallied'` against unmodified
+      `events_log.ts` — the assertion names the FIELD, which is what a line-count
+      or an action-name check could not have caught.
+- [x] **3.2 Add the dimension as a FIELD, never a new action.** The file's own
+      reasoning at `:411-418` is binding here and is not being re-derived: a new
+      action "is invisible to every consumer filtering
+      `action === 'quorum_result'`, which would split the attendance population
+      in two and silently move the denominator of all four registered metrics.
+      An additive boolean moves no existing bucket." Carry the agreement
+      dimension on the existing line, bump the schema version, and record in
+      `src/config/quorum-attendance-budget.json` that a rate computed over
+      older-schema lines must exclude rather than assume the new field.
+      verify (discharged): `npx vitest run tests/scripts/ai_council/attendance_metrics.test.ts`
+      — six cases green over `tests/fixtures/council-events-schema-span/events.log`,
+      four v4 lines and three v5 lines plus two that must be excluded from every
+      rate (a `pre_run`/`estimate` line and a non-`quorum_result` action).
+
+      **The replay had to be BUILT, and that is the finding this step turned up.**
+      The four metrics were registered on 2026-08-10 and nothing in the tree ever
+      computed them, so "the four metrics reproduce unchanged" was a claim with no
+      instrument — a verify that could not have failed. `council_attendance_metrics.ts`
+      is that instrument; the step is not closeable without it.
+
+      **The exclusion is asserted in both directions**, because one direction is
+      not enough: `consensus_rate` is 1/3 over the three v5 lines, and explicitly
+      NOT 1/6 — the number a defaulting implementation produces. The mirror
+      assertion drops the v4 stratum entirely and requires the rate not to move.
+      **Sabotage demonstrated:** replacing the eligibility filter with `const
+      eligible = passes` failed both — `expected 6 to be 3` and `expected
+      0.3333… to be close to 0.1666…`.
+
+      Schema bumped 4 → 5, and the pre-existing `schema_version` assertion was
+      moved off its literal onto `SCHEMA_VERSION` so it cannot silently pin an old
+      version again. `src/config/quorum-attendance-budget.json` gains a
+      `stance_agreement_rate` block stating the exclusion rule, the privacy note
+      (a three-value closed vocabulary; deliberately no option LABEL, since option
+      labels are free-form member text and recording one would open the hole the
+      event type exists to refuse), and an honest gap: agreement is measured among
+      the members that answered and parsed, so `1/2 present · consensus` is one
+      voice agreeing with itself and the two fields must be read together.
+
+      Wiring: `tally_stances` is hoisted above the post-run emit in
+      `council_cli.ts` and reused by `buildHandoffFromStanceTally` — ONE tally, not
+      two, since two tallies over the same responses are two chances to disagree.
+
+## Phase 4 — One certainty vocabulary, or an honest declaration of prose
+
+- [x] **4.1 Inventory and collapse.** Four vocabularies describe the same
+      property today: `prompts.ts:133-135` and `:307`
+      (`confirmed | inferred | speculative`), `:319` (`unverified-by-council`),
+      `:168` (`CONFIDENCE: high|med|low`, format line at `:167`), and
+      `src/skills/ai-council/references/procedure.md:87` (`unverified:`, restated
+      at `:95`). Pick one scale, migrate the prompt templates onto it, and state
+      in the skill which property each surviving term describes — evidence
+      quality is not the same property as a member's certainty in a pick, and
+      collapsing those two would be a worse outcome than four vocabularies.
+      verify (discharged): the grep now returns only `confirmed` / `inferred` /
+      `speculative` — as scale terms at `:133-135`, `:307` and (newly aligned)
+      `:124`, plus three ordinary-English uses of the same words in prose at
+      `:95`, `:258`, `:838`. `unverified-by-council` returns zero hits.
+      `src/skills/ai-council/references/output-and-synthesis.md` carries the
+      property table naming what each surviving term measures.
+
+      **There were SIX vocabularies, not four**, and the two the step did not
+      enumerate are why its grep alone would have passed over a live defect:
+      `prompts.ts:124` had the optimize lens's own `hypothesis` versus
+      `confirmed` — a lens-local synonym for `speculative`, which is the exact
+      mechanism by which one scale becomes four — and `:258` has
+      `needs-verification` in the Blind-spots section. The first is collapsed
+      onto the scale. The second is KEPT: it measures the provenance of the host
+      agent's own inference (reasoned from context vs read from a member
+      response), which is not evidence quality, and it is named in the table
+      rather than merged.
+
+      **`unverified-by-council` was collapsed rather than renamed**, because it
+      measured *corroboration* — how many reviewers engaged — which the
+      `### Outliers` heading already states by construction: everything under it
+      was raised by one reviewer and engaged with by none. A separate word for a
+      fact the section carries invited it to be read as a fourth point on the
+      evidence scale. `DEALBREAKER` and `roadmap-ready` / `needs-discovery` are
+      in the table for the same reason: a reader who cannot see which property a
+      term measures will assume it is certainty.
+- [x] **4.2 Give `unverified:` a parser or declare it prose.** A repo-wide grep
+      for a reader of that marker finds none: `procedure.md:87` and `:95` are
+      prose, and the only other hits are an unrelated object key in
+      `check_branch_freshness.ts:300` and an English sentence in
+      `src/skills/subagent-orchestration/evals/evals.json:19`. The machinery to
+      validate a section exists and is simply not pointed at any certainty
+      marker — `prompts.ts:461-495` already enforces `### Kill criteria` and
+      `### Concrete next step`. Either point it at the marker and give the
+      marker a render consequence, or write in `procedure.md` that it is an
+      authoring convention with no reader.
+      verify (discharged): the second branch. `procedure.md` carries the
+      no-reader statement, and `grep -rn 'unverified:' --include='*.ts' src/scripts/`
+      returns **1** hit — `check_branch_freshness.ts:300`, an unrelated object key
+      in a fallback record, not a parser. Zero parsers, as the criterion requires.
+
+      **The declare-it-prose branch was chosen on the tree's own evidence, not on
+      convenience.** `prompts.ts::assert_synthesis_sections` is the machinery a
+      marker parser would have reused, and its docstring records that it has
+      **zero production call sites** — wiring it unconditionally into `render()`
+      throws on every templated render, because the default body is the literal
+      `*to be summarised by the host agent*` and carries neither required
+      section. A second unwired validator would reproduce that state exactly and,
+      worse, let a reader believe the marker is checked. So `procedure.md` now
+      says three things: write it, because an artefact reader needs to know a
+      mechanism claim was argued rather than measured; do not cite it as
+      enforcement; and do not read its absence as evidence the claim was probed.
+
+**Phase 4 carries no red run, and AC-6's escape clause is why.** Both steps
+change prompt-template prose and skill documentation — there is no behaviour to
+observe failing, so a test written here would assert the contents of a string
+literal and would be green the first time by construction. AC-6 permits exactly
+this ("or states which drift made a red run impossible"); the substitute evidence
+is the grep in 4.1's verify, which returned `unverified-by-council` before the
+change and returns zero hits after, and the parser count in 4.2's, which is 0
+both before and after — the latter being the point rather than a null result.
+
+## Phase 5 — CLI least-agency parity, proven by a canary
+
+- [x] **5.1 Record the asymmetry as measured.** One CLI member is spawned with
+      `--tools ''` (`clients.ts:1724-1725`, in the class at `:1667`) behind a
+      26-line justification at `:1698-1723` that argues Least Agency in general
+      terms — and the same file constructs four further CLI members with no
+      equivalent bound. `grep -nE -- "--sandbox|--approval-mode|read-only" src/scripts/ai_council/clients.ts`
+      returns 0. One of the four passes `--skip-git-repo-check`, a guard
+      *removal*, with no counterpart. Same role, three enforcement levels.
+      verify (discharged): `grep -nE -- "--sandbox|--approval-mode|read-only" src/scripts/ai_council/clients.ts`
+      returned **0** at the start of the phase — confirmed, not assumed. The five
+      classes and the argv each built, read at their current lines:
+
+      | Member | Class | Bound at phase start |
+      |---|---|---|
+      | anthropic | `clients.ts:1678` | `--tools ''`, behind the 26-line justification at `:1698-1723` |
+      | openai | `clients.ts:1808` | none — and `--skip-git-repo-check`, a guard REMOVAL, at `:1854` |
+      | gemini | `clients.ts:2055` | none |
+      | xai | `clients.ts:2205` | none |
+      | perplexity | `clients.ts:2277` | none |
+
+      One bound, one guard removal, three silences: same role, three enforcement
+      levels, which is the asymmetry `AC-5` was phrased to refuse.
+- [x] **5.2 Apply one bound per member against a RECORDED CLI version.** For
+      each CLI member, determine the vendor's own agency flag and apply it. Pin
+      the CLI version the determination was made against in the same note — a
+      flag that exists in one release and not the next is a claim with a
+      shelf life, and an unpinned one cannot be re-checked.
+      verify (discharged): probed on 2026-08-23 against the real binaries, every
+      version string read from the CLI's own `--version`:
+
+      | Member | Binary | Version | Bound applied | Source |
+      |---|---|---|---|---|
+      | anthropic | `claude` | `2.1.241 (Claude Code)` | `--tools ''` (pre-existing) | — |
+      | openai | `codex` | `codex-cli 0.148.0` | `--sandbox read-only` | `codex exec --help`: `-s, --sandbox <SANDBOX_MODE>`, possible values `read-only`, `workspace-write`, `danger-full-access` |
+      | gemini | `gemini` | `0.50.0` | `--approval-mode plan` | `gemini --help`: `plan (read-only mode)` |
+      | xai | `grok` | — | **not-probed: xai — binary absent** | — |
+      | perplexity | `perplexity` | — | **not-probed: perplexity — binary absent** | — |
+
+      **`--approval-mode` and not `--allowed-tools`**, deliberately: gemini's own
+      help marks the latter `DEPRECATED: Use Policy Engine instead`, so pinning
+      the council to it would bind us to a surface the vendor is retiring. The
+      sibling values move the wrong way — `-y/--yolo` is "automatically accept all
+      actions", `auto_edit` auto-approves edit tools — so `plan` is the only
+      choice matching a member that reads a question and returns an opinion.
+
+      **The sandbox sits BESIDE `--skip-git-repo-check`, never instead of it.**
+      The trust gate is what makes a worktree usable at all (without it codex
+      refuses the directory before reading a prompt); the sandbox bounds what the
+      session may then do. The test asserts both are present, because dropping
+      either alone recreates the asymmetry.
+
+      **Asserted as a property, not transcribed into the argv literal.** The four
+      literal-argv assertions were updated too, but the load-bearing tests search
+      for the flag across three prompt sizes — the sibling openai defect survived
+      for months precisely because its argv test pinned the broken command as
+      expected, and a test that transcribes a command cannot notice the command is
+      wrong. A fourth test asserts no member's argv carries a documented bypass
+      (`--dangerously-bypass-approvals-and-sandbox`,
+      `--dangerously-bypass-hook-trust`, `--yolo`, `danger-full-access`,
+      `workspace-write`): a bound is only a bound if the argv cannot also carry
+      the flag that lifts it, and a presence check alone would pass with both.
+
+      **RED recorded:** `expected -1 to be greater than -1` (`indexOf` of the flag)
+      for both new members, against unmodified `clients.ts`.
+- [x] **5.3 Prove effect, not presence — a canary.** Flag-present is not
+      flag-effective; `clients.ts:1706-1715` concedes the existing flag was
+      found by a live context-window overflow rather than by a security pass,
+      which is exactly the failure a presence assertion cannot catch. Ship a
+      canary that asks each CLI member to perform a bounded, harmless action it
+      should be unable to perform, and assert refusal.
+      verify (discharged, partially — read the honest null below):
+      `./scripts-run src/scripts/ai_council/cli_least_agency_canary --confirm`,
+      run 2026-08-23, record committed at `agents/evidence/council-canary/2026-08-23.json`.
+
+      | Member | Verdict | Both directions in one run? |
+      |---|---|---|
+      | anthropic `claude 2.1.241` | **PASS** | yes — bound blocked, control mutated, restored blocked |
+      | openai `codex-cli 0.148.0` | **PASS** | yes — same three phases |
+      | gemini `0.50.0` | **INCONCLUSIVE** | no — the control did not mutate either |
+      | xai | not-probed | binary absent |
+      | perplexity | not-probed | binary absent |
+
+      **The oracle is filesystem state, never prose.** Both council seats
+      insisted on this independently and they were right: a model answering "I
+      cannot write files" proves nothing if nobody stats the file. The probe asks
+      for one sentinel in a disposable directory and then checks `existsSync`.
+
+      **The control had to become a VALUE rather than an absence, and that
+      correction came from running the file rather than from designing it.** The
+      first version used "omit the bound" as the control and openai read
+      INCONCLUSIVE. A direct probe showed why: with no `--sandbox` in argv at all,
+      codex answers `patch rejected: writing is blocked by read-only sandbox;
+      rejected by user approval settings` — its ambient default is ALREADY
+      restrictive. So the control was confounded by a per-machine setting the
+      probe never recorded, and the verdict would have stayed INCONCLUSIVE forever
+      for a reason that looked like the member's behaviour. With an explicit
+      `--sandbox workspace-write` control, openai reads PASS. anthropic keeps an
+      omission control because its control arm demonstrably mutates.
+
+      **gemini is an honest null and is recorded as one.** `--approval-mode
+      auto_edit` did not create the sentinel either, so nothing about
+      `--approval-mode plan` is established for `gemini 0.50.0`: the argv is built
+      correctly and the vendor documents `plan` as read-only, but the EFFECT claim
+      is not proven. The one manual follow-up probe was refused by the host's own
+      command classifier and was **not** worked around. What would settle it is a
+      sharper control or a mutation the model will actually attempt.
+
+      **Never wired into CI**, per the council decision below: each run spends
+      real vendor calls, `--confirm` is required, and no workflow references it.
+      `--dry-run` prints the argv per phase and spends nothing.
+
+## Blockers
+
+### blocker: b-cli-flag-probe
+
+- **Status:** resolved
+- **Resolved by:** execution, 2026-08-23 — option (a) for the three binaries that
+  resolve on this machine and the sanctioned honest null for the two that do not.
+  The blocker's own `Resolved when:` permits exactly this mixed outcome ("either
+  an agency flag with the CLI version string it was read from, or an explicit
+  `not-probed: <member> — binary absent` line"), and its `What to do` says in
+  terms that "an absent binary is an honest null for that member, never a silent
+  skip". So no council call was needed: the question was answerable by running
+  the binaries.
+
+  Probed: `claude 2.1.241 (Claude Code)` (already bounded, `--tools ''`),
+  `codex-cli 0.148.0` → `--sandbox read-only`, `gemini 0.50.0` →
+  `--approval-mode plan`. Absent: `grok` (xai), `perplexity` — both recorded
+  `not-probed … binary absent` in the Phase 5 Step 5.2 table and in
+  `agents/evidence/council-canary/2026-08-23.json`, and neither is rendered as
+  bounded anywhere.
+- **Owner:** maintainer
+- **Blocks:** Phase 5 Steps 5.2 and 5.3. Phase 5 Step 5.1 is not blocked — it
+  reads the argv arrays out of `clients.ts` and needs nothing external.
+- **What to do:** pick exactly one —
+  (a) put the four remaining CLI binaries on `PATH` in one session, run each
+  one's `--help` and `--version`, and record the agency flag plus the version
+  string per member in the Phase 5 note; or
+  (b) declare the binaries unavailable in this environment and record an honest
+  null for `5.2`/`5.3` naming the members that could not be probed, leaving
+  `5.1` closed and the phase open.
+  An absent binary is an honest null for that member, never a silent skip: a
+  member whose bound was never determined must not be rendered as bounded.
+- **Why it is not an agent step:** the flags are properties of external binaries
+  whose behaviour cannot be read out of this tree, and installing vendor CLIs
+  changes the machine rather than the repository.
+- **Recommendation:** (a). The four binaries are already the transport for a
+  configured council on any machine that runs one, so putting them on `PATH`
+  for one session is an errand rather than a build, and it is the only route
+  that lets Phase 5 claim parity instead of claiming intent.
+- **If you do nothing:** Step 5.1 still closes — it reads argv out of
+  `clients.ts` — and Phase 5 stops there. Four of five CLI members keep an
+  unstated agency bound, `AC-5` cannot be met, and the asymmetry stays a
+  recorded finding rather than a fixed one.
+- **Resolved when:** the Phase 5 note carries, per CLI member, either an agency
+  flag with the CLI version string it was read from, or an explicit
+  `not-probed: <member> — binary absent` line.
+
+### blocker: b-probe-channel-decision
+
+- **Status:** resolved
+- **Resolved by:** AI council, 2026-08-23, 2 seats (anthropic + openai),
+  **convergent**. Record: `agents/runtime/council/responses/probe-channel.md`
+  (gitignored and machine-local, so the decision is restated here rather than
+  cited as a path — the summary below is the durable form).
+
+  **Verdict: a named HYBRID**, neither (a) nor (b) as the blocker framed them.
+  Both seats reached it independently on the same argument: `AC-5` contains two
+  independently falsifiable propositions — *the spawner supplies the bound* and
+  *the vendor enforced it* — and no single evidence channel covers both well.
+
+  - **Construction half (continuous, free):** a deterministic assertion that each
+    member's argv carries its designated bound. Landed as three tests in
+    `tests/scripts/ai_council/clients.test.ts`, which the node-tests job already
+    runs. Discharges: *the spawner supplies the designated least-agency argument
+    for each supported CLI.*
+  - **Enforcement half (deliberate, paid, never in CI):**
+    `src/scripts/ai_council/cli_least_agency_canary.ts`, filesystem-state oracle,
+    `bound → control → bound restored` in one run, version pinned per member,
+    `--confirm` required. Discharges: *the recorded CLI version enforced that
+    argument against the tested mutation at the recorded time.*
+
+  **Adopted from the seats, both halves:** filesystem state as the oracle rather
+  than model prose; version pinning, with a version change returning a member to
+  `unverified`; explicit nulls for absent binaries rather than assumed
+  compliance; and the single-run `bound → unbound → restored` sequence over a
+  "prove it once" reading.
+
+  **Rejected, and by which seat:** the openai seat rejected the anthropic seat's
+  90-day cadence as **invented policy** — nothing in the blocker or its
+  constraints establishes a schedule, and it would have entered `AC-5` as a
+  commitment nobody decided. It is therefore NOT in the amended criterion; what
+  replaced it is the version-invalidation rule, which is falsifiable from the
+  record itself. The openai seat also rejected the ">10% false positives" kill
+  criterion as arbitrary for a gate that should be deterministic, and rejected
+  "three consecutive passes then an overflow" as too late — one observed escape
+  invalidates the enforcement claim immediately. Both narrowings are adopted.
+
+  **Kill criteria for this pick**, as the seats stated them: the control cannot
+  reliably mutate (fired for gemini — see Step 5.3); a bounded run mutates
+  anything; bounded and unbounded outcomes become indistinguishable through auth,
+  approval prompts, or timeouts; the probe comes to rest on textual refusal
+  instead of filesystem observation; or a CLI offers only a planning convention
+  rather than an enforceable write restriction.
+- **Owner:** maintainer
+- **Blocks:** Phase 5 Step 5.3 — the canary needs a decision about where it runs
+  before it can be written.
+- **What to do:** pick exactly one —
+  (a) run the canary as a local-only script under `src/scripts/ai_council/`,
+  invoked deliberately, spending real vendor calls and never wired into a CI
+  workflow; or
+  (b) run it against recorded transcripts only, which costs nothing and proves
+  less — it shows the argv was built correctly, not that the vendor honoured it.
+  Option (b) does not satisfy `5.3` on its own and must be recorded as a
+  partial if chosen.
+- **Why it is not an agent step:** (a) spends money on external calls and (b)
+  changes what the acceptance criterion is allowed to claim; both are decisions
+  about cost and about the strength of a claim this roadmap makes.
+- **Recommendation:** (a), run deliberately and never wired into CI. The
+  finding this phase rests on — `clients.ts:1706-1715` — records that the one
+  existing bound was discovered by a live failure, so a channel that cannot
+  observe live behaviour cannot falsify the next one either.
+- **If you do nothing:** Step 5.3 cannot be written at all, because the
+  canary's assertion depends on where it runs. Phase 5 then ends at a bound
+  that is present in an argv array and unproven in effect, which is exactly
+  the claim `AC-5` was phrased to refuse.
+- **Resolved when:** the choice is written into Phase 5 Step 5.3 as a named
+  channel, and — if (b) — `AC-5` is amended in the same change to claim only
+  argv correctness.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A green test that was never red | implementation | Every phase here fixes a defect that produces NO error, so a test written after the fix passes against the broken code too — the exact shape of `orchestrator.test.ts:864`, which asserts `size > 0` over a map whose contents are wrong | Each phase's first step lands the test and records its failure text against unmodified code before the fix; a phase whose test was never observed red is not closed | Context |
+| 2 | The bounded re-ask becomes a loop | implementation | A `parse_failed` outcome invites a retry, and a retry that is not hard-bounded turns one unparseable answer into open-ended paid calls on every run | Step 2.2 fixes the bound at exactly one and its verify asserts the call count in both the recovering and the twice-failing fixture | Phase 2 — A parse failure is reported as a parse failure |
+| 3 | The agreement field silently moves an existing denominator | implementation | Adding a dimension to `quorum_result` can change what a consumer filtering that action sees, which is the failure `events_log.ts:411-418` already names for a new action and which an additive field only avoids if older lines are excluded rather than defaulted | Step 3.2 bumps the schema version and requires a replay over a fixture log with pre-change lines to reproduce the four registered metrics unchanged | Phase 3 — Agreement becomes an additive field on `quorum_result` |
+| 4 | Vocabulary collapse loses a real distinction | product | Evidence quality and a member's certainty in a pick are different properties; folding `CONFIDENCE` into `confirmed / inferred / speculative` would read as tidying and would destroy information the stance line exists to carry | Step 4.1 requires the skill to name the property each surviving term measures, so a collapse that merges two properties cannot pass its own verify | Phase 4 — One certainty vocabulary, or an honest declaration of prose |
+| 5 | Parity is claimed from an argv array | implementation | A flag present in a constructed argv proves the flag was passed, not that the vendor CLI honoured it — and the one existing bound was found by a live overflow, not by inspection | Step 5.3 requires a canary that fails with the bound removed and passes with it restored, in the same run; `b-probe-channel-decision` forces the strength of the claim to be chosen explicitly | Phase 5 — CLI least-agency parity, proven by a canary |
+| 6 | A run-scoped shuffle hides a wrong map instead of fixing it | implementation | Once labels are seeded (Step 1.5), a per-reviewer map that is still wrong reads as a permutation rather than as a collision — the shuffle supplies a plausible reason for any two reviewers disagreeing about `Response-A`, which is exactly the signal Steps 1.1 and 1.2 exist to expose | Steps 1.4 and 1.5 land strictly AFTER 1.2, never beside or before it, so 1.4's red run is recorded against code that already carries the per-reviewer map and a surviving collision still fails loudly | Phase 1 — Per-reviewer attribution replaces the last-wins map |
+
+## Acceptance Criteria
+
+- [x] AC-1 — A peer-review quote in a council artefact resolves to the member
+      who wrote it, for every reviewer in the run, and a test asserting a
+      per-reviewer label mapping was observed failing against the pre-change
+      code. The mapping is also not reproducible from member config order alone:
+      it is a function of the run seed, and across at least eight distinct seeds
+      at least two distinct permutations occur.
+- [x] AC-2 — An unparseable member answer is distinguishable in the artefact
+      from a member that found nothing, and the rendered attendance line does
+      not count it toward `N/N present`.
+- [x] AC-3 — Whether the seats agreed is recoverable from
+      `agents/runtime/council/events.log` alone, as a field on the existing
+      `quorum_result` line, with the four registered metrics reproducing
+      unchanged over a fixture log that spans the schema bump.
+- [x] AC-4 — One scale describes evidence quality across `prompts.ts` and the
+      ai-council skill, and `unverified:` either has a parser with a render
+      consequence or a written statement in `procedure.md` that nothing reads
+      it.
+- [x] AC-5 — **Amended 2026-08-23**, in the same change that resolved
+      `b-probe-channel-decision`, because the council picked a hybrid rather than
+      either option the original wording anticipated. The criterion is now two
+      independently falsifiable propositions, because that is what the evidence
+      splits into:
+
+      **(i) Construction — green for every configured member.** An automated
+      check asserts the spawned argv carries that member's designated bound, and
+      that it carries no documented bypass. Failure or removal fails the check.
+      *Met:* three tests in `clients.test.ts`, in the node-tests job.
+
+      **(ii) Enforcement — per member, version-scoped, and never assumed.** For
+      each locally available member, a deliberately invoked canary records the
+      binary path, CLI version, argv and filesystem observation for
+      `bound → control → bound restored`. A result is valid ONLY for the recorded
+      CLI version and the tested mutation; a changed or unknown version returns
+      that member to `unverified`. Members whose binary or deterministic control
+      is unavailable are recorded as explicit **unverified nulls** and are
+      excluded from any parity claim.
+      *Met as stated, which is not the same as met everywhere:*
+      anthropic `2.1.241` **pass** · openai `codex-cli 0.148.0` **pass** ·
+      gemini `0.50.0` **inconclusive** (the control did not mutate either, so
+      nothing is established about `--approval-mode plan`) · xai and perplexity
+      **unverified nulls**, binaries absent.
+
+      **No five-member enforcement parity is claimed, and none may be read from
+      this.** Two of five are proven, one is inconclusive and two are nulls. What
+      the criterion asserts is that every member's status is *recorded and
+      honest*, not that every member is proven — and the original wording's
+      "every CLI council member is spawned under a stated agency bound" would
+      have been false for xai and perplexity, whose bound is undetermined rather
+      than merely unapplied.
+
+      **The 90-day recheck cadence one seat proposed is deliberately NOT here**:
+      the other seat named it invented policy, and it is replaced by the
+      version-invalidation rule in (ii), which is checkable from the record
+      instead of from a calendar.
+- [x] AC-6 — No phase in this roadmap is closed on a test that was green the
+      first time it ran; each phase's note carries the recorded failure text
+      from its own red run, or states which drift made a red run impossible.

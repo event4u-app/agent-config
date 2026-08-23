@@ -724,6 +724,12 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified: 2026-08-22
 
+### claim: council-parse-outcome-corpus-rate
+- claim: A council member's unparseable answer is separable from a member that found nothing — 2/7 `parse_failed`, 1/7 `empty`, 4/7 `parsed` over the seven recorded answers in `tests/fixtures/council-parse-corpus/`, which is a fixture-corpus denominator and NOT live traffic; reproduce with `./scripts-run src/scripts/council_parse_rate`.
+- kind: quant
+- evidence: exec:vitest run tests/scripts/ai_council/parse_corpus.test.ts -> 0
+- status: backed
+- last_verified: 2026-08-23
 ### claim: skill-link-census
 - claim: Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with.
 - kind: quant

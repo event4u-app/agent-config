@@ -120,9 +120,11 @@ MUST:
    suggestion. No hand-wave "this is probably slow".
 3. State at least one suggestion you explicitly REJECT as
    low-leverage, so the user does not over-engineer.
-4. Mark at least one suggestion as hypothesis (requires measurement
-   before committing) versus confirmed (already supported by the
-   evidence in the artefact).`;
+4. Mark at least one suggestion \`evidence: speculative\` (requires
+   measurement before committing) against at least one marked
+   \`evidence: confirmed\` (already supported by the artefact). Use the
+   same three-term scale as every other lens — \`confirmed\` |
+   \`inferred\` | \`speculative\` — never a lens-local synonym.`;
 
 export const ANALYSIS_MODE = `The artefact is a local analysis output (from a project analyzer,
 audit script, or codebase scan). Critique the **analysis itself**, not
@@ -315,8 +317,13 @@ metadata shape as Top-10.
 
 ### Outliers
 Single-reviewer findings the others did not engage with. Keep them
-— they are signal for a future deeper analysis pass — but mark each
-as \`unverified-by-council\`.
+— they are signal for a future deeper analysis pass — and give each
+the SAME metadata shape as Top-10, including its \`evidence:\` term.
+The heading is the corroboration statement: everything under it was
+raised by one reviewer and engaged with by none. Do not invent a
+separate certainty word for that; \`evidence:\` measures how well a
+finding is supported, and being alone in raising it is a different
+property the section already carries.
 
 ### Kill criteria
 Observable conditions that would falsify the analysis's leading finding

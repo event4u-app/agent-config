@@ -37,6 +37,23 @@ export interface QuorumResult {
     readonly total: number;
     /** Members that actually produced a usable response. */
     readonly present: number;
+    /**
+     * Members that answered with something no parser could read.
+     *
+     * Deliberately OPTIONAL and omitted when zero, never defaulted to `0`. Every
+     * assertion over a `QuorumResult` in this tree is an exact-shape `toEqual`,
+     * and the field also rides into `payload['quorum']`, so a defaulted key would
+     * be a silent breaking change to a serialized surface for the overwhelmingly
+     * common case where nothing was unparseable.
+     *
+     * Such a member is NOT in `present`: the byte check that admits it
+     * (`text.trim() !== ''`) is true of a prose refusal, which is exactly the
+     * "looked more settled than the run was" shape the empty-body fix already
+     * closed one case of. It is not plainly absent either — it answered, and the
+     * distinction is what a reader needs to tell "found nothing" from
+     * "said something unreadable".
+     */
+    readonly unparsed?: number;
 }
 
 /**
@@ -76,11 +93,75 @@ export function evaluateQuorum(
     total: number,
     present: number,
     setting: QuorumSetting = 'majority',
+    unparsed = 0,
 ): QuorumResult {
     const threshold = resolveQuorumThreshold(total, setting);
     const clampedPresent = Math.min(Math.max(present, 0), total);
     const status: QuorumStatus = clampedPresent >= threshold ? 'concluded' : 'inconclusive';
-    return { status, threshold, total, present: clampedPresent };
+    const clampedUnparsed = Math.min(Math.max(unparsed, 0), total - clampedPresent);
+    // Spread-on-condition rather than a defaulted key — see `QuorumResult.unparsed`.
+    return { status, threshold, total, present: clampedPresent, ...(clampedUnparsed > 0 ? { unparsed: clampedUnparsed } : {}) };
+}
+
+/**
+ * Move `n` members out of `present` and into the unparsed bucket.
+ *
+ * The run path derives findings-parse outcomes only AFTER `_postRunQuorum` has
+ * emitted the post-run attendance event, and that ordering is deliberate: the
+ * event is a TRANSPORT-level reading and stays one, so a consumer computing an
+ * attendance rate over the log keeps the denominator it has always had. The
+ * rendered artefact is where AC-2 asks for the distinction, and this is how it
+ * gets there — the same reading, re-derived once the parser has spoken.
+ *
+ * `threshold` is not recomputed: it resolves from `total` and the configured
+ * setting, neither of which this function touches. `status` IS recomputed,
+ * because moving a member out of `present` can legitimately turn a concluded
+ * pass inconclusive — which is the whole point, and the same consequence the
+ * empty-body fix already accepted.
+ */
+export function withUnparsed(q: QuorumResult, unparsed: number): QuorumResult {
+    if (unparsed <= 0) {
+        return q;
+    }
+    const present = Math.max(0, q.present - unparsed);
+    const moved = q.present - present;
+    return {
+        status: present >= q.threshold ? 'concluded' : 'inconclusive',
+        threshold: q.threshold,
+        total: q.total,
+        present,
+        ...(moved > 0 ? { unparsed: moved } : {}),
+    };
+}
+
+/**
+ * The attendance caveats both banners append — ONE wording, one place.
+ *
+ * `orchestrator.ts::_render_quorum_line` and `quorum_wiring.ts::_format_quorum_line`
+ * are deliberate mirrors, and the DEGRADED sentence carries a note explaining
+ * that they must stay byte-identical "so neither surface can drift into being
+ * the softer one again". Two copies of a sentence with that requirement is a
+ * drift waiting to happen, so Step 2.3 extracted it here rather than adding a
+ * third clause to each copy by hand.
+ *
+ * Two caveats, and they are disjoint on purpose:
+ *
+ * - `did not answer` counts only the SILENT members. An unparsed member
+ *   answered, so counting it here would make the line contradict itself — the
+ *   exact "says something the run did not establish" failure this roadmap is
+ *   about, in the sentence written to prevent it.
+ * - `present-unparsed` counts the members whose answer no parser could read.
+ */
+export function formatAttendanceCaveats(q: QuorumResult): string {
+    const unparsed = q.unparsed ?? 0;
+    const silent = q.total - q.present - unparsed;
+    const degraded =
+        silent > 0 ? `  ⚠️  DEGRADED — ${String(silent)} member(s) did not answer; this is not convergence.` : '';
+    const unreadable =
+        unparsed > 0
+            ? `  ⚠️  ${String(unparsed)} present-unparsed — answered, and no parser could read it; not counted toward attendance.`
+            : '';
+    return `${degraded}${unreadable}`;
 }
 
 /**
