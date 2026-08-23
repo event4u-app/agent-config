@@ -201,6 +201,17 @@ jobs:
 
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
+      # ADR-239:185-188 leaves merge authority to the owner. A settings key named
+      # autoMerge / auto_merge / mergePolicy would grant it by configuration
+      # rather than by decision, so the key space is ratcheted shut. Reversible
+      # by construction — the owner deletes the gate to grant it that way.
+      # No canary recipe (both corpus files always exist, so a create-only plant
+      # lands outside the corpus); the red is proven by the committed fixture
+      # tests/fixtures/automerge-key/ instead. Reason recorded in
+      # src/config/gate-coverage.yml under `no_canary_reason:`.
+      - name: no auto-merge settings key (ADR-239 namespace ratchet)
+        run: ./scripts-run src/scripts/check_no_automerge_key --quiet
+
 
       - name: language-and-tone (.md English)
         # Argument shape mirrors the taskfile entry — the two catalog files are
