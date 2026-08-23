@@ -71,7 +71,29 @@ should apply consistently across all UI tasks in this project. Unlike
 
 ## Design philosophy
 One sentence: [density/formality/complexity philosophy]
+
+## Owned components
+| Component | Status | Story file | Registry item |
+|---|---|---|---|
+| [Name] | stable \| experimental \| deprecated | [path to *.stories.tsx] | [registry item name, or —] |
 Example: "Information-dense dashboard; optimize for power users, not casual exploration."
+
+## Owned components — filled from the tree, never from memory
+
+The § Owned components table is populated by **globbing `*.stories.tsx`** (and, when a
+Storybook manifest is reachable, reading it — see
+[`storybook-workshop`](../storybook-workshop/SKILL.md) § MCP path). One row per component
+the project owns: its name, its status, its story file, and its registry item where the
+library publishes one.
+
+**Never write a row from memory.** A remembered component is exactly the row a reader will
+trust and a `ui-component-architect` run will then skip re-checking — an inventory that is
+wrong in the direction of "we already have this" causes the duplicate it exists to prevent.
+A component with no story file gets a row with an empty story cell, not an omission: absent
+from the table reads as "does not exist".
+
+`deprecated` rows stay in the table. Deleting one loses the only durable record that the
+component should not be reached for again.
 
 ## Visual system
 
@@ -197,46 +219,16 @@ Example: "Dashboard = control panel for power users, not an exploration space."
 
 ## Importing an extracted design system
 
-A consumer can reverse-engineer an existing site/repo's look-and-feel with any
-external static-extraction tool and hand the result to this skill as a
-`design-system.json` artifact. We own the **import contract**, not the crawler:
-the package never ships the Playwright runtime, a font-bundler, or a `.skill`
-auto-installer (out of scope). Full schema is lazy-loaded from
-[`references/design-system-json.md`](references/design-system-json.md) — read it
-only when an import is requested.
+A consumer can reverse-engineer an existing site/repo's look-and-feel with any external
+static-extraction tool and hand the result to this skill as a `design-system.json`
+artifact. We own the **import contract**, not the crawler. The artifact is *observed, not
+authoritative*: never write it in silently, and a conflict with a registered brand value is
+flagged rather than applied (`brand-source-of-truth`).
 
-**The supply path is real, and it is one command.** Where an extractor's output
-is not already in this shape, run it through the three-lane adapter first —
-`/design-system:import <file>`, which accepts a native artifact, a DTCG token
-file, or an extraction tool's raw JSON and emits the contract. Lanes and
-documented producers:
-[`references/design-system-json.md`](references/design-system-json.md)
-§ Extractor compatibility. The adapter is offline and pure — it does not change
-what this skill owns.
-
-**Import procedure:**
-
-1. Read `design-system.json`; reject it if `source` (kind + ref + captured_at)
-   is missing — no provenance, no import.
-2. Diff every field against the current `DESIGN.md`.
-3. Surface a **per-field confirm/merge proposal** — the artifact is *observed,
-   not authoritative* (mirrors `source-discovery`). Never write silently.
-4. **Conflict with a registered brand value** (a confirmed `.tokens.json` /
-   brand token) → **flag, never auto-apply** (`brand-source-of-truth`:
-   consumer brand wins). Precedence: brand tokens > confirmed `DESIGN.md` >
-   imported observation.
-5. On the human's accept, persist the chosen fields into `DESIGN.md`. Where the
-   consumer wants a token source of truth, hand the mapped DTCG fields to
-   [`brand-to-tokens`](../brand-to-tokens/SKILL.md) / `design-tokens` to
-   materialise `.tokens.json` — do not invent a parallel token format.
-
-**Two sources, one shape:**
-
-- **External target** (a site/repo you don't own) → an external tool emits the
-  artifact; import it here.
-- **Current repo** → prefer [`existing-ui-audit`](../existing-ui-audit/SKILL.md);
-  it already inventories the codebase and can emit the same `design-system.json`
-  shape, so the import path is identical either way.
+Import contract, the `/design-system:import` supply path, the five-step procedure and the
+two source shapes — read only when an import is requested:
+[`references/import-procedure.md`](references/import-procedure.md). Full schema:
+[`references/design-system-json.md`](references/design-system-json.md).
 
 ## How the design skills consume these documents
 

@@ -360,3 +360,101 @@ re-ask bound whose removal produced `Tests  no tests` rather than a failing asse
 Every null names the unavailable capability, the affected claims, the evidence boundary and
 the reopening condition — a shape the council adopted unanimously in session 1 and that was
 applied to all nine of them.
+
+# Run C — 2026-08-23 (frontend-priority continuation)
+
+Same mandate as Run B, redirected mid-run by the maintainer: *"konzentriere dich vor allem
+auf die frontend roadmapy, playbook, etc."* — so the queue was re-ordered to the frontend
+roadmaps and `road-to-repo-playbooks` ahead of everything else. Zero questions to the user;
+every owner-reserved blocker went to the AI council.
+
+## Pull requests
+
+| PR | Roadmap | State | Steps |
+|---|---|---|---|
+| [#1589](https://github.com/event4u-app/agent-config/pull/1589) | `road-to-frontend-fidelity-calibration` | **merged** | Phase 0 (3 of 36) — roadmap stays open |
+| [#1588](https://github.com/event4u-app/agent-config/pull/1588) | `road-to-repo-playbooks` | open, retitled `roadmap: complete repo-playbooks` | **complete, archived** — 13 steps, 6 AC |
+| [#1590](https://github.com/event4u-app/agent-config/pull/1590) | `road-to-component-library-lifecycle` | open | Phases 0–1 (5 of 23) — roadmap stays open |
+
+## Council decisions — 3 blockers, all 2/2 convergent, $0.04
+
+Every one was `Owner: maintainer` and would otherwise have ended the run.
+
+| Blocker | Verdict |
+|---|---|
+| `b-detector-license-verification` | **(b)** derive the detector independently from this tree's own token model, own-analysis label, no external shape taken — independent derivation *removes* the licensing question rather than answering it. Consequence pinned: nothing is added to `provenance/borrows.jsonl`, and that absence **is** the decision. |
+| `b-page-capture-primitive` | **(b)** render-dependent dimensions ship as recorded nulls and are cut from the Phase-2 matrix in 3.3, with the four-part null (unavailable capability / affected claims / evidence boundary / reopening condition). Step 7.2's obligation follows and is **not** discharged by it: 3.3 must enumerate every dimension it cut. |
+| `b-bundler-choice-for-fixture` | an explicit **combination** — (c) for the source-consumed fixture plus a *static built-package-surface* fixture modelled after (b), no bundler installed or run. Both reviewers independently rejected the single-package alternative **and** the name "buildable" for the second root: a hand-authored `dist/` is a built-package *surface*, and that name is what would have made the test overclaim. |
+
+## What I got wrong, and did not quietly fix
+
+This section is the one worth reading. Five defects were mine; each is recorded at the step
+it belongs to as well as here.
+
+1. **A fabricated measurement row.** The 4.2 post-measurement table claimed
+   `grep -rn 'turbo gen'` over the work engine went from 0 hits to non-zero. Running it says
+   **0**. The lane hard-codes no vendor command at all — it reads `invokes` ids out of the
+   repository's own playbooks at runtime, so a vendor-string grep finds nothing *by design*,
+   and a non-zero reading would have meant the opposite of what the phase wanted. The number
+   was stated without being run, in the direction that flattered the change. Corrected in
+   place, with the reason, in both the evidence file and the roadmap.
+2. **Two hollow passes.** Adding two `ROUTING_MATRIX` rows made the fidelity suite green
+   while asserting nothing — `mandate` was a field no test read. And in the playbooks work,
+   removing the pointer carve-out left its suite green: the fixture's link label carried no
+   step text, so nothing distinguished carve-out from no carve-out. Both fixed by making the
+   fixture carry the hardest case (a pointer whose *label quotes the step*), after which
+   removing the guard is RED.
+3. **A guard with unknown sensitivity.** The length guard in the restatement detector was
+   untested — the needle was long enough that removing the guard changed nothing. Now
+   exercised with a short id (`gen`) against prose containing *"generator"*.
+4. **A detector matching the wrong field.** The first restatement detector matched a step's
+   *title*. Titles are generic by construction (every generator step in the fixture is *"Run
+   the repository's own generator"*), so it reported one prose line once per playbook
+   (`expected 2 to be 1`) and named neither procedure. Rewritten to match the invoked **id**.
+5. **A dropped `git stash` ate a note and a set of skill edits.** Switching branches mid-step
+   stashed uncommitted work; the pop said *"The stash entry is kept"* and the entry was then
+   dropped. `git fsck --unreachable` found no matching commit. Recovered by redoing the edits
+   from the session record. The lesson is the ordering: **commit before switching branches**,
+   and treat a `pop` that does not say *"Dropped"* as a failed pop.
+
+## Gate failures fixed by repair, never by weakening
+
+No baseline was raised, no gate skipped, no allowlist entry added.
+
+| Gate | What it caught | Fix |
+|---|---|---|
+| `lint_regression` / `rule_too_large` | `design-fidelity.md` at 218 lines, hard limit 200 | migrated the table + citation to the mechanics guideline; the rule sits **at** 200 |
+| `check_depth_budget` | the migration target then exceeded its 16,000-char ceiling — a *fifth* over-ceiling file | cut to the table plus two pointer sentences (15,892). Both the rule and its overflow lane are now near their caps, recorded so the next change knows |
+| `lint_framework_leakage` | a generic skill naming a Node manifest as *the* source of truth | rewrote the skill as **ecosystem-neutral** (nox / make / just named as covered-but-not-yet-read) rather than taking the offered suppression, whose reason field would have recorded something untrue |
+| `lint_consumer_internal_refs` | the skill told a consumer to run a maintainer-only script they never receive | stated the split: script maintainer-side, consumer follows the grading rules by hand |
+| `check_artefact_count_messaging` | five count-shaped prose positions | two live counts updated; one **generated** figure re-derived; one **dated measurement** rewritten as *"the then-119 governed-rule total"* — bumping a measured denominator to today's number would turn a measurement into a false claim |
+| projected-rule-link gate | the new rule linked `../../docs/` | ADR cited by number, unlinked: `docs/` is not projected into a consumer install, and `check_references` passes on such a link because the target exists *here* |
+| `adr-evidence-census` | stale after adding ADR-244 | regenerated. Its proposed `E0` against the ADR's declared `E2` is the **expected** output, not a contradiction: the census never raises a grade above E0 on a council marker, structurally |
+
+## Environment defect worth recording
+
+`task preflight` cannot go green in a **worktree** on a machine with a global install: the
+worktree's `generate-tools` emits the full rule projection (114 files) while the main checkout
+emits the partitioned 15, so `check_rule_layer_partition` and the bridge-derivation gate
+deadlock — each red in the state the other requires. CI has neither layer and is unaffected.
+Every push in this run therefore went out from the main checkout, whose projection is
+partitioned. Clearing the worktree's projection satisfies one gate and breaks the other; this
+is a real defect in the emitter's partition-awareness, not a local misconfiguration.
+
+## Descopes
+
+None. Nothing in this run used the mandate's §5 fallback: no blocker survived execution,
+council decision, and re-scoping.
+
+## What is NOT done
+
+- `road-to-frontend-fidelity-calibration` — 33 of 36 steps. Phases 1–7 untouched; the
+  render-dependent dimensions are a recorded null with a reopening condition.
+- `road-to-component-library-lifecycle` — 18 of 23. Phases 2–5 (Storybook as an artefact,
+  registry publishing, `DESIGN.md` inventory, the compatibility refresh) untouched.
+- `road-to-frontend-power` (60 steps) — not started.
+- `road-to-chained-clip-continuity-and-provider-truth` (30) — not started.
+- The non-frontend remainder, deprioritised by the redirection:
+  `road-to-agentic-engineering-assurance` (53), `road-to-trigger-delivered-rule-bodies` (34),
+  `road-to-roadmap-situational-awareness` (29), `road-to-role-scoped-spawn-profiles` (28),
+  `road-to-skill-delivery-over-mcp` (25), and `road-to-council-evidence-integrity` 2.3–5.
