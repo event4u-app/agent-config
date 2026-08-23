@@ -121,7 +121,7 @@ describe('E2.3 — Tier-1 staleness on data already opened', () => {
 
     it('reports and never repairs — the entry carries a reason, not a patch', () => {
         const s = staleness([['DESIGN.md', '`--gone`']], declared);
-        expect(s[0].reason).toMatch(/declared by no UI file/);
+        expect(s[0]!.reason).toMatch(/declared by no UI file/);
         expect(s[0]).not.toHaveProperty('fix');
     });
 });
