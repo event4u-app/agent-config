@@ -289,7 +289,7 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 9 observer · 0 local-only · 83 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 9 observer · 0 local-only · 82 undeclared (no `enforced_by` yet).
 
 `denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
 
@@ -315,6 +315,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `onboarding-gate` | observer | `hook:onboarding-gate` |
 | `output-discipline` | validator | `validator:src/scripts/lint_output_slop.ts` |
 | `persona-governance` | validator | `validator:src/scripts/lint_persona_governance.ts` |
+| `playbook-precedence` | none | `instruction-only: no gate can tell a playbook-first run from a skill-first one — both produce a diff, and which answer was consulted leaves no artefact` |
 | `preservation-guard` | validator | `validator:src/scripts/check_condensation.ts`<br>`validator:src/scripts/skill_linter.ts` |
 | `recurring-criticism` | none | `instruction-only: the earlier disposition, the three outcomes and the hardening are all prose; the self-repair occurrence counter covers only detector-matched defects` |
 | `roadmap-progress-sync` | observer | `hook:roadmap-progress` |
@@ -333,7 +334,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (83) carry no row — an honest gap beats a false claim.
+Undeclared rules (82) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 77 ledger entries · 50 backed · 21 unbacked inventory · 6 resolved-null.
 
