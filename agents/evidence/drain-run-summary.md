@@ -17,7 +17,7 @@ question the roadmaps reserve.
   synthesis beat either original position.
 - **4 transfer stubs** created, each with a named promotion probe and a
   **measured** blocking cost.
-- **3 real defects found and fixed** that no roadmap step had asked for.
+- **3 real defects found and fixed** that no roadmap step had asked for, plus 4 of my own — including three that only remote CI can catch.
 
 ## The correction that shaped the whole run
 
@@ -141,6 +141,26 @@ measurement) and pack-fitness Phase 3 (dependency operationally deferred).
 - **A stale `dist/` projection.** `dist == rewrite(src)` is a CI gate; the
   pre-commit sync regenerates, and the regenerated file must be committed or the
   push is refused.
+- **Three defects that ONLY remote CI catches**, all on #1573 and all worth the
+  next run's attention because `task preflight` and the pre-push hook were green
+  on every one:
+  - `actions/upload-artifact@v4` — a **tag**. This repo SHA-pins every action and
+    `tests/contracts/ci_supply_chain.test.ts` asserts it. The failure read
+    *"dependabot claims SHA pinning: true, unpinned refs: 1"* on four shards,
+    naming the contract rather than the file. Preflight does not run the contracts
+    suite.
+  - **`gate-hardening:unhardened-scan-scope` targets ZERO** — mandatory, not a
+    floor. A new gate that routes through neither `_lib/scan_scope` nor a
+    registered floor reds immediately. Fixed by `reportScanned` with *readings* as
+    the unit: zero readings is a **dead scope**, because a store that parsed to no
+    records reads identically to a store nobody has written.
+  - **`actionlint`**: `matrix.os` referenced in a job with no matrix. Neither
+    preflight nor the pre-push hook invokes actionlint; it runs in CI on changed
+    workflow files only.
+- **A reference to a file that does not exist yet, by design.** The published
+  distribution is rendered from an empty store, so citing its path broke
+  `check_references` in CI while passing locally — the local and CI exclusion sets
+  differ. Marked `ref-ignore` with the reason inline rather than silenced.
 
 ## Verification standard applied throughout
 
