@@ -136,25 +136,25 @@ labels path collisions separately, and the probe reports roadmap-to-PR file
 overlap. **Rollback:** the field is additive — dropping the writer restores
 byte-identical records.
 
-- [ ] **3.1 Extend the session record with `owned_paths`, additively.** Use
+- [x] **3.1 Extend the session record with `owned_paths`, additively.** Use
       the shape `turn_end_refusals` already established at
       `session_register_hook.ts:542-548`, which states exactly the guarantee
       needed: a session with no paths leaves the record **byte-identical** to
       what it was before the field existed. Current fields are at `:533-541`.
       Source of the set: the § 3b pre-scan's owned paths, written by
       `sessions:claim --paths`.
-      verify: `npx vitest run tests/scripts/session_register_hook.test.ts` asserts that a record with no paths is byte-identical to the pre-change fixture and that one with paths round-trips.
-- [ ] **3.2 `sessions:list` prints path collisions** between this session's
+      verify (discharged): **the step's named test file does not exist** — there is no `tests/scripts/session_register_hook.test.ts`; the suite for both `session_register.ts` and `session_register_hook.ts` is `tests/scripts/session_register.test.ts`. Extended that file rather than creating the named one (extend before create). `npx vitest run tests/scripts/session_register.test.ts` → **101 passed**, including `leaves a record byte-identical to the pre-change fixture when no paths are declared` (asserts the key list is the frozen seven AND `JSON.stringify` equality against a hand-written fixture, so the guarantee does not depend on the code under test) and `round-trips a declared path set through the claim file into the record`. Sensitivity proven: writing `owned_paths` unconditionally and dropping the `filter(...).sort()` turned **4 tests red** — `expected [ 'session_id', 'platform', …(6) ] to deeply equal [ …(5) ]`, `expected true to be false`, `expected [ …(2) ] to have a length of 1 but got 2`, `expected [ Array(1) ] to deeply equal []`; restored from a `cp` backup, green at 101/101. Surfaces touched beyond the step's own list: `RoadmapClaim.paths`, `ResolvedClaim.paths`, `_read_claim_file`, `resolve_claim` (all three return sites), `sessions:claim --paths`, plus the doc surfaces `/roadmap:next § 3b` and `docs/guides/parallel-sessions.md`.
+- [x] **3.2 `sessions:list` prints path collisions** between this session's
       owned paths and each live peer's, labelled `PATH OVERLAP`, kept distinct
       from the slug and branch labels.
-      verify: a fixture with two records sharing exactly one path prints exactly one `PATH OVERLAP` line, and zero when the paths are disjoint.
-- [ ] **3.3 The probe computes roadmap-to-open-PR file overlap by REUSING the
+      verify (discharged): `path_overlap_lines` is exported pure and pinned by four cases in `tests/scripts/session_register.test.ts` — exactly one line for two peers where one shares exactly one path (asserting the shared path IS named and the peer's non-shared path is NOT), zero for disjoint sets, zero when this session declared nothing, and `kinds === ['roadmap','branch','path']` so the three labels stay distinct and ordered stop → coordinate → reorder. `CollisionKind` gained `'path'` last on purpose: `foreign_sessions_block` filters on `'roadmap'`/`'branch'` and is byte-unchanged in behaviour.
+- [x] **3.3 The probe computes roadmap-to-open-PR file overlap by REUSING the
       owned-path sets `roadmap-process-loop.md:314-326` already derives.** No
       second derivation — extend before create. Where no pre-scan set exists,
       fall back to the cited-path heuristic and **label which source was
       used**. Conservative direction is the one the set contract already
       states: overlap resolves toward serial.
-      verify: over a frozen fixture (committed PR file lists plus roadmap bodies) the probe reports the expected overlap pairs and the source label; the assertion is on the fixture, never on a live PR number, so it cannot decay the way D1b decayed.
+      verify (discharged): `computeOverlaps` is pure over two in-test maps and asserted three ways (a pair with its `cited-path` label, a `pre-scan` label, and an empty result on disjoint sets); `probe wiring` and `registerOwnedPaths` assert the full path through `probe()` over a temp roadmap tree and an injected `gh` response. **No assertion anywhere names a live PR number** — the whole suite runs offline, which is the D1b property. On the "no second derivation" clause: the loop's § 3d set is model-derived and exists nowhere on disk, so the reuse is real only once it is published — `registerOwnedPaths` reads `owned_paths` off the live session records (§ 3.1), an explicit `--owned-paths <file.json>` outranks it, and only when neither answers does the labelled `cited-path` fallback run. Sensitivity proven: removing the `?? fromRegister.get(r.slug)` fallthrough reds the pre-scan-outranks-heuristic case.
 
 ## Phase 4 — Authoring declares its relations
 

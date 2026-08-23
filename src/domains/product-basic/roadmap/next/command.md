@@ -165,8 +165,16 @@ GOODHART MOVE THIS PACKAGE'S OWN DISCIPLINE FORBIDS.
 ### 3b. Claim the pick, so the next session's screen sees it
 
 ```bash
-agent-config sessions:claim <roadmap-slug>
+agent-config sessions:claim <roadmap-slug> [--paths src/a.ts,src/b.ts]
 ```
+
+`--paths` publishes the run's owned-path set — the same set the § 2 screen
+derived — into the session record as `owned_paths`. It is what turns the third
+collision axis on: without it a peer editing the same file under a different
+roadmap and a different branch name is invisible on every axis, which is the
+shape of the two duplications the branch axis already failed to catch. Declaring
+nothing degrades to today's behaviour exactly, and the field is absent rather
+than empty in the record.
 
 Immediately after the pick, before any branch or commit. This writes the slug
 into `agents/runtime/state/roadmap-claim-<session>.json`; the next heartbeat lifts

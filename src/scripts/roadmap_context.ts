@@ -443,10 +443,16 @@ export function probe(opts: ProbeOptions): RoadmapContext {
     const hits =
         subject === null ? [] : keywordHits(roadmaps, slugKeywords(subject), subject);
 
+    // Pre-scan sets, unioned from two sources and NEVER re-derived. The loop's
+    // § 3d overlap derivation runs in the model's head; the register is where it
+    // becomes readable by anything else — a session that ran
+    // `sessions:claim --paths` has published exactly that set. An explicit
+    // `--owned-paths` file wins, because a caller that names a set means it.
+    const fromRegister = registerOwnedPaths(sessions.records);
     const owned = new Map<string, { paths: readonly string[]; source: OverlapSource }>();
     const subjects = subject === null ? roadmaps.filter((r) => r.dir === 'active') : roadmaps.filter((r) => r.slug === subject);
     for (const r of subjects) {
-        const pre = opts.ownedPaths?.get(r.slug);
+        const pre = opts.ownedPaths?.get(r.slug) ?? fromRegister.get(r.slug);
         if (pre !== undefined && pre.length > 0) {
             owned.set(r.slug, { paths: pre, source: 'pre-scan' });
             continue;
@@ -503,6 +509,30 @@ function readSessions(root: string): SessionsView {
         /* a git failure costs the branch axis, not the whole report */
     }
     return { records, other_worktree_branches: other };
+}
+
+/**
+ * Owned-path sets published by live sessions, slug → paths.
+ *
+ * This is the "extend before create" half of § 3.3: no second derivation exists
+ * anywhere: the set is whatever a session declared through
+ * `sessions:claim --paths`, and a slug with no declaration simply is not in the
+ * map, so the caller falls through to the labelled cited-path heuristic.
+ */
+export function registerOwnedPaths(records: readonly unknown[]): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    for (const r of records) {
+        if (r === null || typeof r !== 'object') continue;
+        const rec = r as Record<string, unknown>;
+        const slug = rec['roadmap_slug'];
+        const paths = rec['owned_paths'];
+        if (typeof slug !== 'string' || slug === '' || !Array.isArray(paths)) continue;
+        const clean = paths.filter((x): x is string => typeof x === 'string' && x.trim() !== '');
+        if (clean.length === 0) continue;
+        const prior = out.get(slug) ?? [];
+        out.set(slug, [...new Set([...prior, ...clean])].sort());
+    }
+    return out;
 }
 
 /** The human report. One compact block — a refresh runs at every phase boundary. */

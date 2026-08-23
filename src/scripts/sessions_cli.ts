@@ -45,12 +45,14 @@ import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from './_lib/fs_atomic.js';
 import {
+    classify_collisions,
     iso_now,
     read_live_records,
     register_dir,
     safe_stem,
     ttl_is_measured,
     ttl_seconds_for,
+    type SessionRecord,
 } from './_lib/session_register.js';
 import { claim_file, claim_is_stale, claim_read_paths } from './session_register_hook.js';
 
@@ -62,7 +64,7 @@ function usage(): number {
             '                                           live sessions, plus unmerged branches',
             '                                           held by other worktrees (--branches adds',
             '                                           that axis to the JSON form)',
-            '  agent-config sessions:claim <slug>       claim a roadmap for this session',
+            '  agent-config sessions:claim <slug> [--paths <a,b,…>]       claim a roadmap for this session',
             '  agent-config sessions:claim <slug> --force   claim it even though a peer holds it',
             '  agent-config sessions:claim --release    drop this session\'s roadmap claim',
             '',
@@ -168,6 +170,30 @@ export function other_worktree_branches_detailed(
     return { rows, filtered: unmerged !== null };
 }
 
+/**
+ * `PATH OVERLAP` lines for this session against every live peer.
+ *
+ * Kept a separate, separately-labelled line rather than folded into the slug or
+ * branch report, because the three collisions call for three different moves: a
+ * slug collision means stop, a branch collision means coordinate, a path
+ * collision means reorder — take the disjoint steps first if ordering allows,
+ * otherwise name it and continue. The register is advisory and never a lock.
+ *
+ * Pure over the record arrays so the fixture test needs no register on disk.
+ */
+export function path_overlap_lines(
+    others: readonly SessionRecord[],
+    here: { branch: string | null; roadmap_slug: string | null; owned_paths?: readonly string[] },
+): string[] {
+    return classify_collisions(others, here)
+        .filter((c) => c.kind === 'path')
+        .map(
+            (c) =>
+                `  PATH OVERLAP  ${c.record.session_id}  ·  ${(c.paths ?? []).length} shared path(s): ` +
+                `${(c.paths ?? []).join(', ')}`,
+        );
+}
+
 function cmd_list(argv: string[], root: string): number {
     const as_json = argv.includes('--json');
     const dir = register_dir(root);
@@ -229,6 +255,21 @@ function cmd_list(argv: string[], root: string): number {
         );
     }
     write_held_branches(held, filtered);
+    // The path axis. Silent when this session has declared no owned paths, which
+    // is every session that has not run `sessions:claim --paths`.
+    const sid = env_session_id();
+    const mine = sid === null ? undefined : records.find((r) => r.session_id === sid);
+    const overlaps = path_overlap_lines(
+        records.filter((r) => r.session_id !== mine?.session_id),
+        {
+            branch: mine?.branch ?? null,
+            roadmap_slug: mine?.roadmap_slug ?? null,
+            ...(mine?.owned_paths !== undefined ? { owned_paths: mine.owned_paths } : {}),
+        },
+    );
+    if (overlaps.length > 0) {
+        process.stdout.write(`\n${overlaps.join('\n')}\n`);
+    }
     process.stdout.write(
         'Advisory only — this register is not a lock, and an idle session\n' +
             'disappears from it after its TTL although its user may return.\n',
@@ -432,7 +473,15 @@ function cmd_claim(argv: string[], root: string): number {
         );
         return 0;
     }
-    const slug = argv.find((a) => !a.startsWith('-'));
+    const paths_idx = argv.indexOf('--paths');
+    const paths_arg = paths_idx >= 0 ? (argv[paths_idx + 1] ?? '') : '';
+    const owned_paths = paths_arg
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => x !== '');
+    // The slug is the first bare token that is not the VALUE of --paths; without
+    // this the comma list would be read as the slug on `claim --paths a,b road-to-x`.
+    const slug = argv.find((a, i) => !a.startsWith('-') && i !== paths_idx + 1);
     if (slug === undefined || slug.trim() === '') {
         return usage();
     }
@@ -476,7 +525,19 @@ function cmd_claim(argv: string[], root: string): number {
     try {
         write_atomic(
             target,
-            `${JSON.stringify({ slug: slug.trim(), written_at: iso_now(), session_id: sid }, null, 2)}\n`,
+            `${JSON.stringify(
+                {
+                    slug: slug.trim(),
+                    written_at: iso_now(),
+                    session_id: sid,
+                    // Absent, not empty, when nothing was declared: the whole
+                    // additive guarantee of `owned_paths` rests on the field not
+                    // being written at all in the ordinary case.
+                    ...(owned_paths.length > 0 ? { paths: owned_paths } : {}),
+                },
+                null,
+                2,
+            )}\n`,
         );
     } catch (exc) {
         process.stderr.write(`sessions:claim: could not write the claim — ${String(exc)}\n`);
@@ -484,6 +545,9 @@ function cmd_claim(argv: string[], root: string): number {
     }
     process.stdout.write(
         `Claimed "${slug.trim()}" for this session. It becomes visible to other\n` +
+            (owned_paths.length > 0
+                ? `Declared ${owned_paths.length} owned path(s); peers sharing one are labelled PATH OVERLAP.\n`
+                : '') +
             'sessions on the next turn, when the heartbeat lifts it into the register.\n' +
             (sid === null
                 ? 'NOTE: this host exports no session id, so the claim is scoped to this\n' +

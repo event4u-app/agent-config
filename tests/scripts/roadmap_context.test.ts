@@ -7,6 +7,7 @@
  * population halved inside six days, so an assertion pinned to a real PR number
  * would rot before the next release.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -21,12 +22,14 @@ import {
     keywordHits,
     parsePrList,
     probe,
+    registerOwnedPaths,
     renderText,
     roadmapTailBranches,
     slugKeywords,
     type Exec,
     type OverlapSource,
 } from '../../src/scripts/roadmap_context.js';
+import { register_dir } from '../../src/scripts/_lib/session_register.js';
 
 let root = '';
 
@@ -45,6 +48,11 @@ afterEach(() => {
 });
 
 const OFFLINE: Exec = () => ({ code: 1, stdout: '' });
+
+/** A real git repo, so `register_dir` resolves and the register assertion is unconditional. */
+function initRepo(): void {
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root, stdio: 'ignore' });
+}
 
 describe('parsePrList — PR file-set extraction', () => {
     it('extracts number, title, head branch and the changed-file set', () => {
@@ -228,6 +236,65 @@ describe('probe wiring — the fallback source is used and labelled', () => {
         });
         expect(ctx.overlaps).toEqual([
             { roadmap: 'road-to-thing', pr: 42, paths: ['src/scripts/owned.ts'], source: 'pre-scan' },
+        ]);
+    });
+});
+
+describe('registerOwnedPaths — the pre-scan set becomes readable, never re-derived', () => {
+    it('maps a slug to the paths a live session published, deduped and sorted', () => {
+        const out = registerOwnedPaths([
+            { roadmap_slug: 'road-to-a', owned_paths: ['src/b.ts', 'src/a.ts'] },
+            { roadmap_slug: 'road-to-a', owned_paths: ['src/a.ts', 'src/c.ts'] },
+            { roadmap_slug: null, owned_paths: ['src/x.ts'] },
+            { roadmap_slug: 'road-to-b' },
+            'not a record',
+        ]);
+        expect([...out.entries()]).toEqual([['road-to-a', ['src/a.ts', 'src/b.ts', 'src/c.ts']]]);
+    });
+
+    it('labels a register-sourced set as pre-scan, outranking the cited-path heuristic', () => {
+        initRepo();
+        write('agents/roadmaps/road-to-thing.md', '# Road to thing\n\nTouch `src/scripts/cited.ts`.\n');
+        const exec: Exec = (cmd) =>
+            cmd === 'gh'
+                ? {
+                      code: 0,
+                      stdout: JSON.stringify([
+                          {
+                              number: 7,
+                              title: 't',
+                              headRefName: 'h',
+                              files: ['src/scripts/cited.ts', 'src/scripts/declared.ts'],
+                          },
+                      ]),
+                  }
+                : { code: 0, stdout: '' };
+        const reg = register_dir(root);
+        expect(reg).not.toBeNull();
+        fs.mkdirSync(reg as string, { recursive: true });
+        fs.writeFileSync(
+            path.join(reg as string, 'peer.json'),
+            JSON.stringify({
+                session_id: 'peer',
+                platform: 'claude',
+                worktree: root,
+                branch: 'main',
+                roadmap_slug: 'road-to-thing',
+                started_at: new Date().toISOString(),
+                last_seen: new Date().toISOString(),
+                owned_paths: ['src/scripts/declared.ts'],
+            }),
+        );
+        const ctx = probe({ repoRoot: root, roadmap: 'road-to-thing', exec });
+        // The register set wins: the cited-path file is NOT in the pair, and the
+        // label says which source answered.
+        expect(ctx.overlaps).toEqual([
+            {
+                roadmap: 'road-to-thing',
+                pr: 7,
+                paths: ['src/scripts/declared.ts'],
+                source: 'pre-scan',
+            },
         ]);
     });
 });
