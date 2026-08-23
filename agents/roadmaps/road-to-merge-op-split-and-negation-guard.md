@@ -400,7 +400,7 @@ until a prompt lands in the gap.
    the **block-side** classifier — `PASTED_COMMANDS` has no `gh api` entry at
    all. Both corrected, with the correction recorded at the assertion.
 
-### Phase 3 fit the cap exactly
+### How Phase 3 fit the cap exactly
 
 `roadmap-writing/SKILL.md` was **at** 400 of a 400 cap, so the carve-out had to
 be net-neutral. It is: 400 lines after, `skill_linter` 1 pass / 0 warn, against a

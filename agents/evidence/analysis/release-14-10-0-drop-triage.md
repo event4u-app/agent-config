@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+<!-- analyzed: 2026-08-23 | pin: 407915361 (v14.10.0) | corpus: 7,981 lines / 12 reviewer reports + 11 attachments -->
 # Analysis — the 14.10.0 reviewer drop, triaged
 
 > **Source:** `agents/tmp.old/release-4.10.0` — twelve files: a 7,981-line
