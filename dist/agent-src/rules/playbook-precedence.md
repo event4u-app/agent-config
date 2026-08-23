@@ -21,8 +21,7 @@ packs: [engineering-base]
 
 # Playbook Precedence
 
-A shipped skill is a generic answer to a generic question. A **playbook**
-([ADR-244](../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md)) is *this*
+A shipped skill is a generic answer to a generic question. A **playbook** (ADR-244) is *this*
 repository's answer to the same question, carrying decisions the repository already made —
 file layout, barrel exports, test co-location, naming — that no generic skill can know.
 When both match a task, running the generic one produces output that looks right and is
@@ -85,6 +84,6 @@ maintainer-side record.
 ## See also
 
 - [`playbook-authoring`](../skills/playbook-authoring/SKILL.md) — writes the playbooks and owns the grade.
-- [ADR-244](../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md) — the artefact class, its home, and the two deferred generator kinds.
+- **ADR-244** — the artefact class, its home, and the two deferred generator kinds. Cited by number rather than linked: `docs/` is not projected into a consumer install, so a relative link here resolves in this repository and nowhere else.
 - [`agents-md-thin-root`](../skills/agents-md-thin-root/SKILL.md) § Workspace files — the per-workspace pointer list.
 - [`standards-from-config`](../skills/standards-from-config/SKILL.md) — the Class-A rule this applies to procedure.

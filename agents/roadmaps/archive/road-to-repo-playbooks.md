@@ -322,6 +322,14 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       name is withheld under that rule, with the attribution left where it already lives on
       the maintainer side. `check_no_external_sources` would not have caught it — the
       project is not on the denylist — so this is the rule binding, not the gate.
+
+      **A second projection defect, caught by CI and not by preflight:** the rule linked the
+      ADR as `../../docs/decisions/…`, and the projected-rule-link gate forbids `../../docs/`
+      outright — `docs/` is not projected into a consumer install, so that link resolves in
+      this repository and nowhere else. Fixed the way every other rule already does it: **cite
+      the ADR by number, unlinked**, with the reason stated at the citation. The lesson
+      generalises past this rule — a rule body may not reach outside the projected tree, and
+      `check_references` passes on such a link because the target exists *here*.
 - [x] **2.2 UI lane reads playbooks.** `directives/ui/scaffold.ts` and
       `apply.ts` resolve playbook files in the playbook home whose `task` matches the
       directive verb (`scaffold`, `apply`) and `scope` matches
