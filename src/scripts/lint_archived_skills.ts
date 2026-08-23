@@ -285,10 +285,10 @@ function main(): number {
  * asked for this (`road-to-skill-link-integrity-and-manifest-sync` Phase 1
  * Step 3) named `src/scripts/new_skill.ts --archive` as the extension point,
  * on the premise that it is "a creation path with no symmetric removal path".
- * That premise is false: `new_skill.ts` scaffolds into
- * `packages/<pack>/.agent-src.uncondensed/` and its `main()` returns exit 2
- * with `error: no packages/ tree found` in this tree, because ADR-051 moved
- * skill authoring to `src/skills/`. A mode added there could not run.
+ * That premise is false: `new_skill.ts` scaffolds into a `packages/<pack>/`
+ * container that ADR-051 retired, and its `main()` returns exit 2 with
+ * `error: no packages/ tree found` in this tree, because skill authoring moved
+ * to `src/skills/`. A mode added there could not run.
  *
  * The obligation is a CI property, not a tool property, and the distinction is
  * the reason the ledger is empty: nothing forces a maintainer or an agent to
