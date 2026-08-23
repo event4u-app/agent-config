@@ -208,7 +208,10 @@ stays blocked, correctly, by `b-composite-ceiling-value`.
 
 
       **SHIPPED 2026-08-23** as `--publish`, rendering
-      `agents/evidence/reports/per-turn-composite-distribution.md`: min / p50 /
+      `agents/evidence/reports/per-turn-composite-distribution.md` <!-- ref-ignore -->
+      — the file does not exist yet **by design**, because it is written from the
+      store and the store is still empty; a committed placeholder would be a
+      distribution nobody measured. It carries min / p50 /
       p95 / max / spread, a per-session table, and the dropped-reading count named
       rather than averaged away.
 

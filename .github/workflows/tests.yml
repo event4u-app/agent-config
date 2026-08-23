@@ -373,7 +373,7 @@ jobs:
         # rather than implied — a store nothing fills would be the mechanism this
         # phase exists to avoid.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: composite-reading-${{ matrix.os || runner.os }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/composite-reading.jsonl
