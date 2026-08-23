@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Stop async split — cost versus saving
 
 **Measured:** 2026-08-23. **Machine:** one, `darwin-arm64`, Node v24. **Method:**
