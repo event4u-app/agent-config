@@ -120,31 +120,92 @@ Work aimed there lands in the guideline.
 
 ## Phase 0 — Separate artefact maturity from artefact mandate
 
-- [ ] **0.1 Write the near-miss fixture first.** Add `daf-wireframe-not-pixel`
+- [x] **0.1 Write the near-miss fixture first.** Add `daf-wireframe-not-pixel`
       to the `daf-*` set: a greyscale wireframe handover that must NOT be
       routed as a 1:1 spec, paired with the near-miss that must stay silent —
       a finished comp handed over with the word "wireframe" in the prose, which
       must still route strictly. Neither fixture may be authored after the
       behaviour it scores.
-      verify: `grep -rho "daf-wireframe-not-pixel" tests src docs | sort -u`
+      verify (discharged): `grep -rho "daf-wireframe-not-pixel" tests src docs | sort -u`
       returns the id, and `git show HEAD:src/rules/design-fidelity.md | grep -c
-      'wireframe'` still reports the pre-state trigger count.
-- [ ] **0.2 State the two axes in the rule.** `design-fidelity.md` gains a
+      'wireframe'` still reports the pre-state trigger count. **Both: the id resolves,
+      and the pre-state count is 1.**
+
+      Both fixtures written **before** the behaviour they score, and the pair is committed
+      together because the near-miss is the half that catches the over-broadness: a
+      finished full-colour comp whose prose says *"this replaces the wireframe we reviewed
+      last week"* must still route **strictly**. The word is a reference to a previous
+      artefact, not a declaration about this one.
+
+      The baseline is recorded per fixture, and the near-miss's is recorded as **PASS,
+      vacuously** — with no discriminator there is nothing to be over-broad, so it passes
+      before the change and must still pass after. Saying so is the point: it is the row
+      that fails if the discriminator ends up reading the prose.
+- [x] **0.2 State the two axes in the rule.** `design-fidelity.md` gains a
       maturity discriminator: a handover whose own artefact declares itself
       low-fidelity carries a **structure** mandate, never a **pixel** mandate,
       regardless of `design.fidelity_mode`. Cite the outbound rule that already
       knows this (`src/skills/wireframe/SKILL.md:109-111`) rather than
       re-deriving it.
-      verify: `./scripts-run src/scripts/check_references` is green and
-      `grep -n 'wireframe' src/rules/design-fidelity.md` shows the trigger
-      accompanied by the discriminator, not standing alone.
-- [ ] **0.3 Pin the near-miss in the routing matrix.**
+      verify (discharged): `./scripts-run src/scripts/check_references` is green and
+      `grep -n 'wireframe' src/rules/design-fidelity.md` shows the trigger accompanied by
+      the discriminator, not standing alone. **Green; the trigger at `:8` is now joined by
+      the § Two axes block at `:92`.**
+
+      The rule states the split as an Iron Law — *maturity is a property of the ARTEFACT,
+      mandate is a property of the INSTRUCTION* — and cites `wireframe`'s own § Gotchas
+      rather than re-deriving it: *"the wireframe's greyscale skeleton hard-codes
+      non-decisions."* A non-decision reproduced 1:1 is a decision nobody made, and a rule
+      that routes a wireframe as a pixel spec contradicts the skill that produced it.
+
+      Two clauses added that the step did not name, both because leaving them implicit is
+      how this trigger would go wrong: **the discriminator reads the artefact, never the
+      prose**, and **an artefact that does not declare its maturity is treated as
+      finished** — the safe direction, since guessing low-fidelity would authorise exactly
+      the redesign this rule exists to prevent.
+      **The rule is now AT its hard cap — 200 lines; `rule_too_large` fires at 201.** The
+      first draft landed at 218 and reddened `lint_regression`. The maturity→spec table, the
+      full `wireframe` quotation and the near-miss rationale were migrated to
+      `design-fidelity-mechanics § Artefact maturity` — this rule's established P4 pattern —
+      leaving the Iron Law and the two discriminator clauses where a session actually reads
+      them. Recorded because it constrains what comes next: **any further maturity prose goes
+      to the mechanics guideline, not to the rule.** There is no headroom left.
+
+      **The migration target had 735 chars of headroom, not the 1,347 the first pass used.**
+      `check_depth_budget` reds a FIFTH over-ceiling file, and `design-fidelity-mechanics.md`
+      sits at 15,265 against a 16,000-char ceiling — so the rule's own overflow lane is
+      nearly full. CI caught it on #1589 (`5 violation(s) against a baseline of 4`), not
+      preflight: the ratchet compares against `origin/main`, so the local run was green
+      until the branch was updated. The section was cut to the table plus two pointer
+      sentences (final file 15,892). Recorded because it constrains the same next step from
+      the other side: **the rule is at 200 lines AND its mechanics file is ~100 chars from
+      a ceiling** — further maturity prose needs its own file, not either of these two.
+
+      One trap worth naming, hit while trimming: reflowing the paragraph moved *"it is
+      treated as finished"* across a line break and took the 0.3 discriminator assertion RED.
+      A `toContain` over a hand-wrapped rule is whitespace-sensitive — the asserted clause
+      stays on one line.
+- [x] **0.3 Pin the near-miss in the routing matrix.**
       `tests/scripts/design_fidelity_routing.test.ts` gains both rows — the
       wireframe class that must route to structure, and the near-miss that must
       still route strictly. The rule's own § Routing already requires a
       near-miss row per new trigger class; this pays it.
-      verify: `npx vitest run tests/scripts/design_fidelity_routing.test.ts`
-      passes with both new rows present.
+      verify (discharged): `npx vitest run tests/scripts/design_fidelity_routing.test.ts`
+      passes with both new rows present. **29/29, up from 25.**
+
+      **The rows alone were a hollow pass and are not left that way.** `Row` gained an
+      optional `mandate` field, and adding two rows with it made the suite green while
+      asserting nothing — the field was data no test read. Four assertions now carry it:
+      the two rows exist and **disagree on mandate while agreeing on `routes`** (which is
+      exactly the shape of this phase's change — two rows agreeing on both would measure
+      nothing new); **absent mandate means `pixel`**, so no pre-existing row was silently
+      downgraded; the rule carries the artefact-not-prose clause and the
+      treated-as-finished default; and — the one that makes the near-miss mean something —
+      **a naive `includes('wireframe')` DOES misfire on the near-miss prompt**, so the row
+      guards a real failure mode rather than a hypothetical one.
+
+      **Sabotage-proven:** softening the artefact-not-prose clause to "matches the handover
+      text" takes the discriminator assertion RED. Restored, 29/29.
 
 ## Phase 1 — Inventory what is measured versus what is asserted
 
@@ -389,7 +450,7 @@ and `:14-15` add parallax scrub.
 
 ### blocker: b-page-capture-primitive
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer / host
 - **Blocks:** Phase 7 step 7.2, and any Phase 3 dimension whose measurement
   requires reaching a rendered page.
@@ -417,10 +478,27 @@ already records `daf-source-over-screenshot` as SKIPPED on 2026-08-13 "for want
 of a page-reaching capture primitive", and states that claiming a regression
 witness before then would be fabrication. The same constraint reaches every
 render-dependent fixture this roadmap would add.
+- **Resolution (2026-08-23) — option (b): the render-dependent dimensions ship as
+  recorded nulls and are cut from the Phase 2 matrix in step 3.3.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent.
+  This environment has no verified page-reaching capture primitive wired to the fixture
+  harness, so (a) is not decidable here.
 
+  The null carries the four parts this run records for every null: *unavailable
+  capability* — a page-reaching capture primitive on the host the fixtures run on;
+  *affected claims* — every dimension whose measurement requires reaching a rendered
+  page is unmeasured, and the Phase 2 matrix must not carry a score for it; *evidence
+  boundary* — the static-scoped dimensions are unaffected and measurable; *reopening
+  condition* — a capture primitive is confirmed available, at which point the
+  render-dependent fixtures are un-skipped against it and the cut dimensions return to
+  the matrix.
+
+  **Step 7.2's obligation follows from this and is not discharged by it:** the
+  render-dependent fixtures stay gated behind this blocker, and step 3.3's null record
+  must **name every dimension that was cut** — a null that does not enumerate what it
+  covers is indistinguishable from a matrix that never had those rows.
 ### blocker: b-detector-license-verification
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 step 3.1.
 - **What to do:** pick exactly one — (a) run the borrow-check skill over the two
@@ -444,7 +522,19 @@ The source's own harvest register flags two of its proposed detector shapes as
 license-unverified. `src/rules/code-provenance.md` is unambiguous: an unknown
 source license is never permissive by default. This blocker exists so the
 question is answered before the code is written, not after.
+- **Resolution (2026-08-23) — option (b): derive the detector independently from this
+  tree's own token model, own-analysis label, no external shape taken.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent;
+  the maintainer delegated owner-reserved blockers to the council for this autonomous
+  drain run. Reason: independent derivation **removes** the licensing question rather
+  than answering it, and is executable here with no external evidence to fetch. Option
+  (a) — run the borrow-check skill and record verdicts in `provenance/borrows.jsonl` —
+  stays available if a future implementation does take an external shape, and the
+  ledger row would then be required before any adapted code lands.
 
+  **Consequence for Phase 3 step 3.1, recorded here so it is not rediscovered:** the
+  detector carries an **own-analysis label** and cites no external shape. Nothing in
+  `provenance/borrows.jsonl` is added by this decision, and that absence is the
+  decision rather than an omission.
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
 

@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **719 public artefacts** shipped by
+Consumer-facing catalog of all **718 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (292)
+## Skills (291)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -218,7 +218,6 @@ are excluded.
 | skill | [`php-service`](../dist/agent-src/skills/php-service/SKILL.md) | official | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`pipeline-strategy`](../dist/agent-src/skills/pipeline-strategy/SKILL.md) | official | Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'. |
 | skill | [`pixar-storyteller`](../dist/agent-src/skills/pixar-storyteller/SKILL.md) | official | Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director. |
-| skill | [`playbook-authoring`](../dist/agent-src/skills/playbook-authoring/SKILL.md) | official | Use when a repo has its own generators, scripts or turbo tasks and an agent reaches for a generic skill instead — derive a Playbook context (ADR-244) from the real config, graded by the tree. |
 | skill | [`playwright-architect`](../dist/agent-src/skills/playwright-architect/SKILL.md) | official | Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'. |
 | skill | [`playwright-testing`](../dist/agent-src/skills/playwright-testing/SKILL.md) | official | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../dist/agent-src/skills/po-discovery/SKILL.md) | official | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
@@ -320,7 +319,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (118)
+## Rules (117)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -402,7 +401,6 @@ are excluded.
 | rule | [`package-ci-checks`](../dist/agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../dist/agent-src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../dist/agent-src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
-| rule | [`playbook-precedence`](../dist/agent-src/rules/playbook-precedence.md) | auto | A repository's own playbook outranks a shipped skill for the same task — run its configured steps first, and treat an observed playbook as advisory |
 | rule | [`prefer-enums-over-literals`](../dist/agent-src/rules/prefer-enums-over-literals.md) | auto | Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after |
 | rule | [`preservation-guard`](../dist/agent-src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../dist/agent-src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
@@ -649,7 +647,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (108)
+## Guidelines (109)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -722,6 +720,7 @@ are excluded.
 | guideline | [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-asset-discipline`](../docs/guidelines/design-asset-discipline.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
 | guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |

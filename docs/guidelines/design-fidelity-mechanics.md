@@ -148,35 +148,25 @@ always owed.
 Visual artifacts carry **real assets or honest placeholders — never fabricated
 brand evidence**. The design-surface instance of the no-invented-facts floor.
 
-- **Copy owned assets through the project's accepted path.** Reference or copy
-  project-owned assets (logos, icons, fonts, images) via the target project's
-  asset directory/pipeline — never hotlink a design-system's internal URL, never
-  bulk-copy a huge source folder. (fixtures: `daf-missing-asset`, `daf-external-asset-url`.)
-- **Third-party asset delivery is self-hosted by default — this section owns that
-  decision.** An asset whose delivery path crosses a third party (a webfont from
-  a font CDN, an icon set from a CDN, a hosted stylesheet) transmits the
-  **visitor's IP address** to that third party on every page view. Deliver it
-  through the target project's own route instead — the framework's font/asset
-  primitive, a bundled package, or a locally-served file. A third-party hotlink
-  is emitted **only** on an explicit consumer opt-in, and the opt-in is stated
-  with what it transmits — never chosen silently because it is the shorter line.
-  A discovery URL is not a delivery URL: keeping a font's browse/share link as
-  *where to find it* is fine. Ownership: this bullet is the single owner of the
-  third-party delivery decision ([`ADR-205`](../decisions/ADR-205-webfont-delivery-ownership.md));
-  emitters (`typography-system`, UI-apply directives, brand-asset paths) are
-  consumers and point here rather than restating it. (fixture:
-  `daf-webfont-delivery`.)
-- **Real imagery where inspection matters.** On visual pages/decks, use actual
-  product / place / object / state imagery where the image IS the proof (a
-  product screenshot, a real dashboard state). Decorative atmosphere is not proof
-  — never pass a stock-like or invented image off as the real product. An
-  invented product screenshot is fabricated evidence. (fixture: `daf-invented-screenshot`.)
-- **Icons follow the iconography floor** — no emoji-as-icon in serious UI, no
-  hand-rolled icon when a set exists; see the `iconography` skill § Iconography floor.
-- **Ask before adding material — no unrequested filler.** Never generate copy,
-  placeholder sections, or decorative blocks the user did not ask for to "complete"
-  a design. Brief silent on a region → surface the gap (`ask-when-uncertain`)
-  or leave an honest placeholder; never invent filler to fill space.
+Owned-asset paths, the third-party delivery decision this repository pins to
+self-hosting ([`ADR-205`](../decisions/ADR-205-webfont-delivery-ownership.md)),
+the real-imagery-as-proof floor, the iconography floor and the
+no-unrequested-filler clause — each with its `daf-*` fixture:
+[`design-asset-discipline`](design-asset-discipline.md).
+
+## Artefact maturity — the second axis
+
+The Iron Law and both discriminator clauses stay in
+[`design-fidelity`](../../src/rules/design-fidelity.md) § Two axes; this is the table.
+
+| The artefact declares | The spec is | The spec is NOT |
+|---|---|---|
+| low fidelity — greyscale, box-and-line, placeholder copy | layout · element set · hierarchy · states shown | greys · placeholder text · borders · exact spacing |
+| finished — colour, real copy, real assets | everything visible (the 1:1 floor, unchanged) | — |
+
+Grounded in [`wireframe`](../../src/skills/wireframe/SKILL.md) § Gotchas. The near-miss
+class is pinned in `ROUTING_MATRIX`, its rationale beside the assertions in
+`design_fidelity_routing.test.ts`.
 
 ## Provided-artifact precedence
 

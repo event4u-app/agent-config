@@ -1,6 +1,6 @@
 {
-    "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "05eeb5ca3",
+    "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
+    "measured_at_commit": "178b89235",
     "tokens_exact": true,
     "ceilings": {
         "active-remediation": 1601,
@@ -16,7 +16,7 @@
         "commit-conventions": 136,
         "context-hygiene": 2470,
         "copilot-routing": 128,
-        "design-fidelity": 2245,
+        "design-fidelity": 2540,
         "devcontainer-routing": 128,
         "docker-commands": 79,
         "domain-adoption-policy": 497,
@@ -53,21 +53,21 @@
             "rule": "roadmap-progress-sync",
             "from": 1424,
             "to": 2117,
-            "reason": "Iron Law 3 gained the preservation test that decides WHO resolves a deferred item \u2014 a routing table plus the two council refinements that make it binding (a follow-up naming a roadmap that does not exist yet fails closed to the user; a council resolution is recorded at the item or it did not happen) and the residual limit both authoring seats named. This is obligation surface, not explanation: the table decides a route and the two refinements are the conditions under which the route is legal, so a reader who reaches only the pointer target has already made the decision. It could not move to the pointer target either \u2014 roadmap-progress-mechanics.md sits at the 16,000-char check_depth_budget ceiling in this same change, and pushing prose there reds a count ratchet whose whole job is refusing a fifth over-ceiling file. The section was condensed once before this raise (2201 -> 2117) by turning four prose paragraphs into bullets; further cutting would delete substance, which preservation-guard forbids."
+            "reason": "Iron Law 3 gained the preservation test that decides WHO resolves a deferred item — a routing table plus the two council refinements that make it binding (a follow-up naming a roadmap that does not exist yet fails closed to the user; a council resolution is recorded at the item or it did not happen) and the residual limit both authoring seats named. This is obligation surface, not explanation: the table decides a route and the two refinements are the conditions under which the route is legal, so a reader who reaches only the pointer target has already made the decision. It could not move to the pointer target either — roadmap-progress-mechanics.md sits at the 16,000-char check_depth_budget ceiling in this same change, and pushing prose there reds a count ratchet whose whole job is refusing a fifth over-ceiling file. The section was condensed once before this raise (2201 -> 2117) by turning four prose paragraphs into bullets; further cutting would delete substance, which preservation-guard forbids."
         },
         {
             "date": "2026-08-20",
             "rule": "context-hygiene",
             "from": 2447,
             "to": 2470,
-            "reason": "One sentence, +23 tokens, and it is obligation surface rather than explanation: for CI, do not hand-write the wait loop. The mechanics went to the pointer target where this rule's own migration note already sends them (context-hygiene-mechanics gains the exit codes, the four not-settled states and the measured incident) \u2014 that move is what took the growth from +179 to +23, and the residue is the pointer itself, which cannot live in the guideline because a rule that does not name the helper is a rule nobody follows to it. The incident it encodes: a hand-written `until ! gh pr checks N | grep -q pending` exited when the API failed, because the error text contains no `pending`, and the session reported a settle that had not happened and retracted it in the next reply. The rule's neighbouring waiter law already says one waiter per condition; what it did not say is that the exit condition is the part that gets written wrong, which is why the helper is named here rather than described."
+            "reason": "One sentence, +23 tokens, and it is obligation surface rather than explanation: for CI, do not hand-write the wait loop. The mechanics went to the pointer target where this rule's own migration note already sends them (context-hygiene-mechanics gains the exit codes, the four not-settled states and the measured incident) — that move is what took the growth from +179 to +23, and the residue is the pointer itself, which cannot live in the guideline because a rule that does not name the helper is a rule nobody follows to it. The incident it encodes: a hand-written `until ! gh pr checks N | grep -q pending` exited when the API failed, because the error text contains no `pending`, and the session reported a settle that had not happened and retracted it in the next reply. The rule's neighbouring waiter law already says one waiter per condition; what it did not say is that the exit condition is the part that gets written wrong, which is why the helper is named here rather than described."
         },
         {
             "date": "2026-08-20",
             "rule": "roadmap-progress-sync",
             "from": 2117,
             "to": 2185,
-            "reason": "One sentence in Iron Law 1, +68 tokens, and it is obligation surface rather than explanation: `roadmap:progress` now passes `--archive`, so the law's operational meaning changed \u2014 a complete roadmap is moved by the same run instead of reported to a human, and the two exclusions a reader must know before trusting that (`--check` never archives, the PostToolUse hook never archives) are exactly the part that cannot be deferred to a pointer. The prose was NOT moved to docs/guidelines/agent-infra/roadmap-progress-mechanics.md, which is where this rule's migration note sends its mechanics, because that file has roughly a hundred characters of headroom under the 16,000-char depth ceiling and check_depth_budget is shrink-only with four files already over it \u2014 a FIFTH over-ceiling file reds, so moving 400 characters there would have traded this gate for that one. The full contract, the council record and its recorded dissent live with the code in src/agent-src/scripts/archival_sweep.ts, which is the third home and the one with room."
+            "reason": "One sentence in Iron Law 1, +68 tokens, and it is obligation surface rather than explanation: `roadmap:progress` now passes `--archive`, so the law's operational meaning changed — a complete roadmap is moved by the same run instead of reported to a human, and the two exclusions a reader must know before trusting that (`--check` never archives, the PostToolUse hook never archives) are exactly the part that cannot be deferred to a pointer. The prose was NOT moved to docs/guidelines/agent-infra/roadmap-progress-mechanics.md, which is where this rule's migration note sends its mechanics, because that file has roughly a hundred characters of headroom under the 16,000-char depth ceiling and check_depth_budget is shrink-only with four files already over it — a FIFTH over-ceiling file reds, so moving 400 characters there would have traded this gate for that one. The full contract, the council record and its recorded dissent live with the code in src/agent-src/scripts/archival_sweep.ts, which is the third home and the one with room."
         },
         {
             "date": "2026-08-20",
@@ -89,6 +89,13 @@
             "from": 845,
             "to": 934,
             "reason": "Six lines, +89 tokens, correcting a claim the section itself had made false. It said no content-scanning backstop existed and that a future one would be the first candidate to change enforced_by; injection_scan_hook.ts now exists, so the first half is false, and the second was always wrong because a warn-only hook cannot refuse and therefore cannot enforce. Every sentence left carries one of those claims. The measurement half -- slot, 15 channels, 99.00 percent recall, 0.85 percent false positives, the manifest keys -- did move to the pointer target, which is what cut the overshoot from +194 to +89; what stays is the rule's own enforcement disclosure, and a stub ceiling that forbids correcting a false statement about the rule's own enforcement is the wrong constraint applied to the right file."
+        },
+        {
+            "date": "2026-08-23",
+            "rule": "design-fidelity",
+            "from": 2245,
+            "to": 2540,
+            "reason": "One subsection, +295 tokens, for the second axis: artefact MATURITY is a property of the handed-over artefact, instruction MANDATE is a property of the prose, and `strict` on a self-declared wireframe is a structure mandate rather than a pixel mandate. It is an Iron Law plus the two discriminator clauses that decide it -- obligation surface, which this repository's rule/mechanics split puts in the rule by construction. The lookup half ALREADY went to the pointer target in the same change: the maturity-to-spec table and the pinned `daf-wireframe-near-miss` row live in design-fidelity-mechanics.md § Artefact maturity, and the rule links them. Pushing the remaining prose there too is the one move that is not available -- that migration is exactly what took the mechanics file from 15,265 to 16,524 chars past check_depth_budget's 16,000 ceiling, and paying for it required splitting the asset & imagery block out into its own guideline in this same commit series. A second push would re-red the ratchet the split just cleared. Raised rather than condensed because the two clauses that would compress are the ones that carry the decision: 'the discriminator reads the ARTEFACT, never the prose' and 'an undeclared artefact is treated as finished' -- drop either and the rule authorises the redesign it exists to prevent."
         }
     ]
 }

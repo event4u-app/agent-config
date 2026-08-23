@@ -89,6 +89,24 @@ this": a prototype (HTML / JSX / Figma export), a mockup or screenshot, a
 design-system file (tokens, component library), or a URL / path. It encodes
 decisions already made — treat it like brand tokens, not like inspiration.
 
+## Two axes — artefact maturity is not instruction mandate
+
+```
+MATURITY IS A PROPERTY OF THE ARTEFACT. MANDATE IS A PROPERTY OF THE INSTRUCTION.
+A HANDOVER WHOSE OWN ARTEFACT DECLARES ITSELF LOW-FIDELITY CARRIES A **STRUCTURE**
+MANDATE, NEVER A **PIXEL** MANDATE — WHATEVER `design.fidelity_mode` SAYS.
+REPRODUCING A WIREFRAME'S GREYS 1:1 HONOURS THE WRONG HALF OF THE ARTEFACT.
+```
+
+`strict` means *do not redesign*; never *reproduce a wireframe's placeholder greys*, which
+are **non-decisions** ([`wireframe`](../skills/wireframe/SKILL.md) § Gotchas).
+**The discriminator reads the ARTEFACT, never the prose.** A finished comp whose prose
+mentions a wireframe it replaces routes **strictly** — a reference to a previous artefact,
+not a declaration about this one. **When the artefact does not declare its maturity,
+it is treated as finished**: the 1:1 floor is stricter, and guessing *low fidelity*
+would authorise the redesign this rule prevents. Maturity→spec table + the pinned near-miss:
+[`design-fidelity-mechanics § Artefact maturity`](../docs/guidelines/design-fidelity-mechanics.md).
+
 ## Strictness — set by `design.fidelity_mode`
 
 Read `design.fidelity_mode` from `.agent-settings.yml`. Missing → `strict`.

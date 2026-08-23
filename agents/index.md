@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **720 artefacts** in this package.
+Maintainer-facing index of all **719 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (292)
+## Skills (291)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -202,7 +202,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`php-service`](../src/skills/php-service/SKILL.md) | official | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`pipeline-strategy`](../src/skills/pipeline-strategy/SKILL.md) | official | Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'. |
 | skill | [`pixar-storyteller`](../src/skills/pixar-storyteller/SKILL.md) | official | Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director. |
-| skill | [`playbook-authoring`](../src/skills/playbook-authoring/SKILL.md) | official | Use when a repo has its own generators, scripts or turbo tasks and an agent reaches for a generic skill instead — derive a Playbook context (ADR-244) from the real config, graded by the tree. |
 | skill | [`playwright-architect`](../src/skills/playwright-architect/SKILL.md) | official | Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'. |
 | skill | [`playwright-testing`](../src/skills/playwright-testing/SKILL.md) | official | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../src/skills/po-discovery/SKILL.md) | official | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
@@ -304,7 +303,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (119)
+## Rules (118)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -386,7 +385,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`package-ci-checks`](../src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
-| rule | [`playbook-precedence`](../src/rules/playbook-precedence.md) | auto | A repository's own playbook outranks a shipped skill for the same task — run its configured steps first, and treat an observed playbook as advisory |
 | rule | [`prefer-enums-over-literals`](../src/rules/prefer-enums-over-literals.md) | auto | Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after |
 | rule | [`preservation-guard`](../src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
@@ -634,7 +632,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (108)
+## Guidelines (109)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -707,6 +705,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-asset-discipline`](../docs/guidelines/design-asset-discipline.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
 | guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |
