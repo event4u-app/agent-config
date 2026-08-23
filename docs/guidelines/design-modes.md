@@ -14,7 +14,7 @@ wrong is the root cause of most AI-generated design failures:
 | **Primary failure** | Flatness / genericness — looks like every other AI startup | Strangeness without purpose — "clever" choices that obscure the tool |
 | **The user's question** | "How was this made?" (genuine curiosity) | "Where do I click?" (the tool disappears into the task) |
 | **Key skill cluster** | `brand-identity`, `iconography`, `fe-design § Aesthetic direction`, `design-intelligence` | `accessibility-auditor`, `ui-component-architect`, `fe-design § Table/Form Design` |
-| **Typography strategy** | Distinctive pairing — two contrasting families, deliberate tracking | One reliable family — Inter or equivalent; predictable hierarchy |
+| **Typography strategy** | Distinctive pairing — two contrasting families, deliberate tracking | One reliable family — predictable hierarchy. A default AI font pick (Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif) is a legitimate product-register choice, and [`design-antipatterns` T7](design-antipatterns.md) scopes itself accordingly — but the register is the reason, so state it: an undeclared Inter is still an undeclared font choice. |
 | **Color strategy** | Brand identity — often unexpected; the palette IS the differentiator | Semantic function — primary/danger/success/neutral; predictable meaning |
 | **Motion strategy** | Expressive — motion reinforces the brand's personality | Utilitarian — motion confirms state changes; nothing decorative |
 | **Spacing strategy** | Breathing room; generous whitespace as a brand signal | Dense/efficient; optimize for information density |
