@@ -87,7 +87,7 @@ function main(argv: readonly string[]): number {
 
     if (argv.includes('--write')) {
         fs.writeFileSync(manifestPath, built);
-        console.log(`✅  wrote ${MANIFEST_NAME} — corpus ${digest}`);
+        process.stdout.write(`✅  wrote ${MANIFEST_NAME} — corpus ${digest}\n`);
         return 0;
     }
     if (argv.includes('--check')) {
@@ -104,7 +104,7 @@ function main(argv: readonly string[]): number {
             );
             return 1;
         }
-        console.log(`✅  corpus matches manifest — ${digest}`);
+        process.stdout.write(`✅  corpus matches manifest — ${digest}\n`);
         return 0;
     }
     process.stdout.write(built);

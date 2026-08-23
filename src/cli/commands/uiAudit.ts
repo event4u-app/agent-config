@@ -127,7 +127,7 @@ export function buildArtefact(
     const markers: DesignSystemMarker[] = [];
     const families = new Set<string>();
 
-    for (const [rel, text] of files) {
+    for (const [rel] of files) {
         for (const [re, marker] of SYSTEM_MARKERS) {
             if (re.test(rel) && !markers.some((m) => m.marker === marker)) markers.push({ marker, path: rel });
         }

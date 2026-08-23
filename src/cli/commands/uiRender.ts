@@ -33,6 +33,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+// Type-only: erased at build time, so it does NOT pull Playwright into the
+// runtime graph. The value import stays dynamic below, which is what keeps a
+// consumer install without the devDependency on the clean "unverified" path.
+import type { chromium as Chromium } from '@playwright/test';
+
 /** The three viewports E3.1 names. Widths are the contract, not a preference. */
 export const VIEWPORTS = [
     { name: 'desktop', width: 1440, height: 900 },
@@ -130,7 +135,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     const slug = opts.slug ?? slugify(opts.target);
     const outDir = path.join(projectRoot, RENDER_REL, slug);
 
-    let chromium: typeof import('@playwright/test')['chromium'];
+    let chromium: typeof Chromium;
     try {
         ({ chromium } = await import('@playwright/test'));
     } catch {
