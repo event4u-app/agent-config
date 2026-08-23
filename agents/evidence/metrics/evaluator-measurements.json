@@ -1,12 +1,12 @@
 {
-  "schema_version": 1,
-  "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit \u2014 refresh it from a real run.",
-  "recorded_at": "2026-08-23T15:22:31.143Z",
-  "git_sha": "6cc2c03686e146af9a28819f5297e4b606b18f67",
-  "run_url": null,
-  "conditions": "Refresh for the 104 -> 106 cli_help_command_count move: road-to-frontend-power E2.1 and E3.1 register `ui:audit` + `ui:render` in src/cli/registry.ts, in the PR that adds the surface. mcp_public_tool_count is unchanged at 20 -- neither verb is exposed over MCP, deliberately: both write under agents/runtime/state/ and the MCP surface is read-only.",
-  "measurements": {
-    "cli_help_command_count": 106,
-    "mcp_public_tool_count": 20
-  }
+    "schema_version": 1,
+    "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
+    "recorded_at": "2026-08-23T18:56:39.799Z",
+    "git_sha": "2e3af822abfe20c44e2e7ead43a74ce5aae04d07",
+    "run_url": null,
+    "conditions": "Refresh for the 106 -> 107 cli_help_command_count move on the merge of drain/roadmap-situational-awareness into main: main had already recorded 106 for road-to-frontend-power's ui:audit + ui:render, this branch adds roadmap:context. Re-measured on the MERGED tree via the budget pinned method (registry enumeration): 107. mcp_public_tool_count unchanged at 20 — neither branch exposes a new MCP tool.",
+    "measurements": {
+        "cli_help_command_count": 107,
+        "mcp_public_tool_count": 20
+    }
 }

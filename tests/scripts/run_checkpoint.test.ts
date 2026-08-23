@@ -668,3 +668,77 @@ describe('countRoadmap — a phase span survives its own sub-headings', () => {
         expect(falseCompletions).toEqual([]);
     });
 });
+
+// ---------------------------------------------------------------------------
+// context_fingerprint — road-to-roadmap-situational-awareness § 5.6
+// ---------------------------------------------------------------------------
+
+describe('context_fingerprint — repository drift, which no other field reported', () => {
+    it('is written into the checkpoint JSON when supplied', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        const cp = buildCheckpoint(r, 'run-1', 'road-to-x', { contextFingerprint: 'abc123' });
+        expect(cp?.context_fingerprint).toBe('abc123');
+        writeCheckpoint(r, cp as RunCheckpoint);
+        const raw = JSON.parse(fs.readFileSync(checkpointFile(r, 'run-1'), 'utf-8')) as Record<
+            string,
+            unknown
+        >;
+        expect(raw['context_fingerprint']).toBe('abc123');
+    });
+
+    it('is ABSENT, not null, when nothing was supplied — absent means "not known"', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        const cp = buildCheckpoint(r, 'run-1', 'road-to-x');
+        expect(cp).not.toBeNull();
+        expect('context_fingerprint' in (cp as object)).toBe(false);
+    });
+
+    it('a resume with a MUTATED fingerprint disagrees on that field', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        const cp = buildCheckpoint(r, 'run-1', 'road-to-x', {
+            head: 'deadbeef',
+            contextFingerprint: 'fp-at-checkpoint',
+        }) as RunCheckpoint;
+        const res = verifyCheckpoint(r, cp, 'fp-now-different');
+        const f = res.fields.find((x) => x.field === 'context_fingerprint');
+        expect(f).toBeDefined();
+        expect(f?.claimed).toBe('fp-at-checkpoint');
+        expect(f?.actual).toBe('fp-now-different');
+        expect(f?.agrees).toBe(false);
+        expect(res.agrees).toBe(false);
+    });
+
+    it('agrees when the fingerprint is unchanged', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        const cp = buildCheckpoint(r, 'run-1', 'road-to-x', {
+            contextFingerprint: 'same',
+        }) as RunCheckpoint;
+        expect(
+            verifyCheckpoint(r, cp, 'same').fields.find((x) => x.field === 'context_fingerprint')
+                ?.agrees,
+        ).toBe(true);
+    });
+
+    it('an unknown on EITHER side is never a disagreement — same rule as head', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ROADMAP);
+        // No fingerprint at checkpoint time (a pre-field checkpoint).
+        const old = buildCheckpoint(r, 'run-old', 'road-to-x') as RunCheckpoint;
+        expect(
+            verifyCheckpoint(r, old, 'fp-now').fields.find((x) => x.field === 'context_fingerprint')
+                ?.agrees,
+        ).toBe(true);
+        // Fingerprint at checkpoint time, but the resume never re-probed.
+        const withFp = buildCheckpoint(r, 'run-new', 'road-to-x', {
+            contextFingerprint: 'fp-then',
+        }) as RunCheckpoint;
+        expect(
+            verifyCheckpoint(r, withFp).fields.find((x) => x.field === 'context_fingerprint')
+                ?.agrees,
+        ).toBe(true);
+    });
+});

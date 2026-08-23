@@ -572,6 +572,7 @@ roadmap:
   # inter-step beat is.
   dashboard_regen_cadence: every_5_steps
 
+
   # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
   # 0  = off (default). Time-boxed plate / horizon framing is forbidden:
   #      no `## Horizon (N-week visible plate)` sections, no

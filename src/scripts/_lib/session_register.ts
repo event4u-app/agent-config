@@ -226,6 +226,22 @@ export interface SessionRecord {
      * session that was never refused, is still a valid record.
      */
     turn_end_refusals?: Record<string, number>;
+    /**
+     * Repo-relative paths this session has declared it owns, or absent when it
+     * has declared none.
+     *
+     * `road-to-roadmap-situational-awareness` § 3.1. The register compared slugs
+     * and branch names and nothing else, so two sessions on two different
+     * roadmaps that happen to edit the same file were invisible to each other —
+     * the axis that actually predicts a merge conflict was the one axis nobody
+     * carried.
+     *
+     * Additive on exactly the terms `turn_end_refusals` established: a session
+     * that declared no paths leaves the record **byte-identical** to what it was
+     * before this field existed, so a reader that does not know the field is
+     * unaffected and a diff of two records still shows only what changed.
+     */
+    owned_paths?: string[];
 }
 
 /**
@@ -430,11 +446,21 @@ export function foreign_live_records(
  * so the branch comparison was silent by construction while a whole
  * implementation was duplicated. One of the two PRs is thrown away either way.
  */
-export type CollisionKind = 'roadmap' | 'branch';
+/**
+ * `path` is the third axis, added last and cheapest to be wrong about: two
+ * sessions can be on different roadmaps and different branches and still be
+ * editing one file. It is reported SEPARATELY rather than folded into either of
+ * the two above, because the response differs — a roadmap collision means stop,
+ * a branch collision means coordinate, a path collision means take the disjoint
+ * steps first and say so.
+ */
+export type CollisionKind = 'roadmap' | 'branch' | 'path';
 
 export interface Collision {
     kind: CollisionKind;
     record: SessionRecord;
+    /** For `kind: 'path'`, the shared paths. Absent on the other two kinds. */
+    paths?: string[];
 }
 
 /**
@@ -451,7 +477,11 @@ export interface Collision {
  */
 export function classify_collisions(
     others: readonly SessionRecord[],
-    here: { branch: string | null; roadmap_slug: string | null },
+    here: {
+        branch: string | null;
+        roadmap_slug: string | null;
+        owned_paths?: readonly string[];
+    },
 ): Collision[] {
     const out: Collision[] = [];
     for (const r of others) {
@@ -466,6 +496,18 @@ export function classify_collisions(
     for (const r of others) {
         if (here.branch !== null && r.branch === here.branch) {
             out.push({ kind: 'branch', record: r });
+        }
+    }
+    // Last, and last on purpose: the two axes above are unchanged in meaning and
+    // in order, so a consumer that filters on `roadmap` or `branch` sees exactly
+    // what it saw before this axis existed.
+    const mine = new Set(here.owned_paths ?? []);
+    if (mine.size > 0) {
+        for (const r of others) {
+            const shared = (r.owned_paths ?? []).filter((p) => mine.has(p)).sort();
+            if (shared.length > 0) {
+                out.push({ kind: 'path', record: r, paths: shared });
+            }
         }
     }
     return out;
