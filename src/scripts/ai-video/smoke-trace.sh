@@ -332,9 +332,15 @@ _st_probe_frame_lock() {
     return 0
   fi
 
-  _st_need_ffmpeg
+  # Argument validation BEFORE the ffmpeg probe, deliberately. A missing
+  # `--still` is a usage error: the command is malformed on every machine, and
+  # the message should not depend on which tools happen to be installed. A
+  # missing ffmpeg is an environment error for a call that would never have been
+  # made anyway. Ordering them the other way made this path report
+  # "ffmpeg required" on a CI runner with no ffmpeg, hiding the real mistake.
   [ -n "${still}" ] || { echo "smoke-trace probe-frame-lock: --still <png> is required for a live probe" >&2; exit 2; }
   [ -r "${still}" ] || { echo "smoke-trace probe-frame-lock: cannot read --still ${still}" >&2; exit 7; }
+  _st_need_ffmpeg
   out_dir="${out_dir:-${ROOT}/agents/reference/ai-video/smoke-traces/frame-lock}"
   mkdir -p "${out_dir}"
   local stamp clip frame0

@@ -43,8 +43,19 @@ command -v jq >/dev/null 2>&1 || {
   exit 3
 }
 
-input="${1:-/dev/stdin}"
-[ -r "$input" ] || { echo "parse-blueprint: cannot read $input" >&2; exit 3; }
+# A file argument is opened; with no argument the ALREADY-OPEN stdin is
+# inherited rather than re-opened through /dev/stdin. Re-opening it is what the
+# documented `parse-blueprint.sh < prompt.txt` form used to do, and it is not
+# portable: on a Linux CI runner whose stdin is a pipe supplied by the test
+# harness, `/dev/stdin` is not openable and the script died with
+# "No such device or address" — the documented interface was broken on the one
+# platform nothing had exercised it on. `exec` keeps the readable-path check
+# meaningful for the argument form while leaving fd 0 untouched otherwise.
+input="${1:-}"
+if [ -n "$input" ]; then
+  [ -r "$input" ] || { echo "parse-blueprint: cannot read $input" >&2; exit 3; }
+  exec < "$input"
+fi
 
 V_STYLE=""; V_SUBJECT=""; V_ENVIRONMENT=""; V_ACTION=""
 V_CAMERA=""; V_LENS=""; V_LIGHTING=""; V_MOOD=""
@@ -84,7 +95,7 @@ while IFS= read -r line || [ -n "$line" ]; do
   if [ -n "$current" ] && [ -n "$line" ]; then
     append_to "$current" "$line"
   fi
-done < "$input"
+done
 
 for short in STYLE SUBJECT ENVIRONMENT ACTION CAMERA LENS LIGHTING MOOD DURATION NEGATIVE; do
   eval "v=\$V_$short"
