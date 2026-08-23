@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **719 artefacts** in this package.
+Maintainer-facing index of all **720 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (291)
+## Skills (292)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -130,6 +130,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`incident-commander`](../src/skills/incident-commander/SKILL.md) | official | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../src/skills/jira-integration/SKILL.md) | official | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../src/skills/jobs-events/SKILL.md) | official | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
+| skill | [`js-library-packaging`](../src/skills/js-library-packaging/SKILL.md) | official | Use when a JavaScript/TypeScript package is consumed by another package — exports map, peer vs. direct dependencies, files allow-list, and whether it should be built at all. |
 | skill | [`judge-artifact-completeness`](../src/skills/judge-artifact-completeness/SKILL.md) | official | When scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates. |
 | skill | [`judge-bug-hunter`](../src/skills/judge-bug-hunter/SKILL.md) | official | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
 | skill | [`judge-code-quality`](../src/skills/judge-code-quality/SKILL.md) | official | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
