@@ -42,13 +42,23 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 279 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 282 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-23 and it returns 279).
-# **56 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 53 of those 56 are listed below.** The manifest is
+# re-run 2026-08-23 and it returns 282).
+# **57 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 54 of those 57 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~19 % of the population.
+#
+# RE-RE-RECOUNTED on 2026-08-23 while adding `lint_adapter_tier`, and once again
+# both figures were stale BEFORE this change: the prose said 279 while
+# `count_gate_scripts()` already returned 281, so two scripts had landed since
+# the previous recount hours earlier. Recomputed rather than incremented, which
+# is the whole point of the paragraph below: `grep -c '^  - id:'` returns 54,
+# the same THREE emitters stay deliberately unlisted, 54 + 3 = 57, and the
+# population comes from the function. Adding one to each of 279/56/53 would have
+# produced 280/57/54 — right on two axes and wrong on the population, which is
+# indistinguishable in a diff from having checked.
 #
 # RECOUNTED on 2026-08-23 while adding `check_no_automerge_key`, and BOTH numbers
 # were stale before the recount by more than the one row this change adds — which
@@ -1479,6 +1489,44 @@ gates:
       floor under a constant can never trip — the false-count shape this manifest
       rejects. 304 keys collapses to 0 if either root moves, which is what the
       floor is for.
+  - id: lint_adapter_tier
+    argv: ["--quiet"]
+    min_scanned: 12
+    corpus: "media adapter `# Lifecycle:` headers under src/scripts/{ai-video,ai-image}/adapters/ — 14 on 2026-08-23 (10 video + 4 image)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/ai-video/adapters/zz-canary-provider.sh
+      content: |
+        #!/usr/bin/env bash
+        # zz canary probe — NOT an adapter. The header below is the planted
+        # violation: a `stable` tier claim for a provider that has no row in
+        # agents/evidence/ai-video/trace-index.json, which is exactly the shape
+        # lint_adapter_tier exists to refuse.
+        # Lifecycle: stable — canary; no smoke trace exists for this provider
+        echo "zz canary: never invoked" >&2
+        exit 0
+    note: >
+      The floor is the adapter-header count, not the finding count: this gate is
+      green on a healthy tree by design, so a collapse would otherwise be
+      invisible. It counts every header it parses, `experimental` included —
+      counting only `stable` ones would let a tree that demoted everything read
+      as covered.
+
+      The canary is a create-only plant of a `stable` header for a provider with
+      no index row, which is exactly the shape the gate exists to refuse. It
+      proves discrimination without touching the real index, and the recipe
+      deletes only the file it created.
+
+      Known limit, stated because the success line would otherwise oversell it:
+      the trace index carries five fields by design (provider, trace_id,
+      captured_at, model, sha256), so `mode` and `success` are NOT visible here
+      and a dry-run trace satisfies the freshness rule. The per-model
+      `verified: true` + `smoke_trace` pair in the manifests is the stronger
+      signal, and this gate's dangling-reference check is what keeps that pair
+      honest. Widening the index to reach a stronger check would turn a
+      five-field allowlist into a body copy — the leak the allowlist prevents.
+
   - id: check_pack_conformance_fixture
     argv: ["--quiet"]
     min_scanned: 12

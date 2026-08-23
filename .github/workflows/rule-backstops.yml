@@ -112,6 +112,9 @@ jobs:
       - name: media-governance-routing (policy linkage)
         run: ./scripts-run src/scripts/lint_media_policy_linkage
 
+      - name: provider-lifecycle-discipline (adapter tier evidence)
+        run: ./scripts-run src/scripts/lint_adapter_tier
+
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
