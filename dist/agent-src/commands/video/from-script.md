@@ -6,7 +6,7 @@ visibility: internal
 cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
-argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--no-calibrate] [--image-provider <id>] [--video-provider <id>]"
+argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--no-calibrate] [--{image,video}-provider <id>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
