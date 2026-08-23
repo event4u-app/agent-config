@@ -82,6 +82,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as YAML from 'yaml';
 
+import { _check_overrides } from './doctor_overrides.js';
+import { _is_global_only_consumer } from './doctor_install_mode.js';
+// Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
+// importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
+// because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
+// import would be dropped — silently breaking whoever imports it from this path.
+export { INSTALL_MODE_MARKER_RELATIVE, _is_global_only_consumer } from './doctor_install_mode.js';
 import * as claude_plugin from '../_lib/claude_plugin.js';
 import * as claude_settings_hooks from '../_lib/claude_settings_hooks.js';
 import { _is_source_repo } from './cmd_refresh.js';
@@ -765,6 +772,7 @@ const CHECK_IDS = [
     'surface-state',
     'hook-wiring',
     'stale-orphans',
+    'overrides',
     'rule-scope-drift',
     'manifest-integrity',
     'lockfile-freshness',
@@ -795,6 +803,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'surface-state',
     'hook-wiring',
     'stale-orphans',
+    'overrides',
     'rule-scope-drift',
     'mcp-mode',
     'mcp-beta-readiness',
@@ -818,20 +827,6 @@ const MANIFEST_REQUIRED_CHECK_IDS: ReadonlySet<string> = new Set([
     'unsupported-combos',
 ]);
 
-/**
- * Signals a set-up global-only consumer. The `.event4u-bridge.yml` marker was
- * retired (ADR-020 amendment 2026-07-13); the durable project-side signal is
- * the install-mode marker (written on every install) or the `agents/overrides/`
- * scaffold. Either is sufficient.
- */
-const INSTALL_MODE_MARKER_RELATIVE = 'agents/.agent-state/install-mode.txt';
-
-function _is_global_only_consumer(project_root: string): boolean {
-    return (
-        isFile(path.join(project_root, INSTALL_MODE_MARKER_RELATIVE)) ||
-        isDir(path.join(project_root, 'agents', 'overrides'))
-    );
-}
 
 /** Repair targets that `--repair <id>` accepts. */
 const REPAIR_IDS = ['wizard-state'] as const;
@@ -2976,6 +2971,7 @@ function _run_checks(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
+        overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
         'manifest-integrity': () => _check_manifest_integrity(manifest),
         'lockfile-freshness': () => _check_lockfile_freshness(manifest),
@@ -3059,6 +3055,11 @@ function _run_checks_no_manifest(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
+        // BOTH registries need the id. Registering only the first one crashed with
+        // `runners[cid] is not a function` on a global-only consumer, which is the
+        // path that has no manifest — a loud failure rather than a silent skip, and
+        // worth the comment because the duplication is easy to miss.
+        overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
@@ -3710,8 +3711,6 @@ export {
     CHECK_IDS,
     GLOBAL_CHECK_IDS,
     MANIFEST_REQUIRED_CHECK_IDS,
-    INSTALL_MODE_MARKER_RELATIVE,
-    _is_global_only_consumer,
     REPAIR_IDS,
     MCP_BETA_GATES,
     STATUS_SYMBOLS,
