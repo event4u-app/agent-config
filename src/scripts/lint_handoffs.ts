@@ -12,6 +12,7 @@
  * detection. No behaviour changes.
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -19,6 +20,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SRC_SKILLS } from './_lib/agent_src.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+import {
+    compute_active_pack_ids,
+    is_pruned_under_scoped,
+    load_packs_registry,
+} from './_lib/scoped_projection.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -237,6 +243,8 @@ function _resolve(p: string): string {
 
 export function lint(skills_dir: string): Violation[] {
     const senior_skills: Map<string, string> = new Map();
+    /** `file|line|href` of every dangling link the senior pass already reported. */
+    const reported_dangling = new Set<string>();
     const all_skills: Map<string, string> = new Map();
     for (const skill_md of _rglobSkillMd(skills_dir)) {
         const text = fs.readFileSync(skill_md, 'utf-8');
@@ -267,6 +275,7 @@ export function lint(skills_dir: string): Violation[] {
             }
             graph.get(skill_path)!.add(target);
             if (!all_skills.has(target)) {
+                reported_dangling.add(`${skill_path}|${String(lineno)}|${link}`);
                 violations.push({
                     file: skill_path,
                     line: lineno,
@@ -291,6 +300,7 @@ export function lint(skills_dir: string): Violation[] {
         for (const [lineno, slug, link] of extract_links(when_not)) {
             const target = resolve_target(skill_path, link);
             if (!all_skills.has(target)) {
+                reported_dangling.add(`${skill_path}|${String(lineno)}|${link}`);
                 violations.push({
                     file: skill_path,
                     line: lineno,
@@ -321,7 +331,266 @@ export function lint(skills_dir: string): Violation[] {
             message: `composition cycle: ${names}`,
         });
     }
+
+    // Whole-body dangling pass — see the BodyLink block below for why the
+    // scope widens here and NOT for tier mismatch or cycle detection.
+    for (const bl of collect_body_links(skills_dir)) {
+        if (all_skills.has(bl.target)) {
+            continue;
+        }
+        if (reported_dangling.has(`${bl.file}|${String(bl.line)}|${bl.link}`)) {
+            continue;
+        }
+        violations.push({
+            file: bl.file,
+            line: bl.line,
+            code: 'handoff_dangling',
+            message: `link to \`${bl.slug}\` resolves to missing file ${bl.link}`,
+        });
+    }
+    violations.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file < b.file ? -1 : 1));
     return violations;
+}
+
+// ── Whole-body cross-skill links + the link census (skill-link-integrity) ──
+// The senior / `## Related Skills` pass above is a COMPOSITION contract: it
+// judges tier and builds the DAG, and both of those only mean anything inside
+// a declared handoff block. A dead link is a different fact — a body sentence
+// telling the agent to read a file that is not on disk is wrong wherever it
+// sits — and every file carrying today's dead links declares neither a `tier:`
+// nor that heading, which is exactly why a gate that has owned
+// `handoff_dangling` since 2026-08-02 had never seen one of them.
+//
+// So the scope widens for the dangling check ONLY. Tier mismatch and cycle
+// detection keep the narrow scope on purpose: widening them would read every
+// prose cross-reference as a composition edge, which it is not.
+
+/** One `[slug](…SKILL.md)` link found anywhere in a SKILL.md body. */
+export interface BodyLink {
+    /** Absolute, symlink-resolved path of the SKILL.md carrying the link. */
+    file: string;
+    line: number;
+    /** Link text. `LINK_RE` only matches slug-shaped text, so this is a slug. */
+    slug: string;
+    /** The href exactly as written. */
+    link: string;
+    /** `resolve_target(file, link)` — absolute, symlink-resolved. */
+    target: string;
+}
+
+/** Every `[slug](…SKILL.md)` link in every SKILL.md body under `skills_dir`. */
+export function collect_body_links(skills_dir: string): BodyLink[] {
+    const out: BodyLink[] = [];
+    for (const skill_md of _rglobSkillMd(skills_dir)) {
+        const file = _resolve(skill_md);
+        const lines = fs.readFileSync(skill_md, 'utf-8').split('\n');
+        for (let idx = 0; idx < lines.length; idx++) {
+            const raw = lines[idx] as string;
+            LINK_RE.lastIndex = 0;
+            let m: RegExpExecArray | null;
+            while ((m = LINK_RE.exec(raw)) !== null) {
+                const link = m[2] as string;
+                out.push({
+                    file,
+                    line: idx + 1,
+                    slug: m[1] as string,
+                    link,
+                    target: resolve_target(file, link),
+                });
+            }
+        }
+    }
+    return out;
+}
+
+/** Values of a block-list frontmatter key (`key:` then `  - item` lines). */
+export function parse_frontmatter_list(text: string, key: string): string[] {
+    if (!text.startsWith('---\n')) {
+        return [];
+    }
+    const end = text.indexOf('\n---\n', 4);
+    if (end === -1) {
+        return [];
+    }
+    const out: string[] = [];
+    let inKey = false;
+    for (const raw of text.slice(4, end).split('\n')) {
+        if (/^\S/.test(raw)) {
+            inKey = raw.replace(/:.*$/, '').trim() === key;
+            continue;
+        }
+        if (inKey) {
+            const m = /^\s+-\s*(.+?)\s*$/.exec(raw);
+            if (m) out.push(_strip(_strip(m[1] as string, '"'), "'"));
+        }
+    }
+    return out;
+}
+
+/** A dead link, as the census records it. */
+export interface DeadLinkRecord {
+    /** Repo-relative path of the referring SKILL.md. */
+    file: string;
+    line: number;
+    /** The href exactly as written. */
+    target: string;
+}
+
+/** A surviving skill linking a slug that `scoped` prunes. */
+export interface ScopedDangleRecord {
+    survivor: string;
+    target: string;
+}
+
+/**
+ * The link census Phase 0 of `road-to-skill-link-integrity-and-manifest-sync`
+ * publishes. Produced by the SAME collector the gate above scans with, so the
+ * published figure and the gate verdict cannot disagree — which is the whole
+ * reason it lives here rather than in a script of its own.
+ */
+export interface SkillLinkCensus {
+    schema_version: 1;
+    _comment: string;
+    commit: string | null;
+    /** `](../<slug>/SKILL.md` occurrences — the Reproduction B.1 grep. */
+    total_links_skill_md: number;
+    /** `](../<slug>/` occurrences — B.1 widened to bare directory targets. */
+    total_links_any_dir: number;
+    /**
+     * Links the GATE sees (`LINK_RE`). Lower than `total_links_skill_md`
+     * because LINK_RE additionally requires slug-shaped link TEXT — and, in
+     * the other direction, its href is unconstrained, so it catches targets
+     * the B.1 character class cannot. Both are recorded because the gap is
+     * where a dead link hid: `../create-pr:description-only/SKILL.md` carries
+     * a colon, so `[a-z0-9-]*` never matched it and the drafted census
+     * reported 14 dead links where the gate finds 16.
+     */
+    links_matched_by_gate: number;
+    files_with_skill_md_link: number;
+    files_with_any_relative_link: number;
+    skills_total: number;
+    dead_links: DeadLinkRecord[];
+    /** Links whose target slug is absent from the linker's `requires_skills:`. */
+    undeclared_in_requires: number;
+    skills_declaring_requires: number;
+    scoped_survivors: number;
+    scoped_pruned: number;
+    scoped_dangles: ScopedDangleRecord[];
+    survivors_with_dangle: number;
+}
+
+/** Provenance carried inside the row, so a reader never has to find this file. */
+const CENSUS_COMMENT =
+    'Written by `./scripts-run src/scripts/lint_handoffs --census-json`. Do not ' +
+    'hand-edit — regenerate it. The collector is `collect_body_links`, the same ' +
+    'one the gate scans with, so the published figure and the gate verdict ' +
+    'cannot drift apart. `dead_links` uses the gate predicate (a target absent ' +
+    'from the live SKILL.md set), NOT the Reproduction B.1 grep — see ' +
+    '`links_matched_by_gate` for why the two differ and which dead link the ' +
+    'grep was blind to.';
+
+/** `](../<slug>/SKILL.md` — the Reproduction B.1 pattern, verbatim. */
+const B1_SKILL_MD_RE = /\]\(\.\.\/[a-z0-9-]*\/SKILL\.md/g;
+/** `](../<slug>/` — B.1 widened to bare directory targets. */
+const B1_ANY_DIR_RE = /\]\(\.\.\/[a-z0-9-]*\//g;
+/** `](../` — the "carries any relative link" file counter from B.1. */
+const B1_ANY_REL_RE = /\]\(\.\.\//;
+
+/** Build the census over a skills root. `commit` is passed in, never guessed. */
+export function skill_link_census(
+    skills_dir: string,
+    package_root: string,
+    commit: string | null = null,
+): SkillLinkCensus {
+    const files = _rglobSkillMd(skills_dir);
+    const live = new Set(files.map(_resolve));
+
+    let total_links_skill_md = 0;
+    let total_links_any_dir = 0;
+    let files_with_skill_md_link = 0;
+    let files_with_any_relative_link = 0;
+    let skills_declaring_requires = 0;
+    const requires_by_file = new Map<string, Set<string>>();
+
+    for (const f of files) {
+        const text = fs.readFileSync(f, 'utf-8');
+        const a = text.match(B1_SKILL_MD_RE) ?? [];
+        const b = text.match(B1_ANY_DIR_RE) ?? [];
+        total_links_skill_md += a.length;
+        total_links_any_dir += b.length;
+        if (a.length > 0) files_with_skill_md_link += 1;
+        if (B1_ANY_REL_RE.test(text)) files_with_any_relative_link += 1;
+        const req = parse_frontmatter_list(text, 'requires_skills');
+        if (text.includes('requires_skills')) skills_declaring_requires += 1;
+        requires_by_file.set(_resolve(f), new Set(req));
+    }
+
+    const links = collect_body_links(skills_dir);
+    const dead_links: DeadLinkRecord[] = [];
+    let undeclared_in_requires = 0;
+    for (const bl of links) {
+        if (!live.has(bl.target)) {
+            dead_links.push({
+                file: _relTo(bl.file, package_root),
+                line: bl.line,
+                target: bl.link,
+            });
+        }
+        if (!(requires_by_file.get(bl.file) ?? new Set()).has(bl.slug)) {
+            undeclared_in_requires += 1;
+        }
+    }
+
+    // Scoped projection, with the installer's own predicate — never a second
+    // definition of "pruned" free to disagree with the one install.ts applies.
+    const active = compute_active_pack_ids(load_packs_registry(package_root), []);
+    let scoped_survivors = 0;
+    let scoped_pruned = 0;
+    const pruned_paths = new Set<string>();
+    for (const f of files) {
+        if (is_pruned_under_scoped(f, active)) {
+            scoped_pruned += 1;
+            pruned_paths.add(_resolve(f));
+        } else {
+            scoped_survivors += 1;
+        }
+    }
+    const scoped_dangles: ScopedDangleRecord[] = [];
+    const survivors = new Set<string>();
+    for (const bl of links) {
+        if (pruned_paths.has(bl.file) || !pruned_paths.has(bl.target)) {
+            continue;
+        }
+        scoped_dangles.push({
+            survivor: path.basename(path.dirname(bl.file)),
+            target: path.basename(path.dirname(bl.target)),
+        });
+        survivors.add(bl.file);
+    }
+    scoped_dangles.sort((x, y) =>
+        x.survivor === y.survivor
+            ? x.target.localeCompare(y.target)
+            : x.survivor.localeCompare(y.survivor),
+    );
+
+    return {
+        schema_version: 1,
+        _comment: CENSUS_COMMENT,
+        commit,
+        total_links_skill_md,
+        total_links_any_dir,
+        links_matched_by_gate: links.length,
+        files_with_skill_md_link,
+        files_with_any_relative_link,
+        skills_total: files.length,
+        dead_links,
+        undeclared_in_requires,
+        skills_declaring_requires,
+        scoped_survivors,
+        scoped_pruned,
+        scoped_dangles,
+        survivors_with_dangle: survivors.size,
+    };
 }
 
 /** Python repr() of a string (single-quote preference). */
@@ -453,7 +722,29 @@ export function main(argv?: readonly string[]): number {
     // red under the exact argv CI runs while green when probed bare. That is the
     // inverse of this suite's dead-scope defect and the reason gate-coverage
     // rule 2 pins CI-identical argv.
-    const args = (argv ?? process.argv.slice(2)).filter((a) => !String(a).startsWith('-'));
+    const rawArgs = argv ?? process.argv.slice(2);
+    const args = rawArgs.filter((a) => !String(a).startsWith('-'));
+    // Census mode. An added mode on the gate's own entry point rather than a
+    // new script: the census MUST be produced by the collector the gate scans
+    // with, or the published figure and the verdict are free to drift, which
+    // is the class of defect this whole roadmap is about.
+    if (rawArgs.includes('--census-json')) {
+        if (args.length > 0) {
+            skills_dir = _resolve(args[0] as string);
+        }
+        let commit: string | null = null;
+        try {
+            commit = execFileSync('git', ['rev-parse', 'HEAD'], {
+                cwd: REPO,
+                encoding: 'utf-8',
+            }).trim();
+        } catch {
+            commit = null;
+        }
+        const census = skill_link_census(skills_dir, REPO, commit);
+        process.stdout.write(JSON.stringify(census, null, 2) + '\n');
+        return 0;
+    }
     if (args.length > 0 && String(args[0]).endsWith('HANDOFF.md')) {
         // artifact mode — validate the workflow-resume file's required fields
         const text = fs.readFileSync(_resolve(args[0] as string), 'utf-8');
