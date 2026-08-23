@@ -22,6 +22,7 @@ import { _playbook_lines, _scaffold_playbooks } from './scaffold.js';
 import {
     is_ambiguous_stack,
     bundle_line,
+    scope_lines,
     unsupported_stack_questions,
 } from './stack_bundles.js';
 
@@ -293,6 +294,7 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
         ...playbook_lines,
         `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
         bundle_line(state.stack, 'build', stack_label),
+        ...scope_lines(state.stack),
         '> Microcopy is locked — every button label, empty-state ' +
             'message, and validation message must come verbatim from ' +
             '`state.ui_design.microcopy`.',
