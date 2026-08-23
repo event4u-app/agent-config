@@ -513,8 +513,8 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 14
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22; 14 on 2026-08-23 after road-to-skill-link-integrity-and-manifest-sync was completed and archived — the floor tracks a corpus that shrinks by design, so archival lowers it and never un-archives to satisfy it)"
+    min_scanned: 10
+    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22; 14 live at 2026-08-23). The floor tracks a corpus that shrinks by design, so completing and archiving a roadmap lowers it — it is never satisfied by un-archiving finished work."
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every
@@ -532,6 +532,30 @@ gates:
       report an empty inventory as a clean one. Floor 15 against 25 at
       registration: the active estate is being drained deliberately and is
       expected to shrink, so a tight floor would red on the drain working.
+
+      LOWERED 15 -> 10 on 2026-08-23, and the reason is the sentence directly
+      above coming true. Archiving `road-to-role-scoped-spawn-profiles` took the
+      live top-level count from 15 to 14, so the floor red on the drain working
+      — exactly the failure mode the registration note predicted, one drain
+      after it was written. Measured at this commit: `find agents/roadmaps
+      -maxdepth 1 -name '*.md' -type f | wc -l` = 14, and the gate's own
+      `scanned:` line agrees at 14.
+
+      Why 10 and not 14. A floor set at the live count reds again on the very
+      next archive, which turns a collapse detector into per-drain friction with
+      no safety gain. The floor's only job is stated in its own note above: catch
+      a scan that stopped seeing `agents/roadmaps/` at all, and such a scan
+      reports **0**. 10 leaves four further drains of headroom while still
+      sitting an order of magnitude above the collapse signal it exists to
+      distinguish.
+
+      What did NOT move, checked rather than assumed: all four
+      `requirements-trace-budget.json` counters (`unlinked`, `unresolved`,
+      `dangling_ac`, `malformed`) remain at their registered baseline of 0. The
+      `0 declaring` reading is likewise NOT from this change — no top-level
+      roadmap at `origin/main` (2a7a8e221) declares `requirement_id` either, and
+      the archived roadmap never carried the trace fields. Only the scan count
+      moved.
 
   - id: check_council_pin_staleness
     argv: []

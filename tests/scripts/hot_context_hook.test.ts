@@ -314,3 +314,164 @@ describe('lifecycle — write → survive → inject', () => {
         }
     });
 });
+
+// ── re-read advisory (road-to-role-scoped-spawn-profiles Phase 3 Steps 4-5) ──
+//
+// The suppression rides THIS surface rather than a second artefact, so the two
+// invariants it must not break are asserted alongside it: the 400-word cap
+// still holds, and the privacy floor still DROPS rather than rewrites. The
+// advisory is advice — Step 5 forbids a refuse branch, so the hook must still
+// emit no decision on the write slot and still exit 0.
+describe('re-read advisory', () => {
+    function writeTranscript(name: string, reads: Array<{ file: string; body: string }>): string {
+        const p = path.join(tmpDir, name);
+        const lines: string[] = [];
+        reads.forEach((r, i) => {
+            const id = `tu${i}`;
+            lines.push(
+                JSON.stringify({
+                    type: 'assistant',
+                    message: {
+                        model: 'm',
+                        usage: { input_tokens: 1 },
+                        content: [{ type: 'tool_use', id, name: 'Read', input: { file_path: r.file } }],
+                    },
+                }),
+            );
+            lines.push(
+                JSON.stringify({
+                    type: 'user',
+                    message: { content: [{ type: 'tool_result', tool_use_id: id, content: r.body }] },
+                }),
+            );
+        });
+        fs.writeFileSync(p, lines.join('\n') + '\n', 'utf-8');
+        return p;
+    }
+
+    beforeEach(() => {
+        writeHistory([
+            { t: 'header', v: 4 },
+            { t: 'user_prompt', text: 'do the thing', ts: '2026-08-23T10:00:00+00:00' },
+        ]);
+    });
+
+    it('names a file read twice in the leg, workspace-relative, with its count', () => {
+        const tp = writeTranscript('t.jsonl', [
+            { file: path.join(tmpDir, 'src', 'a.ts'), body: 'a'.repeat(600) },
+            { file: path.join(tmpDir, 'src', 'a.ts'), body: 'a'.repeat(600) },
+        ]);
+        const r = runHook('stop', { transcript_path: tp });
+        expect(r.status).toBe(0);
+        const text = fs.readFileSync(hotFile, 'utf8');
+        expect(text).toContain('Re-Read Advisory');
+        expect(text).toContain('src/a.ts');
+        expect(text).toMatch(/2\s*x|read 2/i);
+        // relative, never the absolute identity path
+        expect(text).not.toContain(tmpDir);
+    });
+
+    it('says nothing when every file was read once — no advisory section at all', () => {
+        const tp = writeTranscript('t.jsonl', [
+            { file: path.join(tmpDir, 'src', 'a.ts'), body: 'a'.repeat(600) },
+            { file: path.join(tmpDir, 'src', 'b.ts'), body: 'b'.repeat(600) },
+        ]);
+        runHook('stop', { transcript_path: tp });
+        expect(fs.readFileSync(hotFile, 'utf8')).not.toContain('Re-Read Advisory');
+    });
+
+    it('drops a re-read outside the workspace root rather than emitting its path', () => {
+        const outside = path.join(os.tmpdir(), 'not-my-workspace', 'secret.ts');
+        const tp = writeTranscript('t.jsonl', [
+            { file: outside, body: 'x'.repeat(600) },
+            { file: outside, body: 'x'.repeat(600) },
+        ]);
+        runHook('stop', { transcript_path: tp });
+        const text = fs.readFileSync(hotFile, 'utf8');
+        expect(text).not.toContain('secret.ts');
+        expect(text).not.toContain('Re-Read Advisory');
+    });
+
+    it('is a no-op when the payload carries no transcript path', () => {
+        const r = runHook('stop', {});
+        expect(r.status).toBe(0);
+        expect(fs.readFileSync(hotFile, 'utf8')).not.toContain('Re-Read Advisory');
+    });
+
+    it('is a no-op when the transcript path does not exist — never throws', () => {
+        const r = runHook('stop', { transcript_path: path.join(tmpDir, 'nope.jsonl') });
+        expect(r.status).toBe(0);
+        expect(fs.existsSync(hotFile)).toBe(true);
+    });
+
+    it('keeps the 400-word cap even with many re-read candidates', () => {
+        const reads: Array<{ file: string; body: string }> = [];
+        for (let i = 0; i < 40; i++) {
+            const f = path.join(tmpDir, 'src', `deeply/nested/path/segment/file-number-${i}.ts`);
+            reads.push({ file: f, body: 'z'.repeat(400) });
+            reads.push({ file: f, body: 'z'.repeat(400) });
+        }
+        runHook('stop', { transcript_path: writeTranscript('t.jsonl', reads) });
+        expect(wordCount(fs.readFileSync(hotFile, 'utf8'))).toBeLessThanOrEqual(400);
+    });
+
+    // The line cap alone keeps three advisory lines under 400 words, so the
+    // cap test above is NOT sensitive to the trim order. This one is. Getting
+    // there needs care: every record section is snippet-capped in CHARS
+    // (200/120/600), so long words cannot blow the 400-WORD cap — a first
+    // attempt with 6-char filler stayed at ~385 words and the cap never bit,
+    // which made the test fail against correct code. Single-character words
+    // maximise words-per-char and make the cap bite for real.
+    it('is the FIRST section trimmed when the cap bites — records outrank advice', () => {
+        const tiny = (n: number) => Array.from({ length: n }, () => 'x').join(' ');
+        writeHistory([
+            { t: 'header', v: 4 },
+            { t: 'user_prompt', text: tiny(120), ts: '2026-08-23T10:00:00+00:00' },
+            { t: 'user_prompt', text: tiny(120), ts: '2026-08-23T10:00:01+00:00' },
+            { t: 'user_prompt', text: tiny(120), ts: '2026-08-23T10:00:02+00:00' },
+            { t: 'post_tool_use', tool: 'Bash', text: tiny(60), ts: '2026-08-23T10:00:03+00:00' },
+            { t: 'post_tool_use', tool: 'Bash', text: tiny(60), ts: '2026-08-23T10:00:04+00:00' },
+            { t: 'stop', text: tiny(300), ts: '2026-08-23T10:01:00+00:00' },
+        ]);
+        const tp = writeTranscript('t.jsonl', [
+            { file: path.join(tmpDir, 'src', 'trimmed-away.ts'), body: 'a'.repeat(600) },
+            { file: path.join(tmpDir, 'src', 'trimmed-away.ts'), body: 'a'.repeat(600) },
+        ]);
+        runHook('stop', { transcript_path: tp });
+        const text = fs.readFileSync(hotFile, 'utf8');
+        // precondition: the cap actually bit, otherwise this test proves nothing
+        expect(wordCount(text)).toBeLessThanOrEqual(400);
+        expect(text).toContain('Key Facts');
+        expect(text).not.toContain('trimmed-away.ts');
+    });
+
+    // Step 4's verify names the privacy floor explicitly: it must still DROP
+    // rather than rewrite. A relative path is clean by construction, so the
+    // floor has nothing to catch in the happy-path fixtures above and this
+    // assertion is the only thing standing between the floor and a silent
+    // bypass. An email-shaped path segment is a floor violation.
+    it('routes advisory lines through the privacy floor, dropping not rewriting', () => {
+        const dirty = path.join(tmpDir, 'inbox', 'reply-to-matze.b@galawork.de.md');
+        const tp = writeTranscript('t.jsonl', [
+            { file: dirty, body: 'q'.repeat(600) },
+            { file: dirty, body: 'q'.repeat(600) },
+        ]);
+        runHook('stop', { transcript_path: tp });
+        const text = fs.readFileSync(hotFile, 'utf8');
+        // dropped whole — never partially rewritten into a redacted stub
+        expect(text).not.toContain('matze.b@galawork.de');
+        expect(text).not.toContain('[REDACTED]');
+        expect(text).not.toContain('Re-Read Advisory');
+        expect(text).toMatch(/Privacy floor: \d+ line\(s\) dropped/);
+    });
+
+    it('emits no decision on the write slot — advisory only, no refuse branch', () => {
+        const tp = writeTranscript('t.jsonl', [
+            { file: path.join(tmpDir, 'src', 'a.ts'), body: 'a'.repeat(600) },
+            { file: path.join(tmpDir, 'src', 'a.ts'), body: 'a'.repeat(600) },
+        ]);
+        const r = runHook('stop', { transcript_path: tp });
+        expect(r.stdout.trim()).toBe('');
+        expect(r.status).toBe(0);
+    });
+});
