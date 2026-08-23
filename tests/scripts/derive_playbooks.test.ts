@@ -8,6 +8,8 @@ import {
     detectOutOfScope,
     discoverTurboGenerators,
     renderPlaybook,
+    findRestatedSteps,
+    isPointerLine,
     resolveInvoked,
     unwrapScript,
 } from '../../src/scripts/derive_playbooks';
@@ -131,5 +133,57 @@ describe('derive_playbooks', () => {
             expect(unwrapScript('vite build')).toBeNull();
             expect(unwrapScript('echo turbo gen component')).toBeNull();
         });
+    });
+});
+
+describe('per-workspace AGENTS.md — restatement, not duplication (1.3)', () => {
+    const WS_FILE = path.join(FIXTURE, 'packages', 'ui', 'AGENTS.md');
+
+    it('flags a workspace file that restates a playbook step verbatim', () => {
+        const playbooks = derive(FIXTURE).playbooks;
+        const hits = findRestatedSteps(playbooks, WS_FILE, fs.readFileSync(WS_FILE, 'utf8'));
+        expect(hits.length, 'the fixture restates one step and must be flagged').toBeGreaterThan(0);
+        expect(hits[0]?.playbook).toBe('add-ui-component');
+    });
+
+    it('does NOT flag the pointer line in the same file', () => {
+        // The near-miss, and the reason this detector is worth having: the same fixture
+        // carries a LINK to the playbook. A detector that flagged it would forbid the exact
+        // shape the contract asks for, and the workspace-file slot would be unusable.
+        const playbooks = derive(FIXTURE).playbooks;
+        const hits = findRestatedSteps(playbooks, WS_FILE, fs.readFileSync(WS_FILE, 'utf8'));
+        // Exactly ONE restatement: the prose step under "## How to add a component".
+        // The pointer at the bottom quotes the SAME step text in its link label, so without
+        // the carve-out this count would be 2 — which is what makes this assertion sensitive
+        // rather than decorative.
+        expect(hits.length).toBe(1);
+        expect(isPointerLine("- [Run the repository's own generator](../x/add-ui-component.md)")).toBe(true);
+        expect(isPointerLine('Run the generator, then commit')).toBe(false);
+    });
+
+    it('a pointer-only file is clean', () => {
+        const clean = [
+            '# @org/ui',
+            '',
+            // Link label = the step text, so this line is only clean BECAUSE of the carve-out.
+            "- [Run the repository's own generator — `turbo gen component`](../../agents/settings/contexts/add-ui-component.md)",
+        ].join('\n');
+        expect(findRestatedSteps(derive(FIXTURE).playbooks, 'x/AGENTS.md', clean)).toEqual([]);
+    });
+
+    it('a short invoked id is not matched at all — it would collide with ordinary prose', () => {
+        // The guard this asserts, with the collision that makes it necessary: a repo whose
+        // creation script is literally named `gen` yields the needle "gen", which appears in
+        // "the generator writes the barrel export" and in "generated". Matching it would
+        // report every such line, and a detector that fires on coincidence teaches its
+        // readers to ignore it. Sensitivity check: removing the minChars guard makes this
+        // fail, because the prose line below does contain "gen".
+        const short = [{ slug: 'add-gen', steps: [{ title: 'Run it', invokes: 'gen', source_of_truth: 'package.json#scripts', verify: 'x' }] }];
+        const prose = 'The generator writes the component, its test, and the barrel export.';
+        expect(findRestatedSteps(short, 'x/AGENTS.md', prose)).toEqual([]);
+        // And a long id in the same prose IS matched, so the guard is a length rule rather
+        // than a blanket refusal.
+        const long = [{ slug: 'add-x', steps: [{ title: 'Run it', invokes: 'turbo gen component', source_of_truth: 'x', verify: 'x' }] }];
+        expect(findRestatedSteps(long, 'x/AGENTS.md', 'Run `turbo gen component` by hand.')).toHaveLength(1);
     });
 });

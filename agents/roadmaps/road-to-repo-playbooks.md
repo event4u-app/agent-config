@@ -163,7 +163,7 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       `observed` must cite the commit. It also carries a *"What this playbook does NOT
       cover"* section, because a playbook that silently stops short is worse than one that
       names where it ends — a reader cannot otherwise tell completion from omission.
-- [ ] **1.2 `playbook-authoring` skill (new, `engineering-base`).** Derives
+- [x] **1.2 `playbook-authoring` skill (new, `engineering-base`).** Derives
       playbooks from the repository: enumerate `package.json#scripts` (root and
       each workspace), `turbo.json` tasks with `description`, `nx list` /
       `nx g --help` output, `turbo/generators/*`, `plopfile.*`; propose one
@@ -177,18 +177,101 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       yet covered, because their discovery needs a consumer binary (the
       posture decided in `road-to-monorepo-scope-and-detection.md` Phase 3
       step 3.1) and the staleness check in Phase 3 must run without one.
-      verify: run against the 0.1 fixture → produces `add-ui-component.md`
+      verify (discharged): run against the 0.1 fixture → produces `add-ui-component.md`
       in the playbook home with `grade: configured` and `invokes: [turbo gen
       component]`; the ADR lists the three supported kinds and the two
-      deferred ones; `check_references` green.
-- [ ] **1.3 Per-workspace `AGENTS.md` slot.** `agents-md-thin-root` gains a
+      deferred ones; `check_references` green. **All three: the derivation prints
+      `✅ …/add-ui-component.md  grade=configured  invokes=[turbo gen component]`;
+      ADR-244:116-118 carries the three-supported / two-deferred split; references green.**
+
+      Shipped as a **skill plus a deterministic script**, not prose alone. The verify says
+      *"run against the fixture → produces"*, and a prose-only skill cannot discharge that:
+      the claim would be an assertion about what an agent would do. `derive_playbooks.ts`
+      makes no model call, so the verify is a command anyone can re-run.
+
+      **The Class-A refusal is exercised on the fixture, not mocked.** `new:package` wraps
+      `turbo gen workspace` and the fixture registers only `component`, so the same fixture
+      that produces the `configured` playbook also produces an `observed` one naming the
+      unresolved id. The pass arm and the refusal arm cannot drift apart, because they are
+      the same input.
+
+      Two findings that were not in the step and are now in the code:
+
+      - **The wrapper trap.** `"new:component": "turbo gen component"` is a *pointer*. A
+        playbook invoking the SCRIPT stays green after the generator is renamed — the script
+        still exists — so the Phase-3 staleness check would pass over a broken procedure.
+        Thin wrappers are unwrapped and what they point at is recorded.
+      - **The filename is not the generator id.** `turbo/generators/config.ts` registers
+        `component` via `plop.setGenerator`; reading the filename yields `turbo gen config`,
+        which nobody can run. Both Plop spellings are accepted, since a real config carries
+        either.
+
+      Slugs are workspace-qualified (`add-ui-component`, not `add-component`) because two
+      workspaces may each own a `component` procedure with different conventions, and one
+      file per subject would silently collapse them into whichever ran last.
+
+      **Sabotage-proven:** forcing `grade: 'configured'` unconditionally takes both refusal
+      assertions RED. Restored, 13/13.
+
+      **`lint_framework_leakage` rose 0 → 1, and the fix was the better skill rather than a
+      suppression.** The gate offered a line-keyed suppression with a reason field; taking it
+      would have recorded *"this token is quoted content"*, which was false — the draft named
+      a Node manifest as *the* source of truth for a generic skill. A playbook is
+      **ecosystem-neutral**: a Python repo's `nox` sessions, a Go repo's `make` targets, a
+      Rust workspace's `just` recipes are all repeated procedures the class covers. What
+      varies is whether a deterministic reader can resolve an invoked id **without a consumer
+      binary** — the actual constraint ADR-244 recorded, and now what the scope table says. A
+      third row states honest scope: those ecosystems are **not yet read**, so a playbook for
+      them is written by hand against the grading rules. 0 hits, no allowlist entry added.
+
+      **A dropped `git stash` ate this note and the skill edits once.** Switching branches
+      mid-step stashed uncommitted work; the pop reported *"The stash entry is kept"* and the
+      entry was then dropped, taking the ecosystem-neutral rewrite and this whole block with
+      it. `git fsck --unreachable` found no matching commit. Recovered by redoing the edits
+      from the session record. The lesson is the ordering, not the recovery: **commit before
+      switching branches**, and treat a `pop` that does not say *"Dropped"* as a failed pop.
+- [x] **1.3 Per-workspace `AGENTS.md` slot.** `agents-md-thin-root` gains a
       § Workspace files: a `packages/<n>/AGENTS.md` is allowed, is subject to
       the same pointer-ratio rule, and its primary content is a pointer list to
       the playbooks whose `scope` is that workspace. `copilot-agents-optimization`
       dedups these files against the playbooks, not only against `.augment/`.
-      verify: both skills name the per-workspace file; a fixture
+      verify (discharged): both skills name the per-workspace file; a fixture
       `packages/ui/AGENTS.md` that restates a playbook step verbatim is flagged
-      by `copilot-agents-optimization`.
+      by `copilot-agents-optimization`. **Both: `agents-md-thin-root` gains
+      § Workspace files, `copilot-agents-optimization` gains step 3b, and the fixture is
+      flagged — 17/17 in `derive_playbooks.test.ts`.**
+
+      **"Flagged by a skill" is prose, so the flag is a function.** A skill cannot discharge
+      a verify that says *is flagged*: the claim would be an assertion about what an agent
+      would do. `findRestatedSteps` is deterministic and both skills point at it. It is NOT
+      wired as a new CI gate — a new gate reds three ratchets and this is a consumer-side
+      check over files this repository does not have.
+
+      **The detector matches the invoked ID, not the step title, and the first version got
+      that wrong.** Titles are generic by construction — every generator step in the fixture
+      is called *"Run the repository's own generator"* — so the title needle reported the
+      same prose line once per playbook (`expected 2 to be 1`) and named neither procedure.
+      The id is the actionable half, and duplicating the actionable half is the failure.
+
+      **Two guards, both sabotage-proven, and the first probe FAILED to prove anything.**
+      Removing the pointer carve-out left the suite green: the fixture's link label read
+      *"add a UI component"*, which contains no step text, so nothing distinguished
+      carve-out from no carve-out. The fixture's pointer now reads
+      `[Run the repository's own generator — \`turbo gen component\`](…)` — a pointer whose
+      label quotes the step it points at, which is the hardest case and the only one that
+      makes the carve-out observable. Removing it now takes the suite RED. Same story for
+      the length guard: it is exercised with a short id (`gen`) against prose containing
+      *"generator"*, and removing the guard takes it RED. A test never seen red has unknown
+      sensitivity, and two of these had none.
+
+      **`skill_linter` matched `fix` inside `fixtures`** and demanded an analysis-first
+      section of a skill that had passed for months. Resolved by promoting the inventory
+      requirement to its own `### Before writing one` section — which the skill wanted
+      anyway, since a workspace file written before its playbooks are read is exactly how
+      the restatement arrives. The substring match is a real linter defect (no word
+      boundary, the same class as the grep-shaped traps this run keeps hitting); not fixed
+      here, because widening `changeSignals` to word boundaries would move findings across
+      288 skills and every ratchet that counts them.
 
 ## Phase 2 — Precedence: playbook before shipped skill
 

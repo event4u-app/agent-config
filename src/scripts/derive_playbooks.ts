@@ -264,6 +264,73 @@ export const renderPlaybook = (p: Playbook): string => {
     return lines.join('\n');
 };
 
+// ---------------------------------------------------------------------------
+// Restatement detection — for the per-workspace AGENTS.md contract (1.3).
+//
+// A `packages/<n>/AGENTS.md` is allowed and its primary content is a POINTER LIST to the
+// playbooks scoped to that workspace. The failure it must not become is a second copy of
+// the steps: two files then disagree the first time one is edited, and a reader has no way
+// to tell which one the repository actually follows. So the detector below looks for a
+// playbook step's own text appearing verbatim in a workspace file, and deliberately does
+// NOT flag a pointer AT the playbook — naming the file is the behaviour the contract wants.
+// ---------------------------------------------------------------------------
+
+export interface Restatement {
+    readonly file: string;
+    readonly playbook: string;
+    /** The step text found verbatim in `file`. */
+    readonly step: string;
+}
+
+/** Normalise for comparison: collapse whitespace, drop markdown emphasis and list markers. */
+const normalise = (line: string): string =>
+    line
+        .replace(/^\s*(?:[-*+]|\d+\.)\s+/, '')
+        .replace(/[*_`>]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+
+/** A line that merely POINTS at a playbook — a link, or a path mention. Never a restatement. */
+export const isPointerLine = (line: string): boolean =>
+    /\[[^\]]+\]\([^)]*\.md[^)]*\)/.test(line) || /`[^`]*\.md`/.test(line);
+
+/**
+ * Steps of a playbook that a workspace file restates verbatim.
+ *
+ * The needle is the step's **invoked id**, not its title. Titles are generic by
+ * construction — every generator step in this repository's own fixture is called "Run the
+ * repository's own generator" — so a title match reports the same prose line once per
+ * playbook and tells the reader nothing about WHICH procedure was duplicated. The id is
+ * what makes a line actionable, and duplicating the actionable half is the failure.
+ *
+ * Short lines are skipped: a three-word step and a three-word sentence collide by accident,
+ * and a detector that fires on coincidence teaches its readers to ignore it.
+ */
+export const findRestatedSteps = (
+    playbooks: readonly { readonly slug: string; readonly steps: readonly PlaybookStep[] }[],
+    file: string,
+    text: string,
+    minChars = 12,
+): Restatement[] => {
+    const lines = text.split('\n');
+    const found: Restatement[] = [];
+    for (const p of playbooks) {
+        for (const st of p.steps) {
+            const needle = normalise(st.invokes);
+            if (needle.length < minChars) continue;
+            for (const line of lines) {
+                if (isPointerLine(line)) continue;
+                if (normalise(line).includes(needle)) {
+                    found.push({ file, playbook: p.slug, step: st.title });
+                    break;
+                }
+            }
+        }
+    }
+    return found;
+};
+
 const selfTest = (): number => {
     let failed = 0;
     const check = (name: string, cond: boolean): void => {
@@ -276,6 +343,12 @@ const selfTest = (): number => {
     check('a thin wrapper unwraps to the generator it points at', unwrapScript('turbo gen component') === 'turbo gen component');
     check('an unrelated script body does not unwrap', unwrapScript('vite build') === null);
     check('a wrapper with flags still unwraps', unwrapScript('turbo gen workspace --type package') === 'turbo gen workspace');
+
+    check(
+        'a pointer at a playbook is not a restatement',
+        isPointerLine('- See [add a component](../../agents/settings/contexts/add-ui-component.md)'),
+    );
+    check('a prose line is not a pointer', !isPointerLine('Run the repository own generator first'));
 
     const fixture = path.join('tests', 'fixtures', 'playbooks', 'mono-with-generator');
     if (fs.existsSync(fixture)) {

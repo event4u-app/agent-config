@@ -83,6 +83,36 @@ Every substantive pointer specifies, on the same line or the immediately followi
 ✅ **Right** — anchor optional when target is short:
 > Mirror the user's language every reply, single Iron Law that overrides any momentum: [`language-and-tone`](dist/agent-src/rules/language-and-tone.md).
 
+## Workspace files — `packages/<n>/AGENTS.md`
+
+A per-workspace `AGENTS.md` is **allowed**, and it is subject to the same pointer-ratio rule
+as the root file. Its primary content is a **pointer list to the playbooks whose `scope` is
+that workspace** ([ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md)) —
+not a second copy of their steps.
+
+```
+A WORKSPACE FILE POINTS AT ITS PLAYBOOKS. IT NEVER RESTATES THEIR STEPS.
+TWO COPIES OF A PROCEDURE DISAGREE THE FIRST TIME ONE IS EDITED,
+AND A READER CANNOT TELL WHICH ONE THE REPOSITORY ACTUALLY FOLLOWS.
+```
+
+The restatement is detected on the **invoked id**, not the step title: titles are generic by
+construction (*"Run the repository's own generator"*), so a title match reports one hit per
+playbook and names none of them. A line carrying a playbook's `invokes` id **outside** a
+link is a restatement; the same id inside a link label is the pointer the contract wants.
+`findRestatedSteps` in `src/scripts/derive_playbooks.ts` is the detector; the negative
+control is `tests/fixtures/playbooks/mono-with-generator/packages/ui/AGENTS.md`.
+
+### Before writing one — inventory the playbooks
+
+List the playbooks whose `scope` is that workspace and read each one **before** the file
+exists. A workspace file written first and reconciled later is how the restatement arrives:
+the steps are fresh in mind, the pointer feels like an extra hop, and both copies ship. If
+the inventory is empty, the workspace does not need the file yet.
+
+No new caps: a workspace file is small by construction if it only points, and the root
+caps above bind the root file alone.
+
 ## The contract — emergency-triage block
 
 Every Thin-Root AGENTS.md MUST contain an **Emergency Triage** section verbatim from `src/agent-src/contexts/contracts/emergency-triage-block.md` (Phase 6.4 will create that file as the canonical source). The block lists the five questions a host agent answers from the root file alone when network / tool access is degraded:

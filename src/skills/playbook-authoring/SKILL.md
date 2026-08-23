@@ -40,7 +40,8 @@ use our generator"*.
 
 1. **Derive, and write nothing yet.** Run the command below without `--write`. The output is
    one line per candidate with its grade.
-   - **Source of truth:** `package.json#scripts`, `turbo.json#tasks`, `turbo/generators/`.
+   - **Source of truth:** the repository's own task declarations — see the scope table below
+     for which of them this release resolves.
    - **Verify:** every line printed names an id you can run by hand.
 2. **Read every proposal, including the graded-`observed` ones.** An `⚠️` line means an id
    did not resolve — go look at the tree before deciding what it means.
@@ -68,20 +69,29 @@ its grade, so an `⚠️  … grade=observed` line is the signal to go look rath
 to dismiss. Read every proposal before `--write`: the derivation finds *candidates*, and
 whether a repeated procedure deserves a playbook is a judgement it does not make.
 
-## What it enumerates, and the one thing it refuses
+## Scope of the derivation — and what "not covered" means
 
-| Source | Resolves an `invokes` id? |
+A playbook is **ecosystem-neutral**: a Python monorepo's `nox`/`invoke` sessions, a Go
+repo's `make` targets, a Rust workspace's `just` recipes and a PHP repo's console commands
+are all repeated procedures a playbook can encode, and the artefact class does not care
+which. What varies is whether a *deterministic* reader can resolve an invoked id **without
+running a consumer binary** — the constraint that decides this release's set, per
+[ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md).
+
+| Declared where | Resolvable without a binary? |
 |---|---|
-| `package.json#scripts` (root and each workspace) | yes |
-| `turbo.json` tasks | yes |
-| `turbo gen` templates under `turbo/generators/` — by the **registered name**, not the filename | yes |
-| Nx generators | **no** — needs `nx list`, a consumer binary |
-| Plop generators | **no** — needs `plop --help` |
+| a Node manifest's script map (root and each workspace) | yes — read from the manifest |
+| Turborepo task declarations | yes — read from the task file |
+| Turborepo generator templates, by the **registered name** rather than the filename | yes — read from the config |
+| Nx generators | **no** — the list comes from `nx list` |
+| Plop generators | **no** — the list comes from `plop --help` |
+| Make / just / nox / invoke / console targets in other ecosystems | **not yet read** — no reader written; the artefact class covers them |
 
-The last two rows are a decision, not an omission ([ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md)):
-discovering them requires running a binary the consumer owns, and the Phase-3 staleness
-check must run without one. A repo carrying `nx.json` or a `plopfile` is **reported** on
-stdout, so its maintainer sees the gap instead of receiving a silently partial playbook set.
+The `no` rows are a decision, not an omission: their discovery requires running a binary the
+consumer owns, and the Phase-3 staleness check must run without one. A repo carrying either
+is **reported** on stdout, so its maintainer sees the gap rather than receiving a silently
+partial set. The last row is honest scope: nothing reads those yet, and a playbook for them
+is written by hand against this skill's grading rules.
 
 ## The wrapper trap — the one that silently rots
 
@@ -114,19 +124,21 @@ The derivation therefore unwraps a thin wrapper and records what it points at, a
 - **The wrapper trap, and it is the common case.** `"new:component": "turbo gen component"`
   is a pointer. A playbook invoking `new:component` survives the generator being renamed —
   the script still exists — so the staleness check stays green over a broken procedure.
-- **The filename is not the generator id.** `turbo/generators/config.ts` registers
-  `component`; reading the filename yields `turbo gen config`, which nobody can run.
+- **The filename is not the generator id.** A Turborepo generator config registers
+  `component` inside the file; reading the *filename* yields `turbo gen config`, which
+  nobody can run.
 - **`observed` reads like a lesser `configured` and is not.** It means an id did not
   resolve. Shipping it unread is shipping a procedure nobody verified.
-- **A playbook per npm script grows the estate for nothing.** `build` and `test` are one
-  command each; the derivation deliberately proposes nothing for them.
+- **A playbook per declared script grows the estate for nothing.** `build` and `test` are
+  one command each; the derivation deliberately proposes nothing for them.
 
 ## Do NOT
 
 - Do NOT write `grade: configured` for an id you did not resolve in the tree.
 - Do NOT invoke a wrapper script when it points at a generator — invoke the generator.
-- Do NOT infer an Nx or Plop generator from a lockfile or a dependency; this release
-  reports them as out of scope and that is the decision.
+- Do NOT infer an Nx or Plop generator from a lockfile or a dependency, and do NOT hand a
+  Make / just / nox target a `configured` grade this release cannot resolve — report the
+  gap; that is the decision, not a shortfall to paper over.
 - Do NOT write a playbook for a one-off, or for a procedure the repository does not
   actually repeat.
 - Do NOT `--write` a proposal set you have not read.
