@@ -34,20 +34,28 @@ One invocation = one roadmap = one branch = one PR.
 Selection reads live state, never memory, a dashboard count, or an
 earlier fetch (per [`direct-answers`](../../rules/direct-answers.md)
 Iron Law 2 and [`roadmap-process-loop § 1`](../../contexts/execution/roadmap-process-loop.md#1-resolve-roadmap)).
-Run as ONE block:
+Run ONE command:
 
 ```bash
-git fetch origin --prune
-git ls-tree --name-only origin/main agents/roadmaps/          # still active?
-git ls-tree --name-only origin/main agents/roadmaps/archive/   # already closed?
-gh pr list --state open --json number,title,headRefName        # in flight?
-agent-config sessions:list                                     # claimed right now?
+agent-config roadmap:context
 ```
 
-`sessions:list` without `--json` on purpose: the human form carries **both**
-axes — the live records AND the unmerged branches checked out in other
-worktrees. `--json` returns only the records unless `--branches` is passed, and
-the branch axis is the one that does not need a peer to have claimed anything.
+The four hand-written reads this block used to carry — the pruning fetch, the
+active and archived roadmap listings, the open-PR listing, and the session
+register — are now one probe
+([`roadmap_context.ts`](../../../../scripts/roadmap_context.ts)), so all five
+`/roadmap:*` entry points screen the same way instead of one command file
+screening well and four not screening at all.
+
+Both session axes are still in the report and for the same reason: the live
+records AND the unmerged branches checked out in other worktrees. The branch
+axis is the one that does not need a peer to have claimed anything, and it is
+the half that cannot be silent.
+
+The probe never refuses. With no network, no `gh`, or no authentication it
+prints `scanned: 0 PRs (network unavailable)` and exits 0 — a probe that failed
+closed would make the call site conditional, which is the failure this
+extraction removes.
 
 Excluded from the candidate set: `template.md`, `archive/`,
 `skipped/`, `later/`, anything with `status: draft` whose promotion

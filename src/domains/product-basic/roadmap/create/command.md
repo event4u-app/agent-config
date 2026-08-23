@@ -35,6 +35,30 @@ lookup, and assess the four 95%-conditions against the seed.
 - **Explicit user bypass** ("just write it") → skip the gate for this turn;
   count the bypass.
 
+### 0b. Context probe — before step 1
+
+```bash
+agent-config roadmap:context
+```
+
+Run it before gathering any content, and surface its hits to the user as ONE
+list:
+
+- an `agents/tmp/` inbox note on the same topic (names only — the probe never
+  reads the bodies);
+- a sibling roadmap in `later/`, `stubs/`, `archive/` or the active set whose
+  slug or title shares the topic;
+- an open PR touching the paths the new roadmap would cite.
+
+This is the axis step 6's collision check cannot reach. That check is a
+recursive `find -iname`, so it already covers `later/`, `stubs/` and `archive/`
+— **lexically**. Same topic under a different name passes it clean, and the
+probe is the semantic half.
+
+Naming an overlap is **required**, not optional, and it is coordination rather
+than content generation — see the amended rule below. Zero hits is a real
+answer: record the probe's `scanned:` line as the justification and continue.
+
 ### 1. Determine location
 
 Ask the user (in their language) where the roadmap should be created:
@@ -313,6 +337,11 @@ Failure modes covered by this hard stop:
 ### Rules
 
 - **Do NOT auto-generate content** — always ask the user for input.
+- **Naming an overlap is coordination, not content generation, and it is
+  required.** The rule above governs the roadmap's *substance*; it never
+  licenses staying silent about a sibling roadmap, an inbox note, or an open PR
+  that step 0b's probe surfaced. Report every hit, let the user decide what it
+  means, and write the outcome into the `relates:` block (template rule 18).
 - **Do NOT commit or push.**
 - **Do NOT offer execution after save** — Step 11 is a hard stop.
   Execution starts on a later turn with an explicit execution verb

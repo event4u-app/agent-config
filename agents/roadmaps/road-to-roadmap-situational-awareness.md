@@ -79,7 +79,7 @@ axis, a mid-run refresh cadence, and a named `superseded` disposition.**
 invocation exits 0. **Rollback:** delete the script and its test; nothing else
 references it until Phase 2.
 
-- [ ] **1.1 Add `src/scripts/roadmap_context.ts` (CLI `roadmap:context`).**
+- [x] **1.1 Add `src/scripts/roadmap_context.ts` (CLI `roadmap:context`).**
       This is an **extraction, not greenfield**: the hand-written four-command
       block at `next/command.md:39-45` becomes one probe callable from all five
       entry points. `agent-config work:context` / `roadmap:context` genuinely
@@ -91,15 +91,15 @@ references it until Phase 2.
       only, never contents; and title/slug keyword hits across all four roadmap
       directories. `--roadmap <slug>` narrows the hits. `scanned:` line on
       every path per ADR-054.
-      verify: `./scripts-run src/scripts/roadmap_context --json | jq -e '.open_prs | type == "array"'` exits 0; with the network unreachable the same command exits 0 and the text form prints `scanned: 0 PRs (network unavailable)`.
-- [ ] **1.2 Unit tests for the probe** — PR file-set extraction,
+      verify (discharged): `./scripts-run src/scripts/roadmap_context --json` emitted `"open_prs": [...]` (an array) and exited 0 at `c7e82087e`; `agent-config roadmap:context` reaches the same script through the new `cmd_roadmap_context` dispatch entry. The offline half is asserted in the test suite rather than by unplugging the machine — `probe()` takes an injected executor, and `offline path — degrade, never refuse` pins both `network: 'unavailable'` with an empty PR set and the literal `scanned: 0 PRs (network unavailable)` line in `renderText`. **Drift from the step's own premise:** the step asks for `jq -e`, which is not a dependency this repo declares; the assertion was made on the emitted JSON directly. Registration cost three surfaces the step did not name — `src/cli/registry.ts`, `_dispatch.bash` (help text, `cmd_roadmap_context`, case entry) — and `tests/cli/registry.test.ts` + `tests/cli/help.test.ts` are green over them.
+- [x] **1.2 Unit tests for the probe** — PR file-set extraction,
       roadmap-tail branch match, keyword hit across all four roadmap
       directories, `agents/tmp/` names-only, offline path.
-      verify: `npx vitest run tests/scripts/roadmap_context.test.ts` exits 0 with at least five assertions.
-- [ ] **1.3 State the honesty boundary in the script header.** The probe is
+      verify (discharged): `npx vitest run tests/scripts/roadmap_context.test.ts` → **18 tests passed**, well past the five-assertion floor. Sensitivity was proven rather than assumed: four sabotages (`online = true`; inbox names concatenated with file contents; the pre-scan branch disabled; the subject no longer excluded from its own hits) turned **5 tests red** with the verbatim failures `expected 'live' to be 'unavailable'`, `expected [ 'idea-one.md:PRIVATE-SCRATCH-BODY' ] to deeply equal [ 'idea-one.md' ]`, `expected [] to deeply equal [ { roadmap: 'road-to-thing', …(3) } ]` and `expected [ { …(4) } ] to deeply equal []`; the file was then restored from a `cp` backup and re-run green at 18/18.
+- [x] **1.3 State the honesty boundary in the script header.** The probe is
       deterministic once invoked; the invocation is model-carried. Same shape
       as the boundary already stated in `next/command.md`.
-      verify: `grep -c "model-carried" src/scripts/roadmap_context.ts` reports 1 or more.
+      verify (discharged): `grep -c "model-carried" src/scripts/roadmap_context.ts` → `1`, in the header block `THE PROBE IS DETERMINISTIC ONCE INVOKED. THE INVOCATION IS MODEL-CARRIED.` The same sentence is repeated at the end of the rendered human report, so a reader of the *output* meets the boundary too, not only a reader of the source.
 
 ## Phase 2 — Wire the probe into every entry point
 
@@ -107,27 +107,27 @@ references it until Phase 2.
 call site is unconditional rather than claim-triggered. **Rollback:** revert the
 four prose edits; the probe stays and is simply uncalled.
 
-- [ ] **2.1 `roadmap-process-loop § 1` calls `roadmap:context --roadmap <slug>`
+- [x] **2.1 `roadmap-process-loop § 1` calls `roadmap:context --roadmap <slug>`
       before resolving the roadmap — unconditionally.** This is the D1
       residue: today's screen at `:31-49` fires only when a message would claim
       in-flight state. Print the report in the pre-run summary. Roadmap closed
       in an open PR → name the PR and stop; this is a **selection error**, not
       a halt, and does not touch the halt list. Roadmap partially covered by an
       open PR → name the PR and continue on a branch from `origin/main`.
-      verify: `grep -c "roadmap:context" src/agent-src/contexts/execution/roadmap-process-loop.md` reports 1 or more, and `grep -c "before resolving the roadmap" <same file>` reports 1 or more, so the call site is not guarded by a claim condition.
-- [ ] **2.2 `/roadmap:next § 1` replaces the four-command block with the
+      verify (discharged): `grep -c "roadmap:context"` → `1`; `grep -c "before resolving the roadmap"` → `2` (the subsection heading and the imperative under it). The new `### Context probe` subsection sits **above** `Search both locations:` and above the existing claim-triggered live merge-state clause, so the unconditional call precedes the conditional one rather than replacing it; the closed-in-an-open-PR reading is written as a **selection error** and the halt list is untouched.
+- [x] **2.2 `/roadmap:next § 1` replaces the four-command block with the
       probe**, leaving the three-way exclusion table (`taken by an open PR` /
       `claimed by a live session` / `held by a foreign worktree`) unchanged.
-      verify: a grep for the literal PR-listing command in `src/domains/product-basic/roadmap/next/command.md` reports 0 hits, and `grep -c 'held by a foreign worktree' <same file>` reports 1 or more.
-- [ ] **2.3 `/roadmap:create` gains step 0b — run the probe before step 1.**
+      verify (discharged): `grep -c 'gh pr list --state open --json number,title,headRefName' src/domains/product-basic/roadmap/next/command.md` → `0`; `grep -c 'held by a foreign worktree'` → `1`. The three-way exclusion table is byte-unchanged; only the command block above it moved to `agent-config roadmap:context`, and the both-axes rationale was rewritten to explain the report rather than the `--json` flag it no longer passes.
+- [x] **2.3 `/roadmap:create` gains step 0b — run the probe before step 1.**
       Surface hits (inbox note on the same topic, sibling in `later/` or
       `stubs/`, open PR on the cited paths) as one list. Amend the rule at
       `create/command.md:314`: naming an overlap is coordination, not content
       generation, and is required.
-      verify: `grep -c "roadmap:context" src/domains/product-basic/roadmap/create/command.md` reports 1 or more, and the amended rule text sits alongside the unchanged "Do NOT auto-generate content" line.
-- [ ] **2.4 `roadmap-writing § 0` replaces the prose overlap obligation with
+      verify (discharged): `grep -c "roadmap:context"` → `1` (new `### 0b. Context probe — before step 1`, placed above `### 1. Determine location`). The amendment is the bullet immediately after the unchanged `- **Do NOT auto-generate content**` line in § Rules: *"Naming an overlap is coordination, not content generation, and it is required."* **Drift from the step's stated anchors:** the collision check is at `:143-150`, not `:140-149`, and the auto-generate rule at `:339`, not `:314` — the file grew between drafting and execution. The characterisation was correct: the check is a recursive `find -iname` and therefore lexical only.
+- [x] **2.4 `roadmap-writing § 0` replaces the prose overlap obligation with
       the probe plus the relation table** (Phase 4).
-      verify: `grep -c "roadmap:context" src/skills/roadmap-writing/SKILL.md` reports 1 or more, and the pre-save self-check gains a relation-table question.
+      verify (discharged): `grep -c "roadmap:context" src/skills/roadmap-writing/SKILL.md` → `1`. The prose obligation *"Inspect existing roadmaps under `agents/roadmaps/` for overlap or supersession"* is replaced by the probe call plus the `relates:` row mapping; the pre-save self-check gains item **5b**, which requires either one row per probe hit or an explicit `relates: []` carrying the `scanned:` line — the reflex-empty-list risk (risk register rank 3) named in the question itself.
 
 ## Phase 3 — Overlap on paths, not on slugs
 

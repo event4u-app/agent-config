@@ -12,6 +12,36 @@ delta**.
 
 ## 1. Resolve roadmap
 
+### Context probe — unconditionally, before resolving the roadmap
+
+```bash
+agent-config roadmap:context --roadmap <slug>   # slug omitted on a bare invocation
+```
+
+Run it **before resolving the roadmap**, on every invocation, and print its
+report in the pre-run summary (§ 2). Unconditional is the whole point: the live
+merge-state clause below fires only when a message would *describe* a roadmap
+as in-flight or merged, so a run that never makes such a claim has never looked.
+Measured on the population that motivated this: 4 of 24 active roadmaps were
+already closed in an open PR, and 2 of 22 six days later — the same sample
+halved inside a week, which is why the probe re-runs on a cadence (§ 5e) rather
+than once at branch time.
+
+The report carries open PRs with the files they change, remote branches carrying
+a roadmap slug, live sessions on both axes, `agents/tmp/` note names, sibling
+roadmaps on the same topic, and roadmap-to-PR file overlap. Two readings act:
+
+- **The roadmap is closed in an open PR** → name the PR number and stop. This is
+  a **selection error**, not a halt: nothing on the halt list fired, the run
+  simply picked work that is already done. It does not touch the halt list and
+  it is not a `blocked` outcome.
+- **The roadmap is partially covered by an open PR** → name the PR and continue,
+  on a branch cut from `origin/main`. Never rebase onto the foreign branch.
+
+Same honesty boundary the probe states in its own header: **the probe is
+deterministic once invoked, and the invocation is model-carried.** Nothing fires
+it and nothing notices when it is skipped.
+
 Search both locations:
 
 - `agents/roadmaps/*.md` (project root)
