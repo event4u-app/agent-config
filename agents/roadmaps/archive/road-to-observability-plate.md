@@ -99,21 +99,27 @@ definitions that floor's item 4 already assumes exist.
 > existing ones. `alerting-doctrine` is likewise **not** created first, so a
 > downstream consumer cannot dictate the evidence ontology.
 
-- [ ] **1.1 Restate `logging-monitoring` as required signal → detected
+- [x] **1.1 Restate `logging-monitoring` as required signal → detected
       implementation → evidence.** The skill stops being a list of how to
       configure one stack's log channels and becomes a way to answer "what does
       this project actually have". Vendor specifics move behind the detection
       step, not in front of it.
-      verify: `git show HEAD:src/skills/logging-monitoring/SKILL.md | wc -l`
-      reports the 105-line pre-state, and the reworked skill names at least one
-      detection step per required signal.
-- [ ] **1.2 Keep the specialists as specialists.** The vendor-specific
+      verify (discharged): `git show HEAD:...| wc -l` = **105**, pre-state
+      confirmed. Reworked skill is **288** lines with **4** `Typical detection
+      paths` lines — one per required signal — plus Procedure step 2 as the
+      detection step. Vendor material survives *behind* it under
+      `## Detected implementation — stack-specific evidence`; nothing was deleted.
+      One `## Procedure` block only, so the `>= 2 ## Procedure` responsibility
+      trigger stays unfired.
+- [x] **1.2 Keep the specialists as specialists.** The vendor-specific
       dashboarding and error-tracking skills stay where they are and gain an
       inbound pointer from the capability model. Nothing is merged.
-      verify: `./scripts-run src/scripts/check_references` is green and
-      `grep -c 'Golden Signals' src/skills/dashboard-design/SKILL.md` is
-      unchanged from its pre-state.
-- [ ] **1.3 Write the negative fixture first.** A project with logs and no
+      verify (discharged): `check_references` PASS. `grep -c 'Golden Signals'
+      src/skills/dashboard-design/SKILL.md` = **2**, identical to HEAD, and
+      `git status` reports the file **unmodified** — the specialist is untouched,
+      not merely count-stable. The capability model reaches it by pointer
+      (`logging-monitoring` § Detected implementation).
+- [x] **1.3 Write the negative fixture first.** A project with logs and no
       metrics must be scored as missing a signal, not as observable. The
       fixture is authored before the model it scores.
       verify (council-amended, see blocker resolution): `logging-monitoring`
@@ -123,10 +129,14 @@ definitions that floor's item 4 already assumes exist.
       counterpart supplies it and states the passing verdict. NOT registered in
       `src/config/gate-coverage.yml`, which registers gate scripts and their
       mutation canaries, never fixture identifiers.
+      **Discharged:** `logging-monitoring` § Examples → *Missing signal*, verdicts
+      `missing-signal: saturation` / `all-signals-detected`, the pair differing
+      only in the omitted signal. `git status` confirms
+      `src/config/gate-coverage.yml` **unmodified**, so no ratchet moved.
 
 ## Phase 2 — Define the Golden Signals and the SLI/SLO representation
 
-- [ ] **2.1 Define the four signals in the tree.** Latency, traffic, errors,
+- [x] **2.1 Define the four signals in the tree.** Latency, traffic, errors,
       saturation — each with what it measures and what a missing one costs.
       Today `dashboard-design/SKILL.md:28` names the family and nothing defines
       the members.
@@ -139,7 +149,12 @@ definitions that floor's item 4 already assumes exist.
       src/skills/logging-monitoring/SKILL.md` returns exactly 4 and each of the
       four is defined in exactly one place; the broad grep is retained only as an
       informational collision check.
-- [ ] **2.2 Represent an SLI and an SLO without inventing a number.** The
+      **Discharged:** `grep -cE '^### Golden Signal:'` = **4**; each of latency,
+      traffic, errors and saturation defined exactly once, each with what it
+      measures, what a missing one costs and its detection paths. The contract
+      test also asserts `logging-monitoring` is the **only** definer in
+      `src/skills/`, which is the AC-2 claim the raw grep could not make.
+- [x] **2.2 Represent an SLI and an SLO without inventing a number.** The
       representation must carry provenance: a threshold is either **operational**
       (it came from a measurement or a stated commitment) or **proposed** (the
       agent suggested it). A proposed threshold may never be rendered as an
@@ -152,7 +167,12 @@ definitions that floor's item 4 already assumes exist.
       agent-suggested threshold as operational and yields `invalid-provenance`;
       the clean counterpart retains `provenance: proposed` with
       `operational: false`. `measured` and `committed` stay distinguishable.
-- [ ] **2.3 Record the signals a project cannot supply.** A signal with no
+      **Discharged:** `logging-monitoring` § Evidence states carries the
+      four-value table with a *May be rendered as operational* column
+      (`proposed` and `unknown` = **Never**) and the explicit no-promotion-path
+      paragraph; § Examples → *Provenance* carries the pair
+      (`invalid-provenance` / `valid-proposed-threshold`).
+- [x] **2.3 Record the signals a project cannot supply.** A signal with no
       available implementation is a null with a reason, not a gap silently
       dropped from the report.
       verify (council-amended): a malformed/clean contract pair — the malformed
@@ -161,16 +181,26 @@ definitions that floor's item 4 already assumes exist.
       and passes. `unknown` (not inspected) stays distinct from affirmatively
       `unavailable`, and the reported signal count equals four minus the recorded
       nulls.
+      **Discharged:** § Evidence states separates `unavailable` (established, needs
+      a non-empty reason, a recorded null) from `unknown` (nobody looked, reduces
+      nothing, unfinished work) and states the count arithmetic. § Examples →
+      *Unavailable signal* carries the pair (`invalid-unavailable-signal` /
+      `valid-unavailable-signal`).
 
 ## Phase 3 — Alerting doctrine and a lean runbook contract
 
-- [ ] **3.1 Three classes, stated provider-neutrally: page, action, info.**
+- [x] **3.1 Three classes, stated provider-neutrally: page, action, info.**
       What earns each, and what a misclassification costs. This is the layer
       that exists today only inside the vendor dashboarding skill.
-      verify: the three classes are defined outside any vendor-specific skill,
-      and `grep -rn 'page' <new-surface>` shows the wake-a-human criterion
-      stated as a condition rather than a preference.
-- [ ] **3.2 A page without an owner, a runbook and a first diagnostic step is
+      verify (discharged): defined in `src/skills/alerting-doctrine/SKILL.md`
+      (**225** lines, provider-neutral — no vendor named in the class definitions;
+      `lint_framework_leakage` = 0 hits across the tree). The wake-a-human
+      criterion is three **conditions**, not a preference:
+      user-visible-or-irreversible, actionable-now, not-self-clearing, with
+      "fail any one -> `action` or `info`". Misclassification cost is stated in
+      both directions, naming fatigue as the mechanism by which a real outage is
+      missed.
+- [x] **3.2 A page without an owner, a runbook and a first diagnostic step is
       malformed.** All three are mandatory; a page that cannot name them is a
       configuration defect, not a judgement call.
       verify (council-amended — one pair proves only one branch, three are needed
@@ -179,13 +209,23 @@ definitions that floor's item 4 already assumes exist.
       first diagnostic step). Each malformed case omits exactly one field and
       yields `malformed-alert: missing-<field>`; each clean counterpart supplies
       only that field and yields `valid-page-alert`.
-- [ ] **3.3 A runbook contract, deliberately lean.** The minimum a runbook must
+      **Discharged:** three pairs in `alerting-doctrine` § Examples —
+      `missing-owner`, `missing-runbook`, `missing-diagnostic-step`, each clean
+      counterpart adding **only** the field under test and yielding
+      `valid-page-alert`. The obligation is an Iron-Law block, and the procedure
+      forbids dodging it by downgrading the class.
+- [x] **3.3 A runbook contract, deliberately lean.** The minimum a runbook must
       carry to be worth paging into. `incident-commander/SKILL.md` gains the
       inbound pointer; its `:62` status-page cadence and `:143` post-mortem-owner
       requirement are untouched.
-      verify: `git show HEAD:src/skills/incident-commander/SKILL.md | grep -c
-      runbook` reports the 0 pre-state, and the two named lines are byte-identical
-      after the phase.
+      verify (discharged): `git show HEAD:...| grep -c runbook` = **0**,
+      pre-state confirmed; the file now carries **2** occurrences, both inside an
+      appended `## See also` block. The two named lines are byte-identical **and
+      still at lines 62 and 143** — `sed -n '62p;143p' | md5` returns
+      `eacfbecf95af91a4cad8dbb17ad5ca96` before and after, because the pointer was
+      appended at EOF rather than inserted. The runbook contract is five items in
+      `alerting-doctrine`, with an explicit not-in-a-runbook list (architecture
+      background, topology) since a runbook is read under time pressure.
 
 ## Phase 4 — Finite-resource readiness and host hardening
 
@@ -198,21 +238,34 @@ definitions that floor's item 4 already assumes exist.
 > lines is *budget, not fit* — finite-resource policy must remain a **rule**, and
 > acquiring procedural verdict logic is its own stop condition.
 
-- [ ] **4.1 Add a quota / saturation readiness surface.**
+- [x] **4.1 Add a quota / saturation readiness surface.**
       `src/rules/scale-discipline.md` has a growth budget for append-only
       tables and nothing for connection pools, rate limits, disk, memory or
       third-party quotas. Extend the existing rule rather than adding a
       sibling.
-      verify: `git show HEAD:src/rules/scale-discipline.md | grep -ciE
-      'quota|saturation|exhaust'` reports the 0 pre-state, and the rule stays
-      under its 200-line cap — `wc -l src/rules/scale-discipline.md`.
-- [ ] **4.2 One `server-hardening` procedure for the ownerless gap.** SSH
+      verify (discharged): `git show HEAD:...| grep -ciE
+      'quota|saturation|exhaust'` = **0**, pre-state confirmed; now **7** hits.
+      Rule is **123** lines (was 99), under the 200 cap. Extended, not siblinged:
+      **R-A12 finite-resource readiness** joins R-A1..R-A11 and the Iron Law gains
+      one line. Per the council's second note, fit was checked and not only
+      budget — R-A12 states a *review-time requirement* (name the ceiling, name
+      the headroom) and delegates verdict logic to `operational-readiness`, so the
+      rule acquired no procedure. It also says why it is not R-A7: growth
+      degrades, exhaustion stops.
+- [x] **4.2 One `server-hardening` procedure for the ownerless gap.** SSH
       posture, firewall baseline, unattended upgrades. This is the only item in
       the roadmap with no existing owner anywhere in the tree, which is why it
       is a new surface rather than an extension.
-      verify: `grep -rciE 'unattended upgrade|fail2ban' src/skills/ | grep -v
-      ':0'` returns at least one file, where the pre-state returns none.
-- [ ] **4.3 The readiness verdict cannot average a red away.** A single red
+      verify (discharged): pre-state returned **no file**, and the
+      council-mandated Phase 4.0 re-audit widened it — both
+      `grep -rniE 'unattended.upgrade|fail2ban|ssh.hardening|ssh.posture|firewall.baseline' src/skills/`
+      and a broader `ufw|nftables|sshd_config` probe returned **zero hits**, so the
+      gap was genuinely ownerless and a new surface is justified. Now
+      `src/skills/server-hardening/SKILL.md` (**159** lines) is the single owner —
+      the contract test asserts it is the *only* skill matching
+      `unattended[ -]upgrade|fail2ban`, which is the AC-6 "exactly one" claim the
+      roadmap's original grep could not make.
+- [x] **4.3 The readiness verdict cannot average a red away.** A single red
       signal makes the verdict not-ready, regardless of how many greens sit
       beside it. State it as an enum with an explicit floor, not as a score.
       verify (council-amended): a malformed/clean contract pair in
@@ -221,6 +274,20 @@ definitions that floor's item 4 already assumes exist.
       and yields the applicable non-red value. The skill defines no score,
       weight, average or other aggregation path able to override the red floor,
       and `unknown` is never treated as green.
+      **Discharged:** `src/skills/operational-readiness/SKILL.md` (**184** lines)
+      states the verdict as a three-value enum (`ready`, `ready-with-risk`,
+      `not-ready`) with the floor as an Iron-Law block; § Examples carries the
+      one-red-among-four-greens pair plus a second pair pinning
+      `invalid-unknown-as-amber`, because routing `unknown` to amber is the subtler
+      way to average a red away. **A defect in this step's own premise:** "the
+      verdict type has no numeric aggregation path" is not decidable by banning the
+      words — the first version of the assertion failed on the skill's own
+      `Do NOT compute a ... weighted score` line, i.e. it could have been satisfied
+      by deleting the prohibition and making the artefact worse. The assertion is
+      now contextual (every mention of an aggregation construct must sit on a
+      prohibitive line), and its sensitivity was proven by sabotage: appending
+      "The readiness score is the weighted average of the five inputs." turns it
+      red; restoring from a `cp` backup returns it green at 184 lines.
 
 ## Blockers
 
@@ -312,15 +379,15 @@ decision to record rather than one to take mid-phase.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An agent can answer "which required signal does this project lack"
+- [x] AC-1 — An agent can answer "which required signal does this project lack"
       from a provider-neutral model, with the answer grounded in what was
       detected in the project rather than in what the skill happens to document.
-- [ ] AC-2 — The four Golden Signals are each defined once in the tree. Naming
+- [x] AC-2 — The four Golden Signals are each defined once in the tree. Naming
       the family without defining its members no longer occurs.
-- [ ] AC-3 — Every threshold the suite emits is marked operational or proposed,
+- [x] AC-3 — Every threshold the suite emits is marked operational or proposed,
       and a proposed one cannot be rendered as operational. A fixture pins both
       directions.
-- [ ] AC-4 — A page definition missing an owner, a runbook or a first
+- [x] AC-4 — A page definition missing an owner, a runbook or a first
       diagnostic step scores as malformed, proven by committed malformed/clean
       contract-fixture pairs in the skill that owns the verdict, each stating its
       expected verdict and differing only in the condition under test.
@@ -329,12 +396,12 @@ decision to record rather than one to take mid-phase.
       These are contract fixtures with explicit expected verdicts, never
       described as executable, until a machine-readable schema and runner are
       introduced deliberately.)
-- [ ] AC-5 — Finite-resource exhaustion is a question the readiness surface
+- [x] AC-5 — Finite-resource exhaustion is a question the readiness surface
       asks, where today the governing rule contains no such term.
-- [ ] AC-6 — Host hardening has exactly one named owner in the tree, closing
+- [x] AC-6 — Host hardening has exactly one named owner in the tree, closing
       the only item in this set that had none.
-- [ ] AC-7 — A readiness verdict containing one red is not-ready. No numeric
+- [x] AC-7 — A readiness verdict containing one red is not-ready. No numeric
       aggregation path exists that could produce a different answer.
-- [ ] AC-8 — The destination question is answered in writing before the first
+- [x] AC-8 — The destination question is answered in writing before the first
       artefact lands, so the resulting shape is a recorded choice rather than
       the residue of drift.
