@@ -1115,6 +1115,48 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
 
+/**
+ * The project-scope MCP server entry Claude Code reads from `.mcp.json`.
+ *
+ * Shape is fixed by `docs/getting-started-local-stdio.md` — the documented
+ * end-user path — so a consumer who followed the docs and a consumer who ran the
+ * installer end up with the same entry rather than two that drift.
+ */
+export const MCP_SERVER_KEY = 'agent-config';
+const MCP_BRIDGE_ENTRY = {
+    mcpServers: {
+        [MCP_SERVER_KEY]: {
+            command: 'npx',
+            args: ['-y', '@event4u/agent-config', 'mcp-server'],
+        },
+    },
+};
+
+/**
+ * `.mcp.json` — the project-scope MCP config Claude Code reads.
+ *
+ * WHY THE INSTALLER OWNS THIS FILE AND `mcp_render` DOES NOT. `mcp_render`
+ * projects the consumer's OWN root `mcp.json` onto per-tool configs by
+ * overwriting them (`write_target`), which is correct for a file the renderer
+ * generates in full and wrong for one the consumer also edits: a render would
+ * delete both this entry and any server they added by hand. `merge_json_file`
+ * writes only our key, records it as an RFC-6901 pointer in
+ * `agents/installed-tools.lock`, and lets uninstall subtract exactly that key.
+ * `mcp:check` validates the file without ever writing it.
+ *
+ * Default ON for `claude-code`, because `rules/missing-skill-recovery.md` makes
+ * `suggest_skill_for_task` an Iron Law for every consumer and a rule that is
+ * unfulfillable by default is a defect, not a feature. Opting out is the same
+ * lever as every other bridge here — deselect the tool (`--tools`), which is the
+ * gate the caller applies; `.agent-tools.yml` is deliberately NOT that lever, it
+ * is a maintainer-side projection-generator allowlist the installer cannot see
+ * and whose tool ids differ from `_VALID_TOOLS`.
+ */
+function ensure_mcp_bridge(project_root: string, force: boolean): Record<string, unknown>[] {
+    const target = path.join(project_root, '.mcp.json');
+    return merge_json_file(target, MCP_BRIDGE_ENTRY, force, '.mcp.json');
+}
+
 const CURSOR_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string]> = [
     ['session_start', 'sessionStart'],
     ['session_end', 'sessionEnd'],
@@ -5225,7 +5267,10 @@ function _main_project_install(
             ...ensure_augment_bridge(project_root, opts.force),
         ];
         if (_is_tool_enabled(tools, 'claude-code')) {
-            merged_keys_by_tool['claude-code'] = ensure_claude_bridge(project_root, opts.force);
+            merged_keys_by_tool['claude-code'] = [
+                ...ensure_claude_bridge(project_root, opts.force),
+                ...ensure_mcp_bridge(project_root, opts.force),
+            ];
         }
         if (_is_tool_enabled(tools, 'cursor')) {
             merged_keys_by_tool['cursor'] = ensure_cursor_bridge(project_root, opts.force);
@@ -5441,6 +5486,7 @@ export {
     GEMINI_DISPATCHER_BINDINGS,
     ensure_cursor_bridge,
     ensure_cline_bridge,
+    ensure_mcp_bridge,
     ensure_windsurf_bridge,
     ensure_gemini_bridge,
     // road-to-credible-install Phase 2: exported for the scoped-projection
