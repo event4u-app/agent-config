@@ -277,27 +277,17 @@ current state on the next polish round.
 
 When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
 
-## Component workshop (Storybook) — when the library is large enough
+## Component workshop (Storybook) — pointer
 
-The generic "isolate + document reusable components" principle lives in
-[`fe-design`](../fe-design/SKILL.md) § Component Architecture; this is the React
-carve-out for the tool-specific part.
+The workshop discipline (one concept per story, `@summary` on every export, stories run as
+tests, the `!manifest` tag, the opt-in MCP channel) lives in
+[`storybook-workshop`](../storybook-workshop/SKILL.md). It is stack-agnostic and was lifted
+out of here rather than duplicated beside it.
 
-- **When it pays off** — a real, growing shared-component library (roughly: more
-  than a handful of reused primitives, multiple consumers, ongoing UI work).
-  Storybook makes each component discoverable, reviewable in isolation, and
-  reused instead of re-invented. **Skip it** for a small surface of one-off
-  components — the setup + maintenance is not worth it yet.
-- **Story per reusable primitive, not per screen** — a story covers a component
-  and its states (default / loading / empty / error / dark), mirroring the
-  Step 3 state-coverage matrix. Screens are composed, not story-fied.
-- **Reuse the token layer** — stories render under the same semantic tokens +
-  `.dark` class; never hardcode a preview theme (same token discipline as Step 2).
-- **A11y in-workshop** — run the a11y addon so the isolation catches contrast /
-  role / focus issues before the component reaches a screen.
-- Do NOT let stories drift from the component API — a story that props-drills
-  values the component no longer accepts is stale documentation; keep them beside
-  the component and update them in the same change.
+What stays React-specific and therefore stays here: the state-coverage matrix in Step 3 that
+the story set is derived from, the token discipline of Step 2 that stories render under, and
+the `(rule, selector, severity)` a11y shape in § Review pass that the workshop's validate
+step writes into.
 
 ## Security constraints
 
