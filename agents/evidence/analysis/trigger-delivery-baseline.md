@@ -1,5 +1,7 @@
 # Trigger-delivered rule bodies — the pinned baseline
 
+<!-- evidence-type: analysis -->
+
 > Phase 0 of [`road-to-trigger-delivered-rule-bodies`](../../roadmaps/archive/road-to-trigger-delivered-rule-bodies.md).
 > Every figure below carries the command that produced it, measured **2026-08-23**
 > on the branch's own tree against `origin/main` @ `e7c437fe5`. Nothing here is

@@ -1,5 +1,7 @@
 # `subagent_start` payload probe — can a rule body be trigger-matched at spawn?
 
+<!-- evidence-type: analysis -->
+
 > Evidence for steps **0.6** and **0.7** of
 > [`road-to-trigger-delivered-rule-bodies`](../../roadmaps/archive/road-to-trigger-delivered-rule-bodies.md),
 > and the resolving mechanism for blocker `b-subagent-payload-trigger-match`.
