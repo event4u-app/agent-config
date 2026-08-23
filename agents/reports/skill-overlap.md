@@ -1,9 +1,9 @@
 # Skill-family overlap report (6.0.0-C Phase 4 Step 8)
 
-> Content cosine-similarity over 295 skills; pairs at ≥ 70%. **Same-domain pairs (shared `packs:`) are the merge candidates** consumed by [`evidence-based-pruning.md`](../../docs/contracts/evidence-based-pruning.md). This report merges NOTHING — it is input to a future, human-driven consolidation roadmap.
+> Content cosine-similarity over 294 skills; pairs at ≥ 70%. **Same-domain pairs (shared `packs:`) are the merge candidates** consumed by [`evidence-based-pruning.md`](../../docs/contracts/evidence-based-pruning.md). This report merges NOTHING — it is input to a future, human-driven consolidation roadmap.
 
 
-- Skills scanned: **295**
+- Skills scanned: **294**
 
 - Overlap pairs ≥ 70%: **0** (0 same-domain merge candidates, 0 cross-domain)
 
