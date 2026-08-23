@@ -1,6 +1,10 @@
 ---
 type: "auto"
 tier: "1"
+norm:
+  tokens: 2400
+  remainder:
+    - "../docs/guidelines/agent-infra/roadmap-progress-mechanics.md"
 description: "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open"
 triggers:
   - path_prefix: "agents/roadmaps/"
@@ -86,16 +90,12 @@ in the estate?**
   blocker id · every option · verdict + one-sentence rationale · dissent ·
   destination when carried · what closes it. A verdict with no record is a
   silent drop wearing a procedure.
-- **The residual hole, stated not papered over.** Both authoring seats named
-  it in their own strongest counter: a carried follow-up can still become an
-  indefinite deferral, so this test bounds *who decides*, not *whether the work
-  happens*. Only fix-now discharges it. A carried item untouched at the next
-  task boundary is raised again per [`active-remediation`](active-remediation.md).
-- **Why it changed.** Adopted 2026-08-19, unanimous 2/2 council (blind peer
-  review). The prior text — *"Wait for the user"* — handed back a fully
-  analysed choice with four costed options, the low-value interruption
-  [`no-cheap-questions`](no-cheap-questions.md) forbids. The gate protects the
-  item, not the maintainer's attention.
+- **The residual hole, and why the test changed** — a carried follow-up can
+  still become an indefinite deferral, so this test bounds *who decides*, not
+  *whether the work happens*; only fix-now discharges it, and a carried item
+  untouched at the next task boundary is raised again per
+  [`active-remediation`](active-remediation.md). Provenance and the argument:
+  [`roadmap-progress-mechanics § Who resolves a deferred item`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md).
 
 ### `deferred_policy` — a declared contract removes the round, never the route
 
@@ -112,9 +112,8 @@ It changes **when the round happens**, never **who decides**:
 Recorded-or-it-did-not-happen applies unchanged to an automatic spawn, and
 fail-closed binds hardest here: a spawn naming a follow-up that does not exist
 yet reaches the user, because a contract cannot pre-authorize a promise.
-Reversible — `wait` is the default, so removing the field restores always-wait
-(`decision 2026-08-20`, AI council 2/2; record
-`agents/evidence/council/drain-blocker-dispositions-a.md`).
+Reversible — `wait` is the default, so removing the field restores always-wait;
+provenance in the mechanics guideline.
 
 ## Later disposition — blocked-for-later roadmaps are parked, never left active
 
