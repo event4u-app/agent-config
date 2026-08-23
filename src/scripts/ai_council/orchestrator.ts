@@ -21,6 +21,10 @@
 // Failure normalisation (one member's exception → `error`-set
 // CouncilResponse, never raise) is unchanged.
 
+import { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+import type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
+export { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+export type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
 import {
     record_spend as _record_daily_spend,
     today_spend_usd as _today_spend_usd,
@@ -150,17 +154,6 @@ function _label(idx: number): string {
 
 // ── dataclasses ───────────────────────────────────────────────────────
 
-export class CouncilQuestion {
-    mode: string; // one of: prompt, roadmap, diff, files
-    user_prompt: string; // bundled artefact text
-    max_tokens: number;
-
-    constructor(args: { mode: string; user_prompt: string; max_tokens?: number }) {
-        this.mode = args.mode;
-        this.user_prompt = args.user_prompt;
-        this.max_tokens = args.max_tokens ?? DEFAULT_MAX_TOKENS;
-    }
-}
 
 // Callback signature: receive event → return True (proceed) or False (skip + tag error).
 export type OnOverrunCallback = (event: OverrunEvent) => boolean;
@@ -1434,66 +1427,7 @@ export function run_debate(
     return all_rounds;
 }
 
-/**
- * Bundle returned by `run_peer_review()` (Phase 5 / F1).
- *
- * `responses` carries the per-reviewer critiques. `label_to_source`
- * is the anonymisation map captured server-side so the audit-trail
- * JSON can rehydrate it without leaking provider identity to the
- * member at prompt time.
- *
- * `persona_labels` is the (optional) Phase 6 / Step 3a wiring: when
- * the deliberation was an advisor-mode run, the source → persona
- * map flows through to the renderer so peer-review output can render
- * as `Response A (Contrarian)`. Plain-member runs leave it empty.
- */
-export class PeerReviewResult {
-    responses: CouncilResponse[];
-    /**
-     * PER-REVIEWER label→source attribution — the authoritative mapping.
-     *
-     * Keyed by `provider:model`, because that is the identity `by_source` uses and the
-     * identity a quote in the artefact has to resolve against. Added by step 1.2 of
-     * `road-to-council-evidence-integrity`: each reviewer sees a DIFFERENT
-     * self-filtered subset, and `anonymize_responses` restarts its label counter per
-     * call, so `Response-A` means a different member for every reviewer. One map
-     * cannot express that.
-     */
-    label_to_source_by_reviewer: Map<string, Map<string, string>>;
-    /**
-     * Flat compatibility view — the LAST reviewer's mapping, kept only because
-     * `council_cli.ts:1480` serialises this field and `:1492` reads it back.
-     *
-     * It is wrong for any reviewer but the last, and it is retained rather than
-     * removed so the serialisation contract does not break in the same change that
-     * fixes the attribution. Read `label_to_source_by_reviewer` for anything that
-     * resolves a quote.
-     */
-    label_to_source: Map<string, string>;
-    persona_labels: Map<string, string>;
 
-    constructor(args: {
-        responses: CouncilResponse[];
-        label_to_source_by_reviewer?: Map<string, Map<string, string>>;
-        label_to_source: Map<string, string>;
-        persona_labels: Map<string, string>;
-    }) {
-        this.responses = args.responses;
-        this.label_to_source_by_reviewer = args.label_to_source_by_reviewer ?? new Map();
-        this.label_to_source = args.label_to_source;
-        this.persona_labels = args.persona_labels;
-    }
-}
-
-export interface RunPeerReviewOptions {
-    budget?: CostBudget | null;
-    table?: PriceTable | null;
-    on_overrun?: OnOverrunCallback | null;
-    project?: ProjectContext | null;
-    original_ask?: string;
-    max_tokens?: number;
-    persona_labels?: Map<string, string> | null;
-}
 
 /**
  * Karpathy peer-review pass (Phase 5 / F1).
@@ -1645,65 +1579,7 @@ export function run_peer_review(
     });
 }
 
-/**
- * Bundle returned by `run_consensus_scoring()`.
- *
- * `bucket` is renderer-ready; `findings`, `scores`, and `metadata`
- * are kept for audit-trail JSON (council-sessions/*.json).
- */
-export class ConsensusResult {
-    bucket: ConsensusBucket;
-    findings: Finding[];
-    scores: FindingScore[];
-    metadata: Map<string, ConsensusMetadata>;
-    /**
-     * Per-member extraction outcome, keyed by `provider:model` — step 2.2 of
-     * `road-to-council-evidence-integrity`.
-     *
-     * `parsed` · `parsed-after-reask` · `empty` · `parse_failed`. Recorded rather than
-     * derived from the findings count, because "found nothing" and "could not be read"
-     * are different facts and a count cannot tell them apart — which is exactly how an
-     * unparseable answer used to read as a clean zero-findings review.
-     *
-     * `parsed-after-reask` is deliberately distinct from `parsed`: a member needing a
-     * second ask is a signal about the prompt or the member, and folding it into `parsed`
-     * would hide the only evidence that the re-ask does anything.
-     *
-     * Additive and optional, so no existing constructor call changes.
-     */
-    parse_outcomes: Map<string, string>;
-    extraction_responses: CouncilResponse[];
-    scoring_responses: CouncilResponse[];
 
-    constructor(args: {
-        bucket: ConsensusBucket;
-        findings: Finding[];
-        scores: FindingScore[];
-        metadata: Map<string, ConsensusMetadata>;
-        parse_outcomes?: Map<string, string>;
-        extraction_responses: CouncilResponse[];
-        scoring_responses: CouncilResponse[];
-    }) {
-        this.bucket = args.bucket;
-        this.findings = args.findings;
-        this.scores = args.scores;
-        this.metadata = args.metadata;
-        this.parse_outcomes = args.parse_outcomes ?? new Map();
-        this.extraction_responses = args.extraction_responses;
-        this.scoring_responses = args.scoring_responses;
-    }
-}
-
-export interface RunConsensusScoringOptions {
-    budget?: CostBudget | null;
-    table?: PriceTable | null;
-    on_overrun?: OnOverrunCallback | null;
-    project?: ProjectContext | null;
-    original_ask?: string;
-    max_tokens?: number;
-    strong_threshold?: number;
-    minority_threshold?: number;
-}
 
 /**
  * Two-pass consensus round (Phase 4 / F3).
