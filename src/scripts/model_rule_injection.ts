@@ -50,7 +50,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
-import { LexicalIndex, tokenize } from './_lib/lexical_index.js';
+import { LexicalIndex } from './_lib/lexical_index.js';
 import {
     allTierRules,
     kernelIds,
@@ -62,7 +62,6 @@ import {
     tokensOf,
     triggerlessRuleIds,
     type Router,
-    type TierRuleMatch,
 } from './_lib/rule_injection.js';
 import { thin_entry } from './project_thin_rules.js';
 import { buildInjection } from './hooks/rule_inject_hook.js';
