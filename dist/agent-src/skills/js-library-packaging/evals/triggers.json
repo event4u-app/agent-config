@@ -1,0 +1,17 @@
+{
+    "skill": "js-library-packaging",
+    "last_eval": "2026-08-23",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the publish ask, the runtime symptom whose cause is packaging (invalid hook call), the exports-map question, the workspace-range install failure, and a DE phrasing. Should-not-trigger covers the near-miss neighbours this skill is one word away from: authoring the component itself (ui-component-architect), the PHP twin (composer-packages), a commit-message question (conventional-commits-writing), a monorepo task-graph question, and a bundler performance question — none of which are package-surface work.",
+    "queries": [
+        { "q": "publish our ui package", "trigger": true },
+        { "q": "why does my hook say invalid hook call", "trigger": true },
+        { "q": "what should the exports map for this library look like?", "trigger": true },
+        { "q": "the install fails on a workspace: range after publishing", "trigger": true },
+        { "q": "wie veröffentliche ich unser Komponenten-Paket richtig?", "trigger": true },
+        { "q": "build me a Button component with a loading state", "trigger": false },
+        { "q": "how do I publish a composer package?", "trigger": false },
+        { "q": "write the commit message for this breaking change", "trigger": false },
+        { "q": "why is turbo rebuilding everything on every commit?", "trigger": false },
+        { "q": "our bundle is 400kb, what should I lazy-load?", "trigger": false }
+    ]
+}

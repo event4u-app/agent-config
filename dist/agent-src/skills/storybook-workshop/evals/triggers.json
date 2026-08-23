@@ -1,0 +1,17 @@
+{
+    "skill": "storybook-workshop",
+    "last_eval": "2026-08-23",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the named authoring ask, the inventory ask, the story-as-test ask, the MCP-channel question, and a DE phrasing. Should-not-trigger covers the near-misses this skill sits between: authoring the component itself (ui-component-architect), a full WCAG audit of a shipped page (accessibility-auditor), an E2E flow test, the package surface (js-library-packaging), and a visual-design question.",
+    "queries": [
+        { "q": "add stories for the card", "trigger": true },
+        { "q": "what components does our library already have?", "trigger": true },
+        { "q": "can the stories run as tests in CI?", "trigger": true },
+        { "q": "should we wire up the storybook mcp addon?", "trigger": true },
+        { "q": "schreib Stories für die neuen Primitives", "trigger": true },
+        { "q": "build me a Card component with a footer slot", "trigger": false },
+        { "q": "run a full WCAG audit on the checkout page", "trigger": false },
+        { "q": "write a playwright test for the signup flow", "trigger": false },
+        { "q": "why does my hook say invalid hook call", "trigger": false },
+        { "q": "pick a colour palette for the dashboard", "trigger": false }
+    ]
+}

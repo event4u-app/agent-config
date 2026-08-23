@@ -58,7 +58,15 @@ than under-splitting. Meet BOTH conditions before you extract.
 
 ### 1. Inspect prior art, state the responsibility in one sentence
 
-Review existing components in the codebase for the same
+**Read `DESIGN.md` § Owned components first** — it is the project's own inventory of what
+it already owns (component, status, story file, registry item), filled from the story files
+rather than from memory by
+[`design-system-capture`](../design-system-capture/SKILL.md). It is the cheapest possible
+prior-art check: one table, and a `deprecated` row tells you not to reach for something that
+still exists in the tree. Absent or empty → fall through to
+[`existing-ui-audit`](../existing-ui-audit/SKILL.md), which reads the codebase itself.
+
+Then review existing components in the codebase for the same
 responsibility — extend rather than rebuild when a match is found.
 If none exists, write the new component's purpose: *"Renders a
 labelled input with inline error and hint."* If the sentence has an
