@@ -287,3 +287,39 @@ nobody can say which rules actually got shorter and which were merely counted.
 - [ ] AC-7 — The re-derived inflow attribution and the source-pass divergence are
       both written down with the commands that produced them, so the drift can be
       re-measured later against a stated method rather than a remembered one.
+
+## Amendment 2026-08-23 — hook-enforced rules first (road-to-trigger-delivered-rule-bodies A4)
+
+- [ ] **Diet the nine `enforced_by: hook:*` rules before any other body.**
+      Nine rules declare a hook as their enforcement mechanism and then
+      re-describe in prose what that hook implements. Measured 2026-08-23 with
+      the exact BPE tokenizer over `dist/agent-src/rules/`:
+      `context-hygiene` 2,624 · `evaluator-independence` 2,608 ·
+      `roadmap-progress-sync` 2,663 · `session-canary` 2,303 ·
+      `self-repair-loop` 1,457 · `git-history-discipline` 1,434 ·
+      `minimal-safe-diff` 1,061 · `verify-before-complete` 636 ·
+      `onboarding-gate` 395 — **15,181 tok** across the nine, or 12.4 % of the
+      122,449-tok project-scope rules bucket
+      (`./scripts-run src/scripts/check_preamble_payload_budget`).
+      The drafting pass carried ≈14.7k; 15,181 is the measurement, and
+      `minimal-safe-diff` shrank 130 tok inside that window (A1's token move),
+      so the figure is a snapshot rather than a constant.
+      **The proposition:** the mechanism's specification belongs in the hook's
+      own header, where the code that implements it lives; the rule keeps the
+      obligation and the model-carried fallback. It is a diet by RELOCATION, so
+      `preservation-guard` is satisfied by moving rather than cutting, and every
+      one of the nine keeps its Iron Law verbatim at its own heading level.
+      **What this amendment does NOT decide:** how far each of the nine can go.
+      Four of them (`context-hygiene`, `evaluator-independence`,
+      `roadmap-progress-sync`, `session-canary`) carry long honest-scope
+      passages stating precisely what their hook does and does not enforce, and
+      that prose is the reason a reader does not over-trust the gate. Moving it
+      into a hook header a chat session never opens would trade tokens for a
+      false impression of coverage. Per-rule, with the ceiling gate as the
+      arbiter.
+      verify: `grep -l -E '^\s+- "hook:' src/rules/*.md | wc -l` reports 9
+      (the frontmatter is a LIST, so a `grep -c "enforced_by: hook"` returns
+      zero — that phrasing was tried first and is recorded because it is the
+      obvious wrong one), and
+      `./scripts-run src/scripts/check_rule_stub_ceiling --report` shows a
+      lower body-token figure for every rule this step touches.

@@ -13,6 +13,20 @@ contributors whose skills, rules or commands were merged.
 | `design-intelligence` (`ui-styling`-derived assets) | "claudekit" | Apache-2.0 | [`LICENSE.apache-2.0.txt`](src/skills/design-intelligence/LICENSE.apache-2.0.txt) + modified-file markers per §4b |
 | `corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer` (derived slices) | see per-skill notices | MIT / Apache-2.0 | ADR-061 — the per-skill attribution notice is authoritative |
 
+### Comparators (benchmark baselines, no vendored material)
+
+| Comparator | Pinned at | License | Where it is used |
+|---|---|---|---|
+| `Source A` — an external agent-instruction suite | `2ed6c52c` | MIT | benchmark comparator arm: [`agents/roadmaps/stubs/road-to-solution-minimalism-full-tier-run.md`](agents/roadmaps/stubs/road-to-solution-minimalism-full-tier-run.md) § The published comparator |
+
+Nothing is vendored from it — no code, no oracle text, no prose. What is used is
+its **published baseline numbers** as the external column of a two-arm report,
+and four mechanism ideas folded (never copied) into
+`road-to-trigger-delivered-rule-bodies`. It is credited under an anonymised label
+because [`source-confidentiality`](src/rules/source-confidentiality.md) forbids
+the tracked tree recording which third-party package seeded an idea; the real
+identifier resolves from the encrypted token in that roadmap's § Provenance.
+
 Per [ADR-061](docs/decisions/ADR-061-corpus-grounding-layer.md), vendored
 material keeps its upstream notice inside the skill directory; this table is
 the aggregate pointer, never a replacement for the per-skill notice.

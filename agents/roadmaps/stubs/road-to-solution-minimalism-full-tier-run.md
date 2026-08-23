@@ -174,6 +174,45 @@ Each item is quoted exactly as it stands in the parent, where it now carries
   is a single trial, and the parent's own hygiene rule publishes nothing below
   the full tier (F4). Item 1 is a prerequisite of item 2, not a parallel task.
 
+## The published comparator — added 2026-08-23 (road-to-trigger-delivered-rule-bodies A2)
+
+**What this stub was missing.** Item 1 asks for ~30 hand-written oracles and
+item 2 for a full-tier run, and nothing in either said what the resulting
+numbers would be compared *against*. A benchmark with no comparator publishes an
+absolute figure nobody can place: "the discipline family scored 0.62" is not a
+finding, it is a number. The parent's own findings F2 and F7 warn about exactly
+this shape, and the amendment closes it.
+
+**The comparator.** `Source A (an external agent-instruction suite, MIT)` @
+`2ed6c52c` ships a feature-plus-safety task list over a pinned public template
+repository **with its baseline numbers already published**. Those numbers are the
+external arm: this suite's tasks run over the same pinned tree, and the report
+prints both columns side by side.
+
+| Arm | Corpus | Pinned at | Baseline |
+|---|---|---|---|
+| this suite | `internal/bench/corpora/ab-trackb-v2.yaml` | `pallets/click@150d1071d69c5cdad7de78590013ffe56cf9e3bb` | none yet — item 2 produces it |
+| comparator | Source A's feature-plus-safety list | `Source A @ 2ed6c52c` | published upstream, transcribed into the report at run time |
+
+**Scored by executed adversarial scorers, never by judges.** The oracles are
+run, not rated: `bench_ab_v2_safety.ts` and `bench_ab_v2_search.ts` already exist
+and carry exit codes. A judge arm would be inadmissible here on the same grounds
+ADR-202 closed it elsewhere — inter-evaluator Cohen's κ 0.472 against a
+registered 0.800 floor.
+
+**The oracle text is this suite's own.** The comparator supplies the task shape
+and the baseline column; every oracle assertion is written here, against
+[`SCHEMA-v2.md`](../../../internal/bench/corpora/SCHEMA-v2.md). Nothing is
+transcribed from the source, which is what keeps this a comparison rather than a
+port. Attribution: [`CREDITS.md`](../../../CREDITS.md) § Comparators; the real
+identifier of Source A is not written into this tree, per
+[`source-confidentiality`](../../../src/rules/source-confidentiality.md), and
+resolves from the encrypted token in the parent roadmap's § Provenance.
+
+**This adds no work to items 1-3 and unblocks nothing.** It changes what item
+2's report must contain — two columns instead of one — and that requirement is
+now stated before the run rather than discovered after it.
+
 ## Promotion
 
 Item 1 is promoted independently — authoring oracles needs no credential and no

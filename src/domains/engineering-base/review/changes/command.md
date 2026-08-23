@@ -3,12 +3,12 @@ model_tier: high
 name: review-changes
 pack: engineering-base
 intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture"
-routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens]
+routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, overbuild-review-lens]
 replaces: []
 visibility: internal
 sub: changes
 cluster: review
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-synthesis, git-workflow]
+skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, overbuild-review-lens, judge-synthesis, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts
 suggestion:
   eligible: false
@@ -122,9 +122,20 @@ PR body, commit messages) and runs independently. The judges are:
 | [`judge-code-quality`](../../skills/judge-code-quality/SKILL.md) | Naming, SRP, DRY, dead code, consistency with codebase conventions |
 | [`architecture-review-lens`](../../skills/architecture-review-lens/SKILL.md) | Layer violations, dependency direction, leaky abstractions, cross-service contract drift |
 | [`judge-spec-compliance`](../../skills/judge-spec-compliance/SKILL.md) | Does the diff satisfy every acceptance criterion **as stated**? Reads the criteria before the diff, and never infers them from it |
+| [`overbuild-review-lens`](../../skills/overbuild-review-lens/SKILL.md) | Speculative abstraction, premature generality, features nobody asked for, a rewrite where an edit was the task |
 
-The six judges weight equally in the consolidated verdict — none
+The seven judges weight equally in the consolidated verdict — none
 overrides another.
+
+**Why the seventh exists (road-to-trigger-delivered-rule-bodies A5).**
+`overbuild-review-lens` shipped and **no command routed to it** — `grep -rln
+overbuild-review-lens dist/agent-src/commands/` returned nothing, so a lens
+built to catch the most common failure of AI-written code was reachable only by
+being asked for by name. The other six all ask whether the diff is *good*; this
+one asks whether it should have been this *large*, which is the one question a
+diff cannot answer about itself. It is dispatched on demand like the others, so
+it adds no standing token cost — verified: `check_preamble_payload_budget`'s
+measured total is unchanged by this routing.
 
 **Why the sixth exists, and why it is not a severity.** The other five all ask a
 craft-or-correctness question, so a change that is correct, clean, well-tested
@@ -146,12 +157,12 @@ Pick dispatch mode based on diff size and environment:
 
 - **Sequential** (default, simplest) — run bug-hunter → security-auditor
   → test-coverage → code-quality → architecture-review-lens →
-  spec-compliance, collect each verdict
+  spec-compliance → overbuild, collect each verdict
 - **Parallel** — if `subagents.max_parallel` in `.agent-settings.yml` is
-  ≥ 5 and subagent dispatch is available, run all six concurrently
+  ≥ 5 and subagent dispatch is available, run all seven concurrently
   following the `do-in-parallel` pattern in
   [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md);
-  the six judges operate on the same diff but produce independent
+  the seven judges operate on the same diff but produce independent
   reports, so no shared-state risk
 
 Each judge returns its own `Judge / Model / Target / Verdict /
