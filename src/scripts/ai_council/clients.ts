@@ -1849,9 +1849,29 @@ export class OpenAICliClient extends CliClient {
         //
         // `-` is codex's documented "read the prompt from stdin" positional;
         // the payload itself is assembled in `_stdin_payload`.
+        //
+        // `--sandbox read-only` is the parity half, added 2026-08-23 against a
+        // PINNED CLI: `codex --version` → `codex-cli 0.148.0`, whose
+        // `exec --help` documents `-s, --sandbox <SANDBOX_MODE>` with possible
+        // values `read-only`, `workspace-write`, `danger-full-access`. A flag
+        // that exists in one release and not the next is a claim with a shelf
+        // life, so the version it was read from is recorded here rather than
+        // left to be re-derived.
+        //
+        // It belongs beside `--skip-git-repo-check`, not instead of it, and the
+        // pairing is the whole point: the trust gate is what makes a worktree
+        // usable at all, and the sandbox is what bounds what the session may
+        // then do. Before this, the argv carried the guard REMOVAL with no
+        // counterpart — the sibling anthropic member had a 26-line Least-Agency
+        // justification for `--tools ''` while this one had none, which is the
+        // same role at two enforcement levels.
+        //
+        // Presence is not effect: this flag proves the argv was built, never
+        // that the vendor honoured it. `cli_least_agency_canary.ts` is the half
+        // that observes behaviour, and it is deliberately not wired into CI.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...modelArgs, '-'];
+        return [this.binary, 'exec', '--json', '--skip-git-repo-check', '--sandbox', 'read-only', ...modelArgs, '-'];
     }
 
     /**
@@ -2097,7 +2117,22 @@ export class GeminiCliClient extends CliClient {
         // nothing fired the `||` branch and the absent FLAG was reported as an
         // absent BINARY. A compound probe reports its last exit code, not the
         // fact you meant to test.
-        return [this.binary, '--output-format', 'json', '--model', this.model];
+        //
+        // `--approval-mode plan` is the parity half, added 2026-08-23 against a
+        // PINNED CLI: `gemini --version` → `0.50.0`, whose `--help` documents
+        // `--approval-mode` with `plan (read-only mode)` among its choices. The
+        // sibling flags are the reason this one and not another: `-y/--yolo`
+        // ("automatically accept all actions") and `auto_edit` move in the
+        // opposite direction, and `--allowed-tools` is marked DEPRECATED in
+        // favour of the policy engine, so pinning to it would bind the council
+        // to a surface the vendor is retiring.
+        //
+        // A council member reads a question and returns an opinion. `plan` is
+        // the mode that matches that role; anything above it is an over-broad
+        // grant (`tool-safety` § Least Agency).
+        //
+        // Presence is not effect — same caveat as the codex member above.
+        return [this.binary, '--output-format', 'json', '--approval-mode', 'plan', '--model', this.model];
     }
 
     /**

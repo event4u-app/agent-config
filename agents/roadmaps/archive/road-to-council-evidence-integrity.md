@@ -375,39 +375,147 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       mechanism claim was argued rather than measured; do not cite it as
       enforcement; and do not read its absence as evidence the claim was probed.
 
+**Phase 4 carries no red run, and AC-6's escape clause is why.** Both steps
+change prompt-template prose and skill documentation — there is no behaviour to
+observe failing, so a test written here would assert the contents of a string
+literal and would be green the first time by construction. AC-6 permits exactly
+this ("or states which drift made a red run impossible"); the substitute evidence
+is the grep in 4.1's verify, which returned `unverified-by-council` before the
+change and returns zero hits after, and the parser count in 4.2's, which is 0
+both before and after — the latter being the point rather than a null result.
+
 ## Phase 5 — CLI least-agency parity, proven by a canary
 
-- [ ] **5.1 Record the asymmetry as measured.** One CLI member is spawned with
+- [x] **5.1 Record the asymmetry as measured.** One CLI member is spawned with
       `--tools ''` (`clients.ts:1724-1725`, in the class at `:1667`) behind a
       26-line justification at `:1698-1723` that argues Least Agency in general
       terms — and the same file constructs four further CLI members with no
       equivalent bound. `grep -nE -- "--sandbox|--approval-mode|read-only" src/scripts/ai_council/clients.ts`
       returns 0. One of the four passes `--skip-git-repo-check`, a guard
       *removal*, with no counterpart. Same role, three enforcement levels.
-      verify: the grep above returns 0 at the start of the phase, and the phase
-      note records the argv each of the five CLI classes builds.
-- [ ] **5.2 Apply one bound per member against a RECORDED CLI version.** For
+      verify (discharged): `grep -nE -- "--sandbox|--approval-mode|read-only" src/scripts/ai_council/clients.ts`
+      returned **0** at the start of the phase — confirmed, not assumed. The five
+      classes and the argv each built, read at their current lines:
+
+      | Member | Class | Bound at phase start |
+      |---|---|---|
+      | anthropic | `clients.ts:1678` | `--tools ''`, behind the 26-line justification at `:1698-1723` |
+      | openai | `clients.ts:1808` | none — and `--skip-git-repo-check`, a guard REMOVAL, at `:1854` |
+      | gemini | `clients.ts:2055` | none |
+      | xai | `clients.ts:2205` | none |
+      | perplexity | `clients.ts:2277` | none |
+
+      One bound, one guard removal, three silences: same role, three enforcement
+      levels, which is the asymmetry `AC-5` was phrased to refuse.
+- [x] **5.2 Apply one bound per member against a RECORDED CLI version.** For
       each CLI member, determine the vendor's own agency flag and apply it. Pin
       the CLI version the determination was made against in the same note — a
       flag that exists in one release and not the next is a claim with a
       shelf life, and an unpinned one cannot be re-checked.
-      verify: each CLI class's argv carries an agency bound, and the note names
-      one CLI version string per member, obtained from that CLI's own
-      `--version`.
-- [ ] **5.3 Prove effect, not presence — a canary.** Flag-present is not
+      verify (discharged): probed on 2026-08-23 against the real binaries, every
+      version string read from the CLI's own `--version`:
+
+      | Member | Binary | Version | Bound applied | Source |
+      |---|---|---|---|---|
+      | anthropic | `claude` | `2.1.241 (Claude Code)` | `--tools ''` (pre-existing) | — |
+      | openai | `codex` | `codex-cli 0.148.0` | `--sandbox read-only` | `codex exec --help`: `-s, --sandbox <SANDBOX_MODE>`, possible values `read-only`, `workspace-write`, `danger-full-access` |
+      | gemini | `gemini` | `0.50.0` | `--approval-mode plan` | `gemini --help`: `plan (read-only mode)` |
+      | xai | `grok` | — | **not-probed: xai — binary absent** | — |
+      | perplexity | `perplexity` | — | **not-probed: perplexity — binary absent** | — |
+
+      **`--approval-mode` and not `--allowed-tools`**, deliberately: gemini's own
+      help marks the latter `DEPRECATED: Use Policy Engine instead`, so pinning
+      the council to it would bind us to a surface the vendor is retiring. The
+      sibling values move the wrong way — `-y/--yolo` is "automatically accept all
+      actions", `auto_edit` auto-approves edit tools — so `plan` is the only
+      choice matching a member that reads a question and returns an opinion.
+
+      **The sandbox sits BESIDE `--skip-git-repo-check`, never instead of it.**
+      The trust gate is what makes a worktree usable at all (without it codex
+      refuses the directory before reading a prompt); the sandbox bounds what the
+      session may then do. The test asserts both are present, because dropping
+      either alone recreates the asymmetry.
+
+      **Asserted as a property, not transcribed into the argv literal.** The four
+      literal-argv assertions were updated too, but the load-bearing tests search
+      for the flag across three prompt sizes — the sibling openai defect survived
+      for months precisely because its argv test pinned the broken command as
+      expected, and a test that transcribes a command cannot notice the command is
+      wrong. A fourth test asserts no member's argv carries a documented bypass
+      (`--dangerously-bypass-approvals-and-sandbox`,
+      `--dangerously-bypass-hook-trust`, `--yolo`, `danger-full-access`,
+      `workspace-write`): a bound is only a bound if the argv cannot also carry
+      the flag that lifts it, and a presence check alone would pass with both.
+
+      **RED recorded:** `expected -1 to be greater than -1` (`indexOf` of the flag)
+      for both new members, against unmodified `clients.ts`.
+- [x] **5.3 Prove effect, not presence — a canary.** Flag-present is not
       flag-effective; `clients.ts:1706-1715` concedes the existing flag was
       found by a live context-window overflow rather than by a security pass,
       which is exactly the failure a presence assertion cannot catch. Ship a
       canary that asks each CLI member to perform a bounded, harmless action it
       should be unable to perform, and assert refusal.
-      verify: the canary fails when the bound is removed from a member's argv
-      and passes when restored — demonstrate both directions in the same run.
+      verify (discharged, partially — read the honest null below):
+      `./scripts-run src/scripts/ai_council/cli_least_agency_canary --confirm`,
+      run 2026-08-23, record committed at `agents/evidence/council-canary/2026-08-23.json`.
+
+      | Member | Verdict | Both directions in one run? |
+      |---|---|---|
+      | anthropic `claude 2.1.241` | **PASS** | yes — bound blocked, control mutated, restored blocked |
+      | openai `codex-cli 0.148.0` | **PASS** | yes — same three phases |
+      | gemini `0.50.0` | **INCONCLUSIVE** | no — the control did not mutate either |
+      | xai | not-probed | binary absent |
+      | perplexity | not-probed | binary absent |
+
+      **The oracle is filesystem state, never prose.** Both council seats
+      insisted on this independently and they were right: a model answering "I
+      cannot write files" proves nothing if nobody stats the file. The probe asks
+      for one sentinel in a disposable directory and then checks `existsSync`.
+
+      **The control had to become a VALUE rather than an absence, and that
+      correction came from running the file rather than from designing it.** The
+      first version used "omit the bound" as the control and openai read
+      INCONCLUSIVE. A direct probe showed why: with no `--sandbox` in argv at all,
+      codex answers `patch rejected: writing is blocked by read-only sandbox;
+      rejected by user approval settings` — its ambient default is ALREADY
+      restrictive. So the control was confounded by a per-machine setting the
+      probe never recorded, and the verdict would have stayed INCONCLUSIVE forever
+      for a reason that looked like the member's behaviour. With an explicit
+      `--sandbox workspace-write` control, openai reads PASS. anthropic keeps an
+      omission control because its control arm demonstrably mutates.
+
+      **gemini is an honest null and is recorded as one.** `--approval-mode
+      auto_edit` did not create the sentinel either, so nothing about
+      `--approval-mode plan` is established for `gemini 0.50.0`: the argv is built
+      correctly and the vendor documents `plan` as read-only, but the EFFECT claim
+      is not proven. The one manual follow-up probe was refused by the host's own
+      command classifier and was **not** worked around. What would settle it is a
+      sharper control or a mutation the model will actually attempt.
+
+      **Never wired into CI**, per the council decision below: each run spends
+      real vendor calls, `--confirm` is required, and no workflow references it.
+      `--dry-run` prints the argv per phase and spends nothing.
 
 ## Blockers
 
 ### blocker: b-cli-flag-probe
 
-- **Status:** open
+- **Status:** resolved
+- **Resolved by:** execution, 2026-08-23 — option (a) for the three binaries that
+  resolve on this machine and the sanctioned honest null for the two that do not.
+  The blocker's own `Resolved when:` permits exactly this mixed outcome ("either
+  an agency flag with the CLI version string it was read from, or an explicit
+  `not-probed: <member> — binary absent` line"), and its `What to do` says in
+  terms that "an absent binary is an honest null for that member, never a silent
+  skip". So no council call was needed: the question was answerable by running
+  the binaries.
+
+  Probed: `claude 2.1.241 (Claude Code)` (already bounded, `--tools ''`),
+  `codex-cli 0.148.0` → `--sandbox read-only`, `gemini 0.50.0` →
+  `--approval-mode plan`. Absent: `grok` (xai), `perplexity` — both recorded
+  `not-probed … binary absent` in the Phase 5 Step 5.2 table and in
+  `agents/evidence/council-canary/2026-08-23.json`, and neither is rendered as
+  bounded anywhere.
 - **Owner:** maintainer
 - **Blocks:** Phase 5 Steps 5.2 and 5.3. Phase 5 Step 5.1 is not blocked — it
   reads the argv arrays out of `clients.ts` and needs nothing external.
@@ -437,7 +545,50 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 
 ### blocker: b-probe-channel-decision
 
-- **Status:** open
+- **Status:** resolved
+- **Resolved by:** AI council, 2026-08-23, 2 seats (anthropic + openai),
+  **convergent**. Record: `agents/runtime/council/responses/probe-channel.md`
+  (gitignored and machine-local, so the decision is restated here rather than
+  cited as a path — the summary below is the durable form).
+
+  **Verdict: a named HYBRID**, neither (a) nor (b) as the blocker framed them.
+  Both seats reached it independently on the same argument: `AC-5` contains two
+  independently falsifiable propositions — *the spawner supplies the bound* and
+  *the vendor enforced it* — and no single evidence channel covers both well.
+
+  - **Construction half (continuous, free):** a deterministic assertion that each
+    member's argv carries its designated bound. Landed as three tests in
+    `tests/scripts/ai_council/clients.test.ts`, which the node-tests job already
+    runs. Discharges: *the spawner supplies the designated least-agency argument
+    for each supported CLI.*
+  - **Enforcement half (deliberate, paid, never in CI):**
+    `src/scripts/ai_council/cli_least_agency_canary.ts`, filesystem-state oracle,
+    `bound → control → bound restored` in one run, version pinned per member,
+    `--confirm` required. Discharges: *the recorded CLI version enforced that
+    argument against the tested mutation at the recorded time.*
+
+  **Adopted from the seats, both halves:** filesystem state as the oracle rather
+  than model prose; version pinning, with a version change returning a member to
+  `unverified`; explicit nulls for absent binaries rather than assumed
+  compliance; and the single-run `bound → unbound → restored` sequence over a
+  "prove it once" reading.
+
+  **Rejected, and by which seat:** the openai seat rejected the anthropic seat's
+  90-day cadence as **invented policy** — nothing in the blocker or its
+  constraints establishes a schedule, and it would have entered `AC-5` as a
+  commitment nobody decided. It is therefore NOT in the amended criterion; what
+  replaced it is the version-invalidation rule, which is falsifiable from the
+  record itself. The openai seat also rejected the ">10% false positives" kill
+  criterion as arbitrary for a gate that should be deterministic, and rejected
+  "three consecutive passes then an overflow" as too late — one observed escape
+  invalidates the enforcement claim immediately. Both narrowings are adopted.
+
+  **Kill criteria for this pick**, as the seats stated them: the control cannot
+  reliably mutate (fired for gemini — see Step 5.3); a bounded run mutates
+  anything; bounded and unbounded outcomes become indistinguishable through auth,
+  approval prompts, or timeouts; the probe comes to rest on textual refusal
+  instead of filesystem observation; or a CLI offers only a planning convention
+  rather than an enforceable write restriction.
 - **Owner:** maintainer
 - **Blocks:** Phase 5 Step 5.3 — the canary needs a decision about where it runs
   before it can be written.
@@ -478,27 +629,60 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A peer-review quote in a council artefact resolves to the member
+- [x] AC-1 — A peer-review quote in a council artefact resolves to the member
       who wrote it, for every reviewer in the run, and a test asserting a
       per-reviewer label mapping was observed failing against the pre-change
       code. The mapping is also not reproducible from member config order alone:
       it is a function of the run seed, and across at least eight distinct seeds
       at least two distinct permutations occur.
-- [ ] AC-2 — An unparseable member answer is distinguishable in the artefact
+- [x] AC-2 — An unparseable member answer is distinguishable in the artefact
       from a member that found nothing, and the rendered attendance line does
       not count it toward `N/N present`.
-- [ ] AC-3 — Whether the seats agreed is recoverable from
+- [x] AC-3 — Whether the seats agreed is recoverable from
       `agents/runtime/council/events.log` alone, as a field on the existing
       `quorum_result` line, with the four registered metrics reproducing
       unchanged over a fixture log that spans the schema bump.
-- [ ] AC-4 — One scale describes evidence quality across `prompts.ts` and the
+- [x] AC-4 — One scale describes evidence quality across `prompts.ts` and the
       ai-council skill, and `unverified:` either has a parser with a render
       consequence or a written statement in `procedure.md` that nothing reads
       it.
-- [ ] AC-5 — Every CLI council member is spawned under a stated agency bound
-      recorded against a pinned CLI version, and either the canary demonstrated
-      both directions or `b-probe-channel-decision` chose option (b) and this
-      criterion was amended in the same change to claim argv correctness only.
-- [ ] AC-6 — No phase in this roadmap is closed on a test that was green the
+- [x] AC-5 — **Amended 2026-08-23**, in the same change that resolved
+      `b-probe-channel-decision`, because the council picked a hybrid rather than
+      either option the original wording anticipated. The criterion is now two
+      independently falsifiable propositions, because that is what the evidence
+      splits into:
+
+      **(i) Construction — green for every configured member.** An automated
+      check asserts the spawned argv carries that member's designated bound, and
+      that it carries no documented bypass. Failure or removal fails the check.
+      *Met:* three tests in `clients.test.ts`, in the node-tests job.
+
+      **(ii) Enforcement — per member, version-scoped, and never assumed.** For
+      each locally available member, a deliberately invoked canary records the
+      binary path, CLI version, argv and filesystem observation for
+      `bound → control → bound restored`. A result is valid ONLY for the recorded
+      CLI version and the tested mutation; a changed or unknown version returns
+      that member to `unverified`. Members whose binary or deterministic control
+      is unavailable are recorded as explicit **unverified nulls** and are
+      excluded from any parity claim.
+      *Met as stated, which is not the same as met everywhere:*
+      anthropic `2.1.241` **pass** · openai `codex-cli 0.148.0` **pass** ·
+      gemini `0.50.0` **inconclusive** (the control did not mutate either, so
+      nothing is established about `--approval-mode plan`) · xai and perplexity
+      **unverified nulls**, binaries absent.
+
+      **No five-member enforcement parity is claimed, and none may be read from
+      this.** Two of five are proven, one is inconclusive and two are nulls. What
+      the criterion asserts is that every member's status is *recorded and
+      honest*, not that every member is proven — and the original wording's
+      "every CLI council member is spawned under a stated agency bound" would
+      have been false for xai and perplexity, whose bound is undetermined rather
+      than merely unapplied.
+
+      **The 90-day recheck cadence one seat proposed is deliberately NOT here**:
+      the other seat named it invented policy, and it is replaced by the
+      version-invalidation rule in (ii), which is checkable from the record
+      instead of from a calendar.
+- [x] AC-6 — No phase in this roadmap is closed on a test that was green the
       first time it ran; each phase's note carries the recorded failure text
       from its own red run, or states which drift made a red run impossible.

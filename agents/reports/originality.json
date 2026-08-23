@@ -1,12 +1,12 @@
 {
   "fail_threshold": 60,
   "warn_threshold": 40,
-  "artifacts_scanned": 521,
+  "artifacts_scanned": 523,
   "distribution": {
     "worst": 40,
     "p95": 0,
     "median": 0,
-    "comparisons": 62440
+    "comparisons": 63021
   },
   "pairs": [
     {

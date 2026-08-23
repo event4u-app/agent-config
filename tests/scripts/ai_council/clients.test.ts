@@ -646,6 +646,81 @@ describe('clients — CLI command construction', () => {
         expect(fs.existsSync(path.join(where, '.claude'))).toBe(false);
     });
 
+    // ── Phase 5 — least-agency parity across the CLI members ──
+    //
+    // Baseline recorded 2026-08-23 before this landed:
+    // `grep -nE -- "--sandbox|--approval-mode|read-only" clients.ts` returned 0.
+    // One of five CLI members carried a bound (`--tools ''`, anthropic) behind a
+    // 26-line Least-Agency justification, and the same file built four further
+    // members with no equivalent — one of them passing `--skip-git-repo-check`,
+    // a guard REMOVAL, with no counterpart. Same role, three enforcement levels.
+    //
+    // Asserted as a PROPERTY, not transcribed into the argv literal: the sibling
+    // openai defect survived for months precisely because its argv test pinned
+    // the broken command as expected, and a test that transcribes the command
+    // cannot notice the command is wrong.
+    //
+    // Flags probed against real binaries on 2026-08-23, versions pinned:
+    //   codex-cli 0.148.0  → `--sandbox read-only`
+    //                        (possible values: read-only, workspace-write,
+    //                         danger-full-access)
+    //   gemini 0.50.0      → `--approval-mode plan`
+    //                        (documented as "plan (read-only mode)")
+    // xai (`grok`) and perplexity (`perplexity`) are NOT probed: neither binary
+    // resolves on this machine, so their bound is undetermined and is recorded
+    // as an honest null in the roadmap rather than asserted here. A member whose
+    // bound was never determined must not be rendered as bounded.
+    it('OpenAICliClient spawns codex under a read-only sandbox', () => {
+        for (const sys of ['', 'SYS', 'a'.repeat(5000)]) {
+            const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
+            client.ask(sys, 'USER', 1);
+            const cmd = calls[0]!.cmd;
+            const at = cmd.indexOf('--sandbox');
+            expect(at).toBeGreaterThan(-1);
+            expect(cmd[at + 1]).toBe('read-only');
+            // The guard removal keeps its counterpart in the same argv: the
+            // trust gate is what makes a worktree usable, the sandbox is what
+            // bounds what the session may then do. Dropping either alone is the
+            // asymmetry this phase closes.
+            expect(cmd).toContain('--skip-git-repo-check');
+        }
+    });
+
+    it('GeminiCliClient spawns gemini in plan (read-only) approval mode', () => {
+        for (const sys of ['', 'SYS', 'a'.repeat(5000)]) {
+            const { client, calls } = stubCli(GeminiCliClient, { returncode: 0, stdout: '{}', stderr: '' });
+            client.ask(sys, 'USER', 1);
+            const cmd = calls[0]!.cmd;
+            const at = cmd.indexOf('--approval-mode');
+            expect(at).toBeGreaterThan(-1);
+            expect(cmd[at + 1]).toBe('plan');
+            // Never the escape hatches, on any prompt.
+            expect(cmd).not.toContain('--yolo');
+            expect(cmd).not.toContain('-y');
+        }
+    });
+
+    // The negative half, and it is not decoration: a bound is only a bound if the
+    // argv cannot also carry the flag that lifts it. `codex` ships two documented
+    // bypasses and a test that only checks for the presence of `--sandbox` would
+    // pass with both of them alongside it.
+    it('no CLI member argv carries a documented agency bypass', () => {
+        const BYPASSES = [
+            '--dangerously-bypass-approvals-and-sandbox',
+            '--dangerously-bypass-hook-trust',
+            '--yolo',
+            'danger-full-access',
+            'workspace-write',
+        ];
+        for (const Klass of [AnthropicCliClient, OpenAICliClient, GeminiCliClient]) {
+            const { client, calls } = stubCli(Klass, { returncode: 0, stdout: '{}', stderr: '' });
+            client.ask('SYS', 'USER', 1);
+            for (const bad of BYPASSES) {
+                expect(calls[0]!.cmd, `${Klass.name} argv carries ${bad}`).not.toContain(bad);
+            }
+        }
+    });
+
     it('OpenAICliClient argv (prompt on stdin, no --system)', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('SYS', 'USER', 1);
@@ -658,6 +733,8 @@ describe('clients — CLI command construction', () => {
             'exec',
             '--json',
             '--skip-git-repo-check',
+            '--sandbox',
+            'read-only',
             '-',
         ]);
         // One channel, so the boundary has to be in the text — the system prompt
@@ -781,6 +858,8 @@ describe('clients — CLI command construction', () => {
             'exec',
             '--json',
             '--skip-git-repo-check',
+            '--sandbox',
+            'read-only',
             '-',
         ]);
         expect(calls[0]!.stdin).toBe('USER');
@@ -793,7 +872,7 @@ describe('clients — CLI command construction', () => {
         // obvious assertions hold for ANY folded output, including one that
         // dropped the user prompt entirely.
         client.ask('ZQSYSTEMZQ', 'ZQUSERZQ', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', '--output-format', 'json', '--model', 'gemini-2.5-pro']);
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', '--output-format', 'json', '--approval-mode', 'plan', '--model', 'gemini-2.5-pro']);
         const stdin = calls[0]!.stdin ?? '';
         expect(stdin).toContain('<<<SYSTEM_INSTRUCTIONS>>>\nZQSYSTEMZQ\n<<<END_SYSTEM_INSTRUCTIONS>>>');
         expect(stdin).toContain('ZQUSERZQ');
@@ -816,7 +895,7 @@ describe('clients — CLI command construction', () => {
     it('GeminiCliClient sends the bare user prompt when the system prompt is empty', () => {
         const { client, calls } = stubCli(GeminiCliClient, { returncode: 0, stdout: '{}', stderr: '' });
         client.ask('', 'U', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', '--output-format', 'json', '--model', 'gemini-2.5-pro']);
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', '--output-format', 'json', '--approval-mode', 'plan', '--model', 'gemini-2.5-pro']);
         expect(calls[0]!.stdin).toBe('U');
     });
 
