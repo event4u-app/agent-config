@@ -135,16 +135,28 @@ describe('Phase 4.3 — the readiness verdict cannot average a red away', () => 
     });
 
     it('defines no numeric aggregation path over the verdict', () => {
-        const body = read(READINESS);
-        // The forbidden shapes are scores/averages/weights applied to the verdict.
-        for (const banned of [
-            /\baverage[sd]?\s+the\s+verdict/i,
-            /\bweighted\s+score\b/i,
-            /\breadiness\s+score\b/i,
-            /\bpercent(?:age)?\s+ready\b/i,
-        ]) {
-            expect(body, `numeric aggregation path present: ${banned}`).not.toMatch(banned);
-        }
+        // Naming an aggregation in order to FORBID it is not defining one. The
+        // first version of this test banned the bare phrase and failed on the
+        // skill's own `Do NOT compute a ... weighted score` line -- it would
+        // have been satisfied by deleting the prohibition, i.e. by making the
+        // skill worse. So the assertion is contextual: every mention of an
+        // aggregation construct must sit on a prohibitive line.
+        const PROHIBITIVE = /do not|never|no\s|not\s|cannot|refus|hide[sn]?|wearing|lost|instead of|unreachable/i;
+        const AGGREGATION = [
+            /\baverage[sd]?\b/i,
+            /\bweighted?\b/i,
+            /\bscore\b/i,
+            /\bpercent(?:age)?\b/i,
+            /\bpass-count\b/i,
+        ];
+        const offending = read(READINESS)
+            .split('\n')
+            .filter((line) => AGGREGATION.some((re) => re.test(line)))
+            .filter((line) => !PROHIBITIVE.test(line));
+        expect(
+            offending,
+            `these lines name a numeric aggregation without forbidding it:\n${offending.join('\n')}`,
+        ).toEqual([]);
     });
 
     it('never treats unknown as green', () => {
