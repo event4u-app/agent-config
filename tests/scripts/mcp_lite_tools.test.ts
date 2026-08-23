@@ -7,7 +7,10 @@
 // `agents/evidence/metrics/mcp-tool-standing-cost.jsonl` says the kernel surface
 // costs ~3,886 tokens and the lite surface is capped at 600, and a change that
 // moves either should redden a test rather than quietly age a JSON file.
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     INSTRUCTIONS,
@@ -17,7 +20,7 @@ import {
     dispatch,
     liteToolsTokenCost,
 } from '../../src/cli/mcp/dispatch.js';
-import type { ContentEntry, ContentTree } from '../../src/cli/mcp/content.js';
+import { loadTierA, type ContentEntry, type ContentTree } from '../../src/cli/mcp/content.js';
 import { ALLOWLIST, to_mcp_tool_meta } from '../../src/scripts/mcp_server/tools.js';
 
 const IDENTITY = { name: 'agent-config-mcp', version: '0.0.0-test' };
@@ -224,5 +227,93 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
 
     it('is more than 5x the lite surface, which is why the lite one is registered', () => {
         expect(Math.round(payloadChars / 4)).toBeGreaterThan(liteToolsTokenCost() * 5);
+    });
+});
+
+
+describe('lite server — Tier A filtering (Phase 3.3)', () => {
+    // The `no tiers file` branch and the fixture branch, side by side. The
+    // distinction is the whole point: `undefined` means nobody computed a split
+    // on this machine, which is the default state, and must never read as "no
+    // skill is Tier A".
+    const TIERED: ContentTree = { ...FIXTURE, tier_a: new Set(['merge-conflicts']) };
+
+    function callOn(tree: ContentTree, args: Record<string, unknown>): Record<string, unknown> {
+        const resp = dispatch(tree, IDENTITY, {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'tools/call',
+            params: { name: 'suggest_skill_for_task', arguments: args },
+        });
+        return (resp as { result: { structuredContent: Record<string, unknown> } }).result
+            .structuredContent;
+    }
+
+    it('with no tiers file: returns the full ranked list and says tiers: unknown', () => {
+        const out = callOn(FIXTURE, { task: 'resolve merge conflicts' });
+        expect(out.tiers).toBe('unknown');
+        expect((out.suggestions as { skill: string }[]).map((s) => s.skill)).toContain(
+            'merge-conflicts',
+        );
+    });
+
+    it('with a tiers file: drops the Tier A skill and says tiers: tier-b-only', () => {
+        // `authz-review` also scores on this task via its `review` term, so the
+        // list does not go empty and the filter is observable.
+        const out = callOn(TIERED, { task: 'resolve merge conflicts and review gates' });
+        expect(out.tiers).toBe('tier-b-only');
+        const names = (out.suggestions as { skill: string }[]).map((s) => s.skill);
+        expect(names).not.toContain('merge-conflicts');
+        expect(names.length).toBeGreaterThan(0);
+        expect(out.tier_filter).toBeUndefined();
+    });
+
+    it('bypasses the filter rather than returning an empty list', () => {
+        // Only `merge-conflicts` matches, and it is Tier A. An empty answer here
+        // would read as "no skill covers this" — the conclusion the rule forbids.
+        const out = callOn(TIERED, { task: 'rebase conflicts' });
+        const names = (out.suggestions as { skill: string }[]).map((s) => s.skill);
+        expect(names).toEqual(['merge-conflicts']);
+        expect(out.tier_filter).toBe('bypassed-to-avoid-empty');
+    });
+});
+
+describe('loadTierA — absent is not empty', () => {
+    let root: string;
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'tiera-'));
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function writeTiers(body: string): void {
+        const dir = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'skill-tiers.json'), body);
+    }
+
+    it('returns undefined when the file does not exist', () => {
+        expect(loadTierA(root)).toBeUndefined();
+    });
+
+    it('returns the names when it does', () => {
+        writeTiers(JSON.stringify({ tier_a: ['a', 'b'] }));
+        expect([...loadTierA(root)!].sort()).toEqual(['a', 'b']);
+    });
+
+    it('returns an EMPTY SET, not undefined, for a genuinely empty Tier A', () => {
+        writeTiers(JSON.stringify({ tier_a: [] }));
+        expect(loadTierA(root)).toBeInstanceOf(Set);
+        expect(loadTierA(root)!.size).toBe(0);
+    });
+
+    it('returns undefined on malformed or wrong-shaped content — never a half-read split', () => {
+        writeTiers('{ not json');
+        expect(loadTierA(root)).toBeUndefined();
+        writeTiers(JSON.stringify({ tier_a: 'not-an-array' }));
+        expect(loadTierA(root)).toBeUndefined();
+        writeTiers(JSON.stringify({}));
+        expect(loadTierA(root)).toBeUndefined();
     });
 });

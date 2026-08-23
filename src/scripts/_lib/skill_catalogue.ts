@@ -730,6 +730,17 @@ export interface ProjectionModeCounts {
     prunedUnderScoped: number;
     /** Pack ids active by default under `scoped`, sorted. */
     activePacks: string[];
+    /**
+     * Skills a `projection.mode: tiered` install deploys natively — those
+     * predicted to reach the model WITH their description. `null` when no tier
+     * split exists on this machine, which is the common case and is NOT zero.
+     */
+    tierACount: number | null;
+    /**
+     * Skills `tiered` withholds from the native catalogue; still served by the
+     * MCP recovery tools. `null` under the same condition as `tierACount`.
+     */
+    tierBCount: number | null;
 }
 
 /**
@@ -791,8 +802,26 @@ export function formatProjectionModes(
         `  legacy-all:  ${counts.legacyAll}`,
         `  pruned under scoped: ${counts.prunedUnderScoped}`,
         `  active packs under scoped: ${counts.activePacks.length}`,
-        '',
     ];
+    if (counts.tierACount === null || counts.tierBCount === null) {
+        lines.push(
+            '  tiered:      no split on this machine (agents/runtime/state/skill-tiers.json',
+            '               absent) — not zero, unmeasured. `tiered` ships the full surface',
+            '               until a split exists.',
+        );
+    } else {
+        lines.push(
+            `  tiered:      tier A ${counts.tierACount} native + tier B ${counts.tierBCount} ` +
+                `MCP-only = ${counts.tierACount + counts.tierBCount}`,
+        );
+        if (counts.tierACount + counts.tierBCount !== counts.legacyAll) {
+            lines.push(
+                `               ⚠️  tier A + tier B (${counts.tierACount + counts.tierBCount}) != ` +
+                    `legacy-all (${counts.legacyAll}) — the split is STALE, recompute it.`,
+            );
+        }
+    }
+    lines.push('');
     if (rows.length === 0) {
         lines.push(
             'No host root measured. Pass --host-root <dir> (repeatable) to read what',

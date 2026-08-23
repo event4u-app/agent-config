@@ -3591,10 +3591,12 @@ function _resolve_global_settings_path(): string | null {
  */
 function _resolve_scoped_projection(
     package_root: string,
-): { mode: 'scoped' | 'legacy-all'; active_packs: string[] } {
+): { mode: ProjectionMode; active_packs: string[] } {
     const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
     const projection = _isPlainObject(doc['projection']) ? (doc['projection'] as Record<string, unknown>) : {};
-    const mode: 'scoped' | 'legacy-all' = projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all';
+    const raw = projection['mode'];
+    const mode: ProjectionMode =
+        raw === 'scoped' ? 'scoped' : raw === 'tiered' ? 'tiered' : 'legacy-all';
     const runtime = _isPlainObject(doc['runtime']) ? (doc['runtime'] as Record<string, unknown>) : {};
     const active_packs_raw = runtime['active_packs'];
     const active_packs = Array.isArray(active_packs_raw)
@@ -3687,6 +3689,87 @@ function _rule_filter_for_source(
  * non-empty AND has no intersection with `active_ids`. Untagged artefacts
  * (empty `packs:` frontmatter) are core/shared and always kept.
  */
+/**
+ * The three projection modes.
+ *
+ * `legacy-all` ships everything and stays the default. `scoped` narrows to the
+ * active packs. `tiered` (Phase 2.2 of `road-to-skill-delivery-over-mcp`) narrows
+ * to the skills predicted to reach the model WITH their description, on the
+ * theory that a skill the host lists bare is better served by the MCP recovery
+ * tool than by a catalogue entry nobody can read.
+ *
+ * `tiered` is OPT-IN and stays opt-in until Phase 4.4 decides on evidence. The
+ * reason is stated rather than implied: the split usually comes from an
+ * ALPHABETICAL fallback order (`agents/runtime/metrics/skill-usage.jsonl` is
+ * absent on most machines), and the one real host observation this repo has
+ * disagrees with that fallback on four of eight sampled entries. Defaulting to
+ * `tiered` would therefore hide skills on a prediction the tree itself can show
+ * to be wrong — strictly worse than the bare-but-listed defect it fixes
+ * (roadmap risk 4).
+ */
+type ProjectionMode = 'scoped' | 'legacy-all' | 'tiered';
+
+/**
+ * Tier B skill names, or `null` when no split exists on this machine.
+ *
+ * `null` is load-bearing: it means "nobody computed a split here", and a
+ * `tiered` install that finds it must ship the FULL surface rather than prune
+ * on an empty set — pruning on absence would delete the entire catalogue.
+ */
+function _resolve_tier_b(package_root: string): ReadonlySet<string> | null {
+    const p = path.join(package_root, 'agents', 'runtime', 'state', 'skill-tiers.json');
+    if (!pathExists(p)) return null;
+    try {
+        const parsed = JSON.parse(readText(p)) as { tier_b?: unknown };
+        if (!Array.isArray(parsed.tier_b)) return null;
+        return new Set(parsed.tier_b.filter((n): n is string => typeof n === 'string'));
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * The consumer-side alternative to tiering, surfaced as a recommendation only.
+ *
+ * Claude Code's listing budget is settable: `skillListingBudgetFraction` raises
+ * the fraction of the context window spent on skill DESCRIPTIONS, restoring them
+ * at a measured token price instead of withholding skills from the catalogue.
+ * That is the other lever, and for many consumers the better one — a description
+ * they can read beats a tool call they have to make.
+ *
+ * Returns `null` unless a tier split exists AND Tier B is non-empty: with no
+ * split there is nothing to recommend against, and an empty Tier B means the
+ * host already describes everything. This function NEVER writes the consumer's
+ * `settings.json` — the setting is theirs, the token cost is theirs, and an
+ * installer that edited a host's own config to buy itself context would be
+ * taking that decision in their name.
+ */
+function _tier_b_advisory(package_root: string): string | null {
+    const tier_b = _resolve_tier_b(package_root);
+    if (tier_b === null || tier_b.size === 0) return null;
+    return (
+        `ℹ️  ${tier_b.size} skill(s) are predicted to reach the model WITHOUT their ` +
+        'description on a default 200k window.\n' +
+        '   Two levers, neither applied for you:\n' +
+        '   • raise `skillListingBudgetFraction` in your Claude Code settings — ' +
+        'restores descriptions at a token cost (100% delivery of this catalogue ' +
+        'measures ~14,408 tok)\n' +
+        '   • or set `projection.mode: tiered` to withhold them from the catalogue ' +
+        'and reach them via the MCP server instead (opt-in, still unproven — see ' +
+        'docs/mcp-server.md)'
+    );
+}
+
+/** Prune skills the host would list bare; they stay reachable over MCP. */
+function _prune_tier_b_modules(
+    deploy_results: Record<string, DeployResult>,
+    tier_b: ReadonlySet<string>,
+): [number, Record<string, DeployResult>] {
+    return _prune_modules_by(deploy_results, (md_path) =>
+        tier_b.has(path.basename(path.dirname(md_path))),
+    );
+}
+
 function _prune_scoped_modules(
     deploy_results: Record<string, DeployResult>,
     active_ids: ReadonlySet<string>,
@@ -3824,6 +3907,28 @@ function install_global(
     // here and restores the full tree — never a partial or crashed prune.
     try {
         const { mode, active_packs } = _resolve_scoped_projection(package_root);
+        if (mode === 'tiered') {
+            const tier_b = _resolve_tier_b(package_root);
+            if (tier_b === null || tier_b.size === 0) {
+                if (!state.QUIET) {
+                    warn(
+                        'projection.mode: tiered but no skill-tier split exists ' +
+                            '(agents/runtime/state/skill-tiers.json) — shipping the full surface. ' +
+                            'Run `agent-config` skill-tier computation first.',
+                    );
+                }
+            } else {
+                let tier_pruned: number;
+                [tier_pruned, deploy_results] = _prune_tier_b_modules(deploy_results, tier_b);
+                if (!state.QUIET) {
+                    info(
+                        `🧹 Tiered install: pruned ${tier_pruned} Tier-B skill artefact(s) — ` +
+                            'still reachable via the MCP server\'s suggest_skill_for_task / ' +
+                            'read_skill. Set projection.mode: legacy-all to restore the full surface.',
+                    );
+                }
+            }
+        }
         if (mode === 'scoped') {
             const packs_registry = _load_packs_registry(package_root);
             const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
@@ -5294,6 +5399,11 @@ function _main_project_install(
         if (_is_tool_enabled(tools, 'kiro')) ensure_kiro_bridge(project_root, opts.force);
     }
 
+    const tier_advisory = _tier_b_advisory(package_root);
+    if (tier_advisory !== null && !state.QUIET) {
+        info(tier_advisory);
+    }
+
     if (opts.augment_user_hooks) {
         (merged_keys_by_tool['augment'] ??= []).push(...ensure_augment_user_hooks(package_root, opts.force));
     }
@@ -5487,6 +5597,9 @@ export {
     ensure_cursor_bridge,
     ensure_cline_bridge,
     ensure_mcp_bridge,
+    _prune_tier_b_modules,
+    _resolve_tier_b,
+    _tier_b_advisory,
     ensure_windsurf_bridge,
     ensure_gemini_bridge,
     // road-to-credible-install Phase 2: exported for the scoped-projection

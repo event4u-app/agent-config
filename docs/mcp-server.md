@@ -160,6 +160,57 @@ boots cleanly:
 | Stale prompts after editing | Hot-reload triggers on mtime; touch the file or reissue `resources/list`. |
 | Client refuses to start the server | Check the client's log for the full command. Most clients require **absolute** paths in `command` and `cwd`. |
 
+## When the host lists a skill without its description
+
+Claude Code lists every skill NAME but keeps DESCRIPTIONS only up to a fraction
+of the context window — 1% by default, roughly 8,000 characters on a 200k window
+— filling by invocation frequency and capping each entry at 1,536 characters.
+This package projects ~292 skills, so most descriptions do not fit. Measured
+first-party on 2026-08-08, five of eight sampled catalogue entries arrived bare
+while all of them carried a description on disk
+(`agents/evidence/analysis/skill-catalogue-description-delivery.md`).
+
+A bare entry is a routing problem: the description is the only surface a model
+selects on. There are **two levers**, and this package applies neither for you.
+
+### Lever 1 — raise the host's budget (`skillListingBudgetFraction`)
+
+`skillListingBudgetFraction` is a **Claude Code setting**, not one of ours. Raising
+it restores descriptions at a token price: delivering this catalogue's
+descriptions in full measures roughly **14,408 tokens** of standing context.
+Nothing in this package writes it — the setting is yours, the token cost is yours,
+and an installer that edited your host config to buy itself context would be
+taking that decision in your name.
+
+Prefer this lever when you want every skill to stay natively selectable and can
+afford the context.
+
+### Lever 2 — `projection.mode: tiered` (opt-in, unproven)
+
+`tiered` withholds the skills predicted to arrive bare from the native catalogue
+and serves them over this MCP server instead, through `suggest_skill_for_task`
+and `read_skill`. Tier A stays native; Tier B becomes MCP-reachable.
+
+It is **opt-in and stays opt-in**, and the reason is worth reading before you
+enable it. The tier split is computed from a model of the host's budget, and the
+fill order that model needs — invocation frequency — is usually unavailable, so
+it falls back to alphabetical. Pinned against the one real host observation this
+repository has, that fallback **disagrees on four of eight sampled entries**
+(`tests/scripts/host_listing_model.test.ts`). So a Tier B verdict is a
+prediction, not a measurement, and on a host that never calls the tool a Tier B
+skill goes from bare-but-listed to absent — strictly worse than the defect being
+fixed.
+
+Inspect the split before trusting it:
+
+```bash
+./agent-config mcp:check                                    # is the server registered?
+./scripts-run src/scripts/capture_skill_catalogue --projection-modes
+```
+
+The second prints `tier A N native + tier B M MCP-only`, or says plainly that no
+split exists on this machine — which is not the same as zero.
+
 ## Scope
 
 - **In scope:** read-only prompts + resources, pagination, hot-reload, stdio
