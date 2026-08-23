@@ -96,6 +96,15 @@ added against no enforced per-turn number at all.
 Both steps are gated by `b-per-turn-composite-ceiling`. They are open work, not
 deferred work: the blocker names what closes them.
 
+**PARKED 2026-08-23 by AI council, 2 of 2 convergent (verdict (b3)), and the
+park is recorded rather than silent.** Neither step is started. The council
+refused both shortcuts — the after-use variant (Risk 1: a coverage claim the tree
+cannot support) and provisioning `pre_tool_use` without an armed ceiling (slot
+erosion the ceiling exists to prevent) — and required the disposition to state
+plainly that **rug-pull protection remains absent and the protection level is
+zero**. The full reasoning, both seats' disagreement, and the named collection
+milestone are at the blocker below.
+
 - [ ] **1.1 Fingerprint store for third-party MCP tool definitions.** <!-- blocked-by: b-per-turn-composite-ceiling -->
       Record a stable hash per connected third-party tool definition — name,
       description, input schema — and surface a mismatch against the recorded
@@ -182,6 +191,65 @@ tool the check exists for.
   `src/config/hook-latency-budget.json` carries a numeric `p50_ci` and
   `observe_only: false` — or option (b) is recorded at this blocker with the
   owner's chosen side of the trade-off.
+- **Disposition 2026-08-23 — option (a) kept, the wait recorded, and the
+  collection milestone named. AI council 2026-08-23, 2 of 2 seats present
+  (anthropic/claude-sonnet-4-5, openai/codex-default), both convergent on (b3),
+  $0.041.** The response artefact is deliberately NOT linked: it lives under the
+  gitignored, auto-pruned council output tree, so a link from a stable artefact
+  would rot — the convergence summary is inlined below instead, which is what
+  `no-roadmap-references` § council clause requires. Status stays **open**
+  deliberately: this
+  discharges AC-4's first clause — the blocker carries a recorded option — and
+  the roadmap stays `status: draft`, charging no active slot.
+
+  **MCP runtime rug-pull protection remains explicitly absent. No prevention and
+  no detection is shipped; the current protection level is zero.** That sentence
+  is the council's own required wording and it is here rather than paraphrased,
+  because Risk 1's failure mode is a *silent* one — a tree gaining a coverage
+  claim it cannot support.
+
+  **Why (a) is unreachable now rather than refused.** A2.1 of
+  `road-to-per-turn-hook-economy-carry` is a MAINTAINER ACT gated by
+  `b-composite-ceiling-value`, whose own *"What to do"* reads *"name the `p50_ci`
+  ceiling … **once A1.3 publishes the distribution**"*. Phase A1 does not exist —
+  the bench prints the composite and stores nothing — and the row's
+  `arming_precondition` needs **≥ 10 CI readings from ≥ 2 distinct runner
+  sessions**, which accumulate over a release cycle. No verdict and no agent
+  action produces them now.
+
+  **Why not (b1) — build the after-use variant.** Both seats refused it. One:
+  post-use detection is *"detection archaeology, not runtime integrity"* for a
+  tool with irreversible side effects, and shipping it under this roadmap's title
+  is Risk 1 exactly. The other **disagreed** that MCP tools are *fundamentally*
+  irreversible — many are read-only, so late detection has real value — and still
+  refused, because *"shipping under a 'runtime integrity' roadmap while leaving
+  first-call irreversible actions exposed creates a more dangerous ambiguity than
+  explicitly retaining zero coverage."* That disagreement is recorded rather than
+  smoothed over: it is the strongest argument for (b1) and it lost on framing,
+  not on value.
+
+  **Why not (b2) — provision the pre-use slot without an armed ceiling.** The
+  27–34 ms headroom is unreliable: the derivation block records a real p50 spread
+  of 111–148 ms and an unrecorded max that may exceed 157 ms, and this cap was
+  already re-derived once after the gate flapped on unchanged code. One seat put
+  the systemic cost plainly — bypassing capacity discipline "because this one is
+  important" weakens slot integrity **everywhere**, not only here.
+
+- **The collection milestone — added by the council, and it is the load-bearing
+  half of this disposition.** One seat's refinement: *"(b3) needs an actionable
+  collection milestone, not merely a distant revisit condition, or it becomes the
+  indefinite park identified by Risk 2."* Agreed and named:
+
+  > **Milestone: Phase A1 of `road-to-per-turn-hook-economy-carry` is built** —
+  > A1.1 persists every CI composite reading with its runner identity, A1.2
+  > answers the arming question as a predicate, A1.3 publishes the distribution.
+  > That is what starts the clock the `arming_precondition` counts, and it is
+  > **unblocked buildable work today** (`b-composite-ceiling-value` blocks A2.1
+  > only, by its own `Blocks:` line).
+
+  Without that milestone this park has no mechanism, which is precisely Risk 2.
+  With it, the wait is bounded by a build plus a release cycle rather than by
+  nobody's attention.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: ai-council -->
@@ -208,7 +276,15 @@ tool the check exists for.
       `## The no-silent-downgrade rule` is present at
       `b-per-turn-composite-ceiling`, naming which side was chosen and why.
       Falsified by a merged after-use check with no such record.
-- [ ] AC-4 — `b-per-turn-composite-ceiling` carries a recorded option, or Phase
+- [x] AC-4 — `b-per-turn-composite-ceiling` carries a recorded option, or Phase
       1 is untouched and the blocker is still open with its dependency named —
       a carried item whose gate is visible and checkable is a discharged
       obligation; one that has quietly become a second park is not.
+
+      **Met 2026-08-23 on BOTH clauses.** The blocker carries a recorded option
+      (a-kept, via council verdict (b3), 2 of 2 convergent), Phase 1 is untouched,
+      and the dependency is named down to the step that gates it and the
+      precondition that gates *that*. The clause about "quietly become a second
+      park" is answered by the named collection milestone: Phase A1 of
+      `road-to-per-turn-hook-economy-carry`, which is unblocked buildable work and
+      is what starts the reading clock.
