@@ -63,6 +63,11 @@ const PACKAGE_JSON = path.join(REPO_ROOT, 'package.json');
 // Bumped alongside package.json — see set_lockfile_version for why.
 const PACKAGE_LOCK_JSON = path.join(REPO_ROOT, 'package-lock.json');
 const MARKETPLACE_JSON = path.join(REPO_ROOT, '.claude-plugin', 'marketplace.json');
+// The Augment twins. Both ship in the npm tarball (`publish-surface.json`
+// roots) and both are version-synced to package.json — see
+// lint_marketplace.check_augment_manifests for why they are not independent.
+const AUGMENT_PLUGIN_JSON = path.join(REPO_ROOT, '.augment-plugin', 'plugin.json');
+const AUGMENT_MARKETPLACE_JSON = path.join(REPO_ROOT, '.augment-plugin', 'marketplace.json');
 // Source-of-truth project-settings template. Carries an `agent_config_version`
 // pin that check_template_pin_drift requires to equal package.json.version. We
 // bump the src twin here; `task release-prepare` (run right after the bump)
@@ -227,6 +232,8 @@ export {
     GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
     MAIN_BRANCH,
+    AUGMENT_MARKETPLACE_JSON,
+    AUGMENT_PLUGIN_JSON,
     MARKETPLACE_JSON,
     PACKAGE_JSON,
     PACKAGE_LOCK_JSON,

@@ -770,3 +770,27 @@ is the named exception in the claim itself.
   adapter and contract: there is none, so the repair is a supersession note on the
   historical table plus a parity gate over the obliged pair, never an edit to the
   adapter.
+
+### claim: augment-manifest-version-package-synced
+- claim: The `.augment-plugin/` manifest version is the package version, not an independent plugin-API version, and every version-bearing file the release workflow triggers on is read by a job in that workflow.
+- kind: qual
+- evidence: src/scripts/lint_marketplace.ts#check_augment_manifests
+- status: backed
+- last_verified: 2026-08-23
+
+  Both files ship — `src/config/publish-surface.json` lists `.augment-plugin/` as
+  a publish root — and both carried `version: 1.0.0` while `package.json` moved
+  to 14.10.0, with no process owning that number: `lint_marketplace.ts` opened
+  only `.claude-plugin/marketplace.json`, `check_release_pr_shape.ts` allowlisted
+  only that twin, `release.ts` bumped only that twin, and
+  `release-validation.yml` named `.augment-plugin/marketplace.json` in `paths:`
+  while its version job jq-read two other files — a trigger with no reader.
+  `plugin.json` had not been touched since 2026-04-17. Nothing in the tree ever
+  claimed `1.0.0` was an independent plugin-API version: no comment, no test, no
+  doc, and the only reader anywhere is
+  `src/scripts/probe_skill_registration.ts:137`. An unclaimed constant no reader
+  interprets is drift, not a deliberate independent version, so the Augment
+  manifests are held to the same rule as the Claude twin. **This is the reversible
+  half of the decision and it is recorded here on purpose:** if `1.0.0` was ever
+  meant to be independent, one commit undoes it, and a future reader can see the
+  choice was made rather than inferring it from a synced number.
