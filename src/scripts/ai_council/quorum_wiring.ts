@@ -38,7 +38,7 @@ import {
     type QuorumDispatch,
     type QuorumEventPhase,
 } from './events_log.js';
-import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './quorum.js';
+import { evaluateQuorum, formatAttendanceCaveats, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './quorum.js';
 import { absentReasonFromCliFailure, classifyCliFailure } from './transport_resolver.js';
 
 type Dict = Record<string, unknown>;
@@ -154,9 +154,11 @@ export function _postRunQuorum(
     members: ExternalAIClient[],
     responses: CouncilResponse[],
     ai_cfg: Dict,
+    parse_outcomes?: ReadonlyMap<string, string>,
 ): { quorum: QuorumResult; absent: Dict[] } {
     const absent: Dict[] = [];
     let present = 0;
+    let unparsed = 0;
     for (let i = 0; i < members.length; i++) {
         const m = members[i] as ExternalAIClient;
         const r = responses[i];
@@ -167,7 +169,33 @@ export function _postRunQuorum(
         // banner printed `2/2 present` — a single-voice verdict presented as
         // convergence, on a paid run. An empty answer contributes nothing to a
         // quorum by definition, whatever the transport thought of it.
+        // Step 2.3 — the same argument, one rung further in. The byte check
+        // below settles "did the transport deliver anything"; it cannot settle
+        // "was what it delivered usable content", and a prose refusal passes it
+        // unchanged. So a member whose findings answer reached `parse_failed`
+        // is pulled out of `present` into its own bucket rather than folded
+        // into `N/N present`. It is NOT merged with the error cases: those are
+        // transport failures with an `AbsentReason` taxonomy the absent-member
+        // table renders, and re-labelling one of them `unparsed` would lose the
+        // auth/timeout/quota distinction. Hence the error branch below wins for
+        // a member that both errored and parsed badly — the transport failure
+        // is the stronger fact.
+        //
+        // `parse_outcomes` is optional because the run path derives it AFTER
+        // the post-run attendance event is emitted: the event stays a
+        // transport-level reading by design, and the rendered artefact is where
+        // AC-2 asks for the distinction. A caller with no map gets the exact
+        // pre-2.3 behaviour, key-for-key.
         if (r !== undefined && !r.error && r.text.trim() !== '') {
+            if (parse_outcomes?.get(m.name) === 'parse_failed') {
+                unparsed += 1;
+                absent.push({
+                    member: m.name,
+                    reason: 'unparsed',
+                    detail: 'answer present, no parser could read it',
+                });
+                continue;
+            }
             present += 1;
             continue;
         }
@@ -179,7 +207,7 @@ export function _postRunQuorum(
             detail: raw,
         });
     }
-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
+    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg), unparsed), absent };
 }
 
 /**
@@ -205,7 +233,9 @@ export function _format_quorum_line(q: QuorumResult, phase?: QuorumEventPhase): 
     // a solo answer concludes, and nothing in the line distinguishes "both
     // members agreed" from "one member answered". The counts were always there;
     // what was missing is the word that stops a reader inferring convergence.
-    const degraded =
-        q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
-    return `council:quorum · ${tag}${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
+    // Step 2.3 moved the wording into `formatAttendanceCaveats` so this line and
+    // its mirror in `orchestrator.ts` cannot drift apart, and added the
+    // present-unparsed clause there — see that function for why the two counts
+    // are disjoint.
+    return `council:quorum · ${tag}${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${formatAttendanceCaveats(q)}`;
 }

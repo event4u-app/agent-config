@@ -79,7 +79,7 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
+import { evaluateQuorum, withUnparsed, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
     _format_quorum_line,
@@ -2718,6 +2718,19 @@ function cmd_run(
         { persona_labels },
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
+    // Step 2.3 — the rendered artefact's attendance line, re-derived once the
+    // parser has spoken. A member whose findings answer reached `parse_failed`
+    // answered in bytes and said nothing readable; folding it into `N/N present`
+    // is the same overstatement the empty-body fix closed one rung down.
+    //
+    // Deliberately AFTER the post-run `_emitQuorumEvent` above, and deliberately
+    // not re-emitted: the event is a transport-level reading and stays one, so
+    // every attendance rate computed over `events.log` keeps its denominator.
+    // `withUnparsed` documents the split from the other side.
+    if (quorum_out.result !== null && consensus !== null) {
+        const unparsed_n = Array.from(consensus.parse_outcomes.values()).filter((o) => o === 'parse_failed').length;
+        quorum_out.result = withUnparsed(quorum_out.result, unparsed_n);
+    }
     const chairman = _maybe_run_chairman(
         ai_cfg,
         question,

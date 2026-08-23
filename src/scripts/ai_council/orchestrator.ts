@@ -125,7 +125,7 @@ import {
 
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block, deterministic_shuffle_indices } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
-import { isSoloConcluded, type QuorumResult } from './quorum.js';
+import { formatAttendanceCaveats, isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
 
 
@@ -2059,11 +2059,13 @@ function _render_quorum_line(q: QuorumResult): string {
     // so 2-of-4 rendered as plain "concluded" with nothing to stop a reader
     // inferring convergence. Same sentence as stdout on purpose — one wording,
     // so neither surface can drift into being the softer one again.
-    const degraded =
-        q.present < q.total
-            ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.`
-            : '';
-    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}${degraded}`;
+    // Step 2.3 — the shared wording now lives in `quorum.ts::formatAttendanceCaveats`,
+    // which is the mechanical form of the "same sentence on purpose" note above:
+    // two hand-maintained copies of a sentence whose whole requirement is that
+    // they stay identical is a drift waiting to happen. It also carries the
+    // present-unparsed clause, whose count is disjoint from the did-not-answer
+    // one — an unparsed member answered.
+    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}${formatAttendanceCaveats(q)}`;
 }
 
 /**
