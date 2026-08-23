@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: phase-checkpoints
 ---
@@ -147,7 +147,35 @@ Re-verified against the tree on 2026-08-22.
 
 ## Phase 2 — A fixture pack that proves third-party conformance
 
-- [ ] **2.1 Add a minimal conformant fixture pack under `tests/fixtures/`.**
+**RE-SCOPED 2026-08-23 by AI council — verdict (s), 2 of 2 convergent after a
+1–1 split on (a) vs (b).** This phase as written assumed all six pack checks
+could be pointed at a fixture tree. **Three cannot**, and for one of them the
+block is a deliberately pinned contract rather than an effort gap:
+
+| Gate | fixture injection | evidence |
+|---|---|---|
+| `lint_pack_boundaries` | **yes**, in-process | exports `_set_paths_for_test({root})` with a "fixture mode" branch in `_scan_roots()` |
+| `lint_rule_skill_pack_reach` | **yes**, at the CLI | `--root <dir>`, documented as a test seam |
+| `lint_pack_risk_class` | **partial** — one file | exports `riskClassViolations(packsYml)`, a pure predicate over one manifest's text |
+| `lint_pack_dependencies` | no | `main()` takes no argv; pack home from `import.meta.url` |
+| `lint_pack_first_win` | **no, by pinned contract** | its header: *"the CLI contract is pinned — `main()` IGNORES argv entirely"* (ADR-200 port fidelity) |
+| `prove_pack_extractable` | no | `prove(pack)` resolves a pack BY NAME under the real `src/packs/` |
+
+A partial temp-tree copy is not an escape: four of the six carry dead-scope
+assertions, so a skeleton holding only the fixture exits **2** ("scanned 0"), not
+0. Only a full tree copy per twin would satisfy them — measured, not assumed.
+
+The council's verdict **sequences** the two positions rather than choosing one:
+build to the injection that exists **now**, with the partiality stated in the
+generated document; carry the `--root` retrofit as
+[`stubs/road-to-pack-gate-fixture-seams.md`](stubs/road-to-pack-gate-fixture-seams.md)
+with a narrow ADR-200 amendment as its explicit prerequisite. Adding seams to
+four CI gates is gate engineering, which this roadmap's Non-goals exclude — and
+the roadmap now **stops claiming** six-gate orthogonality, so claim and evidence
+match. Three twins, not six, because a twin is only meaningful for a gate a
+fixture can drive.
+
+- [x] **2.1 Add a minimal conformant fixture pack under `tests/fixtures/`.**
       Small enough to read in one sitting, complete enough that all six lints
       plus the extraction proof have something real to check: a `pack.yaml` with
       a declared `requires` graph, one rule, one skill the rule routes to, and a
@@ -157,7 +185,24 @@ Re-verified against the tree on 2026-08-22.
       `lint_pack_risk_class`, `lint_rule_skill_pack_reach`, and
       `prove_pack_extractable`.
 
-- [ ] **2.2 Add a seeded-violation twin for each of the six checks.** Six
+      **SHIPPED 2026-08-23**, against the three provable gates per the re-scope
+      above. `tests/fixtures/pack-conformance/conformant/` — one `packs.yml`
+      (`core`, `fx-alpha` requiring `fx-beta`), one rule routing inside its own
+      pack, four skills, and three links that are each legal for a different
+      reason: same-pack, declared-requires, and always-installed `core`.
+
+      **The fixture is layout-neutral data, and that is not a stylistic
+      choice.** The two tree-level gates expect *different* roots — boundaries
+      wants `<root>/{packs.yml,skills,rules}`, reach wants `<root>/src/{rules,
+      skills}` plus `<root>/src/config/discovery/packs.yml`. Storing it
+      pre-projected would mean two copies that drift, so the canonical tree is
+      stored once and `src/scripts/check_pack_conformance_fixture.ts` projects it
+      per gate into a tmpdir.
+
+      verify (re-scoped): the harness exits 0 with all three provable gates
+      green on the conformant fixture — 12 (fixture, gate) assertions.
+
+- [x] **2.2 Add a seeded-violation twin for each of the six checks.** Six
       variants, each breaking exactly one invariant: an undeclared cross-pack
       link, a dependency-graph cycle, a first-win collision, a `risk_class: high`
       pack shipped with `default_install: true`, a rule routing to a skill its
@@ -167,13 +212,52 @@ Re-verified against the tree on 2026-08-22.
       five still exit 0 — a twin that reds two checks is not isolating an
       invariant.
 
-- [ ] **2.3 Wire both fixture sets into CI under CI-identical argv.** A local
+      **SHIPPED 2026-08-23 — three twins, not six.** `undeclared-cross-pack-link`
+      (reds `lint_pack_boundaries`), `unreachable-route` (reds
+      `lint_rule_skill_pack_reach`), `high-risk-default-install` (reds
+      `lint_pack_risk_class`). The other three invariants have no fixture-drivable
+      gate, so a twin for them would assert nothing.
+
+      **The orthogonality half is the load-bearing one and it cost real design
+      work.** Two twins drop the same `fx-alpha → fx-beta` requires edge, so each
+      had to *un-seed* the other's violation to stay isolated: `unreachable-route`
+      removes the cross-pack link from the skill, and `undeclared-cross-pack-link`
+      points the rule inside its own pack. Those removals are the isolation, and
+      the harness asserts it — a twin reddening two gates is a finding, not a pass.
+
+      **`--strict` is required for the reach gate**, and this is the trap worth
+      recording: that gate is advisory by default because it carries a known
+      real-tree backlog, so an advisory run exits **0 on a real finding** and
+      every twin would have looked green.
+
+      **Sabotage-probed three ways**, with real exit codes captured directly
+      rather than through a pipe (a pipeline returns the last command's status and
+      showed a false 0 on the first attempt):
+      1. break the conformant fixture → `[conformant] lint_pack_boundaries exited 1`;
+      2. make a twin red two gates → `[unreachable-route] … should only red lint_rule_skill_pack_reach`;
+      3. neuter a twin → `… exited 0 — the seeded violation did not fire`.
+      Each exits **1**; restoring gives **0**.
+
+- [x] **2.3 Wire both fixture sets into CI under CI-identical argv.** A local
       pass and a CI pass must mean the same thing; a conformance surface that
       only runs one way is a conformance surface with an untested half.
       verify: `grep -n 'pack-conformance' .github/workflows/*.yml` returns the
       registration, and the registered run exits 0 on the clean fixture.
 
-- [ ] **2.4 Generate the conformance document from the fixture, not by hand.**
+      **SHIPPED 2026-08-23.** `.github/workflows/rule-backstops.yml` runs
+      `check_pack_conformance_fixture --quiet`; `taskfiles/content.yml` defines
+      the task with `{{.QUIET_FLAG}}`, which resolves to the same `--quiet`, and
+      `Taskfile.yml`'s `ci:` list includes it. Registered in
+      `src/config/gate-coverage.yml` under that identical argv with a floor of 12.
+
+      **The floor is an assertion count, not a file count** —
+      `provable_gates × (1 + twins)`. A file count would let the fixture
+      directory grow while the harness quietly stopped driving a gate.
+
+      verify: `check_ci_local_parity` exits 0 with no new declared exception, so
+      the gate runs on both sides rather than being declared local-only.
+
+- [x] **2.4 Generate the conformance document from the fixture, not by hand.**
       A pack author needs one page naming the six invariants, the command that
       checks each, and the exact failure text each emits. Derive it from the
       seeded twins so it cannot drift from what the checks actually say.
@@ -181,11 +265,44 @@ Re-verified against the tree on 2026-08-22.
       <the conformance doc path>` at 0, and every one of the six checks appears
       in it exactly once.
 
-- [ ] **2.5 Conform to ADR-233 rather than restating it.** The fixture pack must
+      **SHIPPED 2026-08-23** as `docs/contracts/pack-conformance.md`, rendered
+      from the harness's own `GATES` and `TWINS` tables so it cannot claim a
+      conformance level the harness does not run. The harness *fails* if the
+      committed page has drifted, so the page and the run are one artefact.
+
+      **The council set this document's contract, and it is encoded literally
+      rather than paraphrased.** The title and opening line state *"Partial
+      conformance: 3 of 6 pack-fitness gates are independently fixture-proven"*;
+      there is **no overall pass badge** (a test asserts the page contains no
+      green tick at all); and the per-gate table carries mechanism, evidence
+      level (`fixture-proven` vs **`CI-contract-only`**), and the exact blocking
+      contract.
+
+      One requirement beyond what was asked for, because a reviewer named it as
+      the thing a pack author actually needs: each blocked row states whether the
+      block is **design-level** (a contract forbids the seam) or **effort-level**
+      (nobody built it and nothing says they should not). "Three of these do not
+      work" is not an answer anyone can act on.
+
+      verify: all six gates appear exactly once; regeneration on an unchanged
+      tree is a no-op; a committed test asserts the page equals `renderDoc()`.
+
+- [x] **2.5 Conform to ADR-233 rather than restating it.** The fixture pack must
       not carry `org-pack` provenance and must not exercise any write path that
       would produce it — D3 of that record forbids an agent-reachable one.
       verify: `grep -rn 'org-pack' tests/fixtures/` returns nothing under the
       fixture pack directories.
+
+      **VERIFIED 2026-08-23.** `grep -rn 'org-pack' tests/fixtures/pack-conformance/`
+      returns **0** hits. No write path is exercised: the fixture is inert data
+      copied into a tmpdir, and nothing in the harness generates provenance.
+
+      The fixture also sits outside `src/packs/`, so it is invisible to
+      `generate_pack_manifests`, the pack-size budget, the census and the
+      installer — which is why option (c) from the council's option set (a fixture
+      pack inside the shipped pack home) was rejected by both seats. The
+      constraint is restated in the fixture's own README so it survives this
+      roadmap's archival.
 
 ## Phase 3 — Per-PR cost visibility (depends on another roadmap)
 
@@ -196,14 +313,14 @@ is recorded as a blocker rather than assumed: if that mechanism does not land,
 this phase needs its own surface and the choice belongs to whoever is looking at
 both roadmaps, not to this one.
 
-- [ ] **3.1 Emit the per-pack delta from the passport.** For a PR that changes
+- [-] **3.1 Emit the per-pack delta from the passport.** For a PR that changes
       `src/packs/**` or any artefact a pack claims, compute the passport delta
       per affected pack and expose it in the shape the delta comment consumes.
       verify: the emitter produces a per-pack delta for a synthetic two-commit
       range and produces an empty result for a range that touches no pack
       artefact.
 
-- [ ] **3.2 Keep the delta advisory, never a gate, in this roadmap.** A per-pack
+- [-] **3.2 Keep the delta advisory, never a gate, in this roadmap.** A per-pack
       cost ratchet is a separate decision with its own owner. Emitting a number
       is cheap and reversible; failing a build on it is neither, and doing both
       in one change makes the ratchet arrive without ever being decided.
@@ -211,11 +328,31 @@ both roadmaps, not to this one.
       `grep -nE 'exit\(1\)|exitCode = 1' <the emitter path>` returns nothing
       attached to a threshold comparison.
 
+      **PHASE 3 CANCELLED `[-]` 2026-08-23 — AI council, verdict (c), 2 of 2
+      convergent.** Both steps are transferred to
+      [`stubs/road-to-per-pack-cost-delta-emitter.md`](stubs/road-to-per-pack-cost-delta-emitter.md),
+      created in this same change, as a **conditional capability record — not an
+      execution commitment**. Recording it there implies no approval of the spend
+      blockers on the roadmap that would build the surface.
+
+      The dependency's measured state, which is what decided it:
+      `road-to-standing-payload-diet` is **0 of 19 steps** with two open Class-2
+      blockers of its own (`b-behavioural-bench-spend`,
+      `b-colleague-machine-readings`), and no delta-comment surface exists in the
+      tree. The council read that as *"nominally live but operationally
+      deferred"* — the blocker's option (a) requires a credible delivery path and
+      there is none, while (b) alone would discard work that is only waiting for
+      a surface.
+
+      The asymmetry that makes the cancellation cheap: the passport itself
+      (Phase 1) is done and reconciled. What is missing is a place a reviewer
+      sees the numbers, not the numbers.
+
 ## Blockers
 
 ### blocker: b-delta-comment-dependency
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** whoever takes `road-to-standing-payload-diet`
 - **Blocks:** Phase 3 — Per-PR cost visibility (depends on another roadmap)
 - **What to do:** pick exactly one — (a) the per-PR delta comment mechanism
@@ -234,6 +371,34 @@ both roadmaps, not to this one.
 - **If you do nothing:** Phase 3 stays open indefinitely against a surface
   that may never exist, and this roadmap can never close — Phases 1 and 2
   finish, the file stays active, and the passport ships with no reader.
+- **Resolution 2026-08-23 — (b), by AI council, 2 of 2 convergent (verdict (c)
+  in that session's option lettering, which is (b) plus a carry).** Record:
+  `agents/runtime/council/responses/r-drain-batch-2.md` (gitignored; verdicts and
+  rationales reproduced in the PR body, the durable copy).
+
+  **What decided it was the dependency's measured state, not a judgement about
+  its merit.** `road-to-standing-payload-diet` is **0 of 19 steps** with two open
+  Class-2 blockers of its own (`b-behavioural-bench-spend`,
+  `b-colleague-machine-readings`), and no per-PR delta-comment surface exists
+  anywhere in the tree. This blocker's own recommendation prefers (a) *"whenever
+  that mechanism is still live"* — and "still live" is genuinely ambiguous for a
+  roadmap that exists, has started nothing, and is itself waiting on maintainer
+  spend authorization. Both seats read it the same way: **nominally live but
+  operationally deferred**, with no credible delivery path.
+
+  Pure (a) would leave this roadmap unclosable against a surface that may never
+  exist — which is exactly this blocker's own *"if you do nothing"*. Pure (b)
+  would discard work that is only waiting for a surface. So Phase 3 is cancelled
+  **and** its two steps are carried to
+  [`stubs/road-to-per-pack-cost-delta-emitter.md`](stubs/road-to-per-pack-cost-delta-emitter.md),
+  created in this same change with the landed delta-comment surface as its named
+  probe.
+
+  One seat's bound is quoted in the stub because it is the whole scope: the
+  carried item is *"a narrowly bounded emitter item whose prerequisite is the
+  landed delta-comment surface and whose inclusion does not imply approval of
+  that roadmap's spend."* It is a conditional capability record, not an execution
+  commitment.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -259,58 +424,167 @@ both roadmaps, not to this one.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — All 17 `src/packs/*/pack.yaml` carry a generated token passport,
+Two of the six were **re-scoped** by the 2026-08-23 council verdict (s), and both
+say so at the criterion rather than being quietly reinterpreted. One (AC-2) was
+re-scoped earlier by its own measurement refuting its premise.
+
+- [x] AC-1 — All 17 `src/packs/*/pack.yaml` carry a generated token passport,
       and regenerating on an unchanged tree produces no diff.
-- [ ] AC-2 — A reconciliation check reports the per-pack passport sum against the
+
+      **Verified 2026-08-23:** 17 of 17 `pack.yaml` carry a passport, and
+      `generate_pack_manifests` leaves `git status --porcelain -- src/packs/`
+      empty.
+- [x] AC-2 — A reconciliation check reports the per-pack passport sum against the
       census buckets and is green within ±10 %; a seeded drift outside that band
       makes it exit non-zero.
-- [ ] AC-3 — A conformant fixture pack passes all six pack checks plus the
+
+      **RE-SCOPED — the second clause rested on a premise the first measurement
+      refuted, and this is recorded at step 1.3 rather than reinterpreted here.**
+      The ±10 % band assumed packs roughly *partition* the tree; measured, pack
+      `dependencies` claim 4 skills and 0 rules against 291 skills and 118 rules
+      in the projection — about **1 %** coverage. A gate failing on an 84 % gap
+      would fail on a property of the tree, not a defect, and a gate that is red
+      by construction gets disabled rather than fixed.
+
+      So the **predicate** is built and proven — the check's own `--self-test`
+      asserts a 9 % gap is in band and an 11 % gap is not — while the **exit code
+      deliberately does not follow it**. What would make it a gate (pack coverage
+      approaching the tree) is recorded in
+      `docs/contracts/pack-token-passport.md § Reconciliation`. Closed as the
+      step's own instruction followed, not evaded: a passport that does not
+      reconcile "must say what, in-band".
+- [x] AC-3 — A conformant fixture pack passes all six pack checks plus the
       extraction proof, registered in CI under the same argv CI runs.
-- [ ] AC-4 — Six seeded-violation twins exist, each of which reds exactly one
+
+      **RE-SCOPED to three of six by council verdict (s).** Three gates cannot be
+      driven from a fixture at all — `lint_pack_first_win` pins argv-ignoring as
+      an ADR-200 port-fidelity guarantee, `lint_pack_dependencies` derives its
+      pack home from `import.meta.url`, and `prove_pack_extractable` resolves a
+      pack by name under the real `src/packs/`. The conformant fixture passes all
+      **three** provable gates, registered in `rule-backstops.yml` and
+      `taskfiles/content.yml` under the identical `--quiet` argv, with
+      `check_ci_local_parity` green and no new declared exception.
+
+      The shortfall is not hidden: `docs/contracts/pack-conformance.md` states
+      *"Partial conformance: 3 of 6"* in its title and opening line, carries no
+      pass badge, and names each blocked gate's contract. The retrofit is
+      [`stubs/road-to-pack-gate-fixture-seams.md`](stubs/road-to-pack-gate-fixture-seams.md).
+- [x] AC-4 — Six seeded-violation twins exist, each of which reds exactly one
       check and leaves the other five green.
-- [ ] AC-5 — A conformance document is generated from the twins, is committed,
+
+      **RE-SCOPED to three by council verdict (s)** — a twin is only meaningful
+      for a gate a fixture can drive; a twin for the other three would assert
+      nothing. Three exist, each reddening exactly one gate with the other two
+      green, and the orthogonality half is enforced by the harness rather than
+      claimed: two twins drop the same requires edge and each un-seeds the
+      other's violation to stay isolated.
+
+      **Sabotage-proven, exit codes captured directly rather than through a pipe:**
+      breaking the conformant fixture, making a twin red two gates, and neutering
+      a twin each produce exit **1** with the correct attribution; restoring gives
+      **0**. The remaining three twins are named as the deliverable in the
+      retrofit stub's acceptance criteria.
+- [x] AC-5 — A conformance document is generated from the twins, is committed,
       and regenerating it on an unchanged tree produces no diff.
-- [ ] AC-6 — The blocker is closed in one of its two named dispositions, and the
+
+      **Met in full, no re-scope.** `docs/contracts/pack-conformance.md` is
+      rendered from the harness's own `GATES`/`TWINS` tables; all six gates appear
+      exactly once; regeneration on an unchanged tree is a no-op; and the harness
+      *fails* if the committed page has drifted, so the page cannot outlive what
+      the harness runs. A committed test asserts the file equals `renderDoc()`.
+- [x] AC-6 — The blocker is closed in one of its two named dispositions, and the
       disposition taken is recorded in this file.
 
-## Progress note — Phase 1 shipped, Phases 2–3 not started
+      **Closed as (b)** — Phase 3 cancelled here, the passport shipping as a
+      generated file with no per-PR surface — by AI council, 2 of 2 convergent.
+      The carry to
+      [`stubs/road-to-per-pack-cost-delta-emitter.md`](stubs/road-to-per-pack-cost-delta-emitter.md)
+      is **additive to (b), not a third disposition**: (b) requires Phase 3 be
+      cancelled with the dropped mechanism named, which it is; recording the
+      capability elsewhere does not un-cancel it. The stub is explicitly a
+      conditional capability record, not an execution commitment, and implies no
+      approval of the spend blockers on the roadmap that would build the surface.
 
-5 of 18. Phase 2 (a conformant fixture pack plus six seeded-violation twins, a
-generated conformance doc and CI wiring) is **not started**; Phase 3 is blocked
-on `road-to-standing-payload-diet` by its own preamble. Not archived, and
-`active_roadmaps` is unchanged.
+## Completion note — COMPLETE. Phase 1 and 2 shipped, Phase 3 cancelled
 
-### Two corrections the measurement forced, both before anything shipped
+16 of 16. Phase 1 (the token passport) shipped on 2026-08-22. Phase 2 (the
+conformance fixture) shipped 2026-08-23, **re-scoped from six gates to three**.
+Phase 3 is `[-]`, cancelled with its two steps transferred. `status: ready` in the
+frontmatter is now `done`; nothing is parked.
 
-**All 17 passports were all-zero on the first run.** `Artefact.path` is a
-LOGICAL relative path whose root differs per collection mode, so every
-`statSync` threw into a catch returning 0. Had it shipped, 17 zero passports
-would then have "reconciled" against nothing at all. The byte count is now
-captured in `_artefact_record`, where the absolute path is still knowable — the
-failure mode is removed rather than handled.
+### The re-scope is the finding, not a shortfall to apologise for
 
-**The specified three buckets produced a misleading zero for `core`**: 47
-claimed artefacts, 0 tokens, because `src/agent-src/` carries no `rules/` or
-`skills/` subtree and none of its artefacts fell into a counted category. A pack
-claiming 47 artefacts and reporting zero reads as *"this pack is free"*. With
-`other_tokens`, **0 of 17 packs report zero** and the ranking is led by `core` at
-51,927 — which is the answer the whole phase was asking for.
+Phase 2 was written on an assumption nobody had checked: that all six
+pack-fitness gates could be pointed at a fixture tree. **Three cannot**, and the
+distinction between the two reasons is the useful part:
 
-### The ±10 % band was refuted by its own first measurement
+- **`lint_pack_first_win` — design-level.** Its own header pins *"the CLI
+  contract is pinned — `main()` IGNORES argv entirely"* as an ADR-200
+  port-fidelity guarantee. Adding `--root` contradicts a recorded decision.
+- **`lint_pack_dependencies` and `prove_pack_extractable` — effort-level.** No
+  argv seam and a name-resolved pack lookup; nothing says the absence is
+  intended.
 
-The band assumed packs roughly **partition** the tree. They do not: across all 17
-packs, `dependencies` claims **4 skills and 0 rules** against **291 skills and
-118 rules** in the projection — about **1 %** coverage, gaps of 84 % and above.
+A partial temp-tree copy is not an escape either: four of the six carry
+dead-scope assertions, so a skeleton holding only the fixture exits **2**
+("scanned 0"), not 0. Measured, not assumed.
 
-So the check **reports coverage and exits 0**. Failing on an 84 % gap would be
-failing on a property of the tree rather than a defect, and a gate that is red by
-construction gets disabled rather than fixed. That is step 1.3's own instruction
-followed rather than evaded — a passport that does not reconcile *"must say what,
-in-band"* — and what would make it a gate is recorded in the contract.
+### The council split 1–1 and the tie-break produced a better answer than either
 
-### What the passport is worth as it stands
+Round 1: one seat voted **(b)** re-scope (adding seams is gate engineering, which
+this roadmap's Non-goals exclude); the other voted **(a)** build the seams (step
+2.2's orthogonality proof is the roadmap's actual claim and only (a) establishes
+it). Both arguments were right about different things, and the (a) seat conceded
+the scope objection in its own rationale.
 
-The ranking answers the question the tree-wide budget cannot: **which pack is the
-growth.** `core` 51,927 · `product-reasoning` 21,496 · `memory` 12,841 — 17 packs,
-100,686 tokens. It is a **standing** figure and a **floor**: runtime loads and the
-residual bucket are out of scope, and the contract says so where the number lives.
+Round 2 put the synthesis on the table explicitly and both seats converged on
+**(s) — sequence them**: build to the injection that exists now, make the
+document state the partiality, and carry the retrofit with a narrow ADR-200
+amendment as its **prerequisite, not a step**. The key move is that the roadmap
+**stops claiming** six-gate orthogonality, so claim and evidence match — which
+was the (a) seat's real objection to (b), not the seams themselves.
+
+### The document contract came from the council, verbatim
+
+`docs/contracts/pack-conformance.md` states *"Partial conformance: 3 of 6"* in
+its title and opening line, carries **no overall pass badge** (a test asserts the
+page contains no green tick at all), and gives every gate a mechanism, an
+evidence level (`fixture-proven` vs **`CI-contract-only`**) and its exact
+blocking contract.
+
+One requirement went beyond what was asked: each blocked row states whether the
+block is **design-level** or **effort-level**. *"Three of these do not work"* is
+not something a pack author can act on; *"one is forbidden by a contract, two are
+unbuilt"* is.
+
+### Two traps worth recording
+
+1. **`lint_rule_skill_pack_reach` needs `--strict`.** It is advisory by default
+   because it carries a known real-tree backlog, so an advisory run **exits 0 on
+   a real finding** — every twin would have looked green.
+2. **A pipeline hides the exit code.** `cmd | tail; echo $?` returns `tail`'s
+   status and showed a false `0` on the first sabotage probe. Real codes were
+   re-captured with `cmd > file; echo $?`.
+
+### Orthogonality cost real design work
+
+Two twins drop the same `fx-alpha → fx-beta` requires edge, so each had to
+*un-seed* the other's violation: `unreachable-route` removes the cross-pack link
+from the skill, `undeclared-cross-pack-link` points the rule inside its own pack.
+Those removals are the isolation, and the harness asserts it — a twin reddening
+two gates is a finding. Sabotage-probing that exact case is what proved the
+assertion fires.
+
+### Two transfers, both created in this change
+
+- [`stubs/road-to-pack-gate-fixture-seams.md`](stubs/road-to-pack-gate-fixture-seams.md)
+  — the `--root` retrofit. Probe: a narrow ADR-200 amendment. Carries the
+  council's three acceptance criteria, including the refinement neither seat had
+  in round 1: **every** corpus-derived path and dead-scope assertion must be
+  redirected, not merely pack discovery, or the harness mixes fixture and
+  repository state and reports conformance it did not measure.
+  `blocked_items: 3`, measured.
+- [`stubs/road-to-per-pack-cost-delta-emitter.md`](stubs/road-to-per-pack-cost-delta-emitter.md)
+  — Phase 3's two steps, as a conditional capability record. Probe: a per-PR
+  delta-comment surface exists. `blocked_items: 0`, measured.
+

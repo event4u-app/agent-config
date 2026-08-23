@@ -201,6 +201,7 @@ jobs:
 
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
+
       # ADR-239:185-188 leaves merge authority to the owner. A settings key named
       # autoMerge / auto_merge / mergePolicy would grant it by configuration
       # rather than by decision, so the key space is ratcheted shut. Reversible
