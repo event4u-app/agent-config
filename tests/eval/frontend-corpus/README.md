@@ -1,7 +1,7 @@
 # Frontend benchmark corpus
 
 Registered by step 0.2 of
-[`road-to-frontend-power`](../../../agents/roadmaps/road-to-frontend-power.md).
+[`road-to-frontend-power`](../../../agents/roadmaps/archive/road-to-frontend-power.md).
 This directory is the frozen population every frontend measurement in that
 roadmap is scored against.
 

@@ -39,7 +39,7 @@ review_trigger: >-
 **accepted** — 2026-08-23. AI council, 2 of 2 seats, convergent on option (c).
 Record: `agents/runtime/council/questions/frontend-power-pack-reach.md` and its
 response. Resolves `b-pack-reach-weight` on
-`agents/roadmaps/road-to-frontend-power.md`.
+`agents/roadmaps/archive/road-to-frontend-power.md`.
 
 ## Context
 
