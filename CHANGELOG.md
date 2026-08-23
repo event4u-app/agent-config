@@ -402,6 +402,55 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.10.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.10.0](https://github.com/event4u-app/agent-config/compare/14.9.0...14.10.0) (2026-08-23)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in ed95d9c, a7c0f2e.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 85138ab, f9958f8, 302abc9, f9e106a.
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **packs:** publish the ranking, and report coverage instead of a false gate ([130cb32](https://github.com/event4u-app/agent-config/commit/130cb32b18310ef2b327b033285e9fd9be10178b))
+* **packs:** a token passport per pack, so growth is attributable ([ed95d9c](https://github.com/event4u-app/agent-config/commit/ed95d9cd83bf5dc8d85b0497864150a1b03d2ebd))
+* **council:** let a run declare what its seats are for, resolved once and frozen ([243c18b](https://github.com/event4u-app/agent-config/commit/243c18b8cae6471eb3bd2983874986a458ed75eb))
+* **descriptions:** ceiling 220 -> 200, and price the lever honestly ([a7c0f2e](https://github.com/event4u-app/agent-config/commit/a7c0f2e32c86b05a19539579173ffbbef8afa99e))
+
+### Bug Fixes
+
+* **tests:** pin the spec-axis pre-state to a commit, not the merge-base ([85138ab](https://github.com/event4u-app/agent-config/commit/85138ab3127a05ec2591a02950a11659b6142bef))
+* **packs:** regenerate token passports after the description-ceiling change ([0f32bdc](https://github.com/event4u-app/agent-config/commit/0f32bdcce062385ff0175a91032181df777af611))
+* **gates:** register the passport reconciliation report, with a self-test ([f9958f8](https://github.com/event4u-app/agent-config/commit/f9958f82e3b2c1219febda3f3f18413a243bbaec))
+* **tests:** stop the fixture teardown race at its source, not only in the retry ([302abc9](https://github.com/event4u-app/agent-config/commit/302abc9bb18be673536c4ec0cd078022767971c7))
+* **roadmap:** name the absorbed stub instead of linking a file this change deletes ([633e768](https://github.com/event4u-app/agent-config/commit/633e76834953741923a2618b884a4a802d1aec4f))
+* **council:** extract the seat-constraint parser instead of growing config.ts ([f9e106a](https://github.com/event4u-app/agent-config/commit/f9e106a07990caba91eb8a53feee32c27118cbbd))
+
+### Documentation
+
+* **evidence:** the /roadmap:ai-council parity table, and what it decided ([8b6fdcb](https://github.com/event4u-app/agent-config/commit/8b6fdcb0390d1f1ba241bc10ce74967fd5295b90))
+* **budget:** classify the three un-bucketed prose corpora, and bank the nulls ([6f78c41](https://github.com/event4u-app/agent-config/commit/6f78c41b379dd8c4881a9b85ab711a44e65b58a9))
+
+### Refactoring
+
+* **roadmaps:** absorb the host-aware-projection stub, corrected ([989d3c5](https://github.com/event4u-app/agent-config/commit/989d3c599696b6cc9f31504a519f51ba3c485f40))
+
+### Chores
+
+* **roadmap:** record Phase 1 of org-pack-fitness and what its own band refuted ([182ac8a](https://github.com/event4u-app/agent-config/commit/182ac8a7ae273f2cf9b161f05f30acac3b23d890))
+* **roadmap:** route Phases 2-3 of council-seat-selection on the evidence ([1d7619a](https://github.com/event4u-app/agent-config/commit/1d7619a6d53127b3eb79179290c4e8a6b0edd07e))
+* **estate:** claim the later/ growth where it happened ([17fbf2b](https://github.com/event4u-app/agent-config/commit/17fbf2b90fd418b0de64dff7131ec091c65ab6d9))
+* **estate:** re-state against main's merged floor after a sibling merge ([8d80306](https://github.com/event4u-app/agent-config/commit/8d80306370f7009dfe6cd1063057e50d4e2abdd9))
+* **index:** regenerate after the description tightening ([c3c7a80](https://github.com/event4u-app/agent-config/commit/c3c7a80fb2ab859f3aae1b5b375ae92a5bc010c5))
+* **estate:** re-state the walk against main's merged floor ([a8c7835](https://github.com/event4u-app/agent-config/commit/a8c78350f4eaddf38f98912c47cee3916ebc6752))
+* **generated:** refresh pack READMEs for the tightened descriptions ([d39fbf5](https://github.com/event4u-app/agent-config/commit/d39fbf57aa332d13d27ea17cdc8d25f0577a34e1))
+* **roadmap:** archive road-to-catalog-and-projection-economy, walk the estate ([3d03add](https://github.com/event4u-app/agent-config/commit/3d03add6e8921be04e248d746ab98a03121d41bb))
+
+Tests: 16390 (+16 since 14.9.0)
+
 ## [14.9.0](https://github.com/event4u-app/agent-config/compare/14.8.0...14.9.0) (2026-08-23)
 
 ### Release highlights
