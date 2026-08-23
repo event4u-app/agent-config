@@ -47,7 +47,7 @@ estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmap
 > roadmap's own R2 token figure.
 
 > **Why this lands as its own file, not merged into
-> `agents/roadmaps/road-to-skill-delivery-over-mcp.md`.** Three reasons, and
+> `agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md`.** Three reasons, and
 > the third is the one that settles it. (1) Different goal: that roadmap's
 > stated goal is **reachability** — every projected skill routable by task
 > description on the default install. This one is **integrity** — whether the
@@ -139,7 +139,7 @@ will notice.
 
 ### D-D — refuted; the surviving finding is a ~2.9x error in the MCP roadmap's own R2 figure — `corrected-from-reproduction`
 
-The source claimed `agents/roadmaps/road-to-skill-delivery-over-mcp.md`
+The source claimed `agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md`
 carries R1 and R2 as prose risks with no vendor field evidence and no size
 comparison. Read at `:84-94`, that is **refuted**: R1 cites a named working
 group with a date (2026-06-18) and its experimental finding; R2 cites the host
@@ -191,7 +191,7 @@ What is **not** adopted from any of them is recorded in `## Nulls`.
       `docs/CLAIMS.md` quoting the row.
       <!-- verify: jq -e '.dead_links|length == 14 and (.scoped_dangles|length) == 24 and .total_links_skill_md == 943 and .total_links_any_dir == 956 and .skills_declaring_requires == 5' agents/evidence/metrics/skill-link-census.json -->
 - [ ] **Step 2:** Correct the R2 token figure in
-      `agents/roadmaps/road-to-skill-delivery-over-mcp.md` as an append to its
+      `agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md` as an append to its
       Phase 0.2, and **no new roadmap**. Replace the "≈1,972 tok" claim at
       `:91`, `:249` and `:265` with the reproduced pair (685 tok over
       `tools.ts` descriptions, 1,144 tok across `mcp_server/*.ts`), state the
@@ -199,7 +199,7 @@ What is **not** adopted from any of them is recorded in `## Nulls`.
       drift (whole-source-span chars/4 versus description-text chars/4) so the
       old figure cannot be re-asserted as a measurement. Nothing else in that
       file changes.
-      <!-- verify: grep -c '1,972' agents/roadmaps/road-to-skill-delivery-over-mcp.md returns 0 and grep -c 'chars/4 over the description strings' agents/roadmaps/road-to-skill-delivery-over-mcp.md returns at least 1 -->
+      <!-- verify: grep -c '1,972' agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md returns 0 and grep -c 'chars/4 over the description strings' agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md returns at least 1 -->
 - [ ] **Step 3:** Record the D-C reframing as a claim before touching the
       contract, so the corrected premise is the thing the later steps are
       measured against: the obliged pair (adapter header, xml example) agrees

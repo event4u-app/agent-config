@@ -7,7 +7,7 @@ complexity: lightweight
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > placeholder: the work is specified, wanted, and blocked only on a capability an
 > autonomous repository run does not have. Transferred out of
-> `agents/roadmaps/road-to-skill-delivery-over-mcp.md` by the autonomous drain run
+> `agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md` by the autonomous drain run
 > of 2026-08-23. The shared promotion criteria in
 > [`README.md`](README.md) § Promotion criteria do **not** govern it; the probe
 > below does.
@@ -94,7 +94,7 @@ Three findings from the deterministic arm bear directly on how to read the live
 one, and none of them is recoverable from the parent's checkbox:
 
 - **81% of the labelled corpus (21 of 26 prompts) has its expected skill in Tier
-  B.** So the live arm is not measuring a marginal change; `tiered` moves four
+  B**, out of a 294-skill catalogue split 44 / 250. So the live arm is not measuring a marginal change; `tiered` moves four
   fifths of that corpus from listed-but-bare to tool-only.
 - **`tiered` costs MORE standing context than `legacy-all` on a default
   install** — 2,259 tok against 1,956 — because the host already caps delivery at

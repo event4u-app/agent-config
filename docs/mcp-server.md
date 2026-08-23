@@ -165,7 +165,7 @@ boots cleanly:
 Claude Code lists every skill NAME but keeps DESCRIPTIONS only up to a fraction
 of the context window — 1% by default, roughly 8,000 characters on a 200k window
 — filling by invocation frequency and capping each entry at 1,536 characters.
-This package projects ~292 skills, so most descriptions do not fit. Measured
+This package projects ~294 skills, so most descriptions do not fit. Measured
 first-party on 2026-08-08, five of eight sampled catalogue entries arrived bare
 while all of them carried a description on disk
 (`agents/evidence/analysis/skill-catalogue-description-delivery.md`).
@@ -177,7 +177,7 @@ selects on. There are **two levers**, and this package applies neither for you.
 
 `skillListingBudgetFraction` is a **Claude Code setting**, not one of ours. Raising
 it restores descriptions at a token price: delivering this catalogue's
-descriptions in full measures roughly **14,408 tokens** of standing context.
+descriptions in full measures roughly **13,003 tokens** of standing context.
 Nothing in this package writes it — the setting is yours, the token cost is yours,
 and an installer that edited your host config to buy itself context would be
 taking that decision in your name.

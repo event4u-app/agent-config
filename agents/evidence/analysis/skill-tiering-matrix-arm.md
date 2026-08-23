@@ -3,7 +3,7 @@
 <!-- evidence-type: analysis -->
 
 > **Produced by:** Phase 4.1 of `road-to-skill-delivery-over-mcp`.
-> **Measured:** 2026-08-23 at commit `741909ea9` (branch `drain/skill-delivery-over-mcp`).
+> **Measured:** 2026-08-23 at commit `53ac0adb4` (branch `drain/skill-delivery-over-mcp`, after merging origin/main).
 > **Reproduce:** `./scripts-run src/scripts/compute_skill_tiers --json`,
 > `./scripts-run src/scripts/measure_skill_ranker_baseline --commit <sha>`, and
 > `./scripts-run src/scripts/capture_skill_catalogue --projection-modes`.
@@ -50,7 +50,7 @@ is Tier A — a model needs one good route, not all of them.
 | `legacy-all` | 5 | 21 | 0 |
 | `tiered` | 5 | 0 | 21 |
 
-Tier split at this commit: **Tier A 44, Tier B 248, of 292** (fill order
+Tier split at this commit: **Tier A 44, Tier B 250, of 294** (fill order
 `alphabetical-fallback`, 0 usage rows).
 
 Every expected skill in the corpus resolves to one of the two tiers — 0 unknown —
@@ -73,20 +73,20 @@ Neither column is obviously better, and this arm cannot rank them.
 
 | quantity | chars | tokens (chars/4) |
 |---|---|---|
-| all 292 descriptions, per-entry-capped | 51,641 | 12,910 |
+| all 294 descriptions, per-entry-capped | 52,010 | 13,003 |
 | Tier A descriptions only (44) | 7,822 | 1,956 |
 | lite server `tools/list` payload | 887 | 222 |
 | server `instructions` | 325 | 81 |
 | **`tiered` push total** | — | **2,259** |
 
-**H2 holds as written: 2,259 < 12,910.** Two caveats, both load-bearing.
+**H2 holds as written: 2,259 < 13,003.** Two caveats, both load-bearing.
 
-**The bucket is 12,910, not the 14,408 the roadmap states.** The catalogue has
-changed since that figure was taken. 12,910 is the reproducible number at this
+**The bucket is 13,003, not the 14,408 the roadmap states.** The catalogue has
+changed since that figure was taken. 13,003 is the reproducible number at this
 commit.
 
 **And the comparison is against a counterfactual, not against today's spend.**
-The host does not deliver 12,910 tokens of descriptions — it caps at ~8,000
+The host does not deliver 13,003 tokens of descriptions — it caps at ~8,000
 chars, i.e. it already delivers only the 7,822 chars of Tier A, about **1,956
 tokens**. So against what a default install actually pays today:
 

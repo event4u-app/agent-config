@@ -8,7 +8,7 @@ complexity: lightweight
 > like [`road-to-adr-134-expiry.md`](road-to-adr-134-expiry.md): there is no step
 > to promote, only a recurring external check that must stay reachable by grep
 > from the active estate. Transferred out of
-> `agents/roadmaps/road-to-skill-delivery-over-mcp.md` Phase 5 by the autonomous
+> `agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md` Phase 5 by the autonomous
 > drain run of 2026-08-23, because a *quarterly* obligation cannot be discharged
 > by finishing one roadmap.
 
