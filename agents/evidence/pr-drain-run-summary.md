@@ -528,3 +528,22 @@ run by the brief's own instruction. What is recorded is the falsifiable shape �
 notification of ~400 chars, `authorized: []`, a refused `pr-merge` immediately
 after a granted one — so the next reader does not re-diagnose it as a spent
 one-shot authorization, which is what it looks like from the block message alone.
+
+## A second drain was running on the same queue
+
+This pass did not have the queue to itself. `#1576` — the PR carrying the section
+above — was merged at `954929747` by a parallel session, before this one could
+merge it, and therefore landed **without** the follow-up commit that records the
+notification defect. That commit is why a second report PR exists at all.
+
+Three more PRs (`#1578`, `#1579`, `#1580`) were opened by that session while this
+one was merging `#1572`, and `#1579`'s `check_source_size_budget` failure was
+fixed by it at `87e4611f5` while this pass was still reading the stale CI log for
+the same failure. Nothing was written into the peer's branches or worktrees: the
+one checkout attempt hit `already checked out at .../ac-drain-z` and was replaced
+with a detached read, then removed.
+
+The consequence for the run brief's terminating condition is worth stating
+plainly: "drain to zero" is not reachable by one session while another is
+producing PRs into the same queue faster than merges retire them. Recomputing
+after every merge keeps a pass honest, but it does not make the queue converge.
