@@ -18,6 +18,7 @@ import {
 import {
     is_ambiguous_stack,
     bundle_line,
+    scope_lines,
     unsupported_stack_questions,
 } from './stack_bundles.js';
 
@@ -266,6 +267,7 @@ function _delegate_to_polish_skill(
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Polish round ${next_round} of ${ceiling}.`,
             bundle_line(state.stack, 'build', stack_label),
+            ...scope_lines(state.stack),
             findings_line,
             '> Fix chart-type / contrast findings against the adopted ' +
                 "corpus rows (design-intelligence § 'Grounding the " +

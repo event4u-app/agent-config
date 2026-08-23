@@ -212,15 +212,84 @@ export function unsupported_stack_questions(
     for (const c of conflicts) {
         lines.push(`> - \`${c}\``);
     }
+    // A scope conflict has a *closed* option set — the detector already named
+    // every candidate — so enumerate them instead of asking the open question.
+    // "Which workspace?" answered from a list is a pick; answered as free text
+    // it is a guess the agent has to validate, which is the same silent-pick
+    // failure one layer up.
+    const roots = workspace_roots_from_conflicts(conflicts);
+    let n = 1;
+    for (const root of roots) {
+        lines.push(
+            `> ${n}. Build for \`${root}\` — write it to \`state.stack.scope_root\` ` +
+                'and re-run detection against that workspace.',
+        );
+        n += 1;
+    }
+    if (roots.length === 0) {
+        lines.push(
+            `> ${n}. Name the project to build for — the workspace path, or which ` +
+                'framework owns this surface. Detection re-runs against that scope.',
+        );
+        n += 1;
+    }
     lines.push(
-        '> 1. Name the project to build for — the workspace path, or which ' +
-            'framework owns this surface. Detection re-runs against that scope.',
-        '> 2. Continue on the stack-neutral floor anyway — `ui-apply-generic` ' +
+        `> ${n}. Continue on the stack-neutral floor anyway — \`ui-apply-generic\` ` +
             'plus its companions. Output will not be idiomatic for either ' +
             'framework; say so in the result.',
-        '> 3. Abort — drop this UI request.',
+        `> ${n + 1}. Abort — drop this UI request.`,
     );
     return lines;
+}
+
+/** Prefix of the ambiguity string the detector emits for a scope conflict. */
+const _WORKSPACE_CONFLICT_PREFIX = 'workspace roots: ';
+
+/**
+ * The workspace names carried by a `workspace roots: a + b` conflict.
+ *
+ * Parsed back out of the ambiguity string rather than passed alongside it,
+ * because `StackResult.ambiguity` is the serialized contract the halt already
+ * echoes — adding a parallel field would give the same fact two representations
+ * that can disagree after a round-trip through `state.stack`.
+ */
+export function workspace_roots_from_conflicts(
+    conflicts: ReadonlyArray<string>,
+): string[] {
+    for (const c of conflicts) {
+        if (c.startsWith(_WORKSPACE_CONFLICT_PREFIX)) {
+            return c
+                .slice(_WORKSPACE_CONFLICT_PREFIX.length)
+                .split('+')
+                .map((name) => name.trim())
+                .filter((name) => name !== '');
+        }
+    }
+    return [];
+}
+
+/**
+ * Name the workspace a dispatch is scoped to, when it is not the project root.
+ *
+ * Returns an empty array for every non-monorepo project, so those halts stay
+ * byte-identical. The line exists because the skills downstream read
+ * `components.json`, `components/ui/*` and the styling config by path, and in a
+ * monorepo none of those live at the repository root — which is the M5 prose
+ * defect, restated where the agent actually acts on it.
+ */
+export function scope_lines(stack_state: unknown): string[] {
+    if (typeof stack_state !== 'object' || stack_state === null) {
+        return [];
+    }
+    const raw = (stack_state as Record<string, unknown>)['scope_root'];
+    if (typeof raw !== 'string' || raw === '') {
+        return [];
+    }
+    return [
+        `> Scope: \`${raw}\` — the workspace this stack was detected in. Read ` +
+            'and write component files, `components.json`, and the styling ' +
+            'config under that path. The repository root carries none of them.',
+    ];
 }
 
 /**
