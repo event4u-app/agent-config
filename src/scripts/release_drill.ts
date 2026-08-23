@@ -68,6 +68,58 @@ interface WorldConfig {
     merge_fails_hard?: boolean;
     /** PR checks fail (watch exits non-zero) — the release must die. */
     checks_fail?: boolean;
+    /**
+     * Content `git show <target>:CHANGELOG.md` returns.
+     *
+     * Step 1.3 of `road-to-release-publication-integrity`, decided by AI council
+     * 2026-08-23 (2/2 convergent) in favour of controlled fixtures over a scoped
+     * policy exemption. The drill USED to return the live `CHANGELOG.md`, which
+     * coupled every sequencing scenario to whatever the repository's changelog
+     * happened to contain — and that coupling is what broke four scenarios in the
+     * second refused attempt at the publication guard: a guard reading real
+     * content refuses on real markers, so the drill failed for a reason that had
+     * nothing to do with sequencing.
+     *
+     * A fixture is the right shape rather than an exemption because the council
+     * had already rejected letting drills bypass policy universally: an exempt
+     * drill proves the sequencing AND proves nothing about the policy, whereas a
+     * fixture holding policy-valid content exercises the same parsing path with
+     * content the test controls.
+     *
+     * Defaults to `defaultChangelogFixture(target)` — a minimal, policy-valid
+     * section for the target. Pass the live file explicitly if a scenario really
+     * needs it; nothing does today, and doing it silently is what this seam
+     * removes.
+     */
+    changelog?: string;
+}
+
+/**
+ * The smallest changelog the pipeline accepts for `target`.
+ *
+ * Shape requirements, each load-bearing rather than decorative:
+ * `extract_changelog_section` needs an `## [X.Y.Z]` heading to find the section
+ * at all, `tag_message_from_section` and `pr_body_from_section` render its body,
+ * and a SECOND section below it is what proves the extractor stops at the right
+ * boundary instead of swallowing the rest of the file. Carries no placeholder
+ * marker, deliberately: a fixture that trips the very guard the drill exists to
+ * sequence would reproduce the failure this seam removes.
+ */
+export function defaultChangelogFixture(target: string): string {
+    return [
+        '# Changelog',
+        '',
+        `## [${target}]`,
+        '',
+        '### Features',
+        '',
+        '- fixture entry for the release drill',
+        '',
+        '## [0.0.0]',
+        '',
+        '- earlier release, present so the section boundary is exercised',
+        '',
+    ].join('\n');
 }
 
 /**
@@ -91,6 +143,7 @@ class FakeWorld {
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
+    private readonly changelog: string;
 
     constructor(
         readonly branch: string,
@@ -98,6 +151,7 @@ class FakeWorld {
         cfg: WorldConfig,
     ) {
         this.push_rejections = cfg.push_rejections ?? 0;
+        this.changelog = cfg.changelog ?? defaultChangelogFixture(target);
         this.behind_probes = cfg.behind_probes ?? 0;
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
@@ -135,9 +189,11 @@ class FakeWorld {
             return OK;
         }
         if (cmd === `git show ${this.target}:CHANGELOG.md`) {
-            // The drill runs in the real repo — the changelog at the tag is
-            // the real file (execute() extracts the target's section from it).
-            return { ...OK, stdout: fs.readFileSync(path.join(REPO_ROOT, 'CHANGELOG.md'), 'utf-8') };
+            // A FIXTURE, not the live file. See `WorldConfig.changelog` for why:
+            // returning the repository's own changelog made every sequencing
+            // scenario depend on its current content, and that dependency is what
+            // broke four of them in the second refused guard attempt.
+            return { ...OK, stdout: this.changelog };
         }
         if (cmd === `git push origin ${this.target}`) {
             this.tag_remote = true;
