@@ -59,6 +59,12 @@ Do NOT use when:
    for Step 3.
 4. If a `character.json` lock exists, load it verbatim — identity
    tokens are immutable.
+5. Continuous take or connector asked for? Read the model's
+   `start_frame` / `end_frame` first —
+   `scripts/ai-video/adapters/<id>.sh capability --model <m>`. `null` is
+   unknown, never `true`. A model that cannot frame-lock is **declined
+   with a one-line why**, never substituted in
+   ([`adapter-contract.md#end_image`](../../../scripts/media/lib/adapter-contract.md#end_image)).
 
 ### Step 1: Camera choreography
 

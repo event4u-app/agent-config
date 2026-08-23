@@ -204,4 +204,14 @@ aiv_cmd_fetch() {
   jq -n --arg p "${out}" '{video_path:$p, audio_embedded:true}'
 }
 
+# Capability: `capability --model <id>` answers from
+# lib/model-capabilities/sora.json (schema v2 — durations, modeled cost,
+# and the start_frame/end_frame continuity answers). A bare `capability`
+# keeps the adapter-level audio flag byte-identical to before the manifest.
+sub="${1:-}"
+if [ "${sub}" = "capability" ]; then
+  shift
+  aiv_manifest_capability "${ADAPTER_ID}" "native" "$@"
+  exit 0
+fi
 aiv_dispatch "${ADAPTER_ID}" "native" "$@"

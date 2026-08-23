@@ -1,0 +1,23 @@
+{
+  "schema": 2,
+  "adapter": "higgsfield",
+  "comment": "Per-model capability manifest for the direct higgsfield adapter. Every value is READ OUT OF THE TREE and cited in input_notes — no field is estimated from provider documentation this repo cannot show. Unknown is null, never a guess: higgsfield.sh sends no duration, aspect or cost parameter (adapters/higgsfield.sh:186-187), so those bounds are unknown rather than defaulted. The provider's named motion presets (mix, burst, dvd, cinematic, talk — adapters/higgsfield.sh:37-38,58) are NOT models and stay on `capability --preset`. higgsfield-soul (the XML <default-model>) is an image model the adapter explicitly refuses for image2video and rewrites to dop-turbo (adapters/higgsfield.sh:113-120), so it is not an entry here. verified stays false: the adapter header records a live 1/1 image2video round-trip (adapters/higgsfield.sh:15-20) but names no per-model trace id reachable from the tree, and `verified` is a per-model claim.",
+  "models": {
+    "dop-turbo": {
+      "label": "Higgsfield DoP Turbo (image-to-video)",
+      "min_duration": null,
+      "max_duration": null,
+      "audio_sync": false,
+      "aspect": null,
+      "cost_per_second_usd": null,
+      "verified": false,
+      "input_notes": "model id from the image2video fallback at adapters/higgsfield.sh:116 (accepted pattern *dop*|*turbo* at :115), route POST /v1/image2video/dop (:70,:189); requires ref_images[0] and dies exit 7 without it (:133-135); request body carries model+prompt+input_images only — no duration, aspect or seed (:186-187), so duration/aspect bounds are unknown; audio_sync false from the video-only fetch shape (:259); the only cost figure in the tree is the dry-run fixture's per-clip cost_estimate 0.1 (media/lib/fixtures/higgsfield/result.json), which is not a per-second rate; observed live output 5.4 s at 1168x768 (:16) and the template's operator tuning cap is <max-duration>5</max-duration> (agents/templates/.ai-video.xml.example:63) — an operator preference, not a provider bound",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
+    }
+  }
+}

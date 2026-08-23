@@ -375,7 +375,7 @@ six steps below and nothing else.
 **Dropped, one line each.** Its Phases 3, 5 and 6 (normalized scroll conductor,
 video scrub renderer, WebGL renderer) are that app-runtime collision and are
 dropped whole. Its Phase 8 is dropped whole because
-`agents/roadmaps/road-to-chained-clip-continuity-and-provider-truth.md` already
+`agents/roadmaps/archive/road-to-chained-clip-continuity-and-provider-truth.md` already
 owns that exact scope and landed in the same run. Its "no Three.js guidance
 exists" premise is false — `src/skills/design-intelligence/data/stacks/threejs.csv`
 carries 54 lines (one header, 53 rows) across 13 `Category` values. Its "no

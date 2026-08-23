@@ -41,15 +41,23 @@ higgsfield_audio_for_preset() {
 }
 
 # Override capability handling so `capability --preset <name>` answers
-# per-preset before falling through to the generic helper.
+# per-preset, and `capability --model <id>` answers from
+# lib/model-capabilities/higgsfield.json (schema v2), before falling through
+# to the generic helper. Presets and models are different axes: a preset is a
+# motion profile, a model is the DoP endpoint's checkpoint.
 aiv_higgsfield_capability() {
-  local preset=""
+  local preset="" model=""
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --preset) preset="${2:-}"; shift 2 ;;
+      --model) model="${2:-}"; shift 2 ;;
       *) shift ;;
     esac
   done
+  if [ -n "${model}" ]; then
+    aiv_manifest_capability "${ADAPTER_ID}" "per-model" --model "${model}"
+    return 0
+  fi
   if [ -n "${preset}" ]; then
     printf '{"audio":"%s","preset":"%s"}\n' \
       "$(higgsfield_audio_for_preset "${preset}")" "${preset}"

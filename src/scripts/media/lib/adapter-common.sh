@@ -91,6 +91,199 @@ aiv_assert_dryrun() {
   esac
 }
 
+# -- Model-capabilities manifests -------------------------------------------
+# Per-model capabilities live in <domain>/lib/model-capabilities/<adapter>.json
+# (schema v2 — see that directory's README). AIV_MODEL_CAPS_DIR overrides the
+# directory: the frame-lock probe and the test suite point the reader at a
+# fixture manifest instead of writing into the tracked one.
+aiv_manifest_path() {
+  printf '%s/%s.json' \
+    "${AIV_MODEL_CAPS_DIR:-${AIV_LIB_DIR}/model-capabilities}" "${1}"
+}
+
+# aiv_warn_unverified <adapter> <model> <manifest> — an entry without a
+# captured smoke trace carries verified:false and must never be trusted
+# silently (model-capabilities/README.md § verified).
+# NB: jq `//` treats false as falsy — the null check is explicit so a
+# present-but-unverified entry is not misreported as absent.
+aiv_warn_unverified() {
+  local adapter="${1}" model="${2}" manifest="${3}" verified
+  [ -f "${manifest}" ] || return 0
+  verified="$(jq -r --arg m "${model}" \
+    '.models[$m] | if . == null then "absent" elif .verified == true then "true" else "false" end' \
+    "${manifest}" 2>/dev/null || true)"
+  case "${verified}" in
+    true) : ;;
+    absent) printf '%s: model %s not in model-capabilities manifest — capabilities unknown\n' \
+          "${adapter}" "${model}" >&2 ;;
+    *) printf '%s: model %s capabilities are UNVERIFIED (no smoke trace) — durations/cost are documented-best-effort\n' \
+          "${adapter}" "${model}" >&2 ;;
+  esac
+}
+
+# aiv_assert_frame_coherent <adapter> <model> <manifest> — an entry claiming
+# end_frame:true while start_frame is not true is INCOHERENT: a model that
+# cannot open on a supplied frame cannot close on one either. Refuse the entry
+# rather than hand it to a planner (schema v2, model-capabilities/README.md).
+aiv_assert_frame_coherent() {
+  local adapter="${1}" model="${2}" manifest="${3}" bad
+  [ -f "${manifest}" ] || return 0
+  bad="$(jq -r --arg m "${model}" \
+    '.models[$m] // {} | if .end_frame == true and .start_frame != true then "1" else "" end' \
+    "${manifest}" 2>/dev/null || true)"
+  [ -z "${bad}" ] || aiv_die 3 "${adapter}: model-capabilities entry for ${model} is incoherent — end_frame:true with start_frame not true; a model that cannot open on a supplied frame cannot close on one (see lib/model-capabilities/README.md § Schema v2)"
+}
+
+# aiv_manifest_capability <adapter> <default-audio> "$@" — shared
+# manifest-backed `capability`. Without --model it prints the adapter's
+# declared audio flag, byte-identical to the pre-manifest surface. With
+# --model it answers from the manifest and refuses an id the manifest does
+# not carry, rather than returning a default that would read as an answer.
+aiv_manifest_capability() {
+  local adapter="${1}" default_audio="${2}"; shift 2
+  local model="" manifest
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --model) model="${2:-}"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  if [ -z "${model}" ]; then
+    aiv_capability "${default_audio}"
+    return 0
+  fi
+  aiv_require_cmd jq
+  manifest="$(aiv_manifest_path "${adapter}")"
+  [ -f "${manifest}" ] || aiv_die 3 "${adapter}: manifest missing: ${manifest}"
+  jq -e --arg m "${model}" '.models[$m]' "${manifest}" >/dev/null 2>&1 \
+    || aiv_die 7 "${adapter}: model not in manifest: ${model}"
+  aiv_assert_frame_coherent "${adapter}" "${model}" "${manifest}"
+  aiv_warn_unverified "${adapter}" "${model}" "${manifest}"
+  aiv_capability_recheck "${adapter}" "${model}" "${manifest}"
+}
+
+# -- Decay markers (recheck_by) ----------------------------------------------
+# A vendor capability is a DATED OBSERVATION, not a permanent fact: endpoints
+# have gained and lost frame conditioning inside weeks, so a manifest entry
+# verified once is evidence about the past presented as the present unless it
+# carries its own expiry. Same idiom as `keep-beta-until` in
+# docs/contracts/skill-bundled-assets.md.
+#
+# The date is DERIVED, never stored twice: the entry's `smoke_trace` id resolves
+# to a row in agents/evidence/ai-video/trace-index.json, whose `captured_at`
+# plus AIV_TRACE_RECHECK_DAYS is the recheck date. One constant, shared with
+# lint_adapter_tier's staleness window and with the `recheck_by` stamp
+# smoke-trace.sh writes into every trace — so a change moves every side or none.
+#
+# Why not read `recheck_by` straight out of the trace: the traces are local-only
+# by a deliberate decision (d7f5d5d3c, reaffirmed by council 2026-08-23) and are
+# absent from every clone. The index is the reviewer-reachable projection, and it
+# carries five fields by design; `captured_at` is one of them and the arithmetic
+# is free, so nothing needs widening.
+AIV_TRACE_INDEX_REL="agents/evidence/ai-video/trace-index.json"
+
+# aiv_capability_recheck <adapter> <model> <manifest> — emit the capability JSON
+# with `verified_at` / `recheck_by` appended, and warn on stderr past the date.
+# An entry with no `smoke_trace` gets both as null: unknown, never "fresh".
+aiv_capability_recheck() {
+  local adapter="${1}" model="${2}" manifest="${3}"
+  local root trace_id index captured recheck days today
+
+  days="${AIV_TRACE_RECHECK_DAYS:-180}"
+  # Walk up for the index rather than counting `..` segments. AIV_LIB_DIR is
+  # `src/scripts/<domain>/lib` when an adapter is the entry point and
+  # `src/scripts/media/lib` when the common file resolves itself, so a fixed
+  # depth is right for one caller and silently wrong for the other — which is
+  # exactly how this landed with `verified_at: null` on a traced model the
+  # first time.
+  index="${AIV_TRACE_INDEX:-}"
+  if [ -z "${index}" ]; then
+    root="${AIV_LIB_DIR}"
+    while [ -n "${root}" ] && [ "${root}" != "/" ]; do
+      if [ -f "${root}/${AIV_TRACE_INDEX_REL}" ]; then
+        index="${root}/${AIV_TRACE_INDEX_REL}"
+        break
+      fi
+      root="$(dirname "${root}")"
+    done
+  fi
+
+  trace_id="$(jq -r --arg m "${model}" '.models[$m].smoke_trace // empty' "${manifest}" 2>/dev/null || true)"
+  captured=""
+  if [ -n "${trace_id}" ] && [ -f "${index}" ]; then
+    captured="$(jq -r --arg t "${trace_id}" 'map(select(.trace_id == $t)) | .[0].captured_at // empty' "${index}" 2>/dev/null || true)"
+  fi
+
+  recheck=""
+  if [ -n "${captured}" ]; then
+    recheck="$(CAP="${captured}" D="${days}" node -e '
+      const iso = process.env.CAP.replace(/T(\d{2})-(\d{2})-(\d{2})Z$/, "T$1:$2:$3Z");
+      const t = new Date(iso);
+      if (Number.isNaN(t.getTime())) { process.stdout.write(""); process.exit(0); }
+      t.setUTCDate(t.getUTCDate() + Number(process.env.D));
+      process.stdout.write(t.toISOString().slice(0, 10));
+    ' 2>/dev/null || true)"
+  fi
+
+  if [ -n "${recheck}" ]; then
+    today="$(date -u +%Y-%m-%d)"
+    # String comparison is correct for ISO dates and needs no date parsing.
+    if [ "${today}" \> "${recheck}" ]; then
+      printf '%s: model %s was verified %s and its recheck-by date %s has PASSED — re-probe before trusting the capability; a vendor may have changed the endpoint since\n' \
+        "${adapter}" "${model}" "${captured%T*}" "${recheck}" >&2
+    fi
+  fi
+
+  jq --arg m "${model}" \
+     --arg va "${captured%T*}" --arg rb "${recheck}" \
+    '.models[$m]
+     | {audio: (if .audio_sync then "native" else "none" end), model: $m}
+       + .
+       + {verified_at: (if $va == "" then null else $va end),
+          recheck_by:  (if $rb == "" then null else $rb end)}' \
+    "${manifest}"
+}
+
+# -- end_image gate (adapter-contract.md § end_image) ------------------------
+# `end_image` asks the provider to CLOSE the clip on a supplied frame. An
+# adapter may honour it only when the submitted model's manifest entry answers
+# end_frame:true; `null` means unknown, and unknown is never treated as true.
+# Refusal over silent downgrade: dropping the image renders something the
+# caller did not ask for and bills for it — the same register stitch.sh uses
+# when it refuses --crossfade instead of quietly hard-cutting.
+AIV_EXIT_END_FRAME_UNSUPPORTED=12
+
+# aiv_assert_end_frame_supported <adapter> <stdin-json> — no-op unless stdin
+# carries a non-null end_image; otherwise refuse with exit 12 naming the model
+# and the field. Model resolution is deliberately conservative (stdin
+# model_id, else AIV_MODEL): an unresolvable model is an unproven capability,
+# and unproven refuses.
+aiv_assert_end_frame_supported() {
+  local adapter="${1}" stdin_json="${2}" model manifest end_frame
+  command -v jq >/dev/null 2>&1 || return 0
+  printf '%s' "${stdin_json}" \
+    | jq -e 'type == "object" and has("end_image") and (.end_image != null)' \
+      >/dev/null 2>&1 || return 0
+
+  model="$(printf '%s' "${stdin_json}" | jq -r '.model_id // empty' 2>/dev/null || true)"
+  [ -n "${model}" ] || model="${AIV_MODEL:-}"
+  [ -n "${model}" ] || model="<unresolved>"
+  manifest="$(aiv_manifest_path "${adapter}")"
+
+  end_frame="null"
+  if [ -f "${manifest}" ]; then
+    end_frame="$(jq -r --arg m "${model}" \
+      '.models[$m] // {} | .end_frame | if . == null then "null" else tostring end' \
+      "${manifest}" 2>/dev/null || printf 'null')"
+  fi
+  if [ "${end_frame}" = "true" ]; then
+    aiv_assert_frame_coherent "${adapter}" "${model}" "${manifest}"
+    return 0
+  fi
+  aiv_die "${AIV_EXIT_END_FRAME_UNSUPPORTED}" \
+    "${adapter}: end_image submitted for model ${model}, whose model-capabilities entry answers end_frame=${end_frame} (null means unknown, and unknown is never treated as true). The image is refused, never dropped — re-submit without end_image, choose a model whose end_frame is a probed true, or probe this one. See media/lib/adapter-contract.md § end_image."
+}
+
 # -- Trust boundary (adapter-contract.md v2) --------------------------------
 # Provider-returned artifact paths and downloads are UNTRUSTED input. The
 # three helpers below are the enforcement surface the live submit/poll/fetch
@@ -234,7 +427,24 @@ aiv_dispatch() {
     dry-run)
       aiv_emit_dry_run "${adapter}"
       ;;
-    submit|poll|fetch|run)
+    submit|run)
+      # These two are the only subcommands that consume the contract stdin, so
+      # they are the only ones the end_image gate can read. A here-string (not
+      # a pipe) re-feeds the bytes: a pipe would run the dispatcher in a
+      # subshell and, for an adapter that exits without draining stdin, turn a
+      # clean EPIPE into the pipeline's exit code. Skipped on a tty, where
+      # there is nothing to read and today's behaviour is an immediate refusal
+      # rather than a block.
+      if [ -t 0 ]; then
+        _aiv_dispatch_timed "${adapter}" "${sub}" "$@"
+      else
+        local _aiv_stdin
+        _aiv_stdin="$(cat)"
+        aiv_assert_end_frame_supported "${adapter}" "${_aiv_stdin}"
+        _aiv_dispatch_timed "${adapter}" "${sub}" "$@" <<< "${_aiv_stdin}"
+      fi
+      ;;
+    poll|fetch)
       _aiv_dispatch_timed "${adapter}" "${sub}" "$@"
       ;;
     "")
