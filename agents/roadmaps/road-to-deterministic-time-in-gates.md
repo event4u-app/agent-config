@@ -334,9 +334,26 @@ construction, not by preference.
       ['create', 'write', 'append', 'delete']`, exit 2. The same fixture with
       `access: "write"` → `Summary: 1 pass, 0 warn, 0 fail`, exit 0. A skill
       declaring nothing (`src/skills/check-refs/SKILL.md` unmodified) → exit 0;
-      absence stays legal. Two further shapes are refused by a new
-      `lint_scope_declaration` check: `scope_verification_both` and
-      `scope_verification_missing`.
+      absence stays legal. Two further shapes are refused by
+      `check_scope_declaration` in `validate_frontmatter.ts`, proven on the real
+      tree by planting each into `check-refs` in turn:
+      `❌ scope-verification-both at $.scope` and
+      `❌ scope-verification-missing at $.scope`, `445 artefacts, 1 failing` each
+      time, `0 failing` after restoring.
+      **That check lives in `validate_frontmatter.ts`, not `skill_linter.ts`, and
+      the gate that put it there is this roadmap's own subject.** Written in the
+      linter first, it made `check_source_size_budget` red — 18634 against a
+      baseline of 18571, 63 new — because that file is 4,742 lines and the
+      ratchet sums lines ABOVE 1,500 per file. Extracting the body to `_lib` still
+      left the import plus the call, i.e. +2, and a ratchet turns one way.
+      `validate_frontmatter.ts` is 1,120 lines, so the same code costs zero there,
+      and it sits beside `check_obligation_frequency`, the existing precedent for
+      an artefact-specific check the generic validator cannot express. Also worth
+      recording: expressing "exactly one of two optional siblings" in the SCHEMA
+      is impossible here — this validator implements `type` / `enum` / `pattern` /
+      `required` / `items` / `additionalProperties` and none of `oneOf`, `anyOf`,
+      `not`, `minProperties` or `maxProperties`, so a schema-only attempt is
+      silently inert, which is worse than absent because it reads as enforced.
       **`verification: {command | reason}` ships as TWO sibling keys**
       (`verification_command` / `verification_reason`), and the reason is
       measured rather than stylistic: this repo's frontmatter parser reads
