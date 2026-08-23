@@ -39,7 +39,7 @@ import {
     type QuorumEventPhase,
     type StanceAgreement,
 } from './events_log.js';
-import { evaluateQuorum, formatAttendanceCaveats, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './quorum.js';
+import { evaluateQuorum, formatAttendanceCaveats, SOLO_FLOOR_MIN_PRESENT, withUnparsed, type QuorumResult } from './quorum.js';
 import { absentReasonFromCliFailure, classifyCliFailure } from './transport_resolver.js';
 
 type Dict = Record<string, unknown>;
@@ -216,6 +216,45 @@ export function _postRunQuorum(
         });
     }
     return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg), unparsed), absent };
+}
+
+/**
+ * Which of the three agreement states a stance tally represents.
+ *
+ * `undefined` when no tally ran — the emitter records that as `not_tallied`,
+ * which is a fact ("nobody asked"), not a `false` that reads as disagreement.
+ * Returned as an optional rather than a nullable so the caller can spread it
+ * under `exactOptionalPropertyTypes`, where an explicit `undefined` and an
+ * absent key are different things.
+ */
+export function stanceAgreementOf(
+    tally: { consensus: unknown } | null,
+): StanceAgreement | undefined {
+    if (tally === null) {
+        return undefined;
+    }
+    return tally.consensus !== null ? 'consensus' : 'split';
+}
+
+/**
+ * Re-derive the rendered attendance line once the findings parser has spoken.
+ *
+ * Lives here rather than at the call site because it is the second half of the
+ * split `withUnparsed` documents: the post-run event stays a TRANSPORT-level
+ * reading so every rate over `events.log` keeps its denominator, and the
+ * rendered artefact is where AC-2 asks for the unparsed distinction. Counting
+ * `parse_failed` outcomes is the whole derivation; keeping it next to
+ * `_postRunQuorum` keeps both readings in one file.
+ */
+export function annotateRenderedQuorum(
+    quorum: QuorumResult | null,
+    parse_outcomes: ReadonlyMap<string, string> | null | undefined,
+): QuorumResult | null {
+    if (quorum === null || parse_outcomes === null || parse_outcomes === undefined) {
+        return quorum;
+    }
+    const unparsed = Array.from(parse_outcomes.values()).filter((o) => o === 'parse_failed').length;
+    return withUnparsed(quorum, unparsed);
 }
 
 /**

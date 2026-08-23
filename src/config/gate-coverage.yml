@@ -513,8 +513,22 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 15
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22)"
+    min_scanned: 10
+    corpus: >-
+      roadmap files at the top level of agents/roadmaps/ (25 at registration,
+      2026-08-22; 14 on 2026-08-23 after a completion drain archived eleven).
+      LOWERED 25-registration floor 15 -> 10 on 2026-08-23, with the reason
+      stated rather than the number quietly edited: this floor tracks the ACTIVE
+      roadmap count, and the active count falls every time a roadmap is
+      legitimately completed and archived. That is the intended direction of the
+      estate ratchet, so a floor pinned to a past active count converts every
+      successful completion into a red gate. 10 is a judgement, not a
+      measurement: it is the count below which a listing over the active corpus
+      stops being able to certify anything, and it is deliberately well under
+      today's 14 because several sibling drains are archiving in parallel and a
+      floor set one below the live count reds on the next merge. Revisit-if the
+      active corpus stabilises above 20 again, at which point the floor should
+      rise with it.
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every

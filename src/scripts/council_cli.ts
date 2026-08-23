@@ -79,11 +79,13 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, withUnparsed, type QuorumResult } from './ai_council/quorum.js';
+import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
+    annotateRenderedQuorum,
     _format_quorum_line,
     _postRunQuorum,
+    stanceAgreementOf,
     _quorum_min_present_from,
     _quorum_setting_from,
 } from './ai_council/quorum_wiring.js';
@@ -165,7 +167,7 @@ import {
     render_deanonymization_block,
     with_chairman_fields,
 } from './ai_council/blind_review.js';
-import { tally_stances } from './ai_council/stance_tally.js';
+import { tallyFromResponses } from './ai_council/stance_tally.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
@@ -2657,18 +2659,9 @@ function cmd_run(
     // with 3 configured members where 2 fail to construct and 1 answers emits
     // `{total: 1, present: 1}` and reads as full attendance.
     const configured_total = quorum_out.result?.total ?? null;
-    // Phase 3 — hoisted above the post-run emit so the agreement dimension can
-    // ride the SAME `quorum_result` line as attendance. It used to be computed
-    // inline at the `buildHandoffFromStanceTally` call below, which is after the
-    // emit; the tally is a pure function of `responses` and `responses` is
-    // already final here, so hoisting changes nothing about what is computed.
-    // Computed ONCE and reused below rather than run twice — two tallies over
-    // the same responses is two chances to disagree.
-    const stance_tally_result = stance_tally_on
-        ? tally_stances(
-              responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
-          )
-        : null;
+    // Hoisted above the post-run emit so agreement rides the same line as attendance.
+    const stance_tally_result = tallyFromResponses(responses, stance_tally_on);
+    const stance_agreement = stanceAgreementOf(stance_tally_result);
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
@@ -2679,15 +2672,7 @@ function cmd_run(
     // skips already went out under `phase: 'pre_run'` from `build_members`,
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
-        // Whether the seats agreed, on the attendance line. The key is OMITTED
-        // when no tally ran — spread-on-condition rather than an explicit
-        // `undefined`, because `exactOptionalPropertyTypes` treats those as
-        // different things and the emitter's own contract is "absent means the
-        // caller ran no tally", which it records as `not_tallied`. A recorded
-        // "nobody asked", never a `false` that reads as disagreement.
-        ...(stance_tally_result === null
-            ? {}
-            : { stanceAgreement: stance_tally_result.consensus !== null ? ('consensus' as const) : ('split' as const) }),
+        ...(stance_agreement === undefined ? {} : { stanceAgreement: stance_agreement }),
         command: 'run',
         // Whether the roster actually shrank — see `dispatch_shape`. Without
         // this the line is byte-identical to a configured one-member council,
@@ -2733,19 +2718,8 @@ function cmd_run(
         { persona_labels },
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
-    // Step 2.3 — the rendered artefact's attendance line, re-derived once the
-    // parser has spoken. A member whose findings answer reached `parse_failed`
-    // answered in bytes and said nothing readable; folding it into `N/N present`
-    // is the same overstatement the empty-body fix closed one rung down.
-    //
-    // Deliberately AFTER the post-run `_emitQuorumEvent` above, and deliberately
-    // not re-emitted: the event is a transport-level reading and stays one, so
-    // every attendance rate computed over `events.log` keeps its denominator.
-    // `withUnparsed` documents the split from the other side.
-    if (quorum_out.result !== null && consensus !== null) {
-        const unparsed_n = Array.from(consensus.parse_outcomes.values()).filter((o) => o === 'parse_failed').length;
-        quorum_out.result = withUnparsed(quorum_out.result, unparsed_n);
-    }
+    // Rendered attendance, re-derived after the parser. The event does not move.
+    quorum_out.result = annotateRenderedQuorum(quorum_out.result, consensus?.parse_outcomes);
     const chairman = _maybe_run_chairman(
         ai_cfg,
         question,

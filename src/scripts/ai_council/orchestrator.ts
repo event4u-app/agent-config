@@ -2059,12 +2059,7 @@ function _render_quorum_line(q: QuorumResult): string {
     // so 2-of-4 rendered as plain "concluded" with nothing to stop a reader
     // inferring convergence. Same sentence as stdout on purpose — one wording,
     // so neither surface can drift into being the softer one again.
-    // Step 2.3 — the shared wording now lives in `quorum.ts::formatAttendanceCaveats`,
-    // which is the mechanical form of the "same sentence on purpose" note above:
-    // two hand-maintained copies of a sentence whose whole requirement is that
-    // they stay identical is a drift waiting to happen. It also carries the
-    // present-unparsed clause, whose count is disjoint from the did-not-answer
-    // one — an unparsed member answered.
+    // Wording shared with the stdout mirror; `formatAttendanceCaveats` owns it.
     return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}${formatAttendanceCaveats(q)}`;
 }
 
