@@ -28,7 +28,7 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
 enforced_by:
-  - "none"
+  - "hook:design-pass"
 collision_ok:
   # The "component" and "design token" entries were removed with their triggers
   # (2026-08-17): a collision note for a trigger that no longer exists is an
@@ -100,20 +100,36 @@ OUTSIDE THE WORK ENGINE, THE AUDIT OBLIGATION IS MODEL-CARRIED.
 NEVER CLAIM THE AUDIT RAN AS IF IT WERE VERIFIED.
 ```
 
-`state.ui_audit` exists only inside the work-engine dispatcher, so only there
-is "the audit ran" a *checked* fact. A chat session cannot verify it: "I ran
-`existing-ui-audit` first" is self-report, and self-report is not enforcement —
-the same honesty boundary `security-sensitive-stop` and
-`untrusted-input-defense` state for their own obligations. So this rule ships
-`enforced_by: none` outside the dispatcher, deliberately, rather than pretending
-a satisfiable-by-assertion condition is a gate.
+**This section used to say the obligation was satisfiable only by assertion.
+That is no longer true, and the change is narrow enough to state precisely.**
 
-What that leaves, and it is the useful part: run
-[`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
-component because reuse beats duplication — not because a check will catch you.
-Full enforcement requires the dispatcher (or the `frontend-design` pack once
-pack-scoped rule projection is enabled; that flip is a maintainer decision,
-never an automated one).
+`state.ui_audit` used to exist only inside the work-engine dispatcher, which is
+why a chat session had nothing to point at: "I ran `existing-ui-audit` first"
+is self-report, and self-report is not enforcement. `agent-config ui:audit`
+now writes `agents/runtime/state/ui-audit.json`, so there IS an artefact — and
+`design_pass_hook.ts` reads it and compares its mtime against the file being
+written. `enforced_by:` names that concern (`hook:design-pass`).
+
+Three limits, because naming a script is not the same as closing the gap:
+
+1. **Freshness, not existence.** The check is "an artefact newer than the
+   target". A stale artefact is worse than a missing one, because it looks like
+   evidence — so an artefact older than the write does not satisfy the gate.
+2. **Default-OFF, and warn before it blocks.** `hooks.design_pass.enabled` ships
+   `false`. When on, a missing artefact warns on `post_tool_use` and blocks at
+   `stop`. Turning it on is a maintainer decision, never an automated one.
+3. **The greenfield asymmetry is real and is not closed by this.**
+   `_lib/ui_surface.ts` is a PATH predicate — measured recall 20/23, with all
+   three misses being a UI *request* that has not yet produced a UI *file*
+   (`internal/bench/frontend-power/BASELINE-2026-08-23.md` § Routing). So an
+   audit-before-write gate keyed on the path cannot fire on the first write of a
+   brand-new surface. After the write it can, which is why the carrier is on
+   `post_tool_use` and not `pre_tool_use`.
+
+Run [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
+component because reuse beats duplication. The difference from before is that a
+check can now catch you — on a host that binds the slot, with the setting on,
+and not on the very first file of a new surface.
 
 **A runtime carrier now exists, and it does not change the verdict.** The
 `ui-route-nudge` PreToolUse concern warns once on a UI write with no design

@@ -60,6 +60,7 @@ commands:
 
   implementation:
     - bug/fix
+    - design
     - design-system
     - design-system/capture
     - design-system/generate
