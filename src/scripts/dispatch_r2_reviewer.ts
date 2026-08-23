@@ -39,6 +39,7 @@
  * (bad ref, unreadable file, crash).
  */
 
+import { independenceFields } from './_lib/review_independence.js';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -872,6 +873,21 @@ function findingsSkeleton(args: {
     return [
         `# Findings: ${args.slug}`,
         `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} -->`,
+        // SECOND PRODUCER of the independence record — step 2.2 of
+        // road-to-review-independence. Until this line, `self_review_gate.ts` was the
+        // only producer, which is why `check_review_schema` reported `scanned: 1`: a
+        // schema gate with one producer checks that one producer agrees with itself.
+        //
+        // The values are derived, never chosen. `single-member` because this dispatch
+        // has exactly one reviewer; `fresh` because a fresh subagent is what this file
+        // dispatches and is the property the whole artifact exists to carry (the
+        // `reviewer:` field above already says so in prose). Both axes go in, and the
+        // derived pair follows: single-member + fresh is `provisional` / `single-pass`.
+        //
+        // Recording `provisional` on a fresh reviewer is not a downgrade — it is the
+        // honest reading. One reviewer is one reviewer, however uncontaminated; the
+        // family axis is what `accepted` needs and one member cannot supply it.
+        `<!-- ${JSON.stringify({ 'review-independence': independenceFields([`r2-fresh-subagent-${args.slug}`], 'fresh') })} -->`,
         // Set at CREATION, never inferred later: an inferred type reads filename
         // and location, which are exactly the signals that already fail to
         // distinguish an input from a binding. This artifact binds a scope from

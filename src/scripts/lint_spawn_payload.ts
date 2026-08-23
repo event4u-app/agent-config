@@ -4,7 +4,19 @@
  * ("NEVER BULK-DUMP CONTEXT INTO A SUBAGENT") deterministic
  * (road-to-lean-agent-init Phase 3).
  *
- * Scans two surfaces for spawn-brief-shaped payloads: (a) JSON fixtures
+ * WIDENED 2026-08-23 (road-to-review-independence step 0.4) to a THIRD surface: the
+ * SHIPPED prompt templates under `src/skills/subagent-orchestration/prompts/`. The gate
+ * made the "NEVER BULK-DUMP CONTEXT INTO A SUBAGENT" Iron Law deterministic over test
+ * fixtures and golden transcripts — i.e. over the places a violation is *simulated* —
+ * while the templates that actually construct a spawn brief in production sat outside
+ * it. Eight diff-payload placeholder sites across five of those files, plus two further
+ * placeholder shapes in two more, were unscanned.
+ *
+ * Still WARN-ONLY, exactly as before: this surface is prose with placeholders, and a
+ * placeholder is not yet a payload. What the widening buys is that a template growing a
+ * bulk-dump shape is now visible rather than invisible.
+ *
+ * Scans three surfaces for spawn-brief-shaped payloads: (a) JSON fixtures
  * matching `tests/fixtures/**\/*spawn*.json`; (b) fenced code blocks in
  * `tests/reasoning-layer-eval/golden-transcripts/*.md` that either parse as
  * JSON with both a `task` and a `knowledge_refs` key, or are introduced by
@@ -41,7 +53,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -219,6 +231,22 @@ function scanRepo(repoRoot: string): Finding[] {
         }
     }
 
+    // The shipped templates — step 0.4's surface. Counted the same way as the other two
+    // (the walk, not the filter), so "no violations" and "no files read" stay
+    // distinguishable; that distinction is why `scanned` is incremented before any
+    // content test in all three loops.
+    const templatesDir = path.join(repoRoot, 'src', 'skills', 'subagent-orchestration', 'prompts');
+    if (fs.existsSync(templatesDir)) {
+        for (const entry of fs.readdirSync(templatesDir, { withFileTypes: true })) {
+            if (entry.isFile() && entry.name.endsWith('.md')) {
+                scanned += 1;
+                findings.push(
+                    ...scanMarkdownTranscript(path.join(templatesDir, entry.name), repoRoot),
+                );
+            }
+        }
+    }
+
     const transcriptsDir = path.join(repoRoot, 'tests', 'reasoning-layer-eval', 'golden-transcripts');
     if (fs.existsSync(transcriptsDir)) {
         for (const entry of fs.readdirSync(transcriptsDir, { withFileTypes: true })) {
@@ -229,11 +257,20 @@ function scanRepo(repoRoot: string): Finding[] {
         }
     }
 
-    assertScanned({
+    // `reportScanned`, not `assertScanned`: step 0.4's verify compares the scanned count
+    // against the pre-change one, and a count the gate never prints cannot be compared.
+    // The helper's own docstring makes the same point — "a count only visible without
+    // `--quiet` is not a count, since CI passes `--quiet`" — so the line goes to stdout
+    // unconditionally.
+    reportScanned({
         gate: 'lint_spawn_payload',
         scanned,
-        units: 'fixture / transcript file(s)',
-        roots: ['tests/fixtures', 'tests/reasoning-layer-eval/golden-transcripts'],
+        units: 'fixture / transcript / template file(s)',
+        roots: [
+            'tests/fixtures',
+            'tests/reasoning-layer-eval/golden-transcripts',
+            'src/skills/subagent-orchestration/prompts',
+        ],
     });
     return findings;
 }

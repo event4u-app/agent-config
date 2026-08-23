@@ -28,6 +28,26 @@ export type ReviewIndependence = 'cross-family' | 'same-family' | 'single-member
 export type AcceptanceStatus = 'accepted' | 'provisional';
 
 /**
+ * How the reviewer relates to the AUTHOR — a second axis, added 2026-08-23 by
+ * `road-to-review-independence` step 2.1.
+ *
+ * Model family and author relation are different questions, and the type carried only
+ * the first. **A cross-family pair that both read the implementer's envelope is not
+ * independent in the sense that matters here**: they disagree about the model, and they
+ * share the framing of what the change is for and what counts as done.
+ *
+ * - `fresh` — no implementation context. A separate dispatch that received the diff and
+ *   the scope, and not the author's envelope.
+ * - `same-session` — ran inside the author's session, with the implementation context in
+ *   scope. The common path today, and the one this axis exists to make visible.
+ * - `unknown` — not recorded. Treated as `same-session` for derivation, because an
+ *   unrecorded relation is not evidence of freshness and the safe direction on an
+ *   integrity field is the weaker claim (the same reasoning `unknown` already gets on
+ *   the family axis).
+ */
+export type ContextRelation = 'fresh' | 'same-session' | 'unknown';
+
+/**
  * How much INDEPENDENT evidence backs the verdict — deliberately orthogonal to
  * how much effort the reviewer spent.
  *
@@ -54,30 +74,56 @@ export function reviewIndependence(memberNames: readonly string[]): ReviewIndepe
  * is not evidence of independence, and the safe direction on an integrity field
  * is the weaker claim.
  */
-export function acceptanceStatus(independence: ReviewIndependence): AcceptanceStatus {
-    return independence === 'cross-family' ? 'accepted' : 'provisional';
+export function acceptanceStatus(
+    independence: ReviewIndependence,
+    relation: ContextRelation = 'unknown',
+): AcceptanceStatus {
+    if (independence !== 'cross-family') return 'provisional';
+    // BOTH axes, and this is the whole point of step 2.1: a cross-family pair that both
+    // sat in the author's session shares the framing even though it disagrees about the
+    // model. `unknown` falls here too — an unrecorded relation is not evidence of
+    // freshness. The parameter defaults to `unknown` so every existing caller keeps
+    // compiling and gets the SAFER answer rather than the old one.
+    return relation === 'fresh' ? 'accepted' : 'provisional';
 }
 
-export function assuranceFor(independence: ReviewIndependence): Assurance {
-    if (independence === 'cross-family') return 'independent';
+export function assuranceFor(
+    independence: ReviewIndependence,
+    relation: ContextRelation = 'unknown',
+): Assurance {
     if (independence === 'unknown') return 'unreviewed';
+    // `independent` requires both axes, for the same reason `accepted` does.
+    if (independence === 'cross-family' && relation === 'fresh') return 'independent';
     return 'single-pass';
 }
 
 export interface IndependenceFields {
     readonly review_independence: ReviewIndependence;
+    /** The recorded second axis. Derived fields below follow from BOTH. */
+    readonly context_relation: ContextRelation;
     readonly acceptance_status: AcceptanceStatus;
     readonly assurance: Assurance;
     readonly reviewers: readonly string[];
 }
 
-/** The three fields plus the member set they were derived from. */
-export function independenceFields(memberNames: readonly string[]): IndependenceFields {
+/**
+ * The recorded axes plus the fields derived from them.
+ *
+ * `context_relation` defaults to `unknown` so an existing caller that names only its
+ * members keeps compiling — and gets `provisional` rather than the `accepted` it used to
+ * get. That direction is deliberate: a producer that has not said whether its reviewer
+ * was fresh has not earned the stronger claim.
+ */
+export function independenceFields(
+    memberNames: readonly string[],
+    relation: ContextRelation = 'unknown',
+): IndependenceFields {
     const independence = reviewIndependence(memberNames);
     return {
         review_independence: independence,
-        acceptance_status: acceptanceStatus(independence),
-        assurance: assuranceFor(independence),
+        context_relation: relation,
+        acceptance_status: acceptanceStatus(independence, relation),
+        assurance: assuranceFor(independence, relation),
         reviewers: [...memberNames],
     };
 }
@@ -97,13 +143,19 @@ export function independenceViolations(doc: Record<string, unknown>): string[] {
         out.push('review_independence is absent — an artifact that does not declare its independence reads as acceptance by default');
         return out;
     }
-    const expectedAccept = acceptanceStatus(indep as ReviewIndependence);
+    // The recorded relation, not a default: `independenceViolations` judges an artifact
+    // that already carries the fields, so reading `unknown` when the artifact says
+    // `fresh` would flag a correct producer.
+    const relRaw = doc['context_relation'];
+    const rel: ContextRelation =
+        relRaw === 'fresh' || relRaw === 'same-session' ? relRaw : 'unknown';
+    const expectedAccept = acceptanceStatus(indep as ReviewIndependence, rel);
     if (accept !== expectedAccept) {
         out.push(
             `acceptance_status is ${String(accept)} but review_independence ${String(indep)} derives ${expectedAccept}`,
         );
     }
-    const expectedAssur = assuranceFor(indep as ReviewIndependence);
+    const expectedAssur = assuranceFor(indep as ReviewIndependence, rel);
     if (assur !== undefined && assur !== expectedAssur) {
         out.push(`assurance is ${String(assur)} but review_independence ${String(indep)} derives ${expectedAssur}`);
     }
