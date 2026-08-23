@@ -513,8 +513,28 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 15
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22)"
+    min_scanned: 8
+    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22; 14 live on 2026-08-23)"
+    floor_note: >
+      LOWERED 15 -> 8 on 2026-08-23, and the reason is the same one the
+      adr-evidence-sweep entry four rows above states for its own gap: a floor
+      pinned to the live count reds when the gate is WORKING. This corpus is the
+      active roadmap estate, which exists to shrink — every roadmap that drains to
+      completion takes its file out of the count, and the estate ratchet's whole
+      purpose is to keep that number falling. At 15 the floor was one archive from
+      red, and it went red on exactly that: closing
+      road-to-agentic-engineering-assurance moved the count 15 -> 14 with the gate
+      itself unchanged and nothing wrong. Un-archiving to satisfy a coverage floor
+      would be the tail wagging the dog.
+      8 is a judgement, not a measurement, and is stated as one. It is chosen as
+      the live NON-DRAFT active count on this date, so it leaves room for roughly
+      six further completions before anyone must look at this line again, while
+      staying far above the 0 that the failure this floor actually guards against
+      produces — a scan that stopped seeing the corpus at all reports 0, not 8.
+      Revisit-if: the live count reaches 8 (raise nothing — re-derive the floor
+      from what the estate is expected to hold), or the corpus definition changes
+      so that draft roadmaps stop being counted, which would move the live number
+      without any drain having happened.
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every
