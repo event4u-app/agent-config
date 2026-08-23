@@ -346,7 +346,39 @@ jobs:
         # regression_gate vs the recorded docs/hook-latency.json numbers
         # (regression net applies only when the recorded invocation_path
         # matches; absolute budgets always bind).
-        run: ./scripts-run src/scripts/bench_hook_latency --gate --via-cli
+        # --record-composite: A1.1 of road-to-per-turn-hook-economy-carry. The
+        # bench used to print the per-turn composite and discard it, which made
+        # per_turn_composite.arming_precondition ("at least 10 CI gate readings
+        # from at least 2 distinct runner sessions") impossible to evaluate in
+        # either direction. The reading is written BEFORE the ceiling comparison,
+        # so a run that fails the gate still contributes its number — a store
+        # holding only the passing runs is biased in the direction that makes a
+        # ceiling look met.
+        run: ./scripts-run src/scripts/bench_hook_latency --gate --via-cli --record-composite "$RUNNER_TEMP/composite-reading.jsonl"
+
+      - name: report the composite arming state (never gates)
+        # Reads the reading this job just wrote and says whether the precondition
+        # holds. It cannot hold from ONE run — that is the point: the output names
+        # the shortfall so the accumulation is visible per run instead of being
+        # discovered as a surprise when someone tries to arm the ceiling.
+        if: always()
+        run: ./scripts-run src/scripts/check_composite_arming --store "$RUNNER_TEMP/composite-reading.jsonl"
+
+      - name: upload the composite reading
+        # Durability, and the honest boundary of this phase. A workflow cannot
+        # append to a tracked file without a push, so each run uploads its own
+        # single-record shard and the shards are concatenated into
+        # agents/evidence/hook-composite-readings.jsonl by whoever collects them.
+        # That collection step is NOT built here and is named in the roadmap
+        # rather than implied — a store nothing fills would be the mechanism this
+        # phase exists to avoid.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: composite-reading-${{ matrix.os || runner.os }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/composite-reading.jsonl
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: hook-latency path comparison (diagnostic, never gates)
         # Answers ONE question the gate above cannot: when the cli path misses

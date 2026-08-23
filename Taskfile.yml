@@ -355,6 +355,7 @@ tasks:
       - task: check-council-config-location
       - task: lint-agents-layout
       - task: check-gitignore-freshness
+      - task: check-composite-arming-self-test
       - task: check-no-automerge-key
       - task: check-pack-conformance-fixture
       - task: check-generator-output-coverage
