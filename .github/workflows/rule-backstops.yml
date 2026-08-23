@@ -212,6 +212,14 @@ jobs:
       - name: no auto-merge settings key (ADR-239 namespace ratchet)
         run: ./scripts-run src/scripts/check_no_automerge_key --quiet
 
+      # Third-party pack conformance. PARTIAL by design and it says so: only 3 of
+      # the 6 pack-fitness gates can be driven from a fixture tree, and the other
+      # three are blocked by contracts (a pinned argv grammar, a name-resolved
+      # pack lookup) rather than by effort. docs/contracts/pack-conformance.md is
+      # generated from this harness so the page cannot claim a level it does not
+      # run; the harness fails if the committed page has drifted.
+      - name: pack-conformance fixture (partial, 3 of 6 gates)
+        run: ./scripts-run src/scripts/check_pack_conformance_fixture --quiet
 
       - name: language-and-tone (.md English)
         # Argument shape mirrors the taskfile entry — the two catalog files are
