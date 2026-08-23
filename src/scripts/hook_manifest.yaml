@@ -625,6 +625,37 @@ concerns:
     fail_closed: false
     severity: advisory
     nudge_rank: 2
+  # road-to-trigger-delivered-rule-bodies Phase 1 — the DELIVERY twin of
+  # `skill-route` above: same two slots, opposite payload policy. `skill-route`
+  # ships pointers because a skill is invoked; this ships BODIES because a rule
+  # is something the agent must already be under, and the only datum on
+  # pointer-shaped rule delivery is the 36.2 %-against-48 % run at
+  # docs/CLAIMS.md:188-189.
+  #
+  # DEFAULT OFF, and off means ZERO bytes: the concern returns before reading
+  # `dist/router.json` unless `lean_projection.mode: delivery`. Under every
+  # shipped default it emits nothing, so its `hook-token-budget.json` row is
+  # registered against the derived per-prompt cap rather than a measured
+  # emission — there is no measured emission yet, and saying so is the point.
+  #
+  # DELIBERATELY NOT nudge-class: it carries no `nudge_rank`. A rule body is not
+  # a hint the model may ignore, so the one-ranked-nudge-per-slot exclusivity
+  # above must not suppress it against `delegation-nudge` / `skill-route`, and it
+  # must not suppress them either. It is still advisory and still droppable by
+  # the per-turn injection ceiling, which is the budget that should govern it.
+  #
+  # `pre_compact` re-arms the once-per-session-per-rule seen-set — the same
+  # pin-lost shape `language-mirror` uses on that slot. Bound on `claude` only:
+  # step 2.4's flip is Claude-only by construction (a thin projection without a
+  # body-delivering hook is the pointer arm that already scored 36.2 %), so
+  # binding a default-off concern on hosts whose flip can never happen would pay
+  # slot cost for nothing. fail_closed: false.
+  rule-inject:
+    script: src/scripts/hooks/rule_inject_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    needs_payload_bodies: [input]
   # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
   # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
   # files beyond MUTATION_LINE_THRESHOLD (50 lines; untracked files added
@@ -956,8 +987,8 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, run-continuation]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -975,7 +1006,7 @@ platforms:
     # already bound on `stop` and `session_start`; this adds the write at the
     # moment the loss actually happens. Deterministic rebuild, emits nothing
     # here — the 4,096-byte row it carries is for its session_start restore.
-    pre_compact:      [language-mirror, hot-context]
+    pre_compact:      [language-mirror, hot-context, rule-inject]
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
     # platform where both native events were measured present on the installed
     # binary (2.1.229 — see the evidence page cited on the alias rows below).
