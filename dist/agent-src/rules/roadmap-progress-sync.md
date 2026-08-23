@@ -5,6 +5,7 @@ norm:
   tokens: 2400
   remainder:
     - "../docs/guidelines/agent-infra/roadmap-progress-mechanics.md"
+    - "../docs/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md"
 description: "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open"
 triggers:
   - path_prefix: "agents/roadmaps/"
@@ -13,6 +14,7 @@ triggers:
   - command: "/roadmap:process-full"
 routes_to:
   - "guideline:agent-infra/roadmap-progress-mechanics"
+  - "guideline:agent-infra/roadmap-deferred-resolution-provenance"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 roles: [planner]
@@ -95,7 +97,7 @@ in the estate?**
   *whether the work happens*; only fix-now discharges it, and a carried item
   untouched at the next task boundary is raised again per
   [`active-remediation`](active-remediation.md). Provenance and the argument:
-  [`roadmap-progress-mechanics § Who resolves a deferred item`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md).
+  [`roadmap-deferred-resolution-provenance`](../docs/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md).
 
 ### `deferred_policy` — a declared contract removes the round, never the route
 

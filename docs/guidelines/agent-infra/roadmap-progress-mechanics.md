@@ -266,29 +266,3 @@ bypasses the sweep red-flags in CI — the forcing function that makes
 `merge-gated` annotations are archived by the next `/create-pr` like any other
 completed roadmap; the dashboard still surfaces any stranded
 complete-but-unarchived roadmap so it can never hide inside a partial progress bar.
-
-## Who resolves a deferred item — provenance for the preservation test
-
-Migrated from [`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md)
-§ *Who resolves it — the preservation test* under the P4 pattern
-(`road-to-standing-payload-diet` step 1.3). The rule keeps the Iron Law, the
-route table, the fail-closed clause and the recorded-or-it-did-not-happen
-clause. What moved here is the provenance and the argument — read once, not on
-every session.
-
-- **The residual hole, stated not papered over.** Both authoring seats named
-  it in their own strongest counter: a carried follow-up can still become an
-  indefinite deferral, so this test bounds *who decides*, not *whether the work
-  happens*. Only fix-now discharges it. A carried item untouched at the next
-  task boundary is raised again per
-  [`active-remediation`](../../../src/rules/active-remediation.md).
-- **Why it changed.** Adopted 2026-08-19, unanimous 2/2 council (blind peer
-  review). The prior text — *"Wait for the user"* — handed back a fully
-  analysed choice with four costed options, the low-value interruption
-  [`no-cheap-questions`](../../../src/rules/no-cheap-questions.md) forbids. The
-  gate protects the item, not the maintainer's attention.
-- **`deferred_policy` provenance.** The declared-contract branch that removes
-  the options round without moving the route is `decision 2026-08-20`, AI
-  council 2/2. It is reversible: `wait` is the default, so removing the field
-  restores always-wait.
-
