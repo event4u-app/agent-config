@@ -40,8 +40,16 @@
  *      The second of those is the one that matters: it is the fabricated +744
  *      debit reappearing, i.e. the probe reproduced defect 1 above exactly.
  *
- * Restoring each gives 10/10, and `git diff --stat` over the gate path is empty
- * after both (verified by `cp` from a backup, never `git checkout`).
+ *   3. The `git archive` path filter repointed at a non-existent directory, to
+ *      check the ref-against-itself case cannot pass over two empty
+ *      measurements agreeing with each other. **3 of 10 red.** It went red by
+ *      raising rather than by the `base > 0` assertion, and that is recorded as
+ *      observed rather than as intended:
+ *        `cannot read tree at ref '438955a3f': Command failed: git archive … -- dist/agent-src/nonexistent-xyzzy`
+ *        `expected 2 to be +0 // Object.is equality`
+ *
+ * Restoring each gives 10/10, and the gate file is byte-restored by `cp` from a
+ * backup (verified with `wc -l`), never by `git checkout`.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -131,13 +139,24 @@ describe('measurement parity with the ratchet it reports beside', () => {
         }
     });
 
-    it('reports a zero delta against its own HEAD', () => {
-        const dir = checkoutRefTree(MERGE_BASE, REPO_ROOT);
+    it('reports a zero delta for one ref against itself', () => {
+        // Deliberately ref-against-ref, NOT ref-against-working-tree. The first
+        // version of this test diffed HEAD's tree against the checkout and
+        // asserted zero, which made it fail on any dirty tree — including the
+        // very branch that introduced it, once `task sync` had regenerated
+        // `dist/`. A test that only passes on a clean tree is measuring the
+        // tree, not the gate.
+        const a = checkoutRefTree(MERGE_BASE, REPO_ROOT);
+        const b = checkoutRefTree(MERGE_BASE, REPO_ROOT);
         try {
-            const rows = diffBuckets(measureBuckets(dir), measureBuckets(REPO_ROOT));
+            const rows = diffBuckets(measureBuckets(a), measureBuckets(b));
             expect(rows.reduce((s, r) => s + r.debit + r.credit, 0)).toBe(0);
+            // …and it really read something on both sides, so the zero is not a
+            // pair of empty measurements agreeing with each other.
+            for (const row of rows) expect(row.base).toBeGreaterThan(0);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(a, { recursive: true, force: true });
+            fs.rmSync(b, { recursive: true, force: true });
         }
     });
 });
