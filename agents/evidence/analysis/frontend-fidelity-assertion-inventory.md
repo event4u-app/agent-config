@@ -1,5 +1,7 @@
 # Frontend fidelity — assertion inventory
 
+<!-- evidence-type: analysis -->
+
 Phase 1 of `road-to-frontend-fidelity-calibration`. One row per fidelity
 **claim** the frontend surface makes, its `file:line`, and whether anything
 downstream can falsify it. Line numbers verified 2026-08-23 against the
@@ -21,17 +23,17 @@ The table below is the answer: **13 rows**.
 
 | # | Claim | `file:line` | Falsifiable downstream? | Class | Blocker |
 |---|---|---|---|---|---|
-| A1 | "every layout must work on 320px width" | `src/skills/fe-design/SKILL.md:213` | No — no viewport set includes 320 | `measurable` | — |
-| A2 | "Mobile-first, and 320 px actually works" | `src/skills/fe-design/SKILL.md:88` | No — same gap as A1 | `measurable` | — |
-| A3 | Viewports tested are 1440 / 768 / 375 | `src/skills/design-review/SKILL.md:84` | Yes — the table is the measured set, and it is readable | `measurable` | — |
+| A1 | "every layout must work on 320px width" | `src/skills/fe-design/SKILL.md:236` | No — no viewport set includes 320 | `measurable` | — |
+| A2 | "Mobile-first, and 320 px actually works" | `src/skills/fe-design/SKILL.md:111` | No — same gap as A1 | `measurable` | — |
+| A3 | Viewports tested are 1440 / 768 / 375 | `src/skills/design-review/SKILL.md:90` | Yes — the table is the measured set, and it is readable | `measurable` | — |
 | A4 | "Compare — visually diff the screenshots, flag regressions" | `src/skills/design-review/references/verification-automation.md:16` | No — the comparison is an agent looking at two pictures; no number is emitted | `measurable-but-blocked` | `b-page-capture-primitive` |
 | A5 | `token_violation` is a finding kind the polish gate acts on | `src/agent-src/templates/scripts/work_engine/directives/ui/polish.ts:31` | Consumed, yes. **Produced** by a detector — not wired | `measurable` | — |
-| A6 | A raw literal where the audit found a token is off-brand by construction | `src/skills/fe-design/SKILL.md:81` | Yes — `src/skills/design-tokens/scripts/tokens.ts:415` (`scanFile`) already emits exactly this kind | `measurable` | — |
+| A6 | A raw literal where the audit found a token is off-brand by construction | `src/skills/fe-design/SKILL.md:104` | Yes — `src/skills/design-tokens/scripts/tokens.ts:415` (`scanFile`) already emits exactly this kind | `measurable` | — |
 | A7 | Arbitrary Tailwind values must cite their design source | `src/skills/tailwind-engineer/SKILL.md:105` | No — "cites a source" is a judgement about prose, not a value | `unmeasurable` | — |
-| A8 | Render evidence is required, not optional, for a render-capable stack | `src/agent-src/templates/scripts/work_engine/directives/ui/review.ts:403` | Yes — `render_ok` is a boolean the gate reads | `measurable` | — |
+| A8 | Render evidence is required, not optional, for a render-capable stack | `src/agent-src/templates/scripts/work_engine/directives/ui/review.ts:617` | Yes — `render_ok` is a boolean the gate reads | `measurable` | — |
 | A9 | Browser automation and a live preview URL are prerequisites | `src/skills/design-review/SKILL.md:37` | Partially — presence is checkable, the resulting *visual* claim is not | `measurable-but-blocked` | `b-page-capture-primitive` |
-| A10 | "Touch targets are at least 44x44px on mobile" | `src/skills/design-review/SKILL.md:90` | No — needs a computed box from a rendered page | `measurable-but-blocked` | `b-page-capture-primitive` |
-| A11 | "4.5:1 contrast for text (3:1 large)" | `src/skills/fe-design/SKILL.md:91` | Yes for token pairs (static colour math); no for rendered composites | `measurable-but-blocked` | `b-page-capture-primitive` |
+| A10 | "Touch targets are at least 44x44px on mobile" | `src/skills/design-review/SKILL.md:110` | No — needs a computed box from a rendered page | `measurable-but-blocked` | `b-page-capture-primitive` |
+| A11 | "4.5:1 contrast for text (3:1 large)" | `src/skills/fe-design/SKILL.md:114` | Yes for token pairs (static colour math); no for rendered composites | `measurable-but-blocked` | `b-page-capture-primitive` |
 | A12 | Every animated transition carries a `prefers-reduced-motion` alternative | `src/skills/design-review/SKILL.md:74` | Partially — presence of the query is greppable; that the *alternative presents something* is not | `unmeasurable` | — |
 | A13 | Rendered visual quality has an owner in the persona layer | `src/agent-src/personas/frontend-engineer.md:60` | No — the line explicitly declines the lens | `unmeasurable` | — |
 

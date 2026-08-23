@@ -215,8 +215,9 @@ Work aimed there lands in the guideline.
       violation) are the seed, not the answer.
       verify (discharged): the artefact exists at
       `agents/evidence/analysis/frontend-fidelity-assertion-inventory.md` and every row's
-      `file:line` resolves — the `sed -n "${l}p"` sweep over all 17 distinct citations in
-      the table produced **no empty line**. **Both halves hold.**
+      `file:line` resolves — the `sed -n "${l}p"` sweep over all **18** distinct citations
+      produced **no empty line**, and every line was re-read for *content* rather than
+      merely non-emptiness. **Both halves hold, re-verified at the final commit.**
 
       **13 rows, not the 3 seeds.** The three known rows are A1/A2 (320 px floor), A4
       (visual diff) and A5 (`token_violation` consumed with no producer). Ten more came
@@ -241,6 +242,21 @@ Work aimed there lands in the guideline.
       than carried: A7 (a value's *source citation* is prose beside the value, invisible
       to a detector), A12 (`grep` proves a `prefers-reduced-motion` block exists, never
       that it presents an alternative) and A13 (no persona owns rendered visual quality).
+
+      **The citations DRIFTED mid-roadmap and were re-anchored; the drift is recorded
+      because the verify would otherwise have been green on stale lines.** Phase 1 wrote
+      the table, then Phases 5.2, 6, 7.1 and 9.3 edited the very files it cites. Re-run at
+      the final commit, **six** citations pointed at the wrong content and one —
+      `fe-design/SKILL.md:213` — pointed at a **blank line**, which is the one condition
+      this step's verify actually tests. Re-anchored: `fe-design` 81→104, 88→111, 91→114,
+      213→236; `design-review` 84→90, 90→110; `review.ts` 403→617.
+
+      Two things follow. First, a `file:line` inventory over files the same roadmap edits
+      is drift by construction — the same defect step 4.1's verify hit from the other side,
+      and worth stating twice because it bit twice. Second, "no empty line" is a weak
+      test: five of the six drifted citations resolved to a **non-empty wrong** line and
+      would have passed it. The sweep above therefore re-read each line's content, and
+      that is the check that caught them.
 
 - [x] **1.2 Classify each row: measurable, measurable-but-blocked, or
       unmeasurable.** "Blocked" must name the blocker id below.

@@ -1,5 +1,7 @@
 # Frontend fidelity — pre-registered falsifiers
 
+<!-- evidence-type: analysis -->
+
 Step 2.3 of `road-to-frontend-fidelity-calibration`. Written and committed
 **before** any Phase 3 step is checked off, so that the bar a dimension has to
 clear was set by someone who did not yet know whether it would clear it.
