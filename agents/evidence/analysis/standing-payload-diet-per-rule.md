@@ -167,6 +167,27 @@ None of the four is claimed as sufficient. Together they are the same order of
 magnitude as the residual, which is the honest statement: the lever is real, the
 pilot proves it, and closing 28,702 needs several more tranches — not one.
 
+**Re-measured after merging `origin/main` (14 commits), and the delta is
+invariant.** The absolute figures above were taken before that merge. After it:
+
+| | tokens |
+|---|---:|
+| merge-base, main's `dist/agent-src/rules` in place | 137,812 |
+| after the diet | **136,452** |
+| **delta** | **−1,360** |
+
+The absolutes each moved +104 because main's commits added skills to the catalog
+bucket; the **rules** bucket moved by exactly −1,360 on both readings, which is
+the number this diet is responsible for.
+`check_standing_payload_delta --base $(git merge-base origin/main HEAD)` reports
+it as a **credit of −1,360 against a debit of +0** — the one-sided ledger step
+0.5 replaced would have shown `+0` here and read as neutral.
+
+**The gate was already red at the merge-base**, by +30,166 over ceiling. It is
+still red, by +28,806. Both readings are recorded so the direction is checkable:
+this change moves the number toward the ceiling and does not reach it, and
+`baseline_tokens` is untouched either way.
+
 ### 3b. `check_standing_rule_delivery` — CANNOT observe this diet, and that is a finding
 
 This is a defect in the criterion's premise, discovered by executing it, and it
