@@ -1,0 +1,9 @@
+# Fixture — a settings template that violates check_no_automerge_key.
+# Committed on purpose: it is the sensitivity proof for the gate. A create-only
+# canary cannot reach that gate (both real corpus files already exist, so a
+# planted file lands outside the corpus and the gate correctly stays green), so
+# the red is proven here instead. Never installed, never projected.
+personal:
+  autonomy: auto
+git:
+  autoMerge: true

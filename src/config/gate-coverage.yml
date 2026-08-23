@@ -42,13 +42,26 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 272 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 278 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-22 and it returns 272).
-# **47 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 44 of those 47 are listed below.** The manifest is
+# re-run 2026-08-23 and it returns 278).
+# **55 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 52 of those 55 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~17 % of the population.
+# carry a floor, and covers ~19 % of the population.
+#
+# RECOUNTED on 2026-08-23 while adding `check_no_automerge_key`, and BOTH numbers
+# were stale before the recount by more than the one row this change adds — which
+# is the fifth time, and the reason this paragraph keeps asking to be computed
+# rather than adjusted. The previous prose said 272 / 47 / 44 while the file
+# already carried 51 rows and the population function already returned 277: six
+# scripts and seven rows had landed since 2026-08-22 without touching this text.
+# Derivation, so the next reader checks rather than trusts:
+# `grep -c '^  - id:' src/config/gate-coverage.yml` returns 52; every listed row
+# is an emitter, because a row that did not emit could carry no floor; the same
+# THREE emitters remain deliberately unlisted (`lint_evidence_artifacts`,
+# `adr_cite_check`, `check_new_adr_evidence`, each with its reason at the place
+# its row would have sat); 52 + 3 = 55. The population comes from the function.
 #
 # RECOUNTED on 2026-08-22, and it was wrong on every figure before the recount —
 # which is the fourth time, and the reason this paragraph keeps asking to be
@@ -1421,3 +1434,39 @@ gates:
   # so a future change that silently narrowed its corpus to zero would pass. The
   # honest close is the rename, in its own change, where 26 files of churn are
   # the subject rather than a side effect.
+
+  - id: check_no_automerge_key
+    argv: ["--quiet"]
+    min_scanned: 200
+    corpus: "every declared key in the two settings files — `src/config/agent-settings.template.yml` plus `src/scripts/schemas/agent-settings.schema.json` (304 on 2026-08-23, so the floor sits well below the live count and far above a collapse)"
+    status: enforced
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus: both settings files are
+      tracked and always exist, so a planted file lands outside the corpus and
+      the gate correctly stays green. Measured on a previous attempt, where the
+      gate was then mis-reported as dead. Same class as `check_condensation` and
+      `check_ci_local_parity` — the only possible violation is a modification of
+      an existing tracked artefact. The red is proven instead by the committed
+      violating fixture `tests/fixtures/automerge-key/` plus two recorded
+      sabotage probes in `tests/scripts/check_no_automerge_key.test.ts`.
+    note: >
+      The no-canary reason above is the create-only contract rather than an
+      omission. Both corpus files are tracked and always exist, so a planted file
+      lands OUTSIDE the corpus and the gate correctly stays green — measured on a
+      previous attempt at this gate, where it was then mis-reported as dead. The
+      only violation this gate can have is a modification of an existing tracked
+      artefact, which is the same class as `check_condensation` and
+      `check_ci_local_parity`, and the CANARY section above already states that
+      such a gate carries no recipe and is reported UNPROVEN rather than green.
+
+      The red is proven elsewhere instead, deliberately and committed:
+      `tests/fixtures/automerge-key/` is a violating settings pair the gate must
+      refuse, and `tests/scripts/check_no_automerge_key.test.ts` asserts exit 1
+      against it, exit 2 on a missing corpus, and records the two sabotage probes
+      (emptying the forbidden set → 4 of 9 red; widening the matcher from a key
+      to a bare word → 6 of 9 red).
+
+      The floor is a KEY count, not a file count. Two files is a constant, and a
+      floor under a constant can never trip — the false-count shape this manifest
+      rejects. 304 keys collapses to 0 if either root moves, which is what the
+      floor is for.
