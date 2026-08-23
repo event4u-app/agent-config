@@ -18,6 +18,7 @@ import {
     agent_directive,
 } from '../../delivery_state.js';
 import { has_design_system, placeholder_paths, provided_artifact } from './design.js';
+import { _playbook_lines, _scaffold_playbooks } from './scaffold.js';
 import {
     is_ambiguous_stack,
     bundle_line,
@@ -25,6 +26,21 @@ import {
 } from './stack_bundles.js';
 
 /** Map `state.stack.frontend` → agent-directive skill name. */
+/**
+ * Task words that make a playbook relevant to the `apply` verb.
+ *
+ * Same shape as `scaffold`'s list and deliberately a SEPARATE constant: `apply` implements
+ * into an existing surface, so a repository may reasonably carry a playbook for one verb and
+ * not the other. One shared list would silently dispatch a scaffold-only procedure here.
+ */
+export const APPLY_VERB_TERMS: ReadonlyArray<string> = [
+    'component',
+    'page',
+    'route',
+    'screen',
+    'view',
+];
+
 export const STACK_DIRECTIVES: Record<string, string> = {
     'blade-livewire-flux': 'ui-apply-blade-livewire-flux',
     'blade-livewire': 'ui-apply-blade-livewire',
@@ -267,8 +283,14 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
         });
     }
     const provided = provided_artifact(state.ui_design as Record<string, Any> | null);
+    // The repository's own procedure goes ahead of the stack skill when it has one. Empty
+    // when it does not, which is what keeps a project with no playbook home byte-identical.
+    // Imported from `scaffold` rather than duplicated: two copies of a scope-match rule
+    // drift, and the drift would be invisible — both lanes would still emit *something*.
+    const playbook_lines = _playbook_lines(_scaffold_playbooks(state, APPLY_VERB_TERMS));
     const lines: string[] = [
         agent_directive(directive),
+        ...playbook_lines,
         `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
         bundle_line(state.stack, 'build', stack_label),
         '> Microcopy is locked — every button label, empty-state ' +

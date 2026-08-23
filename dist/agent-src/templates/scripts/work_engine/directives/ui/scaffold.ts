@@ -60,12 +60,169 @@ export const BRAND_TOKEN_PATHS: ReadonlyArray<string> = [
 ];
 
 /**
+ * Conventional location of the project's `Playbook` contexts (ADR-244).
+ *
+ * A playbook is this repository's OWN procedure for a task, and it outranks a shipped
+ * skill: the generic skill answers a generic question, while the playbook carries decisions
+ * the repository already made (file layout, barrel exports, naming) that no shipped skill
+ * can know. Mirrors {@link BRAND_TOKEN_PATHS} deliberately — same acyclic,
+ * degrades-gracefully shape: present → the repository's command is proposed first, absent →
+ * nothing is emitted and the lane is byte-identical.
+ */
+export const PLAYBOOK_HOME = path.join('agents', 'settings', 'contexts');
+
+/** A playbook the lane may act on: `configured` grade, matching scope, non-empty `invokes`. */
+export interface ScaffoldPlaybook {
+    readonly file: string;
+    readonly task: string;
+    readonly invokes: readonly string[];
+}
+
+/**
+ * Read a playbook's head. Only `configured` playbooks with a `scope` that covers
+ * `scope_root` are returned — an `observed` playbook is advisory (per the
+ * `playbook-precedence` rule) and MUST NOT be dispatched ahead of a shipped skill, because
+ * at least one of its ids was never resolved in the tree.
+ */
+export function _read_playbook(file: string, scope_root: string): ScaffoldPlaybook | null {
+    let text = '';
+    try {
+        text = fs.readFileSync(file, 'utf8');
+    } catch {
+        return null;
+    }
+    if (!text.startsWith('---')) return null;
+    const end = text.indexOf('\n---', 3);
+    if (end < 0) return null;
+    const head = text.slice(3, end);
+
+    const grade = /^grade:\s*["']?([A-Za-z]+)["']?\s*$/m.exec(head);
+    if (grade === null || grade[1] !== 'configured') return null;
+
+    const scope = /^scope:\s*["']?(.+?)["']?\s*$/m.exec(head);
+    const scope_value = scope?.[1] ?? '';
+    // `repo` covers everything; otherwise the playbook's scope must be a prefix of the
+    // project's scope_root (or equal to it). A partial match is NOT a match — a playbook
+    // for `packages/ui` says nothing about `packages/api`.
+    const in_scope =
+        scope_value === 'repo' ||
+        (scope_value !== '' && (scope_root === scope_value || scope_root.startsWith(`${scope_value}/`)));
+    if (!in_scope) return null;
+
+    const task = /^task:\s*["']?(.+?)["']?\s*$/m.exec(head);
+    const invokes: string[] = [];
+    let in_list = false;
+    for (const line of head.split('\n')) {
+        if (/^invokes:\s*$/.test(line)) {
+            in_list = true;
+            continue;
+        }
+        if (in_list) {
+            const item = /^\s+-\s*["']?(.+?)["']?\s*$/.exec(line);
+            if (item?.[1] !== undefined) {
+                invokes.push(item[1]);
+                continue;
+            }
+            in_list = false;
+        }
+        const inline = /^invokes:\s*\[(.*)\]\s*$/.exec(line);
+        if (inline?.[1] !== undefined) {
+            for (const part of inline[1].split(',')) {
+                const v = part.trim().replace(/^["']|["']$/g, '');
+                if (v.length > 0) invokes.push(v);
+            }
+        }
+    }
+    // A `configured` playbook with no ids cannot be dispatched: there is nothing to propose,
+    // and proposing the empty set as "the repository's procedure" would be worse than silence.
+    if (invokes.length === 0) return null;
+    return { file, task: task?.[1] ?? '(untitled)', invokes };
+}
+
+/**
+ * The `configured` playbooks whose scope covers this project, for the given verb.
+ *
+ * `verb` is matched against the playbook's `task` as a plain lower-cased substring. That is
+ * deliberately loose: a playbook titled "Add a new component to this repository" must match
+ * the `scaffold` lane's component work, and a stricter match would make the whole mechanism
+ * unreachable for the phrasing `playbook-authoring` actually generates.
+ */
+export function _scaffold_playbooks(
+    state: DeliveryState,
+    verb_terms: ReadonlyArray<string>,
+    root: string | null = null,
+): ScaffoldPlaybook[] {
+    const base = root !== null ? root : process.cwd();
+    const home = path.join(base, PLAYBOOK_HOME);
+    let names: string[] = [];
+    try {
+        names = fs.readdirSync(home).filter((n) => n.endsWith('.md')).sort();
+    } catch {
+        return [];
+    }
+    const stack = _pyTruthy(state.stack) ? state.stack : {};
+    const scope_root_raw = _isDict(stack) ? stack['scope_root'] : undefined;
+    const scope_root = typeof scope_root_raw === 'string' ? scope_root_raw : '';
+
+    const out: ScaffoldPlaybook[] = [];
+    for (const name of names) {
+        const pb = _read_playbook(path.join(home, name), scope_root);
+        if (pb === null) continue;
+        const task_lower = pb.task.toLowerCase();
+        if (!verb_terms.some((t) => task_lower.includes(t))) continue;
+        out.push(pb);
+    }
+    return out;
+}
+
+/**
+ * The lines that put the repository's own procedure ahead of the stack skill.
+ *
+ * Empty array when no playbook matches — that is what keeps a project with no playbook home
+ * byte-identical to before this existed. The commands are PROPOSED, never run: the
+ * engine-never-writes contract is unchanged, and a playbook is authoritative about *what*,
+ * never about who runs it.
+ */
+export function _playbook_lines(playbooks: ReadonlyArray<ScaffoldPlaybook>): string[] {
+    if (playbooks.length === 0) return [];
+    const lines: string[] = [
+        '> **This repository has its own procedure for this, and it goes FIRST.** A shipped ' +
+            'skill is a generic answer; the playbook below carries decisions this repository ' +
+            'already made. Use the stack skill only for what the playbook does not cover.',
+    ];
+    for (const pb of playbooks) {
+        lines.push(
+            `> \`${pb.file}\` — ${pb.task}: propose \`${pb.invokes.join('`, `')}\` ` +
+                'before any stack-skill step. Propose, never run — the human runs it.',
+        );
+    }
+    return lines;
+}
+
+/**
  * Stack-agnostic directive that derives the scaffold plan.
  *
  * The plan IS stack-agnostic, so plan derivation is a single directive
  * regardless of frontend; only the build stage dispatches per stack.
  */
 export const PLAN_DIRECTIVE = 'ui-scaffold-plan';
+
+/**
+ * Task words that make a playbook relevant to the `scaffold` verb.
+ *
+ * Kept small and concrete rather than clever: these are the nouns
+ * `playbook-authoring` derives from a repository's own creation scripts
+ * (`new:component`, `new:package`, `generate:page`), so the terms and the generator are
+ * two halves of one contract.
+ */
+export const SCAFFOLD_VERB_TERMS: ReadonlyArray<string> = [
+    'component',
+    'page',
+    'package',
+    'workspace',
+    'route',
+    'screen',
+];
 
 /**
  * Map `state.stack.frontend` → build-stage agent-directive skill name.
@@ -324,10 +481,12 @@ function _delegate_build(state: DeliveryState, scaffold: Record<string, Any>): S
     const page_count = Array.isArray(pages) ? pages.length : 0;
     const routes = scaffold['routes'];
     const route_count = Array.isArray(routes) ? routes.length : 0;
+    const playbook_lines = _playbook_lines(_scaffold_playbooks(state, SCAFFOLD_VERB_TERMS));
     return new StepResult({
         outcome: Outcome.BLOCKED,
         questions: [
             agent_directive(directive),
+            ...playbook_lines,
             `> Stack: \`${stack_label}\`. Scaffold plan is ready ` +
                 `(${page_count} page(s), ${route_count} route(s)). Create the ` +
                 'skeleton from `state.ui_scaffold` — routes, layout shell, and ' +
