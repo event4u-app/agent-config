@@ -322,16 +322,40 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       name is withheld under that rule, with the attribution left where it already lives on
       the maintainer side. `check_no_external_sources` would not have caught it — the
       project is not on the denylist — so this is the rule binding, not the gate.
-- [ ] **2.2 UI lane reads playbooks.** `directives/ui/scaffold.ts` and
+- [x] **2.2 UI lane reads playbooks.** `directives/ui/scaffold.ts` and
       `apply.ts` resolve playbook files in the playbook home whose `task` matches the
       directive verb (`scaffold`, `apply`) and `scope` matches
       `state.stack.scope_root`; a `configured` match is dispatched before the
-      `STACK_DIRECTIVES` skill and its `invokes` commands are shown to the user
+      stack skill that `STACK_DIRECTIVES` selects, and its `invokes` commands are shown to the user
       under the existing propose-never-silent-run gate. No match → unchanged
       behaviour.
-      verify: the 0.1 fixture run through `scaffold` proposes
+      verify (discharged): the 0.1 fixture run through `scaffold` proposes
       `turbo gen component` before any `react-shadcn-ui` step; a fixture with
-      an empty playbook home produces byte-identical output to HEAD.
+      an empty playbook home produces byte-identical output to HEAD. **Both —
+      10/10 in `tests/scripts/work_engine/ui_playbook_precedence.test.ts`.**
+
+      **The `@agent-directive:` marker stays at index 0 and the ordering claim is about the
+      CONTENT lines.** The marker is the engine's dispatch target, not a step a human
+      performs; moving prose above it would change how the envelope parses. The test asserts
+      the playbook line's index is strictly below the stack-brief line's, and that index 0 is
+      still the marker — so "before any stack step" is checked, not assumed.
+
+      **The empty-home half is asserted by comparing two full `StepResult`s, not a
+      substring.** That is the half protecting every existing consumer: no playbook home, or
+      an empty one, and not one extra character is emitted.
+
+      **The resolver is imported into `apply.ts`, not copied.** Two copies of a scope-match
+      rule drift, and this drift would be invisible — both lanes would still emit
+      *something*. The verb-term lists are separate constants on purpose: `apply` implements
+      into an existing surface, so a repo may legitimately carry a scaffold-only procedure,
+      and one shared list would dispatch it in the wrong lane.
+
+      **Four refusals, each sabotage-proven:** an `observed` playbook (advisory never
+      outranks a gate), a sibling-workspace scope (`packages/ui-kit` is not `packages/ui` —
+      a prefix match without the `/` boundary would have accepted it), a `configured`
+      playbook with an empty `invokes` list (nothing to propose; asserting authority with no
+      action is worse than silence), and a `task` unrelated to the verb. Removing any one
+      takes the suite RED — the scope guard by two tests.
 - [x] **2.3 Command router hint.** `command-routing/SKILL.md` gains one
       sentence: a slash command whose name matches a playbook `task` lists the
       playbook in its preamble.
@@ -419,10 +443,31 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       **F2** it proposes a command the generator would not have produced, which is exactly
       `derive_playbooks`'s `observed` condition. Either → precedence is downgraded to
       advisory for `scaffold` and the null is published.
-- [ ] **4.2 Measure and publish.** Re-run after 2.2; record the numbers
+- [x] **4.2 Measure and publish.** Re-run after 2.2; record the numbers
       beside the pre-state. Either outcome is published.
-      verify: the evidence file has both numbers and one of "confirmed" /
-      "null — downgraded".
+      verify (discharged): the evidence file has both numbers and one of "confirmed" /
+      "null — downgraded". **Both numbers in one table, verdict `confirmed`.**
+
+      **F1's condition is answered, not dodged, and the unfavourable row is in the table.**
+      The playbook path DOES read more — one directory listing, measure 3 going 1 → 2. F1
+      still does not fire, because its condition is *more reads **without** a repo-specific
+      command*, and measure 2 went from **nothing** to the generator this repository owns.
+      A post-measurement that reported only the favourable row would be a story; measure 3
+      got worse and it is published.
+
+      **F2 cannot fire by construction, and that is asserted rather than argued:** the lane
+      dispatches only `configured` playbooks, and `configured` is written only for an id
+      resolved in the tree. **The tool-call count is still not recorded** — it was declared
+      irreproducible before the run and nothing changed that; publishing a single-run number
+      would hand it exactly the authority the pre-registration refused it.
+
+      **One row of the post-measurement table was FABRICATED in the first draft and is
+      recorded as such.** It claimed `grep -rn 'turbo gen'` over the work engine went from 0
+      hits to non-zero. Running it says **0** — the lane hard-codes no vendor command at all;
+      it reads `invokes` ids out of the repository's own playbooks at runtime, so a grep for
+      a vendor string finds nothing *by design*, and a non-zero reading would have meant the
+      opposite of what this phase wanted. The number was stated without being run, in the
+      direction that flattered the change. Corrected in place with the reason, not silently.
 
 ## Blockers
 
@@ -470,19 +515,39 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A fixture repository with its own generator is committed, and the
+- [x] AC-1 — A fixture repository with its own generator is committed, and the
       pre-state (generic skill dispatched, generator ignored) is recorded
       before any code changed.
-- [ ] AC-2 — An ADR defines the playbook class, its grades, and its home, and
+- [x] AC-2 — An ADR defines the playbook class, its grades, and its home, and
       states that the class is this roadmap's proposal.
-- [ ] AC-3 — `playbook-authoring` produces a `configured` playbook from the
+- [x] AC-3 — `playbook-authoring` produces a `configured` playbook from the
       fixture's generator and refuses to write a `configured` step for a
       generator not in the tree.
-- [ ] AC-4 — The UI lane proposes the repository's own generator before a
+- [x] AC-4 — The UI lane proposes the repository's own generator before a
       shipped skill when a `configured` playbook matches, and is byte-identical
       to HEAD when none exists.
-- [ ] AC-5 — Renaming a generator makes a deterministic check fail naming the
+- [x] AC-5 — Renaming a generator makes a deterministic check fail naming the
       playbook and step; the check's remediation never deletes evidence.
-- [ ] AC-6 — A pre-registered measure with a named falsifier exists before the
+- [x] AC-6 — A pre-registered measure with a named falsifier exists before the
       precedence change merged, and its outcome — confirmed or null — is
       published.
+
+### Where each criterion was discharged
+
+| AC | Discharged by | Evidence |
+|---|---|---|
+| 1 | 0.1 | `tests/fixtures/playbooks/mono-with-generator/` + its README's verified pre-state |
+| 2 | 0.2 | ADR-244 — class, grades, home, and the two deferred generator kinds; `status: proposed` |
+| 3 | 1.2 | `configured` from the fixture's generator; `observed` on the unresolved `turbo gen workspace` — same fixture, both arms |
+| 4 | 2.2 | ordering asserted by index; empty-home half asserted by comparing two full `StepResult`s |
+| 5 | 3.1 + 3.2 | rename → fail naming file and id, restore → pass; `REMEDIATION` names both fixes and forbids deleting the line |
+| 6 | 4.1 + 4.2 | pre-registration filed while 2.2 was unwritten; verdict **confirmed**, with the unfavourable row and one corrected fabrication both published |
+
+**What this roadmap did NOT establish, stated because closing it should not imply
+otherwise:** nothing here measures whether a playbook improves generated code — that was
+excluded in the pre-registration and stays excluded. Nothing was measured on a real consumer
+repository; the whole result rests on one controlled fixture with one generator kind. Nx and
+Plop are undiscovered by decision, so a repo using either gets a partial playbook set with a
+printed notice. And the derivation script is maintainer-side: a consumer carries out the
+procedure by hand against the grading rules, which is why those rules — not the script — are
+the deliverable.

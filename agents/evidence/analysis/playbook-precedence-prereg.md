@@ -73,3 +73,67 @@ says so, and this file records the null. Neither firing → confirmed, with the 
 Re-run when the `scaffold` lane's resolution changes shape (a new `STACK_DIRECTIVES` entry
 does not count), or when a second fixture with a different generator kind lands — at which
 point the single-fixture caveat above is what needs revisiting first.
+
+---
+
+# Post-measurement (2026-08-23, same day, after step 2.2)
+
+## The numbers, beside the pre-state
+
+| # | Measure | Pre-state (HEAD) | After 2.2 |
+|---|---|---|---|
+| 1 | directives dispatched | 2 | **2** — unchanged; the playbook is proposed *inside* the existing directive, not as a third one |
+| 2 | repository-specific command proposed | none | **`turbo gen component`**, ahead of the stack-skill brief |
+| 3 | files read to decide | 1 (`state.stack`) | **2** — `state.stack` plus one directory listing of the playbook home |
+| 4 | `grep -rn 'turbo gen'` over the work engine | 0 hits | **still 0 hits** — see below; this row was WRONG in the first draft |
+
+### Row 4 stayed at zero, and that is the correct outcome — the first draft of this table said otherwise
+
+The draft claimed row 4 went non-zero. Running it says **0**, and the claim was wrong rather
+than the measurement: the lane hard-codes no vendor command at all. It reads `invokes` ids
+out of the repository's own playbooks at runtime, so a grep for a vendor string over the
+engine finds nothing *by design*. A non-zero reading here would have meant the opposite of
+what this phase wanted — a generic lane naming one vendor's generator.
+
+Recorded rather than quietly corrected, because the draft row was a fabricated measurement:
+it stated a number nobody had run, in the direction that flattered the change. The pre-state
+row is the same command and is genuinely 0 both times; what changed is measure 2, which is
+the row that was always carrying the claim.
+
+## Verdict: **confirmed**, and F1 is answered rather than dodged
+
+**F1 asked whether the playbook path reads *more* without proposing a repository-specific
+command.** It does read more — one directory listing, measure 3 going 1 → 2. F1 does **not**
+fire, because its condition is *more reads **without** a repo-specific command*, and measure
+2 went from **nothing** to the generator this repository actually owns. The cost is one
+`readdirSync` on a path that usually does not exist; the gain is the difference between
+proposing a generic component step and proposing the repository's own procedure.
+
+Stating the read increase plainly matters more than the verdict: a pre-registration whose
+post-measurement reports only the favourable row is a story. Measure 3 got worse. It is in
+the table.
+
+**F2 asked whether it proposes a command the generator would not have produced.** It cannot,
+by construction, and that is asserted rather than argued: the lane dispatches only
+`grade: configured` playbooks, and `configured` is written only for an id resolved in the
+tree. Four tests pin the refusals — an `observed` playbook, a sibling-workspace scope, an
+empty `invokes` list, and an unrelated `task` all produce **no** proposal — and each takes
+the suite RED when its guard is removed.
+
+## What is measured and what is not
+
+- **Measured:** the lane reaches the repository's own procedure, on a controlled fixture,
+  with the refusals proven by sabotage.
+- **Not measured:** whether an agent following the proposal produces better code. That was
+  excluded in the pre-registration and stays excluded.
+- **Not measured:** any real consumer repository. One fixture, one generator kind.
+- **The tool-call count** is still not recorded: it was declared irreproducible before the
+  run and nothing changed that. Publishing a single-run number here would give it exactly
+  the authority the pre-registration refused it.
+
+## Empty-home guarantee
+
+The other half of 2.2's verify is the one protecting every existing consumer: with no
+playbook home — or an empty one — the lane's output is **identical**, asserted by comparing
+two full `StepResult`s rather than a substring. Not one extra character reaches a project
+that has no playbooks.
