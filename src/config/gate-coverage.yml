@@ -513,8 +513,8 @@ gates:
 
   - id: check_requirements_trace
     argv: []
-    min_scanned: 15
-    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration, 2026-08-22)"
+    min_scanned: 10
+    corpus: "roadmap files at the top level of agents/roadmaps/ (25 at registration 2026-08-22; 15 at the merge-base 2026-08-23; 14 after road-to-standing-payload-diet archived). LOWERED 15 -> 10 on 2026-08-23 because the floor was tracking the exact live count and therefore reddened on a NORMAL archival: at the merge-base the count was 15 against a floor of 15, so any completed roadmap redded this gate, and archiving a completed roadmap is this corpus's intended lifecycle rather than a defect. Archival is the one deletion a top-level roadmap is SUPPOSED to have, which is precisely the case this file's own contract tells a floor to leave room for (\"set the floor below the true corpus (room for legitimate deletions) but far above a collapse\"). 10 leaves room for four more archives and stays far above the collapse this floor exists to catch — a moved or emptied agents/roadmaps/ reading 0 to 2."
     status: enforced
     no_canary_reason: >-
       this gate is a LISTING, not an enforcement: `main()` returns 0 on every
