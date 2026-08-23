@@ -341,6 +341,10 @@ tasks:
     silent: true
     desc: Run the pack-conformance fixture harness (conformant fixture + one seeded twin per fixture-provable gate)
     cmd: ./scripts-run src/scripts/check_pack_conformance_fixture {{.QUIET_FLAG}}
+  grade-target-readiness-self-test:
+    silent: true
+    desc: Prove the target-readiness grader still discriminates (knockout min, not-detectable != 0, no aggregate score)
+    cmd: ./scripts-run src/scripts/grade_target_readiness --self-test
 
   check-generator-output-coverage:
     silent: true

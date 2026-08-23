@@ -202,6 +202,15 @@ jobs:
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
 
+      # The target-readiness grader has no repo corpus to scan — it grades a
+      # TARGET repository, so on this tree there is nothing to grade. What CI can
+      # prove is that it still DISCRIMINATES: knockout verdict is the min, an
+      # undetectable dimension stays null rather than 0, and the render emits no
+      # aggregate score. That is exactly what --self-test drives, over synthetic
+      # roots in a tmpdir.
+      - name: target-readiness grader discriminates (self-test)
+        run: ./scripts-run src/scripts/grade_target_readiness --self-test
+
       # ADR-239:185-188 leaves merge authority to the owner. A settings key named
       # autoMerge / auto_merge / mergePolicy would grant it by configuration
       # rather than by decision, so the key space is ratcheted shut. Reversible
