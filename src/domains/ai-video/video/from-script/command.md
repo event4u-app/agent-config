@@ -90,17 +90,29 @@ For each scene blueprint:
    it, hard-block before the first live call — confirmation does not
    override the cap.
 3. **Calibration probe (default on; `--no-calibrate` skips).** Before the
-   batch, render exactly **one** still and **one** clip, then read the
-   `charged_usd` the pipeline already writes to
-   `<project>/scenes/<id>/cost.json` and print one line:
+   batch, render exactly **one** still and **one** clip, then run:
+
+   ```bash
+   scripts/ai-video/lib/calibrate-cost.sh <project> <scene-id> \
+     --adapter <id> --model <id> --scenes <n>
+   ```
+
+   It reads the `charged_usd` the pipeline already writes to
+   `<project>/scenes/<id>/cost.json` and prints one line:
 
    ```
    calibration: modeled $0.0800/s · charged $0.1100/s · +37.5 % · extrapolated batch $4.40 (modeled $3.20)
    ```
 
    Re-confirm **only** when the charged figure exceeds the modeled one by
-   more than **25 %**. Under that, print the line and continue — a
-   calibration that interrupts on every run is a confirmation nobody reads.
+   more than **25 %** — the script exits **13** in that case and **0**
+   otherwise. Under the threshold, print the line and continue: a calibration
+   that interrupts on every run is a confirmation nobody reads.
+
+   Exit 13 is a halt for a human, not a failure. `--max-spend-usd` is not a
+   substitute for it — that cap bounds *total spend*, while this catches a
+   wrong *per-second model*, which is what makes the total wrong in the first
+   place.
 
    This folds into the existing `lib/operator-pick.sh` moment rather than
    adding a gate of its own, so the operator sees the calibration line at

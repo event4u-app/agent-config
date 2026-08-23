@@ -288,9 +288,14 @@ aiv_fal_capability() {
     jq -e --arg m "${model}" '.models[$m]' "${FAL_MANIFEST}" >/dev/null 2>&1 \
       || aiv_die 7 "${ADAPTER_ID}: model not in manifest: ${model}"
     _fal_warn_unverified "${model}"
-    jq --arg m "${model}" \
-      '.models[$m] | {audio: (if .audio_sync then "native" else "none" end), model: $m} + .' \
-      "${FAL_MANIFEST}"
+    # Emission goes through the shared helper so the decay markers
+    # (`verified_at` / `recheck_by`, derived from the trace index) appear here
+    # too. fal is the adapter that actually CARRIES smoke_trace ids, so a
+    # capability path that skipped them would leave the only traced adapter as
+    # the one place the dates are invisible. Model validation, the
+    # manifest-missing check and the unverified warning stay above — this
+    # replaces the JSON emission only.
+    aiv_capability_recheck "${ADAPTER_ID}" "${model}" "${FAL_MANIFEST}"
     return 0
   fi
   if [ -f "${FAL_MANIFEST}" ] && command -v jq >/dev/null 2>&1; then
