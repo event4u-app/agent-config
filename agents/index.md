@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **718 artefacts** in this package.
+Maintainer-facing index of all **719 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -632,7 +632,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (108)
+## Guidelines (109)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -705,6 +705,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-asset-discipline`](../docs/guidelines/design-asset-discipline.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
 | guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |
