@@ -313,7 +313,7 @@ roadmap with its own evidence, not smuggled in behind five real defects.
 
 ## Phase 4 — One certainty vocabulary, or an honest declaration of prose
 
-- [ ] **4.1 Inventory and collapse.** Four vocabularies describe the same
+- [x] **4.1 Inventory and collapse.** Four vocabularies describe the same
       property today: `prompts.ts:133-135` and `:307`
       (`confirmed | inferred | speculative`), `:319` (`unverified-by-council`),
       `:168` (`CONFIDENCE: high|med|low`, format line at `:167`), and
@@ -322,10 +322,33 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       in the skill which property each surviving term describes — evidence
       quality is not the same property as a member's certainty in a pick, and
       collapsing those two would be a worse outcome than four vocabularies.
-      verify: `grep -nE 'confirmed|inferred|speculative|unverified-by-council' src/scripts/ai_council/prompts.ts`
-      returns terms from the chosen scale only, and the skill names the property
-      each surviving term measures.
-- [ ] **4.2 Give `unverified:` a parser or declare it prose.** A repo-wide grep
+      verify (discharged): the grep now returns only `confirmed` / `inferred` /
+      `speculative` — as scale terms at `:133-135`, `:307` and (newly aligned)
+      `:124`, plus three ordinary-English uses of the same words in prose at
+      `:95`, `:258`, `:838`. `unverified-by-council` returns zero hits.
+      `src/skills/ai-council/references/output-and-synthesis.md` carries the
+      property table naming what each surviving term measures.
+
+      **There were SIX vocabularies, not four**, and the two the step did not
+      enumerate are why its grep alone would have passed over a live defect:
+      `prompts.ts:124` had the optimize lens's own `hypothesis` versus
+      `confirmed` — a lens-local synonym for `speculative`, which is the exact
+      mechanism by which one scale becomes four — and `:258` has
+      `needs-verification` in the Blind-spots section. The first is collapsed
+      onto the scale. The second is KEPT: it measures the provenance of the host
+      agent's own inference (reasoned from context vs read from a member
+      response), which is not evidence quality, and it is named in the table
+      rather than merged.
+
+      **`unverified-by-council` was collapsed rather than renamed**, because it
+      measured *corroboration* — how many reviewers engaged — which the
+      `### Outliers` heading already states by construction: everything under it
+      was raised by one reviewer and engaged with by none. A separate word for a
+      fact the section carries invited it to be read as a fourth point on the
+      evidence scale. `DEALBREAKER` and `roadmap-ready` / `needs-discovery` are
+      in the table for the same reason: a reader who cannot see which property a
+      term measures will assume it is certainty.
+- [x] **4.2 Give `unverified:` a parser or declare it prose.** A repo-wide grep
       for a reader of that marker finds none: `procedure.md:87` and `:95` are
       prose, and the only other hits are an unrelated object key in
       `check_branch_freshness.ts:300` and an English sentence in
@@ -335,9 +358,22 @@ roadmap with its own evidence, not smuggled in behind five real defects.
       `### Concrete next step`. Either point it at the marker and give the
       marker a render consequence, or write in `procedure.md` that it is an
       authoring convention with no reader.
-      verify: either a test asserts a council artefact missing the marker is
-      rejected, or `procedure.md` carries the no-reader sentence and
-      `grep -rn 'unverified:' src/scripts/` still returns no parser.
+      verify (discharged): the second branch. `procedure.md` carries the
+      no-reader statement, and `grep -rn 'unverified:' --include='*.ts' src/scripts/`
+      returns **1** hit — `check_branch_freshness.ts:300`, an unrelated object key
+      in a fallback record, not a parser. Zero parsers, as the criterion requires.
+
+      **The declare-it-prose branch was chosen on the tree's own evidence, not on
+      convenience.** `prompts.ts::assert_synthesis_sections` is the machinery a
+      marker parser would have reused, and its docstring records that it has
+      **zero production call sites** — wiring it unconditionally into `render()`
+      throws on every templated render, because the default body is the literal
+      `*to be summarised by the host agent*` and carries neither required
+      section. A second unwired validator would reproduce that state exactly and,
+      worse, let a reader believe the marker is checked. So `procedure.md` now
+      says three things: write it, because an artefact reader needs to know a
+      mechanism claim was argued rather than measured; do not cite it as
+      enforcement; and do not read its absence as evidence the claim was probed.
 
 ## Phase 5 — CLI least-agency parity, proven by a canary
 
