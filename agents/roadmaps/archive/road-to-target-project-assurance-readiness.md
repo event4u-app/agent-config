@@ -451,7 +451,7 @@ Ships regardless of 0.4.
 
 ### blocker: b-human-risk-corpus
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 steps 0.1–0.4 · Phase 2 in full · Phase 3 step 3.1 (its
   nightly drift metric has nothing to report against). Phase 1 is unaffected and
@@ -470,6 +470,34 @@ Ships regardless of 0.4.
 - **Recommendation:** supply the corpus. The pre-registration is already written
   and frozen, so this is a data-collection task rather than a design one, and a
   later run re-runs the measurement rather than redesigning it.
+- **Resolution (2026-08-23) — TRANSFERRED to a stub; the roadmap closes around it
+  on its pre-registered null route.** AI council 2026-08-23, 2/2 quorum
+  (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. The maintainer
+  delegated owner-reserved blockers to the council for this autonomous drain run.
+
+  Neither of this blocker's two inputs can be produced by an agent, and the reason is
+  structural rather than a matter of effort: the human label is the pre-registered
+  **reference standard**, and the agent's own label is one of the two arms measured
+  against it — so an agent labelling the corpus collapses the standard into a
+  compared arm and answers a different question. That is not a weaker experiment; it
+  is the manufactured result the pre-registration exists to prevent.
+
+  So the input is **carried into `agents/roadmaps/stubs/road-to-human-risk-corpus.md`**
+  rather than deleted with the roadmap: it stays visible in the active estate, with
+  both pre-registered numbers as its conjunctive promotion criterion, instead of
+  disappearing into `archive/`. `stubs/` is excluded from `active_roadmaps`
+  (`check_estate_count.ts:373`), so the carry costs the estate nothing.
+
+  **Status reads `resolved` and the outcome is a transfer** — the two are not in
+  tension, and the wording is deliberate: every gate in this tree treats any token
+  other than `resolved` as OPEN, so recording `transferred` in the status field would
+  leave the roadmap unarchivable while claiming the blocker was handled. The state is
+  in this prose, where a reader can see it.
+
+  **What is NOT resolved:** the corpus still does not exist, and nothing in this
+  change makes it more likely to. What changed is that the roadmap no longer waits on
+  it — Phase 1 shipped, Phase 2 is cancelled by the pre-registered route, Phase 3's
+  metric runs — and the missing input has a named home and two numbers that reopen it.
 - **If you do nothing:** Phase 1's matrix ships and is useful on its own; the risk
   classifier is never built, so `verify-completion-evidence` keeps accepting prose
   evidence with no computed class, and `test-driven-development` keeps routing by
