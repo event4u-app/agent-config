@@ -13,6 +13,13 @@ triggers:
 applies_to_user_types:
   - "developer"
   - "maintainer"
+# obligation: the precedence question comes due when a task arrives that both a
+# playbook and a shipped skill answer — once per task, not per turn or per edit.
+obligation_frequency: "per-task"
+# frequency-override: the prose heuristic reads the Iron Law's "when both match a
+# task" as a turn-level phrase. It is not: the precedence question is settled once
+# per task, and re-deciding it on every turn of the same task would be the churn
+# this rule exists to prevent.
 routes_to:
   - "skill:playbook-authoring"
 workspaces: [engineering]

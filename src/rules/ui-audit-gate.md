@@ -28,7 +28,7 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
 enforced_by:
-  - "none"
+  - "instruction-only: state.ui_audit exists only inside the work-engine dispatcher, so outside it the audit is satisfiable by assertion"
 collision_ok:
   # The "component" and "design token" entries were removed with their triggers
   # (2026-08-17): a collision note for a trigger that no longer exists is an
@@ -105,7 +105,7 @@ is "the audit ran" a *checked* fact. A chat session cannot verify it: "I ran
 `existing-ui-audit` first" is self-report, and self-report is not enforcement —
 the same honesty boundary `security-sensitive-stop` and
 `untrusted-input-defense` state for their own obligations. So this rule ships
-`enforced_by: none` outside the dispatcher, deliberately, rather than pretending
+`instruction-only` outside the dispatcher, deliberately, rather than pretending
 a satisfiable-by-assertion condition is a gate.
 
 What that leaves, and it is the useful part: run

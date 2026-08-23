@@ -150,9 +150,9 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|none)$"
+        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|instruction-only: *[^ ].*|none)$"
       },
-      "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `none` is legal and counted — an honest gap beats a false claim. Resolved, not trusted, by check_enforcement_coverage.ts."
+      "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `instruction-only: <reason>` declares an honestly model-carried obligation and is counted as a recorded gap — the reason is MANDATORY in the pattern, because a bare marker is a claim with no triage record behind it and resolves to `missing`, which the --check ratchet reds on. The bare `none` spelling it replaces stays legal for exactly one reason: `non-destructive-by-default` still carries it and is a kernel rule that block_kernel_rule_writes denies agent writes to, so retiring the value outright would make a CI-green tree unreachable for any agent. Resolved, not trusted, by check_enforcement_coverage.ts."
     },
     "obligation_frequency": {
       "type": "string",

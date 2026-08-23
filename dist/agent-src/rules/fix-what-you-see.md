@@ -23,7 +23,7 @@ triggers:
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
-  - "none"
+  - "instruction-only: ownership-as-excuse is a disposition in prose; no gate can see a red check handed back with its cause named"
 ---
 
 # Fix What You See

@@ -23,6 +23,8 @@ packs: [meta]
 collision_ok:
   "honest null": "this rule asks whether a recorded null may be REVISITED; evaluator-independence asks how one was PRODUCED — different decision points on the same artefact"
 # obligation: line 31
+enforced_by:
+  - "instruction-only: no gate can observe an agent citing a decision it never opened; adr_cite_check is deterministic where it runs and nothing makes it run"
 obligation_frequency: "per-task"
 ---
 
@@ -176,7 +178,7 @@ precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../doc
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the numbered-options shape
   used to present the revisit offer.
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 `adr_cite_check` is deterministic where it runs, and nothing makes it run. No
 gate can observe an agent citing a decision it never opened, so step 2 above is

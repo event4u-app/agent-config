@@ -16,6 +16,8 @@ self_contained: true
 workspaces: [engineering]
 packs: [meta]
 # obligation: line 41
+enforced_by:
+  - "instruction-only: nothing can observe an agent concluding that no skill exists; the skill-route concern covers only the prompts where the ranker is confident"
 obligation_frequency: "per-turn"
 ---
 
@@ -70,7 +72,7 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
 - A host that delivers its catalogue whole — the rule costs nothing there and
   simply never has a gap to close.
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 Nothing can observe an agent concluding "no skill exists". The `skill-route`
 concern injects ranked pointers on `user_prompt_submit` when its floor is
