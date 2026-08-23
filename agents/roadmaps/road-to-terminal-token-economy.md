@@ -130,25 +130,55 @@ the numbers arrive is not a benchmark.
       run. Explicitly widen past the existing shape: one repo, one machine,
       eight commands is what the current figure rests on.
       verify: the registration file exists under `agents/evidence/analysis/` with a date preceding any results file, and `git log --diff-filter=A --format=%ad -1 -- <registration>` precedes the results file's add date.
-- [ ] **3.2 Run it and publish the number, whatever it is.** A result at or near
+- [~] **3.2 Run it and publish the number, whatever it is.** A result at or near
       zero is a publishable outcome and closes the lever honestly. A result that
       misses the pre-registered bar closes it the same way.
       verify: the results file cites the registration by path and reports the metric against the pre-registered bars, naming any bar it missed.
-- [ ] **3.3 Correct the shipped documentation to whatever 3.2 measured.** The
+- [~] **3.3 Correct the shipped documentation to whatever 3.2 measured.** The
       skill currently carries the 2026-07-28 figure. Replace it with the new one
       and its scope, or — if 3.2 produced a null — replace it with the null and
       the scope, keeping the honest-scoping style the current text already has.
       verify: `grep -n "2026-07-28" src/skills/rtk-output-filtering/SKILL.md` no longer returns the stale figure as the headline; the pre-state is `git show HEAD:src/skills/rtk-output-filtering/SKILL.md | grep -c "2026-07-28"` = 1.
-- [ ] **3.4 Reconcile the upstream-reported range against this tree's own.** The
+- [~] **3.4 Reconcile the upstream-reported range against this tree's own.** The
       skill quotes an upstream 60–90 % range next to a measured 33 %. Whatever
       3.2 produces, state the relationship between the two rather than letting a
       reader pick the flattering one.
       verify: the skill text names both figures with their sources, and `./scripts-run src/scripts/skill_linter src/skills/rtk-output-filtering 2>&1 | tail -3` exits green.
 
+
+      **DEFERRED `[~]` 2026-08-23 — steps 3.2, 3.3 and 3.4, by AI council (b),
+      2 of 2 convergent.** Members anthropic/claude-sonnet-4-5,
+      openai/codex-default; $0.033. Spend was **pre-authorized for the run**, so
+      this is not a budget refusal — the deferral is on **subject**, and both
+      seats called the ordering decisive:
+
+      > Phase 2 *chooses* the wrapper mechanism and Phase 3 benchmarks it. Phase 2
+      > is not done. Benchmarking now would buy a number about a mechanism that
+      > has not been selected, and if Phase 2 picks differently the number is
+      > invalidated.
+
+      One seat added the honest carve-out, which is recorded so a future run does
+      not mistake it for permission: measuring the **current** mechanism could give
+      a baseline, but that would need its **own** pre-registered, explicitly
+      labelled baseline design and must never be presented as the planned widened
+      re-bench.
+
+      **The `Resolved when` half is discharged in this same change**, and it went
+      further than the blocker asked. The blocker wanted the skill's savings
+      paragraph labelled; one seat pointed out that a scope stated only at the
+      canonical definition *"does not survive being copied or summarised"*, so the
+      label had to travel with **every** reader-facing occurrence. Swept
+      `src/` and `docs/`: two sites carry this claim
+      (`src/skills/rtk-output-filtering/SKILL.md`,
+      `docs/contracts/rtk-detection.md`) and **both** now state date, machine,
+      corpus size **and supersession status**. The other six `33 %` hits in the
+      tree are a different claim (judge inconsistency) and were left alone — the
+      count is reported so "I labelled it" is distinguishable from "I labelled the
+      one I happened to see".
 ## Blockers
 
 ### blocker: b-ab-session-spend
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 2 — consent-once (a benchmark run bills real session tokens)
 - **Blocks:** Phase 3 steps 3.2, 3.3 and 3.4. Step 3.1 is the registration and
@@ -172,6 +202,21 @@ the numbers arrive is not a benchmark.
 - **Resolved when:** one of (a) or (b) is recorded at this blocker, and — for (b) —
   the skill's savings paragraph carries the staleness label and steps 3.2–3.4 are
   marked deferred rather than left open-looking.
+- **Resolution 2026-08-23 — (b), AI council, 2 of 2 convergent.** Both halves of
+  the `Resolved when` are discharged in the same change: 3.2-3.4 are `[~]` with
+  the reasoning at 3.4, and the staleness label is on the number at **every**
+  reader-facing site rather than only the canonical one.
+
+  **Spend was pre-authorized, and the deferral is still correct** — that is the
+  part worth recording. The mandate for this run pre-authorizes benchmark spend,
+  so the council decided *how*, not *whether*. Both seats concluded that
+  pre-authorized budget is *"permission without reason"*: it does not refute a
+  methodological objection, and the objection here is ordering — Phase 2 has not
+  chosen the mechanism Phase 3 exists to benchmark.
+
+  What (b) bought immediately: the live misreading is gone. An unqualified "33 %"
+  was reading as this package's general measured claim while being a one-machine,
+  eight-command, month-old spot measurement.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
