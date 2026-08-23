@@ -252,7 +252,7 @@ nobody can say which rules actually got shorter and which were merely counted.
   Phase 2 table, or the table header carries the explicit single-machine scope.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -262,6 +262,7 @@ nobody can say which rules actually got shorter and which were merely counted.
 | 4 | The delta comment becomes a second blocking gate | implementation | A per-PR number that fails a build duplicates the ratchet and double-fails every legitimate rule addition, which is how a reporting surface becomes noise people route around | 0.3 states report-only in the step itself; the ratchet stays the only failing gate on this number | Phase 0 — stop the drift before dieting |
 | 5 | Two levers contend for the same fifteen rules | implementation | The parked sibling holds fifteen always-on rules behind `b-behavioural-bench-spend`. If the diet also targets them, the published before/after cannot attribute its delta to either lever | `b-behavioural-bench-spend` forces an explicit in-or-out decision before 1.3 picks targets | Phase 1 — the body diet: a `norm` pin plus its lint |
 | 6 | Phase 2's number is single-machine and reads as general | product | Both gates are machine-local by construction; the global layer's file count is whatever one developer projected | `b-colleague-machine-readings` forces either a second reading or an explicit scope line in the table header | Phase 2 — publish the per-rule before/after, misses included |
+| 7 | The hook-enforced nine are dieted by moving their honest-scope prose into a hook header | product | Four of the nine (`context-hygiene`, `evaluator-independence`, `roadmap-progress-sync`, `session-canary`) carry passages stating exactly what their hook does and does NOT enforce. That prose is what stops a reader over-trusting the gate; relocating it into a header a chat session never opens would trade tokens for a false impression of coverage — a diet that makes the estate less honest, not smaller | The A4 amendment refuses to pre-decide how far each of the nine goes and says so in the step; per-rule, with `check_rule_stub_ceiling --report` as the arbiter and `preservation-guard` forbidding a cut in place of a move | Amendment 2026-08-23 — hook-enforced rules first |
 
 ## Acceptance Criteria
 

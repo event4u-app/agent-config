@@ -1,7 +1,7 @@
 # PREREG — trigger-delivered rule bodies: four endpoints, and what they license
 
 > Pre-registration for Phase 2 of
-> [`road-to-trigger-delivered-rule-bodies`](../../agents/roadmaps/road-to-trigger-delivered-rule-bodies.md).
+> [`road-to-trigger-delivered-rule-bodies`](../../agents/roadmaps/archive/road-to-trigger-delivered-rule-bodies.md).
 > Committed **before** any artefact under `internal/bench/reports/thin-inject-*`
 > exists. Scorer: `./scripts-run src/scripts/model_rule_injection --endpoints`.
 > Corpus: `tests/eval/routing-matrix/` (94 labelled rules, 305 positives, 194
