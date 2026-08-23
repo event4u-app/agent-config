@@ -173,3 +173,60 @@ describe('grade_target_readiness — CLI and fixtures', () => {
         expect(selfTest()).toBe(0);
     }, 120_000);
 });
+
+/**
+ * Evidence binding — `road-to-agentic-engineering-assurance` step 1.3, whose
+ * verify line reads: *"`available` without at least one evidence ref fails
+ * schema validation."*
+ *
+ * WHY THIS BLOCK EXISTS AND WHAT IT FOUND. The property already HOLDS — every
+ * dimension in all three fixtures emits a non-empty `evidence` string, and both
+ * `null` grades carry `notDetectable`. Nothing asserted it. So the umbrella
+ * roadmap's 1.3 was satisfied in behaviour and unenforced in fact: a new
+ * eleventh dimension could ship with `evidence: ''` and no gate, test or
+ * reviewer would notice. That is the gap this block closes, and it is the honest
+ * scope of the step — the grader was not rebuilt, an unasserted invariant was
+ * pinned.
+ *
+ * SABOTAGE PROBES, run before this block was trusted, each restored from a `cp`
+ * backup (never `git checkout`, which would discard uncommitted work):
+ *   1. blank one dimension's `evidence` string → the first `it` goes red naming
+ *      that dimension's id;
+ *   2. drop `notDetectable` from the runtime-verification dimension → the second
+ *      `it` goes red for all three fixtures.
+ * Both restored; the recorded counts are in the roadmap step.
+ */
+describe('grade_target_readiness — 1.3 evidence binding', () => {
+    it('every dimension in every fixture carries a non-empty evidence ref', () => {
+        for (const [name, root] of [
+            ['full', full],
+            ['ci-absent', ciAbsent],
+            ['python', python],
+        ] as const) {
+            for (const d of grade(root).dimensions) {
+                expect(typeof d.evidence, `${name}/${d.id}`).toBe('string');
+                expect(d.evidence.trim().length, `${name}/${d.id}`).toBeGreaterThan(0);
+            }
+        }
+    });
+
+    it('a null grade always says WHY it is not detectable, and a graded one never does', () => {
+        // `null` is "this tool cannot tell", which the module docstring insists is
+        // NOT a zero. An unexplained null is indistinguishable from a bug in the
+        // probe, so the reason is what makes the distinction checkable.
+        for (const [name, root] of [
+            ['full', full],
+            ['ci-absent', ciAbsent],
+            ['python', python],
+        ] as const) {
+            for (const d of grade(root).dimensions) {
+                if (d.grade === null) {
+                    expect(d.notDetectable, `${name}/${d.id}`).toBeTruthy();
+                    expect((d.notDetectable ?? '').trim().length, `${name}/${d.id}`).toBeGreaterThan(0);
+                } else {
+                    expect(d.notDetectable, `${name}/${d.id}`).toBeUndefined();
+                }
+            }
+        }
+    });
+});

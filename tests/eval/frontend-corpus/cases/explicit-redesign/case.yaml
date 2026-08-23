@@ -1,0 +1,15 @@
+# Case: explicit-redesign
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: explicit-redesign
+prompt: "Redesign this screen. I want it to look completely different."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: redesign
+  reference_maturity: production-incumbent
+note: |
+  The permission case. `redesign` is stated, so a palette and type-family change is authorised and A1.5's intent-aware block must NOT fire.
+files:
+  - Legacy.tsx

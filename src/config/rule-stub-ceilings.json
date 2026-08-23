@@ -1,101 +1,108 @@
 {
-    "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "178b89235",
-    "tokens_exact": true,
-    "ceilings": {
-        "active-remediation": 1601,
-        "analysis-skill-routing": 76,
-        "architecture": 955,
-        "artifact-drafting-protocol": 680,
-        "augment-edit-discipline": 137,
-        "autonomous-execution": 1633,
-        "brand-consistency": 133,
-        "broken-access-control": 743,
-        "cli-output-handling": 83,
-        "code-comment-discipline": 692,
-        "commit-conventions": 136,
-        "context-hygiene": 2470,
-        "copilot-routing": 128,
-        "design-fidelity": 2540,
-        "devcontainer-routing": 128,
-        "docker-commands": 79,
-        "domain-adoption-policy": 497,
-        "framework-neutrality-in-generic-skills": 621,
-        "git-history-discipline": 1205,
-        "improve-before-implement": 845,
-        "laravel-routing": 126,
-        "laravel-translations": 82,
-        "legal-safety-floor": 1401,
-        "linked-projects-onboarding-gate": 172,
-        "minimal-safe-diff": 893,
-        "missing-tool-handling": 103,
-        "model-recommendation": 156,
-        "no-roadmap-references": 644,
-        "package-ci-checks": 74,
-        "persona-governance": 330,
-        "php-coding": 80,
-        "provider-lifecycle-discipline": 472,
-        "reviewer-awareness": 131,
-        "roadmap-ci-steps-policy": 564,
-        "roadmap-progress-sync": 2479,
-        "rule-type-governance": 87,
-        "skill-improvement-trigger": 81,
-        "skill-quality": 78,
-        "slash-command-routing-policy": 77,
-        "symfony-routing": 129,
-        "ui-audit-gate": 1280,
-        "untrusted-input-defense": 934,
-        "upstream-proposal": 76
+  "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction \u2014 every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
+  "measured_at_commit": "178b89235",
+  "tokens_exact": true,
+  "ceilings": {
+    "active-remediation": 1601,
+    "analysis-skill-routing": 76,
+    "architecture": 955,
+    "artifact-drafting-protocol": 680,
+    "augment-edit-discipline": 137,
+    "autonomous-execution": 1633,
+    "brand-consistency": 133,
+    "broken-access-control": 743,
+    "cli-output-handling": 83,
+    "code-comment-discipline": 692,
+    "commit-conventions": 136,
+    "context-hygiene": 2470,
+    "copilot-routing": 128,
+    "design-fidelity": 2540,
+    "devcontainer-routing": 128,
+    "docker-commands": 79,
+    "domain-adoption-policy": 497,
+    "framework-neutrality-in-generic-skills": 621,
+    "git-history-discipline": 1205,
+    "improve-before-implement": 845,
+    "laravel-routing": 126,
+    "laravel-translations": 82,
+    "legal-safety-floor": 1401,
+    "linked-projects-onboarding-gate": 172,
+    "minimal-safe-diff": 893,
+    "missing-tool-handling": 103,
+    "model-recommendation": 156,
+    "no-roadmap-references": 644,
+    "package-ci-checks": 74,
+    "persona-governance": 330,
+    "php-coding": 80,
+    "provider-lifecycle-discipline": 472,
+    "reviewer-awareness": 131,
+    "roadmap-ci-steps-policy": 564,
+    "roadmap-progress-sync": 2479,
+    "rule-type-governance": 87,
+    "skill-improvement-trigger": 81,
+    "skill-quality": 78,
+    "slash-command-routing-policy": 77,
+    "symfony-routing": 129,
+    "ui-audit-gate": 1491,
+    "untrusted-input-defense": 934,
+    "upstream-proposal": 76
+  },
+  "history": [
+    {
+      "date": "2026-08-19",
+      "rule": "roadmap-progress-sync",
+      "from": 1424,
+      "to": 2117,
+      "reason": "Iron Law 3 gained the preservation test that decides WHO resolves a deferred item \u2014 a routing table plus the two council refinements that make it binding (a follow-up naming a roadmap that does not exist yet fails closed to the user; a council resolution is recorded at the item or it did not happen) and the residual limit both authoring seats named. This is obligation surface, not explanation: the table decides a route and the two refinements are the conditions under which the route is legal, so a reader who reaches only the pointer target has already made the decision. It could not move to the pointer target either \u2014 roadmap-progress-mechanics.md sits at the 16,000-char check_depth_budget ceiling in this same change, and pushing prose there reds a count ratchet whose whole job is refusing a fifth over-ceiling file. The section was condensed once before this raise (2201 -> 2117) by turning four prose paragraphs into bullets; further cutting would delete substance, which preservation-guard forbids."
     },
-    "history": [
-        {
-            "date": "2026-08-19",
-            "rule": "roadmap-progress-sync",
-            "from": 1424,
-            "to": 2117,
-            "reason": "Iron Law 3 gained the preservation test that decides WHO resolves a deferred item — a routing table plus the two council refinements that make it binding (a follow-up naming a roadmap that does not exist yet fails closed to the user; a council resolution is recorded at the item or it did not happen) and the residual limit both authoring seats named. This is obligation surface, not explanation: the table decides a route and the two refinements are the conditions under which the route is legal, so a reader who reaches only the pointer target has already made the decision. It could not move to the pointer target either — roadmap-progress-mechanics.md sits at the 16,000-char check_depth_budget ceiling in this same change, and pushing prose there reds a count ratchet whose whole job is refusing a fifth over-ceiling file. The section was condensed once before this raise (2201 -> 2117) by turning four prose paragraphs into bullets; further cutting would delete substance, which preservation-guard forbids."
-        },
-        {
-            "date": "2026-08-20",
-            "rule": "context-hygiene",
-            "from": 2447,
-            "to": 2470,
-            "reason": "One sentence, +23 tokens, and it is obligation surface rather than explanation: for CI, do not hand-write the wait loop. The mechanics went to the pointer target where this rule's own migration note already sends them (context-hygiene-mechanics gains the exit codes, the four not-settled states and the measured incident) — that move is what took the growth from +179 to +23, and the residue is the pointer itself, which cannot live in the guideline because a rule that does not name the helper is a rule nobody follows to it. The incident it encodes: a hand-written `until ! gh pr checks N | grep -q pending` exited when the API failed, because the error text contains no `pending`, and the session reported a settle that had not happened and retracted it in the next reply. The rule's neighbouring waiter law already says one waiter per condition; what it did not say is that the exit condition is the part that gets written wrong, which is why the helper is named here rather than described."
-        },
-        {
-            "date": "2026-08-20",
-            "rule": "roadmap-progress-sync",
-            "from": 2117,
-            "to": 2185,
-            "reason": "One sentence in Iron Law 1, +68 tokens, and it is obligation surface rather than explanation: `roadmap:progress` now passes `--archive`, so the law's operational meaning changed — a complete roadmap is moved by the same run instead of reported to a human, and the two exclusions a reader must know before trusting that (`--check` never archives, the PostToolUse hook never archives) are exactly the part that cannot be deferred to a pointer. The prose was NOT moved to docs/guidelines/agent-infra/roadmap-progress-mechanics.md, which is where this rule's migration note sends its mechanics, because that file has roughly a hundred characters of headroom under the 16,000-char depth ceiling and check_depth_budget is shrink-only with four files already over it — a FIFTH over-ceiling file reds, so moving 400 characters there would have traded this gate for that one. The full contract, the council record and its recorded dissent live with the code in src/agent-src/scripts/archival_sweep.ts, which is the third home and the one with room."
-        },
-        {
-            "date": "2026-08-20",
-            "rule": "artifact-drafting-protocol",
-            "from": 611,
-            "to": 680,
-            "reason": "Three lines plus a pointer extension, +69 tokens, for a new contract field that governs what a run may author without asking: an artifact discovered AFTER an accepted execution contract halts by default, and `late_artifacts: auto-research` is the only declared value that continues, capped at three per run. The five-step auto-research procedure, the reasoning for the default and its reversibility argument all went to the pointer target (artifact-drafting-protocol-mechanics gains a Late artifacts section) rather than here, which is what held the growth to a bullet. The residue is obligation surface and cannot live in the guideline: this rule's own batch-mode bullet already tells the reader that a mid-run artifact triggers the full interactive protocol, so a reader who never opens the guideline would conclude that a declared value cannot change it. Named default rather than described behaviour, because the default direction is the decision -- AI council 2/2 (anthropic + openai) chose `halt` over `auto-research` on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
-        },
-        {
-            "date": "2026-08-20",
-            "rule": "roadmap-progress-sync",
-            "from": 2185,
-            "to": 2479,
-            "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md. RE-BASED on merge with origin/main, 2026-08-20: this entry was authored against a base of 2117 and raised to 2411. main had independently raised the same ceiling 2117 -> 2185 for its own reason, so the merged tree measures 2479 and the honest arithmetic for THIS raise is 2185 -> 2479 -- the same +294 for the same subsection, re-based rather than re-argued. Recorded rather than silently regenerated because the gate's own failure text names a history-versus-ceilings disagreement as the signature of a hand-edited count, and a merge that quietly adopted one side's numbers would produce exactly that signature with nothing saying why."
-        },
-        {
-            "date": "2026-08-22",
-            "rule": "untrusted-input-defense",
-            "from": 845,
-            "to": 934,
-            "reason": "Six lines, +89 tokens, correcting a claim the section itself had made false. It said no content-scanning backstop existed and that a future one would be the first candidate to change enforced_by; injection_scan_hook.ts now exists, so the first half is false, and the second was always wrong because a warn-only hook cannot refuse and therefore cannot enforce. Every sentence left carries one of those claims. The measurement half -- slot, 15 channels, 99.00 percent recall, 0.85 percent false positives, the manifest keys -- did move to the pointer target, which is what cut the overshoot from +194 to +89; what stays is the rule's own enforcement disclosure, and a stub ceiling that forbids correcting a false statement about the rule's own enforcement is the wrong constraint applied to the right file."
-        },
-        {
-            "date": "2026-08-23",
-            "rule": "design-fidelity",
-            "from": 2245,
-            "to": 2540,
-            "reason": "One subsection, +295 tokens, for the second axis: artefact MATURITY is a property of the handed-over artefact, instruction MANDATE is a property of the prose, and `strict` on a self-declared wireframe is a structure mandate rather than a pixel mandate. It is an Iron Law plus the two discriminator clauses that decide it -- obligation surface, which this repository's rule/mechanics split puts in the rule by construction. The lookup half ALREADY went to the pointer target in the same change: the maturity-to-spec table and the pinned `daf-wireframe-near-miss` row live in design-fidelity-mechanics.md § Artefact maturity, and the rule links them. Pushing the remaining prose there too is the one move that is not available -- that migration is exactly what took the mechanics file from 15,265 to 16,524 chars past check_depth_budget's 16,000 ceiling, and paying for it required splitting the asset & imagery block out into its own guideline in this same commit series. A second push would re-red the ratchet the split just cleared. Raised rather than condensed because the two clauses that would compress are the ones that carry the decision: 'the discriminator reads the ARTEFACT, never the prose' and 'an undeclared artefact is treated as finished' -- drop either and the rule authorises the redesign it exists to prevent."
-        }
-    ]
+    {
+      "date": "2026-08-20",
+      "rule": "context-hygiene",
+      "from": 2447,
+      "to": 2470,
+      "reason": "One sentence, +23 tokens, and it is obligation surface rather than explanation: for CI, do not hand-write the wait loop. The mechanics went to the pointer target where this rule's own migration note already sends them (context-hygiene-mechanics gains the exit codes, the four not-settled states and the measured incident) \u2014 that move is what took the growth from +179 to +23, and the residue is the pointer itself, which cannot live in the guideline because a rule that does not name the helper is a rule nobody follows to it. The incident it encodes: a hand-written `until ! gh pr checks N | grep -q pending` exited when the API failed, because the error text contains no `pending`, and the session reported a settle that had not happened and retracted it in the next reply. The rule's neighbouring waiter law already says one waiter per condition; what it did not say is that the exit condition is the part that gets written wrong, which is why the helper is named here rather than described."
+    },
+    {
+      "date": "2026-08-20",
+      "rule": "roadmap-progress-sync",
+      "from": 2117,
+      "to": 2185,
+      "reason": "One sentence in Iron Law 1, +68 tokens, and it is obligation surface rather than explanation: `roadmap:progress` now passes `--archive`, so the law's operational meaning changed \u2014 a complete roadmap is moved by the same run instead of reported to a human, and the two exclusions a reader must know before trusting that (`--check` never archives, the PostToolUse hook never archives) are exactly the part that cannot be deferred to a pointer. The prose was NOT moved to docs/guidelines/agent-infra/roadmap-progress-mechanics.md, which is where this rule's migration note sends its mechanics, because that file has roughly a hundred characters of headroom under the 16,000-char depth ceiling and check_depth_budget is shrink-only with four files already over it \u2014 a FIFTH over-ceiling file reds, so moving 400 characters there would have traded this gate for that one. The full contract, the council record and its recorded dissent live with the code in src/agent-src/scripts/archival_sweep.ts, which is the third home and the one with room."
+    },
+    {
+      "date": "2026-08-20",
+      "rule": "artifact-drafting-protocol",
+      "from": 611,
+      "to": 680,
+      "reason": "Three lines plus a pointer extension, +69 tokens, for a new contract field that governs what a run may author without asking: an artifact discovered AFTER an accepted execution contract halts by default, and `late_artifacts: auto-research` is the only declared value that continues, capped at three per run. The five-step auto-research procedure, the reasoning for the default and its reversibility argument all went to the pointer target (artifact-drafting-protocol-mechanics gains a Late artifacts section) rather than here, which is what held the growth to a bullet. The residue is obligation surface and cannot live in the guideline: this rule's own batch-mode bullet already tells the reader that a mid-run artifact triggers the full interactive protocol, so a reader who never opens the guideline would conclude that a declared value cannot change it. Named default rather than described behaviour, because the default direction is the decision -- AI council 2/2 (anthropic + openai) chose `halt` over `auto-research` on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md."
+    },
+    {
+      "date": "2026-08-20",
+      "rule": "roadmap-progress-sync",
+      "from": 2185,
+      "to": 2479,
+      "reason": "One subsection, +294 tokens, for the `deferred_policy` contract field: a declared policy removes the synchronous options ROUND at closure without moving any row of the preservation test's routing table. It is obligation surface and it cannot live anywhere else. Not in the pointer target -- roadmap-progress-mechanics.md sits at 16,039 chars against check_depth_budget's 16,000-char ceiling, and that gate is a count ratchet whose next failure is a FIFTH over-ceiling file, so prose pushed there is the one move that turns a warn into a red. Not in the contract context either: Iron Law 3 is the gate being amended, and a reader who learns from roadmap-execution-contract that a field exists but never reads this rule would not know that `cancel-with-memo` still stops for the user. The three-row table is the delta in full; the reasoning, both alternatives and the reversibility argument went to the contract context's own decision comment. Condensed once before this raise (2509 -> 2411) by cutting a paragraph that restated the preservation test. AI council 2/2 (anthropic + openai) on the autonomy-defaults-sheet fork of road-to-user-out-of-the-loop, record agents/evidence/council/drain-blocker-dispositions-a.md. RE-BASED on merge with origin/main, 2026-08-20: this entry was authored against a base of 2117 and raised to 2411. main had independently raised the same ceiling 2117 -> 2185 for its own reason, so the merged tree measures 2479 and the honest arithmetic for THIS raise is 2185 -> 2479 -- the same +294 for the same subsection, re-based rather than re-argued. Recorded rather than silently regenerated because the gate's own failure text names a history-versus-ceilings disagreement as the signature of a hand-edited count, and a merge that quietly adopted one side's numbers would produce exactly that signature with nothing saying why."
+    },
+    {
+      "date": "2026-08-22",
+      "rule": "untrusted-input-defense",
+      "from": 845,
+      "to": 934,
+      "reason": "Six lines, +89 tokens, correcting a claim the section itself had made false. It said no content-scanning backstop existed and that a future one would be the first candidate to change enforced_by; injection_scan_hook.ts now exists, so the first half is false, and the second was always wrong because a warn-only hook cannot refuse and therefore cannot enforce. Every sentence left carries one of those claims. The measurement half -- slot, 15 channels, 99.00 percent recall, 0.85 percent false positives, the manifest keys -- did move to the pointer target, which is what cut the overshoot from +194 to +89; what stays is the rule's own enforcement disclosure, and a stub ceiling that forbids correcting a false statement about the rule's own enforcement is the wrong constraint applied to the right file."
+    },
+    {
+      "date": "2026-08-23",
+      "rule": "design-fidelity",
+      "from": 2245,
+      "to": 2540,
+      "reason": "One subsection, +295 tokens, for the second axis: artefact MATURITY is a property of the handed-over artefact, instruction MANDATE is a property of the prose, and `strict` on a self-declared wireframe is a structure mandate rather than a pixel mandate. It is an Iron Law plus the two discriminator clauses that decide it -- obligation surface, which this repository's rule/mechanics split puts in the rule by construction. The lookup half ALREADY went to the pointer target in the same change: the maturity-to-spec table and the pinned `daf-wireframe-near-miss` row live in design-fidelity-mechanics.md \u00a7 Artefact maturity, and the rule links them. Pushing the remaining prose there too is the one move that is not available -- that migration is exactly what took the mechanics file from 15,265 to 16,524 chars past check_depth_budget's 16,000 ceiling, and paying for it required splitting the asset & imagery block out into its own guideline in this same commit series. A second push would re-red the ratchet the split just cleared. Raised rather than condensed because the two clauses that would compress are the ones that carry the decision: 'the discriminator reads the ARTEFACT, never the prose' and 'an undeclared artefact is treated as finished' -- drop either and the rule authorises the redesign it exists to prevent."
+    },
+    {
+      "date": "2026-08-23",
+      "rule": "ui-audit-gate",
+      "from": 1280,
+      "to": 1491,
+      "reason": "road-to-frontend-power E2.2 moved this rule's `enforced_by:` from `none` to `hook:design-pass`, because `agent-config ui:audit` now writes the artefact the rule previously had nothing to point at. +127 tokens, and every one of them is the SCOPE of that change rather than a description of the mechanism: the check is FRESHNESS not existence (a stale artefact looks like evidence, which is worse than a missing one), the carrier is default-OFF and warns before it blocks, and the greenfield asymmetry is NOT closed -- `_lib/ui_surface.ts` is a path predicate, measured recall 20/23 with all three misses being a UI request that has produced no UI file yet, so this gate cannot fire on the first write of a new surface. Condensed first, from +279 to +127, by cutting the narrative framing and the changed-in-both-directions paragraph. The three limits are what remains and they are the reason the raise is legitimate: a rule that newly claims a carrier and does not state where the carrier stops is a stronger claim than the tree supports, which is the exact over-claim this repository has already had to correct twice in the hook-architecture host table. Not pushed to the pointer target: `existing-ui-audit` is a SKILL describing how to run an audit, and the boundary of a gate's enforcement is an obligation-surface fact -- putting it there would file the limit where nobody reading the gate will find it. Amended in the same change, 1407 -> 1491 (+84): landing the carrier revealed that `design-pass-stop` is `severity: advisory` and the dispatcher enforces advisory as a CEILING, so an EXIT_BLOCK from it is downgraded and then mapped to exit 0. Claiming a block in this rule while the transport discards it would be the inert-refusal defect `run-continuation` already recorded once. Limit 2 therefore states what actually happens -- the stop verdict is REPORTED as would-block, not enforced -- and names what would make it real: an entry in concern_severity.test.ts's BLOCKING_ALLOWLIST, which that file calls a security-relevant decision and which would be the third turn-END refusal in the tree. That is a stronger reason to spend the tokens than the original raise had: a rule whose enforced_by names a carrier, and which does not say the carrier cannot refuse, is the over-claim this whole section exists to prevent."
+    }
+  ]
 }

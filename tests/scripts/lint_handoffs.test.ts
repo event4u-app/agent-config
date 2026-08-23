@@ -153,12 +153,73 @@ describe('lint_handoffs — ported pytest suite', () => {
         expect(lint(skills)).toEqual([]);
     });
 
-    it('non-senior skills are ignored (forward-only floor)', () => {
+    // Superseded by the Phase-1 widening of road-to-skill-link-integrity: the
+    // TIER and CYCLE checks stay senior-only (they judge composition edges,
+    // which only exist inside a declared handoff block), but a DEAD link is
+    // wrong wherever it sits. The nine files carrying the repo's real dead
+    // links declared neither `tier:` nor `## Related Skills`, which is exactly
+    // why the gate that owns `handoff_dangling` had never seen them.
+    it('a non-senior skill still gets its dangling link reported', () => {
         makeSkill(tmp, 'legacy', {
             tier: null,
             related_links: [['ghost', '../ghost/SKILL.md']],
         });
+        const v = lint(skills);
+        expect(v).toHaveLength(1);
+        expect(v[0]?.code).toBe('handoff_dangling');
+        expect(v[0]?.message).toContain('../ghost/SKILL.md');
+    });
+
+    it('a non-senior skill gets NO tier-mismatch finding (scope stays narrow)', () => {
+        makeSkill(tmp, 'plain', { tier: null, related_links: [] });
+        makeSkill(tmp, 'legacy', {
+            tier: null,
+            related_links: [['plain', '../plain/SKILL.md']],
+        });
         expect(lint(skills)).toEqual([]);
+    });
+
+    // The exact shape of the repo's own defect: no `tier:`, no
+    // `## Related Skills` heading at all, one prose body link to a slug that
+    // does not exist. Before the widening this produced zero findings.
+    it('a body link outside any Related Skills block is reported exactly once', () => {
+        const dir = path.join(skills, 'prose-only');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'SKILL.md'),
+            [
+                '---',
+                'name: prose-only',
+                'description: "prose-only skill with no tier and no Related Skills block."',
+                '---',
+                '',
+                '# prose-only',
+                '',
+                '## Procedure',
+                '',
+                '1. Verify completeness — see [`ghost`](../ghost/SKILL.md).',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const v = lint(skills);
+        expect(v).toHaveLength(1);
+        expect(v[0]?.code).toBe('handoff_dangling');
+        expect(v[0]?.line).toBe(10);
+    });
+
+    it('an empty skills root raises DeadScopeError through main()', () => {
+        const empty = path.join(tmp, 'empty-root');
+        fs.mkdirSync(empty, { recursive: true });
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            expect(main([empty])).toBe(2);
+            expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain('lint_handoffs');
+        } finally {
+            err.mockRestore();
+            out.mockRestore();
+        }
     });
 
     it('mode-6 worktree cross-wing chain lints clean', () => {

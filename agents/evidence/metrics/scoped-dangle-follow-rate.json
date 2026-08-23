@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "_comment": "Written by `./scripts-run src/scripts/lint_handoffs --scoped-dangle-json`. Do not hand-edit — regenerate it. The instrument is guarded BEFORE any count is read: `attempts` and `pruned_targets_hit` are null, never 0, whenever `instrument_live` is false, because a stopped clock reporting zero is not a null. Read `instrument_reason` first. NOTE ON KINDS: the store has only ever recorded `kind: \"exposure\"`, and no event in FOLLOW_KINDS (`read`, `read_attempt`, `follow`) is emitted anywhere in the tree — so even a LIVE window could not answer this question today. Emitting a follow event is the prerequisite this measurement is blocked on, and it is not in this roadmap.",
+  "commit": "9c4f5bff4170c196ab3a1cfc612bde120252c5eb",
+  "window_start": "2026-07-24T14:10:13.954Z",
+  "window_end": "2026-08-23T14:10:13.954Z",
+  "instrument": "agents/runtime/metrics/skill-usage.jsonl",
+  "instrument_live": false,
+  "instrument_reason": "instrument absent — agents/runtime/metrics/skill-usage.jsonl does not exist (the store is gitignored and machine-local)",
+  "instrument_records": 0,
+  "instrument_newest": null,
+  "instrument_kinds": [],
+  "attempts": null,
+  "pruned_targets_hit": null,
+  "scoped_dangles": 24,
+  "survivors_with_dangle": 17,
+  "null_branch": "Zero attempts over a LIVE window closes the question as a published null and the dangling links stay: a link to a pruned sibling is then behaviour the consumer opted into by choosing `projection.mode: scoped`, not a defect. A null over a DEAD window closes nothing and is not permitted to be reported as one — that is what the guard is for, and why `attempts` is null rather than 0 when the guard fails.",
+  "measured_branch": "A nonzero count promotes the fix: rewrite each dangling link in the PROJECTED SKILL.md to name the slug and its pack instead of linking it — source tree untouched, projection honest about itself, using the same `is_pruned_under_scoped` predicate this counter uses so the two cannot disagree."
+}

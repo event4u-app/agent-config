@@ -61,7 +61,7 @@ or [`fix-pr-comments`](../../commands/fix-pr-comments.md) instead.
 ### 2. Verify readiness
 
 Run the end-of-work gate before presenting any options — see
-[`verify-before-complete`](../verify-before-complete/SKILL.md).
+[`verify-completion-evidence`](../verify-completion-evidence/SKILL.md).
 Steps 1–3 run only when `quality.local_auto_run: true`; under the
 default (`false` / missing) skip them without asking — the user runs
 quality tools manually, remote CI on the PR is the authoritative gate,
@@ -226,7 +226,7 @@ After the chosen option completes, report:
 
 ## When to hand over to another skill / command
 
-* Final pre-merge verification → [`verify-before-complete`](../verify-before-complete/SKILL.md)
+* Final pre-merge verification → [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md)
 * Rebasing the stack before PR → [`prepare-for-review`](../../commands/prepare-for-review.md)
 * Writing the commit for any last-minute tweaks →
   [`commit`](../../commands/commit.md),

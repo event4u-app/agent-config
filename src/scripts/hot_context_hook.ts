@@ -36,6 +36,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { hardenedSpawnEnv } from './_lib/spawn_env.js';
+import { computeRereads } from './_lib/transcript_reads.js';
 import { redact_low_impact_entry } from './ai_council/redact_low_impact_entry.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 
@@ -57,6 +58,7 @@ const MAX_OPEN_VERIFICATIONS = 3;
 const THREAD_SNIPPET_CHARS = 200;
 const CHANGE_SNIPPET_CHARS = 120;
 const KEY_FACTS_CHARS = 600;
+const MAX_REREAD_LINES = 3; // advisory, not an inventory — see _reread_lines
 
 const VERIFICATION_RE = /\b(fail(ing|ed|ure)?|error|exit[= ][1-9]|red\b|broken)\b/i;
 
@@ -162,10 +164,54 @@ function _word_count(text: string): number {
 }
 
 // ---------------------------------------------------------------------
+// re-read advisory (road-to-role-scoped-spawn-profiles Phase 3 Steps 4-5)
+// ---------------------------------------------------------------------
+
+/**
+ * Files this leg read more than once, as advisory lines for the cache.
+ *
+ * Phase 3 Step 4 of `road-to-role-scoped-spawn-profiles` requires the
+ * suppression to ride THIS surface rather than arrive as a second artefact,
+ * and Step 5 requires it to stay advice: there is no refuse branch anywhere
+ * below, and there is no code path that returns a deny on a re-read condition.
+ * The output is three lines in a markdown cache; the next leg may ignore it.
+ *
+ * **Why the path is relativised, and why an outside path is dropped rather
+ * than shortened.** The privacy floor
+ * ({@link _redact_lines} → `redact_low_impact_entry`) drops any line carrying
+ * a project-rooted absolute path, so emitting `/Users/...` would produce a
+ * silently empty section — the feature would look implemented and do nothing.
+ * Relativising to the workspace root keeps the line inside the floor. A path
+ * OUTSIDE the root cannot be relativised without `../` escapes that re-reveal
+ * the layout, and it is another project's business in any case, so it is
+ * dropped entirely.
+ *
+ * Fail-silent: no transcript path, an unreadable one, or a malformed leg all
+ * yield `[]`. This is a cache, and a cache that throws is worse than a cache
+ * that is short.
+ */
+export function _reread_lines(transcriptPath: string | null, root: string): string[] {
+    if (!transcriptPath) return [];
+    const result = computeRereads([transcriptPath]);
+    const lines: string[] = [];
+    for (const f of result.files) {
+        if (lines.length >= MAX_REREAD_LINES) break;
+        const rel = path.relative(root, f.file_path);
+        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) continue;
+        lines.push(`${rel} — read ${f.total_reads}x this leg (${f.duplicate_reads} re-read)`);
+    }
+    return lines;
+}
+
+// ---------------------------------------------------------------------
 // stop — deterministic write
 // ---------------------------------------------------------------------
 
-export function build_hot_context(root: string, now: Date = new Date()): string {
+export function build_hot_context(
+    root: string,
+    now: Date = new Date(),
+    transcriptPath: string | null = null,
+): string {
     const session = _latest_session_entries(_read_history(root));
 
     const userPrompts = session.filter((e) => e.t === 'user_prompt' && e.text);
@@ -188,20 +234,36 @@ export function build_hot_context(root: string, now: Date = new Date()): string 
     );
     const lastStop = String(stops[stops.length - 1]?.text ?? '');
     const keyFacts = _redact_lines(lastStop ? [_snippet(lastStop, KEY_FACTS_CHARS)] : []);
+    const rereads = _redact_lines(_reread_lines(transcriptPath, root));
 
     const droppedTotal =
-        activeThreads.dropped + recentChanges.dropped + openVerifications.dropped + keyFacts.dropped;
+        activeThreads.dropped +
+        recentChanges.dropped +
+        openVerifications.dropped +
+        keyFacts.dropped +
+        rereads.dropped;
 
     // Assemble; trim lowest-priority sections first until under the word cap.
     // Priority (highest kept longest): Key Facts > Active Threads >
-    // Open Verifications > Recent Changes.
+    // Open Verifications > Recent Changes > Re-Read Advisory.
+    //
+    // The advisory sits LAST on purpose. It is the only section that is a
+    // suggestion rather than a record of what happened, so when the 400-word
+    // cap bites it is the one whose loss costs nothing.
     const sections: Array<{ title: string; items: string[] }> = [
         { title: 'Key Facts', items: keyFacts.kept },
         { title: 'Active Threads', items: activeThreads.kept },
         { title: 'Open Verifications', items: openVerifications.kept },
         { title: 'Recent Changes', items: recentChanges.kept },
+        { title: 'Re-Read Advisory', items: rereads.kept },
     ];
-    const trimOrder = ['Recent Changes', 'Open Verifications', 'Active Threads', 'Key Facts'];
+    const trimOrder = [
+        'Re-Read Advisory',
+        'Recent Changes',
+        'Open Verifications',
+        'Active Threads',
+        'Key Facts',
+    ];
 
     const render = (): string => {
         const lines: string[] = [
@@ -240,9 +302,9 @@ export function build_hot_context(root: string, now: Date = new Date()): string 
     return text;
 }
 
-function _write_hot_context(root: string): void {
+function _write_hot_context(root: string, transcriptPath: string | null = null): void {
     const target = _hot_context_path(root);
-    const text = build_hot_context(root);
+    const text = build_hot_context(root, new Date(), transcriptPath);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     const tmp = `${target}.tmp-${process.pid}`;
     fs.writeFileSync(tmp, text, { encoding: 'utf-8' });
@@ -392,7 +454,12 @@ export function main(): number {
         // one rebuild and can never produce a worse cache than the older one it
         // replaces. It emits nothing — the restore side is unchanged.
         if (event === 'stop' || event === 'session_end' || event === 'pre_compact') {
-            _write_hot_context(root);
+            // Claude Code puts the leg's own transcript on the stop payload;
+            // the camelCase alias is defensive, matching how the subagent
+            // ledger reads `last_assistant_message`. Absent on other hosts,
+            // where the advisory is simply empty.
+            const tp = payload.transcript_path ?? payload.transcriptPath;
+            _write_hot_context(root, typeof tp === 'string' && tp.length > 0 ? tp : null);
         } else if (event === 'session_start') {
             const source = String(payload.source ?? '');
             const decision = restore_hot_context(root, source);

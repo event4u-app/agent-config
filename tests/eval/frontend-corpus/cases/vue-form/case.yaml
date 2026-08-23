@@ -1,0 +1,15 @@
+# Case: vue-form
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: vue-form
+prompt: "Add server-side validation errors to the invite form."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Form surface; the change is behavioural and must not trigger a visual review verdict.
+files:
+  - InviteForm.vue
