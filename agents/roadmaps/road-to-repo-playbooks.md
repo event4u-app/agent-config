@@ -90,16 +90,32 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ## Phase 0 — Decide the artefact, prove the gap
 
-- [ ] **0.1 Write the negative control first.** Under
+- [x] **0.1 Write the negative control first.** Under
       `tests/fixtures/playbooks/mono-with-generator/` commit a monorepo that
       already has `turbo/generators/config.ts` (a `turbo gen component`
       template) and a `package.json` script `new:package`. Record in its
       `README.md` what the suite does today when asked "add a Toast component
       to @org/ui": it routes to `react-shadcn-ui` and never runs the
       generator. This is the pre-state.
-      verify: the fixture exists and the `README.md` names the generator file,
-      the script, and the shipped skill that was dispatched instead.
-- [ ] **0.2 ADR — playbook artefact class.** Via `adr-create`: Status Proposed;
+      verify (discharged): the fixture exists and the `README.md` names the generator
+      file, the script, and the shipped skill that was dispatched instead. **All three
+      named** — `turbo/generators/config.ts`, `new:component`, `react-shadcn-ui`.
+
+      **The pre-state is a VERIFIED negative, not a recalled one.** The search that
+      establishes it, run at this commit:
+      `grep -rn 'turbo gen\|turbo/generators\|plopfile' src/skills/ src/rules/` ->
+      **no matches**. Nothing in any shipped skill or rule mentions a repository
+      generator, so no dispatch path *can* propose one — the component-shaped skills
+      (`react-shadcn-ui`, `ui-component-architect`) are the only reachable candidates and
+      both write files directly.
+
+      The README also states why this is a defect rather than a preference: the generator
+      encodes the barrel export, the co-located test and the layout, so a generic skill's
+      output **compiles and is wrong** — and it fails silently, because the result looks
+      like a component. And what the fixture is NOT: `turbo` is never executed (the files
+      are read as configuration, so it works offline and installs nothing), and naming
+      `turbo` is an integration target rather than derivation-attribution.
+- [x] **0.2 ADR — playbook artefact class.** Via `adr-create`: Status Proposed;
       Decision names the playbook **home** (the path decided under
       `b-playbook-home-in-consumer-tree`; every later step says "the playbook
       home" and never spells a path) and defines a playbook as a file there
@@ -109,19 +125,44 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       body in the `command-writing` shape. Consequences name the precedence
       rule (Phase 2) and the staleness check (Phase 3). Mark explicitly that
       the name and class are a proposal of this roadmap.
-      verify: the ADR file exists, `./scripts-run src/scripts/generate_index
-      --check` is green, and the ADR's Decision quotes the frontmatter keys.
+      verify (discharged): the ADR file exists, `./scripts-run src/scripts/generate_index
+      --check` is green, and the ADR's Decision quotes the frontmatter keys. **All three:
+      `ADR-244-playbook-is-a-sixth-context-type.md`, index in sync, and the Decision
+      carries a table of `task` / `scope` / `grade` / `invokes` with the rule for each.**
+
+      **Home: a sixth `Playbook` context type**, in the existing contexts directory beside
+      the five `src/agent-src/templates/contexts.md:25-29` defines — `b-playbook-home-in-consumer-tree`
+      option (b), AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent: *"reusing established context machinery as a sixth type
+      minimizes new surface area versus creating a parallel structure in a new directory."*
+
+      Status **proposed**, because the step says the name and class are this roadmap's
+      proposal and the ADR should say so rather than presenting them as settled.
+
+      Two things the ADR decides that the step did not ask for, both because leaving them
+      open would have cost a later step: **there is no third `recommended` grade** — a
+      grade derived from neither the tree nor a commit is a claim with no basis, and every
+      consumer would have to honour it for it to mean anything; and **Nx and Plop are out
+      of the first release**, because their discovery needs a consumer binary while the
+      Phase-3 staleness check must run without one. A gate that needs the consumer's
+      toolchain installed is a gate that does not run.
 
 ## Phase 1 — Template and authoring skill
 
-- [ ] **1.1 `src/agent-src/templates/playbook.md`.** The template with the
+- [x] **1.1 `src/agent-src/templates/playbook.md`.** The template with the
       0.2 frontmatter, a mandatory "Source of truth" line per step (the
       script / generator / task it invokes, or the worked example commit it
       was observed from), and a "Verify" line per step in the roadmap
       `verify:` idiom. A `configured` playbook may not contain a step without
       an `invokes` entry; an `observed` one must cite a commit.
-      verify: the template exists and `grep -c "Source of truth" …/playbook.md`
-      is ≥ 1.
+      verify (discharged): the template exists and `grep -c "Source of truth" …/playbook.md`
+      is >= 1. **Returns 2.**
+
+      `src/agent-src/templates/playbook.md` carries the 0.2 frontmatter, a **Source of
+      truth** line and a **Verify** line per step, and states both grade obligations as a
+      table rather than as prose: `configured` may have no step without an `invokes` entry,
+      `observed` must cite the commit. It also carries a *"What this playbook does NOT
+      cover"* section, because a playbook that silently stops short is worse than one that
+      names where it ends — a reader cannot otherwise tell completion from omission.
 - [ ] **1.2 `playbook-authoring` skill (new, `engineering-base`).** Derives
       playbooks from the repository: enumerate `package.json#scripts` (root and
       each workspace), `turbo.json` tasks with `description`, `nx list` /
@@ -212,7 +253,7 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ### blocker: b-playbook-home-in-consumer-tree
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.2, Phase 1 step 1.1, Phase 2 step 2.2.
 - **What to do:** pick exactly one — (a) `agents/playbooks/` beside
@@ -227,7 +268,20 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
   in 2.1 cannot name a glob, and 3.1 has nothing to scan.
 - **Resolved when:** the ADR's Decision names the path and every step in this
   file uses it.
+- **Resolution (2026-08-23) — option (b): a sixth context type `Playbook`.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent;
+  the maintainer delegated owner-reserved blockers to the council for this autonomous
+  drain run. Reason, in the council's words: *"reusing established context machinery as a
+  sixth type minimizes new surface area versus creating a parallel structure in a new
+  directory."* Option (a), a new `agents/playbooks/` directory, was refused because it
+  creates a parallel content system with its own discovery, validation and projection
+  surface — a cost paid on every later change to either system — for an artefact the
+  contexts machinery already fits.
 
+  Recorded in `ADR-244-playbook-is-a-sixth-context-type.md`, whose Decision names the
+  home once. **Every later step says "the playbook home" and never spells the path**,
+  which is deliberate: a step that hard-codes a directory has to be rewritten if the
+  placement is revisited, and the placement is the part of this decision least likely to
+  survive contact with a consumer.
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: external-session/claude -->
 
