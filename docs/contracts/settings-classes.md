@@ -242,8 +242,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 107 |
-| **Total** | **136** |
+| C — guarded | 108 |
+| **Total** | **137** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -257,6 +257,14 @@ It rose to 136 on 2026-08-20 when `road-to-gate-autonomy`'s
 first keys added to this contract since the deletions above, and both are C on
 test 1 (money).
 
+It rose to 137 on 2026-08-23 when `road-to-frontend-power` E1.1–E1.3 added
+`hooks.design_pass.enabled`. C on test 1 (it configures code that runs on every
+tool call and at every turn end), and the only hook key in this contract whose
+concern can **block** rather than warn — which is why the class matters here
+more than for its two `hooks.*` neighbours. The disposition is `policy`, not
+`derivable`, and the block is why: whether an operator accepts a gate that can
+refuse a turn is a risk preference, and no predicate computes it. Its two
+`hooks.*` neighbours are `derivable` because they only ever warn.
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -307,8 +315,8 @@ the template, which is the drift this contract exists to prevent.
 | derivable | 83 |
 | un-inferrable | 9 |
 | consent | 39 |
-| policy | 5 |
-| **Total** | **136** |
+| policy | 6 |
+| **Total** | **137** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -524,6 +532,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call | derivable — the rule-registry match plus the hook's own per-signature silence cap |
 | `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call | derivable — the UI-surface predicate plus the hook's own two-nudges-per-session cap |
+| `hooks.design_pass.enabled` | C | `false` | C-test 1 — it configures code that runs on every tool call and at every turn end, and unlike its two `hooks.*` neighbours its stop pass can BLOCK rather than warn | policy — whether an operator accepts a gate that can refuse a turn is a risk preference, not a fact the tree can compute. The two neighbours are `derivable` because they only ever warn; the block is the discriminator. `road-to-frontend-power` transfers the default flip to the owner for the same reason |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call | derivable — the index-detection probe the nudge already runs; no index means silence |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |

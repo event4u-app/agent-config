@@ -1,5 +1,5 @@
 /**
- * Pure-dispatch goldens for the local stdio-lite MCP server (ADR-085).
+ * Pure-dispatch goldens for the local stdio-lite MCP server (ADR-207).
  *
  * Pins the wire shapes (mirrored from the hosted Worker) + the read-only
  * boundary: tools/list empty, tools/call → not_implemented, unknown method →
@@ -99,7 +99,7 @@ describe('dispatch — resources', () => {
     });
 });
 
-describe('dispatch — read-only boundary (ADR-085)', () => {
+describe('dispatch — read-only boundary (ADR-112)', () => {
     it('tools/list is empty', () => {
         expect((ok(dispatch(TREE, ID, req('tools/list'))).result as { tools: unknown[] }).tools).toEqual([]);
     });

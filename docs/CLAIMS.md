@@ -214,7 +214,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 201 commands.
+- claim: 202 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -723,3 +723,84 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-08-22 (road-to-subagent-envelope-adoption Phase 1.3). BASELINE, measured before the pointer landed: **0 valid envelopes of 1,845 post-split stops**, window 2026-08-13T21:19:46Z through 2026-08-22T11:43:05Z, over `agents/runtime/state/subagent-ledger/2026-08.jsonl`. Verdict breakdown `no_envelope` 1,817 · `fail` 28 · `ok` 0 · `no_message` 0; a further 4,543 rows carry the retired `absent` vocabulary and are excluded rather than folded in. Agent-type composition `(null)` 1,725 · `general-purpose` 92 · `Explore` 28 — the null majority is the start-to-stop join rate of roughly 8 in 100 recorded elsewhere, and it is why no stop can be attributed to a dispatcher. METRIC: `ok` divided by post-split stops, reported by `src/scripts/report_envelope_rate.ts`, which prints the rate, the window bounds, the stop count and the ledger path on one line. THRESHOLD FOR THE FIRST WINDOW: greater than zero and rising. Deliberately NOT a percentage — a first window held to a high bar would fail for reasons the measurement cannot separate from the pointer's own effect, so the only thing the first window can establish is that the pointer is readable at all. POWER: the baseline denominator is 1,845; a first window below ~100 stops distinguishes nothing. FALSIFICATION: (1) a rate that stays 0 has at least three causes — the pointer is unreadable, the dominant path was misidentified, or workers on that path never emit a final assistant message — and a single rate cannot separate them, so a flat rate is reported as unresolved rather than as the pointer having failed; (2) the ledger is gitignored and machine-local, so every reading is one machine's drain traffic and no rate from it generalises; (3) a rate that rises without a contemporaneous pointer-removed arm does not establish that the pointer caused it — the historical baseline is temporally and compositionally confounded and both council seats refused it as a control.
 - status: unbacked
 - last_verified: 2026-08-22
+
+### claim: skill-link-census
+- claim: Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with.
+- kind: quant
+- evidence: agents/evidence/metrics/skill-link-census.json#"dead_links": []
+- status: backed
+- last_verified: 2026-08-23
+
+  Written by `./scripts-run src/scripts/lint_handoffs --census-json`. The committed
+  row is the LIVE post-repair state at `9c4f5bff4` (`dead_links: []`,
+  959 links, 948 gate-matched, 294 SKILL.md files — the tree gained two
+  more from an intervening merge, and the row is regenerated rather than pinned
+  because it is an instrument, not a snapshot). The pre-repair capture from the
+  same command at `c7e82087e`, which is the measurement the repair was decided
+  from, read: 947 `](../<slug>/SKILL.md` links across 292 SKILL.md files, 960 widened to
+  bare directory targets, 205 files carrying at least one, 224 carrying any
+  `](../` link, 938 matched by the gate's own `LINK_RE`, 930 of those undeclared
+  in the linker's `requires_skills:` because only 5 of those 292 files declare
+  the field at all, 221 scoped survivors / 71 pruned, 24 scoped dangles across 17
+  survivors. DEAD LINKS BEFORE THE REPAIR: **16**, not the 14 the drafting census
+  recorded, and the gap is the finding rather than drift — the Reproduction B.1
+  grep `](\.\./[a-z0-9-]*/SKILL\.md` cannot match a target containing a colon,
+  so `../create-pr:description-only/SKILL.md` (x2, `src/skills/review-routing/SKILL.md:34,213`)
+  was invisible to the measurement meant to find it. The gate predicate — a target
+  absent from the live SKILL.md set — has no such blind spot, which is why the
+  census is derived from it and the grep is kept only as the reproducible
+  cross-check. All 16 were repaired in the same change: 8 `verify-before-complete`
+  repointed to `verify-completion-evidence` (rename at
+  `docs/archive/CHANGELOG-pre-2.2.0.md:1216`), 3 `tests-execute` and 2
+  `create-pr:description-only` rewritten to their real command paths, 3
+  `data-exposure-review` removed with the referring sentence rewritten because the
+  slug exists nowhere in the tree and no successor may be invented.
+
+### claim: adapter-lifecycle-day-one-table
+- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree; the stale surface is the lifecycle day-one table, which is history and not a live tier list.
+- kind: qual
+- evidence: docs/contracts/provider-lifecycle.md#historical record
+- status: backed
+- last_verified: 2026-08-23
+
+  `src/scripts/ai-video/adapters/higgsfield.sh:15` reads `Lifecycle: stable` and
+  `agents/templates/.ai-video.xml.example:55` reads `<lifecycle>stable</lifecycle>`
+  — the exact pair `docs/contracts/provider-lifecycle.md:101` obliges, and they
+  agree. The surface reading `experimental` is § 5, which states in its own words
+  that it lists the tiers "on the day this contract lands". The promotion is
+  recorded in `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
+  This corrects the drafting premise, which asserted a live contradiction between
+  adapter and contract: there is none, so the repair is a supersession note on the
+  historical table plus a parity gate over the obliged pair, never an edit to the
+  adapter.
+
+### claim: augment-manifest-version-package-synced
+- claim: The `.augment-plugin/` manifest version is the package version, not an independent plugin-API version, and every version-bearing file the release workflow triggers on is read by a job in that workflow.
+- kind: qual
+- evidence: src/scripts/lint_marketplace.ts#check_augment_manifests
+- status: backed
+- last_verified: 2026-08-23
+
+  Both files ship — `src/config/publish-surface.json` lists `.augment-plugin/` as
+  a publish root — and both carried `version: 1.0.0` while `package.json` moved
+  to 14.10.0, with no process owning that number: `lint_marketplace.ts` opened
+  only `.claude-plugin/marketplace.json`, `check_release_pr_shape.ts` allowlisted
+  only that twin, `release.ts` bumped only that twin, and
+  `release-validation.yml` named `.augment-plugin/marketplace.json` in `paths:`
+  while its version job jq-read two other files — a trigger with no reader.
+  `plugin.json` had not been touched since 2026-04-17. Nothing in the tree ever
+  claimed `1.0.0` was an independent plugin-API version: no comment, no test, no
+  doc, and the only reader anywhere is
+  `src/scripts/probe_skill_registration.ts:137`. An unclaimed constant no reader
+  interprets is drift, not a deliberate independent version, so the Augment
+  manifests are held to the same rule as the Claude twin. **This is the reversible
+  half of the decision and it is recorded here on purpose:** if `1.0.0` was ever
+  meant to be independent, one commit undoes it, and a future reader can see the
+  choice was made rather than inferring it from a synced number.
+
+### claim: scoped-dangle-follow-rate
+- claim: A link from a surviving skill to one that `projection.mode: scoped` prunes is either a defect agents actually walk into, or behaviour the consumer opted into — decided by a measured follow rate, never by an unguarded zero.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-23 (road-to-skill-link-integrity-and-manifest-sync Phase 4). POPULATION, measured and reproducible: 24 dangling links from 17 surviving skills, derived by `lint_handoffs --census-json` with `is_pruned_under_scoped` — the predicate `install.ts` itself applies, so the counted set cannot describe a projection the installer does not perform. METRIC: read attempts against `.claude/skills/<pruned-slug>/SKILL.md` over a 30-day window, from `agents/runtime/metrics/skill-usage.jsonl`. THRESHOLD, fixed now: zero attempts over a LIVE window closes this as a published null and the 24 links stay; a nonzero count promotes the fix, which is to rewrite each dangling link in the PROJECTED SKILL.md to name the slug and its pack instead of linking it — source tree untouched, using the same predicate the counter uses. INSTRUMENT STATUS: **dead, and the measurement was therefore not attempted.** Two independent reasons, both verified: (1) the store is gitignored and machine-local, so it is ABSENT in any fresh checkout, worktree, or CI run — that is the state the committed row `agents/evidence/metrics/scoped-dangle-follow-rate.json` records; in the maintainer's parent checkout it holds 181 records whose newest timestamp is 100 days old (2026-05-15T13:44:17.594Z), so it is stale there rather than absent. (2) **A LIVE clock would still not answer this**, which the drafting phase did not foresee: every one of those 181 records carries `kind: "exposure"`, and no event in `FOLLOW_KINDS` (`read`, `read_attempt`, `follow`) is emitted anywhere in the tree — the instrument records that a skill was SHOWN, never that a link was FOLLOWED. BLOCKED ON: emitting a follow event, which is not in this roadmap. FALSIFICATION: `attempts` is `null` and never `0` whenever `instrument_live` is false, asserted in `tests/scripts/scoped_dangle_window_guard.test.ts`; a `0` there would be the false null this whole phase exists to prevent, and reporting one is the failure, not the finding.
+- status: unbacked
+- last_verified: 2026-08-23

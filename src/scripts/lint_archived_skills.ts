@@ -19,17 +19,21 @@
  *   4. No archived slug still has a live SKILL.md (no zombies).
  *   5. No live SKILL.md cites an archived slug as a router target in its
  *      frontmatter `replaced_by:` field.
+ *   6. A slug that had a `SKILL.md` at the base ref and has none in the
+ *      working tree carries an archive note. See {@link removed_without_note}.
  *
  * Exit codes:
  *   0  contract holds
  *   1  one or more violations
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -243,6 +247,19 @@ function main(): number {
         }
     }
 
+    // Rule 6 — removals that never entered the ledger.
+    const removalCheck = removed_without_note(REPO, archivedKeys, live);
+    if ('skipped' in removalCheck) {
+        process.stdout.write(`rule 6 skipped: ${removalCheck.skipped}\n`);
+    } else {
+        for (const slug of removalCheck.removed) {
+            errors.push(
+                `${slug}: SKILL.md removed since the base ref with no ` +
+                    `agents/evidence/archived-skills/${slug}.md note`,
+            );
+        }
+    }
+
     if (errors.length) {
         process.stderr.write(
             `❌  lint_archived_skills: ${errors.length} violation(s) across ${notes.length} note(s)\n`,
@@ -259,6 +276,82 @@ function main(): number {
         );
     }
     return 0;
+}
+
+/**
+ * Rule 6 — a slug that left the tree without entering the ledger.
+ *
+ * WHY THIS LIVES IN THE GATE AND NOT IN A SCAFFOLDER. The roadmap step that
+ * asked for this (`road-to-skill-link-integrity-and-manifest-sync` Phase 1
+ * Step 3) named `src/scripts/new_skill.ts --archive` as the extension point,
+ * on the premise that it is "a creation path with no symmetric removal path".
+ * That premise is false: `new_skill.ts` scaffolds into a `packages/<pack>/`
+ * container that ADR-051 retired, and its `main()` returns exit 2 with
+ * `error: no packages/ tree found` in this tree, because skill authoring moved
+ * to `src/skills/`. A mode added there could not run.
+ *
+ * The obligation is a CI property, not a tool property, and the distinction is
+ * the reason the ledger is empty: nothing forces a maintainer or an agent to
+ * delete a directory *through* a tool, so a scaffolder mode is a bypass by
+ * construction. Three slugs left this tree without a note while
+ * `agents/evidence/archived-skills/` held only a README.
+ *
+ * A RENAME IS A REMOVAL HERE, DELIBERATELY. Git would call
+ * `verify-before-complete` → `verify-completion-evidence` a rename; every link
+ * to the old slug still broke, and repairing eight of them is what produced
+ * this rule. So the old slug owes a note.
+ *
+ * THE COMPARISON IS AGAINST THE MERGE BASE, NOT THE TIP OF MAIN, and this was
+ * found the hard way: the first run of this rule reported `js-library-packaging`
+ * and `storybook-workshop` as unnoted removals. Neither had been removed — both
+ * were ADDED on main after this branch forked, so a branch that is merely
+ * BEHIND its base read every new skill as a deletion. That is the false-red
+ * class `_lib/ratchet_base_ref.ts` warns about in its own docstring ("the gate
+ * gets a reputation for false reds, and someone turns it off"). `git merge-base`
+ * answers the question the rule actually asks — did THIS branch remove it —
+ * because a skill added on main after the fork is not in the merge base at all.
+ *
+ * THE SKIP IS STATED, NEVER SILENT. With no resolvable base ref there is no
+ * "before" side, and comparing against an assumed-empty base would report every
+ * skill in the tree as removed. `resolveBaseRef` returns null in that case and
+ * this returns a `skipped` reason the caller prints — the honest default named
+ * in that helper's own contract. It is also blind to an uncommitted removal;
+ * CI is the authoritative gate and CI only ever sees committed work.
+ */
+export function removed_without_note(
+    repoRoot: string = REPO,
+    archived: ReadonlySet<string> = new Set(archived_slugs()),
+    liveSlugs: ReadonlySet<string> = new Set(live_skill_slugs()),
+): { skipped: string } | { removed: string[] } {
+    const base = resolveBaseRef(repoRoot);
+    if (base === null) {
+        return { skipped: 'no base ref resolved — nothing to compare against' };
+    }
+    const mb = spawnSync('git', ['merge-base', 'HEAD', base], {
+        cwd: repoRoot,
+        encoding: 'utf-8',
+    });
+    // A missing merge base is not "compare against the tip instead" — that is
+    // the false-red above. It is no comparable before-side at all.
+    const forkPoint = mb.status === 0 ? String(mb.stdout).trim() : '';
+    if (!forkPoint) {
+        return { skipped: `no merge base between HEAD and ${base}` };
+    }
+    const res = spawnSync(
+        'git',
+        ['ls-tree', '-r', '--name-only', forkPoint, '--', 'src/skills'],
+        { cwd: repoRoot, encoding: 'utf-8' },
+    );
+    if (res.status !== 0) {
+        return { skipped: `git ls-tree ${forkPoint} failed — base ref is not readable here` };
+    }
+    const atBase = new Set<string>();
+    for (const line of String(res.stdout).split('\n')) {
+        const m = /^src\/skills\/([^/]+)\/SKILL\.md$/.exec(line.trim());
+        if (m) atBase.add(m[1] as string);
+    }
+    const removed = [...atBase].filter((slug) => !liveSlugs.has(slug) && !archived.has(slug)).sort();
+    return { removed };
 }
 
 // --- helpers --------------------------------------------------------------

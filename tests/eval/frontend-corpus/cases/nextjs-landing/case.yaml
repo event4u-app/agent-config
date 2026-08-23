@@ -1,0 +1,15 @@
+# Case: nextjs-landing
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: nextjs-landing
+prompt: "We need a landing page for the new pricing tier."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: new-world
+  reference_maturity: null
+note: |
+  Greenfield brand surface with no supplied reference. The one case where `new-world` is correct.
+files:
+  - app/pricing/page.tsx

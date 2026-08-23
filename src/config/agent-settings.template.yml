@@ -1276,6 +1276,33 @@ hooks:
   design_slop:
     enabled: false
 
+  # PostToolUse + stop design pass (road-to-frontend-power E1.1 / E1.2 / E1.3).
+  # Default-OFF. One concern on two slots. On post_tool_use, a write to a UI
+  # surface delivers the design findings as context and NEVER blocks. On stop,
+  # the same pass runs over every UI file touched this session, deduped against
+  # what the post pass already surfaced, and a P0 OBJECTIVE FLOOR (contrast,
+  # font size, heading skip, focus) blocks with a continuation. P1-P3 never
+  # block on either slot.
+  #
+  # post_tool_use rather than pre_tool_use, and the reason is measured rather
+  # than stylistic (internal/bench/frontend-power/BASELINE-2026-08-23.md):
+  # pre_tool_use is declared by three hosts and honoured by one while
+  # post_tool_use is declared by six, and _lib/ui_surface.ts is a PATH
+  # predicate — so a pre-write gate cannot fire on the first write of a NEW
+  # surface, which is the write it most wants.
+  #
+  # A pass that could not fully run reports verification: degraded with a
+  # reason (no render artefact => the viewport-dependent floors were not
+  # checked) instead of passing silently. Run `agent-config ui:render` to lift
+  # it, and `agent-config ui:audit` to satisfy the audit-freshness line.
+  #
+  # This does NOT replace design_slop above. Two design keys is the honest
+  # state until the tiering experiment has a number: retiring the older
+  # carrier on the assumption that this one covers it is the build-then-justify
+  # pattern the parent roadmap's Risk 2 names.
+  design_pass:
+    enabled: false
+
   # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
   # Default-OFF. When enabled, a Write/Edit to a UI surface with no design
   # consultation latched this session WARNS (exit 2, never blocks) naming the

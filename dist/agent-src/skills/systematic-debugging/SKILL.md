@@ -352,7 +352,7 @@ emit the `context_stale` event above it for the consolidation pass.
 * Playwright / E2E test failures → [`playwright-testing`](../playwright-testing/SKILL.md)
 * PHPStan / Rector / ECS output → [`quality-tools`](../quality-tools/SKILL.md)
 * Verifying the fix is complete before claiming done →
-  [`verify-before-complete`](../verify-before-complete/SKILL.md)
+  [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md)
 
 ## Validation checklist
 

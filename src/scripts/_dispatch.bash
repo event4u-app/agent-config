@@ -71,6 +71,10 @@ TS-shell native (run via the installed `agent-config` binary):
   config                     Open the configuration GUI (global default; --project for the project surface)
   settings                   Open the local Settings GUI (alias of config)
   ui:serve                   Start the local UI server (127.0.0.1, auto-picked port)
+  ui:audit [path]            Inventory a UI tree into agents/runtime/state/ui-audit.json
+                             (Class A). The artefact ui-audit-gate reads.
+  ui:render <path|url>       Headless capture at desktop / 375px / 320px into
+                             agents/runtime/state/render/ (Class A; no process survives).
   workspaces ls              List workspaces from the discovery manifest
   packs ls                   List packs from the discovery manifest
   brand:status               Is a consumer brand layer present, and at which of the
