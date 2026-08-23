@@ -1,0 +1,5 @@
+{
+  "name": "mono-nx",
+  "private": true,
+  "devDependencies": { "nx": "^20.0.0" }
+}

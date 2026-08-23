@@ -1,15 +1,16 @@
 /**
- * Pure JSON-RPC dispatch for the local stdio-lite MCP server (ADR-085).
+ * Pure JSON-RPC dispatch for the local stdio-lite MCP server (ADR-207).
  *
  * Wire shapes are mirrored VERBATIM from the hosted Worker
  * (`internal/workers/mcp/src/{handlers,prompts,resources}.ts`) so the local
  * stdio surface and the hosted HTTP surface return identical envelopes —
- * the multi-channel-consistency guarantee in ADR-085. If you change a shape
- * here, change it there too (and the Python kernel `scripts/mcp_server/`).
+ * the multi-channel-consistency guarantee. If you change a shape here, change
+ * it there too (and the kernel `src/scripts/mcp_server/`).
  *
  * Read-only: `tools/list` is empty and `tools/call` returns the
- * `not_implemented` envelope. Execution (the `full` kernel) is deferred per
- * ADR-085 § Phase-2 trigger. Pure — no I/O, no clock, no stdout.
+ * `not_implemented` envelope. That boundary is accepted policy, owned with its
+ * revisit trigger by ADR-112 and restated as the distribution shape by ADR-207
+ * on Node-only grounds. Pure — no I/O, no clock, no stdout.
  */
 
 import type { ContentTree, ContentEntry } from './content.js';
@@ -135,14 +136,14 @@ function readResource(tree: ContentTree, uri: string): unknown | null {
     };
 }
 
-/** Read-only lite surface: no executable tools. ADR-085 defers `full`. */
+/** Read-only lite surface: no executable tools. ADR-112 owns the boundary. */
 function notImplementedEnvelope(name: string): Record<string, unknown> {
     return {
         code: 'not_implemented',
         message:
             `Tool '${name}' is not available on the local stdio-lite surface ` +
-            `(read-only, ADR-085). Execution is deferred; self-host the Python ` +
-            `kernel (scripts/mcp_server/) for tool execution.`,
+            `(read-only, ADR-112). Execution is deferred; self-host the kernel ` +
+            `(src/scripts/mcp_server/) for tool execution.`,
         tool: name,
     };
 }

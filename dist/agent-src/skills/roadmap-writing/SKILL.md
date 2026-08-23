@@ -51,8 +51,18 @@ dashboard-sync axis stays in `roadmap-management`.
 Authoring or materially rewriting a roadmap must go through
 Understand → Research → Draft per the
 [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
-rule. Inspect existing roadmaps under `agents/roadmaps/` for overlap
-or supersession before opening a new one. **Gate C first** — "write a
+rule. **Run the probe, do not eyeball the directory:**
+
+```bash
+agent-config roadmap:context
+```
+
+It reports sibling roadmaps on the same topic across all four roadmap
+directories, inbox notes, and open PRs on the cited paths — the semantic axis a
+filename scan cannot see. Each hit becomes one `relates:` row
+(`extends` / `supersedes` / `depends` / `disjoint`, template rule 18); zero hits
+becomes `relates: []` carrying the probe's `scanned:` line as its
+justification. **Gate C first** — "write a
 plan/roadmap" is a gated surface, so run
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
 before drafting (95%-conditions, marker, interview-or-degrade, C→R1 handoff).
@@ -218,45 +228,12 @@ preferred.
 
 When a parent roadmap closes with `[~]` items, the
 [`roadmap-management`](../roadmap-management/SKILL.md) skill spawns a
-follow-up. Authors and reviewers must know the shape so they can
-recognise it:
-
-```markdown
----
-complexity: lightweight
-status: draft                      # optional — draft hides from dashboard
-parent_roadmap: <parent-slug>      # back-link to the archived source
----
-
-# Roadmap: Follow-up to <parent-title>
-
-> <One sentence: carried-over outcome.>
-
-## Context
-
-This roadmap collects items deferred from
-[`agents/roadmaps/archive/<parent-slug>.md`](../archive/<parent-slug>.md).
-{ … original phases preserved verbatim … }
-
-<!-- For option 2 (ready + blocked), add this as a body note, NOT in frontmatter: -->
-> Blocked until <condition>. Execution starts when the condition clears.
-```
-
-Two states the author picks between (mirrors the Iron Law 3
-numbered-options block in [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
-
-- **`status: draft`** → hidden from `agents/roadmaps-progress.md`
-  until flipped. Use for items the user wants captured but not
-  surfaced to the active backlog yet.
-- **`status: ready` (default; omit the key)** plus body
-  `> Blocked until …` note → visible in the dashboard, execution
-  gated by the documented condition. The blocking is a body
-  convention, not enforced by the dashboard generator — readers
-  honor the note.
-
-The follow-up roadmap is **not** authored from scratch — the
-deferred steps are copied verbatim (with their phase context). This
-preserves the plan exactly as the author originally wrote it.
+follow-up. Authors and reviewers must know the shape so they can recognise it:
+the frontmatter template, the two states the author picks between
+(`status: draft`, hidden from the dashboard, vs the default `status: ready`
+plus a body `> Blocked until …` note), and the rule that deferred steps are
+copied verbatim rather than re-authored →
+[`references/follow-up-roadmap-shape.md`](references/follow-up-roadmap-shape.md).
 
 ### 8. Source-derived & capability-adoption roadmaps (conditional)
 
@@ -311,6 +288,11 @@ to every roadmap you author.
 3. Are checkboxes present in every non-intro phase?
 4. Are exit criteria decidable, or vibe-based ("looks good")?
 5. Is content duplicated from another roadmap (supersession instead)?
+5b. Does the frontmatter carry a `relates:` block — one row per probe hit with
+   an `extends`/`supersedes`/`depends`/`disjoint` relation, or an explicit
+   `relates: []` whose note carries the probe's `scanned:` line? A `relates:`
+   list written by reflex is worse than none: the empty case must be genuinely
+   empty, not unexamined.
 6. Any human-gate steps or sign-off phases (§ 4c violation) —
    agent-verifiable check or structured blocker instead?
 7. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`

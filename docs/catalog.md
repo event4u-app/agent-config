@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **722 public artefacts** shipped by
+Consumer-facing catalog of all **729 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (294)
+## Skills (299)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -36,6 +36,7 @@ are excluded.
 | skill | [`agents-md-thin-root`](../dist/agent-src/skills/agents-md-thin-root/SKILL.md) | official | Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block. |
 | skill | [`ai-code-blindspots`](../dist/agent-src/skills/ai-code-blindspots/SKILL.md) | official | Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps |
 | skill | [`ai-council`](../dist/agent-src/skills/ai-council/SKILL.md) | official | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
+| skill | [`alerting-doctrine`](../dist/agent-src/skills/alerting-doctrine/SKILL.md) | official | Use when deciding what earns a page — the page, action and info classes stated provider-neutrally, and the rule that a page without an owner, a runbook and a first diagnostic step is malformed. |
 | skill | [`analysis-autonomous-mode`](../dist/agent-src/skills/analysis-autonomous-mode/SKILL.md) | official | Autonomous multi-step investigation — deep research carried end-to-end without per-step approval; explicit request only, never for normal feature work. |
 | skill | [`analysis-skill-router`](../dist/agent-src/skills/analysis-skill-router/SKILL.md) | official | Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'. |
 | skill | [`api-design`](../dist/agent-src/skills/api-design/SKILL.md) | official | Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design. |
@@ -181,7 +182,7 @@ are excluded.
 | skill | [`livewire`](../dist/agent-src/skills/livewire/SKILL.md) | official | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../dist/agent-src/skills/livewire-architect/SKILL.md) | official | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
 | skill | [`llm-provider-knowledge`](../dist/agent-src/skills/llm-provider-knowledge/SKILL.md) | official | Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory. |
-| skill | [`logging-monitoring`](../dist/agent-src/skills/logging-monitoring/SKILL.md) | official | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
+| skill | [`logging-monitoring`](../dist/agent-src/skills/logging-monitoring/SKILL.md) | official | Use when establishing what observability a project actually has — the four Golden Signals, required signal to detected implementation to evidence, and SLI/SLO provenance. |
 | skill | [`logo-generation`](../dist/agent-src/skills/logo-generation/SKILL.md) | official | Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation. |
 | skill | [`market-entry-analysis`](../dist/agent-src/skills/market-entry-analysis/SKILL.md) | official | Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'. |
 | skill | [`markitdown`](../dist/agent-src/skills/markitdown/SKILL.md) | official | Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
@@ -195,6 +196,7 @@ are excluded.
 | skill | [`mobile-e2e-strategy`](../dist/agent-src/skills/mobile-e2e-strategy/SKILL.md) | official | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-detect-on-the-fly`](../dist/agent-src/skills/module-detect-on-the-fly/SKILL.md) | official | When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../dist/agent-src/skills/module-management/SKILL.md) | official | When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
+| skill | [`monorepo-workspace`](../dist/agent-src/skills/monorepo-workspace/SKILL.md) | official | Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed. |
 | skill | [`motion-choreographer`](../dist/agent-src/skills/motion-choreographer/SKILL.md) | official | When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../dist/agent-src/skills/multi-tenancy/SKILL.md) | official | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`nda-triage`](../dist/agent-src/skills/nda-triage/SKILL.md) | official | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
@@ -204,6 +206,7 @@ are excluded.
 | skill | [`onboarding-program`](../dist/agent-src/skills/onboarding-program/SKILL.md) | official | When shaping employee onboarding — time-to-productivity, role-by-role program, mentor pairing, 30/60/90 milestones. Triggers on 'design our onboarding', 'why are new hires ramping slow'. |
 | skill | [`one-on-one-cadence`](../dist/agent-src/skills/one-on-one-cadence/SKILL.md) | official | Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'. |
 | skill | [`openapi`](../dist/agent-src/skills/openapi/SKILL.md) | official | Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI. |
+| skill | [`operational-readiness`](../dist/agent-src/skills/operational-readiness/SKILL.md) | official | Use when adjudicating an operational go/no-go from typed evidence — a readiness enum with an explicit floor where one red is not-ready, unknown is never green, and no score can average a red away. |
 | skill | [`org-design`](../dist/agent-src/skills/org-design/SKILL.md) | official | Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'. |
 | skill | [`overbuild-review-lens`](../dist/agent-src/skills/overbuild-review-lens/SKILL.md) | official | Use when a diff builds more than the task needs — code that should not exist, a dependency the platform already covers, or a clever form where a flat one reads better. Deletion-hunting, not quality. |
 | skill | [`override-management`](../dist/agent-src/skills/override-management/SKILL.md) | official | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
@@ -277,6 +280,7 @@ are excluded.
 | skill | [`security-maturity-assessment`](../dist/agent-src/skills/security-maturity-assessment/SKILL.md) | official | Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt? |
 | skill | [`sentry-integration`](../dist/agent-src/skills/sentry-integration/SKILL.md) | official | Use when the user shares a Sentry URL, says \"check Sentry\", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis. |
 | skill | [`sequential-thinking`](../dist/agent-src/skills/sequential-thinking/SKILL.md) | official | Structured step-by-step problem decomposition and iterative analysis; explicit request only, never for regular coding tasks, and at most once per task. |
+| skill | [`server-hardening`](../dist/agent-src/skills/server-hardening/SKILL.md) | official | Use when hardening a Linux host you operate — SSH posture, a default-deny firewall baseline, and unattended security upgrades, each verified on the box rather than assumed from a config file. |
 | skill | [`skill-improvement-pipeline`](../dist/agent-src/skills/skill-improvement-pipeline/SKILL.md) | official | Run the skill-improvement pipeline after a learning was detected — capture, classify, create, validate, apply; explicit request only. |
 | skill | [`skill-management`](../dist/agent-src/skills/skill-management/SKILL.md) | official | Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained. |
 | skill | [`skill-reviewer`](../dist/agent-src/skills/skill-reviewer/SKILL.md) | official | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
@@ -320,6 +324,7 @@ are excluded.
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) | official | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) | official | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| skill | [`workspace-link`](../dist/agent-src/skills/workspace-link/SKILL.md) | official | Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
 ## Rules (118)
@@ -445,7 +450,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (201)
+## Commands (202)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -510,6 +515,7 @@ are excluded.
 | command | [`design-system-capture`](../dist/agent-src/commands/design-system/capture.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
 | command | [`design-system-generate`](../dist/agent-src/commands/design-system/generate.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |
 | command | [`design-system-import`](../dist/agent-src/commands/design-system/import.md) | cluster: design-system | Run an extraction tool's output through the three-lane adapter into the design-system.json contract, then hand it to the per-field confirmation import. |
+| command | [`design`](../dist/agent-src/commands/design.md) | cluster: design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
 | command | [`estimate-ticket`](../dist/agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`explain-run`](../dist/agent-src/commands/explain-run.md) |  | Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'. |
 | command | [`feature`](../dist/agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
@@ -651,7 +657,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (109)
+## Guidelines (110)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -732,6 +738,7 @@ are excluded.
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`gtm-handoff`](../docs/guidelines/gtm-handoff.md) | (root) |  |
+| guideline | [`monorepo-antipatterns`](../docs/guidelines/monorepo-antipatterns.md) | (root) |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
 | guideline | [`artisan-commands`](../docs/guidelines/php/artisan-commands.md) | php |  |
 | guideline | [`blade-ui`](../docs/guidelines/php/blade-ui.md) | php |  |

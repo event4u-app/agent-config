@@ -22,6 +22,8 @@ import { runVersions } from './commands/versions.js';
 import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runRtkDetect } from './commands/rtkDetect.js';
+import { runUiAudit } from './commands/uiAudit.js';
+import { runUiRender } from './commands/uiRender.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation, findInitGuiConflict, withoutGuiFlag } from './initRouting.js';
 import { maybePrintFirstRunNotice } from './firstRunNotice.js';
@@ -123,6 +125,27 @@ async function main(rawArgv: readonly string[]): Promise<number> {
             // (the JSON-RPC responses) on a pipe. Set the code and let the
             // process exit naturally once stdin is at EOF and stdout drained.
             process.exitCode = await runMcpServer();
+        });
+
+    program
+        .command('ui:audit')
+        .argument('[path]', 'UI tree or file to inventory (default: cwd)')
+        .description('Inventory a UI tree into agents/runtime/state/ui-audit.json (Class A)')
+        .option('--json', 'Print the artefact on stdout as well as writing it')
+        .option('--project-root <path>', 'Override the project root')
+        .action((target: string | undefined, opts: { json?: boolean; projectRoot?: string }) => {
+            process.exitCode = runUiAudit({ target, ...opts });
+        });
+
+    program
+        .command('ui:render')
+        .argument('<target>', 'HTML file or http(s) URL to capture')
+        .description('Headless capture at desktop / 375px / 320px into agents/runtime/state/render/ (Class A)')
+        .option('--json', 'Print the manifest on stdout as well as writing it')
+        .option('--project-root <path>', 'Override the project root')
+        .option('--slug <name>', 'Override the output directory name')
+        .action(async (target: string, opts: { json?: boolean; projectRoot?: string; slug?: string }) => {
+            process.exitCode = await runUiRender({ target, ...opts });
         });
 
     program
@@ -396,7 +419,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'rtk:detect', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
+    const native = ['versions', 'doctor-shell', 'rtk:detect', 'mcp-server', 'ui:serve', 'ui:audit', 'ui:render', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.

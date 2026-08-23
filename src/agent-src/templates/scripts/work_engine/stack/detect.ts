@@ -42,10 +42,17 @@
  * label is recoverable (audit catches it, user can override), but a
  * crash mid-dispatch is not.
  *
- * Root manifests only, by design: a monorepo caller passes the workspace
- * root that carries the manifest it cares about. Note the consequence —
- * a caller that always passes the repository root gets `plain` for a
- * monorepo, so the caller owns scope selection, not the detector.
+ * Workspace-aware since `road-to-monorepo-scope-and-detection`: a repository
+ * whose root declares workspaces (`package.json#workspaces`, a
+ * `pnpm-workspace.yaml`, a `turbo.json`, an `nx.json`, a `lerna.json`) and
+ * whose root manifest is not itself an application is descended into, and the
+ * workspace that was chosen is reported as {@link StackResult.scope_root}.
+ *
+ * The detector still never guesses **between** workspaces: two workspaces on
+ * mutually exclusive reactivity layers produce `unknown` plus both names, the
+ * same refusal a single conflicted manifest produces. What it no longer does is
+ * report `plain` for a monorepo — the previous behaviour, and the reason the
+ * repository was handed the generic directive.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -90,6 +97,8 @@ export const DEFAULT_STACK = 'plain';
 export const UNSUPPORTED_STACK = 'unknown';
 
 const _SHADCN_RADIX_PREFIX = '@radix-ui/';
+/** The unified Radix package (February 2026) that replaced the `@radix-ui/*` scope. */
+const _SHADCN_RADIX_UNIFIED = 'radix-ui';
 const _SHADCN_PACKAGE_NAMES: ReadonlySet<string> = new Set(['shadcn-ui', 'shadcn']);
 const _FLUX_PACKAGE = 'livewire/flux';
 const _LIVEWIRE_PACKAGE = 'livewire/livewire';
@@ -193,16 +202,36 @@ export class StackResult {
      */
     readonly ambiguity: ReadonlyArray<string>;
 
+    /**
+     * The workspace this result describes, **relative to the project root**.
+     *
+     * `''` means the project root itself — a non-monorepo, or a monorepo whose
+     * scope could not be resolved. Empty rather than `'.'` because that is
+     * already what `directives/ui/scaffold.ts` defaults to when the field is
+     * absent, so every non-monorepo project keeps byte-identical behaviour.
+     *
+     * Relative, not absolute, for two reasons that are both load-bearing. The
+     * field is serialized into `state.stack` and read back on a later run,
+     * possibly from a different absolute location (a container, a worktree, a
+     * moved checkout). And its one existing consumer — the playbook scope match
+     * at `scaffold.ts` — compares it against a playbook's declared `scope`,
+     * which is a repo-relative workspace path like `packages/ui`; an absolute
+     * path would silently match nothing but `scope: repo`.
+     */
+    readonly scope_root: string;
+
     constructor(args: {
         frontend: string;
         mtime: number;
         axes?: StackAxes;
         ambiguity?: ReadonlyArray<string>;
+        scope_root?: string;
     }) {
         this.frontend = args.frontend;
         this.mtime = args.mtime;
         this.axes = args.axes ?? _EMPTY_AXES;
         this.ambiguity = args.ambiguity ?? [];
+        this.scope_root = args.scope_root ?? '';
     }
 }
 
@@ -239,6 +268,24 @@ export function detect_stack(project_root: string): StackResult {
     // one manifest resolved to `react` with no warning at all.
     if (ambiguity.length > 0) {
         return _r(UNSUPPORTED_STACK);
+    }
+
+    // Workspace root WITH a root manifest — the shape this detector was written
+    // for and never reached. The old guard was `mtime === 0.0`, i.e. "no
+    // manifest at the repository root at all", but a root `package.json` is the
+    // defining file of an npm/pnpm/yarn/bun workspace, so the branch was skipped
+    // for every repository it was meant to serve.
+    //
+    // The second half of the predicate is what keeps a root application out:
+    // a root that ships `react` in `dependencies` IS the app and must not be
+    // abandoned for one of its own packages. A root that ships `react` only in
+    // `devDependencies` beside a workspace declaration is shared test tooling,
+    // which is why the check reads runtime sections only.
+    if (_is_workspace_root(project_root, pkg) && !_root_carries_frontend(composer, pkg)) {
+        const scoped = _resolve_workspace_scope(project_root, mtime, axes);
+        if (scoped !== null) {
+            return scoped;
+        }
     }
 
     if (_is_blade_livewire_flux(composer)) {
@@ -279,39 +326,16 @@ export function detect_stack(project_root: string): StackResult {
         return _r(UNSUPPORTED_STACK);
     }
 
-    // Monorepo: no manifest at the root, but one sits in a workspace directory.
-    // That is a wrong-scope call, not a plain project — the caller owns scope
-    // selection, so say so instead of labelling the whole repo `plain` and
-    // dispatching generic tooling at it.
+    // No manifest at the repository root, but one sits in a workspace
+    // directory. Not a monorepo in the declarative sense — nothing declares the
+    // workspaces — but a scaffold in progress, and descending is still right.
     //
     // A repo with no manifest ANYWHERE stays `plain`: that is greenfield, and
     // the scaffold path depends on it.
     if (mtime === 0.0) {
-        const roots = _nested_frontend_roots(project_root);
-        if (roots.length === 1) {
-            // Unambiguous scope: descend once and keep the workspace's own
-            // axes. Refusing here would punish the common monorepo shape for a
-            // scope decision the layout already makes.
-            const inner = detect_stack(roots[0] as string);
-            return new StackResult({
-                frontend: inner.frontend,
-                mtime: inner.mtime,
-                axes: inner.axes,
-                ambiguity: inner.ambiguity,
-            });
-        }
-        if (roots.length > 1) {
-            // Several frontend roots: the caller owns scope selection, so name
-            // them and let the step ask. Picking the first would be the silent
-            // guess this detector exists to avoid.
-            return new StackResult({
-                frontend: UNSUPPORTED_STACK,
-                mtime,
-                axes,
-                ambiguity: [
-                    `workspace roots: ${roots.map((r) => path.basename(r)).join(' + ')}`,
-                ],
-            });
+        const scoped = _resolve_workspace_scope(project_root, mtime, axes);
+        if (scoped !== null) {
+            return scoped;
         }
     }
 
@@ -356,6 +380,13 @@ const _CACHE_KEY_FILES: ReadonlyArray<string> = [
     'nuxt.config.ts',
     'nuxt.config.js',
     'astro.config.mjs',
+    // Workspace declarations, for exactly the reason `components.json` is here:
+    // adding a `pnpm-workspace.yaml` changes which manifest the result is
+    // computed from, while leaving both root manifests untouched — and the
+    // cache would otherwise serve the pre-workspace answer indefinitely.
+    'pnpm-workspace.yaml',
+    'turbo.json',
+    'nx.json',
 ];
 
 /**
@@ -469,13 +500,35 @@ const _AXIS_SIGNALS: ReadonlyArray<{
 
     // component_lib — marker file beats dependency
     { axis: 'component_lib', value: 'shadcn', npm: ['shadcn-ui', 'shadcn'], files: ['components.json'] },
-    { axis: 'component_lib', value: 'radix', npm_prefix: ['@radix-ui/'] },
+    // `radix-ui` (no slash) is the unified package shadcn's `new-york` style
+    // moved to in February 2026; the scoped `@radix-ui/*` packages are the
+    // pre-unification shape and both are still in the wild.
+    { axis: 'component_lib', value: 'radix', npm: ['radix-ui'], npm_prefix: ['@radix-ui/'] },
+    // Base UI is the other primitive layer shadcn accepts. `@base-ui/react` is
+    // the name since Base UI 1.0; `@base-ui-components/react` is what it was
+    // called before the rename, and projects pinned to it still exist.
+    { axis: 'component_lib', value: 'base-ui', npm: ['@base-ui/react', '@base-ui-components/react'] },
     { axis: 'component_lib', value: 'flux', composer: ['livewire/flux'] },
     { axis: 'component_lib', value: 'nuxt-ui', npm: ['@nuxt/ui'] },
     { axis: 'component_lib', value: 'vuetify', npm: ['vuetify'] },
     { axis: 'component_lib', value: 'mui', npm: ['@mui/material'] },
 
-    // css
+    // css — the major is a marker-file question, never a version string.
+    // v4 dropped `tailwind.config.*` in favour of CSS-first configuration, so
+    // the two majors are told apart by which artefact exists, and a project
+    // carrying neither marker stays on the undifferentiated `tailwind` value
+    // rather than being guessed into a major.
+    { axis: 'css', value: 'tailwind-v4', npm: ['@tailwindcss/vite', '@tailwindcss/postcss'] },
+    {
+        axis: 'css',
+        value: 'tailwind-v3',
+        files: [
+            'tailwind.config.js',
+            'tailwind.config.cjs',
+            'tailwind.config.mjs',
+            'tailwind.config.ts',
+        ],
+    },
     { axis: 'css', value: 'tailwind', npm: ['tailwindcss'] },
     { axis: 'css', value: 'bootstrap', npm: ['bootstrap'] },
 ];
@@ -564,6 +617,238 @@ function _detect_ambiguity(composer: Manifest, pkg: Manifest): string[] {
     return found;
 }
 
+/** Files that declare a workspace root even when `package.json` does not. */
+const _WORKSPACE_MARKER_FILES: ReadonlyArray<string> = [
+    'pnpm-workspace.yaml',
+    'pnpm-workspace.yml',
+    'turbo.json',
+    'nx.json',
+    'lerna.json',
+];
+
+/**
+ * True when `project_root` declares itself the root of a workspace.
+ *
+ * Declaration, not convention: the presence of an `apps/` directory is a guess,
+ * whereas `workspaces`, `pnpm-workspace.yaml`, `turbo.json`, `nx.json` and
+ * `lerna.json` are the repository saying so itself. The conventional-directory
+ * scan still exists one layer down in {@link _nested_frontend_roots}, as a
+ * fallback for the roots this predicate has already admitted.
+ */
+function _is_workspace_root(project_root: string, pkg: Manifest): boolean {
+    if (_workspace_globs(project_root, pkg).length > 0) {
+        return true;
+    }
+    return _WORKSPACE_MARKER_FILES.some((f) => _is_file(path.join(project_root, f)));
+}
+
+/**
+ * The declared workspace globs, from every declarative source.
+ *
+ * Three shapes, all real: npm/bun/yarn-modern's `workspaces: [...]`, yarn
+ * classic's `workspaces: { packages: [...] }`, and pnpm's `packages:` list in
+ * `pnpm-workspace.yaml` — the last of which a pnpm repository frequently has
+ * *instead of* any `workspaces` key at all.
+ */
+function _workspace_globs(project_root: string, pkg: Manifest): string[] {
+    const out: string[] = [];
+    const declared = pkg['workspaces'];
+    if (Array.isArray(declared)) {
+        out.push(...declared.filter((g): g is string => typeof g === 'string'));
+    } else if (_isDict(declared) && Array.isArray(declared['packages'])) {
+        out.push(
+            ...(declared['packages'] as unknown[]).filter((g): g is string => typeof g === 'string'),
+        );
+    }
+    out.push(..._pnpm_workspace_globs(project_root));
+    return out;
+}
+
+/** Read the `packages:` globs out of `pnpm-workspace.yaml`. */
+function _pnpm_workspace_globs(project_root: string): string[] {
+    for (const name of ['pnpm-workspace.yaml', 'pnpm-workspace.yml']) {
+        const p = path.join(project_root, name);
+        if (!_is_file(p)) {
+            continue;
+        }
+        let text: string;
+        try {
+            text = fs.readFileSync(p, { encoding: 'utf-8' });
+        } catch {
+            return [];
+        }
+        return _parse_pnpm_packages(text);
+    }
+    return [];
+}
+
+/**
+ * Extract `packages:` from a `pnpm-workspace.yaml` body.
+ *
+ * Prefers the `yaml` package, lazily required exactly as
+ * `_lib/agent_settings.ts` does, so an exotic file (anchors, flow sequences,
+ * block scalars) parses properly. Falls back to a line scanner when `yaml`
+ * cannot be resolved — this module ships into consumer repositories that carry
+ * their own `node_modules`, and silently reading no globs there would
+ * reintroduce the very defect this branch exists to fix, for precisely the
+ * pnpm users it was written for.
+ */
+function _parse_pnpm_packages(text: string): string[] {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const YAML = require('yaml') as { parse(input: string): unknown };
+        const data = YAML.parse(text);
+        if (_isDict(data) && Array.isArray(data['packages'])) {
+            return (data['packages'] as unknown[]).filter((g): g is string => typeof g === 'string');
+        }
+        return [];
+    } catch {
+        // `yaml` unresolvable, or the document did not parse — scan instead.
+    }
+    return _scan_yaml_string_list(text, 'packages');
+}
+
+/**
+ * Read a top-level block sequence of strings out of a YAML document.
+ *
+ * Deliberately not a YAML parser. pnpm's own schema makes `packages` a flat
+ * list of glob strings, so the shape is fixed and a scanner cannot silently
+ * mis-read it the way a partial parser could.
+ */
+function _scan_yaml_string_list(text: string, key: string): string[] {
+    const out: string[] = [];
+    let inside = false;
+    for (const raw of text.split('\n')) {
+        const line = raw.replace(/\s+$/, '');
+        if (line === '' || line.trimStart().startsWith('#')) {
+            continue;
+        }
+        if (!inside) {
+            inside = line === `${key}:`;
+            continue;
+        }
+        const item = /^\s*-\s*(.+)$/.exec(line);
+        if (item === null) {
+            break; // the block ended
+        }
+        const value = (item[1] ?? '').trim().replace(/^['"]|['"]$/g, '');
+        if (value !== '') {
+            out.push(value);
+        }
+    }
+    return out;
+}
+
+/**
+ * True when the root manifest describes an application rather than a container.
+ *
+ * Runtime sections only for `package.json`. A workspace root routinely carries
+ * a shared test or build setup in `devDependencies` — a Testing-Library stack,
+ * a bundler — and reading that as "the root is a React app" is how a Vue
+ * monorepo was handed a React lane before this check existed.
+ */
+function _root_carries_frontend(composer: Manifest, pkg: Manifest): boolean {
+    const php = _all_dependencies(composer, 'require', 'require-dev');
+    if (_LIVEWIRE_PACKAGE in php || _FILAMENT_PACKAGE in php) {
+        return true;
+    }
+    const runtime = _all_dependencies(pkg, 'dependencies', 'peerDependencies');
+    if ('react' in runtime || 'vue' in runtime) {
+        return true;
+    }
+    if (_UNMODELLED_MARKERS.some((marker) => marker in runtime || marker in php)) {
+        return true;
+    }
+    return Object.keys(runtime).some((name) => name.startsWith(_SHADCN_RADIX_PREFIX));
+}
+
+/**
+ * Label specificity, most specific first — the label chain's own order.
+ *
+ * Used only to choose between workspaces that do NOT conflict. A monorepo whose
+ * app is `react` and whose design system is `react-shadcn` is one stack seen at
+ * two depths, and the deeper signal is the better scope for the UI lane: it is
+ * the package that owns `components.json`, which is where components are
+ * authored.
+ */
+const _LABEL_SPECIFICITY: ReadonlyArray<string> = [
+    'blade-livewire-flux',
+    'filament',
+    'blade-livewire',
+    'react-shadcn',
+    'react',
+    'vue',
+    UNSUPPORTED_STACK,
+    DEFAULT_STACK,
+];
+
+function _label_rank(label: string): number {
+    const i = _LABEL_SPECIFICITY.indexOf(label);
+    return i === -1 ? _LABEL_SPECIFICITY.length : i;
+}
+
+/**
+ * Pick the frontend scope inside a workspace repository, or refuse.
+ *
+ * `null` means "no workspace carries a frontend" — the caller falls through to
+ * its own label, which keeps a backend-only monorepo `plain` instead of
+ * inventing a scope for it.
+ *
+ * Workspaces that resolve to {@link DEFAULT_STACK} are dropped before anything
+ * else is decided. That is not a tidy-up: a normal Turborepo ships
+ * `packages/eslint-config` and `packages/typescript-config` beside the real
+ * ones, and counting those as "frontend roots" made the multi-root refusal fire
+ * on repositories that have exactly one frontend.
+ */
+function _resolve_workspace_scope(
+    project_root: string,
+    mtime: number,
+    root_axes: StackAxes,
+): StackResult | null {
+    const candidates = _nested_frontend_roots(project_root)
+        .map((dir) => ({ dir, result: detect_stack(dir) }))
+        .filter((c) => c.result.frontend !== DEFAULT_STACK);
+    if (candidates.length === 0) {
+        return null;
+    }
+
+    // Two workspaces on mutually exclusive reactivity layers are two stacks, and
+    // the standing contract for conflicting signals is to name them rather than
+    // pick one. Reuses `_EXCLUSIVE_REACTIVITY` so scope ambiguity and manifest
+    // ambiguity cannot drift apart: Alpine beside React is still one stack here,
+    // exactly as it is inside a single manifest.
+    const layers = new Set(
+        candidates
+            .map((c) => c.result.axes.reactivity)
+            .filter((value) => _EXCLUSIVE_REACTIVITY.has(value)),
+    );
+    if (layers.size > 1) {
+        const names = candidates
+            .map((c) => path.basename(c.dir))
+            .sort()
+            .join(' + ');
+        return new StackResult({
+            frontend: UNSUPPORTED_STACK,
+            mtime,
+            axes: root_axes,
+            ambiguity: [`workspace roots: ${names}`],
+        });
+    }
+
+    const best = [...candidates].sort((a, b) => {
+        const delta = _label_rank(a.result.frontend) - _label_rank(b.result.frontend);
+        return delta !== 0 ? delta : a.dir.localeCompare(b.dir);
+    })[0] as { dir: string; result: StackResult };
+
+    return new StackResult({
+        frontend: best.result.frontend,
+        mtime: best.result.mtime,
+        axes: best.result.axes,
+        ambiguity: best.result.ambiguity,
+        scope_root: path.relative(project_root, best.dir),
+    });
+}
+
 /** Workspace directories a monorepo conventionally puts its packages in. */
 const _WORKSPACE_DIRS: ReadonlyArray<string> = ['packages', 'apps', 'services', 'libs'];
 
@@ -584,10 +869,7 @@ function _nested_frontend_roots(project_root: string): string[] {
     // `workspaces` is the declarative answer when present; the conventional
     // directories are the fallback for repos that do not declare them.
     const root_pkg = _read_json(path.join(project_root, 'package.json'));
-    const declared = root_pkg['workspaces'];
-    const globs: string[] = Array.isArray(declared)
-        ? (declared as unknown[]).filter((g): g is string => typeof g === 'string')
-        : [];
+    const globs = _workspace_globs(project_root, root_pkg);
     const dirs = new Set<string>(_WORKSPACE_DIRS);
     for (const g of globs) {
         const head = g.split('/')[0];
@@ -640,7 +922,10 @@ function _is_react_shadcn(pkg: Manifest, components_json: boolean): boolean {
         return false;
     }
     const names = Object.keys(deps);
-    const has_radix = names.some((name) => name.startsWith(_SHADCN_RADIX_PREFIX));
+    // The unified `radix-ui` package counts exactly like the scoped `@radix-ui/*`
+    // prefix it replaced — same primitives, one entry in the manifest.
+    const has_radix =
+        _SHADCN_RADIX_UNIFIED in deps || names.some((name) => name.startsWith(_SHADCN_RADIX_PREFIX));
     const has_shadcn_pkg = names.some((name) => _SHADCN_PACKAGE_NAMES.has(name));
     return has_radix || has_shadcn_pkg || components_json;
 }

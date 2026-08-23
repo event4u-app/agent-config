@@ -39,7 +39,7 @@ Do NOT use when:
 |---|---|---|
 | `auth-model.md` | Roles, permission model, impersonation, known exceptions | `authz-review`, `judge-security-auditor`, `threat-modeling` |
 | `tenant-boundaries.md` | Tenancy type, scope propagation, known cross-tenant paths | `multi-tenant-boundary-review`, `blast-radius-analyzer`, `judge-security-auditor` |
-| `data-sensitivity.md` | Field classification, masking rules, log-safe types | `data-exposure-review`, `data-flow-mapper`, logging reviewers |
+| `data-sensitivity.md` | Field classification, masking rules, log-safe types | `data-flow-mapper`, logging reviewers |
 | `deployment-order.md` | Migration strategy, feature flags, rollback plan | `migration-safety`, `judge-bug-hunter`, release reviewers |
 | `observability.md` | Error tracking, log channels, metrics, known alerts | deploy reviewers, `bug-analyzer`, incident mode |
 

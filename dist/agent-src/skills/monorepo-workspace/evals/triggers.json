@@ -1,0 +1,17 @@
+{
+  "skill": "monorepo-workspace",
+  "last_eval": "2026-08-23",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers structural orientation in a workspace repository: the dependency graph between workspaces, the task runner's own task list, and which workspace owns a path. Should-not-trigger covers near-miss neighbors: authoring a component (the UI lane routes on state.stack.scope_root, not on this skill), a cross-workspace edit's impact set (blast-radius-analyzer § Monorepo), an unresolved workspace import (workspace-link), single-repo dependency questions, and coding-standards questions (standards-from-config).",
+  "queries": [
+    {"q": "which packages depend on @org/ui", "trigger": true},
+    {"q": "what workspaces are in this monorepo and which package manager does it use", "trigger": true},
+    {"q": "what does the build task actually run here", "trigger": true},
+    {"q": "list the nx projects in this repo", "trigger": true},
+    {"q": "which workspace owns packages/ui/src/button.tsx", "trigger": true},
+    {"q": "add a button", "trigger": false, "note": "authoring a component; the UI lane routes on state.stack.scope_root"},
+    {"q": "what breaks if I change this shared type in packages/ui", "trigger": false, "note": "impact set of an edit → blast-radius-analyzer § Monorepo"},
+    {"q": "cannot find module @org/ui when I import it", "trigger": false, "note": "unresolved workspace import → workspace-link"},
+    {"q": "what version of react does this project use", "trigger": false, "note": "a single dependency lookup, no workspace structure involved"},
+    {"q": "what line length does this project use", "trigger": false, "note": "coding standards from tooling config → standards-from-config"}
+  ]
+}

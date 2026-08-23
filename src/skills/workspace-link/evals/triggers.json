@@ -1,0 +1,17 @@
+{
+  "skill": "workspace-link",
+  "last_eval": "2026-08-23",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers an unresolved cross-workspace import and the workspace: protocol that fixes it, including the editor-resolves-build-fails signature of a tsconfig paths patch. Should-not-trigger covers near-miss neighbors: a third-party package that is genuinely missing, structural orientation (monorepo-workspace), impact analysis (blast-radius-analyzer), a TypeScript type error that is not a resolution failure, and a general dependency upgrade.",
+  "queries": [
+    {"q": "cannot find module @org/ui when I import it from apps/web", "trigger": true},
+    {"q": "TS2307 on a workspace import but the package is right there", "trigger": true},
+    {"q": "how do I link one workspace package to another", "trigger": true},
+    {"q": "should I use workspace:* or workspace:^ for this dependency", "trigger": true},
+    {"q": "the import resolves in my editor but the build cannot find it", "trigger": true},
+    {"q": "cannot find module lodash", "trigger": false, "note": "a third-party package that is not installed, not a workspace link"},
+    {"q": "which packages depend on @org/ui", "trigger": false, "note": "structural orientation → monorepo-workspace"},
+    {"q": "what breaks if I change this shared component", "trigger": false, "note": "impact set → blast-radius-analyzer § Monorepo"},
+    {"q": "type error: string is not assignable to number", "trigger": false, "note": "an ordinary type error, nothing to resolve"},
+    {"q": "upgrade react to 19 across the repo", "trigger": false, "note": "dependency upgrade → dependency-upgrade"}
+  ]
+}

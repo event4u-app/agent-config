@@ -1,0 +1,17 @@
+{
+  "skill": "operational-readiness",
+  "last_eval": "2026-08-23",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers adjudicating a go/no-go from typed evidence and the one-red floor. Should-not-trigger covers the neighbours that PRODUCE the evidence rather than adjudicate it (logging-monitoring, alerting-doctrine, server-hardening), the pre-merge release checklist (launch-readiness) and an incident already running (incident-commander).",
+  "queries": [
+    {"q": "are we operationally ready to run this in production?", "trigger": true},
+    {"q": "give me a go/no-go verdict from what we know about this service", "trigger": true},
+    {"q": "four checks are green and one is red — what is the overall verdict?", "trigger": true},
+    {"q": "can we call this ready if we never inspected the host?", "trigger": true},
+    {"q": "adjudicate operational readiness for the payments service", "trigger": true},
+    {"q": "which Golden Signal is this project missing?", "trigger": false, "note": "produces the observability evidence → logging-monitoring"},
+    {"q": "should this alert wake the on-call engineer?", "trigger": false, "note": "alert classification → alerting-doctrine"},
+    {"q": "write the pre-merge checklist and rollout plan for this release", "trigger": false, "note": "pre-merge release procedure → launch-readiness"},
+    {"q": "we are in an outage right now, who does what?", "trigger": false, "note": "incident already running → incident-commander"},
+    {"q": "configure the firewall baseline on the new server", "trigger": false, "note": "host hardening execution → server-hardening"}
+  ]
+}
