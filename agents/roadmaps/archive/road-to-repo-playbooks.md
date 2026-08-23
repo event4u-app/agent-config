@@ -245,6 +245,17 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
       deliberately does not match. Silently bumping a measured denominator to today's number
       would have turned a measurement into a false claim.
 
+      **`docs/proof.md` is GENERATED and I hand-edited it — the wrong layer.** Fixing the
+      count drift, I rewrote a dated measurement in `proof.md` as *"the then-119 governed-rule
+      total"* to keep a 2026-08-12 figure from being silently rescaled. The reasoning was
+      right and the file was wrong: `build_proof` renders `proof.md` from `docs/CLAIMS.md`, so
+      the edit broke the drift guard (`build_proof — the committed docs/proof.md is in sync`)
+      and would have been overwritten by the next regeneration anyway. `update_counts` already
+      anchors that figure in CLAIMS.md, which means rescaling it is the maintainer's
+      established choice and not mine to override from the generated page. Reverted by
+      regenerating. **Same class as every generated-surface trap in this run: fix the source,
+      never the projection.**
+
       **A dropped `git stash` ate this note and the skill edits once.** Switching branches
       mid-step stashed uncommitted work; the pop reported *"The stash entry is kept"* and the
       entry was then dropped, taking the ecosystem-neutral rewrite and this whole block with
