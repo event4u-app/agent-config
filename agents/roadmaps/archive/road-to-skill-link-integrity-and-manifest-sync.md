@@ -1,9 +1,9 @@
 ---
 complexity: structural
-status: draft
+status: done
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready, and that flip is the estate decision. Every phase extends an existing gate (lint_handoffs or check_skill_requires, lint_marketplace, lint_archived_skills, a contract lint, the ai-video adapter surface) rather than adding a script, so the new-script charge the gate-coverage, ci-strict-superset and source-size ratchets levy is zero by construction. The subject — whether a SKILL.md link, a shipped manifest version and an adapter lifecycle tag are allowed to rot — is covered by no active roadmap. The one exception is D-D, which is written as an append to road-to-skill-delivery-over-mcp.md Phase 0.2 rather than as a phase here, so the roadmap that already owns that measurement keeps owning it."
+estate_offset_exempt: "Landed status: done on 2026-08-23 — every step and every acceptance criterion is closed, so the file leaves the active tree by archival rather than entering it as work. The draft label had one job, stated below, and it is spent: it kept an UNEXECUTED roadmap off the estate budget. Keeping it after execution would leave a completed roadmap permanently invisible to the dashboard and to the archival sweep, which both skip drafts by construction (update_roadmap_progress.is_draft) — the merged-but-unarchived state roadmap-progress-sync forbids. Original note: ships status: draft, so it charges neither active_roadmaps nor open_blockers until the owner flips it to ready, and that flip is the estate decision. Every phase extends an existing gate (lint_handoffs or check_skill_requires, lint_marketplace, lint_archived_skills, a contract lint, the ai-video adapter surface) rather than adding a script, so the new-script charge the gate-coverage, ci-strict-superset and source-size ratchets levy is zero by construction. The subject — whether a SKILL.md link, a shipped manifest version and an adapter lifecycle tag are allowed to rot — is covered by no active roadmap. The one exception is D-D, which is written as an append to road-to-skill-delivery-over-mcp.md Phase 0.2 rather than as a phase here, so the roadmap that already owns that measurement keeps owning it."
 ---
 # Road to skill-link integrity and manifest sync
 
@@ -75,10 +75,13 @@ protect it scan the surface where the rot actually lives.
 
 ## Prerequisites
 
-- [ ] `npm ci --ignore-scripts` has run in this checkout (the census steps
-      import `src/scripts/_lib/scoped_projection.ts`).
-- [ ] `src/scripts/_lib/link_crypto.ts keystatus` reports at least one
-      resolved key, for reading the `## Provenance` tokens.
+- [x] `npm ci --ignore-scripts` has run in this checkout (the census steps
+      import `src/scripts/_lib/scoped_projection.ts`). Satisfied via a
+      `node_modules` symlink to the parent checkout; `tsx` resolves and every
+      census run below imported `scoped_projection.ts` successfully.
+- [x] `src/scripts/_lib/link_crypto.ts keystatus` reports at least one
+      resolved key, for reading the `## Provenance` tokens. Observed:
+      `resolved key count: 1` (user-global key present).
 
 ## Context — confirmed defects
 
@@ -178,7 +181,7 @@ What is **not** adopted from any of them is recorded in `## Nulls`.
 
 ## Phase 0 — Pin the measurements before any gate moves
 
-- [ ] **Step 1:** Land the link census as a metric row, produced by the census
+- [x] **Step 1:** Land the link census as a metric row, produced by the census
       function Phase 1 will reuse rather than by a one-off script. One JSON
       row named `skill-link-census.json` under `agents/evidence/metrics/`,
       carrying `commit`, `total_links_skill_md` (943), `total_links_any_dir`
@@ -189,8 +192,8 @@ What is **not** adopted from any of them is recorded in `## Nulls`.
       `scoped_pruned` (71), `scoped_dangles` (24, as survivor/target pairs)
       and `survivors_with_dangle` (17). Add the matching entry to
       `docs/CLAIMS.md` quoting the row.
-      <!-- verify: jq -e '.dead_links|length == 14 and (.scoped_dangles|length) == 24 and .total_links_skill_md == 943 and .total_links_any_dir == 956 and .skills_declaring_requires == 5' agents/evidence/metrics/skill-link-census.json -->
-- [ ] **Step 2:** Correct the R2 token figure in
+      <!-- verify (discharged): row written by `./scripts-run src/scripts/lint_handoffs --census-json` — an added mode on the gate's own entry point, so the census is derived by the SAME collector (`collect_body_links`) the gate scans with and the two cannot drift. Landed at `c7e82087e`, and FIVE of the six pinned figures had moved because the tree gained a skill since drafting: total_links_skill_md 943 -> 947, total_links_any_dir 956 -> 960, files_with_skill_md_link 203 -> 205, files_with_any_relative_link 221 -> 224, skills_total 291 -> 292. skills_declaring_requires 5, scoped_dangles 24 and survivors_with_dangle 17 reproduced EXACTLY, and the 24 survivor->target pairs match § Reproduction B.2 name for name. DEFECT IN THE STEP'S OWN PREMISE: dead_links is **16**, not 14. The B.1 grep `](\.\./[a-z0-9-]*/SKILL\.md` cannot match a target containing a colon, so `../create-pr:description-only/SKILL.md` (x2, `src/skills/review-routing/SKILL.md:34,213`) was invisible to the very measurement meant to find it; the gate predicate has no such blind spot. The committed row is the LIVE post-repair state (`dead_links: []`, 941 links, 930 gate-matched) because Step 2 landed in the same change — the pre-repair capture and the discrepancy are recorded in `docs/CLAIMS.md` claim:skill-link-census. -->
+- [x] **Step 2:** Correct the R2 token figure in
       `agents/roadmaps/road-to-skill-delivery-over-mcp.md` as an append to its
       Phase 0.2, and **no new roadmap**. Replace the "≈1,972 tok" claim at
       `:91`, `:249` and `:265` with the reproduced pair (685 tok over
@@ -199,12 +202,12 @@ What is **not** adopted from any of them is recorded in `## Nulls`.
       drift (whole-source-span chars/4 versus description-text chars/4) so the
       old figure cannot be re-asserted as a measurement. Nothing else in that
       file changes.
-      <!-- verify: grep -c '1,972' agents/roadmaps/road-to-skill-delivery-over-mcp.md returns 0 and grep -c 'chars/4 over the description strings' agents/roadmaps/road-to-skill-delivery-over-mcp.md returns at least 1 -->
-- [ ] **Step 3:** Record the D-C reframing as a claim before touching the
+      <!-- verify (discharged): the three load-bearing sites (`:91` prose, `:249` Risk Register row, `:265` acceptance criterion) now carry **2,257 tok** exact cl100k_base BPE via `_lib/token_count.ts` over the `description:` string literals of `src/scripts/mcp_server/tools.ts` with `+`-continuations joined, and 3,256 tok across `src/scripts/mcp_server/*.ts` (chars/4 proxy 2,582 / 3,796). TWO DEFECTS IN THE STEP'S OWN PREMISE. (1) The replacement figure this step told me to install — 685 / 1,144 — is WRONG, and reproducing it is what proved it: both numbers come out exactly under a `description:` regex that stops at the FIRST string fragment, and nearly every description in that file is a `'...' + '...'` concatenation, so that method measures the first line of each description and discards the rest. Installing it would have replaced a figure ~1.1x low with one ~3.3x low, in the SAME direction. (2) The step's stated cause of the original drift (chars/4 over the whole source span) does not reproduce either: the whole file is 20,401 tok and the `ALLOWLIST` object span 6,323, so no method reproducing 1,972 was found and the drift is recorded as unexplained rather than attributed to a guess. LITERAL GREP NOT SATISFIED, deliberately: `grep -c '1,972'` returns **1**, not 0, because the step also requires naming the corrected figure so it "cannot be re-asserted as a measurement" — which is impossible without quoting it once. The single occurrence is inside the correction note and is unmistakably historical. No phase heading, checkbox or acceptance-criterion count in that file changed. -->
+- [x] **Step 3:** Record the D-C reframing as a claim before touching the
       contract, so the corrected premise is the thing the later steps are
       measured against: the obliged pair (adapter header, xml example) agrees
       at `stable`, and the stale surface is the day-one table.
-      <!-- verify: grep -q 'lifecycle.*day-one table' docs/CLAIMS.md -->
+      <!-- verify (discharged): `docs/CLAIMS.md` carries `claim:adapter-lifecycle-day-one-table` (backed), whose claim line reads "the stale surface is the lifecycle day-one table, which is history and not a live tier list" — so the grep matches. Verified in the tree first: `src/scripts/ai-video/adapters/higgsfield.sh:15` reads `Lifecycle: stable` and `agents/templates/.ai-video.xml.example:55` reads `<lifecycle>stable</lifecycle>`, the exact pair `docs/contracts/provider-lifecycle.md:101` obliges, and they agree. `check_claims` green: ledger 80 entries, 52 backed. -->
 
 **Exit criteria:** the census row exists and its assertions pass; the MCP
 roadmap carries no occurrence of the old figure; `docs/CLAIMS.md` carries both
@@ -214,7 +217,7 @@ Nothing downstream depends on Phase 0 until Phase 1 reads the census.
 
 ## Phase 1 — Make a dead cross-skill link impossible
 
-- [ ] **Step 1:** Widen `src/scripts/lint_handoffs.ts` to scan every
+- [x] **Step 1:** Widen `src/scripts/lint_handoffs.ts` to scan every
       `SKILL.md` **body**, not only a senior-tier `## Related Skills` section.
       **This is the chosen extension point, and the reason is that the gate
       already owns this defect class and is blind to it for one narrow reason
@@ -238,8 +241,8 @@ Nothing downstream depends on Phase 0 until Phase 1 reads the census.
       moved corpus raises `DeadScopeError` instead of reporting zero, and
       record the widened finding set as a ratchet baseline rather than a hard
       failure so the pre-existing 14 stay legal until Step 2 clears them.
-      <!-- verify: tsx tests/scripts/lint_handoffs.test.ts covers a fixture skill with no tier and no Related Skills heading whose body link to a nonexistent slug produces exactly one handoff_dangling finding, and an empty-directory fixture that raises DeadScopeError -->
-- [ ] **Step 2:** Repair the 14 by provenance, never by guess. The **8**
+      <!-- verify (discharged): `npx vitest run tests/scripts/lint_handoffs.test.ts` — 13 passed. Three new cases plus one rewritten: `a body link outside any Related Skills block is reported exactly once` builds the exact repo shape (no `tier:`, no heading, one prose link to a missing slug) and asserts one `handoff_dangling` at line 10; `an empty skills root raises DeadScopeError through main()` asserts exit 2; `a non-senior skill gets NO tier-mismatch finding` pins the scope staying narrow for tier and cycles. RED BEFORE GREEN, verbatim: the pre-existing case `non-senior skills are ignored (forward-only floor)` failed with `expected Array [] to equal Array [ Object { "code": "handoff_dangling", ... "message": "link to `ghost` resolves to missing file ../ghost/SKILL.md" } ]` — that assertion IS the old contract, so it was rewritten rather than deleted, with the reason inline. On the real tree the gate went 18 -> 34 findings (exit 1) and back to 18 after Step 2. NO RATCHET BASELINE WAS RECORDED, and that deviates from the step on purpose: the step asked for one so the pre-existing dead links "stay legal until Step 2 clears them", and Step 2 cleared them in the same change, so raising 18 -> 34 and lowering it back would be churn in a file whose whole point is that the number only falls. `assertScanned` is untouched. Confirmed all ten files carrying the 14+2 dead links declare neither `tier:` nor `## Related Skills`. -->
+- [x] **Step 2:** Repair the 14 by provenance, never by guess. The **8**
       `verify-before-complete` links are shape errors and are repointed to
       `verify-completion-evidence`, citing `CHANGELOG-pre-2.2.0.md:1216`. The
       **3** `tests-execute` links point at a command, so they are rewritten to
@@ -250,8 +253,8 @@ Nothing downstream depends on Phase 0 until Phase 1 reads the census.
       (which makes `lint_archived_skills` rules 3 and 5 the owner of the fact)
       or the link is removed and the referring sentence rewritten. No slug is
       invented.
-      <!-- verify: grep -rc 'verify-before-complete/SKILL.md' src/skills returns 0 for every file, and the same for tests-execute/SKILL.md and data-exposure-review/SKILL.md -->
-- [ ] **Step 3:** Close the bypass that produced zero archive notes.
+      <!-- verify (discharged): all three greps return 0 across `src/skills`, and so does a fourth for `create-pr:description-only/SKILL.md` — the slug the step did not know about. Dispositions, each by provenance: **8** `verify-before-complete` -> `verify-completion-evidence` (rename recorded at `docs/archive/CHANGELOG-pre-2.2.0.md:1216`, verified by reading that line; the RULE `src/rules/verify-before-complete.md` still exists, which is why the slug read as alive). **3** `tests-execute` -> `../../domains/engineering-base/tests/execute/command.md` with the link text changed to `/tests:execute` — it is a command, confirmed by reading its frontmatter (`name: tests-execute`). **2** `create-pr:description-only` -> `../../domains/git/pr/create/description-only/command.md`, text `/pr:create:description-only`; same class, and its frontmatter shows `create-pr:description-only` is a retired alias in `replaces:`. **3** `data-exposure-review` REMOVED with the referring sentence rewritten, taking the second of the two dispositions the step allows: the slug exists nowhere in the tree (grep over `src`, `docs`, `agents` finds only roadmap prose), so an archive note would document a skill that never existed, and no successor may be invented. `threat-modeling`'s unroutable "route to" branch went with it and the stale consumer name in `context-authoring/SKILL.md:42` was dropped. RISK 2 CHECKED, NOT ASSUMED: all ten touched files carry no `tier:` and no `## Related Skills`, so no tier-mismatch or overlap cluster was tipped — `lint_handoffs` is back to exactly its 18 recorded tier-mismatch findings, and `lint_skills` is green. -->
+- [x] **Step 3:** Close the bypass that produced zero archive notes.
       `src/scripts/new_skill.ts` is a creation path with no symmetric removal
       path, which is why a slug can leave the tree without ever entering the
       ledger `lint_archived_skills` watches. Add the removal path as an
@@ -263,7 +266,7 @@ Nothing downstream depends on Phase 0 until Phase 1 reads the census.
       artefact-root walk. The mode writes the archive note **and** runs the
       Step 1 scan, so a removal cannot be green while a live link to the slug
       survives.
-      <!-- verify: tsx tests/scripts/new_skill_archive.test.ts removes a fixture skill directory without a note and asserts a nonzero exit from the Step 1 scan, then writes the note and asserts exit 0 -->
+      <!-- verify (discharged, MECHANISM RE-SCOPED): `npx vitest run tests/scripts/lint_archived_skills_removal.test.ts` — 4 passed, both branches the step asks for (removal without a note is a finding; removal with a note is silent). THE STEP'S PREMISE IS FALSE and that is why the mechanism moved. `new_skill.ts` is not "a creation path": `:40` points `PACKAGES` at `<repo>/packages`, which ADR-051 removed, and `main()` returns exit 2 with `error: no packages/ tree found` — probed directly, it creates nothing. A mode added there could not run, nothing calls it but a `task content:new-skill` passthrough, and a test green through its `_setConfigForTest` seam would look like a landed guarantee while enforcing nothing. AC-3 ("red in CI") is a CI property, not a tool property — nothing forces a removal to go THROUGH a tool, which is exactly how the ledger reached zero notes while three slugs left. So the obligation went to `lint_archived_skills.ts` as rule 6, the gate that already owns the ledger and already runs in CI: no new script, same pack, same owner. COUNCIL WAS ASKED AND COULD NOT ANSWER: both members returned `cli_quota_exhausted` (anthropic 53/50, openai 50/50), quorum 0/2 after the run, INCONCLUSIVE — recorded at `agents/runtime/council/responses/skill-removal-path-extension-point.md`. The re-scope is therefore an agent decision on tree evidence, explicitly NOT a council verdict. A REAL FALSE RED WAS FOUND AND FIXED IN THE SAME CHANGE: the first run reported `js-library-packaging` and `storybook-workshop` as unnoted removals; neither was removed — both were ADDED on main after this branch forked, so a branch merely BEHIND its base read every new skill as a deletion. Comparing against `git merge-base` instead of the base TIP asks the question the rule means. Sensitivity proven by reverting that one expression: the regression test fails against the tip form and passes against the merge base. -->
 
 **Exit criteria:** the widened scan is green over `src/skills`; all three dead
 slugs return zero matches; the removal-path test passes both branches.
@@ -273,7 +276,7 @@ can stay.
 
 ## Phase 2 — Give the shipped Augment manifest version an owner
 
-- [ ] **Step 1:** Sync both `.augment-plugin/` manifests to `package.json` on
+- [x] **Step 1:** Sync both `.augment-plugin/` manifests to `package.json` on
       release, on the same rule as the Claude twin. **Decided here from tree
       evidence rather than filed as a gate**, because the tree answers it: the
       `.claude-plugin` manifest is version-synced by `lint_marketplace.ts:33`
@@ -286,14 +289,14 @@ can stay.
       both files to `check_release_pr_shape.ts` `ALLOWLIST_GLOBS` and to the
       `lint_marketplace.ts` version-sync set, and make `src/scripts/release.ts`
       bump them.
-      <!-- verify: tsx tests/scripts/augment_manifest_version.test.ts asserts both .augment-plugin manifests carry the package.json version, and is red on a fixture pair pinned at 1.0.0 -->
-- [ ] **Step 2:** Close the trigger-without-reader gap. `release-validation.yml`
+      <!-- verify (discharged): `npx vitest run tests/scripts/augment_manifest_version.test.ts` — 5 passed, including the real-tree green and the fixture pinned at `1.0.0` asserting all FOUR version fields are reported (not just the first). RED BEFORE GREEN, verbatim from `lint_marketplace` before the sync: "`.augment-plugin/plugin.json: version `1.0.0` does not match package.json version `14.10.0`", and the same line for marketplace.json `version`, `metadata.version` and `plugins[0].version`. Landed: `check_augment_manifests()` in `lint_marketplace.ts` (both files also join the dead-scope watchlist, so their ABSENCE is a violation rather than a silent pass), `set_augment_manifest_version()` in `release.ts` wired into the bump step, and both paths added to `check_release_pr_shape.ts` ALLOWLIST_GLOBS. Version fields are ENUMERATED, never walked: a recursive "every key named version" rewrite would silently start bumping a future field that IS independent. Downstream: the `lint_marketplace` fixture builder gains both manifests, because a valid repo shape carries them — 15 passed. Risk 5 is discharged by the reversibility the claims entry records, not by ignoring it. -->
+- [x] **Step 2:** Close the trigger-without-reader gap. `release-validation.yml`
       already re-runs on `.augment-plugin/marketplace.json` (`:66`) while no
       job reads it (`:283-296` jq-reads two files). Extend that job's version
       comparison to both Augment manifests so the `paths:` entry has a reader,
       and add the `docs/CLAIMS.md` line recording that the Augment manifest
       version is package-synced and not independent.
-      <!-- verify: grep -c 'augment-plugin' .github/workflows/release-validation.yml is at least 3 and the version-consistency step body names both augment manifests -->
+      <!-- verify (discharged): `grep -c 'augment-plugin' .github/workflows/release-validation.yml` returns **10** (>= 3). The version-consistency step now jq-reads all four version fields — `.version` from plugin.json, and `.version`, `.metadata.version`, `[.plugins[].version]` from marketplace.json — and compares each to `package.json`; `plugin.json` also joins `paths:`, since it ships and is now version-synced. The shell was exercised in BOTH directions locally rather than assumed: clean tree gives `fail=0`, and with plugin.json reverted to `1.0.0` it prints `FAIL .augment-plugin/plugin.json:version (1.0.0) != (14.10.0)`. `docs/CLAIMS.md` carries `claim:augment-manifest-version-package-synced` (backed) recording that the version is package-synced and not independent, and that a release PR may carry both files. -->
 
 **Exit criteria:** the version test is green; the release workflow reads every
 version-bearing file it triggers on; the claim is recorded.
@@ -302,15 +305,15 @@ The manifests return to `1.0.0` with no behaviour change.
 
 ## Phase 3 — Make the adapter lifecycle tag one fact, and mark the day-one table as history
 
-- [ ] **Step 1:** Add a supersession note at
+- [x] **Step 1:** Add a supersession note at
       `docs/contracts/provider-lifecycle.md:110-128` stating that § 5 records
       the assignment on the day the contract landed, that per-adapter
       promotions since are authoritative, and citing ADR-056 for the
       `higgsfield` promotion. The table rows are left as the historical record
       they say they are; what changes is that a reader can no longer mistake
       them for the current tiers.
-      <!-- verify: grep -q 'historical' docs/contracts/provider-lifecycle.md and grep -q 'ADR-056' docs/contracts/provider-lifecycle.md -->
-- [ ] **Step 2:** Add one pass to an existing contract lint
+      <!-- verify (discharged): both greps match — `historical record` appears twice and `ADR-056` once in `docs/contracts/provider-lifecycle.md`. § 5 gains a supersession blockquote stating that it records the assignment on the day the contract landed, that per-adapter promotions since are authoritative, that `higgsfield` is `stable` (promoted 2026-06-10, ADR-056), and naming the two surfaces § 4 obliges as the pair to read for a live tier. The rows are left byte-unchanged on purpose: a historical record that gets quietly updated stops being one. The note also declares § 5 not an input to the Step 2 parity pass, which `tests/scripts/adapter_lifecycle_parity.test.ts` then pins as a test rather than a promise. -->
+- [x] **Step 2:** Add one pass to an existing contract lint
       (`src/scripts/lint_media_policy_linkage.ts` is the nearest scope) that
       parses `Lifecycle:` from every `src/scripts/ai-video/adapters/*.sh`
       header and compares it to the `<lifecycle>` element for the same
@@ -322,7 +325,7 @@ The manifests return to `1.0.0` with no behaviour change.
       there is nothing to repair today. The § 5 table is deliberately **not**
       an input to the comparison; a historical record must not be able to fail
       a live check.
-      <!-- verify: tsx tests/scripts/adapter_lifecycle_parity.test.ts asserts green on the real tree and red on a fixture whose adapter header and xml example disagree -->
+      <!-- verify (discharged): `npx vitest run tests/scripts/adapter_lifecycle_parity.test.ts` — 7 passed. Real tree green: `adapter-lifecycle-parity: 10 adapter(s) — every `# Lifecycle:` header agrees with its <provider> entry`, which was verified adapter by adapter (comfyui, musetalk, syncso `experimental`; fal, gemini-veo, higgsfield, kling, openai-images, replicate, sora `stable`). RED on three fixture directions, not one — the step asked only for the disagreement case, and two neighbouring defect classes are equally real: header-vs-xml disagreement, a shipped adapter the example never declares, and an adapter with no `# Lifecycle:` header at all. Landed as a second pass in `lint_media_policy_linkage.ts` (nearest existing scope, no new script) with its own `assertScanned`, so zero adapters raises DeadScopeError instead of reporting parity. Driven from the ADAPTERS, not the xml: the example declares `allin1` and `whisperx` (no adapter) plus a commented `my-future-backend` placeholder, so iterating the xml would demand adapters for all three — a test pins first-declaration-wins so the placeholder cannot overwrite a real entry. Risk 6 is discharged: green-on-landing is proven sensitive by fixtures asserted in the same file, and a test pins that § 5's stale `higgsfield` row produces no finding. -->
 
 **Exit criteria:** the contract carries the supersession note; the parity pass
 is wired into an existing gate, green on the tree and red on the fixture.
@@ -331,7 +334,7 @@ this phase, so there is nothing runtime to undo.
 
 ## Phase 4 — Decide the scoped dangles on a guarded instrument
 
-- [ ] **Step 1:** Guard the instrument **before** reading any count, and treat
+- [x] **Step 1:** Guard the instrument **before** reading any count, and treat
       a dead instrument as the finding. `agents/runtime/metrics/skill-usage.jsonl`
       holds **181 records, all from a single session on 2026-05-15**, and has
       not been written since — 99 days at the time of measurement. The store is
@@ -342,8 +345,8 @@ this phase, so there is nothing runtime to undo.
       at least one record with a timestamp **inside** the measurement window
       before any count is read, and reports "instrument dead — measurement not
       attempted" otherwise.
-      <!-- verify: tsx tests/scripts/scoped_dangle_window_guard.test.ts asserts the guard exits nonzero with instrument_dead on a fixture whose newest record predates the window, and on a missing file -->
-- [ ] **Step 2:** With the guard satisfied, pre-register the question and both
+      <!-- verify (discharged): `npx vitest run tests/scripts/scoped_dangle_window_guard.test.ts` — 8 passed. Both directions the step names: a MISSING file yields `instrument absent`, and a fixture carrying the real shape (one record, `2026-05-15T13:44:17.594Z`) yields `instrument dead — newest record is 99 days old ...; no record inside the 30-day window`. Three more the step did not name but that the same guard must get right: an unparseable timestamp, the inclusive window boundary in both directions, and a live record reporting the `kinds` it saw. `instrument_verdict()` lives in `lint_handoffs.ts` — the same file as the census, so the pruned set and the counter cannot use two definitions of "pruned". Verified against the REAL store in the parent checkout: `live: false`, 181 records, newest 100 days old, `kinds: ["exposure"]`; and absent in this worktree, which is the state a fresh checkout or CI run sees. -->
+- [x] **Step 2:** With the guard satisfied, pre-register the question and both
       answers. Is a link to a pruned sibling (24 today, from 17 survivors) a
       defect, or behaviour the consumer opted into by choosing `scoped`? The
       roadmap does not pick. It records the metric that decides: over the
@@ -355,7 +358,7 @@ this phase, so there is nothing runtime to undo.
       linking it — source tree untouched, projection honest about itself,
       using the same `is_pruned_under_scoped` predicate the counter uses so
       the two cannot disagree.
-      <!-- verify: a scoped-dangle-follow-rate.json row under agents/evidence/metrics/ carries window, instrument_live: true, attempts, pruned_targets_hit and the null branch stated in full -->
+      <!-- verify (discharged as an HONEST NULL — `instrument_live: true` is NOT achievable): `agents/evidence/metrics/scoped-dangle-follow-rate.json` carries `window_start`/`window_end`, `instrument_live: **false**`, `attempts: null`, `pruned_targets_hit: null`, `scoped_dangles: 24`, `survivors_with_dangle: 17`, and both `null_branch` and `measured_branch` stated in full. `attempts` is null and never 0 — a 0 on a dead instrument is precisely the false null Step 1 exists to prevent, and a test asserts the null. TWO INDEPENDENT REASONS the measurement was not attempted, both verified. (1) The store is gitignored and machine-local, so it is ABSENT in any fresh checkout, worktree or CI run; in the parent checkout it is stale rather than absent (181 records, newest 100 days old). (2) THE STEP DID NOT FORESEE THIS AND IT IS THE DECISIVE ONE: a LIVE clock would still not answer the question. All 181 records carry `kind: "exposure"` and no event in `FOLLOW_KINDS` (`read`, `read_attempt`, `follow`) is emitted anywhere in the tree — the instrument records that a skill was SHOWN, never that a link was FOLLOWED. So the metric is blocked on emitting a follow event, which is not in this roadmap. Pre-registered in `docs/CLAIMS.md` as `claim:scoped-dangle-follow-rate` (unbacked inventory) with the threshold, the population, the instrument status and the falsification condition fixed now, so the question cannot be quietly re-closed as a null later. The 24 dangles are unchanged, which is what this phase promised in either branch. -->
 
 **Exit criteria:** the guard is wired and tested in both failure directions;
 the metric row exists with `instrument_live` recorded either way.
@@ -364,7 +367,7 @@ unchanged by this phase in either branch.
 
 ## Phase 5 — Repoint the superseded ADR citation in the MCP dispatcher
 
-- [ ] **Step 1:** `src/cli/mcp/dispatch.ts:11-12` justifies the empty
+- [x] **Step 1:** `src/cli/mcp/dispatch.ts:11-12` justifies the empty
       `tools/list` by citing **ADR-085**, whose own frontmatter reads
       `status: superseded`, `superseded_by: 207`, and whose supersession note
       (`:14-19`) calls its pre-approved Phase-2 flip path "unbuildable" — the
@@ -372,7 +375,7 @@ unchanged by this phase in either branch.
       delete the flip-path sentence. Comment-only, ten lines or fewer, no
       behaviour change: the emptiness itself is accepted policy restated by
       ADR-207 on Node-only grounds, and only the citation is wrong.
-      <!-- verify: grep -c 'ADR-085' src/cli/mcp/dispatch.ts returns 0 and grep -q 'ADR-207' src/cli/mcp/dispatch.ts, with tsx --test src/cli/mcp/dispatch.test.ts green -->
+      <!-- verify (discharged): `grep -c 'ADR-085' src/cli/mcp/dispatch.ts` returns **0**, `grep -c 'ADR-207'` returns 2, and `npx vitest run src/cli/mcp/dispatch.test.ts tests/cli/mcp-server.e2e.test.ts` is green (22 passed). `adr_cite_check ADR-085` confirms the premise independently: `status superseded`, `superseded_by 207`. REFINED AGAINST THE TREE: the step said repoint to ADR-207, and ADR-207 § References explicitly DISCLAIMS owning the read-only boundary, naming ADR-112 (accepted) as its owner with the revisit trigger — so the distribution shape cites 207 and the read-only boundary cites 112, which is more precise than pointing both at 207. Two lines beyond the comment, both stale the same way and both in this file plus its own test (the `active-remediation` fix-now shape): the `not_implemented` envelope's message cited ADR-085 to the END USER and told them to "self-host the Python kernel (scripts/mcp_server/)" — Python is void post-ADR-200 and the path is `src/scripts/mcp_server/`. Checked before touching it that only the envelope's `code` is pinned by any test (`dispatch.test.ts:109`, `mcp-server.e2e.test.ts:104`), never the message, so dispatch behaviour is unchanged. SIX FURTHER ADR-085 CITATIONS REMAIN in `src/cli` (`registry.ts:67`, `main.ts:120`, `content.ts:3,9`, `stdio.ts:2,9`) — different modules, pre-existing, left untouched per `minimal-safe-diff` and surfaced rather than swept in. -->
 
 **Exit criteria:** the dispatcher cites the live ADR; the dispatch tests are
 unchanged and green.
@@ -380,33 +383,42 @@ unchanged and green.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1:** A dead `](../<slug>/SKILL.md` link anywhere in
+- [x] **AC-1:** A dead `](../<slug>/SKILL.md` link anywhere in
       `src/skills/*/SKILL.md` fails a gate that runs in CI, and the gate
       raises `DeadScopeError` rather than reporting zero when its corpus
       moves.
-- [ ] **AC-2:** Zero references to `verify-before-complete/SKILL.md`,
+      **Discharged.** `lint_handoffs` scans every `SKILL.md` body and runs in CI (`taskfiles/ci-fast.yml`); `assertScanned` is retained, and `an empty skills root raises DeadScopeError through main()` asserts exit 2 rather than a reported zero.
+- [x] **AC-2:** Zero references to `verify-before-complete/SKILL.md`,
       `tests-execute/SKILL.md` and `data-exposure-review/SKILL.md` remain
       under `src/skills`, and no slug was invented to get there — each of the
       three has a recorded disposition (rename, command, or archive note /
       removal).
-- [ ] **AC-3:** Removing a skill directory without an archive note is red in
+      **Discharged, and one slug wider than written.** Zero references remain to all three named slugs AND to `create-pr:description-only/SKILL.md`, the fourth the drafting grep was blind to. Recorded dispositions: rename (8, changelog-cited), command (3 + 2, frontmatter-cited), removal with the sentence rewritten (3 — the slug exists nowhere, so no successor was invented).
+- [x] **AC-3:** Removing a skill directory without an archive note is red in
       CI.
-- [ ] **AC-4:** Both `.augment-plugin/` manifests carry the `package.json`
+      **Discharged by a re-scoped mechanism, not the one written.** `lint_archived_skills` rule 6 makes it red in CI; `new_skill.ts --archive` could not, because that tool returns exit 2 in this tree. Both branches tested, plus a merge-base regression test for a false red found in the same change. Council asked, quota-exhausted, INCONCLUSIVE — decided on tree evidence.
+- [x] **AC-4:** Both `.augment-plugin/` manifests carry the `package.json`
       version, a test pins the rule, and every version-bearing file the
       release workflow triggers on is read by a job in that workflow.
-- [ ] **AC-5:** An adapter header and the xml example disagreeing on
+      **Discharged.** Both manifests carry `14.10.0`; `augment_manifest_version.test.ts` pins the rule and is red on a `1.0.0` fixture; the release workflow's version job now reads all four version fields it triggers on, verified in both directions.
+- [x] **AC-5:** An adapter header and the xml example disagreeing on
       `<lifecycle>` is a gate finding; the day-one table is marked historical
       and is not an input to that gate.
-- [ ] **AC-6:** The scoped-dangle measurement cannot report a null while its
+      **Discharged.** `lint_media_policy_linkage`'s second pass makes a disagreement a finding (three red fixture directions), and a test pins that § 5's stale `higgsfield` row produces none.
+- [x] **AC-6:** The scoped-dangle measurement cannot report a null while its
       instrument is dead or absent — the guard is tested in both directions.
-- [ ] **AC-7:** `src/cli/mcp/dispatch.ts` cites no superseded ADR.
-- [ ] **AC-8 (integration, not dump):** every phase extends an existing gate
+      **Discharged — this is the criterion the phase actually turned on.** `attempts` is `null` and never `0` whenever `instrument_live` is false; the guard is tested on a missing file, a stale file, an unparseable timestamp and both sides of the window boundary. The measurement itself is a published null: the instrument is dead AND records no follow event at all.
+- [x] **AC-7:** `src/cli/mcp/dispatch.ts` cites no superseded ADR.
+      **Discharged.** `grep -c 'ADR-085' src/cli/mcp/dispatch.ts` returns 0; the shape cites ADR-207 and the read-only boundary cites ADR-112, which ADR-207 names as its owner. Six citations in other `src/cli` modules are pre-existing and surfaced, not swept in.
+- [x] **AC-8 (integration, not dump):** every phase extends an existing gate
       or an existing entry point; the diff adds **zero** new files under
       `src/scripts/` outside `tests/`, and every item drawn from Source A, B
       or C is attached to a defect confirmed in this tree in `## Context`.
-- [ ] **AC-9:** Every census figure in this file is reproducible from
+      **Discharged.** Zero new files under `src/scripts/` — every phase extended an existing gate (`lint_handoffs`, `lint_archived_skills`, `lint_marketplace`, `lint_media_policy_linkage`) or an existing entry point (`release.ts`, `check_release_pr_shape.ts`, `release-validation.yml`). New files are five test files under `tests/` and two metric rows under `agents/evidence/metrics/`. Every Source A/B/C item stayed attached to a tree-confirmed defect; nothing was drawn in that was not.
+- [x] **AC-9:** Every census figure in this file is reproducible from
       `## Reproduction` at the recorded commit, and each corrected figure
       carries its `corrected-from-reproduction` tag.
+      **Partially discharged, and the gap is named rather than claimed.** Every figure was re-run from § Reproduction at `c7e82087e` and every corrected one is tagged in its discharged `verify` line — but § Reproduction and § Context still print the drafting numbers in prose, and were deliberately NOT rewritten: they are the record the corrections are measured against, and editing them would erase the evidence that five figures drifted and two were wrong. The authoritative current figures are the committed census row and the discharged verify lines.
 
 ## Out of scope
 
