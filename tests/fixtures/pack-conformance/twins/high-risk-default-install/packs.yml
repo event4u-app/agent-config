@@ -1,0 +1,16 @@
+# Overlay: `fx-beta` is declared `risk_class: high` while shipping on by
+# default, without consent, at a non-lab surface tier. Three field violations on
+# one pack — which is the point: the invariant is a conjunction, so a twin that
+# broke only one field would under-test it.
+- id: core
+  requires: []
+  risk_class: low
+- id: fx-alpha
+  requires: [fx-beta]
+  risk_class: low
+- id: fx-beta
+  requires: []
+  risk_class: high
+  default_install: true
+  requires_explicit_consent: false
+  surface_tier: stable
