@@ -1,6 +1,6 @@
 # Featured Skills
 
-A curated subset of the 294 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
+A curated subset of the 297 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (see `road-to-product-adoption.md` Phase 1), this page is documentation, not marketing. The entries below are the candidates the corpus tests against; their description quality is what the eval validates.
 
@@ -93,4 +93,4 @@ task lint-featured-skills
 
 CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.py) for the matcher.
 
-→ Browse all 294 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 202 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
+→ Browse all 297 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 202 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
