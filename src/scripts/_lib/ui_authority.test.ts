@@ -202,7 +202,7 @@ describe('A4.1 — six operations as one field, with a conflict path', () => {
         const c = operationConflicts(a, 'bolder');
         expect(c.length).toBeGreaterThan(0);
         expect(c.map((x) => x.dimension).sort()).toEqual(['palette', 'type_family']);
-        expect(c[0].blocked_by).toMatch(/^preserve_/);
+        expect(c[0]!.blocked_by).toMatch(/^preserve_/);
     });
 
     it('polish under preserve is clean — it touches no locked dimension', () => {

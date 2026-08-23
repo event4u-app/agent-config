@@ -44,6 +44,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
+import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const EXIT_ALLOW = 0;
@@ -257,7 +258,7 @@ export function render(result: PassResult): string {
     return lines.join('\n');
 }
 
-async function main(): Promise<number> {
+function main(): number {
     const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     if (!enabled(root)) return EXIT_ALLOW;
 
@@ -287,12 +288,15 @@ async function main(): Promise<number> {
     const findings: Finding[] = [];
     let scanFailed: string | null = null;
     try {
-        const { loadDesignContext, scanFile } = await import('../lint_design_slop.js');
         const ctx = loadDesignContext(root);
         for (const rel of targets) {
             const abs = path.isAbsolute(rel) ? rel : path.join(root, rel);
             if (!fs.existsSync(abs)) continue;
-            for (const f of scanFile(abs, ctx)) {
+            // scanFile takes (content, relPath, ctx) — the hook reads the file
+            // itself rather than handing over a path, which is also what lets a
+            // post-write pass see the bytes that were just written.
+            const content = fs.readFileSync(abs, 'utf-8');
+            for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,
                     severity: f.severity as Finding['severity'],
@@ -326,7 +330,7 @@ async function main(): Promise<number> {
 }
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
-    void main().then((c) => process.exit(c));
+    process.exit(main());
 }
 export { main as _main };
 export const _HERE = fileURLToPath(import.meta.url);
