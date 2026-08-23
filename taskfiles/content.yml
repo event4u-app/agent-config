@@ -342,6 +342,11 @@ tasks:
     desc: Run the pack-conformance fixture harness (conformant fixture + one seeded twin per fixture-provable gate)
     cmd: ./scripts-run src/scripts/check_pack_conformance_fixture {{.QUIET_FLAG}}
 
+  check-composite-arming-self-test:
+    silent: true
+    desc: Prove the per-turn-composite arming predicate still refuses (9-from-3 and 12-from-1 both not-armable, nulls dropped)
+    cmd: ./scripts-run src/scripts/check_composite_arming --self-test
+
   check-generator-output-coverage:
     silent: true
     desc: Fail if any generator output root in condense.ts is not classified in agents-paths.yml or .gitignore
