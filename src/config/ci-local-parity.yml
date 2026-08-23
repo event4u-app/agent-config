@@ -101,6 +101,20 @@ pre_push_budget_seconds: 25
 #   resolver       not a gate at all — a helper a workflow step calls to compute
 #                  something (a diff base, a scope); it decides and blocks nothing
 ci_only:
+  # road-to-target-project-assurance-readiness steps 0.3 and 3.1. Both run in the
+  # NIGHTLY risk-class-drift workflow, and neither belongs in a local gate chain:
+  # `measure_risk_class_drift` APPENDS to a ledger, so putting it in `task ci` would
+  # make every local run write a row and the drift series would measure how often
+  # contributors ran the gate rather than what the tree looks like. Its classifier
+  # self-test is the half that IS worth running locally, and it is reachable —
+  # `classify_change_risk --self-test` — but the workflow invokes it as a step of
+  # its own rather than through the aggregate, which is what this checker sees.
+  - id: classify_change_risk
+    class: benchmark
+    reason: "invoked as the nightly drift workflow's self-test step; the classifier itself gates nothing and its `--self-test` is runnable locally on demand (`./scripts-run src/scripts/classify_change_risk --self-test`)"
+  - id: measure_risk_class_drift
+    class: benchmark
+    reason: "appends one row per run to agents/evidence/risk-classifier-drift.jsonl — in a local chain it would make the drift series a count of local gate runs rather than a measurement of merged changes; the standing metric is nightly by design (step 3.1 forbids a per-change trigger)"
   - id: check_release_surface_equality
     class: release
     reason: "shells out to `gh pr diff <n>` for a live release PR — there is no PR body to compare the CHANGELOG against on a local checkout"
