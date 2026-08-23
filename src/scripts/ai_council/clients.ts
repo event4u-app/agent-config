@@ -46,6 +46,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { boundFor } from './cli_agency_bounds.js';
 import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
 
@@ -1851,7 +1852,7 @@ export class OpenAICliClient extends CliClient {
         // the payload itself is assembled in `_stdin_payload`.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...modelArgs, '-'];
+        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...boundFor('openai'), ...modelArgs, '-'];
     }
 
     /**
@@ -2097,7 +2098,7 @@ export class GeminiCliClient extends CliClient {
         // nothing fired the `||` branch and the absent FLAG was reported as an
         // absent BINARY. A compound probe reports its last exit code, not the
         // fact you meant to test.
-        return [this.binary, '--output-format', 'json', '--model', this.model];
+        return [this.binary, '--output-format', 'json', ...boundFor('gemini'), '--model', this.model];
     }
 
     /**

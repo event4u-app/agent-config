@@ -154,11 +154,14 @@ describe('events_log — quorum attendance (schema v4)', () => {
         // purpose, which is the assertion working.
         //
         // Bumped 3 → 4 when the line gained `min_present` — the floor the
-        // counterfactual was computed against. Same mechanism, same reason it
-        // is a literal.
+        // counterfactual was computed against. Bumped 4 → 5 when it gained
+        // `stance_agreement`. Same mechanism, same reason it is a literal: a
+        // consumer pooling lines across a bump must EXCLUDE the older stratum
+        // rather than default the new field, and it can only do that if the
+        // version actually moved.
         const lp = path.join(tmpDir(), 'wire.log');
         appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
-        expect(readOne(lp).schema_version).toBe(4);
+        expect(readOne(lp).schema_version).toBe(5);
     });
 
     it('writes a quorum_result line carrying the attendance shape', () => {
@@ -210,6 +213,64 @@ describe('events_log — quorum attendance (schema v4)', () => {
         // isSoloConcluded rather than a second copy of the rule.
         expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'concluded']);
         expect(lines.map((l) => l.solo)).toEqual([true, false]);
+    });
+
+    // ── Phase 3 — whether the seats AGREED leaves a line in the log ──
+    //
+    // Before this, `stance_tally.ts` wrote nothing: `grep -c appendEvent` on it
+    // returned 0 across 256 lines and it had no import from `events_log.js` at
+    // all, so its verdict reached the reader as rendered prose only. The log
+    // could say who showed up and never whether they agreed.
+    it('carries the stance agreement as a FIELD on the existing quorum_result line', () => {
+        const lp = path.join(tmpDir(), 'agree.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [], stanceAgreement: 'consensus' },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        // A FIELD, never a new action — a new action is invisible to every
+        // consumer filtering `action === 'quorum_result'` and would split the
+        // attendance population in two.
+        expect(rec.action).toBe('quorum_result');
+        expect(rec.stance_agreement).toBe('consensus');
+    });
+
+    // Three states, not a boolean, and the third is the one that matters: a
+    // pass where no tally ran is NOT a pass where the seats disagreed. Reading
+    // `false` as disagreement is exactly the "says something the run did not
+    // establish" defect this roadmap exists to close, so `not_tallied` is
+    // written explicitly rather than left to an absent key.
+    it('a pass with no stance tally records `not_tallied`, never a bare false', () => {
+        const lp = path.join(tmpDir(), 'agree2.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        expect(rec.stance_agreement).toBe('not_tallied');
+        expect(rec.stance_agreement).not.toBe(false);
+    });
+
+    it('a split is recorded as a split', () => {
+        const lp = path.join(tmpDir(), 'agree3.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [], stanceAgreement: 'split' },
+            { logPath: lp, now: FIXED },
+        );
+        expect(readOne(lp).stance_agreement).toBe('split');
+    });
+
+    // The schema bump is the contract for every consumer that pools lines: a
+    // rate over the new field must EXCLUDE older lines rather than default
+    // them, and it cannot do that unless the version moved.
+    it('the schema version moved with the field', () => {
+        const lp = path.join(tmpDir(), 'agree4.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        expect(readOne(lp).schema_version).toBe(5);
+        expect(SCHEMA_VERSION).toBe(5);
     });
 
     it('records the shadow floor without an operator opting in', () => {

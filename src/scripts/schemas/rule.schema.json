@@ -55,6 +55,28 @@
       },
       "description": "Eager auto-loaded context references. Same logical-name rule as `load_context`. Counts against the per-rule char budget; enforced by scripts/lint_load_context.py."
     },
+    "norm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokens", "remainder"],
+      "description": "The rule's declared NORMATIVE budget, plus where its non-normative remainder went. Optional: a required key would red every existing rule file on the day it lands, which is the gate-that-teaches-you-to-ignore-it failure `src/config/preamble-payload-budget.json` warns about in its own `_comment`. A rule that declares this is asserting that everything left in its body is obligation or routing, and that the rationale a reader may still want is reachable at `remainder`. Measured and enforced by `lint_rule_norm_pin`.",
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Exact-BPE ceiling (cl100k_base) for the rule body BELOW the frontmatter. Never a chars/4 proxy - this tree ships an exact tokenizer and a pin measured in the other unit would be enforced against a number nobody can reproduce. Derive it from a real measurement of the rule after its remainder has moved out; a pin invented at authoring time is an invented threshold and the lint would then enforce a guess."
+        },
+        "remainder": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^((\\.\\./)*(contexts|docs|skills)/|agents/settings/contexts/|dist/agent-src/(contexts|skills)/)[^\\s]+\\.md$"
+          },
+          "description": "Where the prose this rule used to carry now lives - one or more guideline, context, or skill paths. REQUIRED alongside `tokens`, deliberately: a pin with no destination is a licence to delete, and `preservation-guard` forbids deletion during a transformation. The rule must also carry an inbound link to each entry so the relocated prose stays reachable (`check_references`)."
+        }
+      }
+    },
     "tier": {
       "type": "string",
       "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already", "kernel", "tier-1", "tier-2"],

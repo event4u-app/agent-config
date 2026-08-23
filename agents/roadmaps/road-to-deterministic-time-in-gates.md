@@ -412,7 +412,7 @@ pointer.
   rather than relitigating a decision — but the plan hash must live behind a
   human-only write path, and this tree has exactly one: the class-C settings
   route. The stub is where that decision belongs.
-- **The per-invocation skill diet → `agents/roadmaps/road-to-standing-payload-diet.md`,
+- **The per-invocation skill diet → `agents/roadmaps/archive/road-to-standing-payload-diet.md`,
   by reference.** Ownership boundary in one sentence: that roadmap owns the
   standing-payload axis end to end, and the source's own scoping paragraph
   quotes its § Context verbatim (the preamble RED is rule-driven — 120,282 tok

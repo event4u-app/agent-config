@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "description": "Compile every workspace to its dist/ output.",
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "description": "Run the workspace linter over its own sources."
+    },
+    "test": {
+      "description": "Run the workspace unit tests.",
+      "dependsOn": ["^build"]
+    }
+  }
+}

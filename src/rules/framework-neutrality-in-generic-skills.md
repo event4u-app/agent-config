@@ -72,7 +72,7 @@ framework-specific): `laravel*`, `symfony*`, `nextjs*`, `react-*`,
 `^php-*`, `^pest-*`, `^eloquent`, `^blade*`, `^livewire`, `^flux`,
 `^artisan-*`, `^composer-*`, `^docker*`, `^aws-*`, `^grafana`,
 `^openapi$`, `^quality-tools`, `^sql-writing`, `^tailwind*`,
-`^terraform*`, `^terragrunt*`, `^traefik`, `^mobile-e2e`,
+`^terraform*`, `^terragrunt*`, `^traefik`, `^mobile-e2e`, `^monorepo-workspace$`, `^workspace-link$`,
 `-routing$`, `project-analysis-(laravel|symfony|nextjs|react|node-express|zend-laminas)`.
 
 ## The discipline in one breath

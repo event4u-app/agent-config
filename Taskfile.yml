@@ -138,6 +138,7 @@ tasks:
       - task: check-dependency-floors
       - task: check-pack-size
       - task: check-preamble-payload
+      - task: check-standing-payload-delta
       - task: check-static-layer-stability
       - task: bench-hook-injection
       - task: lint-no-python-twin-rationale

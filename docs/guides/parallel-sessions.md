@@ -90,6 +90,14 @@ because either can be silent on its own:
 - **the branch axis** — an unmerged branch in another worktree whose name carries
   the roadmap's distinctive tail. Needs nothing but a checkout on disk, which
   exists from the peer's first minute. `sessions:list` prints it.
+- **the path axis** — `owned_paths` on a live peer record, published by
+  `sessions:claim --paths`. Two sessions can be on different roadmaps and
+  different branches and still be editing one file: neither axis above sees that,
+  and it is the one that actually predicts a merge conflict. `sessions:list`
+  prints it as a separately-labelled `PATH OVERLAP` line, because the response
+  differs — a slug collision means stop, a branch collision means coordinate, a
+  path collision means take the disjoint steps first and say so. Absent when a
+  session declared nothing, which is the ordinary case.
 
 Two limits worth knowing. A branch created seconds ago has no commits of its own,
 so it counts as merged and does not appear on the branch axis — that first minute

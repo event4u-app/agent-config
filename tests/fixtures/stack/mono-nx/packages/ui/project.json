@@ -1,0 +1,6 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "ui",
+  "projectType": "library",
+  "targets": { "build": { "executor": "@nx/vite:build" } }
+}
