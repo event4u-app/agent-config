@@ -398,6 +398,39 @@ blocking` is a property of the concern, never of the host. So "bind it and the
 guard enforces" is as unbacked as "there is nowhere to bind". Row 2 is the
 standing evidence for that: those two hosts are bound and still do not deny.
 
+### Transparent input rewrite — a fifth capability, and the tree's claim about it was wrong
+
+Denial is not the only thing a pre-tool event can do. A host may also offer a
+**transparent input rewrite**: the hook returns a modified tool input and the call
+proceeds with it, unblocked. Three sites in this tree asserted that the contract has no
+such field. Re-probed 2026-08-23 against **Claude Code 2.1.241**, that assertion is
+**false for that build**.
+
+| Host | Rewrite capability | What the probe recorded |
+|---|---|---|
+| `claude` | **offered** (2.1.241) | binary strings document `` `updatedInput` - Modified tool input (PreToolUse only) ``, the shape `{behavior: 'allow', updatedInput?: object}`, **schema validation** on the value, and a fallback when it is absent or empty |
+| every other host | **unprobed** | no observation exists; absence of a claim, not a claim of absence |
+
+**This dispatcher does not emit it, and that is the load-bearing distinction.**
+`src/scripts/hooks/host_semantics.ts:107-117` builds exactly one envelope shape —
+`hookSpecificOutput: { hookEventName, additionalContext }` — and nothing in
+`src/scripts/hooks/` constructs an `updatedInput` or a `permissionDecision`. So:
+
+- *"our dispatcher cannot rewrite tool input"* — **true**, and fixable by us.
+- *"the host contract has no transparent rewrite"* — **false at 2.1.241**, and it was
+  asserted with no date, which is why nobody could tell.
+
+The same collapse this section warns about twice already: a fact about our plumbing was
+written as a fact about the host. **What is still not established** is whether a
+per-concern rewrite can compose — the dispatcher reduces many concerns per event to one
+exit code, and what happens when two want to rewrite the same input is undecided. That
+gap, not a missing host field, is why `rtk_wrap_hook` still only warns (AI council
+2026-08-23, 2/2 convergent).
+
+Evidence: `agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`. Pinned to a
+build and a date deliberately — an unpinned capability claim rots exactly the way the one
+it replaces did.
+
 **Slot presence is not slot firing, and `cursor` is the recorded case.**
 `src/scripts/_lib/session_register.ts` notes that cursor's per-turn slots are
 IDE-only — the CLI fires shell-execution hooks alone — and that a slot-presence

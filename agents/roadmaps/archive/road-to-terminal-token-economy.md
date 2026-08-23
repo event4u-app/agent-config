@@ -73,73 +73,179 @@ Two further verified facts shape the later phases:
 
 Build nothing in this phase. Its only output is a dated, versioned answer.
 
-- [ ] **1.1 Probe whether the current host dispatcher offers a transparent input
+- [x] **1.1 Probe whether the current host dispatcher offers a transparent input
       rewrite.** The header's claim is `allow/block/warn` with no `updatedInput`.
       Establish whether that is still true against the host build in front of
       you, and record the probe method — not a recollection, an observation.
-      verify: the finding is written under `agents/evidence/analysis/` and quotes the pre-state, which is `git show HEAD:src/scripts/hooks/rtk_wrap_hook.ts | grep -c "updatedInput"` = 2 (the two assertions at `:15` and `:190`).
-- [ ] **1.2 Pin the answer to a named host build and a date.** An unpinned
+      verify (discharged): the finding is written under `agents/evidence/analysis/` and quotes the pre-state, which is `git show HEAD:src/scripts/hooks/rtk_wrap_hook.ts | grep -c "updatedInput"` = 2 (the two assertions at `:15` and `:190`). **Pre-state confirmed = 2.**
+
+      **THE PROBE REFUTED THE SHIPPED CLAIM.**
+      `agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`. Method: field-name
+      and context extraction from the shipped host binary — an observation, not a
+      recollection. Claude Code **2.1.241** documents, in its own strings:
+
+      > `` - `updatedInput` - Modified tool input (PreToolUse only) ``
+      > `Expected {behavior: 'allow', updatedInput?: object} or {behavior: 'deny', message: string}.`
+      > `… returned updatedInput that failed schema validation:`
+      > `… : updatedInput is missing or empty, falling back to original tool input`
+
+      A documented field, a documented shape, **schema validation** on the value and a
+      **documented fallback**. A host that validates a field's schema and logs a fallback
+      for it implements the field. So *"there is no transparent `updatedInput` rewrite"* is
+      **false for this build**.
+
+      **The half that survives, and it is the useful one:** this dispatcher does not emit
+      it. `host_semantics.ts:107-117` builds exactly one envelope shape
+      (`hookSpecificOutput: { hookEventName, additionalContext }`) and nothing under
+      `src/scripts/hooks/` constructs an `updatedInput` or a `permissionDecision`. The
+      shipped claim collapsed a fact about our plumbing into a claim about the host, and
+      only the first half was true.
+
+      A count alone would have been weak evidence — the file also records that, and quotes
+      the context rather than resting on `grep -c` = 86.
+- [x] **1.2 Pin the answer to a named host build and a date.** An unpinned
       capability claim rots exactly the way the one being replaced did. The
       finding names the host, its version, and the date, so a later reader can
       tell whether it still describes anything.
-      verify: `grep -cE "20[0-9]{2}-[0-9]{2}-[0-9]{2}" <the finding>` is non-zero and a host build identifier appears in the same paragraph as the verdict.
-- [ ] **1.3 Amend or confirm the header comment in the same change.** Whatever
+      verify (discharged): `grep -cE "20[0-9]{2}-[0-9]{2}-[0-9]{2}" <the finding>` is non-zero and a host build identifier appears in the same paragraph as the verdict. **Both: the finding carries a pinned table (host, version 2.1.241, probed 2026-08-23, platform) and the verdict sentence names 2.1.241 inline.**
+
+      The pin is the substance rather than bookkeeping: a later reader compares their own
+      `claude --version` against 2.1.241 and knows whether the paragraph still describes
+      anything. The claim being replaced had no date, which is why nobody could tell it had
+      gone stale — or, as it turned out, that it was wrong.
+- [x] **1.3 Amend or confirm the header comment in the same change.** Whatever
       1.1 finds, `rtk_wrap_hook.ts:13-15` and `:190` either gain a re-probed date
       or gain the correction. A header that asserts a host contract with no
       date is the defect, independent of whether the assertion is true.
-      verify: `grep -n "re-probed\|dispatcher contract" src/scripts/hooks/rtk_wrap_hook.ts` shows the dated form; `npx vitest run tests/scripts/hooks/rtk_wrap_hook.test.ts 2>&1 | tail -3` still passes.
-- [ ] **1.4 Route the answer into the hook-architecture contract.** The four-state
+      verify (discharged): `grep -n "re-probed\|dispatcher contract" src/scripts/hooks/rtk_wrap_hook.ts` shows the dated form; `npx vitest run tests/scripts/hooks/rtk_wrap_hook.test.ts 2>&1 | tail -3` still passes. **Dated form present at `:17`; 21/21 tests green.**
+
+      Both sites corrected — the header at `:13-15` and the cap-advisory comment at `:190` —
+      and **a third the step did not name**:
+      `src/config/hook-token-budget.json:90` carried the same false cause (*"no updatedInput
+      in the v1 contract"*). A defect found in one place is presumed to recur until searched;
+      `grep -rn 'updatedInput' src/` found exactly three sites and all three are corrected.
+
+      The correction keeps the **outcome** and replaces the **cause**: the hook still only
+      warns, and now says why it does — no emitter and no composition policy — rather than
+      asserting a host limitation that does not exist.
+- [x] **1.4 Route the answer into the hook-architecture contract.** The four-state
       host table at `docs/contracts/hook-architecture-v1.md:370` is where
       per-host capability facts live in this tree. A rewrite-capability finding
       belongs beside it, not only in a hook header.
-      verify: `grep -n "rewrite" docs/contracts/hook-architecture-v1.md` returns the new entry.
+      verify (discharged): `grep -n "rewrite" docs/contracts/hook-architecture-v1.md` returns the new entry. **Returns `:401` and following.**
+
+      Added as a **fifth capability** section beside the four-state `pre_tool_use` table,
+      which is where per-host capability facts live. It records the host as *offered at
+      2.1.241* and every other host as **unprobed** — *"absence of a claim, not a claim of
+      absence"* — because that table's own header warns twice that collapsing its states
+      produces false claims, and inventing a rewrite verdict for seven unprobed hosts would
+      be the same mistake in a new column.
 
 ## Phase 2 — choose ONE wrapper mechanism, and record the two you rejected
 
-- [ ] **2.1 Enumerate the candidate mechanisms against Phase 1's answer.** At
+- [x] **2.1 Enumerate the candidate mechanisms against Phase 1's answer.** At
       least three are on the table and they are not interchangeable: a
       transparent input rewrite (only if 1.1 found one), the existing warn-only
       nudge, and the bounded-alternative branch that `OUTPUT_CAP_TABLE` already
       implements for commands the wrapper cannot take. Write them out with what
       each costs and what each cannot do.
-      verify: `grep -n "OUTPUT_CAP_TABLE" src/scripts/hooks/rtk_wrap_hook.ts` resolves to `:211` and the enumeration cites it as the existing second branch.
-- [ ] **2.2 Pick one and record the rejections with reasons.** One mechanism
+      verify (discharged): `grep -n "OUTPUT_CAP_TABLE" src/scripts/hooks/rtk_wrap_hook.ts` resolves to `:211` and the enumeration cites it as the existing second branch. **Resolves at `:211`; cited.**
+
+      `agents/evidence/analysis/rtk-wrapper-mechanism-decision.md` enumerates all three with
+      what each costs and what each **cannot do** — the second column is the one that made
+      the decision, and Phase 1 is why it could be written honestly: the rewrite had to be
+      weighed on its real costs rather than dismissed on a premise that turned out false.
+- [x] **2.2 Pick one and record the rejections with reasons.** One mechanism
       ships. The other two are written down as rejected-with-reason in the same
       note — a rejected alternative with no reason attached is re-proposed within
       the quarter, which is the pattern this tree keeps a decision-record
       discipline for.
-      verify: the note names exactly one chosen mechanism and gives a reason per rejected one; `grep -ci "rejected" <the note>` is at least 2.
-- [ ] **2.3 State what happens to the second branch under the chosen mechanism.**
+      verify (discharged): the note names exactly one chosen mechanism and gives a reason per rejected one; `grep -ci "rejected" <the note>` is at least 2.
+
+      **CHOSEN: (b), the warn-only nudge.** AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent.
+
+      **Rejected — (a) the transparent rewrite**, and the *reason* is the part that matters:
+      **not** "the host cannot", which Phase 1 refuted, but two real costs. First, **no
+      composition rule exists** — the dispatcher reduces many concerns per event to one exit
+      code, and precedence, conflict detection and failure semantics for two concerns
+      rewriting the same input are undecided; that is design work with a safety surface, not
+      wiring. Second, a default-OFF hook that **silently changes what the agent runs** is a
+      materially different safety posture from one that warns. One seat put it in a sentence
+      worth keeping: *"A host capability is not yet a safe dispatcher capability."*
+
+      **Rejected as a sole mechanism — (c) the cap table**, because it covers only the
+      commands the wrapper *cannot* take; choosing it alone leaves every wrappable command
+      unaddressed. It is retained rather than discarded — see 2.3.
+
+      **Rejected-for-now, not rejected permanently.** Both seats flagged that *"merely
+      rejecting rewrite risks turning a temporary design gap into permanent inertia"*, so the
+      note names the reopening condition: an accepted composition policy for per-concern
+      input rewrite in this dispatcher. And one seat's correction is adopted verbatim rather
+      than paraphrased — the unavailable capability must be labelled accurately:
+      `updatedInput` **is** available; what is absent is a safe composition policy here.
+- [x] **2.3 State what happens to the second branch under the chosen mechanism.**
       `grep` and `rg` are covered today by a warn naming a bounded alternative.
       If the chosen mechanism supersedes that, say so; if it coexists, say how
       the two decide which fires.
-      verify: the decision is written and, if code changed, `npx vitest run tests/scripts/hooks/rtk_wrap_hook.test.ts 2>&1 | tail -3` and `./scripts-run src/scripts/lint_hook_manifest 2>&1 | tail -3` both exit green.
-- [ ] **2.4 Leave default-OFF alone unless Phase 3 earns the flip.** The setting
+      verify (discharged): the decision is written and, if code changed, `npx vitest run tests/scripts/hooks/rtk_wrap_hook.test.ts 2>&1 | tail -3` and `./scripts-run src/scripts/lint_hook_manifest 2>&1 | tail -3` both exit green.
+
+      **They coexist, and there is no precedence question to answer** — the split is by
+      command and the two sets are **disjoint by construction**: membership in
+      `OUTPUT_CAP_TABLE` is precisely the record that the wrapper has no form for that
+      command. So the chosen mechanism supersedes nothing.
+
+      **No code changed for this step**, which is the honest outcome for a decision that
+      ratified what already ships. The hook's behaviour is untouched; only the *reason*
+      recorded in its header changed (1.3).
+- [x] **2.4 Leave default-OFF alone unless Phase 3 earns the flip.** The setting
       ships `false` and a default flip is a change to what every consumer session
       does. It is not part of choosing a mechanism.
-      verify: `grep -n -A1 "^  rtk_wrap:" src/config/agent-settings.template.yml` still shows `enabled: false`.
+      verify (discharged): `grep -n -A1 "^  rtk_wrap:" src/config/agent-settings.template.yml` still shows `enabled: false`. **Confirmed at `:1263-1264`.**
+
+      Untouched, and deliberately: choosing a mechanism is not flipping a default, and a
+      flip changes what every consumer session does. Phase 3 would have to earn it, and
+      Phase 3's run is deferred — so nothing in this change comes close to earning it.
 
 ## Phase 3 — pre-register the re-bench, then publish it including a null
 
 The ordering is the whole point. A benchmark whose success bar is written after
 the numbers arrive is not a benchmark.
 
-- [ ] **3.1 Register the bench design before running anything.** Corpus size and
+- [x] **3.1 Register the bench design before running anything.** Corpus size and
       composition, machines, commands, the metric, and the bars — both the
       success bar and the kill bar — written down and dated ahead of the first
       run. Explicitly widen past the existing shape: one repo, one machine,
       eight commands is what the current figure rests on.
-      verify: the registration file exists under `agents/evidence/analysis/` with a date preceding any results file, and `git log --diff-filter=A --format=%ad -1 -- <registration>` precedes the results file's add date.
-- [~] **3.2 Run it and publish the number, whatever it is.** A result at or near
+      verify (discharged): the registration file exists under `agents/evidence/analysis/` with a date preceding any results file, and `git log --diff-filter=A --format=%ad -1 -- <registration>` precedes the results file's add date. **No results file exists, so the ordering holds trivially and verifiably.**
+
+      `agents/evidence/analysis/rtk-rebench-registration.md`. Widened on all three axes the
+      current figure is narrow on: **>= 3 repositories · >= 2 machines · >= 20 commands**.
+
+      The **command composition is fixed in advance** — 8 verbose, 6 already-compact, 6
+      mixed — and that is the step's real content rather than a detail. The existing
+      figure's own breakdown shows why: verbose commands save ~55 % and already-compact
+      output passes through at ~0 %, so the headline is a function of the mix, and a corpus
+      reweighted toward verbose would raise the number without measuring anything new.
+
+      Bars in both directions: **success** median per-command saving >= 30 % · **kill**
+      <= 10 % · **inconclusive** in between, reported as such and **not rounded toward
+      either**. 30 % is chosen as "the existing 33 % survives widening" rather than pulled
+      from nothing; 10 % is where the wrapper's startup and the advisory's cognitive cost
+      stop being obviously repaid.
+
+      It also states what the run does **not** measure: compliance. A 55 % compression on a
+      command nobody re-runs wrapped saves nothing, and that is the acknowledged limit of
+      the mechanism Phase 2 chose.
+- [-] **3.2 Run it and publish the number, whatever it is.** A result at or near
       zero is a publishable outcome and closes the lever honestly. A result that
       misses the pre-registered bar closes it the same way.
       verify: the results file cites the registration by path and reports the metric against the pre-registered bars, naming any bar it missed.
-- [~] **3.3 Correct the shipped documentation to whatever 3.2 measured.** The
+- [-] **3.3 Correct the shipped documentation to whatever 3.2 measured.** The
       skill currently carries the 2026-07-28 figure. Replace it with the new one
       and its scope, or — if 3.2 produced a null — replace it with the null and
       the scope, keeping the honest-scoping style the current text already has.
       verify: `grep -n "2026-07-28" src/skills/rtk-output-filtering/SKILL.md` no longer returns the stale figure as the headline; the pre-state is `git show HEAD:src/skills/rtk-output-filtering/SKILL.md | grep -c "2026-07-28"` = 1.
-- [~] **3.4 Reconcile the upstream-reported range against this tree's own.** The
+- [-] **3.4 Reconcile the upstream-reported range against this tree's own.** The
       skill quotes an upstream 60–90 % range next to a measured 33 %. Whatever
       3.2 produces, state the relationship between the two rather than letting a
       reader pick the flattering one.
@@ -175,6 +281,43 @@ the numbers arrive is not a benchmark.
       tree are a different claim (judge inconsistency) and were left alone — the
       count is reported so "I labelled it" is distinguishable from "I labelled the
       one I happened to see".
+
+      **IRON-LAW-3 RESOLUTION 2026-08-23 — steps 3.2, 3.3 and 3.4 carried, and the
+      DEFERRAL'S REASON CHANGED IN THIS SAME CHANGE.** Recorded per the preservation
+      test:
+
+      · **Criterion, verbatim:** 3.2 *"A result at or near zero is a publishable
+        outcome and closes the lever honestly"* · 3.3 *"Replace it with the new one
+        and its scope, or — if 3.2 produced a null — replace it with the null and the
+        scope"* · 3.4 *"state the relationship between the two rather than letting a
+        reader pick the flattering one."*
+      · **Blocker:** `b-ab-session-spend`, resolved to (b) earlier on 2026-08-23 —
+        and **re-evaluated in this change**, because its recorded condition no longer
+        holds.
+      · **The lock, and why it was reopened rather than obeyed.** The original
+        deferral rested on **ordering**: *"Phase 2 has not chosen the mechanism Phase 3
+        exists to benchmark."* Phase 2 chose in this change. `decision-revisit-gate`
+        requires a lock whose condition has changed to be surfaced rather than silently
+        complied with, so it was put back to the council.
+      · **Options considered:** (a) the deferral is void, run what can be run on one
+        machine · (b) it stands on a NEW condition, the registration's own >= 2-machine
+        requirement · (c) amend the registration down to one machine.
+      · **Verdict: (b)**, AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent. The ordering objection is **discharged**; what
+        defers it now is that the frozen design needs two machines and one is
+        reachable. A one-machine re-bench would replace a dated single-machine figure
+        with a fresh single-machine figure and call it progress — reproducing exactly
+        the narrowness the widening exists to fix.
+      · **(c) was refused** because it lowers a bar written before any number was seen,
+        which is the one thing a pre-registration exists to prevent.
+      · **Destination:** `agents/roadmaps/stubs/road-to-rtk-rebench-run.md`, created in
+        this change, carrying all three steps with the frozen design.
+      · **What closes it:** a **second machine** is reachable. A CI runner counts and
+        the registration names it as acceptable.
+
+      **The skill's label was updated in the same change**, because the deferral reason
+      it quotes was the discharged one. It now names the >= 2-machine condition instead
+      of the ordering objection — a stale reason attached to a correct outcome is still
+      a doc that misleads.
 ## Blockers
 
 ### blocker: b-ab-session-spend
@@ -202,6 +345,28 @@ the numbers arrive is not a benchmark.
 - **Resolved when:** one of (a) or (b) is recorded at this blocker, and — for (b) —
   the skill's savings paragraph carries the staleness label and steps 3.2–3.4 are
   marked deferred rather than left open-looking.
+- **CONDITION CHANGED 2026-08-23, same day, re-evaluated rather than obeyed.** The
+  resolution below rested on **ordering** — *"Phase 2 has not chosen the mechanism Phase
+  3 exists to benchmark."* **Phase 2 chose in this change** (option (b) of the mechanism
+  decision: the existing warn-only nudge), so that condition is **discharged** and
+  `decision-revisit-gate` required the lock to be surfaced rather than silently complied
+  with.
+
+  Put back to the council with three options — void the deferral and run on one machine ·
+  stand on a new condition · amend the registration down to one machine. Verdict: **the
+  deferral STANDS, on a NEW condition**, AI council 2026-08-23, 2/2 quorum (anthropic/claude-sonnet-4-5 + openai/codex-default), convergent.
+
+  **The new condition is the registration's own `>= 2 machines`**, and only one is
+  reachable. A one-machine re-bench would replace a dated single-machine figure with a
+  fresh single-machine figure and call it progress — reproducing the exact narrowness the
+  widening exists to fix. Amending the registration down was refused: it lowers a bar
+  written before any number was seen, which is the one thing a pre-registration prevents.
+
+  **Reopens when a second machine is reachable** — a CI runner counts, and the
+  registration names it as acceptable. Steps 3.2-3.4 are carried to
+  `agents/roadmaps/stubs/road-to-rtk-rebench-run.md`, and the skill's staleness label was
+  updated in the same change to name this condition rather than the discharged one.
+
 - **Resolution 2026-08-23 — (b), AI council, 2 of 2 convergent.** Both halves of
   the `Resolved when` are discharged in the same change: 3.2-3.4 are `[~]` with
   the reasoning at 3.4, and the staleness label is on the number at **every**
@@ -232,23 +397,31 @@ the numbers arrive is not a benchmark.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Whether the host dispatcher offers a transparent input rewrite is a
+- [x] AC-1 — Whether the host dispatcher offers a transparent input rewrite is a
       written, dated, host-build-pinned finding under
       `agents/evidence/analysis/`, not an undated assertion in a code comment.
-- [ ] AC-2 — `src/scripts/hooks/rtk_wrap_hook.ts` no longer asserts a host
+- [x] AC-2 — `src/scripts/hooks/rtk_wrap_hook.ts` no longer asserts a host
       contract without a re-probe date, and the per-host capability table in
       `docs/contracts/hook-architecture-v1.md` carries the rewrite finding.
-- [ ] AC-3 — Exactly one wrapper mechanism is chosen, and the alternatives are
+- [x] AC-3 — Exactly one wrapper mechanism is chosen, and the alternatives are
       recorded as rejected with a reason each, so a later reader can see why they
       lost rather than re-proposing them.
-- [ ] AC-4 — The relationship between the chosen mechanism and the existing
+- [x] AC-4 — The relationship between the chosen mechanism and the existing
       `OUTPUT_CAP_TABLE` branch is written down as supersede or coexist, with the
       rule that decides which fires.
-- [ ] AC-5 — A bench design with its success and kill bars exists and was created
+- [x] AC-5 — A bench design with its success and kill bars exists and was created
       before any results file, provable from the file-creation order in history.
-- [ ] AC-6 — `src/skills/rtk-output-filtering/SKILL.md` states a figure that
+- [-] AC-6 — `src/skills/rtk-output-filtering/SKILL.md` states a figure that
       matches what this roadmap measured — including if that figure is a null —
       with its corpus, machine count and date travelling alongside the number.
-- [ ] AC-7 — `hooks.rtk_wrap.enabled` is still `false` in
+      **CANCELLED 2026-08-23 with steps 3.2-3.4**, carried to
+      `stubs/road-to-rtk-rebench-run.md`. No new figure exists, so there is nothing to
+      state one against — and marking this met would be the silent green.
+      **What DID change, and it is most of the value:** the number now carries a
+      staleness label naming the condition that actually defers it, the re-bench design
+      is frozen with bars in both directions, and the mechanism it would measure is
+      chosen. Reopens with a second machine.
+
+- [x] AC-7 — `hooks.rtk_wrap.enabled` is still `false` in
       `src/config/agent-settings.template.yml` unless a flip was argued on its
       own terms and recorded separately from the mechanism choice.

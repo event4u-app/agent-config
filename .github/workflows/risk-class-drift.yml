@@ -1,0 +1,94 @@
+name: Risk-class drift (nightly + manual)
+
+# Step 3.1 of road-to-target-project-assurance-readiness.
+#
+# Re-runs `classify_change_risk` over the last 30 days of merged changes and
+# appends one row to agents/evidence/risk-classifier-drift.jsonl.
+#
+# WHY NIGHTLY AND NOT PER-CHANGE. The classifier runs in-session per change; the
+# MEASUREMENT runs on a schedule. A per-change trigger would make this metric a
+# gate, and Phase 2 — the phase that gives the class authority over a completion
+# claim — is cancelled on the pre-registered null route precisely because the
+# class has never been validated against a human-labelled corpus. So the
+# per-change trigger is deliberately absent, and step 3.1's verify is a grep for
+# its absence — which is why this comment does not spell the trigger name out.
+# Prose that trips a grep-shaped verify is a trap for the next reader.
+#
+# WHAT IT MEASURES. The R3 RATE, because that is the number Risk 2 needs: ties
+# and unknowns resolve upward, which is safe per change and corrosive in
+# aggregate, and > 40 % of changes classifying R3 is a defect in the OVERRIDE
+# LIST rather than in the people meeting the gates. `agreement` and `r3_recall`
+# are written as null with a reason — they need a human reference standard, and
+# step 0.2 recorded that no labeller is reachable.
+#
+# READ-ONLY on the repository: appends to a local JSONL and uploads it as a job
+# artifact. It never commits, never pushes, and never touches a consumer
+# machine. No network calls at all. No PII — a row holds a timestamp, four
+# integers, a rate and a fixed reason string; there is no field capable of
+# holding a path, a commit message, or free-form content.
+
+on:
+  workflow_dispatch:
+    inputs:
+      window_days:
+        description: "Trailing window in days"
+        required: false
+        default: "30"
+        type: string
+  schedule:
+    # 04:00 UTC daily. Cron drift is acceptable: the row records its own
+    # `window_days` and `measured_at`, so a late run is a correctly-labelled
+    # row rather than a gap.
+    - cron: "0 4 * * *"
+
+# Every run is keyed by `github.run_id` and sits in a group of one: a cancelled
+# nightly run is a missing row, not a re-runnable check.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Append nightly risk-class drift row
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The measurement walks 30 days of first-parent history, so a shallow
+          # clone would silently shorten the window and under-report the count.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Classifier self-test
+        # The measurement is only as good as the classifier under it, and a
+        # silently no-opped classifier would append plausible rows forever.
+        run: npx tsx src/scripts/classify_change_risk.ts --self-test
+
+      - name: Measure drift
+        run: |
+          npx tsx src/scripts/measure_risk_class_drift.ts \
+            --window-days "${{ github.event.inputs.window_days || '30' }}"
+
+      - name: Upload drift ledger
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: risk-classifier-drift
+          path: agents/evidence/risk-classifier-drift.jsonl
+          if-no-files-found: error
+          retention-days: 90

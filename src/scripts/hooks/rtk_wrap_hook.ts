@@ -10,11 +10,29 @@
  * Killer is installed AND the agent is about to run a single verbose CLI
  * command that is NOT completeness-critical, it surfaces (warn) "re-run
  * wrapped with rtk" so the upstream-reported 60–90% output-token saving is
- * captured. It NEVER blocks (the v1
- * dispatcher contract is allow/block/warn — there is no transparent
- * `updatedInput` rewrite — and, like `injection_scan_hook`, warn preserves
- * agency). It NEVER fires when rtk is absent (silent plain-command fallback,
+ * captured. It NEVER blocks, and like `injection_scan_hook`, warn preserves
+ * agency. It NEVER fires when rtk is absent (silent plain-command fallback,
  * no nag).
+ *
+ * CORRECTED 2026-08-23 (re-probed, Claude Code 2.1.241). This header used to say
+ * "the v1 dispatcher contract is allow/block/warn — there is no transparent
+ * `updatedInput` rewrite". **That was false for this host build**, and it was also
+ * undated, which is the worse half: an unpinned capability claim cannot be checked
+ * against the build it was true for. The host documents
+ * `` `updatedInput` - Modified tool input (PreToolUse only) ``, validates its
+ * schema, and logs a fallback when it is absent
+ * (`agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`).
+ *
+ * What IS true, and is why this hook still only warns: **this dispatcher does not
+ * emit it, and no accepted composition policy exists for it.** The dispatcher
+ * aggregates many concerns per event and reduces them to one exit code; what
+ * happens when two concerns both want to rewrite the same tool input is an
+ * unanswered design question, not a plumbing detail. A default-OFF hook that
+ * silently changes what the agent runs is also a materially different safety
+ * posture from one that warns. AI council 2026-08-23, 2/2 convergent, chose the
+ * warn and recorded the rewrite as REJECTED-FOR-NOW on those two grounds rather
+ * than on the refuted host claim — with a reopening condition, so a temporary
+ * design gap does not become permanent inertia.
  *
  * Default-OFF. Fires only when `hooks.rtk_wrap.enabled: true` in
  * `.agent-settings.yml`. Disabled / missing / rtk-absent → no-op exit 0.
@@ -186,9 +204,14 @@ export function classify(command: string): Eligibility {
 }
 
 // ── Unbounded-output cap ADVISORY (token-economy-cache Phase 4.2) ──────────
-// The roadmap step asked for a deterministic PreToolUse cap REWRITE; the v1
-// dispatcher contract carries no `updatedInput`, so per the roadmap's
-// pre-registered consequence this degrades to an ADVISORY: a committed
+// The roadmap step asked for a deterministic PreToolUse cap REWRITE. It degrades
+// to an ADVISORY per that roadmap's pre-registered consequence — but NOT for the
+// reason recorded here until 2026-08-23, which was "the v1 dispatcher contract
+// carries no `updatedInput`". Re-probed against Claude Code 2.1.241: the host
+// carries it (see the header, and
+// agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md). The real
+// reason is that THIS dispatcher emits no such field and has no accepted
+// composition policy for one across concerns. Same outcome, correct cause: a committed
 // per-command cap table (this constant — rows individually removable,
 // per-row opt-out via `enabled`) and a warn naming the bounded alternative.
 // Nothing is ever truncated; ignoring the advisory IS the uncapped re-run,
