@@ -723,3 +723,50 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-08-22 (road-to-subagent-envelope-adoption Phase 1.3). BASELINE, measured before the pointer landed: **0 valid envelopes of 1,845 post-split stops**, window 2026-08-13T21:19:46Z through 2026-08-22T11:43:05Z, over `agents/runtime/state/subagent-ledger/2026-08.jsonl`. Verdict breakdown `no_envelope` 1,817 · `fail` 28 · `ok` 0 · `no_message` 0; a further 4,543 rows carry the retired `absent` vocabulary and are excluded rather than folded in. Agent-type composition `(null)` 1,725 · `general-purpose` 92 · `Explore` 28 — the null majority is the start-to-stop join rate of roughly 8 in 100 recorded elsewhere, and it is why no stop can be attributed to a dispatcher. METRIC: `ok` divided by post-split stops, reported by `src/scripts/report_envelope_rate.ts`, which prints the rate, the window bounds, the stop count and the ledger path on one line. THRESHOLD FOR THE FIRST WINDOW: greater than zero and rising. Deliberately NOT a percentage — a first window held to a high bar would fail for reasons the measurement cannot separate from the pointer's own effect, so the only thing the first window can establish is that the pointer is readable at all. POWER: the baseline denominator is 1,845; a first window below ~100 stops distinguishes nothing. FALSIFICATION: (1) a rate that stays 0 has at least three causes — the pointer is unreadable, the dominant path was misidentified, or workers on that path never emit a final assistant message — and a single rate cannot separate them, so a flat rate is reported as unresolved rather than as the pointer having failed; (2) the ledger is gitignored and machine-local, so every reading is one machine's drain traffic and no rate from it generalises; (3) a rate that rises without a contemporaneous pointer-removed arm does not establish that the pointer caused it — the historical baseline is temporally and compositionally confounded and both council seats refused it as a control.
 - status: unbacked
 - last_verified: 2026-08-22
+
+### claim: skill-link-census
+- claim: Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with.
+- kind: quant
+- evidence: agents/evidence/metrics/skill-link-census.json#"dead_links": []
+- status: backed
+- last_verified: 2026-08-23
+
+  Written by `./scripts-run src/scripts/lint_handoffs --census-json`. The committed
+  row is the LIVE post-repair state (`dead_links: []`, 941 links, 930 gate-matched).
+  The pre-repair capture from the same command at the same commit, which is the
+  measurement the repair was decided from, read: 947 `](../<slug>/SKILL.md` links across 292 skills, 960 widened to
+  bare directory targets, 205 files carrying at least one, 224 carrying any
+  `](../` link, 938 matched by the gate's own `LINK_RE`, 930 of those undeclared
+  in the linker's `requires_skills:` because only 5 of 292 skills declare the
+  field at all, 221 scoped survivors / 71 pruned, 24 scoped dangles across 17
+  survivors. DEAD LINKS BEFORE THE REPAIR: **16**, not the 14 the drafting census
+  recorded, and the gap is the finding rather than drift — the Reproduction B.1
+  grep `](\.\./[a-z0-9-]*/SKILL\.md` cannot match a target containing a colon,
+  so `../create-pr:description-only/SKILL.md` (x2, `src/skills/review-routing/SKILL.md:34,213`)
+  was invisible to the measurement meant to find it. The gate predicate — a target
+  absent from the live SKILL.md set — has no such blind spot, which is why the
+  census is derived from it and the grep is kept only as the reproducible
+  cross-check. All 16 were repaired in the same change: 8 `verify-before-complete`
+  repointed to `verify-completion-evidence` (rename at
+  `docs/archive/CHANGELOG-pre-2.2.0.md:1216`), 3 `tests-execute` and 2
+  `create-pr:description-only` rewritten to their real command paths, 3
+  `data-exposure-review` removed with the referring sentence rewritten because the
+  slug exists nowhere in the tree and no successor may be invented.
+
+### claim: adapter-lifecycle-day-one-table
+- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree; the stale surface is the lifecycle day-one table, which is history and not a live tier list.
+- kind: qual
+- evidence: docs/contracts/provider-lifecycle.md#historical record
+- status: backed
+- last_verified: 2026-08-23
+
+  `src/scripts/ai-video/adapters/higgsfield.sh:15` reads `Lifecycle: stable` and
+  `agents/templates/.ai-video.xml.example:55` reads `<lifecycle>stable</lifecycle>`
+  — the exact pair `docs/contracts/provider-lifecycle.md:101` obliges, and they
+  agree. The surface reading `experimental` is § 5, which states in its own words
+  that it lists the tiers "on the day this contract lands". The promotion is
+  recorded in `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
+  This corrects the drafting premise, which asserted a live contradiction between
+  adapter and contract: there is none, so the repair is a supersession note on the
+  historical table plus a parity gate over the obliged pair, never an edit to the
+  adapter.
