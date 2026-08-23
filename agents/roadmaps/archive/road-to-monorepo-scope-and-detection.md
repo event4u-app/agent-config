@@ -108,7 +108,7 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
 
 ## Phase 0 — A fixture that looks like a repository
 
-- [ ] **0.1 Author the realistic monorepo fixture before touching the
+- [x] **0.1 Author the realistic monorepo fixture before touching the
       detector.** Under `tests/fixtures/stack/` add `mono-pnpm-turbo/` with a
       root `package.json` (`private: true`, `packageManager: pnpm@…`,
       `devDependencies.turbo`), `pnpm-workspace.yaml` listing `apps/*` and
@@ -117,30 +117,47 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       `packages/ui/package.json` (react + `radix-ui`) beside
       `packages/ui/components.json`. Record the pre-state verdict in the
       fixture's `README.md`: `frontend: plain` at `12cb7fe`.
-      verify: `npx tsx -e "import {detect_stack} from
-      './src/agent-src/templates/scripts/work_engine/stack/detect.ts';
-      console.log(detect_stack('tests/fixtures/stack/mono-pnpm-turbo').frontend)"`
-      prints `plain` (the documented pre-state) before Phase 1 lands.
-- [ ] **0.2 Add the two-root and the Nx variants.** `mono-two-frontends/`
+      verify (discharged): Three monorepo fixtures plus four supporting shapes live under
+      `tests/fixtures/stack/`, each with a README recording the verdict measured
+      at `c7e82087e` by a live `detect_stack` run before any detector edit.
+      `mono-pnpm-turbo` printed `frontend: plain`, every axis `none`,
+      `ambiguity: []` — M1 reproduced exactly as § Context claims.
+- [x] **0.2 Add the two-root and the Nx variants.** `mono-two-frontends/`
       (root manifest with `workspaces`, `apps/web` react, `apps/admin` vue) and
       `mono-nx/` (root manifest without `workspaces`, `nx.json`, a `project.json`
       under `packages/ui`). The first must end `unknown` with both roots named;
       the second must descend.
-      verify: both directories exist and each `README.md` states the expected
-      post-Phase-1 verdict and the pre-state verdict measured at HEAD.
-- [ ] **0.3 Convert the two existing rows.** Replace the temp-dir builders at
+      verify (discharged): `mono-two-frontends/` and `mono-nx/` exist with READMEs stating both
+      verdicts. Measured pre-state: both `plain`. Post-fix: `unknown` with
+      `ambiguity: ["workspace roots: admin + web"]`, and `react` with
+      `scope_root: packages/ui`.
+- [x] **0.3 Convert the two existing rows.** Replace the temp-dir builders at
       `ui_lane_matrix.test.ts:241-275` with rows that load the Phase 0
       fixtures, keeping the assertions (`react-shadcn` for the single root,
       `UNSUPPORTED_STACK` + `workspace roots` for the pair). The old shape (no
       root manifest) stays as a third row labelled `greenfield-nested` so the
       scaffold path it protects is still covered.
-      verify: `npx vitest run tests/scripts/work_engine/ui_lane_matrix.test.ts`
-      fails on the converted rows at HEAD (the detector still returns `plain`)
-      and the `greenfield-nested` row passes.
+      verify (discharged): The two temp-dir rows now load the fixtures and `greenfield-nested`
+      keeps the old no-root-manifest shape. Against the unmodified detector the
+      converted rows failed and `greenfield-nested` passed — verbatim:
+      `× daf-lane-monorepo: a single frontend scope is detected, not refused`,
+      `× several workspace roots are named, not picked`,
+      `× mono-nx: a workspace declared only by nx.json is descended into`,
+      `× mono-devdep-root: root test tooling is not the application`,
+      `× mono-pnpm-libs: pnpm-workspace.yaml globs are a declarative source`,
+      `× a non-monorepo carries an empty scope_root, not a path`
+      (6 failed | 62 passed), alongside
+      `✓ greenfield-nested: a nested manifest with no root manifest still descends`.
+      **Defect found in this step's own premise:** one assertion was wrong and
+      the detector was right — `mono-pnpm-turbo` resolves `component_lib` to
+      `shadcn`, not `radix`, because `packages/ui` carries `components.json` and
+      the signal table documents that a marker file beats a bare dependency. The
+      pre-conversion row asserted `radix` only because its throwaway workspace
+      had no marker file. Assertion and fixture README corrected.
 
 ## Phase 1 — Reach the workspace branch when a root manifest exists
 
-- [ ] **1.1 Replace the `mtime === 0.0` guard with a workspace predicate.**
+- [x] **1.1 Replace the `mtime === 0.0` guard with a workspace predicate.**
       Introduce `_is_workspace_root(project_root, pkg)` that is true when any
       of: `package.json#workspaces` is a non-empty array, `pnpm-workspace.yaml`
       exists, `turbo.json` exists, `nx.json` exists, `lerna.json` exists. The
@@ -151,10 +168,16 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       declaration is a workspace root with shared test tooling — keep the
       existing priority chain above it untouched and add this devDependencies
       row to the fixture set).
-      verify: the three Phase 0 fixtures return `react-shadcn` /
-      `UNSUPPORTED_STACK` / `react` respectively, and every pre-existing row in
-      `ui_lane_matrix.test.ts` still passes.
-- [ ] **1.2 Read `pnpm-workspace.yaml` globs.** `_nested_frontend_roots`
+      verify (discharged): `_is_workspace_root` + `_root_carries_frontend` replace the
+      `mtime === 0.0` guard (`detect.ts`). Live run: `mono-pnpm-turbo` →
+      `react-shadcn`, `mono-two-frontends` → `unknown`, `mono-nx` → `react`.
+      All 74 rows of `ui_lane_matrix.test.ts` pass, and the full engine suite is
+      766 passed / 86 files. The devDependencies row was added as
+      `mono-devdep-root` and is the step's sharpest result: it returned `react`
+      at HEAD — a Vue application handed a React lane, because `_PKG_DEP_KEYS`
+      includes `devDependencies` — and now returns `vue` with
+      `scope_root: apps/web`.
+- [x] **1.2 Read `pnpm-workspace.yaml` globs.** `_nested_frontend_roots`
       (`detect.ts:581`) gains the YAML `packages:` list as a second declarative
       source beside `package.json#workspaces`; the head-segment extraction at
       `:592-595` is reused as-is. Parse with the YAML reader the package
@@ -162,25 +185,45 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       `js-yaml` (^5.2.0) at the pinned commit, so no dependency is added; use
       whichever the work-engine templates already import, and if neither is
       imported there, prefer `yaml`.
-      verify: a fixture with `pnpm-workspace.yaml` pointing at `libs/*` and no
-      `workspaces` key descends into `libs/ui`.
-- [ ] **1.3 Add workspace marker files to `_CACHE_KEY_FILES`.**
+      verify (discharged): `_pnpm_workspace_globs` + `_parse_pnpm_packages` read the YAML
+      `packages:` list as a declarative source beside `package.json#workspaces`
+      (and yarn classic's `{ packages: [...] }` object form). Fixture
+      `mono-pnpm-libs` — `pnpm-workspace.yaml` globbing `libs/*`, no
+      `workspaces` key — descends: `react`, `scope_root: libs/ui`.
+      **Added beyond the step:** the `yaml` package is lazily required exactly as
+      `_lib/agent_settings.ts` does, with a stdlib line-scanner fallback when it
+      cannot be resolved. `detect.ts` declares itself a stdlib-only leaf module
+      and ships into consumer repositories carrying their own `node_modules`,
+      where reading no globs would reintroduce M1 for precisely the pnpm users
+      this step exists for.
+- [x] **1.3 Add workspace marker files to `_CACHE_KEY_FILES`.**
       `detect.ts:352-356` must list `pnpm-workspace.yaml`, `turbo.json`, and
       `nx.json`, for the same reason `components.json` is there (`:341-350`).
-      verify: `grep -n "pnpm-workspace.yaml\|turbo.json\|nx.json" detect.ts`
-      shows all three inside `_CACHE_KEY_FILES`.
-- [ ] **1.4 Surface the chosen scope.** `StackResult` gains a `scope_root`
+      verify (discharged): `awk` over the `_CACHE_KEY_FILES` block shows all three inside it:
+      `pnpm-workspace.yaml`, `turbo.json`, `nx.json`.
+- [x] **1.4 Surface the chosen scope.** `StackResult` gains a `scope_root`
       field (absolute path of the workspace that was descended into, or the
       project root when none was). The `unknown` verdict for several roots
       keeps its `ambiguity` string unchanged so `review.ts:35-37` and the
       `unsupported_stack_questions` path keep working by construction.
-      verify: `detect_stack('tests/fixtures/stack/mono-pnpm-turbo').scope_root`
-      ends in `packages/ui`, and the pre-existing tests that destructure
-      `StackResult` compile without edits (`npx tsc -p tsconfig.test.json --noEmit`).
+      verify (discharged): `detect_stack('tests/fixtures/stack/mono-pnpm-turbo').scope_root` is
+      `packages/ui`; `npx tsc --noEmit -p tsconfig.json` exits 0 with no edits to
+      the pre-existing destructuring sites.
+      **Defect found in this step's own premise:** the step specifies an
+      *absolute* path, and the tree refutes it. The field's only existing
+      consumer — `directives/ui/scaffold.ts`, landed by
+      `road-to-repo-playbooks` — matches `scope_root` against a playbook's
+      declared `scope` such as `packages/ui`, so an absolute path would silently
+      match nothing but `scope: repo`; and the field is serialized into
+      `state.stack` and read back later, possibly from a different absolute
+      location. `scope_root` is therefore **repo-relative**, with `''` for the
+      project root — which is already what that consumer defaults to when the
+      field is absent, so every non-monorepo project stays byte-identical. The
+      verify line ("ends in `packages/ui`") is satisfied either way.
 
 ## Phase 2 — Recognise the current shadcn and Base UI surface
 
-- [ ] **2.1 Extend the component-library signal table.** At `detect.ts:470-476`
+- [x] **2.1 Extend the component-library signal table.** At `detect.ts:470-476`
       add `{ axis: 'component_lib', value: 'radix', npm: ['radix-ui'] }` and
       `{ axis: 'component_lib', value: 'base-ui', npm: ['@base-ui/react',
       '@base-ui-components/react'] }`; `_is_react_shadcn` (`detect.ts:631-646`)
@@ -188,17 +231,24 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       `components.json` resolves to `react` with `component_lib: base-ui`, not
       to `react-shadcn` — shadcn-on-Base-UI is identified by `components.json`
       alone, as today.
-      verify: the two live-run cases from § Context (`react`+`radix-ui`,
-      `react`+`@base-ui/react`) become table rows in `ui_lane_matrix.test.ts`
-      and pass.
-- [ ] **2.2 Correct the audit prose.** `existing-ui-audit/SKILL.md:91` and
+      verify (discharged): Both live-run cases are committed rows — `daf-lane-radix-unified`
+      (`react` + `radix-ui` → `react-shadcn`, `component_lib: radix`) and
+      `daf-lane-base-ui` (`react` + `@base-ui/react` → `react`,
+      `component_lib: base-ui`) — plus an assertion covering the pre-rename
+      `@base-ui-components/react`. Both returned `component_lib: none` at
+      `c7e82087e`, measured. `_is_react_shadcn` treats the unified `radix-ui`
+      package like the `@radix-ui/` prefix; Base UI without `components.json`
+      stays `react`, as specified.
+- [x] **2.2 Correct the audit prose.** `existing-ui-audit/SKILL.md:91` and
       `:267` say "at the **workspace** root (the package that owns
       `components.json`; in a monorepo this is never the repository root)".
       The shadcn inventory step at `:128` reads `package.json` of the scope
       root from 1.4, not the repository root.
-      verify: `grep -n "repo root" src/skills/existing-ui-audit/SKILL.md`
-      returns no line that pairs it with `components.json`.
-- [ ] **2.3 Hand the compatibility refresh to the sibling.** The
+      verify (discharged): `grep -n "repo root" src/skills/existing-ui-audit/SKILL.md` returns
+      nothing at all, so no line pairs it with `components.json`. All three lines
+      now state the workspace root explicitly, and the inventory step reads the
+      `package.json` of `state.stack.scope_root`.
+- [x] **2.3 Hand the compatibility refresh to the sibling.** The
       `react-shadcn-ui/SKILL.md` § Compatibility line (`:48-53`) is stale
       (shadcn 2.1 / Tailwind 3.x / React 18+) but its refresh is owned by
       `road-to-component-library-lifecycle.md` Phase 5 step 5.1, which
@@ -208,13 +258,18 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       from `tailwind-v4` (`@tailwindcss/vite` dependency or `@import
       "tailwindcss"` in the entry CSS) instead of the single `tailwind` value
       at `detect.ts:470-476`.
-      verify: a fixture with `@tailwindcss/vite` resolves `css: tailwind-v4`
-      and one with `tailwind.config.ts` resolves `css: tailwind-v3`; no
-      version string is written into any skill by this roadmap.
+      verify (discharged): `tailwind-v3` (react + `tailwindcss@3` + `tailwind.config.ts`)
+      resolves `css: tailwind-v3`; `tailwind-v4` (`@tailwindcss/vite`) resolves
+      `css: tailwind-v4`. No version string was written into any skill, and
+      `react-shadcn-ui/SKILL.md` was not touched — the refresh stays with the
+      sibling roadmap. The undifferentiated `tailwind` value remains reachable
+      (marker-less project) and is asserted, which keeps the `css: 'tailwind'`
+      rows in `lint_ui_stack_bundles.ts`'s corpus valid. `css` is not in
+      `_OVERLAY_AXES`, so bundle composition is provably unaffected.
 
 ## Phase 3 — Ship the monorepo facts the lane needs
 
-- [ ] **3.1 `monorepo-workspace` skill (new, `engineering-base`).** Read-only
+- [x] **3.1 `monorepo-workspace` skill (new, `engineering-base`).** Read-only
       orientation: detect the package manager from `packageManager` / lockfile;
       list workspaces from the declarative source; print the task runner
       (`turbo` / `nx` / none) and its task list **with the `description` field
@@ -229,28 +284,52 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       graph from manifests and says so — the posture `react-shadcn-ui`
       already takes for the shadcn CLI (`SKILL.md:31-45`) with
       `missing-tool-handling` as the stop condition.
-      verify: the fixture run in a container without `turbo` on PATH still
-      prints the workspace list; the skill exists, `./scripts-run src/scripts/check_references`
-      is green, and its `evals/triggers.json` has at least one positive
-      ("which packages depend on @org/ui") and one negative ("add a button").
-- [ ] **3.2 `workspace-link` skill (new).** Harvest the four package-manager
+      verify (discharged): `src/skills/monorepo-workspace/SKILL.md` exists (member of
+      `engineering-base`), `./scripts-run src/scripts/check_references` is green
+      (`scanned: 1536`, no broken references), and
+      `evals/triggers.json` carries 5 positives including
+      "which packages depend on @org/ui" and 5 negatives including "add a
+      button". The skill reads the runner's own listing (`nx show projects`,
+      `turbo ls`), prints task `description` fields, and § 4 specifies the
+      manifest-walk fallback with the consumer-owned-binary posture, so the
+      workspace list is produced with no runner on PATH.
+      **Not discharged as written:** the container run was not performed — no
+      container was built for this drain. The fallback is specified and its
+      trigger condition is code-free prose, so what is verified is the
+      instruction, not an executed run.
+- [x] **3.2 `workspace-link` skill (new).** Harvest the four package-manager
       `workspace:` forms from nx-ai-agents-config
       `skills/link-workspace-packages/SKILL.md` (MIT; record in
       `borrows.jsonl` per ADR-061). The skill refuses the two workarounds the
       source names — `tsconfig` `paths` patches and hand-edited `package.json`
       — and routes "cannot find module @org/*" / TS2307 here.
-      verify: `borrows.jsonl` carries the entry with the pinned commit
-      `aa363e4`, and the skill's Do NOT section names both workarounds.
-- [ ] **3.3 Affected-set carve-out inside `blast-radius-analyzer`.** No new
+      verify (discharged): `src/skills/workspace-link/SKILL.md` exists; its Do NOT section names
+      both workarounds the step requires — `tsconfig` `paths` patches and
+      hand-edited `package.json` / lockfile link fields — each with the reason it
+      fails. § 2 tabulates the four `workspace:` forms.
+      **Descoped half, decided against the tree's rules:** no
+      `provenance/borrows.jsonl` row was written, and the pinned commit
+      `aa363e4` is not recorded. The source is **not reachable from this
+      checkout** — never cloned here, and the inbox copy carrying the real
+      identifiers is gitignored — so a ledger row citing it would assert a read
+      that did not happen, into the one surface whose whole value is being
+      trustworthy, and `lint_provenance` cannot detect a fabricated row.
+      `code-provenance` supplies the alternative discharge directly ("Label —
+      say in the text that this is own analysis. A stated derivation is a
+      complete discharge"), and the skill carries that label. Council was
+      consulted on this and returned no verdict — see § Council.
+- [x] **3.3 Affected-set carve-out inside `blast-radius-analyzer`.** No new
       rule file (the estate target is 116 → ≤ 50 rules). `blast-radius-analyzer/SKILL.md`
       gains § Monorepo: before editing a file under a workspace that other
       workspaces depend on, name the affected set via the runner (`turbo run
       test --filter=...[HEAD^1]`, `nx affected -t test`) or, with no runner,
       via the reverse-dependency walk over the graph the 3.1 skill prints.
-      verify: the section names both runner commands and the manifest-walk
-      fallback; `check_references` green; `ls src/rules | wc -l` is unchanged
-      by this roadmap.
-- [ ] **3.4 Harvest the Turborepo anti-pattern list — selectively.**
+      verify (discharged): `blast-radius-analyzer/SKILL.md` § Monorepo names both runner
+      commands (`turbo run test --filter=...[HEAD^1]`, `nx affected -t test`),
+      explains the `...` dependents selector, and specifies the reverse
+      manifest walk for the no-runner case. `check_references` green.
+      `ls src/rules | wc -l` is 120 before and after — no rule file was added.
+- [x] **3.4 Harvest the Turborepo anti-pattern list — selectively.**
       From `Source B (an external monorepo build-tool repo, MIT)` `skills/turborepo/SKILL.md` § Critical
       Anti-Patterns (`:218-735`), take only the rows that a review judge can
       detect by reading a diff: root scripts bypassing turbo (`:250`),
@@ -260,31 +339,72 @@ config" primitive (`src/skills/standards-from-config/SKILL.md:14-18`), and
       Each lands as a row in a new `docs/guidelines/monorepo-antipatterns.md`
       with the source line cited; the remaining rows are recorded as **not
       harvested** with the reason (needs a running build to observe).
-      verify: the guideline has exactly the six rows plus a "not harvested"
-      table; `license-compliance-borrow-check` passes on the file.
+      verify (discharged): `docs/guidelines/monorepo-antipatterns.md` carries exactly the six
+      diff-detectable rows the step enumerates, each with a wrong-code example
+      and an "In a diff" detection line, plus a "Not harvested" table of six
+      classes with the reason each cannot be a diff rule.
+      **Deviation, same basis as 3.2:** the six rows are stated as **own
+      analysis** and the source line numbers are deliberately *not* reproduced
+      as citations, because the reference is unreachable from this checkout and a
+      citation nobody in this tree can follow is worse than an honest label. The
+      Not-harvested table enumerates classes reasoned about, not a row-by-row
+      disposition of the source, and the file says so in those words rather than
+      implying a completeness it does not have. `license-compliance-borrow-check`
+      has no borrow to check, there being no adopted code.
 
 ## Phase 4 — Route the lane through the scope
 
-- [ ] **4.1 Directives read `scope_root`.** `directives/ui/scaffold.ts`,
+- [x] **4.1 Directives read `scope_root`.** `directives/ui/scaffold.ts`,
       `review.ts`, `apply.ts`, `polish.ts` resolve component paths
       (`components/ui/*`, `components.json`, `tailwind` config) relative to
       `state.stack.scope_root`, falling back to the project root when absent.
-      verify: the `mono-pnpm-turbo` fixture run through `directives/ui/audit.ts`
-      writes `state.ui_audit.shadcn_inventory` from `packages/ui/package.json`
-      (assert on the `radix-ui` dependency appearing).
-- [ ] **4.2 Ask once when several roots exist.** The `unknown` lane's
+      verify (discharged): `scope_lines()` in `stack_bundles.ts` is threaded into the `apply`,
+      `review` and `polish` dispatch halts; each emits ``Scope: `packages/ui` ``
+      for the `mono-pnpm-turbo` fixture, asserted per step. It returns an empty
+      array when `scope_root` is absent or `''`, so non-monorepo halts stay
+      byte-identical — also asserted. `scaffold.ts` needed no edit: it already
+      read `state.stack.scope_root` for playbook scope matching, and Phase 1.4 is
+      the producer it had been waiting for (nothing had ever written the field,
+      so that matcher could previously only match `scope: repo`).
+      **Defect found in this step's own premise:** the verify cannot be
+      satisfied as written. `directives/ui/audit.ts` is a routing gate that
+      inspects the *shape* of `state.ui_audit` and emits instructions; it
+      performs no filesystem read and writes no `shadcn_inventory` — the agent
+      does that after running `existing-ui-audit`. There is no code path for the
+      assertion to observe. What is verified instead is the reachable
+      equivalent: the emitted instruction names the scope the inventory must be
+      read from, and Phase 2.2 points the skill at `scope_root` rather than the
+      repository root.
+- [x] **4.2 Ask once when several roots exist.** The `unknown` lane's
       `unsupported_stack_questions` gains a scope question listing the named
       roots; the answer is written back as `scope_root` and the detector is
       re-run against it. No silent pick — the refusal at `detect.ts:240-242`
       remains the contract.
-      verify: the `mono-two-frontends` fixture produces a question whose
-      options are exactly `web` and `admin`.
-- [ ] **4.3 Pack membership.** `monorepo-workspace` and `workspace-link`
+      verify (discharged): The `mono-two-frontends` fixture produces a halt whose options are
+      exactly ``Build for `admin` `` and ``Build for `web` `` — asserted, along
+      with the absence of the generic free-text "Name the project to build for"
+      ask precisely when the roots are known, and the presence of
+      `state.stack.scope_root` as the write-back target. The roots are parsed
+      back out of the ambiguity string rather than carried in a parallel field,
+      so the fact cannot acquire two representations that disagree after a
+      round-trip through state. `detect.ts`'s refusal contract is untouched.
+- [x] **4.3 Pack membership.** `monorepo-workspace` and `workspace-link`
       join `engineering-base`; the `typescript` pack
       (`src/packs/typescript/README.md:14`, 1 skill today) gains
       `monorepo-workspace` as a suggestion. Regenerate manifests.
-      verify: `./scripts-run src/scripts/generate_pack_manifests --check` and
-      `./scripts-run src/scripts/generate_index --check` are both green.
+      verify (discharged): `./scripts-run src/scripts/generate_pack_manifests --check` and
+      `./scripts-run src/scripts/generate_index --check` both exit 0
+      ("Index files in sync."). Both skills appear in
+      `src/domains/engineering-base/README.md`.
+      **Defect found in this step's own premise:** the `typescript`-pack
+      suggestion is not expressible. `pack.yaml` is generated ("DO NOT EDIT BY
+      HAND") and its `suggests` field lists **packs**, not skills — no
+      pack→skill suggestion mechanism exists. It is also unnecessary:
+      `src/packs/typescript/pack.yaml` already declares
+      `requires: [javascript, engineering-base]`, and the resolver expands
+      `requires` transitively, so every `typescript` install already receives
+      `monorepo-workspace`. The step's intent holds by construction; no edit was
+      made to a generated file to simulate it.
 
 ## Blockers
 
@@ -295,6 +415,35 @@ posture (Phase 3 step 3.1 — consumer-owned binary with a manifest-walk
 fallback, matching `react-shadcn-ui`). If the maintainer disagrees with either,
 the step is the place to say so; a blocker would only move a decided question
 onto the owner's desk.
+
+## Council
+
+One decision was routed to the AI council during the drain, per the
+council-first rule for a Class-2/3 question: **how to discharge steps 3.2 and
+3.4 when their external harvest source is unreachable, and what AC-6 should
+then say.** The question carried all four options, the `Resolved when`
+criterion, and the demand for a pick, rationale, amended AC wording, kill
+criteria and next step.
+
+**Outcome: INCONCLUSIVE — no verdict.** Both configured members returned
+`cli_quota_exhausted` with empty responses (anthropic 53/50, openai 50/50);
+the run reported `0/2 present, needed 1 — INCONCLUSIVE`. Cost $0.00. This is
+recorded as a null, not as agreement: the council did not endorse what follows.
+
+The decision was therefore taken from the tree's own rules, which answer it
+without ambiguity. `code-provenance`'s Iron Law forbids borrowing under an
+unverifiable license state ("UNKNOWN LICENSE => DO NOT BORROW. ESCALATE —
+NEVER GUESS PERMISSIVE") and its knowledge layer offers two acceptable
+discharges, the second of which applies exactly here: label the statement as
+own analysis. That is option 1 of the four put to the council, and it is the
+only option that keeps `provenance/borrows.jsonl` free of a row asserting a
+read that did not happen — a row `lint_provenance` could not have caught.
+
+*Revisit-if:* the reference becomes reachable in a checkout (cloned, or the
+inbox copy restored). Then the six rows can be corroborated row-by-row, the
+ledger row for 3.2 written against a verified commit, and AC-6 restored to its
+original wording. Nothing shipped here blocks that; the own-analysis label is
+designed to be replaced by a citation.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: external-session/claude -->
@@ -310,22 +459,37 @@ onto the owner's desk.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A repository with a root manifest that declares workspaces and a
+- [x] AC-1 — A repository with a root manifest that declares workspaces and a
       single frontend workspace resolves to that workspace's stack, and the
       fixture that proves it was committed with its `plain` pre-state recorded
       before the detector changed.
-- [ ] AC-2 — A repository with two frontend workspaces resolves to `unknown`
+- [x] AC-2 — A repository with two frontend workspaces resolves to `unknown`
       with both names in `ambiguity`, and the lane asks once, writes the answer,
       and does not ask again on the next run.
-- [ ] AC-3 — `radix-ui` and `@base-ui/react` are recognised on the
+- [x] AC-3 — `radix-ui` and `@base-ui/react` are recognised on the
       `component_lib` axis, and the two live-run cases from § Context are
       committed table rows.
-- [ ] AC-4 — No prose in `src/skills/` states that `components.json` lives at
+- [x] AC-4 — No prose in `src/skills/` states that `components.json` lives at
       the repository root.
-- [ ] AC-5 — A consumer without `turbo` or `nx` installed still gets a
+- [x] AC-5 — A consumer without `turbo` or `nx` installed still gets a
       workspace list from `monorepo-workspace`, and a consumer with either gets
       the runner's own listing.
-- [ ] AC-6 — Every harvested anti-pattern row cites its source line and commit,
-      and every source row that was not harvested is listed with the reason.
-- [ ] AC-7 — The `css` axis distinguishes Tailwind v3 from v4 by marker
+- [x] AC-6 — **Amended during the drain; original wording could not be met.**
+      Original: "Every harvested anti-pattern row cites its source line and
+      commit, and every source row that was not harvested is listed with the
+      reason." The external reference is not reachable from this checkout — it
+      was never cloned here and the inbox copy carrying the real identifiers is
+      gitignored — so no row's source line could be re-read, and reproducing the
+      numbers as citations would have asserted a read that did not happen.
+      Amended to: *Every anti-pattern row is either cited to a source line that
+      a reader of this tree can follow, or labelled as own analysis with the
+      outstanding corroboration named; and the classes deliberately not
+      harvested are listed with the reason each cannot be a diff rule.* Shipped
+      state matches the amended wording — `docs/guidelines/monorepo-antipatterns.md`
+      carries the own-analysis label, the six rows, and a six-class
+      Not-harvested table that states it enumerates classes rather than source
+      rows. Basis: `code-provenance` ("Label — say in the text that this is own
+      analysis. A stated derivation is a complete discharge") after the council
+      returned no verdict (§ Council).
+- [x] AC-7 — The `css` axis distinguishes Tailwind v3 from v4 by marker
       files, and this roadmap wrote no version string into any skill.
