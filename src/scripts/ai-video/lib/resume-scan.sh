@@ -22,12 +22,33 @@
 #   failed   error.json present.
 #   missing  in the plan but no green artifact on disk.
 #
+# Seam sentinels (handoff chains) — same filesystem-as-state idiom:
+#
+#   <project>/seams/<from>__<to>.json
+#     {"from","to","mode":"handoff|connector",
+#      "from_input_sha256","to_input_sha256"}
+#
+# A seam is DECLARED when scene <to>'s prompt.json carries
+# `continuity: handoff|connector` — the value parse-blueprint.sh emits — and
+# <from> is its immediate predecessor in scene-id order. Clip <to> was
+# conditioned on the RENDERED last frame of clip <from>, so the join is a fact
+# about a pair, which no per-scene sentinel can express. Classification:
+#
+#   green    sentinel present, both hashes match what is on disk now, and both
+#            adjacent scenes are green
+#   stale    either adjacent scene is not green, or a recorded hash no longer
+#            matches — i.e. a failed or re-rolled clip invalidates exactly the
+#            seams it touches, and no others
+#   missing  the seam is declared but no sentinel exists
+#
 # Usage:
 #   resume-scan.sh scan <project-dir> [--plan <plan.json>]
 #     plan.json: [{"scene_id":"0001","input_sha256":"<hex>"}, …]
 #     stdout: {"scenes":[{scene_id,state,reason?,charged_usd?}],
 #              "green":N,"stale":N,"failed":N,"missing":N,
-#              "spent_usd":X.YZ}
+#              "spent_usd":X.YZ,
+#              "seams":[{from,to,mode,state,reason?}],
+#              "seams_green":N,"seams_stale":N,"seams_missing":N}
 #
 #   resume-scan.sh hash [< prompt.json]
 #     Canonical input hash: jq -S over prompt.json with the
@@ -172,13 +193,81 @@ _rs_scan() {
         else . end)' "${plan}")"
   fi
 
-  printf '%s' "${rows}" | jq '{
+  # --- seam pass ------------------------------------------------------------
+  # Walks the scene dirs in id order; a seam exists between consecutive scenes
+  # when the LATER one declares a handoff continuity. Scene states come from
+  # ${rows} above, so a seam can never disagree with its own scenes.
+  local seam_rows="[]" prev_id="" prev_state="" cur_id cur_state cont sentinel
+  local seam_state seam_reason rec_from rec_to cur_hash prev_hash seam_mode
+  if [ -d "${project_abs}/scenes" ]; then
+    for scene_dir in "${project_abs}"/scenes/*/; do
+      [ -d "${scene_dir}" ] || continue
+      cur_id="$(basename "${scene_dir}")"
+      case "${cur_id}" in
+        *[!A-Za-z0-9._-]*|..|.) continue ;;
+      esac
+      cur_state="$(printf '%s' "${rows}" | jq -r --arg id "${cur_id}" \
+        'map(select(.scene_id == $id)) | (.[0].state // "")')"
+
+      cont="cut"
+      if [ -f "${scene_dir}prompt.json" ]; then
+        cont="$(jq -r '.continuity // "cut"' "${scene_dir}prompt.json" 2>/dev/null || printf 'cut')"
+      fi
+
+      if [ -n "${prev_id}" ] && { [ "${cont}" = "handoff" ] || [ "${cont}" = "connector" ]; }; then
+        seam_mode="${cont}"
+        sentinel="${project_abs}/seams/${prev_id}__${cur_id}.json"
+        seam_state="" seam_reason=""
+        if [ ! -f "${sentinel}" ]; then
+          seam_state="missing"
+          seam_reason="declared ${seam_mode} seam with no sentinel at seams/${prev_id}__${cur_id}.json"
+        else
+          rec_from="$(jq -r '.from_input_sha256 // empty' "${sentinel}" 2>/dev/null || true)"
+          rec_to="$(jq -r '.to_input_sha256 // empty' "${sentinel}" 2>/dev/null || true)"
+          prev_hash="$(jq -r '.input_sha256 // empty' "${project_abs}/scenes/${prev_id}/prompt.json" 2>/dev/null || true)"
+          cur_hash="$(jq -r '.input_sha256 // empty' "${scene_dir}prompt.json" 2>/dev/null || true)"
+          if [ "${prev_state}" != "green" ]; then
+            seam_state="stale"
+            seam_reason="scene ${prev_id} is ${prev_state:-unknown} — the handoff frame it supplies is not a rendered frame"
+          elif [ "${cur_state}" != "green" ]; then
+            seam_state="stale"
+            seam_reason="scene ${cur_id} is ${cur_state:-unknown} — re-render before the seam can be trusted"
+          elif [ -z "${rec_from}" ] || [ -z "${rec_to}" ]; then
+            seam_state="stale"
+            seam_reason="sentinel records no input hashes — never reuse unverifiable state (ADR-059)"
+          elif [ "${rec_from}" != "${prev_hash}" ]; then
+            seam_state="stale"
+            seam_reason="scene ${prev_id} was re-rolled after the seam was built (input hash changed)"
+          elif [ "${rec_to}" != "${cur_hash}" ]; then
+            seam_state="stale"
+            seam_reason="scene ${cur_id} was re-rolled after the seam was built (input hash changed)"
+          else
+            seam_state="green"
+          fi
+        fi
+        seam_rows="$(printf '%s' "${seam_rows}" | jq \
+          --arg from "${prev_id}" --arg to "${cur_id}" --arg mode "${seam_mode}" \
+          --arg st "${seam_state}" --arg rs "${seam_reason}" \
+          '. + [{from:$from, to:$to, mode:$mode, state:$st}
+                + (if $rs == "" then {} else {reason:$rs} end)]')"
+      fi
+
+      prev_id="${cur_id}"
+      prev_state="${cur_state}"
+    done
+  fi
+
+  printf '%s' "${rows}" | jq --argjson seams "${seam_rows}" '{
     scenes: .,
     green:   (map(select(.state == "green"))   | length),
     stale:   (map(select(.state == "stale"))   | length),
     failed:  (map(select(.state == "failed"))  | length),
     missing: (map(select(.state == "missing")) | length),
-    spent_usd: (map(.charged_usd // 0) | add // 0)
+    spent_usd: (map(.charged_usd // 0) | add // 0),
+    seams: $seams,
+    seams_green:   ($seams | map(select(.state == "green"))   | length),
+    seams_stale:   ($seams | map(select(.state == "stale"))   | length),
+    seams_missing: ($seams | map(select(.state == "missing")) | length)
   }'
 }
 
