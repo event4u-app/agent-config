@@ -65,6 +65,7 @@ import {
     type TierRuleMatch,
 } from './_lib/rule_injection.js';
 import { thin_entry } from './project_thin_rules.js';
+import { buildInjection } from './hooks/rule_inject_hook.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -547,6 +548,122 @@ export function runBaselineComparison(corpusDir: string): string[] {
     return lines;
 }
 
+export interface EndpointResult {
+    id: 'a-delivery' | 'b-recall' | 'c-false-fire' | 'd-price';
+    name: string;
+    reading: string;
+    bar: string;
+    passed: boolean;
+}
+
+/**
+ * Score the four PRE-REGISTERED endpoints of `internal/bench/thin-inject-PREREG.md`.
+ *
+ * Each bar is a property, not a number lifted off a prior run — see the PREREG
+ * for the derivation of each and for the honest limit on how "pre-registered"
+ * this run's registration is.
+ */
+export function runEndpoints(corpusDir: string): EndpointResult[] {
+    const router = loadRouter(REPO_ROOT);
+    const cases = loadCorpus(corpusDir);
+    const positives = cases.filter((c) => c.label === 'positive');
+
+    // (a) Delivery census — the CONCERN's own output against the projection.
+    //
+    // This calls `buildInjection` from the shipped hook rather than re-reading
+    // the projected file twice: comparing a file to itself is a tautology that
+    // would pass whatever the concern did to the bytes on the way out. What is
+    // asserted is that the text the concern puts in front of the model contains
+    // the projected body verbatim, trimmed and nothing else changed.
+    let deliveries = 0;
+    let unequal = 0;
+    for (const c of positives) {
+        const injection = buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set());
+        if (injection === null) continue;
+        for (const id of injection.rules) {
+            const projected = loadRuleBody(REPO_ROOT, id);
+            if (projected === null) {
+                unequal += 1;
+                continue;
+            }
+            if (injection.body.includes(projected.trim())) {
+                deliveries += 1;
+            } else {
+                unequal += 1;
+            }
+        }
+    }
+
+    // (b) No labelled rule may end with ZERO matched positives.
+    const byRule = new Map<string, { hit: number; total: number }>();
+    for (const c of positives) {
+        const e = byRule.get(c.rule) ?? { hit: 0, total: 0 };
+        e.total += 1;
+        if (matchTierRules(router, c.prompt, c.openFiles).some((m) => m.id === c.rule)) e.hit += 1;
+        byRule.set(c.rule, e);
+    }
+    const unreachable = [...byRule.entries()].filter(([, v]) => v.hit === 0).map(([k]) => k);
+    const partial = [...byRule.entries()]
+        .filter(([, v]) => v.hit > 0 && v.hit < v.total)
+        .map(([k, v]) => `${k} ${v.hit}/${v.total}`);
+
+    // (c) A near-miss must never deliver its labelled rule.
+    const exact = scoreExact(router, cases, true);
+
+    // (d) Delivery below eager at 50 turns x 5 spawns.
+    const standing = standingCorpora(router);
+    const rates = loadRates('sonnet');
+    const uncapped = positives.map((c) =>
+        matchTierRules(router, c.prompt, c.openFiles).reduce((a, m) => {
+            const b = loadRuleBody(REPO_ROOT, m.id);
+            return a + (b === null ? 0 : tokensOf(b));
+        }, 0),
+    );
+    const cap = Math.max(500, Math.ceil(quantile(uncapped, 0.9) / 500) * 500);
+    const eagerUsd = sessionCostUsd(standing.eagerTokens, 0, 50, 5, rates);
+    const deliveryUsd = sessionCostUsd(
+        standing.thinTokens,
+        injectedOverSession(router, positives, 50, cap),
+        50,
+        5,
+        rates,
+    );
+
+    return [
+        {
+            id: 'a-delivery',
+            name: 'delivery census — injected body byte-equal to the eager projection',
+            reading: `${deliveries} deliveries byte-equal, ${unequal} not`,
+            bar: 'zero tolerance: unequal == 0',
+            passed: unequal === 0 && deliveries > 0,
+        },
+        {
+            id: 'b-recall',
+            name: 'per-rule recall floor — no labelled rule left unreachable',
+            reading:
+                `${byRule.size - unreachable.length}/${byRule.size} rules reachable; ` +
+                `unreachable: ${unreachable.length === 0 ? 'none' : unreachable.join(', ')}; ` +
+                `partial: ${partial.length === 0 ? 'none' : partial.join(', ')}`,
+            bar: 'unreachable == 0 (a rule with zero matched positives is a rule the mode removed)',
+            passed: unreachable.length === 0,
+        },
+        {
+            id: 'c-false-fire',
+            name: 'false-fire ceiling — a near-miss never delivers its labelled rule',
+            reading: `${exact.falseFires} of ${exact.nearMisses} near-miss prompts fired`,
+            bar: 'falseFires == 0',
+            passed: exact.falseFires === 0,
+        },
+        {
+            id: 'd-price',
+            name: 'price — delivery below eager at 50 turns x 5 spawns',
+            reading: `delivery ${deliveryUsd.toFixed(4)} USD vs eager ${eagerUsd.toFixed(4)} USD`,
+            bar: 'delivery < eager',
+            passed: deliveryUsd < eagerUsd,
+        },
+    ];
+}
+
 // ── selftest (step 2.2) ──────────────────────────────────────────────────
 
 export interface SelftestCase {
@@ -570,23 +687,34 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
     const cases = loadCorpus(corpusDir);
     const out: SelftestCase[] = [];
 
-    // (a) delivery census — a body with one byte changed must NOT be byte-equal.
-    const probeId = allTierRules(router).find((r) => loadRuleBody(REPO_ROOT, r.id) !== null)?.id;
-    const body = probeId === undefined ? null : loadRuleBody(REPO_ROOT, probeId);
-    if (body === null || probeId === undefined) {
+    // (a) delivery census — the endpoint must reject a one-byte mutation of the
+    // body it is comparing against. Driven through the concern's real output, so
+    // a change that mangled the payload would turn this red.
+    const probe = cases.find(
+        (c) =>
+            c.label === 'positive' &&
+            buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set()) !== null,
+    );
+    const injection =
+        probe === undefined
+            ? null
+            : buildInjection(REPO_ROOT, probe.prompt, probe.openFiles, null, new Set());
+    if (injection === null || injection.rules.length === 0) {
         out.push({
             endpoint: 'a-delivery',
             name: 'one-byte mutation rejected',
             passed: false,
-            detail: 'no projected body available to mutate',
+            detail: 'no positive in the corpus produces an injection to check',
         });
     } else {
-        const mutated = `${body.slice(0, body.length - 1)}${body.endsWith('X') ? 'Y' : 'X'}`;
+        const id = injection.rules[0] as string;
+        const projected = loadRuleBody(REPO_ROOT, id) ?? '';
+        const mutated = `${projected.trim().slice(0, -1)}~MUTATED~`;
         out.push({
             endpoint: 'a-delivery',
             name: 'one-byte mutation rejected',
-            passed: mutated !== body,
-            detail: `${probeId}: mutated body compares unequal to the projected body`,
+            passed: injection.body.includes(projected.trim()) && !injection.body.includes(mutated),
+            detail: `${id}: the concern's payload carries the projected body verbatim and rejects a mutation of it`,
         });
     }
 
@@ -668,7 +796,8 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
 // ── CLI ──────────────────────────────────────────────────────────────────
 
 const USAGE = `usage: model_rule_injection [--corpus DIR] [--baseline-comparison]
-                            [--honour-open-files] [--selftest] [--json]
+                            [--honour-open-files]
+                            [--selftest] [--endpoints] [--json]
 
 Offline recall + cost model for trigger-delivered rule bodies. No metered call
 on any path.
@@ -680,6 +809,7 @@ export function main(argv: string[] | null = null): number {
     let baseline = false;
     let honour = false;
     let selftest = false;
+    let endpoints = false;
     let json = false;
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i] as string;
@@ -692,6 +822,8 @@ export function main(argv: string[] | null = null): number {
             honour = true;
         } else if (a === '--selftest') {
             selftest = true;
+        } else if (a === '--endpoints') {
+            endpoints = true;
         } else if (a === '--json') {
             json = true;
         } else if (a === '-h' || a === '--help') {
@@ -722,6 +854,32 @@ export function main(argv: string[] | null = null): number {
             process.stdout.write(`selftest: ${failed.length === 0 ? 'PASS' : 'FAIL'}\n`);
         }
         return failed.length === 0 ? 0 : 1;
+    }
+
+    if (endpoints) {
+        const results = runEndpoints(corpus);
+        if (json) {
+            process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
+        } else {
+            process.stdout.write(
+                'model_rule_injection --endpoints · the four PRE-REGISTERED endpoints of\n' +
+                    'internal/bench/thin-inject-PREREG.md · offline, no metered call\n\n',
+            );
+            for (const r of results) {
+                process.stdout.write(`  ${r.passed ? 'PASS' : 'FAIL'} (${r.id}) ${r.name}\n`);
+                process.stdout.write(`       reading: ${r.reading}\n`);
+                process.stdout.write(`       bar:     ${r.bar}\n`);
+            }
+            const failed = results.filter((r) => !r.passed);
+            process.stdout.write(
+                `\nendpoints: ${results.length - failed.length}/${results.length} hold\n`,
+            );
+            process.stdout.write(
+                'This licenses delivery equivalence and cost. It does not measure behavioural\n' +
+                    'equivalence; that instrument is closed (ADR-202) and this run does not reopen it.\n',
+            );
+        }
+        return results.every((r) => r.passed) ? 0 : 1;
     }
 
     if (baseline) {

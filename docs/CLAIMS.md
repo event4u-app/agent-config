@@ -192,6 +192,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-12
 
+### claim: thin-inject-delivery-equivalence
+- claim: A MEASURED-BUT-NOT-SHIPPED experiment — a `lean_projection.mode: delivery` projection plus the default-OFF `rule-inject` hook concern delivers rule bodies on a trigger match at 579/579 byte-equal deliveries, 94/94 labelled rules reachable, 0 false fires over 194 labelled near-misses, and $0.7285 vs $4.0335 per 50-turn x 5-spawn session at sonnet rates (standing rule corpus 120,582 -> 18,573 exact-BPE tokens). Shipped default does NOT include this: `lean_projection.mode` still resolves to `eager-all`, the concern emits zero bytes, and the flip is Claude-only and carries an unpaid activation charge (a 20,480-byte emission row above the 4,096/2,048-byte slot sums; gate-open latency p95 87.8 ms against 0.06-0.16 ms gate-closed). What these four endpoints license is delivery equivalence and cost, and nothing wider — the paired-judging instrument is closed by ADR-202 at inter-evaluator Cohen's kappa 0.472 against a registered 0.800 floor, and this run does not reopen it. Method: `model_rule_injection --endpoints` over the frozen `tests/eval/routing-matrix` corpus, pre-registered in `internal/bench/thin-inject-PREREG.md` before the report artefact existed, with `--selftest` requiring each endpoint to reject a planted defect first.
+- kind: quant
+- evidence: internal/bench/reports/thin-inject-2026-08-23.md#endpoints
+- status: backed
+- last_verified: 2026-08-23
+
 ### claim: ledger-exec-verifiability
 - claim: NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it.
 - kind: quant
