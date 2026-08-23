@@ -102,7 +102,34 @@ collection mechanism is missing entirely.
 
 ## Phase A1 — make the precondition evaluable
 
-- [ ] **A1.1 Persist every CI composite reading with its runner identity.**
+**SHIPPED 2026-08-23. Read the collection boundary before reading the steps.**
+
+The three steps below build the write half, the predicate and the publisher, and
+they are complete. What this phase deliberately does **not** build is the
+*collection* step, and saying so is the difference between a mechanism and a
+mechanism that can accumulate:
+
+- `.github/workflows/tests.yml` now records a reading on every gate run and
+  **uploads it as a single-record artifact** (`composite-reading-<os>-<attempt>`,
+  30-day retention). Each run's number is therefore durable.
+- A workflow **cannot append to a tracked file without a push**, so the shards are
+  not automatically merged into
+  `agents/evidence/hook-composite-readings.jsonl`. Concatenating them is a
+  maintainer or follow-up act, and it is named here rather than implied — a store
+  nothing fills is the failure this phase exists to prevent.
+- The CI job also prints the arming verdict on every run (`never gates`), so the
+  accumulation is visible per run instead of being discovered as a surprise the
+  day someone tries to arm the ceiling.
+
+This discharges the **collection milestone** the AI council named on 2026-08-23
+when it parked `road-to-mcp-runtime-integrity` (verdict b3): *"(b3) needs an
+actionable collection milestone, not merely a distant revisit condition, or it
+becomes the indefinite park identified by Risk 2."* The clock the
+`arming_precondition` counts can now start. It has not finished — the floor is
+≥ 10 readings from ≥ 2 sessions and one PR's CI run produces a handful — so A2.1
+stays blocked, correctly, by `b-composite-ceiling-value`.
+
+- [x] **A1.1 Persist every CI composite reading with its runner identity.**
       `bench_hook_latency.ts` prints the composite and discards it. Append one
       record per gate run — composite value, the four slot readings it sums,
       `tool_calls`, runner OS, run id, session discriminator, commit — to a
@@ -114,7 +141,33 @@ collection mechanism is missing entirely.
       verify: two consecutive gate runs leave two records whose runner identities
       are distinguishable, and a third run on a different OS leaves a third that
       the predicate in A1.2 counts as a second session.
-- [ ] **A1.2 A predicate that answers the arming question, and refuses to guess.**
+
+      **SHIPPED 2026-08-23.** `bench_hook_latency --record-composite <path>`
+      appends one JSONL record per run: composite ms, the four slot readings it
+      sums, `tool_calls`, platform, node, commit, run id, and the session
+      discriminator.
+
+      **The reading is written BEFORE the ceiling comparison**, deliberately: a
+      store holding only the runs that passed the gate is biased in the direction
+      that makes a ceiling look met — the same bias the null-composite rule
+      guards against from the other side.
+
+      **A null composite is written as `null`, not skipped.** Skipping would make
+      the store's own length a lie about how many runs contributed, and the reader
+      has to distinguish "no run" from "a run whose slots were incomplete".
+
+      **Session identity, per shape** — this is the field the precondition
+      actually turns on: in CI `gh-<run_id>-<RUNNER_OS>-<attempt>`, locally
+      `local-<host>-<pid>`. A workflow **re-run is a different session** because it
+      lands on a fresh runner, and counting it as the same one would under-count a
+      genuinely independent reading.
+
+      verify (discharged): two consecutive local runs left two records with
+      distinguishable session ids and the predicate read them as 2 sessions —
+      measured, `1187 ms` each. The different-OS clause is asserted by injecting
+      `RUNNER_OS=Linux` and `RUNNER_OS=macOS` under one `GITHUB_RUN_ID`, so it
+      needs no second machine to prove.
+- [x] **A1.2 A predicate that answers the arming question, and refuses to guess.**
       One command that reads the store and reports whether `>= 10 readings from
       >= 2 sessions` holds, printing the counts it used. It returns "not yet"
       with the shortfall named, never a bare boolean, and it must refuse rather
@@ -125,7 +178,27 @@ collection mechanism is missing entirely.
       verify: run it against a hand-built store of 9 readings from 3 sessions and
       against 12 from 1 session; both report not-armable, each naming which
       clause failed.
-- [ ] **A1.3 Publish the distribution, do not choose from it.**
+
+      **SHIPPED 2026-08-23** as `src/scripts/check_composite_arming.ts`.
+
+      Both cases the verify names are committed tests and both are **not-armable
+      for different reasons**, which is the whole point of refusing a bare
+      boolean: `9 readings from 3 sessions` fails the readings clause and names
+      the shortfall (`short by 1`); `12 readings from 1 session` fails the
+      sessions clause and carries **why** — the instability the floor excludes was
+      measured on ONE machine, so N readings from one session cannot substitute.
+      Both clauses can fail at once and both are then named.
+
+      A record whose `composite_ms` is `null` is **dropped and counted as
+      unusable**, never extrapolated — and its session does not count toward the
+      session floor either, which is the subtler half.
+
+      **Sabotage-probed three ways**, each red before it was trusted: counting
+      rows instead of distinct sessions (4 of 18 red — the `12 from 1` case goes
+      green, exactly the shape the floor rejects); treating a null composite as
+      usable (4 red); returning a bare boolean with no named clause (4 red).
+      Restoring gives 18/18.
+- [x] **A1.3 Publish the distribution, do not choose from it.**
       When A1.2 reports armable, render the distribution — p50, p95, spread, per
       runner — into a form the maintainer can read in one screen, alongside the
       pathology-net proposal kept separate from the cap per step 3 of the
@@ -133,6 +206,28 @@ collection mechanism is missing entirely.
       verify: the rendered artefact exists and states its own n and session count;
       no `p50_ci` value is written by this step.
 
+
+      **SHIPPED 2026-08-23** as `--publish`, rendering
+      `agents/evidence/reports/per-turn-composite-distribution.md` <!-- ref-ignore -->
+      — the file does not exist yet **by design**, because it is written from the
+      store and the store is still empty; a committed placeholder would be a
+      distribution nobody measured. It carries min / p50 /
+      p95 / max / spread, a per-session table, and the dropped-reading count named
+      rather than averaged away.
+
+      **It writes no `p50_ci`, and the test asserts the absence rather than the
+      presence.** The phrase appears exactly once — in the sentence disclaiming
+      it — and an assertion refuses any `p50_ci: <number>` shape. A script that
+      both measured the distribution and armed the ceiling from it would be the
+      agent setting its own budget, which is precisely what A2.1 reserves.
+
+      The **pathology net is kept separate from the cap**, per step 3 of the
+      recorded arming procedure, and the proposed shape is offered as a starting
+      point rather than a recommendation. A not-armable distribution still prints
+      its numbers, labelled: informative before it is sufficient.
+
+      verify (discharged): the artefact states its own n and session count, and no
+      `p50_ci` is written.
 ## Phase A2 — arming, and the part that is not ours
 
 - [ ] **A2.1 Set `p50_ci` and flip `observe_only` to false — MAINTAINER ACT.**

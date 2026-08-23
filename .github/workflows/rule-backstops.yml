@@ -211,6 +211,15 @@ jobs:
       - name: target-readiness grader discriminates (self-test)
         run: ./scripts-run src/scripts/grade_target_readiness --self-test
 
+      # The arming predicate has no corpus on this tree — the store accumulates
+      # from CI runs over a release cycle. What CI can prove is that it still
+      # REFUSES: 9 readings from 3 sessions and 12 from 1 are both not-armable
+      # and fail for DIFFERENT reasons, and a null composite is dropped rather
+      # than counted (a composite over a subset reads low, and low is the
+      # direction that makes a ceiling look met).
+      - name: composite arming predicate refuses (self-test)
+        run: ./scripts-run src/scripts/check_composite_arming --self-test
+
       # ADR-239:185-188 leaves merge authority to the owner. A settings key named
       # autoMerge / auto_merge / mergePolicy would grant it by configuration
       # rather than by decision, so the key space is ratcheted shut. Reversible

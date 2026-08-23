@@ -28,12 +28,20 @@ commands through intelligent output filtering (whitespace, boilerplate,
 comments, duplicate log messages). Single Rust binary, <10ms startup overhead.
 **Third-party Apache-2.0 tool** (rtk-ai upstream — an external project, not part of this package).
 
-**Savings, honestly stated:** upstream reports 60-90% (their estimate —
-"actual savings vary"). agent-config's own scoped spot-measurement
-(2026-07-28, one repo, one macOS machine, 8-command corpus) landed at
-**33% overall, 0-57% per command** — verbose commands (`git status`,
-`git log`, `ls -la`) save ~55%, already-compact output (`--oneline`,
-`--stat`) passes through at ~0%. See `internal/bench/rtk-savings/RESULTS.md`.
+**Savings — STALE, and scoped. Do not quote the number without this label.**
+Upstream reports 60-90% (their estimate — "actual savings vary").
+agent-config's own figure is **33% overall, 0-57% per command**, and it is a
+**single spot-measurement from 2026-07-28: one repo, one macOS machine, an
+8-command corpus.** It has **not** been superseded by a wider run, and the
+widened re-bench is **deferred** — `road-to-terminal-token-economy` steps
+3.2-3.4, deferred by AI council on 2026-08-23 because Phase 2 has not yet chosen
+the wrapper mechanism, so a re-bench today would measure the wrong subject.
+
+Treat it as an order of magnitude for *that* corpus, never as this package's
+general claim. Verbose commands (`git status`, `git log`, `ls -la`) save ~55%;
+already-compact output (`--oneline`, `--stat`) passes through at ~0%, which is
+why an overall percentage is meaningless without the corpus that produced it.
+See `internal/bench/rtk-savings/RESULTS.md`.
 
 **Docs:** https://www.mintlify.com/rtk-ai/rtk
 **Repo:** https://github.com/rtk-ai/rtk
