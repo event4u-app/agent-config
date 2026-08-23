@@ -54,6 +54,15 @@ a ledger from another session is refused as another conversation's consent
 cap (`src/scripts/git_authorization_hook.ts:255`) and an anchored alternation
 (`:262-263`), so a turn that also opens new work is not an answer.
 
+**The two owner-reserved questions are decided, 2026-08-23, by AI council under
+maintainer-delegated authority (2 of 2 seats, both questions convergent).** The
+namespace ratchet does not encroach on the reserved merge-authority question, so
+Phase 5 shipped; the kernel doctrine line is descoped to
+[`stubs/road-to-merge-confirmation-doctrine.md`](stubs/road-to-merge-confirmation-doctrine.md)
+rather than decided in either direction. Both dispositions are at their blockers
+below with the reasoning, and neither moved a floor: merge authority is exactly
+as open as `ADR-239:185-188` left it.
+
 None of that is what this roadmap touches. What it touches is four places where
 the classifier gets the **operation** wrong.
 
@@ -190,13 +199,55 @@ preference.
 
 ## Phase 5 — a static ratchet, and nothing else
 
-- [~] **5.1 Forbid a future `*autoMerge*` / `mergePolicy` settings key.** A
+- [x] **5.1 Forbid a future `*autoMerge*` / `mergePolicy` settings key.** A
       static check over the settings schema and template, asserting the key
       space stays empty of those names. This is the whole of Phase 5: ADR-239
       already exists, its `review_trigger` at `:10` names the reopen condition,
       and adding a second policy record here would create two.
       verify: the check exits `0` on the current tree and exits non-zero
       against a fixture schema carrying an `autoMerge` key; both are committed.
+
+      **SHIPPED 2026-08-23 after `blocker: owner-reserved-boundary` was resolved
+      by AI council (2/2 convergent, verdict (a)).** `src/scripts/check_no_automerge_key.ts`
+      scans every declared key in the two settings files — 304 keys — and refuses
+      `autoMerge` / `auto_merge` / `mergePolicy`. It exits `0` on this tree and
+      `1` against `tests/fixtures/automerge-key/`, both committed, which is this
+      step's verify discharged literally.
+
+      **What the reverted attempt taught, and it all held.** The match is
+      anchored on a **key**, not the word — this gate's own docstring contains
+      all three names, so a word-matching gate would refuse the decision it
+      protects. Two self-test cases assert exactly that (a comment mention and a
+      prose mention are not findings). The corpus is the two settings files, and
+      the floor is a **key** count (200, live 304) rather than a file count: two
+      files is a constant, and a floor under a constant can never trip.
+
+      **The dead-gate report was right and is answered, not worked around.** No
+      create-only canary can reach this gate: both corpus files already exist, so
+      a plant lands outside the corpus and the gate correctly stays green. That is
+      recorded as `no_canary_reason:` in `src/config/gate-coverage.yml` — the
+      same class as `check_condensation` and `check_ci_local_parity`, which the
+      CANARY section there already declares carry no recipe. The red is proven by
+      the committed fixture plus two recorded sabotage probes: emptying the
+      forbidden set → 4 of 9 tests red; widening the matcher from a key to every
+      identifier on the line → 6 of 9 red. `git diff --stat` over the gate path
+      is empty at the end.
+
+      **One probe was INEFFECTIVE first, and that is recorded because it reads
+      exactly like a proven guard.** Replacing the key regex with
+      `/([A-Za-z_][A-Za-z0-9_-]*)/` left all 9 green — that regex returns the
+      first identifier on the line (`description`), which is not a forbidden
+      name. A probe that does not go red has proven nothing about the guard, only
+      about the probe.
+
+      Registered across all six surfaces: `gate-coverage.yml` (with a recounted
+      header — the prose said 272/47/44 while the file already carried 51 rows
+      and the population function returned 277), `taskfiles/content.yml`,
+      `Taskfile.yml` `ci:`, `.github/workflows/rule-backstops.yml`, and the two
+      ratchets — it adopts `_lib/gate_ledger.ts` and `_lib/gate_self_test.ts`, so
+      `check_gate_completeness` and `gate-self-test:registered-non-adopters` both
+      stay at their baselines. `check_ci_local_parity` green: 127 CI gates, 270
+      local, no new declared exception.
 
 ## What this roadmap will not build
 
@@ -238,7 +289,7 @@ preference.
 
 ### blocker: kernel-doctrine-line
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in Phases 1–5 — recorded so the gap is not lost
 - **What to do:** pick exactly one — (a) the maintainer amends
@@ -257,20 +308,37 @@ preference.
 - **If you do nothing:** A direct `merge PR #123` keeps reading as needing a
   second confirmation on top of itself. Nothing in Phases 1-5 breaks, and the
   gap stays recorded here rather than rediscovered from scratch next time.
-- **Disposition 2026-08-22 — left OPEN, and it is unresolvable by an agent by
-  construction.** Option (a) is a kernel-rule edit: both files are in the nine
-  listed at `src/scripts/hooks/block_kernel_rule_writes.ts:10-12`, so an agent
-  write is a **tool-call-time deny** — not a policy I am declining to break, a
-  mechanism that refuses. Option (b) declines a maintainer's doctrine
-  reconciliation, which is not mine to decline either. The council that would
-  otherwise route it has had 0 of 2 seats all run.
+- **Disposition 2026-08-23 — TRANSFERRED. AI council, 2 of 2 convergent,
+  verdict (c): descope to a stub.** Record:
+  `agents/runtime/council/responses/r-merge-op-split-blockers.md` (gitignored;
+  the verdicts and both rationales are reproduced in the PR body, which is the
+  durable copy). Destination:
+  [`agents/roadmaps/stubs/road-to-merge-confirmation-doctrine.md`](stubs/road-to-merge-confirmation-doctrine.md),
+  created in this same change and carrying the full analysis, both costed
+  options, the promotion probe, and the measured blocking cost.
 
-  It blocks nothing in Phases 1–4, so the roadmap ships around it, and the gap
-  stays recorded here — which is its own stated fallback.
+  **Why not (a) or (b).** (a) is a kernel-rule edit: both files are in the nine
+  listed at `src/scripts/hooks/block_kernel_rule_writes.ts:10-12`, so an agent
+  write is a **tool-call-time deny** — a mechanism that refuses, not a policy
+  being respected. Both seats independently called (b) the wrong trade: it
+  chooses the more burdensome doctrine with no evidence the extra ceremony adds
+  safety, one seat naming it "security theater".
+
+  **Two arguments the council added, carried to the stub rather than lost.**
+  The "explicit confirmation on this turn" requirement reads as aimed at a
+  *vague* approval ("LGTM"), not at a typed `merge PR #123` that names the exact
+  operation — so the double-ceremony reading makes the rule capture a case it
+  was never designed for. And whoever takes (a) must define how a *direct* order
+  is distinguished from a **quoted, replayed, stale, or indirect** one, or
+  "direct order" becomes an authorization bypass.
+
+  The **outcome state is `transferred`**, recorded here in prose because
+  `Status:` carries the only token every gate reads as closed. Nothing in
+  Phases 1–5 depended on it.
 
 ### blocker: owner-reserved-boundary
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 5 in full
 - **What to do:** pick exactly one — (a) confirm that a static ratchet
@@ -291,17 +359,30 @@ preference.
   the key does not exist today, so the ratchet guards against a future nobody
   has proposed, and `ADR-239`'s `review_trigger` already names the reopen
   condition.
-- **Disposition 2026-08-22 — the "do nothing" outcome, taken deliberately after
-  building Phase 5 and reverting it.** I implemented 5.1 in full before noticing
-  this blocker gates the phase, and removed all of it. The blocker's own wording
-  forecloses the shortcut: *"an agent asserting that its own check stays inside
-  a reservation is the shape the reservation exists for."* Confirming my own
-  scope boundary is precisely what (a) reserves to the owner, and the council
-  has had 0 of 2 seats.
+- **Disposition 2026-08-23 — RESOLVED (a). AI council, 2 of 2 convergent.**
+  Record: `agents/runtime/council/responses/r-merge-op-split-blockers.md`
+  (gitignored; verdicts and rationales reproduced in the PR body). Phase 5
+  ships; 5.1 is `[x]`.
 
-  Shipping the gate anyway would have been a phase past its own gate — the
-  silent-green defect this tree has already had once. What building it taught is
-  recorded at 5.1 so the work is not lost, only unshipped.
+  **The reasoning, which is the part that matters.** The ratchet forbids three
+  specific key *names* in two config files. It does not constrain the
+  merge-authority *decision*: the owner keeps every route — a command flag, an
+  ADR, a per-turn confirmation, or a settings key under a different name. Both
+  seats converged that the namespace and the authority are orthogonal, and one
+  added the framing the gate now carries in its own docstring: it is a
+  **reversible architectural boundary, not a permanent prohibition**. If the
+  owner later wants one of these exact names, the owner deletes the gate — and
+  that friction *is* the ratchet's purpose, since it forces the choice to be
+  explicit rather than accidental.
+
+  **Why the council and not the owner.** The blocker's own wording is why it
+  could not be self-confirmed — *"an agent asserting that its own check stays
+  inside a reservation is the shape the reservation exists for."* This run
+  carries maintainer-delegated council authority for exactly this class, so the
+  confirmation came from two independent seats rather than from the agent whose
+  check it is. The previous run's disposition (take the "do nothing" outcome,
+  after building and reverting the gate) was correct **for a run with 0 of 2
+  seats available**, and is preserved above rather than rewritten.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
@@ -335,16 +416,16 @@ preference.
       present in the diff. The owner-reserved question is exactly as open as it
       was before.
 
-## Progress note — Phases 1–4 shipped, Phase 5 blocked, NOT archived
+## Progress note — COMPLETE. Phases 1–5 shipped, both blockers resolved
 
-17 of 18 steps. 5.1 is `[~]`, blocked by `owner-reserved-boundary`; both
-blockers stay **open** because both are unresolvable by an agent — one is a
-kernel-rule edit that is a tool-call-time deny, the other reserves to the owner
-exactly the confirmation an agent cannot give about its own check. Council: 0 of
-2 seats all run.
+18 of 18 steps. Phase 5.1 shipped after `owner-reserved-boundary` was resolved
+(a) by AI council; `kernel-doctrine-line` resolved as **transferred** to
+[`stubs/road-to-merge-confirmation-doctrine.md`](stubs/road-to-merge-confirmation-doctrine.md)
+per the same council's verdict (c). Council: **2 of 2 seats, both questions
+convergent** — the previous run recorded 0 of 2 all run, which is what left both
+blockers open.
 
-Not archived: a parked step and two open blockers would be buried, and
-converting either to a decision is owner-reserved. `active_roadmaps` unchanged.
+Archived: no parked step and no open blocker remains, so nothing is buried.
 
 ### The four defects, closed and measured
 
@@ -400,7 +481,7 @@ until a prompt lands in the gap.
    the **block-side** classifier — `PASTED_COMMANDS` has no `gh api` entry at
    all. Both corrected, with the correction recorded at the assertion.
 
-### Phase 3 fit the cap exactly
+### The carve-out fit the skill cap exactly
 
 `roadmap-writing/SKILL.md` was **at** 400 of a 400 cap, so the carve-out had to
 be net-neutral. It is: 400 lines after, `skill_linter` 1 pass / 0 warn, against a
