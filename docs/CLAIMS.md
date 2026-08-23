@@ -733,15 +733,15 @@ is the named exception in the claim itself.
 
   Written by `./scripts-run src/scripts/lint_handoffs --census-json`. The committed
   row is the LIVE post-repair state at `9c4f5bff4` (`dead_links: []`,
-  959 links, 948 gate-matched, 294 skills — the tree gained two
-  skills from an intervening merge, and the row is regenerated rather than pinned
+  959 links, 948 gate-matched, 294 SKILL.md files — the tree gained two
+  more from an intervening merge, and the row is regenerated rather than pinned
   because it is an instrument, not a snapshot). The pre-repair capture from the
   same command at `c7e82087e`, which is the measurement the repair was decided
-  from, read: 947 `](../<slug>/SKILL.md` links across 292 skills, 960 widened to
+  from, read: 947 `](../<slug>/SKILL.md` links across 292 SKILL.md files, 960 widened to
   bare directory targets, 205 files carrying at least one, 224 carrying any
   `](../` link, 938 matched by the gate's own `LINK_RE`, 930 of those undeclared
-  in the linker's `requires_skills:` because only 5 of 292 skills declare the
-  field at all, 221 scoped survivors / 71 pruned, 24 scoped dangles across 17
+  in the linker's `requires_skills:` because only 5 of those 292 files declare
+  the field at all, 221 scoped survivors / 71 pruned, 24 scoped dangles across 17
   survivors. DEAD LINKS BEFORE THE REPAIR: **16**, not the 14 the drafting census
   recorded, and the gap is the finding rather than drift — the Reproduction B.1
   grep `](\.\./[a-z0-9-]*/SKILL\.md` cannot match a target containing a colon,
