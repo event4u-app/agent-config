@@ -12,6 +12,9 @@ trust:
 install:
   default: false
   removable: true
+triggers:
+  - phrase: "pest test"
+  - phrase: "pest suite"
 ---
 
 # pest-testing

@@ -7,6 +7,9 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "playwright spec"
+  - phrase: "playwright test"
 ---
 
 # playwright-testing

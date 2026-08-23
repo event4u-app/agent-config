@@ -15,6 +15,9 @@ trust:
   level: professional
 install:
   removable: true
+triggers:
+  - phrase: "cash runway"
+  - phrase: "burn rate"
 ---
 
 # runway-cognition

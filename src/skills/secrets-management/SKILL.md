@@ -11,6 +11,10 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "secret rotation"
+  - phrase: "secrets store"
+  - phrase: "secret scanning"
 ---
 
 # secrets-management
