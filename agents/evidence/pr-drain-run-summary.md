@@ -316,3 +316,115 @@ pushed SHA. Established as local, **not root-caused**.
   wipes a standing merge authorization, and a background task-notification
   containing the word "merge" can refresh the ledger without any human having
   spoken. Neither was acted on.
+
+# Third pass — 2026-08-23
+
+A separate autonomous run under a whole-run merge authorization, with the
+`block_unauthorized_git` ledger TTL raised from 30 min to 6 h in source and
+rebuilt into `dist/hooks/dispatch.js` before the run started. **Queue drained to
+zero: 5 merged, 0 closed, 0 deferred, 0 terminal.**
+
+## Step 0 — the premise was verified before the first merge
+
+The run opened with a read-only check that the effective bundle actually carried
+the raised TTL, because a source edit without a rebuild is silently inert:
+`dist/hooks/dispatch.js:26076` reads `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3`, and
+the only surviving `30 * 60 * 1e3` in the bundle is `WALL_CLOCK_ARMS_MS[2]`, an
+unrelated constant. The guard source and the bundle were not touched by this run;
+the temporary `LEDGER_MAX_AGE_MS` edit stayed uncommitted in the working tree
+throughout, and every commit below used an explicit pathspec so it could not be
+swept in.
+
+## Merged
+
+`#1499` was named in the run brief as the first merge and was already `MERGED`
+at `dd6a14406` on 2026-08-21 — first-pass row 6 above. The five PRs below are
+this pass's own work. Every SHA is the merge commit on `main`.
+
+| # | PR | Sync conflicts | Resolution class | CI iters | Disposition |
+|---|---|---|---|---|---|
+| 1 | #1566 | none (branch already carried `main`) | — | 1 | merged `67a85604a` |
+| 2 | #1567 | none | — | 0 | merged `a435b40ce` |
+| 3 | #1569 | none | — | 1 (pre-empted) | merged `6353242e3` |
+| 4 | #1570 | none (synced server-side) | — | 0 | merged `f4dbecb64` |
+| 5 | #1568 | none (synced server-side) | — | 0 | merged `3b2e950fd` |
+
+No conflict was resolved this pass, because no sync produced one: the two
+generated artifacts that collided on every PR of the first two passes —
+`agents/roadmaps-progress.md` and `src/config/estate-count-budget.json` — were in
+no PR's diff. The dashboard is gitignored, and the estate gate reads its floors
+from `origin/main` at run time rather than from a committed budget file, so a
+shrinking estate needs no edit at all. Both of this pass's roadmap archivals
+(`#1567`, `#1569`) therefore passed `check_estate_count` on a `-1 disposed`
+reading with nothing to merge.
+
+**No edit was dropped.** Nothing was closed as superseded, nothing blocked
+externally, nothing exhausted its iteration budget.
+
+## The one real CI failure, and why it happened twice
+
+`#1566` arrived red on `Rule backstops → secret-vcs-guard`:
+`check_secret_leak` reported a `pem-private-key` at
+`src/config/gate-coverage.yml:282`. That line is the `check_secret_leak --pack`
+mutation canary — a PEM header whose body reads `zz-canary-not-a-real-key`,
+planted at a shipped-and-gitignored path to prove the pack scope reaches what no
+git-backed mode can. It carries an audited `.secret-allow` entry, and that entry
+is **line-pinned**.
+
+`#1566` inserts 59 lines into `gate-coverage.yml`, some above the canary recipe,
+so the header moved 269 → 282 and the pin stopped matching. The remedy is the one
+`.secret-allow` documents for itself: re-audit and move the pin. Sensitivity was
+established in both directions before the fix landed — red at 269, green at 282.
+
+`#1569` then did the same thing, moving the header 282 → 291. That one was caught
+locally before CI saw it, because the shape was already known.
+
+**Recorded, not redesigned.** Any PR that inserts a line above that recipe reds
+this gate, and both PRs in this pass that touched `gate-coverage.yml` did. The
+line-pinned design is deliberate and argued in `.secret-allow`'s own header
+comment: a pin that drifts off its line reds, which forces a re-audit, whereas a
+path-only entry would silently allow a real secret pasted anywhere in the file.
+That trade-off is not this run's to overturn — but the frequency is now two
+occurrences in five PRs, which is the falsifiable half the design comment does
+not carry.
+
+## Two branches could not be checked out at all
+
+`#1570` (`drain/rm4`) and `#1568` (`chore/inbox-release-4-10-0`) had their head
+branches checked out in other sessions' worktrees, so `gh pr checkout` failed
+`exit 128`. Both were `BEHIND` with `mergeable: MERGEABLE` — no conflicts, only
+staleness — and the ruleset sets `strict_required_status_checks_policy: true`, so
+staleness alone blocks the merge.
+
+They were synced with `gh pr update-branch`, which performs the same merge
+server-side (merge, never rebase) without touching the peer's working tree. The
+cost is stated rather than hidden: the peer's local branch is now behind its own
+remote and its next push will be rejected until it pulls. That is recoverable and
+was preferred over writing into a tree another session holds.
+
+## Process notes
+
+- **The queue grew four times during the drain.** `#1567`, `#1568`, `#1569` and
+  `#1570` all arrived after the first recompute, from parallel sessions in the 40+
+  worktrees this checkout carries. Recomputing after every merge — rather than
+  working a list captured once — is what kept the run terminating.
+- **The first CI waiter was mis-specified and would never have fired.** It
+  required ≥ 28 checks before reading a green settle, which is right for a
+  code-touching PR and impossible for a docs-only one: path filters mean `#1567`
+  ran exactly 5 checks. It was stopped and replaced with a terminal-state
+  condition — no `IN_PROGRESS`/`QUEUED`/`PENDING` entries in the rollup, plus
+  `mergeStateStatus` out of `UNKNOWN`/`BEHIND` — which is decidable at any check
+  count. One waiter at a time throughout; the superseded one was killed, not left
+  running.
+- **Exactly one status check is required.** `Sync + Generate Tools Consistency`
+  is the only entry in the ruleset's `required_status_checks`, and
+  `required_approving_review_count` is 0. The other 30+ checks are advisory, so a
+  `BLOCKED` reading on a PR with everything green is branch freshness and nothing
+  else — worth knowing before diagnosing it as a failure.
+- **`gh pr merge --delete-branch` fails locally while the remote merge
+  succeeds.** On `#1568` the local branch delete errored because a peer worktree
+  held it. The merge itself had landed. Disposition was confirmed from
+  `gh pr view --json state,mergeCommit`, never from the merge command's own exit.
+- **Two transient classifier denials** on `gh pr merge` and `gh pr checkout`
+  cleared on an immediate identical retry. No authorization window was spent on
+  them.
