@@ -342,19 +342,52 @@ safety gates), `module-detect-on-the-fly`, `check-refs`, and the
 
 ## Phase 3 — Staleness is a gate, not a surprise
 
-- [ ] **3.1 `check_playbook_invokes.ts` (consumer-side gate).** For every
+- [x] **3.1 `check_playbook_invokes.ts` (consumer-side gate).** For every
       `configured` playbook, each `invokes` id must resolve to an existing
       script name, `turbo.json` task, or `turbo gen` template in the tree
       (the three kinds decided in 1.2; an Nx or Plop id is reported as
       `unsupported`, never as resolved). Missing → exit 1 with the playbook
       and step named. Ships under the
       consumer `scripts/` template so it can run in the consumer's own CI.
-      verify: rename the generator in the 0.1 fixture → the check fails naming
-      `add-ui-component.md` step 1; restore → passes.
-- [ ] **3.2 Grade downgrade on drift.** When the check fails, the remediation
+      verify (discharged): rename the generator in the 0.1 fixture → the check fails naming
+      `add-ui-component.md` step 1; restore → passes. **Both, asserted in ONE test over one
+      cloned fixture — 10/10 in `tests/scripts/check_playbook_invokes.test.ts`.** The rename
+      and the restore are compared in a single `it` on purpose: two separate tests can each
+      pass while disagreeing about what the fixture contains.
+
+      **The fixture is cloned to a scratch dir before the rename.** A probe that edits a
+      tracked fixture in place leaves the tree wrong if the assertion throws first, and
+      `tests-must-not-write-tracked-files` is the gate that would then be red for an
+      unrelated reason.
+
+      **It ships in the consumer `scripts/` template, and that placement is the design.**
+      Staleness is a fact about the CONSUMER's repository; a gate living in this package
+      could only ever check this package's own (nonexistent) playbooks. It carries no YAML
+      dependency for the same reason — adding one to a consumer repo to run a single gate is
+      a cost they did not ask for — so the frontmatter reader handles both legal `invokes`
+      shapes, block and inline. A reader that handled only the block form would report a
+      correct playbook as having no ids at all.
+
+      **Two refusals, both sabotage-proven.** An Nx or Plop id is reported `unsupported`,
+      never `missing`: this check does not run a consumer binary, and calling a real id
+      missing is the *worse* error — it would push a correct playbook down to `observed` on
+      the strength of a check that never looked. And an `observed` playbook is skipped
+      entirely, because it already says its steps are unverified; failing it would punish the
+      honest grade and reward writing `configured` and hoping. Removing either behaviour
+      takes the suite RED, as does reading the generator's *filename* instead of its
+      registered name (3 failures).
+- [x] **3.2 Grade downgrade on drift.** When the check fails, the remediation
       it prints is to either fix the `invokes` id or downgrade the step to
       `observed` with a commit citation — never to delete the evidence line.
-      verify: the check's failure message contains both options verbatim.
+      verify (discharged): the check's failure message contains both options verbatim.
+      **`REMEDIATION` is a named export asserted string-by-string: "Fix the `invokes` id",
+      "Downgrade the step to `observed`", "cite the commit", and the forbidden third —
+      "Do NOT delete the evidence line".**
+
+      The third option is named as forbidden rather than left unmentioned, because deleting
+      the evidence line is the *cheapest* way to make this gate green and it converts a
+      caught drift into an uncatchable one: a playbook with no `invokes` list is not a weaker
+      claim, it is an unverifiable one, and the next rename passes silently.
 
 ## Phase 4 — Evidence that it pays
 
