@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "_comment": "Phase 0.3 of road-to-skill-delivery-over-mcp \u2014 the incumbent ranker's hit rate, which did not exist before. Regenerate: ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker <label> --commit <sha>. Phase 3.1 records a keyword-v2 row beside this one and is kept only if top3 does not regress.",
+  "ranker": "keyword-v1",
+  "measured_at": "2026-08-23",
+  "commit": "c7e82087e",
+  "commit_pinned_by_roadmap": "d1861bad",
+  "skills_dir": "src/skills",
+  "skills_indexed": 292,
+  "top1": 0.615,
+  "top3": 0.769,
+  "corpus_lines": 499,
+  "corpus_lines_claimed_by_roadmap": 496,
+  "accuracy": {
+    "corpus_prompts": 26,
+    "top1": 0.615,
+    "top3": 0.769,
+    "misses": [
+      "canonical-01",
+      "canonical-02",
+      "canonical-05",
+      "canonical-06",
+      "content-01",
+      "content-02"
+    ],
+    "denominator_note": "tests/eval/corpus-dev.yaml + corpus-non-dev.yaml \u2014 the only expected-skill ground truth in this tree. Small; a single prompt moves each rate by ~4 points."
+  },
+  "matrix_coverage": {
+    "corpus_prompts": 499,
+    "prompts_with_any_result": 495,
+    "mean_top_score": 19.98,
+    "note": "tests/eval/routing-matrix/ is labelled with the expected RULE, never a skill, so this arm carries no accuracy \u2014 only whether the ranker answers at all and how confident its top answer is. Its size is measured here, not assumed: the roadmap and five other sites still publish 496."
+  },
+  "premise_defects_found_by_this_step": [
+    "The 496-line routing matrix is labelled with the expected RULE, never an expected skill, so no top-1/top-3 accuracy can be computed over it. top1/top3 above are measured against tests/eval/corpus-{dev,non-dev}.yaml, the only expected-skill ground truth in the tree (26 prompts).",
+    "496 is stale: the matrix holds 499 prompts at this commit. The figure is still published at src/scripts/hooks/skill_route_hook.ts:24 and :173, src/scripts/hook_manifest.yaml:618, src/config/hook-token-budget.json:71, and in this roadmap. Correcting those six sites is not in this roadmap's scope; the drift is recorded here so the number is not re-derived from 496 again.",
+    "The measurement runs against src/skills (292 SKILL.md). score_skill_relevance's own DEFAULT_SKILLS_DIR is .agent-src.uncondensed/skills, which is EMPTY in a normal checkout \u2014 a caller that takes the default silently ranks nothing."
+  ]
+}
