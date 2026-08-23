@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "_comment": "Written by `./scripts-run src/scripts/lint_handoffs --scoped-dangle-json`. Do not hand-edit — regenerate it. The instrument is guarded BEFORE any count is read: `attempts` and `pruned_targets_hit` are null, never 0, whenever `instrument_live` is false, because a stopped clock reporting zero is not a null. Read `instrument_reason` first. NOTE ON KINDS: the store has only ever recorded `kind: \"exposure\"`, and no event in FOLLOW_KINDS (`read`, `read_attempt`, `follow`) is emitted anywhere in the tree — so even a LIVE window could not answer this question today. Emitting a follow event is the prerequisite this measurement is blocked on, and it is not in this roadmap.",
-  "commit": "243c363589139ea1efccafd3ad3bb6be9b5cba77",
-  "window_start": "2026-07-24T14:00:33.549Z",
-  "window_end": "2026-08-23T14:00:33.549Z",
+  "commit": "9c4f5bff4170c196ab3a1cfc612bde120252c5eb",
+  "window_start": "2026-07-24T14:10:13.954Z",
+  "window_end": "2026-08-23T14:10:13.954Z",
   "instrument": "agents/runtime/metrics/skill-usage.jsonl",
   "instrument_live": false,
   "instrument_reason": "instrument absent — agents/runtime/metrics/skill-usage.jsonl does not exist (the store is gitignored and machine-local)",

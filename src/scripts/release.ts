@@ -156,6 +156,8 @@ import {
     REPO_ROOT,
     REPO_SLUG,
     SystemExitError,
+    set_augment_manifest_version,
+    set_marketplace_version,
 } from './release_env.js';
 import type { RunResult } from './release_publication.js';
 // Re-export surface for the six names tests import from `release.js` and that
@@ -805,47 +807,6 @@ function set_lockfile_version(p: string, version: string): void {
         }
     }
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
-}
-
-/**
- * Rewrite every version field in an `.augment-plugin/` manifest.
- *
- * Enumerated, not walked: `plugin.json` carries one top-level `version`, and
- * `marketplace.json` carries three (top level, `metadata.version`, and one per
- * `plugins[]` entry). A recursive "every key named version" rewrite would
- * silently start bumping a future field that is legitimately independent, which
- * is the failure this whole change exists to stop — an unowned version is drift
- * whichever direction it drifts.
- */
-function set_augment_manifest_version(p: string, version: string): void {
-    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
-    if ('version' in data) {
-        data['version'] = version;
-    }
-    const meta = data['metadata'];
-    if (typeof meta === 'object' && meta !== null && !Array.isArray(meta) && 'version' in meta) {
-        (meta as Record<string, unknown>)['version'] = version;
-    }
-    const plugins = data['plugins'];
-    if (Array.isArray(plugins)) {
-        for (const entry of plugins) {
-            if (typeof entry === 'object' && entry !== null && !Array.isArray(entry) && 'version' in entry) {
-                (entry as Record<string, unknown>)['version'] = version;
-            }
-        }
-    }
-    fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
-}
-
-/** Update `metadata.version`; preserve 2-space indentation + UTF-8. */
-function set_marketplace_version(p: string, version: string): void {
-    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
-    // data.setdefault("metadata", {})["version"] = version — preserve key order.
-    if (!(typeof data['metadata'] === 'object' && data['metadata'] !== null && !Array.isArray(data['metadata']))) {
-        data['metadata'] = {};
-    }
-    (data['metadata'] as Record<string, unknown>)['version'] = version;
-    fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
 }
 
 function set_template_pin(p: string, version: string): void {
@@ -2029,7 +1990,6 @@ export {
     prepend_changelog,
     set_package_version,
     set_lockfile_version,
-    set_augment_manifest_version,
     set_marketplace_version,
     set_template_pin,
     resolve_bump,

@@ -732,9 +732,12 @@ is the named exception in the claim itself.
 - last_verified: 2026-08-23
 
   Written by `./scripts-run src/scripts/lint_handoffs --census-json`. The committed
-  row is the LIVE post-repair state (`dead_links: []`, 941 links, 930 gate-matched).
-  The pre-repair capture from the same command at the same commit, which is the
-  measurement the repair was decided from, read: 947 `](../<slug>/SKILL.md` links across 292 skills, 960 widened to
+  row is the LIVE post-repair state at `9c4f5bff4` (`dead_links: []`,
+  959 links, 948 gate-matched, 294 skills — the tree gained two
+  skills from an intervening merge, and the row is regenerated rather than pinned
+  because it is an instrument, not a snapshot). The pre-repair capture from the
+  same command at `c7e82087e`, which is the measurement the repair was decided
+  from, read: 947 `](../<slug>/SKILL.md` links across 292 skills, 960 widened to
   bare directory targets, 205 files carrying at least one, 224 carrying any
   `](../` link, 938 matched by the gate's own `LINK_RE`, 930 of those undeclared
   in the linker's `requires_skills:` because only 5 of 292 skills declare the

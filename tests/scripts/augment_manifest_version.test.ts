@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { check_augment_manifests } from '../../src/scripts/lint_marketplace.js';
-import { set_augment_manifest_version } from '../../src/scripts/release.js';
+import { set_augment_manifest_version } from '../../src/scripts/release_env.js';
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 

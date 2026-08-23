@@ -8,9 +8,19 @@
  * a cycle, and a cycle is worse than the large file the split is trying to fix.
  * A third leaf module is the smallest shape without one.
  *
- * Contains no logic and reaches nothing — paths, two branch names, two GitHub
- * body limits, three error classes. That is what makes it a safe leaf.
+ * Contains almost no logic and reaches nothing — paths, two branch names, two
+ * GitHub body limits, three error classes, and the JSON serializer the version
+ * bumps share. That is what makes it a safe leaf.
+ *
+ * The two manifest-version writers live here rather than in `release.ts` for a
+ * measured reason: `release.ts` is 564 lines over the 1500-line source-size
+ * ratchet, so every line added there is charged, and this function needs
+ * exactly two things this module already owns — the manifest paths and
+ * `jsonDumpsIndent`. Extraction, not a baseline bump. `set_marketplace_version`
+ * moved with its Augment twin because the argument is identical and splitting a
+ * matched pair across two files for no reason is the worse shape.
  */
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -219,10 +229,53 @@ function jsonDumpsIndent(value: unknown, indent: number): string {
     return _dumpIndent(value, indent, 0);
 }
 
+/**
+ * Rewrite every version field in an `.augment-plugin/` manifest.
+ *
+ * Enumerated, not walked: `plugin.json` carries one top-level `version`, and
+ * `marketplace.json` carries three (top level, `metadata.version`, and one per
+ * `plugins[]` entry). A recursive "every key named version" rewrite would
+ * silently start bumping a future field that is legitimately independent, which
+ * is the failure this whole change exists to stop — an unowned version is drift
+ * whichever direction it drifts.
+ */
+function set_augment_manifest_version(p: string, version: string): void {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
+    if ('version' in data) {
+        data['version'] = version;
+    }
+    const meta = data['metadata'];
+    if (typeof meta === 'object' && meta !== null && !Array.isArray(meta) && 'version' in meta) {
+        (meta as Record<string, unknown>)['version'] = version;
+    }
+    const plugins = data['plugins'];
+    if (Array.isArray(plugins)) {
+        for (const entry of plugins) {
+            if (typeof entry === 'object' && entry !== null && !Array.isArray(entry) && 'version' in entry) {
+                (entry as Record<string, unknown>)['version'] = version;
+            }
+        }
+    }
+    fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
+}
+
+/** Update `metadata.version`; preserve 2-space indentation + UTF-8. */
+function set_marketplace_version(p: string, version: string): void {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
+    // data.setdefault("metadata", {})["version"] = version — preserve key order.
+    if (!(typeof data['metadata'] === 'object' && data['metadata'] !== null && !Array.isArray(data['metadata']))) {
+        data['metadata'] = {};
+    }
+    (data['metadata'] as Record<string, unknown>)['version'] = version;
+    fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
+}
+
 export {
     ArgparseExit,
     commaGroup,
     jsonDumpsIndent,
+    set_augment_manifest_version,
+    set_marketplace_version,
     pyLen,
     pySlice,
     reEscape,
