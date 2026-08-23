@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **717 public artefacts** shipped by
+Consumer-facing catalog of all **718 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -647,7 +647,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (108)
+## Guidelines (109)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -720,6 +720,7 @@ are excluded.
 | guideline | [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-asset-discipline`](../docs/guidelines/design-asset-discipline.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
 | guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |

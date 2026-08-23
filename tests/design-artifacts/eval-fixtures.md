@@ -203,6 +203,49 @@ whose `ROUTING_MATRIX` is the measurement, same contract as `LANE_MATRIX`. The
 other three are rubric-scored: no unit test can assert whether an agent
 *silently regenerated* a design.
 
+### daf-wireframe-not-pixel
+- **primitive:** `static_inspect`
+- **lifecycle stage:** branch selection (maturity, not mandate)
+- **scenario:** a **greyscale wireframe** is handed over — the artefact declares its
+  own low fidelity (no colour, placeholder copy, box-and-line layout) — with the
+  ordinary handover phrasing ("here's the design, build it").
+- **pass:** the request routes with a **structure** mandate, never a **pixel** one.
+  The layout, the element set and the hierarchy are the spec; the greys, the
+  placeholder text and the box borders are **not**. An agent that reproduces
+  `#cccccc` fills and lorem copy 1:1 has honoured the wrong half of the artefact.
+- **why this is a separate axis, and not a `fidelity_mode` setting:** maturity is a
+  property of the **artefact**, mandate is a property of the **instruction**.
+  `design.fidelity_mode: strict` correctly means "do not redesign"; it does not and
+  must not mean "reproduce a wireframe's placeholder greys". The outbound rule
+  already knows this — `src/skills/wireframe/SKILL.md:109-111`: *"The wireframe file
+  tends to get promoted into hi-fi by incremental edits — don't. … the wireframe's
+  greyscale skeleton hard-codes non-decisions."* A non-decision reproduced 1:1 is a
+  decision nobody made.
+- **measured baseline (2026-08-23, pre-fix): FAIL — the rule has one axis.**
+  `grep -c 'wireframe' src/rules/design-fidelity.md` returns **1**, and that single
+  mention is a routing trigger rather than a discriminator. So a wireframe routes
+  exactly as a finished comp does, and `strict` then demands 1:1 on an artefact whose
+  own skill says its greys are non-decisions.
+
+### daf-wireframe-near-miss
+- **primitive:** `static_inspect`
+- **lifecycle stage:** branch selection (the near-miss the trigger must not swallow)
+- **scenario:** a **finished, full-colour comp** is handed over, and the prose happens
+  to contain the word *"wireframe"* — e.g. *"this replaces the wireframe we reviewed
+  last week; build it 1:1."*
+- **pass:** it routes **strictly**, exactly as today. The word in the prose is a
+  reference to a previous artefact, not a declaration about this one.
+- **why it is committed alongside the class it guards:** the maturity discriminator is
+  the kind of trigger that is one careless `includes('wireframe')` away from
+  downgrading every finished handover that mentions its own history. The rule's own
+  § Routing requires a near-miss row per new trigger class, and it requires the row to
+  test **the direction the new trigger opens** — a row testing something already
+  closed cannot catch the over-broadness being introduced. This is that row.
+- **measured baseline (2026-08-23, pre-fix): PASS, vacuously.** With no discriminator
+  there is nothing to be over-broad, so this row passes before the change and must
+  still pass after it. That is the whole point of committing it now: it is the row
+  that fails if the discriminator reads the prose instead of the artefact.
+
 ### daf-port-baseline
 - **primitive:** `static_inspect`
 - **lifecycle stage:** branch selection → build (the missing "provided artifact" branch)
