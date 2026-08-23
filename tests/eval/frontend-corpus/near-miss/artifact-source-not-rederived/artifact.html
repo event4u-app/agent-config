@@ -1,0 +1,11 @@
+<style>
+  .tiers { display: grid; gap: 1rem; container-type: inline-size; }
+  @container (min-width: 40rem) { .tiers { grid-template-columns: repeat(3, 1fr); } }
+  .tier h3 { font-size: clamp(1.125rem, 1rem + 0.6cqi, 1.5rem); }
+  .tiers:has(.tier[aria-selected="true"]) .tier:not([aria-selected="true"]) { opacity: .55; }
+</style>
+<div class="tiers">
+  <article class="tier"><h3>Solo</h3></article>
+  <article class="tier" aria-selected="true"><h3>Team</h3></article>
+  <article class="tier"><h3>Scale</h3></article>
+</div>

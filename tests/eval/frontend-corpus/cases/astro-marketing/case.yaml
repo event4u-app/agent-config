@@ -1,0 +1,15 @@
+# Case: astro-marketing
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: astro-marketing
+prompt: "Refresh the marketing homepage hero copy and imagery."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Brand register on an existing surface: `extend`, not `redesign` — copy and imagery are not the visual world.
+files:
+  - src/pages/index.astro
