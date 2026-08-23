@@ -2679,15 +2679,15 @@ function cmd_run(
     // skips already went out under `phase: 'pre_run'` from `build_members`,
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
-        // Whether the seats agreed, on the attendance line. `null` when no
-        // tally ran, which the event writes as `not_tallied` — a recorded
+        // Whether the seats agreed, on the attendance line. The key is OMITTED
+        // when no tally ran — spread-on-condition rather than an explicit
+        // `undefined`, because `exactOptionalPropertyTypes` treats those as
+        // different things and the emitter's own contract is "absent means the
+        // caller ran no tally", which it records as `not_tallied`. A recorded
         // "nobody asked", never a `false` that reads as disagreement.
-        stanceAgreement:
-            stance_tally_result === null
-                ? undefined
-                : stance_tally_result.consensus !== null
-                  ? 'consensus'
-                  : 'split',
+        ...(stance_tally_result === null
+            ? {}
+            : { stanceAgreement: stance_tally_result.consensus !== null ? ('consensus' as const) : ('split' as const) }),
         command: 'run',
         // Whether the roster actually shrank — see `dispatch_shape`. Without
         // this the line is byte-identical to a configured one-member council,

@@ -712,11 +712,20 @@ describe('clients — CLI command construction', () => {
             'danger-full-access',
             'workspace-write',
         ];
-        for (const Klass of [AnthropicCliClient, OpenAICliClient, GeminiCliClient]) {
-            const { client, calls } = stubCli(Klass, { returncode: 0, stdout: '{}', stderr: '' });
+        // Thunks rather than an array of classes: the three constructors have
+        // sibling protected members, so a bare array collapses to one of them
+        // and `exactOptionalPropertyTypes` rejects the call. Each thunk keeps
+        // its own concrete type at the `stubCli` call site.
+        const members = [
+            { name: 'anthropic', run: (): ReturnType<typeof stubCli> => stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' }) },
+            { name: 'openai', run: (): ReturnType<typeof stubCli> => stubCli(OpenAICliClient, { returncode: 0, stdout: '{}', stderr: '' }) },
+            { name: 'gemini', run: (): ReturnType<typeof stubCli> => stubCli(GeminiCliClient, { returncode: 0, stdout: '{}', stderr: '' }) },
+        ];
+        for (const m of members) {
+            const { client, calls } = m.run();
             client.ask('SYS', 'USER', 1);
             for (const bad of BYPASSES) {
-                expect(calls[0]!.cmd, `${Klass.name} argv carries ${bad}`).not.toContain(bad);
+                expect(calls[0]!.cmd, `${m.name} argv carries ${bad}`).not.toContain(bad);
             }
         }
     });
