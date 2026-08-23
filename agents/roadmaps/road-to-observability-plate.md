@@ -92,6 +92,13 @@ definitions that floor's item 4 already assumes exist.
 
 ## Phase 1 — Turn log plumbing into a capability model
 
+> **Execution order (council-mandated, blocker resolution).** Step 2.1's four
+> Golden-Signal definitions land **before** 1.1's detection step: detection
+> cannot be specified until what is detected is defined, and Phase 2 must not
+> depend on an evidence contract authored after it. No new step — this reorders
+> existing ones. `alerting-doctrine` is likewise **not** created first, so a
+> downstream consumer cannot dictate the evidence ontology.
+
 - [ ] **1.1 Restate `logging-monitoring` as required signal → detected
       implementation → evidence.** The skill stops being a list of how to
       configure one stack's log channels and becomes a way to answer "what does
@@ -109,8 +116,13 @@ definitions that floor's item 4 already assumes exist.
 - [ ] **1.3 Write the negative fixture first.** A project with logs and no
       metrics must be scored as missing a signal, not as observable. The
       fixture is authored before the model it scores.
-      verify: the fixture id appears in `src/config/gate-coverage.yml` and the
-      capability model returns a missing-signal verdict on it.
+      verify (council-amended, see blocker resolution): `logging-monitoring`
+      carries a malformed/clean contract-fixture pair differing only in the
+      condition under test — the malformed case omits exactly one required signal
+      and states the expected `missing-signal` verdict with its reason, the clean
+      counterpart supplies it and states the passing verdict. NOT registered in
+      `src/config/gate-coverage.yml`, which registers gate scripts and their
+      mutation canaries, never fixture identifiers.
 
 ## Phase 2 — Define the Golden Signals and the SLI/SLO representation
 
@@ -118,21 +130,37 @@ definitions that floor's item 4 already assumes exist.
       saturation — each with what it measures and what a missing one costs.
       Today `dashboard-design/SKILL.md:28` names the family and nothing defines
       the members.
-      verify: `grep -rniE 'saturation' src/skills/ | wc -l` is greater than its
-      pre-state of 0, and each of the four is defined in exactly one place.
+      verify (council-amended — the original asserted a pre-state of 0 that is
+      false): `grep -rniE 'saturation' src/skills/` returns **13** unrelated
+      lexical matches at HEAD (colour saturation in the design corpora, interview
+      saturation in `customer-research:54`, channel saturation in
+      `scenario-modeling:52`) and **zero** definitions of observability
+      saturation. Verify instead that `grep -cE '^### Golden Signal:'
+      src/skills/logging-monitoring/SKILL.md` returns exactly 4 and each of the
+      four is defined in exactly one place; the broad grep is retained only as an
+      informational collision check.
 - [ ] **2.2 Represent an SLI and an SLO without inventing a number.** The
       representation must carry provenance: a threshold is either **operational**
       (it came from a measurement or a stated commitment) or **proposed** (the
       agent suggested it). A proposed threshold may never be rendered as an
       operational one.
-      verify: a fixture carrying a proposed threshold renders it marked as
-      proposed, and the same fixture with the marker stripped fails.
+      verify (council-amended): provenance is a four-value enum — `measured`
+      (observed in telemetry), `committed` (stated in a doc/contract, awaiting
+      verification), `proposed` (agent-suggested, untrusted), `unknown`
+      (inspection could not establish a result). A malformed/clean contract pair
+      pins both directions: the malformed case attempts to render an
+      agent-suggested threshold as operational and yields `invalid-provenance`;
+      the clean counterpart retains `provenance: proposed` with
+      `operational: false`. `measured` and `committed` stay distinguishable.
 - [ ] **2.3 Record the signals a project cannot supply.** A signal with no
       available implementation is a null with a reason, not a gap silently
       dropped from the report.
-      verify: the report for a fixture missing one signal names the signal and
-      the reason, and the signal count in the report equals the four minus the
-      recorded nulls.
+      verify (council-amended): a malformed/clean contract pair — the malformed
+      case carries a null signal with no reason and yields
+      `invalid-unavailable-signal`; the clean counterpart adds a non-empty reason
+      and passes. `unknown` (not inspected) stays distinct from affirmatively
+      `unavailable`, and the reported signal count equals four minus the recorded
+      nulls.
 
 ## Phase 3 — Alerting doctrine and a lean runbook contract
 
@@ -145,8 +173,12 @@ definitions that floor's item 4 already assumes exist.
 - [ ] **3.2 A page without an owner, a runbook and a first diagnostic step is
       malformed.** All three are mandatory; a page that cannot name them is a
       configuration defect, not a judgement call.
-      verify: the negative fixture — a page definition missing an owner —
-      scores as malformed, and its paired complete definition scores clean.
+      verify (council-amended — one pair proves only one branch, three are needed
+      for the universal claim): `alerting-doctrine` carries **three**
+      malformed/clean contract pairs, one per mandatory field (owner, runbook,
+      first diagnostic step). Each malformed case omits exactly one field and
+      yields `malformed-alert: missing-<field>`; each clean counterpart supplies
+      only that field and yields `valid-page-alert`.
 - [ ] **3.3 A runbook contract, deliberately lean.** The minimum a runbook must
       carry to be worth paging into. `incident-commander/SKILL.md` gains the
       inbound pointer; its `:62` status-page cadence and `:143` post-mortem-owner
@@ -156,6 +188,15 @@ definitions that floor's item 4 already assumes exist.
       after the phase.
 
 ## Phase 4 — Finite-resource readiness and host hardening
+
+> **Ownerless-gap re-audit before 4.2 (council-mandated).** Before
+> `server-hardening` is created, re-run
+> `grep -rniE 'unattended.upgrade|fail2ban|ssh.hardening|ssh.posture|firewall.baseline' src/skills/`.
+> Zero hits → create the skill; any hit → extend the owner found instead, or
+> record in 4.2 why a new surface is still justified. Folded into 4.2's evidence
+> rather than added as a step. A second council note binds 4.1: staying under 200
+> lines is *budget, not fit* — finite-resource policy must remain a **rule**, and
+> acquiring procedural verdict logic is its own stop condition.
 
 - [ ] **4.1 Add a quota / saturation readiness surface.**
       `src/rules/scale-discipline.md` has a growth budget for append-only
@@ -174,14 +215,18 @@ definitions that floor's item 4 already assumes exist.
 - [ ] **4.3 The readiness verdict cannot average a red away.** A single red
       signal makes the verdict not-ready, regardless of how many greens sit
       beside it. State it as an enum with an explicit floor, not as a score.
-      verify: a fixture with one red and four greens returns not-ready, and the
-      verdict type has no numeric aggregation path.
+      verify (council-amended): a malformed/clean contract pair in
+      `operational-readiness` — the malformed case carries exactly one red among
+      greens and yields `not-ready`; the clean counterpart replaces only that red
+      and yields the applicable non-red value. The skill defines no score,
+      weight, average or other aggregation path able to override the red floor,
+      and `unknown` is never treated as green.
 
 ## Blockers
 
 ### blocker: b-plate-vs-skill-sprawl
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 step 1.1, and by dependency every later phase — the shape
   decision determines where Phases 2 through 4 land.
@@ -203,6 +248,46 @@ definitions that floor's item 4 already assumes exist.
 - **Resolved when:** the choice is recorded with its reason, and the Phase 1
   artefact lands at the destination the choice names rather than at whichever
   destination the first step found convenient.
+- **Resolution (2026-08-23):** **(b) — three responsibility-aligned skills**, with
+  fixtures as **committed in-skill contract pairs (option ii)**. Decided by the AI
+  council, **2/2 convergent** (`anthropic/claude-sonnet-4-5`, `openai/codex-default`;
+  3 rounds, blind chairman, $0.11748) — response at
+  `agents/runtime/council/responses/b-plate-vs-skill-sprawl.md`. <!-- council-ref-allowed: blocker resolution provenance; the decision body is inlined below so the record survives council-dir pruning -->
+  **Reason:** the `≥ 2 ## Procedure` warning in `size-and-scope.md` is a
+  *responsibility* trigger that fires **regardless of size**, and the four phases
+  contain three independently executable judgements with different inputs, outputs,
+  consumers and trust boundaries — signal detection (repo evidence → normalized
+  signal record), alert validation (alert definition → validity + class) and
+  readiness adjudication (cross-domain evidence → enum). Option (a)'s
+  "upgrade now, split at the cap" defers a decision the roadmap already supplies
+  evidence for, and contradicts *split by responsibility, not by length*. The
+  siblings are not thin: each carries an input contract, a procedure, an output
+  contract and validation examples. **Destinations:**
+  Phases 1–2 → `src/skills/logging-monitoring/SKILL.md`;
+  Phase 3 → `src/skills/alerting-doctrine/SKILL.md` (new);
+  Phase 4.3 → `src/skills/operational-readiness/SKILL.md` (new);
+  Phase 4.1 → `src/rules/scale-discipline.md` (extended);
+  Phase 4.2 → `src/skills/server-hardening/SKILL.md` (new).
+  `incident-commander`, `dashboard-design` and the vendor specialists receive
+  **inbound pointers only**. **Fixtures (ii):** `src/config/gate-coverage.yml`
+  registers gate scripts and their mutation canaries, **not fixture identifiers**,
+  so the literal reading of 1.3 / AC-4 was unsatisfiable without shipping a new
+  gate script; the fixture obligations are discharged as committed
+  malformed/clean contract pairs in the skill that owns each verdict, and are
+  never described as executable. **Kill criteria:** revisit the split if any new
+  sibling is < 300 substantive words and lacks an independently executable
+  workflow, a declared input/output contract, or its own validation section; or if
+  executing one sibling requires opening another merely to learn its inputs,
+  procedure or verdict format. Revisit fixture choice (ii) when a second machine
+  consumer needs the same verdict semantics, or when two merged defects contradict
+  a fixture's stated verdict — at that point introduce one schema and one
+  validator gate deliberately. **Immediate rollback:** `proposed` renders as
+  operational; `committed` becomes indistinguishable from `measured`; a `page`
+  passes without all three mandatory fields; a numeric path overrides a red
+  readiness input; `unknown` is treated as compliant. **Sequencing (council
+  order):** the Golden-Signal definitions land in `logging-monitoring` *before*
+  the detection step, and `alerting-doctrine` is **not** created first — a
+  downstream consumer must not dictate the evidence ontology.
 
 The tension is real in both directions. A prior deferral of this plate named
 three missing capabilities, which reads as an argument for three skills. But
@@ -236,8 +321,14 @@ decision to record rather than one to take mid-phase.
       and a proposed one cannot be rendered as operational. A fixture pins both
       directions.
 - [ ] AC-4 — A page definition missing an owner, a runbook or a first
-      diagnostic step scores as malformed, proven by a committed negative
-      fixture registered as a canary in `gate-coverage.yml`.
+      diagnostic step scores as malformed, proven by committed malformed/clean
+      contract-fixture pairs in the skill that owns the verdict, each stating its
+      expected verdict and differing only in the condition under test.
+      (Council-amended: registration in `gate-coverage.yml` is **not** required —
+      that manifest holds gate scripts and mutation canaries, not fixture ids.
+      These are contract fixtures with explicit expected verdicts, never
+      described as executable, until a machine-readable schema and runner are
+      introduced deliberately.)
 - [ ] AC-5 — Finite-resource exhaustion is a question the readiness surface
       asks, where today the governing rule contains no such term.
 - [ ] AC-6 — Host hardening has exactly one named owner in the tree, closing
