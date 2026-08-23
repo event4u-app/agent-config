@@ -502,3 +502,29 @@ text and a tool result never reaches it.
   immediate identical retry.
 - **CI settled green on the first and only run**: 33 checks, no flake, no
   iteration. `ci_settle` was the single waiter; no second watcher was started.
+
+## The CI waiter destroys the merge authorization
+
+Found while merging this very report. After `#1572` merged, the ledger held
+`authorized: ["pr-merge"]`. The next `gh pr merge` was blocked anyway, and the
+ledger read `authorized: []` with `prompt_chars: 434` — the exact length of the
+harness's background-task completion notification.
+
+That notification travels the `user_prompt_submit` path, so it overwrites the
+session ledger with an authorization set derived from its own text, which carries
+none. The authorization was not *spent* by the merge it authorized; it was
+written away by a system message. Any autonomous run that waits on CI in the
+background therefore loses its merge authorization at the moment the wait
+finishes — the waiter disarms the very operation it was waiting for.
+
+The workaround this pass used is one line of process, not a code change: run the
+CI waiter in the **foreground**, so no completion notification is emitted and the
+ledger survives to the merge. The cost is a bounded wall-clock block instead of a
+re-armable wait, which is acceptable for a docs-only PR with 5 checks and would
+not be for a 33-check run against the shell's timeout.
+
+Not fixed here, deliberately: the guard and its bundle were out of scope for this
+run by the brief's own instruction. What is recorded is the falsifiable shape — a
+notification of ~400 chars, `authorized: []`, a refused `pr-merge` immediately
+after a granted one — so the next reader does not re-diagnose it as a spent
+one-shot authorization, which is what it looks like from the block message alone.
