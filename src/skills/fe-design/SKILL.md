@@ -65,10 +65,23 @@ else runs the loop.
    artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
    re-deriving it from scratch is a deviation needing confirmation
    (`design-fidelity-mechanics` § Adopt the code).
-5. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
-   it done, and scope the verdict honestly: render-scoped when you can render
-   it, otherwise explicitly static-scoped, naming which checks actually ran.
-   "Looks good" with neither scope named is a verdict without evidence.
+5. **Review, then re-enter** — run [`design-review`](../design-review/SKILL.md)
+   before calling it done, and scope the verdict honestly: render-scoped when
+   you can render it, otherwise explicitly static-scoped, naming which checks
+   actually ran. "Looks good" with neither scope named is a verdict without
+   evidence. Findings → fix them and **re-enter step 5**, at most **2 rounds**,
+   and **stop early on a null**: a round that produces **no new finding** ends
+   the loop, and a round that produces only findings the provided artifact
+   already covers produces no new finding. At the 2-round ceiling with findings
+   still open, stop and hand the remaining list back — ship-as-is or abort is
+   the user's call, never another silent pass. Judgement alone never buys a
+   third round.
+
+   The ceiling is **2**, the same number the engine enforces
+   (`directives/ui/polish.ts`, `POLISH_CEILING`), so the ad-hoc path and the
+   ticketed path bound the loop identically rather than by two conventions that
+   can drift. Fixtures: `daf-adhoc-converges` (round 2 is a null, loop ends) and
+   `daf-adhoc-ceiling` (findings remain at the ceiling, loop hands back).
 
 ### The heuristics — here, not one hop away
 

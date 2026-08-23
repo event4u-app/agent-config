@@ -77,13 +77,20 @@ A **live preview URL** is required for testing.
 
 ### Phase 2: Responsiveness
 
-Test at three viewports:
+Test at four viewports:
 
 | Viewport | Width | Device |
 |---|---|---|
 | Desktop | 1440px | Standard monitor |
 | Tablet | 768px | iPad |
 | Mobile | 375px | iPhone SE |
+| Floor | 320px | Narrowest supported — the asserted floor |
+
+The 320px row is the floor [`fe-design`](../fe-design/SKILL.md) already asserts
+("every layout must work on 320px width"). It is in this table because an
+asserted floor outside the measured set is an assertion nobody checks; 375px
+passing says nothing about 320px, which is where a two-column grid or a fixed
+`min-width` actually breaks.
 
 - Take screenshots at each viewport.
 - Check layout shifts, overflow, and content reflow.

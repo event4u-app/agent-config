@@ -386,74 +386,377 @@ Work aimed there lands in the guideline.
 
 ## Phase 3 — One deterministic measurement channel
 
-- [ ] **3.1 Produce `token_violation` from a detector, not from judgement.**
+- [x] **3.1 Produce `token_violation` from a detector, not from judgement.**
       Wire a deterministic check that emits the kind `.../directives/ui/polish.ts:31`
       already declares and `:191` already classifies. Scope it to the narrowest
       dimension that survives 2.3 — a raw literal where the audit found a token
       is the candidate, because `src/skills/design-tokens/SKILL.md:43-44`
       already names it and the consumer already exists.
-      verify: on a seeded raw-literal fixture the detector emits at least one
-      `token_violation` finding, and on its paired clean fixture it emits zero.
-- [ ] **3.2 Keep the prose channel and say which is which.**
+      verify (discharged): on the seeded raw-literal fixture
+      (`tests/design-artifacts/fixtures/token-detector/seeded-raw-literal.json`) the
+      detector emits **2** `token_violation` findings; on its paired clean fixture
+      (`.../clean.json`) it emits **0**. `npx vitest run
+      tests/scripts/work_engine/directives_ui_token_detector.test.ts` → **14/14**.
+      **Both halves hold.**
+
+      **The step's premise was wrong and the correction shrank the work.** 3.1 says
+      "wire a deterministic check"; W4 says `token_violation` is "never produced by a
+      detector". A producer already exists:
+      `src/skills/design-tokens/scripts/tokens.ts:415` (`scanFile`) emits
+      `kind: 'token_violation'` per raw hex / rgb / px / rem literal, and
+      `src/skills/design-tokens/SKILL.md:79` documents it and says to wire it into
+      review/polish. **Nothing did.** So no detector was written — the two existing
+      halves were connected, which is what "wire" asked for and what the Phase 1
+      inventory (row A6) predicted.
+
+      **Red first, against unmodified code.** The test and both fixtures were committed
+      before the implementation and run against HEAD's `review.ts`, verbatim:
+
+      ```
+      × the seeded raw-literal fixture emits at least one token_violation
+        AssertionError: expected 0 to be greater than or equal to 1
+      × F4-unscoped: only values the audit holds a token for are emitted
+        AssertionError: expected [] to deeply equal [ '#2563EB', '12px' ]
+      × every emitted finding names the audit category the value was found in
+        AssertionError: expected undefined to be 'color'
+      × a detector finding carries the file:line it was measured at
+        AssertionError: expected undefined to be 'src/components/Button.tsx'
+      × emitting a finding takes the review off clean
+        AssertionError: expected true to be false
+      × a judgement finding already in the envelope keeps its own channel
+        AssertionError: expected Set{ 'judgement' } to deeply equal Set{ 'judgement', 'detector' }
+      × one detector-produced token_violation opens a polish round
+        AssertionError: expected 'success' not to be 'success'
+      Tests  7 failed | 7 passed (14)
+      ```
+
+      **The wiring copies the a11y shape rather than inventing one.**
+      `review.ts:349` (`_synthesize_a11y_findings`) already turns a raw
+      `state.ui_review.a11y.violations` envelope into deduped findings and sets
+      `review_clean = false`. `_synthesize_token_findings` is the same move over
+      `state.ui_review.tokens.violations`, deduped by `(file, line, value)`, called from
+      `run()` beside the a11y gate. No new halt, no new `AMBIGUITIES` entry, no gating
+      mechanism beside the existing one.
+
+      **Scope is the pre-registered dimension, enforced by a shared predicate.** The
+      dimension is *a raw literal **where the audit found a token***, so
+      `_audit_token_category` emits only values some `state.ui_audit.design_tokens`
+      bucket holds — tested with `Object.values(bucket).includes(value)`, byte-for-byte
+      the predicate `polish._classify_token_violations` uses at `:418`. Two consequences,
+      both deliberate: the seeded fixture's third violation (`#FF00AA`, in no bucket) is
+      **not** emitted, which is `F4-unscoped` held rather than merely declared; and every
+      detector finding classifies as `matched` downstream, so **the detector channel can
+      never trip the token-extraction halt**. The unscoped claim stays with the judgement
+      channel, where Phase 1 classified it (row A7, `unmeasurable`).
+
+      **Sabotage-proven.** Removing the membership test from `_audit_token_category` —
+      the one line that makes the detector scoped — takes **4** assertions red: *the
+      paired clean fixture emits zero*, *F4-unscoped*, *every emitted finding names the
+      audit category*, *the clean fixture stays clean*. Restored, 14/14. The clean
+      fixture is not decoration: it is the assertion that fails when the detector becomes
+      the wider claim.
+
+      **Own analysis, no external shape.** Per `b-detector-license-verification` option
+      (b): the predicate is this tree's own token model, the synthesis mirrors this
+      tree's own a11y function, and nothing is added to `provenance/borrows.jsonl` —
+      that absence is the decision, not an omission.
+
+      Regression: `npx vitest run tests/scripts/work_engine/` → **800 passed (89 files)**,
+      and `npx tsc --noEmit` is clean.
+
+- [x] **3.2 Keep the prose channel and say which is which.**
       `src/skills/tailwind-engineer/SKILL.md:105,110` stays as the judgement
       layer; the detector is additive. A finding must record which channel
       produced it.
-      verify: `grep -n 'arbitrary values' src/skills/tailwind-engineer/SKILL.md`
-      still returns both lines unchanged after the phase lands.
-- [ ] **3.3 Record the nulls as nulls.** Any dimension whose 2.3 falsifier fired
+      verify (discharged): `grep -n 'arbitrary values' src/skills/tailwind-engineer/SKILL.md`
+      returns **four** lines including both cited ones (`:105`, `:110`), and the stronger
+      form of the same claim also holds — `diff` against `git show HEAD:` on that file is
+      **empty, byte-identical**. **The prose channel is untouched.**
+
+      **The verify as written would pass on a file this phase had rewritten**, since a
+      `grep -n` for a phrase says nothing about the lines around it. So it is discharged
+      by the byte-diff instead, which is what "unchanged after the phase lands" means. The
+      grep is reported too because the step asked for it; it is the weaker of the two.
+
+      **The channel field is on the finding, and both values are named in one place.**
+      `review.ts` now exports `DETECTOR_CHANNEL = 'detector'` and
+      `JUDGEMENT_CHANNEL = 'judgement'`, and every synthesized finding carries
+      `channel: 'detector'`. Two assertions pin the split: a detector finding declares
+      `detector`, and a judgement finding **already in the envelope keeps its own
+      `channel` untouched** while the detector appends beside it — the run yields
+      `Set{'judgement','detector'}`, which is additivity measured rather than asserted.
+
+      **A finding carrying no `channel` at all is treated as judgement**, stated in the
+      `JUDGEMENT_CHANNEL` doc comment. That is the safe direction and it is why nothing
+      downstream had to change: every finding that existed before this phase reads as
+      judgement, which is what it was.
+
+      **Why the prose channel is kept rather than tolerated.** Phase 1 classified the
+      claim it carries — *an arbitrary value cites its design source* — as row A7,
+      `unmeasurable`: a detector sees the value and cannot see whether the sentence beside
+      it is true. The prose channel survives because it is the only channel that can carry
+      that claim, not as a courtesy to existing text.
+
+- [x] **3.3 Record the nulls as nulls.** Any dimension whose 2.3 falsifier fired
       is removed from the matrix in this phase with one line saying which
       falsifier fired. An unshipped dimension with no null recorded is the
       failure this step exists to catch.
-      verify: the count of dimensions in the Phase 2 schema equals shipped
-      dimensions plus recorded nulls, checked by reading both artefacts.
+      verify (discharged): the count identity holds, read off both artefacts by script
+      rather than by eye — the sheet at
+      `agents/evidence/analysis/frontend-fidelity-measurement-sheet.json` declares **4**
+      dimensions; **2 shipped** (`token-literal`, `viewport-floor`, each carrying >= 1
+      measured row) **+ 2 recorded nulls** (`render-diff`, `reduced-motion-alternative`)
+      **= 4**. **Equal.**
+
+      **The nulls are the deliverable here, and each names one falsifier.**
+
+      - `render-diff` → **`F0-uncapturable`**, covering claims **A4, A9, A10, A11**. This
+        is the `b-page-capture-primitive` class, resolved 2026-08-23 to option (b).
+      - `reduced-motion-alternative` → **`F2-inert`**, covering claim **A12**. The only
+        obtainable number is a presence count, and no finding about the *claim* can be
+        derived from it.
+
+      Both carry the four required fields — falsifier · unavailable capability · affected
+      claims · reopening condition — because the schema **requires** them when
+      `status: "null"`. The `affected_claims` enumeration is the part that discharges the
+      obligation the `b-page-capture-primitive` resolution wrote down: *a null that does
+      not enumerate what it covers is indistinguishable from a matrix that never had
+      those rows.*
+
+      **The prediction recorded in 2.3 was half right, and the miss is recorded rather
+      than smoothed over.** It said *exactly one* dimension ships. Two did:
+      `token-literal` as predicted, and `viewport-floor` — which 2.3 itself described as
+      resolving to "a coverage fix and not a measurement". Both readings are defensible
+      and the sheet takes the stricter one: `viewport-floor` is `shipped` because it
+      carries a real row whose `observed` value is read off a file and is stable across
+      reads, with a `_note` on the dimension saying plainly it is a documented set and
+      **not** a runtime number. Recording it as a null would have been the easier way to
+      match the prediction, and would have claimed less than is true.
+
+      **The F4-unscoped case is a row, not an omission.** `#FF00AA` sits in the sheet with
+      `status: "unspecified"` and `expectation_source.kind: "agent_inference"` — the
+      detector emits nothing for it and the clean fixture asserts that. A scoped detector
+      and a silent one differ exactly here: `expected: null` says no source specifies a
+      value, so there is nothing to deviate from.
+
+      **Validated against the schema, with negative controls.** `ajv` compiles
+      `fidelity-measurement-sheet.schema.json` and reports the instance **valid: true**.
+      Two deliberate corruptions prove the validation has teeth rather than passing
+      everything: deleting `reopening_condition` from a `null_record` → **false**; setting
+      `expectation_source.kind` to `"vibes"` → **false**. A schema that accepted both
+      would have made the count identity above unfalsifiable.
 
 ## Phase 4 — The preservation gate
 
-- [ ] **4.1 The strict path stays byte-for-byte today's Iron Law.** The
+- [x] **4.1 The strict path stays byte-for-byte today's Iron Law.** The
       measurement channel may add findings; it may not soften
       `src/rules/design-fidelity.md:101`. Prove it by diff, not by argument.
-      verify: `git show HEAD:src/rules/design-fidelity.md | sed -n '99,103p'`
-      and the working-tree equivalent are identical — that range is the mode
-      table, header row included.
-- [ ] **4.2 Every pre-existing `daf-*` fixture still scores the same.** A
+      verify (discharged): proven by diff, in the strongest available form.
+      `git show HEAD:src/rules/design-fidelity.md` and the working tree are
+      **byte-identical for the WHOLE FILE**, so the named range holds trivially. Reported
+      both ways: lines 99–103 identical, and lines 116–122 — the actual mode table, header
+      row included — identical. **No softening, and none possible: the file is untouched.**
+
+      **The step's line range no longer points at the mode table, and the discharge says
+      so rather than reporting a green from the wrong lines.** Phase 0 inserted the
+      § Two axes block above it, so `99,103` now lands on the `strict` gloss and the
+      artefact-not-prose clause; the mode table moved to **116–122**. A verify pinned to
+      absolute line numbers in a file the same roadmap edits is drift by construction —
+      recorded because the next reader of this range will hit the same thing.
+
+      The whole-file diff makes the distinction moot here, which is why it is the
+      evidence quoted: a range argument can be defeated by a range that moved, a
+      byte-identical file cannot.
+
+      **Risk #2 in the register is what this closes** — *"the strict path is softened
+      while nobody is looking"*. It could have been: Phase 3 adds a finding channel and
+      Phase 5 lets it drive a round, both one edit away from `:119`'s "Build 1:1". Neither
+      touched it. The measurement channel adds findings; it changes no mandate.
+
+- [x] **4.2 Every pre-existing `daf-*` fixture still scores the same.** A
       changed verdict on any id in the existing set is a regression until
       argued otherwise in this file. Take the pre-state id list from
       `git show HEAD` rather than from a number written here, which drifts.
-      verify: the `daf-*` fixture suite runs green with no id's expected verdict
-      edited — `git diff --stat` over the fixture expectations is empty.
+      verify (discharged): the pre-state id list is taken from `git show HEAD` rather than
+      from a number written anywhere — **50 ids** at HEAD, **52** in the working tree, and
+      the set difference is **exactly the two fixtures this branch adds** with
+      **nothing removed** (`comm -23` is empty). `git diff --stat` over the fixture
+      expectations (`tests/scripts/design_fidelity_routing.test.ts`,
+      `tests/design-artifacts/`) is **empty**. The four `daf-*`-bearing suites run
+      **121 passed**. **All three hold**: no pre-existing id lost, no expectation edited,
+      suite green.
+
+      **The register's "45 existing `daf-*` fixtures" is stale; the measured count is 50.**
+      Taken tree-wide across `src`, `docs` and `tests` at HEAD. This is exactly why the
+      step says to take the list from `git show HEAD` and not from a number written down —
+      the number had already drifted, and a verify that trusted it would have been
+      comparing against fiction.
+
+      **The first measurement of this step was WRONG, and the defect is recorded rather
+      than quietly corrected.** It reported 50 ids at HEAD and 50 in the working tree,
+      `diff` empty — and concluded the id set was unchanged. It is not: this branch adds
+      two. The bug was the probe, not the tree: `git grep` **without a ref searches only
+      TRACKED files**, and both new fixtures were still untracked, so the working-tree
+      side of the comparison silently omitted exactly the files the step exists to notice.
+      A probe that cannot see new files cannot detect a changed fixture set — it was
+      structurally incapable of failing.
+
+      Re-measured with a filesystem `grep -rhoE` over `src docs tests`: **50 → 52**, the
+      difference being `daf-token-detector-seeded` and `daf-token-detector-clean`, with
+      `comm -23` (removed) **empty**. That empty removal set is the assertion this step
+      actually wants: **no pre-existing `daf-*` id disappeared.** "The set is identical"
+      was never the right claim for a branch that adds fixtures; "nothing was lost and
+      nothing was re-scored" is.
+
+      **No expected verdict was edited.** The two additions are new fixture *files* under
+      `tests/design-artifacts/fixtures/token-detector/`; they add rows and re-score
+      nothing, which `git diff --stat` over the expectation files confirms as empty.
+
+      The four suites are `design_fidelity_routing` (29), `design_slop_vs_provided` (5),
+      `ui_lane_matrix` (63) and `provided_artifact_port` (24). 121 total, green, with no
+      expectation touched — the only honest way to say "still scores the same".
 
 ## Phase 5 — The improvement gate
 
-- [ ] **5.1 A measured delta drives a round.** The number from Phase 3 must be
+- [x] **5.1 A measured delta drives a round.** The number from Phase 3 must be
       able to open a polish round through the path `.../directives/ui/polish.ts:94-100`
       already implements, without a new gating mechanism beside it.
-      verify: a seeded fixture with one detector-produced `token_violation`
-      opens exactly one round; the same fixture with the finding marked
-      `artifact_covered: true` opens zero, exercising `:142`.
-- [ ] **5.2 The 320 px floor enters the measured set or is withdrawn.** Either
+      verify (discharged): the seeded fixture carrying detector-produced
+      `token_violation` findings opens **exactly one** round — `polish.run` returns a
+      non-`success` outcome, which is how the gate opens a round (it delegates to the
+      stack polish skill). The **same** fixture with every finding marked
+      `artifact_covered: true` returns `success` — **zero rounds** — exercising
+      `partition_artifact_covered` at `polish.ts:142`. **Both halves hold**, and both were
+      red before step 3.1 landed.
+
+      **No mechanism was added beside the existing one, which is the actual requirement.**
+      The detector's findings enter `state.ui_review.findings` in the review step and are
+      read by the polish gate through the path already at `polish.ts:94-100`. The diff to
+      `polish.ts` is **empty** — the file is byte-identical to HEAD. A measured number now
+      drives a round because it arrives in the shape the round-driver already consumed.
+
+      Four assertions pin it, and the middle two are the ones that matter:
+
+      - one detector finding → a round opens (`outcome !== 'success'`);
+      - the same finding marked `artifact_covered` → **zero** rounds, i.e. the
+        artifact-covered partition governs detector findings exactly as it governs
+        judgement findings. A detector that could force a round the provided artifact
+        already answers would be a fidelity regression wearing a measurement's clothes;
+      - `partition_artifact_covered` over the detector's own findings yields
+        `actionable: 0 / informational: 2` — the mechanism named directly, not inferred
+        from an outcome;
+      - `POLISH_CEILING` is still **2**. This phase adds findings, never rounds.
+
+      **Risk #1 in the register is what this closes** — *"a detector ships, emits findings,
+      and no gate or round is derived from them"*. The `F2-inert` falsifier is the
+      pre-registered form of the same risk, and for `token-literal` it did **not** fire:
+      that is why the dimension ships rather than joining the two nulls.
+
+- [x] **5.2 The 320 px floor enters the measured set or is withdrawn.** Either
       `src/skills/design-review/SKILL.md:84-86` gains the row that
       `src/skills/fe-design/SKILL.md:88,213` already asserts, or the assertion
       is downgraded to a heuristic in both places. Asserting an unmeasured
       floor is what this step closes.
-      verify: `grep -c '320' src/skills/design-review/SKILL.md` is non-zero, or
-      `grep -c '320 px actually works' src/skills/fe-design/SKILL.md` is zero.
-      Exactly one of the two.
+      verify (discharged): `grep -c '320' src/skills/design-review/SKILL.md` → **4**
+      (non-zero) and `grep -c '320 px actually works' src/skills/fe-design/SKILL.md` →
+      **1** (non-zero). **Exactly one of the two conditions is true**, which is what the
+      step requires: the first branch was taken, so the second must NOT hold.
+
+      **First branch: the measured set gains the row.** `src/skills/design-review/SKILL.md`
+      Phase 2 was "Test at three viewports" (1440 / 768 / 375); it is now four, with
+      `| Floor | 320px | Narrowest supported — the asserted floor |`. The heading count
+      was corrected with it — a table saying "three" above four rows is the same
+      assertion-drift defect in miniature.
+
+      **The downgrade branch was available and is the worse trade.** Deleting *"320 px
+      actually works"* from `fe-design:88` and *"every layout must work on 320px width"*
+      from `:213` would also discharge the step, and would remove a claim this suite is
+      right to make: 375px passing says nothing about 320px, which is exactly where a
+      two-column grid or a fixed `min-width` breaks. The cheaper edit would have cost the
+      claim; this one costs three lines of prose and keeps it.
+
+      Three sentences of rationale ship beside the row, pointing at `fe-design` as the
+      asserting file, so a reader who wonders why a fourth viewport appeared finds the
+      answer without this roadmap.
+
+      **What this is NOT, stated because 2.3 pre-registered the trap.** The
+      `viewport-floor` dimension resolves as a **coverage fix, not a runtime measurement**
+      — the pre-registration says so in advance, precisely so this step could not later
+      claim a detector it does not have. What is now true is narrower and checkable: the
+      asserted floor is in the set a reviewer is told to test. Whether any given surface
+      passes at 320px still needs a rendered page, and that half sits under
+      `b-page-capture-primitive` with the rest of its class.
+
+      `skill_linter --all` → 446 pass, 0 warn, 0 fail.
 
 ## Phase 6 — A bounded convergence loop in the ad-hoc path
 
-- [ ] **6.1 Give `fe-design`'s loop a declared round ceiling.** Step 5 at
+- [x] **6.1 Give `fe-design`'s loop a declared round ceiling.** Step 5 at
       `src/skills/fe-design/SKILL.md:68-71` becomes re-enterable with a stated
       maximum and a stated stop condition. The ceiling is a number in the text,
       not an implication.
-      verify: `grep -nE 'round|ceiling' src/skills/fe-design/SKILL.md` returns
-      a line stating the maximum, and the `ui-trivial` skip at `:30-32` is
-      unchanged.
-- [ ] **6.2 The loop terminates on a null too.** A round that produces no new
+      verify (discharged): `grep -nE 'round|ceiling' src/skills/fe-design/SKILL.md` returns
+      the maximum stated as a number, twice — `:72` *"at most **2 rounds**"* and `:80`
+      *"The ceiling is **2**"* — and the `ui-trivial` skip at `:30-32` is **byte-identical**
+      to `git show HEAD:` on that range. **Both hold.**
+
+      **Pre-state, measured before the edit: `grep -nE 'round|ceiling'` already returned 4
+      lines and not one stated a maximum** — all four were `grounded` / `grounding`
+      matching the substring `round`. That is worth recording because the verify as
+      written would have passed on the pre-state file: a `grep` for `round` was
+      non-empty before this step ran. It is discharged against the stronger reading — a
+      line stating *the maximum* — which is what the step's prose asks for.
+
+      Step 5 was *"Review — run design-review before calling it done"* and nothing
+      re-entered. It is now **"Review, then re-enter"**: findings → fix → re-enter step 5,
+      at most 2 rounds, and at the ceiling with findings still open the loop **hands the
+      remaining list back** — ship-as-is or abort is the user's call. *"Judgement alone
+      never buys a third round"* is the sentence that closes W5.
+
+      **The number is 2 because that is the number the engine already enforces**
+      (`directives/ui/polish.ts`, `POLISH_CEILING`), and the prose says so. A test asserts
+      the identity in both directions — the regex over the skill text **and**
+      `POLISH_CEILING === 2` — so the ad-hoc path and the ticketed path cannot drift into
+      two conventions. Picking a different number here would have been the cheaper edit
+      and would have created exactly that drift.
+
+      The `ui-trivial` skip is untouched by design: a ≤ 5-line change gaining a 2-round
+      convergence loop would be the over-application this skill's own escape hatch exists
+      to prevent.
+
+- [x] **6.2 The loop terminates on a null too.** A round that produces no new
       measured finding ends the loop; it does not license another pass on
       judgement alone.
-      verify: the stop condition is stated in the same paragraph as the
-      ceiling, and a fixture pair (one converging, one that would not) scores
-      both outcomes.
+      verify (discharged): the stop condition is in the **same paragraph** as the ceiling —
+      asserted mechanically, not by eye: the test splits the skill on blank lines, finds the
+      block containing `at most **2 rounds**`, and requires that same block to contain
+      `no new finding`. And the fixture pair scores **both** outcomes:
+      `daf-adhoc-converges` → `success` (loop ends), `daf-adhoc-ceiling` → **not**
+      `success` (hands back). **Both hold**; 19/19 in
+      `tests/scripts/work_engine/directives_ui_token_detector.test.ts`.
+
+      **"In the same paragraph" is asserted as a paragraph, which is the only reading that
+      cannot be satisfied by putting the two sentences four sections apart.** The
+      same-block test is what makes 6.2 a check rather than a claim.
+
+      The pair is scored **through `polish.run`**, the mechanism that already bounds the
+      ticketed loop — no parallel verifier was built for the ad-hoc path. That choice is
+      what makes the fixtures evidence for the prose: the converging fixture ends at
+      `review_clean` with zero findings and one round taken, and `polish.run` returns
+      `success` at `polish.ts:167`, which **is** the stop condition the paragraph states.
+      The ceiling fixture sits at `rounds: 2` with an open finding and does not return
+      success — a third pass is unavailable, not merely discouraged.
+
+      **A null round is defined and not left to inference.** The paragraph states that a
+      round producing **only** findings the provided artifact already covers produces no
+      new finding — which is `partition_artifact_covered` (`polish.ts:142`) read as a stop
+      rule rather than as a ceiling exemption. Without that sentence, an
+      artifact-covered-only round would look like progress and buy another pass.
+
+      **Sabotage-proven:** replacing the stop condition with *"and keep going until it
+      looks right"* takes the same-paragraph assertion **RED** (1 failed / 18 passed).
+      Restored, 19/19. The assertion is sensitive to exactly the regression it guards —
+      a ceiling with no stop condition beside it.
 
 ## Phase 7 — Verdict scoping when nothing can render
 

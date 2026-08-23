@@ -1,0 +1,21 @@
+{
+  "_fixture": "daf-adhoc-ceiling",
+  "_what": "The non-converging half. Two rounds taken — the stated ceiling — and a finding is still open. The loop must hand back rather than take a third pass on judgement.",
+  "_expect": "the loop hands back: polish does NOT return success, and the ceiling is not exceeded",
+  "stack": { "frontend": "react" },
+  "ui_audit": { "design_tokens": { "color": { "primary": "#2563EB" } } },
+  "ui_review": {
+    "review_clean": false,
+    "findings": [
+      {
+        "kind": "token_violation",
+        "channel": "detector",
+        "category": "color",
+        "value": "#2563EB",
+        "file": "src/components/Button.tsx",
+        "line": 12
+      }
+    ]
+  },
+  "ui_polish": { "rounds": 2 }
+}

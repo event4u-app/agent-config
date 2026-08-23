@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "_schema": "src/scripts/schemas/fidelity-measurement-sheet.schema.json",
+  "_what": "Phase 3 step 3.3 of road-to-frontend-fidelity-calibration. The instance that makes AC-3 checkable: every dimension the Phase 2 schema accounts for is either shipped with >=1 row or carries a four-field null_record naming the pre-registered falsifier that fired. Dimension ids and falsifier ids come from agents/evidence/analysis/frontend-fidelity-preregistered-falsifiers.md; claim ids (A1..A13) from frontend-fidelity-assertion-inventory.md.",
+  "surface": "this suite's own frontend surface (src/skills, src/rules, work_engine ui directives)",
+  "captured_at": "2026-08-23",
+  "dimensions": [
+    {
+      "id": "token-literal",
+      "status": "shipped",
+      "_note": "The one dimension the 2.3 prediction said would ship. Detector wired in step 3.1; scope enforced by the shared audit-membership predicate."
+    },
+    {
+      "id": "viewport-floor",
+      "status": "shipped",
+      "_note": "Shipped as a coverage measurement over a documented set, exactly as 2.3 pre-registered it — NOT as a runtime number. The rows below measure which widths the review is told to test, which is a fact about a file and is stable across reads."
+    },
+    {
+      "id": "render-diff",
+      "status": "null",
+      "null_record": {
+        "falsifier": "F0-uncapturable",
+        "unavailable_capability": "a page-reaching capture primitive on the host the fixtures run on — no browser driver, no headless capture, and no MCP browser tool is wired to the fixture harness here",
+        "affected_claims": ["A4", "A9", "A10", "A11"],
+        "reopening_condition": "a page-reaching capture primitive is confirmed available on the fixture host, at which point the render-dependent fixtures are un-skipped against it and this dimension returns to the matrix with real rows"
+      },
+      "_note": "Cut, with all four claims it covers enumerated. This is the dimension b-page-capture-primitive resolved (option b) and the reason F0-uncapturable had to be pre-registered: F1-F3 all presuppose a run that cannot be attempted."
+    },
+    {
+      "id": "reduced-motion-alternative",
+      "status": "null",
+      "null_record": {
+        "falsifier": "F2-inert",
+        "unavailable_capability": "any check that can see what a surface presents INSTEAD of motion — grep proves a prefers-reduced-motion block exists, never that the block presents an alternative rather than setting animation: none",
+        "affected_claims": ["A12"],
+        "reopening_condition": "a check exists that can read the declarations inside a prefers-reduced-motion block and distinguish a presented alternative from a suppression; step 9.3 closes the PROSE half of this gap and deliberately does not reopen the measurement half"
+      },
+      "_note": "Cut on the pre-registered falsifier, not on difficulty. The only obtainable number is a presence count, and no finding about the claim can be derived from it."
+    }
+  ],
+  "rows": [
+    {
+      "selector": "src/components/Button.tsx:12",
+      "dimension": "token-literal",
+      "expected": "var(--color-primary)",
+      "observed": "#2563EB",
+      "expectation_source": {
+        "kind": "design_token",
+        "ref": "state.ui_audit.design_tokens.color.primary"
+      },
+      "status": "deviation",
+      "_note": "From the seeded fixture tests/design-artifacts/fixtures/token-detector/seeded-raw-literal.json. In scope because the audit holds a token whose value is exactly this literal."
+    },
+    {
+      "selector": "src/components/Button.tsx:19",
+      "dimension": "token-literal",
+      "expected": "var(--spacing-md)",
+      "observed": "12px",
+      "expectation_source": {
+        "kind": "design_token",
+        "ref": "state.ui_audit.design_tokens.spacing.md"
+      },
+      "status": "deviation"
+    },
+    {
+      "selector": "src/components/Card.tsx:4",
+      "dimension": "token-literal",
+      "expected": null,
+      "observed": "#FF00AA",
+      "expectation_source": {
+        "kind": "agent_inference",
+        "ref": "no audit bucket holds this value — outside the pre-registered dimension"
+      },
+      "status": "unspecified",
+      "_note": "The F4-unscoped guard, recorded as a row rather than omitted. The detector does NOT emit a finding here, and the clean fixture asserts that. Recording it as `unspecified` is the difference between a scoped detector and a silent one: expected is null because no source specifies a value, so there is nothing to deviate from."
+    },
+    {
+      "selector": "src/skills/design-review/SKILL.md:82",
+      "dimension": "viewport-floor",
+      "expected": "320px present in the measured viewport set",
+      "observed": "1440px, 768px, 375px, 320px",
+      "expectation_source": {
+        "kind": "house_heuristic",
+        "ref": "src/skills/fe-design/SKILL.md:213 — \"every layout must work on 320px width\""
+      },
+      "status": "match",
+      "_note": "Post step 5.2. The pre-state observed value was `1440px, 768px, 375px` and this row was a deviation; the fix put the asserted floor into the set a reviewer is told to test."
+    },
+    {
+      "selector": "src/skills/design-review/SKILL.md:90",
+      "dimension": "render-diff",
+      "expected": "44x44px minimum touch target",
+      "observed": null,
+      "expectation_source": {
+        "kind": "house_heuristic",
+        "ref": "src/skills/design-review/SKILL.md:90"
+      },
+      "status": "unmeasured",
+      "blocker": "b-page-capture-primitive",
+      "_note": "A row rather than an absence, which is the whole point of the `unmeasured` status: a reader can tell a dimension that was blocked from one nobody thought of."
+    }
+  ]
+}
