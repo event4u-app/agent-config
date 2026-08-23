@@ -7,7 +7,7 @@ are excluded.
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (293)
+## Skills (292)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -146,7 +146,6 @@ are excluded.
 | skill | [`incident-commander`](../dist/agent-src/skills/incident-commander/SKILL.md) | official | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../dist/agent-src/skills/jira-integration/SKILL.md) | official | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../dist/agent-src/skills/jobs-events/SKILL.md) | official | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
-| skill | [`js-library-packaging`](../dist/agent-src/skills/js-library-packaging/SKILL.md) | official | Use when a JavaScript/TypeScript package is consumed by another package — exports map, peer vs. direct dependencies, files allow-list, and whether it should be built at all. |
 | skill | [`judge-artifact-completeness`](../dist/agent-src/skills/judge-artifact-completeness/SKILL.md) | official | When scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates. |
 | skill | [`judge-bug-hunter`](../dist/agent-src/skills/judge-bug-hunter/SKILL.md) | official | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
 | skill | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) | official | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
@@ -219,6 +218,7 @@ are excluded.
 | skill | [`php-service`](../dist/agent-src/skills/php-service/SKILL.md) | official | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`pipeline-strategy`](../dist/agent-src/skills/pipeline-strategy/SKILL.md) | official | Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'. |
 | skill | [`pixar-storyteller`](../dist/agent-src/skills/pixar-storyteller/SKILL.md) | official | Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director. |
+| skill | [`playbook-authoring`](../dist/agent-src/skills/playbook-authoring/SKILL.md) | official | Use when a repo has its own generators, scripts or turbo tasks and an agent reaches for a generic skill instead — derive a Playbook context (ADR-244) from the real config, graded by the tree. |
 | skill | [`playwright-architect`](../dist/agent-src/skills/playwright-architect/SKILL.md) | official | Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'. |
 | skill | [`playwright-testing`](../dist/agent-src/skills/playwright-testing/SKILL.md) | official | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../dist/agent-src/skills/po-discovery/SKILL.md) | official | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
@@ -286,7 +286,6 @@ are excluded.
 | skill | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) | official | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'. |
 | skill | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) | official | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../dist/agent-src/skills/standards-from-config/SKILL.md) | official | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
-| skill | [`storybook-workshop`](../dist/agent-src/skills/storybook-workshop/SKILL.md) | official | Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying. |
 | skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) | official | Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council). |
 | skill | [`supply-chain-intake`](../dist/agent-src/skills/supply-chain-intake/SKILL.md) | official | Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned |
 | skill | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) | official | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
@@ -321,7 +320,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (117)
+## Rules (118)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -403,6 +402,7 @@ are excluded.
 | rule | [`package-ci-checks`](../dist/agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../dist/agent-src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../dist/agent-src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
+| rule | [`playbook-precedence`](../dist/agent-src/rules/playbook-precedence.md) | auto | A repository's own playbook outranks a shipped skill for the same task — run its configured steps first, and treat an observed playbook as advisory |
 | rule | [`prefer-enums-over-literals`](../dist/agent-src/rules/prefer-enums-over-literals.md) | auto | Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after |
 | rule | [`preservation-guard`](../dist/agent-src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../dist/agent-src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |

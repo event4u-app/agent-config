@@ -1,0 +1,16 @@
+{
+  "name": "@org/monorepo-with-generator",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "new:package": "turbo gen workspace --type package",
+    "new:component": "turbo gen component",
+    "build": "turbo run build",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "@turbo/gen": "^2.0.0"
+  }
+}

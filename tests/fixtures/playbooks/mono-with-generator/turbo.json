@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "description": "Build every workspace in dependency order",
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "description": "Run each workspace's unit tests",
+      "dependsOn": ["build"]
+    }
+  }
+}
