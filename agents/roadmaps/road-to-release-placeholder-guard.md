@@ -5,7 +5,7 @@ execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-24
-estate_growth_exempt: "Charges +1 active_roadmaps and +2 open_blockers. Neither is new work entering the estate: both blockers existed in the stub and were invisible because check_estate_count excludes agents/roadmaps/stubs/ entirely, so the promotion made an existing obligation countable rather than creating one. That is the same direction the draft-status-ratchet-boundary stub argues for -- work moving INTO the measurement boundary, not out of it. The addition is warranted on measured recurrence rather than appetite: the marker has shipped in five releases, three of them still carry ten lines in the published CHANGELOG, the reviewer has raised it in eight rounds since 9.x, and the AI council step 1 that the stub was blocked on landed as 71e6adff9 without anyone noticing. Leaving it in stubs/ for a ninth round is the cost this claim buys out of."
+estate_growth_exempt: "Charges +1 active_roadmaps and +3 open_blockers. Two of the three blockers existed in the stub and were invisible because check_estate_count excludes agents/roadmaps/stubs/ entirely, so for those the promotion made an existing obligation countable rather than creating one -- the direction the draft-status-ratchet-boundary stub argues for. The third, b-promotion-offset-not-named, is genuinely new and is the honest cost of this promotion: it records that the 2026-08-23 council reopening condition asked for a NAMED one_in_one_out offset and this change supplies a self-issued claim instead. Warranted on measured recurrence rather than appetite: the marker has shipped in five releases, three still carry ten lines in the published CHANGELOG, the reviewer has raised it in eight rounds since 9.x, and on 2026-08-23 the archived parent recorded the promotion criteria as satisfied-and-waiting and declined to promote anyway -- the release shipped four more marker lines the next day."
 estate_offset_exempt: "Promoted out of stubs/ by the /analyze:inbox run of 2026-08-24. Un-stubbing is the documented promotion path, so the gate charges this as an addition; it carries no roadmap to retire against because nothing was archived in this change. The promotion is warranted on new evidence rather than on appetite: the marker has now shipped in five releases, the AI council's prescribed step 1 landed unnoticed, and the size-budget refusal that blocked the stub no longer applies to the destination the council named."
 ---
 # Road to a release-placeholder guard that fits the ratchet
@@ -52,13 +52,22 @@ The 12.1.0 round already wrote *"Ihr habt ja seit 9.x immer wieder Probleme mit
 `_auto-derived, rewrite before merge_` gehabt"*, tabulated it as *"weiterhin
 offen – inzwischen P0"*, and supplied the grep. This is not a new request.
 
-**3. The AI council already answered, and its step 1 has silently landed.**
+**3. The AI council already answered, its step 1 landed, and promotion was refused anyway.**
 `agents/runtime/council/responses/r-placeholder-guard-placement.md` — 2 members,
 2 rounds, both convergent on extraction. The openai seat's step list is the
 implementation plan, and step 1 reads *"Extract a coherent publication phase from
 `release.ts`, producing a net reduction there."*
 
-That extraction exists:
+That extraction exists — **and it was noticed.** An earlier draft of this section
+said it "landed unnoticed". That was wrong, and the correction matters because it
+changes what kind of failure this is:
+`archive/road-to-release-publication-integrity.md:162-168` records the landing,
+measures it at **−788 lines**, and states that *"the stub's promotion criteria are
+satisfied and waiting rather than unmet"* — dated **2026-08-23**, the day before
+14.11.0 shipped four more marker lines.
+
+So this was never a case of nobody looking. It was seen, measured, written down as
+ready, and **not promoted**.
 
 | Fact | Measured at HEAD `3cf0077d9` |
 |---|---|
@@ -75,6 +84,50 @@ the third outcome class in [`recurring-criticism`](../../src/rules/recurring-cri
 The assumption that broke is narrow and nameable — the stub said the guard could
 not be placed without growing an over-ceiling file, and the destination the
 council named now exists **under** the ceiling.
+
+**Why it was refused, and by whom.** `b-stub-promotion-authority` in that same
+archived roadmap is `Status: resolved`, resolved by an AI council on 2026-08-23,
+2/2 quorum, **split 1-1 on the first pass and converged on the second**. The
+losing argument is recorded because it is good: *"two shipped recurrences of the
+same defect establish concrete harm … and in an explicitly autonomous-authority
+context, prioritising policy adherence over defect remediation inverts the purpose
+of having autonomous authority at all."*
+
+The tiebreak both seats reached: *"promoting a stub is an estate decision this
+roadmap itself routes to the maintainer, and the estate runs a shrink-only ratchet
+with `one_in_one_out` — so promotion is growth requiring an offset **this run did
+not identify**."* And then, explicitly:
+
+> *The meta-question the first pass surfaced — **may an autonomous run override an
+> explicitly deferred estate decision?** — is precedent-setting and is not a drain
+> run's to settle. It is recorded here as an open finding for the maintainer
+> rather than answered.*
+
+**So the defect was not refused on its merits. It was refused at the estate
+ratchet, and the authority question was left to the maintainer.** That is the
+structural cause of the recurrence, and it is separable from anything the reviewer
+wrote.
+
+**The reopening condition, verbatim:** *"the maintainer promotes
+`stubs/road-to-release-placeholder-guard.md` and names a `one_in_one_out` offset,
+at which point Phase 2 is the implementation and its plan is already written."*
+
+### How this promotion stands against that condition — stated against itself
+
+Half met, half not, and the unmet half is the one the council reserved:
+
+- **Maintainer instruction: present.** The owner opened the run that promoted this
+  with *"Da waren kleine Punkte, denen ich zustimme und die wir endlich angehen
+  sollten"* — agreement plus an instruction to act. That is the promotion half.
+- **A named `one_in_one_out` offset: NOT supplied.** This file carries
+  `estate_offset_exempt`, a claim the run issues to itself, not an offset naming a
+  roadmap retired in exchange. The council asked for the second thing.
+
+Recorded rather than smoothed over, because the alternative is the exact failure
+this roadmap is about: an agent satisfying a gate's letter while the condition it
+encodes goes unmet. **If the maintainer wants the offset rather than the claim,
+this promotion is the thing to revert** — the plan below survives either way, and
+`b-promotion-offset-not-named` tracks it.
 
 **`release.ts` is still +524 over the ceiling**, so attempt 1's refusal stands for
 that file. What changed is that there is now somewhere else to put it.
@@ -164,25 +217,62 @@ was not written around an unbuilt prerequisite.
 
 ## Blockers
 
-### blocker: b-drill-fixture-isolation
+### blocker: b-drill-negative-case-missing
 
-- **What:** The sequencing drill returns the live `CHANGELOG.md`, so a correct
-  guard fails four scenarios that test something else entirely.
-- **Blocks:** 1.2 and 1.3 landing green.
-- **What to do:** Edit `tests/scripts/release_drill.test.ts` so the four
-  sequencing scenarios read a synthetic clean section instead of the live file,
-  and give `src/scripts/release_drill.ts` a fixture seam for the changelog it
-  returns (it references `CHANGELOG` in 3 places today). Then
-  `npx vitest run tests/scripts/release_drill.test.ts`. The council named this a
-  co-deliverable rather than a precondition — it is filed as a blocker because
-  attempt 2 died on it, and pretending otherwise is how attempt 3 would too.
+- **What:** CORRECTED 2026-08-24. An earlier version of this blocker said the
+  drill still returns the live `CHANGELOG.md`. It does not — that coupling was
+  removed, and `src/scripts/release_drill.ts:75-76` records the 2/2 council
+  decision *"in favour of controlled fixtures"* plus the sentence *"The drill USED
+  to return the live `CHANGELOG.md`"*. The clean fixture exists at `:116`, and
+  `:105` states it deliberately carries no marker. So attempt 2's cause is gone.
+  What is actually missing is the other half: `tests/scripts/release_drill.test.ts`
+  contains **0** marker-bearing cases, so nothing proves a refusal stops the
+  sequence.
+- **Blocks:** AC-3 only. It does **not** block 1.2 or 1.3, which was the earlier
+  version's error.
+- **What to do:** Add a marker-bearing case to
+  `tests/scripts/release_drill.test.ts` using the existing fixture seam in
+  `src/scripts/release_drill.ts` (see its `:105` note on why the shipped fixture
+  is deliberately marker-free), asserting that no irreversible command runs after
+  the refusal. Then `npx vitest run tests/scripts/release_drill.test.ts`.
 - **Owner:** agent.
-- **Recommendation:** land 2.1 before 1.2, inverting the phase order if needed.
-- **If you do nothing:** the guard is correct and CI is red, which reads as the
-  guard being wrong.
-- **Resolved when:** `tests/scripts/release_drill.test.ts` is green with the guard
-  active, its sequencing scenarios run on synthetic clean sections, and the new
-  marker-bearing case is demonstrated red when the guard is neutralised.
+- **Recommendation:** land it with 1.2, not before it — the ordering worry that produced the earlier version of this blocker no longer applies.
+- **If you do nothing:** the guard ships with no test proving it stops a
+  publication, which is the shape a later reader cannot distinguish from an
+  untested guard that does not.
+- **Resolved when:** `grep -c 'rewrite before merge' tests/scripts/release_drill.test.ts`
+  returns non-zero, that case passes with the guard active, and it is demonstrated
+  red when the guard is neutralised.
+- **Status:** open.
+
+### blocker: b-promotion-offset-not-named
+
+- **What:** The 2026-08-23 council reopening condition asks the maintainer to
+  promote this stub **and name a `one_in_one_out` offset**. This promotion carries
+  `estate_offset_exempt` — a claim the run issues to itself — instead of a named
+  offset. The promotion half has an owner instruction behind it; the offset half
+  does not.
+- **Blocks:** nothing in Phase 1 or 2. It is a governance record, not a technical
+  dependency, and the implementation is correct either way.
+- **What to do:** either name the roadmap retired in exchange (candidates: any
+  `agents/roadmaps/*.md` at `count_open == 0`, checked with
+  `./scripts-run src/scripts/roadmap_progress` or the dashboard), or record that
+  the owner accepts the self-issued claim for this one promotion. Reverting is
+  `git mv agents/roadmaps/road-to-release-placeholder-guard.md agents/roadmaps/stubs/`.
+- **Owner:** maintainer. The council recorded the underlying question — *may an
+  autonomous run override an explicitly deferred estate decision?* — as
+  precedent-setting and **not a drain run's to settle**, so an agent resolving
+  this one is the same overreach in miniature.
+- **Recommendation:** accept the claim for this promotion and treat the general
+  question separately, because the general question is the structural finding and
+  deserves its own decision rather than being settled as a side effect of one
+  release defect.
+- **If you do nothing:** the guard still gets built, and the precedent that an
+  autonomous run may self-issue an estate offset over a deferred decision stands
+  unexamined — which is the mechanism that produced eight rounds of this defect.
+- **Resolved when:** a named offset appears in this file's frontmatter, **or** an
+  owner decision is recorded here accepting the claim, **or** the promotion is
+  reverted.
 - **Status:** open.
 
 ### blocker: b-immutable-published-surfaces
