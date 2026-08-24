@@ -278,6 +278,33 @@ concerns:
   # or build if absent). Never blocks — Source G's strict block-first-read
   # mode is deliberately un-ported. Default-OFF (hooks.code_graph.enabled).
   # fail_closed: false.
+  # road-to-suggestion-block-capture Phase 2 — the capture instrument.
+  # TWO SLOTS, and the split is the whole design: `stop` reads
+  # `last_assistant_message` (a payload field, no transcript file read) to latch
+  # "a suggestion block was emitted"; `user_prompt_submit` CONSUMES that latch
+  # and classifies `prompt`. A live probe established both halves —
+  # agents/evidence/analysis/suggestion-capture-probe.md.
+  #
+  # The roadmap planned one slot reading the transcript tail. That works and is
+  # strictly more expensive: it reads a file on every turn and is blind on turn 1,
+  # where `transcript_path` is present but the file is not yet written.
+  #
+  # Consume-once is the correctness argument, not a detail: a bare "1" three turns
+  # later must never read as a pick, so the latch is deleted on read and a prompt
+  # with no latch classifies `other`. Past its TTL, or unparseable, it is
+  # `stale_block` — never a guess.
+  #
+  # Counts only. src/config/suggestion-capture.json registers five fields and none
+  # can hold free text; a test asserts the written key set equals that registry, so
+  # an added field fails rather than shipping quietly.
+  #
+  # Default-OFF (`hooks.suggestion_capture.enabled`). fail_closed: false and every
+  # path exits 0 — an instrument must never break the turn it is observing.
+  suggestion-capture:
+    script: src/scripts/hooks/suggestion_capture_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   code-graph-nudge:
     script: src/scripts/hooks/code_graph_nudge_hook.ts
     args: []
@@ -1036,8 +1063,8 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, run-continuation]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, run-continuation]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror, design-pass]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;

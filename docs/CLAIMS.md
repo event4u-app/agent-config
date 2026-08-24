@@ -731,6 +731,13 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified: 2026-08-22
 
+### claim: suggestion-capture-rate
+- claim: A hook-carried instrument records suggestion-block emissions and the user turns that answer them at a rate above zero, where the model-carried equivalent did not.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-24 (road-to-suggestion-block-capture Phase 1.2), BEFORE any capture code exists. BASELINE: the model-carried comparator is resolved and dead — `orchestration_record` captured 1 of 369 dispatches, and that figure "may not be cited for either direction" per its own entry, so it is the reason this instrument exists rather than a number this claim beats. THIS INSTRUMENT'S BASELINE IS ZERO BY CONSTRUCTION: the sink `agents/runtime/state/audit/suggestion-capture.jsonl` does not exist before the hook lands. METRIC: lines written to that sink divided by suggestion blocks emitted, where the denominator has a reading INDEPENDENT of the instrument under test — a contemporaneous emission log kept by the maintainer during the window. Without that independent denominator the instrument measures only itself and no rate is claimable. WINDOW: fourteen days, fixed in `src/config/suggestion-capture.json` before any capture code ran, because a window whose length is chosen after the numbers are in is a window chosen to produce a number. THRESHOLD FOR THE FIRST WINDOW: greater than zero and rising. Deliberately NOT a rate figure — a first window held to a high bar fails for reasons the measurement cannot separate from the instrument's own readability, so the only thing it can establish is that capture happens at all. FALSIFICATION: a window in which the maintainer's log records blocks emitted and the sink carries zero lines DROPS this claim and parks the three consumer roadmaps' resume conditions as unsatisfiable by this instrument. SCOPE, measured rather than assumed: the payload probe covered Claude Code only (`agents/evidence/analysis/suggestion-capture-probe.md`), so any figure is one host on one machine and generalises to neither the other five bound platforms nor another operator's traffic.
+- status: unbacked
+- last_verified: 2026-08-24
+
 ### claim: mcp-registered-server-standing-cost
 - claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 20-tool surface costs 3,886 tokens of it while the two-tool lite surface is capped at 600.
 - kind: quant

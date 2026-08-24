@@ -15505,6 +15505,11 @@ var settingsSchema = external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
       )
+    }).default({}),
+    suggestion_capture: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        'Suggestion-block capture (road-to-suggestion-block-capture Phase 2). Default off. Two slots: `stop` reads `last_assistant_message` \u2014 a payload field, so no transcript file is read \u2014 and latches that the assistant turn carried a numbered-options block; `user_prompt_submit` CONSUMES that latch and classifies the answering turn as option_n / as_is / other / stale_block. Consume-once is the correctness guard: the latch is deleted on read, so a bare "1" three turns later meets no latch and classifies `other`, and a latch past its TTL or unparseable is `stale_block` rather than a guess. Writes COUNTS ONLY to agents/runtime/state/audit/suggestion-capture.jsonl \u2014 the record type has no field able to hold a prompt, an option label or a command name, and a test asserts the written key set against src/config/suggestion-capture.json. Off by default because this is an INSTRUMENT rather than a feature: it exists so a capture rate can be measured on a maintainer workspace over a fixed soak window, and there is nothing in it for a consumer to gain.'
+      )
     }).default({})
     // `turn_end_gate` is deliberately ABSENT. The stop-slot turn-end gate is
     // always armed (2026-08-12) and has no settings surface: whether it

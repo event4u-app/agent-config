@@ -1,0 +1,28 @@
+{
+    "_comment": "Record schema for the suggestion-block capture instrument (road-to-suggestion-block-capture Phase 1.3). Registered BEFORE the hook exists, so the field set is a pre-commitment rather than a description of whatever the code ended up writing. COUNTS-ONLY BY CONSTRUCTION: there is no field able to hold free text — no prompt, no option label, no command name beyond the evidence class. That is the discipline dispatch-economy-metrics.json:27 fixes as 'a count derived from the result object, never its content', and it is the reason a privacy review here is a schema read rather than a scrubber audit. Every budget-shaped config in this tree carries owner and review_by per the budget-ownership lint.",
+    "schema_version": 1,
+    "registered_at": "2026-08-24",
+    "owner": "maintainer",
+    "review_by": "2027-08-24",
+    "sink": "agents/runtime/state/audit/suggestion-capture.jsonl",
+    "record_fields": {
+        "ts": "ISO-8601 UTC second precision. Not a duration and not a correlation key.",
+        "block_emitted": "boolean — the previous assistant turn matched the render signature.",
+        "options_count": "integer — how many numbered options the block carried. A COUNT of options, never their labels.",
+        "evidence_class": "enum: render-signature | latch-consumed | latch-stale | no-latch. WHY the classification was reachable, not what the turn said.",
+        "turn_classification": "enum: option_n | as_is | other | stale_block."
+    },
+    "classification_enum": ["option_n", "as_is", "other", "stale_block"],
+    "evidence_class_enum": ["render-signature", "latch-consumed", "latch-stale", "no-latch"],
+    "field_ban": {
+        "rule": "No record field may hold a prompt, an option label, a command name, a file path, or any other free-form string. The enums above are closed; a value outside them is a defect in the writer, not a new category.",
+        "why_a_ban_and_not_a_scrubber": "A scrubber can fail and leave content in the sink. A type with no field able to carry content cannot. Same reasoning as the telemetry engagement event, which was deliberately built with no payload/notes/extra key.",
+        "checked_by": "tests/scripts/suggestion_capture.test.ts asserts the written line's key set equals record_fields exactly, so an added field fails a test rather than shipping quietly."
+    },
+    "option_n_note": "`option_n` records THAT a numbered option was chosen and, via options_count, out of how many. It deliberately does NOT record WHICH number: the block's option order is content, and the capture-rate question this instrument exists to answer does not need it.",
+    "soak_window": {
+        "length_days": 14,
+        "fixed_at": "2026-08-24",
+        "why_fixed_before_the_window": "A window whose length is chosen after the numbers are in is a window chosen to produce a number. Fixed here, before any capture code ran, per the same pre-registration discipline hook-latency-budget.json records for itself."
+    }
+}
