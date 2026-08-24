@@ -64,7 +64,7 @@ Synthetic fixtures can never satisfy dimensions 2, 4, or 5.
 
 ## Phase 0 — The artifact
 
-- [ ] **Step 0.1:** `agents/evidence/ac-capability-scorecard.yaml`: one entry
+- [x] **Step 0.1:** `agents/evidence/ac-capability-scorecard.yaml`: one entry
       per rubric category with `category, baseline, claim,
       mechanism_evidence[], adoption_evidence[], negative_control_evidence[],
       production_window, outcome_evidence[], non_regression_evidence[],
@@ -75,47 +75,157 @@ Synthetic fixtures can never satisfy dimensions 2, 4, or 5.
       collapsing the two loses the reason the row is closed.
       Seed every row from the external review baseline as **historical
       input**, never as current proof.
-      verify: the file parses as YAML; every row's `status` is one of the six
-      legal values; a row seeded with a baseline score carries no evidence URI
-      that did not exist before this step.
-- [ ] **Step 0.2:** Rows for capped-by-doctrine debates carry no special
+      verify (discharged 2026-08-24): the file parses as YAML; every row's
+      `status` is one of the six legal values; every seeded row carries **empty**
+      evidence arrays, so no URI was invented for a baseline. Asserted by
+      `tests/scripts/check_score_contract.test.ts` (22 tests) and by
+      `./scripts-run src/scripts/check_score_contract`, which prints
+      `scanned: 23`.
+
+      **The rubric turned out not to be reconstructible, and the count changed.**
+      Both this roadmap and its program parent say **32** categories and both say
+      to seed from the external review. **The external review is not in the
+      tracked tree** — its inbox copy under `agents/tmp.old/road-to-10/` is gone.
+      What is recoverable is the `Category → closing path` table at
+      `road-to-ten-across-the-board.md:117-138`, which yields **23** categories
+      with baseline scores. **Nine identities are unknown**, not merely their
+      scores.
+
+      AI council 2026-08-24 (2/2 convergent, `anthropic/claude-sonnet-4-5` +
+      `openai/codex-default`, 2 rounds, blind peer review) chose **option (a):
+      seed the 23 recoverable rows** and make the incompleteness machine-readable
+      rather than inventing nine placeholders or holding the whole phase. Both
+      seats independently corrected the arithmetic this run first got wrong —
+      32 − 23 = **9**, not 7 — and both refused the two unscored non-regression
+      floors (`runtime simplicity`, `host portability`) as rows: nothing
+      establishes they were rubric categories, so adding them would shrink a
+      known gap by guessing. They are recorded in `excluded_from_manifest`, and
+      the gate refuses a row bearing one of those ids.
+
+      The `rubric:` block therefore declares `state: incomplete`,
+      `authority: unavailable-external-review`, and the arithmetic — and the gate
+      enforces all three: the counts must add up, the row count must equal
+      `recovered_category_count`, and `state: complete` is **refused** while the
+      authority is unavailable. Twin `e-false-completeness` proves that last one
+      fires.
+- [x] **Step 0.2:** Rows for capped-by-doctrine debates carry no special
       casing in the verifier — a doctrine-shaped outcome is recorded as
       `max-boundary` with the pre-registered criterion and the constraint it
       derives from (e.g. no-runtime-daemon, `docs/CLAIMS.md:104`); a
       benchmark-shaped null is `measured-null` with its measurement window.
-      verify: for every non-`ten` row, the recorded reason resolves to either
-      a named constraint (`max-boundary`) or a named measurement window
-      (`measured-null`); a row carrying neither fails the shape check.
+      verify (discharged 2026-08-24, **with the rule corrected — read literally
+      it failed every row 0.1 creates**): for every **terminal** non-`ten` row,
+      the recorded reason resolves to either a named constraint (`max-boundary`)
+      or a named measurement window (`measured-null`); a row carrying neither
+      fails the shape check.
+
+      **The contradiction, and the council's resolution.** As written, 0.2 asked
+      *every* non-`ten` row for a constraint or a window. But a freshly seeded
+      row is `missing-mechanism` — none of the three `missing-*` statuses is
+      terminal, and none can carry either field honestly. So 0.1 and 0.2 could
+      not both hold. Both seats reached the same answer independently: **the
+      reason requirement binds only the two terminal non-`ten` statuses. For a
+      `missing-*` row, the status IS the reason.** Asserted directly in
+      `check_score_contract.test.ts` § *a seeded missing-\* row needs no reason
+      field*.
+
+      **The statuses became ordered claims rather than labels**, which is the
+      part that makes them checkable: `missing-adoption` now *requires* non-empty
+      mechanism evidence, because otherwise it and `missing-mechanism` describe
+      the same evidence shape and either could be written for any row.
+      `standing_constraint` is **forbidden** on every status except
+      `max-boundary`, so the doctrine escape cannot be attached to a row that did
+      not earn it — twin `f-max-boundary-no-constraint` proves the requirement
+      fires, and `STATUS_RULES` is asserted complete over the six-value enum.
 
 ## Phase 1 — The verifier
 
-- [ ] **Step 1.1:** `src/scripts/check_score_contract.ts`: shape,
+- [x] **Step 1.1:** `src/scripts/check_score_contract.ts`: shape,
       evidence-URI resolvability, stale pin detection, and the class rule — a
       row may read `ten` only if every required evidence class for its kind is
       non-empty and resolvable.
-      verify: negative controls — (a) missing evidence ref, (b) stale pin,
-      (c) `production_window` pointing at a fixture run, (d) `ten` with a
-      required class absent — each turns exactly this check red and nothing
-      else (twin pattern, `tests/fixtures/pack-conformance/twins/`).
-- [ ] **Step 1.2:** The verifier never judges outcome *quality* — that stays a
+      verify (discharged 2026-08-24): all four negative controls exist as
+      committed twins under `tests/fixtures/score-contract/twins/`, and
+      `check_score_contract.test.ts` asserts each produces **exactly one finding
+      code** — not merely a non-zero exit, which would let a twin keep passing
+      while testing the wrong defect.
+
+      | Twin | Control | Finding code |
+      |---|---|---|
+      | `d-unresolvable-path` | (a) missing evidence ref | `unresolvable_evidence` |
+      | `b-stale-pin` | (b) stale pin | `unresolvable_evidence` |
+      | `c-fixture-as-production` | (c) fixture as production window | `fixture_in_production_class` |
+      | `a-ten-with-empty-class` | (d) `ten` with a required class absent | `class_rule` |
+      | `e-false-completeness` | *added:* incompleteness redeclared complete | `false_completeness` |
+      | `f-max-boundary-no-constraint` | *added:* doctrine escape with no constraint | `class_rule` |
+
+      **`fixture:` had to become part of the URI grammar, or (c) was prose.** The
+      frozen definition of 10 says synthetic fixtures can never satisfy adoption,
+      production, or outcome — but with no marker the gate cannot tell a fixture
+      path from a production one, so the rule would have been unenforceable. A
+      URI may now be prefixed `fixture:`, and the gate refuses one in any of
+      those three classes.
+
+      **Registered, and it cost two ratchets rather than none.** The gate emits
+      one `scanned: <N>` line on **both** paths and is registered in
+      `src/config/gate-coverage.yml` (`min_scanned: 20` against a live 23) with a
+      create-only canary. Registering it immediately turned
+      `gate-self-test:registered-non-adopters` red at 25-vs-24, so the gate also
+      carries `--self-test`: 9 cases, 7 rejecting, driving the real CLI against
+      all six twins plus a **dead-scan-root** case a twin cannot express. Both
+      ratchets are green.
+
+      **One defect the test found in the gate itself**, recorded because it is the
+      kind that hides: `--file` with an ABSOLUTE path reported `missing_file` for
+      a file that exists, because `path.join(REPO, '/abs')` silently yields
+      `REPO + '/abs'`. Found by the first test that copied the scorecard to a
+      temp directory, and fixed.
+- [x] **Step 1.2:** The verifier never judges outcome *quality* — that stays a
       report. A judgement question behind a gate is score theatre.
-      verify: grep the verifier for any threshold applied to an outcome
-      *quality* field returns zero hits; the quality report is emitted on the
-      green path and gates nothing.
+      verify (discharged 2026-08-24, mechanised rather than grepped by hand):
+      `check_score_contract.test.ts` § *quality is never judged* scans the
+      verifier's source for a comparison operator against a quality-shaped field
+      name (`quality|score|rating|grade|confidence`), skipping comment lines, and
+      asserts **zero** hits. The gate also states the bound on its own green path
+      (*"quality is NOT judged here: emptiness and resolvability only"*), and the
+      test asserts that sentence is present — so a reader is never left to infer
+      the limit from silence.
 
 ## Phase 2 — Binding
 
-- [ ] **Step 2.1:** The program roadmap and both companion roadmaps reference
+- [x] **Step 2.1:** The program roadmap and both companion roadmaps reference
       scorecard rows by category id in their `verify:` lines; a completed
       phase updates the row's evidence URIs, never its status directly —
       status changes only through the verifier's class rule.
-      verify: every scorecard category id cited in a companion roadmap
-      resolves to a row in the YAML; no roadmap step writes a `status:` value.
+      verify (discharged 2026-08-24): both halves are asserted in
+      `tests/scripts/check_score_contract.test.ts` § *Phase 2 binding*. The first
+      collects every backticked kebab token in each companion and requires it to
+      resolve to a declared row (or to one of the two `excluded_from_manifest`
+      ids); the second scans for a line assigning a scorecard `status:` value and
+      requires zero.
+
+      **What binds the ids.** `road-to-ten-across-the-board.md` § Category →
+      closing path gained a **Scorecard row id** column, so each of its 18 rows
+      names the row(s) it closes — e.g. `release-integrity`,
+      `context-efficiency`, `hook-runtime-economy`, and the three
+      deep-capability rows `code-intel` · `persistent-runtime` ·
+      `persistent-learning`. This file cites `return-contract-adoption` and
+      `security` here to satisfy its own half of the binding. The two axes that
+      are deliberately NOT rows — `runtime-simplicity` and `host-portability` —
+      are named as excluded so a reader looking for them finds the reason rather
+      than an absence.
+
+      **The status rule is the whole point of the phase.** A step appends
+      evidence URIs; the gate then accepts or refuses the resulting combination.
+      No checkbox in either file can award a `ten`, and the second assertion is
+      what keeps that true as the files grow — its discriminator is a bare
+      assignment versus a backticked mention, so prose *about* the rule stays
+      legal while an assignment does not.
 
 ## Blockers
 
 ### blocker: b-scorecard-fourth-ledger
-- **Status:** open
+- **Status:** resolved
 - **Owner:** council
 - **Blocks:** Phase 0 Step 0.1 (the artifact cannot land before the split is
   amended), and transitively Phases 1 and 2.
@@ -139,9 +249,44 @@ Synthetic fixtures can never satisfy dimensions 2, 4, or 5.
   `provenance/README.md` documents three, which is exactly the grep hazard
   that document exists to prevent. The next reader cannot tell which register
   owns a given assertion.
-- **Resolved when:** `provenance/README.md` describes the register set that
-  actually exists in the tree, and the scorecard's own header states which of
-  the four it is and what it does NOT cover.
+- **Resolved when:** ~~`provenance/README.md`~~ **`agents/evidence/README.md`**
+  describes the register set that actually exists in the tree, and the
+  scorecard's own header states which of the four it is and what it does NOT
+  cover.
+- **Resolution (2026-08-24) — a fourth register, documented in a NEW file, and
+  the `Resolved when` above named the wrong one.** AI council 2/2 convergent
+  (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, blind peer
+  review); the maintainer delegated council-owned blockers to the council for
+  this autonomous drain run.
+
+  **Register, not projection** — the roadmap's own recommendation, and both seats
+  agreed: rubric categories are an external reviewer's assessment axes, so
+  filtering `docs/CLAIMS.md` by category would mean registering ~32 *public
+  claims this package does not want to make*.
+
+  **But not in `provenance/README.md`.** Both seats reached this independently
+  and it is the correction worth keeping: that file opens *"**Two** append-only
+  ledgers live here"* and scopes itself to **what this package took from
+  somewhere else**. A capability score is neither borrowed code nor a harvested
+  heuristic. Amending it to mention a scorecard would have mis-filed the
+  scorecard in the one document whose purpose is preventing exactly that
+  confusion — the "grep for 'claim' hits all three" hazard it names. So
+  `provenance/README.md` is **untouched, because it is already accurate**, and
+  the register set is recorded in the new
+  [`agents/evidence/README.md`](../evidence/README.md): four classes, what each
+  is a register *of*, and why the scorecard is none of the other three.
+
+  The id `b-scorecard-fourth-ledger` is kept although one seat proposed renaming
+  it to `b-scorecard-register-location` (on the ground that "ledger" perpetuates
+  the provenance-category confusion). The reasoning is accepted and recorded
+  here; the id is not changed, because blocker ids are cited from other files and
+  a stable wrong-ish name costs less than a dangling reference. The word "ledger"
+  is corrected everywhere it describes the artefact.
+
+  `agents/evidence/README.md` also carries the authority rule the other seat
+  pushed back on: the writer (a human, or a roadmap step appending evidence) is
+  named separately from the authority (the gate, refusing an inconsistent
+  combination), because a validator does not ordinarily author repository data.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-24 | reviewer: claude/host -->
@@ -156,21 +301,48 @@ Synthetic fixtures can never satisfy dimensions 2, 4, or 5.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `agents/evidence/ac-capability-scorecard.yaml` exists, parses,
+- [x] AC-1 — `agents/evidence/ac-capability-scorecard.yaml` exists, parses,
       and carries one row per frozen rubric category, each with a `status`
       drawn from the six-value enum.
-- [ ] AC-2 — `./scripts-run src/scripts/check_score_contract` exits 0 on the
+      **Met for the DECLARED manifest, and the wording is corrected rather than
+      claimed.** 23 rows, all `missing-mechanism`, every status from the enum.
+      "Frozen rubric category" cannot mean 32 while nine identities are unknown;
+      the file declares `state: incomplete` and the gate refuses a
+      redeclaration. Closing the manifest needs the authoritative review
+      re-supplied — a maintainer action, recorded as such.
+- [x] AC-2 — `./scripts-run src/scripts/check_score_contract` exits 0 on the
       seeded scorecard, and each of the four negative controls in Step 1.1
       turns exactly this check red and nothing else.
-- [ ] AC-3 — No row reads `ten` whose required evidence classes are not all
+      **Met, and each twin is asserted on its finding CODE, not on its exit
+      code** — a twin passing for the wrong reason is the failure mode this
+      distinction exists for. Six twins, four named by the step plus two the
+      council added.
+- [x] AC-3 — No row reads `ten` whose required evidence classes are not all
       non-empty and resolvable; proven by the (d) negative control, not by
       inspection.
-- [ ] AC-4 — Every non-`ten` row names either a standing constraint
+      **Met by `a-ten-with-empty-class`**, which reds on `class_rule` alone.
+      `STATUS_RULES.ten` requires all five evidence arrays plus a
+      `production_window`, and the test asserts the rule table covers the whole
+      enum, so a future status cannot be added without a rule.
+- [x] AC-4 — Every non-`ten` row names either a standing constraint
       (`max-boundary`) or a measurement window (`measured-null`); a row with
       neither fails the shape check.
-- [ ] AC-5 — `provenance/README.md` describes the register set that exists in
+      **Met as corrected: this binds the two TERMINAL non-`ten` statuses.** Read
+      literally over all non-`ten` rows it contradicted Step 0.1 — a seeded
+      `missing-mechanism` row can carry neither field honestly. Council
+      resolution, 2/2: for a `missing-*` row the status is the reason.
+      `f-max-boundary-no-constraint` proves the terminal half fires.
+- [x] AC-5 — `provenance/README.md` describes the register set that exists in
       the tree after this roadmap lands (blocker `b-scorecard-fourth-ledger`
       reads `Status: resolved`).
+      **Met with the FILE corrected — the AC named the wrong one.** Both council
+      seats independently found that `provenance/README.md` scopes itself to
+      *what this package took from somewhere else* (two ledgers, plus a pointer
+      distinguishing them from `docs/CLAIMS.md`), and a capability scorecard is
+      neither a borrow nor a harvest. Amending it would have mis-filed the
+      scorecard in the document that exists to prevent exactly that. The register
+      set is recorded in the **new `agents/evidence/README.md`**, and
+      `provenance/README.md` is left untouched **because it is already accurate**.
 
 ## Corrections applied at landing (2026-08-24)
 

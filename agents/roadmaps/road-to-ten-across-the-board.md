@@ -24,15 +24,29 @@ pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 
 ## Goal
 
-Every rubric category of the external 32-category review reaches `ten`,
-`measured-null`, or `max-boundary` in
-`agents/evidence/ac-capability-scorecard.yaml` under the six-dimension <!-- ref-ignore --> <!-- produced by road-to-score-contract.md, this run -->
-definition frozen in `road-to-score-contract.md` — with no existing 10
+Every rubric category **in the declared manifest** of
+`agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or
+`max-boundary` under the six-dimension definition frozen in
+`road-to-score-contract.md` — with no existing 10
 regressed, no aggregate averaging, and no mechanism shipped only to satisfy a
 rubric row. The v1 "doctrine caps" are withdrawn: a pre-registered **measured
 no-build null is itself a terminal 10-eligible state**, which protects the same
 constraints (no daemon, no graph monolith) without freezing a judgement as a
 ceiling.
+
+**"32 categories" is a reported figure, not a manifest this tree holds.** The
+external review is not in the tracked tree and its inbox copy is gone. **23**
+categories with baseline scores are recoverable — from § Category → closing path
+below, which is the recovery source the scorecard names — and **nine identities
+are unknown**, not merely their scores. The scorecard therefore declares
+`state: incomplete` with `authority: unavailable-external-review`, and
+`check_score_contract` **refuses** a redeclaration to `complete` while that
+holds. So every "all 32" dependency in this file reads *all rows in the declared
+manifest*; closing the manifest needs the authoritative review re-supplied, which
+is a maintainer action and not a step here. AI council 2026-08-24, 2/2 convergent
+— both seats also corrected the arithmetic the executing run first got wrong
+(32 − 23 = 9, not 7) and refused to add `runtime simplicity` / `host portability`
+as rows, since nothing establishes they were rubric categories.
 
 ## Non-negotiable invariants (merged)
 
@@ -111,33 +125,45 @@ survive; what survives is the narrower D3 above.
 
 ## Category → closing path (deduped against the live tree)
 
-| Category (score) | Closing path | Track |
-|---|---|---|
-| Return-contract adoption (7.5) | Finalizer v2 Phases 0–2 (envelope-DROP adjudication → producer repair → multi-machine window) | W1 |
-| Outcome attribution (8.0) | Finalizer v2 Phases 3–4 | W1 |
-| Requirements traceability (8.5) | Extend shipped minimal mechanic with completion reconciliation — rides the finalizer record (D10); **no parallel ledger** | W1 |
-| Release integrity (9.2) | Promote placeholder-guard stub; guard all 8 transitions incl. `--resume`; no historical-section scan (D1) | W1 |
-| Return delivery (9.5) | `return_state` machine in finalizer record, ≥99 % known-state | W1 |
-| Review independence (8.8) | Council B's negative controls only (same-context reviewer, disallowed family, leaked rationale, no-provider refusal) — the roadmap the draft wanted executed is archived at 0 open | W2 |
-| Pack conformance (9.5) / Negative controls (9.8) | Classify every gate fixture-valid / contract-only / judgement; twin every fixture-valid one; contract-only rows carry written justification (D5) | W2 |
-| Host semantic conformance (9.6) | Differential scenario suite over host projections: compare decisions/refusals/contracts, not text; machine-readable per-host exceptions | W2 |
-| Target readiness (9.4) | Real-repo corpus on maintainer-selected heterogeneous targets; classifier authority stays blocked until the pre-registered human-corpus condition passes (its own reopening rule, preserved) | W2 |
-| Council (9.5) | Outcome calibration vs single-model control from finalizer episodes; "correctly used, not frequently used". The council-evidence-integrity roadmap is archived at 0 open | W2→W3 |
-| Context efficiency (8.3) | Resolve blocker `b-standing-delivery-red` (D4 remaining half) + deep-cap accounting fields | W1 + W3 |
-| Skill routing (9.2) | Frozen routing corpus (precision/recall/conflict/unnecessary-activation) + the narrowed router question: one measured *runtime* consumer default-off, or an honest-null recording that the build-time consumer set is the whole story | W3 |
-| Hook/runtime economy (8.8) | Dispatcher-floor profile (spawn, bundle init, config, registry, serialization); one bounded experiment; pre-registered minimum gain; composite series n ≥ 30 as by-product; **no** concern-split revisit (D6) | W3 |
-| Long-horizon execution (9.2) | Finalizer + deep-cap B3 resume-from-records | W1→W4 |
-| Security (9.6) | Irreversible-boundary audit (tool/MCP/network/package/publication): controls verified pre-effect or honestly labeled detection-only; fingerprint `pre_tool_use` binding gated on D6 population (D7) | W2→W3 |
-| Bounded orchestration / Subagent lifecycle (9.7) | Adversarial suite: fan-out limits, recursion, retries, timeouts, parent crash, cancellation race, duplicate return | W2 |
-| Code intel (6.5) / Persistent runtime (6) / Persistent learning (6) | `later/road-to-ac-deep-capabilities.md` — contract + adapters + pre-registered experiment; **null routes are terminal 10-eligible** | W4 |
-| Activation observability (9.7), Context discipline (9.7), Governance complexity (9.8) | Fall out of W1 finalizer and the per-track estate offsets; no dedicated mechanism | — |
+| Category (score) | Scorecard row id | Closing path | Track |
+|---|---|---|---|
+| Return-contract adoption (7.5) | `return-contract-adoption` | Finalizer v2 Phases 0–2 (envelope-DROP adjudication → producer repair → multi-machine window) | W1 |
+| Outcome attribution (8.0) | `outcome-attribution` | Finalizer v2 Phases 3–4 | W1 |
+| Requirements traceability (8.5) | `requirements-traceability` | Extend shipped minimal mechanic with completion reconciliation — rides the finalizer record (D10); **no parallel ledger** | W1 |
+| Release integrity (9.2) | `release-integrity` | Promote placeholder-guard stub; guard all 8 transitions incl. `--resume`; no historical-section scan (D1) | W1 |
+| Return delivery (9.5) | `return-delivery` | `return_state` machine in finalizer record, ≥99 % known-state | W1 |
+| Review independence (8.8) | `review-independence` | Council B's negative controls only (same-context reviewer, disallowed family, leaked rationale, no-provider refusal) — the roadmap the draft wanted executed is archived at 0 open | W2 |
+| Pack conformance (9.5) / Negative controls (9.8) | `pack-conformance` · `negative-controls` | Classify every gate fixture-valid / contract-only / judgement; twin every fixture-valid one; contract-only rows carry written justification (D5) | W2 |
+| Host semantic conformance (9.6) | `host-semantic-conformance` | Differential scenario suite over host projections: compare decisions/refusals/contracts, not text; machine-readable per-host exceptions | W2 |
+| Target readiness (9.4) | `target-readiness` | Real-repo corpus on maintainer-selected heterogeneous targets; classifier authority stays blocked until the pre-registered human-corpus condition passes (its own reopening rule, preserved) | W2 |
+| Council (9.5) | `council` | Outcome calibration vs single-model control from finalizer episodes; "correctly used, not frequently used". The council-evidence-integrity roadmap is archived at 0 open | W2→W3 |
+| Context efficiency (8.3) | `context-efficiency` | Resolve blocker `b-standing-delivery-red` (D4 remaining half) + deep-cap accounting fields | W1 + W3 |
+| Skill routing (9.2) | `skill-routing` | Frozen routing corpus (precision/recall/conflict/unnecessary-activation) + the narrowed router question: one measured *runtime* consumer default-off, or an honest-null recording that the build-time consumer set is the whole story | W3 |
+| Hook/runtime economy (8.8) | `hook-runtime-economy` | Dispatcher-floor profile (spawn, bundle init, config, registry, serialization); one bounded experiment; pre-registered minimum gain; composite series n ≥ 30 as by-product; **no** concern-split revisit (D6) | W3 |
+| Long-horizon execution (9.2) | `long-horizon-execution` | Finalizer + deep-cap B3 resume-from-records | W1→W4 |
+| Security (9.6) | `security` | Irreversible-boundary audit (tool/MCP/network/package/publication): controls verified pre-effect or honestly labeled detection-only; fingerprint `pre_tool_use` binding gated on D6 population (D7) | W2→W3 |
+| Bounded orchestration / Subagent lifecycle (9.7) | `bounded-orchestration-subagent-lifecycle` | Adversarial suite: fan-out limits, recursion, retries, timeouts, parent crash, cancellation race, duplicate return | W2 |
+| Code intel (6.5) / Persistent runtime (6) / Persistent learning (6) | `code-intel` · `persistent-runtime` · `persistent-learning` | `later/road-to-ac-deep-capabilities.md` — contract + adapters + pre-registered experiment; **null routes are terminal 10-eligible** | W4 |
+| Activation observability (9.7), Context discipline (9.7), Governance complexity (9.8) | `activation-observability` · `context-discipline` · `governance-complexity` | Fall out of W1 finalizer and the per-track estate offsets; no dedicated mechanism | — |
 
 ## Wave 0 — Score contract
 
-- [ ] **Step 0.1:** Adopt `road-to-score-contract.md`; seed all 32 rows from
-      the external review as historical baseline (D11).
-      verify: `./scripts-run src/scripts/check_score_contract` exits 0 with all
-      four negative-control twins red-capable.
+- [x] **Step 0.1:** Adopt `road-to-score-contract.md`; seed the recoverable
+      rows from the recovery source as historical baseline (D11). **Was "all 32
+      rows from the external review"** — the review is not in the tree; see the
+      note under § Goal.
+      verify (discharged 2026-08-24): `./scripts-run src/scripts/check_score_contract`
+      exits 0 (`scanned: 23`) and **six** negative-control twins are red-capable,
+      each on exactly one finding code —
+      `tests/fixtures/score-contract/twins/`, asserted in
+      `tests/scripts/check_score_contract.test.ts`. The four the step named, plus
+      `e-false-completeness` and `f-max-boundary-no-constraint`.
+
+      **A row's `status` is not writable from this file.** A wave step appends
+      evidence URIs to a row; the gate then accepts or refuses the resulting
+      combination. That is what stops a closed checkbox from awarding a `ten`,
+      and `check_score_contract.test.ts` asserts no roadmap step writes a
+      `status:` value.
 
 ## Wave 1 — Truth spine (execute-first)
 
@@ -277,9 +303,12 @@ survive; what survives is the narrower D3 above.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every rubric category has a scorecard row reading `ten`,
-      `measured-null`, or `max-boundary`, each with its evidence classes
-      resolvable.
+- [ ] AC-1 — Every rubric category **in the declared manifest** has a scorecard
+      row reading `ten`, `measured-null`, or `max-boundary`, each with its
+      evidence classes resolvable. **Cannot read "every rubric category" while
+      nine identities are unknown** — an AC over a set the tree does not hold is
+      unsatisfiable rather than strict. Closing the manifest is a prerequisite,
+      recorded under § Goal.
 - [ ] AC-2 — No category previously at 10 (runtime simplicity, portability,
       security, governance complexity, context discipline) has regressed;
       proven by the non-regression evidence class, not by assertion.
