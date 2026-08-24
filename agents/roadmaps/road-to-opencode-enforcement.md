@@ -81,38 +81,94 @@ domain is being opened.
 
 ## Phase 0 — settle the premise before building anything
 
-- [ ] **0.1 Verify whether opencode exposes a plugin API with a deny verdict**, at
+- [x] **0.1 Verify whether opencode exposes a plugin API with a deny verdict**, at
       the pinned revision the proposal names. This needs a network fetch and is
       therefore a human or an explicitly network-authorised step, not an offline
       one.
-      verify: the four hook names the proposal cites either resolve in the
-      upstream source at the pin, or do not; record which, with the file and line.
-- [ ] **0.2 Reconcile `surface-matrix.yml` with 0.1's answer in the same change.**
+      verify (discharged 2026-08-24): **all four resolve**, with file and line, in
+      `agents/evidence/analysis/opencode-plugin-api-verification.md`.
+      `permission.ask` (`index.d.ts:225`) · `tool.execute.before` (`:235`) ·
+      `shell.env` (`:242`) · `experimental.chat.system.transform` (`:265`).
+      **The proposal's premise was right and the committed config was wrong** —
+      which is the direction `b-opencode-plugin-api-unverified` said exactly one of
+      them had to be.
+
+      **The pin is `1.18.21`, not `6386e67`, and that substitution is disclosed
+      rather than glossed.** The blocker asked for a source file at a git sha; the
+      published `@opencode-ai/plugin` and `@opencode-ai/sdk` type declarations were
+      read instead — a stronger artefact for this question (it is the contract a
+      plugin author compiles against), but **not the same artefact**, and
+      equivalence was not demonstrated.
+
+      **Two findings the proposal did not anticipate, and they are why 0.3 could
+      not be written as specified.** (1) There is exactly ONE deny and it is not on
+      the tool path: `tool.execute.before` output is `{ args: any }` — mutate-only,
+      no refusal — so a concern gets every-call coverage OR the ability to refuse,
+      never both, unlike Claude's `pre_tool_use`. (2) `Permission` carries **no
+      tool name, arguments or path** as typed fields, only `pattern?` and an
+      untyped `metadata` — and four of the six concerns 0.3 names decide on exactly
+      those. The two needing no deny are the two that fit.
+- [x] **0.2 Reconcile `surface-matrix.yml` with 0.1's answer in the same change.**
       If the channel exists, `hooks: none` and *"no plugin channel"* are stale and
       the matrix is wrong on a shipped host. If it does not, the proposal is wrong
       and this roadmap stops here.
-      verify: `grep -A5 'opencode:' src/config/surface-matrix.yml` agrees with the
-      recorded finding, and the change cites 0.1's evidence.
-- [ ] **0.3 If and only if 0.1 is positive, write the PREREG.** One file,
+      verify (discharged 2026-08-24): the row reads `hooks: plugin` and its notes
+      cite the evidence file, `lint_surface_matrix` and
+      `lint_supported_tools_matrix` both green.
+
+      **`hooks: none` and "no plugin channel" were stale on a shipped host**, and
+      `hook_manifest.yaml`'s zero opencode entries reflected that stale row rather
+      than an upstream limitation.
+
+      **`unbound` was tried first and refused, correctly.**
+      `lint_surface_matrix`'s enum is
+      `{managed-settings-block, settings-hooks-opt-in, plugin, none}`, and the
+      refusal is right on the merits: every row in that file describes what the
+      HOST offers, and whether this package binds it is `hook_manifest.yaml`'s
+      business — where opencode still has **zero** entries. The notes carry the
+      not-bound-here fact so the row cannot be read as a delivered capability.
+- [x] **0.3 If and only if 0.1 is positive, write the PREREG.** One file,
       `internal/bench/opencode-enforcement-PREREG.md`, fixing six concerns before
       any measurement: `block-kernel-rule-writes`, `block-config-weakening`,
       `block-no-verify`, `git-authorization` (in the op-split semantics whose
       vector tests are the red/green template), `hardenedSpawnEnv` → `shell.env`,
       and kernel projection → `experimental.chat.system.transform`.
-      verify: the file states, per concern, the success criterion **before** the
-      measurement — red without the plugin (the action happens), green with it (the
-      deny lands, with a transcript).
+      verify (discharged 2026-08-24): `internal/bench/opencode-enforcement-PREREG.md`
+      states, per concern, its criterion before any measurement.
+
+      **Six, not two — and the form is what makes six honest.** One council seat
+      argued for pre-registering only the two writable concerns and deferring four;
+      the other argued that BRANCHES are writable for all six and that "unknown
+      result" and "unwritable test" are different things. The second carried, and
+      the first's objection is honoured by the form: the four deny-dependent
+      concerns do not carry `criterion: undetermined` — that would not be a
+      pre-registration — but a **capability probe with three predetermined
+      outcomes** (all three hold → red/green; any fails → *unsupported on this host
+      surface*, no enforcement claim; no transcript → **unevaluated**, which is
+      neither).
+
+      That third outcome is the state B1–B4 are in today, and naming it is the
+      point: an autonomous run cannot install a plugin or drive a live session, so
+      the honest reading is *unevaluated*, never *unsupported*.
+
+      **Group A is fully writable now** — `shell.env` and
+      `chat.system.transform`, both mutate-only, both matching their hook exactly.
+
+      The PREREG also fixes the **translator invariant** as a measured property: a
+      green in Group B counts only if the canonical script produced the verdict. A
+      plugin that reads `metadata` and decides for itself falsifies the translator
+      classification instead of counting.
 
 ## Phase 1 — a thin carrier, never a second source of truth
 
-- [ ] **1.1 A plugin package that translates host hooks onto the existing
+- [~] **1.1 A plugin package that translates host hooks onto the existing <!-- deferred: transferred to agents/roadmaps/stubs/road-to-opencode-runtime-probe.md — needs an installed plugin and a live opencode session -->
       dispatcher.** `@event4u/agent-config-opencode` in the monorepo: a thin
       hook→`dispatch.js` translator with **no duplicated concern logic**. The
       scripts stay the one source; the plugin is a second carrier.
       verify: the package contains no copy of any concern's decision logic —
       `grep -rn 'block-kernel-rule-writes\|block_config_weakening' <pkg>/src` finds
       only dispatch wiring, never a re-implementation.
-- [ ] **1.2 Per-concern red/green arms, exactly as the PREREG fixed them.** Each
+- [~] **1.2 Per-concern red/green arms, exactly as the PREREG fixed them.** <!-- deferred: transferred with 1.1; Group B additionally gated on the runtime probe --> Each
       concern is demonstrated red without the plugin before its green counts —
       sensitivity by sabotage, not by assumption.
       verify: six transcript pairs, one per concern, each showing the action
@@ -120,12 +176,12 @@ domain is being opened.
 
 ## Phase 2 — record the result, whichever way it goes
 
-- [ ] **2.1 An ADR carrying the outcome per concern.** A documented failure with a
+- [~] **2.1 An ADR carrying the outcome per concern.** <!-- deferred: there is no per-concern outcome to record until the transferred arms run; the fifth-state table in hook-architecture-v1.md carries the per-concern CAPABILITY in the meantime --> A documented failure with a
       named cause is a valid result and is the honest-null path the proposal
       itself declares.
       verify: the ADR states, per concern, `enforced` or `not-enforced` plus the
       cause, and no concern is left unstated.
-- [ ] **2.2 Correct the enforcement-coverage claims that this changes.** If any
+- [~] **2.2 Correct the enforcement-coverage claims that this changes.** <!-- deferred: nothing to correct yet — no concern denies on opencode, and check_enforcement_coverage's denominator moves only when one does --> If any
       concern now genuinely denies on a second host, the `enforced_by` lines and
       `check_enforcement_coverage`'s denominator both move.
       verify: `./scripts-run src/scripts/check_enforcement_coverage` reflects the
@@ -156,7 +212,20 @@ domain is being opened.
   cannot distinguish from a verified one.
 - **Resolved when:** `surface-matrix.yml`'s opencode row and the upstream source
   at the pin agree, with the evidence recorded.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24):** the row now reads `hooks: plugin` and the evidence
+  is `agents/evidence/analysis/opencode-plugin-api-verification.md`. **The
+  proposal was right; the committed config was wrong** — `hooks: none` and "no
+  plugin channel" were stale on a shipped host, and all four hook names resolve
+  with file and line.
+
+  **Two qualifications on the resolution, because neither is cosmetic.** The pin
+  is **`1.18.21`, not the `6386e67` this blocker asked for** — the published type
+  declarations were read instead of a source file at a sha, and equivalence was
+  not demonstrated. And the channel is **narrower than "has a deny" suggests**:
+  `permission.ask` is the only refusal and fires only where the host already asks,
+  while `tool.execute.before` is mutate-only. That narrowness is what
+  `docs/contracts/hook-architecture-v1.md` § The fifth state now records.
 
 ### blocker: b-second-carrier-doctrine
 
@@ -178,7 +247,30 @@ domain is being opened.
   cannot express.
 - **Resolved when:** the decision is recorded in the Phase 2 ADR or in
   `hook-architecture-v1.md`.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — recorded in `hook-architecture-v1.md`, and the answer
+  is CONDITIONAL rather than the flat "translator" the recommendation proposed.**
+  AI council 2/2 convergent. A plugin denial is a **new authority surface** if the
+  plugin interprets `pattern` or `metadata` and derives a verdict the canonical
+  script did not produce; it stays a **translator** only if it losslessly
+  normalizes host input, invokes the existing script, and returns that script's
+  verdict unchanged. **A type declaration cannot settle which**, so no
+  classification is asserted in advance — the PREREG makes it a measured property
+  instead, and a green whose verdict came from plugin-local logic falsifies the
+  translator reading rather than counting.
+
+  **The four-state model needed a FIFTH state**, and both seats reached that
+  independently: `bound-but-capability-limited` — the host honours a blocking
+  result, but invocation coverage or the availability of the canonical policy
+  inputs is not guaranteed. opencode occupies it. Forcing it into one of the four
+  would have been a false claim in either direction: `bound, can deny` asserts an
+  enforcement nobody measured, `no surface` asserts a limitation that is false.
+
+  **The classification is per CONCERN, never per host** — also both seats,
+  independently, and it is the part that stops the state becoming a blanket claim.
+  The contract carries a six-row table: two concerns **writable** (mutate-only,
+  matching their hook exactly), four **probe-gated** (they need decision inputs
+  `Permission` does not type).
 
 ## Risk Register
 
@@ -194,11 +286,19 @@ domain is being opened.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** — `surface-matrix.yml`'s opencode row and the upstream plugin source at the pinned revision agree, with the evidence recorded.
-- [ ] **AC-2** — if the channel exists: six concerns each have a red-without-plugin and a green-with-plugin transcript. If it does not: Phase 0 records the null and the roadmap closes.
-- [ ] **AC-3** — the plugin package contains no re-implementation of any concern's decision logic.
-- [ ] **AC-4** — an ADR states, per concern, `enforced` or `not-enforced` with a cause, leaving none unstated.
-- [ ] **AC-5** — no rule's `enforced_by` claims enforcement on a host whose arm came back red.
+- [x] **AC-1** — `surface-matrix.yml`'s opencode row and the upstream plugin source at the pinned revision agree, with the evidence recorded.
+      **Met, with the pin corrected in the record rather than in the claim:** the row agrees with `@opencode-ai/plugin@1.18.21`, which is **not** the `6386e67` this criterion's blocker named. The substitution and its unproven equivalence are stated in the evidence file, in the roadmap step, and in the contract subsection.
+- [ ] **AC-2 — Preregistered opencode capability and behaviour evidence.** Before implementation, all six concerns define falsifiable fixtures and expected outcomes. `hardenedSpawnEnv` through `shell.env` and kernel projection through `experimental.chat.system.transform` each require red-without-plugin and green-with-plugin transcripts. Each deny-dependent concern — `block-kernel-rule-writes`, `block-config-weakening`, `block-no-verify`, `git-authorization` — first requires an `opencode-permission-payload-and-coverage` transcript proving that `permission.ask` fires for the guarded operation, exposes sufficient input for lossless normalization into the canonical enforcement script, and honours the script's denial. If capability is proved, that concern additionally requires red-without-plugin and green-with-plugin transcripts. If capability is disproved, the transcript records the concern as unsupported by this host surface and **no enforcement claim may be made**. Absent runtime evidence, the concern and AC-2 remain **incomplete**.
+
+      **REPLACED 2026-08-24 (council 2/2). The original had no true branch.** It read *"if the channel exists: six concerns each have a red-without-plugin and a green-with-plugin transcript. If it does not: Phase 0 records the null and the roadmap closes."* The channel **exists** — so the null branch is unavailable — and the transcripts need a live session, so the transcript branch is unreachable offline. A criterion whose only two branches are both closed cannot be met or honestly failed.
+
+      **Current state: the pre-registration half is DONE** (`internal/bench/opencode-enforcement-PREREG.md`, six concerns, branches fixed in advance). The transcript half is transferred to `stubs/road-to-opencode-runtime-probe.md`. B1–B4 are **unevaluated** — deliberately not *unsupported*, which would report a host limitation nobody established.
+- [~] **AC-3** — the plugin package contains no re-implementation of any concern's decision logic. <!-- deferred: transferred with 1.1 — there is no package yet to check -->
+      Transferred with 1.1. The invariant it encodes is **stronger** than a grep now: the PREREG's translator clause makes "the canonical script produced the verdict" a condition on every Group-B green, so a package that re-implements logic fails the measurement rather than only a text search.
+- [~] **AC-4** — an ADR states, per concern, `enforced` or `not-enforced` with a cause, leaving none unstated. <!-- deferred with 2.1 — no per-concern outcome exists until the transferred arms run -->
+      **The per-concern CAPABILITY is already stated**, which is the half that was decidable offline: `hook-architecture-v1.md` § The fifth state carries a six-row table — two **writable**, four **probe-gated** — with the missing decision input named per row. What is not stated is `enforced` / `not-enforced`, because nothing has been enforced or refused yet.
+- [x] **AC-5** — no rule's `enforced_by` claims enforcement on a host whose arm came back red.
+      **Met, and met vacuously — which is worth saying rather than presenting as a pass.** No arm has run, and no rule names opencode in `enforced_by`; `hook_manifest.yaml` carries zero opencode entries. The criterion is satisfied because nothing was claimed, not because a claim was checked. The PREREG's disproved-capability branch is what keeps it satisfied later: a concern whose probe fails is recorded unsupported and **may not** appear in an `enforced_by` line.
 
 ## Explicitly NOT in this roadmap
 
