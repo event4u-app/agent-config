@@ -109,6 +109,21 @@ ci_only:
   # self-test is the half that IS worth running locally, and it is reachable —
   # `classify_change_risk --self-test` — but the workflow invokes it as a step of
   # its own rather than through the aggregate, which is what this checker sees.
+  # road-to-npm-payload-reduction Phase 3.1. `report_pack_delta` measures the
+  # BRANCH-vs-BASE packed payload, which has no meaning without a pull request:
+  # locally `--base origin/main --head HEAD` on main reads +0.0 KB every time, and
+  # the step's own contract is to write nothing when the delta is zero. It also
+  # checks out BOTH refs into throwaway worktrees and packs each (~1 minute), so
+  # putting it in `task ci` would add a minute to every local run for a number
+  # that is structurally absent locally. It is a REPORT and cannot red the build
+  # (`continue-on-error: true`, and the script exits 0 whatever the number), so
+  # there is no failure a contributor could discover only after pushing — which is
+  # the exact harm this checker exists to prevent.
+  #
+  # Reachable on demand: `task report-pack-delta -- --base <ref> --head <ref>`.
+  - id: report_pack_delta
+    class: artifact
+    reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
   - id: classify_change_risk
     class: benchmark
     reason: "invoked as the nightly drift workflow's self-test step; the classifier itself gates nothing and its `--self-test` is runnable locally on demand (`./scripts-run src/scripts/classify_change_risk --self-test`)"
