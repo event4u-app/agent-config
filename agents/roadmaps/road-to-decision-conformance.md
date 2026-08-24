@@ -210,6 +210,21 @@ and build the conformance loop that nothing currently performs.
       verify: the affected ADRs read `challenged`, each names the condition that
       would resolve it, and none names a successor ADR or a preferred variant.
 
+- [ ] **3.1b Enumerate the surfaces a retirement would have to touch, and route the transition correctly.**
+      A status flip is cheap; retiring the claim is not, and the two must not be
+      confused. Verified at HEAD, the no-runtime claim is load-bearing on four
+      shipped surfaces: `docs/CLAIMS.md:104-109` (`status: backed`,
+      `last_verified: 2026-07-04`), `docs/comparison.yaml:31-36` where it is row
+      one and `checkable: true` with a `failure_mode` written against the
+      competing approach, the `package.json:5` description string, and
+      `BREAKING_CHANGES.md`. **Routing:** that set makes a retirement a change to
+      a **public commitment**, which
+      [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)'s
+      owner-reserved table routes to the owner — not to the council, whatever
+      depth is requested. This step enumerates and routes; it retires nothing.
+      verify: each of the four surfaces is listed with the line that carries the
+      claim, and the routing decision names the owner-reserved row it matches.
+
 - [ ] **3.2 Record what a resolution would require, and where that already stands.**
       `agents/roadmaps/later/road-to-agent-config-next.md` already parks this
       program with two resume conditions, both measured unmet on 2026-08-24 —
@@ -218,6 +233,27 @@ and build the conformance loop that nothing currently performs.
       re-derive it.
       verify: the `challenged` ADRs point at the parked roadmap's resume
       conditions; nothing in this roadmap flips them.
+
+## Phase 4 — the same backward question, one layer out
+
+- [ ] **4.1 Audit whether accepted learning proposals actually landed.**
+      The forward half is built: `check_proposal.ts`, `check_memory_proposal.ts`,
+      `update_skill_candidates.ts` and `learning_sidecar.ts` capture and draft,
+      and `learning-to-rule-or-skill` carries a recurrence gate. Nothing asks the
+      backward question — *did an accepted proposal reach the tree, and did the
+      friction it named stop?* Prior work reports acceptance **rates** only. This
+      is the same defect as Phase 2 one layer out: a record that says something
+      should happen, with no check that it did.
+      verify: for each accepted proposal in the record, the audit reports landed
+      / not-landed / indeterminate with the artefact path where landed; the three
+      counts sum to the accepted total.
+
+- [ ] **4.2 Report presentation order only — never auto-drop a category.**
+      A proposal class with a poor landing rate is a signal about the class, the
+      reviewer, or the capture — and an audit that silently demotes one destroys
+      the evidence for the other two.
+      verify: the audit changes no proposal's status and deletes nothing; a
+      fixture with a zero-landing category still lists that category.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-24 | reviewer: claude/host -->
@@ -228,7 +264,9 @@ and build the conformance loop that nothing currently performs.
 | 2 | The conformance audit drifts into an architecture decision | product | Class B is where the runtime prohibitions live; the pull to resolve them inside a conformance pass is exactly how a classification task becomes a doctrine change nobody authorised. | 0.3 forbids actioning any class-B row in this roadmap and requires each to name its owning ADR instead; Phase 3 changes status only and explicitly authorises nothing. | Phase 0 — classify before deciding |
 | 3 | The 76-file classification is done by grep, not by reading | implementation | This is the documented failure of the source itself: it cited two files as evidence of live coupling whose own headers state the coupling was removed. | 0.1 requires a one-line reason per row, which cannot be produced without opening the file; 0.2 independently checks the dependency graph, so a misclassified class A is caught by a second instrument. | Phase 0 — classify before deciding |
 | 4 | A corpus-wide check over semantic triggers false-positives and gets bypassed | implementation | `review_trigger` is a semantic condition in prose; a machine cannot decide most of them, and a report full of indeterminate rows trains the reader to skip it. | 2.2 makes `indeterminate` a first-class reported state rather than a failure, and 2.4 refuses to build a gate until 2.3's citation number justifies one. | Phase 2 — the conformance loop |
-| 5 | Migrating twelve supersession scopes changes a meaning by accident | implementation | The parenthetical on `ADR-094` is load-bearing: it is the whole boundary between an exclusion that stands and techniques that are reopenable. A mechanical migration could flatten it. | 1.1 migrates all twelve as individual edits with the original prose preserved in the ADR body, and `ADR-094`'s boundary is restated in Phase 0's class-B rows so a flattened scope is detectable. | Phase 1 — the four schema gaps |
+| 5 | The enumeration in 3.1b is read as authorisation to retire the claim | product | Listing the four surfaces makes retirement look like a checklist, and the surfaces are exactly what someone would edit next. | 3.1b retires nothing by construction and names the owner-reserved row the transition matches; 3.1 already forbids naming a successor, and no step in this roadmap edits `CLAIMS.md`, `comparison.yaml` or `package.json`. | Phase 3 — the runtime doctrine, status only |
+| 6 | The landing audit becomes a pruning tool | product | A category with a low landing rate is the cheapest thing to switch off, and switching it off destroys the evidence needed to tell a bad category from a bad reviewer. | 4.2 forbids status changes and deletions outright and requires a zero-landing category to stay listed, proven by a fixture. | Phase 4 — the same backward question |
+| 7 | Migrating twelve supersession scopes changes a meaning by accident | implementation | The parenthetical on `ADR-094` is load-bearing: it is the whole boundary between an exclusion that stands and techniques that are reopenable. A mechanical migration could flatten it. | 1.1 migrates all twelve as individual edits with the original prose preserved in the ADR body, and `ADR-094`'s boundary is restated in Phase 0's class-B rows so a flattened scope is detectable. | Phase 1 — the four schema gaps |
 
 ## Acceptance Criteria
 
@@ -239,5 +277,7 @@ and build the conformance loop that nothing currently performs.
 - [ ] **AC-5** — a decision on `reopen_policy` coverage is recorded in `adr-layout.md`, whichever way it went.
 - [ ] **AC-6** — `adr_cite_check` reports over the whole corpus and separates fired, not-fired and indeterminate triggers with the three counts summing correctly.
 - [ ] **AC-7** — the fraction of accepted ADRs cited nowhere outside `docs/decisions/` is measured and stated, and the decision about what runs the loop names that number as its basis.
+- [ ] **AC-9** — the four surfaces carrying the no-runtime claim are enumerated with their lines, and the transition is routed to the owner against a named owner-reserved row.
+- [ ] **AC-10** — the landing audit reports landed / not-landed / indeterminate over the accepted-proposal record, with the counts summing, and it changes no status and deletes nothing.
 - [ ] **AC-8a** — the 20 premise-carrying ADRs are listed with the premise clause quoted per row and each marked load-bearing or incidental, with no blank row.
 - [ ] **AC-8** — the runtime-doctrine ADRs read `challenged`, name their resolving condition, and name no successor; the parked roadmap's two resume conditions are unchanged.
