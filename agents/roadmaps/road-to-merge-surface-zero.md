@@ -118,6 +118,35 @@ it.
       currently routes all four to a human decision. This is advice-only and
       banks no drawdown (the header's own rule), but it stops the wrong
       instruction today.
+
+      **PATH LIST CORRECTED 2026-08-24 by measurement, and the step stays open.**
+      `pr_conflict_census` over 60 days (1,843 merges, 533 with a resolution)
+      says this list is aimed at the wrong four:
+
+      | named here | measured resolutions |
+      |---|---:|
+      | `docs/proof.md` | 26 |
+      | `src/domains/*/pack.yaml` | 12 |
+      | `internal/reports/exec-evidence-feasibility.json` | 3 |
+      | `agents/reports/originality.{json,md}` | **0 — appears in neither window** |
+
+      The generated paths that actually conflict, none of them named:
+      **`agents/roadmaps-progress.md` 339** · `agents/roadmaps/stubs/README.md`
+      61 · `agents/roadmaps/archive/index.json` 60 ·
+      `agents/roadmaps/archive/INDEX.md` 59 ·
+      `internal/.condensation-hashes.json` 50 · `agents/index.md` 15 ·
+      `docs/catalog.md`.
+
+      **`roadmaps-progress.md` needs no classification: it is already fixed.**
+      339 resolutions over 60 days, **zero in the last three** — it is untracked
+      at `.gitignore:108`. The census measures the before and the after of a
+      repair the tree already made, which is the strongest evidence in this
+      roadmap that the mechanism is the right target.
+
+      So the remaining work here is the FIVE unfixed generated paths above, not
+      the four this step named. Recorded rather than silently re-scoped, because
+      one of the four turned out to have never conflicted at all and a reader
+      should be able to see that the list moved and why.
       verify: `tests/scripts/sync_pr_branch.test.ts` gains a `classifyConflicts`
       case per path; the four measured § 0 conflict sets classify with zero
       AUTHORED rows among them.
@@ -233,8 +262,30 @@ it.
       aggregates, reports, derived docs, or baselines.
 - [ ] **AC-3** — T1 and T2 from Phase 5.1 are published against the § 0
       baseline, hit or miss, with the census script committed.
-- [ ] **AC-4** — `pr_conflict_census.ts` answers "why is everything red" as one
+- [x] **AC-4** — `pr_conflict_census.ts` answers "why is everything red" as one
       command, so the § 0 measurement never has to be reconstructed by hand.
+      **Met.** `./scripts-run src/scripts/pr_conflict_census --limit 2000` prints
+      the ranked path list, the generated share, and the window it actually
+      scanned. Reading:
+      `agents/evidence/analysis/merge-conflict-census-2026-08-24.md`.
+
+      It counts **resolutions, not touches**: `git show --name-only` on a merge
+      commit prints the combined diff, so a clean merge prints nothing and a
+      resolved one prints exactly the resolved paths. Validated both ways before
+      any figure was taken — a merge with five known conflicts printed those five,
+      a clean PR merge printed nothing.
+
+      Two defects were found by running it rather than by writing it, and both
+      would have produced a confident wrong answer:
+
+      - **The default `--limit 200` measured the newest THREE DAYS while the
+        header said "60 days ago".** A 60-day window holds 1,843 merge commits
+        here. The census now prints the window it scanned and flags truncation;
+        a mislabelled window reads as a trend.
+      - **`isGenerated()` misclassified the top four hotspots**, reporting a
+        10 % generated share where the answer is **50 %**. A test now pins both
+        directions — the five paths it missed and seven authored paths it must
+        not claim.
 
 ## Premise re-measured 2026-08-24 — the motivating population is now empty
 
@@ -271,6 +322,46 @@ alongside the one flip this run did make would assert an executable plan on a
 dissolved premise with two open blockers underneath. Re-measure the open-PR set,
 or re-anchor the phases onto the two structural claims and let the blockers gate
 them — either is a real path; the flip is not.
+
+### Re-anchored 2026-08-24 — the second path, taken
+
+The premise is re-anchored on **history**, not on a PR set, because the section
+above is right that a live-state figure decays. `pr_conflict_census` (AC-4,
+built this run) measures merge-conflict *resolutions* over a fixed window, and
+history does not dissolve between the measurement and the phase.
+
+**60 days, 1,843 merges, 533 carrying a resolution: 703 of 1,394 resolutions
+(50 %) are on GENERATED paths.** That is Phase 1's premise, quantified for the
+first time and independent of who has a PR open. Full reading and method:
+`agents/evidence/analysis/merge-conflict-census-2026-08-24.md`.
+
+**Two repairs the tree already made are visible in the numbers**, which is the
+part that changes what the phases should do rather than only justifying them:
+
+- `agents/roadmaps-progress.md` — **339 resolutions in 60 days, zero in the last
+  three.** Untracked at `.gitignore:108`. The largest merge surface in the
+  repository was removed by deleting it from the index.
+- `src/config/estate-count-budget.json` — **105 in 60 days, and all 9 recent ones
+  fall on 2026-08-22**, the day ADR-243 removed its stored baseline. None after.
+  Phase 3's target, already hit by a different change.
+
+Neither is a causal claim: the dates line up and the mechanism is plausible, but
+nothing was held constant and merge volume varies. Recorded as observation.
+
+**What the re-anchoring moves.** Phase 1's path list is aimed at four paths, one
+of which (`agents/reports/originality.*`) has **never** conflicted; the five that
+do are unnamed (§ 1.1 now carries the table). Phase 3's headline case is done.
+Phase 2's target, `docs/CLAIMS.md`, is the **only** top-ten authored path with a
+rising trend — 38 over 60 days but 12 in the newest three. And three authored
+hotspots sit in no phase at all: `gate-violation-baselines.json` 29,
+`taskfiles/ci-fast.yml` 24, `gate-coverage.yml` 18. This drain run hit the last
+two on two branches in one day and moved `.secret-allow`'s pin into
+`gate-coverage.yml` five times.
+
+**Status still stays `draft`**, and the re-anchoring is why rather than despite:
+it changes what the phases should target, and a plan whose phase list the
+evidence just moved is not a plan to mark executable in the same change that
+moved it.
 
 **Also worth knowing:** its two blockers are written as `- **B1 —` bullets, and
 `check_estate_count` counts only `### blocker:` headings
