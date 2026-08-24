@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Which paths actually cost merge conflicts — measured, two windows
 
 > Produced by `./scripts-run src/scripts/pr_conflict_census --limit 2000`, for
