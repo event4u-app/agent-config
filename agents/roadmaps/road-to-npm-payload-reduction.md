@@ -1,14 +1,15 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
+estate_growth_exempt: "Owner-instructed draft -> ready flip, 2026-08-24. Growth is +1 active_roadmaps and +0 open_blockers (this roadmap declares none). The flip is not new estate: the work was already sitting in the active tree, it was merely invisible to the metric because `status: draft` is excluded by collect(). That exclusion is a recorded defect, not a feature -- `agents/roadmaps/stubs/road-to-draft-status-ratchet-boundary.md` states it as \"the measured party controls whether its work enters the measurement boundary\" -- so this claim buys a metric that moved TOWARD the truth, not an estate that grew. Measured the same run: archiving the two completed drafts in this change offset +0, because neither was ever counted, which is the same defect seen from the other side and the reason no offset was available."
 execution:
   mode: phase-checkpoints
 ---
 # Road to npm payload reduction
 
-> **Source:** the `packed_size_mb` re-baseline of 2026-08-24 (8.4 → 9.1,
+> **Source:** the `packed_size_mb` re-baseline of 2026-08-24 (8.4 → 9.2,
 > `src/config/pack-size-budget.json`). That is the fourth raise of this cap in
-> twenty days — 6.4 → 6.9 → 7.8 → 8.4 → 9.1 — and each note names the same
+> twenty days — 6.4 → 6.9 → 7.8 → 8.4 → 9.2 — and each note names the same
 > structural cause and defers it. The 2026-08-20 note promised in writing that
 > its raise "buys the time to write one [a roadmap]"; a grep of
 > `agents/roadmaps/` (active, `stubs/`, `later/`, `archive/`) found none. This
@@ -110,7 +111,7 @@ as evidence.
 - [ ] **2.3 Lower `packed_size_mb.max` to the measured figure plus ~8 %.** A
       ratchet that only ever moves up is not a ratchet. This step is what
       turns the reduction into a floor the next accretion has to respect.
-      verify: `check_pack_size` green, and the new `max` is below 9.1.
+      verify: `check_pack_size` green, and the new `max` is below 9.2.
 
 ## Phase 3 — Make the next merge-induced trip visible before it lands
 
@@ -129,7 +130,7 @@ as evidence.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A trim resolves in CI and breaks a real global install | implementation | `prepack-check` verifies resolvability, not behaviour, and the recorded `ERR_MODULE_NOT_FOUND` incident was found by that guard rather than by a behavioural gate. A trim can pass every gate here and still break an install. | Phase 1.1 builds the behavioural harness FIRST and proves its sensitivity by sabotage before any trim is attempted. No exclusion lands before 1.1 is green-and-proven-red. | Phase 1 — Establish the per-subtree verdict empirically |
 | 2 | The verdict is derived from import specifiers instead of measured | implementation | Reading `from '…/transport_resolver.js'` invites the conclusion that the TS source is unused. Whether it resolves to `src/` or to `dist/` in a published install is not decidable from the specifier. A wrong verdict recorded as evidence is worse than an open question. | Every verdict in 1.2 cites a harness run, never an import. The `ai_council` case is left explicitly open in Context for this reason. | Phase 1 — Establish the per-subtree verdict empirically |
-| 3 | Phase 1 completes and Phase 2 never runs | product | This is the fourth time the reduction has been deferred. An evidence table with no exclusions applied is the same deferral with better documentation. | 2.3 lowers the cap, so the phase has an artifact a later reviewer can check. A Phase 1 that lands without Phase 2 leaves `max: 9.1` standing, which is the visible signal that it did not finish. | Phase 2 — Land the reductions Phase 1 proved safe |
+| 3 | Phase 1 completes and Phase 2 never runs | product | This is the fourth time the reduction has been deferred. An evidence table with no exclusions applied is the same deferral with better documentation. | 2.3 lowers the cap, so the phase has an artifact a later reviewer can check. A Phase 1 that lands without Phase 2 leaves `max: 9.2` standing, which is the visible signal that it did not finish. | Phase 2 — Land the reductions Phase 1 proved safe |
 
 ## Acceptance Criteria
 
@@ -138,7 +139,7 @@ as evidence.
       global-install harness run rather than a reading of an import.
 - [ ] AC-2 — A global-install smoke harness exists, runs the consumer surface,
       and has been observed FAILING against a deliberately broken `files[]`.
-- [ ] AC-3 — `packed_size_mb.max` is below 9.1 and carries ~8 % headroom over
+- [ ] AC-3 — `packed_size_mb.max` is below 9.2 and carries ~8 % headroom over
       a fresh measurement, so the cap has moved down for the first time.
 - [ ] AC-4 — The branch-vs-base packed delta is reported on pull requests, so
       the merge-artifact shape that caused the 2026-08-24 trip is visible
