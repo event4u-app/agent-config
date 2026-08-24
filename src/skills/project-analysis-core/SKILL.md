@@ -134,7 +134,7 @@ Check:
 Before a full analysis, ask whether this target has already been analysed:
 
 ```bash
-npx tsx src/scripts/select_analysis_mode.ts "<target>"
+npx tsx node_modules/@event4u/agent-config/src/scripts/select_analysis_mode.ts "<target>"
 ```
 
 `full` → run steps 1-8 as written. `delta` → **read the named artefact first**,
