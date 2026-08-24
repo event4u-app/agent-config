@@ -463,5 +463,14 @@ jobs:
       # left local-only on purpose: a gate `task ci` runs and no workflow does
       # is its own violation under ci-parity:local-only (165, shrink-only).
 
+      # Wired here rather than left local-only for the reason the step below
+      # gives: a gate `task ci` runs and no workflow does is its own violation
+      # under ci-parity:local-only (165, shrink-only). This workflow's `paths:`
+      # already covers `src/skills/**` and `agents/**`, which is the gate's whole
+      # corpus, so no filter change is needed — unlike a gate whose corpus sits
+      # outside those roots.
+      - name: Skill admissions and refusals are recorded
+        run: ./scripts-run src/scripts/check_skill_admissions
+
       - name: Stub inventory table stays deleted
         run: ./scripts-run src/scripts/check_no_stub_inventory_table

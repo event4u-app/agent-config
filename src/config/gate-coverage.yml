@@ -42,13 +42,25 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-23)
 # ----------------------------------------------------------
-# 283 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 288 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-23 and it returns 283).
-# **58 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 55 of those 58 are listed below.** The manifest is
+# re-run 2026-08-24 and it returns 288, `check_skill_admissions` included).
+# **60 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 57 of those 60 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~19 % of the population.
+# carry a floor, and covers ~21 % of the population.
+#
+# RECOUNTED on 2026-08-24 while adding `check_skill_admissions`, and the prose was
+# stale by FOUR on the population axis before the row landed — it said 283 while
+# the function already returned 288 with the new script counted, so three scripts
+# had arrived since the previous recount without touching this text. Seventh
+# consecutive recount to find the figures already wrong, which is the argument for
+# computing them rather than incrementing: 283 + 1 would have written 284 and been
+# wrong by four. Derivation, so the next reader checks rather than trusts:
+# `grep -c '^  - id:' src/config/gate-coverage.yml` returns 57; every listed row is
+# an emitter, because a row that did not emit could carry no floor; the same THREE
+# emitters remain deliberately unlisted (`lint_evidence_artifacts`,
+# `adr_cite_check`, `check_new_adr_evidence`); 57 + 3 = 60.
 #
 # RECOUNTED on 2026-08-23 while adding `lint_deterministic_time` and
 # `check_enforcement_denominator` (two rows, and the figures above are the
@@ -254,6 +266,23 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: check_skill_admissions
+    argv: []
+    min_scanned: 0
+    corpus: "the admission/refusal rows in agents/decisions/skill-admissions.jsonl, plus the skills added since the base ref (a `git diff --diff-filter=A` over src/skills). `min_scanned: 0` with a declared allowEmpty: 0 rows is the SHIPPED state, because the gate is forward-only and the 299 pre-existing skills are grandfathered by the diff scope rather than by rows. The dead-scope risk is covered one layer up instead — readLedger() throws a DeadScopeError when the file is missing or malformed, so `moved` and `empty` are different verdicts."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-skill-admissions/SKILL.md
+      content: |
+        ---
+        name: zz-canary-skill-admissions
+        description: Canary skill planted by check_gate_coverage --canary; never ships.
+        ---
+
+        # zz-canary-skill-admissions
+
+        An added skill with no row in the admission ledger — the gate must red.
   - id: check_pack_size
     argv: []
     min_scanned: 2000
