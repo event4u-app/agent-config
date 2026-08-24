@@ -220,6 +220,7 @@ tasks:
       - task: lint-legal-pack
       - task: lint-provenance
       - task: lint-harvest-provenance
+      - task: check-score-contract
       - task: lint-skill-router-head
       - task: lint-provenance-vocabulary
       - task: validate-discovery-manifest

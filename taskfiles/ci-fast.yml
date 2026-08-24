@@ -1392,6 +1392,23 @@ tasks:
       pass and the green line says so.
     cmd: ./scripts-run src/scripts/lint_harvest_provenance {{.QUIET_FLAG}}
 
+  check-score-contract:
+    silent: true
+    desc: >-
+      Score-contract gate — an unreferenced prose "10" becomes impossible.
+      `agents/evidence/ac-capability-scorecard.yaml` records one row per rubric
+      category recoverable from the tracked tree; this gate makes `status` a
+      DERIVED field, so a row whose status disagrees with its own evidence arrays
+      fails and nobody can hand-award a `ten`. It also refuses `rubric.state:
+      complete` while the authoritative 32-category rubric is unavailable — nine
+      identities are unknown, and incompleteness is enforced rather than
+      commented. It deliberately never judges outcome QUALITY: emptiness and
+      resolvability only, because a judgement behind a gate is score theatre.
+      Six negative-control twins under `tests/fixtures/score-contract/twins/`
+      each red on exactly one finding code; `--self-test` drives the real binary
+      against all six plus a dead-scan-root case.
+    cmd: ./scripts-run src/scripts/check_score_contract {{.QUIET_FLAG}}
+
   lint-skill-router-head:
     silent: true
     desc: >-
