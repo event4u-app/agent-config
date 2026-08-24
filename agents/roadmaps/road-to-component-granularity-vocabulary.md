@@ -1,0 +1,213 @@
+---
+complexity: structural
+status: draft
+execution:
+  mode: phase-checkpoints
+owner: maintainer
+review_by: 2026-11-24
+relates: []
+# relates: `./scripts-run src/scripts/roadmap_context atomic-component-intelligence`
+# and the same probe for `component-legibility` and `component-library-intelligence`
+# each returned `sibling roadmaps on the same topic: (none)` over
+# `scanned: 753 roadmap file(s)`. Recorded with its known limit: the probe is a
+# slug-keyword match and did NOT surface `archive/road-to-component-library-lifecycle.md`,
+# which was found by reading `agents/tmp.old/component-library/` by hand. Empty
+# here means "no live sibling", not "nothing adjacent exists" -- § Already
+# shipped carries what the probe missed.
+estate_growth_exempt: "Measured +0 at landing: check_estate_count counts non-draft roadmaps and this file is draft. Pre-declared for the flip to ready, which charges +1 active_roadmaps. Warranted on a measurement: three shipped surfaces name component granularity in three mutually inconsistent ways at HEAD b15b63d38, and two of the three disagreements are between a skill and the TypeScript that implements it."
+estate_offset_exempt: "The sanctioned +1 path for the flip to ready, no archive move being available in the same change. Net direction is favourable regardless: two proposed roadmaps totalling 1,210 lines were reduced to this one file, roughly 70 per cent of the larger having been verified as already-shipped or already-planned in four unbuilt predecessors."
+---
+# Road to a component-granularity vocabulary — three surfaces, three taxonomies, none of them talking
+
+> **Source:** `agents/tmp.old/atomic-design/` (2026-08-24) — a transcript and two
+> drafted roadmaps totalling 1,210 lines. The larger of the two is dropped; what
+> survives is recorded in § Dropped, with the measurement that killed each part.
+> Every figure below was re-derived at HEAD `b15b63d38`.
+
+## Goal
+
+This suite names component granularity once, and the surfaces that classify,
+inventory and budget components all use that one name set. Finished means: the
+audit's `kind` values agree between the skill that specifies them and the
+TypeScript that emits them, the granularity tier that already exists as a
+prop budget is the same vocabulary the audit emits, `DESIGN.md`'s inventory
+carries it as a column, and none of it hard-codes a five-level taxonomy this
+repository never adopted.
+
+## Context — measured 2026-08-24 at HEAD `b15b63d38`
+
+Three shipped surfaces describe component granularity. No two agree, and two of
+the three disagreements are between a skill and its own implementation.
+
+| Surface | What it says | Reference |
+|---|---|---|
+| the audit **skill** | `kind: page\|partial\|component\|layout` | `src/skills/existing-ui-audit/SKILL.md:82` |
+| the audit **code** | `kind: 'component' \| 'view' \| 'style' \| 'page'` | `src/cli/commands/uiAudit.ts:54` |
+| the **architect** skill | `Primitive` / `Composite` / `Page section` — as a prop-count cap only | `src/skills/ui-component-architect/SKILL.md:120-124` |
+| the **capture** skill | `\| Component \| Status \| Story file \| Registry item \|` — no granularity column at all | `src/skills/design-system-capture/SKILL.md:76` |
+
+| # | Defect | Evidence |
+|---|---|---|
+| **D1** | **The audit skill and the audit code disagree in both directions.** The skill declares `partial` and `layout`, which the type cannot hold; the code emits `view` and `style`, which the skill never mentions. Only `page` and `component` are common. An audit artefact written by the code and read against the skill is being read against a contract it does not satisfy. | the two lines above |
+| **D2** | **The classifier is a path regex with a catch-all.** `classify()` at `uiAudit.ts:122-127` tests four path shapes and ends `return 'component'`. Every React component from a one-line `Button` to a paginated `DataTable` lands in the same bucket, so the inventory carries no granularity signal — not because granularity is unmodelled, but because the fallback swallows it. | `uiAudit.ts:122-127` |
+| **D3** | **A granularity vocabulary already exists and is emitted nowhere.** `ui-component-architect:120-124` distinguishes Primitive, Composite and Page section — with different prop caps per tier, so the distinction is already load-bearing for a review decision. Nothing writes the tier, nothing reads it, and no other surface knows the words. | `ui-component-architect/SKILL.md:118-126`; grep for the tier names outside that file |
+| **D4** | **The `DESIGN.md` inventory has no granularity column.** Four columns, none of them saying whether the row is a primitive or a page section — so the artefact the architect consults first cannot answer the question the architect's own prop budget asks. | `design-system-capture/SKILL.md:76` |
+| **D5** | **The data-boundary axis is undeclared in every component output.** Whether a component fetches or receives its data changes its reuse verdict, and this suite states the distinction only as one advisory corpus row — `design-intelligence/data/stacks/react.csv:52`, *"Container/Presentational split … Mixed data and UI in one"* as an anti-pattern. No skill emits it, no audit records it. | `react.csv:52`; grep across `src/skills/` for an emitted boundary field |
+| **D6** | **Feature-prefixed component names are unaddressed.** A `CommentButton` beside a design-system `Button` shadows the primitive without replacing it, and nothing in the audit, the architect or the review names the pattern. Zero occurrences repo-wide and roadmap-wide, so it is a genuine gap rather than a re-statement. | `grep -rniE 'shadow(s|ing)? the (design[- ])?system' src/` → 0 |
+
+## Already shipped — read before proposing any mechanism here
+
+`agents/roadmaps/archive/road-to-component-library-lifecycle.md` closed 23/23
+with no deferrals. It landed the inventory contract, the architect's
+read-inventory-first step, `storybook-workshop` with its story set and its
+`one concept per story` Iron Law, the Storybook MCP path with the
+never-use-an-undocumented-prop rule, the report-only script precedent
+(`story_contrast_floor.ts`, `check_package_surface.ts`), and the fuzzy reuse
+candidate ranking at `existing-ui-audit/SKILL.md:181`.
+
+Separately, a **code graph already exists** and is an ADR-124 Class A engine:
+`src/scripts/code_graph/{build,extract,query,detect,sqlite_store}.ts`, with
+`affected()` at `query.ts:206` and verbs `build|detect|refresh|query|explain|affected|path`.
+`./scripts-run src/scripts/code_graph/cli detect` reports
+`native agents/runtime/state/code-graph-v1.json · STALE`. What it does not have
+is JSX: `grep -ci jsx src/scripts/code_graph/extract.ts` → **0**. The real delta
+is composition edges inside the existing extractor, not a second graph — and
+building a second one would plausibly open a new engine class under ADR-133.
+
+## Dropped — and what killed each part
+
+| Proposal | Verdict |
+|---|---|
+| **`road-to-atomic-component-intelligence.md` (953 lines) as a whole** | dropped. Its Phase 2 specifies a read-only component analyzer with `uses`/`used_by` queries — that is the shipped Class-A engine described as a gap. Its Phase 6 adds a gate, which this repository prices at three ratchets (gate-coverage registration with a `scanned:` line and a canary, the shrink-only `gate-self-test:registered-non-adopters`, ci-parity) for a heuristic with no measured false-positive rate. Its Phases 7–8 specify a two-arm benchmark that three unbuilt predecessors in `agents/tmp.old/component-library/` already pre-register, on a dependency stack (`workspace-graph` → `intelligence` → `playbooks`) whose foundation was never built. |
+| importing Frost's five-level taxonomy (atom/molecule/organism/template/page) | **not adopted, deliberately.** `grep -rniF 'atomic design' src/ docs/` → 0; the five levels have never been this repository's vocabulary. Adopting them would replace a three-tier distinction that already exists and is already load-bearing, and would import the classification churn the source's own critique documents. |
+| *"never skip a level / extract atoms first"* | **rejected on a live lock.** `ADR-213` and `docs/guidelines/abstraction-thresholds.md:24` canonise `~4+ repeats AND real state (both conditions)`, with `lint_abstraction_thresholds.ts` enforcing it. Extract-first is the opposite rule. |
+| *"no data fetching in components"* as a hard rule | dropped as stated. `react-shadcn-ui/SKILL.md:57` pins React 19, so a blanket prohibition is stale — but the rule's **underlying axis** survives as D5, which is about declaring the boundary, not forbidding one side of it. |
+| a falsifiable presentational test *"renders identically with mock props in Storybook"* | **has no harness.** There is no `.storybook/` in this tree; the only story file is a test fixture. `story_contrast_floor.ts` is explicitly not that path — the archived roadmap records a four-part null on browser-in-CI. Kept as an idea with no verify line, therefore not kept. |
+| the harvest analysis itself | worth preserving, not as estate. It belongs under `agents/evidence/analysis/`, anonymised to `Source A/B/C` with `ENC1:` links per [`source-confidentiality`](../../src/rules/source-confidentiality.md) — both source roadmaps name three external repositories outright, and `check_no_external_sources` is green on them only because those tokens are not in the denylist. |
+
+## Phase 0 — fix the contract before widening it
+
+- [ ] **0.1 Reconcile the audit `kind` enum between the skill and the code.**
+      Two of four values disagree in each direction. Pick one set, and state which
+      surface is authoritative — the type is emitted into
+      `agents/runtime/state/ui-audit.json`, so the code's set is the one that
+      exists in artefacts today.
+      verify: the value list in `existing-ui-audit/SKILL.md:82` and the union in
+      `ComponentEntry['kind']` are string-identical, asserted by a test that
+      reads both files rather than restating either.
+
+- [ ] **0.2 Record what `classify()`'s catch-all currently produces, before changing it.**
+      A `return 'component'` fallback means the current distribution is unknown.
+      Measure it over this repository's own fixtures and over one real consumer
+      tree before assuming granularity is absent rather than merely uncollected.
+      verify: a committed distribution table under `agents/evidence/analysis/`
+      with a count per `kind` and the fallback share stated as a percentage.
+
+- [ ] **0.3 Pin taxonomy independence with a fixture, before adding a vocabulary.**
+      The vocabulary chosen in Phase 1 must not be readable as an endorsement of
+      any external methodology, and the cheapest guard is a test that fails if a
+      five-level name set appears in the emitted values.
+      verify: a fixture asserting the emitted vocabulary contains none of
+      `atom`, `molecule`, `organism`, `template` as a `kind` value.
+
+## Phase 1 — one granularity vocabulary, on the surfaces that already need it
+
+- [ ] **1.1 Adopt the tier names that already exist as the granularity vocabulary.**
+      `primitive` / `composite` / `section`, taken from
+      `ui-component-architect:122-124` rather than invented. Reusing the existing
+      three-tier distinction is what keeps this a unification instead of a fourth
+      taxonomy.
+      verify: the three names appear as a single exported constant, and
+      `ui-component-architect`'s prop-budget table references that constant's
+      values rather than restating them.
+
+- [ ] **1.2 Emit granularity from the audit — code and skill together.**
+      This is a TypeScript change, not a prose one: `ComponentEntry`,
+      `classify()` and their tests in `src/cli/commands/uiAudit.ts`, plus the
+      skill line. The source roadmap claimed this phase was "edits to five
+      existing skills and one guideline"; that claim is false and is corrected
+      here.
+      verify: `ui-audit.json` carries a granularity field per entry; a fixture
+      component of each tier classifies to its tier; the artefact's existing
+      consumers still parse it (`directives/ui/audit.ts` reads
+      `state.ui_audit` — its shape stays additive).
+
+- [ ] **1.3 Add the granularity column to the `DESIGN.md` inventory.**
+      verify: `design-system-capture/SKILL.md:76`'s table carries the column, and
+      the skill's existing "empty cell rather than omission" rule covers it.
+
+- [ ] **1.4 State the anti-dogma contract where the vocabulary is defined.**
+      Three tiers is this repository's distinction, derived from a prop budget it
+      already enforces. It is not a methodology, it does not imply a build order,
+      and it never overrides `ADR-213`'s extraction threshold.
+      verify: the contract sentence exists at the definition site and names
+      `ADR-213` as the governing threshold; `lint_abstraction_thresholds` stays
+      green.
+
+## Phase 2 — the data-boundary axis
+
+- [ ] **2.1 Declare the boundary as a field, not as a prohibition.**
+      `presentational` or `data-bound: <where>`. D5 is that the axis is
+      undeclared, not that one side of it is wrong — a React 19 component that
+      fetches is legitimate, and a reuse verdict still needs to know.
+      verify: the field is emitted for each audited component; a fixture pair
+      differing only in a data call classifies differently.
+
+- [ ] **2.2 Consume the boundary in the reuse verdict.**
+      verify: the architect's reuse decision cites the field, and a case where
+      the boundary alone changes the verdict is covered by a test.
+
+## Phase 3 — name shadowing
+
+- [ ] **3.1 Detect a feature-prefixed component shadowing a design-system primitive.**
+      `CommentButton` beside `Button`. Report-only, following the precedent
+      already in the tree (`story_contrast_floor.ts`, `check_package_surface.ts`)
+      rather than adding a gate — a new gate costs three ratchets for a heuristic
+      whose false-positive rate nobody has measured.
+      verify: the check names the shadowing pair and the primitive it shadows;
+      a negative fixture proves an unrelated `SubmitButton` in a tree with no
+      `Button` primitive is not reported.
+
+- [ ] **3.2 Decide whether the report ever becomes a gate — with 3.1's rate, not before.**
+      verify: the decision is recorded with the measured false-positive count
+      from a run over this repository's fixtures; "stays report-only" is a
+      complete answer and is written down as one.
+
+## Phase 4 — composition edges, inside the engine that exists
+
+- [ ] **4.1 Extend `code_graph/extract.ts` to emit JSX composition edges.**
+      `grep -ci jsx src/scripts/code_graph/extract.ts` is 0 today, and `affected()`
+      already exists at `query.ts:206`. This is an extractor extension, not a new
+      engine — which also keeps it clear of ADR-133's large-subsystem review,
+      whereas a second graph would plausibly trip it.
+      verify: a fixture component tree yields `renders` edges, and
+      `code_graph/cli affected <component>` returns its consumers.
+
+- [ ] **4.2 Confirm the graph artefact stays out of standing context.**
+      `road-to-standing-payload-truth` reports two payload gates red at HEAD, one
+      by +30,566 tokens. Nothing here may add to that.
+      verify: the artefact is referenced by pointer and checksum, and
+      `preamble_byte_census` reports no new gated bucket.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-24 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The vocabulary is read as an endorsement of a five-level methodology | product | The source is an atomic-design harvest; a three-tier vocabulary landing out of it will be read as a first step toward atoms and molecules, and the next contributor will "complete" it. | 0.3 pins the exclusion as an executable fixture rather than a sentence; 1.1 derives the names from a prop budget already in the tree; 1.4 states the contract at the definition site and binds it to ADR-213. | Phase 0 — fix the contract |
+| 2 | Changing `ComponentEntry` breaks a live artefact consumer | implementation | `ui-audit.json` is read by `directives/ui/audit.ts` and gates the work engine's `refine` step; a shape change could red a path unrelated to this work. | 0.1 reconciles the enum before 1.2 widens it, so the two changes are separable; 1.2's verify requires existing consumers to still parse, and the field is additive rather than a replacement. | Phase 1 — one granularity vocabulary |
+| 3 | Phase 4 grows into the second graph the source proposed | implementation | "Composition edges" is one refactor away from "a component graph", which is a new engine class and an ADR-133 review. | 4.1 is scoped to `extract.ts` and reuses `affected()`; no new store, no new CLI verb, no new persisted artefact beyond the existing `code-graph-v1.json`. | Phase 4 — composition edges |
+| 4 | Granularity classification churns on ambiguous components | product | The source's own critique documents this: an `IconButton` is defensibly a primitive or a composite, and a classifier that flips between them teaches readers to ignore the field. | 0.2 measures the current distribution first, so churn is observable rather than hypothesised; the three tiers are coarser than five, which is the whole reason for reusing them; the prop-cap the tiers already carry gives an objective tie-break. | Phase 0 — fix the contract |
+| 5 | The shadowing check false-positives on legitimate feature components | implementation | Most `XButton` names are not shadowing anything, and a noisy report gets ignored the way this repository documents for over-wide gates. | 3.1 is report-only by construction and requires a negative fixture; 3.2 forbids promoting it to a gate without the measured rate. | Phase 3 — name shadowing |
+
+## Acceptance Criteria
+
+- [ ] **AC-1** — `existing-ui-audit/SKILL.md:82` and `ComponentEntry['kind']` carry a string-identical value set, asserted by a test that reads both.
+- [ ] **AC-2** — the emitted granularity vocabulary contains no five-level taxonomy name, proven by a fixture that fails if one appears.
+- [ ] **AC-3** — `ui-audit.json` carries a granularity value per component, and one fixture per tier classifies to its tier.
+- [ ] **AC-4** — `DESIGN.md`'s inventory table has a granularity column, and `ui-component-architect`'s prop budget reads its tier names from the shared constant rather than restating them.
+- [ ] **AC-5** — the data-boundary field is emitted, and a test covers a case where it alone changes the reuse verdict.
+- [ ] **AC-6** — the shadowing check reports a real pair and a negative fixture proves it stays silent on an unrelated name; whether it becomes a gate is recorded with a measured false-positive count.
+- [ ] **AC-7** — `code_graph` emits JSX composition edges from its existing extractor, `affected()` resolves a component's consumers, and no new engine, store or CLI verb was added.
+- [ ] **AC-8** — `preamble_byte_census` reports no new gated bucket after Phase 4.
+- [ ] **AC-9** — the harvest analysis is preserved under `agents/evidence/analysis/` with external sources anonymised, and `check_no_external_sources` is green for a reason other than an incomplete denylist.
