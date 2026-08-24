@@ -62,16 +62,41 @@ is not renumbered.
 | D10 | Requirements traceability **shipped minimal, reconciliation missing**: contract fields + listing gate + ratchet landed (`check_requirements_trace.ts`); no completion-time REQ resolution | `archive/road-to-requirements-traceability-minimal.md` steps 0.1–1.3 `[x]`, step 2.1 `[-]` |
 | D11 | No score contract: nothing in the tree records per-category claims, evidence classes, or status | verified absent at landing |
 
-**On D4's struck half.** The draft reported two red payload gates,
-135,436 vs 107,646 and 120,857 vs 110,000. The first is fixed:
-`src/config/preamble-payload-budget.json` records `baseline_tokens: 102520`,
-below the 107,646 ceiling the draft cited. Only the standing-delivery half
-remains red, at 120,961 — and the archived diet roadmap declared that gate
-**out of scope** for an ADR-236 layer-overlap reason, which is why draining the
-diet did not close it and why blocker `b-standing-delivery-red` exists. One
-honesty note: that same config file carries a registration-time note saying a
-measured total sat ~23k above the baseline, so run the gate rather than trust
-either number in this table.
+**On D4 — CORRECTION 2026-08-24, the strike is WITHDRAWN.** An earlier version of
+this section struck D4's preamble half as fixed, on the reasoning that
+`preamble-payload-budget.json` records `baseline_tokens: 102520`, "below the
+107,646 ceiling the draft cited". **That comparison is invalid.** 107,646 *is*
+102,520 x 1.05 — the ceiling is derived from the baseline, so comparing the two
+can never fail. The figure that decides the gate is the **measured** one.
+
+Run at 2026-08-24 on this branch:
+
+```
+  measured total    138212 tok (baseline 102520, +35692; ceiling 107646)
+❌  per-spawn preamble payload grew past the ratchet: 138212 > 107646 tok.
+```
+
+**So D4 has two red halves, not one.** The preamble residual is **+30,566 over
+the ceiling**, and the reviewer's "136k" is not stale-low but stale-**high**:
+`stubs/standing-rule-delivery-observability.md:20` measured 137,708 -> 136,348 on
+2026-08-23, and it reads 138,212 today — the diet's -1,360 has been more than
+eaten back.
+
+The strike was made by this run's own predecessor and is recorded rather than
+quietly reverted, because the file already carried the instruction that would have
+caught it, two lines below the strike: *run the gate rather than trust either
+number in this table*. The instruction was written and not followed.
+
+The standing-delivery half is red too and has **grown**: 120,857 in the draft,
+120,961 at landing, **123,176** measured live on a two-layer checkout. Blocker
+`b-standing-delivery-red` asked whether that is a real payload defect or an
+ADR-236 layer-overlap artifact of one machine — **it is answerable now and the
+answer is "real"**: the two-layer run prints no `overlap` line, and that line is
+emitted only when `overlap_rules > 0` (`check_standing_rule_delivery.ts:307`), so
+the two layers are cleanly disjoint.
+
+Both halves are now owned by `road-to-standing-payload-truth.md`, which also
+carries why neither gate stops a PR.
 
 **On D3's struck framing.** The draft opened D3 with "0.27 % capture
 (1/370 dispatches)". That is the **pre-backfill, model-carried** figure, and
@@ -203,7 +228,17 @@ survive; what survives is the narrower D3 above.
 ## Blockers
 
 ### blocker: b-standing-delivery-red
-- **Status:** open
+- **Status:** resolved
+- **Resolution (2026-08-24, `/analyze:inbox`):** step 2 answered — **the overage
+  is real, not an ADR-236 overlap artifact**, and the gate distinguishes the two
+  causes itself so no clean-checkout run was needed. A two-layer run prints
+  **no `overlap` line**, and that line is emitted only when `overlap_rules > 0`
+  (`check_standing_rule_delivery.ts:307`), so the two layers are cleanly disjoint.
+  The figure has also **grown**: 120,857 in the draft, 120,961 at landing,
+  **123,176** measured live. Per step 3's own instruction the overage is therefore
+  a payload defect and belongs in a reduction roadmap rather than in this index —
+  it is now owned by `road-to-standing-payload-truth.md` (phase 1.4 and AC-6),
+  together with the second red gate this index wrongly struck (see § On D4)
 - **Owner:** council
 - **Blocks:** Wave 1 Step 1.5, and the Context-efficiency row of the
   category table.
