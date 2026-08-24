@@ -1,19 +1,80 @@
 ---
 complexity: structural
-status: ready
+status: stub
 execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-24
-estate_growth_exempt: "Charges +1 active_roadmaps and +3 open_blockers. Two of the three blockers existed in the stub and were invisible because check_estate_count excludes agents/roadmaps/stubs/ entirely, so for those the promotion made an existing obligation countable rather than creating one -- the direction the draft-status-ratchet-boundary stub argues for. The third, b-promotion-offset-not-named, is genuinely new and is the honest cost of this promotion: it records that the 2026-08-23 council reopening condition asked for a NAMED one_in_one_out offset and this change supplies a self-issued claim instead. Warranted on measured recurrence rather than appetite: the marker has shipped in five releases, three still carry ten lines in the published CHANGELOG, the reviewer has raised it in eight rounds since 9.x, and on 2026-08-23 the archived parent recorded the promotion criteria as satisfied-and-waiting and declined to promote anyway -- the release shipped four more marker lines the next day."
-estate_offset_exempt: "Promoted out of stubs/ by the /analyze:inbox run of 2026-08-24. Un-stubbing is the documented promotion path, so the gate charges this as an addition; it carries no roadmap to retire against because nothing was archived in this change. The promotion is warranted on new evidence rather than on appetite: the marker has now shipped in five releases, the AI council's prescribed step 1 landed unnoticed, and the size-budget refusal that blocked the stub no longer applies to the destination the council named."
 ---
-# Road to a release-placeholder guard that fits the ratchet
+# Stub: a release-placeholder guard that fits the ratchet
+
+> **Stub — not active work, and a third class.** `stubs/README.md` distinguishes
+> *org-mode* stubs (demand-gated: should this be built at all?) from *drain-run
+> transfers* (capability-gated: the run lacked an environment). This file is
+> neither. It is a **reverted promotion**: the work is wanted, is specified, and
+> needs no capability this repository lacks — what it lacks is estate
+> authorization. So neither the shared promotion criteria nor a capability probe
+> governs it. **Its promotion criterion is the five-condition rule in § Estate
+> disposition, and nothing else.** Recorded here rather than in the README
+> because one instance is not a class.
 
 > **Source:** `agents/tmp.old/feedback-14.11.0/chat.txt` §62–63, and the stub this
 > file was promoted from, which lived under `agents/roadmaps/stubs/` from
 > 2026-08-21 until this promotion moved it here. Promoted 2026-08-24 by `/analyze:inbox` on new evidence, not on a
 > fresh opinion.
+
+## Estate disposition — reverted to `stubs/` by council verdict, 2026-08-24
+
+**Promotion readiness remains satisfied. Estate authorization does not.** This
+file was promoted out of `agents/roadmaps/stubs/` on 2026-08-24 and is back here
+by a 2/2 convergent AI-council verdict the same day
+(`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds with blind
+peer review; the maintainer had delegated owner-reserved blockers to the council
+for that autonomous drain run).
+
+**What was wrong:** the 2026-08-23 council reopening condition asked for the
+promotion **and** a named `one_in_one_out` offset. The promotion had an owner
+instruction behind it; the offset did not, and the run wrote an
+`estate_offset_exempt` claim to itself instead. Substituting a self-certified,
+uncapped exemption for an expressly required offset changes the recorded estate
+floor, which `decision-revisit-gate` reserves to the owner. Both seats reached
+that independently and both refused to name an offset instead — no mechanical
+evidence identifies the least valuable active roadmap, so any pick would have
+invented a maintainer priority.
+
+**The rule for the next run, as the council stated it.** An autonomous run may
+self-issue an estate exemption over a deferred decision **only if all five hold**:
+
+1. an existing repository-authorized rule explicitly permits autonomous exemption;
+2. that rule supplies objective eligibility criteria;
+3. repository evidence proves those criteria satisfied;
+4. the exemption is mechanically capped or expiring;
+5. applying it requires no choice among competing roadmap priorities.
+
+Otherwise the run preserves the prior estate count: revert, or apply an
+already-named offset. **A free-text justification never satisfies these
+conditions.** This is narrower than "agents may never exempt" on purpose — an
+agent may *execute* bounded advance authorization, it may not *manufacture*
+authorization case by case.
+
+**How this file becomes active again.** An authorized record either (1) names the
+specific active roadmap retired in exchange, or (2) explicitly authorizes an
+exemption that is mechanically capped or expiring. Nothing else — and
+specifically not the defect evidence below, which establishes this work's value
+and says nothing about the relative value of the active set.
+
+**What did NOT change.** The defect is real and the evidence in the next section
+stands: five shipped releases, eight-plus feedback rounds. Prevention (Phase 1,
+Phase 2) is **unbuilt**, and no seat argued it should not be built — it is held
+because the file is a stub again, not because the guard was reconsidered. One
+piece of work did land independently of the estate question and is kept:
+`b-immutable-published-surfaces` is discharged, see its entry.
+
+**What would reopen the general question.** Either seat named a falsifier worth
+recording: evidence that the ratchet creates systematic deadlock — validated
+promotions blocked across more than two releases while user-facing defects ship —
+would argue for a mechanically capped provisional-promotion path rather than for
+loosening this rule. One instance is not that evidence.
 
 ## Why this reopened — the three facts the stub did not have
 
@@ -261,8 +322,10 @@ was not written around an unbuilt prerequisite.
 - **What to do:** either name the roadmap retired in exchange (candidates: any
   `agents/roadmaps/*.md` at `count_open == 0`, checked with
   `./scripts-run src/scripts/roadmap_progress` or the dashboard), or record that
-  the owner accepts the self-issued claim for this one promotion. Reverting is
-  `git mv agents/roadmaps/road-to-release-placeholder-guard.md agents/roadmaps/stubs/`.
+  the owner accepts the self-issued claim for this one promotion. Reverting was
+  the third option and is what happened — the inverse command,
+  `git mv agents/roadmaps/stubs/road-to-release-placeholder-guard.md agents/roadmaps/`,
+  is what re-promotes this file once the § Estate disposition conditions hold.
 - **Owner:** maintainer. The council recorded the underlying question — *may an
   autonomous run override an explicitly deferred estate decision?* — as
   precedent-setting and **not a drain run's to settle**, so an agent resolving
@@ -277,7 +340,31 @@ was not written around an unbuilt prerequisite.
 - **Resolved when:** a named offset appears in this file's frontmatter, **or** an
   owner decision is recorded here accepting the claim, **or** the promotion is
   reverted.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — reverted, by the third branch of the `Resolved when`
+  above.** AI council 2/2 convergent, 2 rounds with blind peer review
+  (`anthropic/claude-sonnet-4-5`, `openai/codex-default`); the maintainer had
+  delegated owner-reserved blockers to the council for the drain run. Verdict:
+  `git mv` this file back to `agents/roadmaps/stubs/` and delete the self-issued
+  `estate_offset_exempt` and `estate_growth_exempt` keys. Both seats **declined to
+  name an offset** — selecting one would have invented a maintainer priority the
+  tree carries no evidence for.
+
+  Resolved **by reversion, not as "roadmap rejected"**: promotion readiness
+  remains satisfied, and the five-condition rule for re-promotion is recorded in
+  § Estate disposition at the top of this file. The council also declined to add
+  any new gate, script, or config key, on the ground that another maintained
+  policy surface is a real cost this decision does not need — so this resolution
+  is prose plus a `git mv`, with no ratchet impact beyond the estate count it
+  restores.
+
+  **Dissent, recorded because it was not adopted.** One seat additionally proposed
+  a forcing function — an `estate-offset-required` / `maintainer-blocking` blocker
+  with a 48-hour response window before the next release — arguing that reversion
+  alone leaves a deferral able to become an indefinite hold while the defect
+  ships. The other seat rejected it as broadening the change beyond the decision
+  and adding maintenance cost not shown to be necessary. Not adopted; the concern
+  is real and is what the falsifier in § Estate disposition is for.
 
 ### blocker: b-immutable-published-surfaces
 
@@ -300,7 +387,26 @@ was not written around an unbuilt prerequisite.
 - **Resolved when:** a written record names, per shipped release, which surfaces
   are repairable (`CHANGELOG.md` on main) and which are permanent (the pushed
   annotated tag message, and any mirror that already fetched it).
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24):** `agents/evidence/analysis/release-marker-surface-mutability.md`
+  — one row per release, one column per surface, every number derived by command
+  (`git cat-file -t/-p`, `gh release view`, a per-section split of `CHANGELOG.md`)
+  rather than assumed. Deriving it corrected two of this blocker's own premises:
+
+  1. **The tags are unprefixed** (`14.11.0`, not `v14.11.0`) and **all five are
+     annotated**, so the tag message is a distinct surface for every one of them.
+  2. **It is five releases, not three, and the earlier repair reached one surface
+     of three.** 14.5.0 and 14.6.0 were retro-curated in `CHANGELOG.md` only —
+     their tag messages (3 and 2 lines) and their **GitHub Release bodies** (3 and
+     2 lines) still carry the marker today. `archive/road-to-session-closeout.md:182,264`
+     recorded them as cleaned up; that is true of the changelog and false of the
+     other two surfaces, and nothing recorded the repair as partial.
+
+  Totals: **10** marker lines in `CHANGELOG.md`, **15** in tag messages
+  (permanent), **15** in Release bodies (repairable via `gh release edit`).
+
+  This is independent of the estate reversion above and is kept: it is a
+  measurement, not a promotion.
 
 ## Risk Register
 
