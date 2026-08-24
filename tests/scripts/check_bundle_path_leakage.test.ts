@@ -24,6 +24,11 @@ import {
     mask_snippet,
     parse_args,
     scan_content,
+    ALLOW_FILE,
+    PUBLISHED_MD_ROOTS,
+    parse_allow_file,
+    scan_files,
+    tracked_published_md,
 } from '../../src/scripts/check_bundle_path_leakage.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -295,5 +300,62 @@ describe('check_bundle_path_leakage — CLI contract on the real repo', () => {
     it('an unrecognized flag exits 2', () => {
         const result = spawnSync(TSX_BIN, [TS_SCRIPT, '--nope'], { cwd: REPO_ROOT, encoding: 'utf-8' });
         expect(result.status).toBe(2);
+    });
+});
+
+/**
+ * Phase 0 of `road-to-inbox-harvest-2026-08-e-command-surface-legibility`: the
+ * published-`.md` scope, and the pinned-exception mechanism the council chose
+ * over a backtick exemption.
+ */
+describe('published-.md scope and the zero-unapproved floor', () => {
+    it('the published roots are declared and include the projection tree', () => {
+        expect(PUBLISHED_MD_ROOTS).toContain('dist/agent-src');
+        expect(PUBLISHED_MD_ROOTS).toContain('docs/guidelines');
+        // Every root must be a `files[]` root — a root outside the tarball would
+        // scan content no consumer receives, which is scope creep dressed as rigour.
+        const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8')) as { files: string[] };
+        const shipped = manifest.files.filter((f) => !f.startsWith('!'));
+        for (const root of PUBLISHED_MD_ROOTS) {
+            expect(
+                shipped.some((f) => f.replace(/\/$/, '') === root || root.startsWith(f.replace(/\/$/, ''))),
+                `${root} must be inside package.json files[]`,
+            ).toBe(true);
+        }
+    });
+
+    it('scans a four-figure published-md population, not a handful', () => {
+        // The floor a dead-scope would collapse through. Measured 947 on
+        // 2026-08-24 (after narrowing `src/agent-src` to its two shipped
+        // subtrees); 700 is comfortably below and far above a collapse.
+        expect(tracked_published_md().length).toBeGreaterThan(700);
+    });
+
+    it('the allow file parses, strips comments, and holds only path:line keys', () => {
+        const raw = fs.readFileSync(ALLOW_FILE, 'utf8');
+        const set = parse_allow_file(raw);
+        expect(set.size).toBeGreaterThan(0);
+        for (const entry of set) {
+            expect(entry, `${entry} must be <path>:<line>`).toMatch(/^[^\s:]+:\d+$/);
+        }
+        // Every entry carries a reason above it — the file's own contract. A bare
+        // pin with no comment anywhere above it is an unaudited suppression.
+        expect(raw).toMatch(/^#/m);
+    });
+
+    it('every pinned exception still matches something — a drifted pin is a defect', () => {
+        // This is the mechanism's whole cost: pins are line-numbers into a
+        // GENERATED tree. A pin that matches nothing suppresses nothing and hides
+        // that the exception was never re-audited after the source moved.
+        const pinned = parse_allow_file(fs.readFileSync(ALLOW_FILE, 'utf8'));
+        const live = new Set(
+            scan_files(tracked_published_md()).map((h) => `${h.file}:${String(h.line)}`),
+        );
+        const dead = [...pinned].filter((p) => !live.has(p));
+        expect(dead, 'these pins match nothing — re-audit and move them').toEqual([]);
+    });
+
+    it('the whole gate is green on the committed tree', () => {
+        expect(main(['--quiet'])).toBe(0);
     });
 });

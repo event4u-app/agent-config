@@ -1,0 +1,62 @@
+# Audited published-`.md` exceptions for check_bundle_path_leakage.
+# Format: <path>:<line>.  A `#` comment is stripped, so every entry carries its
+# reason above it.
+#
+# THE FLOOR IS ZERO UNAPPROVED, NEVER A COUNT. A numeric baseline of twelve was
+# rejected by both council seats on 2026-08-24 for one reason: it lets an approved
+# hit disappear while a real leak takes its slot, and the count stays twelve. So
+# every match is either pinned here with a reason or it reds the build.
+#
+# Line-pinned on purpose, same trade-off `.secret-allow` documents for itself: an
+# entry that drifts off its line stops matching and the gate REDS. That is the
+# safe direction — someone re-audits and moves the pin. A path-only entry would
+# silently allow a real leak anywhere in the file.
+#
+# These paths are all under `dist/agent-src/`, a GENERATED projection, so a pin
+# here drifts whenever the source above it gains or loses a line. That is
+# expected and is the mechanism working; re-audit and move the pin rather than
+# widening the entry.
+#
+# WHAT DOES NOT BELONG HERE: a real machine path. The three classes below are the
+# pattern being DOCUMENTED, not committed. If a new entry is not one of those
+# three, the fix is to anonymise the path, not to pin it.
+
+# ── Class 1: anonymised documentation examples ────────────────────────────────
+# Already placeholders (`maintainer`, `me`), and deliberately path-SHAPED so a
+# reader recognises what they stand for. No regex can tell them from a real path,
+# which is why they are pinned rather than pattern-exempted.
+dist/agent-src/commands/knowledge/forget.md:63
+dist/agent-src/commands/knowledge/list.md:58
+dist/agent-src/commands/package/test.md:69
+
+# `/node_modules/` inside a prose explanation of what an ignore file should
+# cover. Matched by `absolute-node-modules`, which was written for baked-in
+# bundle strings; in a command body it is the subject of the sentence.
+dist/agent-src/commands/optimize/augmentignore.md:99
+
+# ── Class 2: the rules that FORBID the pattern, quoting it ────────────────────
+# The sharp class, and the reason a mechanical exemption was refused. These
+# artefacts exist to stop `/Users/<realname>/…` reaching a shipped file; a gate
+# that reds on them makes the rule unwritable. Same shape as
+# lint_deterministic_time, whose own docstring names the construct it bans and
+# which therefore had to exempt its own matcher.
+dist/agent-src/rules/doc-screenshot-hygiene.md:62
+dist/agent-src/skills/screenshot-hygiene/SKILL.md:71
+dist/agent-src/skills/screenshot-hygiene/SKILL.md:72
+# `:78` is the ALLOWED variant (`/Users/<handle>/…` — a public handle), quoted in
+# contrast with the forbidden one on the two lines above. Both halves of that
+# contrast have to be printable or the distinction cannot be taught.
+dist/agent-src/skills/screenshot-hygiene/SKILL.md:78
+
+# The privacy floor enumerating the patterns it detects, backticked, on one line.
+dist/agent-src/rules/low-impact-corpus-privacy-floor.md:46
+
+# ── Class 3: legitimately absolute ───────────────────────────────────────────
+# Where the file actually is on a Homebrew install — a consumer edits this exact
+# path, so anonymising it would make the instruction wrong.
+dist/agent-src/skills/traefik/SKILL.md:60
+
+# This package's own worktree convention, documented by the skill that owns it.
+# `worktree-path` exists to catch a build run from inside `.claude/worktrees/`;
+# the skill defining the convention is the one place the string is the subject.
+dist/agent-src/skills/worktree-lifecycle/SKILL.md:141

@@ -187,27 +187,95 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
 
 ## Phase 0 — The path-leakage ratchet
 
-- [ ] 0.1 Measure the current absolute-path population across published `.md`
+- [x] 0.1 Measure the current absolute-path population across published `.md`
   and record it as the pre-registered baseline before changing any scan scope.
-      verify: the count and the file list land in
-      `agents/evidence/analysis/` and are reproducible from the recorded
-      command
-- [ ] 0.2 **Extend** `src/scripts/check_bundle_path_leakage.ts` to cover
+      verify (discharged 2026-08-24):
+      `agents/evidence/analysis/published-md-path-leakage-baseline.md` — count,
+      per-pattern breakdown, full file:line table, and the derivation of the
+      population from `package.json` `files[]`.
+
+      **947 published `.md` · 12 hits · 9 files · ZERO leaks.** Every hit is one of
+      three classes: an anonymised documentation example (4), an occurrence inside
+      the rules that FORBID the pattern and must quote it (6), or a legitimately
+      absolute path (2).
+
+      **The measurement corrected itself twice, and both are recorded rather than
+      overwritten.** The first pass said 11 of 1,079. It ran four of the gate's six
+      patterns on a stated assumption that the two `node_modules` ones were
+      "bundle-shaped and cannot occur in prose" — false, there is one prose hit, so
+      the real figure is 12. And it scanned `src/agent-src/` wholesale when
+      `files[]` ships only two subtrees of it, counting 132 files no consumer
+      receives. **The second error was caught by the new test asserting every
+      declared root is inside `files[]`** — a test written for the gate, catching
+      the measurement.
+
+      The narrow lesson, worth more than the numbers: run the gate rather than
+      re-implementing its patterns.
+- [x] 0.2 **Extend** `src/scripts/check_bundle_path_leakage.ts` to cover
   published `.md` files, reusing its existing username redaction and the
   `src/scripts/_lib/scan_scope.ts` dead-scope protection. Do **not** add a
   second gate: this one is already in CI at `.github/workflows/tests.yml:141`
   and already carries the patterns a new gate would duplicate.
-      verify: the extended gate reds on a seeded `/Users/<name>/…` path in a
-      published `.md`, greens after removal, and the bundle-root behaviour is
-      byte-unchanged; sabotage the scope extension and watch it stop firing
-- [ ] 0.3 Convert the measured baseline into a forward-only ratchet: new and
+      verify (discharged 2026-08-24), all four halves:
+
+      | Probe | Result |
+      |---|---|
+      | seeded `/Users/realperson/…` in a published `.md` | **red** (exit 1) |
+      | same seed **inside backticks** | **red** (exit 1) |
+      | seed removed | green |
+      | bundle-root behaviour | unchanged — an explicit single-file run reports `1 bundle + 0 published-md`, and the 31 pre-existing tests pass untouched |
+      | **scope extension sabotaged** (`PUBLISHED_MD_ROOTS` emptied) with the seed in place | **exit 0 — it stopped firing**, which is the sensitivity proof |
+
+      **The backtick row is the load-bearing one.** It empirically refutes the
+      other candidate mechanism: both council seats rejected "exempt matches inside
+      backticks and fenced blocks" because *a real leaked path is commonly
+      formatted as code*, and the seeded-in-backticks probe is that argument as a
+      measurement rather than a prediction.
+
+      Extended rather than duplicated, as the step required: this gate already runs
+      in CI, already carries the patterns, the username masking and the
+      `scan_scope` dead-scope protection.
+
+      **One defect the extension exposed and fixed:** the per-pattern hints are
+      bundle-shaped (*"rebuild from a clean checkout"*), which is the wrong
+      instruction for prose — nothing is rebuilt to fix a `.md`. A published-md hit
+      now gets its own line naming the two real options: anonymise, or pin.
+- [x] 0.3 Convert the measured baseline into a forward-only ratchet: new and
   edited files must be clean, the existing population melts down, target 0.
-      verify: the ratchet value equals the 0.1 measurement, and a new dirty
-      file fails while the recorded population does not
+      verify (discharged 2026-08-24 with the mechanism CHANGED, and the change is
+      the finding): a new dirty file fails; the recorded population does not.
+
+      **"Target 0" was unreachable and the numeric ratchet was rejected.** The
+      measured population contains six occurrences inside the rules that exist to
+      FORBID the pattern — `doc-screenshot-hygiene` and `screenshot-hygiene` quote
+      `/Users/<realname>/…` because that is their subject, and
+      `low-impact-corpus-privacy-floor` lists `/opt/` and `/private/` as the
+      patterns it detects. **A gate that reds on those makes the rule unwritable.**
+      Melting the population to 0 would mean deleting correct content.
+
+      AI council 2026-08-24, 2/2: **the floor is 0 UNAPPROVED matches, not a
+      count.** A numeric floor of 12 was rejected for a specific reason — it lets
+      an approved hit disappear while a real leak takes its slot and the count
+      stays 12. So the twelve are **line-pinned exceptions** in `.path-leak-allow`,
+      each carrying its reason and its class, and everything else reds.
+
+      **Line-pinned deliberately, with the cost named:** the pins point into
+      `dist/agent-src/`, a generated tree, so a pin drifts when its source gains a
+      line. That reds the gate, which is the safe direction — someone re-audits and
+      moves it — and a test asserts **every pin still matches something**, because
+      a pin matching nothing suppresses nothing and hides that the exception was
+      never re-audited. This tree has been bitten by the opposite already: a
+      `.secret-allow` pin sat one line off on `main` for a day, covering nothing,
+      invisible because that gate is diff-scoped.
+
+      **No `gate-violation-baselines.json` entry**, and that is a consequence
+      rather than an omission: a zero-unapproved floor has no number to ratchet, so
+      the mechanism costs one of the three ratchets a new numeric baseline would
+      have.
 
 ## Phase 1 — Command prerequisites and probing (from D3)
 
-- [ ] 1.1 Declare command prerequisites using the **existing**
+- [~] 1.1 Declare command prerequisites using the **existing** <!-- deferred: transferred to agents/roadmaps/stubs/road-to-command-runtime-requirements.md — gated on a maintainer schema-ownership decision -->
   `runtime_requires` vocabulary from
   `src/scripts/schemas/skill.schema.json:45-89` (`bins`, `env`, `primary_env`,
   `network`) rather than inventing a second shape. Note two hard constraints
@@ -219,7 +287,7 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
       regenerations are run in order (`task sync` then `task generate-tools`),
       and the key name is not `requires`; blocked on
       `blocker: command-schema-additionalproperties`
-- [ ] 1.2 Add gate `check_command_needs`: a static body scan (invocation
+- [~] 1.2 Add gate `check_command_needs`: a static body scan (invocation <!-- deferred: transferred with 1.1; the corrected 8/6 baseline travels with it -->
   heuristic on `gh`, `docker`, `kubectl`, `terraform`, extensible) against the
   declaration. Pre-registered baseline: **8 invoking / 14 mentioning, of 202**
   recursive command files. Forward-only ratchet on the `command-verbs.yml`
@@ -228,12 +296,12 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
       verify: the gate reds on a seeded undeclared invocation, and the 8/14
       distinction is triaged by hand before the gate goes blocking, so a
       documentation-only mention is not counted as an invocation
-- [ ] 1.3 Probe declared prerequisites from an **existing** doctor entry point,
+- [~] 1.3 Probe declared prerequisites from an **existing** doctor entry point, <!-- deferred: transferred with 1.1 -->
   emitting the pinned fix command, reusing the reach probe taxonomy rather than
   building a parallel doctor.
       verify: a missing binary yields the pinned fix command and the correct
       probe state; blocked on `blocker: reach-doctor-generalisation-verdict`
-- [ ] 1.4 Hold the non-goals: no auto-install, and no network access on the
+- [~] 1.4 Hold the non-goals: no auto-install, and no network access on the <!-- deferred: transferred with 1.1 — a non-goal has nothing to hold until the phase runs -->
   default path (`--deep` stays opt-in, per the reach doctrine).
       verify: the probe issues zero network calls without `--deep`
 
@@ -291,7 +359,7 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
 
 ## Phase 4 — Later and only with evidence
 
-- [ ] 4.1 A "make it stick" suggestion: repeated manual invocations of the same
+- [~] 4.1 A "make it stick" suggestion: repeated manual invocations of the same <!-- deferred: transferred to agents/roadmaps/stubs/road-to-make-it-stick-telemetry.md — the telemetry to test the hypothesis does not exist -->
   command with similar arguments (local-analytics signal) produce a read-only
   suggestion to capture a preset or a learning via `learning-to-rule-or-skill`.
   Default-off. **Pre-registered precondition, carried over from the source
@@ -306,6 +374,13 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
 ## Blockers
 
 ### blocker: command-schema-additionalproperties
+
+> **TRANSFERRED 2026-08-24 with Phase 1** to
+> [`stubs/road-to-command-runtime-requirements.md`](stubs/road-to-command-runtime-requirements.md),
+> probe `probe-command-schema-runtime-requires`. It stays **open** and moves file
+> rather than closing: the schema-ownership question is unchanged and is the
+> maintainer's. AI council 2/2 — an autonomous run may not widen a contract every
+> consumer's frontmatter validates against.
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** 1.1, and by dependency 1.2 and 1.3. Phases 0, 2 and 3 ship
@@ -330,6 +405,9 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
   green.
 
 ### blocker: reach-doctor-generalisation-verdict
+
+> **TRANSFERRED 2026-08-24 with Phase 1.3** to the same stub. Unchanged and still
+> open; 1.3 is the only step it gates and that step moved.
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** 1.3 only. 1.1, 1.2 and 1.4 are unaffected.
@@ -353,6 +431,14 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
   verdict exists with a `revisit-if` line.
 
 ### blocker: make-it-stick-telemetry
+
+> **TRANSFERRED 2026-08-24 with Phase 4.1** to
+> [`stubs/road-to-make-it-stick-telemetry.md`](stubs/road-to-make-it-stick-telemetry.md),
+> probe `probe-make-it-stick-telemetry`. Still open. It is a separate stub from its
+> sibling deliberately: this one is gated on a **measurement that has to be built**,
+> the other on a **decision that could be taken tomorrow** — different producers,
+> different re-entry conditions, and `stubs/README.md` refuses to merge two probes
+> into one.
 - **Status:** open
 - **Owner:** agent
 - **Blocks:** 4.1 only.
@@ -371,6 +457,59 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
   unblocked or closed against the published null.
 
 ---
+
+## Step ledger — every step in a defined state
+
+The council that re-scoped this roadmap on 2026-08-24 required this table
+explicitly: *"a 14-step roadmap partially executed needs each step in a defined
+state, and 'the rest later' is not one."*
+
+| Step | State | Where it went / why |
+|---|---|---|
+| 0.1 baseline | **executed** | `agents/evidence/analysis/published-md-path-leakage-baseline.md` — 947 files, 12 hits, 0 leaks |
+| 0.2 extend the gate | **executed** | `check_bundle_path_leakage` scans published `.md`; four sensitivity probes incl. the backtick case |
+| 0.3 the ratchet | **executed, mechanism changed** | `.path-leak-allow`, floor = 0 unapproved. "Target 0" was unreachable |
+| 1.1 `runtime_requires` | **transferred** | [`stubs/road-to-command-runtime-requirements.md`](stubs/road-to-command-runtime-requirements.md) · probe `probe-command-schema-runtime-requires` |
+| 1.2 `check_command_needs` | **transferred** | same stub; the corrected 8/6 baseline travels with it |
+| 1.3 doctor probe | **transferred** | same stub |
+| 1.4 hold the non-goals | **transferred** | same stub — a non-goal has nothing to hold until the phase runs |
+| 2.1 `## Examples` convention | **open, executable, NOT executed** | see below |
+| 2.2 pattern vocabulary | **open, executable, NOT executed** | see below |
+| 2.3 `check_command_examples` | **open, executable, NOT executed** | see below |
+| 2.4 site sync | **open, executable, NOT executed** | see below |
+| 3.1 re-orientation paragraph | **open, executable, NOT executed** | see below |
+| 3.2 `project-analysis-core` improvement mode | **open, executable, NOT executed** | see below |
+| 4.1 "make it stick" | **transferred** | [`stubs/road-to-make-it-stick-telemetry.md`](stubs/road-to-make-it-stick-telemetry.md) · probe `probe-make-it-stick-telemetry` |
+
+### The six open steps are open, not blocked — and the distinction is the point
+
+```
+PHASES 2 AND 3 NEED NO CAPABILITY THIS RUN LACKED. THEY WERE NOT REACHED.
+RECORDING THEM AS TRANSFERRED WOULD CLAIM A BLOCKER THAT DOES NOT EXIST.
+```
+
+The council ruled both **executable in this run**, and it was right — there is no
+schema decision, no missing telemetry, no absent host. The autonomous drain run
+that executed Phase 0 simply did not get to them, and that is a **capacity** fact
+about the run, not a **capability** fact about the work. A `stubs/` transfer
+asserts the second, so using one here would be a false blocker.
+
+What Phase 2 needs, measured so the next run starts from numbers rather than the
+proposal's:
+
+- The axis is **`visibility:`**, not `tier:` — `command.schema.json:20` records
+  that the integer `tier:` alias was **removed**, so the roadmap's "tier 0/1"
+  vocabulary is stale. 201 of 202 command files carry no `tier:` key at all.
+- Over the 222 files `lint_command_tiers` scans: **179 `internal` · 18 `advanced` ·
+  5 `visible` · 20 with NO `visibility:` key**.
+- The convention binds `visible` **+** `advanced` (council 2/2) = **23 governed**,
+  of which **5 already carry `## Examples`** → **18 to write.**
+- **The 20 missing-key files are a Phase 2 CLOSURE PREREQUISITE**, not a separate
+  concern: Phase 2 cannot honestly close while 20 commands silently evade the
+  classification the convention keys on. Establish whether omission has a
+  documented default; if not, classify them, then re-run the census before
+  freezing the gate.
+- `check_command_examples` will cost the same **three ratchets** as any new gate.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-24 | reviewer: claude/host -->

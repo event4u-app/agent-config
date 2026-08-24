@@ -597,3 +597,122 @@ Recorded because they cost real time and recurred:
   folded into the convergent set.
 - `#1594` and `#1604` are deliberately **not** archived and their open items are
   owner-facing, so the active estate is not empty by design.
+
+---
+
+# Run C — 2026-08-24
+
+Second autonomous drain run of 2026-08-24. Every decision below was taken by the
+**AI council** under maintainer-delegated authority; none was taken by the agent
+alone, and none reached the user. Council spend: **$0.45** across 7 sessions.
+
+**This run did not empty the roadmap directory, and the reason is capacity rather
+than a blocker.** That is stated first because it is the fact the mandate's
+success condition turns on.
+
+## The seven pull requests
+
+| PR | Roadmap | Outcome |
+|---|---|---|
+| [#1614](https://github.com/event4u-app/agent-config/pull/1614) | `component-library-lifecycle` | **complete + archived.** 2 steps, 8 ACs · **merged** |
+| [#1615](https://github.com/event4u-app/agent-config/pull/1615) | `release-placeholder-guard` | **reverted to `stubs/`** by council verdict · **merged** |
+| [#1616](https://github.com/event4u-app/agent-config/pull/1616) | `score-contract` | **complete + archived.** New gate + 23-row scorecard · **merged** |
+| [#1617](https://github.com/event4u-app/agent-config/pull/1617) | `npm-payload-reduction` | **complete + archived.** Cap 9.2 → 9.1 |
+| [#1618](https://github.com/event4u-app/agent-config/pull/1618) | `suggestion-block-capture` | 11/13; soak transferred; **stays active** |
+| [#1619](https://github.com/event4u-app/agent-config/pull/1619) | `opencode-enforcement` | Phase 0 complete; Phases 1–2 transferred; **stays active** |
+| (this PR) | `command-surface-legibility` | Phase 0 complete; Phases 1 + 4 transferred; 6 steps open |
+
+## Council decisions — every one, with its verdict
+
+| Question | Verdict | Convergence |
+|---|---|---|
+| May an autonomous run self-issue an estate offset over a deferred decision? | **Never.** Five conditions stated; revert `release-placeholder-guard` | 2/2 |
+| Is the AC scorecard a fourth register or a `CLAIMS.md` projection? | **Register** — but in a **new `agents/evidence/README.md`**, not `provenance/README.md`, which the blocker named wrongly | 2/2 |
+| Seed 32 rubric rows, or the 23 recoverable? | **23**, incompleteness machine-enforced. Both seats corrected the arithmetic to **9** missing, not 7 | 2/2 |
+| Lower `packed_size_mb` to 9.1 on a 92.9 KB reduction? | **Yes**, and state the headroom as **7.4 %**, not "~8 %" | 2/2 |
+| Repoint 9 shipped importers at `dist/agent-src/` for ~102 KB? | **No** — it inverts source-of-truth; needs an ADR | 2/2 |
+| Disposition of a 14-day soak needing a human's log? | **Transfer to `stubs/`; roadmap stays active; AC-2 is `open`, not "partially met"** | 2/2 (after a 1/2 `ENOBUFS` degradation was **re-run rather than banked**) |
+| opencode: translator or new authority? | **Conditional and behavioural**; a **fifth** hook state, classified **per concern** | 2/2 |
+| Six-concern PREREG, or two? | **Six**, as branch pre-registrations with three predetermined outcomes | 2/2 |
+| Path-leak floor: 12, or backtick exemption? | **Neither** — 0 unapproved with line-pinned exceptions | 2/2 |
+| `## Examples` for `visible` only or `visible`+`advanced`? | **Both** = 23 governed, 18 to write | 2/2 |
+
+## Premises the run measured and falsified
+
+Nine, each in a roadmap that asserted the opposite:
+
+1. **`src/scripts/ai_council/` can be dropped for 270 KB** — the candidate carried across four cap raises. Removing it breaks `council:status` **and** `hooks:status` with `ERR_MODULE_NOT_FOUND`. **Settled; should not be proposed a fifth time.**
+2. **Every named payload subtree ships.** All six. The removable set is three *file patterns* nobody had looked for.
+3. **`src/agent-src/` "partly duplicates" `dist/agent-src/`** — it is **94.2 %** byte-identical (284/297 files), and still not removable.
+4. **The 32-category rubric is reconstructible** — it is not in the tracked tree. 23 recoverable; **9 identities unknown**.
+5. **opencode has no plugin channel** (`surface-matrix.yml`) — it has four hooks and a real deny.
+6. **`permission.ask` gives a pre-tool deny** — it gives a deny only where the host already asks; `tool.execute.before` is mutate-only.
+7. **"tier 0/1" classifies commands** — the integer alias was removed; 201 of 202 files have no `tier:` key.
+8. **8 invoking / 14 mentioning** — measured 8/**6**.
+9. **Published `.md` can melt to zero absolute paths** — six of twelve are the rules that *forbid* the pattern, quoting it.
+
+## Errors this run made, caught, and recorded
+
+Kept because a summary that lists only findings reads as a run that made none:
+
+1. **Lowered a ratchet on a local reading.** `ci-parity:local-only` reported itself loose at 164; CI measured 165 and red the gate. Reverted, and the entry now records that this baseline moves on the **enforcing** environment only.
+2. **Skipped two of six patterns on an assumption.** Called the `node_modules` patterns "bundle-shaped, cannot occur in prose". One prose hit exists. Under-reported 11 for 12.
+3. **Scanned a root outside `files[]`.** Counted 132 files no consumer receives. Caught by a test written for the gate.
+4. **Wrote a settings disposition as `derivable`** when the key authorises observing an operator's turns — `consent`. The shrink-only ratchet refused it immediately.
+5. **Appended a stop-slot concern after `run-continuation`**, which must be last. CI named the constraint exactly.
+6. **Four downstream surfaces missed for one settings key** — schema path, class contract, proof page, install bundle. Each caught by CI, none by me.
+7. **Substituted a pin** — read npm `1.18.21` where a blocker asked for git `6386e67`. Disclosed in four places rather than glossed.
+
+## Transferred to `stubs/` — five, each with a named probe
+
+| Stub | Probe | Gated on |
+|---|---|---|
+| `road-to-release-placeholder-guard` | (re-promotion conditions) | a named estate offset, or an authorised capped exemption |
+| `road-to-suggestion-capture-soak` | `probe:suggestion-capture-soak-evidence-ready` | a human's 14-day independent emission log |
+| `road-to-opencode-runtime-probe` | `opencode-permission-payload-and-coverage` | an installed plugin + a live opencode session |
+| `road-to-command-runtime-requirements` | `probe-command-schema-runtime-requires` | a maintainer schema-ownership decision |
+| `road-to-make-it-stick-telemetry` | `probe-make-it-stick-telemetry` | per-invocation telemetry that does not exist |
+
+## What remains, and why — the honest accounting
+
+**The directory is not empty.** Nine roadmaps carry open work this run did not
+reach, and **not one of them is blocked**:
+
+| Roadmap | Open | Why not reached |
+|---|---|---|
+| `command-surface-legibility` | 6 | Phases 2–3 executable; Phase 0 shipped instead |
+| `merge-surface-zero` | 15 | not started |
+| `standing-payload-truth` | 15 | not started (4 blockers) |
+| `skill-estate-drawdown` | 16 | not started (3 blockers) |
+| `web-launch-readiness` | 19 | not started |
+| `episode-finalizer-and-outcome-attribution-v2` | 21 | not started (3 blockers) |
+| `ten-across-the-board` | 20 | index roadmap; owns no state of its own |
+| `routing-assurance` | 33 | not started |
+| `capability-native-execution` | 54 | not started (5 blockers) |
+| `inbox-harvest-2026-08-e-council-topology-evidence` | 77 | not started (6 blockers) |
+
+```
+THIS IS A CAPACITY LIMIT, NOT A BLOCKER. THE MANDATE'S TERMINAL FALLBACK COVERS
+WORK THAT SURVIVES EXECUTION, COUNCIL, RE-SCOPING AND DESCOPING. NONE OF THE
+ABOVE WAS PUT TO ANY OF THE FOUR — THE RUN STOPPED BEFORE REACHING THEM.
+```
+
+Descoping them into stubs would assert a capability gap that does not exist, which
+is the same false-blocker the `command-surface-legibility` ledger refuses for its
+own six open steps. So they are left **active and open**, which is what they are.
+
+## Honest limits of this record
+
+- **PR-reported state.** #1617, #1618, #1619 and this PR were still settling
+  checks when this was written; #1614–#1616 are merged.
+- **Every "complete" is complete against its own ACs**, several of which this run
+  **rewrote** — most sharply `opencode-enforcement`'s AC-2, which had no true
+  branch, and `command-surface-legibility`'s "target 0", which was unreachable. A
+  reader auditing completion should read the AC as amended, and the amendment's
+  reason is recorded at each one.
+- **Three ACs are met vacuously or partially and say so** in their own text:
+  `opencode` AC-5 (nothing claimed, so nothing violated), `suggestion-block` AC-2
+  (unit-verified, live-unverified, N=3 budget spent), `npm-payload` AC-1 (six named
+  boundaries, not "every subtree").
+- **One council reached 1 of 2** on the first attempt (`ENOBUFS`) and was re-run;
+  the degraded reading was not banked. Every other session was 2/2.
