@@ -106,8 +106,9 @@ not estate.
 ## Honest limits of this triage
 
 - **The council was not re-run.** For the flagship item it had already answered —
-  `agents/runtime/council/responses/r-placeholder-guard-placement.md`, 2 members,
-  2 rounds, convergent, with a seven-step list whose step 1 had already landed.
+  AI council 2026-08-23, 2 members (anthropic, openai), 2 rounds, convergent,
+  with a seven-step list whose step 1 had already landed. The response artefact is
+  local-only and auto-pruned, so the convergence is stated rather than linked.
   Re-asking would have paid for a re-derivation; `decision-revisit-gate` step 2
   asks for a lock to be *evaluated* before it is cited. Both members also reported
   `quota_exhausted` on the day before.

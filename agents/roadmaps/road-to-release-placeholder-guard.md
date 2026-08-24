@@ -53,8 +53,12 @@ The 12.1.0 round already wrote *"Ihr habt ja seit 9.x immer wieder Probleme mit
 offen – inzwischen P0"*, and supplied the grep. This is not a new request.
 
 **3. The AI council already answered, its step 1 landed, and promotion was refused anyway.**
-`agents/runtime/council/responses/r-placeholder-guard-placement.md` — 2 members,
-2 rounds, both convergent on extraction. The openai seat's step list is the
+**AI council 2026-08-23 — 2 members (anthropic, openai), 2 rounds, both
+convergent on extraction.** Its response artefact is local-only and auto-pruned,
+so the convergence is recorded here rather than linked: the seat that argued for
+promoting held that *"two shipped recurrences of the same defect establish
+concrete harm"*, and both seats agreed the placement is an extracted publication
+module with the check immediately before each irreversible transition. The openai seat's step list is the
 implementation plan, and step 1 reads *"Extract a coherent publication phase from
 `release.ts`, producing a net reduction there."*
 
