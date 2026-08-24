@@ -4,6 +4,25 @@
 # instead of hard-coding them (measure_augment_budget, and any future
 # per-tool budget meter).
 
+# ── Ownership ─────────────────────────────────────────────────────────────────
+# Added 2026-08-24, road-to-standing-payload-truth `b-budgets-yml-outside-ownership`.
+# This file was outside `lint_budget_ownership`'s corpus for its whole life,
+# because that gate filtered on `.json`. A budget without an owner is a budget
+# nobody has to defend, and this is the one that gates `standing_rule_delivery` —
+# the larger of the two red payload numbers. It is now governed by an explicit
+# single-file row in that gate's `GOVERNED_NON_JSON`, not by a widened glob.
+#
+# `review_by` IS DERIVED, AND NO CADENCE RULE IS DOCUMENTED — said plainly rather
+# than presented as policy. `lint_budget_ownership` requires the field and defines
+# no interval for it. Two conventions are observable in the sibling budgets:
+# four files use 2026-11-10 (the preamble milestone) and seven use a ~1-year
+# horizon, including this file's subject-nearest sibling
+# `preamble-payload-budget.json`. Registered 2026-08-24 on that convention →
+# 2027-08-24. If a cadence is ever written down and disagrees, this date is wrong
+# and should move to the rule rather than the rule to the date.
+owner: maintainer
+review_by: '2027-08-24'
+
 augment_workspace_guidelines:
   # Verified platform maximum: 99,024 chars (re-measured 2026-07; the old
   # 49,512 ceiling from the 2026-05-08 baseline is obsolete). We deliberately
