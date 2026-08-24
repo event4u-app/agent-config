@@ -131,3 +131,114 @@ rules do not have to be someone else's to produce the number.
 - For E4.4, derive the four copy rules independently and label them own analysis.
   Do not reach for the external set; that door is closed on two independent
   grounds and reopening it needs the fidelity roadmap's (b) reversed first.
+
+## Graft from the 2026-08-24 inbox drain
+
+A frontend roadmap draft arriving in that run (`Draft C`, held in
+`agents/tmp.old/nxt-lvl-frontend/`, not landed) covered the same detector ground
+E3.3 covers. Most of it duplicates what is already above — six named
+browser-engine candidates, computed styles as the implementation, one epoch per
+rule. Three residues do **not** duplicate anything here, and they are what this
+section carries.
+
+### 1. `CAPTURED_PROPERTIES` has no spacing dimension
+
+`src/cli/commands/uiRender.ts:49` declares the captured set, and its own comment
+calls these "the A1.5 delta inputs, plus the overflow signals":
+
+```
+color · background-color · border-color · font-family
+font-size · line-height · overflow-x · overflow-y
+```
+
+Eight properties, no spacing. E3.3's `edge-flush-cards` is a spacing rule, and
+Draft C's rendered-side producer asks for "selected spacing dimensions" beside
+font size and the colour pair. So the extension is a genuine prerequisite for
+one of the six rows rather than a nice-to-have.
+
+- **What to add:** the padding, margin and gap dimensions the two spacing-shaped
+  rows actually read. Add the ones a rule consumes; a speculative full box model
+  is the pro-forma-field risk the schema layer already refuses elsewhere.
+- **Where:** `src/cli/commands/uiRender.ts:49`, with
+  `src/cli/commands/uiRender.test.ts:28` asserting membership — that test walks
+  `CAPTURED_PROPERTIES`, so an addition is covered the moment it lands.
+- **Ordering consequence:** `edge-flush-cards` cannot be promoted before this
+  ships, because its M1 would be measured against a capture that cannot express
+  its input. The other five rows are unaffected.
+
+### 2. Nothing emits a measurement sheet from the render manifest
+
+`src/scripts/schemas/fidelity-measurement-sheet.schema.json` exists and is the
+per-element artefact — one row per (selector, dimension) pair carrying expected
+value, observed value, and where the expectation came from. A validated instance
+exists at `agents/evidence/analysis/frontend-fidelity-measurement-sheet.json`
+(4 rows), authored by hand.
+
+`agent-config ui:render` writes computed styles per viewport. **No producer
+joins the two.** A tree-wide grep for `render-diff` / `render_diff` /
+`renderDiff` returns only unified-diff helpers in `sync_gitignore.ts`,
+`sync_agent_settings.ts`, `prelaunch_diagnostics.ts` and the low-impact council
+preview — all textual diff renderers, none related to rendered measurement.
+Stated plainly so a promoter does not go looking: **`render-diff` does not exist
+in this tree under any spelling.** The name is Draft C's, and the residue is a
+subcommand to add, not a symbol to find.
+
+- **What to add:** an emit path that reads a render manifest and writes an
+  instance conforming to the existing schema. The schema is the contract; do not
+  author a second shape.
+- **Why it matters here:** a promotion needs a per-element number with a
+  provenance column. Without the emit, an M1 on a spacing or overflow row is
+  read off screenshots or asserted, and the schema's own header states the
+  distinction it exists to hold — a sheet is the measurement, a finding is what
+  someone decided about it.
+- **Boundary:** the sheet's schema and its fidelity interpretation are owned by
+  the fidelity work, not by this stub. What belongs here is only the emit that
+  feeds it from `ui:render`.
+
+### 3. The admission bar and the judgment-class exclusion — the clean addition
+
+Draft C's B2 and B4 are the one part of it that adds something this stub does
+not already say.
+
+**B2 — the false-positive admission bar is pre-registered, not chosen after the
+run.** No candidate lands before its false-positive criterion is frozen, and the
+criterion is measured on a real clean corpus rather than on fixture presence.
+This stub already forbids the authored corpus (§ Promotion gates 2) and already
+requires one M1 per rule (gate 1). What it does not say is that the **bar itself
+is committed before the implementation** — the same ordering the parent's own
+Risk-6 mitigation applies to the corpus hash. Without it, "M1 = 0" is a
+threshold chosen once the number is visible.
+
+- **Add to the promotion protocol:** for each of the ten rows (E3.3's six,
+  E4.3's four) and each of E4.4's four copy rules, the false-positive criterion
+  is committed in a commit that **precedes** the first commit implementing that
+  rule. A rule whose bar postdates its implementation is not promotable, at any
+  M1.
+
+**B4 — a judgment-class row must not become a blocking deterministic check.**
+`src/scripts/lint_design_antipattern_parity.ts:42` defines the five statuses —
+`backed`, `floor`, `judgment-only`, `deferred`, `candidate` — and its invariant
+C flags `rule-without-backed` when a registry rule declares a catalogId whose
+row is not `backed`. So the **transition is detected**. What is not constrained
+is its **direction**: the finding is equally satisfiable by removing the rule or
+by flipping the row to `backed`, and flipping is the cheaper fix. With 16
+judgment-only rows in the measured baseline above, that is a live path from
+taste to blocking policy through a lint that reads green afterwards.
+
+- **Add to the promotion protocol:** a `judgment-only` row is promoted to
+  `backed` only through the same one-rule-one-epoch-one-M1 protocol as any
+  other row, with its pre-registered bar from B2. Resolving a
+  `rule-without-backed` finding by editing the status is not a promotion and is
+  explicitly not permitted as a lint fix.
+- **Honest scope:** this is a protocol clause, not a gate. Nothing in the tree
+  distinguishes a status edit made as a promotion from one made to silence a
+  finding, and inventing a gate that cannot tell them apart would be worse than
+  the stated clause. Recorded as model-carried.
+
+### What does not change
+
+§ The criteria, § What moves here, § Why authorship and not ordering is the
+blocker, § What E4.4 lost, and the three probe readings all stand unchanged. The
+producer is still a maintainer running the promotion protocol against
+`internal/bench/corpora/design-slop-clean/`, one rule per epoch, and residue 1
+adds one ordering constraint inside that protocol rather than a new blocker.

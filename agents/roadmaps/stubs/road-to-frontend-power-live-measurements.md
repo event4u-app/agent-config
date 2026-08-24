@@ -157,3 +157,40 @@ The README's shared criteria (recruited customer, funded audit, ADR sign-off) do
   sequence and not authorship.
 - Respect the power floor: below 12 scored cases on a grade, or a single host
   presented as a suite figure, publish it as an anecdote or not at all.
+
+## Graft from the 2026-08-24 inbox drain
+
+A frontend roadmap draft arriving in that run (`Draft C`, held in
+`agents/tmp.old/nxt-lvl-frontend/`, not landed) proposed a two-tier detector
+economics lane: tier every deterministic rule `immediate` or `deferred`, run the
+deferred registry at Stop against touched UI files with deduplication, name the
+state owner or record a null, and preserve the hot-path latency budget while
+measuring the Stop pass separately.
+
+**Adjudicated into E1.5, and it adds nothing.** That is the finding, and it is
+recorded rather than filled in:
+
+- E1.5 above already states the experiment as **three named arms** —
+  all-per-edit, immediate-plus-stop, stop-only — on the 0.2 corpus. Draft C's
+  four phases describe the *second* arm only, as an implementation to build.
+  An arm you can only build is not a comparison.
+- E1.5 already names the corpus and requires results published with its hash and
+  the shipped default citing the row it came from. Draft C named no corpus and
+  no publication requirement.
+- Draft C's state-ownership phase ("reuse an existing ledger if fit for purpose;
+  otherwise record the null instead of inventing a new persistent subsystem") is
+  a discipline this stub's § Producer and probe already applies to every row.
+- Draft C's latency phase measures a hot path whose carrier
+  (`hooks.design_pass.enabled`) ships **false** and, per the control reading
+  above, has never fired in anger. It would measure the same absent thing.
+
+So nothing is added to § The criteria, § What moves here, § Promotion gates, or
+§ Seed content. The blocker is unchanged and is the same one E1.5 already
+records: **a maintainer running the suite across real sessions**, one per host.
+Draft C supplies inputs; it does not supply the turns.
+
+The one thing worth carrying forward is negative and cheap to state: a promoter
+who reads Draft C first may believe the tiering work is unstarted design. It is
+not — it is a specified experiment blocked on session time, and building
+Draft C's single arm would produce the immediate-plus-stop implementation with
+no comparison to the other two, which is the shape E1.5 exists to prevent.
