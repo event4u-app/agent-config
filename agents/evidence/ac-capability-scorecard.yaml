@@ -1,0 +1,292 @@
+# AC capability scorecard
+#
+# Register class 4 of 4 -- see agents/evidence/README.md for what the other
+# three are and why this is not one of them.
+#
+# WHAT THIS FILE IS: one row per rubric category recoverable from the tracked
+# tree, recording the current claim, the evidence classes that would support it,
+# and a derived status. Enforced by src/scripts/check_score_contract.ts.
+#
+# WHAT IT IS NOT: complete. See the `rubric:` block. Nine category identities
+# are unknown, and the gate refuses `state: complete` while they are.
+#
+# WHO WRITES WHAT: a roadmap step or a human APPENDS evidence URIs. Nobody
+# hand-awards a `status` -- the gate refuses a status its evidence does not
+# support, so a closed checkbox cannot buy a `ten`.
+#
+# Seeded 2026-08-24 by road-to-score-contract.md Phase 0, on an AI-council
+# verdict (2/2 convergent, anthropic/claude-sonnet-4-5 + openai/codex-default).
+
+schema_version: 1
+
+rubric:
+  # The arithmetic is enforced: recovered + missing must equal reported.
+  state: incomplete
+  authority: unavailable-external-review
+  reported_category_count: 32
+  recovered_category_count: 23
+  missing_category_count: 9
+  manifest_version: baseline_v1
+  recovery_source: agents/roadmaps/road-to-ten-across-the-board.md
+  # Deliberately NOT rows: `runtime simplicity` and `host portability` are named
+  # as non-regression floors elsewhere and carry no baseline score. Nothing
+  # establishes they were rubric categories, and adding them would shrink a
+  # known gap of nine by guessing.
+  excluded_from_manifest:
+    - runtime-simplicity
+    - host-portability
+
+categories:
+  - category: return-contract-adoption
+    baseline: 7.5
+    claim: "Baseline 7.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Finalizer v2 Phases 0-2 (envelope-DROP adjudication -> producer repair -> multi-machine window)"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: outcome-attribution
+    baseline: 8.0
+    claim: "Baseline 8.0 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Finalizer v2 Phases 3-4"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: requirements-traceability
+    baseline: 8.5
+    claim: "Baseline 8.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Extend the shipped minimal mechanic with completion reconciliation, riding the finalizer record; no parallel ledger"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: release-integrity
+    baseline: 9.2
+    claim: "Baseline 9.2 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Promote the placeholder-guard stub; guard all irreversible transitions including --resume; no historical-section scan"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: return-delivery
+    baseline: 9.5
+    claim: "Baseline 9.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "return_state machine in the finalizer record, >=99 % known-state"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: review-independence
+    baseline: 8.8
+    claim: "Baseline 8.8 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Negative controls: same-context reviewer, disallowed family, leaked rationale, no-provider refusal"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: pack-conformance
+    baseline: 9.5
+    claim: "Baseline 9.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Classify every gate fixture-valid / contract-only / judgement; twin every fixture-valid one"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: negative-controls
+    baseline: 9.8
+    claim: "Baseline 9.8 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Contract-only rows carry written justification"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: host-semantic-conformance
+    baseline: 9.6
+    claim: "Baseline 9.6 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Differential scenario suite over host projections: compare decisions and refusals, not text"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: target-readiness
+    baseline: 9.4
+    claim: "Baseline 9.4 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Real-repo corpus on maintainer-selected heterogeneous targets; classifier authority stays blocked until the pre-registered human-corpus condition passes"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: council
+    baseline: 9.5
+    claim: "Baseline 9.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Outcome calibration against a single-model control from finalizer episodes"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: context-efficiency
+    baseline: 8.3
+    claim: "Baseline 8.3 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Resolve the standing-delivery overage plus deep-capability accounting fields"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: skill-routing
+    baseline: 9.2
+    claim: "Baseline 9.2 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Frozen routing corpus (precision / recall / conflict / unnecessary activation) plus the narrowed router-consumer question"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: hook-runtime-economy
+    baseline: 8.8
+    claim: "Baseline 8.8 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Dispatcher-floor profile; one bounded experiment with a pre-registered minimum gain; composite series n >= 30 as a by-product"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: long-horizon-execution
+    baseline: 9.2
+    claim: "Baseline 9.2 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Finalizer plus deep-capability resume-from-records"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: security
+    baseline: 9.6
+    claim: "Baseline 9.6 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Irreversible-boundary audit (tool / MCP / network / package / publication): controls verified pre-effect or honestly labelled detection-only"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: bounded-orchestration-subagent-lifecycle
+    baseline: 9.7
+    claim: "Baseline 9.7 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Adversarial suite: fan-out limits, recursion, retries, timeouts, parent crash, cancellation race, duplicate return"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: code-intel
+    baseline: 6.5
+    claim: "Baseline 6.5 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Contract plus adapters plus a pre-registered experiment; a null route is terminal 10-eligible"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: persistent-runtime
+    baseline: 6.0
+    claim: "Baseline 6.0 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Contract plus adapters plus a pre-registered experiment; a null route is terminal 10-eligible"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: persistent-learning
+    baseline: 6.0
+    claim: "Baseline 6.0 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Contract plus adapters plus a pre-registered experiment; a null route is terminal 10-eligible"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: activation-observability
+    baseline: 9.7
+    claim: "Baseline 9.7 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Falls out of the finalizer work and the per-track estate offsets; no dedicated mechanism"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: context-discipline
+    baseline: 9.7
+    claim: "Baseline 9.7 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Falls out of the finalizer work and the per-track estate offsets; no dedicated mechanism"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
+  - category: governance-complexity
+    baseline: 9.8
+    claim: "Baseline 9.8 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    closing_path: "Falls out of the finalizer work and the per-track estate offsets; no dedicated mechanism"
+    mechanism_evidence: []
+    adoption_evidence: []
+    negative_control_evidence: []
+    production_window: null
+    outcome_evidence: []
+    non_regression_evidence: []
+    status: missing-mechanism
