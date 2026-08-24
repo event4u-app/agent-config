@@ -1,6 +1,7 @@
 ---
 complexity: structural
 status: draft
+estate_growth_exempt: "Charges +1 later_roadmaps despite status: draft, and that is not a mistake in either direction -- it is an asymmetry in the gate. check_estate_count counts later_roadmaps with countIn(), a bare name filter that never reads status, while laterRoadmaps() in the same file skips drafts for the blocker inventory. So a draft is exempt from active_roadmaps at the top level and exempt from nothing in later/. The addition is warranted: this roadmap is parked behind a three-clause entry condition whose producers both land in this same change, and it replaces a rival draft rather than adding to it. +0 open_blockers."
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24 directly into later/. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and so are unavailable as offsets. This file is parked, not active, and its Workstream D was deleted at landing because its whole subject is four roadmaps this run found archived at 0 open."
 execution:
   mode: experiment-gated

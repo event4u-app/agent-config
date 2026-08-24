@@ -165,3 +165,39 @@ Add to § What moved here:
 5. If it is not, at minimum make a phantom claim visible: a claim whose reason is
    exactly `>-` or `|` should fail rather than authorise, which also discharges
    item 1 above with one condition instead of two.
+
+## Third finding: `status: draft` exempts the top level and nothing in `later/`
+
+Same family, found the same way — by landing a `status: draft` roadmap into
+`later/` and watching `later_roadmaps` rise anyway.
+
+`check_estate_count` counts `later/` **twice, two different ways**, in the same
+file:
+
+| Function | What it counts | Reads `status:`? |
+|---|---|---|
+| `countIn()` (`:286`) | `later_roadmaps` — the gated metric | **No.** A bare `readdirSync` plus `isRoadmapCandidate` name filter. |
+| `laterRoadmaps()` (`:297`) | the blocker inventory over `later/` | **Yes** — its own docstring says "Non-draft roadmaps parked in `later/`", and it skips drafts. |
+
+So `status: draft` exempts a roadmap from `active_roadmaps` at the top level, and
+exempts it from **nothing** in `later/` — while still exempting its blockers.
+A draft parked in `later/` therefore charges the file count and not the blocker
+count, which is a third distinct behaviour of the same key.
+
+**This is not obviously a bug**, and the stub does not claim it is. An argument
+for the current split exists: parked estate is estate whatever its status, and
+[`road-to-draft-status-ratchet-boundary.md`](road-to-draft-status-ratchet-boundary.md)
+is about drafts *hiding* from the count, so counting them in `later/` is the
+behaviour that roadmap wants. The defect is that the split is **undocumented and
+surprising**: the config's own `later_roadmaps` prose says "counted from the
+filesystem" without saying that this is the one place the draft exclusion does
+not reach, and an author who learned the key at the top level will predict the
+wrong charge.
+
+Add to § What moved here:
+
+6. Either document the asymmetry in `estate-count-budget.json`'s
+   `metric.later_roadmaps` prose, or make the two `later/` readers agree. One of
+   the two, not neither — the current state is a key with three behaviours and a
+   description covering one.
+
