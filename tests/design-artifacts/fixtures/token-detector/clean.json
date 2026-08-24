@@ -1,0 +1,23 @@
+{
+  "_fixture": "daf-token-detector-clean",
+  "_what": "The paired clean fixture. Same audit token map, same shape, and the ONE violation present carries a value no audit bucket holds — so it is outside the pre-registered dimension and the detector must stay silent. This is the F4-unscoped guard: a detector that flags every literal would emit here.",
+  "_expect": "the detector channel emits exactly 0 token_violation findings",
+  "stack": { "frontend": "react" },
+  "ui_audit": {
+    "components_found": ["Button"],
+    "design_tokens": {
+      "color": { "primary": "#2563EB", "muted": "#64748B" },
+      "spacing": { "sm": "8px", "md": "12px" }
+    }
+  },
+  "ui_review": {
+    "review_clean": true,
+    "findings": [],
+    "preview": { "skipped": true, "skip_reason": "b-page-capture-primitive" },
+    "tokens": {
+      "violations": [
+        { "file": "src/components/Card.tsx", "line": 4, "value": "#FF00AA", "type": "hexColor" }
+      ]
+    }
+  }
+}

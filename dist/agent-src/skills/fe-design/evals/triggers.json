@@ -1,55 +1,67 @@
 {
-    "skill": "fe-design",
-    "last_eval": "2026-08-12",
-    "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND — new — ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work.",
-    "queries": [
-        {
-            "q": "give me three directions for the pricing page",
-            "trigger": true
-        },
-        {
-            "q": "explore a few visual directions for the dashboard before we commit",
-            "trigger": true
-        },
-        {
-            "q": "design the multi-step onboarding flow",
-            "trigger": true
-        },
-        {
-            "q": "should this filter be a modal or an inline panel?",
-            "trigger": true
-        },
-        {
-            "q": "plan the responsive layout for the settings screen",
-            "trigger": true
-        },
-        {
-            "q": "implement the selected checkout design in React exactly as approved",
-            "trigger": true
-        },
-        {
-            "q": "build the settings page",
-            "trigger": true
-        },
-        {
-            "q": "improve this form, it feels clunky",
-            "trigger": true
-        },
-        {
-            "q": "what form components do we already have in the codebase?",
-            "trigger": false
-        },
-        {
-            "q": "change the primary button colour to green",
-            "trigger": false
-        },
-        {
-            "q": "add a database index on orders.status",
-            "trigger": false
-        },
-        {
-            "q": "fix the failing unit test in the auth module",
-            "trigger": false
-        }
-    ]
+  "skill": "fe-design",
+  "last_eval": "2026-08-12",
+  "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND \u2014 new \u2014 ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work. Scroll-storytelling rows added 2026-08-23: a scroll-driven narrative build is an ad-hoc UI write and routes here, and the renderer axis is a third row in this skill's mode table rather than a second executor. The should-NOT-trigger row is the one that matters \u2014 \"scroll position resets when I navigate back\" is a state/restoration bug and belongs to the frontend-engineer lens, not to design. Without it the word \"scroll\" alone would route every scroll bug to a design skill.",
+  "queries": [
+    {
+      "q": "give me three directions for the pricing page",
+      "trigger": true
+    },
+    {
+      "q": "explore a few visual directions for the dashboard before we commit",
+      "trigger": true
+    },
+    {
+      "q": "design the multi-step onboarding flow",
+      "trigger": true
+    },
+    {
+      "q": "should this filter be a modal or an inline panel?",
+      "trigger": true
+    },
+    {
+      "q": "plan the responsive layout for the settings screen",
+      "trigger": true
+    },
+    {
+      "q": "implement the selected checkout design in React exactly as approved",
+      "trigger": true
+    },
+    {
+      "q": "build the settings page",
+      "trigger": true
+    },
+    {
+      "q": "improve this form, it feels clunky",
+      "trigger": true
+    },
+    {
+      "q": "what form components do we already have in the codebase?",
+      "trigger": false
+    },
+    {
+      "q": "change the primary button colour to green",
+      "trigger": false
+    },
+    {
+      "q": "add a database index on orders.status",
+      "trigger": false
+    },
+    {
+      "q": "fix the failing unit test in the auth module",
+      "trigger": false
+    },
+    {
+      "q": "build the scroll-driven story section for the launch page",
+      "trigger": true
+    },
+    {
+      "q": "make the hero pin and scrub through three beats as you scroll",
+      "trigger": true
+    },
+    {
+      "q": "the scroll position resets when I navigate back \u2014 fix the restoration bug",
+      "trigger": false
+    }
+  ]
 }

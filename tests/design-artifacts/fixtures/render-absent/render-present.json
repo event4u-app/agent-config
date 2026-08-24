@@ -1,0 +1,30 @@
+{
+  "_fixture": "daf-render-absent-control",
+  "_what": "The control half. Identical shape with render_ok: true, so the scope must come out `render` and the render-dependent checks must appear in checks_run rather than checks_not_run. Without this row the static branch could be the only branch and nothing would notice.",
+  "_expect": "scope: render, no checks_not_run, no blocker",
+  "_skip": "SKIPPED \u2014 this fixture SYNTHESISES render_ok: true as state; it does not render",
+  "_skip_reason": "b-page-capture-primitive",
+  "_honesty": "The control proves the static branch is not the only branch. It does NOT prove any render-dependent check works, because nothing here renders.",
+  "stack": {
+    "frontend": "react"
+  },
+  "ui_audit": {
+    "design_tokens": {
+      "color": {
+        "primary": "#2563EB"
+      }
+    }
+  },
+  "ui_review": {
+    "review_clean": true,
+    "findings": [],
+    "preview": {
+      "render_ok": true,
+      "screenshot_path": "/tmp/shot.png",
+      "dom_dump_path": "/tmp/dom.json"
+    },
+    "tokens": {
+      "violations": []
+    }
+  }
+}

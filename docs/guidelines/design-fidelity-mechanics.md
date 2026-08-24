@@ -230,6 +230,32 @@ unmarked finding is treated as actionable, so the default failure direction is
 
 Regression witness: `daf-slop-vs-provided`.
 
+## Value-level provenance — the finer grain beside the flag
+
+The block above is finding-level and stays the default: `artifact_covered` is a
+boolean on a **finding**, and every consumer of it — `partition_artifact_covered`
+and the ceiling check it feeds — is unchanged by this section.
+
+What a per-finding boolean cannot answer is *"where did this `16px` come from"*.
+The flag says a finding is answered by the artifact; it does not say which value
+carried the expectation, so two rows that disagree about the same element look
+identical to a reviewer.
+
+`src/scripts/schemas/fidelity-measurement-sheet.schema.json` adds that grain and
+nothing else: each measurement row carries `expectation_source` — a `kind`
+ordered by authority (`provided_artifact` › `design_token` › `brand_token` ›
+`house_heuristic` › `agent_inference`) plus a `ref` naming the token, `file:line`
+or artefact anchor. `agent_inference` is the row a reviewer filters for.
+
+Two boundaries, because this is an addition and not a replacement:
+
+- **The coarse flag stays the default channel.** A row's optional
+  `expectation_source.artifact_covered` mirrors the flag for one value; it never
+  substitutes for setting the flag on the finding, and no gate reads it.
+- **The ordering above is a mirror, not a second source of truth.** Precedence
+  is decided in the block above; a `kind` that disagreed with it would be a
+  defect in the schema, not a competing chain.
+
 ## Failure modes
 
 - Swapping the prototype's font / typeface because another "reads better".

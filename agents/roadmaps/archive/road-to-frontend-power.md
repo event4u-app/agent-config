@@ -198,7 +198,7 @@ where the owner is named, not here.
 
 ## Ownership boundary — what this roadmap does NOT own
 
-`agents/roadmaps/road-to-frontend-fidelity-calibration.md` is **active**
+`agents/roadmaps/archive/road-to-frontend-fidelity-calibration.md` is **active**
 (`status: ready`, 0 of 21 steps closed) and it owns the fidelity axis. Without
 this boundary written down, all nine phases below duplicate it. Graft 1 from
 the unlanded fourth draft.

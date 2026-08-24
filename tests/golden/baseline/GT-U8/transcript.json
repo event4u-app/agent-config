@@ -784,7 +784,22 @@
         "ui_scaffold": null,
         "ui_review": {
           "findings": [],
-          "review_clean": true
+          "review_clean": true,
+          "verdict_scope": {
+            "scope": "static",
+            "render_available": false,
+            "checks_run": [
+              "findings-review"
+            ],
+            "checks_not_run": [
+              "viewport-sweep",
+              "touch-target-size",
+              "rendered-contrast",
+              "screenshot-diff"
+            ],
+            "blocker": "b-page-capture-primitive",
+            "skip_reason": "b-page-capture-primitive"
+          }
         },
         "ui_polish": null,
         "contract": null,
