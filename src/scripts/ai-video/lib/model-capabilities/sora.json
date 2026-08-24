@@ -1,0 +1,45 @@
+{
+  "schema": 2,
+  "adapter": "sora",
+  "comment": "Per-model capability manifest for the direct sora adapter. Every value is READ OUT OF THE TREE and cited in input_notes. Both entries are concrete model ids the adapter names (adapters/sora.sh:20,73-74); sora-2 is the adapter default (:111) and the XML <default-model> (agents/templates/.ai-video.xml.example:101). verified stays false: the adapter header records a live 1/1 round-trip on sora-2 (adapters/sora.sh:9-13) but names no trace id reachable from the tree, and sora-2-pro has never been rendered here at all.",
+  "models": {
+    "sora-2": {
+      "label": "OpenAI Sora 2 (text-to-video, native audio)",
+      "min_duration": 4,
+      "max_duration": 12,
+      "audio_sync": true,
+      "aspect": [
+        "16:9",
+        "9:16"
+      ],
+      "cost_per_second_usd": 0.1,
+      "verified": false,
+      "input_notes": "model id from adapters/sora.sh:20,74 and agents/templates/.ai-video.xml.example:101; seconds enum {'4','8','12'} verified empirically via validation-error probes with no spend (:12,:15-16,:21) and is the clamp the adapter applies (:114-119); audio_sync true from the declared audio=native (:4) and the fixture's audio_embedded:true (media/lib/fixtures/sora/result.json); aspect is the adapter's own two-branch size mapping — 9:16 to 720x1280, everything else to 1280x720 (:121-122) — out of the verified size enum {720x1280,1280x720,1024x1792,1792x1024} (:12,:22); cost_per_second_usd from _sora_model_rate_usd_per_s sora-2* = 0.10 (:74), corroborated by the header's ~$0.40 for a 4 s render (:11)",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
+    },
+    "sora-2-pro": {
+      "label": "OpenAI Sora 2 Pro (text-to-video, native audio)",
+      "min_duration": 4,
+      "max_duration": 12,
+      "audio_sync": true,
+      "aspect": [
+        "16:9",
+        "9:16"
+      ],
+      "cost_per_second_usd": 0.3,
+      "verified": false,
+      "input_notes": "model id from adapters/sora.sh:20,73; seconds and size enums are the same adapter-level surface as sora-2 (:114-122) — the adapter branches on the model only for the rate; audio_sync true from the declared audio=native (:4); cost_per_second_usd from _sora_model_rate_usd_per_s sora-2-pro* = 0.30 (:73); NEVER rendered from this repo — no live round-trip is recorded for this id anywhere in the tree",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
+    }
+  }
+}

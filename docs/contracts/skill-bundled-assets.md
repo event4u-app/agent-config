@@ -60,3 +60,82 @@ a temp skills root, invokes the script from an unrelated cwd, and asserts
 it finds its sibling data — plus runs the real `corpus-grounding` engine
 from a foreign cwd. If that test goes red, the grounding layer is theater
 at consumer runtime (road-to-frontend-design-intelligence Step 1.0).
+
+## Port invariants — the behaviours a re-implementation must keep
+
+The delivery chain above makes a bundled asset portable by construction: it is
+copied verbatim into the consumer scope, where anyone can read it, rewrite it,
+or ask an agent to re-implement it in another language. That last case is where
+hardening disappears, and it disappears silently — the re-implementation runs,
+produces plausible output, and reports success.
+
+The field evidence is **Source D**: a generated site produced by an agent from
+another skill's method, which re-implemented a bundled engine and lost the
+refusals and defaults the original author had paid for. The descriptor is
+neutral on purpose (`source-confidentiality` — this tree records no readable
+harvest-source names); the pinned reference is the `ENC1:` token in the
+`## Provenance` row below.
+
+So: **a skill that bundles an executable asset lists `port_invariants:` in that
+asset's own header** — the behaviours that must survive a re-implementation.
+
+- **In the asset's header, not in a separate doc.** A ported file is read; a
+  sibling document is not.
+- **Each entry names the behaviour AND what breaks without it.** "Fails loudly"
+  is a slogan; "exits non-zero before any work, and never falls through to a
+  near-miss" is checkable.
+- **Only properties whose loss is silent.** A signature change breaks the
+  caller immediately and needs no invariant. A changed default does not.
+- **Three to five entries.** A list nobody finishes reading is not a control.
+- **Not an API contract and not a style guide.** Argument shapes, exit-code
+  tables and output schemas belong in the asset's usage block.
+
+This is a **documentation** obligation with no gate behind it: nothing can
+inspect a re-implementation that lives in someone else's repository. The
+invariants are what a porter reads before deciding what is safe to change.
+
+### Pilot — `stitch.sh` (the `/video:*` clip concatenator)
+
+Its header carries exactly these three, and
+`tests/scripts/ai_video_stitch_handoff.test.ts` asserts they are still there:
+
+```
+port_invariants:
+  1. hard-cut default — `--mode cut` is the default and stream-copies
+     (`-c copy`). A port that re-encodes by default has changed the output of
+     every existing caller without telling anyone.
+  2. refusal over silent downgrade — an unimplemented or out-of-bounds request
+     exits non-zero BEFORE any work and never falls through to a near-miss.
+     Reporting success for output the caller did not ask for is the one failure
+     this script exists to not have.
+  3. handoff frame = rendered frame — a handoff seam joins clips where the later
+     one was conditioned on the earlier one's RENDERED last frame, never on its
+     own still. A port that re-conditions from the source still produces a
+     plausible-looking chain that does not actually continue the shot.
+```
+
+Invariant 2 is the one with a recorded cost: the flag it names once printed a
+notice and concatenated anyway, so a caller asking for a transition got a hard
+cut and exit 0 — and the notice sat after the dry-run exit, which is the default
+mode, so in the default mode the request was accepted in total silence.
+
+### Scope note — the pilot sits outside the chain above
+
+`stitch.sh` lives under `src/scripts/`, which "What this contract does NOT
+cover" excludes: it is maintainer-only and is **not** copied into the consumer
+scope. Its `/video:*` commands are, so a consumer holds the instructions to run
+a script they do not have — which is exactly the re-implementation prompt
+Source D describes, and why it is the honest pilot rather than a mismatched one.
+The invariants section therefore governs **executable assets a consumer may
+re-implement**, and the skill-bundled ones are the subset the delivery chain
+above hands over intact.
+
+## Provenance
+
+Neutral descriptors with `ENC1:` pins (`src/scripts/_lib/link_crypto.ts`;
+decrypt with the maintainer key). No source code is borrowed — the citation is
+for a field observation, so no licence obligation arises here.
+
+| Ref | Neutral descriptor | Pinned reference |
+|---|---|---|
+| Source D | Not a skill — a generated site produced by an agent from another skill's method, and the field evidence that a re-implemented engine loses the hardening the original author paid for. | `ENC1:HZOvYuwy9+J+8ZVdGDYleNskEFXJdF0MzqwSS0uS/chBGIvScK11YFvMesd51EUAnSr+viVtHa3k+E5qpA0QIQ==` |

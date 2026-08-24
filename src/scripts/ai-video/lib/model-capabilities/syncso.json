@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "adapter": "syncso",
   "comment": "Lip-sync post-process capability manifest. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace — verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. The lipsync_budget block is the MACHINE-READABLE sparse-lip-sync discipline (council 2026-06-06: singing lip-sync is genuinely hard — keep it sparse): the orchestrator enforces it BEFORE any submit; tests lock its shape.",
   "lipsync_budget": {
@@ -17,7 +17,13 @@
       "aspect": ["16:9", "9:16", "1:1"],
       "cost_per_second_usd": 0.05,
       "verified": false,
-      "input_notes": "input is [{type:video,url},{type:audio,url}] — both https-hosted; ASSUMED max clip length 60s; singing-capable per vendor docs, quality degrades off frontal close-ups"
+      "input_notes": "input is [{type:video,url},{type:audio,url}] — both https-hosted; ASSUMED max clip length 60s; singing-capable per vendor docs, quality degrades off frontal close-ups",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     }
   }
 }

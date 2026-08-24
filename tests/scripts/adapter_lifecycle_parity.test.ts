@@ -104,14 +104,25 @@ describe('adapter lifecycle parity', () => {
         );
     });
 
-    // The § 5 day-one table must never be able to fail this check: it records
-    // `higgsfield` as `experimental` while both live surfaces say `stable`.
-    it('the day-one table is not an input — its stale row does not produce a finding', () => {
+    // SUPERSEDED 2026-08-24, and the replacement is stronger rather than looser.
+    // This used to pin the § 5 day-one table's stale row (`higgsfield` as
+    // `experimental` while both live surfaces read `stable`) and assert only that
+    // a stale row cannot fail the parity check. The provider-truth work removed
+    // the premise instead of annotating it: § 5 is now generated from the
+    // adapters by `lint_adapter_tier --table`, so there is no hand-written row
+    // left to go stale. Asserting the OLD row would now assert the drift is back.
+    // What is checked instead: the generated table carries the adapter's real
+    // tier, it is marked generated so a hand edit is visible, and parity still
+    // reports nothing.
+    it('the § 5 table is generated and carries the live tier, so no stale row exists', () => {
         const contract = fs.readFileSync(
             path.join(REPO, 'docs', 'contracts', 'provider-lifecycle.md'),
             'utf-8',
         );
-        expect(contract).toContain('| `higgsfield` | image+video | `experimental` |');
+        expect(contract).toContain('## § 5 — Current tier assignment (generated)');
+        expect(contract).toContain('DO NOT EDIT BY HAND');
+        expect(contract).toContain('| `higgsfield` | ai-video | `stable` |');
+        expect(contract).not.toContain('| `higgsfield` | image+video | `experimental` |');
         expect(adapter_lifecycle_findings()).toEqual([]);
     });
 });

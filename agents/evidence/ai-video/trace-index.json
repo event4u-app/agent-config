@@ -1,0 +1,401 @@
+[
+  {
+    "captured_at": "2026-06-10T07-15-44Z",
+    "model": null,
+    "provider": "fal",
+    "sha256": "46e018e2aea2416f6fbcf3f82ce799047e440b0c334e1c3934543e2f5ffeb6dc",
+    "trace_id": "fal-dry-run-2026-06-10T07-15-44Z"
+  },
+  {
+    "captured_at": "2026-06-10T12-36-28Z",
+    "model": null,
+    "provider": "fal",
+    "sha256": "0f89708147386aa969b77b9e6e02e5fac86ecb55ab3dd953028746cc726488e7",
+    "trace_id": "fal-dry-run-2026-06-10T12-36-28Z"
+  },
+  {
+    "captured_at": "2026-06-10T14-59-22Z",
+    "model": null,
+    "provider": "fal",
+    "sha256": "517a83174c2b2c913bc189a14511883d9538c728bd1eee0ac2baef438809ac33",
+    "trace_id": "fal-dry-run-2026-06-10T14-59-22Z"
+  },
+  {
+    "captured_at": "2026-06-10T12-39-13Z",
+    "model": "fal-ai_hunyuan-video",
+    "provider": "fal",
+    "sha256": "aeca9d0c7162746aa42b8995ecb35e2eb3e507f8492677346a955051ef4aa87f",
+    "trace_id": "fal-fal-ai_hunyuan-video-live-2026-06-10T12-39-13Z"
+  },
+  {
+    "captured_at": "2026-06-10T07-17-46Z",
+    "model": "fal-ai_ltx-2_text-to-video",
+    "provider": "fal",
+    "sha256": "c23c25632efe62dddb5edb51f08d50cae4aca78efa871ca5827b50a25627387b",
+    "trace_id": "fal-fal-ai_ltx-2_text-to-video-dry-run-2026-06-10T07-17-46Z"
+  },
+  {
+    "captured_at": "2026-06-10T12-32-52Z",
+    "model": "fal-ai_ltx-2_text-to-video",
+    "provider": "fal",
+    "sha256": "80f58f0c23e590d071ce4537834d4c175f307af46c340abf868f69f8f8579aa0",
+    "trace_id": "fal-fal-ai_ltx-2_text-to-video-live-2026-06-10T12-32-52Z"
+  },
+  {
+    "captured_at": "2026-06-10T12-36-49Z",
+    "model": "fal-ai_ltx-2_text-to-video",
+    "provider": "fal",
+    "sha256": "d71563eb297a166b5550d4feaafd3c68362e0518d56b702cf16ac387f9db05f0",
+    "trace_id": "fal-fal-ai_ltx-2_text-to-video-live-2026-06-10T12-36-49Z"
+  },
+  {
+    "captured_at": "2026-06-10T12-38-11Z",
+    "model": "fal-ai_wan_v2.2-a14b_text-to-video",
+    "provider": "fal",
+    "sha256": "86091ac5814ac9ea4d976bcfdb2a5b721e48a8774d29de720132732423d383c9",
+    "trace_id": "fal-fal-ai_wan_v2.2-a14b_text-to-video-live-2026-06-10T12-38-11Z"
+  },
+  {
+    "captured_at": "2026-06-10T03-55-25Z",
+    "model": null,
+    "provider": "fal",
+    "sha256": "8a7ba3b6e87742633d971d062602daa30d534584d6d2fc3ad104e12dfdf82e51",
+    "trace_id": "fal-live-2026-06-10T03-55-25Z"
+  },
+  {
+    "captured_at": "2026-06-10T03-47-31Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "4eb14140703b5006e383440f641386f523e36c1503f0b4b57d40744f17841cce",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T03-47-31Z"
+  },
+  {
+    "captured_at": "2026-06-10T03-50-18Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "68a4f596d5ed0171281de4b48be297e82ba39fd1f7dfdf589174bb93ec2daa40",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T03-50-18Z"
+  },
+  {
+    "captured_at": "2026-06-10T03-55-25Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "2cfe88eb7b7fb43bf69001bcc5471e0fe39effb39564897497a3976dceb1d50a",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T03-55-25Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-34-20Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "19167543654586925967521be4dc2b3d8dbf8d0a69ce022ecaaad585ce9b11e7",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T05-34-20Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-44-26Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "f941ef0da2161ed56f9890ce10d418a9de4c46143d9571090ef9bd66041a988d",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T05-44-26Z"
+  },
+  {
+    "captured_at": "2026-06-10T06-25-39Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "e4676ec58042978a3426322fc58f8376572ae081c1d8bb5e7be0259ca20f5322",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T06-25-39Z"
+  },
+  {
+    "captured_at": "2026-06-10T07-17-47Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "85c4973b673532d7547ff7b142f19beed68dc39333e589ee7a9479656cb37dec",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T07-17-47Z"
+  },
+  {
+    "captured_at": "2026-06-10T14-59-22Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "ebe955564755d0f0c4d9587d4feb4cdfdeef1579b398f68d9ca4b4693f0092c8",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T14-59-22Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-13-26Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "1e99a77727db2a620f620a4562e170bc40e4be7642ccf335d477d6d85c2b8976",
+    "trace_id": "gemini-veo-dry-run-2026-06-10T20-13-26Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-34-33Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "bc4b0296c1c0f7e340c119adb974f00143d1a3898d0af11cbf702a6a0b517604",
+    "trace_id": "gemini-veo-live-2026-06-10T05-34-33Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-35-17Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "2d27c928571c133cc29f375dcfb064e9938514230dcd4399d48d0472b8f5047d",
+    "trace_id": "gemini-veo-live-2026-06-10T05-35-17Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-36-17Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "70f76da86d411b903fe3fd73392ae8aefd07a7746b28dc5fcdd3879d61f003cf",
+    "trace_id": "gemini-veo-live-2026-06-10T05-36-17Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-37-11Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "aab900c7c9b3700e2f3eeef6d7eef884c21f39ad79e8750c0ab297c02faa8bd3",
+    "trace_id": "gemini-veo-live-2026-06-10T05-37-11Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-37-53Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "b2450974a231de48af9ca8f2148cdebc18ae247a7fed5e8c94c5f02400a3a13f",
+    "trace_id": "gemini-veo-live-2026-06-10T05-37-53Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-38-36Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "ea03c549263b474316e57d3bb7be12fc84d7d586477d053fa0aaf69289412b5a",
+    "trace_id": "gemini-veo-live-2026-06-10T05-38-36Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-39-49Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "c04ee0dac8f835a567c17e2bf921800c423b3f925d7929c726e07269664b86ec",
+    "trace_id": "gemini-veo-live-2026-06-10T05-39-49Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-40-33Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "4ee95a82416111fe777832b3efdee467c5097c5f7be7e008a99638701bffbb75",
+    "trace_id": "gemini-veo-live-2026-06-10T05-40-33Z"
+  },
+  {
+    "captured_at": "2026-06-10T05-42-49Z",
+    "model": null,
+    "provider": "gemini-veo",
+    "sha256": "16d6e5d89f74877397ca85146f5ba6f56cafa39a45570541728e878cbfbdddf7",
+    "trace_id": "gemini-veo-live-2026-06-10T05-42-49Z"
+  },
+  {
+    "captured_at": "2026-06-10T02-50-36Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "2ac0d250a71a8dcf961e52a61059b96be86fc1ab8fe8402a5df1c15afb4eb80d",
+    "trace_id": "higgsfield-dry-run-2026-06-10T02-50-36Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-39-34Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "b076c983a6df015d68c6fb2dcb2da7e5fa41e303672601548539847e6ed1e53f",
+    "trace_id": "higgsfield-dry-run-2026-06-10T20-39-34Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-14-20Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "4d0ab7066312eb601d094abd3a775167ceb2474ecc9243730aa7e238f801ebab",
+    "trace_id": "higgsfield-live-2026-06-10T20-14-20Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-16-11Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "74d3790c21171571b37d56d459ad582e43a9c9968b6692d11d7afd274cef4be4",
+    "trace_id": "higgsfield-live-2026-06-10T20-16-11Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-17-08Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "1b6d123877d03d9afd1ab035bdbc0653c2352dea826ba6512401917af24b657a",
+    "trace_id": "higgsfield-live-2026-06-10T20-17-08Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-32-46Z",
+    "model": null,
+    "provider": "higgsfield",
+    "sha256": "ff07435a6c7e79e9e6348a63a7d4cddcc0c9f4282d4268db1f8de88c1469652e",
+    "trace_id": "higgsfield-live-2026-06-10T20-32-46Z"
+  },
+  {
+    "captured_at": "2026-06-10T14-59-22Z",
+    "model": null,
+    "provider": "kling",
+    "sha256": "53e26b3322067a28db59b11b9a95fa8e44361dd92f02ef0214616b5cce844f4f",
+    "trace_id": "kling-dry-run-2026-06-10T14-59-22Z"
+  },
+  {
+    "captured_at": "2026-06-10T08-01-21Z",
+    "model": null,
+    "provider": "kling",
+    "sha256": "0647743dbecc1a4f5c805785cddd4c5c12ba53085b8be4cb73ea633217164488",
+    "trace_id": "kling-live-2026-06-10T08-01-21Z"
+  },
+  {
+    "captured_at": "2026-06-10T08-32-05Z",
+    "model": null,
+    "provider": "kling",
+    "sha256": "7425a8aa71b48fcfe706f48a910a50c5b4585cead6ec891a1036954490d3347b",
+    "trace_id": "kling-live-2026-06-10T08-32-05Z"
+  },
+  {
+    "captured_at": "2026-06-10T02-50-35Z",
+    "model": null,
+    "provider": "openai-images",
+    "sha256": "a6119d5c337ad33dada5308af750abd9361e71671b71ddd1e77183d45425f700",
+    "trace_id": "openai-images-dry-run-2026-06-10T02-50-35Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-39-34Z",
+    "model": null,
+    "provider": "openai-images",
+    "sha256": "b5d01378933e1ca681a98ebdb6e892456d95bfd59366f5b53435690ba6a19ee7",
+    "trace_id": "openai-images-dry-run-2026-06-10T20-39-34Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-11-24Z",
+    "model": null,
+    "provider": "openai-images",
+    "sha256": "baa12c2f0b3732fd4327a4e683b64ac2b06be2d1f4fcbb85a7d4b7bcfb3a9ae6",
+    "trace_id": "openai-images-live-2026-06-10T20-11-24Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-13-26Z",
+    "model": null,
+    "provider": "openai-images",
+    "sha256": "c5aa6dda7659d6253181c164a98014e2d5c48b0c6837c0ff3f30b85dac848b70",
+    "trace_id": "openai-images-live-2026-06-10T20-13-26Z"
+  },
+  {
+    "captured_at": "2026-06-10T07-15-45Z",
+    "model": null,
+    "provider": "replicate",
+    "sha256": "8dbaaeb85d16fcd8d84e6b05e2bc8ac335877d885d28b959be4572f3393b30c2",
+    "trace_id": "replicate-dry-run-2026-06-10T07-15-45Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-46-31Z",
+    "model": null,
+    "provider": "replicate",
+    "sha256": "bdaddb329174d2aa416c69a4139ce4dea591adba6ad8dd38e407d2ec1addb271",
+    "trace_id": "replicate-dry-run-2026-06-10T10-46-31Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-52-48Z",
+    "model": null,
+    "provider": "replicate",
+    "sha256": "08419b5a57cf9f309b0f186619cf5034478314ec048938d9ed75e59f2d71a8e5",
+    "trace_id": "replicate-dry-run-2026-06-10T10-52-48Z"
+  },
+  {
+    "captured_at": "2026-06-10T14-59-22Z",
+    "model": null,
+    "provider": "replicate",
+    "sha256": "4b3a9ddfce0875643e11eed75f6eec3e675d0df3b14ddd37eaa117b0c212cfe0",
+    "trace_id": "replicate-dry-run-2026-06-10T14-59-22Z"
+  },
+  {
+    "captured_at": "2026-06-10T08-39-18Z",
+    "model": "lightricks_ltx-video",
+    "provider": "replicate",
+    "sha256": "61af306ba2ecafc1d17466f9c612d437870238189548647030bad9daf68cf0e5",
+    "trace_id": "replicate-lightricks_ltx-video-live-2026-06-10T08-39-18Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-44-51Z",
+    "model": "lightricks_ltx-video",
+    "provider": "replicate",
+    "sha256": "946eccfc86fc88fe23424506264cac3ea69ec352eab634779aebf65271f763ed",
+    "trace_id": "replicate-lightricks_ltx-video-live-2026-06-10T10-44-51Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-46-47Z",
+    "model": "lightricks_ltx-video",
+    "provider": "replicate",
+    "sha256": "1631cb6f475db51a5151527f9b8fe5e60f2f26a3ad1e9039bfd08a7e6d0d2188",
+    "trace_id": "replicate-lightricks_ltx-video-live-2026-06-10T10-46-47Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-48-39Z",
+    "model": "tencent_hunyuan-video",
+    "provider": "replicate",
+    "sha256": "ab03639f55fbf697a8f6fa054e7a61abf79d1c1adba039709624118e0c31a69b",
+    "trace_id": "replicate-tencent_hunyuan-video-live-2026-06-10T10-48-39Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-51-09Z",
+    "model": "tencent_hunyuan-video",
+    "provider": "replicate",
+    "sha256": "dc76c5a9181f674305e42b593217f93b876c2e15e72003d4744b3d3595f97ac8",
+    "trace_id": "replicate-tencent_hunyuan-video-live-2026-06-10T10-51-09Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-54-32Z",
+    "model": "tencent_hunyuan-video",
+    "provider": "replicate",
+    "sha256": "00554fd456c70d803dce91a0b580c14d2e897608ae42d4337f372794399c17ea",
+    "trace_id": "replicate-tencent_hunyuan-video-live-2026-06-10T10-54-32Z"
+  },
+  {
+    "captured_at": "2026-06-10T08-41-36Z",
+    "model": "wan-video_wan-2.2-t2v-fast",
+    "provider": "replicate",
+    "sha256": "d4fa6a246c7936483fc06a515c9e93ac45890a599a58187804b9b03fdb447762",
+    "trace_id": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T08-41-36Z"
+  },
+  {
+    "captured_at": "2026-06-10T09-45-37Z",
+    "model": "wan-video_wan-2.2-t2v-fast",
+    "provider": "replicate",
+    "sha256": "287fd99d404bf001b65ed0e6d87ef02576d03bc10725752ef0a6f98d5eb10830",
+    "trace_id": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T09-45-37Z"
+  },
+  {
+    "captured_at": "2026-06-10T09-49-06Z",
+    "model": "wan-video_wan-2.2-t2v-fast",
+    "provider": "replicate",
+    "sha256": "5a88f28bf8004e2a7ae5742e6584ac0cb0b843ed084dc141b4b65fcf1bc33d58",
+    "trace_id": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T09-49-06Z"
+  },
+  {
+    "captured_at": "2026-06-10T09-54-48Z",
+    "model": "wan-video_wan-2.2-t2v-fast",
+    "provider": "replicate",
+    "sha256": "3e5464d54385e6bc7ffc747944dbc019c857989d7a5afbb414666341929d7a73",
+    "trace_id": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T09-54-48Z"
+  },
+  {
+    "captured_at": "2026-06-10T10-43-52Z",
+    "model": "wan-video_wan-2.2-t2v-fast",
+    "provider": "replicate",
+    "sha256": "22e14a119fef498825143c9b5c3dca618cd2cb98ac25af2fbb6ec5e3723de832",
+    "trace_id": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T10-43-52Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-39-34Z",
+    "model": null,
+    "provider": "sora",
+    "sha256": "1526a7af79a19a4bca9489e204daf9910a8032d48f7ae22d927f52f901a456d4",
+    "trace_id": "sora-dry-run-2026-06-10T20-39-34Z"
+  },
+  {
+    "captured_at": "2026-06-10T20-09-34Z",
+    "model": null,
+    "provider": "sora",
+    "sha256": "6b4f50cbd3c6ec863eef5c6863889576a728a9334ec5be8a89f5d81d2b1fe270",
+    "trace_id": "sora-live-2026-06-10T20-09-34Z"
+  }
+]

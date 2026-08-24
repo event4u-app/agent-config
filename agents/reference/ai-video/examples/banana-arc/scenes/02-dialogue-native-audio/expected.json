@@ -26,6 +26,7 @@
     "no soap-opera lighting",
     "no lens flare"
   ],
+  "continuity": "cut",
   "requires": {
     "audio_native": true
   }

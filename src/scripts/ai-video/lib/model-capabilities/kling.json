@@ -1,0 +1,23 @@
+{
+  "schema": 2,
+  "adapter": "kling",
+  "comment": "Per-model capability manifest for the direct kling adapter. Every value is READ OUT OF THE TREE and cited in input_notes. Only kling-v2-master is an entry: it is the adapter default (adapters/kling.sh:153) and the XML <default-model> (agents/templates/.ai-video.xml.example:87). kling-v1* appears only as a rate PREFIX PATTERN (adapters/kling.sh:105) with no concrete model id anywhere in the tree, so no v1 entry is invented. verified stays false: the adapter header records a live 1/1 round-trip (adapters/kling.sh:9-13) but names no per-model trace id reachable from the tree.",
+  "models": {
+    "kling-v2-master": {
+      "label": "Kling v2 Master (text-to-video)",
+      "min_duration": 5,
+      "max_duration": 10,
+      "audio_sync": false,
+      "aspect": null,
+      "cost_per_second_usd": 0.28,
+      "verified": false,
+      "input_notes": "model id from adapters/kling.sh:153 and agents/templates/.ai-video.xml.example:87; duration is the enum {'5','10'} the adapter clamps to (:151) with KLING_MAX_DURATION default 10 (:52) matching the template tuning <max-duration>10</max-duration> (xml:93); audio_sync false from the adapter's declared audio=none (:4), the video-only fetch (:245), the dispatch flag (:248) and <audio-native>false</audio-native> (xml:94); aspect is passed straight through as aspect_ratio with no enum check (:167) so the accepted set is unknown — the template's tuning default is 16:9 (xml:91); cost_per_second_usd is DERIVED, not quoted: _kling_model_rate_usd gives kling-v2* = 1.40 USD per 5 s (:102-104) and the header records ~$1.40 for a 5 s std render (:12), so 1.40 / 5 = 0.28",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
+    }
+  }
+}

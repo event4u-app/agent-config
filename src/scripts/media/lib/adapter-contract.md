@@ -103,6 +103,7 @@ the same stdout shape on stdout and an exit code on completion.
     "mood": "..."
   },
   "ref_images": ["/abs/path/frame.png", "..."],
+  "end_image": "/abs/path/last-frame.png",
   "duration": 4.5,
   "aspect": "16:9",
   "seed": 1234567,
@@ -116,9 +117,45 @@ the same stdout shape on stdout and an exit code on completion.
 }
 ```
 
-`ref_images`, `duration`, `aspect`, `seed`, `audio`, `negative` are
-optional. `prompt.*` blocks are mandatory. Unknown top-level keys
-are logged to stderr and ignored.
+`ref_images`, `end_image`, `duration`, `aspect`, `seed`, `audio`,
+`negative` are optional. `prompt.*` blocks are mandatory. Unknown
+top-level keys are logged to stderr and ignored.
+
+<a id="end_image"></a>
+
+### `end_image` — closing frame (additive, v2)
+
+`ref_images[0]` is the frame a clip **opens** on. `end_image` is the frame it
+**closes** on — the input a connector clip needs to land exactly on the next
+clip's first frame instead of near it.
+
+```
+NO ADAPTER DROPS AN end_image IT CANNOT HONOUR.
+```
+
+An adapter may honour `end_image` only when the submitted model's
+`model-capabilities` entry answers `end_frame: true`. `false` and `null` both
+refuse, because `null` means *unknown* and unknown is never treated as `true`;
+a model the manifest does not carry at all refuses on the same ground. The
+refusal is **exit 12**, and its message names the model and the field.
+
+Enforcement is one shared helper, `aiv_assert_end_frame_supported` in
+`scripts/media/lib/adapter-common.sh`, called by `aiv_dispatch` on the two
+subcommands that consume this stdin (`submit`, `run`) — so every adapter
+refuses identically and none re-implements the rule. Two consequences worth
+stating plainly:
+
+- The gate runs **before** `aiv_assert_dryrun`, so a caller in the default
+  dry-run mode is told the truth instead of receiving a fixture that reads as
+  success. An invalid request is invalid in both modes, and no spend is
+  involved in saying so.
+- The `dry-run` subcommand is **not** gated, because it consumes no stdin at
+  all — it returns a committed fixture and ignores `duration`, `aspect` and
+  every other input alike. It is a fixture echo, not a render preview.
+
+Refusal over silent downgrade is the register this contract already uses:
+`scripts/ai-video/stitch.sh` refuses `--crossfade` rather than quietly hard-
+cutting, for the same reason.
 
 ### `model_id` — multiplexer model selection (additive, v2)
 
@@ -136,9 +173,13 @@ Single-model adapters ignore it (unknown-key rule above). Rules:
   (`<model_id>::<request_id>`) and re-validates both segments on every
   poll/fetch.
 - Per-model capabilities (`min_duration`, `max_duration`, `audio_sync`,
-  `aspect`, modeled cost) live in
-  `scripts/ai-video/lib/model-capabilities/<adapter>.json` and are
-  surfaced via `capability --model <id>`. Entries are
+  `aspect`, modeled cost, and the `start_frame` / `end_frame` /
+  `frame_lock` continuity answers) live in
+  `scripts/ai-video/lib/model-capabilities/<adapter>.json` (schema v2 —
+  see that directory's README) and are surfaced via
+  `capability --model <id>`. A direct adapter with more than one model, or
+  with per-model bounds, carries a manifest too; it selects via the XML
+  `<default-model>` rather than via `model_id`. Entries are
   `verified: false` until a real smoke trace exists for that model —
   consumers must surface the flag, never trust the numbers silently.
 
@@ -276,6 +317,33 @@ the orchestrator MUST NOT auto-retry. `retryable: true` does **not**
 authorize auto-retry either; the orchestrator surfaces a single
 numbered-options block (retry · regenerate prompt · skip · abort)
 per `non-destructive-by-default` and waits.
+
+### Exit codes
+
+Every adapter exits through `aiv_die <code> <message>`. The codes below are
+the whole live set, read out of `scripts/media/lib/adapter-common.sh` and
+`scripts/ai-video/adapters/*.sh`; a new refusal takes the next free number and
+lands in this table in the same change.
+
+| Code | Meaning | Raised by |
+|---|---|---|
+| `2` | Usage error, bad argument, or a flag the script refuses rather than downgrades | argv parsing · `stitch.sh --crossfade` |
+| `3` | Missing dependency, missing fixture, or an unusable / incoherent manifest | `aiv_require_cmd` · `aiv_emit_dry_run` · `aiv_assert_frame_coherent` |
+| `4` | Live call refused — `AIV_DRYRUN` is not `false` | `aiv_assert_dryrun` |
+| `5` | Live subcommand not wired (scaffold tier — dry-run only) | `_aiv_dispatch_timed` |
+| `6` | Provider unusable — `<enabled>false</enabled>`, missing key, sandbox refusal | `aiv_provider_enabled` · key checks |
+| `7` | Bad or missing input — illegal or absent `model_id`, missing `ref_images[0]`, a local path where https is required, a missing clip | adapters · `stitch.sh` |
+| `8` | Provider or tool failure — non-2xx HTTP, upload failure, `ffmpeg` failure | adapters · `stitch.sh` |
+| `10` | Artifact-path validation violation (trust boundary) | `aiv_validate_artifact_path` |
+| `11` | Download failed or exceeded the size cap | `aiv_fetch_url` |
+| `12` | `end_image` submitted for a model whose `end_frame` is not a probed `true` — refusal over silent downgrade, never dropped | `aiv_assert_end_frame_supported` |
+| `13` | the calibration probe measured a charge more than the tolerance above the modeled `cost_per_second_usd` — a halt for a human before the batch, never a failure | `lib/calibrate-cost.sh` |
+| `75` | Transient inference failure — the caller MAY retry once or fall back | local engines |
+
+`1` is unused (it is the shell's own catch-all). `9` is **retired**: it meant
+"live subcommand not yet wired" until ADR-056 disposed of the five unvalidated
+video adapters and `5` took that role — it is left vacant rather than recycled,
+so an `exit_code: 9` in an archived `error.json` keeps its original meaning.
 
 ## Dry-run
 

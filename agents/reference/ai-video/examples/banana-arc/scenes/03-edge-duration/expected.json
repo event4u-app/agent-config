@@ -23,6 +23,7 @@
     "no fish-eye distortion",
     "no chromatic aberration"
   ],
+  "continuity": "cut",
   "requires": {
     "audio_native": false
   }

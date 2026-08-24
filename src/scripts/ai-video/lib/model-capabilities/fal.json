@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "adapter": "fal",
   "comment": "Per-model capability manifest for the fal multiplexer. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace for that model \u2014 verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. Durations in seconds; cost_per_second_usd is a modeled estimate, never a quote.",
   "models": {
@@ -15,7 +15,13 @@
       ],
       "cost_per_second_usd": 0.28,
       "verified": false,
-      "input_notes": "duration is an enum string '5'|'10'; aspect_ratio; negative_prompt supported; cfg_scale optional"
+      "input_notes": "duration is an enum string '5'|'10'; aspect_ratio; negative_prompt supported; cfg_scale optional",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "fal-ai/wan/v2.2-a14b/text-to-video": {
       "label": "Wan 2.2 A14B (text-to-video)",
@@ -29,7 +35,13 @@
       "cost_per_second_usd": 0.08,
       "verified": true,
       "input_notes": "resolution enum ('480p'|'580p'|'720p') instead of free aspect; num_frames-driven duration; seed supported",
-      "smoke_trace": "fal-fal-ai_wan_v2.2-a14b_text-to-video-live-2026-06-10T12-38-11Z"
+      "smoke_trace": "fal-fal-ai_wan_v2.2-a14b_text-to-video-live-2026-06-10T12-38-11Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "fal-ai/ltx-2/text-to-video": {
       "label": "LTX-2 (text-to-video, synchronized audio)",
@@ -44,7 +56,13 @@
       "cost_per_second_usd": 0.16,
       "verified": true,
       "input_notes": "generates synchronized audio natively (audio_sync); resolution up to 4K; duration in seconds",
-      "smoke_trace": "fal-fal-ai_ltx-2_text-to-video-live-2026-06-10T12-36-49Z"
+      "smoke_trace": "fal-fal-ai_ltx-2_text-to-video-live-2026-06-10T12-36-49Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "fal-ai/veo3": {
       "label": "Google Veo 3 (text-to-video, native audio)",
@@ -57,7 +75,13 @@
       ],
       "cost_per_second_usd": 0.5,
       "verified": false,
-      "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; aspect_ratio; generate_audio flag"
+      "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; aspect_ratio; generate_audio flag",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "fal-ai/hunyuan-video": {
       "label": "Hunyuan Video (text-to-video)",
@@ -71,7 +95,13 @@
       "cost_per_second_usd": 0.08,
       "verified": true,
       "input_notes": "num_frames-driven duration; resolution enum; no negative_prompt",
-      "smoke_trace": "fal-fal-ai_hunyuan-video-live-2026-06-10T12-39-13Z"
+      "smoke_trace": "fal-fal-ai_hunyuan-video-live-2026-06-10T12-39-13Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     }
   }
 }

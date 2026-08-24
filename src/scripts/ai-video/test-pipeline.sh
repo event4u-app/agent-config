@@ -19,6 +19,10 @@
 #      PNG magic; pairwise NCC ≥ 0.95 when `compare` is available.
 #      When unavailable, asserts byte-identity (the three frames are
 #      committed identical for the offline path).
+#   7. end_image refusal: an adapter handed `end_image` for a model whose
+#      model-capabilities entry answers `end_frame: null` exits non-zero
+#      and names the model — it never drops the image (adapter-contract.md
+#      § end_image, exit 12).
 #
 # Exit 0 = all assertions pass; 1 = at least one failure (counted +
 # summarized at the end).
@@ -47,7 +51,7 @@ require jq || exit 1
 printf '\n== test-pipeline.sh — banana-arc golden run (offline) ==\n\n'
 
 # ---------------------------------------------------------------- 1
-printf '[1/6] parse-blueprint vs. expected.json\n'
+printf '[1/8] parse-blueprint vs. expected.json\n'
 SCENES="01-simple 02-dialogue-native-audio 03-edge-duration"
 for s in $SCENES; do
   actual="$(bash "$ROOT/src/scripts/ai-video/lib/parse-blueprint.sh" "$PROJECT/scenes/$s/blueprint.txt" 2>/dev/null \
@@ -63,7 +67,7 @@ for s in $SCENES; do
 done
 
 # ---------------------------------------------------------------- 2
-printf '\n[2/6] character.json descriptors verbatim in prompt.subject\n'
+printf '\n[2/8] character.json descriptors verbatim in prompt.subject\n'
 SILHOUETTE="$(jq -r '.characters[0].silhouette' "$PROJECT/character.json")"
 PALETTE="$(jq -r '.characters[0].palette'    "$PROJECT/character.json")"
 WARDROBE="$(jq -r '.characters[0].wardrobe'  "$PROJECT/character.json")"
@@ -84,7 +88,7 @@ for s in $SCENES; do
 done
 
 # ---------------------------------------------------------------- 3
-printf '\n[3/6] audio.* branching matches manifest\n'
+printf '\n[3/8] audio.* branching matches manifest\n'
 for entry in 01-simple:false 02-dialogue-native-audio:true 03-edge-duration:false; do
   s="${entry%%:*}"
   want="${entry##*:}"
@@ -98,7 +102,7 @@ for entry in 01-simple:false 02-dialogue-native-audio:true 03-edge-duration:fals
 done
 
 # ---------------------------------------------------------------- 4
-printf '\n[4/6] adapter capability declarations\n'
+printf '\n[4/8] adapter capability declarations\n'
 declare_caps() {
   local adapter="$1"; local expected="$2"
   local out got
@@ -116,7 +120,7 @@ declare_caps sora          "native"
 declare_caps kling         "none"
 
 # ---------------------------------------------------------------- 5
-printf '\n[5/6] stitch.sh dry-run returns manifest output path\n'
+printf '\n[5/8] stitch.sh dry-run returns manifest output path\n'
 STITCH_OUT="$(jq -r '.stitch_output' "$PROJECT/manifest.json")"
 stitch_log="$(AIV_DRYRUN=true bash "$ROOT/src/scripts/ai-video/stitch.sh" \
   "$PROJECT/manifest.json" "$PROJECT/$STITCH_OUT" 2>&1 || true)"
@@ -126,7 +130,7 @@ case "$stitch_log" in
 esac
 
 # ---------------------------------------------------------------- 6
-printf '\n[6/6] visual regression (locked.png pairwise)\n'
+printf '\n[6/8] visual regression (locked.png pairwise)\n'
 PNG_MAGIC="$(printf '\x89PNG\r\n\x1a\n')"
 prev=""
 have_compare=0
@@ -159,6 +163,80 @@ for s in $SCENES; do
   fi
   prev="$f"
 done
+
+# ---------------------------------------------------------------- 7
+printf '\n[7/8] end_image is refused, never dropped\n'
+END_ADAPTER="kling"
+END_MODEL="kling-v2-master"
+END_MANIFEST="$ROOT/src/scripts/ai-video/lib/model-capabilities/$END_ADAPTER.json"
+
+# Precondition: the entry must actually answer end_frame:null, or this case
+# proves nothing. A probed `true` here would make the refusal wrong, not this
+# assertion stale — so it is checked, not assumed.
+end_declared="$(jq -r --arg m "$END_MODEL" \
+  '.models[$m] // {} | .end_frame | if . == null then "null" else tostring end' \
+  "$END_MANIFEST" 2>/dev/null || echo missing)"
+if [ "$end_declared" = "null" ]; then
+  ok "$END_ADAPTER/$END_MODEL declares end_frame=null (unknown)"
+else
+  fail "$END_ADAPTER/$END_MODEL declares end_frame=$end_declared — expected null for this case"
+fi
+
+end_stdin='{"prompt":{"subject":"a lone figure","action":"turns toward the door"},"duration":5,"end_image":"/tmp/aiv-end-frame.png"}'
+end_out="$(printf '%s' "$end_stdin" \
+  | AIV_DRYRUN=true AIV_MODEL="$END_MODEL" \
+    bash "$ROOT/src/scripts/ai-video/adapters/$END_ADAPTER.sh" submit 2>&1)"
+end_rc=$?
+
+if [ "$end_rc" -eq 0 ]; then
+  fail "$END_ADAPTER: end_image was accepted (exit 0) — the image was dropped silently"
+else
+  case "$end_out" in
+    *"$END_MODEL"*end_frame*|*end_frame*"$END_MODEL"*)
+      ok "$END_ADAPTER: end_image refused with exit $end_rc, naming $END_MODEL and end_frame";;
+    *)
+      fail "$END_ADAPTER: exit $end_rc but the message names neither the model nor the field (got: $end_out)";;
+  esac
+fi
+
+# ---------------------------------------------------------------- 8
+printf '\n[8/8] cost calibration prints modeled-vs-charged and does not re-confirm on null\n'
+CAL_PROJECT="$(mktemp -d -t aiv-cal-XXXXXX)"
+mkdir -p "$CAL_PROJECT/scenes/0001"
+printf '{"duration":5}\n' > "$CAL_PROJECT/scenes/0001/prompt.json"
+CAL_ADAPTER="fal"
+CAL_MODEL="fal-ai/ltx-2/text-to-video"
+
+# No cost.json: nothing has been charged. This is the dry-run shape, and it is
+# the case that matters most — `charged: null` must extrapolate nothing and must
+# NOT halt, because treating an absent charge as 0 would make every future
+# estimate quietly cheaper.
+cal_out="$(bash "$ROOT/src/scripts/ai-video/lib/calibrate-cost.sh" \
+  "$CAL_PROJECT" 0001 --adapter "$CAL_ADAPTER" --model "$CAL_MODEL" \
+  --scenes 4 --no-append 2>&1)" && cal_rc=0 || cal_rc=$?
+
+case "$cal_out" in
+  *"modeled \$"*"charged null"*) ok "calibration line prints modeled vs charged with charged: null" ;;
+  *) fail "calibration line missing or malformed (got: $cal_out)" ;;
+esac
+if [ "$cal_rc" -eq 0 ]; then
+  ok "charged: null does not re-confirm (exit 0)"
+else
+  fail "charged: null re-confirmed with exit $cal_rc — an absent charge is not an overrun"
+fi
+
+# Sensitivity: the halt must actually fire when a charge genuinely overruns, or
+# the exit-0 assertion above would pass against a script that never halts.
+printf '{"charged_usd":1.60}\n' > "$CAL_PROJECT/scenes/0001/cost.json"
+cal_over="$(bash "$ROOT/src/scripts/ai-video/lib/calibrate-cost.sh" \
+  "$CAL_PROJECT" 0001 --adapter "$CAL_ADAPTER" --model "$CAL_MODEL" \
+  --scenes 4 --no-append 2>&1)" && cal_over_rc=0 || cal_over_rc=$?
+if [ "$cal_over_rc" -eq 13 ]; then
+  ok "a charge over the tolerance halts with exit 13 for re-confirmation"
+else
+  fail "an overrun exited $cal_over_rc, expected 13 (got: $cal_over)"
+fi
+rm -rf "$CAL_PROJECT"
 
 # ----------------------------------------------------------------
 printf '\n----------------\nresult: %d passed · %d failed\n' "$PASS" "$FAIL"

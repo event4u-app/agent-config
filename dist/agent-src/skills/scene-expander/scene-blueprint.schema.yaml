@@ -82,6 +82,31 @@ blocks:
     target: negative
     description: "Clichés to reject, load-bearing top-first."
 
+# Chain directives — NOT one of the 12 blocks.
+#
+# A block above describes the shot. A chain directive describes how this scene
+# JOINS ITS NEIGHBOUR, which is a property of the assembly, not of the prompt —
+# so it is listed separately and the blueprint stays a 12-block IR everywhere
+# else in the tree. `parse-blueprint.sh` accepts the label like any other and
+# emits the value at the top level; the chain itself is read by
+# `scripts/ai-video/lib/seam-plan.sh`, which this file's parser never sees.
+chain_directives:
+  CONTINUITY:
+    required: false
+    target: continuity
+    default: cut
+    values: [cut, handoff, connector]
+    description: >
+      How this scene joins the PREVIOUS one. `cut` is a hard cut and is the
+      value assumed when the label is absent, so every blueprint written before
+      this directive existed keeps its exact meaning. `handoff` means this
+      scene's ref_images[0] is the extracted last frame of the previous scene's
+      RENDERED clip rather than its own still, which forces the two clips to
+      render sequentially. `connector` is a handoff plus one extra bridging
+      clip, and needs a probed `end_frame: true` on both adjacent models.
+      An unknown value is a parse error naming the value — never a silent
+      downgrade to `cut`.
+
 # Adapter-contract JSON shape produced by parse-blueprint.sh
 output_shape: |
   {
@@ -102,6 +127,7 @@ output_shape: |
     },
     "duration": 5.0,
     "negative": ["...", "..."],
+    "continuity": "cut" | "handoff" | "connector",
     "requires": {
       "audio_native": true | false
     }

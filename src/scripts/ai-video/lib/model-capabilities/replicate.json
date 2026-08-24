@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "adapter": "replicate",
   "comment": "Per-model capability manifest for the replicate multiplexer. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace for that model \u2014 verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. Durations in seconds; cost_per_second_usd is a modeled estimate, never a quote.",
   "models": {
@@ -15,7 +15,13 @@
       "cost_per_second_usd": 0.5,
       "verified": false,
       "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; resolution flag",
-      "official": true
+      "official": true,
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "kwaivgi/kling-v2.1-master": {
       "label": "Kling v2.1 Master (text/image-to-video)",
@@ -30,7 +36,13 @@
       "cost_per_second_usd": 0.28,
       "verified": false,
       "input_notes": "duration enum 5|10; start_image for image-to-video; negative_prompt supported",
-      "official": true
+      "official": true,
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "wan-video/wan-2.2-t2v-fast": {
       "label": "Wan 2.2 (text-to-video, fast)",
@@ -45,7 +57,13 @@
       "verified": true,
       "input_notes": "num_frames-driven duration; resolution enum; seed supported",
       "official": true,
-      "smoke_trace": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T10-43-52Z"
+      "smoke_trace": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T10-43-52Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "lightricks/ltx-video": {
       "label": "LTX Video (text-to-video)",
@@ -61,7 +79,13 @@
       "verified": true,
       "input_notes": "length in frames at fixed fps; cfg + negative_prompt supported",
       "official": false,
-      "smoke_trace": "replicate-lightricks_ltx-video-live-2026-06-10T10-46-47Z"
+      "smoke_trace": "replicate-lightricks_ltx-video-live-2026-06-10T10-46-47Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     },
     "tencent/hunyuan-video": {
       "label": "Hunyuan Video (text-to-video)",
@@ -76,7 +100,13 @@
       "verified": true,
       "input_notes": "video_length in frames; embedded_guidance_scale; no negative_prompt",
       "official": false,
-      "smoke_trace": "replicate-tencent_hunyuan-video-live-2026-06-10T10-54-32Z"
+      "smoke_trace": "replicate-tencent_hunyuan-video-live-2026-06-10T10-54-32Z",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
     }
   }
 }

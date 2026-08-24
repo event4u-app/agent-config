@@ -1,0 +1,23 @@
+{
+  "schema": 2,
+  "adapter": "gemini-veo",
+  "comment": "Per-model capability manifest for the direct gemini-veo adapter. Every value is READ OUT OF THE TREE and cited in input_notes. Only veo-3.0-generate-001 is an entry: it is the adapter default (adapters/gemini-veo.sh:129) and the XML <default-model> (agents/templates/.ai-video.xml.example:72). veo-3.0-fast* and veo-2.0* appear only as rate PREFIX PATTERNS (adapters/gemini-veo.sh:93-95) with no concrete model id in the tree, so no entries are invented for them. verified stays false: the adapter header records 10/10 live renders of this exact model (adapters/gemini-veo.sh:9-15) but names no trace id reachable from the tree, and the local traces are gitignored.",
+  "models": {
+    "veo-3.0-generate-001": {
+      "label": "Google Veo 3 (text-to-video, native audio)",
+      "min_duration": 4,
+      "max_duration": 8,
+      "audio_sync": true,
+      "aspect": null,
+      "cost_per_second_usd": 0.4,
+      "verified": false,
+      "input_notes": "model id from adapters/gemini-veo.sh:129 and agents/templates/.ai-video.xml.example:72; durationSeconds enum {4,6,8} is ASSUMED in the adapter header (:34-37) and is the clamp the adapter applies (:132-137), upper bound matching the template tuning <max-duration>8</max-duration> (xml:77); audio_sync true from the declared audio=native (:4), the dispatch flag (tail) and <audio-native>true</audio-native> (xml:78); aspect is passed through as aspectRatio with no enum check (:151) so the accepted set is unknown — the template's tuning default is 16:9 (xml:75); cost_per_second_usd from _veo_model_rate_usd_per_s veo-3.0* = 0.40 (:94), corroborated by the header's ~$1.60 per 4 s render at $0.40/s (:10)",
+      "start_frame": null,
+      "end_frame": null,
+      "frame_lock": {
+        "probed_at": null,
+        "psnr_frame0": null
+      }
+    }
+  }
+}

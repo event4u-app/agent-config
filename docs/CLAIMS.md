@@ -796,22 +796,29 @@ is the named exception in the claim itself.
   slug exists nowhere in the tree and no successor may be invented.
 
 ### claim: adapter-lifecycle-day-one-table
-- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree; the stale surface is the lifecycle day-one table, which is history and not a live tier list.
+- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree, and the surface that read stale is no longer hand-written: § 5 is generated, so the drift this claim was opened over cannot recur.
 - kind: qual
-- evidence: docs/contracts/provider-lifecycle.md#historical record
+- evidence: docs/contracts/provider-lifecycle.md#Current tier assignment
 - status: backed
-- last_verified: 2026-08-23
+- last_verified: 2026-08-24
 
   `src/scripts/ai-video/adapters/higgsfield.sh:15` reads `Lifecycle: stable` and
   `agents/templates/.ai-video.xml.example:55` reads `<lifecycle>stable</lifecycle>`
-  — the exact pair `docs/contracts/provider-lifecycle.md:101` obliges, and they
-  agree. The surface reading `experimental` is § 5, which states in its own words
-  that it lists the tiers "on the day this contract lands". The promotion is
-  recorded in `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
-  This corrects the drafting premise, which asserted a live contradiction between
-  adapter and contract: there is none, so the repair is a supersession note on the
-  historical table plus a parity gate over the obliged pair, never an edit to the
-  adapter.
+  — the exact pair the contract obliges, and they agree. That half is unchanged
+  and still measured; the promotion behind it is recorded in
+  `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
+
+  **Restated 2026-08-24, and the restatement is the finding.** This claim used
+  to assert that the stale surface was a *historical* day-one table and that the
+  repair was therefore a supersession note over frozen prose. The
+  chained-clip-continuity-and-provider-truth roadmap deleted that premise rather
+  than annotating it: § 5 is now `Current tier assignment (generated)`, and its
+  own opening says why the note was not enough — "a table in a contract is read
+  as the current state whatever its preamble says". So the earlier repair was
+  superseded by a stronger one, and the evidence pointer moved with it: it named
+  the phrase `historical record`, which no longer exists in the file, and a
+  pointer surviving into a tree that contradicts it is exactly what check_claims
+  catches. It caught this one in a merge.
 
 ### claim: augment-manifest-version-package-synced
 - claim: The `.augment-plugin/` manifest version is the package version, not an independent plugin-API version, and every version-bearing file the release workflow triggers on is read by a job in that workflow.

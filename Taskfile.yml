@@ -301,6 +301,7 @@ tasks:
       - task: lint-command-tiers
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
+      - task: lint-adapter-tier
       - task: lint-ui-stack-bundles
       - task: lint-rule-skill-pack-reach
       - task: lint-eval-fixture-citations

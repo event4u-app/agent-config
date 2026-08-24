@@ -55,6 +55,20 @@ the first missing clip) flags. Reject any other flag — this command
 does not render, so `--image-provider` / `--video-provider` are
 contract bugs.
 
+**`--mode` and `--xfade` exist on the script and are deliberately not
+reachable from here.** `stitch.sh` now carries `--mode cut|handoff`, and in
+handoff mode an optional `--xfade <s>` (≤ 0.25) at handoff seams. `cut` is the
+default and is byte-identical to the only behaviour this command has ever
+produced. `handoff` **re-encodes** (`libx264 -crf 20 -g 8 +faststart -an`) where
+`cut` stream-copies, so it pays a generation loss and drops audio — a spend-free
+but not cost-free change of the output. Reaching it needs the seam plan that
+`lib/seam-plan.sh` builds from per-scene `continuity:` directives, which this
+command does not read. Passing either flag here is therefore rejected by the
+rule above, and that is the intended answer, not a gap: the continuity path is
+driven from `/video:from-script`, and `--crossfade` remains refused in every
+mode. Port invariants: `docs/contracts/skill-bundled-assets.md` § Port
+invariants.
+
 ### 4. Stitch
 
 ```bash

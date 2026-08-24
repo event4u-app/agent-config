@@ -31,8 +31,18 @@ rows:
     reason: "all four violation bullets moved verbatim into a newly added section that names this rule as its origin"
   - heading: "Day-one state"
     disposition: merged
-    target: "docs/contracts/provider-lifecycle.md#§ 5 — Day-one assignment"
-    reason: "the rule paragraph duplicated a section that already existed, so the migration deleted the rule copy without needing to add anything"
+    target: "docs/contracts/provider-lifecycle.md#§ 5b — Promotion stays maintainer-authored"
+    reason: >-
+      the rule paragraph duplicated a section that already existed, so the
+      migration deleted the rule copy without needing to add anything.
+      Re-pointed 2026-08-23: the old anchor "§ 5 — Day-one assignment" held a
+      hand-written day-one snapshot that had gone stale (it listed five
+      experimental adapters while seven headers read stable). § 5 is now a
+      GENERATED current-state table, so the day-one prose this row actually
+      describes — promotion stays maintainer-authored, per-adapter, on the
+      commit that records a trace — moved to § 5b, and that is where this row
+      now points. The migrated content is unchanged; only the heading it lives
+      under moved.
   - heading: "Why agent-in-the-loop, not Python gate"
     disposition: carried
     target: "docs/contracts/provider-lifecycle.md#§ 4b — Why agent-in-the-loop, not a Python gate"

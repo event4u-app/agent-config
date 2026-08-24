@@ -515,6 +515,11 @@ tasks:
     desc: "Enforce structural reachability of media governance policies — every agents/settings/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/settings/policies/media/README.md § Enforcement model)"
     cmd: ./scripts-run src/scripts/lint_media_policy_linkage {{.QUIET_FLAG}}
 
+  lint-adapter-tier:
+    silent: true
+    desc: "Every media adapter header reading `# Lifecycle: stable` must resolve to a dated row in agents/evidence/ai-video/trace-index.json inside 180 days, every manifest smoke_trace id must resolve, and the generated tier table in docs/contracts/provider-lifecycle.md § 5 must match the tree (see docs/contracts/provider-lifecycle.md § 5)"
+    cmd: ./scripts-run src/scripts/lint_adapter_tier {{.QUIET_FLAG}}
+
   lint-eval-fixture-citations:
     silent: true
     desc: "Every design-artifact eval fixture id must be cited by a contract, guideline, skill, rule, or test — an uncited fixture is an eval nobody runs (see tests/design-artifacts/eval-fixtures.md § Notes)"

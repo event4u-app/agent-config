@@ -140,6 +140,18 @@ current, and that the check the contract itself says CI does not perform still
 is not performed — so the day the two obliged surfaces *do* diverge, nothing
 will notice.
 
+> **Both halves were closed on 2026-08-23 by
+> `road-to-chained-clip-continuity-and-provider-truth` (now archived).** § 5 is
+> a **generated** current-state table spliced between markers and re-derived on
+> every gate run, so "a historical table read as current" no longer describes it
+> — the old day-one prose moved to § 5b. And the check is now performed:
+> `lint_adapter_tier` fails when a `stable` header has no dated row in
+> `agents/evidence/ai-video/trace-index.json` inside 180 days, or when a manifest
+> cites a `smoke_trace` id that resolves to nothing. This note is left here
+> rather than deleting the finding, because the finding was correct when written
+> and the provenance rows above are still the evidence for **why** it was fixed.
+> It does **not** close any step of this roadmap — only its Context is stale.
+
 ### D-D — refuted; the surviving finding is a ~2.9x error in the MCP roadmap's own R2 figure — `corrected-from-reproduction`
 
 The source claimed `agents/roadmaps/road-to-skill-delivery-over-mcp.md`
