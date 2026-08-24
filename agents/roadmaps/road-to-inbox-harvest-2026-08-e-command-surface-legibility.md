@@ -416,7 +416,7 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
    from a proposal.
 9. The pedagogy line uses the shipped literal `Why it works` and cites exactly
    one ID from the closed vocabulary in
-   `src/config/discovery/prompt-patterns.yml`.
+   `src/config/discovery/prompt-patterns.yml`. <!-- ref-ignore --> <!-- this roadmap own deliverable -->
 10. `lint_examples.ts` is **extended** to commands; the 4 existing
     `*-demos.md` files still pass byte-unchanged, and no parallel pedagogy
     linter exists.

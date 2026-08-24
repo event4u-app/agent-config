@@ -26,7 +26,7 @@ pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 
 Every rubric category of the external 32-category review reaches `ten`,
 `measured-null`, or `max-boundary` in
-`agents/evidence/ac-capability-scorecard.yaml` under the six-dimension
+`agents/evidence/ac-capability-scorecard.yaml` under the six-dimension <!-- ref-ignore --> <!-- produced by road-to-score-contract.md, this run -->
 definition frozen in `road-to-score-contract.md` — with no existing 10
 regressed, no aggregate averaging, and no mechanism shipped only to satisfy a
 rubric row. The v1 "doctrine caps" are withdrawn: a pre-registered **measured
