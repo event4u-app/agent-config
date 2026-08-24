@@ -1,6 +1,41 @@
 #!/usr/bin/env tsx
 /**
- * Guard against build-machine path leakage in the tracked install bundle.
+ * Guard against build-machine path leakage in the tracked install bundle AND in
+ * published Markdown.
+ *
+ * ## The published-.md scope (road-to-inbox-harvest-2026-08-e-command-surface-legibility Phase 0)
+ *
+ * The bundle roots below were the original scope. A second population ships the
+ * same leak class: every `.md` inside `package.json` `files[]` — 1,079 files —
+ * and a `/Users/<name>/…` in a shipped skill is the same defect as one in
+ * `install.mjs`.
+ *
+ * **It is EXTENDED here rather than given a second gate**, deliberately: this one
+ * already runs in CI, already carries the patterns, the username masking and the
+ * `scan_scope` dead-scope protection, and a sibling gate would duplicate all
+ * four.
+ *
+ * ### Why the floor is ZERO UNAPPROVED and not the measured 11
+ *
+ * The published-.md baseline measured **11 hits in 8 files, none of them a leak**
+ * (`agents/evidence/analysis/published-md-path-leakage-baseline.md`): three
+ * documentation examples, six occurrences inside the rules that FORBID the
+ * pattern and must quote it, two legitimately absolute paths.
+ *
+ * A numeric floor of 11 was rejected by both council seats, 2026-08-24, for one
+ * reason: it lets an approved hit disappear while a real leak takes its slot, and
+ * the count stays 11. So the floor is **0 unapproved matches**, and the eleven are
+ * pinned exceptions in `.path-leak-allow` — line-pinned, so an entry that drifts
+ * off its line stops matching and the gate REDS, which is the safe direction.
+ *
+ * ### And why NOT "exempt matches inside backticks"
+ *
+ * That was the other candidate, and it was rejected on a false-negative argument
+ * both seats found decisive: **a real leaked path is commonly formatted as code**,
+ * so exempting inline code and fenced blocks opens a channel that hides exactly
+ * the defect this gate exists to catch. It would also hide a skill author's
+ * accidental real path inside an example block — the contribution path where this
+ * class is most likely to arrive.
  *
  * road-to-feedback-9.2.0-followups Phase 4.1. Three 9.1 commits
  * (f8752443b, 5933bf1a9, f30adb5a1) each rebuilt `dist/install/install.mjs`
@@ -74,6 +109,40 @@ const BUNDLE_ROOTS: readonly string[] = [
     'dist/mcp',
     'dist/cli-delegate',
 ];
+
+/**
+ * Published `.md` — the second population, derived from `package.json` `files[]`
+ * rather than guessed, so the scope is what the tarball actually ships. Roots
+ * only; the per-file filter below keeps it to `.md`.
+ */
+const PUBLISHED_MD_ROOTS: readonly string[] = [
+    'dist/agent-src',
+    'docs/guidelines',
+    'src/scripts',
+    // NOT `src/agent-src` wholesale: `files[]` ships only these two subtrees, and
+    // scanning the parent would gate content no consumer receives. Caught by this
+    // gate's own test, which asserts every root is inside `files[]`.
+    'src/agent-src/scripts',
+    'src/agent-src/templates/scripts',
+    'agents/templates',
+    'src/templates',
+    'src/config',
+];
+
+/** Named `.md` / text files `files[]` ships individually. */
+const PUBLISHED_MD_FILES: readonly string[] = [
+    'AGENTS.md',
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+    'MIGRATION.md',
+    'README.md',
+    'docs/contracts/persona-schema.md',
+    'docs/contracts/provider-lifecycle.md',
+    'docs/contracts/settings-classes.md',
+];
+
+/** Repo-root allow file for audited published-`.md` exceptions. */
+const ALLOW_FILE = '.path-leak-allow';
 
 interface LeakPattern {
     readonly name: string;
@@ -192,6 +261,49 @@ function _splitlines(text: string): string[] {
     return text.split('\n').filter((l) => l.length > 0);
 }
 
+/**
+ * Parse `.path-leak-allow` into `path:line` keys.
+ *
+ * Line-pinned on purpose, and the trade-off is the same one `.secret-allow`
+ * documents for itself: an entry that drifts off its line stops matching and the
+ * gate REDS. That is the safe direction — someone re-audits and moves the pin —
+ * whereas a path-only entry would silently allow a real leak anywhere in the
+ * file. This tree has already been bitten by the opposite: a `.secret-allow` pin
+ * sat one line off on `main` for a day, covering nothing, invisible because that
+ * gate is diff-scoped.
+ */
+export function parse_allow_file(text: string): Set<string> {
+    const out = new Set<string>();
+    for (const raw of text.split('\n')) {
+        const line = raw.replace(/#.*$/, '').trim();
+        if (line === '') continue;
+        out.add(line);
+    }
+    return out;
+}
+
+function allow_set(): Set<string> {
+    try {
+        return parse_allow_file(fs.readFileSync(path.join(REPO, ALLOW_FILE), 'utf-8'));
+    } catch {
+        return new Set();
+    }
+}
+
+/** Every tracked `.md` inside the published roots, plus the named files. */
+function tracked_published_md(): string[] {
+    const seen = new Set<string>();
+    for (const root of PUBLISHED_MD_ROOTS) {
+        for (const rel of _splitlines(_git(['ls-files', root]))) {
+            if (rel.endsWith('.md')) seen.add(rel);
+        }
+    }
+    for (const rel of PUBLISHED_MD_FILES) {
+        for (const got of _splitlines(_git(['ls-files', rel]))) seen.add(got);
+    }
+    return [...seen].sort();
+}
+
 /** Every tracked path under the bundle roots, deduped and sorted. */
 function tracked_bundle_files(): string[] {
     const seen = new Set<string>();
@@ -291,7 +403,12 @@ function parse_args(argv: readonly string[]): Options {
 
 function main(argv: readonly string[] = process.argv.slice(2)): number {
     const opts = parse_args(argv);
-    const targets = opts.files.length > 0 ? opts.files : tracked_bundle_files();
+    const bundle = opts.files.length > 0 ? opts.files : tracked_bundle_files();
+    // Published `.md` joins the default target list. With explicit `--file`
+    // arguments it does NOT — an ad-hoc single-file run stays a single-file run,
+    // which is what the existing tests and the pre-push path rely on.
+    const published = opts.files.length > 0 ? [] : tracked_published_md();
+    const targets = [...bundle, ...published];
 
     // `git ls-files <untracked-root>` returns nothing, by design (BUNDLE_ROOTS
     // lists roots that may not be tracked yet). That tolerance is also the
@@ -305,8 +422,11 @@ function main(argv: readonly string[] = process.argv.slice(2)): number {
         assertScanned({
             gate: 'check_bundle_path_leakage',
             scanned: targets.length,
-            units: 'bundle file(s)',
-            roots: opts.files.length > 0 ? ['<explicit file arguments>'] : BUNDLE_ROOTS,
+            units: 'bundle + published-md file(s)',
+            roots:
+                opts.files.length > 0
+                    ? ['<explicit file arguments>']
+                    : [...BUNDLE_ROOTS, ...PUBLISHED_MD_ROOTS],
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
@@ -316,17 +436,48 @@ function main(argv: readonly string[] = process.argv.slice(2)): number {
         throw exc;
     }
 
-    const hits = scan_files(targets);
+    const allowed = allow_set();
+    const all = scan_files(targets);
+    // The floor is ZERO UNAPPROVED, never a count. A pinned exception that has
+    // drifted off its line simply stops matching, so the hit resurfaces and the
+    // gate reds — deliberately, per the header.
+    const hits = all.filter((h) => !allowed.has(`${h.file}:${String(h.line)}`));
+    const suppressed = all.length - hits.length;
 
     if (hits.length > 0) {
         process.stderr.write(`${format_report(hits)}\n`);
+        // The per-pattern hints are bundle-shaped ("rebuild from a clean
+        // checkout"), which is the wrong instruction for a `.md` hit — nothing is
+        // rebuilt to fix prose. Published-md hits get their own line rather than
+        // a misleading one.
+        if (hits.some((h) => h.file.endsWith('.md'))) {
+            process.stderr.write(
+                `   NOTE: a \`.md\` hit is not fixed by rebuilding. Either anonymise the path,\n` +
+                    `   or — if it IS the pattern being documented — pin it in ${ALLOW_FILE}.\n`,
+            );
+        }
+        if (suppressed > 0) {
+            process.stderr.write(
+                `   (${suppressed} further match(es) are pinned exceptions in ${ALLOW_FILE})\n`,
+            );
+        }
+        process.stderr.write(
+            `   A published-.md match that is the PATTERN BEING DOCUMENTED — a rule quoting\n` +
+                `   the shape it forbids, or an anonymised example — belongs in ${ALLOW_FILE}\n` +
+                `   as \`<path>:<line>\` with its reason above it. A real path does not.\n`,
+        );
         return 1;
     }
 
     if (!opts.quiet) {
+        // A gate that scans nothing and exits green is indistinguishable from a
+        // broken one, so the green path names both populations and the
+        // suppression count — an exception set that quietly grows is the failure
+        // mode a bare "no leakage" line would hide.
         process.stdout.write(
-            `✅  check_bundle_path_leakage: no build-machine path leakage ` +
-                `(${targets.length} tracked bundle file(s) scanned).\n`,
+            `✅  check_bundle_path_leakage: no unapproved path leakage ` +
+                `(${String(bundle.length)} bundle + ${String(published.length)} published-md ` +
+                `file(s) scanned, ${String(suppressed)} pinned exception(s)).\n`,
         );
     }
     return 0;
@@ -359,6 +510,10 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 export {
     REPO,
     BUNDLE_ROOTS,
+    PUBLISHED_MD_ROOTS,
+    PUBLISHED_MD_FILES,
+    ALLOW_FILE,
+    tracked_published_md,
     LEAK_PATTERNS,
     MAX_SNIPPET,
     MAX_HITS_SHOWN_PER_GROUP,
