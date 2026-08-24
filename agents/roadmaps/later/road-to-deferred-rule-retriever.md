@@ -16,12 +16,34 @@ complexity: lightweight
 > `rules_carried`/`rules_used` per-worker audit fields shipped by
 > `road-to-lean-agent-init` (2026-07-28): a sustained low usage quota
 > (rules carried but not applied) IS the datum this condition asks for.
-> **Producer registered (2026-08-10):** `road-to-token-economy-dispatch`
-> Phase 1.3 registered `rules_efficiency` (median `rules_used/rules_carried`,
-> low-quota bar 0.2) in `src/config/dispatch-economy-metrics.json` with the
-> report command `./scripts-run src/scripts/dispatch_economy_report` — one
-> measurement, two consumers; condition (c) reads that metric's sustained
-> value, no new instrumentation needed.
+> **Producer registered (2026-08-10) and RETIRED as condition (c)'s datum
+> (2026-08-23).** `road-to-token-economy-dispatch` Phase 1.3 registered
+> `rules_efficiency` (median `rules_used/rules_carried`, low-quota bar 0.2) in
+> `src/config/dispatch-economy-metrics.json`. It cannot produce condition (c)'s
+> signal, and `road-to-trigger-delivered-rule-bodies` step 0.8 classified it
+> **`pre-intervention-impossible`** on measured grounds rather than retiring it
+> on taste: the report path works and 755 orchestration lines carry both fields
+> `null` on every single one, because `rules_used` — "rules the worker actually
+> applied/cited" — is a model self-report and under an eager projection there is
+> no runtime consumer of rule bodies to observe. A gate reading a metric that
+> cannot be produced can never fire, which is what parked this roadmap behind an
+> instrument rather than behind a decision.
+>
+> **Condition (c) now reads the trigger-MATCH rate** — `rules_matched /
+> rules_carried`, produced offline by `./scripts-run src/scripts/model_rule_injection`
+> over `tests/eval/routing-matrix` and, once a delivery mode is on, by the
+> concern that performs the delivery. Measured 2026-08-23 on the frozen corpus:
+> p50 **2** matched, p90 **4**, mean **2.07**, against **105** tier rules carried
+> — a match rate around 2 %.
+>
+> **It is NOT a usage figure, and the substitution is refused in as many words.**
+> Matched-and-delivered is not applied-and-followed. Reading the match rate as
+> "usage" would make this roadmap's own demand gate self-fulfilling, which is
+> exactly the metric-repair-manufactures-evidence failure step 0.8 forbids. What
+> the match rate licenses is the narrower claim: most carried rules are not
+> reachable from a given turn's triggers. Whether the agent would have USED them
+> had they been present is unmeasured, and no number in this tree answers it.
+> Evidence: `agents/evidence/analysis/trigger-delivery-baseline.md` § 7.
 >
 > **Gate (1) HAS FIRED — as an honest null (2026-07-28).** The first native
 > engine's Phase-5 verdict is published: the code graph measured recall

@@ -27,8 +27,8 @@ rows:
     reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
   - heading: "Before writing the diff"
     disposition: carried
-    target: "src/rules/minimal-safe-diff.md#Before writing the diff"
-    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Before writing the diff — the three questions"
+    reason: "the section stayed in the rule through the body-migration, then MOVED to the migration target on 2026-08-23 (road-to-trigger-delivered-rule-bodies A1): minimal-safe-diff sat at exactly its 893-token ceiling and the new pre-fix shared-path clause had to be paid for, so this section was relocated verbatim rather than cut -- preservation-guard is satisfied by moving"
   - heading: "When the task seems to require a larger change"
     disposition: carried
     target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#When the task seems to require a larger change"
@@ -39,12 +39,12 @@ rows:
     reason: "the section moved to the migration target under the same heading text"
   - heading: "Red flags in your own diff — reject them"
     disposition: carried
-    target: "src/rules/minimal-safe-diff.md#Red flags in your own diff — reject them"
-    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Red flags in your own diff — reject them"
+    reason: "the section stayed in the rule through the body-migration, then MOVED to the migration target on 2026-08-23 (road-to-trigger-delivered-rule-bodies A1): minimal-safe-diff sat at exactly its 893-token ceiling and the new pre-fix shared-path clause had to be paid for, so this section was relocated verbatim rather than cut -- preservation-guard is satisfied by moving"
   - heading: "When in doubt"
     disposition: carried
-    target: "src/rules/minimal-safe-diff.md#When in doubt"
-    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#When in doubt"
+    reason: "the section stayed in the rule through the body-migration, then MOVED to the migration target on 2026-08-23 (road-to-trigger-delivered-rule-bodies A1): minimal-safe-diff sat at exactly its 893-token ceiling and the new pre-fix shared-path clause had to be paid for, so this section was relocated verbatim rather than cut -- preservation-guard is satisfied by moving"
   - heading: "Anti-over-engineering"
     disposition: carried
     target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Anti-over-engineering"

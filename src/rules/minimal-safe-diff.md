@@ -43,29 +43,23 @@ change.
 - Never consolidate or split unrelated code paths as a side effect.
 - Never delete code that *looks* dead without proof it is unreachable.
 
-## Before writing the diff
+## Repair the shared path, don't patch the reported call site
 
-Ask yourself, in order:
+```
+BEFORE EDITING A SHARED PATH, ENUMERATE ITS CALLERS AND REPAIR THE PATH ONCE.
+PATCHING ONLY THE REPORTED CALL SITE IS NOT THE SMALLEST CHANGE — IT IS THE
+SMALLEST-LOOKING ONE, AND IT LEAVES EVERY OTHER CALLER BROKEN.
+```
 
-1. **What is the minimum set of files that must change for the stated task?**
-   If your answer includes files with no causal link to the task, stop and
-   remove them.
-2. **What is the minimum number of lines per file?** If you are editing a
-   method, edit the method — not the surrounding class.
-3. **Is any of this a refactor?** If yes, it belongs in its own commit or
-   PR, clearly labeled as a refactor, with no behavior change.
+Fires when the defect sits in something several callers reach — a shared
+helper, a base class, a middleware, a query builder. The minimum set of files
+then INCLUDES the shared path and EXCLUDES the N call sites a per-caller patch
+would touch: repairing once is both smaller and complete.
 
-## Red flags in your own diff — reject them
-
-Files the task never mentioned · import reordering, whitespace, or comments
-outside the edited region · "small improvements" to neighboring methods ·
-test-only mixed with behavior changes in one commit · renames outside the
-task scope · dependency bumps "because it was close to the cache".
-
-## When in doubt
-
-Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
-reviewer has to untangle.
+**The PRE-fix half of a pair.** The post-fix half ships in
+[`downstream-changes`](downstream-changes.md) § Defect-pattern search — name
+the construct, grep the tree, report the count, AFTER the fix. Enumerate
+before, sweep after; the two run over different sets.
 
 ## Own-orphan cleanup
 
