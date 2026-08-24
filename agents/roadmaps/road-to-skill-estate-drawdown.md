@@ -195,16 +195,72 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 
 ## Phase 3 — a durable admission and refusal record
 
-- [ ] **3.1 Move the Phase-3.1 answers out of the PR body into a committed
+- [x] **3.1 Move the Phase-3.1 answers out of the PR body into a committed
       ledger.** Follow the precedent the tree already set for findings rather than
       inventing a format: `check_finding_dispositions.ts` is the reader, its
       rejection of comments is the reason, and a committed file is what it accepts.
-      verify: a new skill cannot pass its authoring gate without a committed row,
-      and `grep` finds the row after the PR is squashed.
-- [ ] **3.2 Record refusals, not only admissions.** A ledger of what shipped is a
+      verify: **`agents/decisions/skill-admissions.jsonl` + `check_skill_admissions`,
+      forward-only, and a correction to this roadmap's own reading.**
+
+      **The authoring gate DOES exist and is documented** — this roadmap's Context
+      implies otherwise by quoting only its storage line.
+      `skill-writing/references/procedure.md` § 0b asks all five questions
+      (family · capability · why-not-extend · why-not-a-guideline · visibility) and
+      already tells the author to surface overlap first. What was wrong was the
+      one sentence *"answer these in the PR body"*, and that is now
+      *"answer these in the ledger"*, with the reason written beside it:
+      `check_finding_dispositions.ts:11` rejects that exact surface for findings in
+      its own words — a comment is *"mutable and unaudited; it is transport, not a
+      record"*.
+
+      The gate is FORWARD-ONLY by diff rather than by list: only skills added
+      since the base ref need a row, so the 299 already in the tree are
+      grandfathered **by construction** and cannot be forgotten off a grandfather
+      file. It rejects an answer under 12 characters, because a one-word answer is
+      the boilerplate the gate exists to catch.
+
+      Two properties found by building it rather than by planning it:
+
+      - **The gate must see UNTRACKED skills, not only committed ones.** The first
+        version read `git diff --diff-filter=A` alone, so
+        `check_gate_coverage --canary` planted a skill, the gate stayed green, and
+        the canary correctly reported the gate **dead**. Now it reads
+        `git ls-files --others` too — which is also the right direction for a
+        contributor, and the same scope `check_secret_leak` uses.
+      - **An empty ledger is a legitimate green and a missing one is not.**
+        `allowEmpty: EMPTY_VALID:` covers the shipped state (0 rows, everything
+        grandfathered); `readLedger` THROWS on a missing or malformed file. Without
+        that split the allowEmpty would be the hole.
+
+      17 tests and an 8-case `--self-test` (6 rejecting, floor 8), every case
+      sabotage-then-repair over a real throwaway git repo — the forward-only scope
+      IS a `git diff`, so a fixture without history would exercise a different
+      code path than the one that runs. `--canary` now catches the plant at
+      exit 1.
+- [x] **3.2 Record refusals, not only admissions.** A ledger of what shipped is a
       changelog; the reviewer's ask is a visible "no".
-      verify: the ledger's schema carries a rejected state, and at least one
-      historical refusal is backfilled or the absence of any is recorded.
+      verify: **`decision: rejected` is a first-class state with its own
+      consistency check, and the absence of any historical refusal is recorded as
+      the finding it is.**
+
+      A rejected row needs `skill`, `decision`, `date` and `instead` — not the five
+      admission answers, since it is not an admission, and a test pins that the
+      two findings are never confused (a refusal must not be asked for admission
+      answers). The check that makes the state mean something: **a rejected row may
+      not name a skill that exists.** A record saying a capability was refused
+      while it ships is worse than no record, and it is the shape a ledger drifts
+      into once someone rejects a proposal that later lands under the same name.
+
+      **No historical refusal was backfilled, because none exists**, and that is
+      recorded in the ledger's own `_absence_of_refusals` line rather than left as
+      an empty file. A grep over `archive/`, `later/` and `stubs/` returns the
+      recurring OBSERVATION that the count keeps climbing
+      (`road-to-capability-governance.md:46`) and one 2026-05-01 audit that
+      captured the count as data (`road-to-governance-cleanup.md:64`). **No skill
+      proposal was ever refused in a form the tree records** — which is exactly
+      what a ledger kept in PR bodies produces, so it is the defect rather than a
+      gap in this backfill. The first genuine `rejected` row will be the first
+      visible no.
 
 ## Phase 4 — the first tranche, gated on Phase 1
 
@@ -416,8 +472,22 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
       are a `tier` backfill backlog), `skill_eval_coverage` covers 42/299, and
       *never triggered* — the reviewer's strongest signal — carries the word `none`
       because no persistence path exists.
-- [ ] **AC-4** — a new skill cannot pass its authoring gate without a committed ledger row, and the row survives a squash.
-- [ ] **AC-5** — the ledger schema carries a rejected state, and either one historical refusal is backfilled or the absence of any is recorded.
+- [x] **AC-4** — a new skill cannot pass its authoring gate without a committed ledger row, and the row survives a squash.
+      **Met.** `check_skill_admissions` reds on an added skill with no row and
+      greens when the row lands — proven both ways in 17 tests and an 8-case
+      `--self-test`, and by `check_gate_coverage --canary` catching a planted
+      skill at exit 1. The row survives a squash because it is a committed line in
+      `agents/decisions/skill-admissions.jsonl`, which is the entire point of
+      moving it out of the PR body: `grep '"skill":"<name>"' agents/decisions/skill-admissions.jsonl`
+      answers after the squash, a PR comment does not.
+- [x] **AC-5** — the ledger schema carries a rejected state, and either one historical refusal is backfilled or the absence of any is recorded.
+      **Met by the second branch, and the branch taken is itself the finding.**
+      `decision: rejected` is a first-class state with a consistency check of its
+      own — a rejected row may not name a skill that exists. No refusal was
+      backfilled because none exists in any form the tree records; the absence is
+      written into the ledger's `_absence_of_refusals` line with the grep that
+      establishes it, rather than left as an empty file a later reader would read
+      as an unfinished backfill.
 - [ ] **AC-6** — `skill_count` is lower than 299 and every retirement cites its ranking row.
 - [x] **AC-7** — two consecutive per-release readings of the net direction are committed.
       **Met with four readings, not two.** Backfilled from release tags
