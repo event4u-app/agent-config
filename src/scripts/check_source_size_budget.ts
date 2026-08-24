@@ -66,6 +66,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
@@ -216,7 +217,7 @@ export function selfTest(): number {
                 : {
                       check_source_size_budget: {
                           count: baseline,
-                          landed: new Date().toISOString().slice(0, 10),
+                          landed: asOf().toISOString().slice(0, 10),
                           note: 'self-test fixture',
                       },
                   };

@@ -71,6 +71,10 @@ TS-shell native (run via the installed `agent-config` binary):
   config                     Open the configuration GUI (global default; --project for the project surface)
   settings                   Open the local Settings GUI (alias of config)
   ui:serve                   Start the local UI server (127.0.0.1, auto-picked port)
+  ui:audit [path]            Inventory a UI tree into agents/runtime/state/ui-audit.json
+                             (Class A). The artefact ui-audit-gate reads.
+  ui:render <path|url>       Headless capture at desktop / 375px / 320px into
+                             agents/runtime/state/render/ (Class A; no process survives).
   workspaces ls              List workspaces from the discovery manifest
   packs ls                   List packs from the discovery manifest
   brand:status               Is a consumer brand layer present, and at which of the
@@ -224,6 +228,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin
+  roadmap:context            One live situational-awareness probe: open PRs and the
+                             files they change, remote branches carrying a roadmap
+                             slug, live sessions, agents/tmp/ note NAMES, and sibling
+                             roadmaps on the same topic. --roadmap <slug>, --json
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
                              (archives completed roadmaps; --no-archive to skip)
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
@@ -693,6 +701,14 @@ cmd_mcp_run() {
 # PACKAGE_ROOT, not the consumer projection: the CLI imports the register library
 # under src/scripts/_lib/, which is package-internal and never shipped into
 # dist/agent-src/scripts/. Same shape as cmd_settings_set.
+# Situational-awareness probe (road-to-roadmap-situational-awareness Phase 1).
+# PACKAGE_ROOT, not the consumer projection: it imports src/scripts/_lib/, which
+# is package-internal and never shipped into dist/agent-src/scripts/. Same shape
+# as cmd_sessions_list below, and for the same reason.
+cmd_roadmap_context() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/roadmap_context.ts" "$@"
+}
+
 cmd_sessions_list() {
   exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" list "$@"
 }
@@ -1461,6 +1477,7 @@ main() {
     settings:get)            cmd_settings_get "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
+    roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;

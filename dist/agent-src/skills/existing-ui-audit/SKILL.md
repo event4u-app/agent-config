@@ -88,7 +88,7 @@ Detect markers, in order. **Stop at the first match** — projects rarely run mo
 | Marker | Signal | Where |
 |---|---|---|
 | Flux | `livewire/flux` in `composer.json`, `<flux:*>` tags in views | `composer.json`, grep `resources/views` |
-| shadcn/ui | `components.json` exists at repo root | `components.json` |
+| shadcn/ui | `components.json` exists at the **workspace** root — the package that owns it; in a monorepo this is never the repository root | `components.json` |
 | Headless UI | `@headlessui/react` or `@headlessui/vue` in `package.json` | `package.json` |
 | Radix | `@radix-ui/*` in `package.json` (without shadcn marker) | `package.json` |
 | Material/Chakra/Mantine/Ant | their package names in `package.json` | `package.json` |
@@ -125,7 +125,7 @@ read, so easing and duration stop being values the brief silently regenerates.
 
 ### 4. Detect shadcn inventory (only when `state.stack.frontend == "react-shadcn"`)
 
-Read `components.json` for the registered style + base color, then read `package.json` for `@radix-ui/*` and any locally vendored `components/ui/*.tsx` files. Write into `state.ui_audit.shadcn_inventory`:
+Read `components.json` for the registered style + base color, then read the `package.json` **of the scope root** — `state.stack.scope_root`, relative to the project root, empty when the project root *is* the scope — for `@radix-ui/*` or the unified `radix-ui` package, plus any locally vendored `components/ui/*.tsx` files. In a monorepo the repository root carries neither the marker nor the dependency, so reading it finds nothing. Write into `state.ui_audit.shadcn_inventory`:
 
 ```
 {
@@ -281,7 +281,7 @@ tool produces, so the import path is uniform.
 
 - The model tends to skip the audit and start designing straight from the request — the dispatcher gate at `directives/ui/audit.ts` enforces "no design without audit findings". Never treat this skill as optional for non-trivial UI.
 - The model tends to misidentify a single Tailwind utility as a "design token" — tokens come from the config or `:root`, not from class strings in templates.
-- Don't assume a Radix-only `package.json` means shadcn — shadcn requires `components.json` at repo root.
+- Don't assume a Radix-only `package.json` means shadcn — shadcn requires `components.json` at the workspace root that owns the components. Each workspace carries its own; the repository root carries none, which is the layout the shadcn CLI scaffolds.
 - `state.ui_audit.shadcn_inventory.version` is often missing; the shadcn CLI does not always pin itself in `package.json`. Record `null` rather than guessing.
 - Greenfield is detected, not assumed — a project with one Blade layout and no components is still greenfield only if tokens AND design system markers AND components are all empty.
 - **There is no mtime cache.** An earlier revision told you to cache by

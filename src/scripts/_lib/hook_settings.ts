@@ -77,3 +77,36 @@ export function hookSectionEnabled(root: string, section: string): boolean {
 
     return false;
 }
+
+/**
+ * Raw `lean_projection.mode` string out of `.agent-settings.yml`, or `''`.
+ *
+ * Same indentation-shaped discipline as `hookSectionEnabled` above and for the
+ * same reason — no YAML parser in a hook — but a top-level two-level key rather
+ * than a `hooks.<section>.enabled` flag. Interpretation is NOT done here:
+ * `_lib/lean_projection_mode.ts` owns it, so the projector and the concern
+ * cannot disagree about what the string means.
+ */
+export function leanProjectionModeRaw(root: string): string {
+    const file = path.join(root, SETTINGS_FILE);
+    let text: string;
+    try {
+        if (!fs.statSync(file).isFile()) return '';
+        text = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return '';
+    }
+    let inSection = false;
+    for (const raw of text.split(/\r\n|\r|\n/)) {
+        const line = raw.replace(/\s+$/, '');
+        if (!line || line.replace(/^\s+/, '').startsWith('#')) continue;
+        if (!(line.startsWith(' ') || line.startsWith('\t'))) {
+            inSection = /^lean_projection\s*:\s*$/.test(line);
+            continue;
+        }
+        if (!inSection) continue;
+        const m = /^\s+mode\s*:\s*(.+)$/.exec(line);
+        if (m) return (m[1] ?? '').trim().replace(/^["']|["']$/g, '');
+    }
+    return '';
+}

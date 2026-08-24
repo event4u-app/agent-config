@@ -37,6 +37,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 type Severity = 'error' | 'warning';
@@ -364,7 +365,7 @@ function _dateFromIso(s: string): Ymd | null {
 }
 
 function _todayMinusDays(days: number): Ymd {
-    const now = new Date();
+    const now = asOf();
     const base = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     const d = new Date(base - days * 86_400_000);
     return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };

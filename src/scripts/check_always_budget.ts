@@ -29,6 +29,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 // src/scripts/check_always_budget.ts → parents[2] is the repo root
@@ -435,7 +436,7 @@ function recordTrend(totalExt: number, sizes: Array<[string, number, number]>): 
 
 /** datetime.now(timezone.utc).isoformat(timespec="seconds") → ...+00:00. */
 function isoSeconds(): string {
-    const d = new Date();
+    const d = asOf();
     const pad = (v: number): string => String(v).padStart(2, '0');
     return (
         `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +

@@ -13,6 +13,15 @@ triggers:
 applies_to_user_types:
   - "developer"
   - "maintainer"
+# obligation: the precedence question comes due when a task arrives that both a
+# playbook and a shipped skill answer — once per task, not per turn or per edit.
+enforced_by:
+  - "instruction-only: no gate can tell a playbook-first run from a skill-first one — both produce a diff, and which answer was consulted leaves no artefact"
+obligation_frequency: "per-task"
+# frequency-override: the prose heuristic reads the Iron Law's "when both match a
+# task" as a turn-level phrase. It is not: the precedence question is settled once
+# per task, and re-deciding it on every turn of the same task would be the churn
+# this rule exists to prevent.
 routes_to:
   - "skill:playbook-authoring"
 workspaces: [engineering]
@@ -87,3 +96,10 @@ maintainer-side record.
 - **ADR-244** — the artefact class, its home, and the two deferred generator kinds. Cited by number rather than linked: `docs/` is not projected into a consumer install, so a relative link here resolves in this repository and nowhere else.
 - [`agents-md-thin-root`](../skills/agents-md-thin-root/SKILL.md) § Workspace files — the per-workspace pointer list.
 - [`standards-from-config`](../skills/standards-from-config/SKILL.md) — the Class-A rule this applies to procedure.
+
+## Honest enforcement — `instruction-only`
+
+Nothing can see which answer was consulted. A playbook-first run and a
+skill-first run both produce a diff, and the precedence decision leaves no
+artefact a gate could read — so this rule is model-carried, and saying so is
+cheaper than a check that would have to guess.

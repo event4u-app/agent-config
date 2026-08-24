@@ -23,7 +23,7 @@ self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
-  - "none"
+  - "instruction-only: threat-model-before-you-edit is a pre-edit reasoning step only the model observes"
 collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
 # obligation: line 36
@@ -118,7 +118,7 @@ Authorization and tenancy bugs are often invisible in logs and fire silently
 until an auditor or attacker finds them. The cheapest moment to catch them
 is before the first edit — this rule makes that the default path.
 
-## Enforcement — stated honestly (`enforced_by: none`)
+## Enforcement — stated honestly (`instruction-only`)
 
 No script can enforce "threat-model before you edit": the obligation is a
 pre-edit reasoning step only the model observes (ADR-135 classifies it HIGH —

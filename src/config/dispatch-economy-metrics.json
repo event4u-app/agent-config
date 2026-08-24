@@ -40,7 +40,7 @@
             "status": "armed-awaiting-projection: Phase 3.1-3.3 are data-window-gated (>= 2 weeks of rules_used); this criterion binds the moment a projection ships"
         },
         "ask_economy": {
-            "definition": "Rung-0.5 substitution and adoption (roadmap Phase 4.4): substitution = ask-routed lines / (ask-routed + rung-1 spawn lines); adoption = ask lines with dispatch_outcome DONE / all ask lines; escalation = the caller\u0027s follow-up SPAWN lines carrying route_taken=subagent + escalated=true + origin=dispatch-economy-2026 (the ask line itself cannot know it was insufficient).",
+            "definition": "Rung-0.5 substitution and adoption (roadmap Phase 4.4): substitution = ask-routed lines / (ask-routed + rung-1 spawn lines); adoption = ask lines with dispatch_outcome DONE / all ask lines; escalation = the caller's follow-up SPAWN lines carrying route_taken=subagent + escalated=true + origin=dispatch-economy-2026 (the ask line itself cannot know it was insufficient).",
             "source": "Audit-log orchestration lines with route_taken='ask' (written by src/scripts/ask_transport.ts, origin tag dispatch-economy-2026).",
             "thresholds": {
                 "escalation_kill": 0.3,
@@ -53,7 +53,9 @@
             "thresholds": {
                 "low_quota_signal": 0.2,
                 "_low_quota": "a sustained median quota below 0.2 over the review window is the cut-line evidence Phase 3.1 requires (>= 2 weeks of data) and the retriever gate's demand signal"
-            }
+            },
+            "classification": "pre-intervention-impossible",
+            "classification_note": "Classified 2026-08-23 by road-to-trigger-delivered-rule-bodies step 0.8, which requires exactly one of miswired / pre-intervention-impossible / stale before anything is changed. NOT miswired: the report path works and 755 orchestration lines in agents/runtime/state/audit/2026-08.jsonl carry both fields, null on every one, because orchestration_record.ts:146-147 reads them from --rules-carried / --rules-used CLI flags that no caller anywhere passes. NOT stale: the question it asks is exactly the one a delivery mode makes answerable. IMPOSSIBLE: `rules_used` is 'rules the worker actually applied/cited' (contexts/execution/orchestration-telemetry.md:68), a model self-report, and under an eager projection there is no runtime consumer of rule bodies to instrument -- nothing can distinguish a rule that was applied from one that was merely present. The metric is left registered rather than deleted so this reasoning stays attached to it, and it no longer gates anything: later/road-to-deferred-rule-retriever condition (c) now reads the trigger-MATCH rate (rules_matched / rules_carried, produced by src/scripts/model_rule_injection), which is an event the delivery concern performs rather than a claim the model makes. The match rate is explicitly NOT relabelled as usage: matched-and-delivered is not applied-and-followed, and calling it usage would make the retriever's own demand gate self-fulfilling. Evidence: agents/evidence/analysis/trigger-delivery-baseline.md section 7."
         }
     },
     "honest_null_consequence": "If the re-measured floor on the post-9.29 tree is materially smaller than the cache-economy baseline (roadmap step 1.4), phases 3-5 of road-to-token-economy-dispatch downgrade to blockers citing the null, and the null is published in docs/benchmark.md. A metric nobody re-runs by review_by is treated as the latency file's fossilization failure: the report command below is the re-verification procedure.",

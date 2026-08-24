@@ -3,6 +3,9 @@ model_tier: inherit
 name: persona-improvement
 description: "Refine a persona from recent corrections — tightens its Unique Questions, governance-gated; explicit request only. Skill analog → skill-improvement-pipeline."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

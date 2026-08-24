@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://event4u.dev/schemas/ui-authority.schema.json",
+  "title": "ui_authority",
+  "description": "The ONE authority object for a UI surface. Produced once before design and read by every UI phase and by the stop gate. Contract: docs/contracts/ui-authority.md. There is deliberately no second partial decision table anywhere in src/skills/ — A1.1's verify line asserts that.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "surface_mode",
+    "register",
+    "change_intent",
+    "reference_maturity",
+    "primary_source",
+    "constraints",
+    "conflicts",
+    "provenance",
+    "verification"
+  ],
+  "properties": {
+    "surface_mode": {
+      "description": "What the surface is FOR. Per-surface, never inherited from PRODUCT.md.",
+      "enum": ["persuade", "operate", "read", "experience"]
+    },
+    "register": {
+      "description": "The design register, unchanged from docs/guidelines/design-modes.md.",
+      "enum": ["brand", "product"]
+    },
+    "change_intent": {
+      "description": "What the run is authorised to move. `preserve` is the strongest constraint and drives the intent-aware stop gate.",
+      "enum": ["preserve", "extend", "redesign", "new-world"]
+    },
+    "reference_maturity": {
+      "description": "How finished the supplied reference is. `wireframe` declares STRUCTURE and never a pixel mandate. `null` means no reference was supplied.",
+      "enum": [
+        "wireframe",
+        "prototype",
+        "finished-comp",
+        "runnable-artifact",
+        "production-incumbent",
+        null
+      ]
+    },
+    "fidelity_mandate": {
+      "description": "Carried from road-to-frontend-fidelity-calibration Phase 0. NOT re-derived here — this field holds that phase's output, and null means that phase has not produced one.",
+      "type": ["string", "null"]
+    },
+    "primary_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "description": "Which authority the run builds from. `incumbent` is the answer when no DESIGN.md exists but a coherent incumbent does.",
+          "enum": ["user-instruction", "artifact", "comp", "design-system", "incumbent", "brief", "none"]
+        },
+        "path": { "type": ["string", "null"] }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preserve_palette": { "type": "boolean" },
+        "preserve_type_family": { "type": "boolean" },
+        "preserve_layout": { "type": "boolean" },
+        "preserve_copy": { "type": "boolean" }
+      }
+    },
+    "conflicts": {
+      "description": "Surfaced disagreements. A conflict is REPORTED, never silently resolved — an operation whose declared dimensions collide with a constraint appends here and performs no write.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "wanted", "blocked_by"],
+        "properties": {
+          "dimension": { "type": "string" },
+          "wanted": { "type": "string" },
+          "blocked_by": { "type": "string" }
+        }
+      }
+    },
+    "provenance": {
+      "description": "Where each resolved value came from. One entry per resolved field, so a wrong resolution is traceable to its signal rather than to the resolver as a whole.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "source"],
+        "properties": {
+          "field": { "type": "string" },
+          "source": {
+            "enum": ["user-instruction", "surface-brief", "design-md", "product-md", "incumbent-scan", "reference-artifact", "default"]
+          },
+          "detail": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "verification": {
+      "description": "Graft 2 of the parent roadmap. A pass that could not fully run says so rather than passing silently.",
+      "enum": ["verified", "degraded", "unverified"]
+    },
+    "degradation_reason": {
+      "description": "Required whenever `verification` is not `verified`. The resolver refuses to emit a degraded object without one.",
+      "type": ["string", "null"]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "verification": { "enum": ["degraded", "unverified"] } }, "required": ["verification"] },
+      "then": { "properties": { "degradation_reason": { "type": "string", "minLength": 1 } }, "required": ["degradation_reason"] }
+    }
+  ]
+}

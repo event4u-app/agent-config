@@ -3,6 +3,9 @@ model_tier: inherit
 name: condense-memory
 description: "When shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

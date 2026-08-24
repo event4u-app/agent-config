@@ -864,6 +864,21 @@
             "render_ok": false,
             "error": "playwright: net::ERR_CONNECTION_REFUSED at http://localhost:8080/marketing/pricing",
             "skipped": true
+          },
+          "verdict_scope": {
+            "scope": "static",
+            "render_available": false,
+            "checks_run": [
+              "findings-review"
+            ],
+            "checks_not_run": [
+              "viewport-sweep",
+              "touch-target-size",
+              "rendered-contrast",
+              "screenshot-diff"
+            ],
+            "blocker": "b-page-capture-primitive",
+            "skip_reason": "b-page-capture-primitive"
           }
         },
         "ui_polish": null,

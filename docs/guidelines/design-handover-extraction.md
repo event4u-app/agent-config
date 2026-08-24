@@ -74,11 +74,41 @@ ladder requires you to **name**, not to pass off as a source-based build.
 ## Coverage — stated honestly
 
 No fixture scores this class yet. `daf-source-over-screenshot` scores the rung
-choice on an *attached* artifact, not a URL handover, and it is itself recorded
-as SKIPPED on 2026-08-13 for want of a page-reaching capture primitive. Closing
-the gap needs a fixture whose host actually has one; claiming a regression
-witness before then would be the fabrication this package's evidence discipline
-exists to prevent.
+choice on an *attached* artifact, not a URL handover.
+
+**Its blocking reason changed on 2026-08-23 and the new one is narrower.** It was
+SKIPPED since 2026-08-13 "for want of a page-reaching capture primitive". That
+primitive now exists — `agent-config ui:render`, a Class-A headless capture at
+desktop / 375 px / 320 px, executed against a real fixture. So the fixture is no
+longer blocked on a missing capability; it is **unscored**, pending a live eval
+run that puts an agent through an artifact port and judges the rung it chose.
+
+The discipline is unchanged and still binds: claiming a regression witness before
+that run would be the fabrication this package's evidence discipline exists to
+prevent. What moved is which sentence is true — "we cannot measure this" became
+"we have not measured this yet", and those are different claims.
+
+### The skip register — every fixture gated on the same primitive
+
+`daf-source-over-screenshot` is no longer the only one, so the reason string is
+recorded once here rather than restated per fixture. Every row below is
+**SKIPPED** with `b-page-capture-primitive` as its reason, and none is silently
+absent:
+
+| Fixture | Registered | Reason |
+|---|---|---|
+| `daf-source-over-screenshot` | 2026-08-13 | `b-page-capture-primitive` |
+| `daf-render-absent-scoped` | 2026-08-23 | `b-page-capture-primitive` — its render-dependent assertions only; the static-scope assertions run and pass |
+| `daf-render-absent-control` | 2026-08-23 | `b-page-capture-primitive` — synthesises `render_ok: true` as state rather than rendering, and says so |
+
+**Probed, not assumed** (2026-08-23). The `playwright` library resolves in this
+tree, which reads as a capture primitive until you run it: launching chromium
+fails with *"Executable doesn't exist at
+…/chromium_headless_shell-1234/chrome-headless-shell"*. The library is present
+and **no browser binary is installed**, so the primitive is
+`not-available: headless-browser-binary`. Recorded as execution evidence because
+"playwright is in node_modules" is exactly the inference that would have made a
+fabricated witness look justified.
 
 ## See also
 

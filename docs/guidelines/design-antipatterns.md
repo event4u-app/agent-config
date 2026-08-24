@@ -107,8 +107,8 @@ Within-project invariants + repetition caps. Override = declare the value in
 | T4 | Eyebrow / ALL-CAPS label above every section heading | Overuse collapses the emphasis; maximum is 1 eyebrow per 3 sections (countable: grep tracking classes) | Used for genuine section-type differentiation with meaningful vocabulary (not just "FEATURES", "PRICING") |
 | T5 | Repeated section kickers ("Our mission", "What we offer", "Why choose us") | Filler vocabulary; every AI-generated page has the same three section titles | Every kicker is substantive and uses brand-specific vocabulary, not generic marketing speak |
 | T6 | Crushed letter-spacing on display text (`letter-spacing` < −0.04em) | Below −0.04em glyphs collide optically; reads as "designer-ish effect" with no grounding | Intentional tight display treatment with a documented minimum floor; verify at the actual render size |
-| T7 | Overused fonts without a brand reason: Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif | These are the default AI-coding-tool font picks; every generated UI uses one of them | Brand has explicitly adopted one of these AND there is a documented reason (e.g., Inter for its variable metrics in a data-dense dashboard) |
-| T8 | Single typeface for everything | Missed typographic contrast opportunity; all-Inter reads as "I did not think about fonts" | Intentional mono-typeface aesthetic (e.g., terminal-inspired); must be stated in the brief |
+| T7 | Overused fonts without a stated reason: Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif | These are the default AI-coding-tool font picks; every generated UI uses one of them | **Register-scoped.** In the **brand** register: the brand has explicitly adopted one of these AND there is a documented reason. In the **product** register: a single reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers), so one of these is legitimate on a **stated** product-register choice — the register itself is the reason, and it must be stated (DESIGN.md, the surface brief, or `design-slop-disable`). Neither register admits an *undeclared* pick. |
+| T8 | Single typeface for everything | Missed typographic contrast opportunity; in the **brand** register an unexamined single family reads as "I did not think about fonts" | **Register-scoped like T7.** Intentional mono-typeface aesthetic (e.g., terminal-inspired), stated in the brief — *or* the **product** register, where one reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers) and contrast is carried by weight and scale rather than by a second family. |
 | T9 | All-caps body paragraphs or field labels | Reduces legibility below WCAG AA for sustained reading; reads as flair over function | Short UI labels (e.g., button text in a brutalist layout); never for body paragraphs |
 | T10 | Wide letter-spacing on body text (`letter-spacing` > 0.05em) | Reduces readability for sustained reading; reserved for display use | Display text (headlines, pull quotes) where intentional tracking is a brand element |
 
@@ -162,6 +162,7 @@ Within-project invariants + repetition caps. Override = declare the value in
 | CP3 | Aphoristic manufactured contrast ("We don't do X. We do Y." / "Not just A, but B.") | A generated sentence rhythm that sounds like brand writing but carries no specificity | Aphoristic copy is legitimate when the contrast reveals a genuine product distinction; test by asking whether the Y side says something concrete |
 | CP4 | "Theater" framing — copy that announces what the product does without saying how or why | "The platform for modern teams." communicates nothing; it is content-shaped noise | Every tagline must pass the "so what" test: can a skeptic follow it with "but how?" and get a concrete answer? |
 | CP5 | Emoji-decoration in UI markup — 🚀/✅/🎉 prepending headings, buttons, list items, or CTAs (`🚀 Get Started`) | Performative-enthusiasm coating; the default-startup-template tell. No emoji is better than decorative emoji | Brand/`DESIGN.md` declares a systematic emoji strategy, or the emoji is functional (status indicator, category marker tied to real meaning) |
+| CP6 | Stock render subject named instead of the product's own subject matter — "floating abstract shapes", "gradient mesh", "glowing orb", "particle field", "futuristic HUD" | These name the default thing a render becomes when nobody decided what it is about; same delete-test as CP2, applied to art direction — swap the phrase for what the product actually shows and the brief says more | The subject IS abstract by decision (a generative-art surface, a data-driven field whose data is named), and the brief says which decision and why |
 
 ---
 
@@ -261,6 +262,7 @@ are listed in § Quality floors.
 | CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
 | CP4 | judgment-only | copy phrase-list; that mechanism is council-rejected |
 | CP5 | backed | |
+| CP6 | backed | copy-engine phrase list, same mechanism as CP2; a CSS engine cannot see subject matter |
 
 ---
 

@@ -15,6 +15,47 @@ When Playwright MCP or browser tools are available, use them for automated visua
 3. **Capture after** — screenshot at the same viewports and states.
 4. **Compare** — visually diff the screenshots, flag regressions.
 
+### Scroll evidence — the machine-readable half of the comparison
+
+The step above compares screenshots **by eye**, which is the whole of W2: no
+number leaves the comparison, so nothing downstream can act on it. For a
+scroll-driven surface the missing artefact is small and specific — the scroll
+position, the beat that position belongs to, and the element states asserted
+there. Emit it as `scroll_evidence` on the review envelope; `design-review`
+reads it in Phase 2 alongside the viewport sweep.
+
+```json
+{
+  "schema_version": 1,
+  "ledger_ref": "path to the story-beat ledger these ids come from",
+  "samples": [
+    {
+      "scroll": 0.42,
+      "beat_id": "b2-reveal",
+      "element_states": [
+        { "selector": "#panel", "state": "pinned", "observed": "pinned" },
+        { "selector": "#caption", "state": "visible", "observed": "offscreen" }
+      ]
+    }
+  ]
+}
+```
+
+`beat_id` references the ledger at
+[`wireframe/references/story-beat-ledger.schema.json`](../../wireframe/references/story-beat-ledger.schema.json),
+which is what makes a sample checkable against an intent rather than against a
+remembered screenshot: a row whose `state` and `observed` disagree is a finding,
+and a reviewer can diff two runs of this file.
+
+**Build no verifier beside this.** The artefact is consumed by the review flow
+already described on this page — the async verifier captures it in the same pass
+that captures the screenshots. Sampling positions come from the ledger's
+`enters_at` values, so the sample set is derived from the beats, not from an
+arbitrary scroll grid. Where no capture primitive is available the samples are
+absent and the verdict is static-scoped, per `verdict_scope`
+(`directives/ui/review.ts`) — an empty `samples` array is a recorded null, never
+a pass.
+
 ### State-based verification
 
 Don't just screenshot the default state. Capture:

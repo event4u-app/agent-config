@@ -54,6 +54,7 @@ import { main as blockNoVerifyMain } from './block_no_verify.js';
 import { main as blockKernelRuleWritesMain } from './block_kernel_rule_writes.js';
 import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
 import { main as rtkWrapMain } from './rtk_wrap_hook.js';
+import { _main as designPassMain } from './design_pass_hook.js';
 import { main as designSlopMain } from './design_slop_hook.js';
 import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
 import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
@@ -62,6 +63,7 @@ import { main as telemetryUsageMain } from './telemetry_usage_hook.js';
 import { main as telemetryFlushMain } from './telemetry_flush_hook.js';
 import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
 import { main as skillRouteMain } from './skill_route_hook.js';
+import { main as ruleInjectMain } from './rule_inject_hook.js';
 import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
 import { main as turnEndGateMain } from './turn_end_gate_hook.js';
 import { main as editShapeMain } from './edit_shape_hook.js';
@@ -109,6 +111,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/block_kernel_rule_writes.ts': blockKernelRuleWritesMain as ConcernMain,
     'src/scripts/hooks/block_config_weakening.ts': blockConfigWeakeningMain as ConcernMain,
     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
+    'src/scripts/hooks/design_pass_hook.ts': designPassMain as ConcernMain,
     'src/scripts/hooks/design_slop_hook.ts': designSlopMain as ConcernMain,
     'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,
     'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,
@@ -117,6 +120,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/telemetry_flush_hook.ts': telemetryFlushMain as ConcernMain,
     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
+    'src/scripts/hooks/rule_inject_hook.ts': ruleInjectMain as ConcernMain,
     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
     'src/scripts/hooks/turn_end_gate_hook.ts': turnEndGateMain as ConcernMain,
     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,

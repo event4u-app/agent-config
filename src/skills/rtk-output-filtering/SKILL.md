@@ -3,6 +3,9 @@ model_tier: medium
 name: rtk-output-filtering
 description: "Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer, third-party Apache-2.0; upstream reports 60-90% token savings). Covers installation, configuration, and usage patterns."
 domain: process
+scope:
+  write: []
+  verification_reason: "this skill wraps another command's stdout; it has no output path of its own. Absence of a write is not something a command can prove."
 execution:
   type: assisted
   handler: shell

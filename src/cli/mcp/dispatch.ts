@@ -1,11 +1,11 @@
 /**
- * Pure JSON-RPC dispatch for the local stdio-lite MCP server (ADR-085).
+ * Pure JSON-RPC dispatch for the local stdio-lite MCP server (ADR-207).
  *
  * Wire shapes are mirrored VERBATIM from the hosted Worker
  * (`internal/workers/mcp/src/{handlers,prompts,resources}.ts`) so the local
  * stdio surface and the hosted HTTP surface return identical envelopes —
- * the multi-channel-consistency guarantee in ADR-085. If you change a shape
- * here, change it there too (and the Python kernel `scripts/mcp_server/`).
+ * the multi-channel-consistency guarantee. If you change a shape here, change
+ * it there too (and the kernel `src/scripts/mcp_server/`).
  *
  * Read-only, and still read-only after Phase 1.1 of
  * `road-to-skill-delivery-over-mcp`: `tools/list` now returns exactly TWO
@@ -20,6 +20,10 @@
  * below is that budget, asserted in `tests/scripts/mcp_lite_tools.test.ts`.
  * `list_skills` is deliberately absent: the host already lists the names, and a
  * 290-name tool result is the context cost this whole surface exists to avoid.
+ *
+ * The read-only boundary itself is accepted policy, owned with its revisit
+ * trigger by ADR-112 and restated as the distribution shape by ADR-207 on
+ * Node-only grounds; Phase 1.1 widens what is READ, never what is executed.
  */
 
 import { rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
@@ -305,8 +309,8 @@ function notImplementedEnvelope(name: string): Record<string, unknown> {
         code: 'not_implemented',
         message:
             `Tool '${name}' is not available on the local stdio-lite surface ` +
-            `(read-only, ADR-085). Execution is deferred; self-host the Python ` +
-            `kernel (scripts/mcp_server/) for tool execution.`,
+            `(read-only, ADR-112). Execution is deferred; self-host the kernel ` +
+            `(src/scripts/mcp_server/) for tool execution.`,
         tool: name,
     };
 }
