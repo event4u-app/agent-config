@@ -13,7 +13,7 @@ complexity: lightweight
 
 ## What was transferred, verbatim
 
-From `agents/roadmaps/road-to-suggestion-block-capture.md` Phase 3, on an AI
+From `agents/roadmaps/archive/road-to-suggestion-block-capture.md` Phase 3, on an AI
 council verdict of 2026-08-24 (2/2 convergent after a first attempt reached only
 1 of 2 — `anthropic/claude-sonnet-4-5` + `openai/codex-default`; the maintainer
 delegated capability-gated dispositions to the council for that drain run).
