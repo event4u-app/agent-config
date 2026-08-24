@@ -106,62 +106,217 @@ roughly 5.4 MB throughout.
 
 ## Phase 1 — make the two red gates reachable from CI
 
-- [ ] **1.1 Decide and record where `check_preamble_payload_budget` runs in CI.**
+- [x] **1.1 Decide and record where `check_preamble_payload_budget` runs in CI.**
       Not "add it everywhere": it is a per-spawn measurement, so a per-PR job is
       the natural home, and `standing-payload-delta.yml` already computes the
       delta beside it.
-      verify: a workflow file names the gate, and `gh workflow view` (or the
-      required-checks list) shows it on a PR.
-- [ ] **1.2 Correct the two stale premises in the same change.** The
+      verify (discharged 2026-08-24, with the second half bounded rather than
+      claimed): `.github/workflows/standing-payload-delta.yml` names the gate in a
+      step whose failure fails the job, and `preamble-payload-budget.json` →
+      `ci_delivery` records the choice with its reason. The required-checks half is
+      **not** claimed — see the honest limit below.
+
+      **Council 2/2 chose option (b) because the alternative's premise was false.**
+      That workflow justified never failing with *"`check_preamble_payload_budget`
+      already ratchets this number and already fails on growth"* — and **no
+      workflow in `.github/` invoked that gate at all.** It ran only in the local
+      `task ci` chain. The workflow declined to fail on the strength of a sibling
+      that was not there, so folding the gate in is the smallest change that
+      removes the contradiction instead of adding a third surface. Measured cost of
+      the gap: **+12,619 tokens in nine days** (125,593 → 138,212).
+
+      **It runs behind a GRACE CEILING, and that is not a softening.** HEAD is
+      138,212 against a design ceiling of 107,646 — 28.4 % over. Blocking at the
+      design number fails **every** PR from the moment this lands, and nobody sheds
+      30,566 tokens inside the PR that arms the gate. The grace ceiling sits **at**
+      the measurement: growth beyond today reds immediately, today's tree passes. It
+      may only ratchet DOWN and it expires at milestone 1 (2026-11-10).
+
+      **The `--ceiling` override is one-directional, and a test pins it.** LOOSER is
+      honoured; **TIGHTER is ignored**. Backwards for one line and deliberate:
+      honouring a tighter value would let a caller silently lower the bar this
+      budget file owns — the config-weakening shape in reverse. Tightening happens
+      by lowering `baseline_tokens`, in the file, where a reviewer sees it.
+
+      **The single-sample objection is answered, not waved off.** "Per-spawn" names
+      where the cost is *paid*, not sampling: the measurement is a deterministic
+      census of revision-controlled inputs, so one CI run represents the checked-out
+      revision exactly, and variation between two runs on one commit would be a
+      **checker defect**. Both seats required that be demonstrated —
+      `check_preamble_payload_budget.test.ts` now asserts two `evaluate()` calls
+      return identical totals *and* identical per-bucket file counts.
+
+      **HONEST LIMIT, recorded in three places:** this makes the check **fail**, not
+      **required**. Whether a failing check blocks a merge is branch-protection
+      configuration — a repo-admin action outside this change and outside an
+      autonomous run. The claim is *"the gate can now fail a PR"*, never *"the gate
+      now blocks a merge"*. Verify the latter with
+      `gh api repos/:owner/:repo/rulesets`.
+- [x] **1.2 Correct the two stale premises in the same change.** The
       declines-to-fail comment at `standing-payload-delta.yml:5-10` and its twin at
       `taskfiles/ci-fast.yml:820` both assert the gate fails on growth. Either make
       that true (1.1) or rewrite both sentences.
-      verify: `grep -rn 'already fails on growth' .github/ taskfiles/` returns only
-      occurrences whose premise now holds.
-- [ ] **1.3 Correct the "blocks by construction" claim in
+      verify (discharged 2026-08-24): two occurrences remain and **neither asserts
+      the premise** — both are labelled retractions.
+      `standing-payload-delta.yml:8` sits under a heading reading *"The premise this
+      header used to rest on was false"*; `taskfiles/ci-fast.yml:836` reads *"this
+      used to justify itself with … and that premise was FALSE"*.
+
+      **The difference from AC-3 is why the two corrections were written
+      differently, and the checks were read rather than assumed equivalent.** This
+      verify asks for occurrences *whose premise holds* — a quotation labelled as
+      retracted asserts nothing, so recording the correction satisfies it. AC-3's
+      check is a bare `grep -c … returns 0`, which a quotation would **fail**, so
+      that correction describes the retracted phrase without reproducing it.
+- [x] **1.3 Correct the "blocks by construction" claim in
       `preamble-payload-budget.json`.** Replace it with what is true: the guard
       classifies budget files as advisory, so the restraint is a policy the
       maintainer keeps, not a mechanism that enforces it.
-      verify: `grep -c 'blocks by construction' src/config/preamble-payload-budget.json`
-      returns 0, and `block_config_weakening.ts:93-97` still classifies the file
-      advisory (i.e. the fix is to the prose, not to the guard).
-- [ ] **1.4 Answer `b-standing-delivery-red` in the file that raised it.** It is
+      verify (discharged 2026-08-24), **both conjuncts**: the grep returns **0**,
+      and `block_config_weakening.ts:96-98` still returns `'advisory'` for
+      `-budget(s).(json|yaml)` and for the literal `budgets.yml` — so the guard is
+      untouched and the fix went to the prose, which is what the step asked for.
+
+      The claim was that raising a ratchet baseline to clear a failing check is a
+      move *the repo blocks structurally*. It over-claimed on three counts:
+      `block_config_weakening` warns from five allowlist entries and blocks past
+      twenty, is honoured only on the one host that denies at all, and — per the
+      classification just verified — treats this very file as **advisory**, so it
+      does not gate a baseline edit. The restraint is real; it is carried by review
+      and by the file's own record, not by construction.
+
+      The replacement deliberately does **not** quote the retracted phrase, because
+      this AC's check is a literal grep and quoting it would leave the string in the
+      file it was removed from. The reason for describing rather than quoting is
+      stated inline, so a later reader does not restore the quote as a courtesy.
+- [x] **1.4 Answer `b-standing-delivery-red` in the file that raised it.** It is
       already answerable: the two-layer run prints no `overlap` line, and that line
       is emitted only when `overlap_rules > 0`
       (`check_standing_rule_delivery.ts:307`), so the two layers are disjoint and
       the 123,176 is real rather than a local-install artifact.
-      verify: the blocker in `road-to-ten-across-the-board.md` reads
-      `Status: resolved` with that reasoning recorded.
+      verify (discharged — **already resolved before this roadmap ran**, and
+      re-verified rather than assumed): `road-to-ten-across-the-board.md:257` reads
+      `Status: resolved` with the no-`overlap`-line reasoning in the entry.
+
+      Re-derived live at HEAD: the gate prints **120,023 tok** against the 110,000
+      cap, and the single `overlap` occurrence in its output is inside the **remedy
+      hint prose**, not an emitted `overlap_rules` count — that line is emitted only
+      when `overlap_rules > 0`. The two host layers are cleanly disjoint and the
+      overage is real body length, not a local-install artifact.
+
+      **One correction to this roadmap's own Context table:** it states **123,176**
+      for this gate. Measured now: **120,023** — down **3,153**, as the drain's
+      merged rule edits landed. Favourable direction; still 9.1 % over cap.
 
 ## Phase 2 — close the built-tarball hole
 
-- [ ] **2.1 Either register `unpacked_size_mb` in `evaluator-budgets.json` or
+- [x] **2.1 Either register `unpacked_size_mb` in `evaluator-budgets.json` or
       correct the sentence in `pack-size-budget.json`.** One of the two must
       change; today the pair is a contradiction.
-      verify: a `python3 -c` assertion that the key named by
-      `pack-size-budget.json`'s prose exists in `evaluator-budgets.json`, or that
-      the prose no longer names it.
-- [ ] **2.2 Measure the built delta once, and record it.** `evaluator_umbrella.sh`
+      verify (discharged 2026-08-24, the **second** branch): asserted that
+      `unpacked_size_mb` is absent from `evaluator-budgets.json`'s `budgets` object
+      **and** that the string *"gated separately, at release time, by
+      evaluator-budgets.unpacked_size_mb"* is gone from `pack-size-budget.json`.
+
+      **The blocker's premise was INCOMPLETE, and completing it decided which
+      branch.** It said the key *"does not exist"*. It does not exist **because it
+      was removed** — `evaluator-budgets.json:30` records `removed_2026_08_04`:
+      *"removed by maintainer decision at the 9.17.0 release: the gate turned every
+      legitimate payload addition into a blocked release (measured 28.22 vs max 28
+      with all functional gates green), and the maintainer judged tarball size not
+      worth gating. ADR-204 review_trigger (a) fired and was resolved this way."*
+
+      So option (a) — *"add `unpacked_size_mb` with a measured baseline"* — is not a
+      wiring choice. **It reverses a recorded maintainer release decision**, which
+      `decision-revisit-gate` reserves to the owner. Council 2/2: the record settles
+      it, and the council has no basis to reopen it.
+
+      Both seats also required **every** contradictory occurrence be corrected
+      rather than one sentence. There were **two** — in `_comment` and in
+      `measurement_conditions` — and a single-sentence fix would have left the
+      second standing.
+- [x] **2.2 Measure the built delta once, and record it.** `evaluator_umbrella.sh`
       already measures the size (`consistency.yml:451` says plainly *"this is not a
       second gate on that number"*), so the measurement exists and only the
       recording is missing.
-      verify: a committed figure for the built unpacked size, with the command that
-      produced it.
-- [ ] **2.3 Restate the cap history against the built surface.** The five raises
+      verify (discharged 2026-08-24): `pack-size-budget.json` →
+      `built_surface_measurement_2026_08_24`, both surfaces with the command that
+      produced each.
+
+      | Surface | packed | unpacked | entries |
+      |---|---|---|---|
+      | **unbuilt** (`--ignore-scripts`, clean detached worktree) | 8.4953 MB | 28.7516 MB | 2,614 |
+      | **built** (`npm run build` then `npm pack`) | 10.5525 MB | **37.3775 MB** | 2,808 |
+      | delta | +2.0572 MB | **+8.6259 MB** | +194 |
+
+      **The "~5.4 MB larger" figure this roadmap and the budget file both carried is
+      WRONG.** Measured, the built surface is **+8.6259 MB** unpacked. Corrected
+      rather than carried: a reader comparing 8.4953 against 28.22 against 37.3775
+      was comparing three different surfaces without knowing it.
+
+      **And the measurement makes the 2026-08-04 removal look better in hindsight
+      than it did at the time.** That cap was `max 28`, removed at a measurement of
+      28.22 — a **0.8 %** breach. The built unpacked size is now **37.3775 MB**,
+      i.e. **33.5 % over** the cap whose 0.8 % breach caused its removal. Reinstating
+      it is therefore not "add a key with a baseline"; it is setting a cap a third
+      higher. Recorded so an owner reopening it under `decision-revisit-gate` starts
+      from 37.4, not from 28.
+
+      **Bound:** local-only, one machine, two worktrees of one commit. CI reads ~8 KB
+      above the local *packed* figure historically; there is **no CI reading of the
+      built surface at all**, so these are not a CI baseline.
+- [x] **2.3 Restate the cap history against the built surface.** The five raises
       were measured on the unbuilt tree; say so where the history is recorded, so
       the next reviewer is not comparing two different surfaces.
-      verify: `pack-size-budget.json`'s baseline notes state which surface each
-      figure covers.
+      verify (discharged 2026-08-24): `_comment` now opens with a **surface label**
+      stating that every `packed_size_mb` figure in this file and in every
+      `baseline_note_*` was measured on the **unbuilt** tree under
+      `measurement_conditions`, that the built surface is recorded separately, and
+      that a note's figure must not be compared against a built one.
+
+      Done as **one label rather than five per-note edits**, deliberately: all five
+      raises were measured the same way, so five copies of one sentence is
+      duplication that can drift apart, and the label sits where a reader meets the
+      file rather than buried in the oldest note.
 
 ## Phase 3 — close the ownership gap that let a cap raise cost one sentence
 
-- [ ] **3.1 Bring `budgets.yml` into `lint_budget_ownership`'s corpus.** That gate
+- [x] **3.1 Bring `budgets.yml` into `lint_budget_ownership`'s corpus.** That gate
       scans `src/config/*budget*.json` — a `.json` filter
       (`lint_budget_ownership.ts:126-131`) — so `budgets.yml` escapes it entirely
       and its `standing_rule_delivery` entry carries no `owner` and no `review_by`.
-      verify: `./scripts-run src/scripts/lint_budget_ownership` reports
-      `budgets.yml` among the files it scanned, and fails if `owner` or `review_by`
-      is absent.
+      verify (discharged 2026-08-24): the gate reports **12 budget config(s)** —
+      eleven JSON plus `budgets.yml` — and it named exactly the two missing fields
+      *before* they were added, which is the mechanism working rather than a claim
+      about it.
+
+      **An explicit single-file row, NOT a widened glob.** Council 2/2 refused the
+      glob for two reasons, and the second is a defect the blocker did not know
+      about:
+
+      1. `*budget*.json` **is** this gate's corpus definition (its own `main` says
+         so), so widening it means any future `*budget*.yml` dropped into
+         `src/config/` joins the governed set **silently**. A governed file should be
+         a decision, not a filename coincidence.
+      2. **It could not have worked as written.** The read was an unconditional
+         `JSON.parse`, so a YAML file arriving through a widened glob would have been
+         reported `unparseable JSON` — the gate red, blaming the file for the gate's
+         own bug. Parsing now dispatches on extension, and a YAML scalar or list is
+         refused rather than coerced into a document.
+
+      `GOVERNED_NON_JSON` is the decision surface and holds one row.
+      `lint_budget_ownership.test.ts` (17 tests) asserts `budgets.yml` is in, an
+      **unlisted** `rogue-budget.yml` stays **out**, the corpus is exactly 12,
+      parsing dispatches on extension, and dropping either `owner` or `review_by` is
+      reported by name.
+
+      **`review_by` is DERIVED and no cadence rule exists** — stated plainly rather
+      than presented as policy. The gate requires the field and defines no interval.
+      Two conventions are observable across the siblings: four files use
+      `2026-11-10` (the preamble milestone) and seven use a ~1-year horizon,
+      including this file's subject-nearest sibling `preamble-payload-budget.json`.
+      Registered on that convention → **2027-08-24**. If a cadence is ever written
+      down and disagrees, this date is wrong and moves to the rule.
 
 ## Blockers
 
@@ -185,7 +340,30 @@ roughly 5.4 MB throughout.
   nine days.
 - **Resolved when:** one of the three options is recorded in
   `preamble-payload-budget.json` with its reason.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — option (b), recorded in `ci_delivery`.** AI council
+  2/2 convergent (`anthropic/claude-sonnet-4-5` + `openai/codex-default`); the
+  maintainer delegated owner-reserved blockers to the council for this drain run.
+
+  **(b) won because the premise behind "don't add a second gate" was false.** The
+  workflow declined to fail on the grounds that this gate *"already fails on
+  growth"*, and **no workflow invoked it at all**. Folding it in is the smallest
+  change that removes the contradiction.
+
+  **The single-sample worry this blocker raised is answered, not dismissed.**
+  "Per-spawn" names where the cost is paid, not sampling: the census reads only
+  revision-controlled inputs, so one CI run represents the revision exactly, and
+  run-to-run variation would be a **checker defect**. Both seats required a
+  repeatability assertion before a single run may fail a build; it exists.
+
+  **A grace ceiling was added that neither the blocker nor its options
+  anticipated.** HEAD is 28.4 % over the design ceiling, so arming at that number
+  fails every PR immediately — a self-inflicted stop, not a gate. The grace ceiling
+  sits at the measurement, ratchets DOWN only, and expires at milestone 1.
+
+  **Not resolved, and named rather than implied:** the check can now **fail** a PR;
+  whether it **blocks a merge** is branch protection, a repo-admin action outside
+  this change.
 
 ### blocker: b-milestone-one-unreachable
 
@@ -205,7 +383,28 @@ roughly 5.4 MB throughout.
   unexplained drift behind it.
 - **Resolved when:** `preamble-payload-budget.json` records the 2026-08-24
   measurement against milestone 1.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — PUBLISH AND HOLD, in `status_2026_08_24`.** AI
+  council 2/2. The drift is published now and the date is retained.
+
+  **It is recorded as `at_risk`, explicitly NOT as a miss.** 2026-11-10 has not
+  arrived; declaring a miss before its date would be the mirror of silently
+  re-dating, and one seat corrected the framing on exactly that point. The
+  `on_miss` clause applies **at** the date, and this entry is the early warning
+  that keeps the date falsifiable.
+
+  **The disagreement is recorded unresolved, because it is real.** One seat argued
+  the derivative already falsifies the schedule — +12,619 in nine days against a
+  target needing net reduction over the remaining 78 — so holding for a second miss
+  preserves a signal nobody will act on. The other argued holding is what keeps the
+  checkpoint falsifiable at all. Both readings are defensible and the measurement on
+  2026-11-10 decides between them; collapsing that into one verdict now would
+  discard the thing being measured.
+
+  **One field added beyond what was asked:** `committed_reduction_mechanism:
+  NONE`. Two roadmaps name reductions and neither is executing. A schedule with no
+  mechanism is a date, not a plan, and the field exists so the next reader is not
+  left to infer that from silence.
 
 ### blocker: b-built-vs-tracked-surface
 
@@ -224,7 +423,27 @@ roughly 5.4 MB throughout.
 - **If you do nothing:** the pair stays contradictory and the cap history keeps
   understating the installed payload by ~5.4 MB.
 - **Resolved when:** the key exists, or the sentence naming it does not.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — the sentence is gone, and the RECORD settled it
+  rather than the council's preference.** AI council 2/2.
+
+  **This blocker's premise was incomplete in a way that decided the branch.** It
+  said the key *"does not exist"*. It does not exist **because it was removed**:
+  `evaluator-budgets.json:30` carries `removed_2026_08_04` — a maintainer decision
+  at the 9.17.0 release, with the measurement behind it (28.22 against max 28, all
+  functional gates green) and ADR-204's `review_trigger (a)` resolved by it.
+
+  So option (a) is not a wiring choice; it **reverses a recorded maintainer release
+  decision**, which `decision-revisit-gate` reserves to the owner. The council had
+  no basis to reopen it, and said so.
+
+  **Two occurrences, not one.** Both seats required every contradictory claim be
+  corrected: `_comment` and `measurement_conditions` each asserted the removed key
+  as a gate, and a single-sentence fix would have left the second standing.
+
+  **Phase 2.2's measurement then strengthened the original decision.** The built
+  unpacked size is now **37.3775 MB** — 33.5 % over the `max 28` whose 0.8 % breach
+  caused the removal. An owner reopening this starts from 37.4, not 28.
 
 ### blocker: b-budgets-yml-outside-ownership
 
@@ -241,7 +460,28 @@ roughly 5.4 MB throughout.
   sentence and no evidence.
 - **Resolved when:** `lint_budget_ownership` scans `budgets.yml`, or an exemption
   is recorded in that file.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — the gate scans it, via an explicit single-file row
+  and NOT the widened glob this blocker recommended.** AI council 2/2, and the
+  refusal rests on a defect the blocker did not know about.
+
+  1. `*budget*.json` **is** this gate's corpus definition, so widening it lets any
+     future `*budget*.yml` join the governed set **silently**. A governed file should
+     be a decision, not a filename coincidence.
+  2. **The widened glob could not have worked.** The read was an unconditional
+     `JSON.parse`, so a YAML file arriving through it would have been reported
+     `unparseable JSON` — the gate red, blaming the file for the gate's own bug.
+     Parsing now dispatches on extension.
+
+  `GOVERNED_NON_JSON` holds one row and is the decision surface; 17 tests pin that
+  an unlisted `*budget*.yml` stays out and that the corpus is exactly 12.
+
+  **`review_by` is derived and no cadence rule exists.** The gate requires the field
+  and defines no interval; two conventions are observable across the siblings.
+  Registered on the ~1-year one its subject-nearest sibling uses → 2027-08-24, with
+  the derivation and its fragility stated in `budgets.yml` itself. Seat 1 was
+  explicit that inventing a date would be a governance defect, so the derivation is
+  shown rather than the number asserted.
 
 ## Risk Register
 
@@ -257,13 +497,20 @@ roughly 5.4 MB throughout.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** — `check_preamble_payload_budget` runs in a CI job on a pull request, and the job's failure is visible in the checks list. A corrected comment does not satisfy this.
-- [ ] **AC-2** — `grep -rn 'already fails on growth' .github/ taskfiles/` returns no occurrence whose premise is false.
-- [ ] **AC-3** — `grep -c 'blocks by construction' src/config/preamble-payload-budget.json` returns 0.
-- [ ] **AC-4** — the key `pack-size-budget.json`'s prose names either exists in `evaluator-budgets.json`, or is no longer named.
-- [ ] **AC-5** — `lint_budget_ownership` reports `budgets.yml` in its scanned set, or that file records its exemption.
-- [ ] **AC-6** — `b-standing-delivery-red` in `road-to-ten-across-the-board.md` reads `Status: resolved`, with the no-`overlap`-line reasoning recorded.
-- [ ] **AC-7** — `preamble-payload-budget.json` records the 2026-08-24 measurement of 138,212 against milestone 1, per its own `on_miss` clause.
+- [x] **AC-1** — `check_preamble_payload_budget` runs in a CI job on a pull request, and the job's failure is visible in the checks list. A corrected comment does not satisfy this.
+      **Met for the half that is in this change's power, and the other half is named rather than claimed.** The gate runs as a step of `standing-payload-delta.yml` on `pull_request`, and the step fails the job, so the failure is visible in the checks list. **What is NOT claimed: that the check is REQUIRED.** Branch protection decides whether a failing check blocks a merge, and that is a repo-admin action — `gh api repos/:owner/:repo/rulesets` answers it, this file does not. The AC asks for visibility in the checks list, which is met; a reader wanting "blocks a merge" should read the honest limit in `ci_delivery`.
+- [x] **AC-2** — `grep -rn 'already fails on growth' .github/ taskfiles/` returns no occurrence whose premise is false.
+      **Met.** Two occurrences remain and **neither asserts the premise** — both are labelled retractions, one under a heading reading *"The premise this header used to rest on was false"*, the other reading *"this used to justify itself with … and that premise was FALSE"*. The criterion is about a false premise, not a literal string, and the two were read as different checks rather than assumed equivalent — see AC-3, whose bare `grep -c` a quotation would have failed.
+- [x] **AC-3** — `grep -c 'blocks by construction' src/config/preamble-payload-budget.json` returns 0.
+      **Met: returns 0.** The replacement deliberately does **not** quote the retracted phrase, because this check is a literal grep and quoting it would leave the string in the file it was removed from — the failure mode AC-2's looser wording tolerates and this one does not. Step 1.3's second conjunct was verified too: `block_config_weakening.ts:96-98` still classifies budget files `advisory`, so the guard is untouched and the fix went to the prose.
+- [x] **AC-4** — the key `pack-size-budget.json`'s prose names either exists in `evaluator-budgets.json`, or is no longer named.
+      **Met by the second branch**, and asserted both ways: `unpacked_size_mb` is absent from `evaluator-budgets.json`'s `budgets` object, and the sentence naming it as a release-time gate is gone from `pack-size-budget.json`. The first branch was refused on governance grounds, not preference — adding the key reverses a recorded 2026-08-04 maintainer release decision.
+- [x] **AC-5** — `lint_budget_ownership` reports `budgets.yml` in its scanned set, or that file records its exemption.
+      **Met by the first branch.** The gate reports **12 budget config(s)**, up from 11, and named exactly the two missing fields before they were added. Via an explicit `GOVERNED_NON_JSON` row rather than a widened glob — the glob would have admitted future YAML budgets silently *and* could not have parsed this one.
+- [x] **AC-6** — `b-standing-delivery-red` in `road-to-ten-across-the-board.md` reads `Status: resolved`, with the no-`overlap`-line reasoning recorded.
+      **Met — and it was already met before this roadmap ran**, which is stated rather than presented as this change's work: the entry reads `Status: resolved` at `:257` with the reasoning in place. Re-verified live rather than trusted: the gate's only `overlap` output is inside its remedy-hint prose, not an emitted `overlap_rules` count, so the layers are disjoint and the overage is real body length. The re-run also corrected this roadmap's own figure — **120,023**, not the 123,176 in its Context table.
+- [x] **AC-7** — `preamble-payload-budget.json` records the 2026-08-24 measurement of 138,212 against milestone 1, per its own `on_miss` clause.
+      **Met** via `status_2026_08_24`: 138,212 measured, 102,520 target, 35,692 from target, 12,619 from registration, milestone date retained. Recorded as **`at_risk`, not a miss** — the date has not arrived, and the `on_miss` clause applies at it. The council's unresolved disagreement about whether the trajectory already falsifies the schedule is recorded in the same entry rather than settled, because 2026-11-10 is what settles it.
 
 ## Explicitly NOT in this roadmap
 
