@@ -4,14 +4,7 @@ status: ready
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this addition carries no roadmap of its own to retire: the run archived two roadmaps, but both were status: draft and therefore never counted, so neither is available as an offset. The addition is sanctioned on its own terms -- three parked roadmaps name this instrument's capture rate as their resume condition."
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: >-
-  Instrument roadmap: hook-carried capture for suggestion-block emission and
-  user selection. Its published capture-rate figure is the citable telemetry
-  reading that the resume conditions of later/road-to-composite-dispatch-topology
-  and later/road-to-cost-parity-2-state-aware-dispatch already name, and the
-  measurement prerequisite for later/road-to-elicitation-front-door. One
-  addition unblocks three parked measurements; growth is claimed, not dodged
-  via draft status (the hole road-to-draft-status-ratchet-boundary documents).
+estate_growth_exempt: "Instrument roadmap: hook-carried capture for suggestion-block emission and user selection. Its published capture-rate figure is the citable telemetry reading that the resume conditions of later/road-to-composite-dispatch-topology and later/road-to-cost-parity-2-state-aware-dispatch already name, and the measurement prerequisite for later/road-to-elicitation-front-door. One addition unblocks three parked measurements; growth is claimed, not dodged via draft status (the hole road-to-draft-status-ratchet-boundary documents)."
 ---
 # Road to suggestion block capture — a hook-carried instrument, not appetite
 
