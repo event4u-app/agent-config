@@ -96,6 +96,25 @@ so it has no way to falsify one. Marking such a claim `unverified:` in the artef
 keeps the reader from mistaking a well-argued mechanism for a measured one, and the
 non-binding clause means the fix for a wrong claim is a probe, not a re-vote.
 
+**`unverified:` is an authoring convention with no reader, and that is stated
+rather than left to be discovered.** Nothing in `src/scripts/` parses the marker:
+a repo-wide grep finds `procedure.md` (this file, twice) and one unrelated object
+key in `check_branch_freshness.ts:300`. No render consequence follows from writing
+it, and none follows from omitting it.
+
+The machinery to enforce a section exists and is deliberately not pointed here.
+`prompts.ts::assert_synthesis_sections` validates `### Kill criteria` and
+`### Concrete next step` — and its own docstring records that it has **zero
+production call sites**, because the templated render path emits
+`*to be summarised by the host agent*`, which carries neither section, so wiring
+it unconditionally would throw on every default render. Adding a second unwired
+validator for this marker would reproduce exactly that state and let a reader
+believe the marker is checked.
+
+So: write it because a reader of the artefact needs to know a mechanism claim was
+argued rather than measured. Do not cite it as enforcement, and do not read its
+absence as evidence the claim was probed.
+
 **Case zero (2026-07-29).** An accepted ADR claimed a compile-time toggle gave
 "zero-cost dormancy" because the rule was dropped from `dist/router.json`. Two
 council members praised the reasoning; neither could check it. A one-line `grep`

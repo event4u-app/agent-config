@@ -1,0 +1,25 @@
+# Case: refine-preserves-world
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: refine-preserves-world
+prompt: "Refine the spacing and hierarchy here."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: preserve
+  reference_maturity: production-incumbent
+note: |
+  A `refine` request is NOT a licence to change the visual world.
+
+  The trap: `refine` reads as an aesthetic verb, so a naive run treats it as
+  permission to swap the family and warm the palette. It is not. Under
+  `preserve`, A1.5's gate blocks a palette or type-family delta against the
+  incumbent snapshot.
+
+  PASS: spacing, rhythm, hierarchy, alignment change; `--ink`/`--surface` and the
+  `Newsreader`/`Inter` pairing are byte-identical afterwards.
+  FAIL: any new hex outside the incumbent set, or any font-family the incumbent
+  did not declare.
+files:
+  - incumbent.css

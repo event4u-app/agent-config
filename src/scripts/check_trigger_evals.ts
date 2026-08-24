@@ -27,6 +27,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -99,7 +100,7 @@ function _days_between(a: PyDate, b: PyDate): number {
 
 /** Today's local date, matching `date.today()`. */
 function _today_local(): PyDate {
-    const now = new Date();
+    const now = asOf();
     return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
 }
 

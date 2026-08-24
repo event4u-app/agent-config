@@ -31,6 +31,11 @@ const ALLOWLIST_GLOBS = [
     'package-lock.json',
     'CHANGELOG.md',
     '.claude-plugin/marketplace.json',
+    // Augment twins — version-synced to package.json by release.ts
+    // set_augment_manifest_version, enforced by lint_marketplace. Both ship in
+    // the tarball (publish-surface.json roots), so a release PR must carry them.
+    '.augment-plugin/plugin.json',
+    '.augment-plugin/marketplace.json',
     'src/packs/*/pack.yaml',
     'src/packs/*/README.md',
     'src/domains/*/pack.yaml',

@@ -65,6 +65,19 @@ const COMPLEXITY_PAT = /^complexity:\s*(lightweight|structural)\s*$/m;
 const EXEC_MODE_PAT = /^execution:[^\S\n]*\n(?:[ \t]+(?!mode:).*\n)*[ \t]+mode:[ \t]*([^\s#]+)/m;
 const EXEC_MODE_VALUES = new Set(['autonomous', 'phase-checkpoints', 'interactive']);
 
+/**
+ * `relates:` relations (templates/roadmaps.md rule 18) — a CLOSED set.
+ *
+ * An open vocabulary here degrades into free-text notes nothing can read, which
+ * is the state `depends:` was in when its adoption measured 0/22. Four values,
+ * and an unknown one is a hard problem rather than a warning: the field feeds a
+ * decision (order, and whether a sibling supersedes this roadmap), so a value no
+ * reader understands is worse than an absent field.
+ */
+const RELATES_RELATIONS = new Set(['extends', 'supersedes', 'depends', 'disjoint']);
+// The `relation:` line under each `- slug:` row inside the `relates:` block.
+const RELATES_RELATION_PAT = /^[ \t]+relation:[ \t]*([^\s#]+)/gm;
+
 // Plate / horizon detection — template rule 16 forbids time-boxed plates.
 const PLATE_PATS: ReadonlyArray<readonly [RegExp, string]> = [
     [/^##\s+Horizon\b/im, "'## Horizon' section header"],
@@ -211,6 +224,7 @@ function lint_roadmap(
         _check_no_plate(text, problems);
     }
     _check_execution_mode(fm, problems);
+    _check_relates(fm, problems);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
         _check_human_gate_steps(text, warnings);
@@ -440,6 +454,47 @@ function _check_external_population_gates(text: string, warnings: string[]): voi
                 break;
             }
         }
+    }
+}
+
+/**
+ * Validate a declared `relates:` block. Absent is valid here — requiring the
+ * block is `check_roadmap_trackable`'s ratchet, not this linter's job. This one
+ * only judges a declaration that IS present, exactly as `_check_execution_mode`
+ * does above.
+ */
+export function _check_relates(fm: string, problems: string[]): void {
+    if (!fm || !/^relates:/m.test(fm)) return;
+    const inline_empty = /^relates:[^\S\n]*\[[^\S\n]*\][^\S\n]*(?:#[^\n]*)?$/m.test(fm);
+    RELATES_RELATION_PAT.lastIndex = 0;
+    const values: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = RELATES_RELATION_PAT.exec(fm)) !== null) {
+        values.push(m[1]!.replace(/^['"]|['"]$/g, ''));
+    }
+    for (const v of values) {
+        if (!RELATES_RELATIONS.has(v)) {
+            problems.push(
+                `unknown relates[].relation '${v}' — allowed: extends | supersedes | ` +
+                    'depends | disjoint (templates/roadmaps.md rule 18)',
+            );
+        }
+    }
+    if (!inline_empty && values.length === 0) {
+        problems.push(
+            "'relates:' present but no 'relation:' key found — every row needs " +
+                "slug + relation, or write 'relates: []' with the probe's scanned: line " +
+                '(templates/roadmaps.md rule 18)',
+        );
+    }
+    // A `depends` row that does not mirror into `depends:` splits the set
+    // contract's edge source in two, which rule 18 forbids in as many words.
+    if (values.includes('depends') && !/^depends:/m.test(fm)) {
+        problems.push(
+            "relates[].relation: depends declared but no 'depends:' key mirrors it — " +
+                'the set contract reads `depends:` and only `depends:` ' +
+                '(templates/roadmaps.md rule 18)',
+        );
     }
 }
 
@@ -708,6 +763,7 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 }
 
 export {
+    RELATES_RELATIONS,
     REPO_ROOT,
     ROADMAP_GLOB,
     LIGHTWEIGHT_LINE_CAP,

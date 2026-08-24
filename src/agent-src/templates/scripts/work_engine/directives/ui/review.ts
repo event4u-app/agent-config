@@ -19,6 +19,7 @@ import {
 import {
     is_ambiguous_stack,
     bundle_line,
+    scope_lines,
     unsupported_stack_questions,
 } from './stack_bundles.js';
 
@@ -237,6 +238,7 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             `> Stack: \`${stack_label}\`. Reviewing rendered components ` +
                 'against the locked design brief.',
             bundle_line(state.stack, 'review', stack_label),
+            ...scope_lines(state.stack),
             '> The review pass compares `state.ticket.ui_apply.rendered` ' +
                 'against `state.ui_design` (microcopy, states, a11y, layout) ' +
                 'and produces a structured `findings` list.',

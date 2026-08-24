@@ -1,0 +1,10 @@
+:root {
+  --ink: #16181d;
+  --surface: #ffffff;
+  --muted: #5b616b;
+  --rule: #e3e5e9;
+}
+.article { font-family: Newsreader, Georgia, serif; color: var(--ink); background: var(--surface); }
+.article h2 { font-family: Inter, system-ui, sans-serif; font-weight: 600; letter-spacing: -0.011em; }
+.article p { line-height: 1.6; color: var(--ink); }
+.article hr { border: 0; border-top: 1px solid var(--rule); }

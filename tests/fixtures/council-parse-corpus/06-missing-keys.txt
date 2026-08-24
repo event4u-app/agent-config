@@ -1,0 +1,1 @@
+[{"severity": "high", "title": "the quorum banner overstates attendance", "detail": "no id, no text — the schema the prompt asks for is {id, text}"}, {"observation": "also missing both required keys"}]

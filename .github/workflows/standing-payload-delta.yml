@@ -1,0 +1,89 @@
+name: Standing Payload Delta
+
+# road-to-standing-payload-diet Phase 0 steps 0.3 / 0.5 — a REPORT, never a gate.
+#
+# `check_preamble_payload_budget` already ratchets this number and already fails
+# on growth. A second blocking gate on one measurement double-fails every
+# legitimate rule addition, which is how a reporting surface becomes noise people
+# route around. So this workflow measures the gated buckets at the MERGE-BASE and
+# at HEAD, posts the signed delta with a debit AND a credit column, and never
+# fails the job.
+#
+# Why the merge-base and not `origin/main`: measured while building this step,
+# `origin/main` had moved four commits past the branch point, so a diff against
+# the moving ref attributed other people's merges to this PR. The merge-base is
+# the only ref that answers "what did THIS branch change".
+
+on:
+  pull_request:
+    paths:
+      - "src/rules/**"
+      - "src/skills/**/SKILL.md"
+      - "dist/agent-src/rules/**"
+      - "dist/agent-src/skills/**"
+      - "AGENTS.md"
+      - "src/config/preamble-payload-budget.json"
+      - "src/scripts/check_standing_payload_delta.ts"
+      - ".github/workflows/standing-payload-delta.yml"
+  workflow_dispatch:
+
+# Write scope justified: `pull-requests: write` is needed by the sticky-comment
+# step and by nothing else here. Nothing in this workflow writes code, and there
+# is no `pull_request_target` anywhere in this tree, so a fork PR receives the
+# read-only fork token cap and this block reads wider than the exposure is.
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  standing-payload-delta:
+    name: Standing payload delta (report-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The merge-base needs both sides of the history, so a shallow clone
+          # will not do. `fetch-depth: 0` is the documented way to get it.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Resolve merge-base
+        id: base
+        run: |
+          set -euo pipefail
+          base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          echo "merge_base=$base" >> "$GITHUB_OUTPUT"
+          echo "merge-base: $base"
+
+      - name: Measure standing-payload delta
+        id: delta
+        run: |
+          set -euo pipefail
+          ./scripts-run src/scripts/check_standing_payload_delta \
+            --base "${{ steps.base.outputs.merge_base }}" --rank > /tmp/spd-comment.md
+          cat /tmp/spd-comment.md
+
+      - name: Post / update PR comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88  # v3.0.5
+        with:
+          header: standing-payload-delta
+          path: /tmp/spd-comment.md
+
+      - name: Job summary
+        if: always()
+        run: cat /tmp/spd-comment.md >> "$GITHUB_STEP_SUMMARY"

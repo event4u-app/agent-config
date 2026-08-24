@@ -22,7 +22,7 @@ workspaces: [engineering]
 packs: [engineering-base]
 roles: [developer, reviewer, tester, po, incident, planner]
 enforced_by:
-  - "none"
+  - "instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation"
 # obligation: line 40
 obligation_frequency: "per-edit"
 ---
@@ -129,7 +129,7 @@ checks the ledger's own records, not similarity, and cannot catch an
 unrecorded borrow. The discipline above **is** the control; skipping it is
 not caught downstream by anything automatic. No script can enforce "close
 the source and re-derive" — a pre-write reasoning step only the model
-observes — so this rule ships `enforced_by: none`, same honesty stance as
+observes — so this rule ships `instruction-only`, same honesty stance as
 `security-sensitive-stop` and `untrusted-input-defense`.
 
 `lint_harvest_provenance.ts` stands in exactly the same relation to the

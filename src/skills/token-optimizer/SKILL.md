@@ -3,6 +3,9 @@ model_tier: medium
 name: token-optimizer
 description: "Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset."
 domain: process
+scope:
+  write: []
+  verification_reason: "an index-and-routing skill — it names other artefacts to load and writes nothing. Absence of a write is not something a command can prove."
 execution:
   type: assisted
   handler: shell

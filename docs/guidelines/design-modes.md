@@ -14,7 +14,7 @@ wrong is the root cause of most AI-generated design failures:
 | **Primary failure** | Flatness / genericness — looks like every other AI startup | Strangeness without purpose — "clever" choices that obscure the tool |
 | **The user's question** | "How was this made?" (genuine curiosity) | "Where do I click?" (the tool disappears into the task) |
 | **Key skill cluster** | `brand-identity`, `iconography`, `fe-design § Aesthetic direction`, `design-intelligence` | `accessibility-auditor`, `ui-component-architect`, `fe-design § Table/Form Design` |
-| **Typography strategy** | Distinctive pairing — two contrasting families, deliberate tracking | One reliable family — Inter or equivalent; predictable hierarchy |
+| **Typography strategy** | Distinctive pairing — two contrasting families, deliberate tracking | One reliable family — predictable hierarchy. A default AI font pick (Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif) is a legitimate product-register choice, and [`design-antipatterns` T7](design-antipatterns.md) scopes itself accordingly — but the register is the reason, so state it: an undeclared Inter is still an undeclared font choice. |
 | **Color strategy** | Brand identity — often unexpected; the palette IS the differentiator | Semantic function — primary/danger/success/neutral; predictable meaning |
 | **Motion strategy** | Expressive — motion reinforces the brand's personality | Utilitarian — motion confirms state changes; nothing decorative |
 | **Spacing strategy** | Breathing room; generous whitespace as a brand signal | Dense/efficient; optimize for information density |
@@ -40,6 +40,46 @@ Ask: **What is the output of this UI being used for?**
 a product-mode dashboard). The register applies per-surface, not per-product.
 When unclear: ask — *"Is the user here to be impressed, or to accomplish a
 task?"*
+
+## The second axis — surface job
+
+The register answers *how expressive may this be*. It does not answer *what is
+this surface for*, and conflating the two is why a persuade surface inside a
+product repo gets dense, utilitarian defaults. So there are two axes, and they
+are independent.
+
+| Surface job | The user's situation | Density | Hierarchy | Expressiveness |
+|---|---|---|---|---|
+| `persuade` | arrived, deciding, will leave in seconds | generous | one dominant claim per viewport | high — this is the job |
+| `operate` | returning, task in mind, wants it done | dense | scannable, predictable, repeated | low — strangeness costs time |
+| `read` | sustained attention on prose or data | measured | typographic, not chrome-led | restrained |
+| `experience` | exploring, no task, willing to be surprised | spacious | narrative, sequential | high, and sequenced |
+
+```
+SURFACE JOB IS PER-SURFACE AND LIVES IN THE SURFACE BRIEF.
+IT IS NEVER READ OFF PRODUCT.md, AND A RUN NEVER WRITES IT THERE.
+```
+
+**Why not in PRODUCT.md.** PRODUCT.md describes the product, and a product has
+many surfaces with different jobs — an investor one-pager and an ops console
+belong to the same product and share no defaults. A run that resolves the job
+from PRODUCT.md flattens the persuade surface into the product register, which
+is the `surface-mode-not-product-mode` near-miss in
+`tests/eval/frontend-corpus/near-miss/`.
+
+**Register stays.** The two axes compose: a `persuade` surface in the `brand`
+register and a `persuade` surface in the `product` register are both persuade
+surfaces, and the register decides how far the expressiveness may go.
+
+**Quality floors do not vary by either axis.** Density, hierarchy and
+expressiveness defaults move; contrast, minimum font size, line length,
+reduced-motion, heading order and focus visibility do not. A floor that moved
+with the surface job would be a preference wearing a floor's name.
+
+The machine-readable form is `surface_mode` in
+[`ui-authority`](../contracts/ui-authority.md), which is also the one place the
+precedence between an explicit instruction, the brief and these defaults is
+written down.
 
 ## Brand-mode failure modes
 

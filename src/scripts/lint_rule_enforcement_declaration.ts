@@ -84,11 +84,25 @@ function _declaration(fm: Record<string, string | string[]>): string[] | null {
     return list.length === 0 ? null : list;
 }
 
-/** The body must state a `none` gap in prose — the honesty convention. */
-function _bodyStatesNone(text: string): boolean {
+/**
+ * The body must state the gap in prose — the honesty convention.
+ *
+ * BOTH spellings are accepted, and that is not leniency. The bare `none` was
+ * retired for `instruction-only: <reason>` on 2026-08-23 (one rule still carries
+ * it: `non-destructive-by-default`, a kernel rule `block_kernel_rule_writes`
+ * denies the agent write to). A body-check that knew only the old word would
+ * fail a NEW rule that spelled the declaration the new way and said so in prose —
+ * the rename would have made the honesty convention unsatisfiable for exactly
+ * the rules adopting it.
+ */
+function _bodyStatesGap(text: string): boolean {
     const end = text.indexOf('\n---\n', 4);
     const body = end === -1 ? text : text.slice(end + 5);
-    return body.includes('enforced_by: none') || body.includes('`enforced_by: none`');
+    return (
+        body.includes('enforced_by: none') ||
+        body.includes('`enforced_by: none`') ||
+        body.includes('instruction-only')
+    );
 }
 
 function _readBaseline(root: string): string[] | null {
@@ -144,11 +158,14 @@ function _scan(root: string, baseline: ReadonlySet<string>, ledger: GateLedger |
         // shape validate_frontmatter uses for obligation_frequency. Their
         // projected bytes are stability-gated, so requiring a prose line here
         // would force an un-editable edit.
-        if (decl.includes('none') && !_bodyStatesNone(text) && !is_kernel_rule(file)) {
+        const declaresGap =
+            decl.includes('none') || decl.some((d) => d.startsWith('instruction-only'));
+        if (declaresGap && !_bodyStatesGap(text) && !is_kernel_rule(file)) {
             const f =
-                `src/rules/${file}  declares \`enforced_by: none\` in frontmatter but never states the gap ` +
-                `in its body — the honesty convention is one prose line naming \`enforced_by: none\`, so a ` +
-                `reader of the rule sees the gap, not only a machine.`;
+                `src/rules/${file}  declares a model-carried gap in frontmatter but never states it ` +
+                `in its body — the honesty convention is one prose line naming \`instruction-only\` ` +
+                `(or the retired \`enforced_by: none\`), so a reader of the rule sees the gap, not ` +
+                `only a machine.`;
             findings.push(f);
             ledger?.fail(file, f);
             continue;

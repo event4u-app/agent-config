@@ -66,7 +66,7 @@ mapping before running anything:
 ### 2. Run the command fresh
 
 * Run against the current working tree, not a cached summary.
-* If the project runs commands inside a container or VM (Docker, Devcontainer, Vagrant), run them there — not on the host. See [`docker`](../docker/SKILL.md) and [`tests-execute`](../tests-execute/SKILL.md).
+* If the project runs commands inside a container or VM (Docker, Devcontainer, Vagrant), run them there — not on the host. See [`docker`](../docker/SKILL.md) and [`/tests:execute`](../../domains/engineering-base/tests/execute/command.md).
 * Use targeted runs during iteration (`--filter=`, `--testNamePattern`).
   Run the full suite only in the final verification pass.
 
@@ -189,7 +189,7 @@ When reporting completion to the user:
 ## When to hand over to another skill
 
 * Exact PHP quality commands (PHPStan / Rector / ECS) → [`quality-tools`](../quality-tools/SKILL.md)
-* Running tests inside a container / VM → [`tests-execute`](../tests-execute/SKILL.md)
+* Running tests inside a container / VM → [`/tests:execute`](../../domains/engineering-base/tests/execute/command.md)
 * Writing the regression test that the gate requires →
   [`test-driven-development`](../test-driven-development/SKILL.md)
 * Diagnosing why the gate failed → [`systematic-debugging`](../systematic-debugging/SKILL.md)

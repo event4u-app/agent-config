@@ -343,9 +343,15 @@ export const SLOP_RULES: SlopRule[] = [
     catalogId: "T7",
     severity: "P2",
     engines: ["css"],
-    description: "Default AI font (Inter/Roboto/DM Sans/Geist/Space Grotesk/Instrument Serif) without a brand reason",
+    description: "Default AI font (Inter/Roboto/DM Sans/Geist/Space Grotesk/Instrument Serif) without a stated reason",
+    // Register-scoped by the catalog, NOT by this matcher: a CSS text pass carries
+    // no register signal, so the scope lives in the rebuttal rather than in the
+    // gate. `design-modes.md` sanctions a single reliable family in the PRODUCT
+    // register, which makes "product register" a complete reason on its own — the
+    // message names it so a product surface knows the rebuttal without reading two
+    // guidelines. P2 is a rebuttable presumption (see the header), never a block.
     message:
-      "This is a default AI-coding-tool font pick. Declare it in DESIGN.md with a reason, or choose deliberately (T7).",
+      "This is a default AI-coding-tool font pick. Declare it with a reason (T7) — in the product register, \"single reliable family\" IS the reason; state it in DESIGN.md or the surface brief.",
     gated: (ctx) => DEFAULT_FONTS.some((f) => ctx.has(f)),
     detect: ({ lines }) =>
       lines.flatMap((l, i) => {

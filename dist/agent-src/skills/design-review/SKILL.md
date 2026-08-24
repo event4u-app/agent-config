@@ -208,6 +208,64 @@ Load the reference file whose sections the review needs — never all of them by
 - The model tends to suggest accessibility improvements that break the existing design system.
 - "Best practice" is not always the right choice — sometimes "good enough" ships faster.
 
+## Read the authority object — the review is scoped by it
+
+Read the resolved `ui_authority`
+([contract](../../../docs/contracts/ui-authority.md)) before reviewing. Three
+fields change what a finding *means*:
+
+- **`surface_mode`** sets the density, hierarchy and expressiveness a reviewer
+  should expect. A dense `operate` screen is not "cramped" and a generous
+  `persuade` hero is not "wasteful".
+- **`change_intent`** decides whether a visual-world difference is a finding at
+  all. Under `preserve` a palette or type-family delta is a **defect**; under
+  `redesign` it is the point.
+- **`reference_maturity`** decides whether a difference from the reference is a
+  defect. A `wireframe` declares structure, so reproducing its grey boxes is
+  over-fidelity, not fidelity.
+
+```
+QUALITY FLOORS DO NOT VARY BY SURFACE MODE.
+THE Q1-Q6 FLOOR SET IS IDENTICAL IN ALL FOUR MODES.
+```
+
+Do not re-derive any of these fields here. This skill is a declared consumer of
+that object, and the contract's consumer table names it.
+
+## Review independence — two passes, isolated, in this order
+
+```
+PASS A (JUDGEMENT) RUNS BEFORE PASS B (DETECTOR + RENDER), AND IN ISOLATION.
+INLINE EXECUTION IS PERMITTED ONLY WHERE NO SPAWN PRIMITIVE EXISTS, AND THEN
+LINE 1 READS `DEGRADED: single-context (<reason>)`.
+THERE IS NO THIRD STATE.
+```
+
+**Pass A — judgement.** Read the surface and form a verdict without the
+detector output and without the render artefact. Emit an assessment id.
+
+**Pass B — detector plus render.** Run `lint_design_slop` and read the
+`ui:render` manifest. Emit a second assessment id.
+
+**Order is the whole point.** A judgement formed after reading a detector's
+findings is anchored to them: the reviewer confirms the list instead of looking
+at the surface. Running A first is what keeps B's findings additive rather than
+directive — the same reason
+[`evaluator-independence`](../../rules/evaluator-independence.md) forbids
+pre-loading a verdict into a reviewer's prompt.
+
+**When no spawn primitive exists** the two passes share one context, which
+means A cannot be isolated from B. That is a real degradation and it is
+reported, not hidden: line 1 of the output reads
+
+```
+DEGRADED: single-context (<reason>)
+```
+
+Output therefore carries **either** two assessment ids **or** that banner.
+Neither present is not a third state — it is an unreported degradation, and it
+is the failure this section exists to prevent.
+
 ## Anti-slop scan
 
 Hybrid: a deterministic detector does the mechanical pattern-matching (zero

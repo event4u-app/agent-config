@@ -48,10 +48,21 @@ import {
     STACK_DIRECTIVES,
     run as applyRun,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/apply.js';
-import { STACK_DIRECTIVES as REVIEW_DIRECTIVES } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
-import { STACK_DIRECTIVES as POLISH_DIRECTIVES } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/polish.js';
+import {
+    STACK_DIRECTIVES as REVIEW_DIRECTIVES,
+    run as reviewRun,
+} from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
+import {
+    STACK_DIRECTIVES as POLISH_DIRECTIVES,
+    run as polishRun,
+} from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/polish.js';
 import { run as designRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/design.js';
-import { STACK_BUNDLES, compose_bundle } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
+import {
+    STACK_BUNDLES,
+    compose_bundle,
+    scope_lines,
+    workspace_roots_from_conflicts,
+} from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
@@ -70,6 +81,18 @@ function projectWith(manifests: Record<string, unknown>): string {
         );
     }
     return root;
+}
+
+/**
+ * Path to a committed stack fixture.
+ *
+ * Committed rather than built in a temp dir on purpose: the shape under test IS
+ * the artefact (a root manifest beside workspace globs and marker files), so a
+ * builder that constructs it inline can drift from what a real repository looks
+ * like without any test going red — which is exactly how M1 survived two edits.
+ */
+function fixture(name: string): string {
+    return path.join(REPO_ROOT, 'tests', 'fixtures', 'stack', name);
 }
 
 afterAll(() => {
@@ -221,6 +244,26 @@ const LANE_MATRIX: readonly Lane[] = [
         detects: 'unknown',
         dispatchResolves: false,
     },
+    // ── road-to-monorepo-scope-and-detection Phase 2 ───────────────────────
+    // The two live-run cases the roadmap recorded as defects: both resolved to
+    // `component_lib: none` because the table knew only the `@radix-ui/` scope.
+    {
+        // shadcn's `new-york` style moved to the unified `radix-ui` package in
+        // February 2026. Was `react` with `component_lib: none`.
+        id: 'daf-lane-radix-unified',
+        manifests: { 'package.json': { dependencies: { react: '^19', 'radix-ui': '^1.1' } } },
+        detects: 'react-shadcn',
+        dispatchResolves: false,
+    },
+    {
+        // Base UI is a primitive layer shadcn accepts, but it is not shadcn:
+        // without `components.json` this stays `react`, and only the
+        // component_lib axis carries the extra fact. Was `component_lib: none`.
+        id: 'daf-lane-base-ui',
+        manifests: { 'package.json': { dependencies: { react: '^19', '@base-ui/react': '^1.0' } } },
+        detects: 'react',
+        dispatchResolves: false,
+    },
     {
         // No htmx signal anywhere in the detector. corpus: none.
         id: 'daf-lane-htmx',
@@ -238,12 +281,45 @@ describe('UI lane matrix — detection', () => {
         });
     }
 
-    it('daf-lane-monorepo: a single workspace root is detected, not refused', () => {
-        // Twice-changed row, and the reason matters. It was `plain` (silent
+    it('daf-lane-monorepo: a single frontend scope is detected, not refused', () => {
+        // Thrice-changed row, and the reason matters. It was `plain` (silent
         // generic tooling over the whole repo), then `unknown` (refused as a
-        // wrong-scope call). Neither is right when the layout is unambiguous:
-        // one frontend workspace IS the scope, and refusing it punished the
-        // most common monorepo shape for a decision the repo already made.
+        // wrong-scope call), then `react-shadcn` — but measured against a
+        // monorepo with NO root `package.json`, which is not a shape that
+        // exists. That is M2: the row passed before and after the M1 defect,
+        // so it witnessed nothing. It now loads a fixture that looks like a
+        // repository — root manifest, `pnpm-workspace.yaml`, `turbo.json` —
+        // and its pre-state (`plain`, recorded in the fixture README) is the
+        // defect this roadmap fixes.
+        const r = detect_stack(fixture('mono-pnpm-turbo'));
+        expect(r.frontend).toBe('react-shadcn');
+        // `shadcn`, not `radix`: the workspace carries `components.json`, and the
+        // signal table's documented rule is that the marker file beats the bare
+        // dependency. The pre-conversion row asserted `radix` because its
+        // throwaway workspace had no marker file at all.
+        expect(r.axes.component_lib).toBe('shadcn');
+        expect(r.ambiguity).toEqual([]);
+        // The scope is the workspace that owns `components.json`, never the
+        // repository root — the layout shadcn's own CLI scaffolds.
+        expect(r.scope_root).toBe(path.join('packages', 'ui'));
+    });
+
+    it('several workspace roots are named, not picked', () => {
+        // Two workspaces that genuinely disagree (react vs vue). The refusal
+        // contract that governs a single manifest governs scope selection too.
+        const r = detect_stack(fixture('mono-two-frontends'));
+        expect(r.frontend).toBe(UNSUPPORTED_STACK);
+        expect(r.ambiguity.join(' ')).toContain('workspace roots');
+        expect(r.ambiguity.join(' ')).toContain('admin');
+        expect(r.scope_root).toBe('');
+    });
+
+    it('greenfield-nested: a nested manifest with no root manifest still descends', () => {
+        // The pre-conversion shape, kept deliberately. No root manifest at all
+        // is not a monorepo — it is a scaffold in progress — and the descent
+        // path that serves it is a different branch from the workspace-root
+        // predicate Phase 1 added. Dropping this row would have retired the
+        // only coverage that branch has.
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-mono-'));
         _tmpdirs.push(root);
         const pkgDir = path.join(root, 'packages', 'web');
@@ -259,18 +335,63 @@ describe('UI lane matrix — detection', () => {
         expect(r.ambiguity).toEqual([]);
     });
 
-    it('several workspace roots are named, not picked', () => {
-        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-multi-'));
-        _tmpdirs.push(root);
-        for (const [name, deps] of [['web', { react: '^18' }], ['admin', { vue: '^3' }]] as const) {
-            const d = path.join(root, 'apps', name);
-            fs.mkdirSync(d, { recursive: true });
-            fs.writeFileSync(path.join(d, 'package.json'), JSON.stringify({ dependencies: deps }));
+    it('mono-nx: a workspace declared only by nx.json is descended into', () => {
+        const r = detect_stack(fixture('mono-nx'));
+        expect(r.frontend).toBe('react');
+        expect(r.scope_root).toBe(path.join('packages', 'ui'));
+    });
+
+    it('mono-devdep-root: root test tooling is not the application', () => {
+        // Pre-state was `react` — the root's shared Testing-Library setup in
+        // devDependencies matched the flat label before any descent ran, so a
+        // Vue application was handed a React lane.
+        const r = detect_stack(fixture('mono-devdep-root'));
+        expect(r.frontend).toBe('vue');
+        expect(r.scope_root).toBe(path.join('apps', 'web'));
+    });
+
+    it('mono-pnpm-libs: pnpm-workspace.yaml globs are a declarative source', () => {
+        const r = detect_stack(fixture('mono-pnpm-libs'));
+        expect(r.frontend).toBe('react');
+        expect(r.scope_root).toBe(path.join('libs', 'ui'));
+    });
+
+    it('the unified radix package and Base UI are on the component_lib axis', () => {
+        // § Context recorded both of these returning `component_lib: none` at
+        // the pinned commit — the signal table was one major behind.
+        const radix = detect_stack(
+            projectWith({ 'package.json': { dependencies: { react: '^19', 'radix-ui': '^1.1' } } }),
+        );
+        expect(radix.axes.component_lib).toBe('radix');
+
+        for (const name of ['@base-ui/react', '@base-ui-components/react']) {
+            const base = detect_stack(
+                projectWith({ 'package.json': { dependencies: { react: '^19', [name]: '^1.0' } } }),
+            );
+            // `react`, never `react-shadcn`: shadcn-on-Base-UI is identified by
+            // `components.json` alone, exactly as it was before.
+            expect(base.frontend).toBe('react');
+            expect(base.axes.component_lib).toBe('base-ui');
         }
-        const r = detect_stack(root);
-        expect(r.frontend).toBe(UNSUPPORTED_STACK);
-        expect(r.ambiguity.join(' ')).toContain('workspace roots');
-        expect(r.ambiguity.join(' ')).toContain('admin');
+    });
+
+    it('the css axis separates the two Tailwind majors by marker file', () => {
+        expect(detect_stack(fixture('tailwind-v3')).axes.css).toBe('tailwind-v3');
+        expect(detect_stack(fixture('tailwind-v4')).axes.css).toBe('tailwind-v4');
+        // Neither marker present: the axis stays undifferentiated rather than
+        // guessing a major, which is what keeps the value reachable for the
+        // bundle corpus that still names it.
+        expect(
+            detect_stack(projectWith({ 'package.json': { devDependencies: { tailwindcss: '^4' } } }))
+                .axes.css,
+        ).toBe('tailwind');
+    });
+
+    it('a non-monorepo carries an empty scope_root, not a path', () => {
+        // `scope_root` is repo-relative, so "the project root" is the empty
+        // string — which is also what `scaffold.ts` defaults to when the field
+        // is absent, keeping every non-monorepo project byte-identical.
+        expect(detect_stack(projectWith({ 'package.json': { dependencies: { react: '^18' } } })).scope_root).toBe('');
     });
 
     it('an empty repo stays the default — greenfield must not be refused', () => {
@@ -482,6 +603,75 @@ describe('UI lane matrix — bundle resolution (what must actually exist)', () =
         for (const name of STACK_BUNDLES['plain']?.build ?? []) {
             expect(body).toContain(name);
         }
+    });
+
+    it('the scope question names each workspace, and only those', () => {
+        // Phase 4.2. A scope conflict has a closed candidate set, so the halt
+        // enumerates it. The open "name the workspace" ask is what this
+        // replaces: answered as free text it is a guess the agent must then
+        // validate, which is the silent pick the detector refused one layer up.
+        const detected = detect_stack(fixture('mono-two-frontends'));
+        expect(workspace_roots_from_conflicts(detected.ambiguity)).toEqual(['admin', 'web']);
+
+        const st = new DeliveryState({
+            ticket: {},
+            stack: { frontend: detected.frontend, mtime: 0, ambiguity: detected.ambiguity },
+        } as never);
+        const r = applyRun(st);
+        expect(r.outcome).toBe('blocked');
+        const body = r.questions.join('\n');
+        expect(body).toContain('Build for `admin`');
+        expect(body).toContain('Build for `web`');
+        expect(body).toContain('state.stack.scope_root');
+        // The generic free-text ask is gone precisely when the roots are known.
+        expect(body).not.toContain('Name the project to build for');
+        expect(body).toContain('Abort');
+    });
+
+    it('a scoped dispatch tells the agent which workspace to write in', () => {
+        // Phase 4.1. The skills downstream resolve `components.json` and
+        // `components/ui/*` by path; in a monorepo none of them sit at the
+        // repository root, so the halt has to carry the scope.
+        const detected = detect_stack(fixture('mono-pnpm-turbo'));
+        expect(detected.scope_root).not.toBe('');
+        const stack = {
+            frontend: detected.frontend,
+            mtime: 0,
+            scope_root: detected.scope_root,
+        };
+        // `polish` short-circuits to SUCCESS with nothing to fix, so it only
+        // reaches its dispatch halt once review has left findings behind.
+        const extra: Record<string, Record<string, unknown>> = {
+            apply: {},
+            review: {},
+            polish: { ui_review: { findings: [{ code: 'contrast' }], review_clean: false } },
+        };
+        for (const [step, run] of [
+            ['apply', applyRun],
+            ['review', reviewRun],
+            ['polish', polishRun],
+        ] as const) {
+            const st = new DeliveryState({
+                ticket: {},
+                stack,
+                ...extra[step],
+            } as never);
+            const r = run(st);
+            expect(r.outcome, step).toBe('blocked');
+            expect(r.questions.join('\n'), step).toContain(`Scope: \`${detected.scope_root}\``);
+        }
+    });
+
+    it('a non-monorepo halt carries no scope line at all', () => {
+        // The byte-identical guarantee: every project that is not a monorepo
+        // must produce exactly the halt it produced before Phase 4.
+        expect(scope_lines({ frontend: 'react', mtime: 0 })).toEqual([]);
+        expect(scope_lines({ frontend: 'react', mtime: 0, scope_root: '' })).toEqual([]);
+        const st = new DeliveryState({
+            ticket: {},
+            stack: { frontend: 'react', mtime: 0 },
+        } as never);
+        expect(applyRun(st).questions.join('\n')).not.toContain('Scope: `');
     });
 
     it('a lane with no framework-specific executor says so in the halt', () => {

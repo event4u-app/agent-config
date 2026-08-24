@@ -10,6 +10,9 @@ workspaces:
 packs:
   - frontend-design
 token_budget_class: rich
+scope:
+  write: []
+  verification_reason: "execution declares no handler, so this skill runs nothing of its own — every write is the calling agent's, under the rules that govern it. No command can prove a scope the skill never executes."
 execution:
   type: manual
 ---

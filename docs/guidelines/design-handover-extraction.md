@@ -74,11 +74,19 @@ ladder requires you to **name**, not to pass off as a source-based build.
 ## Coverage — stated honestly
 
 No fixture scores this class yet. `daf-source-over-screenshot` scores the rung
-choice on an *attached* artifact, not a URL handover, and it is itself recorded
-as SKIPPED on 2026-08-13 for want of a page-reaching capture primitive. Closing
-the gap needs a fixture whose host actually has one; claiming a regression
-witness before then would be the fabrication this package's evidence discipline
-exists to prevent.
+choice on an *attached* artifact, not a URL handover.
+
+**Its blocking reason changed on 2026-08-23 and the new one is narrower.** It was
+SKIPPED since 2026-08-13 "for want of a page-reaching capture primitive". That
+primitive now exists — `agent-config ui:render`, a Class-A headless capture at
+desktop / 375 px / 320 px, executed against a real fixture. So the fixture is no
+longer blocked on a missing capability; it is **unscored**, pending a live eval
+run that puts an agent through an artifact port and judges the rung it chose.
+
+The discipline is unchanged and still binds: claiming a regression witness before
+that run would be the fabrication this package's evidence discipline exists to
+prevent. What moved is which sentence is true — "we cannot measure this" became
+"we have not measured this yet", and those are different claims.
 
 ### The skip register — every fixture gated on the same primitive
 

@@ -53,6 +53,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML, { parseDocument } from 'yaml';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 type Severity = 'error' | 'warning' | 'info';
@@ -276,7 +277,7 @@ function _dateDiffDays(today: PyDate, lv: PyDate): number {
 }
 
 function _today(): PyDate {
-    const now = new Date();
+    const now = asOf();
     return new PyDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
 }
 

@@ -1,0 +1,17 @@
+{
+  "skill": "alerting-doctrine",
+  "last_eval": "2026-08-23",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers alert classification and the malformed-page contract. Should-not-trigger covers the near-miss neighbours this skill deliberately does not own: signal existence (logging-monitoring), the go/no-go verdict (operational-readiness), running an open incident (incident-commander), dashboard layout (dashboard-design) and host security (server-hardening).",
+  "queries": [
+    {"q": "should this condition page someone or just open a ticket?", "trigger": true},
+    {"q": "review our alert rules — too many of them wake the on-call", "trigger": true},
+    {"q": "what has to be in a runbook for it to be worth paging into?", "trigger": true},
+    {"q": "this alert has no owner, is that a problem?", "trigger": true},
+    {"q": "define what earns a page versus an info notification", "trigger": true},
+    {"q": "does this project even have an error rate metric?", "trigger": false, "note": "signal existence and detection → logging-monitoring"},
+    {"q": "are we ready to ship this to production?", "trigger": false, "note": "go/no-go readiness verdict → operational-readiness"},
+    {"q": "the outage started 10 minutes ago, what do I do now?", "trigger": false, "note": "running an open incident → incident-commander"},
+    {"q": "how should I lay out the panels on this monitoring dashboard?", "trigger": false, "note": "dashboard layout and visualization → dashboard-design"},
+    {"q": "harden ssh and set up unattended upgrades on this box", "trigger": false, "note": "host security posture → server-hardening"}
+  ]
+}

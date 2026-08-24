@@ -199,3 +199,61 @@ describe('lint_roadmap_complexity — behavioural spec', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// relates: — road-to-roadmap-situational-awareness § 4.1
+// ---------------------------------------------------------------------------
+
+describe('relates: — a closed relation vocabulary', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrc-relates-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function write(fm: string): string {
+        const p = path.join(tmp, 'road.md');
+        fs.writeFileSync(p, `---\ncomplexity: structural\n${fm}\n---\n## Phase 1\n\n- [ ] x\n`, 'utf-8');
+        return p;
+    }
+
+    it('accepts every one of the four relations', () => {
+        for (const rel of ['extends', 'supersedes', 'disjoint']) {
+            const p = write(`relates:\n  - slug: road-to-other\n    relation: ${rel}\n    note: "n"`);
+            expect(mod.lint_roadmap(p, 0)).toEqual([]);
+        }
+        // `depends` additionally has to mirror into `depends:` — rule 18.
+        const p = write(
+            'depends: [road-to-other]\nrelates:\n  - slug: road-to-other\n    relation: depends\n    note: "n"',
+        );
+        expect(mod.lint_roadmap(p, 0)).toEqual([]);
+    });
+
+    it('reds on an unknown relation', () => {
+        const p = write('relates:\n  - slug: road-to-other\n    relation: maybe\n    note: "n"');
+        expect(mod.lint_roadmap(p, 0)).toEqual([
+            "unknown relates[].relation 'maybe' — allowed: extends | supersedes | depends | " +
+                'disjoint (templates/roadmaps.md rule 18)',
+        ]);
+    });
+
+    it('accepts an explicit empty list', () => {
+        expect(mod.lint_roadmap(write('relates: []   # scanned: 716 files, 0 hits'), 0)).toEqual([]);
+    });
+
+    it('reds on a relates: block with rows but no relation key', () => {
+        const p = write('relates:\n  - slug: road-to-other\n    note: "n"');
+        expect(mod.lint_roadmap(p, 0)[0]).toContain("'relates:' present but no 'relation:' key");
+    });
+
+    it('reds on a depends row that does not mirror into depends:', () => {
+        const p = write('relates:\n  - slug: road-to-other\n    relation: depends\n    note: "n"');
+        expect(mod.lint_roadmap(p, 0)[0]).toContain("no 'depends:' key mirrors it");
+    });
+
+    it('is silent when the field is absent — requiring it is the ratchet, not this gate', () => {
+        expect(mod.lint_roadmap(write('name: x'), 0)).toEqual([]);
+    });
+});

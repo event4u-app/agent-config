@@ -261,7 +261,6 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
   — rubric for "minimum control" recommendations.
   [csrc.nist.gov/projects/risk-management/sp800-53-controls](https://csrc.nist.gov/projects/risk-management/sp800-53-controls/release-search#!/800-53)
 - [`threat-modeling`](../threat-modeling/SKILL.md),
-  [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`security`](../security/SKILL.md),
   [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.

@@ -28,6 +28,18 @@
  * A hook fix that cannot reach the agent that wrote it is indistinguishable
  * from no fix, and nothing said so. This gate says so.
  *
+ * WHAT IT DOES NOT DO — ORDERING IS NOT EQUIVALENCE. This gate compares
+ * mtimes, so `touch dist/hooks/dispatch.js` makes every source look older and
+ * this gate green while the executing bytes are stale. Demonstrated on this tree
+ * rather than argued (2026-08-23): a one-constant edit to
+ * `block_unauthorized_git.ts` plus a `touch` on the bundle left THIS gate at
+ * exit 0 while `check_hook_bundle_content` exited 1 with executing
+ * `sha256 ce21579b7c14` against rebuilt `ac83e2f51118` — identical byte count,
+ * different bytes. That is why the success line below says "ordering" and names
+ * the digest gate instead of claiming freshness outright, and why preflight runs
+ * the two together (`taskfiles/ci-fast.yml`). The content comparison is NOT
+ * duplicated here: one home per invariant.
+ *
  * WHAT IT DOES NOT DO: it never builds. Building into a live hook path is a
  * documented hazard in this repo (an esbuild run that overwrites the
  * dispatcher a running hook is executing can wedge the tool loop), so the
@@ -169,7 +181,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   if (r.stale.length === 0) {
     if (!quiet) {
       process.stdout.write(
-        `✅  OK  hook bundle: fresh (built ${stamp(r.bundleMtimeMs)}, ${String(r.checked)} bundled source(s) checked)\n`,
+        `✅  OK  hook bundle: ordering fresh (built ${stamp(r.bundleMtimeMs)}, ${String(r.checked)} bundled source(s) checked) — byte-equivalence is check_hook_bundle_content's\n`,
       );
     }
     return 0;

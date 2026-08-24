@@ -1,0 +1,7 @@
+Here is what I found.
+
+```json
+[{"id": "label-map-last-wins", "text": "Each reviewer overwrites the shared label map, so Response-A resolves to whichever reviewer ran last."}]
+```
+
+Let me know if you want more detail on any of these.

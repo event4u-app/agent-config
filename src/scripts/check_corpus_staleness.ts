@@ -49,6 +49,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
@@ -126,7 +127,7 @@ export function days_between(fromStamp: number, toStamp: number): number {
 }
 
 /** Today as `YYYY-MM-DD` in UTC — the only place the clock is read. */
-export function today_iso(now: Date = new Date()): string {
+export function today_iso(now: Date = asOf()): string {
     return now.toISOString().slice(0, 10);
 }
 
