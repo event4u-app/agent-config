@@ -24,8 +24,8 @@ thing the key exists to surface.**
 So a claim written as a folded or literal block —
 
 ```yaml
-estate_growth_exempt: >-
-  the real reason, on the following lines
+# estate_growth_exempt: >-      <- key commented out ON PURPOSE, see below
+#   the real reason, on the following lines
 ```
 
 — is captured as the literal reason **`>-`**. The gate goes green, prints
@@ -120,3 +120,48 @@ complete answer; silence is not.
   — the sibling defect in the same gate, from the other direction: there the
   *population* is opt-out-able, here the *reason* is. Both are cases of a
   measured party controlling what the measurement sees.
+
+## Second finding: this stub triggered the defect it documents
+
+Worth recording as its own item, because it is sharper than the first and was
+found the only way it could be — by accident.
+
+The example above was originally written as a live YAML key inside a fenced code
+block. `check_estate_count` **read it as a real claim**, printed
+`↑ growth claimed in agents/roadmaps/stubs/road-to-single-line-estate-claims.md: >-`,
+and authorised growth on a stub that claims nothing. A file whose entire subject
+is a phantom claim produced a phantom claim.
+
+**The repository already solved this, for the sibling parser only.**
+`src/agent-src/scripts/update_roadmap_progress.ts:433-436`:
+
+```
+// Strip fenced code blocks before blocker detection — a roadmap that shows the
+// `## Blockers` shape as a documentation example (fenced, indented or not)
+// must not be mistaken for a live blocker on that roadmap.
+const FENCED_CODE_RE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm;
+```
+
+`check_estate_count.ts` contains **zero** occurrences of `stripFenced` or
+`fence`. So one parser in this family was hardened against documentation
+examples and its sibling was not, and nothing connects the two.
+
+The example is now prefixed with `# `, which defeats the match because the regex
+allows only `\s*` before the key. That is a workaround in this one file, not a
+fix: every future artefact that documents the key has the same trap waiting, and
+the whole point of stripping fences in the sibling parser was to stop authors
+needing to know that.
+
+**Scope note.** `growthClaims()` reads a **patch**, not a file, so it cannot
+reuse `FENCED_CODE_RE` directly — fence delimiters may sit outside the hunk
+entirely at `--unified=0`. Establishing whether fence-awareness is even
+well-defined over a patch is part of the work, and "it is not, so reject block
+scalars and accept the phantom-claim risk" is a legitimate outcome to record.
+
+Add to § What moved here:
+
+4. Decide whether `growthClaims()` should ignore claims inside fenced blocks, and
+   whether that is decidable from a patch at all.
+5. If it is not, at minimum make a phantom claim visible: a claim whose reason is
+   exactly `>-` or `|` should fail rather than authorise, which also discharges
+   item 1 above with one condition instead of two.
