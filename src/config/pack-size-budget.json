@@ -1,10 +1,10 @@
 {
-    "_comment": "Payload budget for the published npm tarball (road-to-zero-ceremony-install Phase 4). MEASURED, NEVER INVENTED \u2014 the numbers below come from `npm pack --dry-run --json --ignore-scripts` on the tracked tree at 9.9.0 (2026-07-31). Two metrics, both genuinely ungated before this file: COMPRESSED tarball size, and PER-SKILL share of the skills subtree. The UNPACKED size is deliberately absent \u2014 it is already owned by src/config/evaluator-budgets.json (unpacked_size_mb), and a second number for one lever is how three conflicting figures start circulating.",
+    "_comment": "Payload budget for the published npm tarball (road-to-zero-ceremony-install Phase 4). SURFACE LABEL, added 2026-08-24 (2.3): every packed_size_mb figure in this file and in every baseline_note_* below was measured on the UNBUILT tree under measurement_conditions. The BUILT surface a consumer installs is larger and is recorded separately in built_surface_measurement_2026_08_24 \u2014 do not compare a note's figure against a built one. MEASURED, NEVER INVENTED \u2014 the numbers below come from `npm pack --dry-run --json --ignore-scripts` on the tracked tree at 9.9.0 (2026-07-31). Two metrics, both genuinely ungated before this file: COMPRESSED tarball size, and PER-SKILL share of the skills subtree. The UNPACKED size is deliberately absent, and the reason CHANGED on 2026-08-04 without this sentence being updated \u2014 corrected 2026-08-24. It used to read that unpacked size is 'already owned by src/config/evaluator-budgets.json (unpacked_size_mb)'. That key was REMOVED by maintainer decision at the 9.17.0 release (`evaluator-budgets.json` -> `removed_2026_08_04`): the gate turned every legitimate payload addition into a blocked release (28.22 measured against max 28, all functional gates green) and the maintainer judged tarball size not worth gating. So the built artifact's unpacked size is MEASURED as evidence by `evaluator_umbrella.sh` and is deliberately NOT budget-gated. Reinstating `unpacked_size_mb` reverses a recorded maintainer release decision and requires owner review under `decision-revisit-gate` \u2014 it is not a wiring fix. The original point stands on its own terms: a second number for one lever is how three conflicting figures start circulating.",
     "schema_version": 1,
     "owner": "maintainer",
     "review_by": "2027-07-31",
     "regression_pct": 10,
-    "measurement_conditions": "npm pack --dry-run --json --ignore-scripts, run at the repo root on a clean checkout. `--ignore-scripts` means NO build runs, so dist/cli, dist/ui, dist/mcp and dist/hooks are absent and the figure covers only the TRACKED payload (src/scripts/, dist/agent-src/, dist/install/, docs/guidelines/, templates). That is deliberate: this gate is always-on for every PR, and the tracked content tree is exactly the surface that grows by accretion. The built artifact is ~5.4 MB larger and is gated separately, at release time, by evaluator-budgets.unpacked_size_mb.",
+    "measurement_conditions": "npm pack --dry-run --json --ignore-scripts, run at the repo root on a clean checkout. `--ignore-scripts` means NO build runs, so dist/cli, dist/ui, dist/mcp and dist/hooks are absent and the figure covers only the TRACKED payload (src/scripts/, dist/agent-src/, dist/install/, docs/guidelines/, templates). That is deliberate: this gate is always-on for every PR, and the tracked content tree is exactly the surface that grows by accretion. The built artifact is ~5.4 MB larger and is NOT gated \u2014 corrected 2026-08-24. This sentence named `evaluator-budgets.unpacked_size_mb` as a release-time gate; that key was removed by maintainer decision on 2026-08-04 (see `_comment`). `evaluator_umbrella.sh` still measures and records the figure as evidence, so the number exists and nothing enforces it. That is the honest state and it is deliberate.",
     "budgets": {
         "packed_size_mb": {
             "max": 9.1,
@@ -30,5 +30,31 @@
                 "baseline_note_2026_08_13": "23.0 \u2192 23.5 on 2026-08-13, and the reason belongs in this file per the sentence above. WHAT WAS ADOPTED: data/motion.csv, 10.5 KB, 16 rows. WHY IT IS NOT DISCRETIONARY: the roadmap's three design dials were all in its original scope, and two of the three (variance, density) were already portable \u2014 variance's keywords resolve against the local styles.csv (2/3/3 hits) and density is three pure range maps. The motion dial is not: upstream filters its corpus rows by `Intensity Tier == <dial tier>`, and that column exists only in motion.csv, so shipping the dial without the file means shipping a flag that silently does nothing. Two of three dials plus an inert third is a worse surface than three working ones. WHAT WAS DECLINED IN THE SAME PASS, so this is not a ratchet slipping: google-fonts.csv (743 KB \u2014 ADR-061 \u00a78 rejects it by name and by size; the 2026-06-16 amendment authorises a slim top-N slice from a different mirror, not this file), typography.csv (our curated font-pairings-reference.csv is the ADR's working substitution), six desktop-UI stacks outside frontend-design's scope, and eleven content-drifted files nobody has reviewed. The base pin in ATTRIBUTION.md is deliberately NOT bumped for the same reason. HONEST LIMIT ON THE NUMBER: 22.63 is the committed measurement, not a fresh one \u2014 check_pack_size cannot be re-measured from a built worktree (it reads 9.096 against the 7.8 packed cap before any change, the trap the packed_size_mb note above documents), so the post-adoption share is arithmetic (~22.87 %) and the new cap carries ~0.6 pp over it rather than clearing by a hair. DECIDED BY: AI council, 2026-08-13, on a maintainer delegation \u2014 and honestly, by ONE member over two rounds, not by convergence: the second seat returned exit_1 (the codex CLI refuses a git worktree as an untrusted directory). Recorded as a single-member review in agents/evidence/analysis/design-system-blockers-council.md."
             }
         }
+    },
+    "built_surface_measurement_2026_08_24": {
+        "purpose": "road-to-standing-payload-truth 2.2 and 2.3. Every cap raise in this file's baseline_note_* history was measured on the UNBUILT tree, and nothing recorded what the BUILT surface \u2014 the one a consumer installs \u2014 actually is. Two figures for one lever with no label is how the confusion this file warns about starts, so both are recorded here with the command that produced each.",
+        "unbuilt": {
+            "packed_mb": 8.4953,
+            "unpacked_mb": 28.7516,
+            "entries": 2614,
+            "command": "npm pack --dry-run --json --ignore-scripts   # clean detached worktree, dist/ unbuilt",
+            "note": "THIS is the surface every packed_size_mb cap in this file was set against, including max 9.1."
+        },
+        "built": {
+            "packed_mb": 10.5525,
+            "unpacked_mb": 37.3775,
+            "entries": 2808,
+            "command": "npm run build && npm pack --dry-run --json   # prepack runs the build; this is what publish emits",
+            "note": "The surface a consumer downloads and installs. Gated by nothing \u2014 see _comment."
+        },
+        "delta": {
+            "packed_mb": 2.0572,
+            "unpacked_mb": 8.6259,
+            "entries": 194,
+            "correction": "The roadmap and an earlier note in this file put the built artifact at '~5.4 MB larger'. MEASURED it is +8.6259 MB unpacked and +2.0572 MB packed. The 5.4 figure is stale and is corrected here rather than carried; a reader comparing 8.4953 against 28.22 or 37.3775 was comparing three different surfaces."
+        },
+        "what_this_says_about_the_removed_gate": "unpacked_size_mb was removed on 2026-08-04 with max 28 and a measurement of 28.22 \u2014 0.8 % over. The built unpacked size TODAY is 37.3775 MB, i.e. that cap would now be exceeded by 33.5 %. Reinstating it is therefore not 'add a key with a measured baseline': it is setting a cap a third higher than the one whose 0.8 % breach caused its removal. Recorded because it makes the 2026-08-04 decision look better in hindsight than it did at the time, and because an owner reopening it under decision-revisit-gate should start from 37.4, not from 28.",
+        "measured_at": "2026-08-24",
+        "measured_on": "One machine, two worktrees of the same commit. CI has historically read ~8 KB above the local packed figure; no CI reading of the BUILT surface exists, so the built numbers here are local-only and are not a CI baseline."
     }
 }
