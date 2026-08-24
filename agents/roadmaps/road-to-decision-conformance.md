@@ -11,7 +11,8 @@ relates: []
 # not a sibling. No other active, later or archived roadmap carries an
 # ADR-conformance item; grepped across all twelve active files plus later/ and
 # archive/ for `ADR-094`, `adr_cite_check`, `reopen_policy` and `challenged`.
-estate_growth_exempt: "Measured +0 at landing: check_estate_count counts non-draft roadmaps and this file is draft. Pre-declared for the flip to ready, which charges +1 active_roadmaps. Warranted on a measurement: 185 accepted ADRs, 8 carrying reopen_policy, 12 carrying a free-text scope parenthetical no schema parses, and one ADR whose own Context states an org-level outcome a live probe contradicts in the opposite direction from the one the review assumed. The mechanism half is already built (adr_cite_check, decision-revisit-gate) -- this closes the conformance half rather than adding a parallel one."
+estate_growth_exempt: "Charges +0 on the COUNT half (status-scoped, this file is draft) and +1 on one-in-one-out, which is file-based. Warranted on a measurement: 185 accepted ADRs, 8 carrying reopen_policy, 12 carrying a free-text scope parenthetical no schema parses, and one ADR whose own Context states an org-level outcome a live probe contradicts in the opposite direction from the one the review assumed. The mechanism half is already built (adr_cite_check, decision-revisit-gate); this closes the conformance half rather than adding a parallel one."
+estate_offset_exempt: "No archive move is available in this change. Scope was cut against the tree before landing: most of the source P0.1 is already shipped as decision-revisit-gate plus adr_cite_check plus 73 ADRs carrying revisit fields, and only the four unbuilt gaps are carried here."
 ---
 # Road to decision conformance — the decisions exist, and nothing checks whether the tree still agrees with them
 

@@ -14,7 +14,8 @@ relates: []
 #     declare; it is this roadmap's § Prior disposition. Recorded there instead
 #     of as a `relates:` row, because a closed archive entry is evidence, not
 #     coordination surface.
-estate_growth_exempt: "Measured +0 at landing: check_estate_count counts non-draft roadmaps and this file is draft. Pre-declared for the flip to ready, which charges +1 active_roadmaps. Warranted on measurement, not appetite: six numbers this package publishes were re-derived at HEAD b15b63d38 on 2026-08-24 and three are wrong, while the gate written in July to stop exactly this (check_claims witness sweep) is verified present and verified unable to see any of them. No open roadmap carries a numeric-claim or instrumentation item -- grepped across all twelve."
+estate_growth_exempt: "Charges +0 on the COUNT half (that half is status-scoped and this file is draft) and +1 on one-in-one-out, which is file-based and fires whatever the status. Warranted on measurement, not appetite: six numbers this package publishes were re-derived at HEAD b15b63d38 on 2026-08-24 and three are wrong, while the gate written in July to stop exactly this -- the check_claims witness sweep -- is verified present and verified unable to see any of them. No open roadmap carries a numeric-claim or instrumentation item; grepped across all twelve."
+estate_offset_exempt: "No archive move is available in this change. The addition is the smaller half of a reduction: a 4,154-line review yielded two roadmaps, and nine of its claims were verified dead and recorded as prevented rather than becoming work."
 ---
 # Road to published-number truth — the witness sweep watches the right file and the wrong shapes
 

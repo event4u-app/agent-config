@@ -10,7 +10,8 @@ relates: []
 # --relates` was run at HEAD b15b63d38 -- scanned 753 roadmap files, 326 remote
 # branches, 0 PRs; `sibling roadmaps on the same topic: (none)`. Empty is the
 # probe's answer, not an unrun probe.
-estate_growth_exempt: "Measured +0 at landing (draft; the open blocker is likewise uncounted while draft). Pre-declared for the flip to ready, which charges +1 active_roadmaps and +1 open_blockers -- the latter has allowance none, so it needs this claim. The blocker is pre-existing: two council rejections this roadmap names for the first time rather than obligations it creates. Both defects were re-derived at HEAD b15b63d38 and neither is covered by any of the twelve active roadmaps, all of which are infrastructure or governance. Four of the source artifact's five anchors were dropped as refuted or already-shipped."
+estate_growth_exempt: "Charges +0 on the COUNT half (status-scoped; the open blocker is likewise uncounted while draft) and +1 on one-in-one-out, which is file-based. On the flip to ready it additionally charges +1 open_blockers, whose allowance is none, so this claim carries that too. The blocker is pre-existing: two council rejections this roadmap names for the first time rather than obligations it creates. Both defects were re-derived at HEAD b15b63d38 and neither is covered by any of the twelve active roadmaps. Four of the source artifact five anchors were dropped as refuted or already-shipped."
+estate_offset_exempt: "No archive move is available in this change. Net direction is favourable: a five-command cluster proposal and a second whole roadmap were both dropped, leaving one lightweight file carrying the two anchors that survived re-derivation."
 ---
 # Road to channel contract and profile drift — two defects that survived a LinkedIn ask
 

@@ -14,8 +14,8 @@ relates: []
 # which was found by reading `agents/tmp.old/component-library/` by hand. Empty
 # here means "no live sibling", not "nothing adjacent exists" -- § Already
 # shipped carries what the probe missed.
-estate_growth_exempt: "Measured +0 at landing: check_estate_count counts non-draft roadmaps and this file is draft. Pre-declared for the flip to ready, which charges +1 active_roadmaps. Warranted on a measurement: three shipped surfaces name component granularity in three mutually inconsistent ways at HEAD b15b63d38, and two of the three disagreements are between a skill and the TypeScript that implements it."
-estate_offset_exempt: "The sanctioned +1 path for the flip to ready, no archive move being available in the same change. Net direction is favourable regardless: two proposed roadmaps totalling 1,210 lines were reduced to this one file, roughly 70 per cent of the larger having been verified as already-shipped or already-planned in four unbuilt predecessors."
+estate_growth_exempt: "Charges +0 on the COUNT half (status-scoped, this file is draft) and +1 on one-in-one-out, which is file-based. Warranted on a measurement: three shipped surfaces name component granularity in three mutually inconsistent ways at HEAD b15b63d38, and two of the three disagreements are between a skill and the TypeScript that implements it."
+estate_offset_exempt: "No archive move is available in this change. Net direction is favourable: two proposed roadmaps totalling 1,210 lines were reduced to this one file, roughly 70 per cent of the larger having been verified as already-shipped or already-planned in four unbuilt predecessors."
 ---
 # Road to a component-granularity vocabulary — three surfaces, three taxonomies, none of them talking
 
