@@ -1,76 +1,102 @@
 {
-  "_comment": "Per-spawn preamble payload ceiling (road-to-cache-economy Phase 3), unblocked by C-3 measuring 38.0% against a 15% bar. This is a RATCHET, not the roadmap's literal candidate numbers: those (median 40k / p95 50k) were anchored to an upstream ~37k baseline, while this package's own deterministic in-repo payload is ~102.5k tokens \u2014 a hard 40k gate would be red on the day it lands and would teach the reader to ignore it. The ratchet fails on GROWTH instead, so the number can only walk down, and the 40k/50k target stays recorded as the destination. Only the deterministic, in-repo buckets are gated: user-scope rules depend on what the developer happens to have installed globally and are therefore not CI-checkable.",
-  "schema_version": 1,
-  "registered_at": "2026-07-30",
-  "owner": "maintainer",
-  "review_by": "2027-07-30",
-  "metric": {
-    "basis": "chars/4 token estimate over the projected tree, produced by src/scripts/preamble_byte_census.ts",
-    "gated_buckets": [
-      "project-scope rules (dist/agent-src/rules/*.md)",
-      "preloaded skills catalog (name + description, dist/agent-src/skills)",
-      "CLAUDE.md hierarchy (project + project-local)"
-    ],
-    "excluded_buckets": [
-      "user-scope rules (~/.claude/rules/*.md) \u2014 machine-dependent, not CI-checkable",
-      "tool definitions + dispatch prompt \u2014 no local source carries the request payload; the census reports it as an explicit residual",
-      "personas (src/agent-src/personas, 36 files, ~37,181 tok) \u2014 measured ZERO standing cost 2026-08-22: .claude/personas/ is written by this repo's generators (5 in-repo references) and read by no host contract; the host's real subagent surface is .claude/agents/, which this package writes 1 file into. Reversal condition: a host publishing a personas contract, or a generator folding persona prose into an instruction file that IS read. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md",
-      "contexts (src/agent-src/contexts, 58 files, ~114,042 tok) \u2014 measured ON-DEMAND 2026-08-22: 0 rules declare load_context_eager: (17 declare the lazy load_context:), and rule.schema.json:49 documents eager as the variant that counts against the per-rule budget. This records that no eager declaration exists, NOT that eager loading would be free \u2014 nobody has declared one, so nobody has measured it. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md",
-      "skill bodies (src/skills/*/SKILL.md, 290 files, ~595,843 tok) \u2014 measured ON-DEMAND 2026-08-22: censusSkillsCatalog (preamble_byte_census.ts:216-234) builds the gated catalog bucket from `- name: description` per skill and reads no body byte, which is why 290 skills totalling ~595,843 tok report as ~14.4k standing. Corollary: the description cap is the WHOLE skill-side lever, not a fragment of it. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md"
-    ],
-    "_bucket_classification_note": "All three additions above are EXCLUSIONS, not gated buckets, and that is the finding rather than a shortcut. A census bucket over a corpus measured at zero is a permanently green gate certifying nothing. The exclusions carry their measurement so the next pass that proposes one of these corpora as a token lever meets the number instead of the silence."
-  },
-  "baseline_tokens": 102520,
-  "baseline_history": [
-    {
-      "tokens": 102599,
-      "at": "2026-07-30",
-      "why": "registered with the gate"
-    },
-    {
-      "tokens": 102520,
-      "at": "2026-07-31",
-      "why": "free tightening: the measured tree came in 79 tok under the registered baseline, so the ratchet walks down to meet it. Not a claimed reduction \u2014 nothing was optimised; the point of a ratchet is that a lower measurement becomes the new ceiling instead of becoming unused headroom."
-    }
-  ],
-  "headroom_pct": 5,
-  "target_tokens": {
-    "median": 40000,
-    "p95": 50000,
-    "_comment": "The roadmap's candidate numbers, kept as the destination. Reaching them needs reductions this package has not built yet; scope-dedup (C-3) removes a redundant COPY at the consumer, it does not shrink the suite itself."
-  },
-  "target_schedule": {
-    "_comment": "road-to-inbox-harvest-2026-08-d-context-ledger Step 5.3. The target above was a destination with no route: the ratchet fails on GROWTH only, so the corpus can drift away from 40k indefinitely without any gate objecting. These milestones give the destination a schedule. They are DATES WITH NUMBERS, not a derivation - no measurement in this tree says the estate can reach 85k by a given day, and pretending otherwise would be the invented-threshold failure this file's own baseline_history is careful to avoid. What they buy is that a miss becomes a published fact with an owner instead of a silent drift.",
+    "_comment": "Per-spawn preamble payload ceiling (road-to-cache-economy Phase 3), unblocked by C-3 measuring 38.0% against a 15% bar. This is a RATCHET, not the roadmap's literal candidate numbers: those (median 40k / p95 50k) were anchored to an upstream ~37k baseline, while this package's own deterministic in-repo payload is ~102.5k tokens \u2014 a hard 40k gate would be red on the day it lands and would teach the reader to ignore it. The ratchet fails on GROWTH instead, so the number can only walk down, and the 40k/50k target stays recorded as the destination. Only the deterministic, in-repo buckets are gated: user-scope rules depend on what the developer happens to have installed globally and are therefore not CI-checkable.",
+    "schema_version": 1,
+    "registered_at": "2026-07-30",
     "owner": "maintainer",
-    "measured_at_registration": {
-      "tokens": 125593,
-      "at": "2026-08-15",
-      "note": "MEASURED total at registration time, from check_preamble_payload_budget. It is ~23k ABOVE both baseline_tokens (102520) and the derived ceiling, i.e. the gate is red on the tree as it stands. The baseline is deliberately NOT raised to meet it - raising a ratchet baseline to clear a failing check is the config-weakening move this repo blocks by construction. It is recorded here so the milestones below are planned against the real starting point rather than a stale one. Per-rule ranking: agents/evidence/analysis/rule-paths-coverage-census.md"
+    "review_by": "2027-07-30",
+    "metric": {
+        "basis": "chars/4 token estimate over the projected tree, produced by src/scripts/preamble_byte_census.ts",
+        "gated_buckets": [
+            "project-scope rules (dist/agent-src/rules/*.md)",
+            "preloaded skills catalog (name + description, dist/agent-src/skills)",
+            "CLAUDE.md hierarchy (project + project-local)"
+        ],
+        "excluded_buckets": [
+            "user-scope rules (~/.claude/rules/*.md) \u2014 machine-dependent, not CI-checkable",
+            "tool definitions + dispatch prompt \u2014 no local source carries the request payload; the census reports it as an explicit residual",
+            "personas (src/agent-src/personas, 36 files, ~37,181 tok) \u2014 measured ZERO standing cost 2026-08-22: .claude/personas/ is written by this repo's generators (5 in-repo references) and read by no host contract; the host's real subagent surface is .claude/agents/, which this package writes 1 file into. Reversal condition: a host publishing a personas contract, or a generator folding persona prose into an instruction file that IS read. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md",
+            "contexts (src/agent-src/contexts, 58 files, ~114,042 tok) \u2014 measured ON-DEMAND 2026-08-22: 0 rules declare load_context_eager: (17 declare the lazy load_context:), and rule.schema.json:49 documents eager as the variant that counts against the per-rule budget. This records that no eager declaration exists, NOT that eager loading would be free \u2014 nobody has declared one, so nobody has measured it. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md",
+            "skill bodies (src/skills/*/SKILL.md, 290 files, ~595,843 tok) \u2014 measured ON-DEMAND 2026-08-22: censusSkillsCatalog (preamble_byte_census.ts:216-234) builds the gated catalog bucket from `- name: description` per skill and reads no body byte, which is why 290 skills totalling ~595,843 tok report as ~14.4k standing. Corollary: the description cap is the WHOLE skill-side lever, not a fragment of it. Evidence: agents/evidence/analysis/uncounted-prose-corpora-load-semantics.md"
+        ],
+        "_bucket_classification_note": "All three additions above are EXCLUSIONS, not gated buckets, and that is the finding rather than a shortcut. A census bucket over a corpus measured at zero is a permanently green gate certifying nothing. The exclusions carry their measurement so the next pass that proposes one of these corpora as a token lever meets the number instead of the silence."
     },
-    "milestones": [
-      {
-        "by": "2026-11-10",
-        "tokens": 102520,
-        "why": "Return to the registered baseline. This is a RECOVERY milestone, not progress toward 40k - it undoes drift rather than shrinking the estate. The date is the review_by both budget files already carry, so it needs no new calendar."
-      },
-      {
-        "by": "2027-02-10",
-        "tokens": 85000,
-        "why": "First real reduction. The rule-paths census shows 92.1% of rule weight sits in the auto tier and the top 20 files carry 35.5% of it, so a scoped tranche is the plausible mechanism - GATED on the paths-scoping consumer decision, which is a human call and may resolve against scoping entirely."
-      },
-      {
-        "by": "2027-05-10",
-        "tokens": 60000,
-        "why": "Second reduction. No mechanism is committed for this one; it exists so the destination keeps a date after the first tranche lands, and it is the milestone most likely to be revised on evidence."
-      }
+    "baseline_tokens": 102520,
+    "baseline_history": [
+        {
+            "tokens": 102599,
+            "at": "2026-07-30",
+            "why": "registered with the gate"
+        },
+        {
+            "tokens": 102520,
+            "at": "2026-07-31",
+            "why": "free tightening: the measured tree came in 79 tok under the registered baseline, so the ratchet walks down to meet it. Not a claimed reduction \u2014 nothing was optimised; the point of a ratchet is that a lower measurement becomes the new ceiling instead of becoming unused headroom."
+        }
     ],
-    "on_miss": "A missed milestone is PUBLISHED - recorded here with the measured number and the reason - and never silently re-dated. Two consecutive misses mean the schedule was wrong or the destination is unreachable with the mechanisms available; either outcome is a decision to surface, not a date to move again.",
-    "revisit_if": "The paths-scoping decision resolves against scoping (removing the only named mechanism for the 85k milestone), or a measured reduction lands ahead of schedule and the remaining milestones are re-derived from it."
-  },
-  "reference_measurements": {
-    "measured_cold_start_median_tokens": 230930,
-    "c3_scope_dedup_reduction_pct": 38,
-    "c3_condition": "FIXTURE-ONLY as of 2026-07-31: the 38% was measured on a byte-identical two-scope fixture, and that condition is currently unreachable for every consumer because install.ts:2723/2725 stamp package:/source_path: into every installed rule while the in-repo projection stamps nothing. Aligning versions yields 0/110 twins, not 110/110. The figure is the mechanism's ceiling, NOT a realised saving, and this baseline therefore assumes no dedup. Reachability is the subject of road-to-dedup-reachability; run measure_scope_dedup for the live split.",
-    "_comment": "The measured median comes from Claude Code transcripts (deduped by message.id + requestId) and is context for the ratchet, never the gated number \u2014 it moves with the developer's own session history."
-  }
+    "headroom_pct": 5,
+    "target_tokens": {
+        "median": 40000,
+        "p95": 50000,
+        "_comment": "The roadmap's candidate numbers, kept as the destination. Reaching them needs reductions this package has not built yet; scope-dedup (C-3) removes a redundant COPY at the consumer, it does not shrink the suite itself."
+    },
+    "target_schedule": {
+        "_comment": "road-to-inbox-harvest-2026-08-d-context-ledger Step 5.3. The target above was a destination with no route: the ratchet fails on GROWTH only, so the corpus can drift away from 40k indefinitely without any gate objecting. These milestones give the destination a schedule. They are DATES WITH NUMBERS, not a derivation - no measurement in this tree says the estate can reach 85k by a given day, and pretending otherwise would be the invented-threshold failure this file's own baseline_history is careful to avoid. What they buy is that a miss becomes a published fact with an owner instead of a silent drift.",
+        "owner": "maintainer",
+        "measured_at_registration": {
+            "tokens": 125593,
+            "at": "2026-08-15",
+            "note": "MEASURED total at registration time, from check_preamble_payload_budget. It is ~23k ABOVE both baseline_tokens (102520) and the derived ceiling, i.e. the gate is red on the tree as it stands. The baseline is deliberately NOT raised to meet it - raising a ratchet baseline to clear a failing check is the config-weakening move this repo REFUSES. Corrected 2026-08-24 (AC-3): this used to assert the repo blocks it structurally -- the exact phrase is deliberately not reproduced here, because AC-3's check is a grep and quoting a retracted claim would leave the string in the file it was removed from. It over-claimed the mechanism. `block_config_weakening` is a PreToolUse guard that warns from five allowlist entries and blocks past twenty, is honoured only on the one host that denies, and does not gate a baseline edit at all -- a rising count there may be a legitimate ratchet reset the edit alone cannot distinguish. The refusal is real and it is carried by review and by this file's own record, not by construction. It is recorded here so the milestones below are planned against the real starting point rather than a stale one. Per-rule ranking: agents/evidence/analysis/rule-paths-coverage-census.md"
+        },
+        "milestones": [
+            {
+                "by": "2026-11-10",
+                "tokens": 102520,
+                "why": "Return to the registered baseline. This is a RECOVERY milestone, not progress toward 40k - it undoes drift rather than shrinking the estate. The date is the review_by both budget files already carry, so it needs no new calendar."
+            },
+            {
+                "by": "2027-02-10",
+                "tokens": 85000,
+                "why": "First real reduction. The rule-paths census shows 92.1% of rule weight sits in the auto tier and the top 20 files carry 35.5% of it, so a scoped tranche is the plausible mechanism - GATED on the paths-scoping consumer decision, which is a human call and may resolve against scoping entirely."
+            },
+            {
+                "by": "2027-05-10",
+                "tokens": 60000,
+                "why": "Second reduction. No mechanism is committed for this one; it exists so the destination keeps a date after the first tranche lands, and it is the milestone most likely to be revised on evidence."
+            }
+        ],
+        "on_miss": "A missed milestone is PUBLISHED - recorded here with the measured number and the reason - and never silently re-dated. Two consecutive misses mean the schedule was wrong or the destination is unreachable with the mechanisms available; either outcome is a decision to surface, not a date to move again.",
+        "revisit_if": "The paths-scoping decision resolves against scoping (removing the only named mechanism for the 85k milestone), or a measured reduction lands ahead of schedule and the remaining milestones are re-derived from it."
+    },
+    "reference_measurements": {
+        "measured_cold_start_median_tokens": 230930,
+        "c3_scope_dedup_reduction_pct": 38,
+        "c3_condition": "FIXTURE-ONLY as of 2026-07-31: the 38% was measured on a byte-identical two-scope fixture, and that condition is currently unreachable for every consumer because install.ts:2723/2725 stamp package:/source_path: into every installed rule while the in-repo projection stamps nothing. Aligning versions yields 0/110 twins, not 110/110. The figure is the mechanism's ceiling, NOT a realised saving, and this baseline therefore assumes no dedup. Reachability is the subject of road-to-dedup-reachability; run measure_scope_dedup for the live split.",
+        "_comment": "The measured median comes from Claude Code transcripts (deduped by message.id + requestId) and is context for the ratchet, never the gated number \u2014 it moves with the developer's own session history."
+    },
+    "ci_delivery": {
+        "workflow": ".github/workflows/standing-payload-delta.yml",
+        "trigger": "pull_request",
+        "posture": "blocking_on_ceiling_breach_with_grace_ceiling",
+        "design_ceiling": 107646,
+        "grace_ceiling": 138212,
+        "grace_measured_at": "2026-08-24",
+        "grace_end_date": "2026-11-10",
+        "decision": "OPTION (b) of b-preamble-ci-placement: fold into the existing standing-payload-delta.yml rather than add a per-PR job or a scheduled main job. That workflow already computes the neighbouring number and already DECLINED to fail on the premise that this gate 'already fails on growth' -- a premise that was false, because nothing in .github/ ran this gate at all. Making it fail is the smallest change that removes the contradiction instead of adding a third surface. AI council 2026-08-24, 2/2 convergent, on a maintainer delegation.",
+        "why_a_single_ci_run_is_enough": "The 'per-spawn' in this metric's name describes WHERE the cost is paid, not random sampling. The measurement is a deterministic census of revision-controlled inputs -- rules, the skill catalogue and CLAUDE.md, all read from the checkout -- so one CI run represents the checked-out revision exactly. Variation between two runs on the same commit would be a CHECKER DEFECT, never budget noise, and is asserted against by the repeatability test in tests/scripts/check_preamble_payload_budget.test.ts. Both council seats rejected the single-sample objection on this ground.",
+        "why_a_grace_ceiling": "HEAD measures 138,212 against a design ceiling of 107,646 -- 28.4 % over. Making the gate blocking at the design ceiling would fail EVERY pull request from the moment it lands, which is a self-inflicted CI stop rather than a gate: nobody can reduce 30,566 tokens inside the PR that turns the gate on. The grace ceiling is set AT the measurement so growth beyond today reds immediately while today's tree passes, and it ratchets DOWN toward the design ceiling as reductions land. It may never move UP. It expires at the milestone-1 date, at which point the design ceiling applies.",
+        "honest_limit": "Editing this workflow makes it FAIL; it does not make it REQUIRED. Whether a failing check blocks a merge is branch-protection configuration, which is a repo-admin action outside this change and outside an autonomous run. So the claim this record supports is 'the gate can now fail a PR', never 'the gate now blocks a merge'. Verify the latter with `gh api repos/:owner/:repo/rulesets` rather than by reading this file."
+    },
+    "status_2026_08_24": {
+        "state": "at_risk",
+        "measured": 138212,
+        "target": 102520,
+        "target_date": "2026-11-10",
+        "delta_from_target": 35692,
+        "delta_from_registration": 12619,
+        "registration_measurement": 125593,
+        "registered_at": "2026-08-15",
+        "decision": "PUBLISH AND HOLD. The adverse drift is recorded now and the original milestone date is retained. This is an EARLY RISK PUBLICATION, not a milestone miss -- 2026-11-10 has not arrived, and recording a miss before its date would be as wrong as re-dating silently. The file's own on_miss clause ('a missed milestone is PUBLISHED ... and never silently re-dated') applies at the date; this entry is the early warning that keeps the date falsifiable. AI council 2026-08-24, 2/2.",
+        "trajectory": "+12,619 tokens in the nine days from 2026-08-15 to 2026-08-24, i.e. roughly +1,400/day. Reaching 102,520 by 2026-11-10 from 138,212 needs a NET REDUCTION averaged over the remaining 78 days, against a measured net growth. One seat argued the derivative already falsifies the schedule model and that holding for a second miss preserves a signal nobody will act on; the other argued that holding is what keeps the checkpoint falsifiable at all. Recorded unresolved rather than settled, because both readings are defensible and the measurement is what decides between them on 2026-11-10.",
+        "committed_reduction_mechanism": "NONE. Stated explicitly because its absence is the finding: no mechanism in the tree is committed to closing 35,692 tokens by 2026-11-10. road-to-cost-parity-1-rule-payload-diet and road-to-standing-context-40k both name reductions and neither is executing. A schedule with no mechanism is a date, not a plan, and this field exists so the next reader does not have to infer that from silence."
+    }
 }

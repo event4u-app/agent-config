@@ -15,7 +15,10 @@ import {
     checkBudgetRows,
     budgetFiles,
     main,
+    GOVERNED_NON_JSON,
+    parseBudgetDoc,
 } from '../../src/scripts/lint_budget_ownership.js';
+import * as os from 'node:os';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'cost-parity-budget');
@@ -110,5 +113,81 @@ describe('lint_budget_ownership — row schema (cost-parity § 1.2b/1.3)', () =>
             fs.readFileSync(path.join(REPO_ROOT, 'src', 'config', 'cost-parity-budget.json'), 'utf-8'),
         ) as Record<string, unknown>;
         expect(checkBudgetRows('src/config/cost-parity-budget.json', doc)).toEqual([]);
+    });
+});
+
+/**
+ * `b-budgets-yml-outside-ownership` (road-to-standing-payload-truth Phase 3.1).
+ *
+ * The council refused a widened `*budget*.{json,yml}` glob for two reasons, and
+ * these tests pin both: a governed non-JSON budget is an explicit DECISION, not a
+ * filename coincidence, and the read must dispatch on extension because the old
+ * unconditional `JSON.parse` would have reported the very file the extension was
+ * written for as `unparseable`.
+ */
+describe('governed non-JSON budgets — explicit list, never a widened glob', () => {
+    const CONFIG_DIR = path.join(REPO_ROOT, 'src', 'config');
+
+    it('budgets.yml is in the corpus', () => {
+        const rels = budgetFiles(CONFIG_DIR).map((f) => path.basename(f));
+        expect(rels).toContain('budgets.yml');
+    });
+
+    it('the corpus is 12 — the eleven JSON budgets plus the one named YAML', () => {
+        // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
+        // is exactly the glob-widening failure this mechanism exists to prevent.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(12);
+    });
+
+    it('an UNLISTED *budget*.yml is not silently included', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'budget-corpus-'));
+        try {
+            fs.writeFileSync(path.join(dir, 'rogue-budget.yml'), 'owner: nobody\n', 'utf-8');
+            fs.writeFileSync(path.join(dir, 'real-budget.json'), '{"owner":"x"}', 'utf-8');
+            fs.writeFileSync(path.join(dir, 'budgets.yml'), 'owner: maintainer\n', 'utf-8');
+            const got = budgetFiles(dir).map((f) => path.basename(f)).sort();
+            // `budgets.yml` joins because it is NAMED; `rogue-budget.yml` does not,
+            // although a widened glob would have taken both.
+            expect(got).toEqual(['budgets.yml', 'real-budget.json']);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('the governed list is the decision surface, and it is short on purpose', () => {
+        expect(GOVERNED_NON_JSON).toEqual(['budgets.yml']);
+    });
+
+    it('parsing dispatches on extension — the defect that made a glob unworkable', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'budget-parse-'));
+        try {
+            const yml = path.join(dir, 'budgets.yml');
+            fs.writeFileSync(yml, "owner: maintainer\nreview_by: '2027-08-24'\n", 'utf-8');
+            expect(parseBudgetDoc(yml)).toMatchObject({ owner: 'maintainer' });
+
+            const json = path.join(dir, 'a-budget.json');
+            fs.writeFileSync(json, '{"owner":"maintainer"}', 'utf-8');
+            expect(parseBudgetDoc(json)).toMatchObject({ owner: 'maintainer' });
+
+            // A YAML scalar or list is not a budget document — refused, not coerced.
+            const bad = path.join(dir, 'scalar.yml');
+            fs.writeFileSync(bad, 'just-a-string\n', 'utf-8');
+            expect(() => parseBudgetDoc(bad)).toThrow(/not a mapping/);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('budgets.yml carries owner and review_by, and a missing one fails', () => {
+        const doc = parseBudgetDoc(path.join(CONFIG_DIR, 'budgets.yml'));
+        expect(doc['owner']).toBe('maintainer');
+        expect(doc['review_by']).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        // Sensitivity: strip each field and confirm the checker names it.
+        for (const field of ['owner', 'review_by']) {
+            const stripped = { ...doc };
+            delete stripped[field];
+            const errs = checkBudgetDoc('src/config/budgets.yml', stripped);
+            expect(errs.join(' '), `dropping ${field} must be reported`).toContain(field);
+        }
     });
 });

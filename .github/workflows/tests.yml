@@ -414,6 +414,17 @@ jobs:
         # second budget here would re-introduce the moved-bar move this step
         # exists to make unnecessary.
         if: always()
+        # `continue-on-error` because "never gates" was a claim this step could not
+        # keep. It has no build of its own: `always()` makes it run after an earlier
+        # failure has SKIPPED the Build step, the bundle path then exits 2 on a
+        # missing `dist/hooks/dispatch.js`, and with the default `bash -e` shell that
+        # failed the job. Observed on run 32736574349, where a typecheck error
+        # produced TWO red steps — the real one, and this diagnostic reporting that it
+        # had nothing to measure. A diagnostic that turns one failure into two is
+        # worse than no diagnostic: it adds a line a reader has to rule out before
+        # reaching the cause. Now it prints what it can and never contributes a
+        # failure, which is what the comment above always said it did.
+        continue-on-error: true
         run: |
           echo "::group::bundle path — node dist/hooks/dispatch.js"
           ./scripts-run src/scripts/bench_hook_latency

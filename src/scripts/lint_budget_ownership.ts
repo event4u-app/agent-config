@@ -28,6 +28,7 @@
  * Exit codes: 0 clean · 1 findings · 2 internal error.
  */
 import * as fs from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -122,20 +123,69 @@ export function checkBudgetRows(relPath: string, doc: Record<string, unknown>): 
     return errors;
 }
 
+/**
+ * Non-JSON budget files this gate governs, named ONE BY ONE.
+ *
+ * road-to-standing-payload-truth `b-budgets-yml-outside-ownership`: `budgets.yml`
+ * carries a `standing_rule_delivery` entry that gates the larger of the two red
+ * payload numbers, and it had no `owner` and no `review_by` because this gate
+ * filtered on `.json`.
+ *
+ * **An explicit list, NOT a widened glob**, and both council seats (2026-08-24)
+ * refused the glob for the same two reasons:
+ *
+ * 1. `*budget*.json` **IS** this gate's corpus definition (see `main`'s note), so
+ *    widening it to `*budget*.{json,yml}` means any future `*budget*.yml` dropped
+ *    into `src/config/` joins the governed set **silently**. A governed file
+ *    should be a decision, not a filename coincidence.
+ * 2. It could not have worked as written anyway: the read below was an
+ *    unconditional `JSON.parse`, so a YAML file entering through a widened glob
+ *    would have been reported as `unparseable JSON` — a red gate blaming the
+ *    file for the gate's own bug. Parsing is now dispatched on extension.
+ *
+ * Adding a row here is the whole cost of governing a new non-JSON budget, and
+ * `lint_budget_ownership.test.ts` asserts an unlisted `*budget*.yml` stays OUT.
+ */
+export const GOVERNED_NON_JSON: readonly string[] = ['budgets.yml'];
+
 export function budgetFiles(dir: string = CONFIG_DIR): string[] {
     try {
-        return fs
+        const globbed = fs
             .readdirSync(dir)
             .filter((f) => f.endsWith('.json') && f.toLowerCase().includes('budget'))
             .map((f) => path.join(dir, f));
+        const named = GOVERNED_NON_JSON.map((f) => path.join(dir, f)).filter((abs) =>
+            fs.existsSync(abs),
+        );
+        return [...globbed, ...named];
     } catch {
         return [];
     }
 }
 
+/**
+ * Parse a budget file by EXTENSION.
+ *
+ * The previous unconditional `JSON.parse` is the defect that made a widened glob
+ * unworkable; keeping it while adding a `.yml` row would have turned this gate
+ * red on the very file it was extended to govern.
+ */
+export function parseBudgetDoc(abs: string): Record<string, unknown> {
+    const text = fs.readFileSync(abs, 'utf-8');
+    if (abs.endsWith('.yml') || abs.endsWith('.yaml')) {
+        const doc = parseYaml(text) as unknown;
+        if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) {
+            throw new Error('top level is not a mapping');
+        }
+        return doc as Record<string, unknown>;
+    }
+    return JSON.parse(text) as Record<string, unknown>;
+}
+
 export function main(): number {
     const files = budgetFiles();
-    // `*budget*.json` IS this gate's corpus definition, not a content-derived
+    // `*budget*.json` PLUS the explicitly named `GOVERNED_NON_JSON` rows IS this
+    // gate's corpus definition, not a content-derived
     // subset: zero matches means src/config/ moved or the budgets were deleted,
     // and the old "nothing to lint" exit 0 could not tell either from a healthy
     // tree. Of the two documented failure codes, 1 is the one the gate actually
@@ -160,9 +210,9 @@ export function main(): number {
         const rel = path.relative(REPO_ROOT, abs);
         let doc: Record<string, unknown>;
         try {
-            doc = JSON.parse(fs.readFileSync(abs, 'utf-8')) as Record<string, unknown>;
+            doc = parseBudgetDoc(abs);
         } catch (e) {
-            errors.push(`${rel}: unparseable JSON (${(e as Error).message})`);
+            errors.push(`${rel}: unparseable budget file (${(e as Error).message})`);
             continue;
         }
         errors.push(...checkBudgetDoc(rel, doc));

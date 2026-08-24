@@ -833,7 +833,7 @@ tasks:
 
   check-standing-payload-delta:
     silent: true
-    desc: "Per-PR standing-payload delta against the merge-base — the two-sided debit/credit ranking its sibling ratchet cannot show. A REPORT, not a gate: it never fails on the delta in either direction (check-preamble-payload already fails on growth), only when it cannot measure. Wired here so the number is reachable locally rather than discoverable only after a push (road-to-standing-payload-diet Phase 0.3-0.5)"
+    desc: "Per-PR standing-payload delta against the merge-base — the two-sided debit/credit ranking its sibling ratchet cannot show. A REPORT, not a gate: it never fails on the delta in either direction, only when it cannot measure. CORRECTED 2026-08-24 (road-to-standing-payload-truth AC-2): this used to justify itself with '(check-preamble-payload already fails on growth)', and that premise was FALSE -- that gate ran only in the local task chain and no workflow in .github/ invoked it, so nothing failed a pull request on preamble growth. It does now, behind a grace ceiling, as a step of standing-payload-delta.yml. Wired here so the number is reachable locally rather than discoverable only after a push (road-to-standing-payload-diet Phase 0.3-0.5)"
     cmd: ./scripts-run src/scripts/check_standing_payload_delta --base "$(git merge-base origin/main HEAD)" --rank
 
   check-static-layer-stability:
