@@ -48,6 +48,7 @@ import {
 // bundled-CLI-entry-guard landmine. Verified before wiring, not assumed.
 import { build_thin } from './project_thin_rules.js';
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
+import { normalizeLeanProjectionMode, writesThinFiles, type LeanProjectionMode } from './_lib/lean_projection_mode.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
@@ -458,20 +459,14 @@ function _read_projection_scope_dedup(): boolean {
 }
 
 
-function _lean_projection_mode(): string {
+function _lean_projection_mode(): LeanProjectionMode {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const lean = data['lean_projection'];
-    if (
-        typeof lean === 'object' &&
-        lean !== null &&
-        !Array.isArray(lean) &&
-        String((lean as Record<string, unknown>)['mode'] ?? '')
-            .trim()
-            .toLowerCase() === 'thin'
-    ) {
-        return 'thin';
-    }
-    return 'eager-all';
+    const raw =
+        typeof lean === 'object' && lean !== null && !Array.isArray(lean)
+            ? (lean as Record<string, unknown>)['mode']
+            : '';
+    return normalizeLeanProjectionMode(raw);
 }
 
 // --- hashing -----------------------------------------------------------------
@@ -1126,7 +1121,7 @@ export function generate_rule_symlinks(): number {
     const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
 
     let thin_files: Record<string, string> | null = null;
-    if (_lean_projection_mode() === 'thin') {
+    if (writesThinFiles(_lean_projection_mode())) {
         // DEAD-SWITCH REPAIR (road-to-renewal-foundation Phase 2). This branch
         // used to THROW: the port was skipped as "out of scope, not exercised by
         // golden parity", which left a documented, settings-selectable mode that

@@ -13,6 +13,15 @@
  *     .windsurf/mcp.json                                     (in-project)
  *     ~/.config/claude-desktop/claude_desktop_config.json    (user, opt-in)
  *
+ * `.mcp.json` — Claude Code's project-scope config — is a CHECK-ONLY target
+ * (Phase 1.3 of `road-to-skill-delivery-over-mcp`). It is deliberately not
+ * rendered: the installer writes it with `merge_json_file`, which touches only
+ * this package's own server key and records it in `agents/installed-tools.lock`
+ * so uninstall subtracts exactly that key. Rendering it here would overwrite a
+ * file the consumer also edits and silently delete servers they added by hand.
+ * `--check` therefore asserts CONTAINMENT of our entry rather than equality with
+ * a rendering, and says so on the same line.
+ *
  * All targets use the same `mcpServers` top-level key. The source file uses
  * `servers` to keep our internal schema stable if a downstream format ever
  * diverges.
@@ -38,6 +47,36 @@ const ENV_PLACEHOLDER = /\$\{env:([^}]+)\}/g;
 // mcp:render` from their own repo root). Override with --project-root.
 export function default_project_root(): string {
     return fs.realpathSync(process.cwd());
+}
+
+/** The one entry `.mcp.json` must contain. Mirrors `install.ts:MCP_SERVER_KEY`. */
+export const MCP_JSON_SERVER_KEY = 'agent-config';
+
+/** Claude Code's project-scope MCP config. Checked here, written by the installer. */
+export function claude_code_mcp_target(projectRoot: string): string {
+    return path.join(projectRoot, '.mcp.json');
+}
+
+/**
+ * Does `.mcp.json` carry this package's server entry?
+ *
+ * `absent` is a distinct verdict from `missing-entry` on purpose: absent means
+ * the installer has not run for `claude-code` here, which is a hint; a file that
+ * exists WITHOUT our key means something removed it, which is a failure.
+ */
+export function check_mcp_json(projectRoot: string): 'absent' | 'ok' | 'missing-entry' | 'unreadable' {
+    const target = claude_code_mcp_target(projectRoot);
+    if (!fs.existsSync(target)) return 'absent';
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(fs.readFileSync(target, 'utf-8'));
+    } catch {
+        return 'unreadable';
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return 'unreadable';
+    const servers = (parsed as Record<string, unknown>)['mcpServers'];
+    if (servers === null || typeof servers !== 'object' || Array.isArray(servers)) return 'missing-entry';
+    return MCP_JSON_SERVER_KEY in (servers as Record<string, unknown>) ? 'ok' : 'missing-entry';
 }
 
 export function in_project_targets(projectRoot: string): Record<string, string> {
@@ -274,7 +313,33 @@ function cmd_check(args: ParsedArgs): number {
         return 1;
     }
     process.stdout.write('✅  All MCP targets match source.\n');
-    return 0;
+    return _report_mcp_json(projectRoot);
+}
+
+/**
+ * The `.mcp.json` leg of `--check`. Additive: it can only turn a green run red
+ * when the file EXISTS and has lost our entry, never on a fresh tree where the
+ * installer has not run.
+ */
+function _report_mcp_json(projectRoot: string): number {
+    const verdict = check_mcp_json(projectRoot);
+    const rel = path.relative(projectRoot, claude_code_mcp_target(projectRoot)) || '.mcp.json';
+    if (verdict === 'ok') {
+        process.stdout.write(`✅  ${rel} carries the \`${MCP_JSON_SERVER_KEY}\` server (containment, not equality).\n`);
+        return 0;
+    }
+    if (verdict === 'absent') {
+        process.stdout.write(
+            `ℹ️   ${rel} not present — written by \`agent-config install\` for the ` +
+                'claude-code tool, never rendered from mcp.json.\n',
+        );
+        return 0;
+    }
+    process.stderr.write(
+        `❌  ${rel} exists but does not carry the \`${MCP_JSON_SERVER_KEY}\` server ` +
+            `(${verdict}). Re-run \`agent-config install\`.\n`,
+    );
+    return 1;
 }
 
 class ArgError extends Error {}

@@ -3,6 +3,9 @@ model_tier: inherit
 name: upstream-contribute
 description: "Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

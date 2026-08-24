@@ -287,6 +287,45 @@
         }
       }
     },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL write-scope declaration. Measured 2026-08-23: 0 of 292 SKILL.md files said WHERE a skill may write — `execution:` carries type / handler / timeout_seconds / allowed_tools and `trust:` carries level / removable / default, and none of them answers that question. This is a DECLARATION and a census, not a runtime control: nothing observes a skill's writes, `skill_linter` validates the SHAPE only, and absence stays legal. Saying so is the point — an optional field described as if it constrained anything would be exactly the coverage inflation this repository's enforcement doctrine forbids. Derive it, never guess it: for `handler: shell` the `command:` array names the script whose writes ARE the scope; for `handler: internal` and for a bare `type: manual` the skill executes nothing itself, so an empty `write` list plus a `verification_reason` is the accurate declaration rather than a placeholder.",
+      "properties": {
+        "read": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Repo-relative globs the skill reads. Optional — omit rather than guess; an invented read set is worse than an absent one."
+        },
+        "write": {
+          "type": "array",
+          "description": "Write paths this skill's OWN execution touches. An empty list is a real statement — \"this skill declares no write path of its own\" — and is falsified by any write its execution performs.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pattern", "access"],
+            "properties": {
+              "pattern": {"type": "string", "minLength": 1, "description": "Repo-relative glob the skill may write."},
+              "access": {
+                "type": "string",
+                "enum": ["create", "write", "append", "delete"],
+                "description": "Closed enum. `create` = new paths only · `write` = create or overwrite · `append` = never rewrites existing bytes · `delete` = removes paths. A value outside the enum is a skill_linter error."
+              }
+            }
+          }
+        },
+        "verification_command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The command that proves the declared scope is what the skill actually touches. Exactly one of `verification_command` / `verification_reason` is present when `scope:` is — enforced by skill_linter's `scope_verification` check, not by this schema, because JSON Schema cannot express \"exactly one of these two optional siblings\" in a form this repo's frontmatter validator implements."
+        },
+        "verification_reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An HONEST NULL at declaration level: why no command can prove this scope. The pair is deliberately TWO sibling keys rather than a nested `verification: {command|reason}` map, and the reason is measured rather than stylistic: this repo's frontmatter parser reads map -> list -> map (that is how `triggers[].keyword` works) but flattens map -> map -> scalar, so a nested `verification.reason` parses as `scope.verification = \"\"` plus a stray `scope.reason` and the schema then rejects a correctly-written declaration. A field the parser cannot read is a field nothing validates."
+        }
+      }
+    },
     "triggers": {
       "type": "array",
       "minItems": 1,

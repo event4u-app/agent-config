@@ -49,6 +49,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
+import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger, type GateSkipReason } from './_lib/gate_ledger.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
@@ -979,7 +980,7 @@ function run_canary_mode(specs: readonly GateSpec[], argv: readonly string[]): n
     process.stdout.write(`  ❌ DISAGREEMENT [${d.kind}] ${d.gate}: ${d.detail}\n`);
   }
 
-  const cycleId = `gate-surface-${new Date().toISOString().slice(0, 10)}`;
+  const cycleId = `gate-surface-${asOf().toISOString().slice(0, 10)}`;
   const li = argv.indexOf('--ledger');
   if (li >= 0 && argv[li + 1] !== undefined) {
     const out = path.resolve(REPO_ROOT, argv[li + 1] as string);

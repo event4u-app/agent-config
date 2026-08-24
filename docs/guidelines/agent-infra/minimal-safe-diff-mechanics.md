@@ -118,7 +118,51 @@ sole case that may interrupt is a **live cross-user/tenant data exposure**
 (`broken-access-control`) — fix-now-if-small, else stop and surface; never
 defer it silently.
 
+## Shared-path repair — scope, and when NOT to fire
+
+The rule's pre-fix clause is the obligation; this is its boundary.
+
+**Does not fire** when nothing else reaches the code (a leaf function, a
+one-caller private), or when the shared repair is genuinely larger than the
+five-condition bounded carve-out above permits. In the second case it is
+note + ask per [`active-remediation`](active-remediation-mechanics.md) — never
+a silent per-caller patch presented as the minimal diff, and never a
+shared-path rewrite smuggled in under a bug-fix label.
+
+**Enumerate with the tool, not from memory.** The caller set is a grep or an
+index query, and its COUNT is what makes "repairing once is smaller" a claim
+rather than an intuition — two callers and a three-line patch each is not
+obviously worse than one shared change, while nine callers is.
+
+## Before writing the diff — the three questions
+
+Migrated verbatim from the rule (road-to-trigger-delivered-rule-bodies A1),
+which had to pay for the pre-fix root-cause clause out of its own token
+ceiling. Nothing was cut; this is where it now lives.
+
+Ask yourself, in order:
+
+1. **What is the minimum set of files that must change for the stated task?**
+   If your answer includes files with no causal link to the task, stop and
+   remove them.
+2. **What is the minimum number of lines per file?** If you are editing a
+   method, edit the method — not the surrounding class.
+3. **Is any of this a refactor?** If yes, it belongs in its own commit or
+   PR, clearly labeled as a refactor, with no behavior change.
+
+## Red flags in your own diff — reject them
+
+Files the task never mentioned · import reordering, whitespace, or comments
+outside the edited region · "small improvements" to neighboring methods ·
+test-only mixed with behavior changes in one commit · renames outside the
+task scope · dependency bumps "because it was close to the cache".
+
+## When in doubt
+
+Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
+reviewer has to untangle.
+
 ## See also
 
-- `minimal-safe-diff` (rule) — Iron Law, the rule, pre-diff checklist, red flags, own-orphan cleanup.
+- `minimal-safe-diff` (rule) — Iron Law, the rule, the pre-fix shared-path repair clause, own-orphan cleanup. The pre-diff checklist, the red-flag catalog and the when-in-doubt line live HERE since A1.
 - [`active-remediation-mechanics`](active-remediation-mechanics.md) — the fix-now / note+ask / follow-up-PR ladder detail.

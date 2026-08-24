@@ -205,7 +205,7 @@ re-introduce the source family token). **It is not landing as a roadmap.** Its
 Phase 8 duplicates this file's entire scope, and its renderer phases would make
 this package ship a web runtime, which `CLAUDE.md:3` refuses ("No app runtime").
 Its surviving items merge into
-`agents/roadmaps/road-to-frontend-fidelity-calibration.md`.
+`agents/roadmaps/archive/road-to-frontend-fidelity-calibration.md`.
 
 So the split is: **this roadmap owns the seam and provider axis and nothing on
 the page-rendering axis.** Any step here that would emit HTML, JS, or a scroll

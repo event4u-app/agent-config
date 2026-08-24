@@ -94,6 +94,17 @@
     "review_clean": true,
     "preview": {
       "render_ok": true
+    },
+    "verdict_scope": {
+      "scope": "render",
+      "render_available": true,
+      "checks_run": [
+        "findings-review",
+        "viewport-sweep",
+        "touch-target-size",
+        "rendered-contrast",
+        "screenshot-diff"
+      ]
     }
   },
   "ui_polish": null,

@@ -73,6 +73,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as os from 'node:os';
 
+import { asOf } from './_lib/as_of.js';
 import { GateLedger, LedgerUsageError } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
@@ -147,7 +148,7 @@ export function parseStamp(stamp: string): Date | null {
     return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export function ageInDays(stamp: string, now = new Date()): number | null {
+export function ageInDays(stamp: string, now = asOf()): number | null {
     const d = parseStamp(stamp);
     if (d === null) return null;
     return (now.getTime() - d.getTime()) / 86_400_000;
@@ -178,7 +179,7 @@ export function check(
     root: string,
     opts: { now?: Date; quiet?: boolean } = {},
 ): { code: number; findings: Finding[]; scanned: number; adapters: AdapterTier[] } {
-    const now = opts.now ?? new Date();
+    const now = opts.now ?? asOf();
     const findings: Finding[] = [];
     const adapters = collectAdapters(root);
 
@@ -345,7 +346,7 @@ export function manifestTraceRefs(root: string): TraceRef[] {
  * stale snapshot in a contract is still something a reader trips over.
  * Generating it means the snapshot cannot drift again.
  */
-export function tierTable(root: string, now = new Date()): string {
+export function tierTable(root: string, now = asOf()): string {
     const adapters = collectAdapters(root);
     const indexAbs = path.join(root, INDEX_PATH);
     let rows: IndexRow[] = [];
@@ -460,7 +461,7 @@ export function spliceContract(contractText: string, table: string): string {
  * `DO NOT EDIT BY HAND` marker with nothing checking it is a request, and the
  * defect this replaced was precisely a table nobody re-derived for ten weeks.
  */
-export function contractDrift(root: string, now = new Date()): string | null {
+export function contractDrift(root: string, now = asOf()): string | null {
     const abs = path.join(root, CONTRACT_PATH);
     if (!fs.existsSync(abs)) return `${CONTRACT_PATH} not found`;
     const text = fs.readFileSync(abs, 'utf-8');
@@ -497,7 +498,7 @@ function _fixtureTree(opts: { tier: string; rows: unknown[]; withContract?: bool
 }
 
 function _freshRow(provider: string, daysAgo: number, traceId = `${provider}-t`) {
-    const d = new Date(Date.now() - daysAgo * 86_400_000);
+    const d = new Date(asOf().getTime() - daysAgo * 86_400_000);
     return {
         provider,
         trace_id: traceId,

@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -185,7 +186,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 
 /** Today's date as an ordinal, in local time (mirrors date.today()). */
 function _todayOrdinal(): number {
-    const now = new Date();
+    const now = asOf();
     return _dateOrdinal(now.getFullYear(), now.getMonth() + 1, now.getDate());
 }
 

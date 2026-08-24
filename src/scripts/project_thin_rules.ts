@@ -69,6 +69,30 @@ export function kernel_ids(): Set<string> {
 }
 
 /**
+ * Tier rules the router gives NO trigger at all.
+ *
+ * These cannot be delivered on a match, so thinning them would remove a body
+ * that nothing can ever put back — a silent hole rather than a saving. They
+ * project full-bodied, and `measure` reports them by name so the residue is
+ * visible instead of being absorbed into the pointer count
+ * (road-to-trigger-delivered-rule-bodies 1.3).
+ */
+export function no_trigger_ids(): Set<string> {
+    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
+    const out = new Set<string>();
+    for (const tier of ['tier_1', 'tier_2']) {
+        const entries = data[tier];
+        if (!Array.isArray(entries)) continue;
+        for (const e of entries) {
+            const obj = e as Record<string, unknown>;
+            const t = obj.triggers;
+            if (!Array.isArray(t) || t.length === 0) out.add(String(obj.id));
+        }
+    }
+    return out;
+}
+
+/**
  * id → workspaces for every non-kernel router entry (router.json schema v2,
  * road-to-request-scoped-rule-load Phase 1). Rules absent from the map (or
  * with an empty list) fail safe: they stay in scope.
@@ -192,6 +216,7 @@ export function build_thin(
     scope: readonly string[] | null = null,
 ): Map<string, string> {
     const kernel = kernel_ids();
+    const noTrigger = no_trigger_ids();
     const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
     const out = new Map<string, string>();
     for (const p of _globSortedMd(rules_dir)) {
@@ -200,7 +225,8 @@ export function build_thin(
         if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
             continue; // out of workspace scope — no body, no pointer line
         }
-        out.set(path.basename(p), kernel.has(stem) ? text : thin_entry(stem, text));
+        const full = kernel.has(stem) || noTrigger.has(stem);
+        out.set(path.basename(p), full ? text : thin_entry(stem, text));
     }
     return out;
 }
@@ -209,6 +235,10 @@ export interface ThinMeasure {
     rules_total: number;
     kernel_full: number;
     non_kernel_thinned: number;
+    /** Non-kernel rules kept full-bodied because the router gives them no trigger. */
+    no_trigger_full: number;
+    no_trigger_ids: string[];
+    no_trigger_gpt: number;
     eager_gpt: number;
     thin_gpt: number;
     saved_gpt: number;
@@ -263,13 +293,22 @@ export function measure(
             kernelInDir += 1;
         }
     }
+    const noTrigger = no_trigger_ids();
+    const residueIds = [...noTrigger].filter((id) => stemSet.has(id)).sort();
+    const residueBlob = residueIds
+        .map((id) => fs.readFileSync(path.join(rules_dir, `${id}.md`), 'utf-8'))
+        .join('');
+    const residueGpt = residueIds.length === 0 ? 0 : token_count.measure(residueBlob).tokens_gpt;
     const saved_pct = eager.tokens_gpt
         ? _python_round1((100 * (eager.tokens_gpt - thin.tokens_gpt)) / eager.tokens_gpt)
         : 0.0;
     return {
         rules_total: n,
         kernel_full: kernelInDir,
-        non_kernel_thinned: n - kernelInDir,
+        non_kernel_thinned: n - kernelInDir - residueIds.length,
+        no_trigger_full: residueIds.length,
+        no_trigger_ids: residueIds,
+        no_trigger_gpt: residueGpt,
         eager_gpt: eager.tokens_gpt,
         thin_gpt: thin.tokens_gpt,
         saved_gpt: eager.tokens_gpt - thin.tokens_gpt,
@@ -480,6 +519,10 @@ export function main(argv: string[] | null = null): number {
         process.stdout.write(`  thin:  ${_rjust6(m.thin_gpt)} GPT tok (${_comma(m.thin_chars)} chars)\n`);
         process.stdout.write(`  saved: ${_rjust6(m.saved_gpt)} GPT tok  (${m.saved_pct}% of the rule layer)\n`);
         process.stdout.write(`  method: ${m.token_method}\n`);
+        process.stdout.write(
+            `  no-trigger residue (kept full-bodied, ${m.no_trigger_full} rules, ` +
+                `${m.no_trigger_gpt} GPT tok): ${m.no_trigger_ids.join(', ')}\n`,
+        );
     }
     return 0;
 }

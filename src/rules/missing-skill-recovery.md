@@ -16,6 +16,8 @@ self_contained: true
 workspaces: [engineering]
 packs: [meta]
 # obligation: line 41
+enforced_by:
+  - "instruction-only: nothing can observe an agent concluding that no skill exists; the skill-route concern covers only the prompts where the ranker is confident"
 obligation_frequency: "per-turn"
 ---
 
@@ -60,6 +62,16 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
    inventing one. A ranked empty list and an unreachable catalogue are
    different answers; the tool distinguishes them (`status: no_catalogue`) and
    so should you.
+5. **If the tool is not registered, say THAT — and proceed.** This rule may
+   never instruct a call it cannot verify is possible. The tool arrives with
+   this package's MCP server, which `agent-config install` registers for the
+   `claude-code` tool in the project's `.mcp.json`. No entry there, or the
+   server not started, and there is no tool to call: name the gap in one clause,
+   proceed without a skill, and — only if the missing catalogue entry actually
+   mattered — point at `agent-config mcp:check`, which reports whether
+   `.mcp.json` carries the entry. Never retry a call that is not wired, and
+   never report "no skill covers this" when what you learned is "no tool
+   answered".
 
 ## When NOT to fire
 
@@ -70,7 +82,7 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
 - A host that delivers its catalogue whole — the rule costs nothing there and
   simply never has a gap to close.
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 Nothing can observe an agent concluding "no skill exists". The `skill-route`
 concern injects ranked pointers on `user_prompt_submit` when its floor is

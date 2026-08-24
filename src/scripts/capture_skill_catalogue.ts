@@ -434,11 +434,32 @@ function runLimitsMode(): number {
 /** The package's two projection-mode counts, one walk. Shared by both modes. */
 function projectionModeCounts(): ProjectionModeCounts {
     const stats = scoped_projection_stats(REPO, iter_skills());
+    // The tier split is a per-machine runtime artefact (gitignored), so absent is
+    // the normal state and must read as "unmeasured", never as zero.
+    let tierACount: number | null = null;
+    let tierBCount: number | null = null;
+    const tiersFile = path.join(REPO, 'agents', 'runtime', 'state', 'skill-tiers.json');
+    if (fs.existsSync(tiersFile)) {
+        try {
+            const parsed = JSON.parse(fs.readFileSync(tiersFile, 'utf-8')) as {
+                tier_a?: unknown;
+                tier_b?: unknown;
+            };
+            if (Array.isArray(parsed.tier_a) && Array.isArray(parsed.tier_b)) {
+                tierACount = parsed.tier_a.length;
+                tierBCount = parsed.tier_b.length;
+            }
+        } catch {
+            /* a malformed split is an absent split — never a partial count */
+        }
+    }
     return {
         scoped: stats.projected,
         legacyAll: stats.total,
         prunedUnderScoped: stats.pruned,
         activePacks: stats.active_packs,
+        tierACount,
+        tierBCount,
     };
 }
 

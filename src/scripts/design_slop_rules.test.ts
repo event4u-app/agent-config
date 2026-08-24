@@ -93,6 +93,13 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     positive: "We streamline and empower your robust, world-class workflow.",
     negative: "We cut page load by 40% and remove three steps from checkout.",
   },
+  "slop-cp6-generic-art-direction": {
+    ext: "md",
+    positive: "Build a Three.js hero with floating abstract shapes and a gradient mesh.",
+    negative:
+      "Build a Three.js hero: the assembled chassis rotates, one component " +
+      "highlighted per beat, ending on the price panel.",
+  },
   "slop-cp5-emoji-ui": {
     ext: "html",
     positive: '<h1>🚀 Get Started</h1><button>✅ Track progress</button>',

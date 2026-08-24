@@ -11,6 +11,9 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "gdpr-safe"
+  - phrase: "pii redaction"
 ---
 
 # privacy-review

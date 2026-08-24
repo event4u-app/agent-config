@@ -12,6 +12,13 @@ trust:
 install:
   default: false
   removable: true
+scope:
+  write:
+    - pattern: "components/ui/**"
+      access: "create"
+    - pattern: "components.json"
+      access: "write"
+  verification_command: "npx shadcn@latest add <component> --dry-run"
 execution:
   type: assisted
   handler: shell

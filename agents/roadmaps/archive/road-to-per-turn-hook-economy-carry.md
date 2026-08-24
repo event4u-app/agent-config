@@ -678,3 +678,31 @@ correction, but a reader should not inherit the wrong reason.
       either decision being an input to the other. The one-file shape's stated
       `Revisit-if` — *"either track grows a step that has to reference the
       other"* — did not fire.
+
+## Amendment 2026-08-23 — the count, not only the clock (road-to-trigger-delivered-rule-bodies A5/A3)
+
+This roadmap measured per-turn hook cost in **milliseconds** and left the other
+axis unmeasured: how many concerns a slot carries. `max_per_event` exists
+(`src/config/agent-settings.template.yml`, `hooks.concern_budget.max_per_event`)
+and is a **warn-only placeholder of 8** that every per-turn slot on every host
+already exceeds — a threshold nothing ratchets is a number, not a budget.
+
+- [-] **`max_per_event` becomes a measured shrink-only floor per slot.**
+      Producing command: `./scripts-run src/scripts/lint_hook_concern_budget`.
+      Measured on `claude` at the time of this amendment, in the slot order
+      session_start / stop / user_prompt_submit / pre_tool_use / post_tool_use:
+      **14/12/11/14/12** against the placeholder 8. The figure the drafting pass
+      carried was **14/12/10/13/12**; the +1 on `user_prompt_submit` and on
+      `pre_tool_use` is the `rule-inject` concern added by
+      `road-to-trigger-delivered-rule-bodies` Phase 1, and it is named here
+      rather than absorbed so the delta has an owner. That concern is
+      default-OFF and emits **zero bytes** under every shipped setting
+      (`bench_hook_injection`: 73 concern-slot pairs, 4 emitting, `rule-inject`
+      not among them), which is why its arrival is a count change and not a cost
+      change — the distinction the amended step 1.7 of that roadmap turns into
+      the rule.
+      Carried, not opened: this roadmap is archived, and a per-slot shrink-only
+      ratchet is a new gate with its own baseline, its own re-anchor discipline
+      and its own three-ratchet charge. It belongs in a live roadmap. Recorded
+      here so the axis is not lost and so the next reader starts from a measured
+      number instead of the placeholder.

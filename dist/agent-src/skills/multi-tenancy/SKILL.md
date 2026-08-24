@@ -8,6 +8,10 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "tenant isolation"
+  - phrase: "cross-tenant"
+  - phrase: "tenant scoping"
 ---
 
 <!-- Framework scope: Laravel only. Uses Eloquent model conventions,

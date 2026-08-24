@@ -3,6 +3,9 @@ model_tier: inherit
 name: override-management
 description: "Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

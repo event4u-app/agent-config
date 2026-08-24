@@ -218,6 +218,28 @@ export function tally_stances(
  * Render the **Vote Tally** verdict section: one line per option, the threshold,
  * and a cleared-or-escalated line. Deterministic — pure projection of the tally.
  */
+/**
+ * Tally the stance lines of a finished round, or `null` when tallying is off.
+ *
+ * Wraps the member-shape mapping so a caller does not re-derive it: an errored
+ * response has no stance line to read, and the member key is
+ * `provider:model` because that is what `parse_stance_line` records. Exists so
+ * ONE tally is computed per pass and reused — two tallies over the same
+ * responses are two chances to disagree, and the attendance event and the
+ * handoff envelope both consume this one.
+ */
+export function tallyFromResponses(
+    responses: ReadonlyArray<{ provider: string; model: string; text: string; error?: string | null }>,
+    enabled: boolean,
+): StanceTallyResult | null {
+    if (!enabled) {
+        return null;
+    }
+    return tally_stances(
+        responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
+    );
+}
+
 export function render_vote_tally(result: StanceTallyResult): string {
     const lines: string[] = ['### Vote Tally'];
     if (result.options.length === 0) {

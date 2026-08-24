@@ -40,25 +40,30 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-23)
 # ----------------------------------------------------------
-# 282 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 283 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-23 and it returns 282).
-# **57 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 54 of those 57 are listed below.** The manifest is
+# re-run 2026-08-23 and it returns 283).
+# **58 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 55 of those 58 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~19 % of the population.
 #
-# RE-RE-RECOUNTED on 2026-08-23 while adding `lint_adapter_tier`, and once again
-# both figures were stale BEFORE this change: the prose said 279 while
-# `count_gate_scripts()` already returned 281, so two scripts had landed since
-# the previous recount hours earlier. Recomputed rather than incremented, which
-# is the whole point of the paragraph below: `grep -c '^  - id:'` returns 54,
-# the same THREE emitters stay deliberately unlisted, 54 + 3 = 57, and the
-# population comes from the function. Adding one to each of 279/56/53 would have
-# produced 280/57/54 — right on two axes and wrong on the population, which is
-# indistinguishable in a diff from having checked.
+# RECOUNTED on 2026-08-23 while adding `lint_deterministic_time` and
+# `check_enforcement_denominator` (two rows, and the figures above are the
+# function's answer AFTER both — not the previous reading plus two), and — the sixth
+# time in a row, which is the whole point of this section — the prose was already
+# stale before the row landed. It said 279 / 56 / 53 while `count_gate_scripts()`
+# already returned **281**, so two scripts had arrived since the previous
+# recount without touching this text. Incrementing 279 by one would have written
+# 280 and been wrong by two; the figures above are the function's answer and a
+# fresh `grep`, not arithmetic on the previous sentence. Derivation, so the next
+# reader checks rather than trusts: `grep -c '^  - id:' src/config/gate-coverage.yml`
+# returns 55; every listed row is an emitter, because a row that did not emit
+# could carry no floor; the same THREE emitters remain deliberately unlisted
+# (`lint_evidence_artifacts`, `adr_cite_check`, `check_new_adr_evidence`, each
+# with its reason at the place its row would have sat); 55 + 3 = 58.
 #
 # RECOUNTED on 2026-08-23 while adding `check_no_automerge_key`, and BOTH numbers
 # were stale before the recount by more than the one row this change adds — which
@@ -1513,44 +1518,6 @@ gates:
       floor under a constant can never trip — the false-count shape this manifest
       rejects. 304 keys collapses to 0 if either root moves, which is what the
       floor is for.
-  - id: lint_adapter_tier
-    argv: ["--quiet"]
-    min_scanned: 12
-    corpus: "media adapter `# Lifecycle:` headers under src/scripts/{ai-video,ai-image}/adapters/ — 14 on 2026-08-23 (10 video + 4 image)"
-    status: enforced
-    canary:
-      class: contract-violation
-      path: src/scripts/ai-video/adapters/zz-canary-provider.sh
-      content: |
-        #!/usr/bin/env bash
-        # zz canary probe — NOT an adapter. The header below is the planted
-        # violation: a `stable` tier claim for a provider that has no row in
-        # agents/evidence/ai-video/trace-index.json, which is exactly the shape
-        # lint_adapter_tier exists to refuse.
-        # Lifecycle: stable — canary; no smoke trace exists for this provider
-        echo "zz canary: never invoked" >&2
-        exit 0
-    note: >
-      The floor is the adapter-header count, not the finding count: this gate is
-      green on a healthy tree by design, so a collapse would otherwise be
-      invisible. It counts every header it parses, `experimental` included —
-      counting only `stable` ones would let a tree that demoted everything read
-      as covered.
-
-      The canary is a create-only plant of a `stable` header for a provider with
-      no index row, which is exactly the shape the gate exists to refuse. It
-      proves discrimination without touching the real index, and the recipe
-      deletes only the file it created.
-
-      Known limit, stated because the success line would otherwise oversell it:
-      the trace index carries five fields by design (provider, trace_id,
-      captured_at, model, sha256), so `mode` and `success` are NOT visible here
-      and a dry-run trace satisfies the freshness rule. The per-model
-      `verified: true` + `smoke_trace` pair in the manifests is the stronger
-      signal, and this gate's dangling-reference check is what keeps that pair
-      honest. Widening the index to reach a stronger check would turn a
-      five-field allowlist into a body copy — the leak the allowlist prevents.
-
   - id: check_pack_conformance_fixture
     argv: ["--quiet"]
     min_scanned: 12
@@ -1583,3 +1550,73 @@ gates:
       home from `import.meta.url`, and `prove_pack_extractable` resolves a pack
       by name under the real `src/packs/`. Raising this gate's coverage by
       pretending otherwise is the manufactured green this file exists to prevent.
+
+  - id: lint_deterministic_time
+    argv: ["--quiet"]
+    min_scanned: 200
+    corpus: "gate scripts under `src/scripts/` carrying a `check_` or `lint_` prefix, excluding `*.test.ts` (261 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/check_zz_canary_wall_clock.ts
+      content: |
+        // zz canary probe: a gate script reading the wall clock inline, which is
+        // exactly the construct `lint_deterministic_time` refuses. The plant is
+        // create-only and therefore expressible as a canary, unlike the
+        // MODIFICATION shape most ratchets in this file detect.
+        const planted = Date.now();
+        export { planted };
+    note: >
+      The floor is 200 against a live corpus of 261, which is the usual
+      "comfortably below, far above a collapse" shape — a prefix regex that
+      stopped matching, or the flat-`src/` scan root moving again, collapses this
+      to single digits long before it reaches 200.
+
+      `argv` carries `--quiet` because that is what the preflight task and the
+      workflow step both pass. `reportScanned` is not quiet-gated, so the count
+      is published either way; the flag is registered anyway because rule 2 of
+      this manifest is argv PARITY, not "an argv that happens to work".
+
+      The canary is a genuine create-only plant rather than a
+      `no_canary_reason`, and that is unusual enough here to be worth stating:
+      this gate's violation shape is a NEW file carrying the construct, so a
+      single planted script expresses it completely. Discrimination is
+      additionally proven by the gate's own `--self-test` (7 cases, 4 rejecting)
+      — including the two cases the canary cannot express: a mention inside a
+      comment or a string literal that must NOT be a finding (the gate's own
+      docstring names the construct it bans, so a raw-text matcher would refuse
+      itself), and a dead scan root that must exit 2 rather than green.
+
+  - id: check_enforcement_denominator
+    argv: ["--quiet"]
+    min_scanned: 350
+    corpus: "published markdown under `docs/` plus `README.md`, excluding `docs/decisions/` and `docs/archive/` (464 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: docs/zz-canary-enforcement-count.md
+      content: |
+        # ZZ canary probe
+
+        15 of 120 governed rules carry a backstop that fails a CI build.
+
+        A hand-written enforcement denominator in a published doc, which is the
+        sixth-number defect this gate exists to prevent. Create-only, so it is
+        expressible as a canary.
+    note: >
+      The floor is 350 against a live corpus of 464. The collapse case is real
+      rather than theoretical here: `docs/` was flattened once already
+      (ADR-051), and a walk rooted at a moved directory reads zero files and
+      prints "no published doc restates it" — a green over nothing.
+
+      The gate deliberately does NOT compare values against the resolver. A
+      hand-written figure that happens to be right today is precisely how the
+      plurality returned each of the previous times, so the finding is the
+      restatement, not the disagreement. That is why the canary body carries a
+      CORRECT figure: a value-comparing gate would pass this plant.
+
+      Discrimination is additionally proven by the gate's own `--self-test`
+      (9 cases, 5 rejecting) — including the three cases the canary cannot
+      express: the generated projection which must stay green, a `docs/decisions/`
+      ADR whose dated record must not be rewritten, and a bare rule count with no
+      enforcement sense ("2 rules" in a concepts page) which must not be a finding.

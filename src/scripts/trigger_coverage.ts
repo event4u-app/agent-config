@@ -338,14 +338,18 @@ interface ParsedArgs {
     json: boolean;
     /** `rule` keeps the pinned byte-identical contract; `skill` is additive. */
     scope: 'rule' | 'skill';
+    /** `--ratchet`: compare the skill scope against its published baseline. */
+    ratchet: boolean;
 }
 
 function parse_args(argv: string[]): ParsedArgs {
-    const out: ParsedArgs = { json: false, scope: 'rule' };
+    const out: ParsedArgs = { json: false, scope: 'rule', ratchet: false };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i]!;
         if (a === '--json') {
             out.json = true;
+        } else if (a === '--ratchet') {
+            out.ratchet = true;
         } else if (a === '--scope') {
             const v = argv[i + 1];
             if (v !== 'rule' && v !== 'skill') {
@@ -355,7 +359,9 @@ function parse_args(argv: string[]): ParsedArgs {
             out.scope = v;
             i += 1;
         } else if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: trigger_coverage [-h] [--json] [--scope rule|skill]\n');
+            process.stdout.write(
+                'usage: trigger_coverage [-h] [--json] [--scope rule|skill] [--ratchet]\n',
+            );
             process.exit(0);
         }
     }
@@ -372,6 +378,113 @@ function parse_args(argv: string[]): ParsedArgs {
  * its own change, not against a number invented on the day the instrument
  * shipped.
  */
+/** The published skill-coverage baseline `--ratchet` compares against. */
+export const SKILL_RATCHET_BASELINE = path.join(
+    REPO_ROOT,
+    'agents',
+    'evidence',
+    'metrics',
+    'skill-trigger-coverage-baseline.json',
+);
+
+export interface SkillRatchetBaseline {
+    skills_with_triggers: number;
+    activations: number;
+}
+
+/** Read the baseline, or `null` when none is published yet. */
+export function loadSkillRatchetBaseline(file = SKILL_RATCHET_BASELINE): SkillRatchetBaseline | null {
+    if (!fs.existsSync(file)) return null;
+    try {
+        const parsed = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
+        const c = parsed['skills_with_triggers'];
+        const a = parsed['activations'];
+        if (typeof c !== 'number' || typeof a !== 'number') return null;
+        return { skills_with_triggers: c, activations: a };
+    } catch {
+        return null;
+    }
+}
+
+export interface RatchetVerdict {
+    ok: boolean;
+    lines: string[];
+}
+
+/**
+ * The Phase-3.2 ratchet, as a pure function of two readings.
+ *
+ * TWO directions, and only one of them is a floor. Coverage
+ * (`skills_with_triggers`) may only RISE — a tranche that removes triggers is
+ * the regression this exists to catch. Activations over the matrix may only
+ * FALL OR HOLD — that is the noise ceiling, and it is the half that makes
+ * seeding safe rather than merely measurable.
+ *
+ * A missing baseline is NOT a pass. It is `ok: false` with a line saying to
+ * publish one, because a ratchet that silently no-ops when its baseline is gone
+ * is the failure mode a ratchet exists to prevent.
+ */
+export function ratchetVerdict(
+    current: SkillRatchetBaseline,
+    baseline: SkillRatchetBaseline | null,
+): RatchetVerdict {
+    if (baseline === null) {
+        return {
+            ok: false,
+            lines: [
+                '❌  no published baseline — cannot ratchet.',
+                `    Publish one: {"skills_with_triggers": ${current.skills_with_triggers}, ` +
+                    `"activations": ${current.activations}}`,
+                `    at agents/evidence/metrics/skill-trigger-coverage-baseline.json`,
+            ],
+        };
+    }
+    const lines: string[] = [];
+    let ok = true;
+    if (current.skills_with_triggers < baseline.skills_with_triggers) {
+        ok = false;
+        lines.push(
+            `❌  coverage fell: ${baseline.skills_with_triggers} → ${current.skills_with_triggers} ` +
+                'skills declaring triggers. The ratchet only turns one way.',
+        );
+    } else {
+        lines.push(
+            `✅  coverage ${baseline.skills_with_triggers} → ${current.skills_with_triggers} ` +
+                'skills declaring triggers.',
+        );
+    }
+    if (current.activations > baseline.activations) {
+        ok = false;
+        lines.push(
+            `❌  matrix activations rose: ${baseline.activations} → ${current.activations}. ` +
+                'A tranche may raise coverage only without raising noise.',
+        );
+    } else {
+        lines.push(`✅  matrix activations ${baseline.activations} → ${current.activations}.`);
+    }
+    return { ok, lines };
+}
+
+function runSkillRatchetCli(json: boolean): number {
+    const report = runSkillScope(loadSkillTriggers(SKILLS_DIR), loadMatrixPrompts(MATRIX_DIR));
+    const current = {
+        skills_with_triggers: report.skills_with_triggers,
+        activations: report.activations,
+    };
+    const verdict = ratchetVerdict(current, loadSkillRatchetBaseline());
+    if (json) {
+        process.stdout.write(_jsonDumps({ current, ok: verdict.ok, lines: verdict.lines }) + '\n');
+        return verdict.ok ? 0 : 1;
+    }
+    for (const line of verdict.lines) process.stdout.write(`${line}\n`);
+    process.stdout.write(
+        verdict.ok
+            ? '\nskill-trigger ratchet: OK\n'
+            : '\nskill-trigger ratchet: FAILED\n',
+    );
+    return verdict.ok ? 0 : 1;
+}
+
 function runSkillScopeCli(json: boolean): number {
     const report = runSkillScope(loadSkillTriggers(SKILLS_DIR), loadMatrixPrompts(MATRIX_DIR));
     if (json) {
@@ -405,7 +518,13 @@ function runSkillScopeCli(json: boolean): number {
 
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
-    if (args.scope === 'skill') return runSkillScopeCli(args.json);
+    if (args.ratchet && args.scope !== 'skill') {
+        process.stderr.write('error: --ratchet requires --scope skill\n');
+        return 2;
+    }
+    if (args.scope === 'skill') {
+        return args.ratchet ? runSkillRatchetCli(args.json) : runSkillScopeCli(args.json);
+    }
 
     let isFile = false;
     try {

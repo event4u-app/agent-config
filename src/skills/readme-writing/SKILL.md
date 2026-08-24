@@ -3,6 +3,9 @@ model_tier: medium
 name: readme-writing
 description: "Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

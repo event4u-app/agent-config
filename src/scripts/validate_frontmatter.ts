@@ -872,6 +872,69 @@ export function check_obligation_frequency(
     ];
 }
 
+/**
+ * Shape check for a skill's optional `scope:` write-scope declaration.
+ *
+ * WHAT IT CHECKS, and only this: when `scope:` is present it carries exactly ONE
+ * of `verification_command` / `verification_reason`. The `access` enum, the
+ * `pattern` shape and the closed key set are `skill.schema.json`'s and are
+ * already enforced by {@link validate} — including through `skill_linter`, which
+ * calls the same validator. This covers the one constraint JSON Schema cannot
+ * express in the subset implemented here: **exactly one of two optional
+ * siblings**. `oneOf` / `anyOf` / `not` are not implemented (nor are
+ * `minProperties` / `maxProperties`), so a schema-only attempt would be silently
+ * inert — which is worse than absent, because it reads as enforced.
+ *
+ * WHY EXACTLY ONE. Neither branch is a formality. A declaration with NEITHER is a
+ * scope claim nobody can check and nobody has excused, which is the pro-forma
+ * field the whole shape exists to avoid. A declaration with BOTH reads as
+ * "verified, with an excuse attached" — and the excuse is the half a reader would
+ * act on, so the pair is strictly less informative than either alone.
+ *
+ * WHY IT LIVES HERE AND NOT IN `skill_linter.ts`. It was written there and
+ * `check_source_size_budget` refused it: `skill_linter.ts` is 4,742 lines, the
+ * ratchet sums lines ABOVE 1,500 per file, and 63 added lines were 63 new
+ * violations against a shrink-only baseline. Extracting the body to `_lib` still
+ * left the import plus the call, i.e. +2, and a ratchet turns one way. This file
+ * is 1,120 lines, so the same code costs zero — and it sits beside
+ * {@link check_obligation_frequency}, the existing precedent for an
+ * artefact-specific check that the generic validator cannot express.
+ *
+ * WHAT IT DOES NOT CHECK, stated plainly: whether the declared paths are the
+ * paths the skill actually writes. Nothing observes a skill's writes, so that
+ * half is model-carried and `scope:` is a declaration, not a control.
+ */
+export function check_scope_declaration(data: Record<string, YamlValue>): SchemaError[] {
+    const scope = data['scope'];
+    if (scope === null || typeof scope !== 'object' || Array.isArray(scope)) return [];
+    const keys = scope as Record<string, YamlValue>;
+    const hasCommand = typeof keys['verification_command'] === 'string';
+    const hasReason = typeof keys['verification_reason'] === 'string';
+    if (hasCommand && hasReason) {
+        return [
+            new SchemaError(
+                '$.scope',
+                'scope-verification-both',
+                'declares BOTH verification_command and verification_reason — exactly one. A reason ' +
+                    'beside a command reads as a verified claim with an excuse attached, and the excuse ' +
+                    'is the half a reader would act on.',
+            ),
+        ];
+    }
+    if (!hasCommand && !hasReason) {
+        return [
+            new SchemaError(
+                '$.scope',
+                'scope-verification-missing',
+                'declares neither verification_command nor verification_reason — exactly one. A scope ' +
+                    'claim with no command and no stated reason is unfalsifiable, which is the ' +
+                    'pro-forma field this declaration exists to avoid.',
+            ),
+        ];
+    }
+    return [];
+}
+
 // --- CLI entry point -------------------------------------------------------
 
 /** Yield `[artefact_type, path]` pairs for all lintable artefacts. */
@@ -998,6 +1061,9 @@ export function _main(argv: string[]): number {
             const errors = validate(data, schema);
             if (artefactType === 'rule') {
                 errors.push(...check_obligation_frequency(p, text, data));
+            }
+            if (artefactType === 'skill') {
+                errors.push(...check_scope_declaration(data));
             }
             const fatal = errors.filter((e) => e.severity === 'error');
             const warnings = errors.filter((e) => e.severity === 'warning');

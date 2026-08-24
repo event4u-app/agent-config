@@ -7,6 +7,9 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "terraform module"
+  - phrase: "terraform state"
 ---
 
 # terraform

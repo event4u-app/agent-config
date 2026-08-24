@@ -55,6 +55,28 @@
       },
       "description": "Eager auto-loaded context references. Same logical-name rule as `load_context`. Counts against the per-rule char budget; enforced by scripts/lint_load_context.py."
     },
+    "norm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokens", "remainder"],
+      "description": "The rule's declared NORMATIVE budget, plus where its non-normative remainder went. Optional: a required key would red every existing rule file on the day it lands, which is the gate-that-teaches-you-to-ignore-it failure `src/config/preamble-payload-budget.json` warns about in its own `_comment`. A rule that declares this is asserting that everything left in its body is obligation or routing, and that the rationale a reader may still want is reachable at `remainder`. Measured and enforced by `lint_rule_norm_pin`.",
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Exact-BPE ceiling (cl100k_base) for the rule body BELOW the frontmatter. Never a chars/4 proxy - this tree ships an exact tokenizer and a pin measured in the other unit would be enforced against a number nobody can reproduce. Derive it from a real measurement of the rule after its remainder has moved out; a pin invented at authoring time is an invented threshold and the lint would then enforce a guess."
+        },
+        "remainder": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^((\\.\\./)*(contexts|docs|skills)/|agents/settings/contexts/|dist/agent-src/(contexts|skills)/)[^\\s]+\\.md$"
+          },
+          "description": "Where the prose this rule used to carry now lives - one or more guideline, context, or skill paths. REQUIRED alongside `tokens`, deliberately: a pin with no destination is a licence to delete, and `preservation-guard` forbids deletion during a transformation. The rule must also carry an inbound link to each entry so the relocated prose stays reachable (`check_references`)."
+        }
+      }
+    },
     "tier": {
       "type": "string",
       "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already", "kernel", "tier-1", "tier-2"],
@@ -150,9 +172,9 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|none)$"
+        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|instruction-only: *[^ ].*|none)$"
       },
-      "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `none` is legal and counted — an honest gap beats a false claim. Resolved, not trusted, by check_enforcement_coverage.ts."
+      "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `instruction-only: <reason>` declares an honestly model-carried obligation and is counted as a recorded gap — the reason is MANDATORY in the pattern, because a bare marker is a claim with no triage record behind it and resolves to `missing`, which the --check ratchet reds on. The bare `none` spelling it replaces stays legal for exactly one reason: `non-destructive-by-default` still carries it and is a kernel rule that block_kernel_rule_writes denies agent writes to, so retiring the value outright would make a CI-green tree unreachable for any agent. Resolved, not trusted, by check_enforcement_coverage.ts."
     },
     "obligation_frequency": {
       "type": "string",

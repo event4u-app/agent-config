@@ -192,6 +192,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-12
 
+### claim: thin-inject-delivery-equivalence
+- claim: A MEASURED-BUT-NOT-SHIPPED experiment — a `lean_projection.mode: delivery` projection plus the default-OFF `rule-inject` hook concern delivers rule bodies on a trigger match at 579/579 byte-equal deliveries, 94/94 labelled rules reachable, 0 false fires over 194 labelled near-misses, and $0.7285 vs $4.0335 per 50-turn x 5-spawn session at sonnet rates (standing rule corpus 120,582 -> 18,573 exact-BPE tokens). Shipped default does NOT include this: `lean_projection.mode` still resolves to `eager-all`, the concern emits zero bytes, and the flip is Claude-only and carries an unpaid activation charge (a 20,480-byte emission row above the 4,096/2,048-byte slot sums). Latency is not part of that charge: the concern carries no tokenizer and measures p95 0.04-0.05 ms gate-closed and 0.61 ms gate-open, with the whole `pre_tool_use` slot at 62 ms against a 175 ms budget. What these four endpoints license is delivery equivalence and cost, and nothing wider — the paired-judging instrument is closed by ADR-202 at inter-evaluator Cohen's kappa 0.472 against a registered 0.800 floor, and this run does not reopen it. Method: `model_rule_injection --endpoints` over the frozen `tests/eval/routing-matrix` corpus, pre-registered in `internal/bench/thin-inject-PREREG.md` before the report artefact existed, with `--selftest` requiring each endpoint to reject a planted defect first.
+- kind: quant
+- evidence: internal/bench/reports/thin-inject-2026-08-23.md#endpoints
+- status: backed
+- last_verified: 2026-08-23
+
 ### claim: ledger-exec-verifiability
 - claim: NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it.
 - kind: quant
@@ -200,11 +207,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-25
 
 ### claim: enforcement-coverage-resolved
-- claim: 15 of 120 governed rules (12.8%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 117 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (89 in the 117-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count).
+- claim: The share of governed rules carrying a backstop that fails a CI build is RESOLVED, not declared, and is published in exactly ONE place — `docs/proof.md` § 4b, projected from `check_enforcement_coverage`, which prints its denominator together with the frame that produced it (`internal/reports/enforcement-coverage.json` is that same output on disk). No figure is restated in this entry, deliberately, and `check_enforcement_denominator` reds when one appears in a published doc the resolver did not generate: until 2026-08-23 this tree carried FIVE different numbers for the one property, and every previous correction fixed a figure while leaving the plurality intact — a number that is right today is how it came back each time. Resolution means a declared `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), while a hook registered `fail_closed: false` resolves to `observer`, never `validator`. That distinction is not cosmetic: it once let "named in a taskfile" read as "fails the build" while NO workflow invoked `task ci`, `ci-strict`, or `ci-fast`, so most of the counted validators only ran when a human typed the command. Splitting `validator` (CI runs it) from `validator-local` (only a human does) cut the honest figure to roughly a third at the time; wiring the taskfile-only gates into `rule-backstops.yml` restored it, this time meaning what the headline says, and `local_only` is ratcheted at zero so a gate cannot drop back out silently. Wiring them also surfaced that five were failing invisibly, 37 findings deep; those are cleared and the baseline in `rule-backstop-debt.json` stands at zero, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. The ratio has not risen across five releases, and the reason is worth stating rather than reading as stagnation: the ratchet prevents regression, it does not raise the level. An undeclared rule counts as uncovered, never excluded — an honest recorded gap beats a false claim of coverage — including the two scale/history pack rules that ship enforced by `lint_persistence` in consumer CI, which this resolver, scoped to THIS repo's workflows, correctly does not count.
 - kind: quant
 - evidence: exec:check_enforcement_coverage --check -> 0
 - status: backed
-- last_verified: 2026-08-12
+- last_verified: 2026-08-23
 
 ### claim: skill-count
 - claim: 299 skills.
@@ -724,6 +731,38 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified: 2026-08-22
 
+### claim: mcp-registered-server-standing-cost
+- claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 20-tool surface costs 3,886 tokens of it while the two-tool lite surface is capped at 600.
+- kind: quant
+- evidence: agents/evidence/metrics/mcp-tool-standing-cost.jsonl#tool_search_threshold
+- status: backed
+- last_verified: 2026-08-23
+
+### claim: skill-tiering-h1-unmeasured
+- claim: Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established, and `projection.mode: tiered` therefore stays opt-in.
+- kind: quant
+- evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer
+- status: backed
+- last_verified: 2026-08-23
+
+### claim: skill-tiering-h2-costs-more-by-default
+- claim: On a default Claude Code install `projection.mode: tiered` costs MORE standing context than `legacy-all` — 2,259 tokens against 1,956 — because the host already caps description delivery at roughly the Tier A set; the 82% saving exists only against a 100%-delivery counterfactual.
+- kind: quant
+- evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#H2
+- status: backed
+- last_verified: 2026-08-23
+### claim: enforcement-undeclared-denominator
+- claim: Exactly one enforcement denominator is quotable, it names the frame that produced it, and no published doc restates it by hand.
+- kind: quant
+- evidence: exec:check_enforcement_denominator -> 0
+- status: backed
+- last_verified: 2026-08-23
+### claim: council-parse-outcome-corpus-rate
+- claim: A council member's unparseable answer is separable from a member that found nothing — 2/7 `parse_failed`, 1/7 `empty`, 4/7 `parsed` over the seven recorded answers in `tests/fixtures/council-parse-corpus/`, which is a fixture-corpus denominator and NOT live traffic; reproduce with `./scripts-run src/scripts/council_parse_rate`.
+- kind: quant
+- evidence: exec:vitest run tests/scripts/ai_council/parse_corpus.test.ts -> 0
+- status: backed
+- last_verified: 2026-08-23
 ### claim: skill-link-census
 - claim: Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with.
 - kind: quant
@@ -757,22 +796,29 @@ is the named exception in the claim itself.
   slug exists nowhere in the tree and no successor may be invented.
 
 ### claim: adapter-lifecycle-day-one-table
-- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree; the stale surface is the lifecycle day-one table, which is history and not a live tier list.
+- claim: The two surfaces the provider-lifecycle contract obliges to agree on an adapter tier — the adapter header and the xml example — do agree, and the surface that read stale is no longer hand-written: § 5 is generated, so the drift this claim was opened over cannot recur.
 - kind: qual
-- evidence: docs/contracts/provider-lifecycle.md#historical record
+- evidence: docs/contracts/provider-lifecycle.md#Current tier assignment
 - status: backed
-- last_verified: 2026-08-23
+- last_verified: 2026-08-24
 
   `src/scripts/ai-video/adapters/higgsfield.sh:15` reads `Lifecycle: stable` and
   `agents/templates/.ai-video.xml.example:55` reads `<lifecycle>stable</lifecycle>`
-  — the exact pair `docs/contracts/provider-lifecycle.md:101` obliges, and they
-  agree. The surface reading `experimental` is § 5, which states in its own words
-  that it lists the tiers "on the day this contract lands". The promotion is
-  recorded in `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
-  This corrects the drafting premise, which asserted a live contradiction between
-  adapter and contract: there is none, so the repair is a supersession note on the
-  historical table plus a parity gate over the obliged pair, never an edit to the
-  adapter.
+  — the exact pair the contract obliges, and they agree. That half is unchanged
+  and still measured; the promotion behind it is recorded in
+  `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md`.
+
+  **Restated 2026-08-24, and the restatement is the finding.** This claim used
+  to assert that the stale surface was a *historical* day-one table and that the
+  repair was therefore a supersession note over frozen prose. The
+  chained-clip-continuity-and-provider-truth roadmap deleted that premise rather
+  than annotating it: § 5 is now `Current tier assignment (generated)`, and its
+  own opening says why the note was not enough — "a table in a contract is read
+  as the current state whatever its preamble says". So the earlier repair was
+  superseded by a stronger one, and the evidence pointer moved with it: it named
+  the phrase `historical record`, which no longer exists in the file, and a
+  pointer surviving into a tree that contradicts it is exactly what check_claims
+  catches. It caught this one in a merge.
 
 ### claim: augment-manifest-version-package-synced
 - claim: The `.augment-plugin/` manifest version is the package version, not an independent plugin-API version, and every version-bearing file the release workflow triggers on is read by a job in that workflow.

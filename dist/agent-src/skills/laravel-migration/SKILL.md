@@ -13,6 +13,9 @@ trust:
 install:
   default: false
   removable: true
+triggers:
+  - phrase: "make:migration"
+  - phrase: "laravel migration"
 ---
 
 # laravel-migration

@@ -97,6 +97,18 @@ rg -n 'curl[^|]*\|\s*(bash|sh)|wget[^|]*\|\s*(bash|sh)' .
 - A package that exists but was published this week with 12 downloads is a slopsquat candidate, not a safe dep — weigh age + usage, not just existence.
 - Lockfile integrity is part of the threat model: an unhashed or floating entry can pull a freshly-poisoned release even when a lockfile is "present".
 
+## Known pitfalls
+
+- **Name-similarity is not provenance.** An organisation whose name is
+  near-identical to a widely used tool's, whose site ranks for that tool's
+  queries, and whose "download" button points at a third-party page is not that
+  tool — and may ship no code at all. Observed while harvesting an external
+  reference on 2026-08-22: the lookalike existed only as an SEO surface. The
+  registry entry, the repository URL and the publisher are the provenance; the
+  name, the ranking and the visual resemblance are not. Resolve the package
+  through the registry and follow the declared repository, never through a search
+  result that merely looks right.
+
 ## Do NOT
 
 - Do NOT run an install command for a package you have not existence-checked this session.

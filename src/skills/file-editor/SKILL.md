@@ -3,6 +3,11 @@ model_tier: lite
 name: file-editor
 description: "Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled."
 domain: process
+scope:
+  write:
+    - pattern: "**"
+      access: "write"
+  verification_reason: "the write target IS the caller's argument — this skill edits whatever path it is pointed at, so its scope is the tree by construction. A narrower glob would be false, not tighter."
 execution:
   type: assisted
   handler: shell

@@ -1029,6 +1029,67 @@ describe('_postRunQuorum', () => {
         expect(quorum).toEqual({ status: 'concluded', threshold: 2, total: 3, present: 2 });
         expect(absent).toEqual([{ member: 'gemini', reason: 'unavailable', detail: 'exit_1' }]);
     });
+
+    // Step 2.3 — a member that said SOMETHING no parser could read is neither
+    // present nor plainly absent. The byte check at the top of the loop admits
+    // it (`text.trim() !== ''` is true of a prose refusal), so before this it
+    // was folded into `N/N present` and the banner claimed an attendance the
+    // run never established. `present-unparsed` is its own bucket: excluded
+    // from `present`, counted in `unparsed`, and rendered as such.
+    it('a non-empty answer no parser could read is present-unparsed, not present', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'a real answer' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'I would rather not answer that.' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {}, new Map([['openai', 'parse_failed']]));
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1, unparsed: 1 });
+        expect(absent).toEqual([{ member: 'openai', reason: 'unparsed', detail: 'answer present, no parser could read it' }]);
+    });
+
+    // The mirror, asserted rather than assumed: an outcome that is NOT
+    // `parse_failed` must leave attendance exactly where it was, and `unparsed`
+    // must be absent from the shape rather than present-and-zero — every
+    // existing assertion in this block is an exact-shape `toEqual`, so a
+    // defaulted `unparsed: 0` would be a silent breaking change to the payload.
+    it('a `parsed` outcome leaves the shape byte-identical — no `unparsed` key', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'a real answer' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: '[]' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum } = _postRunQuorum(members, responses, {}, new Map([['anthropic', 'parsed'], ['openai', 'empty']]));
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
+    });
+
+    // An unparseable answer from a member that ALSO errored stays classified by
+    // the error. The transport failure is the stronger fact and the one the
+    // absent-member table already renders; re-labelling it `unparsed` would
+    // lose the auth/timeout/quota distinction `AbsentReason` exists to carry.
+    it('a transport error outranks an unparsed outcome for the same member', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '', error: 'auth_expired' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {}, new Map([['anthropic', 'parse_failed']]));
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0 });
+        expect(absent).toEqual([{ member: 'anthropic', reason: 'no_auth', detail: 'auth_expired' }]);
+    });
+});
+
+// ── the rendered banner carries the unparsed bucket (Step 2.3, AC-2) ──
+describe('_format_quorum_line — present-unparsed', () => {
+    it('two members, one unparseable → the banner does not read 2/2 present and names the bucket', () => {
+        const line = _format_quorum_line({ status: 'concluded', threshold: 1, total: 2, present: 1, unparsed: 1 });
+        expect(line).not.toContain('2/2 present');
+        expect(line).toContain('present-unparsed');
+        expect(line).toContain('1/2 present');
+    });
+
+    it('no unparsed members leaves the line byte-identical to before', () => {
+        const line = _format_quorum_line({ status: 'concluded', threshold: 1, total: 2, present: 2 });
+        expect(line).not.toContain('present-unparsed');
+    });
 });
 
 // ── cmd_debate — disclosure + refusal cap (all return before output write) ──

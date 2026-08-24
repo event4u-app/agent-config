@@ -27,7 +27,7 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
 enforced_by:
-  - "none"
+  - "instruction-only: no artefact proves a design review happened outside the work-engine dispatcher; the review verdict is self-report"
 collision_ok:
   # The "component" and "design token" entries were removed with their triggers
   # (2026-08-17): a collision note for a trigger that no longer exists is an
@@ -107,7 +107,7 @@ AS IF IT WERE VERIFIED.
 
 There is no artefact a chat session can point at to prove a design review
 happened — "I ran `design-review`" is self-report, and self-report is not
-enforcement. So this rule ships `enforced_by: none`, the same honesty boundary
+enforcement. So this rule ships `instruction-only`, the same honesty boundary
 `ui-audit-gate`, `security-sensitive-stop`, and `untrusted-input-defense` state
 for their own obligations, rather than pretending a satisfiable-by-assertion
 condition is a gate.

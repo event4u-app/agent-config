@@ -281,9 +281,13 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             // claim names as its own method.
             ['(installs ships )(\\d+)( of )', 'skills_scoped'],
             ['( of )(\\d+)( skills \\(untagged core)', 'skills'],
-            // "14 of 111 governed rules" — the total was scanner-checked and
-            // generator-blind for the same reason.
-            ['( of )(\\d+)( governed rules \\()', 'rules'],
+            // The "N of M governed rules" position was retired on 2026-08-23:
+            // the `enforcement-coverage-resolved` entry no longer restates any
+            // enforcement figure, because five hand-written numbers for one
+            // property is the defect `check_enforcement_denominator` now reds
+            // on. The denominator lives in ONE place — the resolver's own output,
+            // projected into docs/proof.md § 4b — so there is no longer a
+            // literal here for a generator to keep in sync.
         ],
     ],
     [
