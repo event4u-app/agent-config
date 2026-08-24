@@ -478,7 +478,7 @@ red the estate ratchet for a decision this roadmap does not own.
       `// wall-clock-required: <reason>` escape whose reason is mandatory (a bare
       marker is still a finding) for the one legitimate case — measuring elapsed
       duration, where real time is the subject rather than a threshold input.
-- [~] AC-2 — met on this machine, and the two-machine half is UNMEASURABLE from
+- [~] AC-2 <!-- resolved 2026-08-24: carried to stubs/road-to-two-machine-time-determinism.md, see § Deferred-item resolution --> — met on this machine, and the two-machine half is UNMEASURABLE from
       here rather than met. Two consecutive runs of all 17 at the same pin are
       **byte-identical**, and the boundary sweep flips exactly one verdict
       (step 1.4). CI logs the pin: `check_council_pin_staleness` and
@@ -540,7 +540,7 @@ red the estate ratchet for a decision this roadmap does not own.
       `non-destructive-by-default`, a kernel rule
       `block_kernel_rule_writes` denies the agent write to and whose edit
       `scope-control` binds to its own PR plus a ≥ 24 h soak. Descoped to
-      [`stubs/road-to-kernel-instruction-only-migration.md`](stubs/road-to-kernel-instruction-only-migration.md);
+      [`stubs/road-to-kernel-instruction-only-migration.md`](../stubs/road-to-kernel-instruction-only-migration.md);
       the other nine are migrated and the schema records that single survival
       with its reason.
 - [x] AC-4 — met. `grep -l '^execution:' src/skills/*/SKILL.md | wc -l` → 52 and
@@ -569,3 +569,41 @@ red the estate ratchet for a decision this roadmap does not own.
       no such path, and `src/packs/` gained no directory (unchanged at its
       pre-branch set). The § Not-new mechanism-match holds: nothing here reopens
       the 2026-07-07 vault-integration REJECT.
+
+## Deferred-item resolution (2026-08-24, `/analyze:inbox` run)
+
+Closing this roadmap requires a disposition for its one `[~]`, per
+[`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) Iron Law 3.
+Recorded here rather than asserted, because a verdict with no record is a silent
+drop wearing a procedure.
+
+**Criterion, verbatim:** AC-2 — *"met on this machine, and the two-machine half is
+UNMEASURABLE from here rather than met."*
+
+**Options considered, all four from the preservation test:**
+
+| Option | Route | Verdict |
+|---|---|---|
+| Fix now, in this change | council | **Rejected** — needs a second host; no run on one machine can supply it. |
+| Carry item into a named follow-up created in the SAME change | council | **CHOSEN** |
+| Restore to `[ ]` in this roadmap | council | Rejected — would hold a completed roadmap open on an input the roadmap cannot obtain. |
+| Convert to `[-]`, or accept the narrower claim permanently | **owner** | Not taken — that would weaken a criterion, which is owner-reserved. |
+
+**Verdict:** carried, not dropped. The disposition preserves the criterion in the
+active estate, so it is council-decidable rather than owner-reserved — the owner's
+decision is preserved *inside* the destination, not taken here.
+
+**Destination:** [`stubs/road-to-two-machine-time-determinism.md`](../stubs/road-to-two-machine-time-determinism.md),
+created in this same change and estate-free (`stubs/` is outside all three gated
+metrics — verified: `check_estate_count` counts the active top level and `later/`
+only).
+
+**What closes it:** that stub's clause 2 — a recorded two-machine result naming a
+pin and two host identifiers. Met or diverged, either is an answer.
+
+**Dissent:** none. The parent annotation and this disposition agree the criterion
+is unmeasurable from one host.
+
+**Residual, stated:** a carried item can still become an indefinite deferral. Only
+a fix-now discharges that, and fix-now is unavailable here. The stub's probe is
+what keeps it findable.

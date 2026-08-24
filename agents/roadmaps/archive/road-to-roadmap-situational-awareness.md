@@ -186,7 +186,7 @@ roadmaps carry it, and `/roadmap:create` fills it from probe hits.
       are held at their measured state, the ratchet pattern the blocker linter
       already uses.
       verify (discharged): `./scripts-run src/scripts/check_roadmap_trackable` → exit 0, `✅ 9 active roadmap(s)` + `✅ check_roadmap_trackable:relates: 9 violation(s) at baseline, age 0d`. The RED state was observed first, before the baseline existed: `❌ check_roadmap_trackable:relates: 9 violation(s) and no recorded baseline`, naming all nine files. Ratchet recorded in `src/config/gate-violation-baselines.json` (`count: 9`, `landed: 2026-08-23`) using the existing `checkRatchet` helper — **not** a new baseline file, so no new suppression gate is introduced. Four end-to-end cases in `tests/scripts/check_roadmap_trackable.test.ts` run the real CLI over fixture trees: 9-without → green at baseline, **10-without → exit 1 with `10 violation(s) against a baseline of 9`**, 9-without + 3-with → green, and `declares_relates` is presence-only. Sensitivity proven: hardcoding `no_relates` to `[]` turned 2 tests red (`expected +0 to be 1`); restored, 12/12. **Drift from the step's premise:** the population is **9 active non-draft**, not 22 — the tree carries 15 active roadmaps of which 6 are `status: draft`, and the drafted figure was measured before that. The baseline is therefore 9.
-- [~] **4.3 Retro-tag the 22 existing roadmaps with `relates: []`.** <!-- deferred: an estate-wide write across 22 tracked files; owner-reserved, and no analysis exists to invent edges -->
+- [~] <!-- resolved 2026-08-24: carried to stubs/road-to-relates-retrofit-and-superseded-marking.md --> **4.3 Retro-tag the 22 existing roadmaps with `relates: []`.** <!-- deferred: an estate-wide write across 22 tracked files; owner-reserved, and no analysis exists to invent edges -->
       Held deferred deliberately: this is a write over the whole active estate
       and produces no evidence, so it waits for an explicit go rather than
       riding an autonomous run.
@@ -224,7 +224,7 @@ carries a repository fingerprint. **Rollback:** set the cadence default to
       (d) The roadmap itself was archived on `origin/main` → stop; the same
       selection error as 2.1, detected late.
       verify (discharged): `### 5e. Context refresh — four reactions, enumerated and closed` at `roadmap-process-loop.md:699`, carrying exactly the four rows (a) merged-PR → `sync_pr_branch` + re-read + continue, (b) open PR → continue and name it, never rebase onto a foreign branch, (c) `PATH OVERLAP` → disjoint steps first, register is advisory, (d) archived on `origin/main` → stop as the same **selection error** as § 1. No drift-level taxonomy, as the step insists. The forbidden-non-halt-reasons block is **byte-identical to `origin/main`**, verified by section-scoped diff rather than by a line number: `git show origin/main:… | awk '/^### Forbidden non-halt/{f=1} /^### Non-halt — gating/{f=0} f'` against the same slice of the working tree → `FORBIDDEN_REASONS_BYTE_IDENTICAL`. **Drift:** the step cites `:738`, which was the line at drafting time; the anchors moved as the file grew, which is exactly why a byte-comparison of the whole section is the stronger check.
-- [~] **5.3 Reaction (e): mark a step the tree already closed.** <!-- deferred: an autonomous run writing a completion marker into the source of truth touches roadmap-progress-sync Iron Law 3; owner-reserved -->
+- [~] <!-- resolved 2026-08-24: carried to stubs/road-to-relates-retrofit-and-superseded-marking.md --> **5.3 Reaction (e): mark a step the tree already closed.** <!-- deferred: an autonomous run writing a completion marker into the source of truth touches roadmap-progress-sync Iron Law 3; owner-reserved -->
       When a merged PR or an `origin/main` commit has already satisfied the
       current step — the step's own `verify:` passes against `origin/main`, or
       the PR body names the step — mark it done with
@@ -312,7 +312,7 @@ clauses do hold and are evidenced at the criterion.
 
 **Why this roadmap does not auto-archive, deliberately.** `count_open` reached 0
 with `count_deferred == 3`, which is exactly the state Iron Law 3 of
-[`roadmap-progress-sync`](../../src/rules/roadmap-progress-sync.md) refuses to
+[`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) refuses to
 archive silently. Applying its preservation test: converting these to `[-]`, or
 keeping them in an archive as an intentional drop, are **user** dispositions, and
 the two mechanisms behind them are owner-reserved by the author's own annotations
@@ -380,7 +380,7 @@ exists to catch.
       9`; 9 → exit 0 at baseline; 9 + 3 declaring it → exit 0. **Corrected
       count:** the estate carries 15 active roadmaps of which 9 are non-draft,
       not 22; the baseline is the measured 9.
-- [~] AC-5 — The loop's halt list is byte-unchanged, and `superseded` appears
+- [~] AC-5 <!-- resolved 2026-08-24: travels with 5.3, carried to stubs/road-to-relates-retrofit-and-superseded-marking.md --> — The loop's halt list is byte-unchanged, and `superseded` appears
       only as a terminal outcome with a memo, counted in the run report.
       <!-- deferred: the memo clause is bound to step 5.3, which is owner-reserved and deferred -->
       **Two of three clauses hold, the third cannot.** Byte-unchanged: verified
@@ -417,3 +417,50 @@ exists to catch.
       evidence for D1b — the estate did not merely halve, it drained — together
       with what that null does **not** license, since the denominator moved too
       and the three figures are snapshots rather than one cohort.
+
+## Deferred-item resolution (2026-08-24, `/analyze:inbox` run)
+
+Three `[~]` items, dispositioned per
+[`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) Iron Law 3.
+All three are **owner-reserved by this roadmap's own annotations** — which decides
+what may be done here and what may not.
+
+| Item | Criterion, verbatim | Chosen option | Route |
+|---|---|---|---|
+| **4.3** | *"Retro-tag the 22 existing roadmaps with `relates: []`"* | carried to a named follow-up | council |
+| **5.3** | *"Reaction (e): mark a step the tree already closed"* | carried to a named follow-up | council |
+| **AC-5** | halt list byte-unchanged + `superseded` terminal-with-memo | travels with 5.3 | council |
+
+**Why council and not owner.** The preservation test routes by the *disposition*,
+not by the item: carrying an item into a follow-up created in the same change
+**preserves** it in the active estate, and preservation is council-decidable. The
+owner-reserved decisions themselves — may an agent write across the estate, may an
+autonomous run write a completion marker — are **not taken here**. They travel
+intact into the destination and remain the owner's.
+
+The owner-reserved options were considered and **not** taken: converting any of
+the three to `[-]` cancelled, weakening a criterion, or keeping-in-archive as an
+intentional drop. Each of those drops or weakens the item, which reaches the
+owner and no mandate lifts that.
+
+**Destination:** [`stubs/road-to-relates-retrofit-and-superseded-marking.md`](../stubs/road-to-relates-retrofit-and-superseded-marking.md),
+created in this same change. `stubs/` is estate-free — verified, not assumed:
+`check_estate_count` counts the active top level and `later/` only.
+
+**What closes it:** that stub's two independent clauses — for 4.3, zero files
+missing `relates:` **or** a written decision not to retrofit; for 5.3, a live
+`superseded-by` consumer **or** a written refusal. Either branch is an answer.
+
+**A correction the carry forced.** 4.3's own wording says *"the 22 existing
+roadmaps"*, measured 2026-08-22. The active set is **4** today. Re-measured
+2026-08-24, the real scope is **64 files** missing the field — 3 of 4 active and
+61 of 61 in `later/`. The stub therefore states its probe as a **comparison**, not
+as a pinned count; a probe pinned to "22" would have reported FIRED on the first
+unrelated archival.
+
+**Dissent:** none recorded. What is carried forward instead is this roadmap's own
+Risk Register row 3 — `relates: []` written by reflex — so a granted retrofit
+cannot satisfy itself with 64 empty lists and a boilerplate note.
+
+**Residual, stated:** carrying is not discharging. Only the owner taking up either
+clause closes it; the stub's probe is what keeps it findable rather than buried.
