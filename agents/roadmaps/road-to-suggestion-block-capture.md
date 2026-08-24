@@ -8,7 +8,7 @@ estate_growth_exempt: "Instrument roadmap: hook-carried capture for suggestion-b
 ---
 # Road to suggestion block capture — a hook-carried instrument, not appetite
 
-> **Source:** senior-review session 2026-08-23 against pinned commit
+> **Source:** `agents/tmp.old/5-steps/road-to-suggestion-block-capture.md`, from a senior-review session 2026-08-23 against pinned commit
 > `c7e82087e1402968b9ecf16d43cc3affd3968e47` (v14.10.0). The predecessor
 > draft of an elicitation front door was rejected in that review because its
 > verdict metrics had no capture instrument — the same defect that resolved
