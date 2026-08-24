@@ -1,0 +1,15 @@
+# Case: svelte-page
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: svelte-page
+prompt: "Add an empty state to the projects list."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Empty state is the classic spec-silent behaviour; the corpus pins it as `extend`, never `new-world`.
+files:
+  - routes/projects/+page.svelte

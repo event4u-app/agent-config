@@ -1,0 +1,5 @@
+{
+  "name": "mono-two-frontends",
+  "private": true,
+  "workspaces": ["apps/*"]
+}

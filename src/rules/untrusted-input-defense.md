@@ -18,7 +18,7 @@ routes_to:
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
-  - "none"
+  - "instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF"
 # obligation: line 38
 obligation_frequency: "per-event"
 ---
@@ -65,7 +65,7 @@ Scope boundary: this is where delegation authority ends — cross-linked with
 [`delegation-policy`](delegation-policy.md). Delegating a task is not
 delegating unbounded execution of everything the task's data happens to say.
 
-## Enforcement — stated honestly (`enforced_by: none`)
+## Enforcement — stated honestly (`instruction-only`)
 
 No deterministic gate inspects fetched/tool/RAG content for injected
 instructions — the quarantine is carried by the model (ADR-135 lists it in the

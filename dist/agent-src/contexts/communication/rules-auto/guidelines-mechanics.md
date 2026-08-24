@@ -11,6 +11,7 @@ before writing or reviewing code); this file is the catalog.
 |---|---|
 | `abstraction-thresholds.md` | Per-class extraction-threshold canon (code 2 · UI shell 3+ · stateful component ~4+state · utility-class string ≥3) — the single source every numeric threshold cites (ADR-213) |
 | `code-clarity.md` | Cross-language clarity rules — inline single-use values, carve-outs (side effects, loops, type narrowing, debugger) |
+| `monorepo-antipatterns.md` | Diff-detectable monorepo task-graph anti-patterns (root scripts bypassing the runner, lifecycle-hook sibling builds, `&&`-chained tasks, shared code under `apps/`, `../` in `inputs`, missing `outputs`) plus the classes deliberately not harvested |
 | `component-oriented-and-oop-development.md` | Reuse-first components (FE) + OOP-where-it-reduces-complexity (backend); carve-out index; bounded by the anti-over-engineering anchors |
 
 ## PHP (`docs/guidelines/php/`)

@@ -91,8 +91,19 @@ describe('settings-ask-protocol — the artefact exists and is routed', () => {
     it('declares its enforcement honestly rather than borrowing a neighbour gate', () => {
         // The one-per-execution budget is model-carried. Claiming a hook here
         // would be the coverage inflation this repo's gate discipline refuses.
-        expect(frontmatter()['enforced_by']).toEqual(['none']);
-        expect(ruleText()).toMatch(/enforced_by: `?none/);
+        //
+        // The SPELLING moved on 2026-08-23 and the assertion follows it rather
+        // than being relaxed: the bare `none` was retired for
+        // `instruction-only: <reason>`, because "nothing enforces this" and
+        // "nothing enforces this AND here is why that is the right call" are not
+        // the same statement. So this now pins BOTH halves — the honest level,
+        // and that a reason is actually present. A bare `instruction-only` with
+        // no reason resolves to `missing` in check_enforcement_coverage and
+        // fails the schema pattern, which is the property this line protects.
+        const declared = frontmatter()['enforced_by'] as string[];
+        expect(declared).toHaveLength(1);
+        expect(declared[0]).toMatch(/^instruction-only: \S/);
+        expect(ruleText()).toMatch(/`instruction-only`/);
     });
 
     it('keeps the description inside the auto-rule cap', () => {

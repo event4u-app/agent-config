@@ -138,6 +138,7 @@ tasks:
       - task: check-dependency-floors
       - task: check-pack-size
       - task: check-preamble-payload
+      - task: check-standing-payload-delta
       - task: check-static-layer-stability
       - task: bench-hook-injection
       - task: lint-no-python-twin-rationale
@@ -359,6 +360,15 @@ tasks:
       - task: grade-target-readiness-self-test
       - task: check-composite-arming-self-test
       - task: check-no-automerge-key
+      # src/scripts/lint_deterministic_time — a gate's verdict must be a function
+      # of the tree, not of the hour it ran. 17 gates read the clock inline until
+      # 2026-08-23; the seam is _lib/as_of.ts and this is the ratchet that keeps
+      # them on it.
+      - task: lint-deterministic-time
+      # src/scripts/check_enforcement_denominator — exactly ONE enforcement
+      # denominator is quotable, and it comes from check_enforcement_coverage.
+      # The tree published five figures for that one property until 2026-08-23.
+      - task: check-enforcement-denominator
       - task: check-pack-conformance-fixture
       - task: check-generator-output-coverage
       - task: check-tracked-but-ignored

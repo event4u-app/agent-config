@@ -1,0 +1,1 @@
+[{"severity": "high", "title": "Label map is last-wins", "detail": "Each reviewer overwrites the shared map, so Response-A resolves to whichever reviewer ran last

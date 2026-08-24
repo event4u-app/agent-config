@@ -122,7 +122,7 @@ For each comment classified as blocking/important:
 
 Run the relevant tests and linters **between** each group — do not
 batch four changes and then run tests once. See
-[`verify-before-complete`](../verify-before-complete/SKILL.md).
+[`verify-completion-evidence`](../verify-completion-evidence/SKILL.md).
 
 ## Output format
 
@@ -181,7 +181,7 @@ When reporting back to the user after handling review:
 * Executing the fixes across many comments → [`fix-pr-comments`](../../commands/fix-pr-comments.md)
   (handles both bot + human reviewers in one pass)
 * Running the full verification gate before pushing replies →
-  [`verify-before-complete`](../verify-before-complete/SKILL.md)
+  [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md)
 * Writing the commit message that references the review →
   [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md)
 * Digging into *why* the reviewer's scenario actually fails →

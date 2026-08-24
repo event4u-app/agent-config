@@ -1,0 +1,9 @@
+{
+  "_fixture": "daf-adhoc-converges",
+  "_what": "The converging half of the fe-design ad-hoc loop pair. One round has been taken and the review came back with no new finding — the null that ends the loop per step 5's stop condition.",
+  "_expect": "the loop ends: polish returns success, no further round",
+  "stack": { "frontend": "react" },
+  "ui_audit": { "design_tokens": { "color": { "primary": "#2563EB" } } },
+  "ui_review": { "review_clean": true, "findings": [] },
+  "ui_polish": { "rounds": 1 }
+}

@@ -1,0 +1,15 @@
+# Case: wireframe
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: wireframe
+prompt: "Here is the wireframe. Build the screen."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: new-world
+  reference_maturity: wireframe
+note: |
+  THE over-fidelity trap: a wireframe declares STRUCTURE, never pixels. A run that reproduces the wireframe's grey boxes and 1px borders as the visual design has failed this case.
+files:
+  - wireframe.md

@@ -13,7 +13,7 @@ execution:
 
 > **Parked 2026-08-22. Resume when** BOTH conditions hold, measured and written
 > down, not asserted: (a) the standing-payload delta ledger has **≥ 4 weeks of
-> measured entries** — the instrument `agents/roadmaps/road-to-standing-payload-diet.md`
+> measured entries** — the instrument `agents/roadmaps/archive/road-to-standing-payload-diet.md`
 > Phase 0 builds (steps 0.3–0.5, the two-sided debit/credit per-PR delta); and
 > (b) subagent response-envelope adoption is **≥ 95 % over ≥ 500 stops**, which
 > is the terminal state of the roadmap `road-to-subagent-envelope-adoption`
@@ -110,7 +110,7 @@ Verified overlap, in the order v2 sequences them:
 2. **A runtime-truth-and-reduction umbrella.** Duplicative: its phases each
    have a named destination already in this tree. The response-envelope leg is
    the roadmap `road-to-subagent-envelope-adoption`; the context-ledger leg is
-   `agents/roadmaps/road-to-standing-payload-diet.md` Phase 0. An umbrella whose
+   `agents/roadmaps/archive/road-to-standing-payload-diet.md` Phase 0. An umbrella whose
    every phase resolves elsewhere adds sequencing, not work.
 3. **An external-host enforcement spike.** Demand-gated with **no confirmed
    defect** starting it. It is a capability probe: the tree carries host
@@ -141,7 +141,7 @@ Two facts, not an argument:
   standing context, install size, setup time, completion rate, provider/tool
   calls, model tokens and representative task quality. That is a context ledger
   under another name, and
-  `agents/roadmaps/road-to-standing-payload-diet.md` Phase 0 builds the
+  `agents/roadmaps/archive/road-to-standing-payload-diet.md` Phase 0 builds the
   measuring half of it now (0.3 emits a per-PR standing-payload delta against
   the merge-base; 0.5 books the credit side so the ledger is two-sided). The
   tournament cannot start before that ledger exists. The ledger is useful
@@ -187,7 +187,7 @@ clearing them still leaves the owner-reserved clause open.
       four weekly ones, with both a debit and a credit column populated at
       least once. If the ledger shipped but never accumulated entries, that is
       the finding, and the answer is to fix the ledger, not to resume here.
-      verify: the pre-state is that no workflow computes a merge-base delta — `grep -rln 'merge-base\|merge_base' .github/workflows/` returns nothing and exits 1 today; at resume time the ledger artefact named by `agents/roadmaps/road-to-standing-payload-diet.md` Phase 0 lists ≥ 4 dated entries.
+      verify: the pre-state is that no workflow computes a merge-base delta — `grep -rln 'merge-base\|merge_base' .github/workflows/` returns nothing and exits 1 today; at resume time the ledger artefact named by `agents/roadmaps/archive/road-to-standing-payload-diet.md` Phase 0 lists ≥ 4 dated entries.
 - [ ] **1.2 Confirm response-envelope adoption is ≥ 95 % over ≥ 500 stops.**
       The pinned reading is the opposite: 0.00 % adoption (0 `ok` of 1,296
       stops), with delivery at 100 % and parse failure 0.39 %. A successor

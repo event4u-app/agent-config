@@ -1,0 +1,15 @@
+{
+  "_fixture": "daf-render-absent-scoped",
+  "_what": "The render-absent fixture for Phase 7.1. The preview is explicitly skipped with b-page-capture-primitive as the reason — the state this environment is actually in, confirmed by probe: the playwright library resolves but no browser binary is installed.",
+  "_expect": "the review emits an enumerated verdict_scope with scope: static, a checks_run list, a checks_not_run list, and the blocker slug",
+  "_skip": "SKIPPED — render-dependent assertions on this fixture cannot run",
+  "_skip_reason": "b-page-capture-primitive",
+  "stack": { "frontend": "react" },
+  "ui_audit": { "design_tokens": { "color": { "primary": "#2563EB" } } },
+  "ui_review": {
+    "review_clean": true,
+    "findings": [],
+    "preview": { "skipped": true, "skip_reason": "b-page-capture-primitive" },
+    "tokens": { "violations": [] }
+  }
+}

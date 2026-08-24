@@ -1,0 +1,8 @@
+{
+  "name": "mono-pnpm-turbo",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  }
+}

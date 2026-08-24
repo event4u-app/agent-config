@@ -1,0 +1,6 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "tailwind": { "css": "src/styles.css", "baseColor": "neutral" },
+  "aliases": { "components": "@fixture/ui/components" }
+}

@@ -1,0 +1,17 @@
+{
+  "skill": "server-hardening",
+  "last_eval": "2026-08-23",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the three host surfaces — SSH posture, firewall baseline, unattended upgrades. Should-not-trigger covers the neighbours: application-code vulnerability work (security-audit), application authorization (authz-review), cloud provisioning (terraform, aws-infrastructure), container images (docker) and adjudicating the resulting posture (operational-readiness).",
+  "queries": [
+    {"q": "harden ssh on this server — disable password login", "trigger": true},
+    {"q": "set up a default-deny firewall baseline on the VPS", "trigger": true},
+    {"q": "how do I get automatic security patches on this box?", "trigger": true},
+    {"q": "should I install fail2ban on the host?", "trigger": true},
+    {"q": "host hardening checklist for a new bare-metal server", "trigger": true},
+    {"q": "audit this codebase for injection vulnerabilities", "trigger": false, "note": "application-code vulnerability sweep → security-audit"},
+    {"q": "can user A read user B's records through this endpoint?", "trigger": false, "note": "application authorization → authz-review"},
+    {"q": "write the Terraform for a new ECS service", "trigger": false, "note": "cloud provisioning → terraform / aws-infrastructure"},
+    {"q": "reduce the attack surface of this Dockerfile", "trigger": false, "note": "container image hardening → docker"},
+    {"q": "is the overall system ready to operate given the host posture?", "trigger": false, "note": "adjudicating the verdict → operational-readiness"}
+  ]
+}

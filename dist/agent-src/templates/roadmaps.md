@@ -147,6 +147,43 @@ that was never a judgement call.
     resolves toward serial and a declaration is the cheap way to be right.
     Absent means no declared dependency, never “independent”: the overlap
     heuristic still runs.
+
+    **Companion field, same block — `relates:`.** The wider relation, of which
+    `depends` is one value:
+
+    ```yaml
+    relates:
+      - slug: road-to-other-thing
+        relation: extends        # extends | supersedes | depends | disjoint
+        note: "adds the path axis its § 3 left as slug-only"
+      - slug: road-to-old-thing
+        relation: supersedes
+        note: "same mechanism, this one replaces it"
+    ```
+
+    One row per hit from `agent-config roadmap:context`, which is what the
+    authoring surfaces run before drafting. Four relations and no more —
+    `extends`, `supersedes`, `depends`, `disjoint`; an unknown value is rejected
+    by the roadmap lint, because an open vocabulary here degrades into free-text
+    notes nothing can read.
+
+    A `relation: depends` row **mirrors into `depends:`** so the set contract's
+    edge source stays the single one already defined above; `relates:` never
+    becomes a second dependency source.
+
+    An explicit `relates: []` is a complete answer and the common one, but only
+    when it carries the probe's `scanned:` line as its justification:
+
+    ```yaml
+    relates: []   # scanned: 716 roadmap file(s), 0 sibling hits
+    ```
+
+    Absent-versus-empty is the whole point. Absent means nobody looked; `[]` with
+    a `scanned:` line means somebody looked and found nothing. A `relates: []`
+    written by reflex, with a boilerplate note, carries no information and is
+    worse than none — the pre-save self-check in
+    [`roadmap-writing`](../../skills/roadmap-writing/SKILL.md) asks for exactly
+    this distinction.
 19. **Source-derived roadmaps carry a gap-table + provenance; internally
     originated roadmaps carry neither.** This rule fires **only** when a
     roadmap originates from an external input (a suggestion, a competitive

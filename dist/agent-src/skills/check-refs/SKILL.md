@@ -3,6 +3,9 @@ model_tier: medium
 name: check-refs
 description: "Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions."
 domain: process
+scope:
+  write: []
+  verification_reason: "the declared command is a read-only checker: grep -c 'writeFileSync|mkdirSync|appendFileSync' src/scripts/check_references.ts returns 2 and both sit inside its own --self-test tmpdir. Absence of a write is not something a command can prove, so the derivation is stated instead."
 execution:
   type: assisted
   handler: shell

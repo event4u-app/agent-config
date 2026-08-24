@@ -109,6 +109,19 @@ The CI guarantee is structural reachability — the linter would fail if a provi
 
 ## § 5 — Day-one assignment
 
+> **Superseded as a tier list — this section is a historical record, not the
+> current tiers.** It states the assignment on the day this contract landed,
+> and per-adapter promotions since are authoritative. `higgsfield` is `stable`,
+> promoted 2026-06-10 and recorded in
+> [`ADR-056`](../decisions/ADR-056-unvalidated-video-adapters-disposition.md);
+> its header at `src/scripts/ai-video/adapters/higgsfield.sh:15` and its
+> `<lifecycle>` element in `agents/templates/.ai-video.xml.example` are the two
+> surfaces § 4 obliges to agree, and they are the pair to read for a live tier.
+> The rows below are left unedited on purpose: a historical record that gets
+> quietly updated stops being one. They are also deliberately **not** an input
+> to the parity pass in `src/scripts/lint_media_policy_linkage.ts` — a table
+> describing day one must not be able to fail a check about today.
+
 The five shipped adapters carry the following tiers on the day
 this contract lands (PR `universal-platform-refinement`):
 

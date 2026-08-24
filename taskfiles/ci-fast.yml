@@ -810,6 +810,11 @@ tasks:
     desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%)"
     cmd: ./scripts-run src/scripts/check_preamble_payload_budget
 
+  check-standing-payload-delta:
+    silent: true
+    desc: "Per-PR standing-payload delta against the merge-base — the two-sided debit/credit ranking its sibling ratchet cannot show. A REPORT, not a gate: it never fails on the delta in either direction (check-preamble-payload already fails on growth), only when it cannot measure. Wired here so the number is reachable locally rather than discoverable only after a push (road-to-standing-payload-diet Phase 0.3-0.5)"
+    cmd: ./scripts-run src/scripts/check_standing_payload_delta --base "$(git merge-base origin/main HEAD)" --rank
+
   check-static-layer-stability:
     silent: true
     desc: "Static-layer hygiene lint — machine-volatile markers (home paths, uuid-shaped ids) in the NON-kernel always-loaded layer; the kernel prefix keeps its own drift guard. Phase-1 null downgraded the cache-ordering phase to exactly this lint (road-to-token-economy-cache 2.2; spike: agents/settings/contexts/cache-injection-anatomy.md)"

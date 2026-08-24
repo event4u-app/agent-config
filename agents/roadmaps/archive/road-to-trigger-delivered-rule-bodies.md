@@ -470,8 +470,8 @@ opt-in and the published table stays as the record.
       the hook header; the rule keeps the fallback. **This is an amendment into
       the payload-diet roadmap, not a phase here** — body length is that
       roadmap's axis.
-      verify (discharged): `grep -c "enforced_by: hook" agents/roadmaps/road-to-standing-payload-diet.md` ≥ 1 and the step names all nine files and the total.
-      observed: `grep -c "enforced_by: hook" agents/roadmaps/road-to-standing-payload-diet.md` reads 2 and the step names all nine files with per-file token counts and the total. Two corrections the step forced: the total is **15,181** exact-BPE tokens, not the drafting pass's ≈14.7k; and the step's own first verify line was wrong — `grep -c "enforced_by: hook" src/rules/*.md` returns ZERO against list-form frontmatter, so it now reads `grep -l -E '^\s+- "hook:' src/rules/*.md | wc -l` → 9, with the wrong form recorded because it is the obvious one to reach for.
+      verify (discharged): `grep -c "enforced_by: hook" agents/roadmaps/archive/road-to-standing-payload-diet.md` ≥ 1 and the step names all nine files and the total.
+      observed: `grep -c "enforced_by: hook" agents/roadmaps/archive/road-to-standing-payload-diet.md` reads 2 and the step names all nine files with per-file token counts and the total. Two corrections the step forced: the total is **15,181** exact-BPE tokens, not the drafting pass's ≈14.7k; and the step's own first verify line was wrong — `grep -c "enforced_by: hook" src/rules/*.md` returns ZERO against list-form frontmatter, so it now reads `grep -l -E '^\s+- "hook:' src/rules/*.md | wc -l` → 9, with the wrong form recorded because it is the obvious one to reach for.
 - [x] **A5 — `review/changes`: route the over-build lens as the seventh.** The
       command already routes six; `overbuild-review-lens` is not one of them.
       Add it on-demand like the others; no standing-token cost.
@@ -526,7 +526,7 @@ opt-in and the published table stays as the record.
 
 ## Non-goals — with the dropped drafts' proposals dispositioned
 
-- **Dieting rule bodies** — owned by `agents/roadmaps/road-to-standing-payload-diet.md` (status: ready). A4 lands there.
+- **Dieting rule bodies** — owned by `agents/roadmaps/archive/road-to-standing-payload-diet.md` (status: ready). A4 lands there.
 - **Restoring `paths:` scoping** — owned by `agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md`.
 - **A command-invoked rule retriever** — `agents/roadmaps/later/road-to-deferred-rule-retriever.md` is **superseded only if Phase 2 licenses the flip**, and is not run in parallel with this roadmap. Its 0.3 council lock is honoured here rather than bypassed.
 - **Re-opening thin-vs-eager quality measurement** — ADR-202, closed three times. The 48 % bar is not reinstated; the dropped sibling's "the 48 % gate stays unchanged" is the exact `decision-revisit-gate` failure the sixth analysis loop caught.

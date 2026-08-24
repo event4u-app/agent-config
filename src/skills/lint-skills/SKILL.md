@@ -3,6 +3,9 @@ model_tier: medium
 name: lint-skills
 description: "Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata."
 domain: process
+scope:
+  write: []
+  verification_reason: "the declared command is a read-only linter: grep -c 'writeFileSync|mkdirSync|appendFileSync' src/scripts/skill_linter.ts returns 0. Absence of a write is not something a command can prove."
 execution:
   type: assisted
   handler: shell

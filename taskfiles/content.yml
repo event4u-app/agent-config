@@ -337,6 +337,16 @@ tasks:
     desc: Fail if the settings key space declares an auto-merge policy key (ADR-239 namespace ratchet)
     cmd: ./scripts-run src/scripts/check_no_automerge_key {{.QUIET_FLAG}}
 
+  check-enforcement-denominator:
+    silent: true
+    desc: Fail if a published doc restates an enforcement denominator the resolver did not generate
+    cmd: ./scripts-run src/scripts/check_enforcement_denominator {{.QUIET_FLAG}}
+
+  lint-deterministic-time:
+    silent: true
+    desc: Fail if a check_/lint_ gate script reads the wall clock instead of routing through _lib/as_of.ts
+    cmd: ./scripts-run src/scripts/lint_deterministic_time {{.QUIET_FLAG}}
+
   check-pack-conformance-fixture:
     silent: true
     desc: Run the pack-conformance fixture harness (conformant fixture + one seeded twin per fixture-provable gate)

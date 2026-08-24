@@ -8,9 +8,61 @@ resolution, commit-step pre-scan, halt conditions, and archival check.
 The three command files are thin wrappers that bind only the **scope
 delta**.
 
-**Size budget:** ≤ 4,000 chars.
+**Size budget:** ≤ 57,000 chars — restated from the original 4,000.
+
+The old figure described nothing: the file measured 47,115 bytes against it, a
+factor of 11.8, so it was a dead budget rather than a typo. Restated at the
+measured size rather than split, because splitting a contract this load-bearing
+into referenced fragments is a large change with its own risk, and the step that
+found this asked for hygiene.
+
+**Why it moved:** this file is not a page a reader skims but the canonical
+autonomous-execution loop — roadmap discovery, cadence resolution, the step loop,
+the flip-guard, the halt list, the terminal outcomes, and the archival check. The
+original 4,000 was inherited from the sibling context docs (`≤ 3,000`, `≤ 6,000`)
+without asking whether the same shape applied.
+
+**Read it as a ratchet, not a target.** A budget that rises whenever the file
+does is not a budget. It may fall; raising it again needs the same kind of note
+as this one.
+
+**Nothing enforces this line**, and saying so is the point: no gate reads it, so
+it is a declaration a future edit can falsify exactly as the 4,000 was falsified.
+A true declaration with a stated enforcement boundary is worth more than a false
+one, and less than a check — the same `enforced_by: none` honesty the rules in
+this tree state about their own obligations.
 
 ## 1. Resolve roadmap
+
+### Context probe — unconditionally, before resolving the roadmap
+
+```bash
+agent-config roadmap:context --roadmap <slug>   # slug omitted on a bare invocation
+```
+
+Run it **before resolving the roadmap**, on every invocation, and print its
+report in the pre-run summary (§ 2). Unconditional is the whole point: the live
+merge-state clause below fires only when a message would *describe* a roadmap
+as in-flight or merged, so a run that never makes such a claim has never looked.
+Measured on the population that motivated this: 4 of 24 active roadmaps were
+already closed in an open PR, and 2 of 22 six days later — the same sample
+halved inside a week, which is why the probe re-runs on a cadence (§ 5e) rather
+than once at branch time.
+
+The report carries open PRs with the files they change, remote branches carrying
+a roadmap slug, live sessions on both axes, `agents/tmp/` note names, sibling
+roadmaps on the same topic, and roadmap-to-PR file overlap. Two readings act:
+
+- **The roadmap is closed in an open PR** → name the PR number and stop. This is
+  a **selection error**, not a halt: nothing on the halt list fired, the run
+  simply picked work that is already done. It does not touch the halt list and
+  it is not a `blocked` outcome.
+- **The roadmap is partially covered by an open PR** → name the PR and continue,
+  on a branch cut from `origin/main`. Never rebase onto the foreign branch.
+
+Same honesty boundary the probe states in its own header: **the probe is
+deterministic once invoked, and the invocation is model-carried.** Nothing fires
+it and nothing notices when it is skipped.
 
 Search both locations:
 
@@ -417,6 +469,34 @@ of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md))
 forces an immediate regen regardless of cadence. The checkbox flip
 itself is **never** batchable — only the subprocess.
 
+### Context refresh — a comparison, not a third cadence key
+
+There is **no `roadmap.context_refresh_cadence` setting**, deliberately. The
+refresh trigger is derived:
+
+```bash
+agent-config roadmap:context --fingerprint   # cheap: one rev-parse + one gh call
+```
+
+At every phase boundary (and at run end), take the fingerprint and compare it
+with the one § 1's probe returned. **Differs → re-probe in full** and apply the
+reaction table in § 5e. **Same → nothing moved; continue without paying for a
+probe.** Cache the new value as the run's baseline either way.
+
+The fingerprint covers `origin/main` **and the head SHA of every open PR**. The
+second half is the case a `main`-only trigger misses: a peer pushing to their own
+PR branch mid-run can add a file that now overlaps this run's owned paths while
+`origin/main` has not moved at all.
+
+Why a comparison and not a knob: `docs/contracts/settings-classes.md` classifies
+a fixed-beat flag as `derivable` — "the mechanism itself can decide, from the
+situation, better than a flag can" — behind a ratchet whose count may only fall.
+A cadence enum was implemented, refused by `lint_settings_classes`, and replaced
+by this; the full reasoning, the options rejected, and what the substitution costs
+are in `agents/evidence/analysis/situational-awareness-cadence-key-decision.md`.
+Turning the refresh off is a one-line revert of this subsection, which is the same
+reversibility a `cadence: off` value would have bought.
+
 ## 5. Step loop
 
 For each open step in the working set (scope-bound — see wrapper):
@@ -510,6 +590,26 @@ For each open step in the working set (scope-bound — see wrapper):
      links the directory. Not a gate: the memo is what makes an
      autonomous resolution reviewable after the fact, which is the
      condition under which it is legitimate at all.
+4b. **Stale-artefact check — a vanished file is never a closed step.**
+
+   Before flipping anything, check the step's own cited paths against the tree:
+
+   ```
+   NEVER MARK STALE WORK COMPLETE JUST BECAUSE IT DISAPPEARED.
+   ABSENCE OF THE FILE IS ABSENCE OF EVIDENCE, NOT EVIDENCE OF COMPLETION.
+   ```
+
+   Any cited path missing → the step resolves to **`unverified`**: surface it in
+   the run report, name the missing path, and flip **no** checkbox. Not `[x]`
+   (the evidence cannot be checked), not `[-]` (nobody decided to skip it), not
+   `[~]` (nobody deferred it) — the box stays open and the report carries the
+   reason. `staleArtefactVerdict` in `roadmap_context.ts` is the predicate.
+
+   The failure this catches is quiet: "nothing to do here" reads identically to
+   "already done", and one of those is a closed step while the other is a lost
+   one. A step citing no paths is unaffected — there is nothing to check, and
+   inventing a doubt would fire this on every prose step.
+
 5. **Atomic flip — same reply, every step.**
    Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
    `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
@@ -634,9 +734,45 @@ sibling worktree moved, the dying session finished a step it never recorded),
 and the `actual` column is what to resume from. Treating progress as corruption
 would refuse every healthy resume.
 
+**The checkpoint carries a repository fingerprint too, not only roadmap counts.**
+`context_fingerprint` is the `roadmap:context --fingerprint` value the dying run
+last held. Every other field on the checkpoint reports **roadmap** drift; none
+reported **repository** drift, so a run resumed after a long gap trusted a context
+reading it never re-took — the exact staleness § 4's refresh exists to end,
+reappearing across the one boundary a mid-run cadence cannot see.
+
+A resumed run therefore re-probes and passes the fresh fingerprint into
+`verifyCheckpoint`. A disagreement forces a full re-probe and the § 5e reactions
+**before the first step**. A `null` or absent value on either side reads as *not
+known* and never as a disagreement — the same rule `head` already follows, and for
+the same reason: a false alarm on the field whose job is to say whether anything
+moved trains the reader to skip the line.
+
 `agent-config run:supervise --once` reports which runs died with open steps
 left. It never merges, pushes, or closes anything — that boundary is a named
 rejection, not a missing feature.
+
+### 5e. Context refresh — four reactions, enumerated and closed
+
+At each due point (§ 4 — fingerprint differs) re-probe and act. **These four rows
+are the whole set.** Nothing here is a halt: none of them appears on the halt list
+and none of them is a `blocked` outcome.
+
+| # | What the refresh found | Reaction |
+|---|---|---|
+| a | A PR touching my owned paths **merged** since the last refresh | Run `sync_pr_branch` now — already the documented resolution, only push-bound until this row existed. Re-read the current step's files, continue. |
+| b | An **open** PR touches my owned paths | Continue. Name the collision in the PR description and in the final report. **Never rebase onto a foreign branch.** |
+| c | A peer session shows `PATH OVERLAP` | Take disjoint steps first if ordering allows; otherwise name it and continue. The register is advisory, never a lock. |
+| d | The roadmap itself was **archived on `origin/main`** | Stop. The same **selection error** as § 1, detected late — not a halt, and no checkbox is flipped to reach it. |
+
+Deliberately NOT a drift-level taxonomy. A severity ladder over these four would
+invite a fifth row for every new shape of surprise, and the value here is that the
+set is closed: an agent that meets something outside it has met an ordinary step,
+not a new reaction.
+
+Row (a) is the one that changes behaviour mid-run rather than only reporting. Rows
+(b) and (c) exist to make the collision **visible in the artefact** — a run that
+silently produces a conflicting PR has spent the reviewer's time, not its own.
 
 ### Halt conditions
 
@@ -681,13 +817,29 @@ setting, pushing, opening a PR, re-running CI, updating a merge base, fixing a
 test, spending inside a budget — the agent can do all of it. That is remediation
 work, and a `process-full` invocation grants it.
 
-Three outcomes, and only one of them is success:
+Four outcomes, and only one of them is success:
 
 | Outcome | When | What it reports |
 |---|---|---|
 | `complete` | `count_open == 0` and the PR is open | the roadmap is finished; archival check runs (§ 6) |
 | `blocked` | every remaining open step is **externally impossible** for the agent | the work that DID close, plus the specific impossibility |
+| `superseded` | the remaining work **already landed** on `origin/main`, in a merged PR | which steps the tree already satisfies, with the PR number and the evidence per step |
 | a halt | one of the five conditions above fired | the halt, its evidence, and what remains |
+
+**Why `superseded` is here and not on the halt list.** A run that meets a merged
+PR which already closed its remaining steps had, until this row existed, no legal
+move: *"let the open PRs merge first"* is a forbidden non-halt reason below, the
+halt list calls itself exhaustive, and neither `complete` nor `blocked` is true —
+the work is done and it was not externally impossible. The only two available
+actions were a rule violation or duplicate work. This row is the third.
+
+It is a **report**, not a licence to flip anything. Marking a step the tree
+already closed is a separate, deliberately unbuilt mechanism: it needs the step's
+own `verify:` green against `origin/main`, a decision memo, and a one-strike kill
+criterion, and an autonomous run writing a completion marker into the source of
+truth is not switched on unasked. Until it is, `superseded` reports and the boxes
+stay open — the same discipline the `[~]` prohibition below enforces for
+`blocked`.
 
 `blocked-preflight` **no longer exists** (ADR-237 § 4). A run always starts.
 

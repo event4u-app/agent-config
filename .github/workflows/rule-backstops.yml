@@ -231,6 +231,24 @@ jobs:
       - name: no auto-merge settings key (ADR-239 namespace ratchet)
         run: ./scripts-run src/scripts/check_no_automerge_key --quiet
 
+      # A gate's verdict is a function of the tree, not of the hour it ran. 17
+      # `check_*` / `lint_*` scripts read the clock inline until 2026-08-23, so
+      # none of their staleness verdicts was reproducible from the commit. The
+      # seam is `src/scripts/_lib/as_of.ts` (--as-of / AC_AS_OF / the commit date
+      # under CI / the wall clock with an explicit WARN); this step is the ratchet
+      # that keeps them on it. Canary recipe in src/config/gate-coverage.yml.
+      - name: gate scripts resolve "now" through the as-of seam
+        run: ./scripts-run src/scripts/lint_deterministic_time --quiet
+
+      # Five figures for one property is not five errors, it is one defect: a
+      # denominator quoted without the frame it was taken over. The resolver
+      # publishes it with its frame and docs/proof.md § 4b projects that output;
+      # this step reds when a published doc restates a count instead of citing it.
+      # A CORRECT hand-written figure is still a finding — that is how the
+      # plurality returned every previous time.
+      - name: one citable enforcement denominator
+        run: ./scripts-run src/scripts/check_enforcement_denominator --quiet
+
       # Third-party pack conformance. PARTIAL by design and it says so: only 3 of
       # the 6 pack-fitness gates can be driven from a fixture tree, and the other
       # three are blocked by contracts (a pinned argv grammar, a name-resolved

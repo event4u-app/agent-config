@@ -15,6 +15,8 @@
  *   - owner must have name + email
  *   - metadata must have description + version
  *   - metadata.version must match package.json (single source of truth)
+ *   - every version field in BOTH .augment-plugin/ manifests matches
+ *     package.json too — see check_augment_manifests()
  *   - the union of plugins[].skills[] must be EXACTLY the pointer skill
  *     (./.claude-plugin/skills/install-agent-config) — a repopulated
  *     content-skill list FAILS by design
@@ -88,6 +90,87 @@ function require_key(
   return true;
 }
 
+/**
+ * Every version field in both `.augment-plugin/` manifests must equal
+ * `package.json`'s.
+ *
+ * WHY THE AUGMENT TWIN IS IN SCOPE OF THIS GATE. Both files ship in the npm
+ * tarball — `src/config/publish-surface.json` lists `.augment-plugin/` as a
+ * publish root — and both carried `version: 1.0.0` while `package.json` moved
+ * to 14.x. Nothing in the tree ever claimed `1.0.0` was an independent
+ * plugin-API version: no comment, no test, no doc, and the only reader anywhere
+ * is `src/scripts/probe_skill_registration.ts:137`. `plugin.json` had not been
+ * touched since 2026-04-17. An unclaimed constant no reader interprets is
+ * drift, not a deliberate independent version — so the Augment manifests are
+ * treated as the projection counterpart of the `.claude-plugin` twin this gate
+ * already version-syncs, and are held to the same rule.
+ *
+ * Reversible in one commit if that reading is ever wrong, which is why
+ * `docs/CLAIMS.md` records the choice rather than leaving it implicit.
+ *
+ * The nesting differs between the two files, so the fields are enumerated
+ * rather than discovered: a recursive "every key named version" walk would
+ * silently start policing a future field that is legitimately independent.
+ */
+export function check_augment_manifests(
+  pkgVersion: string,
+  errors: string[],
+  base: string = ROOT,
+): void {
+  const targets: Array<[string, string[][]]> = [
+    [path.join(base, ".augment-plugin", "plugin.json"), [["version"]]],
+    [
+      path.join(base, ".augment-plugin", "marketplace.json"),
+      [["version"], ["metadata", "version"], ["plugins", "*", "version"]],
+    ],
+  ];
+  for (const [file, paths] of targets) {
+    if (!_exists(file)) {
+      errors.push(`${file} not found (listed in publish-surface.json roots)`);
+      continue;
+    }
+    let data: JsonValue;
+    try {
+      data = JSON.parse(fs.readFileSync(file, "utf-8")) as JsonValue;
+    } catch (e) {
+      errors.push(`${file} is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+      continue;
+    }
+    for (const keys of paths) {
+      for (const [label, value] of _resolveVersionField(data, keys)) {
+        if (value !== pkgVersion) {
+          errors.push(
+            `${file}: ${label} \`${String(value)}\` does not match ` +
+              `package.json version \`${pkgVersion}\``,
+          );
+        }
+      }
+    }
+  }
+}
+
+/** Resolve a key path, expanding `*` over array indices. Returns [label, value]. */
+function _resolveVersionField(
+  data: JsonValue,
+  keys: readonly string[],
+  prefix = "",
+): Array<[string, JsonValue | undefined]> {
+  if (keys.length === 0) {
+    return [[prefix.replace(/^\./, ""), data]];
+  }
+  const [head, ...rest] = keys as [string, ...string[]];
+  if (head === "*") {
+    if (!Array.isArray(data)) {
+      return [[`${prefix}[*]`.replace(/^\./, ""), undefined]];
+    }
+    return data.flatMap((item, i) => _resolveVersionField(item, rest, `${prefix}[${String(i)}]`));
+  }
+  if (!isObject(data)) {
+    return [[`${prefix}.${head}`.replace(/^\./, ""), undefined]];
+  }
+  return _resolveVersionField(data[head] ?? null, rest, `${prefix}.${head}`);
+}
+
 export function main(): number {
   // No corpus to count — the shim is exactly one manifest plus one pointer
   // skill, and every count the shape offers (plugins, skill entries, dirs under
@@ -100,6 +183,8 @@ export function main(): number {
       gate: "lint_marketplace",
       candidates: [
         ".claude-plugin/marketplace.json",
+        ".augment-plugin/plugin.json",
+        ".augment-plugin/marketplace.json",
         "package.json",
         `${POINTER_SKILL_ENTRY.replace(/^\.\//, "")}/SKILL.md`,
       ],
@@ -160,6 +245,9 @@ export function main(): number {
           `metadata.version \`${String(mpVersion)}\` does not match ` +
             `package.json version \`${String(pkgVersion)}\``,
         );
+      }
+      if (typeof pkgVersion === "string") {
+        check_augment_manifests(pkgVersion, errors);
       }
     }
   } else {

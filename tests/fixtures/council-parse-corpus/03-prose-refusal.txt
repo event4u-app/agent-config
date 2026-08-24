@@ -1,0 +1,3 @@
+I would rather not produce a findings list for this diff. The change is large
+enough that any list I gave you would be a guess dressed as a review, and a
+guess in a findings array is worse than no list at all.

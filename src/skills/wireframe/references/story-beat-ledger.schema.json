@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "story-beat-ledger.schema.json",
+  "title": "Story-beat ledger and style bible",
+  "description": "The one cleanly unmet gap Phase 9.1 of road-to-frontend-fidelity-calibration verified: `grep -rilE 'beat ledger|story ledger|style bible' src/` returned zero paths on 2026-08-22. Hosted in `wireframe` because that skill already owns the low-fidelity artefact — a beat ledger IS a low-fidelity artefact, one axis further along than a static skeleton. No skill was created to hold a schema. Two halves in one file, deliberately: the ledger is what happens in order, the style bible is what it looks like throughout, and splitting them into two files would let a beat reference a style that no longer exists.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "beats"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        1
+      ],
+      "description": "Pinned. One-member `enum` rather than `const`: this repo's Draft-07 subset validator enforces `enum` and silently ignores `const`."
+    },
+    "surface": {
+      "type": "string",
+      "description": "The page or route the ledger describes."
+    },
+    "style_bible": {
+      "type": "object",
+      "description": "What holds STILL across every beat. A property that changes per beat belongs on the beat, not here — that split is the point of having a bible at all.",
+      "additionalProperties": true,
+      "properties": {
+        "palette_ref": {
+          "type": "string",
+          "description": "A token reference, never a literal. `brand-source-of-truth` governs: the consumer's registered tokens win over anything a bible proposes."
+        },
+        "type_ref": {
+          "type": "string",
+          "description": "Token reference for the type system, per `typography-system`."
+        },
+        "motion_band": {
+          "type": "string",
+          "description": "The motion band this surface sits in. `fe-design` § Motion is the timing source of truth; this names a band, it does not define one."
+        },
+        "reduced_motion_presentation": {
+          "type": "string",
+          "description": "What the surface presents INSTEAD of motion when `prefers-reduced-motion` is set. Required by convention on any bible whose beats carry `motion`: `animation: none` is a suppression, not a presentation. This field is the schema half of step 9.3."
+        },
+        "art_direction_note": {
+          "type": "string",
+          "description": "The brief-level direction a `design-director` read would judge against. Free text."
+        }
+      }
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered. A scroll-driven surface is a sequence, and the order is the content.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "intent"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable beat id. The scroll evidence artefact in `design-review/references/verification-automation.md` references these ids, which is what lets a review check a beat rather than a pixel row."
+          },
+          "intent": {
+            "type": "string",
+            "description": "What this beat is FOR, in one sentence. A beat with no intent is a section, and a wireframe does not need a ledger to list sections."
+          },
+          "enters_at": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ],
+            "description": "Where the beat begins — a scroll fraction, a viewport-height multiple, or null when the ledger is authored before any layout exists. `null` is the honest value at wireframe stage and must stay allowed."
+          },
+          "element_states": {
+            "type": "array",
+            "description": "What is asserted to be true at this beat. The unit a review can check.",
+            "items": {
+              "type": "object",
+              "required": [
+                "selector",
+                "state"
+              ],
+              "additionalProperties": true,
+              "properties": {
+                "selector": {
+                  "type": "string",
+                  "description": "A CSS selector, or a wireframe region name before markup exists."
+                },
+                "state": {
+                  "type": "string",
+                  "description": "The asserted state — `visible`, `pinned`, `faded`, `offscreen`, and so on. A vocabulary the reviewer and the ledger share, not a free-form description."
+                }
+              }
+            }
+          },
+          "motion": {
+            "type": "string",
+            "description": "The motion this beat uses, if any. A beat carrying this obliges `style_bible.reduced_motion_presentation` to say what replaces it."
+          },
+          "maturity": {
+            "enum": [
+              "wireframe",
+              "comp"
+            ],
+            "description": "Which axis of `design-fidelity` § Two axes this beat sits on. A `wireframe` beat carries a STRUCTURE mandate: its greys and its exact offsets are non-decisions and must not be reproduced 1:1. Present so a ledger cannot be handed over as a pixel spec by omission."
+          }
+        }
+      }
+    }
+  }
+}

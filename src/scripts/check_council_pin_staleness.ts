@@ -36,6 +36,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { asOf, asOfBanner } from './_lib/as_of.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
@@ -234,7 +235,7 @@ function main(argv: string[]): number {
     const today =
         ti >= 0 && argv[ti + 1] !== undefined
             ? String(argv[ti + 1])
-            : new Date().toISOString().slice(0, 10);
+            : asOf().toISOString().slice(0, 10);
     if (epochDay(today) === null) {
         process.stderr.write(`--today must be a real YYYY-MM-DD date (got ${today})\n`);
         return 2;
@@ -253,6 +254,7 @@ function main(argv: string[]): number {
     const bad = rows.filter((r) => r.verdict === 'stale' || r.verdict === 'future-date' || r.verdict === 'malformed');
     const unstamped = rows.filter((r) => r.verdict === 'unstamped');
 
+    process.stdout.write(`${asOfBanner(ti >= 0 ? today : undefined)}\n`);
     for (const r of rows) {
         const age = r.age_days === null ? '—' : `${r.age_days}d`;
         process.stdout.write(

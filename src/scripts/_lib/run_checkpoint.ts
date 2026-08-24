@@ -57,6 +57,21 @@ export interface RunCheckpoint {
     readonly next_step: string | null;
     /** Commit the tree was on. A resume onto a different commit is normal, and visible. */
     readonly head: string | null;
+    /**
+     * The situational-awareness reading this run last took —
+     * `contextFingerprint()` over `origin/main` plus every open PR's head SHA.
+     *
+     * `road-to-roadmap-situational-awareness` § 5.6. Every other field here
+     * reports **roadmap** drift; none reported **repository** drift, so a run
+     * resumed after a long gap trusted a context reading it never re-took. A
+     * disagreement here forces a re-probe before the first step.
+     *
+     * Optional: a checkpoint written before this field existed, or by a run that
+     * could not reach the probe, is still a valid checkpoint. Absent means "not
+     * known", never "unchanged" — `verifyCheckpoint` treats a null on either
+     * side as unknown, the same way it already treats `head`.
+     */
+    readonly context_fingerprint?: string | null;
     readonly written_at: string;
 }
 
@@ -109,6 +124,16 @@ export interface BuildOptions {
     /** Injected so a test does not depend on the ambient git state. */
     readonly head?: string | null;
     readonly now?: () => Date;
+    /**
+     * The run's situational-awareness fingerprint
+     * (`roadmap:context --fingerprint`). Injected rather than read here, so this
+     * library keeps its no-subprocess property — `readHead` reads `.git`
+     * directly for the same reason, and the probe cannot.
+     *
+     * Omitted → the field is absent, and a resume reports "not known" rather
+     * than asserting the repository stood still.
+     */
+    readonly contextFingerprint?: string | null;
 }
 
 /**
@@ -204,6 +229,12 @@ export function buildCheckpoint(
         parked_steps: counts.parked,
         next_step: counts.next,
         head: opts.head ?? readHead(repoRoot),
+        // Absent rather than null when nothing was supplied: a checkpoint that
+        // predates this field and one written without a probe are the same
+        // state, and both must read as "not known".
+        ...(opts.contextFingerprint !== undefined
+            ? { context_fingerprint: opts.contextFingerprint }
+            : {}),
         written_at: (opts.now ?? ((): Date => new Date()))().toISOString(),
     };
 }
@@ -310,7 +341,16 @@ export interface VerifyResult {
  * 4, actual 3" tells it a step landed after the checkpoint was written and
  * which count to trust.
  */
-export function verifyCheckpoint(repoRoot: string, cp: RunCheckpoint): VerifyResult {
+export function verifyCheckpoint(
+    repoRoot: string,
+    cp: RunCheckpoint,
+    /**
+     * The fingerprint a fresh `roadmap:context --fingerprint` returned, when the
+     * resumed run took one. Omitted → the field reports "not known" rather than
+     * asserting the repository stood still.
+     */
+    currentFingerprint?: string | null,
+): VerifyResult {
     let text: string;
     try {
         text = fs.readFileSync(roadmapPath(repoRoot, cp.roadmap), 'utf-8');
@@ -348,6 +388,19 @@ export function verifyCheckpoint(repoRoot: string, cp: RunCheckpoint): VerifyRes
             // human whether anything moved, and a false alarm there costs more
             // than a missing one: it trains the reader to skip the line.
             agrees: cp.head === null || head === null || cp.head === head,
+        },
+        // Repository drift, which no other field here reports. The `actual` is
+        // supplied by the caller (the probe is a subprocess and this library
+        // stays I/O-light) — absent means the caller did not re-probe, and an
+        // unknown on either side is never a disagreement, exactly as for `head`.
+        {
+            field: 'context_fingerprint',
+            claimed: cp.context_fingerprint ?? null,
+            actual: currentFingerprint ?? null,
+            agrees:
+                (cp.context_fingerprint ?? null) === null ||
+                (currentFingerprint ?? null) === null ||
+                cp.context_fingerprint === currentFingerprint,
         },
     ];
     return { readable: true, fields, agrees: fields.every((f) => f.agrees) };

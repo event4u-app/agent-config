@@ -55,6 +55,7 @@ import {
     claim_conflicts,
     other_worktree_branches,
     other_worktree_branches_detailed,
+    path_overlap_lines,
 } from '../../src/scripts/sessions_cli.js';
 
 let tmp: string;
@@ -1117,5 +1118,128 @@ describe('the claim is repo-global — writer and reader cannot land in differen
             expect(resolve_claim(main, 'sess-none')).toBeNull();
             expect(read_claimed_slug(main, 'sess-none')).toBeNull();
         });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The path axis — road-to-roadmap-situational-awareness § 3.1 / § 3.2
+// ---------------------------------------------------------------------------
+
+describe('owned_paths — additive, byte-identical when absent', () => {
+    /**
+     * The pre-change record shape, hand-frozen here on purpose. The whole
+     * guarantee `owned_paths` claims is that a session declaring no paths writes
+     * exactly this, so the fixture has to be independent of the code under test.
+     */
+    const PRE_CHANGE_KEYS = [
+        'session_id',
+        'platform',
+        'worktree',
+        'branch',
+        'roadmap_slug',
+        'started_at',
+        'last_seen',
+    ];
+
+    it('leaves a record byte-identical to the pre-change fixture when no paths are declared', () => {
+        const { main } = make_repo();
+        const built = build_record(main, 'sess-np', 'claude', '2026-08-23T00:00:00Z', new Date(0));
+        expect(Object.keys(built)).toEqual(PRE_CHANGE_KEYS);
+        expect('owned_paths' in built).toBe(false);
+
+        const frozen = {
+            session_id: 'sess-np',
+            platform: 'claude',
+            worktree: main,
+            branch: 'main',
+            roadmap_slug: null,
+            started_at: '2026-08-23T00:00:00Z',
+            last_seen: built.last_seen,
+        };
+        expect(JSON.stringify(built)).toBe(JSON.stringify(frozen));
+    });
+
+    it('round-trips a declared path set through the claim file into the record', () => {
+        const { main } = make_repo();
+        const target = claim_file(main, 'sess-p');
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                slug: 'road-to-thing',
+                session_id: 'sess-p',
+                paths: ['src/b.ts', 'src/a.ts'],
+            }),
+            'utf-8',
+        );
+        expect(resolve_claim(main, 'sess-p')?.paths).toEqual(['src/b.ts', 'src/a.ts']);
+
+        const built = build_record(main, 'sess-p', 'claude', '2026-08-23T00:00:00Z');
+        // Sorted on write, so two sessions declaring the same set produce the
+        // same field and a diff of two records shows a real change.
+        expect(built.owned_paths).toEqual(['src/a.ts', 'src/b.ts']);
+        expect(built.roadmap_slug).toBe('road-to-thing');
+    });
+
+    it('treats a claim with an empty or malformed paths list as no declaration', () => {
+        const { main } = make_repo();
+        const target = claim_file(main, 'sess-e');
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({ slug: 'road-to-thing', session_id: 'sess-e', paths: ['', 7] }),
+            'utf-8',
+        );
+        expect(resolve_claim(main, 'sess-e')?.paths).toBeUndefined();
+        expect('owned_paths' in build_record(main, 'sess-e', 'claude', 'x')).toBe(false);
+    });
+});
+
+describe('path collisions — a third axis, labelled separately', () => {
+    it('prints exactly one PATH OVERLAP line for two records sharing exactly one path', () => {
+        const others = [
+            rec({ session_id: 'peer-1', owned_paths: ['src/a.ts', 'src/z.ts'] }),
+            rec({ session_id: 'peer-2', owned_paths: ['src/q.ts'] }),
+        ];
+        const lines = path_overlap_lines(others, {
+            branch: null,
+            roadmap_slug: null,
+            owned_paths: ['src/a.ts', 'src/other.ts'],
+        });
+        expect(lines).toHaveLength(1);
+        expect(lines[0]).toContain('PATH OVERLAP');
+        expect(lines[0]).toContain('peer-1');
+        expect(lines[0]).toContain('src/a.ts');
+        expect(lines[0]).not.toContain('src/z.ts');
+    });
+
+    it('prints zero lines when the path sets are disjoint', () => {
+        const others = [rec({ session_id: 'peer-1', owned_paths: ['src/a.ts'] })];
+        expect(
+            path_overlap_lines(others, {
+                branch: null,
+                roadmap_slug: null,
+                owned_paths: ['src/b.ts'],
+            }),
+        ).toEqual([]);
+    });
+
+    it('prints zero lines when this session declared no paths at all', () => {
+        const others = [rec({ session_id: 'peer-1', owned_paths: ['src/a.ts'] })];
+        expect(path_overlap_lines(others, { branch: null, roadmap_slug: null })).toEqual([]);
+    });
+
+    it('keeps the slug and branch labels distinct from the path label', () => {
+        const others = [
+            rec({ session_id: 'peer-1', branch: 'feat/a', roadmap_slug: 'road-to-x', owned_paths: ['src/a.ts'] }),
+        ];
+        const kinds = classify_collisions(others, {
+            branch: 'feat/a',
+            roadmap_slug: 'road-to-x',
+            owned_paths: ['src/a.ts'],
+        }).map((c) => c.kind);
+        // Order is part of the contract: roadmap (stop) before branch
+        // (coordinate) before path (reorder).
+        expect(kinds).toEqual(['roadmap', 'branch', 'path']);
     });
 });

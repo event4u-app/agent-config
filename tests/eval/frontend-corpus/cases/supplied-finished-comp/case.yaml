@@ -1,0 +1,15 @@
+# Case: supplied-finished-comp
+# Registered by road-to-frontend-power step 0.2. Labels are declarations,
+# not measurements — see ../../README.md for what this corpus may and may
+# not be cited for.
+id: supplied-finished-comp
+prompt: "Build this screen. The PNG is the approved comp."
+authority:
+  surface_mode: persuade
+  register: brand
+  change_intent: new-world
+  reference_maturity: finished-comp
+note: |
+  An image handover. Per `design-fidelity`, the image IS the spec and the 1:1 floor applies unchanged — but a comp is not runnable, so mechanics are `translated`, never `honoured`.
+files:
+  - HANDOVER.md

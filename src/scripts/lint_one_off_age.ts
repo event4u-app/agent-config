@@ -28,6 +28,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf, asOfBanner } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -59,7 +60,7 @@ interface SimpleDate {
 }
 
 function _today_utc(): SimpleDate {
-    const now = new Date();
+    const now = asOf();
     return {
         y: now.getUTCFullYear(),
         m: now.getUTCMonth() + 1,
@@ -369,6 +370,10 @@ export function main(): number {
         }));
         process.stdout.write(JSON.stringify(payload, null, 2) + '\n');
     } else {
+        // Text only: the JSON payload is consumed by tooling and must stay a
+        // bare array. A reviewer reading the text report needs to know which
+        // "now" produced these ages — see `_lib/as_of.ts`.
+        process.stdout.write(`${asOfBanner()}\n`);
         process.stdout.write(format_text(findings) + '\n');
     }
     return findings.some((f) => f.severity === 'fail') ? 1 : 0;

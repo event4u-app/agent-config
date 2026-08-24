@@ -21,6 +21,8 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
   "schon wieder": "active-remediation makes a user 'leave it' terminal against the AGENT re-raising a closed item; this rule fires only when the USER brings it back — a decision-maker reopening their own decision is not the nagging that rule prevents"
+enforced_by:
+  - "instruction-only: the earlier disposition, the three outcomes and the hardening are all prose; the self-repair occurrence counter covers only detector-matched defects"
 obligation_frequency: "per-task"
 ---
 
@@ -85,7 +87,7 @@ analysis prose by design, so "I found nothing" means *prose was grepped*, never
 - **The agent is the one repeating** — that is [`no-cheap-questions`](no-cheap-questions.md).
 - **Already resolved this task.** Once decided, it is decided.
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 One narrow deterministic signal exists. `src/scripts/_lib/self_repair.ts` keeps one
 record per defect fingerprint with an `occurrences` counter and reopens a released

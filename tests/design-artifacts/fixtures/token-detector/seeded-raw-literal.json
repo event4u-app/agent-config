@@ -1,0 +1,25 @@
+{
+  "_fixture": "daf-token-detector-seeded",
+  "_what": "A raw-literal fixture: three detector violations whose values ARE present in the audit's token map, so each is 'a raw literal where the audit found a token' — the one dimension Phase 1 classified measurable with no page needed.",
+  "_expect": "the detector channel emits >= 1 token_violation finding",
+  "stack": { "frontend": "react" },
+  "ui_audit": {
+    "components_found": ["Button"],
+    "design_tokens": {
+      "color": { "primary": "#2563EB", "muted": "#64748B" },
+      "spacing": { "sm": "8px", "md": "12px" }
+    }
+  },
+  "ui_review": {
+    "review_clean": true,
+    "findings": [],
+    "preview": { "skipped": true, "skip_reason": "b-page-capture-primitive" },
+    "tokens": {
+      "violations": [
+        { "file": "src/components/Button.tsx", "line": 12, "value": "#2563EB", "type": "hexColor" },
+        { "file": "src/components/Button.tsx", "line": 19, "value": "12px", "type": "pixelValue" },
+        { "file": "src/components/Card.tsx", "line": 4, "value": "#FF00AA", "type": "hexColor" }
+      ]
+    }
+  }
+}
