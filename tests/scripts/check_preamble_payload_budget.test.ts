@@ -126,8 +126,8 @@ describe('the measurement is a deterministic census, not a sample', () => {
         const a = evaluate();
         const b = evaluate();
         expect(b.measured).toBe(a.measured);
-        expect(b.buckets.map((x) => [x.label, x.tokens, x.files])).toEqual(
-            a.buckets.map((x) => [x.label, x.tokens, x.files]),
+        expect(b.buckets.map((x) => [x.name, x.tokens, x.files])).toEqual(
+            a.buckets.map((x) => [x.name, x.tokens, x.files]),
         );
     });
 
@@ -136,7 +136,7 @@ describe('the measurement is a deterministic census, not a sample', () => {
         // across machines while staying stable on one — the failure a same-process
         // repeat cannot see.
         for (const b of evaluate().buckets) {
-            expect(b.files, `${b.label} must read at least one file`).toBeGreaterThan(0);
+            expect(b.files, `${b.name} must read at least one file`).toBeGreaterThan(0);
         }
     });
 });
