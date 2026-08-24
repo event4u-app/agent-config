@@ -91,19 +91,46 @@ export function measureDeterministicPayload(
     ];
 }
 
-export function evaluate(repoRoot?: string, budgetFile?: string): BudgetVerdict {
+/**
+ * A caller-supplied ceiling, and the one direction it may go.
+ *
+ * road-to-standing-payload-truth 1.1 arms this gate in CI behind a GRACE ceiling
+ * equal to the 2026-08-24 measurement, because HEAD is 28.4 % over the design
+ * ceiling and blocking at the design number would fail every pull request from
+ * the moment the workflow lands — nobody can shed 30,566 tokens inside the PR
+ * that arms the gate.
+ *
+ * **An override may only be LOOSER than the design ceiling, and it is refused if
+ * it is tighter.** That sounds backwards for one line and is the whole point: a
+ * tighter override would let a caller silently *lower* the bar this file owns,
+ * which is the config-weakening shape in reverse — the design ceiling stays the
+ * authority, and the override is a dated, expiring concession recorded in
+ * `ci_delivery`. Tightening happens by lowering `baseline_tokens`, in the file,
+ * with a reason, where a reviewer sees it.
+ */
+export function evaluate(repoRoot?: string, budgetFile?: string, overrideCeiling?: number): BudgetVerdict {
     const budget = readBudget(budgetFile);
     const buckets = measureDeterministicPayload(repoRoot);
     const measured = buckets.reduce((sum, b) => sum + b.tokens, 0);
-    const ceiling = Math.round(budget.baseline_tokens * (1 + budget.headroom_pct / 100));
+    const design = Math.round(budget.baseline_tokens * (1 + budget.headroom_pct / 100));
+    const ceiling =
+        overrideCeiling !== undefined && Number.isFinite(overrideCeiling) && overrideCeiling > design
+            ? overrideCeiling
+            : design;
     return { measured, baseline: budget.baseline_tokens, ceiling, withinBudget: measured <= ceiling, buckets };
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     const json = argv.includes('--format=json') || argv.includes('--json');
+    // `--ceiling <n>`: the grace ceiling the CI step reads out of
+    // `ci_delivery.grace_ceiling`. Read from the budget file there, never written
+    // in the workflow, so the number has exactly one home. A non-numeric or
+    // tighter-than-design value is IGNORED rather than honoured — see `evaluate`.
+    const ci = argv.indexOf('--ceiling');
+    const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
     let verdict: BudgetVerdict;
     try {
-        verdict = evaluate();
+        verdict = evaluate(undefined, undefined, override);
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
