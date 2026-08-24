@@ -1,0 +1,8 @@
+{"_comment":"Per-release skill-estate readings (road-to-skill-estate-drawdown 4.2). Backfilled from release tags rather than waiting for two future releases: `git archive <tag> src/skills | tar -x` then `measureSkillEstate` on the extracted tree. `git archive` works here where it does not for agents/ -- .gitattributes carries `/agents export-ignore`, src/skills has no such rule. Reproduce any row by re-running that pair; the definition lives in src/config/estate-count-budget.json metric.skill_count and metric.skill_description_tokens.","schema_version":1,"measured_at":"2026-08-24","tokeniser":"js-tiktoken cl100k_base, exact"}
+{"ref":"14.0.0","skill_count":290,"skill_description_tokens":11124,"deprecated_count":0}
+{"ref":"14.9.0","skill_count":291,"skill_description_tokens":11165,"deprecated_count":0}
+{"ref":"14.10.0","skill_count":291,"skill_description_tokens":11133,"deprecated_count":0}
+{"ref":"14.11.0","skill_count":299,"skill_description_tokens":11461,"deprecated_count":0}
+{"ref":"HEAD","skill_count":299,"skill_description_tokens":11461,"deprecated_count":0,"note":"Same as 14.11.0: the +8 landed in that release and nothing has moved since."}
+{"_finding":"The two dimensions move independently in real history, not only in a fixture. 14.9.0 to 14.10.0 holds skill_count at 291 while skill_description_tokens FALLS 11165 to 11133 -- a description edit with no file change, invisible to a count ratchet. That is the anti-gaming case the second dimension was added for, observed rather than constructed."}
+{"_direction":"Net direction from 14.0.0 to HEAD: +9 skills, +337 description tokens. The reviewer's ask is a falling net. This file is where that is read; two readings is the floor for a direction and four is what the tags allowed."}

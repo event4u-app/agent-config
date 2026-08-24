@@ -1618,6 +1618,15 @@ tasks:
     desc: "Fail when a new/promoted visible command uses an unapproved verb or a banned create-* prefix (6.0.0-C Phase 2; ADR-041)"
     cmd: ./scripts-run src/scripts/lint_command_verbs {{.QUIET_FLAG}}
 
+  check-skill-admissions:
+    silent: true
+    desc: >-
+      Fail when a skill added since the base ref carries no row in
+      agents/decisions/skill-admissions.jsonl, when an admission row's five
+      skill-growth answers are missing or boilerplate, or when a `rejected` row
+      names a skill that exists. Forward-only: the 299 pre-existing skills are
+      grandfathered by the diff scope.
+    cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
   check-command-examples:
     silent: true
     desc: >-

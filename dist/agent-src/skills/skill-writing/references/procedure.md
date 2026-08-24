@@ -22,14 +22,36 @@ rule. Skip only on explicit *"just do it"* bypass or trivial edits
 ### 0b. Skill-growth gate (new skill only)
 
 The skill count keeps climbing; nothing forces *"should this be a new skill at
-all?"*. Before creating a **new** skill, answer these in the PR body — a new
-skill that cannot answer them is a merge / guideline / no-op in disguise:
+all?"*. Before creating a **new** skill, answer these **in the ledger**,
+`agents/decisions/skill-admissions.jsonl` — a new skill that cannot answer them
+is a merge / guideline / no-op in disguise:
 
 1. **Family** — which capability family does it join? (engineering, product, …)
 2. **Capability** — what does it do that no existing skill does? Name the gap.
 3. **Why not extend / merge** — which nearest skill did you consider folding into, and why is a separate skill better?
 4. **Why not a guideline** — is this executable workflow (skill) or reference material (guideline)? Guideline-shaped content does not become a skill.
 5. **Visibility tier** — `core` or `lab`? Which pack?
+
+**The answers go in the ledger, not in the PR body.** That used to say PR body,
+and `check_finding_dispositions.ts:11` rejects that exact surface for findings in
+its own words — a comment is *"mutable and unaudited; it is transport, not a
+record"*. The consequence was measurable: **+8 skills landed in one release with
+no visible "no"**, because a refusal kept in a PR body is a refusal nobody can
+grep. One line, appended:
+
+```json
+{"skill":"<name>","decision":"admitted","date":"YYYY-MM-DD","family":"…","capability":"…","why_not_extend":"…","why_not_a_guideline":"…","visibility":"…"}
+```
+
+`check_skill_admissions` is forward-only: it requires a row only for skills added
+since the base ref, so nothing existing needs backfilling. It rejects an answer
+under 12 characters, because a one-word answer is the boilerplate the gate exists
+to catch rather than an answer.
+
+**A refusal is a row too**, and that is the half the PR body lost:
+`{"skill":"…","decision":"rejected","date":"…","instead":"…"}`. A rejected row may
+not name a skill that exists — a record saying a capability was refused while it
+ships is worse than no record.
 
 **Surface overlap before deciding** — run `./scripts-run src/scripts/skill_overlap`
 (or `audit_skill_overlap`) and read the nearest matches; a high-overlap hit is a

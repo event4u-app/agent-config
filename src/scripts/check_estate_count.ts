@@ -152,6 +152,7 @@ import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { materialiseSubtree } from './_lib/base_tree.js';
+import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
@@ -171,11 +172,35 @@ export interface EstateCounts {
     active_roadmaps: number;
     later_roadmaps: number;
     open_blockers: number;
+    /**
+     * Maintained `SKILL.md` files — `lifecycle: deprecated` excluded.
+     *
+     * A FOURTH corpus on the same machinery, added 2026-08-24 on AI council 2/2
+     * over the alternative of a second budget file and a second gate: the
+     * floor-from-the-base-ref machinery is the expensive part and should not be
+     * written twice, and a second ratchet is a second place to forget.
+     */
+    skill_count: number;
+    /**
+     * Exact-BPE tokens across those skills' `description:` fields.
+     *
+     * The second DIMENSION, not a companion figure. A count ratchet alone is
+     * gameable by merging four large skills into one file: the count falls, the
+     * payload a host must carry does not. `0` here means UNRESOLVED, never
+     * "no tokens" — see `tokensExact`.
+     */
+    skill_description_tokens: number;
 }
 
 export type MetricName = keyof EstateCounts;
 
-export const METRICS: readonly MetricName[] = ['active_roadmaps', 'later_roadmaps', 'open_blockers'];
+export const METRICS: readonly MetricName[] = [
+    'active_roadmaps',
+    'later_roadmaps',
+    'open_blockers',
+    'skill_count',
+    'skill_description_tokens',
+];
 
 export interface EstateBudget {
     /**
@@ -247,6 +272,16 @@ export interface EstateVerdict {
     authorisedGrowth: GrowthFinding[];
     /** The claims found in this change's diff, with their reasons. */
     claims: GrowthClaim[];
+    /**
+     * Metrics dropped from the compare, each with its reason.
+     *
+     * Never empty-and-silent: a skill metric drops when the base ref carries no
+     * `src/skills` (an old tag, a shallow clone) or when the tokeniser resolved
+     * on one side and not the other. Comparing an exact reading against a proxy
+     * one would move the number by more than the growth this gate exists to
+     * catch, so the metric is stated unavailable rather than guessed.
+     */
+    skippedMetrics: { metric: MetricName; reason: string }[];
     /** `null` when the diff half could not run; the reason is printed either way. */
     offsets: OffsetLedger | null;
     offsetSkipReason: string | null;
@@ -342,11 +377,24 @@ export function countEstate(repoRoot: string): EstateCounts {
     const stats = collect(roadmapRoot);
     const openOf = (rows: readonly { open_blockers: readonly unknown[] }[]): number =>
         rows.reduce((n, r) => n + r.open_blockers.length, 0);
+    const skills = measureSkillEstate(repoRoot);
     return {
         active_roadmaps: stats.length,
         later_roadmaps: countIn(roadmapRoot, 'later'),
         open_blockers: openOf(stats) + openOf(laterRoadmaps(roadmapRoot)),
+        skill_count: skills.skill_count,
+        // 0 stands for unresolved. `skillTokensExact` below is what the caller
+        // reads to tell that apart from a genuinely empty corpus, and the
+        // verdict skips the metric rather than comparing an exact reading
+        // against a proxy one — they differ by more than the growth a ratchet
+        // is trying to catch.
+        skill_description_tokens: skills.skill_description_tokens ?? 0,
     };
+}
+
+/** Did the tokeniser resolve under `root`? A ratchet must not mix the two modes. */
+export function skillTokensExact(root: string): boolean {
+    return measureSkillEstate(root).skill_description_tokens !== null;
 }
 
 /** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */
@@ -506,19 +554,57 @@ export function evaluate(
     // property, and unlike a number nobody has to remember to update it.
     let floor: EstateCounts | null = null;
     let floorSkipReason: string | null = null;
+    /** Set when the base ref carries no `src/skills` — the skill metrics drop. */
+    let skillFloorSkipReason: string | null = null;
+    /** Set when either side's tokeniser did not resolve — that ONE metric drops. */
+    let skillTokenSkipReason: string | null = null;
+    if (!skillTokensExact(repoRoot)) {
+        skillTokenSkipReason =
+            'the tokeniser did not resolve at HEAD; an exact reading may not be compared ' +
+            'against a proxy one';
+    }
     if (baseRef === null || baseRef === undefined) {
         floorSkipReason =
             'no base ref resolved (no origin/main, no merge-commit parent) — the floor cannot be measured';
     } else {
         const base = materialiseSubtree(repoRoot, baseRef, ROADMAPS_POSIX);
+        // TWO subtrees, because the estate now spans two corpora and the floor
+        // must be measured on the base ref's own tree for BOTH. Materialised
+        // separately rather than widening the first call: `materialiseSubtree`
+        // takes one prefix, and the roadmap tree must stay readable even when
+        // the skills read fails (a `src/skills`-less base ref is a real state —
+        // an old tag, a shallow clone), in which case the skill metrics skip and
+        // the roadmap metrics still ratchet.
+        const baseSkills = materialiseSubtree(repoRoot, baseRef, SKILLS_POSIX);
         try {
             if (base.error !== null || base.files === 0) {
                 floorSkipReason = `could not read ${ROADMAPS_POSIX} at ${baseRef} — ${base.error ?? 'no files'}`;
             } else {
-                floor = countEstate(base.root);
+                const roadmapFloor = countEstate(base.root);
+                if (baseSkills.error !== null || baseSkills.files === 0) {
+                    // Roadmap floor stands; the skill floor is stated as
+                    // unavailable and its metrics are dropped from the compare.
+                    floor = roadmapFloor;
+                    skillFloorSkipReason =
+                        `could not read ${SKILLS_POSIX} at ${baseRef} — ` +
+                        `${baseSkills.error ?? 'no files'}`;
+                } else {
+                    const s = measureSkillEstate(baseSkills.root);
+                    floor = {
+                        ...roadmapFloor,
+                        skill_count: s.skill_count,
+                        skill_description_tokens: s.skill_description_tokens ?? 0,
+                    };
+                    if (s.skill_description_tokens === null) {
+                        skillTokenSkipReason =
+                            `the tokeniser did not resolve at ${baseRef}; an exact reading may ` +
+                            'not be compared against a proxy one';
+                    }
+                }
             }
         } finally {
             fs.rmSync(base.root, { recursive: true, force: true });
+            fs.rmSync(baseSkills.root, { recursive: true, force: true });
         }
     }
 
@@ -571,11 +657,32 @@ export function evaluate(
         active_roadmaps: offsets?.exempt.length ?? 0,
         later_roadmaps: offsets?.parked.length ?? 0,
         open_blockers: 0,
+        // The skill corpus gets NO allowance, and that is the whole point of the
+        // metric: the defect it addresses is a corpus that grew +8 in one release
+        // with nothing objecting. An addition takes the `estate_growth_exempt`
+        // claim path — a recorded reason in the diff — or it fails.
+        skill_count: 0,
+        skill_description_tokens: 0,
+    };
+
+    /** Metrics dropped from the compare, with the reason, never silently. */
+    const skippedMetrics: { metric: MetricName; reason: string }[] = [];
+    const skipMetric = (metric: MetricName): boolean => {
+        if (skillFloorSkipReason !== null && (metric === 'skill_count' || metric === 'skill_description_tokens')) {
+            skippedMetrics.push({ metric, reason: skillFloorSkipReason });
+            return true;
+        }
+        if (skillTokenSkipReason !== null && metric === 'skill_description_tokens') {
+            skippedMetrics.push({ metric, reason: skillTokenSkipReason });
+            return true;
+        }
+        return false;
     };
 
     const over: GrowthFinding[] = [];
     if (floor !== null) {
         for (const metric of METRICS) {
+            if (skipMetric(metric)) continue;
             const live = counts[metric];
             const allowed = floor[metric] + allowance[metric];
             if (live > allowed) {
@@ -596,6 +703,7 @@ export function evaluate(
         growth,
         authorisedGrowth,
         claims,
+        skippedMetrics,
         offsets,
         offsetSkipReason,
         unpaid,
@@ -1010,8 +1118,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     for (const g of verdict.growth) {
         const allow = g.allowance > 0 ? ` (+${String(g.allowance)} allowed here)` : '';
+        // Two corpora share this gate, so the line names which one grew. It used
+        // to say "the roadmap estate" unconditionally, which was already the
+        // wrong noun for `skill_count` the moment that metric landed.
+        const corpus = g.metric.startsWith('skill_') ? 'the skill estate' : 'the roadmap estate';
         process.stderr.write(
-            `❌  the roadmap estate grew: ${g.metric} ${String(g.floor)} → ${String(g.live)}${allow}.\n` +
+            `❌  ${corpus} grew: ${g.metric} ${String(g.floor)} → ${String(g.live)}${allow}.\n` +
                 `    The floor is the measurement at ${verdict.floorRef ?? 'the base ref'}, not a number in a\n` +
                 '    config — so there is no number to edit and nothing to walk. The estate does not\n' +
                 '    walk down by itself, which is the defect this ratchet exists for. Either close,\n' +
@@ -1020,6 +1132,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 '    this change touches. The claim is read from the diff, so it authorises this\n' +
                 '    change and no later one, and the reason is a real sentence or it does not count.\n',
         );
+    }
+
+    // A dropped metric is REPORTED, never silent: a reader must be able to tell
+    // "within its ratchet" from "within the ratchet of the metrics that could be
+    // measured". This is the same distinction the floor-skip reason above keeps.
+    for (const s of verdict.skippedMetrics) {
+        process.stdout.write(`  ⏭️  ${s.metric} not compared — ${s.reason}\n`);
     }
 
     if (verdict.unpaid > 0 && verdict.offsets !== null) {
