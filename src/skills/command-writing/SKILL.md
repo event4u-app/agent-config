@@ -305,6 +305,41 @@ Bad description (vague, no outcome):
 
 > "PR command"
 
+## The `## Examples` section on a user-facing command
+
+Stated once, here — never repeated per command.
+
+A command whose `visibility` is `visible` or `advanced` carries an
+`## Examples` section: **1-3 filled invocations** in a fence, then **exactly
+one Why line**. Filled means a real path, a real ticket key, a real flag — a
+placeholder teaches nothing about what to type.
+
+The Why line uses one of two literals, `**Why it works:**` or a
+`### Why it works` heading, and cites **exactly one** pattern id from
+[`prompt-patterns.yml`](../../config/discovery/prompt-patterns.yml):
+`outcome-not-steps` · `self-check-loop` · `measurable-target` ·
+`give-the-artifact` · `point-at-reference` · `say-the-format`. One id, because
+the Why line's job is the part that transfers to a command the reader has not
+seen, and a line naming three patterns names none of them.
+
+~~~
+## Examples
+
+```
+/work fix the failing login test under tests/feature/auth
+```
+
+**Why it works:** measurable-target — it names the file instead of the symptom.
+~~~
+
+Enforced by `check_command_examples`, forward-only: the 23 in-scope commands as
+of 2026-08-24 are grandfathered in a frozen set inside the gate, and a command
+**added or promoted into `visible`/`advanced`** after that must comply. Two
+things the gate checks that are easy to miss — an invocation must resolve to
+the command's own `name:` (a rename otherwise leaves stale examples behind), and
+a flag used in an example must be documented in the body **outside** the
+section.
+
 ## Encode usage policy in the description
 
 Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,

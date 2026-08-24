@@ -242,6 +242,7 @@ tasks:
       - task: lint-no-new-atomic-commands
       - task: lint-command-budget
       - task: lint-command-verbs
+      - task: check-command-examples
       - task: lint-command-routing
       - task: lint-skill-names
       - task: lint-new-skill-gate

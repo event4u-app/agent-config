@@ -1,0 +1,56 @@
+# Controlled prompt-pattern vocabulary for command `## Examples` Why lines.
+#
+# Read by `src/scripts/check_command_examples.ts` (sub-check c). A Why line on
+# an example must cite exactly ONE id from `approved_patterns`.
+#
+# WHY A CONTROLLED VOCABULARY AND NOT FREE PROSE. A worked example teaches two
+# things: what to type, and why that phrasing works. The second half is the part
+# that transfers to a command the reader has not seen. Free prose lets every
+# author invent their own account of it, and six accounts of the same pattern
+# teach the pattern less well than one. The ids are deliberately few and
+# deliberately about the SHAPE of the invocation, never about the command.
+#
+# FORWARD-ONLY, on the `command-verbs.yml` precedent (ADR-041): only commands
+# added, or promoted into `visible` / `advanced`, since the frozen grandfather
+# set in `check_command_examples.ts` are required to carry Why lines. The
+# existing surface is grandfathered and melts down voluntarily.
+#
+# Adding an id here is a governance change: land it in its own PR with the
+# reason the six below could not carry the case. Do NOT add an id to make one
+# awkward example pass — rewrite the example to an existing pattern, or leave
+# the Why line off and accept the gate's finding.
+
+approved_patterns:
+  # Name the end state, not the sequence of steps to reach it. The agent picks
+  # the steps; a step list from the operator overconstrains it and goes stale.
+  - outcome-not-steps
+
+  # Build the verification into the ask, so the agent can tell green from done
+  # without a second turn.
+  - self-check-loop
+
+  # Point at a file, a ticket, a URL, a line range — a resolvable location
+  # beats a description of the thing.
+  - measurable-target
+
+  # Hand over the artifact itself rather than describing it: paste the log, the
+  # diff, the failing output.
+  - give-the-artifact
+
+  # Cite an existing convention, doc, or sibling implementation as the standard
+  # to match, instead of restating it inline.
+  - point-at-reference
+
+  # State the shape the answer must arrive in — a table, JSON, one sentence, a
+  # file path — when the shape is what makes it usable.
+  - say-the-format
+
+# The two literals a Why line may use. Adopted verbatim from
+# `lint_examples.ts` (`### Why it works` / `**Why it works:**`), the strings
+# the demo linter already detects for the SAME purpose on a different
+# population. Reusing the strings rather than the code keeps the two
+# conventions textually aligned without coupling the gates — the demo linter's
+# scope and observable behaviour are compatibility-pinned and stay untouched.
+why_line_literals:
+  - '**Why it works:**'
+  - '### Why it works'
