@@ -34,26 +34,23 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { pyRound } from '../_lib/value_ladder.js';
+// The formula, the stopword list and the tokenizer live in one Node-free
+// module so the pure stdio-lite dispatcher can share them instead of growing
+// a second copy (road-to-skill-delivery-over-mcp risk 6). Everything below is
+// the disk half — globbing, frontmatter, the CLI — which stays here.
+import {
+    scoreSkill,
+    skillTerms as _sharedSkillTerms,
+    tokenize as _sharedTokenize,
+    triggerTextFromFlatLines,
+    type RankOptions,
+} from '../../shared/skillRanking.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/skill_tools/score_skill_relevance.ts → parents[3] of the .py
 // (skill_tools → scripts → src → repo root) is the package root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 export const DEFAULT_SKILLS_DIR = path.join(ROOT, '.agent-src.uncondensed', 'skills');
-
-// re.compile(r"[a-z][a-z0-9]+") — applied to the lowercased text.
-const TOKEN_RE = /[a-z][a-z0-9]+/g;
-
-const STOPWORDS: ReadonlySet<string> = new Set([
-    'the', 'a', 'an', 'and', 'or', 'but', 'of', 'for', 'with', 'to', 'in',
-    'on', 'at', 'by', 'from', 'as', 'is', 'are', 'was', 'were', 'be', 'been',
-    'this', 'that', 'these', 'those', 'it', 'its', 'use', 'when', 'even',
-    'via', 'via:', 'into', 'onto', 'use:', 'skill', 'skills', 'task', 'tasks',
-    'code', 'file', 'files', 'doing', 'make', 'do', 'go', 'get', 'set',
-    'not', 'no', 'yes', 'any', 'some', 'all', 'one', 'two', 'new', 'old',
-    'user', 'users', 'our', 'your', 'their', 'they', 'we', 'you', 'i', 'me',
-]);
 
 /** Mirror Python len(str) — count Unicode code points, not UTF-16 units. */
 function pyLen(s: string): number {
@@ -65,16 +62,9 @@ function pyLen(s: string): number {
 }
 
 export function _tokenize(text: string): Set<string> {
-    const out = new Set<string>();
-    // The TOKEN_RE stopwords never contain digits, so the `len(t) > 2`
-    // filter is on code-point length (matches Python `len`).
-    const matches = text.toLowerCase().match(TOKEN_RE) ?? [];
-    for (const t of matches) {
-        if (!STOPWORDS.has(t) && pyLen(t) > 2) {
-            out.add(t);
-        }
-    }
-    return out;
+    // Single-sourced in `src/shared/skillRanking.ts`. Kept as an export because
+    // the CLI-parity suite and the hook path both import this name.
+    return _sharedTokenize(text);
 }
 
 export interface Frontmatter {
@@ -152,6 +142,8 @@ export interface Skill {
     description: string;
     personas: string[];
     terms: Set<string>;
+    /** `triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2. */
+    triggerText: string[];
 }
 
 function _load_skills(skillsDir: string): Skill[] {
@@ -167,11 +159,16 @@ function _load_skills(skillsDir: string): Skill[] {
             personas = [personas];
         }
         const personaList = [...personas];
+        const rawTriggers = fm['triggers'];
+        const triggerText = Array.isArray(rawTriggers)
+            ? triggerTextFromFlatLines(rawTriggers as string[])
+            : [];
         skills.push({
             name,
             description: desc,
             personas: personaList,
             terms: _tokenize(name + ' ' + desc),
+            triggerText,
         });
     }
     return skills;
@@ -214,43 +211,29 @@ function _globSkillMd(root: string): string[] {
     return dirs.map((name) => path.join(root, name, 'SKILL.md'));
 }
 
-function _score(taskTerms: Set<string>, skill: Skill): number {
-    if (taskTerms.size === 0) {
-        return 0;
-    }
-    const skillTerms = skill.terms;
-    let inter = 0;
-    for (const t of taskTerms) {
-        if (skillTerms.has(t)) {
-            inter++;
-        }
-    }
-    // overlap = |task ∩ skill| / max(|task|, 1)
-    const overlap = inter / Math.max(taskTerms.size, 1);
-    let personaHit = 0.0;
-    // task_lower = " ".join(task_terms) — Set iteration order = insertion order
-    // (matches Python set-iteration only incidentally; the membership tests
-    // below are order-independent so the result is deterministic).
-    const taskLower = [...taskTerms].join(' ');
-    for (const persona of skill.personas) {
-        const slug = String(persona).toLowerCase();
-        const parts = slug.split('-');
-        if (taskLower.includes(slug) || parts.some((part) => taskTerms.has(part))) {
-            personaHit = 1.0;
-            break;
-        }
-    }
-    return pyRound(overlap * 70 + personaHit * 30, 0);
+function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): number {
+    // Single-sourced in `src/shared/skillRanking.ts`. Under keyword-v1 (the
+    // default) `skill.terms` is already `tokenize(name + ' ' + description)`, so
+    // the precomputed set is reused unchanged; keyword-v2 re-derives the term
+    // set with the skill's trigger prose folded in.
+    const rankable = {
+        name: skill.name,
+        description: skill.description,
+        personas: skill.personas,
+        triggerText: skill.triggerText,
+    };
+    const terms = opts.includeTriggers ? _sharedSkillTerms(rankable, opts) : skill.terms;
+    return scoreSkill(taskTerms, rankable, terms);
 }
 
 export type RankRow = [string, number, string[]];
 
-export function rank(task: string, skillsDir: string): RankRow[] {
+export function rank(task: string, skillsDir: string, opts: RankOptions = {}): RankRow[] {
     const taskTerms = _tokenize(task);
     const skills = _load_skills(skillsDir);
     const rows: RankRow[] = [];
     for (const s of skills) {
-        const score = _score(taskTerms, s);
+        const score = _score(taskTerms, s, opts);
         if (score > 0) {
             rows.push([s.name, score, [...s.personas]]);
         }

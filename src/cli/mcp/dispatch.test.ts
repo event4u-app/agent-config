@@ -99,9 +99,15 @@ describe('dispatch — resources', () => {
     });
 });
 
-describe('dispatch — read-only boundary (ADR-112)', () => {
-    it('tools/list is empty', () => {
-        expect((ok(dispatch(TREE, ID, req('tools/list'))).result as { tools: unknown[] }).tools).toEqual([]);
+describe('dispatch — read-only boundary (ADR-085)', () => {
+    // Phase 1.1 of `road-to-skill-delivery-over-mcp` moved this boundary by
+    // exactly two READ-ONLY discovery tools. The boundary itself is unchanged:
+    // nothing here shells out, writes, or executes. Full surface contract lives
+    // in `tests/scripts/mcp_lite_tools.test.ts`.
+    it('tools/list is the two discovery tools and nothing else', () => {
+        const tools = (ok(dispatch(TREE, ID, req('tools/list'))).result as { tools: { name: string }[] })
+            .tools;
+        expect(tools.map((t) => t.name).sort()).toEqual(['read_skill', 'suggest_skill_for_task']);
     });
     it('tools/call returns the not_implemented envelope in error.data', () => {
         const e = err(dispatch(TREE, ID, req('tools/call', { name: 'memory_store' })));

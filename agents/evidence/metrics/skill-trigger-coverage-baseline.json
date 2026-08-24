@@ -1,0 +1,36 @@
+{
+  "_comment": "Phase 3.2 of road-to-skill-delivery-over-mcp — the skill-trigger ratchet. `skills_with_triggers` is a FLOOR (coverage may only rise) and `activations` is a CEILING (matrix noise may only fall or hold). Enforced by `./scripts-run src/scripts/trigger_coverage --scope skill --ratchet`, which exits 1 on a breach and also exits 1 when this file is missing — a ratchet that silently no-ops without its baseline is the failure a ratchet exists to prevent. Re-anchor this file in the same change as each tranche, and never to make a red run green.",
+  "schema": 1,
+  "measured_at": "2026-08-23",
+  "commit": "3fe3f1791",
+  "corpus": "tests/eval/routing-matrix (499 prompts, measured — the 496 published in six other sites is stale)",
+  "skills_with_triggers": 12,
+  "activations": 3,
+  "history": [
+    {
+      "at": "2026-08-23",
+      "tranche": "0 — the instrument shipped empty of adopters",
+      "skills_with_triggers": 4,
+      "activations": 3,
+      "note": "The roadmap's D6 says 19 skills declare `triggers:`. The measured count was 4. `rule-writing` matches a `^triggers:` grep only inside a fenced example, which is where the higher figure probably came from."
+    },
+    {
+      "at": "2026-08-23",
+      "tranche": "1 — eight Tier-B skills, phrase triggers only",
+      "skills_with_triggers": 12,
+      "activations": 3,
+      "seeded": [
+        "pest-testing",
+        "laravel-migration",
+        "multi-tenancy",
+        "secrets-management",
+        "playwright-testing",
+        "runway-cognition",
+        "privacy-review",
+        "terraform"
+      ],
+      "note": "Coverage 4 -> 12 with activations held at 3: the eighteen seeded phrases fire on ZERO of the 499 matrix prompts, so this tranche raised coverage without raising noise. Tier B was the selection criterion per the phase; every one of the eight is in Tier B of agents/runtime/state/skill-tiers.json. Only `phrase` triggers were used — a bare `keyword` is the over-broad shape the rule-side census was built to catch."
+    }
+  ],
+  "rule_side_census_note": "The roadmap's verify asks that the unintended-activation census stay at or below 433 after each tranche. That number is RULE-side, and `trigger_coverage --scope skill` states in its own output that it cannot move from this scope. Verified rather than assumed: `--scope rule` reports 26/26 before and after this tranche, and a replay of all 499 matrix prompts through `fired_rules` shows this change moving no rule activation."
+}

@@ -13,6 +13,8 @@
  */
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+
+import { INDEXED_TRIGGER_KEYS } from '../../shared/skillRanking.js';
 import { join, resolve, basename, relative, sep } from 'node:path';
 import * as yaml from 'js-yaml';
 
@@ -34,11 +36,24 @@ export interface ContentEntry {
     kind: EntryKind;
     /** `text/markdown` for resources; omitted for prompts. */
     mime_type?: string;
+    /** Frontmatter `personas:` — the ranker's persona-match term source. */
+    personas?: string[];
+    /** `triggers[].keyword` + `triggers[].phrase` text. Indexed only on request. */
+    trigger_text?: string[];
 }
 
 export interface ContentTree {
     /** uri → entry. */
     uris: Record<string, ContentEntry>;
+    /**
+     * Skill names predicted to reach the model WITH their description (Tier A),
+     * read from `agents/runtime/state/skill-tiers.json` when it exists.
+     *
+     * `undefined` is not "no skills are Tier A" — it is "nobody computed a
+     * split on this machine", which is the default state, and the recovery tool
+     * reports it as `tiers: unknown` rather than silently filtering nothing.
+     */
+    tier_a?: ReadonlySet<string>;
 }
 
 const MIME_MARKDOWN = 'text/markdown';
@@ -61,6 +76,33 @@ function parseFrontmatter(raw: string): { fm: Record<string, unknown>; body: str
 
 function str(v: unknown, fallback = ''): string {
     return typeof v === 'string' ? v : fallback;
+}
+
+/** Frontmatter `personas:` — a bare string counts as a one-element list. */
+function personaList(v: unknown): string[] {
+    if (typeof v === 'string') return v ? [v] : [];
+    if (!Array.isArray(v)) return [];
+    return v.filter((x): x is string => typeof x === 'string');
+}
+
+/**
+ * `triggers[].keyword` + `triggers[].phrase` as plain text.
+ *
+ * Which keys count is `INDEXED_TRIGGER_KEYS`, shared with the disk-side reader
+ * so the two cannot disagree about what a trigger contributes.
+ */
+function triggerText(v: unknown): string[] {
+    if (!Array.isArray(v)) return [];
+    const out: string[] = [];
+    for (const item of v) {
+        if (!item || typeof item !== 'object') continue;
+        const rec = item as Record<string, unknown>;
+        for (const key of INDEXED_TRIGGER_KEYS) {
+            const val = rec[key];
+            if (typeof val === 'string' && val) out.push(val);
+        }
+    }
+    return out;
 }
 
 /** Recursively collect `*.md` files under `dir` (empty if `dir` is absent). */
@@ -97,6 +139,13 @@ function makeEntry(
         kind,
     };
     if (kind === 'rule' || kind === 'guideline') entry.mime_type = MIME_MARKDOWN;
+    // Ranking inputs — only skills are ranked, so only skills carry them.
+    if (kind === 'skill') {
+        const personas = personaList(fm.personas);
+        if (personas.length > 0) entry.personas = personas;
+        const triggers = triggerText(fm.triggers);
+        if (triggers.length > 0) entry.trigger_text = triggers;
+    }
     return entry;
 }
 
@@ -106,6 +155,26 @@ function makeEntry(
  * (a partial install still serves what is present). Never throws on a single
  * malformed file — that file is skipped with a stderr note.
  */
+/**
+ * Tier A names, or `undefined` when no split has been computed here.
+ *
+ * The file is gitignored and per-machine (`compute_skill_tiers` writes it), so
+ * absent is the common case and must stay distinguishable from empty. A
+ * malformed or unreadable file is also `undefined`: a half-read split would
+ * filter the wrong skills out of the one tool that exists to find them.
+ */
+export function loadTierA(packageRoot: string): ReadonlySet<string> | undefined {
+    const file = resolve(packageRoot, 'agents', 'runtime', 'state', 'skill-tiers.json');
+    if (!existsSync(file)) return undefined;
+    try {
+        const parsed = JSON.parse(readFileSync(file, 'utf8')) as { tier_a?: unknown };
+        if (!Array.isArray(parsed.tier_a)) return undefined;
+        return new Set(parsed.tier_a.filter((n): n is string => typeof n === 'string'));
+    } catch {
+        return undefined;
+    }
+}
+
 export function loadContentTree(packageRoot: string): ContentTree {
     const uris: Record<string, ContentEntry> = {};
     const add = (e: ContentEntry): void => {
@@ -150,7 +219,8 @@ export function loadContentTree(packageRoot: string): ContentTree {
         safe(() => add(makeEntry(f, 'guideline', 'guideline', fallback)), f);
     }
 
-    return { uris };
+    const tierA = loadTierA(packageRoot);
+    return tierA ? { uris, tier_a: tierA } : { uris };
 }
 
 /** All entries of the given kinds (insertion order). */

@@ -731,6 +731,26 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified: 2026-08-22
 
+### claim: mcp-registered-server-standing-cost
+- claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 20-tool surface costs 3,886 tokens of it while the two-tool lite surface is capped at 600.
+- kind: quant
+- evidence: agents/evidence/metrics/mcp-tool-standing-cost.jsonl#tool_search_threshold
+- status: backed
+- last_verified: 2026-08-23
+
+### claim: skill-tiering-h1-unmeasured
+- claim: Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established, and `projection.mode: tiered` therefore stays opt-in.
+- kind: quant
+- evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer
+- status: backed
+- last_verified: 2026-08-23
+
+### claim: skill-tiering-h2-costs-more-by-default
+- claim: On a default Claude Code install `projection.mode: tiered` costs MORE standing context than `legacy-all` — 2,259 tokens against 1,956 — because the host already caps description delivery at roughly the Tier A set; the 82% saving exists only against a 100%-delivery counterfactual.
+- kind: quant
+- evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#H2
+- status: backed
+- last_verified: 2026-08-23
 ### claim: enforcement-undeclared-denominator
 - claim: Exactly one enforcement denominator is quotable, it names the frame that produced it, and no published doc restates it by hand.
 - kind: quant

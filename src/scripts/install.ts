@@ -74,6 +74,7 @@ import type * as YamlModule from 'yaml';
 import { build_merge_entries } from './_lib/json_pointers.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
+import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -1114,6 +1115,18 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     const bridge = { enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } };
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
+
+// `.mcp.json` registration + the skill-tier projection lever live in
+// `_lib/mcp_bridge.ts`; only the call sites are here (see that module's header
+// for why). Names are forwarded so the export surface is unchanged.
+const ensure_mcp_bridge = mcp_bridge.makeEnsureMcpBridge(merge_json_file);
+const _resolve_tier_b = mcp_bridge.resolveTierB;
+const _tier_b_advisory = mcp_bridge.tierBAdvisory;
+const _prune_tier_b_modules = (
+    dr: Record<string, DeployResult>,
+    tier_b: ReadonlySet<string>,
+): [number, Record<string, DeployResult>] =>
+    _prune_modules_by(dr, mcp_bridge.tierBPrunePredicate(tier_b));
 
 const CURSOR_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string]> = [
     ['session_start', 'sessionStart'],
@@ -2472,7 +2485,7 @@ function _file_entry(p: string, kind: string, hash_content: boolean): Record<str
     };
 }
 
-type DeployResult = [number, number, string, string[]];
+type DeployResult = scoped_projection.DeployTuple;
 
 function _files_by_tool_from_deploy(
     deploy_results: Record<string, DeployResult>,
@@ -3397,91 +3410,10 @@ function _verify_deploy_targets(anchor: string, plan: ReadonlyArray<readonly [st
     return missing;
 }
 
-/**
- * Remove skills/commands matching `is_pruned` from a completed deploy.
- *
- * road-to-install-contract-stability Phase 2 Step 2 (generalized in
- * road-to-credible-install Phase 2 to back both the core-only lab prune and
- * the scoped-projection pack prune off the same mechanics). Skills are
- * pruned by whole directory (tier decided by the skill's `SKILL.md`
- * frontmatter); commands by file (own frontmatter). Rules / personas /
- * contexts / templates are core/shared and left intact. Returns
- * `[pruned_count, adjusted_results]` with the pruned paths removed from each
- * tool's `written_paths` so the manifest never records them.
- */
-function _prune_modules_by(
-    deploy_results: Record<string, DeployResult>,
-    is_pruned: (md_path: string) => boolean,
-): [number, Record<string, DeployResult>] {
-    let pruned = 0;
-    const adjusted: Record<string, DeployResult> = {};
-    for (const tool_id of Object.keys(deploy_results)) {
-        const [written, skipped, status, paths] = deploy_results[tool_id] as DeployResult;
-        const pruned_skill_dirs = new Set<string>();
-        for (const p of paths) {
-            const parts = p.split(path.sep);
-            if (parts.includes('skills')) {
-                const i = parts.indexOf('skills');
-                if (i + 1 < parts.length) {
-                    const skill_root = parts.slice(0, i + 2).join(path.sep);
-                    if (!pruned_skill_dirs.has(skill_root)) {
-                        const skillmd = path.join(skill_root, 'SKILL.md');
-                        if (pathExists(skillmd) && is_pruned(skillmd)) {
-                            pruned_skill_dirs.add(skill_root);
-                        }
-                    }
-                }
-            }
-        }
-        const keep: string[] = [];
-        const delete_files: string[] = [];
-        for (const p of paths) {
-            const parts = p.split(path.sep);
-            let is_target = false;
-            if (parts.includes('skills')) {
-                const i = parts.indexOf('skills');
-                if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
-                    is_target = true;
-                }
-            } else if (
-                parts.includes('commands') &&
-                path.extname(p) === '.md' &&
-                is_pruned(p)
-            ) {
-                is_target = true;
-            }
-            (is_target ? delete_files : keep).push(p);
-        }
-        for (const d of pruned_skill_dirs) {
-            fs.rmSync(d, { recursive: true, force: true });
-        }
-        for (const p of delete_files) {
-            if (p.split(path.sep).includes('commands') && pathExists(p)) {
-                try {
-                    fs.unlinkSync(p);
-                } catch {
-                    // OSError → swallow, mirroring the .py.
-                }
-            }
-        }
-        pruned += delete_files.length;
-        adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
-    }
-    return [pruned, adjusted];
-}
-
-/**
- * Remove lab-tier skills/commands from a completed deploy (core-only).
- *
- * road-to-install-contract-stability Phase 2 Step 2. Thin wrapper over
- * `_prune_modules_by` — see that function for the mechanics.
- */
-function _prune_lab_modules(
-    deploy_results: Record<string, DeployResult>,
-    lab_ids: Set<string>,
-): [number, Record<string, DeployResult>] {
-    return _prune_modules_by(deploy_results, (p) => surface_tiers.is_lab_artefact(p, lab_ids));
-}
+// The prune mechanics moved WHOLE into `_lib/scoped_projection.ts` beside the
+// predicate they consume — a pure move, names forwarded, no behaviour change.
+const _prune_modules_by = scoped_projection.prune_modules_by;
+const _prune_lab_modules = scoped_projection.prune_lab_modules;
 
 // --- Scoped-projection prune (road-to-credible-install Phase 2) ----------
 //
@@ -3549,10 +3481,10 @@ function _resolve_global_settings_path(): string | null {
  */
 function _resolve_scoped_projection(
     package_root: string,
-): { mode: 'scoped' | 'legacy-all'; active_packs: string[] } {
+): { mode: mcp_bridge.ProjectionMode; active_packs: string[] } {
     const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
     const projection = _isPlainObject(doc['projection']) ? (doc['projection'] as Record<string, unknown>) : {};
-    const mode: 'scoped' | 'legacy-all' = projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all';
+    const mode = mcp_bridge.projectionModeOf(projection['mode']);
     const runtime = _isPlainObject(doc['runtime']) ? (doc['runtime'] as Record<string, unknown>) : {};
     const active_packs_raw = runtime['active_packs'];
     const active_packs = Array.isArray(active_packs_raw)
@@ -3782,6 +3714,13 @@ function install_global(
     // here and restores the full tree — never a partial or crashed prune.
     try {
         const { mode, active_packs } = _resolve_scoped_projection(package_root);
+        if (mode === 'tiered') {
+            const outcome = mcp_bridge.applyTieredPrune(deploy_results, package_root, _prune_modules_by);
+            deploy_results = outcome.deployResults;
+            if (!state.QUIET && outcome.message !== null) {
+                (outcome.level === 'warn' ? warn : info)(outcome.message);
+            }
+        }
         if (mode === 'scoped') {
             const packs_registry = _load_packs_registry(package_root);
             const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
@@ -5225,7 +5164,10 @@ function _main_project_install(
             ...ensure_augment_bridge(project_root, opts.force),
         ];
         if (_is_tool_enabled(tools, 'claude-code')) {
-            merged_keys_by_tool['claude-code'] = ensure_claude_bridge(project_root, opts.force);
+            merged_keys_by_tool['claude-code'] = [
+                ...ensure_claude_bridge(project_root, opts.force),
+                ...ensure_mcp_bridge(project_root, opts.force),
+            ];
         }
         if (_is_tool_enabled(tools, 'cursor')) {
             merged_keys_by_tool['cursor'] = ensure_cursor_bridge(project_root, opts.force);
@@ -5247,6 +5189,11 @@ function _main_project_install(
         if (_is_tool_enabled(tools, 'zed')) ensure_zed_bridge(project_root, opts.force);
         if (_is_tool_enabled(tools, 'jetbrains')) ensure_jetbrains_bridge(project_root, opts.force);
         if (_is_tool_enabled(tools, 'kiro')) ensure_kiro_bridge(project_root, opts.force);
+    }
+
+    const tier_advisory = _tier_b_advisory(package_root);
+    if (tier_advisory !== null && !state.QUIET) {
+        info(tier_advisory);
     }
 
     if (opts.augment_user_hooks) {
@@ -5441,6 +5388,10 @@ export {
     GEMINI_DISPATCHER_BINDINGS,
     ensure_cursor_bridge,
     ensure_cline_bridge,
+    ensure_mcp_bridge,
+    _prune_tier_b_modules,
+    _resolve_tier_b,
+    _tier_b_advisory,
     ensure_windsurf_bridge,
     ensure_gemini_bridge,
     // road-to-credible-install Phase 2: exported for the scoped-projection

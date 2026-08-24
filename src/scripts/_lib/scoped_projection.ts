@@ -260,3 +260,99 @@ export function scoped_projection_stats(
         workspaces: [...SCOPED_ACTIVE_WORKSPACES].sort(),
     };
 }
+
+/** The installer's deploy tuple: [written, skipped, status, paths]. */
+export type DeployTuple = [number, number, string, string[]];
+
+// --- Deploy-tree prune mechanics ------------------------------------------
+// Moved here WHOLE from `install.ts` (a pure move, names forwarded there) so
+// the prune sits beside `is_pruned_under_scoped`, the predicate it consumes —
+// which is what this module's header says it exists for. It also pays for the
+// `check_source_size_budget` ratchet, which counts every line in a file above
+// 1,500 and which `install.ts` at 5,466 lines cannot grow past.
+
+/**
+ * Remove skills/commands matching `is_pruned` from a completed deploy.
+ *
+ * road-to-install-contract-stability Phase 2 Step 2 (generalized in
+ * road-to-credible-install Phase 2 to back both the core-only lab prune and
+ * the scoped-projection pack prune off the same mechanics). Skills are
+ * pruned by whole directory (tier decided by the skill's `SKILL.md`
+ * frontmatter); commands by file (own frontmatter). Rules / personas /
+ * contexts / templates are core/shared and left intact. Returns
+ * `[pruned_count, adjusted_results]` with the pruned paths removed from each
+ * tool's `written_paths` so the manifest never records them.
+ */
+export function prune_modules_by(
+    deploy_results: Record<string, DeployTuple>,
+    is_pruned: (md_path: string) => boolean,
+): [number, Record<string, DeployTuple>] {
+    let pruned = 0;
+    const adjusted: Record<string, DeployTuple> = {};
+    for (const tool_id of Object.keys(deploy_results)) {
+        const [written, skipped, status, paths] = deploy_results[tool_id] as DeployTuple;
+        const pruned_skill_dirs = new Set<string>();
+        for (const p of paths) {
+            const parts = p.split(path.sep);
+            if (parts.includes('skills')) {
+                const i = parts.indexOf('skills');
+                if (i + 1 < parts.length) {
+                    const skill_root = parts.slice(0, i + 2).join(path.sep);
+                    if (!pruned_skill_dirs.has(skill_root)) {
+                        const skillmd = path.join(skill_root, 'SKILL.md');
+                        if (fs.existsSync(skillmd) && is_pruned(skillmd)) {
+                            pruned_skill_dirs.add(skill_root);
+                        }
+                    }
+                }
+            }
+        }
+        const keep: string[] = [];
+        const delete_files: string[] = [];
+        for (const p of paths) {
+            const parts = p.split(path.sep);
+            let is_target = false;
+            if (parts.includes('skills')) {
+                const i = parts.indexOf('skills');
+                if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
+                    is_target = true;
+                }
+            } else if (
+                parts.includes('commands') &&
+                path.extname(p) === '.md' &&
+                is_pruned(p)
+            ) {
+                is_target = true;
+            }
+            (is_target ? delete_files : keep).push(p);
+        }
+        for (const d of pruned_skill_dirs) {
+            fs.rmSync(d, { recursive: true, force: true });
+        }
+        for (const p of delete_files) {
+            if (p.split(path.sep).includes('commands') && fs.existsSync(p)) {
+                try {
+                    fs.unlinkSync(p);
+                } catch {
+                    // OSError → swallow, mirroring the .py.
+                }
+            }
+        }
+        pruned += delete_files.length;
+        adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
+    }
+    return [pruned, adjusted];
+}
+
+/**
+ * Remove lab-tier skills/commands from a completed deploy (core-only).
+ *
+ * road-to-install-contract-stability Phase 2 Step 2. Thin wrapper over
+ * `_prune_modules_by` — see that function for the mechanics.
+ */
+export function prune_lab_modules(
+    deploy_results: Record<string, DeployTuple>,
+    lab_ids: Set<string>,
+): [number, Record<string, DeployTuple>] {
+    return prune_modules_by(deploy_results, (p) => surface_tiers.is_lab_artefact(p, lab_ids));
+}

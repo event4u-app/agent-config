@@ -31,6 +31,42 @@ estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 202
 > cited elsewhere as a foundation until the phase that would establish it has
 > its `verify:` line green.
 
+## Outcome — `measured-null`, closed 2026-08-23
+
+Closed by an autonomous drain run. **22 of 25 boxes ticked, 3 transferred**, no
+deferred item.
+
+**What shipped.** The turnkey server serves two read-only discovery tools
+(`suggest_skill_for_task`, `read_skill`) at 222 tok; the installer registers it
+in `.mcp.json`, so the Iron Law in `missing-skill-recovery.md` is fulfillable on
+the documented end-user path for the first time; that rule gained the branch it
+lacked for when the tool is still absent; the host's listing budget is modelled
+and checked; `projection.mode: tiered` exists, opt-in; the relevance formula is
+single-sourced so the two servers cannot drift; and skill-trigger coverage is a
+ratchet with one seeded tranche.
+
+**The verdict on the roadmap's own hypotheses.** H2 holds arithmetically and its
+useful reading is the opposite of the flattering one — on a default install
+`tiered` costs **more** standing context than `legacy-all` (2,259 tok against
+1,956), because the host already caps delivery at roughly the Tier A set. H1 —
+whether tiering improves selection — is **not established and not establishable
+without a live host arm**, which is the pre-registered `measured-null` branch of
+4.4. So `tiered` stays opt-in with no context-saving fallback argument, and both
+nulls are in `docs/CLAIMS.md`.
+
+**Six premise defects were found while executing, each recorded at its step:**
+the 496-line matrix carries expected *rules* and cannot score a skill ranker; it
+holds 499 prompts, not 496; the catalogue is 294 skills, not 290; the kernel
+server's standing cost is 3,886 tok (payload) / 1,791 (descriptions), not ~1,972;
+**4** skills declared `triggers:`, not 19; and `mcp:turnkey-parity` /
+`agents/roadmaps/roadmaps-progress.md` do not exist (`mcp:parity-stdio` and
+`agents/roadmaps-progress.md` do, the latter generated).
+
+**One decision was routed to the AI council and came back INCONCLUSIVE** — both
+members `quota_exhausted` — so 1.3's mechanism was decided on written tree
+evidence instead, choosing the option that required no acceptance criterion to be
+weakened. Details at the step.
+
 ## Goal
 
 On the default Claude Code install, every one of the 290 projected skills is
@@ -114,29 +150,29 @@ assumptions:
 
 ## Phase 0 — Pin the host model and the baseline before touching delivery
 
-- [ ] **0.1 Write the host listing-budget model into the tree as a checked
+- [x] **0.1 Write the host listing-budget model into the tree as a checked
       artefact, with its upstream provenance and date.** A small pure
       function: given `(context_window, fraction=0.01, per_entry_cap=1536,
       usage_order)` and the projected catalogue, return the set of skills whose
       descriptions survive. Name the assumptions that are upstream prose
       rather than repo measurement (fill order, wrapper overhead).
-      verify: `tests/scripts/host_listing_model.test.ts` pins that the model, run over the 2026-08-08 projection with an empty usage order, marks the five sampled-bare skills in `skill-catalogue-description-delivery.md` as **not surviving** and the three sampled-described ones as **surviving**; any disagreement is recorded in the test as a known gap, not suppressed.
-- [ ] **0.2 Record the kernel server's standing tool cost and the threshold it
+      verify (discharged): `tests/scripts/host_listing_model.test.ts` (10 tests) pins `src/scripts/_lib/host_listing_model.ts`. The model DISAGREES with the 2026-08-08 observation on **four of eight** sampled entries, and the test asserts the disagreement by name rather than tuning it away — `context-document` and `mcp` predicted bare where observed described, `comp-banding` and `composer-packages` the reverse. The gap is structural, not a coding error: `context-document` sorts strictly between two observed-bare neighbours, so NO position-ordered fill over an alphabetical catalogue can reproduce that session. All five upstream-prose assumptions are returned by id with a reason (`fill-order-is-invocation-frequency` is the one that fails here). What the model IS good for: the budget arithmetic, the per-entry cap and the direction — 44 of 294 descriptions survive an 8,000-char budget.
+- [x] **0.2 Record the kernel server's standing tool cost and the threshold it
       sits under.** One row in `agents/evidence/metrics/` with the chars/4
       figure over `tools.ts` allowlist descriptions, the Tool Search threshold
       and the source date, so "registering the kernel server is free" can never
       be asserted again without a re-measurement.
-      verify: the metric row exists and `grep -c "1972\|tool_search_threshold" <row>` ≥ 2; `docs/CLAIMS.md` gains an entry that quotes it.
-- [ ] **0.3 Freeze the routing-matrix baseline for the incumbent ranker.**
+      verify (discharged): `agents/evidence/metrics/mcp-tool-standing-cost.jsonl` exists; `grep -c "1972\|tool_search_threshold"` = **2**; `docs/CLAIMS.md` gains `claim:mcp-registered-server-standing-cost` (backed, pointer resolves) and the derived denominator in `internal/reports/exec-evidence-feasibility.json` was moved 49 → 50 in the same change. DEFECT IN THE PREMISE: the ~1,972 tok figure is not reproducible — descriptions measure **1,791** — and it counts the wrong thing, because the host loads the whole `tools/list` payload, schemas included, which is **3,886 tok**, roughly 2.2x. Both are recorded AND asserted in `tests/scripts/mcp_lite_tools.test.ts`, so the row cannot age silently.
+- [x] **0.3 Freeze the routing-matrix baseline for the incumbent ranker.**
       Run `trigger_coverage.ts --scope skill` and `score_skill_relevance` over
       the 496-line corpus and record top-1 / top-3 hit rate against the
       corpus's expected skill per line. This is the number Phase 3 and Phase 4
       must beat and it does not exist yet.
-      verify: `agents/evidence/metrics/skill-ranker-baseline.json` carries `corpus_lines: 496`, `top1`, `top3`, `ranker: keyword-v1`, `commit: d1861bad`.
+      verify (discharged): `agents/evidence/metrics/skill-ranker-baseline.json` carries `ranker: keyword-v1`, `top1: 0.615`, `top3: 0.769`, `corpus_lines: 499`, `commit: 53ac0adb4`. Regenerate with `./scripts-run src/scripts/measure_skill_ranker_baseline`. TWO DEFECTS IN THE PREMISE, both recorded in the file: (a) the 496-line routing matrix is labelled with the expected **rule** and never a skill, so no top-1/top-3 can be computed over it — the rates are measured against `tests/eval/corpus-{dev,non-dev}.yaml`, the 26 prompts that DO carry expected skills, and the matrix is reported beside them as coverage-without-accuracy (495 of 499 answered, mean top score 19.98); (b) 496 is stale, the matrix holds **499**, and the old figure still stands in five other sites. Also found: `score_skill_relevance`'s own `DEFAULT_SKILLS_DIR` points at `.agent-src.uncondensed/skills`, which is EMPTY in a normal checkout — a caller taking the default ranks nothing.
 
 ## Phase 1 — Make the promised tool reachable on the default path (D1, D2, D3)
 
-- [ ] **1.1 Add a minimal skill-discovery surface to the lite server.** Exactly
+- [x] **1.1 Add a minimal skill-discovery surface to the lite server.** Exactly
       two tools, ported from the kernel handlers, read-only, shell-free:
       `suggest_skill_for_task` (unchanged contract: `task`, `limit`, returns
       names + scores + personas, never bodies) and `read_skill`
@@ -144,31 +180,31 @@ assumptions:
       catalogue root, refuses traversal). No `list_skills` — the host already
       lists names, and a 290-name tool result is the context cost this
       roadmap exists to avoid.
-      verify: `dispatch.ts` `tools/list` returns exactly 2 entries; `task mcp:turnkey-parity` stays green for prompts/resources; chars/4 of the two descriptions + schemas ≤ 600 tok and that number is asserted in a test.
-- [ ] **1.2 Add server `instructions` that tell the host when to search.**
+      verify (discharged): `tools/list` returns exactly 2 entries, checked by NAME not count (`read_skill`, `suggest_skill_for_task`) in `tests/scripts/mcp_lite_tools.test.ts` and in `src/cli/mcp/dispatch.test.ts`. Standing cost **222 tok** (887 chars) against the 600 cap, asserted. Both tools are pure over the content tree; `read_skill` resolves `skill://<name>` through the uri map and builds no path, so traversal is unexpressible — the separator guard is kept anyway so a future path-based backend inherits it. PARITY: the task is `mcp:parity-stdio`, not `mcp:turnkey-parity` (which does not exist); it asserted `tools/list` was EMPTY, so it was updated to assert the two names and is green — `✅ node tools/list: read_skill,suggest_skill_for_task`, 493 prompts and 228 resources matching. Risk 6 is discharged structurally as well as by that check: the formula now lives once, in `src/shared/skillRanking.ts`, imported by both servers.
+- [x] **1.2 Add server `instructions` that tell the host when to search.**
       One paragraph, derived from `missing-skill-recovery.md`'s Iron Law, so
       Tool Search (if active) and the model (if not) both know the tool is the
       recovery path for a truncated listing. This is the AAIF WG's one
       positive finding; it is applied, and its decay (R1) is measured in 4.3.
-      verify: `tools/initialize` result carries `instructions`; byte length ≤ 400 and pinned in the same test as 1.1.
-- [ ] **1.3 Render the server into Claude Code's project-scope config.** Extend
+      verify (discharged): `initialize` carries `instructions`; **325 bytes** against the 400 cap, pinned in the same test as 1.1, together with the requirement that it names both tools and the still-exists clause.
+- [x] **1.3 Render the server into Claude Code's project-scope config.** Extend
       `mcp_render.ts` with a `.mcp.json` target whose entry is
       `{"agent-config": {"command": "npx", "args": ["-y", "@event4u/agent-config", "mcp-server"]}}`
       (the exact shape already documented at
       `docs/getting-started-local-stdio.md:21`). Default **on** for the
       `claude-code` projection, because a rule that is unfulfillable by
       default is a defect, not a feature; opt-out via `.agent-tools.yml`.
-      verify: a fresh consumer install produces `.mcp.json` with that entry; `lint_mcp_config_security.ts` passes on the rendered file; the `mcp:check` sync task treats `.mcp.json` as a target.
-- [ ] **1.4 Close the rule's unreachable branch.** Add to
+      verify (discharged), WITH THE MECHANISM AMENDED — see the note below the step. A fresh consumer install produces `.mcp.json` with the documented entry (`ensure_mcp_bridge`, gated on `_is_tool_enabled(tools, 'claude-code')`), MERGING so a consumer's own servers survive; `lint_mcp_config_security`'s `_scan` produces zero FAIL findings on the produced file (`npx -y` is a documented MED warn); and `mcp:check` treats `.mcp.json` as a target as CONTAINMENT — `ok`/`absent`/`missing-entry`/`unreadable` — never equality with a rendering. 12 tests in `tests/scripts/mcp_json_bridge.test.ts`; replacing the merge with a plain write reddens 3 of them.
+- [x] **1.4 Close the rule's unreachable branch.** Add to
       `missing-skill-recovery.md` the case "the tool is not registered": say
       so explicitly, point at the rendered `.mcp.json`, and proceed without a
       skill — the rule may never instruct a call it cannot verify is possible.
       Re-anchor the `# obligation:` line marker.
-      verify: `trigger_coverage.ts --scope rule` unchanged; the rule's unintended-activation contribution replayed at 0 as in the 2026-08-16 review.
+      verify (discharged): `trigger_coverage --scope rule` reports **26/26 pass**, byte-identical before and after the edit; the rule's activation contribution replayed through `fired_rules` over all **499** matrix prompts is **0**, matching the 2026-08-16 review. The `# obligation: line 41` marker still resolves to the Iron Law fence — the insert lands 20 lines below it, so no re-anchor was needed and none was invented.
 
 ## Phase 2 — Tier the projection against the modelled budget (D4, D5)
 
-- [ ] **2.1 Compute the tier split at install time, from data, and write it
+- [x] **2.1 Compute the tier split at install time, from data, and write it
       down.** Using 0.1's model: Tier A = skills predicted to survive the
       host's listing budget under the consumer's observed usage order
       (`agents/runtime/metrics/skill-usage.jsonl`, falling back to pack scope
@@ -176,41 +212,41 @@ assumptions:
       used). Tier B = everything else. The split is emitted as
       `agents/runtime/state/skill-tiers.json` with the model inputs, so the
       next session can see *why* a skill was Tier B.
-      verify: the file carries `model_inputs` (context_window, fraction, usage_rows_used, fallback) and `tier_a` / `tier_b` arrays whose union equals the projected catalogue.
-- [ ] **2.2 Project Tier B as MCP-reachable only, behind a Human Gate.** In
+      verify (discharged): `agents/runtime/state/skill-tiers.json` carries `model_inputs` (`context_window_tokens` 200000, `fraction` 0.01, `per_entry_cap_chars` 1536, `usage_rows_used` 0, `fallback: "alphabetical"`, `fill_order`) and `tier_a` 44 / `tier_b` 250 whose union equals the projected catalogue of 294 — asserted, not eyeballed. `agents/runtime/metrics/skill-usage.jsonl` does not exist here, so the fallback path is the one actually exercised, which is why it is named in the output. 9 tests in `tests/scripts/compute_skill_tiers.test.ts`. `fallback: "pack-scope"` is in the type and deliberately unreachable — naming a fallback that never runs would be worse than naming none.
+- [x] **2.2 Project Tier B as MCP-reachable only, behind a Human Gate.** In
       `install.ts`, a new projection mode `tiered` writes Tier A to
       `.claude/skills/` as today and Tier B **only** into the lite server's
       content tree. Default stays `legacy-all`; `tiered` is opt-in until
       Phase 4 says otherwise. `scoped` remains as the pack-level lever it is.
-      verify: under `tiered`, `capture_skill_catalogue.ts --projection-modes` reports `tier_a_count + tier_b_count = 290`; `read_skill` resolves every Tier B name; no Tier B SKILL.md exists under `.claude/skills/`.
-- [ ] **2.3 Surface the consumer-side host setting as an alternative, not a
+      verify (discharged): under `tiered`, `capture_skill_catalogue --projection-modes` reports `tier A 44 native + tier B 250 MCP-only = 294` and flags the sum against `legacy-all` as STALE if they diverge. **294, not the 290 this line assumed** — the figure is read, not retyped. `read_skill` resolves every one of the 250 Tier B names through the REAL handler over the REAL projected tree, each with a non-empty body (`tests/scripts/tiered_projection.test.ts`) — that is the claim `tiered` rests on, so it is asserted against the tree rather than a fixture. `_prune_tier_b_modules` removes exactly the Tier B SKILL.md dirs and nothing else. `legacy-all` remains the default; `_resolve_tier_b` returns `null` (never an empty set) on a missing or malformed split and the tiered branch then warns and ships the full surface, because pruning on absence would delete the catalogue.
+- [x] **2.3 Surface the consumer-side host setting as an alternative, not a
       default.** Document `skillListingBudgetFraction` as the *other* lever —
       raising it restores descriptions at a measured token price (14,408 tok at
       100% delivery) — and add it to the install's `--doctor` output as a
       recommendation only when Tier B is non-empty. Never write the
       consumer's `settings.json` for them.
-      verify: `grep -c skillListingBudgetFraction docs/` ≥ 1; the doctor line appears only when `tier_b.length > 0`.
+      verify (discharged): `grep -c skillListingBudgetFraction docs/` = **2 hits in docs/mcp-server.md** (≥ 1). `_tier_b_advisory` returns `null` unless a split exists AND `tier_b` is non-empty — both branches asserted — and it returns a STRING, with a test proving it writes nothing to disk. The doc gives both levers with the token price of each and recommends neither.
 
 ## Phase 3 — Index what routes, not what reads (D6)
 
-- [ ] **3.1 Extend the ranker's term source to `triggers:`.** `name +
+- [x] **3.1 Extend the ranker's term source to `triggers:`.** `name +
       description + triggers.keyword/phrase` become the indexed text; body
       prose stays out (the one design note every surveyed skill-MCP converged
       on, and the reason the K-Dense design needed a 250 MB embedding backend
       this package will not ship). Scoring stays deterministic; no model
       download, no network.
-      verify: re-run 0.3; `top1` and `top3` for `ranker: keyword-v2` are recorded beside v1; the change is kept only if `top3` does not regress and the per-prompt cost stays within `hook-latency-budget.json` (measured, stated in the header as the 2026-08-16 fix did).
-- [ ] **3.2 Make trigger coverage a ratchet, Tier B first.** A Tier B skill
+      verify (discharged) — AND THE RESULT IS A NULL. `keyword-v2` measures **identical** to v1: top1 0.615, top3 0.769. top3 does not regress, so the keep-condition holds and the change stays; it buys nothing measurable, and the reason is honest — only **4** skills declared `triggers:` before this roadmap (the phase's premise says 19; a `^triggers:` grep returns 5 files, one of which is `rule-writing` matching inside a fenced example), and none of them is an expected skill in the 26-prompt labelled corpus. Per-prompt cost, local darwin, 40 samples over 294 skills: v1 p95 9.3 ms, v2 p95 9.2 ms — indistinguishable, against the 175 ms `pre_tool_use` p95_ci in `hook-token-budget`'s sibling `hook-latency-budget.json`; and v2 is off by default, so the `skill-route` hook path is unchanged either way. Body prose stays out. `INDEXED_TRIGGER_KEYS` is shared so the two readers cannot disagree about what a trigger contributes.
+- [x] **3.2 Make trigger coverage a ratchet, Tier B first.** A Tier B skill
       with no `triggers:` is reachable only through whatever its description
       happens to share with the prompt. Seed triggers for Tier B skills in
       tranches, each measured against the matrix before merge, exactly as
       Phase 3.3 of the archived routing roadmap did for the first 19.
-      verify: `trigger_coverage.ts --scope skill` count only increases; unintended-activation census ≤ its current value (433 was the last recorded ceiling) after each tranche.
-- [ ] **3.3 Stop `suggest_skill_for_task` from returning Tier A.** When the
+      verify (discharged): `trigger_coverage --scope skill --ratchet` is the mechanism — coverage is a FLOOR, matrix activations a CEILING, and a missing baseline exits 1 rather than silently passing. Tranche 1 seeded eight Tier-B skills with eighteen `phrase` triggers and no bare `keyword`: coverage **4 → 12**, activations **3 → 3**, i.e. zero of the 499 matrix prompts fire on any seeded phrase. Sabotage-checked both ways — removing one skill's triggers fails the floor (12 → 11), replacing one phrase with `"the"` fails the ceiling (3 → 329). ON THE 433 CEILING: that census is RULE-side, and `--scope skill` states in its own output that it cannot move from this scope. Verified rather than assumed — `--scope rule` is 26/26 before and after, and a replay of all 499 prompts shows this tranche moving no rule activation. The ratchet is NOT wired into CI: that would touch `gate-coverage.yml`, the gate ledger and two budget files, which is a larger decision than this phase authorises.
+- [x] **3.3 Stop `suggest_skill_for_task` from returning Tier A.** When the
       host already lists a skill with its description, returning it from the
       recovery tool is noise. Filter on `skill-tiers.json` when present; when
       absent, return everything and say `tiers: unknown`.
-      verify: unit test with a fixture tiers file; the `no tiers file` branch returns the full ranked list and the `tiers` field.
+      verify (discharged): `tests/scripts/mcp_lite_tools.test.ts` covers both branches with a fixture tier set — no tiers file returns the full ranked list and `tiers: "unknown"`; a fixture split drops the Tier A name and reports `tiers: "tier-b-only"`. `loadTierA` returns `undefined` for absent or malformed and an EMPTY SET for a genuinely empty Tier A, because absent is not empty. One guard this step did not ask for: the filter is BYPASSED rather than allowed to empty the result (`tier_filter: "bypassed-to-avoid-empty"`), because a list emptied only by tiering is indistinguishable to the caller from "no skill covers this" — the conclusion this rule exists to prevent. Disabling the filter reddens 2 tests; removing the bypass reddens 1.
 
 ## Phase 4 — The falsifier (pre-registered; decides the default)
 
@@ -222,42 +258,42 @@ Hypothesis H2: the server's push-side cost (1.1 + 1.2) plus Tier A listing is
 The AAIF WG null is the prior for H1 being false. Both are recorded either
 way.
 
-- [ ] **4.1 Routing-matrix arm (deterministic).** Replay the 496-line corpus
+- [x] **4.1 Routing-matrix arm (deterministic).** Replay the 496-line corpus
       under `legacy-all` (modelled listing from 0.1) vs `tiered`, counting
       lines whose expected skill is (a) listed with description, (b) listed
       bare, (c) reachable only via the tool. This is computable without a
       host.
-      verify: `agents/evidence/analysis/skill-tiering-matrix-arm.md` carries the three counts per mode at the pinned commit.
-- [ ] **4.2 Live arm (observed, small N, stated as such).** ≥ 20 sessions per
+      verify (discharged): `agents/evidence/analysis/skill-tiering-matrix-arm.md` carries the three counts per mode at commit `53ac0adb4` — `legacy-all` described 5 / bare 21 / tool-only 0, `tiered` described 5 / bare 0 / tool-only 21, over the 26 labelled prompts (the 499-prompt matrix carries expected RULES and cannot answer this; both facts recorded in the note). **81% of that corpus has its expected skill in Tier B**, so `tiered` moves four fifths of it from listed-but-bare to tool-only. H2 holds as written — 2,259 tok against a **13,003**-tok bucket (not 14,408; the catalogue changed) — and the flattering reading of it is wrong: the host already caps delivery at roughly the Tier A set, ~1,956 tok, so on a default install `tiered` costs **MORE** standing context than `legacy-all`, 2,259 against 1,956. Published as `claim:skill-tiering-h2-costs-more-by-default`. Consequence stated rather than buried: the case for `tiered` now rests ENTIRELY on H1.
+- [-] **4.2 Live arm (observed, small N, stated as such).** ≥ 20 sessions per
       arm on one machine, same repo, `skill-usage.jsonl` + MCP telemetry
       (`mcp_telemetry_query.ts`) as the only instruments. Report invocations,
       distinct skills, `suggest_skill_for_task` calls and their hit rate. No
       survivor count is inferred from host silence (the repo's standing rule).
-      verify: the note states N per arm, the date range, the host version, and whether H1 held; a "did not hold" is a valid close.
-- [ ] **4.3 Measure R1 directly.** From the live arm, the fraction of sessions
+      verify (TRANSFERRED — `agents/roadmaps/stubs/road-to-skill-tiering-live-arm.md`): needs ≥ 40 real interactive sessions across two install configurations on one machine. An autonomous repository run has none of that, and scripting forty headless prompts would measure a script rather than a model — producing a number in exactly the shape H1 wants while answering a different question. Measured baseline on the transfer date: `agents/runtime/metrics/skill-usage.jsonl` **absent** (not zero rows — no file), `skill-usage-report.md` 337 tracked / **0 active**, sessions available for either arm **0**. The stub carries the criterion verbatim, the named producer, and a one-command probe with 20-per-arm as the bar.
+- [-] **4.3 Measure R1 directly.** From the live arm, the fraction of sessions
       where a Tier B skill was *needed* (matrix says so) and the tool was
       *called* — by context position in the session. If adherence decays with
       context as the WG saw, the number is published and the `skill-route`
       push hook is confirmed as primary.
-      verify: a table of `(session_context_tokens_bucket, tool_called_rate)` with ≥ 3 buckets, or an explicit statement that N was too small to bucket.
-- [ ] **4.4 Decide the default, once.** If H1 and H2 hold, flip `tiered` to
+      verify (TRANSFERRED — same stub): 4.3 reads its buckets out of 4.2's sessions, so it cannot precede them. The R1 prior it would test is recorded in the stub and in the matrix-arm note as the unfavourable one it is.
+- [x] **4.4 Decide the default, once.** If H1 and H2 hold, flip `tiered` to
       default for `claude-code` in a single PR that cites 4.1–4.3 by file. If
       either fails, `tiered` stays opt-in, the null is written into
       `docs/CLAIMS.md`, and this roadmap closes with outcome `measured-null`.
-      verify: exactly one of the two outcomes is recorded in `agents/roadmaps/roadmaps-progress.md` with the three evidence paths.
+      verify (discharged) — outcome **`measured-null`**, which is this step's own pre-registered second branch. H1 is not established and is not establishable here: three unobservables decide its sign (whether a bare name still routes, whether the tool is called, and the accuracy of the split itself, which used the fallback order the pinned observation refutes on four of eight entries). So `tiered` stays opt-in — it was never made default — and the null is published as `claim:skill-tiering-h1-unmeasured`, beside `claim:skill-tiering-h2-costs-more-by-default`. Three evidence paths: `agents/evidence/analysis/skill-tiering-matrix-arm.md`, `agents/roadmaps/stubs/road-to-skill-tiering-live-arm.md`, `docs/CLAIMS.md`. DEFECT IN THE PREMISE: this line names `agents/roadmaps/roadmaps-progress.md`, which does not exist — the dashboard is `agents/roadmaps-progress.md` and is GENERATED, so recording an outcome there would be a hand-edit of generated output, forbidden by `source-of-truth`. The outcome is recorded here, in the authored file, instead.
 
 ## Phase 5 — Tracking only: SEP-2640 `skill://` alignment
 
 Not executable today. Carried so it is not re-proposed as new.
 
-- [ ] **5.1 Re-verify SEP-2640's status quarterly** (pending as of the
+- [-] **5.1 Re-verify SEP-2640's status quarterly** (pending as of the
       2026-06-18 AAIF post; not re-verified on 2026-08-22). When it merges
       *and* a second host implements Resources-based skill discovery, add a
       `skill://index.json` resource to the lite server that mirrors
       `skill-tiers.json` Tier B. Until then, the existing `prompts/` +
       `resources/` surface is the same content under a different name, and
       renaming it for a pending spec would be an unmeasured change.
-      verify: a dated line in this file per check; the step's checkbox can only be ticked with a spec URL that says "merged".
+      verify (TRANSFERRED — `agents/roadmaps/stubs/road-to-sep-2640-skill-resources.md`): the dated line is discharged and the checkbox is not tickable. Checked today rather than assumed — `modelcontextprotocol/modelcontextprotocol` PR **#2640 "SEP-2640: Skills Extension" is `state: open`**, last updated `2026-08-23T02:00:42Z`, read via `gh api search/issues`. Not merged, so this step's own verify makes the checkbox unreachable. A **quarterly** obligation also cannot be discharged by finishing one roadmap, so it becomes a date carrier: check log, one-command probe, next check **2026-11-23**, and both promotion conditions (merged **and** a second host implementing Resources-based skill discovery) named in the stub.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-23 | reviewer: drain/skill-link-integrity -->
@@ -287,20 +323,54 @@ Not executable today. Carried so it is not re-proposed as new.
 
 ## Acceptance criteria
 
-- [ ] A consumer on the documented end-user path can call
+- [x] A consumer on the documented end-user path can call
       `suggest_skill_for_task` without hand-editing any config (Phase 1).
-- [ ] No rule instructs a tool call the default install cannot make (1.4).
-- [ ] The catalogue's host-side fate is *predicted* per skill before install,
+      *Met:* `ensure_mcp_bridge` writes the entry at install time for the
+      `claude-code` tool, and the turnkey server serves the tool. Neither half
+      existed before: `grep -ic mcp src/scripts/install.ts` was 0 and
+      `tools/list` returned `[]`.
+- [x] No rule instructs a tool call the default install cannot make (1.4).
+      *Met:* the default install now registers the server, AND
+      `missing-skill-recovery.md` step 5 covers the residual case where it is
+      absent — so the rule is fulfillable by default and honest when it is not.
+- [x] The catalogue's host-side fate is *predicted* per skill before install,
       with the model's assumptions named (0.1, 2.1).
-- [ ] The registered server's standing cost is a measured, pinned number ≤ 600
+      *Met, with the prediction's own accuracy published against it:* all five
+      upstream-prose assumptions are returned by id with a reason, and the model
+      disagrees with the one real observation on four of eight sampled entries.
+      A prediction whose error bar is recorded beside it is what this criterion
+      asks for; a confident one would not have been.
+- [x] The registered server's standing cost is a measured, pinned number ≤ 600
       tok, and the kernel server's 2,257-tok cost is recorded as the reason
       it is not the one registered (0.2, 1.1).
-- [ ] The ranker indexes `triggers:` and its matrix hit rate is recorded
+      *Met, with the second figure corrected:* the registered surface is **222
+      tok** against a 600 cap, asserted. The kernel's cost is **1,791 tok** in
+      descriptions and **3,886 tok** as the payload the host actually loads —
+      not 1,972, and the payload figure is the one that belongs against the Tool
+      Search threshold. Both are in the metric row and both are asserted in
+      `tests/scripts/mcp_lite_tools.test.ts`, which is more than "recorded".
+- [x] The ranker indexes `triggers:` and its matrix hit rate is recorded
       before and after (0.3, 3.1).
-- [ ] `tiered` becomes default only by 4.4, or the null is published.
-- [ ] No embedding model, daemon, or network call is introduced anywhere in
+      *Met, and the after equals the before:* keyword-v1 and keyword-v2 both
+      measure top1 0.615 / top3 0.769. Recorded as the null it is, with the
+      reason (4 declaring skills pre-tranche, none of them in the labelled
+      corpus) rather than presented as an improvement.
+- [x] `tiered` becomes default only by 4.4, or the null is published.
+      *Met via the second branch:* `tiered` was never made default, and two
+      nulls are published — `claim:skill-tiering-h1-unmeasured` and
+      `claim:skill-tiering-h2-costs-more-by-default`.
+- [x] No embedding model, daemon, or network call is introduced anywhere in
       the skill path ("zero runtime daemon" claim in `package.json:4` stays
       machine-checked).
+      *Met:* the ranker is deterministic keyword scoring in a Node-free module;
+      the tier model and the tier split are pure functions over the file system.
+      Verified rather than asserted — grepping every added line across the skill
+      path (`src/shared/skillRanking.ts`, `src/cli/mcp/`,
+      `_lib/host_listing_model.ts`, `compute_skill_tiers.ts`,
+      `measure_skill_ranker_baseline.ts`) for `fetch(`, a URL, `net.`,
+      `setInterval`, `child_process`, `spawn`, `listen(`, `WebSocket`,
+      `onnxruntime`, `@xenova` and `embedding` returns **zero** hits, and
+      `check_claims` stays green.
 
 ## Risks
 
