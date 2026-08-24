@@ -20,6 +20,28 @@ execution:
 > (authored in the same inbox drain as this file — reference it by slug, it is
 > not this roadmap's to name a path for).
 >
+> **Re-measured 2026-08-24 by `/analyze:inbox`. BOTH LEGS STILL UNMET — the
+> condition is unchanged, only its figures moved, and one of them moved the wrong
+> way.**
+>
+> The 14.11.0 feedback bundle re-arrived carrying this same program rebased on
+> `0f7c26ee9` — ten design-frame files, one per track. Nothing was landed from it,
+> because:
+>
+> - **Leg (a):** the instrument landed. `road-to-standing-payload-diet` is
+>   archived at 18 done / 0 open and `check_standing_payload_delta.ts` ships with
+>   `partitionCredit()` booking the ADR-236 credit side. But the leg asks for
+>   **four weeks of entries**, and the floor derived below (2026-09-20) still
+>   stands — a landed instrument holds zero weeks of history on the day it lands.
+> - **Leg (b):** measured **0.00 %, 0 valid envelopes of 4,274 stops**. The
+>   denominator is met eight times over; the rate is in the DROP band of the very
+>   roadmap that owns it. Against a ≥ 95 % condition this is not "not yet", it is
+>   pointing the other way.
+>
+> Recorded here rather than only in the triage, because a parked file whose resume
+> figures are a day stale is how a re-arrival gets read as new. Triage:
+> `agents/evidence/analysis/feedback-14-11-0-triage.md`.
+>
 > **Per-leg decidability, added 2026-08-23 by `road-to-unowned-resume-conditions`.
 > Both legs are OWNED. Neither is restated and neither is recorded permanent —
 > the conditions below are the ones parked on 2026-08-22, unchanged.**
