@@ -1,13 +1,36 @@
 name: Standing Payload Delta
 
-# road-to-standing-payload-diet Phase 0 steps 0.3 / 0.5 — a REPORT, never a gate.
+# road-to-standing-payload-diet Phase 0 steps 0.3 / 0.5 — the delta REPORT.
+# road-to-standing-payload-truth Phase 1 — plus one BLOCKING step, added 2026-08-24.
 #
-# `check_preamble_payload_budget` already ratchets this number and already fails
-# on growth. A second blocking gate on one measurement double-fails every
-# legitimate rule addition, which is how a reporting surface becomes noise people
-# route around. So this workflow measures the gated buckets at the MERGE-BASE and
-# at HEAD, posts the signed delta with a debit AND a credit column, and never
-# fails the job.
+# ## The premise this header used to rest on was false
+#
+# It said: "`check_preamble_payload_budget` already ratchets this number and
+# already fails on growth. A second blocking gate on one measurement double-fails
+# every legitimate rule addition." The first sentence was **wrong** and the second
+# depended on it. That gate runs in the local `task ci` chain and **no workflow in
+# `.github/` invoked it** — so nothing failed a pull request on preamble growth,
+# and this workflow declined to fail on the strength of a sibling that was not
+# there. The measured cost of that gap: +12,619 tokens in nine days
+# (125,593 on 2026-08-15 → 138,212 on 2026-08-24).
+#
+# So the delta report is unchanged and still never fails, and a SEPARATE step now
+# runs the budget gate itself. AI council 2026-08-24, 2/2: option (b) of
+# `b-preamble-ci-placement` — fold it in here rather than add a third surface,
+# because this workflow already computes the neighbouring number.
+#
+# It runs against a GRACE CEILING equal to the 2026-08-24 measurement, not the
+# design ceiling: HEAD is 28.4 % over the design number, so blocking at it would
+# fail every PR from the moment this lands, and nobody can shed 30,566 tokens
+# inside the PR that arms the gate. Growth beyond today reds; today's tree passes.
+# The grace ceiling ratchets DOWN only, and expires at milestone 1 (2026-11-10).
+# Full record, including why one CI run is a sufficient sample for a deterministic
+# census: `src/config/preamble-payload-budget.json` → `ci_delivery`.
+#
+# HONEST LIMIT: this makes the check FAIL, not REQUIRED. Whether a failing check
+# blocks a merge is branch-protection configuration — a repo-admin action outside
+# this change. Verify with `gh api repos/:owner/:repo/rulesets`, never by reading
+# this file.
 #
 # Why the merge-base and not `origin/main`: measured while building this step,
 # `origin/main` had moved four commits past the branch point, so a diff against
@@ -23,6 +46,8 @@ on:
       - "dist/agent-src/skills/**"
       - "AGENTS.md"
       - "src/config/preamble-payload-budget.json"
+      - "src/scripts/check_preamble_payload_budget.ts"
+      - "CLAUDE.md"
       - "src/scripts/check_standing_payload_delta.ts"
       - ".github/workflows/standing-payload-delta.yml"
   workflow_dispatch:
@@ -87,3 +112,20 @@ jobs:
       - name: Job summary
         if: always()
         run: cat /tmp/spd-comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      # THE BLOCKING STEP (road-to-standing-payload-truth 1.1). Deliberately LAST
+      # and `if: always()`, so the delta report and the PR comment land even when
+      # this fails — a gate that suppresses the diagnostic explaining it is worse
+      # than no gate.
+      #
+      # `--ceiling` is the GRACE ceiling from ci_delivery, not the design ceiling.
+      # It is read out of the budget file rather than written here, so the number
+      # has exactly one home and this workflow cannot drift from it.
+      - name: Preamble payload budget (blocking, grace ceiling)
+        if: always()
+        run: |
+          set -euo pipefail
+          ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
+          end="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_end_date'])")"
+          echo "grace ceiling $ceiling (expires $end) — design ceiling is lower; see ci_delivery"
+          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling"
