@@ -1620,3 +1620,59 @@ gates:
       express: the generated projection which must stay green, a `docs/decisions/`
       ADR whose dated record must not be rewritten, and a bare rule count with no
       enforcement sense ("2 rules" in a concepts page) which must not be a finding.
+
+  - id: check_score_contract
+    argv: ["--quiet"]
+    min_scanned: 20
+    corpus: "rows in `agents/evidence/ac-capability-scorecard.yaml` — one per rubric category recoverable from the tracked tree (23 at baseline, 2026-08-24)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: agents/evidence/ac-capability-scorecard-zz-canary.yaml
+      content: |
+        # zz canary probe: a scorecard awarding `ten` with an empty required
+        # evidence class, which is the one thing this gate exists to refuse.
+        # Create-only, so it is expressible as a canary — unlike the MODIFICATION
+        # shapes (a redeclared `state: complete`, a count edited to match an
+        # added row) that most of this file's ratchets detect.
+        schema_version: 1
+        rubric:
+          state: incomplete
+          authority: unavailable-external-review
+          reported_category_count: 32
+          recovered_category_count: 1
+          missing_category_count: 31
+          manifest_version: baseline_v1
+          recovery_source: agents/roadmaps/road-to-ten-across-the-board.md
+          excluded_from_manifest: []
+        categories:
+          - category: release-integrity
+            baseline: 9.2
+            claim: "canary"
+            closing_path: "canary"
+            mechanism_evidence: ["src/scripts/check_score_contract.ts"]
+            adoption_evidence: ["src/scripts/check_score_contract.ts"]
+            negative_control_evidence: []
+            production_window: src/scripts/check_score_contract.ts
+            outcome_evidence: ["src/scripts/check_score_contract.ts"]
+            non_regression_evidence: ["src/scripts/check_score_contract.ts"]
+            status: ten
+    note: >
+      The floor is 20 against a live corpus of 23, and the gap is deliberately
+      narrow because this corpus does not grow by ordinary work: a row is added
+      only when a rubric category is recovered, and `check_score_contract` itself
+      refuses a row count that disagrees with the declared
+      `recovered_category_count`. So the failure this floor guards is not
+      "someone deleted a few rows" but the migration shape — the scorecard moving
+      and the gate reading an absent file, which `countRows` reports as 0.
+
+      `argv` carries `--quiet` because that is the invocation the preflight task
+      uses. The `scanned:` line is deliberately NOT quiet-gated and is emitted on
+      the RED path too: a gate that publishes its coverage only when it passes
+      cannot be caught going blind at the moment that matters most.
+
+      Six negative-control twins live under
+      `tests/fixtures/score-contract/twins/`, and
+      `tests/scripts/check_score_contract.test.ts` asserts each reds on exactly
+      one finding CODE — not merely on a non-zero exit, which would let a twin
+      keep passing while testing the wrong defect.

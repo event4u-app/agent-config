@@ -1,0 +1,23 @@
+# TWIN FIXTURE — deliberately broken. See ../README.md.
+schema_version: 1
+rubric:
+  state: incomplete
+  authority: unavailable-external-review
+  reported_category_count: 32
+  recovered_category_count: 1
+  missing_category_count: 31
+  manifest_version: baseline_v1
+  recovery_source: agents/roadmaps/road-to-ten-across-the-board.md
+  excluded_from_manifest: []
+categories:
+  - category: release-integrity
+    baseline: 9.2
+    claim: "twin fixture"
+    closing_path: "twin fixture"
+    mechanism_evidence: ["src/scripts/check_score_contract.ts"]
+    adoption_evidence: ["src/scripts/check_score_contract.ts"]
+    negative_control_evidence: []
+    production_window: src/scripts/check_score_contract.ts
+    outcome_evidence: ["src/scripts/check_score_contract.ts"]
+    non_regression_evidence: ["src/scripts/check_score_contract.ts"]
+    status: ten
