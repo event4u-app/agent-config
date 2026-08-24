@@ -31,6 +31,16 @@ console.log(detect_stack('tests/fixtures/stack/mono-pnpm-turbo').frontend)"
 | `mono-pnpm-libs` | `pnpm-workspace.yaml` globbing `libs/*`, no `workspaces` key | `plain` | `react`, `scope_root: libs/ui` |
 | `tailwind-v3` | react + `tailwindcss@3` + `tailwind.config.ts` | `css: tailwind` | `css: tailwind-v3` |
 | `tailwind-v4` | react + `tailwindcss@4` + `@tailwindcss/vite` | `css: tailwind` | `css: tailwind-v4` |
+| `shadcn-current` | verbatim `npx shadcn@latest init -d --template vite` output (CLI 4.19.0, 2026-08-24) + its `components.json` | n/a — version-pin fixture, not a detector input | n/a; it is the only source any skill may quote shadcn / Tailwind majors from |
+| `storybook-current` | verbatim `npx storybook@latest init --yes` output (Storybook 10.5.10, 2026-08-24) | n/a — version-pin fixture | n/a; the only source for Storybook majors and the default addon set |
+
+Two of the rows above are **version-pin fixtures rather than detector
+fixtures**: `shadcn-current` and `storybook-current` are the unedited output
+of a real scaffold, committed so that a skill's stated versions are traceable
+to a command someone ran on a date rather than to prose someone read. They
+have no pre/post detector verdict because `detect_stack()` is not what reads
+them — `check_stated_versions` is
+(`road-to-component-library-lifecycle` Phase 5).
 
 These directories carry `package.json` files that are **fixtures, never
 installed**: the repository root declares no `workspaces`, so no package
