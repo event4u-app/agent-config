@@ -1,3 +1,12 @@
+<!-- evidence-type: analysis -->
+<!-- Typed `analysis` because `lint_evidence_artifacts` requires one of the
+     five types for every .md under agents/evidence/, and this is the only
+     one it can honestly be: it is a written record of what the register set
+     WAS on 2026-08-24, never re-bound to a later tree. It is not a review
+     (`original-review`/`current-binding`), nothing was skipped
+     (`declared-skip`), and no review ran (`honest-null`). If a `directory-index`
+     type is ever added, this file belongs to it. -->
+
 # Evidence registers
 
 Four register classes carry evidence in this repository, and the split is the
