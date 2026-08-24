@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and so are unavailable as offsets. The addition is sanctioned on its own terms: two companion roadmaps landed in the same run name this file's artifact as the surface their verify: lines write into, and later/road-to-ac-deep-capabilities.md names its verifier in the first conjunct of its entry condition."
 execution:
   mode: phase-checkpoints
@@ -18,6 +18,13 @@ pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 > (`docs/CLAIMS.md`, enforced by `src/scripts/check_claims.ts`) — same
 > culture, applied to the external 32-category rubric instead of public
 > marketing claims.
+
+> **Flipped `draft` → `ready` at closure, 2026-08-24, and archived in the same
+> change.** The file shipped as a draft, which means `collect()` never counted it
+> and the archiver never saw it — so a completed draft would have sat in the
+> active directory forever looking like open work. Flipping and archiving in one
+> change is estate-neutral (+1 active, −1 disposed) and leaves the honest state:
+> executed, not abandoned.
 
 ## Goal
 
