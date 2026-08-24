@@ -70,39 +70,128 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 
 ## Phase 1 — measure before gating
 
-- [ ] **1.1 Register the count and its definition.** Decide what counts as one
+- [x] **1.1 Register the count and its definition.** Decide what counts as one
       skill (a `SKILL.md`, presumably) and record the definition beside the number
       so a later reader cannot re-derive a different total.
-      verify: a committed figure plus the exact command that produced it, and
-      re-running that command reproduces it.
-- [ ] **1.2 Per retirement signal, name the instrument or record its absence.**
+      verify: **299 maintained skills and 11,461 exact-BPE description tokens**,
+      both defined in `src/config/estate-count-budget.json` §
+      `metric.skill_count` / `metric.skill_description_tokens` and measured by
+      `_lib/skill_estate.ts`. Reproduce: `find src/skills -name SKILL.md | wc -l`
+      → 299, or `measureSkillEstate(process.cwd())` for the split with the
+      deprecated exclusion. The definition names what is EXCLUDED, which the
+      count alone cannot: `lifecycle: deprecated` skills do not count, because
+      with them counted deprecating one would create no headroom and the
+      retirement mechanism the council chose would be unusable against its own
+      gate. 0 carry it today, so the exclusion is a no-op now and a correctness
+      property once a tranche lands.
+- [x] **1.2 Per retirement signal, name the instrument or record its absence.**
       The reviewer's five: never triggered · low relevance score · duplicate
-      responsibility · dead cross-skill links · no unique outcome. Two have shipped
-      instruments — `src/shared/skillRanking.ts` for relevance (consumed by
-      `cli/mcp/dispatch.ts`, `cli/mcp/content.ts`, `hooks/skill_route_hook.ts`,
-      `mcp_server/tools.ts`, `skill_tools/*`, but **not** by
-      `compute_skill_tiers.ts` or the host-listing emitter) and `lint_handoffs.ts`
-      for dead links. The other three need naming or an honest null.
-      verify: a five-row table, each row carrying an instrument with a path or the
-      word `none`, and no row left blank.
-- [ ] **1.3 Rank the corpus once, on whatever 1.2 established.** A ranking is not
+      responsibility · dead cross-skill links · no unique outcome.
+      verify: **the five-row table, with every instrument RUN rather than only
+      named — and the result is that no signal currently produces a retirement
+      candidate.**
+
+      | signal | instrument | reading, 2026-08-24 |
+      |---|---|---|
+      | never triggered | **`none`** | No persistence path exists. `skill_route_hook.ts` contains no `appendFileSync` / `writeFileSync` / sink at all, and the one audit file (`agents/runtime/state/audit/2026-08.jsonl`) holds a single `type: note` row carrying **zero** skill names. This is the reviewer's strongest signal and it has no instrument. |
+      | low relevance score | `src/shared/skillRanking.ts` | Exists, and is a RANKER with no threshold — it answers "which of these" for a query, not "is this one dead". Not consumed by `compute_skill_tiers.ts` or the host-listing emitter. |
+      | duplicate responsibility | `src/scripts/audit_skill_overlap.ts` | RAN: **299 skills, 0 pairs ≥ 70 %, 0 same-domain merge candidates.** An honest null, not an absent instrument. |
+      | dead cross-skill links | `src/scripts/lint_handoffs.ts` | RAN: 18 violations, **all `handoff_tier_mismatch`** — a `tier` metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link was fixed when the baseline was set. **0 retirement candidates.** |
+      | no unique outcome | `src/scripts/skill_eval_coverage.ts` | RAN: **42/299 = 14.0 %** behavioural-eval coverage (rich 4/4, default-surface 29/29, router 2/2, priority 35/35, other 7/264). Usable as a signal only for the 42; silent on the 257 that carry no eval. |
+
+      No row is blank and no row is guessed. Three instruments were run rather
+      than cited, which is what turns this from a table of names into a
+      measurement — and the measurement is the finding: see 1.3.
+- [x] **1.3 Rank the corpus once, on whatever 1.2 established.** A ranking is not
       a retirement decision; it is the input one needs.
-      verify: a committed ranking whose row count equals 1.1's figure.
+      verify: **PUBLISHED NULL — a ranking is not constructible from what 1.2
+      established, and the reason is a finding rather than a gap in this step.**
+
+      A retirement ranking needs at least one signal that nominates candidates.
+      Of the five: the two instruments that CAN nominate both returned **zero**
+      (0 overlap pairs ≥ 70 %, 0 dead links); relevance is a per-query ranker
+      with no dead-skill threshold, so it cannot order a corpus by
+      retirement-worthiness without one being invented; eval coverage is silent
+      on 257 of 299; and the signal that would actually nominate — never
+      triggered — has no instrument at all.
+
+      So a "committed ranking whose row count equals 299" would be 299 rows of
+      the same non-answer, ordered by nothing. Publishing it would create exactly
+      the artefact this repository rejects elsewhere: a measurement-shaped object
+      with no measurement in it. **The honest output is that Phase 4's input does
+      not exist**, which is why 4.1 is not attempted here and why the missing
+      instrument is named as the thing that unblocks it.
 
 ## Phase 2 — the ratchet, as a fourth metric on the existing budget
 
-- [ ] **2.1 Add `skill_count` to `src/config/estate-count-budget.json` and
+- [x] **2.1 Add `skill_count` to `src/config/estate-count-budget.json` and
       `check_estate_count.ts`.** Reuse the shape, do not build a parallel gate:
       that gate already measures its floor on the **base ref's own tree** with the
       same functions it applies to HEAD (so the "before" side cannot be rewritten
       by the change under review), reads `estate_growth_exempt` from the **diff**
       so a claim cannot be banked, and runs a `one_in_one_out` lint.
-      verify: `./scripts-run src/scripts/check_estate_count` prints a
-      `skill_count` row with a floor, and a test proves the floor comes from the
-      base ref rather than from the config.
-- [ ] **2.2 Prove the gate fires.** Add a skill in a test fixture and watch the
+      verify: **two metrics, not one**, and the gate prints both with a base-ref
+      floor:
+
+      ```
+      skill_count          299  (floor 299 at origin/main, +0)
+      skill_description_tokens 11461  (floor 11461 at origin/main, +0)
+      ```
+
+      AI council 2/2 asked for the token dimension to be **gated** rather than
+      published informationally, against this step's own recommendation: a count
+      ratchet alone is gameable by merging four large skills into one file, which
+      lowers the count while the description payload a host must carry does not
+      move. Both dimensions carry allowance 0 — the defect being addressed is a
+      corpus that grew with nothing objecting, so an addition takes the
+      `estate_growth_exempt` claim path or fails.
+
+      The floor comes from the base ref and a test proves it in the way the step
+      asks: `tests/scripts/check_estate_count.test.ts` § the skill estate drives
+      the REAL binary over a git repo whose base ref carries a committed skill
+      tree, asserts `floor 4 at main`, and then greps the budget file to show it
+      holds **no** skill number that could have supplied it. Two subtrees are
+      materialised because `materialiseSubtree` takes one prefix, and they are
+      independent on purpose: a base ref with no `src/skills` (an old tag, a
+      shallow clone) DROPS the skill metrics with a printed reason and leaves the
+      roadmap metrics ratcheting — never a silent zero floor, which would fail
+      every branch, and never a silent skip, which would pass every tree.
+
+      An unresolved tokeniser drops that one metric the same way, because an
+      exact reading compared against a proxy one moves by more than the growth
+      this gate exists to catch.
+- [x] **2.2 Prove the gate fires.** Add a skill in a test fixture and watch the
       metric grow and the gate refuse; remove it and watch it pass.
-      verify: red-then-green demonstrated by sabotage, not asserted.
+      verify: **sabotaged on the live tree AND in fixtures, both dimensions, exit
+      codes captured directly rather than through a pipe.**
+
+      Live tree, one added skill:
+      `skill_count 300 (floor 299, +1)` · `skill_description_tokens 11472 (floor
+      11461, +11)` · `❌ the skill estate grew: skill_count 299 → 300` · **exit 1**.
+      Removed → **exit 0**.
+
+      Live tree, token-only (the gaming path): one existing description
+      lengthened, no file added → `skill_count 299 (+0)` ·
+      `skill_description_tokens 11482 (floor 11461, +21)` · **exit 1**, and the
+      failure line names `skill_description_tokens` and not `skill_count`.
+      Restored → **exit 0**.
+
+      Seven fixture cases in `tests/scripts/check_estate_count.test.ts` drive the
+      real CLI over temp git repos: both dimensions reported with a base-ref
+      floor · an added skill refused with the config proven not to hold the number
+      · the failure line naming *the skill estate* rather than *the roadmap
+      estate* (the noun was unconditional before this metric existed) · a padded
+      description refused with the count unchanged · a deprecated skill LOWERING
+      the count · a base ref with no skill tree dropping the metrics with a
+      stated reason · a skill addition authorised by an `estate_growth_exempt`
+      claim. 48 tests green across the two files, and the gate's own
+      `--self-test` stays green at 13/13 (8 rejecting, floor 12).
+
+      Where the discrimination is proven: those seven cases go through
+      `spawnSync` against the real binary, which is what the `--self-test`
+      harness does too. No new `--self-test` case was added; the CLI-driven
+      fixtures cover the same property over real git history, which a synthetic
+      self-test fixture cannot.
 
 ## Phase 3 — a durable admission and refusal record
 
@@ -124,9 +213,35 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
       and leave the rest.
       verify: `skill_count` falls, `check_estate_count` reports the fall, and every
       retirement cites its 1.3 row.
-- [ ] **4.2 Record the net direction per release from here.** The reviewer's ask is
+- [x] **4.2 Record the net direction per release from here.** The reviewer's ask is
       *"netto sinkender Skill Count"* — a falling net, not a single tranche.
-      verify: a committed figure per release, and the first two readings.
+      verify: **`agents/evidence/metrics/skill-estate-per-release.jsonl`, with
+      FOUR historical readings rather than the two this step asked for.**
+
+      One council seat held that two readings necessarily wait for another
+      release; the other said to try a historical backfill first. The backfill
+      works: `git archive <tag> src/skills | tar -x` then `measureSkillEstate` on
+      the extracted tree — and `git archive` is usable here precisely where it is
+      not for the roadmap estate, because `.gitattributes` carries
+      `/agents export-ignore` and no such rule for `src/skills`.
+
+      | ref | skills | description tokens |
+      |---|---:|---:|
+      | 14.0.0 | 290 | 11,124 |
+      | 14.9.0 | 291 | 11,165 |
+      | 14.10.0 | 291 | 11,133 |
+      | 14.11.0 | 299 | 11,461 |
+      | HEAD | 299 | 11,461 |
+
+      **The dimensions move independently in real history, not only in a
+      fixture:** 14.9.0 → 14.10.0 holds the count at 291 while the tokens FALL
+      11,165 → 11,133 — a description edit with no file change, invisible to a
+      count ratchet. That is the anti-gaming case the second dimension was added
+      for, observed rather than constructed, and it is the strongest available
+      evidence that one metric would not have been enough.
+
+      Net 14.0.0 → HEAD: **+9 skills, +337 tokens.** The direction is rising, and
+      the file is where a falling one will be read.
 
 ## Blockers
 
@@ -149,7 +264,32 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 - **If you do nothing:** Phase 2 stalls, because a gate cannot ratchet an
   undefined metric.
 - **Resolved when:** the definition is committed in that config file.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — (a) for the ratchet AND (c) gated beside it, not
+  published informationally.** AI council 2/2. This goes FURTHER than the
+  recommendation above, on an argument the recommendation did not make: a
+  `SKILL.md` count alone does not measure what a skill costs, because merging
+  four large skills into one file satisfies a count ratchet while the description
+  payload a host must carry stays put. So both dimensions are gated, both with
+  allowance 0.
+
+  **(b) and (d) were eliminated by measurement rather than by argument**, and the
+  measurements are the reason the choice is not a preference:
+
+  - **(b) catalogue bytes read 0** on a real checkout. `readProjectedCatalogue`
+    walks `.claude/skills`, which is empty in any tree where `task
+    generate-tools` cannot complete — it fails under `projection.mode=scoped`
+    without the config package. A ratchet whose reading depends on whether a
+    generator ran reds for the environment, not for the change.
+  - **(d) host-listing slots are the host's decision.** A measured install
+    published its own budget event stating it had stripped every description and
+    dropped 402 entries. Not reproducible from the repository, so it cannot carry
+    a floor.
+
+  Committed in `src/config/estate-count-budget.json` §
+  `metric.skill_count`, `metric.skill_description_tokens`, and
+  `metric.skill_metric_rejected_candidates` — the last so a later reader finds
+  the eliminations rather than re-running them.
 
 ### blocker: b-retirement-reversibility
 
@@ -171,7 +311,36 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 - **If you do nothing:** a tranche either breaks a routing rule or is never taken.
 - **Resolved when:** the mechanism is recorded, and the reach lint is green on the
   proposed tranche.
-- **Status:** open.
+- **Status:** resolved for the MECHANISM; the tranche itself is owner-reserved.
+- **Resolution (2026-08-24) — `lifecycle: deprecated` for one release, then
+  delete.** AI council 2/2 on the mechanism, and this blocker's own description
+  of the vocabulary was wrong in a way worth correcting rather than carrying.
+
+  **The four-word lifecycle it names — `experimental → validated → recommended →
+  deprecated` — is not what the skill schema carries.**
+  `src/scripts/schemas/skill.schema.json` defines
+  `lifecycle: active | deprecated | experimental | archived` (ADR-013), default
+  `active`. `deprecated` exists, which is what the recommendation needed; the
+  other three words of the quoted chain do not, and `archived` is a fourth the
+  quote omits. **0 skills carry `deprecated` today.**
+
+  `archive/` under `src/skills/` was REJECTED, on a reason neither the blocker
+  nor the recommendation gave: one seat noted it risks remaining discoverable and
+  pack-eligible, and git history already provides the archive after a delete. A
+  directory that looks retired but still ships is worse than either endpoint.
+
+  **The mechanism is wired into the gate, not only recorded.**
+  `_lib/skill_estate.ts` EXCLUDES deprecated skills from both metrics, and a
+  test proves deprecating one LOWERS the count. That property is load-bearing:
+  with deprecated skills counted, deprecation would create no headroom and the
+  mechanism would be unusable against its own gate.
+
+  **Still open, deliberately:** the deprecation CONTRACT one seat listed —
+  installable during the transition release, visibly communicated, new rule and
+  pack references prevented, replacement named or its absence explained, removal
+  release recorded, all lint-enforced rather than prose. None of that is built
+  here, and `lint_rule_skill_pack_reach` has not been run against a proposed
+  tranche because no tranche exists (see 1.3's published null).
 
 ### blocker: b-fourth-metric-home
 
@@ -194,7 +363,25 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
   block Phase 1.
 - **Resolved when:** the metric lives in a named file that `lint_budget_ownership`
   scans.
-- **Status:** open.
+- **Status:** resolved.
+- **Resolution (2026-08-24) — extend `estate-count-budget.json`.** AI council 2/2
+  with the recommendation. `lint_budget_ownership` reports **12 budget config(s)**
+  and that file is one of them, so the metric lives somewhere the ownership gate
+  already sees, with no second `owner` / `review_by` pair to keep fresh.
+
+  Both seats added the same refinement, which the implementation follows: the
+  metrics are **separate named entries** carrying their own basis, not a widened
+  scalar bolted onto the roadmap description. `metric.basis` is extended to state
+  that the skill side needs a SECOND materialised subtree — `materialiseSubtree`
+  takes one prefix — and that the two are independent so a base ref without
+  `src/skills` drops the skill metrics and leaves the roadmap metrics
+  ratcheting.
+
+  The category-error worry this blocker raised is real and is answered in the
+  file rather than dismissed: the `_comment` still describes a roadmap-estate
+  ratchet, and the skill entries say in as many words that they are a fourth and
+  fifth corpus on the same machinery. A reader who opens the file for the roadmap
+  estate is not misled about what else it now gates.
 
 ## Risk Register
 
@@ -210,13 +397,34 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** — `check_estate_count` prints a `skill_count` row with a floor measured on the base ref, and a test proves the floor is not read from config.
-- [ ] **AC-2** — the gate is demonstrated red on an added skill and green on its removal, by sabotage.
-- [ ] **AC-3** — the five retirement signals each carry an instrument path or the word `none`, with no blank row.
+- [x] **AC-1** — `check_estate_count` prints a `skill_count` row with a floor measured on the base ref, and a test proves the floor is not read from config.
+      **Met.** `skill_count 299 (floor 299 at origin/main, +0)` plus a second
+      dimension the AC did not ask for. The floor-provenance test drives the real
+      binary over a git repo whose base ref carries a committed skill tree,
+      asserts `floor 4 at main`, then greps the budget file to show it holds no
+      skill number that could have supplied it.
+- [x] **AC-2** — the gate is demonstrated red on an added skill and green on its removal, by sabotage.
+      **Met, twice over and in both dimensions.** Live tree: one added skill →
+      `299 → 300`, exit 1; removed → exit 0. Token-only: one description
+      lengthened, count unchanged at 299, tokens `11461 → 11482`, exit 1; restored
+      → exit 0. Exit codes captured directly, never through a pipe. Seven fixture
+      cases drive the real CLI over temp git repos.
+- [x] **AC-3** — the five retirement signals each carry an instrument path or the word `none`, with no blank row.
+      **Met, and three of the five instruments were RUN rather than named** — the
+      table in 1.2 carries readings. The finding is the reading: `audit_skill_overlap`
+      returns 0 pairs ≥ 70 %, `lint_handoffs` returns 0 dead links (its 18 findings
+      are a `tier` backfill backlog), `skill_eval_coverage` covers 42/299, and
+      *never triggered* — the reviewer's strongest signal — carries the word `none`
+      because no persistence path exists.
 - [ ] **AC-4** — a new skill cannot pass its authoring gate without a committed ledger row, and the row survives a squash.
 - [ ] **AC-5** — the ledger schema carries a rejected state, and either one historical refusal is backfilled or the absence of any is recorded.
 - [ ] **AC-6** — `skill_count` is lower than 299 and every retirement cites its ranking row.
-- [ ] **AC-7** — two consecutive per-release readings of the net direction are committed.
+- [x] **AC-7** — two consecutive per-release readings of the net direction are committed.
+      **Met with four readings, not two.** Backfilled from release tags
+      (`git archive <tag> src/skills | tar -x`, then `measureSkillEstate`) rather
+      than waiting two releases, in `agents/evidence/metrics/skill-estate-per-release.jsonl`.
+      One seat held two readings must wait for a future release; the other said to try
+      the backfill first, and the backfill worked.
 
 ## Explicitly NOT in this roadmap
 
