@@ -42,6 +42,18 @@ execution:
 > figures are a day stale is how a re-arrival gets read as new. Triage:
 > `agents/evidence/analysis/feedback-14-11-0-triage.md`.
 >
+> **Third arrival, same day, 2026-08-24.** A further inbox bundle
+> (`agents/tmp.old/atomic-claude-graph/`) proposed this program again as an
+> 11-phase runtime roadmap — 2,354 lines, zero checkboxes, zero `verify:` lines
+> — and cited this file nowhere. The sequence is now
+> feedback-14.8.0 → feedback-14.11.0 → atomic-claude-graph. Nothing above
+> changed: both legs were re-measured that day and leg (b) still points the
+> wrong way. Logged so a fourth arrival is recognised as one, instead of costing
+> another full re-derivation. Its two extractable items went to
+> `road-to-decision-conformance` steps 0.4 and 3.0; its form and premise
+> refutations are recorded in
+> `road-to-contract-review-deadlines` § Dropped.
+>
 > **Per-leg decidability, added 2026-08-23 by `road-to-unowned-resume-conditions`.
 > Both legs are OWNED. Neither is restated and neither is recorded permanent —
 > the conditions below are the ones parked on 2026-08-22, unchanged.**

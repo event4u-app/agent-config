@@ -16,6 +16,13 @@ estate_offset_exempt: "No archive move is available in this change. Scope was cu
 ---
 # Road to decision conformance — the decisions exist, and nothing checks whether the tree still agrees with them
 
+> **Second source (Phase 3 only):** `agents/tmp.old/atomic-claude-graph/`
+> (2026-08-24) contributed the sizing for step 3.0 — its "Reopen Register" is
+> this roadmap's Phase 2 conformance loop applied to one premise class, so it is
+> folded in as an amendment rather than landed as a second roadmap. Its own
+> 2,354-line artefact is not landed; the reasons are in
+> `road-to-contract-review-deadlines` § Dropped.
+>
 > **Source:** `agents/tmp.old/hard-feedback-1/chat.txt` (2026-08-24), the
 > converged P0.1–P0.3 of a two-model cross-critique. Its own most useful moment
 > is a failure it documents about itself: three instances with full tree access
@@ -104,6 +111,17 @@ and build the conformance loop that nothing currently performs.
       verify: every class-B row names the guard and the ADR that would own its
       reopening; no class-B row is actioned in this roadmap.
 
+- [ ] **0.4 Extend the classification beyond `docs/decisions/` to archived roadmaps and harvest dispositions.**
+      An ADR is not the only place a rejection is recorded. A capability
+      refused in an archived roadmap *because* an ADR prohibited it stays
+      refused when that ADR changes, and the refusal record keeps reading as a
+      live veto. This is the one gap the ADR-scoped phases above genuinely have,
+      and it is scoping, not a second mechanism.
+      verify: the corpus for Phase 2's loop names `agents/roadmaps/archive/`
+      and `agents/roadmaps/skipped/` alongside `docs/decisions/`, and a
+      spot-check finds at least one archived refusal whose stated reason cites
+      a decision record.
+
 ## Phase 1 — the four schema gaps
 
 - [ ] **1.1 Add a machine-readable scope to supersession.**
@@ -172,6 +190,17 @@ and build the conformance loop that nothing currently performs.
 
 ## Phase 3 — the runtime doctrine, status only
 
+- [ ] **3.0 Enumerate the ADRs whose rejection rested on the runtime premise, before flipping any status.**
+      Setting one ADR to `challenged` while its dependent rejections keep
+      standing as architecture vetoes is the failure mode a second inbox
+      artefact named on 2026-08-24, and it is right. Measured at HEAD
+      `b15b63d38`: **20 ADRs** carry a no-runtime / no-daemon / no-persistence
+      premise, and `docs/contracts/no-runtime-boundary.md` is the contract they
+      lean on. That is the population 3.1 has to name, not a single record.
+      verify: a committed list of the 20 with the premise clause quoted per row,
+      and each row marked `premise-load-bearing` or `premise-incidental` — a
+      rejection that merely mentions daemons is not one that rests on them.
+
 - [ ] **3.1 Set the runtime-doctrine ADRs to `challenged`, naming the trigger and naming no successor.**
       This is a status change and a recorded question. It selects no
       architecture, authorises no prototype and reopens no budget. The source's
@@ -210,4 +239,5 @@ and build the conformance loop that nothing currently performs.
 - [ ] **AC-5** — a decision on `reopen_policy` coverage is recorded in `adr-layout.md`, whichever way it went.
 - [ ] **AC-6** — `adr_cite_check` reports over the whole corpus and separates fired, not-fired and indeterminate triggers with the three counts summing correctly.
 - [ ] **AC-7** — the fraction of accepted ADRs cited nowhere outside `docs/decisions/` is measured and stated, and the decision about what runs the loop names that number as its basis.
+- [ ] **AC-8a** — the 20 premise-carrying ADRs are listed with the premise clause quoted per row and each marked load-bearing or incidental, with no blank row.
 - [ ] **AC-8** — the runtime-doctrine ADRs read `challenged`, name their resolving condition, and name no successor; the parked roadmap's two resume conditions are unchanged.
