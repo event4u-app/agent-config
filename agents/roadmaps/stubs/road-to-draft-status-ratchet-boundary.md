@@ -175,3 +175,90 @@ in a closing PR. It confirmed `B` in round 2. The dissent is kept because it is
 right about one thing that constrains this stub: **the fix must not be hasty**,
 which is why the observe-only rollout and the rollback criteria are inside the
 transferred scope rather than left to whoever picks it up.
+
+## The asymmetry, measured 2026-08-24 — the defect has a second half
+
+Everything above is about the *population*: `status: draft` lets a file leave the
+measured set. This section is about what the gate then does to the files that
+stayed in it, and it is the half that produces recurrence.
+
+**Promotion is charged. Addition is exempted. Both by the same gate, in the same
+run.**
+
+`archive/road-to-release-publication-integrity.md`, blocker
+`b-stub-promotion-authority`, resolved 2026-08-23 by an AI council 2/2 that split
+1-1 and converged on this tiebreak, verbatim:
+
+> *"promoting a stub is an estate decision this roadmap itself routes to the
+> maintainer, and the estate runs a shrink-only ratchet with `one_in_one_out` — so
+> promotion is growth requiring an offset **this run did not identify**."*
+
+So a fix that was fully specified, whose three refusal causes had all been cleared
+and measured, was **not refused on its merits**. It was refused because the
+promotion needed an offset. The council also recorded the general question — *may
+an autonomous run override an explicitly deferred estate decision?* — as
+precedent-setting and *"not a drain run's to settle"*, and left it open for the
+maintainer.
+
+**The next day, the same gate was waived thirteen times.** Measured across PR
+#1612 (`0f7c26ee9..3cf0077d9`), by counting tree entries at each ref:
+
+| Corpus | before | after | delta |
+|---|---|---|---|
+| `agents/roadmaps/*.md` (top level) | 4 | 12 | **+8** |
+| `agents/roadmaps/stubs/` | 69 | 73 | **+4** |
+| `agents/roadmaps/later/` | 61 | 64 | **+3** |
+| `agents/roadmaps/archive/` | 601 | 603 | **+2** |
+
+**Fifteen planning artefacts opened, two closed.** And:
+
+```bash
+git diff 0f7c26ee9..3cf0077d9 | grep -c '^+estate_offset_exempt'   # -> 13
+git diff 0f7c26ee9..3cf0077d9 | grep '^+estate_offset_exempt' \
+  | grep -c 'never counted'                                         # -> 13
+```
+
+**Thirteen claims, thirteen carrying the same boilerplate sentence** — *"this run
+archived only `status: draft` roadmaps, which were never counted and so are
+unavailable as offsets."* Which is true, and is also the point: the reason no
+offset was available is the draft hole this stub already documents. The exemption
+mechanism is fed by the population defect.
+
+## Why this is the recurrence engine, and not just an inconsistency
+
+Three subjects the reviewer keeps re-raising — the release-placeholder guard, stub
+hygiene, the package diet — share no technical content. What they share is that
+each was **blocked at the estate boundary rather than on the merits**:
+
+| Subject | Where it stopped | Record |
+|---|---|---|
+| publication guard | `one_in_one_out`, offset not identified | `archive/road-to-release-publication-integrity.md` `b-stub-promotion-authority` |
+| stub hygiene | disposition `E` (abandon), council **split 1/1**, dissent stands | `archive/road-to-estate-drawdown.md` Step 4.1 |
+| package diet | refused on ROI at one payload size, then the cap rose 6.4 → 9.2 | `archive/road-to-zero-ceremony-install.md` Phase 4 |
+
+So the recurrence is predictable **without reading their content**, which is what
+makes this a mechanism finding rather than three separate ones. The tree already
+states the principle against itself, one section up: *"the measured party controls
+whether its work enters the measurement boundary."* The asymmetry is the same
+sentence applied to promotion — the party that would be charged decides whether to
+issue itself an exemption.
+
+## What this adds to § What moved here
+
+7. Decide whether `one_in_one_out` should treat a **stubs→active promotion**
+   differently from a **new addition**. A promotion moves work already agreed and
+   already recorded; an addition creates it. The gate charges both identically,
+   which prices remediation and appetite the same.
+8. Decide whether `estate_offset_exempt` may be **self-issued by an autonomous
+   run** at all, or whether the thirteen-in-one-PR pattern is the signal that it
+   needs a cap, a distinct key, or an owner countersignature. This is the
+   maintainer question the 2026-08-23 council explicitly declined to settle — it is
+   recorded here so it has an address, not so an agent can answer it.
+9. If either is changed, state the interaction with items 1–6 above: the
+   population defect and the exemption asymmetry are the same key seen from two
+   sides, and fixing one without the other moves the hole rather than closing it.
+
+**Not proposed here, deliberately:** tightening the gate. A shrink-only ratchet
+that also refuses promotions of agreed remediation would make this worse, not
+better, and nothing above establishes which direction is right. The finding is the
+asymmetry; the remedy is the maintainer's.
