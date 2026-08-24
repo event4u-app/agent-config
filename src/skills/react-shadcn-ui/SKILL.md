@@ -54,7 +54,14 @@ block above:
 
 ## Compatibility
 
-- **Tested against:** `shadcn@2.1`, Tailwind CSS `3.x`, React `18+`.
+- **Tested against:** `shadcn@4`, Tailwind CSS `4.x`, React `19`, primitives from
+  `@base-ui/react@1`, `components.json` style `base-nova` — every major read out
+  of `tests/fixtures/stack/shadcn-current/package.json`, the verbatim output of
+  `npx shadcn@latest init -d --template vite` on 2026-08-24. No version on this
+  line may be stated from prose; move it only by re-running that scaffold and
+  re-committing the fixture.
+- Tailwind `3.x` and Radix primitives stay supported through the **v3 branch**
+  under § Gotcha — the CLI moved on, existing projects did not.
 - The audit step (`directives/ui/audit.ts`) reads the line above and
   compares it with `state.ui_audit.shadcn_inventory.version`; a major
   mismatch triggers a soft halt before this skill runs.
@@ -63,8 +70,8 @@ block above:
 
 Use when `state.stack.frontend == "react-shadcn"` and `directives/ui/apply.ts`,
 `review.ts`, or `polish.ts` dispatches to this skill, or when a React project
-clearly uses shadcn/ui (presence of `components.json`, `@radix-ui/*`
-dependencies, a `components/ui/` folder of generated primitives).
+clearly uses shadcn/ui (presence of `components.json`, a `@base-ui/react` or
+`@radix-ui/*` dependency, a `components/ui/` folder of generated primitives).
 
 Do NOT use when:
 - Project is Blade + Livewire + Flux (use `flux` / `livewire` / `blade-ui`).
@@ -82,13 +89,23 @@ Do NOT use when:
   writes `state.ui_audit.shadcn_inventory` with the detected version —
   when it diverges by a major, audit emits a soft halt before this
   skill runs.
-- shadcn/ui composes Radix primitives. Accessibility is built in via Radix
-  but only when you use the wrapper components correctly (`asChild`,
+- shadcn/ui composes a primitive vendor — `@base-ui/react` in a CLI-4 scaffold,
+  `@radix-ui/*` in older projects. Accessibility is built in either way, but
+  only when the wrapper components are used correctly (`asChild`,
   `<DialogTrigger>` instead of a bare `<button>`).
-- Tailwind tokens come from `tailwind.config.{js,ts}` (`theme.extend.colors`)
-  and CSS custom properties on `:root` and `.dark` (`--background`,
-  `--foreground`, `--primary`, `--ring`, …). Audit writes them into
-  `state.ui_audit.design_tokens`. Use those tokens; do not hardcode values.
+- **Tailwind tokens: branch on the `css` axis, never guess.** `detect_stack()`
+  emits `axes.css` as `tailwind-v4` or `tailwind-v3`
+  (`work_engine/stack/detect.ts:521-524`); `existing-ui-audit` reads tokens on
+  the same key.
+  - `tailwind-v4` — **no config file exists.** Tokens live in the `@theme` block
+    of the entry CSS named by `components.json` → `tailwind.css`, and that file's
+    `"tailwind": {"config": ""}` — an empty `config` string — IS the v4 marker.
+    Never write `tailwind.config.{js,ts}` in a v4 project.
+  - `tailwind-v3` — tokens come from `tailwind.config.{js,ts}`
+    (`theme.extend.colors`).
+  - Either branch — CSS custom properties on `:root` and `.dark`
+    (`--background`, `--foreground`, `--primary`, `--ring`, …). Audit writes them
+    into `state.ui_audit.design_tokens`. Use those tokens; never hardcode values.
 - Dark mode is class-based (`<html class="dark">`). Every color must come
   from `bg-background`, `text-foreground`, etc. — never raw `bg-white`.
 - Every interactive primitive must declare a focus-visible state via
@@ -243,12 +260,12 @@ this over a registry file.
    `bg-primary text-primary-foreground`, `text-muted-foreground`. No
    `bg-white` / `text-black` / hardcoded `#fff`.
 2. Spacing / radius from theme tokens (`rounded-lg` mapped to `--radius`
-   in `tailwind.config.{js,ts}`). Polish refactors hardcoded values
-   when a token equivalent exists.
+   — in the `@theme` block on `tailwind-v4`, in `tailwind.config.{js,ts}` on
+   `tailwind-v3`). Polish refactors hardcoded values when a token exists.
 3. Dark mode: never branch on a `dark` prop; rely on the `.dark` class
    on the root and semantic tokens.
 4. Every interactive primitive: keyboard trigger present (Enter/Space
-   on buttons, Esc on dialogs — Radix free), visible focus ring,
+   on buttons, Esc on dialogs — free from the primitive vendor), focus ring,
    `aria-label` from `state.ui_design.a11y` when icon-only.
 
 ### Step 3: State coverage
