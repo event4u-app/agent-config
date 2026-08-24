@@ -242,8 +242,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 108 |
-| **Total** | **137** |
+| C — guarded | 109 |
+| **Total** | **138** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -256,6 +256,25 @@ It rose to 136 on 2026-08-20 when `road-to-gate-autonomy`'s
 `b-gate-budget-preauth` was decided: the two class-1 gate-budget caps are the
 first keys added to this contract since the deletions above, and both are C on
 test 1 (money).
+
+It rose to 138 on 2026-08-24 when `road-to-suggestion-block-capture` Phase 2
+added `hooks.suggestion_capture.enabled`. C on test 1 — it configures code that
+runs at every turn end and every prompt — and the third `hooks.*` key here.
+
+Its disposition is **`consent`**, and the first draft of this row said
+`derivable`, which was wrong in the way the disposition axis exists to catch. The
+`derivable` argument was that the sink's own line count answers whether the soak
+window is running — true, and it answers the wrong question. What the key
+authorises is *the package observing this operator's turns and writing a record
+of them*, and no predicate computes whether someone consents to that. The
+`derivable-surface` ratchet caught it immediately: it is shrink-only, so a new
+`derivable` key reds by construction, and being unable to add one is the
+mechanism working rather than an obstacle.
+
+The distinction against its `design_pass` neighbour still holds and is the reason
+this is not `policy` either: that concern can **block**, so arming it is a risk
+preference. This one only observes and exits 0 on every path — the question is
+not risk, it is permission.
 
 It rose to 137 on 2026-08-23 when `road-to-frontend-power` E1.1–E1.3 added
 `hooks.design_pass.enabled`. C on test 1 (it configures code that runs on every
@@ -314,9 +333,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 39 |
+| consent | 40 |
 | policy | 6 |
-| **Total** | **137** |
+| **Total** | **138** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -534,6 +553,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call | derivable — the UI-surface predicate plus the hook's own two-nudges-per-session cap |
 | `hooks.design_pass.enabled` | C | `false` | C-test 1 — it configures code that runs on every tool call and at every turn end, and unlike its two `hooks.*` neighbours its stop pass can BLOCK rather than warn | policy — whether an operator accepts a gate that can refuse a turn is a risk preference, not a fact the tree can compute. The two neighbours are `derivable` because they only ever warn; the block is the discriminator. `road-to-frontend-power` transfers the default flip to the owner for the same reason |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call | derivable — the index-detection probe the nudge already runs; no index means silence |
+| `hooks.suggestion_capture.enabled` | C | `false` | configures code that runs at every turn end and every prompt | consent |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate | derivable — the risk class the engine already computes at the implement phase; the Hard Floor covers the irreversible end unconditionally |

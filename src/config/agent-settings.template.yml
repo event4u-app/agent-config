@@ -1344,6 +1344,22 @@ hooks:
   code_graph:
     enabled: false
 
+  # Suggestion-block capture (road-to-suggestion-block-capture). Two slots:
+  # `stop` latches that the assistant turn carried a numbered-options block,
+  # `user_prompt_submit` consumes the latch and classifies the answering turn.
+  # Writes COUNTS ONLY to agents/runtime/state/audit/suggestion-capture.jsonl —
+  # the record type has no field able to hold a prompt, an option label or a
+  # command name, and a test asserts the written key set against
+  # src/config/suggestion-capture.json.
+  #
+  # `enabled: false` is the shipped default because this is an INSTRUMENT, not a
+  # feature: it exists so a capture rate can be measured on a maintainer
+  # workspace during a fixed soak window, and there is nothing in it for a
+  # consumer to gain. Turning it on costs one string match per turn and one
+  # small file write per answered block.
+  suggestion_capture:
+    enabled: false
+
 # --- Decision engine ---
 #
 # Controllable gates layered over the observability surface. Absent
