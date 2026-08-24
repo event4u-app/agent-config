@@ -158,9 +158,28 @@ describe('the gate refuses a row outside the declared manifest', () => {
 });
 
 describe('Phase 2 binding — companion roadmaps cite rows, never write status', () => {
+    /**
+     * A roadmap moves to `archive/` the moment it closes, so pinning the active
+     * path makes the test fail the instant the work it asserts is finished —
+     * which is exactly what happened: green locally before archival, red in CI
+     * after it. Resolve either location instead.
+     */
+    const companion = (slug: string): string => {
+        for (const dir of [
+            path.join('agents', 'roadmaps'),
+            path.join('agents', 'roadmaps', 'archive'),
+            path.join('agents', 'roadmaps', 'later'),
+            path.join('agents', 'roadmaps', 'stubs'),
+        ]) {
+            const p = path.join(dir, `${slug}.md`);
+            if (fs.existsSync(p)) return p;
+        }
+        throw new Error(`${slug}.md is in none of the roadmap dispositions`);
+    };
+
     const COMPANIONS = [
-        path.join('agents', 'roadmaps', 'road-to-ten-across-the-board.md'),
-        path.join('agents', 'roadmaps', 'road-to-score-contract.md'),
+        companion('road-to-ten-across-the-board'),
+        companion('road-to-score-contract'),
     ];
 
     const declaredIds = (): Set<string> => {
