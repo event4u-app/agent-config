@@ -55,6 +55,59 @@ the three disagreements are between a skill and its own implementation.
 | **D5** | **The data-boundary axis is undeclared in every component output.** Whether a component fetches or receives its data changes its reuse verdict, and this suite states the distinction only as one advisory corpus row — `design-intelligence/data/stacks/react.csv:52`, *"Container/Presentational split … Mixed data and UI in one"* as an anti-pattern. No skill emits it, no audit records it. | `react.csv:52`; grep across `src/skills/` for an emitted boundary field |
 | **D6** | **Feature-prefixed component names are unaddressed.** A `CommentButton` beside a design-system `Button` shadows the primitive without replacing it, and nothing in the audit, the architect or the review names the pattern. Zero occurrences repo-wide and roadmap-wide, so it is a genuine gap rather than a re-statement. | `grep -rniE 'shadow(s|ing)? the (design[- ])?system' src/` → 0 |
 
+## Field measurement — one real three-level library, 2026-08-24
+
+The roadmap above was written from this tree alone. It was then run against a
+production component library with `atoms/` (55), `molecules/` (3),
+`organisms/` (2) and no `templates/` or `pages/`. Every number below is
+re-derived, and two of them refute the roadmap's own reasoning.
+
+**`classify()` is a constant function there.** Traced over the levelled tree:
+**60 of 60 files → `component`**. Not "mostly" — every atom, every molecule,
+every organism. D2 predicted the fallback swallows granularity; the measured
+rate is 100 %, which makes 0.2's distribution step the load-bearing one rather
+than a formality.
+
+**The prop budget is inverted, and the worst offender is an atom.** Against
+`ui-component-architect:122-124` (Primitive ≤ 6 · Composite ≤ 8 · Page section ≤ 4):
+
+| component | its level | props | cap | over |
+|---|---|---:|---:|---:|
+| `file-upload` | **atom** | 19 | 6 | 3.2× |
+| `date-navigator` | molecule | 18 | 8 | 2.25× |
+| `picker-sheet` | organism | 14 | 4 | 3.5× |
+| `duration-input` | molecule | 13 | 8 | 1.6× |
+| `stepper` | molecule | 4 | 8 | — |
+
+Higher-level components legitimately carry more props — every label, callback
+and test id of an orchestrated pattern surfaces at its root — so a cap that
+*tightens* as granularity rises flags the components that are correctly built.
+And between 45 % and 72 % of the library declares no root prop interface at all
+depending on how you count (`React.ComponentProps<'div'> & VariantProps<cva>` is
+the dominant idiom), so for most components the number does not exist.
+
+**No scalar separated the levels.** Composition depth, state, sub-component
+count and props were each tested; each overlaps completely across `atoms/` and
+`molecules/`, and several *invert*. Sub-component count is the most tempting
+replacement and it fails too: `atoms/combobox` exports **16**, more than every
+molecule (1, 1, 2) and more than one of the two organisms (`picker-sheet`, 1) —
+while the other organism exports 23. Recorded because the obvious next move
+after "props do not work" is "count exports instead", and the data says that is
+the same mistake with a different field.
+
+**The level was a bulk rename four days old.** Git shows 52 files moved flat →
+`atoms/` in one commit, `molecules/` and `organisms/` created empty, and exactly
+one promotion since — shipped as a breaking change, because a barrel-free
+package with subpath-glob exports puts the level string in every consumer
+import. So the level records *when a file was created*, and migrating one is
+semver-major. That is why level churn looks low; it is not evidence that the
+levels are right.
+
+| # | Defect this surfaced | Evidence |
+|---|---|---|
+| **D7** | **The audit never reads `components.json`, and the skill says three times that it should.** `existing-ui-audit/SKILL.md:91` names it as *the* shadcn marker, `:104` uses its `"tailwind": {"config": ""}` for the v4 axis, `:135` says *"Read `components.json` for the registered style + base color"*. `grep -c 'components.json' src/cli/commands/uiAudit.ts` → **0**. `SYSTEM_MARKERS[0]` is the **path** `components/ui/[a-z-]+.tsx` instead. A library that renamed its primitives directory and recorded the rename in `components.json` (`"aliases": {"ui": ".../components/atoms"}`) therefore detects as having **no design system** — measured `design_system_markers: []` on a demonstrably shadcn-derived library. This is the same skill↔code class as D1, on the marker axis. | the three skill lines; `uiAudit.ts:92-99`; the grep |
+| **D8** | **`classify()`'s `page` branch misfires on barrels, and its `view` value is dead outside one framework.** `uiAudit.ts:126` maps `index.[jt]sx?` to `page`; in a barrel-using codebase that hits `components/<feature>/index.tsx`, which is an export barrel, not a route. `view` requires `.blade.php` or `resources/views/`, so it is 0 in any JS tree. Both are separate from the catch-all and 0.1 should decide them explicitly rather than only aligning the two lists. | `uiAudit.ts:122-127` |
+
 ## Already shipped — read before proposing any mechanism here
 
 `agents/roadmaps/archive/road-to-component-library-lifecycle.md` closed 23/23
@@ -103,23 +156,67 @@ building a second one would plausibly open a new engine class under ADR-133.
       verify: a committed distribution table under `agents/evidence/analysis/`
       with a count per `kind` and the fallback share stated as a percentage.
 
-- [ ] **0.3 Pin taxonomy independence with a fixture, before adding a vocabulary.**
-      The vocabulary chosen in Phase 1 must not be readable as an endorsement of
-      any external methodology, and the cheapest guard is a test that fails if a
-      five-level name set appears in the emitted values.
-      verify: a fixture asserting the emitted vocabulary contains none of
-      `atom`, `molecule`, `organism`, `template` as a `kind` value.
+- [ ] **0.3 Pin taxonomy independence — and pin NON-EQUIVALENCE, which is the live risk.**
+      The vocabulary must not read as an endorsement of any external
+      methodology; a fixture forbidding those words as emitted values is the
+      cheap half. The expensive half is positional: a three-tier name set lines
+      up 1:1 with a three-level directory, so a reader with such a tree open will
+      read tier one as *"the thing in the first directory"*. Measured in the
+      field library, a correct classifier and the directory disagree on **at
+      least 14 of 61** components — so the equivalence is not merely unproven,
+      it is false, and forbidding the words while permitting the equivalence
+      hands the reader a wrong key instead of no key.
+      verify: a fixture asserts the emitted vocabulary contains none of `atom`,
+      `molecule`, `organism`, `template`; a second asserts that a component
+      sitting in a directory named `atoms/` does **not** thereby classify as the
+      first tier — the tier is derived, or it is a path regex with nicer words.
+
+- [ ] **0.4 Measure the candidate discriminators before committing to any of them.**
+      The field measurement tested four — composition depth, state,
+      sub-component count, prop count — and all four overlap completely across
+      the two lower levels, several inverting. Sub-component count is the
+      tempting replacement after props fail and it fails the same way: one
+      first-level component exported 16, more than every second-level component
+      and more than one of the two third-level ones. Run the same four over this
+      repository's fixtures before 1.1 picks a basis.
+      verify: a committed table with one row per candidate and its measured
+      separation across levels; a candidate with overlapping ranges is recorded
+      as rejected, and 1.1 cites the surviving one or records that none survived.
+
+- [ ] **0.5 Read the declared primitives location instead of matching a conventional path.**
+      D7: `SYSTEM_MARKERS[0]` is the path `components/ui/[a-z-]+.tsx`, and
+      `uiAudit.ts` never opens `components.json` — while the skill names it as
+      the marker three separate times. A library that renamed its primitives
+      directory and recorded the rename in that file's `aliases.ui` therefore
+      reports as having no design system.
+      verify: `grep -c 'components.json' src/cli/commands/uiAudit.ts` is
+      non-zero; a fixture whose `aliases.ui` points somewhere other than
+      `components/ui/` still yields a non-empty `design_system_markers`.
+
+- [ ] **0.6 Decide the `page` and `view` branches explicitly, not only the enum.**
+      D8: `index.[jt]sx?` → `page` hits every export barrel in a barrel-using
+      codebase, and `view` requires markup this classifier will not see outside
+      one server framework — measured 0 of 364 UI files in a JS tree. 0.1
+      reconciles two lists; these two values need a decision, not an alignment.
+      verify: the barrel case is covered by a fixture that does not classify as
+      `page`, and `view` is either removed or its retention carries a reason.
 
 ## Phase 1 — one granularity vocabulary, on the surfaces that already need it
 
-- [ ] **1.1 Adopt the tier names that already exist as the granularity vocabulary.**
+- [ ] **1.1 Adopt the tier names that already exist — on the reuse argument, not on the budget.**
       `primitive` / `composite` / `section`, taken from
-      `ui-component-architect:122-124` rather than invented. Reusing the existing
-      three-tier distinction is what keeps this a unification instead of a fourth
-      taxonomy.
-      verify: the three names appear as a single exported constant, and
-      `ui-component-architect`'s prop-budget table references that constant's
-      values rather than restating them.
+      `ui-component-architect:122-124` rather than invented. **The justification
+      narrows here.** D3 argued the names were load-bearing because a prop cap
+      already depended on them; the field measurement refutes the cap — inverted
+      at both upper tiers, and unmeasurable for the 45-72 % of a real library
+      that declares no root prop interface. What survives is the weaker and still
+      sufficient argument: these three words are already in the tree, so using
+      them is unification rather than a fourth taxonomy. The basis for *deciding*
+      a component's tier comes from 0.4, not from the cap.
+      verify: the three names appear as a single exported constant;
+      `ui-component-architect`'s table references that constant's values rather
+      than restating them; and the prop caps are either re-derived against 0.4's
+      measurement or marked advisory with the inversion recorded.
 
 - [ ] **1.2 Emit granularity from the audit — code and skill together.**
       This is a TypeScript change, not a prose one: `ComponentEntry`,
@@ -198,12 +295,16 @@ building a second one would plausibly open a new engine class under ADR-133.
 | 2 | Changing `ComponentEntry` breaks a live artefact consumer | implementation | `ui-audit.json` is read by `directives/ui/audit.ts` and gates the work engine's `refine` step; a shape change could red a path unrelated to this work. | 0.1 reconciles the enum before 1.2 widens it, so the two changes are separable; 1.2's verify requires existing consumers to still parse, and the field is additive rather than a replacement. | Phase 1 — one granularity vocabulary |
 | 3 | Phase 4 grows into the second graph the source proposed | implementation | "Composition edges" is one refactor away from "a component graph", which is a new engine class and an ADR-133 review. | 4.1 is scoped to `extract.ts` and reuses `affected()`; no new store, no new CLI verb, no new persisted artefact beyond the existing `code-graph-v1.json`. | Phase 4 — composition edges |
 | 4 | Granularity classification churns on ambiguous components | product | The source's own critique documents this: an `IconButton` is defensibly a primitive or a composite, and a classifier that flips between them teaches readers to ignore the field. | 0.2 measures the current distribution first, so churn is observable rather than hypothesised; the three tiers are coarser than five, which is the whole reason for reusing them; the prop-cap the tiers already carry gives an objective tie-break. | Phase 0 — fix the contract |
-| 5 | The shadowing check false-positives on legitimate feature components | implementation | Most `XButton` names are not shadowing anything, and a noisy report gets ignored the way this repository documents for over-wide gates. | 3.1 is report-only by construction and requires a negative fixture; 3.2 forbids promoting it to a gate without the measured rate. | Phase 3 — name shadowing |
+| 5 | The vocabulary is read as an alias for a three-level directory | product | Three tiers line up 1:1 with three level directories, and a reader will map them positionally. Measured, that mapping is wrong for at least 14 of 61 components in a real library — a 23 % disagreement between an emitted field and a directory the reader can see, which is the churn failure arriving through the door Risk 4 watches. | 0.3's second fixture pins non-equivalence directly: a directory name may not by itself produce a tier. 0.4 forces the tier to be derived from a measured discriminator, so there is something for it to be derived *from*. | Phase 0 — fix the contract |
+| 6 | The shadowing check false-positives on legitimate feature components | implementation | Most `XButton` names are not shadowing anything, and a noisy report gets ignored the way this repository documents for over-wide gates. | 3.1 is report-only by construction and requires a negative fixture; 3.2 forbids promoting it to a gate without the measured rate. | Phase 3 — name shadowing |
 
 ## Acceptance Criteria
 
 - [ ] **AC-1** — `existing-ui-audit/SKILL.md:82` and `ComponentEntry['kind']` carry a string-identical value set, asserted by a test that reads both.
-- [ ] **AC-2** — the emitted granularity vocabulary contains no five-level taxonomy name, proven by a fixture that fails if one appears.
+- [ ] **AC-2** — the emitted granularity vocabulary contains no five-level taxonomy name, proven by a fixture that fails if one appears, AND a second fixture proves a directory name alone does not determine the tier.
+- [ ] **AC-2b** — the four candidate discriminators are measured with their separation across levels recorded, and 1.1 cites the surviving one or records that none survived.
+- [ ] **AC-2c** — `design_system_markers` is non-empty for a fixture whose declared primitives alias points outside `components/ui/`.
+- [ ] **AC-2d** — an export barrel does not classify as `page`, and `view` is removed or its retention carries a reason.
 - [ ] **AC-3** — `ui-audit.json` carries a granularity value per component, and one fixture per tier classifies to its tier.
 - [ ] **AC-4** — `DESIGN.md`'s inventory table has a granularity column, and `ui-component-architect`'s prop budget reads its tier names from the shared constant rather than restating them.
 - [ ] **AC-5** — the data-boundary field is emitted, and a test covers a case where it alone changes the reuse verdict.

@@ -133,6 +133,48 @@ that the deadline itself is enforced by nothing.
       verify: a command prints the current percentage and whether the trigger has
       fired; running it at HEAD reproduces 0.1's number.
 
+## Phase 4 — the same shape, one surface over
+
+Found while following a contract's own pointer during an estate review: the
+lockfile contract names `scripts/_lib/installed_tools.py` as its *"Authoritative
+module"*, and that file does not exist — it became `.ts` under the TypeScript
+migration. Sweeping that construct gave a second population with the same cause
+as D5: a gate exists, and `docs/` is not in its scope.
+
+- [ ] **4.1 Measure the dead-reference population in `docs/` and split it by whether the file ships.**
+      Measured 2026-08-24: **487 dead relative links across 656 files, 11.2 %**;
+      **104** of them sit in files `package.json:files[]` actually ships
+      (`docs/guidelines/` is a shipped root); **152** point at `.py` paths left
+      by the migration. `check_references.ts:58` sets
+      `SCAN_DIRS = ['dist/agent-src', 'agents']`, and the run reports
+      `excluded_directory ×4496` — so the tree is green with 487 broken links in
+      it, and no other gate does general link validation over `docs/`.
+      verify: a committed count under `agents/evidence/analysis/` split
+      shipped / internal / `.py`-target, reproducible by a command in the file.
+
+- [ ] **4.2 Repair the shipped 104 first, and the migration leftovers as a class.**
+      The `.py` targets are mechanical — the same path with a different
+      extension, or a file that no longer exists at all. Shipped-first because a
+      dead link a consumer follows is the only half of this that reaches anyone.
+      verify: the shipped count is 0; the `.py`-target count is 0 or every
+      survivor carries a reason.
+
+- [ ] **4.3 Decide whether `docs/` enters `check_references`'s scope — and price it before deciding.**
+      Widening the scan is one constant, and it lands 383 internal findings on
+      the next PR unless 4.2 ran first. The same flood argument as Phase 0
+      applies, and the same three outcomes are legitimate: widen, widen to the
+      shipped roots only, or record the exclusion with the excluded class named.
+      verify: `SCAN_DIRS` carries the decision, or `check_references.ts`'s module
+      docstring names `docs/` as deliberately out of scope and says why.
+
+- [ ] **4.4 Correct the two stale pointers the contract itself carries.**
+      `installed-tools-lockfile.md` names a `.py` authoritative module that does
+      not exist, and cites *"Active roadmap: P1.1 of the
+      `road-to-multi-package-coexistence` roadmap"* — that roadmap is archived.
+      Both are instances of 4.1's population and both are in a normative
+      contract, which is the worst place for them.
+      verify: both pointers resolve, or are removed.
+
 ## Dropped — the bundle's own proposals
 
 | Artefact | Verdict |
@@ -152,7 +194,8 @@ that the deadline itself is enforced by nothing.
 | 2 | The 90-day cadence is unsustainable and the fix encodes it harder | product | 71.1 % lapsed is not 86 individual oversights; it is evidence about the cadence. Enforcing the floor without questioning the window would make a real constraint out of a number nobody has met. | 0.2 puts the window itself in scope with the measured rate as its input, and 2.3 applies the same treatment to the ceiling rather than defending it by default. | Phase 0 — disposition before enforcement |
 | 3 | Two roadmaps edit the same contract frontmatter | implementation | `road-to-channel-contract-and-profile-drift` step 1.1 already changes `write-engine.md`; this sweep would change it again, and the two are in the same PR. | 3.1 makes the reconciliation an explicit step with a verify that forbids both files touching the same frontmatter; the sweep treats the earlier filing as its first row rather than as a competing fix. | Phase 3 — close the two one-off filings |
 | 4 | Wiring a previously-unwired gate reds the branch that wires it | implementation | D4's single violation is live at HEAD, so step 2.1 turns an invisible red into a blocking one on its own PR. | 2.3 resolves that violation before or with 2.1, and it is one day on one file; the sequencing is stated rather than discovered. | Phase 2 — put it where a PR can see it |
-| 5 | The disposition pass becomes a promotion pass | product | The cheapest disposition for 86 lapsed contracts is "promote to stable", and promotion by exhaustion turns a review backlog into a stability claim nobody reviewed. | 0.1 requires one of four dispositions per row with a reason, and promotion is not the default; the four counts are reported separately so a 86-way promotion is visible as one number. | Phase 0 — disposition before enforcement |
+| 5 | Widening the reference scan floods the next PR with 383 internal findings | implementation | Same failure as rank 1, on a second gate: 4.3's cheapest branch is to widen the constant, and 383 simultaneous reds is a flood. | 4.3 is ordered after 4.2 so the shipped half is already repaired, prices the widening before deciding, and admits "record the exclusion" as a complete outcome. | Phase 4 — the same shape, one surface over |
+| 6 | The disposition pass becomes a promotion pass | product | The cheapest disposition for 86 lapsed contracts is "promote to stable", and promotion by exhaustion turns a review backlog into a stability claim nobody reviewed. | 0.1 requires one of four dispositions per row with a reason, and promotion is not the default; the four counts are reported separately so a 86-way promotion is visible as one number. | Phase 0 — disposition before enforcement |
 
 ## Acceptance Criteria
 
@@ -164,4 +207,5 @@ that the deadline itself is enforced by nothing.
 - [ ] **AC-6** — the gate runs in a workflow, a deliberately lapsed contract reds its PR, and the gate is registered in `gate-coverage.yml`.
 - [ ] **AC-7** — the gate is green at HEAD, `ui-authority.md` included, or its exception carries a written reason at the contract.
 - [ ] **AC-8** — `write-engine.md` and `no-runtime-boundary.md` are each fixed exactly once across this PR's roadmaps, and no two files change the same frontmatter.
-- [ ] **AC-9** — a command prints the current lapsed percentage and whether `STABILITY.md`'s 25 % trigger has fired, and reproduces AC-1's number at HEAD.
+- [ ] **AC-9** — the `docs/` dead-reference count is measured and split shipped / internal / `.py`-target, the shipped count is driven to 0, and `check_references`'s scope either includes `docs/` or names it as deliberately excluded with the class stated.
+- [ ] **AC-10** — a command prints the current lapsed percentage and whether `STABILITY.md`'s 25 % trigger has fired, and reproduces AC-1's number at HEAD.
