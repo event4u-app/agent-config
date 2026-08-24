@@ -307,13 +307,20 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
 
 ## Phase 2 — A worked-example layer with checkable pedagogy (from D1 + D2)
 
-- [ ] 2.1 Convention: every **visible** command (tier 0/1) carries an
+- [x] 2.1 Convention: every **visible** command (tier 0/1) carries an
   `## Examples` section with 1-3 filled invocations and exactly **one** Why
   line each. Measure the exact tier-0/1 count against the live tree when
   implementing — do not quote a figure from a proposal.
-      verify: the measured tier-0/1 count is recorded in the change, and the
-      convention is stated once in `command-writing`, not per command
-- [ ] 2.2 Controlled pattern vocabulary: the Why line cites exactly one pattern
+      verify: **the count is 23, and "tier 0/1" is retired vocabulary.**
+      `command.schema.json` has no `tier` key — its own description says
+      `visibility` is *"the sole command-surface classifier since the integer
+      `tier:` alias was removed"*. Live: `visible` 5 + `advanced` 18 = 23 of 202
+      `src/domains/**/command.md` files. Recorded in three places that a reader
+      reaches independently — `check_command_examples.ts` GRANDFATHERED,
+      `gate-coverage.yml` corpus, and `command-writing`. The convention is
+      stated ONCE, in `command-writing/SKILL.md` § The `## Examples` section on a
+      user-facing command, and in no command body.
+- [x] 2.2 Controlled pattern vocabulary: the Why line cites exactly one pattern
   ID from the six-member set (`outcome-not-steps`, `self-check-loop`,
   `point-at-reference`, `measurable-target`, `give-the-artifact`,
   `say-the-format`), stored as `src/config/discovery/prompt-patterns.yml` —
@@ -321,41 +328,116 @@ What **this** roadmap keeps is only the ratchet that prevents recurrence
   **Adopt the shipped literal**: `### Why it works` or `**Why it works:**`, the
   exact strings `lint_examples.ts:88-93` already detects. Extend that linter's
   scope to commands rather than authoring a parallel convention.
-      verify: the vocabulary file exists with a forward-only header, the
-      extended linter reds on an unregistered pattern ID, and the 4 existing
-      `*-demos.md` files still pass byte-unchanged
-- [ ] 2.3 Gate `check_command_examples`: (a) a tier-0/1 command without an
+      verify: **vocabulary shipped; the "extend that linter" instruction was
+      NOT followed, by council decision.** `prompt-patterns.yml` carries the six
+      ids, the two literals adopted verbatim, and a forward-only header on the
+      `command-verbs.yml` precedent. The literals are reused, the CODE is not:
+      `lint_examples.ts`'s scope and observable behaviour are
+      compatibility-pinned (its `DEMO_GLOB` is asserted as a constant by its own
+      test; its docstring states the quirks are preserved deliberately) and its
+      grammar — `## Demo N` + Wrong/Right/Failure-mode — is a demo-document
+      grammar, not a command grammar. AI council 2/2 chose a separate gate. Both
+      seats also corrected the word *byte-frozen* in the question: the evidence
+      pins the glob and the CLI contract, not literal immutability, so the
+      argument is grammar mismatch and not impossibility. The 4 `*-demos.md`
+      files are byte-unchanged and `lint_examples` is untouched. Its own test
+      comment advertises a python3 golden-parity layer that does not exist —
+      `lint_examples.py` was retired and the file holds 5 tests, none of them
+      parity; recorded here rather than fixed, since editing that file is
+      outside this step.
+- [x] 2.3 Gate `check_command_examples`: (a) a tier-0/1 command without an
   Examples section fails, forward-only with the existing population melting
   down; (b) an example invocation must parse against the `argument-hint`
   grammar and the `routes_to` subcommands, so examples cannot drift silently
   through a refactor; (c) the Why line must cite a registered pattern ID.
   Pre-registered baseline: **4 of 61** top-level commands today.
-      verify: each of the three sub-checks reds on its own seeded violation and
-      greens on repair
-- [ ] 2.4 Site sync: the site renders the Examples from the same source files —
+      verify: **all three red on a seeded violation and green on repair, proven
+      twice over** — 26 vitest cases in
+      `tests/scripts/check_command_examples.test.ts` over a tmpdir corpus, and
+      8 `--self-test` cases (6 rejecting, floor 8) that drive the REAL CLI, so
+      the argv parsing and the entry guard are exercised rather than bypassed.
+      The pre-registered baseline was wrong on both halves: **5 of 23**, not 4
+      of 61. And the number that decided the posture — of the 5 sections that
+      exist, **zero** carry a Why line; every one is a bare fence of
+      invocations. So the full convention is satisfied by no command in the
+      tree, and grandfathering (c) for all 5 is what keeps this forward-only
+      instead of a 23-finding wall on the PR that introduces the gate.
+      Sub-check (b) is implemented as name-resolution plus flag-documentation
+      rather than an `argument-hint` parse: the shipped hints are prose bracket
+      notation (`[ticket-key | url | text] [--personas=<list>]`), not a grammar,
+      and `/work` legitimately shows a zero-argument invocation against a hint
+      that declares one. What (b) does catch is the drift the step names — a
+      renamed command whose examples still say the old slug, and a flag used in
+      an example that the body no longer documents. Both are proven red.
+      The grandfather set is a frozen constant IN the gate, not an editable
+      exemption file (council: "the gate's canonical data or a protected
+      initial-baseline invariant"), and it ratchets one way — a grandfathered
+      command that GAINS compliance, or a name that leaves the in-scope
+      population, is itself a finding.
+- [x] 2.4 Site sync: the site renders the Examples from the same source files —
   single-copy doctrine, no second maintained copy.
-      verify: editing one source example changes the rendered page, and no
-      duplicate example text exists in the site content tree
+      verify: **PUBLISHED NULL — the site holds no command examples at all, so
+      there is no synchronisation boundary to validate.** AI council 2/2 chose
+      this over both alternatives. Measured: `site/sync-docs.mjs` copies exactly
+      five canonical pages (`docs/proof.md`, `benchmark.md`, `CLAIMS.md`,
+      `catalog.md`, `guides/works-with-agent-switch.md`); there is no
+      per-command page and no render path from `command.md`. `docs/catalog.md`
+      is generated by `generate_index.ts` and lists commands as name +
+      description only. `site/src/content/docs/agent-commands/key-commands.md`
+      is a hand-maintained table of one-line descriptions — no invocations, no
+      Why lines. The step's second conjunct is therefore true and its first is
+      unsatisfiable without building a surface. Both seats rejected asserting
+      the second alone: a duplicate-text check with no consumer is
+      underspecified (byte identity? normalised? what minimum length?) and buys
+      false confidence, which is worse than a recorded absence. **Future
+      activation condition:** any change that puts command examples into site
+      content must name their canonical source and ship the synchronisation
+      check with it. Building per-command pages is explicitly out of scope
+      here.
 
 ## Phase 3 — Two small behavioural fixes (from D4 + D5)
 
-- [ ] 3.1 Add a re-orientation paragraph — **not** a new artefact, per ADR-236
+- [x] 3.1 Add a re-orientation paragraph — **not** a new artefact, per ADR-236
   — to the appropriate execution context (candidates: the evidence-discipline
   or developer-like-execution context; decide when implementing): when the user
   mentions external edits, or a file read contradicts the last known state,
   re-orient first (renamed files, moved blocks), then continue. About 10 lines,
   accepted by review, no gate of its own.
-      verify: the paragraph lands in exactly one context file and no new
-      artefact is created; `./scripts-run src/scripts/check_references` green
-- [ ] 3.2 Add an improvement mode to `project-analysis-core`: before a full
+      verify: **landed in exactly one file, and the candidate list was half
+      stale.** `evidence-discipline.md` exists;
+      `developer-like-execution.md` does **not** exist anywhere in the tree, so
+      there was one live candidate rather than two. Council 2/2 for it on the
+      merits anyway: external state invalidates previously gathered evidence,
+      which is that file's subject. Added as § Re-orient when the tree
+      contradicts what you last read (168 → 194 lines), carrying the five-step
+      sequence both seats asked for: invalidate → re-read → reconstruct the
+      broken assumption → preserve the external work → report a moved scope.
+      No new artefact; `check_references` green at 1,569 scanned. A grep for
+      `external edit` / `renamed file` / `re-orient` across
+      `src/agent-src/contexts` and `src/rules` returned **zero** hits before
+      this, so the behaviour was genuinely absent and not duplicated. The
+      paragraph states its own enforcement honestly: a re-read is
+      indistinguishable from a first read in a transcript, so no gate covers
+      it.
+- [x] 3.2 Add an improvement mode to `project-analysis-core`: before a full
   analysis, check whether an artefact for the target already exists under the
   `agents/knowledge/concepts/` convention (`SKILL.md:146`); if so, take a
   targeted delta path — gaps, stale sections, new patterns — instead of a full
   rewrite. This stays entirely inside the card doctrine: cards are a hypothesis
   cache, never truth, and the mode changes only the write economics, never the
   trust status.
-      verify: a fixture test asserts that an existing artefact selects the
-      delta path and a missing one selects the full path
+      verify: **11 fixture tests over a tmpdir concepts directory, driving both
+      branches off what is actually on disk.** `select_analysis_mode.ts` is the
+      decidable half the verify line requires — a skill's prose cannot be
+      asserted, a router can. Existing artefact → `delta`, naming the file it
+      would update; absent file, absent directory, a directory AT the path, and
+      a target that slugifies to nothing → `full`. The case that matters is an
+      **empty** page: treating existence as sufficient would take the delta path
+      on a page with no conclusions and report a saving, so a zero-byte artefact
+      counts as absent. The trust boundary is asserted, not just documented —
+      a test pins that the delta verdict's own reason says the structural claims
+      are still re-verified against a live source. Exit 0 always; it is a router,
+      never a gate, so it adds no gate-registration surface.
 
 ## Phase 4 — Later and only with evidence
 
