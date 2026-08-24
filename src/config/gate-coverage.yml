@@ -40,15 +40,30 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-23)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-24)
 # ----------------------------------------------------------
-# 288 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 289 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run 2026-08-24 and it returns 288, `check_skill_admissions` included).
-# **60 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 57 of those 60 are listed below.** The manifest is
+# re-run on the MERGED tree, with both `check_skill_admissions` and
+# `check_command_examples` counted).
+# **61 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 58 of those 61 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~21 % of the population.
+#
+# RECOUNTED ON THE MERGE, 2026-08-24, and the merge is exactly the case the two
+# paragraphs below were each written for and neither could cover. Both branches
+# added a gate row and both recounted correctly for their own tree; after the
+# merge BOTH gates exist, so either side's figure describes a tree that no longer
+# does. Picking one would have been wrong by one on three axes at once — which is
+# the arithmetic-on-prose this section forbids, arriving through a merge rather
+# than through an edit. Recomputed here, not adjusted:
+#
+#   ./scripts-run npx tsx -e "import {count_gate_scripts} from './src/scripts/check_gate_coverage.ts'; console.log(count_gate_scripts())"
+#   grep -c '^  - id:' src/config/gate-coverage.yml
+#
+# Both paragraphs are kept below rather than collapsed, because each records a
+# real recount of a real tree and the pair is the evidence for this one.
 #
 # RECOUNTED on 2026-08-24 while adding `check_skill_admissions`, and the prose was
 # stale by FOUR on the population axis before the row landed — it said 283 while
@@ -61,6 +76,19 @@
 # an emitter, because a row that did not emit could carry no floor; the same THREE
 # emitters remain deliberately unlisted (`lint_evidence_artifacts`,
 # `adr_cite_check`, `check_new_adr_evidence`); 57 + 3 = 60.
+# RECOUNTED on 2026-08-24 while adding `check_command_examples`, and the prose
+# was stale by FIVE on the population axis before the row landed — it said 283
+# while the function already returned 288 including the new script, so four
+# scripts had arrived since the previous recount without touching this text.
+# That is the seventh consecutive recount to find the figures already wrong,
+# which is the argument for the derivation below rather than for arithmetic:
+# incrementing 283 by one would have written 284 and been wrong by four.
+# Derivation, so the next reader checks rather than trusts:
+# `grep -c '^  - id:' src/config/gate-coverage.yml` returns 57; every listed row
+# is an emitter, because a row that did not emit could carry no floor; the same
+# THREE emitters remain deliberately unlisted (`lint_evidence_artifacts`,
+# `adr_cite_check`, `check_new_adr_evidence`, each with its reason at the place
+# its row would have sat); 57 + 3 = 60. The population comes from the function.
 #
 # RECOUNTED on 2026-08-23 while adding `lint_deterministic_time` and
 # `check_enforcement_denominator` (two rows, and the figures above are the
@@ -283,6 +311,25 @@ gates:
         # zz-canary-skill-admissions
 
         An added skill with no row in the admission ledger — the gate must red.
+  - id: check_command_examples
+    argv: []
+    min_scanned: 18
+    corpus: "every `src/domains/**/command.md` whose `visibility` is `visible` or `advanced` — 23 on 2026-08-24 (5 visible + 18 advanced). The floor sits at 18 because a pack going uninstalled cannot shrink this corpus (the walk reads the source tree, not an install), so the only legitimate drop is a demotion to `internal`; a fall to 18 or below means a whole pack's commands stopped being read."
+    status: enforced
+    canary:
+      class: undetected-antipattern
+      path: src/domains/meta/zz-canary-command-examples/command.md
+      content: |
+        ---
+        name: zz-canary-command-examples
+        description: Canary command planted by check_gate_coverage --canary; never ships.
+        disable-model-invocation: true
+        visibility: visible
+        ---
+
+        # zz-canary-command-examples
+
+        A user-facing command with no `## Examples` section — sub-check (a) must red.
   - id: check_pack_size
     argv: []
     min_scanned: 2000

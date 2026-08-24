@@ -95,6 +95,32 @@ L0–L4 are human shorthand for how deep a discovery went; they are documentatio
 only. The **same** evidence rules apply at every tier — no enforced state
 machine, no per-tier evidence relaxation.
 
+## Re-orient when the tree contradicts what you last read
+
+External edits invalidate evidence. When the user mentions they changed something
+outside this session, or a read contradicts the last known state of a file, the
+prior observation is **stale, not wrong** — and acting on it overwrites work that
+is not yours.
+
+Five steps, in order:
+
+1. Treat every prior observation of the affected paths as invalidated.
+2. Re-read the state — `git status`, then the affected files themselves.
+3. Reconstruct the assumption that broke. A file did not vanish; it was renamed,
+   a block moved, a symbol was extracted. Find where it went before concluding
+   it is gone.
+4. Preserve the external work. Never restore from your own stale copy.
+5. Say what changed if the scope or the conclusion moved, rather than
+   continuing as though the earlier reading still held.
+
+The failure this prevents is narrower than "be careful": it is re-applying a
+diff computed against a tree that no longer exists, which looks like a clean
+apply and silently reverts somebody's edit.
+
+**No gate covers this.** It is a re-read the transcript cannot distinguish from
+a first read, so it is model-carried — the same honesty boundary § Honest
+enforcement reality states for the rest of this file.
+
 ## Honest enforcement reality
 
 ```

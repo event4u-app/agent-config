@@ -289,30 +289,53 @@ dissent is recorded in the stub.
       pre-registration rather than a description of whatever the code did. The
       probe also names its own negative branch as a legitimate terminal state —
       it returned positive, so that branch was not taken.
-- [ ] **AC-2 — OPEN.** On the maintainer workspace, an emitted suggestion block
-      followed by a pick, an as-is choice, an unrelated turn, and a stale
-      reply each produce exactly the registered classification — unit- and
-      one-live-turn-demonstrated, with no line written on ordinary turns.
+- [~] **AC-2 — TRANSFERRED, and the suspicion it recorded was wrong.** On the
+      maintainer workspace, an emitted suggestion block followed by a pick, an
+      as-is choice, an unrelated turn, and a stale reply each produce exactly the
+      registered classification — unit- and one-live-turn-demonstrated, with no
+      line written on ordinary turns.
 
-      **Verified:** unit behaviour across all four enum outcomes plus the
-      no-signature no-op path (30 tests); manifest registration and both budgets
-      (latency p95 71 / 109 ms against 250 ms; zero injection bytes); and one
-      direct dispatcher-envelope invocation producing a valid capture line and
-      consuming the latch.
+      **The blocker was found and fixed 2026-08-24.** This entry previously read
+      *"a failure in the local CLI's `--project-dir` path is suspected but not
+      established"*. It was not that path. `suggestion_capture_hook.ts` declared
+      `main(now: Date = new Date())` while the dispatcher calls every in-process
+      concern as `main(argv)` (`ConcernMain`, `dispatch_hook.ts:666`), so an array
+      arrived where a Date was expected, `now.getTime()` threw, and the
+      instrument's own catch — *"an instrument never breaks the turn it
+      observes"* — swallowed it. The dispatcher recorded `exit_code: 0`,
+      `severity: allow`, no output: **indistinguishable from a disabled hook**,
+      which is exactly how the three isolation attempts read it. The concern had
+      never worked on any live dispatch. Captured verbatim by instrumenting the
+      concern and running the real dispatcher:
+      `TypeError: now.getTime is not a function` at
+      `suggestion_capture_hook.ts:314` ← `_run_concern_inproc` at
+      `dispatch_hook.ts:666`.
 
-      **NOT verified:** a live host turn through `agent-config dispatch:hook`
-      creating and consuming the latch and writing the line. Three bounded
-      isolation attempts produced no concern output, after which the N=3
-      validation budget stopped further iteration. The compiled manifest and the
-      bundle both carry the concern, `hooks:status` lists it in the claude `stop`
-      chain, and `enabled()` returns true for that project's settings file — so a
-      failure in the local CLI's `--project-dir` path is **suspected but not
-      established**, and suspecting it is not evidence that the live path works.
+      Why 30 tests missed it: **every one imported a pure helper** — `classify`,
+      `detectBlock`, `writeLatch`, `consumeLatch`, `enabled`, `appendRecord`. Not
+      one called `main`. The entry point the dispatcher uses was reachable only
+      through a live dispatch, and the live dispatch was the thing that could not
+      be got working. Defect-pattern search: all 29 `CONCERN_REGISTRY` scripts
+      checked, **population 1**.
 
-      **Recorded OPEN rather than "partially met"**, on both council seats'
-      insistence: partial verification describes *evidence*, and is not an
-      executable state for an acceptance criterion. A later reader — or an
-      accounting tool — must not be able to read an incomplete gate as satisfied.
+      **All four classifications now reproduce live** through the installed
+      `./agent-config dispatch:hook`, one temp project each — `1` → `option_n`,
+      `as-is please` → `as_is`, `refactor the auth module` → `other`, a latch
+      dated at epoch → `stale_block`; latch created on `stop`, consumed on
+      `user_prompt_submit`, one line per answered block, key set equal to the
+      registry.
+
+      **Transferred rather than met, on AI council 2/2 (2026-08-24).** What is
+      left of this criterion is its first three words — *"On the maintainer
+      workspace"* — which both seats read as an environmental qualifier rather
+      than description: a temp project driven by the CLI proves the mechanism CAN
+      fire, not that it fires where a user meets it. An autonomous run cannot
+      produce a real host session with a real user picking an option without a
+      user round-trip. That is a missing human, not a missing isolation, so it
+      moves to
+      [`stubs/road-to-suggestion-capture-soak.md`](stubs/road-to-suggestion-capture-soak.md),
+      whose earlier carve-out excluding AC-2 is void and marked so. One seat noted
+      it can be discharged in the same session that starts the soak clock.
 - [x] AC-3 — `lint_hook_manifest` and the hook-latency bench are green with
       the hook registered, with no edit to the latency budget file.
       **Met.** `lint_hook_manifest`, `lint_hook_concern_budget` and
@@ -321,7 +344,7 @@ dissent is recorded in the stub.
       `bench-hook-injection` green with this concern contributing **0 bytes** —
       it emits no context at all, so it cannot move the per-turn injection
       budget.
-- [ ] **AC-4 — TRANSFERRED UNRESOLVED.** `claim:suggestion-capture-rate` carries
+- [~] **AC-4 — TRANSFERRED UNRESOLVED.** `claim:suggestion-capture-rate` carries
       a resolved verdict with a citable figure, in the form the parked consumers'
       resume conditions name — or a recorded DROP that parks them honestly.
 
@@ -333,6 +356,24 @@ dissent is recorded in the stub.
       specifically: rewriting it into "the claim is registered with a threshold"
       would be accurate progress reporting and would not be the criterion. The
       criterion is a verdict, and there is no verdict.
+
+      **Closure authorised 2026-08-24, AI council 2/2.** The disposition is a
+      carry into a named follow-up that exists, which the deferred-resolution
+      preservation test routes to the council; no drop is proposed, so nothing
+      here is owner-reserved. Both seats required the closure language be exact,
+      and one of them corrected the other on the venue: *"This is not still the
+      owner's call: the proposal expressly says the maintainer delegated
+      owner-reserved decisions to this council."*
+
+      **This roadmap is closed with TWO acceptance criteria transferred — never
+      "fully accepted".** AC-1 and AC-3 are met; AC-2 and AC-4 both now rest on
+      the same real-host session, recorded in the successor stub with their
+      reasons. The soak clock starts at verified deployment of the FIXED
+      instrument: no observation before 2026-08-24 is admissible, because a zero
+      reading from the broken period would have triggered this claim's own
+      falsification clause for the wrong reason and parked three consumer
+      roadmaps on the strength of a bug. Recorded in the stub and in
+      `docs/CLAIMS.md`.
 
 ## Corrections applied at landing (2026-08-24)
 

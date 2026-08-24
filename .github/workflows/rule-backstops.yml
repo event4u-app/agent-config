@@ -27,6 +27,10 @@ on:
       - "src/scripts/**"
       - "src/skills/**"
       - "src/agent-src/**"
+      # check_command_examples reads the command corpus and its pattern
+      # vocabulary; neither lives under the roots above.
+      - "src/domains/**"
+      - "src/config/discovery/**"
       - "docs/**"
       - "agents/**"
       - "tests/**"
@@ -45,6 +49,10 @@ on:
       - "src/scripts/**"
       - "src/skills/**"
       - "src/agent-src/**"
+      # check_command_examples reads the command corpus and its pattern
+      # vocabulary; neither lives under the roots above.
+      - "src/domains/**"
+      - "src/config/discovery/**"
       - "docs/**"
       - "agents/**"
       - "tests/**"
@@ -471,6 +479,15 @@ jobs:
       # outside those roots.
       - name: Skill admissions and refusals are recorded
         run: ./scripts-run src/scripts/check_skill_admissions
+      # Wired here rather than left local-only for the same reason as the step
+      # above: a gate `task ci` runs and no workflow does is its own violation
+      # under ci-parity:local-only (165, shrink-only). Its corpus is
+      # `src/domains/**` and `src/config/discovery/prompt-patterns.yml`, so both
+      # are added to this workflow's `paths:` — a gate whose corpus the filter
+      # does not cover is path-filtered into silence, which is the failure
+      # `lint_workflow_paths` exists to make visible.
+      - name: Worked examples on the visible command surface
+        run: ./scripts-run src/scripts/check_command_examples
 
       - name: Stub inventory table stays deleted
         run: ./scripts-run src/scripts/check_no_stub_inventory_table

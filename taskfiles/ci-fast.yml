@@ -1627,6 +1627,15 @@ tasks:
       names a skill that exists. Forward-only: the 299 pre-existing skills are
       grandfathered by the diff scope.
     cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
+  check-command-examples:
+    silent: true
+    desc: >-
+      Fail when a command a user can see (visibility: visible|advanced) carries
+      no `## Examples` section, an invocation that does not resolve to its own
+      name, an undocumented flag, or a Why line citing no registered
+      prompt-pattern id. Forward-only: the 23 in-scope commands as of
+      2026-08-24 are grandfathered in a frozen set inside the gate.
+    cmd: ./scripts-run src/scripts/check_command_examples {{.QUIET_FLAG}}
 
   lint-command-routing:
     silent: true

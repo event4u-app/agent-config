@@ -276,7 +276,25 @@ export function eventOf(envelope: JsonObject, payload: JsonObject): string {
     return raw;
 }
 
-export function main(now: Date = new Date()): number {
+/**
+ * The dispatcher calls every in-process concern as `main(argv)` — see
+ * `_run_concern_inproc` in `hooks/dispatch_hook.ts`, and the `ConcernMain`
+ * signature in `hooks/concern_registry.ts`.
+ *
+ * This used to be `main(now: Date = new Date())`, and the mismatch made the
+ * concern a SILENT NO-OP on every live dispatch: argv arrived where a Date was
+ * expected, `now.getTime()` threw `TypeError: now.getTime is not a function`,
+ * and the outer catch — "an instrument never breaks the turn it observes" —
+ * swallowed it and returned EXIT_ALLOW. The dispatcher recorded exit 0 and no
+ * output, which is indistinguishable from a disabled hook. Three earlier
+ * isolation attempts read that silence as a `--project-dir` problem; it was
+ * this.
+ *
+ * The clock stays injectable because the TTL and the timestamp need to be
+ * driven from a test, but it is now the SECOND parameter, where the dispatcher
+ * cannot land on it.
+ */
+export function main(_argv: readonly string[] = [], now: Date = new Date()): number {
     let envelope: JsonObject;
     let payload: JsonObject;
     try {
