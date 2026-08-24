@@ -584,3 +584,112 @@ describe('check_estate_count — argv and output contracts (R2 findings 2, 7)', 
         expect(res.stderr).toContain('usage:');
     });
 });
+
+/**
+ * The skill corpus, added as a fourth and fifth metric 2026-08-24.
+ *
+ * Every case here drives the REAL binary over a git repo whose base ref carries
+ * a committed skill tree, so the floor is measured off that tree — Phase 2.1's
+ * verify line asks specifically for a test proving the floor comes from the base
+ * ref rather than from the config, and the config carries no skill number at all.
+ */
+describe('check_estate_count — the skill estate', () => {
+    /** A skill directory with a one-line description. */
+    function skill(name: string, description: string, lifecycle?: string): string {
+        const lc = lifecycle === undefined ? '' : `lifecycle: ${lifecycle}\n`;
+        return `---\nname: ${name}\n${lc}description: ${description}\n---\n\n# ${name}\n`;
+    }
+
+    /** `initRepo` plus `k` committed skills on the base ref. */
+    function initRepoWithSkills(k: number): string {
+        const dir = initRepo(3);
+        git(dir, 'checkout', '-q', 'main');
+        for (let i = 0; i < k; i++) {
+            write(dir, `src/skills/s${String(i)}/SKILL.md`, skill(`s${String(i)}`, `Does thing ${String(i)}.`));
+        }
+        commitAll(dir, 'skills');
+        git(dir, 'checkout', '-q', 'feat/change');
+        git(dir, 'merge', '-q', '--no-edit', 'main');
+        return dir;
+    }
+
+    it('reports both dimensions with a floor read off the base ref', () => {
+        const repo = initRepoWithSkills(4);
+        const r = run(repo, ['--base', 'main']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/skill_count\s+4\s+\(floor 4 at main/);
+        expect(r.stdout).toMatch(/skill_description_tokens\s+\d+\s+\(floor \d+ at main/);
+    });
+
+    it('FAILS on one added skill, and the config holds no number that could have said so', () => {
+        const repo = initRepoWithSkills(4);
+        write(repo, 'src/skills/s99/SKILL.md', skill('s99', 'An added skill.'));
+        commitAll(repo, 'add a skill');
+        const r = run(repo, ['--base', 'main']);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('the skill estate grew: skill_count 4 → 5');
+        // The floor is not in the budget file: grep proves it, so a reader cannot
+        // conclude the 4 came from configuration.
+        const cfg = fs.readFileSync(path.join(repo, 'src/config/estate-count-budget.json'), 'utf8');
+        expect(cfg).not.toMatch(/skill_count"?\s*:\s*\d/);
+    });
+
+    it('names the SKILL estate, not the roadmap estate', () => {
+        // The noun was unconditional before this metric existed.
+        const repo = initRepoWithSkills(2);
+        write(repo, 'src/skills/extra/SKILL.md', skill('extra', 'One more.'));
+        commitAll(repo, 'grow');
+        expect(run(repo, ['--base', 'main']).stderr).toContain('the skill estate grew');
+    });
+
+    it('FAILS on a longer description with the count unchanged', () => {
+        // The gaming path the second dimension closes: no new file, more payload.
+        const repo = initRepoWithSkills(3);
+        write(
+            repo,
+            'src/skills/s0/SKILL.md',
+            skill('s0', 'A substantially longer description with a great many additional words in it.'),
+        );
+        commitAll(repo, 'pad a description');
+        const r = run(repo, ['--base', 'main']);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('skill_description_tokens');
+        expect(r.stderr).not.toContain('skill_count 3 → ');
+    });
+
+    it('deprecating a skill LOWERS the count — retirement buys headroom', () => {
+        const repo = initRepoWithSkills(3);
+        write(repo, 'src/skills/s2/SKILL.md', skill('s2', 'Does thing 2.', 'deprecated'));
+        commitAll(repo, 'deprecate s2');
+        const r = run(repo, ['--base', 'main']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/skill_count\s+2\s+\(floor 3 at main/);
+    });
+
+    it('a base ref with NO skill tree drops the skill metrics with a stated reason', () => {
+        // Never silently zero: a floor of 0 against a live 299 would fail every
+        // branch, and a silent skip would pass every tree.
+        const repo = initRepo(3); // base ref has no src/skills at all
+        write(repo, 'src/skills/fresh/SKILL.md', skill('fresh', 'Brand new.'));
+        commitAll(repo, 'first skill ever');
+        const r = run(repo, ['--base', 'main']);
+        expect(r.stdout + r.stderr).toContain('skill_count not compared');
+        expect(r.stdout + r.stderr).toMatch(/could not read src\/skills at main/);
+        expect(r.status).toBe(0);
+    });
+
+    it('a skill addition can be claimed like any other growth', () => {
+        const repo = initRepoWithSkills(2);
+        write(repo, 'src/skills/claimed/SKILL.md', skill('claimed', 'Justified addition.'));
+        // The helper's own `claim` option, not a string replace: `roadmap()`
+        // emits no frontmatter block at all when neither option is set, so a
+        // replace had nothing to anchor on and the claim never reached the diff.
+        write(
+            repo,
+            'agents/roadmaps/road-to-0.md',
+            roadmap('R0', { claim: '"A real sentence explaining why this skill had to land here."' }),
+        );
+        commitAll(repo, 'add a skill with a claim');
+        expect(run(repo, ['--base', 'main']).status).toBe(0);
+    });
+});
