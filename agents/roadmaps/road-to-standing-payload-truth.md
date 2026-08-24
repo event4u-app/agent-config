@@ -11,7 +11,7 @@ estate_growth_exempt: "Charges +1 active_roadmaps and +4 open_blockers. All four
 # Road to standing-payload truth — two red gates that cannot fail a PR
 
 > **Source:** `agents/tmp.old/feedback-14.11.0/chat.txt` §10 (*"Der Standing Payload
-> ist aber noch immer deutlich zu groß"*), §68/§69 (packed size), §81 and §88.
+> ist aber noch immer deutlich zu groß"*), §68/§69 (packed size), §81 and §88. <!-- md-language-check: ignore -->
 
 ## Goal
 

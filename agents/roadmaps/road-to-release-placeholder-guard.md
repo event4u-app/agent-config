@@ -46,7 +46,7 @@ the consumed feedback bundles for the marker string:
 | 9.29.0 | 8 | 12.0.0 | 14 |
 | 9.30.0 | 5 | 12.1.0 | **22** |
 | 9.35.0 | 5 | 14.4.0 | 10 |
-| 10.1.0 | 17 | 14.11.0 | *"bleibt absurd hartnäckig"* |
+| 10.1.0 | 17 | 14.11.0 | *"bleibt absurd hartnäckig"* | <!-- md-language-check: ignore -->
 
 The 12.1.0 round already wrote *"Ihr habt ja seit 9.x immer wieder Probleme mit
 `_auto-derived, rewrite before merge_` gehabt"*, tabulated it as *"weiterhin
