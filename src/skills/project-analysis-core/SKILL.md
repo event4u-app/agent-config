@@ -129,6 +129,29 @@ Check:
 6. Known uncertainties
 7. Recommended next specialist skill
 
+## Improvement mode — check for an existing artefact first
+
+Before a full analysis, ask whether this target has already been analysed:
+
+```bash
+npx tsx src/scripts/select_analysis_mode.ts "<target>"
+```
+
+`full` → run steps 1-8 as written. `delta` → **read the named artefact first**,
+then analyse only what it does not cover: gaps, sections the tree has moved past,
+patterns that are new since it was written. The output format is unchanged; the
+reading is narrower.
+
+This changes **write economics only**. A concept page is a hypothesis cache,
+never truth — the delta path re-verifies every structural claim it carries
+forward against a live source, exactly as a full run would
+([`source-discovery-gate`](../../rules/source-discovery-gate.md) § v1↔v2
+isolation). A cheaper write is not a licence to trust a cached read, and
+"the page already says so" is not evidence.
+
+An empty page counts as absent: it carries no conclusions to delta against, so
+the router answers `full`.
+
 ## Knowledge capture (`convention_detected` events)
 
 An architecture map or stack finding that recurs (a naming convention,
