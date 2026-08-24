@@ -367,21 +367,23 @@ Validated by `scripts/lint_hook_manifest.py` (Phase 7.10): every
 concern script must exist on disk, every platform key must be a known
 platform, every event key must be in the agent-config event vocabulary.
 
-### Which hosts carry `pre_tool_use` — bound-and-denying, bound-only, unbound, absent
+### Which hosts carry `pre_tool_use` — bound-and-denying, bound-only, capability-limited, unbound, absent
 
 Five `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
 `block-unauthorized-git`, `block-kernel-rule-writes`, `block-config-weakening`
 and `evidence-independence` (its blocking branch) — so "which hosts is this
 actually enforced on" is asked of this manifest repeatedly. It has **four**
-answers, and every collapse of them has produced a false claim in shipped
-prose: collapsing the bottom two asserts a host limitation nobody established,
-collapsing the top two asserts an enforcement nobody measured.
+answers — **five since 2026-08-24** — and every collapse of them has produced a
+false claim in shipped prose: collapsing the bottom two asserts a host limitation
+nobody established, collapsing the top two asserts an enforcement nobody
+measured.
 
 | State | Hosts | What the tree records |
 |---|---|---|
 | **Bound, and can deny** | `claude` | a `pre_tool_use:` key in the `platforms:` row, **and** membership of `VERIFIED_PLATFORMS` in `src/scripts/hooks/host_semantics.ts` — the one host whose native block contract is documented and verified, so `EXIT_BLOCK` is the code that host honours |
 | **Bound, cannot deny** | `augment`, `cowork` | a `pre_tool_use:` key, but outside `VERIFIED_PLATFORMS`, so the dispatcher falls through to the legacy pass-through whose own header documents `EXIT_BLOCK = 1` as *non-blocking*. Both trampolines (`augment-dispatcher.sh`, `cowork-dispatcher.sh`) additionally discard dispatcher output and `exit 0` unconditionally — "must never block the agent loop", in their own headers |
 | **Aliased but unbound** | `cursor`, `cline`, `gemini` | a native pre-tool event in `native_event_aliases` — `preToolUse`, `PreToolUse`, `BeforeTool` respectively — mapped onto `pre_tool_use`, with **no** `pre_tool_use:` key in the platform row |
+| **Bound-but-capability-limited** | `opencode` (upstream only — this package binds nothing) | the host honours a blocking result, but **invocation coverage or the availability of the canonical policy inputs is not guaranteed**. See below |
 | **No pre-tool surface** | `windsurf`, `copilot` | no pre-tool alias row at all; `copilot` is additionally `fallback_only` |
 
 The two middle rows are the ones that get lost. Row 2: a concern bound on
@@ -391,6 +393,62 @@ over-claim of exactly two thirds. Row 3: on `cursor`, `cline` and `gemini` a
 guard is **unbound, not unbindable** — the host sends a pre-tool event and the
 translation table already accepts it; this package has simply never written the
 binding.
+
+#### The fifth state — `bound-but-capability-limited`
+
+```
+A HOOK IN THIS STATE IS NOT AN ENFORCEMENT CARRIER FOR A CONCERN UNTIL RUNTIME
+EVIDENCE PROVES ALL THREE: THAT IT FIRES FOR THE GUARDED OPERATION, THAT IT
+PROVIDES LOSSLESSLY NORMALIZABLE DECISION INPUTS, AND THAT IT HONOURS THE
+CANONICAL SCRIPT'S DENIAL.
+```
+
+Added because opencode fits none of the four above and forcing it into one would
+be a false claim in either direction. Established 2026-08-24 by reading
+`@opencode-ai/plugin@1.18.21` and `@opencode-ai/sdk@1.18.21` — evidence and the
+type signatures in
+[`opencode-plugin-api-verification`](../../agents/evidence/analysis/opencode-plugin-api-verification.md).
+
+**opencode — `permission.ask`: bound-but-capability-limited.** It honours
+`{ status: "deny" }`, but **only when the host raises a permission request** —
+`tool.execute.before` is mutate-only (`{ args }`, no refusal), so a concern gets
+either every-call coverage or the ability to refuse, never both. And its declared
+payload does not guarantee the tool name, arguments, path, command string or diff
+the deny-dependent concerns decide on:
+
+```ts
+type Permission = { id, type, pattern?, sessionID, messageID, callID?,
+                    title, metadata: Record<string, unknown>, time }
+```
+
+`shell.env` and `experimental.chat.system.transform` are **separate mutation
+carriers** and do not establish `pre_tool_use` enforcement capability.
+
+**The classification is per concern, never per host** — both council seats
+insisted on this independently, and it is the part that keeps the state from
+becoming a blanket claim:
+
+| Concern | Decision input it needs | Hook | Input available? | Status |
+|---|---|---|---|---|
+| `hardenedSpawnEnv` | env mutations only | `shell.env` | ✅ dedicated hook | **writable** — mutate-only, exactly its shape |
+| kernel projection | system-prompt mutations only | `experimental.chat.system.transform` | ✅ dedicated hook | **writable** — mutate-only |
+| `block-kernel-rule-writes` | the written path | `permission.ask` | ⚠️ `pattern` / untyped `metadata` | **probe-gated** |
+| `block-config-weakening` | path **and** diff | `permission.ask` | ⚠️ diff certainly absent | **probe-gated** |
+| `block-no-verify` | the command string | `permission.ask` | ⚠️ not a typed field | **probe-gated** |
+| `git-authorization` | the git operation | `permission.ask` | ⚠️ not a typed field | **probe-gated** |
+
+**Translator or new authority — conditional, and the condition is behavioural.**
+A plugin denial is a **new authority surface** if the plugin itself interprets
+`pattern` or `metadata` and derives a verdict the canonical script did not
+produce. It stays a **translator** only if it losslessly normalizes host input,
+invokes the existing canonical script, and returns that script's verdict
+unchanged. A type declaration cannot settle which; only the plugin's own
+implementation can, so no classification is asserted here in advance.
+
+**Scope, stated because the pin was substituted.** The blocker asked for git
+`6386e67`; the published packages at `1.18.21` were read instead. Every statement
+here is scoped to `1.18.21`, and **equivalence to that sha was not demonstrated**.
+If it is shown to differ, this whole subsection is re-derived rather than patched.
 
 **What is NOT established, in either direction:** whether an unbound host's
 pre-tool event can *deny* a call. Nothing here records it, and `severity:

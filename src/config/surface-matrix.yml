@@ -167,8 +167,27 @@ tools:
   opencode:
     surface: projection
     scope_path: "~/.opencode/"
-    hooks: none
-    notes: Plain projection (skill bundle); no plugin channel.
+    # CORRECTED 2026-08-24: this row read `hooks: none` and "no plugin channel",
+    # and that was wrong on a shipped host. @opencode-ai/plugin@1.18.21 exposes
+    # `permission.ask`, `tool.execute.before`, `shell.env` and
+    # `experimental.chat.system.transform`. Evidence, with the pin and the type
+    # signatures: agents/evidence/analysis/opencode-plugin-api-verification.md
+    #
+    # `plugin`, and the value is the HOST's channel type rather than a claim that
+    # this suite binds it. An `unbound` value was tried first and rejected by
+    # lint_surface_matrix's enum {managed-settings-block, settings-hooks-opt-in,
+    # plugin, none} — correctly: every other row here describes what the host
+    # offers, and whether this package binds it is hook_manifest.yaml's business,
+    # where opencode still has ZERO entries. The notes below carry the
+    # not-bound-here fact so the row cannot be read as a delivered capability.
+    hooks: plugin
+    notes: >-
+      Plain projection (skill bundle) today. Upstream DOES expose a plugin
+      channel with a real deny (`permission.ask` -> status "deny"), but the deny
+      is narrower than a pre-tool slot: `tool.execute.before` is mutate-only
+      (`{args}`, no refusal), so a concern can only refuse where opencode already
+      stops to ask, and the `Permission` input carries no tool name, arguments or
+      path as typed fields. Nothing in this package is bound to it.
 
   trae:
     surface: projection
