@@ -11,7 +11,7 @@ complexity: lightweight
 
 ## What was transferred
 
-From `agents/roadmaps/road-to-opencode-enforcement.md` Phase 1, on an AI council
+From `agents/roadmaps/archive/road-to-opencode-enforcement.md` Phase 1, on an AI council
 verdict of 2026-08-24 (2/2 convergent; the maintainer delegated owner-reserved
 blockers to the council for that drain run).
 
@@ -20,6 +20,12 @@ blockers to the council for that drain run).
 - **Group B of the PREREG** — the four deny-dependent concerns
   (`block-kernel-rule-writes`, `block-config-weakening`, `block-no-verify`,
   `git-authorization`), each gated on the probe below.
+- **AC-2's transcript half, AC-3 and AC-4** — recorded here 2026-08-24 to close a
+  bookkeeping gap rather than to transfer anything new. All three already rested
+  on 1.1 and 1.2; naming them makes the parent's `[~]` boxes verifiable against
+  this file instead of against a sentence in the parent. AC-2's
+  PRE-REGISTRATION half did NOT transfer and is complete
+  (`internal/bench/opencode-enforcement-PREREG.md`).
 
 **Group A did NOT transfer and is not blocked.** `hardenedSpawnEnv` → `shell.env`
 and kernel projection → `experimental.chat.system.transform` are mutate-only,
@@ -85,6 +91,19 @@ the PREREG is re-derived before this probe runs.
 
 - **Phase 0**, which is complete: the matrix is corrected, the fifth state and the
   per-concern table are in the contract, and the PREREG is written.
-- **The estate.** The parent roadmap stays **active** with Phases 1 and 2 open —
-  its premise was *confirmed*, not refuted, so closing it would report a null that
-  the evidence does not support.
+- ~~**The estate.**~~ **Superseded 2026-08-24, and the original is kept because
+  its reasoning still holds while its factual premise no longer does.** It read:
+
+  > *"The parent roadmap stays **active** with Phases 1 and 2 open — its premise
+  > was confirmed, not refuted, so closing it would report a null that the
+  > evidence does not support."*
+
+  Phases 1 and 2 are no longer open: every step in both is `[~]`, transferred
+  here. The parent is therefore **archived**, and the sentence's own argument is
+  why that is not a null: the premise WAS confirmed, the channel exists, the
+  matrix is corrected, the fifth state and the per-concern table are in the
+  contract, and the PREREG is written. Archiving records completed work whose
+  remaining half lives here — it does not report that opencode enforcement failed.
+
+  What would have been dishonest is closing it as *done*: the parent is archived
+  with **three acceptance criteria transferred**, never with all five met.
