@@ -17,7 +17,7 @@ routes_to:
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
-  - "none"
+  - "instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one"
 collision_ok:
   "refactor": "an explicit clean-up/refactor ask is the remediation ladder's own trigger"
 # obligation: line 31
@@ -97,11 +97,11 @@ While implementing/modifying code you pass an issue outside the literal task. Al
 - The issue is the task itself — then it's just the task (no ladder needed).
 - The user already decided this item (fixed later, or explicitly ignored).
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 The note, the ask and the user's decision are all prose, and the issue set is
 whatever the agent happened to see, so no gate can tell a discharged issue from a
-mentioned one. This rule ships `enforced_by: none` — the honesty boundary
+mentioned one. This rule ships `instruction-only` — the honesty boundary
 [`security-sensitive-stop`](security-sensitive-stop.md) and
 [`ui-audit-gate`](ui-audit-gate.md) state for their own obligations. The ladder
 is the control; skipping it is caught by nothing.

@@ -110,6 +110,44 @@ consume the source figure at all.** The divergence is recorded here rather than
 silently replaced because a roadmap that quietly fixes its own source cannot be
 checked against it later.
 
+### Received by reference — the per-invocation skill diet (2026-08-23)
+
+Routed here by
+[`road-to-deterministic-time-in-gates.md`](road-to-deterministic-time-in-gates.md)
+§ Routed elsewhere, which declined to open a phase for it. The ownership
+boundary in one sentence: **this roadmap owns the standing-payload axis end to
+end**, and a per-invocation diet phase elsewhere would fork one budget across
+two plans — the routing roadmap's own scoping quotes § Context verbatim (the
+preamble RED is rule-driven, 120,282 tok of 135,436 against a 107,646 ceiling,
+while the skills catalog costs 14,408), so the axis was already named here.
+
+Nothing in this roadmap changes as a result; the item is recorded so the pointer
+resolves and the transfer is not a claim nobody received. Two figures came with
+it, both `corrected-from-reproduction` against the source that raised them and
+both re-measured in this tree on 2026-08-23:
+
+- **14 of 292** skills carry a `references/` directory (the source said 14/290 —
+  the count held, the denominator moved with the tree).
+- SKILL.md line distribution — re-measured rather than carried over; see below.
+
+**One of those two figures does not reproduce, and the correction ran the wrong
+way.** Re-measured at `origin/main` on 2026-08-23 over the 294 `SKILL.md` files
+`git ls-tree -r --name-only origin/main src/skills/` returns: **sum 53,432 · p50
+166 · p90 275** (median by `statistics.median`, p90 by nearest-rank; both methods
+tried agree). That matches the SOURCE's `p50 166 · p90 275` exactly and refutes
+the routing roadmap's "corrected" `p50 165 · p90 271`. The sum matches neither —
+52,599 (source), 52,798 (correction), 53,432 (measured) — and it cannot, because
+none of the three states its denominator: the one-level glob
+`src/skills/*/SKILL.md` sees 292 files while the recursive listing sees 294. A
+distribution published without its corpus definition and its percentile method is
+not reproducible in either direction, which is the finding worth keeping; the
+`references/` count (14) reproduces exactly.
+
+They are inputs to Phase 1's per-rule before/after, not new steps: the catalog
+half of the preamble bucket is 14,408 tok of 135,436, so a `references/`
+extraction sweep cannot close a rule-driven overrun and is not proposed as if it
+could.
+
 ## Phase 0 — stop the drift before dieting
 
 A ratchet that fails on growth tells you *after* the growth is committed. The

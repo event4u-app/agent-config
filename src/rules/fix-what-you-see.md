@@ -23,7 +23,7 @@ triggers:
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
-  - "none"
+  - "instruction-only: ownership-as-excuse is a disposition in prose; no gate can see a red check handed back with its cause named"
 ---
 
 # Fix What You See
@@ -106,3 +106,11 @@ maintainer decision, recorded), a kernel rule shortened to make room, or a
 option that would fire on tool output rather than on wording. Until then, `auto`
 plus this paragraph is the honest state: the obligation is real, its delivery is
 partial, and the partiality is named rather than implied away.
+
+## Honest enforcement — `instruction-only`
+
+Nothing observes a disposition. "I fixed it", "I landed a roadmap for it" and
+"I named the author and moved on" are the same prose to every gate in this tree,
+and the issue set is whatever the agent happened to see. So the two dispositions
+above are model-carried, and the activation gap named in the previous section
+sits on top of that rather than beside it.

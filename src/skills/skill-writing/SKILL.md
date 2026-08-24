@@ -229,6 +229,12 @@ to every skill you author.
 - Per the post-action summary suppression, the example output ships
   the artifact, not a wrapping `## Status` / `## Summary` block.
 
+**Scope-exclusion clause.** A skill can shed assumed-knowledge prose without
+losing correctness by naming what it does NOT cover: "this skill covers only
+`<X>`; standard `<Y>` is assumed". One sentence replaces the paragraph that
+would otherwise re-teach `<Y>`, and it is stronger than silence — a reader who
+does not have `<Y>` learns that from the clause instead of from a wrong result.
+
 **Pre-save self-check:**
 1. Does any procedure step open with "Let me", "Now I will", "Found
    it", "OK", or "Alright"?

@@ -37,6 +37,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // tolerantly (try/except → None) so the project-local linter still runs if the
 // _lib package layout shifts; the TS twins always exist, so a static import is
 // byte-faithful for behaviour (the only observable effect is the --global path).
+import { asOf } from './_lib/as_of.js';
 import * as _kg from './_lib/knowledge_global.js';
 import * as _kgr from './_lib/knowledge_global_redaction.js';
 import { assertScanned } from './_lib/scan_scope.js';
@@ -485,7 +486,7 @@ function _maxDate(parsed: PyDate[]): PyDate {
 }
 
 function _todayUtcDate(): PyDate {
-    const now = new Date();
+    const now = asOf();
     return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1, day: now.getUTCDate() };
 }
 

@@ -66,7 +66,8 @@ evidence pointer, or `task check-claims` fails the build.
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite). | quant | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` | ✅ |
 | The text-layer-only boundary above is machine-enforced, not asserted: a scope-guard test fails if any corpus entry declares a non-text layer, and that guard is itself falsified by a test that splices in a `layer: file` PNG-metadata fixture and requires the guard to fail. The corpus is sha256-frozen and was committed BEFORE any detector existed, so no detector was tuned against it. | qual | `tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added` | ✅ |
 | The retrieval sanitize floor covers the TEXT layer only, by construction — never file or network channels (image / audio / PDF / DNS / TCP / file-metadata steganography) and never semantic evasion (word choice, phrasing, garden-path constructions, word-order permutation). On the frozen 653-entry corpus it strips or flags 99.00% of in-scope positives (100.00% on the unambiguous zero-width / bidi / variation-selector classes) at a 0.00% false-positive rate over 353 real in-repo negatives, with zero added model spend and 0.018 ms p95 per message. Exactly ONE of the seven added channels removes bytes; the other six report and pass the text through unchanged — this is NOT a claim to block steganography. | quant | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` | ✅ |
-| 15 of 120 governed rules (12.8%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 117 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (89 in the 117-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count). | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
+| The share of governed rules carrying a backstop that fails a CI build is RESOLVED, not declared, and is published in exactly ONE place — `docs/proof.md` § 4b, projected from `check_enforcement_coverage`, which prints its denominator together with the frame that produced it (`internal/reports/enforcement-coverage.json` is that same output on disk). No figure is restated in this entry, deliberately, and `check_enforcement_denominator` reds when one appears in a published doc the resolver did not generate: until 2026-08-23 this tree carried FIVE different numbers for the one property, and every previous correction fixed a figure while leaving the plurality intact — a number that is right today is how it came back each time. Resolution means a declared `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), while a hook registered `fail_closed: false` resolves to `observer`, never `validator`. That distinction is not cosmetic: it once let "named in a taskfile" read as "fails the build" while NO workflow invoked `task ci`, `ci-strict`, or `ci-fast`, so most of the counted validators only ran when a human typed the command. Splitting `validator` (CI runs it) from `validator-local` (only a human does) cut the honest figure to roughly a third at the time; wiring the taskfile-only gates into `rule-backstops.yml` restored it, this time meaning what the headline says, and `local_only` is ratcheted at zero so a gate cannot drop back out silently. Wiring them also surfaced that five were failing invisibly, 37 findings deep; those are cleared and the baseline in `rule-backstop-debt.json` stands at zero, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. The ratio has not risen across five releases, and the reason is worth stating rather than reading as stagnation: the ratchet prevents regression, it does not raise the level. An undeclared rule counts as uncovered, never excluded — an honest recorded gap beats a false claim of coverage — including the two scale/history pack rules that ship enforced by `lint_persistence` in consumer CI, which this resolver, scoped to THIS repo's workflows, correctly does not count. | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
+| Exactly one enforcement denominator is quotable, it names the frame that produced it, and no published doc restates it by hand. | quant | `exec:check_enforcement_denominator -> 0` | ✅ |
 | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed. | quant | `docs/benchmark.md#REPLICATION FAILED` | ✅ |
 | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `exec:skill_eval_coverage --check -> 0` | ✅ |
 | A credential-free prescription layer reads content the host's own web tools cannot fetch at all — Reddit thread text (Atom feeds) AND comment ranking plus reply nesting (server-rendered HTML), and a single named tweet (the platform's own oEmbed endpoint). Measured 2026-07-25 from a residential network against a pre-registered 6-task-per-channel set with a native control and thresholds frozen before the run: reddit tier 1 6/6, reddit tier 2 6/6, twitter-oembed 6/6, native 0/6 on both Reddit tiers. Zero credentials, zero resident processes, zero auto-installs. Scope bounds that travel WITH the claim: (a) the twitter gap is narrower than 6/6 suggests — native also passed 2 of those 6 via third-party mirrors, so the channel earns its place only on tweets nothing mirrors; (b) reddit tier 2 is on an announced closing path and ships with a kill-switch keyed on an OBSERVED login wall; (c) youtube-transcripts is PARKED, not shipped — its backend is human-installed by contract and was never exercised; (d) residential network is load-bearing, and CI is explicitly not a bench environment. | quant | `docs/benchmark.md#ship-gated-reach` | ✅ |
@@ -99,11 +100,11 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**53 backed claim(s)** — all evidence pointers resolve in CI.
+**54 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**14 of 53** backed claims carry `exec:` evidence —
+**15 of 54** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
 **39** rest on a pointer: CI checks that the artefact
@@ -295,35 +296,41 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 10 observer · 0 local-only · 86 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 10 observer · 0 local-only · 82 undeclared (no `enforced_by` yet).
+
+`denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
-| `active-remediation` | none | `none` |
-| `code-provenance` | none | `none` |
+| `active-remediation` | none | `instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one` |
+| `code-provenance` | none | `instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
-| `council-availability` | none | `none` |
-| `design-review-after-ui-write` | none | `none` |
+| `council-availability` | none | `instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only` |
+| `decision-revisit-gate` | none | `instruction-only: no gate can observe an agent citing a decision it never opened; adr_cite_check is deterministic where it runs and nothing makes it run` |
+| `design-review-after-ui-write` | none | `instruction-only: no artefact proves a design review happened outside the work-engine dispatcher; the review verdict is self-report` |
 | `evaluator-independence` | observer | `hook:evidence-independence` |
-| `fix-what-you-see` | none | `none` |
+| `fix-what-you-see` | none | `instruction-only: ownership-as-excuse is a disposition in prose; no gate can see a red check handed back with its cause named` |
 | `framework-neutrality-in-generic-skills` | validator | `validator:src/scripts/lint_framework_leakage.ts` |
 | `git-history-discipline` | hook | `hook:block-no-verify` |
 | `language-and-tone` | validator | `validator:src/scripts/check_md_language.ts` |
 | `lethal-trifecta-guard` | validator | `validator:src/scripts/lint_skill_frontmatter_safety.ts` |
 | `media-governance-routing` | validator | `validator:src/scripts/lint_media_policy_linkage.ts` |
 | `minimal-safe-diff` | observer | `hook:minimal-safe-diff` |
+| `missing-skill-recovery` | none | `instruction-only: nothing can observe an agent concluding that no skill exists; the skill-route concern covers only the prompts where the ranker is confident` |
 | `no-roadmap-references` | validator | `validator:src/scripts/check_no_roadmap_refs.ts`<br>`validator:src/scripts/check_council_references.ts` |
 | `non-destructive-by-default` | none | `none` |
 | `onboarding-gate` | observer | `hook:onboarding-gate` |
 | `output-discipline` | validator | `validator:src/scripts/lint_output_slop.ts` |
 | `persona-governance` | validator | `validator:src/scripts/lint_persona_governance.ts` |
+| `playbook-precedence` | none | `instruction-only: no gate can tell a playbook-first run from a skill-first one — both produce a diff, and which answer was consulted leaves no artefact` |
 | `preservation-guard` | validator | `validator:src/scripts/check_condensation.ts`<br>`validator:src/scripts/skill_linter.ts` |
+| `recurring-criticism` | none | `instruction-only: the earlier disposition, the three outcomes and the hardening are all prose; the self-repair occurrence counter covers only detector-matched defects` |
 | `roadmap-progress-sync` | observer | `hook:roadmap-progress` |
 | `secret-vcs-guard` | validator | `validator:src/scripts/check_secret_leak.ts` |
-| `security-sensitive-stop` | none | `none` |
+| `security-sensitive-stop` | none | `instruction-only: threat-model-before-you-edit is a pre-edit reasoning step only the model observes` |
 | `self-repair-loop` | observer | `hook:self-repair` |
 | `session-canary` | observer | `hook:session-canary` |
-| `settings-ask-protocol` | none | `none` |
+| `settings-ask-protocol` | none | `instruction-only: no gate counts the questions in a chat turn; settings:set fences the illegal WRITE, never the badly-shaped ask` |
 | `skill-quality` | validator | `validator:src/scripts/skill_linter.ts` |
 | `source-confidentiality` | validator | `validator:src/scripts/check_no_external_sources.ts` |
 | `source-of-truth` | validator | `validator:src/scripts/check_condensation.ts` |
@@ -331,12 +338,12 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `token-optimizer-maintenance` | validator | `validator:src/scripts/check_token_optimizer_freshness.ts` |
 | `tool-safety` | validator | `validator:src/scripts/lint_agent_security.ts` |
 | `ui-audit-gate` | observer | `hook:design-pass` |
-| `untrusted-input-defense` | none | `none` |
+| `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (86) carry no row — an honest gap beats a false claim.
+Undeclared rules (82) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 81 ledger entries · 53 backed · 22 unbacked inventory · 6 resolved-null.
+**Axis 2 — evidence form per public claim.** 82 ledger entries · 54 backed · 22 unbacked inventory · 6 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -373,6 +380,7 @@ Undeclared rules (86) carry no row — an honest gap beats a false claim.
 | `encoding-corpus-scope-guard` | qual | backed | `tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added` |
 | `encoding-floor-text-layer-only` | quant | backed | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` |
 | `enforcement-coverage-resolved` | quant | backed | `exec:check_enforcement_coverage --check -> 0` |
+| `enforcement-undeclared-denominator` | quant | backed | `exec:check_enforcement_denominator -> 0` |
 | `essential-tier-cost-factor` | quant | backed | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | `exec:skill_eval_coverage --check -> 0` |
 | `experiment-loop-iteration-floor` | quant | unbacked | `PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 0/5 — the floor was fixed before the spike ran, and the spike's kill criterion was its complement: "fewer than five clean iterations" would have left Phase 3 unbuilt). Measured on a toy metric in a scratch repository, `agents/evidence/eval-findings/metric-loop-s01.md`: 6 clean iterations, metric 24 → 3, with iteration 5 reverting a change that improved the metric 67 % and broke behaviour. That result answers the PHASE GATE and is why the skill shipped. It does NOT back this claim, and the distinction is the whole reason the entry stays unbacked: the run was one agent, one session, one toy metric whose evaluator was written alongside the loop, so it measured whether the PROTOCOL holds, not whether the shipped skill drives a real metric. BACKING REQUIRES: ≥ 3 runs of the shipped `experiment-loop` skill against metrics that existed before the run, each with its register committed, each reaching ≥ 5 clean iterations. DROP: any run below the floor publishes the null and the skill is withdrawn rather than the floor lowered — lowering a pre-registered floor after seeing the data is the tuning this roadmap's own s04 finding forbids.` |

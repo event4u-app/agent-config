@@ -38,6 +38,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { count as count_artefacts } from './update_counts.js';
 import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
 import {
     carrier_frequency_by_platform,
@@ -81,7 +82,7 @@ export type Resolution =
     | 'observer'        // instruments only — never blocks
     | 'unwired'         // declared script exists but nothing runs it  ← the D1 class
     | 'missing'         // declared target does not exist at all
-    | 'none';           // honest, recorded gap
+    | 'none';           // honest, recorded gap — `instruction-only: <reason>`, or the retired bare `none`
 
 /**
  * Whether the carrier's firing set covers the obligation's — the question
@@ -91,7 +92,8 @@ export type Resolution =
  *                  hook-capable platform.
  * `gap`          — at least one hook-capable platform where no declared carrier
  *                  covers it. `gap_platforms` names them.
- * `declared-gap` — the rule declares `enforced_by: none`; the gap is stated in
+ * `declared-gap` — the rule declares `instruction-only:` (or the retired `none`);
+ *                  the gap is stated in
  *                  the rule's own text, so it is honest, not a defect.
  * `unclassified` — no `obligation_frequency` to join against. The nine kernel
  *                  rules sit here: `block_kernel_rule_writes.ts` denies agent
@@ -377,7 +379,31 @@ export function resolve_one(
         exists: (rel: string) => boolean;
     },
 ): { resolution: Resolution; note?: string } {
+    // `none` stays legal and counted — an honest gap beats a false claim — but it
+    // is the RETIRED spelling. `instruction-only: <reason>` is the same effective
+    // level with the triage record attached, because "nothing enforces this" and
+    // "nothing enforces this AND here is why that is the right call" are not the
+    // same statement, and only the second one survives review. The one remaining
+    // `none` is `non-destructive-by-default`, a kernel rule that
+    // `block_kernel_rule_writes` denies agent writes to — see
+    // `agents/roadmaps/stubs/road-to-kernel-instruction-only-migration.md`.
     if (decl === 'none') return { resolution: 'none' };
+
+    if (decl === 'instruction-only' || decl.startsWith('instruction-only:')) {
+        const reason = decl.slice('instruction-only:'.length).trim();
+        if (decl === 'instruction-only' || reason === '') {
+            // A bare marker is not a triage record. `missing` is the honest slot:
+            // the declaration names a mechanism it never supplies, and `missing`
+            // is what the `--check` ratchet reds on.
+            return {
+                resolution: 'missing',
+                note:
+                    'instruction-only declared with no reason — a reason is a triage record, ' +
+                    'not a pass. State in one line why this obligation is model-carried.',
+            };
+        }
+        return { resolution: 'none' };
+    }
 
     const idx = decl.indexOf(':');
     const kind = decl.slice(0, idx);
@@ -471,7 +497,10 @@ export function join_frequency(
     if (declared.length === 0) {
         return { verdict: 'unmeasured', carrier_frequency: null, gap_platforms: [] };
     }
-    if (declared.every((d) => d === 'none')) {
+    // `instruction-only:` is the same declared gap as `none`, with its reason
+    // attached; a rule that spelled it the new way must not become a frequency
+    // finding for doing so.
+    if (declared.every((d) => d === 'none' || d.startsWith('instruction-only:'))) {
         return { verdict: 'declared-gap', carrier_frequency: null, gap_platforms: [] };
     }
 
@@ -599,6 +628,12 @@ export interface Summary {
     frequency_gap: number;
     /** Rules with no `obligation_frequency` to join — the nine kernel rules. */
     frequency_unclassified: number;
+    /**
+     * The denominator every figure above is taken over, WITH its frame. See
+     * {@link denominator_frames} for why the frame ships even when the two
+     * populations agree.
+     */
+    frames: DenominatorFrames;
 }
 
 export function summarise(rows: RuleCoverage[]): Summary {
@@ -617,7 +652,81 @@ export function summarise(rows: RuleCoverage[]): Summary {
         blocking_pct: rows.length === 0 ? 0 : Math.round((blocking / rows.length) * 1000) / 10,
         frequency_gap: count((r) => r.frequency_verdict === 'gap'),
         frequency_unclassified: count((r) => r.frequency_verdict === 'unclassified'),
+        frames: denominator_frames(rows.length),
     };
+}
+
+/**
+ * The denominator, WITH the frame that produced it.
+ *
+ * WHY A FRAME AND NOT JUST A NUMBER. Until 2026-08-23 the tree published five
+ * different figures for one property — `docs/proof.md` carried an 86 and an 89
+ * for "rules that declare no backstop" in two places, a frontmatter grep said
+ * 87 and an any-line grep said 82 — and a reader had no way to tell which was
+ * the answer. The cause was not arithmetic. It was that every figure was
+ * quoted without saying WHICH population it was taken over: the resolver was
+ * once scoped narrower than the governed-rule corpus, so "in-scope" and
+ * "governed total" were genuinely different numbers, and prose copied one under
+ * a heading that meant the other.
+ *
+ * They agree today, because the resolver now reads the whole of `src/rules/`.
+ * That agreement is exactly why the frame must still be printed: a silent
+ * agreement is indistinguishable from a silent conflation, and the next
+ * narrowing of either side would reintroduce the plurality with nothing
+ * reporting it. So the two frames are computed from INDEPENDENT sources — this
+ * resolver's own row count, and `update_counts.count('rules')`, the same
+ * function that keeps the published artefact counts honest — and their
+ * agreement is asserted rather than assumed.
+ */
+export interface DenominatorFrames {
+    /** Rules this resolver actually resolved. Every percentage uses this frame. */
+    in_scope: number;
+    /** The governed-rule total, counted independently by `update_counts`. */
+    governed_total: number;
+    /** `false` means the two populations have diverged and prose must say which. */
+    agree: boolean;
+    /** Where the in-scope frame comes from, for a reader re-deriving it. */
+    source: string;
+}
+
+export function denominator_frames(
+    in_scope: number,
+    governed = (): number => count_artefacts('rules'),
+): DenominatorFrames {
+    let governed_total: number;
+    try {
+        governed_total = governed();
+    } catch {
+        // An unreadable second source is reported as a divergence, never as
+        // agreement: "I could not check" and "they match" must not print alike.
+        governed_total = -1;
+    }
+    return {
+        in_scope,
+        governed_total,
+        agree: governed_total === in_scope,
+        source: 'src/rules/*.md',
+    };
+}
+
+/** The one sanctioned sentence for the denominator. Prose quotes this, never a literal. */
+export function denominator_line(f: DenominatorFrames): string {
+    if (f.governed_total < 0) {
+        return (
+            `denominator: ${String(f.in_scope)} rule(s), frame in-scope (${f.source}) — ` +
+            `governed-total UNAVAILABLE, so agreement is unverified`
+        );
+    }
+    if (f.agree) {
+        return (
+            `denominator: ${String(f.in_scope)} rule(s), frame in-scope (${f.source}) ` +
+            `== governed-total ${String(f.governed_total)}`
+        );
+    }
+    return (
+        `denominator: ${String(f.in_scope)} rule(s) in-scope (${f.source}) vs ` +
+        `${String(f.governed_total)} governed-total — FRAMES DIVERGE, name the frame on every figure`
+    );
 }
 
 function main(argv: string[]): number {
@@ -702,6 +811,10 @@ function main(argv: string[]): number {
         `  frequency: ${summary.frequency_gap} gap · ${summary.frequency_unclassified} unclassified ` +
             `(kernel — block_kernel_rule_writes denies the field)`,
     );
+    // The denominator is published WITH its frame, and it is the only sanctioned
+    // source for that number: `check_enforcement_denominator` reds when a
+    // tracked doc carries an enforcement count this resolver did not produce.
+    lines.push(`  ${denominator_line(summary.frames)}`);
 
     const gaps = rows.filter((r) => r.frequency_verdict === 'gap');
     if (gaps.length > 0) {

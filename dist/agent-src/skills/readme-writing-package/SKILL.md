@@ -3,6 +3,9 @@ model_tier: medium
 name: readme-writing-package
 description: "Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding."
 domain: process
+scope:
+  write: []
+  verification_reason: "execution.handler is internal, so this skill spawns no subprocess — writes happen through the agent's declared allowed_tools. No command can prove a scope the skill never executes."
 execution:
   type: assisted
   handler: internal

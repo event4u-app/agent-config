@@ -21,7 +21,7 @@ packs: [meta]
 routes_to:
   - "contract:settings-classes"
 enforced_by:
-  - "none"
+  - "instruction-only: no gate counts the questions in a chat turn; settings:set fences the illegal WRITE, never the badly-shaped ask"
 collision_ok:
   "canary_name": "the nickname ask is this protocol's canonical B-class instance — session-canary owns what the NAME then does and which layers already supply it, this rule owns how it is asked for and where the answer goes"
 # obligation: line 39
@@ -164,7 +164,7 @@ by `settings:set` and only *displayed* by the GUI.
 - **The `ask` is code, not agent-carried.** `decision_engine.on_block: ask` is a
   TTY prompt in `work_engine/hooks/builtin/decision_gate.ts`.
 
-## Honest enforcement — `enforced_by: none`
+## Honest enforcement — `instruction-only`
 
 No gate counts the questions in a chat turn, and no B key currently gates an
 action through a guard: the two that gate behaviour

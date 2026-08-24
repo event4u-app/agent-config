@@ -13,7 +13,7 @@ self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 enforced_by:
-  - "none"
+  - "instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only"
 # obligation: line 27
 obligation_frequency: "per-task"
 ---
@@ -79,7 +79,7 @@ Availability is already settled this session, or the question is about council
 
 ## Enforcement
 
-`enforced_by: none` — no gate reads a chat claim. Deterministic instead:
+`instruction-only` — no gate reads a chat claim. Deterministic instead:
 `check_council_config_location` fails the build when a council surface ties the
 config to `.agent-settings.yml`, which never carried it, or to a project-tree
 path, and its §4 fails when no always-loaded rule carries this fact at all.

@@ -19,9 +19,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_trigger_evals.ts');
-// The script imports the scan-scope assertion, so the fixture tree needs the
-// lib beside it. scan_scope imports only node builtins, so the chain ends here.
-const SCAN_SCOPE_SRC = path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'scan_scope.ts');
+// The script imports the scan-scope assertion and the `asOf()` time seam, so
+// the fixture tree needs both libs beside it. Each imports only node builtins,
+// so the chain ends here.
+const LIB_SRCS = ['scan_scope.ts', 'as_of.ts'] as const;
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -50,7 +51,12 @@ function fixtureRepo(): { root: string; ts: string } {
     const ts = path.join(root, 'src', 'scripts', 'check_trigger_evals.ts');
     fs.copyFileSync(TS_SCRIPT, ts);
     fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib'), { recursive: true });
-    fs.copyFileSync(SCAN_SCOPE_SRC, path.join(root, 'src', 'scripts', '_lib', 'scan_scope.ts'));
+    for (const lib of LIB_SRCS) {
+        fs.copyFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', '_lib', lib),
+            path.join(root, 'src', 'scripts', '_lib', lib),
+        );
+    }
     // tsx resolves node_modules upward from the script; symlink the real one.
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
     return { root, ts };

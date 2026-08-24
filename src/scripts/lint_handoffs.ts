@@ -18,6 +18,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { SRC_SKILLS } from './_lib/agent_src.js';
+import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import {
@@ -517,7 +518,7 @@ export interface InstrumentVerdict {
  */
 export function instrument_verdict(
     storePath: string,
-    now: Date = new Date(),
+    now: Date = asOf(),
     windowDays: number = DANGLE_WINDOW_DAYS,
 ): InstrumentVerdict {
     const end = now;
@@ -620,7 +621,7 @@ export function scoped_dangle_follow_rate(
     package_root: string,
     storePath: string,
     commit: string | null = null,
-    now: Date = new Date(),
+    now: Date = asOf(),
 ): ScopedDangleFollowRate {
     const census = skill_link_census(skills_dir, package_root, commit);
     const v = instrument_verdict(storePath, now);
