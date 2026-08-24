@@ -28,8 +28,9 @@ const manifest = (dir: string): Manifest =>
 /** The major of a semver range as the scaffold wrote it — `^4.19.0` -> `4`, `^4` -> `4`. */
 const major = (range: string): string => {
     const m = /(\d+)/.exec(range);
-    if (!m) throw new Error(`no major in range ${range}`);
-    return m[1];
+    const major = m?.[1];
+    if (major === undefined) throw new Error(`no major in range ${range}`);
+    return major;
 };
 
 const dep = (m: Manifest, name: string): string => {
