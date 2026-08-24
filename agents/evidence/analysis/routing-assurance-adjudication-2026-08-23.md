@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Routing-assurance adjudication — doctrine, schemas, and revision log
 
 > **This is an evidence artefact, not estate.** It records design doctrine and

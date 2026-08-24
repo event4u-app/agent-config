@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 <!-- Landed by the /analyze:inbox run of 2026-08-24. -->
 
 > **This is an evidence artefact, not estate.** It lives under
