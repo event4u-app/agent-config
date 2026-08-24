@@ -187,17 +187,27 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
     // Closing the gap needs a usage-ordered observation \u2014 Phase 4.2\u2019s live arm.
     // It is not closable from the file system.
     // ------------------------------------------------------------------
+    // MOVED ONCE, 2026-08-24, and recorded rather than re-pinned silently —
+    // which is the whole point of the test below. `composer-packages` crossed
+    // from the model's SURVIVES set to its bare set as the projected catalogue
+    // reached 299 skills with 44 surviving: the fill boundary tightened past it.
+    // The direction matters and is the reason this is not a regression — the
+    // observation says bare, so the model CONVERGED on the observation. The
+    // sample therefore agrees on five of eight, not four, and three known
+    // disagreements remain. Nothing about the model or the observation changed;
+    // only the corpus did, which is exactly the movement the block above says
+    // per-skill fate is subject to without a usage order.
     const AGREE_SURVIVES = ['accessibility-auditor'] as const;
-    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling'] as const;
+    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling', 'composer-packages'] as const;
     const DISAGREE_MODEL_SAYS_BARE = ['context-document', 'mcp'] as const;
-    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding', 'composer-packages'] as const;
+    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding'] as const;
 
-    it('agrees with the observation on exactly four of the eight sampled entries', () => {
+    it('agrees with the observation on exactly five of the eight sampled entries', () => {
         for (const name of AGREE_SURVIVES) expect(survived.has(name), name).toBe(true);
         for (const name of AGREE_BARE) expect(survived.has(name), name).toBe(false);
     });
 
-    it('records the four known disagreements so they cannot silently move', () => {
+    it('records the three known disagreements so they cannot silently move', () => {
         for (const name of DISAGREE_MODEL_SAYS_BARE) {
             expect(survived.has(name), `${name} is a KNOWN GAP \u2014 see the block above`).toBe(false);
         }
