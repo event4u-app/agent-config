@@ -451,6 +451,28 @@ jobs:
         # evaluator-umbrella budget; this is not a second gate on that number.
         run: task check-pack-size
 
+      - name: Payload delta vs base — reported, never gated
+        # AC-4 of road-to-npm-payload-reduction: the number must APPEAR on a PR
+        # that adds payload and be ABSENT on one that does not, so the step
+        # writes to the job summary only when the delta is non-zero. A line that
+        # always appears is a line nobody reads.
+        #
+        # `continue-on-error` is deliberate and is the whole design: this is a
+        # report. The absolute cap above owns the refusal, and a reporter that
+        # can red the build is a second cap with no derivation behind it.
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          git fetch --quiet --depth=200 origin "${{ github.base_ref }}" || true
+          ./scripts-run src/scripts/report_pack_delta \
+            --base "origin/${{ github.base_ref }}" --head HEAD --markdown > /tmp/pack-delta.md || exit 0
+          if grep -q 'unchanged: +0.0 KB' /tmp/pack-delta.md; then
+            echo "packed payload unchanged vs origin/${{ github.base_ref }} — nothing to report"
+            exit 0
+          fi
+          cat /tmp/pack-delta.md >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/pack-delta.md
+
       - name: Token-surface regression (>5% over the recorded baseline)
         # `internal/bench/reports/projection-cost.json` is gitignored, so it never
         # exists on a fresh checkout. The task target carries `deps: [audit-tokens]`

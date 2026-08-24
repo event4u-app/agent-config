@@ -805,6 +805,22 @@ tasks:
     desc: "Published-tarball payload budget — compressed size (absolute + >10% creep) and per-skill share of the skills subtree, with named exceptions. The UNPACKED size stays owned by evaluator-budgets; this gate covers the two axes nothing measured before (road-to-zero-ceremony-install Phase 4)"
     cmd: ./scripts-run src/scripts/check_pack_size
 
+  report-pack-delta:
+    silent: true
+    desc: >-
+      Branch-vs-base packed-payload delta — a REPORT, never a gate. The
+      2026-08-24 cap trip was a merge artifact: main measured 8.3911 and the
+      branch 8.4305 against a cap of 8.4, so neither side was over alone and no
+      per-branch absolute check could see it. check-pack-size answers "is the
+      total under the cap"; this answers "how much did THIS branch add", which is
+      the number that would have made four cap raises visible while they were
+      still small. Both refs are measured in unbuilt detached worktrees under
+      pack-size-budget.json's own documented conditions — a delta between two
+      figures measured differently is noise, and a built tree reads ~2 MB high.
+      Exits 0 whatever the number: a threshold here would be a second cap with
+      no derivation behind it.
+    cmd: ./scripts-run src/scripts/report_pack_delta {{.CLI_ARGS}}
+
   check-dependency-floors:
     silent: true
     desc: "Runtime dependency-floor gate — every caret floor is a settled minor (^X.Y.0), every exact pin is a named ABI exception, so a consumer on prefer-offline or a lagging registry mirror cannot hit ETARGET. npm resolves dependencies before our bin runs, so this failure cannot be retried at runtime — only made unreachable at publish time (road-to-zero-ceremony-install Phase 2)"
