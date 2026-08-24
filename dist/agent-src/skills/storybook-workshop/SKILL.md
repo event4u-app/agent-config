@@ -131,6 +131,15 @@ that file, which is the one thing a static checker must not start doing.
 
 ## MCP path — opt-in channel, never a dependency
 
+**"Opt-in" is about the agent connecting, not about installing.** A 2026-08-24
+`npx storybook@latest init --yes` scaffold ships `@storybook/addon-mcp` *and*
+`@storybook/addon-a11y` in `devDependencies` by default — recorded verbatim in
+`tests/fixtures/stack/storybook-current/`, which is also the only source any
+Storybook major stated here may come from (`storybook@^10.5.10`). So the addon
+usually already exists; what stays optional is whether an agent reaches a
+running instance. The same scaffold prints *"installed but is not entirely set
+up yet"*, so its presence is not evidence the channel works.
+
 When the project has `@storybook/addon-mcp` **and** a running Storybook,
 [`existing-ui-audit`](../existing-ui-audit/SKILL.md) prefers the live tools —
 `list-all-documentation`, then `get-documentation` for the components that matter — over the

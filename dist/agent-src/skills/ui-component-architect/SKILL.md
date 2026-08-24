@@ -68,6 +68,14 @@ still exists in the tree. Absent or empty → fall through to
 
 Then review existing components in the codebase for the same
 responsibility — extend rather than rebuild when a match is found.
+
+**A new component's workshop is part of its design, on every React lane and not
+only `react-shadcn`.** When the extraction is agreed, the story set comes from
+[`storybook-workshop`](../storybook-workshop/SKILL.md) — one story per concept
+off the state-coverage matrix below, which is what makes the component
+agent-readable and its contrast floor checkable before it reaches a page. That
+skill is stack-agnostic and ships in `engineering-base`, so a plain-`react`
+project receives it exactly as a `react-shadcn` one does.
 If none exists, write the new component's purpose: *"Renders a
 labelled input with inline error and hint."* If the sentence has an
 "and" joining two unrelated jobs, the component is two components.

@@ -422,15 +422,47 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ## Phase 5 — Refresh the compatibility surface once, measured
 
-- [ ] **5.1 Scaffold, do not assert.** In a throwaway directory run
+- [x] **5.1 Scaffold, do not assert.** In a throwaway directory run
       `npx shadcn@latest init -d --template vite` and `npx storybook@latest
       init --yes`; commit the resulting `package.json` files under
       `tests/fixtures/stack/shadcn-current/` and
       `tests/fixtures/stack/storybook-current/`. The majors that came out are
       the only versions any skill in this roadmap may state.
-      verify: both fixture `package.json` files exist and
-      `react-shadcn-ui/SKILL.md` § Compatibility quotes majors equal to theirs.
-- [ ] **5.2 Tailwind v4 consistency.** `react-shadcn-ui/SKILL.md` references
+      verify (discharged 2026-08-24, both halves witnessed by
+      `tests/scripts/skill_stated_versions.test.ts`, 9 tests green): both fixture
+      `package.json` files exist and `react-shadcn-ui/SKILL.md` § Compatibility
+      quotes majors equal to theirs.
+
+      **What the scaffold actually returned, because five of these contradicted the
+      skill.** `npx shadcn@latest init -d --template vite` (CLI **4.19.0**) and
+      `npx storybook@latest init --yes` (**10.5.10**) were run in a throwaway
+      directory on 2026-08-24; their `package.json` files are committed **unedited**
+      at `tests/fixtures/stack/shadcn-current/` and
+      `tests/fixtures/stack/storybook-current/`, each with a README naming the exact
+      command and date. The shadcn `components.json` is committed too, because three
+      facts are observable only there.
+
+      | Fact | Scaffold said | Skill had said |
+      |---|---|---|
+      | shadcn CLI | `shadcn@^4.19.0`, and a **runtime** dependency | `shadcn@2.1` |
+      | Tailwind | `^4` + `@tailwindcss/vite` | `3.x` |
+      | Tailwind config file | none; `components.json` `"tailwind": {"config": ""}` | `tailwind.config.{js,ts}` assumed present |
+      | Primitive vendor | `@base-ui/react@^1.7.0` | Radix |
+      | Default style | `base-nova` | `default` / `new-york` |
+      | React | `^19.2.6` | `18+` |
+
+      **The test is a JOIN, not a pin, and it was seen red.** It reads each major out
+      of the fixture manifest and requires it in § Compatibility, so bumping either
+      file alone fails. Sensitivity was proven by restoring the old
+      `shadcn@2.1` / Tailwind `3.x` line: 2 of 9 tests went red, then passed again on
+      restore — a test never seen red has unknown sensitivity.
+
+      **One honest-null:** `npx storybook init` ends by printing *"installed but is
+      not entirely set up yet"* and asking for `npx storybook ai setup`. That step
+      was **not** run — it is an interactive AI-agent handshake, not a scaffold — so
+      no claim is made about a fully wired workshop. The fixture README records the
+      printed sentence so no skill can read init as sufficient.
+- [x] **5.2 Tailwind v4 consistency.** `react-shadcn-ui/SKILL.md` references
       `tailwind.config.{js,ts}` and `theme.extend.colors` (§ Gotcha, § Step 2)
       while `design-intelligence/data/stacks/html-tailwind.csv:53` already
       teaches v4 syntax. The skill gains a v3/v4 branch keyed on the `css` axis
@@ -438,8 +470,30 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
       `tailwind-v4`, `road-to-monorepo-scope-and-detection.md` Phase 2 step
       2.3); token reading in `existing-ui-audit:128` follows the same key
       (v4: `@theme` block in the entry CSS; v3: `theme.extend` in the config).
-      verify: both skills name the axis value they branch on; the 5.1 scaffold
-      fixture resolves to the branch that matches its own files.
+      verify (discharged 2026-08-24): both skills name the axis value they branch
+      on, and the 5.1 fixture resolves to the branch matching its own files —
+      asserted in `tests/scripts/skill_stated_versions.test.ts` § *the v3/v4 branch
+      is keyed on the css axis in both skills*.
+
+      **The axis values were already emitted; only the skills were missing.**
+      `detect.ts:521-524` has emitted `tailwind-v4` (marker: `@tailwindcss/vite` /
+      `@tailwindcss/postcss`) and `tailwind-v3` since the sibling roadmap's Phase 2,
+      so this step added no detector code — it keyed two prose surfaces onto a key
+      that existed. `react-shadcn-ui` § Gotcha now branches three ways (v4 → the
+      `@theme` block in the entry CSS; v3 → `theme.extend`; either → the `:root` /
+      `.dark` custom properties), and `existing-ui-audit` § 3 carries the same split
+      as two table rows plus an explicit *do not probe for a config file* note.
+
+      **The scaffold supplied a marker the roadmap did not know about.** In a v4
+      project `components.json` carries `"tailwind": {"config": ""}` — an **empty
+      string, not an absent key**. Both skills now state that an empty `config` IS
+      the v4 marker and that a missing `tailwind.config.*` is v4's normal state
+      rather than a missing file; the test asserts it against the real fixture.
+
+      **Downstream corrections in the same pass, so the branch is not contradicted
+      two sections later:** `react-shadcn-ui`'s § Polish radius-token line, its
+      detection hint (`@base-ui/react` **or** `@radix-ui/*`), and its
+      "Radix free" a11y phrasing all now match the branch.
 
 ## Blockers
 
@@ -509,21 +563,74 @@ Already present and reused: `ui-component-architect` (shape), `react-shadcn-ui`
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A library fixture is committed and the suite's pre-state output
+- [x] AC-1 — A library fixture is committed and the suite's pre-state output
       against it is filed before any skill changed.
-- [ ] AC-2 — A skill names `peerDependencies`, the `exports` map, and the
+      **Met:** `tests/fixtures/library/ui-lib-vite/{source-consumed,built-surface}/`
+      + `agents/evidence/analysis/library-lifecycle-prestate.md` (pinned
+      `cc1e0376b`, filed in Phase 0.2 before any skill edit).
+
+- [x] AC-2 — A skill names `peerDependencies`, the `exports` map, and the
       buildable decision, and a deterministic check errors when `react` sits in
       `dependencies`.
-- [ ] AC-3 — Storybook guidance is reachable from the `react` lane, not only
+      **Met:** `src/skills/js-library-packaging/SKILL.md` +
+      `scripts/check_package_surface.ts`; `tests/scripts/check_package_surface.test.ts`
+      asserts exactly one `error` when `react` moves to `dependencies`, and zero
+      errors on both clean fixture roots.
+
+- [x] AC-3 — Storybook guidance is reachable from the `react` lane, not only
       `react-shadcn`, and the story set is derived from the state-coverage
       matrix that already exists.
-- [ ] AC-4 — A low-contrast story produces an `a11y_violation` in the same
+      **Met, and the last gap was closed in this pass.** `storybook-workshop` ships
+      in `engineering-base`, which `src/packs/react/pack.yaml` **requires**, so every
+      React install receives it; `existing-ui-audit:160` (stack-agnostic) and
+      `design-system-capture:85` already routed to it. What did **not** exist was a
+      route on the plain-`react` UI lane — `apply.ts:50` dispatches `react` to
+      `ui-apply-react`, never to `react-shadcn-ui`, and
+      `ui-component-architect/SKILL.md` had **zero** mentions of Storybook. It now
+      names the workshop as part of a new component's design and points the story set
+      at the state-coverage matrix in its own body.
+
+- [x] AC-4 — A low-contrast story produces an `a11y_violation` in the same
       state shape the engine already de-duplicates.
-- [ ] AC-5 — The Storybook MCP is opt-in, has a stated fallback, and states the
+      **Met:** `storybook-workshop/scripts/story_contrast_floor.ts` emits
+      `{rule, selector, severity, ratio}`; `review.ts:378-395` appends
+      `a11y_violation` findings deduped on `(rule, selector)` — the same key.
+      `tests/scripts/story_contrast_floor.test.ts`, 12 tests green.
+      **Scope stated rather than overclaimed:** this is a declared-colour-pair
+      computation, not axe — it sees no rendered page, so role, focus and
+      computed-style defects are out of its reach, and the script's own header says so.
+
+- [x] AC-5 — The Storybook MCP is opt-in, has a stated fallback, and states the
       React-only limit with its source.
-- [ ] AC-6 — `react-shadcn-ui` can publish a registry through the same gate it
+      **Met, with the framing corrected by 5.1's evidence.** § MCP path keeps the
+      file-read fallback as non-removable and cites the Storybook 10.5 MCP FAQ for the
+      React-only preview limit. The scaffold then showed `@storybook/addon-mcp` is a
+      **default devDependency**, so "opt-in" now explicitly means *the agent
+      connecting*, not *installing* — and the section records that the same scaffold
+      prints "installed but is not entirely set up yet", so addon presence is not
+      evidence the channel works.
+
+- [x] AC-6 — `react-shadcn-ui` can publish a registry through the same gate it
       uses to install one, and names the deprecated registry types.
-- [ ] AC-7 — `DESIGN.md` carries an owned-components table that is generated,
+      **Met:** the registry-publish path is behind the same propose/dry-run/confirm
+      gate as `add`, and `react-shadcn-ui/SKILL.md:207` names `registry:build` and
+      `registry:example` as forbidden (deprecated in v4).
+
+- [x] AC-7 — `DESIGN.md` carries an owned-components table that is generated,
       and `ui-component-architect` reads it first.
-- [ ] AC-8 — Every version stated in the touched skills equals a major in a
+      **Met:** `design-system-capture/SKILL.md:75-85` — § Owned components, populated
+      by globbing `*.stories.tsx` (never by hand); `ui-component-architect:61` reads
+      it as step 1's first action, with `existing-ui-audit` as the fall-through when
+      it is absent or empty.
+
+- [x] AC-8 — Every version stated in the touched skills equals a major in a
       committed scaffold fixture.
+      **Met, by a join that was seen red.** `tests/scripts/skill_stated_versions.test.ts`
+      reads each major out of `tests/fixtures/stack/{shadcn,storybook}-current/package.json`
+      and requires it in the skill — bumping either side alone fails. Sabotage:
+      restoring `shadcn@2.1` / Tailwind `3.x` turned 2 of 9 tests red, green again on
+      restore.
+      **Honest bound:** it gates § Compatibility in `react-shadcn-ui` and the version
+      sentence in `storybook-workshop`. A stale version written into some *other*
+      skill's prose is not caught — no gate scans the whole estate for version
+      literals, and claiming otherwise would be the defect this AC exists to remove.
