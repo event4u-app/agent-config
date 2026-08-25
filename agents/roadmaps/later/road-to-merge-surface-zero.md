@@ -1,11 +1,69 @@
 ---
 complexity: structural
-status: draft
+status: later
+estate_growth_exempt: "Charges +1 later_roadmaps and -0 active, and the asymmetry is the gate's rather than this change's: check_estate_count counts later_roadmaps with a bare name filter that never reads status, while this file carried status: draft at the top level and was therefore ALREADY invisible to the active count. So the estate did not grow by any measure of planned work -- the same file moved from a location where it was uncounted to one where it is counted, which is the ratchet observing a correction rather than an addition. No roadmap was created. The move is the disposition AI council 2/2 directed on 2026-08-25 under the maintainer's standing delegation, and roadmap-progress-sync section Later disposition requires it: a roadmap whose open work is gated on an owner decision and a repo-admin action may not sit in the active tree. The alternative dispositions were both refused -- leaving it active dilutes the signal that active roadmaps are executable, and descoping the blocked half would remove the merge-surface-reduction mechanism while keeping the title. +0 open_blockers: this change created none and resolved none; B4 gained a decision packet, which is not a resolution."
 estate_offset_exempt: "Carried into the /analyze:inbox branch of 2026-08-24 from an uncommitted staged file in the main checkout, where it would otherwise have been stranded. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and cannot serve as offsets. Stays status: draft, so it charges no gated metric."
 execution:
   mode: phase-checkpoints
 ---
 # Road to merge surface zero
+
+> **PARKED to `later/` on 2026-08-25 — blocked-for-later, not abandoned.** AI
+> council 2/2 (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 3 rounds,
+> blind chairman, $0.044) under the maintainer's standing delegation for the
+> autonomous drain run.
+>
+> **Resume when** EITHER of the two conditions below clears. They are the whole
+> set, deliberately — both seats refused a longer list, on the ground that a
+> resume condition naming every open blocker is not falsifiable and that only a
+> blocker whose removal makes a **next increment executable** belongs in it:
+>
+> 1. **B4 — the maintainer answers the architecture question** in
+>    `agents/decisions/b4-regeneration-writer-architecture.md` (Option A direct
+>    push / B regen-PR / C untrack / none). Unblocks 1.2, 1.3, 1.4 and 2.1's
+>    *"rides the Phase-1.3 writer"* clause, and 2.2 behind 2.1.
+> 2. **3.1b — a repo-admin enables the prospective-merge job and makes the check
+>    required.** Unblocks 3.1b, and 3.3 behind it.
+>
+> **B1 and B2 are open and are deliberately NOT resume conditions.** Neither was
+> shown to gate the next executable increment: B1 (untracking `dist/`) is an
+> input to Option C rather than a prerequisite of A or B, and B2 (a merge queue)
+> is an optimisation whose sizing needs measured CI wall-time. One seat put the
+> test precisely — *"Do not make B2 a resume condition merely because it is
+> open."*
+>
+> **Why parking rather than closing or staying active.** Option (b), leaving it
+> in the active tree as pressure on the blocker, was rejected: *"Leaving blocked
+> work active doesn't pressure the blocker — it dilutes the signal that active
+> roadmaps are executable."* Option (c), descoping the B4-dependent half and
+> closing the remainder, was rejected harder: it would remove 1.2, 1.3, 1.4,
+> 2.1, 2.2 and 3.2 — the roadmap's entire merge-surface-reduction mechanism —
+> while keeping the title "merge surface zero". *"That would be misleading
+> closure."*
+>
+> `roadmap-progress-sync` § Later disposition settles the classification on its
+> own terms, and both seats said so: an owner-reserved decision **is** "a
+> decision" under that rule, and nothing exempts it. Leaving this file active
+> was therefore not a neutral choice.
+>
+> **What DID advance in this change, and what did not.** Step 3.1 was split into
+> **3.1a** (the baseline reader — landed and tested, 15 tests, verified in the
+> tree) and **3.1b** (the PR job plus required check — repo-admin). The
+> B4 decision packet was written. **The packet is blocker-resolution work and
+> moves no checkbox** — no step in Phase 1 or 2 advanced because it exists.
+>
+> **The count moved 2/15 → 3/16 with no new implementation.** Splitting 3.1
+> converted already-delivered scope into a checkable half. Recorded so the jump
+> is not read as delivery — one seat asked for exactly this note.
+>
+> **Live-state note, measured 2026-08-25:** all six PRs in § 0's table are
+> MERGED — #1605, #1604, #1601, #1600 (the four CONFLICTING ones) and #1598 /
+> #1596, all on 2026-08-24. So § 0's conflict measurement is a historical
+> snapshot, and **AC-2** (*"Re-measuring the four § 0 conflicting branches after
+> Phases 1–3"*) is no longer executable as written: its subjects are gone. Not
+> rewritten here — rewriting an acceptance criterion while parking is the
+> retroactive redefinition both seats refused elsewhere. It is flagged for
+> whoever resumes.
 
 > **Source:** maintainer session 2026-08-24 (*"warum haben alle PRs CI-Probleme
 > & Mergekonflikte?"*), then a full re-measurement of the **actual** open-PR set
@@ -258,7 +316,7 @@ it.
 
 ## Phase 3 — Baselines advance on main, merge-base judges the PR
 
-- [ ] **3.1 Read the governing baseline from the TARGET commit.** Gate scripts
+- [x] **3.1a Read the governing baseline from the TARGET commit — the READER.** Gate scripts
       reading `gate-violation-baselines.json` resolve it via
       `git show <target-sha>:<path>` instead of the merge-ref working tree, and
       the count is measured on the **prospective merge result**. Pass/fail is
@@ -306,14 +364,39 @@ it.
       working-tree read is the only answer there. What is forbidden — and what
       throws — is a target that IS configured and fails to resolve.
 
-      **STILL OPEN, and it is the remaining half:** the PR job must measure on
-      `refs/pull/N/merge` and carry a freshness binding, so the result that
-      passed is the result that lands. Both seats named that binding as
+      **3.1a is DONE.** Verified in the tree 2026-08-25: `loadBaselinesAt`,
+      `diagnoseRegression`, `BaselineResolutionError` and `TARGET_REF_ENV` are
+      exported from `src/scripts/_lib/gate_baseline.ts`, and
+      `tests/scripts/gate_baseline_absolute.test.ts` passes **15 tests** (the
+      roadmap said 11 — it grew). Every conjunct of the original verify clause
+      has a named test: the 165 → 160 → 163 case is pinned as a **must-fail**
+      (`:79-84`), an unresolvable ref / missing blob / unparseable JSON are each
+      a hard error rather than an empty ratchet, and the merge-base reading
+      survives as a diagnostic that *"NEVER decides the verdict — it only names
+      the cause"*.
+
+      **The split is accounting for delivered scope, NOT a retroactive
+      redefinition of the criterion.** The original step text is preserved
+      verbatim above and its second half is carried into 3.1b below, unweakened.
+      Both seats insisted on this distinction, and one added the bookkeeping
+      consequence: **the checkbox count moves from 2/15 to 3/16 without any new
+      work having been done.** Recorded here so the progress jump is not read as
+      delivery.
+
+- [ ] **3.1b Exercise it against the prospective merge result, and make the
+      check required.** The PR job must measure on `refs/pull/N/merge` and carry
+      a freshness binding, so the result that passed is the result that lands. Both seats named that binding as
       essential and neither treated the synthetic merge alone as sufficient —
       one was explicit that `refs/pull/N/merge` *"is not enough"* without branch
       protection or a merge queue holding the head/base pair. Making a check
       **required** is a repo-admin action, so that half ends outside this
       roadmap's reach whatever it builds.
+
+      **BLOCKED — repo-admin, outside this roadmap's reach.** Its own original
+      text said so: making a check **required** is a repo-admin action, and one
+      seat was explicit that `refs/pull/N/merge` *"is not enough"* without branch
+      protection or a merge queue holding the head/base pair. This is one of the
+      two resume conditions below.
 
       **The contradiction that produced B5, kept for the record.** These two
       acceptance criteria selected **different contracts** and no implementation
