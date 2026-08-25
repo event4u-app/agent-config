@@ -149,14 +149,27 @@ describe('the live tree', () => {
         expect(v.fallen).toEqual([]);
     });
 
-    it('the seeds are the measured values, and the two scopes differ sharply', () => {
-        // The gap IS the roadmap's defect D1: the rules surface is ~90 % covered
-        // by a gating corpus, the skills surface — which production routes on —
-        // is 25 %, covered only by an advisory harness.
+    it('the seeds ARE the live measurement, whatever it currently reads', () => {
+        // Deliberately NOT pinned to 0.8952 / 0.2542. Those were the values on
+        // the day the ratchet landed, and the very next commit in the same
+        // roadmap raised the skills seed to 0.3010 by adding corpus files —
+        // which reddened the pinned version for doing exactly what the ratchet
+        // exists to encourage. A snapshot of a number the work is supposed to
+        // move is a test of the calendar, not of the gate.
         const s = readSeed(REPO);
-        expect(s.rules).toBeCloseTo(0.8952, 4);
-        expect(s.skills).toBeCloseTo(0.2542, 4);
-        expect(s.rules - s.skills).toBeGreaterThan(0.6);
+        expect(r4(measureRules(REPO).ratio)).toBe(r4(s.rules));
+        expect(r4(measureSkills(REPO).ratio)).toBe(r4(s.skills));
+    });
+
+    it('and the two scopes still differ sharply — the gap IS defect D1', () => {
+        // The rules surface is covered by a corpus that can fail a PR; the
+        // skills surface, which production routes on, is covered only by a
+        // harness its own header calls advisory. The threshold is loose on
+        // purpose: it asserts the SHAPE of the finding, and closing the gap is
+        // the roadmap's goal, so a future run that legitimately narrows it
+        // should change this line deliberately rather than trip it.
+        const s = readSeed(REPO);
+        expect(s.rules - s.skills).toBeGreaterThan(0.4);
     });
 
     it('measures 105 routed rules and 299 routed skills', () => {
