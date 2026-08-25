@@ -32,8 +32,10 @@
  * Dates are plain `YYYY-MM-DD`; ages are whole days in UTC, so the verdict does
  * not depend on the machine's timezone.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import process from 'node:process';
 
 /** Days a baseline may sit unchanged before it must be fixed or reaffirmed. */
 export const STALE_AFTER_DAYS = 56;
@@ -105,10 +107,130 @@ export function loadBaselines(repoRoot: string, relPath: string = BASELINE_REL):
     } catch {
         return { gates: {} };
     }
+    return parseBaselines(raw);
+}
+
+function parseBaselines(raw: string): BaselineFile {
     const parsed = JSON.parse(raw) as Partial<BaselineFile>;
     const out: BaselineFile = { gates: parsed.gates ?? {} };
     if (parsed.$comment !== undefined) out.$comment = parsed.$comment;
     return out;
+}
+
+/**
+ * A baseline-resolution failure, which is a HARD error and never a fallback.
+ *
+ * `loadBaselines` returns an empty ratchet when the file is missing, and that
+ * is correct for a working-tree read: a repository with no baseline file has no
+ * ratchet. It is NOT correct for a target-commit read. There, a failure to
+ * resolve the ref or the blob means the governing policy could not be
+ * determined — and silently falling back to the working tree would let an
+ * infrastructure error change which policy applies, invisibly. The AI council
+ * was unanimous on this point (2026-08-25) and stated it applies to whichever
+ * invariant won.
+ */
+export class BaselineResolutionError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'BaselineResolutionError';
+    }
+}
+
+/**
+ * Read the baseline as it stands at a specific commit.
+ *
+ * `road-to-merge-surface-zero` Phase 3.1, under the **ABSOLUTE invariant** the
+ * AI council picked 2/2 on 2026-08-25 to resolve blocker B5.
+ *
+ * ## Why the target commit and not the merge base
+ *
+ * The merge-base read was the roadmap's original proposal and it selects the
+ * *contribution* invariant: a PR passes if it did not worsen the state it
+ * branched from. The worked example that killed it uses numbers this repository
+ * actually carries — `main` tightens `ci-parity:local-only` 165 → 160, a PR that
+ * branched earlier measures 163, the merge-base read returns 165, the PR
+ * **passes**, and after it merges `main` measures 163 against a baseline of 160.
+ * **A tightening is undone by a PR that never touched the baseline file and
+ * never saw a red.**
+ *
+ * The remedy of checking both was refused on a correctness ground rather than a
+ * preference: **violation counts are not necessarily compositional.** Conflict
+ * resolution, file movement, generated outputs and interactions with changes on
+ * `main` can make a prospective merge regress even when the isolated PR delta is
+ * non-positive. If trunk health is the invariant, the merge RESULT is what has
+ * to be measured.
+ *
+ * ## Why the TARGET commit specifically, and not the merge tree
+ *
+ * The count is measured on the prospective merge tree; the **policy** is read
+ * from the target. Reading the baseline out of the merge tree would let a PR
+ * loosen the very number it is being judged against, in the same diff.
+ *
+ * @throws BaselineResolutionError when the ref or the blob cannot be resolved.
+ */
+export function loadBaselinesAt(
+    repoRoot: string,
+    targetRef: string,
+    relPath: string = BASELINE_REL,
+    run: (args: string[]) => string = (args) =>
+        execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }),
+): BaselineFile {
+    let sha: string;
+    try {
+        sha = run(['rev-parse', '--verify', `${targetRef}^{commit}`]).trim();
+    } catch {
+        throw new BaselineResolutionError(
+            `cannot resolve target ref "${targetRef}" — the governing baseline is unknown, ` +
+                'and a working-tree fallback would let an infrastructure error decide the policy.',
+        );
+    }
+    let raw: string;
+    try {
+        raw = run(['show', `${sha}:${relPath}`]);
+    } catch {
+        throw new BaselineResolutionError(
+            `${relPath} does not exist at ${sha.slice(0, 9)} ("${targetRef}") — this is a ` +
+                'resolution failure, NOT an empty ratchet. A missing blob at a named commit ' +
+                'means the read was wrong, not that the ratchet is empty.',
+        );
+    }
+    try {
+        return parseBaselines(raw);
+    } catch {
+        throw new BaselineResolutionError(
+            `${relPath} at ${sha.slice(0, 9)} is not parseable JSON — refusing to continue ` +
+                'with an unknown policy.',
+        );
+    }
+}
+
+/**
+ * The merge-base reading, kept as a DIAGNOSTIC and never as the verdict.
+ *
+ * Both council seats asked for this explicitly. It does not decide pass/fail; it
+ * distinguishes two failures a reader cannot otherwise tell apart:
+ *
+ *   - `branch-regression` — the branch itself made the count worse. Fix the code.
+ *   - `main-tightened` — the branch is unchanged and `main` improved underneath
+ *     it. Rebase, then re-run.
+ *
+ * The distinction matters because the remediations differ, and one seat was
+ * pointed about the wording: "rebase and re-run" is incomplete advice for a PR
+ * that genuinely reintroduced violations, so a diagnostic must say which case it
+ * is rather than always suggesting a rebase.
+ */
+export type RegressionCause = 'branch-regression' | 'main-tightened' | 'none';
+
+export function diagnoseRegression(opts: {
+    actual: number;
+    targetBaseline: number;
+    mergeBaseBaseline: number | null;
+}): RegressionCause {
+    if (opts.actual <= opts.targetBaseline) return 'none';
+    if (opts.mergeBaseBaseline === null) return 'branch-regression';
+    // The branch is at or under the policy it branched from, and it still
+    // exceeds the target's policy: main tightened while this work was open.
+    return opts.actual <= opts.mergeBaseBaseline ? 'main-tightened' : 'branch-regression';
 }
 
 export interface RatchetOptions {
@@ -122,6 +244,12 @@ export interface RatchetOptions {
     baselineRel?: string;
     /** Override "now" as `YYYY-MM-DD` (tests); defaults to the current UTC date. */
     today?: string;
+    /**
+     * Read the governing baseline from this commit instead of the working tree.
+     * Defaults to `process.env[TARGET_REF_ENV]`; absent means a local run with
+     * no merge to judge, which is not the same as a failed resolution.
+     */
+    targetRef?: string;
 }
 
 /**
@@ -131,9 +259,30 @@ export interface RatchetOptions {
  * does not print or exit. A gate with no entry behaves exactly as it did before
  * the ratchet existed: any violation fails.
  */
+/**
+ * The env var that switches every ratchet onto the ABSOLUTE invariant at once.
+ *
+ * Set it to the target ref (`origin/main`, or the base SHA a PR job already
+ * knows) and all 18 `checkRatchet` call sites read the governing baseline from
+ * that commit instead of the working tree — no per-gate migration, no chance of
+ * migrating seventeen and forgetting one.
+ *
+ * **Unset is not a fallback.** A local run with no target configured has no
+ * merge to judge, so the working-tree read is the right and only answer there.
+ * What the council forbade is different and is honoured: a target that IS
+ * configured and fails to resolve throws, rather than quietly reverting to the
+ * working tree and changing the governing policy on an infrastructure error.
+ */
+export const TARGET_REF_ENV = 'GATE_BASELINE_TARGET_REF';
+
 export function checkRatchet(opts: RatchetOptions): BaselineVerdict {
     const { gate, actual } = opts;
-    const file = loadBaselines(opts.repoRoot, opts.baselineRel ?? BASELINE_REL);
+    const rel = opts.baselineRel ?? BASELINE_REL;
+    const target = opts.targetRef ?? process.env[TARGET_REF_ENV];
+    const file =
+        target !== undefined && target !== ''
+            ? loadBaselinesAt(opts.repoRoot, target, rel)
+            : loadBaselines(opts.repoRoot, rel);
     const entry = file.gates[gate];
 
     if (entry === undefined) {

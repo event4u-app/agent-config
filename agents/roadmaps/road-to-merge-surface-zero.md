@@ -258,19 +258,67 @@ it.
 
 ## Phase 3 — Baselines advance on main, merge-base judges the PR
 
-- [ ] **3.1 Read the baseline from the merge-base side.** Gate scripts reading
-      `gate-violation-baselines.json` resolve it via
-      `git show $(git merge-base origin/main HEAD):<path>` instead of the merge-ref
-      working tree, so a PR is judged against the baseline that existed when its
-      work began.
-      verify: a PR held deliberately 100 commits behind a tightened baseline
-      passes; the count of affected read sites is re-pinned from
-      `src/scripts/_lib/gate_baseline.ts` and named in the step's own output.
+- [ ] **3.1 Read the governing baseline from the TARGET commit.** Gate scripts
+      reading `gate-violation-baselines.json` resolve it via
+      `git show <target-sha>:<path>` instead of the merge-ref working tree, and
+      the count is measured on the **prospective merge result**. Pass/fail is
+      decided exclusively by that pair.
+      verify: the 165 → 160 → 163 case **FAILS**; a resolution failure on the
+      ref, the blob or the JSON is a hard error rather than an empty ratchet;
+      the merge-base reading survives as a **diagnostic** that names the cause.
 
-      **BLOCKED 2026-08-25 on a contradiction between this step and 3.3, not on
-      sequencing.** AI council split on the remedy and was **2/2 on the
-      diagnosis**: these two acceptance criteria select **different contracts**,
-      and no implementation order reconciles them.
+      **REWRITTEN 2026-08-25 — the criterion this step used to carry selected
+      the losing invariant.** It read *"a PR held deliberately 100 commits behind
+      a tightened baseline passes"*, which is the contribution invariant, and B5
+      was the contradiction between that and 3.3. AI council 2/2 on **ABS**; the
+      rewrite is the unblocking action this step's own text named.
+
+      **The acceptance test is INVERTED rather than deleted**, on both seats'
+      insistence: the worked example that killed the merge-base read is now the
+      case that must fail, and it is pinned as a test.
+
+      **Landed this change** — `loadBaselinesAt` and `diagnoseRegression` in
+      `src/scripts/_lib/gate_baseline.ts`, 11 tests. Three properties, each
+      because a seat asked for it by name:
+
+      - the policy is read from the **target**, never from the merge tree, so a
+        PR cannot loosen the number it is judged against in the same diff;
+      - an unresolvable ref, a missing blob or unparseable JSON is a
+        `BaselineResolutionError` — `loadBaselines`'s empty-ratchet-on-missing
+        stays correct for a working-tree read and would be a silent policy swap
+        here;
+      - the merge-base number is kept as a **diagnostic** separating
+        `branch-regression` from `main-tightened`, because the remediations
+        differ and *"rebase and re-run"* is wrong advice for a PR that genuinely
+        reintroduced violations. A test asserts it never returns the exculpatory
+        answer when the merge-base reading is missing.
+
+      **The 18 read sites migrated in one move, not eighteen.**
+      `GATE_BASELINE_TARGET_REF` switches `checkRatchet` itself — every caller
+      goes through it, so there is no chance of migrating seventeen and
+      forgetting one. Demonstrated end-to-end on a real gate:
+      `GATE_BASELINE_TARGET_REF=origin/main check_ci_local_parity` → exit 0;
+      pointed at a ref that does not exist → **exit 1** with
+      `BaselineResolutionError: cannot resolve target ref`; unset → unchanged.
+
+      **Unset is not a fallback, and the distinction is the council's clause.** A
+      local run with no target configured has no merge to judge, so the
+      working-tree read is the only answer there. What is forbidden — and what
+      throws — is a target that IS configured and fails to resolve.
+
+      **STILL OPEN, and it is the remaining half:** the PR job must measure on
+      `refs/pull/N/merge` and carry a freshness binding, so the result that
+      passed is the result that lands. Both seats named that binding as
+      essential and neither treated the synthetic merge alone as sufficient —
+      one was explicit that `refs/pull/N/merge` *"is not enough"* without branch
+      protection or a merge queue holding the head/base pair. Making a check
+      **required** is a repo-admin action, so that half ends outside this
+      roadmap's reach whatever it builds.
+
+      **The contradiction that produced B5, kept for the record.** These two
+      acceptance criteria selected **different contracts** and no implementation
+      order reconciled them; the resolution above picks one and rewrites the
+      loser.
 
       Worked example, from the numbers this repository actually carries. main
       tightens `ci-parity:local-only` 165 → 160. A PR that branched earlier
@@ -304,9 +352,13 @@ it.
       post-merge job that pushes a baseline commit may **normalise** a regression
       rather than prevent it.
 
-      **What unblocks this:** the roadmap picks one invariant and rewrites the
-      losing criterion. If absolute, this step's "100 commits behind passes" goes
-      and is replaced by validating the prospective merge result.
+      **Unblocked 2026-08-25:** the roadmap picked ABS and this step's "100
+      commits behind passes" is gone, replaced by validating the prospective
+      merge result. The operational cost is real and was named rather than
+      waved away — a tightening on `main` can invalidate an otherwise unchanged
+      PR — and it is not NEW work: Phase 4.1 already requires a rebase onto
+      fresh `origin/main` before opening, so this makes the pre-merge gate
+      enforce what the roadmap already asks for at merge time.
 
       **Unanimous, and applies to whichever contract wins:** a failed merge-base,
       target-ref or baseline-blob resolution is a **hard error**. `loadBaselines`
@@ -325,10 +377,14 @@ it.
       verify: the test fails when the Phase-3.1 read is pointed back at the
       merge-ref tree — i.e. it has been seen red against the change it guards.
 
-      **BLOCKED with 3.1, on the same contradiction.** This criterion selects the
-      **absolute invariant**; 3.1's verify sentence selects the **contribution
-      invariant**; a test cannot assert both. See 3.1 for the worked example, the
-      non-compositionality objection, and what unblocks them.
+      **UNBLOCKED 2026-08-25 — this criterion WON.** It selects the absolute
+      invariant, which the council picked 2/2; 3.1's conflicting sentence was
+      rewritten rather than this one. Nothing here changes.
+
+      The asymmetry below still holds and is now the whole remaining task: this
+      can only be demonstrated on a **prospective merge result**, so the test
+      that satisfies it needs the PR job 3.1 leaves open, not just the reader
+      3.1 landed.
 
       Note the asymmetry that makes this the harder half to satisfy: 3.1 can be
       demonstrated on a branch, while this can only be demonstrated on a
@@ -380,7 +436,30 @@ it.
   output), 1.3 itself, 1.4, and 2.1's "rides the Phase-1.3 writer" clause. An
   autonomous run may design and propose the writer; it may not merge it.
   Status: open.
-- **B5 — 3.1 and 3.3 select contradictory invariants.** AI council 2/2 on the
+- **B5 — 3.1 and 3.3 select contradictory invariants. RESOLVED 2026-08-25:
+  the ABSOLUTE invariant wins; 3.1's criterion was rewritten.** AI council 2/2,
+  a second round asking only for the pick the roadmap's own text said it owed.
+  Both seats: CONTRIB permits the 165 → 160 → 163 regression, so it does not
+  deliver the trunk invariant this roadmap already committed to — one seat put
+  the authority question sharply, that choosing CONTRIB *"would weaken the
+  already stated uninterrupted-trunk guarantee, not merely relocate its check"*,
+  which is why picking ABS is the council-decidable direction and picking
+  CONTRIB would not have been.
+
+  **SPLIT-BY-FILE was refused on a sharper ground than fragility:** finding #1
+  establishes that non-compositionality exists, not WHERE, so a per-ratchet
+  classification of "safe to regress" would be *"a guess wearing process
+  clothes"*.
+
+  **And ABS does NOT require B4** — both seats, independently. A read-only PR job
+  can evaluate the prospective merge tree and load the baseline from the target
+  commit; the post-merge writer is needed for detection and baseline
+  maintenance, not for prevention. This is the finding that keeps Phase 3 alive
+  while B4 stays owner-reserved.
+
+  Status: **closed — decided.** The reader landed with 11 tests; the PR job and
+  its freshness binding remain open under 3.1.
+- **B5-superseded — the original diagnosis, kept because the reasoning is load-bearing.** AI council 2/2 on the
   diagnosis, split on the remedy. 3.1's verify sentence selects a *contribution*
   invariant ("100 commits behind passes"); 3.3 selects an *absolute* one ("a
   tightening still fails a PR that regresses past it"). No implementation order
