@@ -675,6 +675,65 @@ Phase 7.4 ships a regression test that spawns two concurrent
 dispatcher invocations against the same event and asserts no torn
 writes (file ends with valid JSON, last-writer-wins).
 
+## Performance doctrine — four rules, and why each is a rule
+
+Added 2026-08-25 (`road-to-skill-ecosystem-runtime-enforcement` Phase 1 Step 5).
+A hook runs on **every** matching event, and the overwhelming majority of those
+events are legitimate. So the cost that matters is not the cost of acting — it is
+the cost of **deciding not to act**, paid constantly.
+
+1. **Prefer shell over an interpreted runtime, because startup dominates.** A
+   node or python process start is paid on every invocation to say nothing in
+   almost all of them. This is why the container-only shim
+   (`src/scripts/hooks/shims/php`) is POSIX `sh` rather than a `.ts` sharing the
+   dispatcher's helpers: the duplication is the cheaper mistake.
+2. **Fast-pass non-matching invocations.** Decide *not mine* before doing any
+   other work — before reading a file, before resolving a path. The shim's
+   basename `case` is the shape: one comparison, then either a refusal or an
+   exit.
+3. **Prefer a regex over a parse, and accept rare false positives.** A parser is
+   correct and slow; a regex is fast and occasionally wrong. On a hot path the
+   regex wins, **provided the false positives are enumerated and asserted** —
+   which is what a false-positive matrix is for
+   (`tests/scripts/hook_shims.test.ts` § matrix). An unenumerated false positive
+   is not an accepted trade, it is an unmeasured defect.
+4. **Prefer a PATH prepend over a per-tool-call spawn where both are available.**
+   A prepend costs nothing per call, works for any process the session starts —
+   including ones no hook surface observes — and is reversible by closing the
+   shell. A per-call hook is observable only where a slot exists and is bound.
+
+**The trade these rules do NOT make:** none of them permits a hook to skip work
+it should do. They govern how cheaply a hook reaches *no*, never whether it may
+reach a wrong *yes*.
+
+## Marker-hook convention — a hook that triggers work never does the work
+
+Added 2026-08-25 (Phase 1 Step 6).
+
+```
+A HOOK THAT TRIGGERS WORK RECORDS A MARKER AND EXITS ZERO.
+IT NEVER PERFORMS THE WORK, AND IT NEVER SPENDS.
+```
+
+The hook's job is to make a condition **visible** at the moment it is cheapest to
+observe. Doing the work inside the hook puts an unbounded, unattributed cost on
+an event the user did not ask to pay for — and on a per-tool-call slot, pays it
+repeatedly.
+
+**Why exiting zero is part of the convention, and not an afterthought.** The
+recorded trap on this host is that an **advisory exit code 2 reads as a hard
+block**: a hook that merely wanted to say "something is worth doing" can stop the
+turn instead. So a marker hook exits 0 and writes its marker; the reader decides.
+A hook that genuinely refuses — the container-only shim is one — is not a marker
+hook and does exit non-zero, deliberately and with the refusal as its whole
+purpose.
+
+**Distinguishing the two, since the boundary is where mistakes happen:** if the
+hook's output is *information for a later decision*, it is a marker hook and
+exits 0. If the hook's output is *the decision*, it may exit non-zero, and it
+must then be the kind of decision a human would recognise as a refusal rather
+than a suggestion.
+
 ## Hook-resilience shim — every registered command degrades silently
 
 Every hook command the installer registers (Claude managed block + plugin
