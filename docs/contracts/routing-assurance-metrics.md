@@ -135,3 +135,9 @@ live harness does, and the live harness is not PR-affordable.
 Recorded here so a green Phase-1 gate is never read as evidence that production
 routing works. It is evidence that a description did not get *less*
 distinguishable.
+
+The same limitation is carried in the checker's own module docstring
+(`src/scripts/description_route_check.ts`, § THE PROXY GAP) rather than only
+here, and the duplication is deliberate: a reader arriving at a red check reads
+the script, and a reader arriving at the metric set reads this file. A
+limitation recorded in exactly one of the two is invisible from the other.

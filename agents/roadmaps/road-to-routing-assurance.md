@@ -120,67 +120,208 @@ This roadmap EXTENDS three artefacts and duplicates none: `trigger_coverage.ts`,
 
 ## Phase 0 — Pre-registration and baseline capture
 
-- [ ] **0.1 Pre-register the metric set** in `docs/contracts/`: per-unit routing
+- [x] **0.1 Pre-register the metric set** in `docs/contracts/`: per-unit routing
       recall (unit = skill or routed rule), per-unit precision on near-misses,
       catalogue-conditioned selection accuracy, and delivery-path parity delta.
       Include the Phase 3 and Phase 4 null hypotheses verbatim.
-      verify: the contract file exists and each metric has a definition and a
-      unit; the two nulls are quoted, not paraphrased.
+      verify: **`docs/contracts/routing-assurance-metrics.md`** — four metrics,
+      each with a definition, a unit and the surface it must be measured on.
+      Both nulls are **quoted**, with the Phase-3 scope restriction carried into
+      the quote because it is part of the pre-registration: the null *"settles
+      exactly one question, the confusion measurement, and cancels nothing"* and
+      may not claim authority over tiering.
+
+      **Floors are deliberately NOT set here**, and the contract says why: 0.4
+      requires each floor to derive from the 0.2 baseline, and that baseline is a
+      live run which has not happened. Writing floors now would be inventing them
+      — the move 0.4 forbids in its own title. What IS registered is the
+      derivation rule plus **the tolerance, 0.10 absolute recall, fixed before
+      any baseline exists** so it cannot be tuned to a result. Phase 4's epsilon
+      is fixed the same way at 0.05.
+
+      **The proxy gap is stated before it can be discovered**: Phase 1's checker
+      asks whether a description is *distinguishable*, not whether a production
+      model *selects* it, and no floor closes that gap. A green Phase-1 gate is
+      never evidence that production routing works.
 - [ ] **0.2 Run the existing live harness once as a frozen baseline** (canary
       budget), storing per-unit results as the regression reference.
       verify: the baseline artifact exists, names its commit and model, and its
       per-unit rows are machine-readable.
-- [ ] **0.3 Two ratchet files, one per scope** (rules / skills): coverage ratio
+
+      **Open, and it gates 0.4.** This is a live LLM run against the canary
+      budget. Token spend is authorised for this drain run, but a *frozen
+      baseline* is only worth freezing if it is taken on the surface and model
+      the regression reference will be compared against later — and a baseline
+      captured mid-run by an autonomous session, then used to derive floors in
+      the same session, is the shape 0.4's own title warns about. Recorded as
+      the next real step rather than attempted here.
+- [x] **0.3 Two ratchet files, one per scope** (rules / skills): coverage ratio
       = corpus cases / routed units, seeded at the measured current value. CI
       fails only on decrease, the same COUNT-ratchet disposition as
       `lint_trigger_precision.ts`.
-      verify: both ratchets green at seed; a deliberately removed corpus case
-      turns one red, and restoring it turns it green — both states demonstrated.
+      verify: **both states demonstrated on BOTH scopes**, not one.
+      `check_routing_coverage` + `src/config/routing-coverage-seed.json`:
+
+      ```
+      = rules    94 / 105  = 0.8952  (seed 0.8952)
+      = skills   76 / 299  = 0.2542  (seed 0.2542)
+      ```
+
+      Removing `routing-matrix/active-remediation.yaml` → `rules 93/105 = 0.8857
+      < 0.8952`, **exit 1**; restored → exit 0. Removing
+      `legal-practice-profile/evals/triggers.json` → `skills 75/299 = 0.2508 <
+      0.2542`, **exit 1**; restored → exit 0.
+
+      **The two seeds ARE defect D1, quantified.** The rules surface is ~90 %
+      covered by a deterministic corpus that can fail a PR; the skills surface —
+      the one production routes on — is **25 %**, covered only by a harness that
+      is *"advisory only, never gating"*. One blended figure would read ~46 % and
+      describe neither, which is why this is two ratchets and not one.
+
+      **A ratio rather than a count**, because the denominator moves: adding 8
+      skills without corpus cases lowers coverage while every count rises, and a
+      count ratchet would call that progress. A test asserts exactly that case.
+
+      **Wired to fail a build, not only a terminal.** `gate-coverage.yml` row
+      (`min_scanned: 300`, canary `zz-canary-routing-coverage`), `ci-fast.yml`
+      task, the `Taskfile.yml` `ci:` list, and a `rule-backstops.yml` step — plus
+      `src/config/routing-coverage-seed.json` added to **both** `paths:` blocks,
+      because without it a PR that lowered the seed alone would not trigger the
+      gate that refuses exactly that edit.
+
+      **`scanned` is the sum of the two DENOMINATORS, deliberately.** Reporting
+      the covered count would make the gate's own dead-scope floor move with the
+      thing it measures — a corpus case going missing would shrink `scanned` and
+      the floor would follow it down.
+
+      Three ratchets were checked rather than assumed. `--canary` confirms the
+      planted skill is caught (`caught the planted contract-violation defect`).
+      `--self-test` (7 cases, 5 rejecting) drives the real CLI, so
+      `gate-self-test:registered-non-adopters` stayed at its baseline of 24
+      instead of rising to 25; the `GateLedger` adoption kept
+      `check_gate_completeness` at the 218 it already reads on `main`.
+
+      One defect found while building it and worth recording: the first version
+      compared the **raw float** in the per-scope row and the **rounded** value
+      in the verdict, so `rules` printed `↑` and `skills` printed `❌` while the
+      summary line correctly said green. A gate whose rows contradict its verdict
+      is worse than one that is simply wrong — the reader cannot tell which half
+      to trust. Both now share one exported `r4`.
 - [ ] **0.4 Derive the floors, never invent them.** Each per-unit floor = its
       0.2 baseline value minus a fixed tolerance, written into the
       pre-registration BEFORE Phase 1 activates.
       verify: every floor in the contract traces to a 0.2 row; no floor is
       raised in the same PR that changes the thing it measures.
-- [ ] **0.5 Claims-ledger entries** for every claim this roadmap will make
+
+      **Open, blocked on 0.2 by construction** — there are no rows to trace to.
+      What 0.1 could register in advance, and did, is the **derivation rule and
+      the tolerance** (0.10 absolute recall), fixed before any baseline exists so
+      the tolerance cannot be chosen after seeing the numbers. That is the half
+      of 0.4 that does not need the baseline, and it is the half that is
+      gameable if left until after.
+- [x] **0.5 Claims-ledger entries** for every claim this roadmap will make
       ("diff-scoped gate catches description regressions", the Phase 3 and 4
       nulls), each with its evidence class and its null path — before any
       implementation lands.
-      verify: `check_claims` resolves every entry; each carries a null path.
+      verify: **three entries registered with zero implementation code**, which
+      is what makes them pre-registrations rather than descriptions:
+      `claim:description-gate-catches-regressions`,
+      `claim:catalogue-pressure-null`, `claim:delivery-path-parity`.
+      `check_claims` resolves all three (ledger 91 entries, 27 unbacked) and
+      `docs/proof.md` was regenerated in the same change.
+
+      Each carries its null path explicitly. The parity entry also carries the
+      consequence of a breach *before* a breach can soften it — *"blocks any MCP
+      default-on decision; default-off holds until then"* — and records that the
+      Phase-4.3 table adds **no new claim id**, which is why one entry covers the
+      gate and not the table.
 
 **Exit:** pre-registration merged, baseline artifact stored, ratchets green at
 seed values.
 
 ## Phase 1 — A description-surface gate that PRs can afford
 
-- [ ] **1.1 Build `description_route_check`.** Input = full catalogue (name +
+- [x] **1.1 Build `description_route_check`.** Input = full catalogue (name +
       description, the production routing condition) + a prompt; output =
       would-load set. Two backends: (a) the existing MockRouter for plumbing,
       (b) a cached live backend keyed on (catalogue-hash, prompt) so unchanged
       pairs cost zero.
-      verify: the dry-run backend runs with no key and no spend; a repeated
-      (catalogue-hash, prompt) pair is served from cache, demonstrated by a
-      zero-call assertion.
-- [ ] **1.2 Diff-scoped gating, inside the existing key boundary.** Because live
+      verify: **`src/scripts/description_route_check.ts`**, 17 tests. The dry
+      backend runs with no key and no network. The zero-call assertion is the
+      load-bearing one and is written as such — a second identical run leaves
+      `inner.calls` at 1, and a cache that quietly re-called would still have
+      produced the right verdict, so the verdict could not have caught it.
+
+      **The cache key carries the catalogue hash, and a test proves why.** A
+      description edit anywhere changes the routing condition for EVERY prompt,
+      so a prompt-only key would serve a stale answer at exactly the moment the
+      answer changed; the `MISSES when any description changes` case asserts the
+      call count rises. The hash sorts by name first, so a filesystem reordering
+      — not part of the routing condition — does not invalidate the cache.
+
+      **The catalogue is read from `dist/agent-src/`, not `src/`** (418 units,
+      all 418 carrying a description), because the projection is what a host
+      loads. And it is the WHOLE estate even when the case scope is one unit:
+      routing is competitive, so scoping the catalogue would change what is
+      being measured, while scoping the cases is the cost control.
+- [x] **1.2 Diff-scoped gating, inside the existing key boundary.** Because live
       authorization derives exclusively from the canary workflow's key file with
       no env-var fallback (`rule_trigger_eval.ts:28-29`), the live check CANNOT
       run in ordinary PR CI. It runs in the same secrets-bearing workflow class,
       triggered pre-merge for same-repo branches whose diff touches a
       `description`, over that unit's positives and near-misses only. Fork PRs
       and non-description diffs stay canary-only and advisory, exactly as today.
-      verify: a fork-PR fixture and a non-description diff both leave the
-      advisory path untouched; a same-repo description edit triggers the scoped
-      run.
-- [ ] **1.3 Recall-first fail condition** — a positive that stops loading
+      verify: all three demonstrated, as unit cases on `scopeRun` and end-to-end
+      on the CLI. Fork → `advisory — fork PR — the key file is unreachable by
+      construction`; a `src/scripts/*.ts`-only diff → `advisory — no description
+      surface in the diff`; `src/skills/legal-practice-profile/SKILL.md` →
+      `scoped-live — 1 unit(s)`.
+
+      **The refusal happens before any spend, with a reason**, rather than as a
+      key error at the router — a fork PR takes the advisory path even if a
+      secret were later added to that job, because the decision reads the event.
+
+      **The PROJECTION counts as a description surface too.** A `dist`-only edit
+      is what a host actually reads, and a source-only filter would miss exactly
+      that case; a test pins both directions, including that a unit whose source
+      AND projection changed appears once.
+
+      `.github/workflows/description-route.yml` — dry tier per PR (no key, no
+      spend), cached-live tier on schedule and dispatch, inside the key
+      boundary. An absent secret is a `::notice::`, never a red: an absent
+      secret is a repo-configuration fact, and a red check for one trains
+      readers to ignore the workflow.
+- [x] **1.3 Recall-first fail condition** — a positive that stops loading
       blocks; a near-miss that starts loading warns. This matches D2's direction.
-      verify: two fixtures, one per direction, produce block and warn
-      respectively.
-- [ ] **1.4 Record the proxy gap as a stated limitation.** The checker asks a
+      verify: two fixtures, one per direction. A positive that stops loading →
+      `blocked: 1`, render exit **1**. A near-miss that starts loading →
+      `warned: 1`, render exit **0**. A third case runs both at once and asserts
+      neither masks the other.
+
+      **The asymmetry is the point and is stated in the code**: an extra unit
+      loading is a token cost, a missing unit is a missing obligation, and D2's
+      measured direction in this repository is under-delivery.
+
+      One design correction found by running it: `--dry` initially returned its
+      own exit code, which made every description edit red — the dry backend is
+      a NAME-substring matcher over a catalogue whose signal is the
+      DESCRIPTION, so it misses nearly every real prompt by construction. Its
+      exit is now forced to 0 with the reason printed. A gate red for a reason
+      unrelated to the thing it measures is worse than no gate.
+- [x] **1.4 Record the proxy gap as a stated limitation.** The checker asks a
       model "which units would you load given this catalogue" — that is NOT the
       host's full selection procedure. It is a regression detector on the
       description signal, and its fidelity to real sessions is a MEASURED
       quantity (5.4), never an assumption.
-      verify: the limitation is written in the checker's own module docstring
-      and in the 0.1 contract.
+      verify: both surfaces carry it — `description_route_check.ts` § THE PROXY
+      GAP, and `routing-assurance-metrics.md` § The proxy gap. The duplication is
+      deliberate and each side now points at the other: a reader arriving at a
+      red check reads the script, a reader arriving at the metric set reads the
+      contract, and a limitation recorded in only one of the two is invisible
+      from the other.
+
+      The wording states the gap as **unquantified**, not small — its fidelity
+      is step 5.4's measurement, which has not run.
 
 **Exit:** checker ships with dry-run and cached-live backends, the pre-merge
 diff-scoped workflow exists inside the key boundary, and either its first

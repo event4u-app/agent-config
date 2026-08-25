@@ -1627,6 +1627,18 @@ tasks:
       names a skill that exists. Forward-only: the 299 pre-existing skills are
       grandfathered by the diff scope.
     cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
+  description-route-check:
+    silent: true
+    desc: >-
+      Diff-scoped routing regression check on the DESCRIPTION surface (dry tier
+      — no key, no network, no spend). Reachable locally so the CI job is not a
+      gate only a workflow can run; the cached-live tier stays inside the key
+      boundary and is scheduled, never per-PR.
+    cmds:
+      - "git diff --name-only origin/main...HEAD > /tmp/description-route-changed.txt || true"
+      - "touch /tmp/description-route-changed.txt"
+      - "./scripts-run src/scripts/description_route_check --changed-files /tmp/description-route-changed.txt --dry"
+
   check-routing-coverage:
     silent: true
     desc: >-
