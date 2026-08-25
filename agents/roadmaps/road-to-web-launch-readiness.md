@@ -261,18 +261,75 @@ disposition as the reason, which is a publishable outcome and not a failure.
       audited)` and are **never** counted as PASSED. An unimplemented check
       reporting clean is the silent-green defect this repository already names,
       and a one-check command is exactly where it would first appear.
-- [ ] **2.2 Add the remaining critical and high tiers** — HTTPS enforcement,
+- [x] **2.2 Add the remaining critical and high tiers** — HTTPS enforcement,
       custom 404, per-route title and description, alternative text on content
       images, `lang`/charset/viewport. Each with explanation, remediation and
       verification per the design directive.
-      verify: each check has a fixture that fires it and a fixture that does
-      not; `applies_to` is exercised by at least one skipped-with-reason case.
-- [ ] **2.3 Add medium and situational tiers**, including the region axis for
+      verify: **both states for all eight**, asserted as a loop over the check
+      ids rather than one assertion per check, so a check added to the config
+      without a fixture fails this test rather than passing unnoticed.
+      `defects-marketing/` fires every one; `clean-marketing/` passes every one;
+      `saas-app/` supplies the skipped-with-reason case
+      (`site type is saas-app`).
+
+      Two checks that a presence test would have got wrong, and each has its own
+      assertion because getting them right is the whole value:
+
+      - **`alt=""` is a PASS.** `clean-marketing/about.html` carries it
+        deliberately. Flagging it would push authors to write filler alt text,
+        which is worse for a screen reader than the empty string that tells it
+        to skip.
+      - **A title present on every page but SHARED is still a per-route
+        finding.** Presence is the easy half; a layout with one hard-coded title
+        passes a presence check and is exactly what *per-route* excludes. Both
+        locations are reported.
+
+      Two checks were added to the config to cover the step's list —
+      `https-enforcement` (critical: mixed content breaks the padlock silently
+      while the page still looks fine) and `document-head-basics`
+      (`lang`/charset/viewport, one line each, invisible on the developer's
+      machine).
+
+      `defects-marketing/SEEDED.md` is a **checked-in manifest**, so a fixture
+      that stops firing a check is a visible diff rather than a quietly weaker
+      test. It also records what is deliberately NOT seeded there:
+      `staging-noindex-leftover` has its own fixture, and seeding it twice would
+      make the two non-independent.
+
+      **One real defect, found by the fixture rather than by review.**
+      `analytics-and-consent-wiring` passed on a tree seeded to fire it, because
+      `SEEDED.md` contains the word *consent* and the consent scan read prose as
+      an implementation. Prose is now excluded from **both** sides — a README
+      naming an analytics vendor must not count as analytics either.
+- [x] **2.3 Add medium and situational tiers**, including the region axis for
       legal pages (DE: Impressum and Datenschutz as `critical` for
       DE-targeted sites).
-      verify: a SaaS-app fixture reports the local-business items as
-      `situational-skipped` **with the site type as the stated skip reason**,
-      never as findings.
+      verify: `saas-app` reports `per-route-metadata` and
+      `canonical-and-sitemap-coherence` as skipped with the reason `site type is
+      saas-app` verbatim, and a companion assertion proves no skipped check ever
+      appears among the findings.
+
+      **The region axis is a tier ESCALATION, not a second `applies_to`**, and
+      the distinction is the design decision here: `applies_to` decides
+      *whether* a check applies, a region decides *how severely*. A legal page
+      is not more or less applicable in Germany — it is more or less optional,
+      because TMG 5 and DSGVO Art. 13 make it owed. Modelling it as an
+      escalation keeps one check with one implementation and puts the
+      jurisdiction on the consequence.
+
+      Demonstrated in both directions: `required-legal-pages` is
+      **situational** at `--region unspecified` and **critical** at `--region
+      de`, with the reason carried into the report header so a reader seeing two
+      different tiers for one check knows which axis moved it.
+
+      **And the escalation changes the EXIT CODE** — a test asserts the blocking
+      count is exactly one higher under `de`. A tier label nothing acts on is
+      decoration; this one is the difference between a launch that stops and one
+      that does not.
+
+      An unregistered region is a hard `DeadScopeError`, never a silent fallback
+      to `unspecified`: a typo'd `--region` must not quietly downgrade a legally
+      owed page.
 - [x] **2.4 Tiered output shape.** Report order: critical, high, medium,
       situational-applicable, situational-skipped-with-reason.
       verify: **order asserted by index comparison rather than by a snapshot**,
