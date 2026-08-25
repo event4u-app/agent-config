@@ -1,6 +1,5 @@
 ---
 complexity: structural
-status: draft
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -8,6 +7,55 @@ review_by: 2026-10-01
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this addition carries no roadmap of its own to retire: the run archived only status: draft roadmaps, which were never counted and therefore cannot serve as an offset. The addition is sanctioned on its own terms -- its G0 gate passed against the live tree, so the defect it names is confirmed rather than hypothesised, and the estate decision it waits on is recorded as a blocker rather than assumed."
 ---
 # Road to web launch readiness — a site-type-conditional pre-ship audit
+
+> **CLOSED 2026-08-25 BY APPROVED RESCOPE — original scope NOT completed.** The
+> phrase is chosen over "completed" deliberately, and both council seats asked
+> for exactly this distinction: 15 of 19 items are met, **4 are descoped**, and
+> the experiment this roadmap was built to run has not run.
+>
+> | | |
+> |---|---|
+> | closed_by | `council-approved-rescope` (AI council 2/2, 2026-08-25) |
+> | original_scope_completed | **false** |
+> | met | 15 / 19 |
+> | descoped | 4 / 19 — steps **3.2**, **3.3**, criteria **AC-5** (remainder), **AC-6** |
+> | benchmark_claim_resolved | **false** — `claim:web-launch-readiness-finds-more` stays `unbacked` |
+> | command_state | ships **default-off**, and is gated from changing |
+>
+> **The arithmetic reconciles to 19, and it is spelled out because a seat caught
+> it not doing so.** The openai seat observed that descoping two steps from
+> 15/19 accounts for only 17 and asked what happened to the other two. Measured
+> answer: the 19 checkboxes are **13 phase steps** plus **6 acceptance
+> criteria**; 11 steps and 4 criteria are met, and the four outstanding items are
+> steps 3.2 and 3.3 plus criteria AC-5 and AC-6. Each of the four now carries an
+> explicit disposition at its own line. Nothing is left undisposed, and no
+> criterion was rewritten to match what shipped.
+>
+> **What was actually delivered** is the implementation half: the
+> `web-launch-readiness` command, its site-type-conditional check config, the
+> three benchmark fixtures with a checked-in 19-row ground truth and one decoy,
+> and 18 tests of which the two load-bearing ones were sabotage-proved. What was
+> **not** delivered is the comparative benchmark that would say whether any of it
+> finds more than a bare audit prompt.
+>
+> **Why closure was legitimate rather than convenient.** The remaining two steps
+> are an experiment this session is structurally barred from running: it authored
+> the checks, the fixtures **and** the ground truth they are scored against. An
+> earlier council (2/2) ruled it may park them for that conflict but that calling
+> the parking *completion* was owner-reserved. The maintainer's standing
+> delegation for the autonomous drain run supplied that authority in terms that
+> name scope re-cuts explicitly, and a second council (2/2) then approved the
+> move **with binding conditions**, all applied here. Full reasoning, including
+> the one condition that was refused and why, is at
+> `### blocker: b-benchmark-owner-rescope`.
+>
+> **The promotion gate is the control that makes this safe.** The claim may not
+> leave `unbacked`, the command may not become default-on, and no comparative
+> claim may be published, until
+> `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md` records a
+> verdict from an execution that satisfies its independence condition. That file
+> also carries the accountable trigger and the eligibility rule that keep it from
+> becoming abandoned work.
 
 > **Source:** agents/tmp.old/checklist/roadmap-web-launch-readiness.md
 
@@ -383,25 +431,42 @@ recorded null.
       **without** a Datenschutz page (the common real-world DE shape), and a
       canonical that is **present and wrong** — copied from the marketing site,
       so the page that gets indexed is not the page anyone chose.
-- [ ] **3.2 Run the comparator arm** — identical model, bare audit prompt, same
+- [-] **3.2 Run the comparator arm** — identical model, bare audit prompt, same
       site access.
       verify: both arms' raw outputs are archived with the run.
 
-      **OPEN, and deliberately not closed.** Protocol preserved verbatim in
+      **DESCOPED 2026-08-25 by AI council 2/2** under the maintainer's standing
+      delegation — NOT done, and not silently dropped. The step is transferred
+      to `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md`,
+      which carries the protocol verbatim and now carries the promotion gate
+      that keeps this transfer from becoming an abandonment. See
+      `b-benchmark-owner-rescope` for the decision and both seats' reasoning.
+
+      Protocol preserved verbatim in
       `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md`; see
       `b-benchmark-owner-rescope` below for the verdict that put it there and
       for why this roadmap stays open rather than closing around it.
-- [ ] **3.3 Resolve the claim** — PROVE, DROP, or UNDERPOWERED. The decoy gate
+- [-] **3.3 Resolve the claim** — PROVE, DROP, or UNDERPOWERED. The decoy gate
       is checked first: a decoy false positive is DROP regardless of the recall
       delta.
       verify: the verdict PR flips the claim status; on DROP the skill stays
       default-off and the null is recorded rather than noted.
 
-      **OPEN.** `claim:web-launch-readiness-finds-more` stays `unbacked` and the
-      command stays default-off, which is already its shipped state — an honest
+      **DESCOPED 2026-08-25 by AI council 2/2**, same decision as 3.2.
+      `claim:web-launch-readiness-finds-more` stays `unbacked` and the command
+      stays default-off, which is already its shipped state — an honest
       **interim** state, and explicitly not completion.
 
-**Exit:** a resolved verdict in either direction. NOT reached.
+      **`unbacked` is the claim's repository disposition, NOT an experimental
+      verdict.** The openai seat asked for the two to be kept apart in writing,
+      because calling `unbacked` an "honest-null verdict" would let a reader
+      infer the benchmark ran and returned nothing. It did not run. No
+      superiority, parity, or failure conclusion may be drawn in either
+      direction.
+
+**Exit:** a resolved verdict in either direction. **NOT reached, and descoped
+rather than met** — see `b-benchmark-owner-rescope`. The exit condition is
+transferred intact to the parked roadmap; it is not weakened here.
 
 ## Blockers
 
@@ -431,7 +496,63 @@ recorded null.
   `unbacked` with no owner — which over time reads as an abandoned claim rather
   than a pending one. The command itself is unaffected either way: it ships
   default-off and stays that way until the claim resolves.
-- **Status:** open.
+- **Status:** resolved 2026-08-25 — **option (1), approve the move.** AI
+  council 2/2 convergent, under the maintainer's standing delegation for the
+  autonomous drain run, whose terms are quoted in the council question:
+  *"Anything that would normally end in 'ask the user' … is instead put to the
+  AI Council. The council's recorded decision substitutes for user sign-off and
+  is documented as such."* Convergence summary, inlined rather than linked
+  because council sessions are gitignored and auto-pruned: **2026-08-25,
+  members `anthropic/claude-sonnet-4-5` and `openai/codex-default`, 3 rounds,
+  blind chairman, both seats present, quorum concluded 2/2, $0.059 actual.**
+
+  **What changed since the earlier session declined.** Nothing about the merits.
+  The earlier council ruled it *may* park 3.2/3.3 for conflict-of-interest but
+  that treating the parking as completion was owner-reserved — because no
+  delegation existed. The delegation now exists and names scope re-cuts
+  explicitly. That is the changed premise and the only thing this decision rests
+  on: the COI finding is carried forward intact rather than re-litigated, and
+  the mechanism-match half is unchanged.
+
+  **Both seats attached binding conditions; the verdict was Option 1 *with*
+  conditions, not Option 1 plain. All are applied in this change:**
+
+  1. 3.2 and 3.3 are marked `[-]` **DESCOPED**, never `[x]`, each linking the
+     parked roadmap and this decision.
+  2. AC-5 and AC-6 stand **verbatim** and are recorded unmet. Both seats
+     refused rewriting them into criteria the delivered work satisfies —
+     *"Reviewer A's pattern allows future roadmaps to retroactively redefine
+     unmet criteria as met."*
+  3. The arithmetic reconciles to 19 — 15 met, 4 descoped — because the openai
+     seat caught that descoping two steps leaves 17 of 19 and asked what
+     happened to the other two. Answer, measured rather than assumed: the 19
+     boxes are 13 phase steps plus 6 acceptance criteria; the four outstanding
+     items are steps 3.2 and 3.3 and criteria AC-5 and AC-6, and all four now
+     carry an explicit disposition. Nothing is left undisposed.
+  4. An enforceable **promotion gate** replaces a passive `revisit-if` as the
+     primary control, per the openai seat: the claim may not leave `unbacked`
+     and the command may not become default-on until an independent verdict
+     exists. Recorded at AC-6 and at the parked roadmap.
+  5. The parked roadmap gains an **accountable trigger** and an
+     **evaluator-eligibility rule**, so `later/` is not a graveyard.
+
+  **One condition was REFUSED, and the refusal is the openai seat's.** The
+  anthropic seat asked this council to freeze the parked roadmap's seven
+  protocol items before archival, so that the future evaluator runs this
+  session's experiment rather than inventing one. The openai seat refused on a
+  stronger argument, and it is adopted: *"Having this ground-truth-aware council
+  select sample sizes, metrics, or thresholds would freeze contamination into
+  the experiment rather than eliminate it."* The conflict of interest that bars
+  this session from **running** the arms bars it equally from **parameterising**
+  them — which is the anthropic seat's own premise applied one step earlier than
+  it applied it. The seven items therefore stay open, and the parked roadmap now
+  names who may close them.
+
+  **Revisit-if:** an eligible ground-truth-blind protocol designer and evaluator
+  become available; the claim or the command is proposed for promotion or
+  default-on use; any fixture, ground truth, or protocol input changes; or the
+  parked roadmap lacks an accountable owner at the next roadmap review.
+
 - **Why it reached the owner and not the council (2026-08-25).** The council was
   asked and **declined the closure half of the question**, 2/2 convergent. It
   ruled it may park the two steps for conflict-of-interest reasons — the session
@@ -573,10 +694,17 @@ recorded null.
       boilerplate the assertion exists to catch. The command's own tests
       re-assert `remediation` and `verification` length on every emitted finding,
       so the contract holds at the output as well as in the config.
-- [~] AC-5 — A SaaS-app fixture reports local-business items as
+- [-] AC-5 — A SaaS-app fixture reports local-business items as
       situational-skipped with the site type as the skip reason, and the
       benchmark decoy is not flagged.
-      **First half MET, second half NOT REACHABLE YET.** The SaaS-app fixture
+      **PARTIALLY MET / REMAINDER DESCOPED 2026-08-25, AI council 2/2.** The
+      criterion is left standing verbatim rather than rewritten to match what
+      shipped: both seats refused the rewrite, on the ground that redefining an
+      unmet criterion as met is the precedent that lets any future roadmap
+      retro-fit its own acceptance. The first half is met; the second half was
+      descoped with 3.2/3.3 and is transferred to the parked roadmap.
+
+      **First half MET, second half NOT REACHABLE HERE.** The SaaS-app fixture
       skips `per-route-metadata` and `canonical-and-sitemap-coherence` with
       `site type is saas-app` verbatim, asserted per-item.
 
@@ -586,8 +714,23 @@ recorded null.
       benchmark runs. Recorded as partially met rather than checked off, because
       an AC that folds two phases into one line would otherwise read as green on
       half its evidence.
-- [ ] AC-6 — The benchmark claim carries a resolved verdict; on DROP the skill
+- [-] AC-6 — The benchmark claim carries a resolved verdict; on DROP the skill
       remains default-off and the null is recorded.
+      **NOT EVALUATED — DESCOPED 2026-08-25, AI council 2/2.** The criterion
+      stands verbatim and is recorded unmet. No verdict exists because the
+      benchmark did not run: `claim:web-launch-readiness-finds-more` remains
+      `unbacked` and the command remains default-off, which is its shipped state
+      and **not** a DROP verdict. The distinction is the openai seat's, and it is
+      load-bearing — a reader who takes `unbacked` for a resolved null would
+      believe an experiment happened.
+
+      **Promotion gate, and it is the enforceable half of this disposition.**
+      The claim may not leave `unbacked`, the command may not become default-on,
+      and no comparative claim about this command may be published, until the
+      parked roadmap records a verdict from an execution that satisfies its own
+      independence condition. This gate is stated here as well as at the parked
+      roadmap deliberately: the archived file is what a future reader finds
+      first.
 
 ## Corrections applied at landing (2026-08-24)
 
