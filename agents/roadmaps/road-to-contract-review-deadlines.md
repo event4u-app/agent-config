@@ -308,7 +308,7 @@ as D5: a gate exists, and `docs/` is not in its scope.
 | the four named-tool reopen candidates (a knowledge-graph engine, a PKM client, a swarm runtime, a memory service — anonymised per [`source-confidentiality`](../../src/rules/source-confidentiality.md)) | **behind the same gate, and correctly so in the bundle's own analysis** — it states that the memory honest null survives a boundary change because it closed on *"counterfactual not on disk"*, which no daemon supplies. Nothing to land before `road-to-decision-conformance` Phase 3 resolves. |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-25 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
