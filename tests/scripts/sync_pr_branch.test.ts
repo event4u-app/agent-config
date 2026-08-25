@@ -271,3 +271,84 @@ describe('CLI', () => {
         expect(main(['--help'])).toBe(0);
     });
 });
+
+/**
+ * The 2026-08-25 additions (road-to-merge-surface-zero 1.1).
+ *
+ * A case per path, because this list tells a human to DISCARD one side of a
+ * conflict. An entry that does not belong tells them to throw away hand work,
+ * so each is pinned against its write site rather than against a conflict count.
+ */
+describe('sync_pr_branch — generated paths added from the conflict census', () => {
+    it('classifies the paths whose generator was traced to a write site', () => {
+        // docs/proof.md — build_proof.ts:500
+        expect(isGenerated('docs/proof.md')).toBe(true);
+        // both — generate_catalog.ts (:166 for llms.txt)
+        expect(isGenerated('docs/skills-catalog.md')).toBe(true);
+        expect(isGenerated('llms.txt')).toBe(true);
+        // lint_originality.ts:340
+        expect(isGenerated('agents/reports/originality.json')).toBe(true);
+        expect(isGenerated('agents/reports/originality.md')).toBe(true);
+    });
+
+    it('classifies a per-pack manifest, which no literal could express', () => {
+        // generate_pack_manifests.ts:427, and pack.yaml's own line 1 says
+        // "DO NOT EDIT BY HAND".
+        expect(isGenerated('src/domains/meta/pack.yaml')).toBe(true);
+        expect(isGenerated('src/domains/engineering-base/pack.yaml')).toBe(true);
+        // The pattern is anchored to exactly one directory level: a pack.yaml at
+        // the domains root is not a per-pack manifest, and a SKILL.md inside a
+        // pack is not one either.
+        expect(isGenerated('src/domains/pack.yaml')).toBe(false);
+        expect(isGenerated('src/domains/meta/skills/x/SKILL.md')).toBe(false);
+        expect(isGenerated('src/domains/meta/sub/dir/pack.yaml')).toBe(false);
+    });
+
+    it('REFUSES the two paths the step named that measurement did not support', () => {
+        // These are the load-bearing negatives. Both were candidates — one named
+        // by step 1.1, one added to the roadmap's own corrected census table in a
+        // previous session — and both are wrong:
+        //
+        // exec-evidence-feasibility.json is READ by check_claims.ts:431, not
+        // written by it. The classification inside it is a human judgment and
+        // only its `backed_claims` count is checked mechanically. Telling a
+        // reader to regenerate it would discard that judgment.
+        expect(isGenerated('internal/reports/exec-evidence-feasibility.json')).toBe(false);
+        // stubs/README.md is hand-authored prose. check_no_stub_inventory_table.ts
+        // guards it AGAINST carrying a generated index (`GUARDED` at :79), which
+        // is the opposite of being generated.
+        expect(isGenerated('agents/roadmaps/stubs/README.md')).toBe(false);
+    });
+
+    it('keeps GENERATED and REMEASURED disjoint across the new entries', () => {
+        for (const p of [
+            'docs/proof.md',
+            'docs/skills-catalog.md',
+            'llms.txt',
+            'agents/reports/originality.json',
+            'agents/reports/originality.md',
+            'src/domains/meta/pack.yaml',
+        ]) {
+            expect(isRemeasured(p), `${p} must not also be REMEASURED`).toBe(false);
+        }
+    });
+
+    it('routes a mixed conflict set into the three classes', () => {
+        const plan = classifyConflicts([
+            'docs/proof.md',
+            'src/domains/meta/pack.yaml',
+            'src/config/gate-violation-baselines.json',
+            'docs/CLAIMS.md',
+            'internal/reports/exec-evidence-feasibility.json',
+        ]);
+        expect(plan.generated).toEqual(['docs/proof.md', 'src/domains/meta/pack.yaml']);
+        expect(plan.remeasured).toEqual(['src/config/gate-violation-baselines.json']);
+        // CLAIMS.md is the #1 authored hotspot (38 resolutions/60d) and stays
+        // authored: it is hand-written and Phase 2 splits it rather than
+        // classifying it.
+        expect(plan.authored).toEqual([
+            'docs/CLAIMS.md',
+            'internal/reports/exec-evidence-feasibility.json',
+        ]);
+    });
+});

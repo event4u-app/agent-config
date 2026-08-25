@@ -111,7 +111,7 @@ it.
 
 ## Phase 1 — Generated aggregates leave the PR diff
 
-- [ ] **1.1 Add the four unclassified generated paths to `sync_pr_branch.ts`.**
+- [x] **1.1 Add the four unclassified generated paths to `sync_pr_branch.ts`.**
       `agents/reports/originality.{json,md}`, `docs/proof.md`,
       `internal/reports/exec-evidence-feasibility.json`, and
       `src/domains/*/pack.yaml` are regenerated, never hand-merged — the tool
@@ -150,12 +150,73 @@ it.
       verify: `tests/scripts/sync_pr_branch.test.ts` gains a `classifyConflicts`
       case per path; the four measured § 0 conflict sets classify with zero
       AUTHORED rows among them.
+
+      **DONE 2026-08-25, and two candidates were REFUSED on evidence.** Each
+      shipped entry carries its **write site**, because this list tells a human to
+      discard one side of a conflict and an entry added on frequency alone would
+      tell them to discard hand work:
+
+      | path | write site |
+      |---|---|
+      | `docs/proof.md` | `build_proof.ts:500` |
+      | `docs/skills-catalog.md`, `llms.txt` | `generate_catalog.ts` (`:166`) |
+      | `agents/reports/originality.{json,md}` | `lint_originality.ts:340` |
+      | `src/domains/*/pack.yaml` | `generate_pack_manifests.ts:427`, and the file's own line 1 reads *"DO NOT EDIT BY HAND"* |
+
+      The pack manifests needed a **named pattern**, not a literal: `isGenerated`
+      matches on equality or a trailing-slash prefix, and loosening that matcher
+      would make every future entry ambiguous about which kind of match it asks
+      for.
+
+      **Refused — `internal/reports/exec-evidence-feasibility.json`**, which THIS
+      STEP names. `check_claims.ts:431` **reads** it; only its `backed_claims`
+      count is checked mechanically, and the classification inside is a human
+      judgment that regeneration would discard.
+
+      **Refused — `agents/roadmaps/stubs/README.md`**, which came from this
+      roadmap's own corrected census table, written in an earlier session **on
+      conflict count alone** (61 resolutions). It is hand-authored prose, and
+      `check_no_stub_inventory_table.ts:79` guards it *against* carrying a
+      generated index — the opposite of being generated. Correcting an earlier
+      entry of my own rather than carrying it forward.
+
+      Both refusals ship as test cases, because that is the direction which costs
+      work: an over-broad classification tells someone to throw away a
+      hand-written file.
 - [ ] **1.2 Gate PR diffs against touching them.** A PR may not modify the
       Phase-1.1 path set; allowlist is the post-merge bot plus an explicit
       `regen-intended` label. A PR that changes inputs stops carrying the
       re-rendered outputs.
       verify: the gate fails a probe commit that edits `docs/proof.md`, and
       passes the same commit with the label.
+
+      **BLOCKED on 1.3, and the dependency is measured rather than argued.** With
+      1.1's classification live, this gate was run against the **last 40 merged
+      PRs**: **22 of them — 55 % — touch a generated path and would fail it.**
+
+      | path | PRs of 40 |
+      |---|---:|
+      | `docs/proof.md` | 13 |
+      | `src/domains/meta/pack.yaml` | 9 |
+      | `src/domains/engineering-base/pack.yaml` | 9 |
+      | `agents/index.md` | 7 |
+      | `docs/catalog.md` | 7 |
+
+      The step's allowlist is *"the post-merge bot plus an explicit
+      `regen-intended` label"*, and **the post-merge bot does not exist** — 1.3 is
+      owner-reserved. So shipping this gate today makes carrying regenerated
+      output an error while providing **no other route for that output to reach
+      `main`**: every one of those 22 PRs would need the escape label, which
+      turns the allowlist into the default and the gate into paperwork.
+
+      This is the ordering the phase numbering hides. 1.2 reads as independent of
+      1.3 and is not: it is the *enforcement* half of a mechanism whose *writer*
+      half is the owner's to authorise.
+
+      Reproduce the figure:
+      `git log --merges --first-parent -40 origin/main`, then
+      `git diff --name-only <sha>^1 <sha>` filtered through
+      `isGenerated` from `src/scripts/sync_pr_branch.ts`.
 - [ ] **1.3 One writer on `main`, post-merge.** A workflow regenerates the set
       after each merge and pushes a single bot commit when output changed.
       Loop guard: the workflow ignores its own commits; idempotence asserted by
@@ -163,6 +224,21 @@ it.
       verify: two consecutive runs on an unchanged tree produce no second
       commit; a run after a merge that shifts `artefact_count` produces exactly
       one.
+
+      **OWNER-RESERVED 2026-08-25, AI council 2/2** — the one point both seats
+      reached independently and stated in the same terms. A workflow that pushes
+      a commit to `main` is **privileged trunk mutation**, a different risk class
+      from everything else in this roadmap, and the maintainer's delegation of
+      *sequencing* decisions to the council does not extend to activating it.
+
+      One seat proposed landing it disabled or manual-dispatch-only as
+      containment for 3.1; the other refused, and the refusal carried on its own
+      argument: **"infrastructure ready" is not containment.** A disabled writer
+      closes nothing, and wiring a mechanism that *can* auto-commit to the trunk
+      is the step that needs authorisation, not switching it on afterwards.
+
+      An autonomous run may **design and propose** this writer. It may not merge
+      it. That is why this step stays open rather than being attempted.
 - [ ] **1.4 Move the freshness gates to the writer.** Originality freshness and
       proof drift run on `main` post-merge, where staleness is actionable, and
       leave the PR merge-ref path, where staleness is someone else's merge.
@@ -190,6 +266,53 @@ it.
       verify: a PR held deliberately 100 commits behind a tightened baseline
       passes; the count of affected read sites is re-pinned from
       `src/scripts/_lib/gate_baseline.ts` and named in the step's own output.
+
+      **BLOCKED 2026-08-25 on a contradiction between this step and 3.3, not on
+      sequencing.** AI council split on the remedy and was **2/2 on the
+      diagnosis**: these two acceptance criteria select **different contracts**,
+      and no implementation order reconciles them.
+
+      Worked example, from the numbers this repository actually carries. main
+      tightens `ci-parity:local-only` 165 → 160. A PR that branched earlier
+      measures 163. The merge-base read returns 165, so it **passes** — and after
+      it merges, main measures 163 against a baseline of 160. **A tightening is
+      undone by a PR that never touched the baseline file and never saw a red.**
+      That is exactly what 3.3 forbids.
+
+      The two contracts, named so the next reader picks one rather than
+      re-deriving the conflict:
+
+      - **Absolute invariant** — no merge may leave `main` above its current
+        baseline. 3.3 selects this.
+      - **Contribution invariant** — a PR passes if it did not worsen its own
+        merge-base state, even when the merge result undoes improvements made
+        since it branched. **This step's verify sentence selects this.**
+
+      One seat proposed satisfying both by checking the PR delta against
+      merge-base AND the absolute count against main's current baseline, with no
+      new infrastructure. The other refused on a correctness ground rather than a
+      preference: **violation counts are not necessarily compositional.** Conflict
+      resolution, file movement, generated outputs and interactions with changes
+      on `main` can make the prospective merge regress even when the isolated PR
+      delta is non-positive. If trunk health is the invariant, the **merge result**
+      is what has to be measured — not the branch.
+
+      Also recorded, because it is a third thing "post-merge enforcement"
+      currently blurs: *prevention before merge*, *detection after merge*, and
+      *baseline maintenance after a successful tightening* are three different
+      jobs, and only the first protects an uninterrupted trunk invariant. A
+      post-merge job that pushes a baseline commit may **normalise** a regression
+      rather than prevent it.
+
+      **What unblocks this:** the roadmap picks one invariant and rewrites the
+      losing criterion. If absolute, this step's "100 commits behind passes" goes
+      and is replaced by validating the prospective merge result.
+
+      **Unanimous, and applies to whichever contract wins:** a failed merge-base,
+      target-ref or baseline-blob resolution is a **hard error**. `loadBaselines`
+      today returns an empty ratchet on a read failure, so a silent working-tree
+      fallback would change the governing policy depending on an infrastructure
+      error, invisibly.
 - [ ] **3.2 Rebaseline on `main` only, and gate PRs against editing it.**
       Tightening lands in the post-merge job; the file leaves the pairwise
       conflict surface entirely. This is neither the union merge the council
@@ -201,6 +324,16 @@ it.
       tightening on `main` still fails a PR that regresses past it.
       verify: the test fails when the Phase-3.1 read is pointed back at the
       merge-ref tree — i.e. it has been seen red against the change it guards.
+
+      **BLOCKED with 3.1, on the same contradiction.** This criterion selects the
+      **absolute invariant**; 3.1's verify sentence selects the **contribution
+      invariant**; a test cannot assert both. See 3.1 for the worked example, the
+      non-compositionality objection, and what unblocks them.
+
+      Note the asymmetry that makes this the harder half to satisfy: 3.1 can be
+      demonstrated on a branch, while this can only be demonstrated on a
+      **prospective merge result** — the state where the loosening actually
+      appears.
 
 ## Phase 4 — The drain serializes
 
@@ -235,6 +368,27 @@ it.
   every required workflow (currently zero across the workflow set) plus measured
   per-PR CI wall-time to size throughput. An unmeasured queue on a multi-shard
   pipeline can lengthen the backlog rather than shorten it. Status: open.
+- **B4 — the post-merge writer is owner-reserved, and five steps depend on it.**
+  AI council 2/2 (2026-08-25): a workflow that pushes a commit to `main` is
+  privileged trunk mutation, a different risk class from the rest of this
+  roadmap, and a delegation of *sequencing* decisions does not extend to
+  activating it. One seat proposed landing it disabled as containment; the other
+  refused because **"infrastructure ready" is not containment** — wiring a
+  mechanism that *can* auto-commit to the trunk is the step needing
+  authorisation, not switching it on afterwards. **Blocks:** 1.2 (measured: 55 %
+  of the last 40 merged PRs would fail its gate with no other route for the
+  output), 1.3 itself, 1.4, and 2.1's "rides the Phase-1.3 writer" clause. An
+  autonomous run may design and propose the writer; it may not merge it.
+  Status: open.
+- **B5 — 3.1 and 3.3 select contradictory invariants.** AI council 2/2 on the
+  diagnosis, split on the remedy. 3.1's verify sentence selects a *contribution*
+  invariant ("100 commits behind passes"); 3.3 selects an *absolute* one ("a
+  tightening still fails a PR that regresses past it"). No implementation order
+  reconciles them, and the proposal to satisfy both with a delta check was
+  refused on a correctness ground: **violation counts are not necessarily
+  compositional**, so a prospective merge can regress even when the isolated PR
+  delta is non-positive. **Blocks:** 3.1, 3.2, 3.3. **What unblocks:** the
+  roadmap picks one invariant and rewrites the losing criterion. Status: open.
 - **B3 — union merge drivers for any ratchet or ledger file.** Refused by the
   AI council 2026-08-21 (recorded in the archived hotspot-drawdown roadmap).
   Inherited unchanged; Phase 3 takes the one-writer route *because* union merge
