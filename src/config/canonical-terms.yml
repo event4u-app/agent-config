@@ -1,0 +1,119 @@
+# Canonical terms — the house dialect for repository-authored prose.
+# road-to-canonical-terms Phase 1.1. AI council 2/2, 2026-08-25.
+#
+# WHAT THIS FILE DECIDES, AND WHAT IT DOES NOT.
+# It records the canonical side of each measured pair. It does NOT authorise a
+# sweep of the existing corpus. Both council seats separated the two
+# deliberately: choosing a canonical dialect and rewriting ~5000 historical
+# occurrences have different evidentiary requirements, and only the first is
+# supported today. `policy_scope` below states that boundary in the data rather
+# than only in prose, so a future reader cannot take this file for authorisation.
+#
+# WHY AMERICAN, WHEN THE PUBLISHED AGGREGATE SAID BRITISH.
+# The roadmap's Phase 1.1 rests on `behaviour`/`behavior` splitting 57/43 with
+# the BRITISH side ahead, calling it a case where the majority rule and the
+# consistency rule point in opposite directions. Decomposed by directory, they
+# do not point in opposite directions at all:
+#
+#     src/     128 behaviour / 432 behavior   -> 22/78  AMERICAN
+#     docs/    304 / 189                      -> 61/39
+#     agents/  971 / 419                      -> 69/31
+#
+# The British majority is produced almost entirely by `agents/` -- roadmaps,
+# evidence notes and archive, i.e. this repository's own working prose, much of
+# it in files nobody will edit again. On the SHIPPED surface the tree is already
+# 78 % American. So this file documents existing practice where it matters
+# rather than imposing a rewrite, which is also the strongest answer to the
+# seat that asked for evidence of harm before authorising 5000 changed lines:
+# declaring the convention `src/` already follows costs nothing and changes no
+# file.
+#
+# Full decomposition, including the two other pairs that flip between the
+# shipped surface and the aggregate (`artifact`/`artefact` and
+# `preflight`/`pre-flight`), is the CORRECTION section of
+# agents/evidence/analysis/wording-baseline-2026-08-25.md.
+schema_version: canonical-terms-v1
+
+policy_scope: prose-authored-here
+# `prose-authored-here` -- the canonical side applies to prose THIS repository
+# writes. It never applies to: exact external titles and quotations, code,
+# identifiers, paths, URLs, commands, test fixtures, snapshots, or externally
+# synchronised material. The council's wording, adopted verbatim in intent:
+# do NOT exempt ordinary prose merely because it sits near protected text.
+
+sweep_authorised: false
+# Set true only when a classified inventory and a bounded pilot exist. The
+# conditions are recorded at the roadmap's step 2.1; this key exists so a gate
+# or a future session reads the answer rather than inferring it from silence.
+
+terms:
+  # --- decided, and the direction is the same in src/, docs/ and agents/ ---
+  - canonical: subagent
+    variant: sub-agent
+    confidence: unambiguous
+    note: 98/2 in src/, 99/1 in docs/ and agents/. No directory disagrees.
+  - canonical: handoff
+    variant: hand-off
+    confidence: unambiguous
+    note: >-
+      84/16 in src/, 85/15 in docs/, 95/5 in agents/. `hand off` as two words is
+      a verb phrase and is not a variant of the noun; it is out of scope here.
+  - canonical: organize
+    variant: organise
+    confidence: unambiguous
+    note: >-
+      100/0 in src/ and docs/. agents/ is 53/47 on n=13, which is too small to
+      contradict anything.
+  - canonical: gray
+    variant: grey
+    confidence: low-count
+    note: >-
+      68/32 in src/ on n=25. Direction is consistent across directories but the
+      total is small; recorded as decided and flagged as thin evidence.
+  - canonical: canonicalize
+    variant: canonicalise
+    confidence: low-count
+    note: 100/0 in src/ on n=2. Follows `organize` rather than standing on its own count.
+
+  # --- decided AGAINST the published aggregate, on the shipped-surface reading ---
+  - canonical: behavior
+    variant: behaviour
+    confidence: decided-against-aggregate
+    note: >-
+      The pair the roadmap called hard. src/ is 22/78 American, so on the
+      shipped surface the majority rule and the consistency rule agree. The
+      aggregate's 57/43 British lead is an artifact of counting agents/.
+  - canonical: artifact
+    variant: artefact
+    confidence: decided-against-aggregate
+    note: >-
+      Aggregate 51/49 is a coin-flip and agents/ is 49/51, but src/ is 63/37.
+      Decided on the shipped surface for the same reason as `behavior`.
+
+  # --- decided, but the migration is explicitly NOT mechanical ---
+  - canonical: license
+    variant: licence
+    confidence: semantic-care-required
+    note: >-
+      94/6 in src/. `license` is both noun and verb in the canonical dialect, so
+      no noun/verb distinction is preserved in repository-authored prose. But
+      exact licence TITLES and quoted names are protected text and are never
+      rewritten -- and per the council, proximity to a protected name does not
+      exempt the surrounding prose. This pair is the one where a mechanical
+      find-and-replace would be wrong.
+
+  # --- NOT decided ---
+  - canonical: null
+    variant: pre-flight
+    also: preflight
+    confidence: undecided
+    note: >-
+      The one pair this file declines to decide. src/ is 44/56 in favour of the
+      HYPHENATED form on n=25, while the aggregate says 68/32 for the closed
+      form. The honest reading of a 25-sample near-tie is undecided, not decided
+      the other way, and picking a side to make the table look complete is the
+      failure this entry exists to avoid. Revisit when src/ carries enough
+      occurrences to separate the two.
+
+# `cancelled` / `canceled` is 946/0 and needs no entry -- recorded in the
+# wording baseline so a later pass does not spend a sweep on it.
