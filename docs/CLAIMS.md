@@ -122,6 +122,27 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: unbacked
 - last_verified: 2026-08-25
 
+### claim: description-gate-catches-regressions
+- claim: A diff-scoped gate on SKILL.md `description` frontmatter catches a description edit that makes a skill less distinguishable from its neighbours, at PR time and within the existing key budget.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-25 (road-to-routing-assurance Phase 0.5), BEFORE `description_route_check` exists. BASELINE: zero by construction -- no gate reads the description surface today. The deterministic suites test `dist/router.json` trigger substrings (`trigger_coverage.ts:10`) and the 94 routing-matrix fixtures; production skill selection runs on SKILL.md `description` (`lint_skill_descriptions.ts:6-7`, "the agent picks a skill from its description"); and the only harness on that surface is `rule_trigger_eval.ts`, which is "advisory only, never gating" (`:4`) and whose "live floor breach fails the SCHEDULED canary job only -- PRs are never blocked by live results" (`:32-33`). METRIC: on a corpus of description edits with known direction, the fraction of regressions the gate blocks (recall) and the fraction of neutral edits it does not block (precision). THRESHOLD: pre-registered per unit in `docs/contracts/routing-assurance-metrics.md` as the Phase 0.2 baseline minus a fixed 0.10 absolute tolerance, with the tolerance FIXED BEFORE the baseline run so it cannot be tuned to a result. RECALL-FIRST: per Phase 1.3 a positive that stops loading is the failure that matters, so the fail condition is recall-shaped and a precision miss is reported rather than blocking. FALSIFICATION: the gate blocks no seeded regression, or it blocks neutral edits at a rate that makes it unusable at PR time. STATED LIMITATION, not discovered later: the checker is a PROXY -- it asks whether a description is distinguishable from its neighbours, not whether a production model selects it. A green gate is evidence that a description did not get LESS distinguishable, never that production routing works.
+- status: unbacked
+- last_verified: 2026-08-25
+
+### claim: catalogue-pressure-null
+- claim: Selection accuracy at full catalogue is not worse than at N=20 by more than the floor delta.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-25 (road-to-routing-assurance Phase 3.3), quoted verbatim from the roadmap rather than paraphrased. DESIGN: the Phase 2 corpus run at N in {12, 20, 50, full}, distractors sampled deterministically in FNV-1a order -- the discipline `rule_trigger_eval.ts:20-21` and `:147` already use -- so the same seed reproduces the same distractor set. SCOPE, and it is a restriction the roadmap imposes on itself: this null "settles exactly one question, the confusion measurement, and cancels nothing". It may NOT be read as authority over tiering, because tiering already shipped for a different reason -- the host listing budget, via `compute_skill_tiers.ts`. ON HOLD: if the null holds, record it and stop; no follow-up work item is created. ON BREAK: the result feeds the archived MCP roadmap's routable-skills-per-standing-token measurement rather than duplicating it. FALSIFICATION: a full-catalogue accuracy more than the floor delta below the N=20 figure, on a run whose distractor seed is recorded.
+- status: unbacked
+- last_verified: 2026-08-25
+
+### claim: delivery-path-parity
+- claim: MCP-path recall may not undercut native-path recall by more than a pre-registered epsilon on the same corpus.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-25 (road-to-routing-assurance Phase 4.2), quoted verbatim. EPSILON: 0.05 absolute recall, fixed in `docs/contracts/routing-assurance-metrics.md` before any parity run. DESIGN: one corpus file, identical prompts and floors, parametrized over host-native listing and MCP-tool listing -- both paths exist in the tree today, so this has no external dependency. CONSEQUENCE OF A BREACH, pre-registered so it cannot be softened afterwards: a breach "blocks any MCP default-on decision; default-off holds until then". PUBLICATION: the parity table is published as evidence against the archived MCP roadmap's measured-null outcome and adds NO new claim id -- which is why this entry covers the parity gate and not the table. FALSIFICATION: a measured delta worse than -0.05 on the full Phase 2 corpus, or a corpus that cannot be run on both paths, in which case the claim is UNDERPOWERED rather than broken.
+- status: unbacked
+- last_verified: 2026-08-25
+
 ### claim: surgical-uninstall
 - claim: Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
 - kind: qual
