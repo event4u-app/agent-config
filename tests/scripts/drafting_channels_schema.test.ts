@@ -57,7 +57,11 @@ interface Channel {
 }
 
 function channels(): Channel[] {
-    const data = loadYaml(REGISTRY) as { channels: Channel[] };
+    // `as unknown as` rather than a direct assertion: YamlValue is a union
+    // whose object arm is an index signature, which does not overlap a shape
+    // with a required key, so tsc rejects the one-step cast. The registry's
+    // real shape is guaranteed by the schema test above, not by this cast.
+    const data = loadYaml(REGISTRY) as unknown as { channels: Channel[] };
     return data.channels;
 }
 
@@ -146,7 +150,9 @@ describe('the three --channel surfaces accept exactly the schema values', () => 
             // Every `--channel=<...>` enumeration in the file must be a subset
             // of the registry. An enumeration listing a value the schema
             // rejects is the drift this whole phase exists to close.
-            const enumerations = [...text.matchAll(/--channel=<([^>]+)>/g)].map((m) => m[1]);
+            const enumerations = [...text.matchAll(/--channel=<([^>]+)>/g)]
+                .map((m) => m[1])
+                .filter((g): g is string => g !== undefined);
             for (const e of enumerations) {
                 const listed = e.split('|').map((v) => v.trim());
                 expect(listed.sort()).toEqual([...ids].sort());
