@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **732 artefacts** in this package.
+Maintainer-facing index of all **733 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -642,7 +642,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (112)
+## Guidelines (113)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -757,4 +757,5 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`validations`](../docs/guidelines/php/validations.md) | php |  |
 | guideline | [`websocket`](../docs/guidelines/php/websocket.md) | php |  |
 | guideline | [`prompt-templates`](../docs/guidelines/prompt-templates.md) | (root) |  |
+| guideline | [`redundancy-taxonomy`](../docs/guidelines/redundancy-taxonomy.md) | (root) |  |
 | guideline | [`wing4-handoff`](../docs/guidelines/wing4-handoff.md) | (root) |  |

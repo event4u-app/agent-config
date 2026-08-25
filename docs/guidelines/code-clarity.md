@@ -246,6 +246,18 @@ Before emitting a comment or docblock, all three must be true:
 
 One "no" → drop it. When in doubt: no comment.
 
+Those three conditions are the code-comment instance of a wider test. The
+generalised form — five questions covering comments, docblocks, labels, hints,
+tooltips, placeholders, badges and empty states alike — is the Information Delta
+Test in [`redundancy-taxonomy`](redundancy-taxonomy.md), together with the
+representation classes that name what a redundant surface *is*. Reach for it
+whenever the surface is not a code comment, and whenever a reduction would touch
+the semantic channel: an accessibility name is required information, so it is a
+hard guard and never a deletion candidate. The rule is not "less text" — it is
+that if removing the text loses no information in any required channel, remove
+it, and if the information is required, express it once, in the strongest native
+form available.
+
 ### Additional worked examples
 
 (The TypeScript `formatPrice` pair above is the canonical TS example; these
@@ -309,3 +321,6 @@ criteria are proven by `tests/scripts/code_comment_fixtures.test.ts`.
   removals on untouched code".
 - `direct-answers` rule — same spirit at the prose level: shortest
   version that fully answers the question.
+- [`redundancy-taxonomy`](redundancy-taxonomy.md) — the shared classes,
+  verdicts and Information Delta Test this section instantiates for code
+  comments; also cited by the review and refactoring skills.
