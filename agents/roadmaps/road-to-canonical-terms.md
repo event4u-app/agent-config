@@ -5,7 +5,7 @@ execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-25
-estate_offset_exempt: "One-in-one-out is satisfied in the same change, not exempted: road-to-redundancy-governance is archived in this commit, so the active count does not rise. This file exists because that roadmap's last three [~] items are gated on conditions outside it — a maintainer dialect decision, another roadmap's 13 open steps, and a payload-budget milestone dated 2026-11-10 — and Iron Law 3 requires them resolved rather than carried inside an archived file. Nothing is claimed away: check_estate_count reads the archival in the same diff."
+estate_growth_exempt: "CORRECTED before landing, because the first version of this line was arithmetically false. It claimed the active count does not rise; check_estate_count measures +2 active / -1 disposed on this change, so it rises by ONE. The honest ground: one roadmap carrying six heterogeneous deferrals is replaced by two thematically separate successors, because memory-script twins and prose terminology share nothing and forcing them into one file would be a grab-bag whose blockers contradict each other. Three of the six were RESOLVED rather than carried (4.7 and the exhaustiveness 5.3 closed on measurements, 3.2 split), so the +1 buys three live decisions with named blockers instead of six sitting inside an archive where Iron Law 3 cannot see them."
 ---
 # Road to canonical terms — one dialect, one sweep, one budgeted row
 
