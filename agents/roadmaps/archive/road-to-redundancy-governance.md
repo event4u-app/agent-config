@@ -199,7 +199,7 @@ presented as council-backed.
       knowledge duplication by this roadmap's own taxonomy, found by an external
       audit of it. 29 is the count of *any* depth using that resolve shape; 22 is
       the two-level literal.
-      verify: `grep -rho 'only [0-9]* use the two-level' agents/roadmaps/road-to-redundancy-governance.md
+      verify: `grep -rho 'only [0-9]* use the two-level' agents/roadmaps/archive/road-to-redundancy-governance.md
       agents/evidence/analysis/redundancy-baseline-2026-08-25.md | sort -u` yields
       exactly one distinct value, and it matches the measurement command in the
       baseline. (Matching on the bare number cannot work — this very line would
@@ -243,25 +243,63 @@ presented as council-backed.
       verify: `grep -rl 'component-oriented-and-oop-development' src/skills/ | wc -l`
       returns 2, was 0.
 
-- [~] **4.5 Decide the canonical side per mechanical pair.** Nine measured pairs.
+- [-] **4.5 Decide the canonical side per mechanical pair.** Nine measured pairs.
       The majority side is the obvious proposal for seven of them, and two are
       not mechanical at all: `behaviour`/`behavior` splits 57/43 with the
       *British* side ahead, against a tree that is otherwise American, and
       `license`/`licence` is a genuine noun/verb distinction in one dialect plus
       quoted licence names. A term map is a maintainer decision.
-- [~] **4.6 Sweep the prose layer, then gate it.** ~5000 occurrences across the
+
+      **CARRIED, not cancelled** → `road-to-canonical-terms.md` step 1.1 and its
+      blocker `b-dialect-decision-is-owner-reserved`, created in the same change.
+      The nine pairs, the 57/43 split and the noun/verb case travel verbatim; the
+      blocker names the three options and states why the recommendation is not
+      the agent's to make.
+- [-] **4.6 Sweep the prose layer, then gate it.** ~5000 occurrences across the
       three largest pairs; sequenced behind `road-to-merge-surface-zero` (13 open
       steps) because a tree-wide text sweep against its conflicting branches
       multiplies the merge surface. The gate is
       `lint_canonical_terms.ts` as the fourth member of the existing vocabulary
       linter family, ratchet mode, reusing `check_md_language`'s
       frontmatter/fence/marker skip machinery. Gated on 4.5.
-- [~] **4.7 The identifier layer stays `keep-duplicated` until someone renames
+
+      **CARRIED, not cancelled** → `road-to-canonical-terms.md` Phase 2. The
+      sequencing behind `road-to-merge-surface-zero` travels with it, and 2.2's
+      verify is tightened rather than copied: the gate must be shown green on the
+      same word inside a fence, a frontmatter value AND a quoted licence name,
+      because a matcher that reds on those is the failure this gate would
+      otherwise introduce.
+- [x] **4.7 The identifier layer stays `keep-duplicated` until someone renames
       it deliberately.** Five `check_/lint_/move_artefact*` scripts with five
       matching tests and four taskfile references against three
       `*-artifact-*.md` contracts. Measured: nothing imports across the split, so
       the divergence costs nothing at runtime. A rename is ~14 files plus
       references — a refactor with its own blast radius, not a text substitution.
+
+      **Closed 2026-08-25 as `keep-duplicated`, and the correction is that this
+      was never an open question.** The step's own title states the verdict and
+      its own body states the measurement; it was marked `[~]` while carrying
+      both, which made a decided item read as a pending one.
+
+      **The measurement was re-verified live rather than taken from the text**,
+      because a count written days ago is not evidence today. All six
+      `*artefact*` / `*artifact*` scripts under `src/scripts/`
+      (`check_artefact_checksums`, `check_artefact_count_messaging`,
+      `check_generated_artefact_headers`, `lint_artefact_frontmatter`,
+      `lint_evidence_artifacts`, `move_artefact`) are imported by **0** files
+      across the spelling split. Reproduce:
+
+      ```
+      for f in $(git ls-files 'src/scripts/*artefact*' 'src/scripts/*artifact*'); do
+        b=$(basename "$f" .ts)
+        printf '%-42s %s\n' "$b" \
+          "$(git grep --files-with-matches "from '\./$b" -- 'src/*' | wc -l)"
+      done
+      ```
+
+      So the divergence still costs nothing at runtime, and the verdict stands
+      unchanged. A deliberate rename remains available and is not what this step
+      asked for.
 
 ## Phase 5 — Propagation: the change that only half landed
 
@@ -297,18 +335,65 @@ presented as council-backed.
       shape-search step where identifier search is insufficient.
       verify: the propagation dimension exists and both skills resolve the rule
       link; `check_references` exits 0.
-- [~] **5.3 Put the closed-set row in the rule once the payload budget allows.**
+- [-] **5.3 Put the closed-set row in the rule once the payload budget allows.**
       The row belongs in the rule's own table, next to the sweep it extends —
       that is where an agent looks. It costs ~95 tok and the gated payload has
       zero headroom, so it waits on a reduction. The budget config records that
       no reduction mechanism is committed, which makes this item's blocker the
       same one milestone 1 (2026-11-10) already carries.
-- [~] **5.3 Measure the exhaustiveness lint rule before enabling it.**
+
+      **CARRIED, not cancelled** → `road-to-canonical-terms.md` Phase 3 and its
+      blocker `b-payload-headroom-for-the-closed-set-row`. That blocker records
+      what this item only implies: `preamble-payload-budget.json`'s
+      `committed_reduction_mechanism` reads **NONE**, so the wait is unfunded —
+      and it therefore offers the guideline placement as a recordable outcome
+      rather than an indefinite hold.
+- [x] **5.3 Measure the exhaustiveness lint rule before enabling it.**
       `eslint.config.js` carries no exhaustiveness rule. The available one is
       type-aware, so it needs a TypeScript program built before linting — a real
       cost against 134 + 135 gate scripts. Repo culture is measure-then-default,
       and the same check exists in cheaper non-type-aware linters worth
       benchmarking against it. Deferred to a measurement, not to a preference.
+
+      **Measured 2026-08-25, and the premise this step deferred on is refuted.**
+      The stated cost was *"it needs a TypeScript program built before linting"*.
+      That program is **already built**: `eslint.config.js:38` sets
+      `project: ['./tsconfig.json', './tsconfig.ui.json', './tsconfig.test.json']`,
+      and `consistent-type-imports` is already a type-aware rule. The cost the
+      deferral was protecting against is paid whether or not this rule is on.
+
+      | configuration | scope | real | exhaustiveness findings |
+      |---|---|---:|---:|
+      | rule off | `src/scripts/**` | 10.26s | — |
+      | rule on, defaults | `src/scripts/**` | 9.74s | **21** |
+      | rule on, `considerDefaultExhaustiveForUnions` | `src/scripts/**` | 9.69s | **0** |
+      | rule off | `src/**` + `tests/**` | 15.77s | — |
+      | rule on, option | `src/**` + `tests/**` | 15.27s | **0** |
+
+      **No measurable overhead** — the with-rule readings are *lower* than the
+      without-rule ones, so the difference is run-to-run variance. Total findings
+      are identical at 342 either way (305 `no-unused-vars`, 32
+      `no-explicit-any`, all pre-existing in `tests/`), which is the control: the
+      rule adds nothing to the count.
+
+      **The option is the whole finding.** On defaults the rule reports 21
+      violations in `src/scripts/` alone — and **every one is a switch that HAS a
+      `default` clause**, which is precisely the *deliberate fallback* that step
+      5.1's three-way classification calls a legitimate outcome. Enabling it
+      without the option would have contradicted 5.1 from inside the same
+      roadmap. With `considerDefaultExhaustiveForUnions: true`, 0 violations.
+
+      **Enabled, with both directions of its sensitivity demonstrated** rather
+      than assumed — a rule reporting 0 on the current tree proves nothing about
+      what it would catch:
+
+      - a union switch with a missing case and **no** fallback →
+        `Switch is not exhaustive. Cases not matched: "c"`, **red**;
+      - the same missing case **with** a `default` → **green**.
+
+      The non-type-aware alternatives were not benchmarked, and that is stated
+      rather than implied: with the type-aware program already built and its
+      marginal cost measured at zero, the comparison has nothing left to decide.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-25 | reviewer: claude/host -->
@@ -348,6 +433,34 @@ presented as council-backed.
       that proves the sweep fired.
 - [x] AC-7 — Every number this branch asserts is reproducible with the command
       printed beside it, and no number appears twice with two values.
+
+## How the six deferrals were resolved (2026-08-25)
+
+Recorded here rather than only at each item, because the dispositions differ and
+a reader arriving at the archive should see the split without reconstructing it.
+
+| item | disposition | where it went |
+|---|---|---|
+| 3.2 twins | **split** — 3 closed `keep-duplicated`, 4 carried | `road-to-memory-twin-reconciliation.md` |
+| 4.5 dialect | carried | `road-to-canonical-terms.md` 1.1 + blocker |
+| 4.6 prose sweep | carried | `road-to-canonical-terms.md` Phase 2 |
+| 4.7 identifiers | **closed** — verdict re-verified live, 0 cross-imports | — |
+| 5.3 closed-set row | carried | `road-to-canonical-terms.md` Phase 3 + blocker |
+| 5.3 exhaustiveness lint | **closed** — measured, premise refuted, rule enabled | — |
+
+**Two were closed because they were not open.** 4.7's own title and body already
+carried a `keep-duplicated` verdict and its measurement; the exhaustiveness 5.3
+deferred on a cost — *"it needs a TypeScript program built before linting"* —
+that `eslint.config.js:38` shows was already being paid. Both were `[~]` while
+holding their own answer.
+
+**The three carried ones are `[-]` and each says `CARRIED, not cancelled`.**
+`decision-revisit-gate`'s preservation test reserves a genuine DROP to the owner
+and leaves a carry to the council, provided the follow-up roadmap is created in
+the SAME change. `road-to-canonical-terms.md` lands in this commit, carries all
+three verbatim, and turns two implicit conditions into named blockers with
+options and a recommendation. Nothing was weakened; the glyph is `[-]` because
+the item is closed **here**, and the sentence beside it says where it continues.
 
 ## Parking lot — deliberately not now
 

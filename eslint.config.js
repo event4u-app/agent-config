@@ -71,6 +71,25 @@ export default [
             // growing unobserved the moment --max-warnings is ever dropped from the
             // npm script. A warn tier with no cap is a counter nobody reads.
             '@typescript-eslint/no-explicit-any': 'error',
+            // road-to-redundancy-governance 5.3, enabled on a measurement
+            // rather than a preference. `considerDefaultExhaustiveForUnions`
+            // is the load-bearing option: without it the rule reports 21
+            // violations in `src/scripts/` alone, and every one is a switch
+            // that HAS a default clause -- exactly the "deliberate fallback"
+            // that step 5.1's three-way classification calls a legitimate
+            // outcome. With it, 0 violations across `src/` and `tests/`, so
+            // what remains is the case 5.1 exists for: a switch over a union
+            // with a missing case and no fallback.
+            //
+            // Cost, measured both ways on this tree: 15.77s without the rule
+            // and 15.27s with it over `src/**` + `tests/**`. No measurable
+            // overhead -- the type-aware program the rule needs is already
+            // built, because `parserOptions.project` above names three
+            // tsconfigs.
+            '@typescript-eslint/switch-exhaustiveness-check': [
+                'error',
+                { considerDefaultExhaustiveForUnions: true },
+            ],
         },
     },
     {
