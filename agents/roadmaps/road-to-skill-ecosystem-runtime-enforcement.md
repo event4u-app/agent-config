@@ -89,13 +89,27 @@ block on this host constrains every new hook's exit contract.
 
 ## Phase 1: Shims and the hook contract
 
-- [ ] **Step 1:** Add `src/scripts/hooks/shims/` and a session-start installer that prepends the shim directory to the path for the session only. <!-- verify: bash -n src/scripts/hooks/shims/install.sh -->
-- [ ] **Step 2:** Ship the first shim for the surface with the clearest recorded need: the container-only tooling rule. The shim prints the sanctioned in-container invocation and exits non-zero; it re-quotes the received arguments so the printed alternative is directly runnable. <!-- verify: bash -n src/scripts/hooks/shims/php -->
-- [ ] **Step 3:** Dispatch on the invoked basename so one script can serve several names, and give each shim a paired test asserting both the non-zero exit and the runnable suggestion. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
-- [ ] **Step 4:** Add a documented false-positive matrix per shim covering the cases where the binary name appears without being invoked — a which query, a grep for the name, a file whose name contains it — and assert each is a fast pass. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
-- [ ] **Step 5:** Record the hook performance doctrine in `docs/contracts/` alongside the hook manifest: prefer shell over an interpreted runtime because startup dominates, fast-pass non-matching invocations, prefer a regex over a parse and accept rare false positives, and prefer a path prepend over a per-tool-call spawn where both are available.
-- [ ] **Step 6:** Record the marker-hook convention in the same contract: a hook that triggers work records a marker and exits zero; it never performs the work and never spends. Cite the recorded trap that an advisory exit code 2 reads as a hard block on this host.
-- [ ] **Step 7:** Add a single environment flag that disables every hook for one invocation, and make the Phase 2 diagnostic report it as a warning when set, so a disabled estate is visible rather than silent.
+- [x] **Step 1:** Add `src/scripts/hooks/shims/` and a session-start installer that prepends the shim directory to the path for the session only. <!-- verify: bash -n src/scripts/hooks/shims/install.sh -->
+      **DONE 2026-08-26.** `bash -n` clean. **Session-only is the whole design, not a limitation:** the installer never writes to a profile or any shell rc, so the entire mechanism is undone by closing the terminal. That reversibility is what let the council scope Phase 1 to a shim at all — the reversible option is the one that ships first. It must be **sourced**, not executed (a child cannot alter its parent's PATH), and it says so rather than appearing to work. Verified: prepends once, **idempotent on a double source** (1 occurrence, not 2), and `--off` removes it (0 occurrences).
+- [x] **Step 2:** Ship the first shim for the surface with the clearest recorded need: the container-only tooling rule. The shim prints the sanctioned in-container invocation and exits non-zero; it re-quotes the received arguments so the printed alternative is directly runnable. <!-- verify: bash -n src/scripts/hooks/shims/php -->
+      **DONE 2026-08-26** — `src/scripts/hooks/shims/php`, `sh -n` clean, exit **2** on a host invocation.
+      **The shim set is exactly this one**, per `blocker: shim-scope-decision` (AI council 2/2, option (a)); the hook-bypass-flag and package-manager candidates are **recorded as out of scope for Phase 1** there, with the reason and a two-part revisit condition.
+      Re-quoting is asserted on the two cases that break naive quoting — an argument containing a **space**, and one containing an **embedded single quote** — because a suggestion that does not survive copy-paste silently does something other than what was refused.
+- [x] **Step 3:** Dispatch on the invoked basename so one script can serve several names, and give each shim a paired test asserting both the non-zero exit and the runnable suggestion. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
+      **DONE 2026-08-26 — 16 tests.** Dispatch is a basename `case`; today the claimed set is deliberately **one entry wide**, and an invocation under an **unclaimed** basename **refuses** rather than passing through silently — a silent pass-through would make the shim look installed and inert, which is worse than an error because nothing would ever reveal the gap.
+- [x] **Step 4:** Add a documented false-positive matrix per shim covering the cases where the binary name appears without being invoked — a which query, a grep for the name, a file whose name contains it — and assert each is a fast pass. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
+      **DONE 2026-08-26.** The matrix is a table in `tests/scripts/hook_shims.test.ts` and **each row is an assertion**, not a comment: `command -v php` **resolves** the shim without invoking it; `grep php <file>` does not fire it; the name as a literal argument does not; a **file** named `php` in a listing does not.
+      Asserted rather than assumed because a future shim implemented as a shell **function** or an **alias** would break exactly these four, and this file is where that regression surfaces.
+- [x] **Step 5:** Record the hook performance doctrine in `docs/contracts/` alongside the hook manifest: prefer shell over an interpreted runtime because startup dominates, fast-pass non-matching invocations, prefer a regex over a parse and accept rare false positives, and prefer a path prepend over a per-tool-call spawn where both are available.
+      **DONE 2026-08-26** — `docs/contracts/hook-architecture-v1.md` § *Performance doctrine*. Extends the existing hook contract rather than adding a file, per `minimal-safe-diff`.
+      All four rules are recorded with the reason each is a rule, framed on the cost that actually matters: **not the cost of acting, but the cost of deciding not to act, paid on every event.** The regex rule carries a condition the step's wording leaves implicit — accepting rare false positives is a trade only when they are **enumerated and asserted** (Step 4's matrix); an unenumerated false positive is not an accepted trade but an unmeasured defect. Closed with the limit: none of the four permits a hook to skip work it should do.
+- [x] **Step 6:** Record the marker-hook convention in the same contract: a hook that triggers work records a marker and exits zero; it never performs the work and never spends. Cite the recorded trap that an advisory exit code 2 reads as a hard block on this host.
+      **DONE 2026-08-26** — same contract, § *Marker-hook convention*, with the trap cited: an **advisory exit code 2 reads as a hard block** on this host, so a hook that merely wanted to say *"something is worth doing"* can stop the turn instead.
+      Adds the discriminator the convention needs to be usable, since the boundary is where the mistakes happen: if the output is **information for a later decision** it is a marker hook and exits 0; if the output **is** the decision it may exit non-zero — and the shim shipped in Step 2 is deliberately the second kind.
+- [~] **Step 7:** Add a single environment flag that disables every hook for one invocation, and make the Phase 2 diagnostic report it as a warning when set, so a disabled estate is visible rather than silent.
+      **HALF DONE — the flag exists; the diagnostic does not.** `AGENT_CONFIG_DISABLE_HOOKS=1` is implemented and tested. Marked `[~]` rather than `[x]` because the step has two clauses and the second names the **Phase 2 diagnostic**, which does not exist yet — checking it would claim a visibility guarantee nothing provides.
+      What is built: the flag is checked **first**, so the escape hatch cannot be shadowed; it **re-execs the real binary** rather than merely not refusing, so `AGENT_CONFIG_DISABLE_HOOKS=1 php -v` does what it says; it exits **127**, never 0, when disabled with no real binary to reach, because exiting 0 would report success for a command that never ran; and **only the exact value `1`** disarms it — `0`, `true`, `yes` and empty all leave it armed, since a truthy-ish check would let `=0` disable enforcement.
+      **The loop guard is the load-bearing part and was proven by breaking it.** Re-exec strips the shim's own directory from PATH before looking again; removing that strip makes the shim find itself and **recurse until the process dies** — the probe hung and had to be killed, which is the proof.
 
 ## Phase 2: A diagnostic for the runtime wiring
 
@@ -162,7 +176,35 @@ block on this host constrains every new hook's exit contract.
 ## Blockers
 
 ### blocker: shim-scope-decision
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **(a): ship only the container-only tooling
+  shim, `src/scripts/hooks/shims/php`.** The hook-bypass-flag and
+  package-manager candidates are recorded as **out of scope for Phase 1**. AI
+  council **2/2 unanimous**, inlined convergence:
+  `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 3 rounds, blind
+  chairman, quorum concluded 2/2, $0.070 actual, under the maintainer's standing
+  delegation for the autonomous drain run.
+
+  **Why the narrow set, in the seats' own terms.** A shim alters what a
+  developer's shell resolves, so *"unnecessary interception has the greater
+  immediate blast radius"* — the asymmetry runs against breadth, not for it.
+  Option (b)'s hook-bypass shim would duplicate a guard that already exists and
+  is substantial (`src/scripts/hooks/block_no_verify.ts`, verified present at
+  29,518 bytes), and option (c) contradicts this roadmap's own recorded-failure
+  discipline: no failure is named behind the package-manager candidate.
+
+  **One piece of evidence offered in the question was refused, and the refusal is
+  kept.** The question cited *"`src/skills/docker/SKILL.md` mentions containers
+  29 times"* as support for the container-only surface. One seat rejected it:
+  *"The '29 container mentions' is weak evidence by itself: it shows topic
+  prevalence, not interception failures."* Correct, and recorded so a later
+  reader does not treat a grep count as a recorded need. The actual basis is
+  Phase 1 Step 2's own phrase — *"the surface with the clearest recorded
+  need"* — and that phrase is what this decision rests on.
+
+  **Revisit-if:** a provenance-backed failure shows a hook-bypass or
+  package-manager command escaped existing enforcement, **and** testing shows the
+  proposed shim would have caught it without unacceptable false positives. Both
+  halves, not either.
 - **Owner:** user
 - **Blocks:** Phase 1 — Shims and the hook contract
 - **Recommendation:** (a). It is the only candidate the sweep gives a recorded need for — Phase 1 Step 2 calls the container-only tooling rule "the surface with the clearest recorded need" — while this blocker's own text says a shim over the hook-bypass flags would be *additive* to a guard that already exists, and names no failure behind the package-manager candidate. A shim changes what a developer's shell does, so the narrow set is the reversible one.
@@ -174,7 +216,37 @@ block on this host constrains every new hook's exit contract.
 - **Resolved when:** the shim set is named in this roadmap's Phase 1 Step 2 and the remaining candidates are recorded as out of scope.
 
 ### blocker: plan-injection-decision
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **(c): defer the whole injection half, AND
+  the attestation with it.** AI council **2/2**, and both seats **overruled this
+  blocker's own recommendation of (b)**. Same session as `shim-scope-decision`.
+
+  **Why (b) failed, and it is not the argument the recommendation makes.** (b)
+  proposed shipping `src/scripts/attest_artifact.ts` *"on its own merit"* as a
+  standalone tamper check. Both seats found the merit unstated: **no protected
+  artifact, no threat model, no consumer of the attestation result, and no
+  required response to a failure.** One seat: *"attestation is a mechanism
+  without a subject."* The other: the proposal *"does not identify the gap this
+  new mechanism would fill"*, given that git already detects tampering in
+  tracked files. Verified in the tree — neither `src/scripts/attest_artifact.ts`
+  nor its test exists, so (b) was a **build**, not a re-labelling of code already
+  present, which is what made "commits to nothing" untrue.
+
+  **The recommendation's own argument was also weakened.** *"Standing injection
+  amplifier"* is *"a plausible risk hypothesis, not measured evidence"* — it
+  supports caution about the injection half and does not independently justify
+  building the attestation.
+
+  **Consequence for Phase 5, stated so nothing is left ambiguous:** Steps 1–5
+  land as a bounded **non-injecting** loop, and Steps 6 and 7 land nothing. The
+  blocker's `If you do nothing` warned that Steps 1–5 would otherwise have
+  *"injection behaviour undefined"*; (c) defines it as **none**.
+
+  **Revisit-if:** EITHER a provenance-backed context-rot or artifact-tampering
+  incident identifies the missing control; OR a concrete design names the
+  protected artifact, the trust boundary, the attacker or failure mode, the
+  attestation's consumer, and the required response. One seat noted an incident
+  is not the only admissible trigger — a complete threat model would do — and
+  that is why the second branch exists.
 - **Owner:** user
 - **Blocks:** Phase 5 — A bounded loop the harness enforces
 - **Recommendation:** (b). The sweep supplies evidence on both sides, and only one side is reversible: `src/scripts/attest_artifact.ts` is useful standalone as a tamper check, whereas per-turn re-injection turns a governed file into a standing injection amplifier — this roadmap's own counter-evidence — and that is hard to withdraw once hosts depend on it. Deciding (b) now unblocks Steps 6 and 7 without foreclosing (a) later.
