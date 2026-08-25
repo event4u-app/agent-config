@@ -1627,6 +1627,16 @@ tasks:
       names a skill that exists. Forward-only: the 299 pre-existing skills are
       grandfathered by the diff scope.
     cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
+  lint-skill-trigger-corpus:
+    silent: true
+    desc: >-
+      Fail when a skill trigger corpus breaks the routing-matrix discipline —
+      fewer than 3 positives or fewer than 2 near-misses. A changed or added
+      corpus must additionally declare `"language": "de"` on one positive:
+      declared, never detected, because a detector would pass German-looking
+      English and fail short German.
+    cmd: ./scripts-run src/scripts/lint_skill_trigger_corpus {{.QUIET_FLAG}}
+
   description-route-check:
     silent: true
     desc: >-

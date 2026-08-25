@@ -1,0 +1,32 @@
+{
+    "skill": "code-review",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are the sharper adversarial ask and the narrower single-lens reviews.",
+    "queries": [
+        {
+            "q": "review this code",
+            "trigger": true
+        },
+        {
+            "q": "check my changes before I open the PR",
+            "trigger": true
+        },
+        {
+            "q": "schau dir bitte meinen Diff an",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "be brutal and tear this design apart",
+            "trigger": false
+        },
+        {
+            "q": "is this endpoint's authorization correct?",
+            "trigger": false
+        },
+        {
+            "q": "write the PR description for this branch",
+            "trigger": false
+        }
+    ]
+}

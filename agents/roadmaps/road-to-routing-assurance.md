@@ -329,21 +329,83 @@ true-positive or a recorded month of zero-noise operation is in the ledger.
 
 ## Phase 2 — Per-skill corpus at routing-matrix discipline
 
-- [ ] **2.1 Extend the routing-matrix CORPUS DISCIPLINE to skills** (not its
+- [x] **2.1 Extend the routing-matrix CORPUS DISCIPLINE to skills** (not its
       matcher): one YAML per skill, at least 3 positives (at least 1 German), at
       least 2 near-misses. Validity is checked on the description surface via
       Phase 1's checker; the substring matcher stays a projection-layer tool
       with no opinion on descriptions.
-      verify: a corpus file failing the discipline is rejected by a schema
-      check, not by review.
-- [ ] **2.2 Priority order:** skills with recorded invocations first (hook
+      verify: **`lint_skill_trigger_corpus`** — 90 corpus files scanned, 15
+      tests, `--self-test` 7/7 (4 rejecting). Too few positives, too few
+      near-misses, a malformed file and a dead scan root all exit non-zero; no
+      case reaches a reviewer.
+
+      **AMENDED, by AI council 2/2 (`anthropic/claude-sonnet-4-5` +
+      `openai/codex-default`), and recorded rather than performed silently.**
+      This step's literal text said *"one YAML per skill"*. Taken literally it
+      adds a THIRD corpus surface next to the 74 `queries`-shaped and 2
+      `should_trigger`-shaped JSON files already in the tree and already read by
+      `skill_trigger_eval`. Both seats: the step's stated objective is corpus
+      DISCIPLINE and its verify condition is format-agnostic, so the discipline
+      goes on the existing JSON. Both were also explicit that this is legitimate
+      **only because it is amended in writing** — one seat: *"silent
+      substitution would violate the roadmap's intent; explicit amendment
+      preserves accountability"*. Migration of all 76 (option C) was rejected as
+      scope creep inside a drain run; a second format (option B) as competing
+      authorities.
+
+      **Language is DECLARED, never detected**, on both seats' insistence:
+      `"language": "de"` on the case. A detector would pass a German-looking
+      English sentence and fail a short German one, and its failures would be
+      unactionable. Forward-only, because zero of the 76 pre-existing files
+      carry the field.
+
+      **The council's sharpest point is carried into the gate's docstring:
+      serialization, case semantics and coverage are three contracts, and
+      choosing JSON answers only the first.** Whether a `trigger: false` case is
+      a genuine NEAR-MISS rather than an unrelated negative is not
+      machine-decidable, and the gate says so instead of pretending. Coverage
+      stays with `check_routing_coverage`.
+
+      **Grandfathering is by NAME (`brand-asset-generation`, `estimate-ticket`),
+      not by a numeric baseline** — a count would let a third failure arrive
+      while the number stayed put if one of the two were fixed in the same
+      change.
+- [x] **2.2 Priority order:** skills with recorded invocations first (hook
       telemetry), then tier by `model_tier`. Do not attempt all 299 in one drop;
       the 0.3 ratchet makes partial progress durable.
-      verify: the ordering is derived from a telemetry query recorded in the PR,
-      not chosen by hand.
-- [ ] **2.3 Each corpus file doubles as the Phase 1 gate input**, so corpus
+      verify: **the telemetry query was run and returned an HONEST NULL.**
+      `skill_usage_report` on the current tree: *"Skills tracked: 299 · Active:
+      **0** · Exposed-only: **0** · Dead: **299**"*. There are no recorded
+      invocations, so the first ordering key ranks nothing — the query is
+      recorded here precisely because its answer is empty, and an ordering
+      presented as telemetry-derived would have been chosen by hand.
+
+      The ordering therefore falls to this step's own stated second key,
+      `model_tier`. Distribution over the 223 skills with no corpus: **high 65**,
+      medium 87, inherit 69, lite 2. The batch is 14 `high`-tier skills, and the
+      step's *"do not attempt all 299 in one drop"* is the reason it is 14 and
+      not 65.
+
+      **The exit condition "every top-invoked skill has a corpus file" is
+      vacuously satisfied** — the top-invoked set is empty — and that is stated
+      rather than claimed as coverage.
+- [x] **2.3 Each corpus file doubles as the Phase 1 gate input**, so corpus
       growth directly widens the gated surface.
-      verify: adding one corpus file measurably widens the 1.2 scoped run.
+      verify: measured on the loader Phase 1 ships. Before the batch: **1,285
+      cases over 170 units**. After: **1,369 over 184**. A scoped run for
+      `src/skills/authz-review/SKILL.md` returns 6 cases where it previously
+      returned 0 — the gated surface widened by exactly the corpus added.
+
+      Coverage moved **0.2542 → 0.3010** (76 → 90 of 299) and the seed was
+      RAISED to 0.3010 in the same change, so the gain cannot be given back
+      silently. The ratchet may never be lowered; `history` in
+      `routing-coverage-seed.json` records the move and its reason.
+
+      **One real defect surfaced here and was fixed rather than noted.** Phase
+      1's loader read only the `queries` shape, so the 2 `should_trigger`-shaped
+      files contributed ZERO cases while `check_routing_coverage` counted them
+      as covered — the file existed, so the ratio said yes and the corpus said
+      nothing. Both readers now handle both shapes, and a test in each pins it.
 
 **Exit:** skill-scope ratchet strictly above its seed; every top-invoked skill
 has a corpus file.

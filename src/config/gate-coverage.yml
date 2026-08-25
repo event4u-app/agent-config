@@ -42,14 +42,20 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 290 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 291 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying this row, with `check_skill_admissions`,
-# `check_command_examples` and `check_routing_coverage` counted).
-# **62 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 59 of those 62 are listed below.** The manifest is
+# re-run on the tree carrying these rows, with `check_skill_admissions`,
+# `check_command_examples`, `check_routing_coverage`, `description_route_check`
+# and `lint_skill_trigger_corpus` counted).
+# **63 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 60 of those 63 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~20 % of the population.
+# carry a floor, and covers ~21 % of the population.
+#
+# `description_route_check` is counted in the POPULATION and deliberately NOT
+# listed: it is diff-scoped, so its natural reading on most trees is zero cases,
+# and a `min_scanned` floor over a corpus that is legitimately empty would be a
+# floor on the diff rather than on the gate.
 #
 # RECOUNTED on 2026-08-25 while adding `check_routing_coverage`, and this time
 # the prose was NOT stale — 289 was correct for the tree before the row landed,
@@ -304,6 +310,23 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_skill_trigger_corpus
+    argv: []
+    min_scanned: 70
+    corpus: "every src/skills/*/evals/triggers.json. The floor sits at 70 because 90 exist in the shipped tree and the count only grows — a reading below it means the scan root moved, not that corpora were deleted, which has its own gate. Two units (brand-asset-generation, estimate-ticket) are grandfathered BY NAME rather than by a numeric baseline, so a third failure cannot hide inside a count."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-trigger-corpus/evals/triggers.json
+      content: |
+        {
+            "skill": "zz-canary-trigger-corpus",
+            "last_eval": "2026-08-25",
+            "description": "Canary planted by check_gate_coverage --canary; never ships. One positive and no near-miss, which is the discipline violation this gate must reject.",
+            "queries": [
+                { "q": "only one positive", "trigger": true }
+            ]
+        }
   - id: check_routing_coverage
     argv: []
     min_scanned: 300

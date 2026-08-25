@@ -494,6 +494,10 @@ jobs:
       # added to both `paths:` blocks in the same change.
       - name: Routing-corpus coverage has not fallen below seed
         run: ./scripts-run src/scripts/check_routing_coverage
+      # Same ci-parity:local-only grounds. Corpus is `src/skills/**`, which this
+      # workflow's `paths:` already carries.
+      - name: Skill trigger corpora hold the routing-matrix discipline
+        run: ./scripts-run src/scripts/lint_skill_trigger_corpus
       # Wired here rather than left local-only for the same reason as the step
       # above: a gate `task ci` runs and no workflow does is its own violation
       # under ci-parity:local-only (165, shrink-only). Its corpus is

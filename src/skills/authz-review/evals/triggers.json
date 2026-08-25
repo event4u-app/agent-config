@@ -1,0 +1,32 @@
+{
+    "skill": "authz-review",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are authentication and tenancy-modelling, the two surfaces most often confused with authorization.",
+    "queries": [
+        {
+            "q": "review the authorization on this endpoint",
+            "trigger": true
+        },
+        {
+            "q": "can user A reach user B's invoice here?",
+            "trigger": true
+        },
+        {
+            "q": "prüf bitte die Berechtigungen — wer darf das sehen?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "add login with Google",
+            "trigger": false
+        },
+        {
+            "q": "how should we model tenants in the schema?",
+            "trigger": false
+        },
+        {
+            "q": "rotate the API signing key",
+            "trigger": false
+        }
+    ]
+}

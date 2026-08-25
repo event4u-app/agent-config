@@ -47,6 +47,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { type SkillMeta } from './skill_trigger_eval.js';
 
 const HERE = fileURLToPath(import.meta.url);
@@ -325,14 +326,39 @@ export function loadCases(root = REPO_ROOT): Case[] {
         if (!d.isDirectory()) continue;
         const f = path.join(sdir, d.name, 'evals', 'triggers.json');
         if (!fs.existsSync(f)) continue;
-        const doc = JSON.parse(fs.readFileSync(f, 'utf-8')) as {
-            queries?: { q?: string; trigger?: boolean }[];
-        };
-        for (const q of doc.queries ?? []) {
-            if (typeof q.q === 'string' && typeof q.trigger === 'boolean') {
-                out.push({ unit: d.name, prompt: q.q, expect: q.trigger });
-            }
+        out.push(...readTriggersFile(d.name, f));
+    }
+    return out;
+}
+
+/**
+ * Read one skill trigger file, in EITHER of the two shapes that exist.
+ *
+ * 74 files use `queries: [{q, trigger}]`; 2 use `should_trigger` /
+ * `should_not_trigger` string arrays. A reader that knew only the majority
+ * shape returned ZERO cases for the other two while `check_routing_coverage`
+ * counted them as covered — the file exists, so the ratio said yes and the
+ * corpus said nothing. That is exactly the silent no-op this repository keeps
+ * finding, and it is the reason both shapes are read here rather than one
+ * being called the format.
+ */
+export function readTriggersFile(unit: string, file: string): Case[] {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf-8')) as {
+        queries?: { q?: string; trigger?: boolean }[];
+        should_trigger?: string[];
+        should_not_trigger?: string[];
+    };
+    const out: Case[] = [];
+    for (const q of doc.queries ?? []) {
+        if (typeof q.q === 'string' && typeof q.trigger === 'boolean') {
+            out.push({ unit, prompt: q.q, expect: q.trigger });
         }
+    }
+    for (const q of doc.should_trigger ?? []) {
+        if (typeof q === 'string') out.push({ unit, prompt: q, expect: true });
+    }
+    for (const q of doc.should_not_trigger ?? []) {
+        if (typeof q === 'string') out.push({ unit, prompt: q, expect: false });
     }
     return out;
 }
@@ -435,6 +461,17 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
     const inner: Backend = new DryBackend();
     const backend = dry ? inner : new CachedBackend(inner, path.join(root, CACHE_REL));
     const report = evaluate(cases, catalogue, backend);
+    // The ledger's target is the UNIT, not the individual case: a unit is what
+    // the diff scoped in, so a per-case ledger would report rows nobody chose
+    // to include while hiding which unit actually regressed.
+    const ledger = new GateLedger('description_route_check');
+    ledger.plan(decision.units);
+    for (const u of decision.units) {
+        const own = report.findings.filter((f) => f.unit === u && f.direction === 'recall');
+        if (own.length === 0) ledger.complete(u);
+        else ledger.fail(u, `${String(own.length)} positive(s) stopped loading`);
+    }
+    ledger.report(write);
     const code = render(report, write);
     if (dry) {
         // The dry backend is a NAME-substring matcher over a catalogue whose
