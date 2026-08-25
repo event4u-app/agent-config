@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Lapsed beta-contract inventory — 2026-08-25
 
 > `road-to-contract-review-deadlines` step **0.1**. Produced so that D3's
