@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **731 public artefacts** shipped by
+Consumer-facing catalog of all **732 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -657,7 +657,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (112)
+## Guidelines (113)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -772,6 +772,7 @@ are excluded.
 | guideline | [`validations`](../docs/guidelines/php/validations.md) | php |  |
 | guideline | [`websocket`](../docs/guidelines/php/websocket.md) | php |  |
 | guideline | [`prompt-templates`](../docs/guidelines/prompt-templates.md) | (root) |  |
+| guideline | [`redundancy-taxonomy`](../docs/guidelines/redundancy-taxonomy.md) | (root) |  |
 | guideline | [`wing4-handoff`](../docs/guidelines/wing4-handoff.md) | (root) |  |
 
 ---
