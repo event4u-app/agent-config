@@ -1,0 +1,32 @@
+{
+    "skill": "code-refactoring",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are behaviour changes, which a refactor by definition is not.",
+    "queries": [
+        {
+            "q": "refactor this controller",
+            "trigger": true
+        },
+        {
+            "q": "rename this class and update every caller",
+            "trigger": true
+        },
+        {
+            "q": "zieh die doppelte Logik in eine gemeinsame Methode",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "add a retry to this job",
+            "trigger": false
+        },
+        {
+            "q": "fix the off-by-one in the pagination",
+            "trigger": false
+        },
+        {
+            "q": "why does this class exist?",
+            "trigger": false
+        }
+    ]
+}

@@ -244,6 +244,9 @@ tasks:
       - task: lint-command-verbs
       - task: check-skill-admissions
       - task: check-command-examples
+      - task: lint-skill-trigger-corpus
+      - task: check-routing-coverage
+      - task: description-route-check
       - task: lint-command-routing
       - task: lint-skill-names
       - task: lint-new-skill-gate

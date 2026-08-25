@@ -1,0 +1,32 @@
+{
+    "skill": "blast-radius-analyzer",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are doing the edit and reviewing it afterwards — this fires BEFORE, on the question of reach.",
+    "queries": [
+        {
+            "q": "what breaks if I change this helper's signature?",
+            "trigger": true
+        },
+        {
+            "q": "who calls this method — all of it, including jobs and tests?",
+            "trigger": true
+        },
+        {
+            "q": "was hängt alles an dieser Basisklasse, bevor ich sie anfasse?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "rename this method to something clearer",
+            "trigger": false
+        },
+        {
+            "q": "review the diff I just pushed",
+            "trigger": false
+        },
+        {
+            "q": "why is this helper so slow?",
+            "trigger": false
+        }
+    ]
+}

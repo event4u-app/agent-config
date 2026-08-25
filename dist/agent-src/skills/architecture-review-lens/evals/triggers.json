@@ -1,0 +1,32 @@
+{
+    "skill": "architecture-review-lens",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are the other review lenses this one is dispatched alongside.",
+    "queries": [
+        {
+            "q": "does this diff break a service boundary?",
+            "trigger": true
+        },
+        {
+            "q": "check the dependency direction in this change",
+            "trigger": true
+        },
+        {
+            "q": "verletzt das die Schichtgrenzen zwischen Domain und Infrastruktur?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "is this change secure?",
+            "trigger": false
+        },
+        {
+            "q": "will this query be slow at 10M rows?",
+            "trigger": false
+        },
+        {
+            "q": "does this diff have enough test coverage?",
+            "trigger": false
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "skill": "blameless-post-mortem",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are the incident itself while it is still live — this skill runs AFTER resolution.",
+    "queries": [
+        {
+            "q": "write the post-mortem for yesterday's outage",
+            "trigger": true
+        },
+        {
+            "q": "the incident is closed — let's do the retro",
+            "trigger": true
+        },
+        {
+            "q": "wir hatten einen Ausfall, schreib bitte eine Post-Mortem ohne Schuldzuweisung",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "the API is down right now, help",
+            "trigger": false
+        },
+        {
+            "q": "why is latency spiking?",
+            "trigger": false
+        },
+        {
+            "q": "page the on-call engineer",
+            "trigger": false
+        }
+    ]
+}

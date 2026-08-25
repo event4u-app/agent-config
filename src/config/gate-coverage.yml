@@ -40,16 +40,32 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-24)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 289 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 291 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the MERGED tree, with both `check_skill_admissions` and
-# `check_command_examples` counted).
-# **61 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 58 of those 61 are listed below.** The manifest is
+# re-run on the tree carrying these rows, with `check_skill_admissions`,
+# `check_command_examples`, `check_routing_coverage`, `description_route_check`
+# and `lint_skill_trigger_corpus` counted).
+# **63 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 60 of those 63 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~21 % of the population.
+#
+# `description_route_check` is counted in the POPULATION and deliberately NOT
+# listed: it is diff-scoped, so its natural reading on most trees is zero cases,
+# and a `min_scanned` floor over a corpus that is legitimately empty would be a
+# floor on the diff rather than on the gate.
+#
+# RECOUNTED on 2026-08-25 while adding `check_routing_coverage`, and this time
+# the prose was NOT stale — 289 was correct for the tree before the row landed,
+# which is the first recount in eight to find that. Derivation, unchanged and
+# still the point: `grep -c '^  - id:' src/config/gate-coverage.yml` returns 59;
+# every listed row is an emitter, because a row that did not emit could carry no
+# floor; the same THREE emitters remain deliberately unlisted
+# (`lint_evidence_artifacts`, `adr_cite_check`, `check_new_adr_evidence`);
+# 59 + 3 = 62. The percentage moved DOWN while a gate was added, which is
+# arithmetic rather than regression: the denominator grew by one too.
 #
 # RECOUNTED ON THE MERGE, 2026-08-24, and the merge is exactly the case the two
 # paragraphs below were each written for and neither could cover. Both branches
@@ -294,6 +310,43 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_skill_trigger_corpus
+    argv: []
+    min_scanned: 70
+    corpus: "every src/skills/*/evals/triggers.json. The floor sits at 70 because 90 exist in the shipped tree and the count only grows — a reading below it means the scan root moved, not that corpora were deleted, which has its own gate. Two units (brand-asset-generation, estimate-ticket) are grandfathered BY NAME rather than by a numeric baseline, so a third failure cannot hide inside a count."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-trigger-corpus/evals/triggers.json
+      content: |
+        {
+            "skill": "zz-canary-trigger-corpus",
+            "last_eval": "2026-08-25",
+            "description": "Canary planted by check_gate_coverage --canary; never ships. One positive and no near-miss, which is the discipline violation this gate must reject.",
+            "queries": [
+                { "q": "only one positive", "trigger": true }
+            ]
+        }
+  - id: check_routing_coverage
+    argv: []
+    min_scanned: 300
+    corpus: "every routed unit on both surfaces — the tier-1 + tier-2 ids in dist/router.json, plus every src/skills/*/SKILL.md. `scanned` is the sum of the two DENOMINATORS, deliberately, not the covered count: a corpus case going missing must not shrink the scanned figure, or the ratchet's own dead-scope floor would move with the thing it measures. The floor sits at 300 because the skills denominator alone is 299 and cannot fall below the shipped estate without a skill deletion, which has its own gate."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-routing-coverage/SKILL.md
+      content: |
+        ---
+        name: zz-canary-routing-coverage
+        description: Canary skill planted by check_gate_coverage --canary; never ships.
+        ---
+
+        # zz-canary-routing-coverage
+
+        A routed unit with no evals/triggers.json. It raises the skills
+        denominator by one while the numerator stands still, so the ratio falls
+        below seed and the ratchet must red. A gate that stayed green here would
+        be a count ratchet wearing a ratio's name.
   - id: check_skill_admissions
     argv: []
     min_scanned: 0

@@ -1,0 +1,32 @@
+{
+    "skill": "analysis-autonomous-mode",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are ordinary multi-step work — this fires only on an EXPLICIT hand-off of per-step approval.",
+    "queries": [
+        {
+            "q": "investigate this end to end, don't ask me between steps",
+            "trigger": true
+        },
+        {
+            "q": "run the whole analysis autonomously and report at the end",
+            "trigger": true
+        },
+        {
+            "q": "arbeite das eigenständig durch, frag nicht nach jedem Schritt",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "implement this feature",
+            "trigger": false
+        },
+        {
+            "q": "work through the roadmap phase by phase",
+            "trigger": false
+        },
+        {
+            "q": "keep going",
+            "trigger": false
+        }
+    ]
+}

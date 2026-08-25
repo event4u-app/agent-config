@@ -356,19 +356,39 @@ allowed to stop.**
   already-paid outputs: stance divergence, finding overlap, contradiction
   count, confidence spread, rank uncertainty, novelty / self-similarity.
       verify: no extra model call is issued; call count is unchanged
-- [ ] 6.2 Argument-exhaustion stop requires **all** of: ≥ 2 rounds completed;
+- [x] 6.2 Argument-exhaustion stop requires **all** of: ≥ 2 rounds completed;
   dissent repair already attempted; every present member self-near-duplicate
   versus the prior round under the existing novelty logic; no unresolved
   adversarial trigger.
-      verify: removing any one condition makes a fixture stop that must not
-      stop; blocked on `blocker: early-stop-vs-dissent-ordering`
-- [ ] 6.3 Majority size alone can never trigger a stop.
-      verify: a fixture with unanimous-but-unrepaired agreement does not stop
-- [ ] 6.4 A stopped run renders: stopped early, round N of M, reason, saved
+      verify: **`evaluateStop` in `src/scripts/ai_council/argument_exhaustion.ts`,
+      15 tests.** All four conditions asserted individually via a table-driven
+      case — each one alone blocks a fixture that would otherwise stop — plus a
+      fifth the step did not name (`no-members-present`, because `every()` over
+      an empty array is vacuously true and would have made an empty council the
+      easiest one to stop).
+
+      The verdict reports **every** failing condition rather than the first: a
+      caller acting on one reason at a time would re-evaluate N times to learn N
+      blockers.
+
+      Unblocked by `early-stop-vs-dissent-ordering`, resolved the same day with
+      the red-then-green sensitivity proof that blocker required.
+- [x] 6.3 Majority size alone can never trigger a stop.
+      verify: majority size is **not an input to the predicate at all**, which is
+      stronger than not triggering on it, and two tests pin the absence — a
+      unanimous-but-unrepaired run does not stop, and a twenty-member unanimous
+      run is no easier to stop than a two-member one.
+- [x] 6.4 A stopped run renders: stopped early, round N of M, reason, saved
   calls and cost, which members and arguments were judged exhausted — never as
   if all configured rounds executed.
-      verify: the artifact of a stopped run is textually distinguishable from
-      a full run
+      verify: `renderStop` emits `STOPPED EARLY`, `round 3 of 5`, the reason, the
+      saved calls and cost, the named exhausted members, and the explicit line
+      **`NOT a full run: the remaining configured rounds did not execute.`**
+      Four assertions pin those separately.
+
+      The last line is the load-bearing one: the failure here is quiet, and an
+      artifact that reads as though all configured rounds executed is a claim
+      about deliberation depth that nobody made on purpose.
 - [ ] 6.5 Pre-registered promotion gate against a fixed-round arm: quality
   non-inferiority on gradeable slices, no meaningful minority-rescue
   regression, measurable call/cost reduction, no increased
@@ -616,7 +636,38 @@ is **seating**, and it already has a carrier.
 - **Resolved when:** the stub is promoted or closed, per its own gate.
 
 ### blocker: early-stop-vs-dissent-ordering
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **the conjunct is in the predicate and its
+  sensitivity is demonstrated red-then-green.**
+  `src/scripts/ai_council/argument_exhaustion.ts`, 15 tests.
+
+  **`dissentRepairAttempted` is a required conjunct of `evaluateStop`**, not a
+  soft check upstream that the predicate hopes ran. Encoding it as a conjunct
+  rather than as call-order discipline is the point: a caller that forgets the
+  ORDER produces a wrong answer silently, while a caller that forgets the FIELD
+  produces `false` — the safe direction, and a visible one.
+
+  **The sensitivity proof, both arms, on one fixture.**
+  `CONFORMITY_COLLAPSE` is indistinguishable from a genuinely exhausted run on
+  every cost-visible axis — enough rounds, everyone repeating themselves, no open
+  objection — and differs only in that the anti-conformity defence never ran.
+  **RED:** through a neutered copy with the conjunct removed, it **stops**, which
+  is exactly the failure this blocker names. **GREEN:** through the shipped
+  predicate it does not, and reports `dissent-repair-not-attempted`. A third case
+  asserts the neutered copy still agrees with the real one on a genuinely
+  exhausted run — sensitivity means differing on the ONE axis under test, and a
+  copy that disagreed everywhere would prove nothing.
+
+  **Majority size is absent from the predicate on purpose (6.3), and asserted
+  absent.** Unanimity is the most available signal here and the least
+  trustworthy: it is precisely what conformity collapse produces, so a predicate
+  reading it would stop soonest in the case it must not. A test shows a
+  twenty-member unanimous-but-unrepaired run is no easier to stop than a
+  two-member one.
+
+  **One case the step's four conditions did not cover, found while writing it:**
+  `every()` over an empty array is vacuously true, so a council with **no present
+  member** would have been the easiest one to stop. `no-members-present` is now
+  its own blocker in the verdict.
 - **Owner:** agent
 - **Blocks:** 6.2, and by dependency 6.5.
 - **What to do:** the ordering is the substance, not a detail: anti-conformity

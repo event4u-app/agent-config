@@ -1,0 +1,32 @@
+{
+    "skill": "analysis-skill-router",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are requests that name the analysis they want — the router fires when the CHOICE is the question.",
+    "queries": [
+        {
+            "q": "which analysis skill fits this?",
+            "trigger": true
+        },
+        {
+            "q": "analyse this repo — I don't know where to start",
+            "trigger": true
+        },
+        {
+            "q": "welches Analyse-Vorgehen passt hier?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "run a security audit on the auth module",
+            "trigger": false
+        },
+        {
+            "q": "map the data flow for the export endpoint",
+            "trigger": false
+        },
+        {
+            "q": "profile this query",
+            "trigger": false
+        }
+    ]
+}
