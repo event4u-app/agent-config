@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer

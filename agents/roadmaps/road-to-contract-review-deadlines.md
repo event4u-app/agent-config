@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -193,7 +193,7 @@ as D5: a gate exists, and `docs/` is not in its scope.
 | 1 | The lower bound lands before the backlog and 86 reds teach the maintainer to waive | implementation | This repository documents the pattern directly: a gate that floods is a gate that gets bypassed, and 86 simultaneous violations on the next PR is a flood by any reading. | Phase 0 dispositions all 86 before Phase 1 changes any comparison, and 0.2 admits "report, not failure" as a complete outcome; Phase 2 wires the gate only after Phase 1 is green. | Phase 0 — disposition before enforcement |
 | 2 | The 90-day cadence is unsustainable and the fix encodes it harder | product | 71.1 % lapsed is not 86 individual oversights; it is evidence about the cadence. Enforcing the floor without questioning the window would make a real constraint out of a number nobody has met. | 0.2 puts the window itself in scope with the measured rate as its input, and 2.3 applies the same treatment to the ceiling rather than defending it by default. | Phase 0 — disposition before enforcement |
 | 3 | Two roadmaps edit the same contract frontmatter | implementation | `road-to-channel-contract-and-profile-drift` step 1.1 already changes `write-engine.md`; this sweep would change it again, and the two are in the same PR. | 3.1 makes the reconciliation an explicit step with a verify that forbids both files touching the same frontmatter; the sweep treats the earlier filing as its first row rather than as a competing fix. | Phase 3 — close the two one-off filings |
-| 4 | Wiring a previously-unwired gate reds the branch that wires it | implementation | D4's single violation is live at HEAD, so step 2.1 turns an invisible red into a blocking one on its own PR. | 2.3 resolves that violation before or with 2.1, and it is one day on one file; the sequencing is stated rather than discovered. | Phase 2 — put it where a PR can see it |
+| 4 | Wiring a previously-unwired gate reds the branch that wires it | implementation | D4's single violation is live at HEAD, so step 2.1 turns an invisible red into a blocking one on its own PR. | 2.3 resolves that violation before or with 2.1, and it is one day on one file; the sequencing is stated rather than discovered. | Phase 2 — put it where a pull request can see it |
 | 5 | Widening the reference scan floods the next PR with 383 internal findings | implementation | Same failure as rank 1, on a second gate: 4.3's cheapest branch is to widen the constant, and 383 simultaneous reds is a flood. | 4.3 is ordered after 4.2 so the shipped half is already repaired, prices the widening before deciding, and admits "record the exclusion" as a complete outcome. | Phase 4 — the same shape, one surface over |
 | 6 | The disposition pass becomes a promotion pass | product | The cheapest disposition for 86 lapsed contracts is "promote to stable", and promotion by exhaustion turns a review backlog into a stability claim nobody reviewed. | 0.1 requires one of four dispositions per row with a reason, and promotion is not the default; the four counts are reported separately so a 86-way promotion is visible as one number. | Phase 0 — disposition before enforcement |
 

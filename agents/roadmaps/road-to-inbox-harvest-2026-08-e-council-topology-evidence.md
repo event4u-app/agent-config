@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 research_pin: "agent-config @ f16c7d9df2e1a4a6f480e734be6ed3a0138fc14d · @event4u/agent-config 14.10.0 · citations re-verified against the landing HEAD 2026-08-24"
