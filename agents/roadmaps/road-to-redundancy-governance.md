@@ -117,11 +117,68 @@ consolidation, and any clone-detector dependency. Those collide with the active
       verify: the section names both alternatives and the consumer-impact
       question.
 
-- [~] **3.2 Decide the intended behaviour per divergent twin.** Seven pairs,
+- [x] **3.2 Decide the intended behaviour per divergent twin.** Seven pairs,
       up to 787 changed lines each. Which side is correct is a behavioural
       judgement per file, not a mechanical one, and each resolution is a bugfix
       that changes what consumers already run. Deferred to the maintainer with
       the Phase 1.2 table as its input.
+
+      **Resolved 2026-08-25 by the maintainer, as a SPLIT rather than one
+      answer** — and the split is the work: three of the seven turned out to
+      need no behavioural judgement at all, which was not visible from the diff
+      table this step was handed.
+
+      **Classification added to the baseline artefact**, splitting each diff into
+      lines inside comments and lines outside, with the command that produced it:
+
+      | Twin | changed | outside comments | class |
+      |---|---:|---:|---|
+      | `memory_hash.ts` | 6 | **0** | comment-only |
+      | `memory_status.ts` | 16 | 4 | structural-only |
+      | `memory_report.ts` | 28 | 8 | structural-only |
+      | `memory_signal.ts` | 57 | 36 | **behavioural** |
+      | `check_memory_proposal.ts` | 60 | 45 | **behavioural** |
+      | `check_memory.ts` | 262 | 195 | **behavioural** |
+      | `memory_lookup.ts` | 750 | 506 | **behavioural** |
+
+      **The first three: `keep-duplicated`, and the ground is verifiable rather
+      than plausible.** Every non-comment difference in them is the
+      `__AGENT_CONFIG_BUNDLE__` entry guard. That flag is defined in exactly
+      three places — `package.json`'s `build:install-bundle`, `build:hooks` and
+      `build:mcp-bundle`, each an `esbuild --define` whose entrypoint sits under
+      `src/scripts/` — and `git grep` finds it in **no** file under
+      `src/agent-src/templates/`. The guard exists because every module in an
+      esbuild bundle shares the bundle's `import.meta.url`; a consumer template
+      ships as source, is run directly, and is an input to none of the three
+      bundles. Reconciling would put a guard into a file that can never be
+      bundled.
+
+      **One loose end is recorded rather than absorbed into that verdict.**
+      `memory_report.ts`'s dev side exports `CuratedTuple` and
+      `_iter_curated_entries`, and `git grep` finds no test and no caller for
+      either — surplus surface on one copy, not a divergence between them. A
+      verdict that quietly covered it would be a verdict about something nobody
+      examined, so it travels to the follow-up as its own step (1.4).
+
+      **The remaining four: carried to
+      `road-to-memory-twin-reconciliation.md`**, created in this same change with
+      the classification as its input.
+
+      **This step's resolution does NOT archive this roadmap**, and the
+      distinction is worth stating because a dashboard reading of "Deferred: 1"
+      suggested otherwise: five further `[~]` items remain here — 4.5, 4.6, 4.7
+      and two numbered 5.3 — each with its own owner and its own condition. Iron
+      Law 3 requires all of them resolved, so 3.2 closing moves the count from
+      six to five and nothing else. They diverge in **both** directions, so no
+      blanket rule resolves them — the dev side of `memory_signal.ts` has a
+      provenance gate the template lacks, while the **template** side of
+      `check_memory_proposal.ts` refuses `--intake-id` with `--proposal` as
+      mutually exclusive and the dev side does not.
+
+      `check_memory.ts` (195) and `memory_lookup.ts` (506) are deliberately
+      **not** characterised here. Guessing at them would be the failure this step
+      exists to avoid, and the follow-up's 1.3 requires an unread subtree to be
+      named rather than implied.
 
 ## Phase 4 — The dual: one concept, one word
 
@@ -279,6 +336,11 @@ presented as council-backed.
       are visible there.
 - [x] AC-4 — The seven divergent shipped twins are recorded with measured diff
       sizes and the decision is in front of the maintainer, not guessed.
+      **Decided 2026-08-25**, and the decision arrived as a split: three closed
+      here with a `keep-duplicated` verdict on verifiable grounds, four carried
+      to `road-to-memory-twin-reconciliation.md` with the classification as
+      input. Nothing was guessed — the two largest twins are explicitly recorded
+      as un-characterised rather than summarised.
 - [x] AC-5 — The taxonomy covers naming as well as duplication, and the same
       three carriers cite it for both without restating either.
 - [x] AC-6 — A closed-set change cannot be called done from an identifier
