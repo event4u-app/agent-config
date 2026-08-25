@@ -98,19 +98,46 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       `requires` exists in the schema; the chosen name appears in exactly one
       schema and is validated by `validate_frontmatter`.
 
-- [ ] **0.2 Classify the roadmap against ADR-042, ADR-212 and ADR-088.** Each
+- [~] **0.2 Classify the roadmap against ADR-042, ADR-212 and ADR-088.** Each
       of the three blockers below is answered with a written disposition, not an
       assumption of non-overlap.
       `verify:` each of the three blockers reads `Status: resolved` with a dated
       disposition naming the ADR and the reason this work is or is not inside
       its scope.
 
-- [ ] **0.3 State why the browser vertical is not the reach-channels result
+      **Two of three done, ADR-088 outstanding — deferred, not skipped.**
+      `b-adr-042-runtime-resolver` and `b-adr-212-declarative-routing` both read
+      `Status: resolved` with dated dispositions (AI council 2/2, 2026-08-25).
+      `b-adr-088-external-runtime-federation` names **`Owner: maintainer`**, so
+      it was not put to the council: it blocks only Phase 6 Step 6.4's parked
+      half, and Phases 0-5 and 7-9 proceed without it. This step closes when
+      that third disposition exists.
+
+      **What the two dispositions established, and it is narrower than the step's
+      wording suggests:** ADR-042 is out of scope **only** for demonstrated
+      execution gating, and ADR-212's class distinction holds **only** for
+      semantics-preserving feasibility resolution. Neither is a general
+      clearance, and widening either returns to the ADR owner.
+
+- [x] **0.3 State why the browser vertical is not the reach-channels result
       again.** Blocker `b-reach-channels-precedent`, answered before any adapter
       manifest is authored.
-      `verify:` the blocker reads `Status: resolved`, and its disposition names
-      at least one property of the browser vertical that the reach benchmark's
-      `band: stop` outcome does not transfer to.
+      `verify:` **`b-reach-channels-precedent` reads `Status: resolved`** with a
+      dated 2/2 disposition naming the transferable and non-transferable parts.
+
+      **The named property is NOT one this step expected**, and that is the
+      finding. Both council seats **rejected** two of the three candidate
+      distinctions the blocker offered — *"interchangeable on one protocol"* is
+      false as stated (Playwright, Puppeteer, Selenium, WebDriver and CDP are not
+      one protocol), and byte-comparable evidence *"measures reproducibility, not
+      whether we should choose this adapter over that one"*. Only the third
+      distinguishes: **a real caller exists before the selector**, supplying at
+      least one observed unavailability case.
+
+      So the property is **semantics-preserving selection on demonstrated
+      execution eligibility** — not "browser", and not determinism. The step's
+      verify asked for *at least one* property, and it has one; it does not have
+      the three it went looking for.
 
 - [ ] **0.4 Map existing runtime-routing primitives and forbid a second
       router.** Read `tool_probe.ts`, `reach_doctor.ts`, `judgment_ladder.ts`,
@@ -167,6 +194,29 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       exits non-zero.
 
 ## Phase 2 — Adapter manifest and the dispatchability probe
+
+> **RESEQUENCED 2026-08-25 by the Step 0.3 disposition, and this is a real
+> change rather than a note.** The general selector manifest **may not precede
+> the Phase 3 caller**. Both council seats named the ordering unprompted — one
+> calling the current shape *"the speculative-infrastructure mistake"*, the other
+> requiring that *"Phase 3 caller evidence must demonstrate at least one real
+> unavailability case before Phase 2 authors a general manifest"*.
+>
+> **What may still proceed here:** the capability contract, its conformance
+> tests, and one explicit adapter. **What waits:** the manifest, the ordering,
+> and any probe that selects.
+>
+> **The stop condition is part of the disposition, not a caveat.** If Phase 3
+> produces no genuine runtime-unavailability case, the reach precedent controls
+> and the selector work stops — an outcome one seat said should be *celebrated
+> rather than treated as invalidation*, because it would mean cross-platform
+> browser automation simply works through one adapter.
+>
+> **Build to the conservative intersection**, because the seats split on where
+> the line sits and the evidence that would settle it does not exist yet:
+> **binary eligibility only, no ranking among executable adapters, no preference
+> metric anywhere in the selection path.** Detail and the recorded disagreement:
+> `b-adr-212-declarative-routing`.
 
 Proving adapters, four: existing project Playwright, playwright-cli, Playwright
 MCP, and agent-browser (experimental). Stagehand and Browser Use are
@@ -371,7 +421,49 @@ Do not expand because capability names are cheap to invent.
 ## Blockers
 
 ### blocker: b-reach-channels-precedent
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **the reach precedent is TRANSFERABLE
+  against speculative preference-routing and NON-TRANSFERABLE to caller-proven
+  binary feasibility selection.** AI council 2/2 convergent.
+
+  **Both seats REJECTED the distinctions this blocker offered as candidates**,
+  which is the most useful part of the answer and the opposite of what the
+  recommendation expected:
+
+  - *"genuinely interchangeable on one protocol"* — **false as stated.**
+    Playwright, Puppeteer, Selenium, WebDriver and CDP are not one
+    interchangeable protocol. Wrapping unlike APIs behind one interface does not
+    establish interchangeability; the roadmap must define its own capability
+    contract and **prove adapter conformance**.
+  - *"numeric and byte-comparable evidence"* — **not a categorical
+    distinction.** Screenshots differ across engines, fonts, operating systems,
+    timing and rendering pipelines. One seat: byte equality *"may test
+    reproducibility without testing whether the requested browser task
+    succeeded"*. The other: it *"measures reproducibility, not whether we should
+    choose this adapter over that one"*.
+  - *"a caller exists in Phase 3 before the selector"* — **the only one that
+    distinguishes**, and it is decisive.
+
+  **So the property is not "browser" and not determinism.** It is
+  **semantics-preserving selection on demonstrated execution eligibility**, with
+  a real caller supplying at least one observed unavailability case first.
+
+  **Consequence for phase order, and it is a real change:** the general selector
+  manifest may not precede the caller. Both seats named the sequencing
+  explicitly — one calling the current order *"the speculative-infrastructure
+  mistake"*. Phase 2's capability contract and an explicit adapter may proceed;
+  Phase 2's general manifest waits on Phase 3 evidence.
+
+  **The stop condition is recorded rather than left implicit:** if Phase 3
+  produces no genuine runtime-unavailability case, the reach precedent controls
+  and the selector work stops. One seat added that this outcome should be
+  *celebrated rather than treated as invalidation* — if cross-platform browser
+  automation simply works through one adapter, no selector is needed at all.
+
+  **Scope, recorded so the disposition cannot later be read wider:** it permits
+  selection among implementations conforming to ONE declared capability contract
+  where binary execution preconditions make an implementation genuinely
+  unavailable. It authorises no quality, latency, cost, historical-success or
+  preference routing.
 - **Owner:** AI council
 - **Blocks:** Phase 0 Step 0.3, and transitively Phase 2 (no adapter manifest is
   authored before this is answered).
@@ -434,7 +526,39 @@ Do not expand because capability names are cheap to invent.
   and `CAPABILITIES.yaml` is either dropped or renamed away from the collision.
 
 ### blocker: b-adr-042-runtime-resolver
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **OUT of ADR-042's scope for demonstrated
+  execution gating only. Health-based prioritisation among executable adapters
+  stays IN scope.** AI council 2/2 convergent, applying the ADR's own
+  discriminator to the case rather than restating it.
+
+  **Unavailable, enumerated as a closed set** — executable or required transport
+  absent · platform or protocol version unsupported · mandatory credentials
+  absent · a required browser feature not implemented. **De-prioritised** —
+  capable but losing on order, latency, cost, quality, comparative health or
+  historical performance.
+
+  **The conflation both seats warned about, and it is the live risk here:** a
+  probe that turns a working-but-degraded adapter into "unavailable" smuggles
+  runtime ranking in through the definition. A transient probe failure
+  establishes unavailability **only if the same condition would make the
+  imminent invocation unable to execute**; a generic "unhealthy" score never
+  does.
+
+  **One seat qualified the blocker's own recommendation rather than adopting
+  it:** *"no adapter means no capability"* does not by itself prove a runtime
+  resolver is necessary — explicit configuration or build-time selection
+  produces the same failure. What satisfies ADR-042's re-trigger is evidence
+  that implementations **vary in availability at execution time** and static
+  selection cannot handle that.
+
+  **Authority boundary, stated by both:** this narrow classification is
+  council-decidable. Redefining "unavailable" to include degraded, slower,
+  costlier or less-preferred implementations would **weaken an accepted ADR**
+  and returns to the owner under `decision-revisit-gate`.
+
+  Also recorded: configuration may reference only implementations already
+  admitted by a trusted code registry, never an arbitrary executable target —
+  the config-to-execution trust boundary ADR-042 was written about.
 - **Owner:** AI council
 - **Blocks:** Phase 0 Step 0.2, and transitively Phase 4.
 - **What to do:** read `docs/decisions/ADR-042-runtime-resolver-decision-gate.md`
@@ -454,7 +578,50 @@ Do not expand because capability names are cheap to invent.
   the ADR's own discriminator applied.
 
 ### blocker: b-adr-212-declarative-routing
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **different class, but ONLY where adapter
+  selection is semantics-preserving feasibility resolution.** AI council 2/2 on
+  the disposition, with one **recorded disagreement on where the line sits**
+  (below). ADR-212's quantified reopen is **untouched**.
+
+  **The subject distinction alone does NOT clear ADR-212's anti-renaming bar,
+  and both seats said so.** One put the test sharply: it is not *"are the
+  subjects different"* but *"would this distinction prevent ANY subject from
+  claiming exception?"* — if capability-to-implementation earns an exception,
+  database drivers, HTTP clients and every plugin system claim the same one.
+
+  **The bar that does clear it is SEMANTIC AUTHORITY, not subject.** Rule
+  routing decides what instructions and policy reach a session and can therefore
+  change intended behaviour. A qualifying adapter selector receives an
+  already-declared capability and may only choose an implementation proven to
+  satisfy that same contract. It may not choose the capability, alter its
+  contract, load rules, change policy, or trade correctness for latency, cost or
+  quality. **If choosing a different adapter observably changes contract-level
+  semantics, those adapters are not interchangeable and runtime choice is a
+  separate decision.**
+
+  **RECORDED DISAGREEMENT — unresolved, and material to Phase 2's design.**
+  Seat 1: *any* runtime choice among multiple eligible adapters is the same
+  resolver class, so the manifest must be an **unordered registry with explicit
+  caller selection** and a test must prove that changing manifest order cannot
+  change which adapter executes. Seat 2: that *"would expand an ADR about
+  rule-to-session routing into a universal prohibition on dispatch mechanisms"*
+  — a **semantics-neutral tie-break** among conformance-tested equivalents is
+  legitimate, and the danger is order **carrying behavioural preference** or
+  equivalence being **asserted rather than tested**.
+
+  Both agree on the conservative intersection, so Phase 2 builds to it and the
+  tie-break question stays open until the conformance tests exist to make it
+  answerable: **binary eligibility only, no ranking among executable adapters,
+  no preference metric anywhere in the selection path.** A split is an
+  escalation condition, not a verdict; this one is recorded rather than resolved
+  because the evidence that would settle it does not exist yet.
+
+  **The quantified reopen (>= 30 % of tier-2 rules failing their matrix floor) is
+  untouched, and one seat added a clause the blocker did not ask for:** adapter
+  eligibility, conformance and availability measurements **may not count toward,
+  feed, or be cited as evidence satisfying that threshold**. Recorded, because
+  that is exactly how an unrelated measurement ends up reopening a decision it
+  has nothing to do with.
 - **Owner:** AI council
 - **Blocks:** Phase 0 Step 0.2, and transitively Phase 4.
 - **What to do:** read
