@@ -264,11 +264,37 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
 
 ## Phase 4 — the first tranche, gated on Phase 1
 
-- [ ] **4.1 Retire the candidates Phase 1 ranked, in one reviewable batch.**
+- [~] **4.1 Retire the candidates Phase 1 ranked, in one reviewable batch.**
       Not "retire aggressively": retire the set whose evidence Phase 1 produced,
       and leave the rest.
-      verify: `skill_count` falls, `check_estate_count` reports the fall, and every
-      retirement cites its 1.3 row.
+      verify: **TRANSFERRED — the input does not exist, and the mechanism does.**
+      AI council 2/2 (2026-08-25) for option (a) over three alternatives, moved to
+      [`stubs/road-to-skill-retirement-signal.md`](stubs/road-to-skill-retirement-signal.md).
+
+      This step says *"retire the set whose evidence Phase 1 produced"*, and
+      Phase 1.3 produced a published null. Re-measured 2026-08-25 rather than
+      recalled from that record: `audit_skill_overlap` **0 pairs ≥ 70 %** over 299
+      skills · `lint_handoffs` 18 findings, **all `handoff_tier_mismatch`**, a
+      `tier` backfill backlog on the linked-TO skills and **0** retirement
+      candidates · `skill_eval_coverage` 42/299 · `skillRanking.ts` a per-query
+      ranker with no dead-skill threshold · **never triggered → `none`**, with
+      `grep -cE 'appendFileSync|writeFileSync' src/scripts/hooks/skill_route_hook.ts`
+      returning **0**. Estate unchanged at 299 / 11,461 / 0 deprecated.
+
+      **Three alternatives were refused, each for its own reason.** Building the
+      missing instrument here (b) is work this roadmap never scoped plus a
+      wall-clock window a run does not have. Re-scoping to "retire what the
+      existing signals nominate" (c) closes 4.1 on the empty set — vacuous
+      completion. Retiring the 257 skills with no eval (d) was refused by both
+      seats independently and on the same ground: **"no eval coverage" means
+      UNMEASURED, not unnecessary**, so those 257 are the un-instrumented
+      majority rather than candidates.
+
+      **The stub gates on BOTH** the instrument and a maintainer-approved tranche.
+      Neither substitutes for the other: the instrument supplies evidence, the
+      maintainer supplies authority, and a prior council call SPLIT on whether an
+      autonomous run may retire consumer-visible capabilities at all. That split
+      stands and is why the authority half is gated separately.
 - [x] **4.2 Record the net direction per release from here.** The reviewer's ask is
       *"netto sinkender Skill Count"* — a falling net, not a single tranche.
       verify: **`agents/evidence/metrics/skill-estate-per-release.jsonl`, with
@@ -488,7 +514,27 @@ does not fire, and saying so is cheaper than leaving a reader to wonder.
       written into the ledger's `_absence_of_refusals` line with the grep that
       establishes it, rather than left as an empty file a later reader would read
       as an unfinished backfill.
-- [ ] **AC-6** — `skill_count` is lower than 299 and every retirement cites its ranking row.
+- [-] **AC-6** — `skill_count` is lower than 299 and every retirement cites its ranking row.
+      **UNMET in this roadmap; objective carried forward.** Measured
+      `skill_count`: **299**. Phase 1 produced no evidence-backed retirement
+      candidates, so Phase 4 never ran.
+
+      **The council split on how to say this, and the split is the record.** Both
+      seats rejected the bare word *failed* — it reads as *the mechanism did not
+      work*, and the mechanism was never exercised. One argued **TRANSFERRED
+      (blocked on 4.1)**: a criterion that could not be *attempted* is blocked
+      rather than failed, and calling it failed inverts a positive finding — the
+      estate was checked and no slimming was indicated. The other argued that a
+      work item may transfer while an **acceptance criterion records an
+      outcome**: AC-6 says below 299, the measurement is 299, so it is unmet here
+      whatever blocked it.
+
+      **The stricter accounting is adopted**, because it also contains the first
+      seat's objection: *"UNMET in this roadmap; objective carried forward"*
+      states the outcome without implying the mechanism failed. The objective
+      lives in
+      [`stubs/road-to-skill-retirement-signal.md`](stubs/road-to-skill-retirement-signal.md);
+      the unmet criterion stays here, where it was declared.
 - [x] **AC-7** — two consecutive per-release readings of the net direction are committed.
       **Met with four readings, not two.** Backfilled from release tags
       (`git archive <tag> src/skills | tar -x`, then `measureSkillEstate`) rather
