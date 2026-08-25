@@ -1,23 +1,22 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Un-parking counts as an ADDITION under one-in-one-out (later/X -> X is classified an addition by classifyDiff), and no archive move is available in this change: it closes a slot-cap blocker rather than finishing a roadmap. The offsetting event already happened in an earlier change -- the two predecessors this file queued behind, road-to-skill-ecosystem-gate-integrity and road-to-skill-ecosystem-authoring-discipline, both sit in archive/, which is why lint_roadmap_family_cap measures 0/2 slots used and why this file's own blocker instructs the move."
 ---
 
 # Road to runtime enforcement — bind the rules that currently only ask
 
-> **Parked at queue position 3 of the verification track.** The 2026-08-05
-> council capped concurrently-open verification roadmaps at two; the two open
-> slots are held by the gate-integrity and authoring-discipline roadmaps, which
-> the council named mandatory-first and mandatory-second. This roadmap is
-> verification infrastructure and is therefore eligible under the successor
-> constraint, not under the capability arm.
->
-> **Resume when** one of the two open verification roadmaps reaches zero open
-> steps and is archived, freeing a slot. Verify with
-> `./agent-config roadmap:progress` and by confirming the predecessor moved to
-> `agents/roadmaps/archive/`.
+> **RESUMED 2026-08-25 — queue position 3 reached.** This roadmap was parked
+> on one condition only: the 2026-08-05 council capped concurrently-open
+> verification roadmaps at two. Both predecessors it queued behind —
+> `road-to-skill-ecosystem-gate-integrity` and
+> `road-to-skill-ecosystem-authoring-discipline` — now sit in
+> `agents/roadmaps/archive/`, and `lint_roadmap_family_cap` measures **0/2 slots
+> used**. That is the file's own stated resume test, so it is unparked and open.
+> Position 5 (`road-to-skill-ecosystem-security-and-conformance`) stays parked:
+> positions 4 and 3 fill the cap.
 
 > Convert the cheapest of this package's honestly-unenforced obligations into
 > deterministic runtime behaviour — a non-zero exit, a machine-checkable state, a
@@ -166,18 +165,24 @@ block on this host constrains every new hook's exit contract.
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Phase 1 — Shims and the hook contract
-- **What to do:**
-  1. Decide which surfaces get a shim beyond the container-only tooling rule. Candidates observed in the sweep: hook-bypass flags (already guarded by a pre-tool hook, so a shim is additive), and package-manager invocations the house rules route elsewhere.
-  2. A shim changes what a developer's shell does inside a session, so the set is a maintainer decision rather than an agent inference.
+- **Recommendation:** (a). It is the only candidate the sweep gives a recorded need for — Phase 1 Step 2 calls the container-only tooling rule "the surface with the clearest recorded need" — while this blocker's own text says a shim over the hook-bypass flags would be *additive* to a guard that already exists, and names no failure behind the package-manager candidate. A shim changes what a developer's shell does, so the narrow set is the reversible one.
+- **If you do nothing:** Phase 1 Steps 2, 3 and 4 cannot name their subject, so Steps 1, 5, 6 and 7 land a shim directory, a performance doctrine and a global kill switch with no shim inside them, and Step 4's false-positive matrix has nothing to cover. Phases 2, 3, 4 and 6 are unaffected.
+- **What to do:** pick exactly one —
+  1. (a) Ship only the container-only tooling shim: `src/scripts/hooks/shims/php`, and record the hook-bypass and package-manager candidates as out of scope in Phase 1 Step 2.
+  2. (b) Add the hook-bypass-flag shim as well, accepting that it duplicates the existing pre-tool guard, and extend the matrix in `tests/scripts/hook_shims.test.ts` to cover both basenames.
+  3. (c) Also shim package-manager invocations, which needs a recorded failure first per this roadmap's own evidence discipline.
 - **Resolved when:** the shim set is named in this roadmap's Phase 1 Step 2 and the remaining candidates are recorded as out of scope.
 
 ### blocker: plan-injection-decision
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Phase 5 — A bounded loop the harness enforces
-- **What to do:**
-  1. Decide whether per-turn re-injection of the active roadmap into context is wanted at all. The sweep's evidence is that it closes context rot; the sweep's own counter-evidence is that it converts a governed file into a standing injection amplifier.
-  2. The attestation mechanism (Phase 5 Steps 6 and 7) ships regardless, because it is the precondition and is useful on its own.
+- **Recommendation:** (b). The sweep supplies evidence on both sides, and only one side is reversible: `src/scripts/attest_artifact.ts` is useful standalone as a tamper check, whereas per-turn re-injection turns a governed file into a standing injection amplifier — this roadmap's own counter-evidence — and that is hard to withdraw once hosts depend on it. Deciding (b) now unblocks Steps 6 and 7 without foreclosing (a) later.
+- **If you do nothing:** Phase 5 Steps 6 and 7 ship an attestation guarding an injection that may never exist, and Steps 1 to 5 land a bounded loop whose injection behaviour is undefined. Nothing outside Phase 5 waits on this.
+- **What to do:** pick exactly one —
+  1. (a) Approve per-turn re-injection and open a follow-up roadmap for it; Steps 6 and 7 remain its precondition.
+  2. (b) Mark the injection half out of scope and ship `src/scripts/attest_artifact.ts` plus `tests/scripts/attest_artifact.test.ts` on their own merit.
+  3. (c) Defer the whole of Phase 5's injection half until a context-rot incident is recorded with provenance.
 - **Resolved when:** the decision is recorded and either a follow-up roadmap opens for the injection half or it is marked out of scope.
 
 ## Risk Register

@@ -1,7 +1,7 @@
 ---
 title: "Road to Episode Finalizer and Outcome Attribution v2"
 complexity: structural
-status: draft
+status: ready
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and so are unavailable as offsets. Its predecessor road-to-episode-finalizer-and-outcome-attribution was never landed in the active estate either, so the supersedes edge offsets nothing countable."
 execution:
   mode: phase-checkpoints
