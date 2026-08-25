@@ -232,14 +232,35 @@ disposition as the reason, which is a publishable outcome and not a failure.
 > eleven verify lines to change one noun would bury the decision in a diff; it is
 > recorded once, here, where a reader meets it before the steps.
 
-- [ ] **2.1 Ship the indexability check alone.** `src/skills/web-launch-readiness/`
+- [x] **2.1 Ship the indexability check alone.** `src/skills/web-launch-readiness/`
       with site-type classification as step 1 and exactly one check: no
       `noindex` and no blocking `robots.txt` on the production build.
       Verification method: static grep over the build output plus a fetch of
       `/robots.txt`. Tier `critical`, `applies_to` all site types.
-      verify: on a fixture carrying a staging `noindex`, the skill reports a
-      critical finding with the offending `file:line`; on a clean fixture it
-      reports none. Both states demonstrated.
+      verify: **both states demonstrated**, as
+      `src/scripts/check_web_launch_readiness.ts` — a COMMAND, per the Phase 2
+      re-scope, not `src/skills/`.
+
+      Staging fixture → **2 critical findings, each with a location**:
+      `index.html:7` (the `noindex` meta) and `robots.txt:2` (the blanket
+      `Disallow: /`), exit **1**. Clean fixture → **none**, exit **0**.
+
+      **The clean fixture deliberately keeps `Disallow: /admin/`.** A check
+      matching any `Disallow` would pass a naive clean fixture and still be
+      wrong, so the discrimination is asserted rather than the absence: blanket
+      block versus path rule.
+
+      The `applies_to` axis is exercised on the same tree: audited as `saas-app`
+      it skips `per-route-metadata` and `canonical-and-sitemap-coherence` with
+      *"site type is saas-app"*; audited as `marketing-site` the same directory
+      skips nothing. Same files, different answer — which is what makes the axis
+      conditional rather than incidental.
+
+      **The honesty property this needed and the step did not name:** the six
+      unimplemented checks are reported as `NOT YET IMPLEMENTED (applicable, not
+      audited)` and are **never** counted as PASSED. An unimplemented check
+      reporting clean is the silent-green defect this repository already names,
+      and a one-check command is exactly where it would first appear.
 - [ ] **2.2 Add the remaining critical and high tiers** — HTTPS enforcement,
       custom 404, per-route title and description, alternative text on content
       images, `lang`/charset/viewport. Each with explanation, remediation and
@@ -252,12 +273,26 @@ disposition as the reason, which is a publishable outcome and not a failure.
       verify: a SaaS-app fixture reports the local-business items as
       `situational-skipped` **with the site type as the stated skip reason**,
       never as findings.
-- [ ] **2.4 Tiered output shape.** Report order: critical, high, medium,
+- [x] **2.4 Tiered output shape.** Report order: critical, high, medium,
       situational-applicable, situational-skipped-with-reason.
-      verify: a snapshot test pins the section order and the skip-reason text.
-- [ ] **2.5 Default-off** until the Phase 3 benchmark returns positive.
-      verify: with the flag absent, the skill does not activate on a
-      would-fire prompt.
+      verify: **order asserted by index comparison rather than by a snapshot**,
+      and the difference is deliberate: a snapshot pins the whole string, so any
+      wording edit reds it and the ORDER — the thing the step actually
+      specifies — is not what fails. The test asserts
+      `CRITICAL < NOT YET IMPLEMENTED < SKIPPED` positionally, and separately
+      that the report opens with `site type: <type>` so a reader knows which
+      axis produced it. Skip-reason text is pinned exactly
+      (`site type is saas-app`) because 2.3 requires the type verbatim.
+- [x] **2.5 Default-off** until the Phase 3 benchmark returns positive.
+      verify: **with no settings file at all, a run pointed at the FAILING
+      fixture exits 0, prints `DEFAULT-OFF` with the reason, and does not print
+      `CRITICAL`.** Pointing the disabled run at the fixture that would fire is
+      the load-bearing part: a test that disabled a clean tree would pass
+      whether or not the flag worked.
+
+      Enabled only by the exact key `web_launch_readiness.enabled: true`;
+      `enabled: false` and the near-miss `web_launch:` both leave it off.
+      `--force` is the explicit override the fixtures use.
 
 **Exit:** skill ships, flag off, under 50 checks, every check verifiable.
 **Rollback:** delete the skill directory; the config and claim survive as a
@@ -368,20 +403,43 @@ recorded null.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The G0 evidence note, the site-type config, the no-import decision
+- [x] AC-1 — The G0 evidence note, the site-type config, the no-import decision
       and the benchmark claim all exist and predate the first skill commit in
       history.
-- [ ] AC-2 — `b-estate-decision-web-launch` carries a recorded disposition with
+      **Met.** All four landed in the Phase-0 change (merged as #1630) with zero
+      implementation code, and the first implementation commit is in THIS change.
+      The ordering is the pre-registration, and it is checkable in `git log`.
+- [x] AC-2 — `b-estate-decision-web-launch` carries a recorded disposition with
       a date and a named decider.
-- [ ] AC-3 — The indexability check reports a critical finding with a
+      **Met.** `Status: resolved 2026-08-25 — NO to a standalone skill slot; the
+      domain ships as a COMMAND`, decided by AI council 2/2, with the reasoning
+      and the reopening condition recorded at the blocker.
+- [x] AC-3 — The indexability check reports a critical finding with a
       `file:line` on a staging-`noindex` fixture and reports none on a clean
       one — both states demonstrated in the PR.
-- [ ] AC-4 — Every shipped check carries an explanation, a remediation, a
+      **Met.** `index.html:7` and `robots.txt:2`, exit 1; clean fixture exit 0
+      with no findings. Both runs are quoted in the PR body.
+- [x] AC-4 — Every shipped check carries an explanation, a remediation, a
       verification step and a non-empty `applies_to`, asserted by a schema test
       rather than by review.
-- [ ] AC-5 — A SaaS-app fixture reports local-business items as
+      **Met** by the 18-case schema test that landed with the config, which also
+      rejects any field under 20 characters — a one-word remediation is the
+      boilerplate the assertion exists to catch. The command's own tests
+      re-assert `remediation` and `verification` length on every emitted finding,
+      so the contract holds at the output as well as in the config.
+- [~] AC-5 — A SaaS-app fixture reports local-business items as
       situational-skipped with the site type as the skip reason, and the
       benchmark decoy is not flagged.
+      **First half MET, second half NOT REACHABLE YET.** The SaaS-app fixture
+      skips `per-route-metadata` and `canonical-and-sitemap-coherence` with
+      `site type is saas-app` verbatim, asserted per-item.
+
+      The decoy half belongs to Phase 3: the decoy is *a missing team photo on
+      the SaaS app*, and nothing can flag or not-flag it until the checks that
+      could see it exist (`image-alternative-text` is unimplemented) and the
+      benchmark runs. Recorded as partially met rather than checked off, because
+      an AC that folds two phases into one line would otherwise read as green on
+      half its evidence.
 - [ ] AC-6 — The benchmark claim carries a resolved verdict; on DROP the skill
       remains default-off and the null is recorded.
 
