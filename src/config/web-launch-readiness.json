@@ -39,6 +39,20 @@
       "verification": "`curl -sI <prod-url> | grep -i x-robots-tag` returns nothing, `curl -s <prod-url>/robots.txt` carries no blanket disallow, and the rendered HTML has no `noindex` meta."
     },
     {
+      "id": "https-enforcement",
+      "title": "HTTP is redirected to HTTPS and no asset is loaded over plain HTTP",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs"
+      ],
+      "tier": "critical",
+      "why": "A mixed-content asset silently breaks the padlock and, on a form page, ships a credential over plaintext. Browsers block some of it and load the rest, so the page LOOKS fine while the guarantee is gone -- which is why this is critical rather than high.",
+      "remediation": "Serve every asset over https:// or protocol-relative paths, and redirect http:// at the edge. Never hard-code an http:// origin you control.",
+      "verification": "`curl -sI http://<prod-host>/` returns a 301/308 to https, and the browser console shows no mixed-content warning on the heaviest page."
+    },
+    {
       "id": "custom-error-route",
       "title": "A custom 404 route exists and is reachable",
       "applies_to": [
@@ -79,6 +93,21 @@
       "why": "The one check that applies to every type, including internal tools -- an internal user with a screen reader is still a user. `alt text` matches 7 files, all accessibility prose rather than a launch check.",
       "remediation": "Add `alt` to content images; decorative images take `alt=\"\"` explicitly rather than being left without the attribute.",
       "verification": "Parse the rendered HTML and assert every `<img>` has an `alt` attribute, empty or not."
+    },
+    {
+      "id": "document-head-basics",
+      "title": "Every page declares lang, charset and viewport",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs",
+        "internal-tool"
+      ],
+      "tier": "high",
+      "why": "A missing `lang` makes a screen reader guess the pronunciation of the whole page; a missing viewport makes a phone render a desktop layout at 320px. Both are one line, both are invisible on the developer's machine, and both are the kind of default a framework template silently drops when a page is hand-written.",
+      "remediation": "`<html lang=\"..\">`, `<meta charset=\"utf-8\">` and `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">` in the shared layout, not per page.",
+      "verification": "View source on two unrelated routes and confirm all three are present on both -- one route proves the layout, two prove it is the layout and not a copy."
     },
     {
       "id": "canonical-and-sitemap-coherence",
@@ -137,5 +166,23 @@
     "why": "An imported rule set arrives with its authors' assumptions about site type, jurisdiction and stack, and none of those is checked on arrival. The failure is silent: the skill grows to N checks, each individually plausible, and the conditional axis this file exists to enforce is the first thing a bulk import flattens. One-at-a-time keeps the axis honest because every entry has to answer `applies_to` before it lands.",
     "ceiling": 50,
     "ceiling_enforced_by": "tests/scripts/web_launch_readiness_config.test.ts asserts checks.length < 50. Currently 7."
+  },
+  "regions": {
+    "_comment": "Region axis (road-to-web-launch-readiness 2.3). Separate from site_types because it answers a different question: site_types decides WHETHER a check applies, regions decides HOW SEVERELY. A DE-targeted site owes Impressum and Datenschutz by law (TMG 5 / DSGVO Art. 13), so `required-legal-pages` is critical there and situational elsewhere -- the same check, a different tier. Modelled as a tier ESCALATION rather than as a second applies_to list, because a legal page is not more or less applicable in Germany, it is more or less optional.",
+    "values": [
+      "de",
+      "eu",
+      "us",
+      "unspecified"
+    ],
+    "default": "unspecified",
+    "escalations": [
+      {
+        "check": "required-legal-pages",
+        "region": "de",
+        "to": "critical",
+        "why": "TMG 5 obliges an Impressum and DSGVO Art. 13 a Datenschutzerklaerung for a DE-targeted commercial site. Abmahnung risk is real and immediate, which is what separates critical from situational here."
+      }
+    ]
   }
 }
