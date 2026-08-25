@@ -1627,6 +1627,15 @@ tasks:
       names a skill that exists. Forward-only: the 299 pre-existing skills are
       grandfathered by the diff scope.
     cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
+  check-routing-coverage:
+    silent: true
+    desc: >-
+      Fail when routing-corpus coverage falls below its seed on either scope —
+      rules (routing-matrix fixtures over routed router ids) or skills
+      (evals/triggers.json over SKILL.md). A ratio, not a count: adding skills
+      without corpus cases lowers coverage while every count rises.
+    cmd: ./scripts-run src/scripts/check_routing_coverage {{.QUIET_FLAG}}
+
   check-command-examples:
     silent: true
     desc: >-
