@@ -1,0 +1,96 @@
+name: Description route check
+
+# road-to-routing-assurance Phase 1.2 — a diff-scoped routing regression check
+# that runs INSIDE the existing key boundary, never outside it.
+#
+# Why it is a separate workflow rather than a step in an existing PR job: live
+# authorization derives exclusively from the key file the canary workflow
+# materializes from repo secrets, with no env-var fallback. A fork PR cannot
+# reach that key by construction, so a step in the ordinary PR pipeline would
+# either fail on forks or need a secret in a pipeline that must not carry one.
+#
+# Cost shape, deliberately asymmetric:
+#   - EVERY same-repo PR touching a description runs the DRY tier: no key, no
+#     network, no spend. It proves the plumbing and the scoping decision.
+#   - The cached-live tier runs on schedule and on manual dispatch only, where
+#     the key exists. Its cache is keyed on (catalogue-hash, prompt), so a run
+#     over unchanged descriptions costs nothing.
+#
+# What this workflow does NOT establish: that production routing works. The
+# checker asks a model which units it would load given the catalogue, which is
+# not the host's selection procedure — see the module docstring's proxy-gap
+# section. It is a regression detector on the description signal.
+
+on:
+  pull_request:
+    paths:
+      - "src/skills/*/SKILL.md"
+      - "src/rules/*.md"
+      - "dist/agent-src/skills/*/SKILL.md"
+      - "dist/agent-src/rules/*.md"
+      - "src/scripts/description_route_check.ts"
+      - ".github/workflows/description-route.yml"
+  schedule:
+    - cron: "0 7 * * 2"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  scoped-dry:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund --prefer-offline
+      - name: Collect the changed-file list
+        run: |
+          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
+          wc -l < /tmp/changed.txt
+      # `--fork` is passed from the event itself rather than inferred: a fork PR
+      # must take the advisory path even if someone later adds a secret to this
+      # job, and the decision belongs where a reader can see it.
+      - name: Scoped description-route check (dry tier — no key, no spend)
+        run: |
+          FORK=""
+          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then FORK="--fork"; fi
+          ./node_modules/.bin/tsx src/scripts/description_route_check.ts \
+            --changed-files /tmp/changed.txt --dry $FORK
+
+  cached-live:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund --prefer-offline
+      # No key configured is a NOTICE, never a failure: an absent secret is a
+      # repo-configuration fact, and turning it into a red check would train
+      # readers to ignore this workflow.
+      - name: Cached-live description-route check (skips if the key is absent)
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::Cached-live tier skipped — set the ANTHROPIC_API_KEY repo secret to enable."
+            exit 0
+          fi
+          git diff --name-only HEAD~1...HEAD > /tmp/changed.txt || : > /tmp/changed.txt
+          ./node_modules/.bin/tsx src/scripts/description_route_check.ts \
+            --changed-files /tmp/changed.txt

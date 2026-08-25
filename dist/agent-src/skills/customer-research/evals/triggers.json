@@ -1,0 +1,32 @@
+{
+    "skill": "customer-research",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are analysing research already collected, and support triage.",
+    "queries": [
+        {
+            "q": "build me an interview guide for the onboarding slice",
+            "trigger": true
+        },
+        {
+            "q": "we need to talk to users about why they churn",
+            "trigger": true
+        },
+        {
+            "q": "wie führe ich die Interviews, ohne die Antworten vorzugeben?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "summarise these 40 interview transcripts",
+            "trigger": false
+        },
+        {
+            "q": "answer this support ticket",
+            "trigger": false
+        },
+        {
+            "q": "what does the NPS survey say?",
+            "trigger": false
+        }
+    ]
+}

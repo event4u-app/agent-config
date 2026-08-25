@@ -1,0 +1,32 @@
+{
+    "skill": "adr-create",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are the two adjacent decision surfaces: reading an existing ADR, and a decision that is tactical rather than architectural.",
+    "queries": [
+        {
+            "q": "write this up as an ADR",
+            "trigger": true
+        },
+        {
+            "q": "we picked Postgres over DynamoDB — record the decision properly",
+            "trigger": true
+        },
+        {
+            "q": "halt das als Architekturentscheidung fest, mit Kontext und Konsequenzen",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "what does ADR-042 say about the kernel boundary?",
+            "trigger": false
+        },
+        {
+            "q": "should we use Postgres or DynamoDB here?",
+            "trigger": false
+        },
+        {
+            "q": "regenerate the ADR index",
+            "trigger": false
+        }
+    ]
+}

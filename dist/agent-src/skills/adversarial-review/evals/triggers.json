@@ -1,0 +1,32 @@
+{
+    "skill": "adversarial-review",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are ordinary review and ordinary feedback — this skill fires on an explicit request to attack the idea, never on 'review this'.",
+    "queries": [
+        {
+            "q": "poke holes in this plan",
+            "trigger": true
+        },
+        {
+            "q": "be brutal — what breaks first?",
+            "trigger": true
+        },
+        {
+            "q": "was hältst du davon? sei bitte schonungslos",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "review this pull request",
+            "trigger": false
+        },
+        {
+            "q": "check my code for bugs",
+            "trigger": false
+        },
+        {
+            "q": "what do you think of this API shape?",
+            "trigger": false
+        }
+    ]
+}

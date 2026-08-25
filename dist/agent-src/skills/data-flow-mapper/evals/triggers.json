@@ -1,0 +1,32 @@
+{
+    "skill": "data-flow-mapper",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are the privacy VERDICT and the schema, neither of which is the trace.",
+    "queries": [
+        {
+            "q": "trace where this email address ends up",
+            "trigger": true
+        },
+        {
+            "q": "map every hop this field takes from request to storage",
+            "trigger": true
+        },
+        {
+            "q": "wohin fließen die Nutzerdaten in diesem Endpoint?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "is this GDPR-compliant?",
+            "trigger": false
+        },
+        {
+            "q": "add an index on the email column",
+            "trigger": false
+        },
+        {
+            "q": "write the privacy policy section on data retention",
+            "trigger": false
+        }
+    ]
+}

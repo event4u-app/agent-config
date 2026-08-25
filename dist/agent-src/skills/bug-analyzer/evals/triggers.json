@@ -1,0 +1,32 @@
+{
+    "skill": "bug-analyzer",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are feature work and a failing test with a known cause.",
+    "queries": [
+        {
+            "q": "here's a Sentry error — what's the root cause?",
+            "trigger": true
+        },
+        {
+            "q": "this ticket says the export drops rows, investigate",
+            "trigger": true
+        },
+        {
+            "q": "der Bug tritt nur in Produktion auf — finde die Ursache",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "add pagination to the export endpoint",
+            "trigger": false
+        },
+        {
+            "q": "this test fails because I renamed the column — fix the test",
+            "trigger": false
+        },
+        {
+            "q": "write a regression test for the fix we just made",
+            "trigger": false
+        }
+    ]
+}

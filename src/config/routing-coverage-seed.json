@@ -1,0 +1,29 @@
+{
+    "_comment": "Routing-coverage ratchet seeds (road-to-routing-assurance 0.3). Coverage ratio = corpus cases / routed units, per scope, seeded at the MEASURED current value on 2026-08-25. CI fails only on a decrease -- the COUNT-ratchet disposition of lint_trigger_precision.ts. TWO scopes and never one aggregate: a blended figure would read ~0.46 and describe neither surface. Lowering a seed is a defect, not a fix: a ratio falls when a corpus case is removed OR when units are added without cases, and both are things to repair rather than to record.",
+    "schema_version": 1,
+    "registered_at": "2026-08-25",
+    "owner": "maintainer",
+    "review_by": "2027-08-25",
+    "measurement": {
+        "rules": "intersection of tests/eval/routing-matrix/*.yaml stems with the tier_1+tier_2 ids in dist/router.json, over that id count. Intersection rather than the file count, so a fixture naming no routed rule cannot raise the ratio.",
+        "skills": "src/skills/*/evals/triggers.json over src/skills/*/SKILL.md."
+    },
+    "seed": {
+        "rules": 0.8952,
+        "skills": 0.301
+    },
+    "seed_provenance": {
+        "rules": "94 covered of 105 routed rules (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
+        "skills": "76 of 299 skills carry evals/triggers.json on 2026-08-25.",
+        "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
+    },
+    "history": [
+        {
+            "date": "2026-08-25",
+            "scope": "skills",
+            "from": 0.2542,
+            "to": 0.301,
+            "reason": "road-to-routing-assurance Phase 2.2 authored 14 high-tier corpus files (76 -> 90 of 299). The seed rises so the gain cannot be given back silently; it may never be LOWERED."
+        }
+    ]
+}

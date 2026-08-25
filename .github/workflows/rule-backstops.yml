@@ -31,6 +31,10 @@ on:
       # vocabulary; neither lives under the roots above.
       - "src/domains/**"
       - "src/config/discovery/**"
+      # The routing-coverage ratchet reads its seed from here. Without this
+      # line a PR that lowered the seed alone — the one edit the gate names as
+      # a defect rather than a fix — would not trigger the gate that refuses it.
+      - "src/config/routing-coverage-seed.json"
       - "docs/**"
       - "agents/**"
       - "tests/**"
@@ -53,6 +57,10 @@ on:
       # vocabulary; neither lives under the roots above.
       - "src/domains/**"
       - "src/config/discovery/**"
+      # The routing-coverage ratchet reads its seed from here. Without this
+      # line a PR that lowered the seed alone — the one edit the gate names as
+      # a defect rather than a fix — would not trigger the gate that refuses it.
+      - "src/config/routing-coverage-seed.json"
       - "docs/**"
       - "agents/**"
       - "tests/**"
@@ -479,6 +487,17 @@ jobs:
       # outside those roots.
       - name: Skill admissions and refusals are recorded
         run: ./scripts-run src/scripts/check_skill_admissions
+      # Wired here on the same ci-parity:local-only grounds as the step above.
+      # Corpus check rather than assumption: this workflow's `paths:` already
+      # carried `src/skills/**`, `tests/**` and `dist/router.json` — both
+      # denominators and the rules numerator — but NOT the seed file, which is
+      # added to both `paths:` blocks in the same change.
+      - name: Routing-corpus coverage has not fallen below seed
+        run: ./scripts-run src/scripts/check_routing_coverage
+      # Same ci-parity:local-only grounds. Corpus is `src/skills/**`, which this
+      # workflow's `paths:` already carries.
+      - name: Skill trigger corpora hold the routing-matrix discipline
+        run: ./scripts-run src/scripts/lint_skill_trigger_corpus
       # Wired here rather than left local-only for the same reason as the step
       # above: a gate `task ci` runs and no workflow does is its own violation
       # under ci-parity:local-only (165, shrink-only). Its corpus is
