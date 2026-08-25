@@ -1,0 +1,9 @@
+# NEGATIVE FIXTURE — a fifth drafting channel invented outside the enum.
+# The step's verify clause requires exactly this to fail the schema: the four
+# values are a contract shared with docs/contracts/write-engine.md and three
+# command surfaces, so a fifth cannot be added by editing a data file alone.
+schema_version: drafting-channels-v1
+channels:
+  - id: mastodon-post
+    length_default: 300
+    cadence: Two short paragraphs, no hashtags.
