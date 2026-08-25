@@ -1,8 +1,8 @@
 {
     "name": "@event4u/agent-config",
     "mcpName": "io.github.event4u-app/agent-config",
-    "version": "14.11.0",
-    "description": "Governed skills, rules and commands for AI coding tools (Claude Code, Cursor, Windsurf, Copilot) \u2014 every claim machine-checked, including \"zero runtime daemon\".",
+    "version": "14.12.0",
+    "description": "Governed skills, rules and commands for AI coding tools (Claude Code, Cursor, Windsurf, Copilot) — every claim machine-checked, including \"zero runtime daemon\".",
     "license": "MIT",
     "private": false,
     "type": "module",
