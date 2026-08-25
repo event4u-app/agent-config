@@ -177,12 +177,57 @@ survive; what survives is the narrower D3 above.
       verify: the finalizer roadmap's AC set is citable, and blocker
       `b-envelope-drop-vs-unresolved` in that file reads `Status: resolved`
       before its Phase 2 runs.
-- [ ] **Step 1.5:** Resolve blocker `b-standing-delivery-red` (D4 remaining
+
+      **First conjunct SATISFIED 2026-08-25**, and the step stays open because
+      the rest of it is a different roadmap's work.
+      `b-envelope-drop-vs-unresolved` now reads `Status: resolved` — and the
+      resolution is worth citing here because it changes what "before its Phase 2
+      runs" means: the band's population line requires `>=200 **non-local**
+      stops`, every measured stop is machine-local, so the eligible population is
+      zero and the band never triggered. Neither pre-registered contract was
+      weakened.
+
+      **What that leaves is `b-machine-local-denominator`**, promoted to the
+      actual gate in the same change. Multi-machine ingestion is now the
+      precondition for everything downstream of it — which the finalizer's own
+      Step 2.3 already said, against a phase numbering that put 2.2 first. So the
+      chain this step tracks is: multi-machine ingestion → producer repair →
+      `episode_final`, and its head is a capability an autonomous run does not
+      have (council 2/2: CI does not qualify as the second machine by replaying a
+      ledger or running fixtures).
+- [x] **Step 1.5:** Resolve blocker `b-standing-delivery-red` (D4 remaining
       half) — decide whether 120,961/110,000 is a real payload defect or a
       local ADR-236 layer-overlap artifact, and record which.
-      verify: `./scripts-run src/scripts/check_standing_rule_delivery` either
-      exits 0, or a recorded finding names the overlap and the gate's scope is
-      amended in the same change.
+      verify: **the question is answered — REAL payload defect, not an overlap
+      artifact — and the verify line's second branch presupposes the other
+      answer.**
+
+      The gate distinguishes the two causes itself, so no clean-checkout run was
+      needed: a two-layer run prints **no `overlap` line**, and that line is
+      emitted only when `overlap_rules > 0`
+      (`check_standing_rule_delivery.ts:307`). The layers are cleanly disjoint,
+      so the total is body length rather than duplication.
+
+      **Re-measured 2026-08-25: `120,023 tok / 110,000 cap (109.1 %)`** —
+      global 104 files / 111,193 tok, project 13 files / 8,830 tok. Note the
+      direction: 120,857 in the draft → 120,961 at landing → 123,176 at the
+      blocker's resolution → **120,023 today**. It came DOWN 3,153 as merged rule
+      edits landed. Still 9.1 % over.
+
+      **The verify line offers two branches and the outcome fits neither.** It
+      says the gate exits 0, *or* "a recorded finding names **the overlap** and
+      the gate's scope is amended". There is no overlap — that IS the finding —
+      so there is no scope to amend. The clause was written assuming the overlap
+      answer; recorded rather than quietly satisfied, because a reader checking
+      this step against its own verify line would otherwise conclude it was not
+      met. (The same shape appeared at `road-to-episode-finalizer` Step 0.1 this
+      week: a verify line that pre-supposes one of the two possible answers.)
+
+      **The reduction is not this index's work and is owned elsewhere**, per the
+      blocker's own step 3: `archive/road-to-standing-payload-truth.md` carries
+      the figure and its re-derivation, and
+      `stubs/standing-rule-delivery-observability.md` carries the observability
+      half. This step's job was to decide **which cause**, and that is decided.
 
 ## Wave 2 — Independence, conformance, adversarial proof
 
