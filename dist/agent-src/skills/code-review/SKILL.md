@@ -85,7 +85,7 @@ consumers and their status — every `switch` / `match` / if-chain over the type
 every lookup table keyed by it, every validator, serializer, schema, fixture and
 translation key. A `default` branch that silently absorbs the new member is a
 missing case, not a handled one. Procedure:
-[`downstream-changes`](../../rules/downstream-changes.md) § Closed-set evolution.
+[`downstream-changes-mechanics`](../../../docs/guidelines/agent-infra/downstream-changes-mechanics.md).
 
 **A shared behaviour moved and its siblings did not.** A defect fixed in one
 place is presumed to recur until searched: name the exact wrong construct, grep

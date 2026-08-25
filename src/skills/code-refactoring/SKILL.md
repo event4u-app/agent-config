@@ -34,7 +34,7 @@ Do NOT use when:
    well (`switch` / `match` / if-chains over it, lookup tables keyed by it,
    validators, serializers, schemas, fixtures, translation keys) and classify each
    as exhaustive, deliberate fallback, or missing case. Procedure:
-   [`downstream-changes`](../../rules/downstream-changes.md) § Closed-set evolution.
+   [`downstream-changes-mechanics`](../../../docs/guidelines/agent-infra/downstream-changes-mechanics.md).
 4. **Map the impact** — create a list of all files that will need changes.
 5. **Decide the verdict, if the refactor is a de-duplication** — see the
    safe-abstraction gate below. An extraction with no recorded verdict is a
