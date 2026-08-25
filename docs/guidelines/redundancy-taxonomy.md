@@ -54,6 +54,54 @@ An accessibility conflict is a **hard guard, never a deletion candidate**. A
 reduction that improves the visual channel by breaking the semantic one is not a
 reduction; it is a defect.
 
+**Naming** — the *dual* of a representation echo. An echo says one meaning twice;
+divergent naming says one meaning with two words, so the reader cannot tell
+whether they are looking at one concept or two. It is a modelling defect rather
+than a style preference: a concept carries one term across the whole model, and
+several terms for one concept is the model telling you it has not decided.
+<!-- harvest:one-language-per-concept-inconsistency-is-a-model-defect -->
+
+| Class | What it is |
+|---|---|
+| Spelling variant | One word, two spellings (`artifact` / `artefact`). No semantic difference; decidable without judgement. |
+| Synonym drift | One concept, several terms. Needs a term map, because the terms may denote different things. |
+| Homonym collision | One term, several meanings. The opposite failure, and usually `keep-duplicated` when the meanings are module-local. |
+
+Naming verdicts: `canonicalize-term` · `keep-distinct` (with the recorded reason
+— an external compatibility value, a quoted name, a genuinely different concept)
+· `defer-for-context`.
+
+**Only a spelling variant is mechanically decidable, and the split between the
+prose layer and the identifier layer is decisive.** Prose is a substitution;
+filenames, symbols and their test and task references are a rename refactor with
+its own blast radius, and the same cluster can be committed to different sides on
+each layer. Measure both before proposing either — the measured example is in
+`agents/evidence/analysis/wording-baseline-2026-08-25.md`, where nothing imports
+across the split and the identifier layer is therefore `keep-duplicated` while
+the prose layer is `canonicalize-term`.
+
+Synonym drift is the class to be slowest about. Words that read as synonyms in
+translation frequently denote different mechanisms — here `route`, `dispatch`,
+`delegate`, `spawn` and `forward` are five mechanisms, not one concept spelled
+five ways — so a sweep over them destroys information the echo classes exist to
+protect.
+
+## Why any of this is worth a gate at all
+
+Generated code trends toward duplication rather than reuse: measured
+longitudinally over roughly 211 million changed lines, copy/pasted code rose from
+8.3 % to 12.3 % of changes over the period assistance became common.
+<!-- harvest:ai-agents-raise-copy-paste-share --> The pressure this document
+resists is therefore not a hypothetical — it is the default direction of the tool
+writing the code, which is why `keep-duplicated` needs to be a recorded verdict
+rather than an unstated outcome.
+
+Where enforcement follows, the shape is already known: separate the term list
+from the rules, and control false positives by **syntax awareness** — skip
+frontmatter, fenced code and inline code rather than matching inside them.
+<!-- harvest:prose-linter-vocabulary-accept-reject --> `check_md_language.ts`
+already carries exactly that skip machinery.
+
 ## The verdicts
 
 For implementation and knowledge findings: `extract-local` · `extract-module` ·

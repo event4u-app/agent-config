@@ -258,6 +258,12 @@ that if removing the text loses no information in any required channel, remove
 it, and if the information is required, express it once, in the strongest native
 form available.
 
+The same document carries the **naming** half, which fires earlier than any of
+this: before introducing a term for a concept, search for the term the tree
+already uses. A second word for an existing concept costs a reader more than a
+redundant sentence does — a redundant sentence is skipped, a second name makes
+them check whether they are looking at one thing or two.
+
 ### Additional worked examples
 
 (The TypeScript `formatPrice` pair above is the canonical TS example; these

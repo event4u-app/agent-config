@@ -53,24 +53,34 @@ first. The source roadmaps raised this objection and were right to.
 `src/agent-src/templates/scripts/`, so both copies of every twin below reach
 consumers. No sync, drift or parity gate compares the two directories.
 
-| Twin (`src/scripts/` ↔ `src/agent-src/templates/scripts/`) | `diff -u` lines |
-|---|---|
-| `memory_lookup.ts` | 980 |
-| `check_memory.ts` | 384 |
-| `check_memory_proposal.ts` | 125 |
-| `memory_signal.ts` | 92 |
-| `memory_report.ts` | 53 |
-| `memory_status.ts` | 33 |
-| `memory_hash.ts` | 15 |
+| Twin (`src/scripts/` ↔ `src/agent-src/templates/scripts/`) | added | removed | changed lines |
+|---|---|---|---|
+| `memory_lookup.ts` | 24 | 763 | 787 |
+| `check_memory.ts` | 18 | 251 | 269 |
+| `check_memory_proposal.ts` | 23 | 38 | 61 |
+| `memory_signal.ts` | 8 | 53 | 61 |
+| `memory_report.ts` | 8 | 20 | 28 |
+| `memory_status.ts` | 6 | 10 | 16 |
+| `memory_hash.ts` | 4 | 2 | 6 |
 
 Reproduce with:
 
 ```
 for f in $(ls src/agent-src/templates/scripts/*.ts | xargs -n1 basename); do
-  [ -f "src/scripts/$f" ] && printf '%s %s\n' "$f" \
-    "$(diff -u "src/scripts/$f" "src/agent-src/templates/scripts/$f" | wc -l)"
+  [ -f "src/scripts/$f" ] && git diff --no-index --numstat \
+    "src/scripts/$f" "src/agent-src/templates/scripts/$f"
 done
 ```
+
+**The metric is `git diff --numstat`, deliberately, and it replaced `diff -u |
+wc -l`.** A unified-diff line count includes context lines and hunk headers, so
+it varies with the local `diff` implementation: the same seven pairs measured
+980 / 384 here and 975 / 381 on another machine. A number that moves with the
+tooling is not evidence. `--numstat` counts only added and removed lines and
+reproduces anywhere git does. It also reorders the table — `check_memory_proposal`
+and `memory_signal` read 125 and 92 under the old metric and tie at 61 under this
+one, because the old number was measuring how *scattered* the changes were rather
+than how many there are.
 
 All seven pairs diverge. Which side is intended is a behavioural judgement per
 file, not a mechanical one — every resolution changes what consumers already
@@ -84,7 +94,7 @@ at the code layer it is unsolved.
    artifact while the knowledge lives once in the source — or do the two
    directories stay independently authored with a drift gate between them?
 2. **What happens to consumers pinned to current template behaviour.** Seven
-   files diverge by up to 980 lines; reconciling each is a behaviour change
+   files diverge by up to 787 changed lines; reconciling each is a behaviour change
    shipped to installs that already run the template side. The ADR states
    whether that is a patch, a minor, or gated behind a migration note.
 
@@ -116,6 +126,6 @@ extraction should happen.
   The figure is unverified, not refuted. Adding a scanner is a supply-chain
   intake decision, not a measurement step.
 - **248 files pinned byte-identical under ADR-200.** The parity comments exist
-  (`check_always_budget.ts:139`, `check_artefact_checksums.ts:8`) and confirm the
+  (`check_always_budget.ts:139`, `check_artifact_checksums.ts:8`) and confirm the
   mechanism; the exact file count was not re-derived.
 - **`agent-switch` figures.** A different repository, out of scope for this pass.

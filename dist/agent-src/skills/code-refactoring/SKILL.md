@@ -28,6 +28,13 @@ Do NOT use when:
 2. **Understand the scope** — what exactly needs to change and why?
 3. **Find ALL references** — use `codebase-retrieval` and `view` with `search_query_regex` to find every
    caller, implementation, test, and configuration that references the code being changed.
+   **If the change is to a closed set** — an enum, union, literal type, state
+   machine, role or permission set — identifier search is not enough: the
+   consumers that break are the ones that never name the type. Search by shape as
+   well (`switch` / `match` / if-chains over it, lookup tables keyed by it,
+   validators, serializers, schemas, fixtures, translation keys) and classify each
+   as exhaustive, deliberate fallback, or missing case. Procedure:
+   [`downstream-changes-mechanics`](../../../docs/guidelines/agent-infra/downstream-changes-mechanics.md).
 4. **Map the impact** — create a list of all files that will need changes.
 5. **Decide the verdict, if the refactor is a de-duplication** — see the
    safe-abstraction gate below. An extraction with no recorded verdict is a
@@ -60,6 +67,12 @@ behaviour silently.
 
 The class names and the full verdict list are in
 [`redundancy-taxonomy`](../../../docs/guidelines/redundancy-taxonomy.md).
+
+When the refactor goes the other way and **creates** a new unit, the reuse
+question comes first: does an existing class or component already cover this, and
+what does composing or extending it cost against a new one? Thresholds per
+artifact class:
+[`component-oriented-and-oop-development`](../../../docs/guidelines/component-oriented-and-oop-development.md).
 
 ## Procedure: Refactor code
 
