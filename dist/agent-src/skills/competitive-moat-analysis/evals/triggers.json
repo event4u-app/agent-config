@@ -1,0 +1,32 @@
+{
+    "skill": "competitive-moat-analysis",
+    "last_eval": "2026-08-25",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are adjacent strategy surfaces: positioning wording, and pricing.",
+    "queries": [
+        {
+            "q": "who are our real competitors and what defends us?",
+            "trigger": true
+        },
+        {
+            "q": "where is the white space in this market?",
+            "trigger": true
+        },
+        {
+            "q": "was ist unser Burggraben gegenüber den etablierten Anbietern?",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "write the positioning statement for the landing page",
+            "trigger": false
+        },
+        {
+            "q": "what should we charge for the pro tier?",
+            "trigger": false
+        },
+        {
+            "q": "draft the fundraising deck narrative",
+            "trigger": false
+        }
+    ]
+}
