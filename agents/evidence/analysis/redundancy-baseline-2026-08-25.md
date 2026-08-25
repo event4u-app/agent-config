@@ -98,6 +98,98 @@ at the code layer it is unsolved.
    shipped to installs that already run the template side. The ADR states
    whether that is a patch, a minor, or gated behind a migration note.
 
+## The seven, classified — comment-only vs behavioural (added 2026-08-25)
+
+The table above measures the diffs. It does not say which of them are
+*decisions*, and that omission is what left step 3.2 deferred as seven
+open-ended behavioural judgements. Splitting the changed lines into those inside
+comments and those outside halves the question.
+
+Reproduce:
+
+```
+for n in memory_lookup check_memory check_memory_proposal memory_signal \
+         memory_report memory_status memory_hash; do
+  d="src/scripts/$n.ts"; tm="src/agent-src/templates/scripts/$n.ts"
+  tot=$(diff -u "$d" "$tm" | grep -cE '^[+-][^+-]')
+  code=$(diff -u "$d" "$tm" | grep -E '^[+-][^+-]' \
+         | grep -vcE '^\s*[+-]\s*\*|^\s*[+-]\s*//|^[+-]\s*/\*')
+  printf '%-24s %4s %4s\n' "$n" "$tot" "$code"
+done
+```
+
+| Twin | changed lines | outside comments | class |
+|---|---:|---:|---|
+| `memory_hash.ts` | 6 | **0** | comment-only |
+| `memory_status.ts` | 16 | 4 | structural-only |
+| `memory_report.ts` | 28 | 8 | structural-only + one export note |
+| `memory_signal.ts` | 57 | 36 | **behavioural** |
+| `check_memory_proposal.ts` | 60 | 45 | **behavioural** |
+| `check_memory.ts` | 262 | 195 | **behavioural** |
+| `memory_lookup.ts` | 750 | 506 | **behavioural** |
+
+(Counts differ from the `--numstat` table above because `diff -u` and
+`git diff --numstat` count a modified line differently. Both are reproduced from
+their own quoted command; neither is derived from the other.)
+
+### Why the first three need no behavioural judgement
+
+Every non-comment difference in `memory_status.ts` and `memory_report.ts` is the
+same construct:
+
+```
+-declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+-    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+-        return false;
+-    }
+```
+
+**Its absence in the template is correct by construction, and that is
+verifiable rather than plausible.** The flag is defined in exactly three places
+— `package.json`'s `build:install-bundle`, `build:hooks` and `build:mcp-bundle`,
+each an `esbuild --define:__AGENT_CONFIG_BUNDLE__=true` whose entrypoint is
+under `src/scripts/`. The guard exists because every module in an esbuild bundle
+shares the bundle's `import.meta.url`, so a bundled script would otherwise
+auto-run on import. A consumer template is shipped as source and run directly,
+is **not** an input to any of the three bundles, and `git grep` finds the flag in
+**no** file under `src/agent-src/templates/`.
+
+So the verdict for these three is **`keep-duplicated`**: the copies differ
+because their execution contexts differ, and reconciling them would put a guard
+into a file that can never be bundled.
+
+### One thing NOT covered by that verdict
+
+`memory_report.ts` additionally differs by visibility:
+
+```
+-export type CuratedTuple = [string, string, Record<string, unknown>];
+-export function _iter_curated_entries(): CuratedTuple[] {
+```
+
+`git grep` finds **no test and no caller** for either name, so the dev-side
+`export` is broader than anything needs — not a divergence between the copies,
+but surplus surface on one of them. Recorded separately rather than folded into
+`keep-duplicated`, because a verdict that quietly absorbed it would be a verdict
+about something nobody examined.
+
+### Why the other four are genuinely open
+
+They diverge in **both directions**, so no rule like "the dev side is newer"
+resolves them:
+
+- `memory_signal.ts` — the dev side carries `ProvenanceRefusedError` and
+  `_origin_is_global`, a provenance gate distinguishing global-store origins
+  from symbolic ones. The template has neither.
+- `check_memory_proposal.ts` — the dev side has `assertScanned` and a `--quiet`
+  flag; the **template** has argparse behaviour the dev side lacks, refusing
+  `--intake-id` together with `--proposal` as mutually exclusive.
+- `check_memory.ts` (195) and `memory_lookup.ts` (506) — unread at this depth,
+  and deliberately not characterised here rather than guessed at.
+
+Each is a bugfix that changes what installs already run, in a direction that has
+to be chosen per file.
+
 ## Enforcement gaps
 
 | Fact | Count | Command |
