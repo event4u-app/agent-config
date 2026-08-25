@@ -82,7 +82,7 @@ without:
 The draft's Phase 0 (build the capture) and Phase 1 (probe the host) are both
 shipped. What replaces them is the decision their results created.
 
-- [ ] **Step 0.1:** Resolve blocker `b-envelope-drop-vs-unresolved`: Phase 2.2's
+- [x] **Step 0.1:** Resolve blocker `b-envelope-drop-vs-unresolved`: Phase 2.2's
       pre-registered DROP band is arithmetically satisfied today (0.00 % over
       4,274 stops, against `population >=200` / `DROP <=1%`), while the shipped
       `claim:subagent-valid-envelope-rate` forbids reading a flat rate as the
@@ -90,9 +90,18 @@ shipped. What replaces them is the decision their results created.
       "is reported as unresolved rather than as the pointer having failed".
       The two contracts contradict on the same number. Decide which governs
       **before** Phase 2 runs.
-      verify: the blocker reads `Status: resolved`, and the recorded decision
-      names which contract governs and what happens to the other; a decision
-      that leaves both standing is not a resolution.
+      verify: **resolved — and the verify line's own premise turned out to be
+      false.** It says *"a decision that leaves both standing is not a
+      resolution"*. Both standing is exactly what the resolution is: the band's
+      population line reads `>=200 **non-local** stops`, all 4,912 measured stops
+      are machine-local, so the eligible population is **zero** and the band was
+      never triggered. Nothing is overridden and nothing is amended.
+
+      That clause was written on the assumption that the two contracts genuinely
+      collide on this sample. They do not — they collide on a sample that does
+      not exist yet. Recorded rather than quietly satisfied, because a reader
+      checking this step against its own verify line would otherwise conclude it
+      was not met.
 - [ ] **Step 0.2:** Stable identities on every dispatch record: `episode_id`,
       `dispatch_id`, capability/skill identity, parent episode reference,
       timestamp, host/provider metadata. No payload duplication.
@@ -124,6 +133,13 @@ producers do not emit the shape — not because the schema rejects them.
       verify: the verdict cites `report_envelope_rate.ts` output with its
       window bounds, stop count and ledger path on one line, and cites the
       Step 0.1 decision as its authority for reading the band at all.
+
+      **The Step 0.1 decision (2026-08-25) is that authority, and it withholds
+      permission rather than granting it.** The band's population line requires
+      `>=200 non-local` stops; every stop measured to date is machine-local; the
+      eligible population is zero. **This step cannot run until
+      `b-machine-local-denominator` resolves** — which Step 2.3 below already
+      states, against a phase numbering that puts this step first.
 - [ ] **Step 2.3:** Multi-machine ingestion. This is a **prerequisite** of
       Steps 2.2 and 5.2, not a successor — every envelope figure to date comes
       from one gitignored machine-local ledger, so no rate from it generalises
@@ -243,7 +259,45 @@ producers do not emit the shape — not because the schema rejects them.
 ## Blockers
 
 ### blocker: b-envelope-drop-vs-unresolved
-- **Status:** open
+- **Status:** resolved 2026-08-25 — **the band does not trigger, and NEITHER
+  contract is weakened.** Full note:
+  [`agents/evidence/analysis/envelope-band-population-2026-08-25.md`](../evidence/analysis/envelope-band-population-2026-08-25.md).
+
+  **The band's own population line settles it, and nobody had quoted it.** It
+  reads `population >=200 **non-local** stops` — the word is in the
+  pre-registration, ahead of the thresholds. Step 2.3 of this same roadmap
+  defines it: *"every envelope figure to date comes from one gitignored
+  machine-local ledger, so no rate from it generalises"*.
+
+  Re-measured 2026-08-25: **0 ok of 4,912 stops**, read from
+  `agents/runtime/state/subagent-ledger/2026-08.jsonl`. Run in a clean worktree
+  the same command prints *"NO LEDGER … is not a measurement of zero"*. **Every
+  one of the 4,912 is machine-local, so the eligible population is zero, not
+  4,912.**
+
+  So the band is **not triggerable on this sample** — not overridden, not
+  amended. Its precondition is unmet by its own wording, and the claim's
+  falsification clause is untouched because there is no DROP reading to forbid.
+  That is precisely the resolution the owner-rationale said did not exist:
+  *"either resolution weakens a pre-registered criterion"*. **This one weakens
+  neither**, which is why it is releasable here.
+
+  **It is not post-hoc revision**, which is the objection this has to survive:
+  `non-local` was in the pre-registration before any measurement was taken, and
+  the note quotes it rather than adding it.
+
+  **What the council contributed.** Asked whether the machine-local finding
+  *mooted* the contradiction, both seats said **no** and corrected the framing —
+  outcome, attribution and generalisation are three separate judgments. Their
+  reconciliation was a **split resolution**: the band classifies an *outcome*,
+  the claim governs *causal attribution*, so both hold — *"Local DROP; cause
+  unresolved; cross-machine status unconfirmed."* One seat then set the condition
+  that decided the case: *"the original language should be quoted before owner
+  sign-off. Without it, declaring the band 'not yet triggerable' risks post-hoc
+  criterion revision."* Quoting it resolved the question in the direction that
+  seat had left open. **The split resolution is recorded as the reading that
+  governs once an eligible population exists** — which is the state Step 2.3
+  exists to produce.
 - **Owner:** maintainer/owner
 - **Blocks:** Phase 0 Step 0.1, and transitively all of Phase 2.
 - **What to do:**
@@ -298,7 +352,31 @@ producers do not emit the shape — not because the schema rejects them.
   `first_pass_success` and `escalated` with the construction reason cited.
 
 ### blocker: b-machine-local-denominator
-- **Status:** open
+- **Status:** open — **and it is now the ACTUAL gate**, promoted from a
+  side-condition by the 2026-08-25 resolution of `b-envelope-drop-vs-unresolved`.
+
+  That blocker resolved by finding the band's population line reads `>=200
+  **non-local** stops` while all 4,912 measured stops are machine-local. So the
+  question the roadmap treated as "which contract wins" is really "when does an
+  eligible population exist", and **this blocker is that question**. Nothing in
+  Phase 2 can quote a rate until it resolves — which Step 2.3 already says in its
+  own text (*"a prerequisite of Steps 2.2 and 5.2, not a successor"*), against a
+  phase numbering that puts 2.2 first.
+
+  **AI council 2/2 on what a second machine must be**, asked because an
+  autonomous run has one: CI qualifies **only** with an independent identity,
+  identical instrumentation, comparable traffic, and separately retained
+  evidence. Replaying the maintainer's ledger, running fixtures, or merely
+  assigning a different identity **does not** satisfy it. On the evidence
+  available this run, CI does not qualify.
+
+  One seat added a distinction worth keeping, because the `Resolved when` does
+  not capture it: **"machine-local" conflates confirmability with
+  representativeness.** Two machine identities give confirmability. They do not
+  give representativeness if both carry the same operator's drain-run traffic —
+  and this ledger's is exactly that. Satisfying `≥2 distinct machine identities`
+  would therefore close the letter of this blocker while leaving the
+  generalisation limit intact, and any rate quoted afterwards still has to say so.
 - **Owner:** council
 - **Blocks:** Phase 2 Step 2.2 and Phase 5 Step 5.2 — both quote a rate.
   Phase 2 Step 2.3 is the work that resolves it.
