@@ -208,24 +208,44 @@ presented as council-backed.
 
 ## Phase 5 — Propagation: the change that only half landed
 
-- [x] **5.1 Give `downstream-changes` the closed-set case.** The rule carried the
-      find-ALL-callers Iron Law and the defect-pattern sweep, but
-      `grep -icE 'enum|variant|union|switch|case'` over it returned **0** — the
-      exact case that produces bad refactors was absent. Added: the row, the
-      Iron Law, discover-by-shape, the three-way classification (exhaustive /
+- [x] **5.1 Write the closed-set procedure — in a guideline, not in the rule.**
+      `src/rules/downstream-changes.md` carried the find-ALL-callers Iron Law and
+      the defect-pattern sweep, and `grep -icE 'enum|variant|union|switch|case'`
+      over it returned **0** — the exact case that produces bad refactors was
+      absent. The procedure now lives in
+      `docs/guidelines/agent-infra/downstream-changes-mechanics.md`: the Iron
+      Law, discover-by-shape, the three-way classification (exhaustive /
       deliberate fallback / missing case), the finding that a `default` clause
       suppresses an exhaustiveness report entirely, and the synthetic-member
       probe. No blanket rule against `default` — that would be refuted by every
       protocol parser in the tree.
-      verify: `grep -icE 'enum|union|switch' src/rules/downstream-changes.md`
-      is greater than 0; the file stays under the 200-line rule cap.
-- [x] **5.2 Wire the rule into the two skills that need it.** Exactly one skill
-      cited `downstream-changes` before this. `code-review` gains a propagation
+      **The rule itself is untouched, and that is a measured constraint rather
+      than a preference.** `corrected-from-reproduction`: the first attempt added
+      38 lines to the rule and reddened `check_preamble_payload_budget` —
+      project-scope rules are a gated bucket of the per-spawn standing payload,
+      that payload measures 138,212 tok against a grace ceiling of exactly
+      138,212, and the config states the ceiling may never move up. At that
+      margin the rule cannot grow by a single table row. Guidelines are an
+      excluded bucket, so the obligation is carried by the guideline plus the two
+      skills that fire when it matters.
+      verify: `check_preamble_payload_budget` reports the same measured total as
+      clean `origin/main` (net 0 in the gated buckets), and
+      `npx vitest run tests/scripts/check_preamble_payload_budget.test.ts` is
+      green — it was red at 138,833, so its sensitivity is known.
+- [x] **5.2 Wire the procedure into the two skills that need it.** Exactly one
+      skill cited `downstream-changes` before this, and the closed-set procedure
+      had no carrier at all. `code-review` gains a propagation
       dimension (closed-set consumers listed with status; sibling-occurrence
       sweep with a reported count, zero included), `code-refactoring` gains the
       shape-search step where identifier search is insufficient.
       verify: the propagation dimension exists and both skills resolve the rule
       link; `check_references` exits 0.
+- [~] **5.3 Put the closed-set row in the rule once the payload budget allows.**
+      The row belongs in the rule's own table, next to the sweep it extends —
+      that is where an agent looks. It costs ~95 tok and the gated payload has
+      zero headroom, so it waits on a reduction. The budget config records that
+      no reduction mechanism is committed, which makes this item's blocker the
+      same one milestone 1 (2026-11-10) already carries.
 - [~] **5.3 Measure the exhaustiveness lint rule before enabling it.**
       `eslint.config.js` carries no exhaustiveness rule. The available one is
       type-aware, so it needs a TypeScript program built before linting — a real
