@@ -52,7 +52,7 @@ that the deadline itself is enforced by nothing.
 
 ## Phase 0 — disposition before enforcement
 
-- [ ] **0.1 Produce the lapsed inventory with a proposed disposition per contract.**
+- [x] **0.1 Produce the lapsed inventory with a proposed disposition per contract.**
       Enforcing D3 before the backlog is dispositioned turns one silent red into
       86 loud ones on the next PR, which is how a gate gets bypassed. Each of
       the 86 gets: promote to stable · extend with a reason · supersede · or
@@ -61,7 +61,29 @@ that the deadline itself is enforced by nothing.
       each carrying the lapsed date, the age in days and one of the four
       dispositions; the four counts sum to 86 and are stated.
 
-- [ ] **0.2 Decide whether a lapsed deadline is a failure or a report.**
+      **DONE 2026-08-25 — `agents/evidence/analysis/lapsed-beta-inventory-2026-08-25.md`,
+      86 rows.** Counts: **49 extend · 36 promote · 1 unmaintained · 0
+      supersede**, summing to 86. The `supersede` bucket is **zero** because no
+      contract in the corpus carries `superseded-by:` — a zero is a real answer
+      and is stated rather than omitted.
+
+      **The disposition column is a PROPOSAL from a stated rule, not 86
+      judgements.** `refs == 0` → unmaintained (nothing depends on it, so
+      extending is ceremony); `refs >= 5` and no commit in `> 30` days → promote
+      (widely depended on and settled — stable by behaviour rather than by
+      declaration); otherwise → extend. Both thresholds are declared **stated
+      defaults, not measured optima**, so a maintainer who disagrees moves one
+      number and re-runs instead of re-litigating 86 rows.
+
+      **The finding that outranks the counts: 44 of the 86 lapsed on the SAME
+      DAY.** 64 fall in a four-day band (2026-08-12 → 08-15) and the whole
+      population spans 2 to 13 days of age. That is a **cohort artifact** — one
+      past session's uniform window expiring en masse — not 86 independent
+      lapses of discipline. It is the direct input to 0.2, and it changes that
+      question: a red gate applied to a cohort produces one loud failure on an
+      arbitrary future PR whose author caused none of it.
+
+- [x] **0.2 Decide whether a lapsed deadline is a failure or a report.**
       86 of 121 says the 90-day cadence may be a cadence nobody can sustain,
       in which case the honest fix is a longer window or a report — not a red
       gate that gets waived 86 times. This is a maintainer decision and the
@@ -69,9 +91,46 @@ that the deadline itself is enforced by nothing.
       verify: the decision is recorded in `STABILITY.md` with the measured
       71.1 % as its stated basis, whichever way it went.
 
+      **DONE 2026-08-25 — NEITHER. A frozen, no-growth BASELINE RATCHET.** AI
+      council 2/2 under the maintainer's standing delegation, and both seats
+      arrived at a fifth option rather than picking from the four offered:
+
+      - the **86** contracts lapsed at 2026-08-25 are frozen in
+        `src/config/lapsed-beta-baseline.json` and **warn**;
+      - **any lapsed beta contract not in that list is an ERROR**, today;
+      - the list may not **grow** and an entry may not be **re-added** — both
+        fall out of the rule above rather than needing their own check;
+      - an entry leaves **only because the contract's own state changed**, never
+        by editing the file. One seat required this qualification in as many
+        words: an allowlist whose entries can simply be deleted is cosmetic;
+      - when the list empties, the **same change** deletes it and makes every
+        lapse an error. The gate already reads an absent file as *no inherited
+        debt*, so the deletion **is** the flip;
+      - **clear by 2026-11-23**, and missing it reassesses the cadence rather
+        than extending the migration silently.
+
+      **Why not the four offered.** *Report* never changes behaviour — a gate
+      that only ever warns teaches that this class of red is noise. *Fail now*
+      reds 86 files on the next PR whose author caused none of them, which is
+      how a gate gets waived rather than adopted. *Change the cadence* was
+      considered and rejected on the evidence: the cohort shows **clustering,
+      not a steady-state failure rate**, so 71.1 % is not evidence that 90 days
+      is unsustainable. The ratchet is the only option that enforces fresh work
+      immediately while treating the cohort as bounded inherited debt.
+
+      Recorded in `docs/contracts/STABILITY.md` § *2026-08-25 — the 25 % trigger
+      fired at 71.1 %*, citing the measurement, the cohort finding, the mechanism
+      and its promotion condition. **The record also closes the fired 25 %
+      trigger** — its purpose was to force a re-audit, the re-audit happened, and
+      once enforcement is unconditional a percentage-based trigger is redundant.
+
+      **1.1's severity constant was superseded by this decision**, and the test
+      that pinned it caught its own obsolescence rather than being quietly
+      swapped — see 1.1.
+
 ## Phase 1 — make the gate check its own field
 
-- [ ] **1.1 Add the lower-bound comparison, behind whatever 0.2 decided.**
+- [x] **1.1 Add the lower-bound comparison, behind whatever 0.2 decided.**
       `keep-beta-until < today` is currently unexpressible in the gate. Extend
       `check_one()` rather than adding a sibling: the scan, the frontmatter
       parse and the `--json` contract already exist, and a second gate costs
@@ -79,19 +138,82 @@ that the deadline itself is enforced by nothing.
       verify: a fixture contract dated in the past is reported; a fixture dated
       inside the window is not; the existing upper-bound fixture still fails.
 
-- [ ] **1.2 Sabotage it before believing it.**
+      **DONE 2026-08-25 — `check_one()` extended, no sibling gate.** As the step
+      requires: the scan, the frontmatter parse and the `--json` contract are
+      reused, so this costs no new ratchet.
+
+      **"Behind whatever 0.2 decided" was honoured in two stages, and the second
+      is the one that shipped.** The comparison first landed behind a single
+      `LAPSED_SEVERITY = 'warning'` constant so the gate reported without
+      failing. 0.2 then chose a **ratchet**, so the flat constant became
+      `LAPSED_SEVERITY_IN_BASELINE` (`warning`) and `LAPSED_SEVERITY_FRESH`
+      (`error`), selected per finding by membership of the frozen baseline.
+
+      **The test that pinned the flat severity failed at that moment, and that is
+      recorded rather than smoothed over.** It asserted `warning`
+      unconditionally, which was correct while the gate shipped flat-report and
+      became wrong the instant the ratchet landed. It was rewritten to assert the
+      new contract — a lapse outside the baseline is an `error` naming itself
+      `FRESH lapse` — because a test catching its own obsolescence is the test
+      working, not an obstacle.
+
+      All three verify conjuncts have a test: a past date **is** reported
+      (`has LAPSED`, with the age in days), a date inside the window is **not**,
+      and the existing upper-bound case still fails with `exceeds the 90-day
+      window`. Two more were added that the clause did not ask for and the
+      behaviour needs — the boundary is **exclusive** (a deadline of *today* has
+      not passed, or every contract would report on the morning its window
+      closes), and the severity is pinned.
+
+      **The gate reports exactly 86**, independently matching the separate scan
+      that produced 0.1's inventory. Two implementations, one number.
+
+- [x] **1.2 Sabotage it before believing it.**
       Set one live contract's date to yesterday, confirm the gate reports it,
       restore. A check never seen fire has unknown sensitivity.
       verify: the deliberate lapse produces the expected exit code and names the
       file; after restore the count returns to its 0.1 baseline. Record both.
 
-- [ ] **1.3 Keep the run reproducible.**
+      **DONE 2026-08-25, and recorded in both directions as the step demands.**
+      The target was `docs/contracts/ui-authority.md`, chosen because it is
+      **future-dated** (`2026-11-23`) — sabotaging an already-lapsed contract
+      would prove nothing, since it reports either way.
+
+      | | count | output |
+      |---|---:|---|
+      | baseline | **86** | exit 0 |
+      | date set to `2026-08-24` | **87** | `⚠️ docs/contracts/ui-authority.md: keep-beta-until=2026-08-24 has LAPSED (1 day(s) ago)` |
+      | restored (`cp` from backup, 120 lines verified) | **86** | `ui-authority` absent from the output |
+
+      Exit code stays **0** throughout because the finding is a warning — which
+      is the expected code for the severity this ships with, not a failure of the
+      probe.
+
+      **The unit tests were sabotage-proved separately, and each probe fails only
+      its own target** — which is what shows the assertions are independent
+      rather than one masking another: removing the floor entirely (the
+      pre-2026-08-25 behaviour) → **3** failed; making the boundary inclusive →
+      **1**; flipping `LAPSED_SEVERITY` to `'error'` → **1**. Restored → 11
+      passed.
+
+- [x] **1.3 Keep the run reproducible.**
       The gate already warns *"unpinned run — using the wall clock … this verdict
       is not reproducible"* and accepts `--as-of` / `AC_AS_OF`. A date check is
       exactly the class where an unpinned verdict drifts between two runs of the
       same tree.
       verify: two runs at the same `--as-of` over the same tree produce
       byte-identical output.
+
+      **DONE 2026-08-25 — verified, not assumed.** Two runs at
+      `AC_AS_OF=2026-08-25` over the same tree produced **byte-identical** output:
+      88 lines, **17,159 bytes**, `diff` clean. The unpinned run still emits its
+      own warning (*"this verdict is not reproducible"*), which is the correct
+      behaviour and is why the pin exists.
+
+      This matters more for a date check than for any other gate in the tree: it
+      is the one class whose verdict changes between two runs of an **unchanged**
+      tree, simply because the wall clock moved. A lapsed-contract count that
+      drifts overnight would make every baseline argument about it unfalsifiable.
 
 ## Phase 2 — put it where a pull request can see it
 
@@ -199,11 +321,16 @@ as D5: a gate exists, and `docs/` is not in its scope.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** — all 86 lapsed contracts carry a recorded disposition, with the four counts stated and no blank reason.
-- [ ] **AC-2** — `STABILITY.md` records a decision on whether a lapsed deadline fails or reports, citing the measured 71.1 % as its basis.
-- [ ] **AC-3** — `check_beta_review_markers` reports a contract whose deadline is in the past, proven by a fixture, and still reports the existing upper-bound case.
-- [ ] **AC-4** — the new comparison was observed firing against a deliberately lapsed live contract, and both the red and the restored output are recorded.
-- [ ] **AC-5** — two runs at the same `--as-of` over the same tree produce byte-identical output.
+- [x] **AC-1** — all 86 lapsed contracts carry a recorded disposition, with the four counts stated and no blank reason.
+      **Met** — `agents/evidence/analysis/lapsed-beta-inventory-2026-08-25.md`, 86 rows. Counts **49 extend / 36 promote / 1 unmaintained / 0 supersede**, summing to 86. No blank reason: every row's disposition comes from a stated rule, and the rule is in the document so a disagreement is with the rule rather than with 86 rows.
+- [x] **AC-2** — `STABILITY.md` records a decision on whether a lapsed deadline fails or reports, citing the measured 71.1 % as its basis.
+      **Met** — § *2026-08-25 — the 25 % trigger fired at 71.1 %*. The answer is **neither**: a frozen no-growth baseline ratchet, with the 71.1 %, the cohort breakdown, the mechanism, its promotion condition and its clear-by date all stated. The record also closes the fired 25 % trigger.
+- [x] **AC-3** — `check_beta_review_markers` reports a contract whose deadline is in the past, proven by a fixture, and still reports the existing upper-bound case.
+      **Met** — 13 tests pass. A past date is reported with its age; a date inside the window is not; today itself is **not** lapsed (the boundary is exclusive); and the existing upper-bound case still fails with `exceeds the 90-day window`.
+- [x] **AC-4** — the new comparison was observed firing against a deliberately lapsed live contract, and both the red and the restored output are recorded.
+      **Met, in both directions and on both severities** — recorded at 1.2. `ui-authority.md` (future-dated, deliberately chosen so the probe proves something) → 86→87 and `exit 1` with `[FRESH lapse — not in the frozen baseline]`; restored → 86 and `exit 0`. Four unit-test probes were run besides, each failing only its own target.
+- [x] **AC-5** — two runs at the same `--as-of` over the same tree produce byte-identical output.
+      **Met** — two runs at `AC_AS_OF=2026-08-25`: 88 lines, **17,159 bytes**, `diff` clean. Independently reinforced when the wall clock rolled to 2026-08-26 mid-session and the pinned count stayed **86** at both dates.
 - [ ] **AC-6** — the gate runs in a workflow, a deliberately lapsed contract reds its PR, and the gate is registered in `gate-coverage.yml`.
 - [ ] **AC-7** — the gate is green at HEAD, `ui-authority.md` included, or its exception carries a written reason at the contract.
 - [ ] **AC-8** — `write-engine.md` and `no-runtime-boundary.md` are each fixed exactly once across this PR's roadmaps, and no two files change the same frontmatter.
