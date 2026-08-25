@@ -1,0 +1,141 @@
+{
+  "_comment": "Site-type axis for the web-launch-readiness skill (road-to-web-launch-readiness 0.2). The design directive this file exists to enforce is CONDITIONAL, NOT FLAT: a check that applies everywhere is a check that gets ignored somewhere. Every entry declares which site types it applies to, so a SaaS app is never asked for opening hours and a docs site is never asked for a cookie banner it does not set. REGISTERED BEFORE ANY SKILL CODE EXISTS, which is the point of Phase 0: the axis is a decision, and deciding it after writing the checks would let the checks pick their own scope. Nothing reads this file yet -- the skill is gated behind b-estate-decision-web-launch.",
+  "schema_version": 1,
+  "registered_at": "2026-08-25",
+  "owner": "maintainer",
+  "review_by": "2027-08-25",
+  "site_types": {
+    "_comment": "The closed enum. A check may not name a type outside it, and a type carries no checks until one lists it -- so adding a type is inert until a check opts in, and removing one is caught by the schema test rather than silently emptying a check's scope.",
+    "values": [
+      "local-business",
+      "marketing-site",
+      "saas-app",
+      "docs",
+      "internal-tool"
+    ]
+  },
+  "tiers": {
+    "_comment": "Report order, and it is the output contract rather than a label: critical first, situational last. A finding's tier is a property of the FINDING, not of the reader's patience -- a staging noindex on a production marketing site is critical whether or not the reader has time for it.",
+    "values": [
+      "critical",
+      "high",
+      "medium",
+      "situational"
+    ]
+  },
+  "checks": [
+    {
+      "id": "staging-noindex-leftover",
+      "title": "A staging `noindex` or `robots.txt` disallow survived into production",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs"
+      ],
+      "tier": "critical",
+      "why": "The defect class with ZERO coverage in the estate (G0: `robots` 0 files, `noindex` 0 files) and the highest cost: the site ships, works, looks correct, and is invisible to search. Nothing in the tree looks for it today.",
+      "remediation": "Remove the `noindex` meta tag and the blanket `Disallow: /` from the production build; keep them behind the staging environment's own config rather than in shared source.",
+      "verification": "`curl -sI <prod-url> | grep -i x-robots-tag` returns nothing, `curl -s <prod-url>/robots.txt` carries no blanket disallow, and the rendered HTML has no `noindex` meta."
+    },
+    {
+      "id": "custom-error-route",
+      "title": "A custom 404 route exists and is reachable",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs"
+      ],
+      "tier": "high",
+      "why": "A framework default error page leaks stack shape and loses the visitor. `404` matches 19 files in the estate, all HTTP-status tables -- none is a launch check.",
+      "remediation": "Add the framework's custom 404 route and give it a link back into the site.",
+      "verification": "`curl -s -o /dev/null -w '%{http_code}' <prod-url>/<random-path>` returns 404 and the body is the custom page, not the framework default."
+    },
+    {
+      "id": "per-route-metadata",
+      "title": "Every indexable route carries a title and a meta description",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "docs"
+      ],
+      "tier": "high",
+      "why": "`meta description` matches 0 files. Excluded for `saas-app` and `internal-tool` on purpose: an authenticated app's routes are not indexed, so per-route descriptions are work with no consumer.",
+      "remediation": "Add title and description to each route's metadata export; a shared default is a fallback, not a per-route value.",
+      "verification": "Fetch each route in the sitemap and assert a non-empty, non-duplicated title and description."
+    },
+    {
+      "id": "image-alternative-text",
+      "title": "Content images carry alternative text",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs",
+        "internal-tool"
+      ],
+      "tier": "high",
+      "why": "The one check that applies to every type, including internal tools -- an internal user with a screen reader is still a user. `alt text` matches 7 files, all accessibility prose rather than a launch check.",
+      "remediation": "Add `alt` to content images; decorative images take `alt=\"\"` explicitly rather than being left without the attribute.",
+      "verification": "Parse the rendered HTML and assert every `<img>` has an `alt` attribute, empty or not."
+    },
+    {
+      "id": "canonical-and-sitemap-coherence",
+      "title": "Canonical URLs, sitemap and robots.txt agree with each other",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "docs"
+      ],
+      "tier": "medium",
+      "why": "Three sources that can disagree silently: a sitemap listing a route whose canonical points elsewhere, or a robots disallow on a route the sitemap advertises. Note `canonical` matches 115 files in this estate in a completely different sense (\"the canonical rule\"), so its count is NOT coverage evidence.",
+      "remediation": "Make the canonical the same URL the sitemap lists; remove sitemap entries that robots.txt disallows.",
+      "verification": "For each sitemap URL, fetch it and assert the canonical equals the sitemap entry and robots.txt does not disallow it."
+    },
+    {
+      "id": "required-legal-pages",
+      "title": "The legal pages the jurisdiction requires exist and are linked",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app"
+      ],
+      "tier": "situational",
+      "why": "SITUATIONAL because the requirement is jurisdictional, not universal: a German commercial site needs an Impressum, a US one does not. The skill reports what is missing for the declared region and does not assert a legal conclusion -- that is the domain-safety-disclaimer boundary, not this file's.",
+      "remediation": "Add the pages the declared region requires and link them from the footer of every page.",
+      "verification": "Assert each declared-required page returns 200 and is reachable from the home page in one click."
+    },
+    {
+      "id": "analytics-and-consent-wiring",
+      "title": "Analytics fires only after consent, where consent is required",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app"
+      ],
+      "tier": "situational",
+      "why": "Also jurisdictional, and the failure is asymmetric: analytics that never fires costs data, analytics that fires before consent costs a regulatory exposure.",
+      "remediation": "Gate the analytics snippet behind the consent state; do not load it on first paint.",
+      "verification": "Load the page with consent declined and assert no request to the analytics origin."
+    }
+  ],
+  "not_in_scope": {
+    "_comment": "Named so a later contributor does not add them by analogy. Performance budgets and Lighthouse scoring are a different instrument with a different failure mode (a score is a gradient, these checks are binary), and `lighthouse` matching 0 files is NOT an argument for adding it here. Accessibility beyond alt text belongs to accessibility-auditor, which already exists and does it properly.",
+    "items": [
+      "performance budgets",
+      "lighthouse scoring",
+      "full WCAG audit",
+      "SEO keyword strategy"
+    ]
+  },
+  "no_import_decision": {
+    "_comment": "Step 0.3, recorded HERE rather than in the skill body, and the relocation is a correction the step needs rather than a liberty taken. 0.3 sits in Phase 0, whose Exit condition reads \"zero skill code written\" -- so its verify line (\"the decision is written in the skill's own body\") names an artefact its own phase forbids. The decision is what the step is about; it is recorded in the earliest durable place that exists, and the skill body restates it at 2.1 when there is a body.",
+    "decision": "no-import",
+    "decided_at": "2026-08-25",
+    "rule": "The external corpus is a STUDY OBJECT and a per-defect harvest source. Its rule set is not imported. Rules enter ONE AT A TIME, each against a named defect, each carrying its own remediation and verification.",
+    "why": "An imported rule set arrives with its authors' assumptions about site type, jurisdiction and stack, and none of those is checked on arrival. The failure is silent: the skill grows to N checks, each individually plausible, and the conditional axis this file exists to enforce is the first thing a bulk import flattens. One-at-a-time keeps the axis honest because every entry has to answer `applies_to` before it lands.",
+    "ceiling": 50,
+    "ceiling_enforced_by": "tests/scripts/web_launch_readiness_config.test.ts asserts checks.length < 50. Currently 7."
+  }
+}

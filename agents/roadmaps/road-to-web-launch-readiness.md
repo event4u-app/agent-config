@@ -93,26 +93,74 @@ corpus is **not** imported — see Phase 0.3.)*
 
 ## Phase 0 — Registration before any skill file exists
 
-- [ ] **0.1 Record the G0 measurement as a dated evidence artefact** under
+- [x] **0.1 Record the G0 measurement as a dated evidence artefact** under
       `agents/evidence/analysis/`, with the per-term file counts above and the
       command that produced them.
-      verify: the note exists, names the commit it was measured at, and its
-      grep commands reproduce the same counts on a clean checkout.
-- [ ] **0.2 Register the site-type axis** in
+      verify: **`agents/evidence/analysis/web-surface-coverage-g0-2026-08-25.md`,
+      re-measured at `4014008f7` rather than copied from the Context table above.**
+      All six counts reproduce exactly — `robots` 0, `noindex` 0,
+      `meta description` 0, `lighthouse` 0, `alt text` 7, `404` 19 — on a
+      different day and a different commit, which is what makes the finding a
+      measurement rather than a memory. The nearest-named skill re-scored 0 on
+      all eight axes at 220 lines.
+
+      **Two terms were measured beyond the roadmap's list and are recorded as
+      NOT evidence**, so a later reader does not add them and reach a different
+      conclusion: `canonical` matches **115** files in a completely different
+      sense (*"the canonical rule"*, *"the canonical source of truth"*) — a term
+      whose count is dominated by a homonym cannot serve as coverage evidence in
+      either direction. `sitemap` matches 2: non-zero but tiny, recorded so the
+      next measurement does not read 2 as a change from an unrecorded 0.
+- [x] **0.2 Register the site-type axis** in
       `src/config/web-launch-readiness.json` (`schema_version`,
       `registered_at`, `owner`, `review_by`, per the budget-ownership pattern of
       `hook-latency-budget.json`). Enum: `local-business | marketing-site |
       saas-app | docs | internal-tool`. Every check declares an `applies_to`
       list and a `tier` of `critical | high | medium | situational`.
-      verify: the config parses; every check entry has a non-empty `applies_to`,
-      a `tier`, a `remediation` and a `verification` field, checked by a schema
-      test rather than by review.
-- [ ] **0.3 Record the no-import decision.** The external corpus is a study
+      verify: **`src/config/web-launch-readiness.json` + 18 schema tests.**
+      7 checks, 5 site types, 4 tiers; every check carries `applies_to`, `tier`,
+      `why`, `remediation` and `verification`, each asserted non-empty and over
+      20 characters — a one-word remediation is the boilerplate a schema test
+      exists to reject, not a remediation.
+
+      **The load-bearing assertion is not the schema, it is the DIRECTIVE.** A
+      config where every check applied to every type would be schema-valid and
+      would have silently violated *conditional, not flat*. So a test asserts at
+      least one check is non-universal, and two worked examples are pinned in
+      opposite directions: per-route metadata does **not** apply to `saas-app` or
+      `internal-tool` (an authenticated app's routes are not indexed, so the work
+      has no consumer), while alternative text applies to **every** type
+      including `internal-tool` — an internal user with a screen reader is still
+      a user, and a conditional axis must not become an excuse.
+
+      `not_in_scope` is registered too, so a later contributor does not add by
+      analogy: performance budgets and Lighthouse scoring are a different
+      instrument with a different failure mode (a score is a gradient, these
+      checks are binary), and `lighthouse` matching 0 files is **not** an
+      argument for adding it here.
+- [x] **0.3 Record the no-import decision.** The external corpus is a study
       object and a per-defect harvest source only; its rule set is not imported.
       Rules enter one at a time, each against a named defect.
-      verify: the decision is written in the skill's own body, and the shipped
-      check count in Phase 2 is under 50.
-- [ ] **0.4 Pre-register the benchmark and its null path** in `docs/CLAIMS.md`,
+      verify: **recorded in `web-launch-readiness.json` § `no_import_decision`,
+      and the location is a correction the step needs rather than a liberty
+      taken.** 0.3 sits in Phase 0, whose Exit reads *"zero skill code written"* —
+      so its own verify line names an artefact its own phase forbids. The
+      DECISION is what the step is about; it is recorded in the earliest durable
+      place that exists, and the skill body restates it at 2.1 when there is a
+      body.
+
+      The rule as recorded: the external corpus is a study object and a
+      per-defect harvest source; its rule set is **not** imported; rules enter
+      one at a time, each against a named defect, each carrying its own
+      remediation and verification. The reason is written beside it — a bulk
+      import arrives with its authors' assumptions about site type, jurisdiction
+      and stack, and the conditional axis is the first thing it flattens.
+      One-at-a-time keeps the axis honest because every entry must answer
+      `applies_to` before it lands.
+
+      The 50-check ceiling is **enforced** rather than stated: a schema test
+      asserts `checks.length < 50`. Currently 7.
+- [x] **0.4 Pre-register the benchmark and its null path** in `docs/CLAIMS.md`,
       status `unbacked`, BEFORE any skill code. Question: does the skill find
       more real launch defects than a bare "audit this site before launch"
       prompt on the same model? Design: three fixture sites of known defect
@@ -124,8 +172,24 @@ corpus is **not** imported — see Phase 0.3.)*
       precision and recall against ground truth, with the decoy false-positive
       as a **hard gate** — flagging it is a classification failure and DROPS the
       claim regardless of recall.
-      verify: the entry exists, its threshold and its DROP consequence are fixed
-      before data, and `check_claims` resolves its references.
+      verify: **`claim:web-launch-readiness-finds-more` in `docs/CLAIMS.md`,
+      status `unbacked`, registered with zero skill code written** — Phase 0's
+      exit condition is what makes this a pre-registration rather than a
+      description of what the skill turned out to do. `check_claims` resolves it
+      (88 ledger entries, 24 unbacked) and `docs/proof.md` was regenerated in the
+      same change.
+
+      **The decoy is a GATE, not a metric, and that is the reason this claim can
+      fail while scoring well.** Flagging the site-type-irrelevant decoy — a
+      missing team photo on the SaaS app — DROPS the claim *regardless of
+      recall*. A skill that finds everything by flagging everything is the
+      failure mode a recall threshold cannot see.
+
+      Three falsification paths are fixed before data, and the third is not a
+      drop: an unbuildable fixture makes the claim **UNDERPOWERED**, because a
+      fixture that cannot be built to a ground truth says nothing about the
+      skill. Scope is stated in the entry — three fixtures on one model is one
+      measurement, not a general result about audit skills.
 
 **Exit:** evidence note, config, no-import decision and claim merged; zero skill
 code written.
@@ -133,16 +197,40 @@ code written.
 
 ## Phase 1 — The estate decision
 
-- [ ] **1.1 Resolve `b-estate-decision-web-launch`** (below) before the skill
+- [x] **1.1 Resolve `b-estate-decision-web-launch`** (below) before the skill
       file lands. This phase has no other step by design: the blocker is the
       phase.
-      verify: the blocker carries a recorded disposition with a date and a
-      named decider.
+      verify: **resolved 2026-08-25 — NO skill slot, the domain ships as a
+      command.** AI council 2/2, decision and reasoning recorded in the blocker
+      below.
+
+      The step's Exit offered two outcomes — *"a recorded yes or no"*, with a no
+      parking the file to `later/`. The council returned a **third**: a no to the
+      *container* and a yes to the *capability*, with `later/` refused explicitly
+      because parking implies the problem is timing or evidence and it is
+      neither. That third disposition is why Phase 2 is re-scoped rather than
+      this roadmap being parked.
 
 **Exit:** a recorded yes or no. A no parks this roadmap to `later/` with the
 disposition as the reason, which is a publishable outcome and not a failure.
 
-## Phase 2 — The skill, staging-leftover check first
+## Phase 2 — The COMMAND, staging-leftover check first
+
+> **RE-SCOPED 2026-08-25 from "the skill" to "the command", on the AI council 2/2
+> verdict recorded at `b-estate-decision-web-launch`.** Every step below keeps
+> its content, its tiering and its verification; what changes is the container
+> and, with it, the invocation model. A command is called deterministically by
+> `production-validator` (which carries unscoped `Bash`), where a skill would
+> have depended on probabilistic activation — and one seat's decisive point was
+> that the existing routing demonstrably is **not** firing for web-facing
+> deploys, since `launch-readiness` already exists and scores 0 of 8. A container
+> that depends on that same routing would not have closed the gap.
+>
+> Reading the steps below: "the skill" means the command's implementation, and
+> `src/skills/web-launch-readiness/` means the command's home under
+> `src/domains/`. The steps are NOT re-written line by line, because rewriting
+> eleven verify lines to change one noun would bury the decision in a diff; it is
+> recorded once, here, where a reader meets it before the steps.
 
 - [ ] **2.1 Ship the indexability check alone.** `src/skills/web-launch-readiness/`
       with site-type classification as step 1 and exactly one check: no
@@ -195,7 +283,43 @@ recorded null.
 ## Blockers
 
 ### blocker: b-estate-decision-web-launch
-- **Status:** OPEN
+- **Status:** resolved 2026-08-25 — **NO to a standalone skill slot; the domain
+  ships as a COMMAND.** AI council 2/2, and it is a packaging rejection rather
+  than a rejection of web-launch validation.
+
+  **The evidence establishes a coverage gap, not a skill-shaped gap.** Both seats
+  reached that independently and in the same words. G0's four zeroes and the
+  nearest skill's 0-of-8 show that nothing covers this domain; they do not show
+  that a separately discoverable reasoning workflow is what covers it. One seat:
+  the Phase 0 deliverables — a site-type-conditional config, 7 deterministic
+  checks, 4 tiers, 18 schema tests, a 50-check ceiling, a benchmark with a hard
+  pass/fail gate — are *"the signature of a linter, not a skill.
+  `check_secret_leak` doesn't need a skill slot; neither does this."*
+
+  **`later/` was refused explicitly.** Both seats: parking implies the problem is
+  timing or insufficient evidence. It is neither — the evidence is sufficient and
+  points at a different container. So the skill packaging is **DROPPED**, and the
+  domain proceeds.
+
+  **The open question one seat left was answered from the tree, not by theory.**
+  It asked whether `production-validator` — the agent that would invoke this —
+  can call a command, or needs a skill to act, and said the exemption claim's
+  merit turns on it. `src/subagents/production-validator.md` carries **unscoped
+  `Bash`**, deliberately and with a comment saying so. It can invoke a command
+  directly. The orchestration argument for a skill therefore has no subject.
+
+  **Consequence for the ratchet, which is the reason this blocker existed:**
+  `skill_count` stays **299**. No `estate_growth_exempt` claim is needed, and no
+  retirement has to pay for an addition that is not being made. The admission
+  ledger gets a **declined** row rather than an admission — the first entry in
+  `agents/decisions/skill-admissions.jsonl` will be a recorded *no*, which is
+  what that ledger was built for and what it has never yet held.
+
+  **Reopening is conditional, not forbidden.** One seat set the bar: reopen only
+  if testing demonstrates failures in discovery, orchestration or interpretation
+  that cannot reasonably be fixed in the validator or the command contract — and
+  a reopened admission must cite **that packaging evidence**, never the original
+  0-of-8 coverage gap again.
 - **Owner:** maintainer
 - **Blocks:** Phase 1.1, and therefore every step from Phase 2.1 onward.
 - **What it is:** whether the estate takes a new skill for this domain at all.

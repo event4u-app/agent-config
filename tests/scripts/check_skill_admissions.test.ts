@@ -224,10 +224,32 @@ describe('the ledger is the corpus, so a broken one is a hard error', () => {
 });
 
 describe('the live tree', () => {
-    it('the shipped ledger parses and carries no admission row yet', () => {
-        // Both shipped lines are bookkeeping (`_comment`, `_absence_of_refusals`),
-        // so 0 rows is correct rather than a read failure.
-        expect(readLedger(REPO)).toEqual([]);
+    it('the shipped ledger parses, and every row it carries is well-formed', () => {
+        // REWRITTEN 2026-08-25. This used to assert `readLedger(REPO)` equals
+        // `[]`, which was true the day it was written and pinned a TRANSIENT
+        // state as if it were an invariant: the ledger's whole purpose is to
+        // accumulate rows, so the first one broke a test that was supposed to
+        // guard the reader, not the count. It went red on the change that added
+        // the first genuine `rejected` row.
+        //
+        // What is actually invariant: the file parses, bookkeeping lines are
+        // ignored, and every real row carries a known decision. Asserted here;
+        // the per-row admission requirements are asserted against fixtures
+        // above, where a change to the live ledger cannot reach them.
+        const rows = readLedger(REPO);
+        for (const r of rows) {
+            expect(typeof r.skill, 'every row names a skill').toBe('string');
+            expect(r.skill.length).toBeGreaterThan(0);
+            expect(DECISIONS, `${r.skill} carries an unknown decision`).toContain(r.decision);
+        }
+    });
+
+    it('validate() is silent on the shipped ledger — it must never red on main', () => {
+        // The consequence a snapshot assertion could not express: whatever the
+        // ledger accumulates, the gate stays green on the live tree unless a
+        // real defect lands. A rejected row naming a skill that EXISTS would
+        // fail here, which is the one live-tree contradiction worth catching.
+        expect(validate(readLedger(REPO), liveSkills(REPO), [])).toEqual([]);
     });
 
     it('reads 299 live skills, matching the estate metric', () => {
