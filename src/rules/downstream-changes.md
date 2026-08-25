@@ -48,6 +48,7 @@ After editing any file, search for **all** of these:
 | **API schemas / OpenAPI** | Check controller attributes | Update if response structure changed |
 | **Routes** | Search `routes/` for controller references | Update after controller rename/move |
 | **Documentation** | Search `agents/`, `docs/`, `README`, examples for references | Update the doc that **describes** the changed surface — see Doc-Impact below |
+| **Closed-set members** | The member set changed (enum, union, literal-type, state machine, role/permission set, DB check constraint, schema `enum`) → search every `switch` / `match` / if-chain over that type, every `Record<T, …>` or lookup table keyed by it, every validator, serializer, mapping, fixture, factory, and translation key | Each consumer either handles the new member or fails loudly — see Closed-set evolution below |
 
 ## Defect-pattern search — one instance is a sample, not the population
 
@@ -104,6 +105,42 @@ Detection + the framework-agnostic surface→doc map (Laravel / Symfony /
 Next.js / Python / Go) live in [`agent-docs-writing`](../skills/agent-docs-writing/SKILL.md)
 § Doc-Impact — run it after every code change.
 
+## Closed-set evolution — the incomplete-refactor case
+
+```
+CHANGING A MEMBER OF A CLOSED SET IS NEVER DONE WHEN THE TYPE COMPILES.
+EVERY CONSUMER IS CLASSIFIED: EXHAUSTIVE, DELIBERATE FALLBACK, OR MISSING CASE.
+A `default` THAT SWALLOWS THE NEW MEMBER IS A MISSING CASE WEARING A BRANCH.
+```
+
+Adding, removing or renaming a member of an enum / union / state set is the
+canonical bad refactor: the authority changes, the type still compiles, and a
+serializer, a badge variant, a schema or a transition table silently keeps the
+old set. None of them references the type by name, so the find-ALL-callers sweep
+above does not reach them — which is why they get their own row.
+
+**Discover by shape, not by identifier** (the row lists the shapes). Then
+classify every hit: **exhaustive** (compiler or data structure forces
+completeness), **deliberate fallback** (part of the contract — a
+forward-compatible external value, a protocol unknown, a defensive boundary
+parse), or **missing case**. Only the third is a defect. There is no blanket
+rule that a `default` branch is wrong; one would be refuted by every protocol
+parser in the tree.
+
+Prefer the language-native guarantee over a comment — a fully-typed
+`Record<Member, …>` where every member needs a value, an exhaustive `match`
+without a masking default. Where a check exists, **a `default` clause suppresses
+an exhaustiveness report entirely**, so adding one to quiet the check removes
+exactly the signal it existed to give.
+<!-- harvest:exhaustiveness-default-clause-masks-the-check -->
+
+**Prove the sweep, do not assert it.** Add a synthetic member, confirm the checks
+you rely on go red, update the consumers, confirm green. A sweep never seen red
+has unknown coverage.
+
+Naming half of the same problem — one concept, several terms:
+[`redundancy-taxonomy`](../../docs/guidelines/redundancy-taxonomy.md).
+
 ## Breaking changes
 
 Before making a change that affects a **public API** (endpoint response, service method signature,
@@ -146,3 +183,4 @@ After completing all downstream changes:
 4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.
 5. **No own-orphans** — the same sweep applied to the new diff: identifiers whose last reference disappeared in a file this diff touched are removed in the same diff (see [`minimal-safe-diff § Own-orphan cleanup`](minimal-safe-diff.md#own-orphan-cleanup)); pre-existing dead code stays.
 6. **No doc drift** — a public surface changed this diff has its describing doc updated (or the one-line no-doc-needed reason stated), per Doc-Impact above.
+7. **No unhandled closed-set member** — a member set changed this diff has every consumer classified per Closed-set evolution above, and the synthetic-member probe was run.

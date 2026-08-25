@@ -39,10 +39,11 @@ Use this skill when:
 4. **Correctness** — does it actually work? Edge cases? Error handling?
 5. **Quality** — types, naming, readability, SOLID?
 6. **Redundancy** — see below; a verdict, not a "this looks duplicated".
-7. **Security** — input validation, authorization, injection?
-8. **Performance** — N+1 queries, missing indexes, unbounded queries?
-9. **Tests** — are new paths covered? Are existing tests still valid?
-10. **Conventions** — does it follow project standards?
+7. **Propagation** — did a changed concept reach every occurrence? see below.
+8. **Security** — input validation, authorization, injection?
+9. **Performance** — N+1 queries, missing indexes, unbounded queries?
+10. **Tests** — are new paths covered? Are existing tests still valid?
+11. **Conventions** — does it follow project standards?
 
 ## The redundancy dimension
 
@@ -67,6 +68,39 @@ review nobody will run twice.
 For comments, labels, tooltips, placeholders and empty states, run the
 Information Delta Test from the same document rather than judging text volume.
 A reduction that removes an accessibility name is a defect, not a cleanup.
+
+Naming is the same dimension pointed the other way: a diff that introduces a
+second term for a concept the tree already names is the finding, and an existing
+split is baseline. The classes and the `canonicalize-term` / `keep-distinct`
+verdicts are in the same document.
+
+## The propagation dimension
+
+A change is complete when the **concept** changed everywhere, not when the named
+file compiles. Two shapes to check, both of which the file-level review misses:
+
+**A closed set gained or lost a member** (enum, union, literal type, state
+machine, role or permission set, schema `enum`, DB check constraint). List the
+consumers and their status — every `switch` / `match` / if-chain over the type,
+every lookup table keyed by it, every validator, serializer, schema, fixture and
+translation key. A `default` branch that silently absorbs the new member is a
+missing case, not a handled one. Procedure:
+[`downstream-changes`](../../rules/downstream-changes.md) § Closed-set evolution.
+
+**A shared behaviour moved and its siblings did not.** A defect fixed in one
+place is presumed to recur until searched: name the exact wrong construct, grep
+the tree, and report the count — zero is a real answer and worth stating, because
+it distinguishes "this was unique" from "nobody looked".
+
+Diff-aware on the same terms as redundancy: the finding is a concept **this
+change** left half-migrated. Pre-existing incompleteness elsewhere is baseline.
+
+When the diff **creates** a class, component, service or hook rather than
+changing one, the question is whether it needed to exist: what was searched,
+what was found, and why composing or extending the incumbent was rejected. An
+answer, not a ceremony — and the thresholds for when repetition actually earns
+an abstraction are in
+[`component-oriented-and-oop-development`](../../../docs/guidelines/component-oriented-and-oop-development.md).
 
 ## Change-type routing — load only the checklist the diff needs
 
@@ -138,7 +172,7 @@ coverage reads as full coverage.
 the package implements it. That is now true for a recorded reason rather than by
 omission: the pre-registered question — does rotating reviewer order change the finding set
 on a frozen corpus, by more than 15 % — **cannot be answered from the corpus that exists**.
-`agents/evidence/reviews/` holds 123 findings artefacts, and none of them records the file
+`agents/evidence/reviews/` holds 123 findings artifacts, and none of them records the file
 order it was produced under, so the counterfactual is not recoverable; re-running reviewers
 produces fresh judgements in which ordering is confounded with run-to-run variance. Full
 null, with its reopening condition: `agents/evidence/review-rotation-prereg-and-null.md`.
