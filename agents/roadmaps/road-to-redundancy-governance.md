@@ -37,7 +37,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
       confirmed count with the command that produced it, plus the four
       corrections the verification pass found against the inbox claims: the
       entry-guard block is 534 files, not 373; `REPO_ROOT` declarations are 245
-      but only 29 use the two-level depth, so the copies are not
+      but only 22 use the two-level depth, so the copies are not
       interchangeable; `ArgparseExit` is 37 but the sibling classes `ArgError`
       and `ArgExit` add 39 more; the jscpd figure is unverifiable here because
       neither `jscpd` nor `ast-grep` is a dependency.
@@ -46,9 +46,9 @@ consolidation, and any clone-detector dependency. Those collide with the active
       its stated number when run.
 
 - [x] **1.2 Record the seven divergent shipped twins as a table.** In the same
-      artefact, list each `src/scripts/<n>.ts` against
-      `src/agent-src/templates/scripts/<n>.ts` with its measured `diff -u` line
-      count, and state the observed fact that `package.json` `files` carries
+      artifact, list each `src/scripts/<n>.ts` against
+      `src/agent-src/templates/scripts/<n>.ts` with its measured
+      `git diff --numstat` changed-line count, and state the observed fact that `package.json` `files` carries
       both paths, so both copies reach consumers with no sync mechanism between
       them. Facts only — no side is declared correct here.
       verify: the table has exactly 7 rows and each named file pair exists.
@@ -110,7 +110,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
 ## Phase 3 — The delivery defect, decided by its owner
 
 - [x] **3.1 Name the ADR the twins need.** Add a short proposal section to the
-      baseline artefact stating what an ADR must settle: whether
+      baseline artifact stating what an ADR must settle: whether
       `src/scripts/` becomes the sole authority with the template copies
       generated at build time, and what happens to consumers pinned to the
       current template behaviour.
@@ -118,10 +118,120 @@ consolidation, and any clone-detector dependency. Those collide with the active
       question.
 
 - [~] **3.2 Decide the intended behaviour per divergent twin.** Seven pairs,
-      up to 980 diff lines each. Which side is correct is a behavioural
+      up to 787 changed lines each. Which side is correct is a behavioural
       judgement per file, not a mechanical one, and each resolution is a bugfix
       that changes what consumers already run. Deferred to the maintainer with
       the Phase 1.2 table as its input.
+
+## Phase 4 — The dual: one concept, one word
+
+Second inbox drop (`agents/tmp.old/reduntanz-2/`), same workstream. It audited
+this branch and found three defects in it; those are 4.0. The rest extends the
+taxonomy rather than creating a second authority, which is this roadmap's own
+core finding applied to itself.
+
+**Council: invoked, no verdict.** `council_cli run --depth deep` on the scope and
+sequencing questions returned `quorum_result: inconclusive`, `present: 0` — both
+configured members reported `unavailable` (CLI transport, `api_on_quota: off`).
+The decisions below are therefore taken from tree evidence and named as such, not
+presented as council-backed.
+
+- [x] **4.0a Fix the 22-vs-29 contradiction.** This file said "29 at the
+      two-level depth" in two places while the baseline artifact, the PR body and
+      re-measurement said 22. The same number encoded twice and diverged — a
+      knowledge duplication by this roadmap's own taxonomy, found by an external
+      audit of it. 29 is the count of *any* depth using that resolve shape; 22 is
+      the two-level literal.
+      verify: `grep -rho 'only [0-9]* use the two-level' agents/roadmaps/road-to-redundancy-governance.md
+      agents/evidence/analysis/redundancy-baseline-2026-08-25.md | sort -u` yields
+      exactly one distinct value, and it matches the measurement command in the
+      baseline. (Matching on the bare number cannot work — this very line would
+      match it. `corrected-from-reproduction`.)
+- [x] **4.0b Pin the twin-diff metric.** `diff -u | wc -l` counts context lines,
+      so it moved with the local diff implementation — 980/384 here, 975/381 on
+      the auditing machine. Restated as `git diff --numstat`, which reproduces
+      anywhere git does. `corrected-from-reproduction`.
+      verify: the baseline table carries added/removed/changed columns and the
+      loop in it uses `--numstat`.
+- [x] **4.0c Canonicalise this branch's own spelling.** The branch mixed
+      `artefact` (5) and `artifact` (6) across its own files while introducing a
+      taxonomy about exactly that. Unified to `artifact`, which is the spelling
+      the `evidence-artifact-types` contract governing the baseline file already
+      uses.
+      verify: `grep -c artefact` returns 0 across the files this branch touches.
+
+- [x] **4.1 Write the wording baseline.**
+      `agents/evidence/analysis/wording-baseline-2026-08-25.md` — nine measured
+      spelling pairs with their commands, the identifier-layer table, and the
+      concept-cluster honest null.
+      verify: every row reproduces from its stated command.
+- [x] **4.2 Teach the taxonomy the dual defect.** Naming classes (spelling
+      variant, synonym drift, homonym collision) and verdicts
+      (`canonicalize-term`, `keep-distinct`, `defer-for-context`) in
+      `redundancy-taxonomy.md`, with the prose-vs-identifier split stated as
+      decisive.
+      verify: the section names all three classes and all three verdicts.
+- [x] **4.3 The three moments carry naming.** `code-clarity` (before introducing
+      a term, search for the incumbent), `code-review` (a diff introducing a
+      second term for an existing concept is the finding; an existing split is
+      baseline), `code-refactoring` (a rename to the canonical term is an
+      outcome). No new carrier.
+      verify: `check_references` exits 0; `skill_linter --all` warn count
+      unchanged at 1.
+- [x] **4.4 Close the reuse-citation gap.** `component-oriented-and-oop-development.md`
+      had **0** skill citations while being the authority on when repetition earns
+      an abstraction. Now cited from `code-review` (diff creates a unit → what was
+      searched, what was found) and `code-refactoring` (reuse question before a
+      new unit).
+      verify: `grep -rl 'component-oriented-and-oop-development' src/skills/ | wc -l`
+      returns 2, was 0.
+
+- [~] **4.5 Decide the canonical side per mechanical pair.** Nine measured pairs.
+      The majority side is the obvious proposal for seven of them, and two are
+      not mechanical at all: `behaviour`/`behavior` splits 57/43 with the
+      *British* side ahead, against a tree that is otherwise American, and
+      `license`/`licence` is a genuine noun/verb distinction in one dialect plus
+      quoted licence names. A term map is a maintainer decision.
+- [~] **4.6 Sweep the prose layer, then gate it.** ~5000 occurrences across the
+      three largest pairs; sequenced behind `road-to-merge-surface-zero` (13 open
+      steps) because a tree-wide text sweep against its conflicting branches
+      multiplies the merge surface. The gate is
+      `lint_canonical_terms.ts` as the fourth member of the existing vocabulary
+      linter family, ratchet mode, reusing `check_md_language`'s
+      frontmatter/fence/marker skip machinery. Gated on 4.5.
+- [~] **4.7 The identifier layer stays `keep-duplicated` until someone renames
+      it deliberately.** Five `check_/lint_/move_artefact*` scripts with five
+      matching tests and four taskfile references against three
+      `*-artifact-*.md` contracts. Measured: nothing imports across the split, so
+      the divergence costs nothing at runtime. A rename is ~14 files plus
+      references — a refactor with its own blast radius, not a text substitution.
+
+## Phase 5 — Propagation: the change that only half landed
+
+- [x] **5.1 Give `downstream-changes` the closed-set case.** The rule carried the
+      find-ALL-callers Iron Law and the defect-pattern sweep, but
+      `grep -icE 'enum|variant|union|switch|case'` over it returned **0** — the
+      exact case that produces bad refactors was absent. Added: the row, the
+      Iron Law, discover-by-shape, the three-way classification (exhaustive /
+      deliberate fallback / missing case), the finding that a `default` clause
+      suppresses an exhaustiveness report entirely, and the synthetic-member
+      probe. No blanket rule against `default` — that would be refuted by every
+      protocol parser in the tree.
+      verify: `grep -icE 'enum|union|switch' src/rules/downstream-changes.md`
+      is greater than 0; the file stays under the 200-line rule cap.
+- [x] **5.2 Wire the rule into the two skills that need it.** Exactly one skill
+      cited `downstream-changes` before this. `code-review` gains a propagation
+      dimension (closed-set consumers listed with status; sibling-occurrence
+      sweep with a reported count, zero included), `code-refactoring` gains the
+      shape-search step where identifier search is insufficient.
+      verify: the propagation dimension exists and both skills resolve the rule
+      link; `check_references` exits 0.
+- [~] **5.3 Measure the exhaustiveness lint rule before enabling it.**
+      `eslint.config.js` carries no exhaustiveness rule. The available one is
+      type-aware, so it needs a TypeScript program built before linting — a real
+      cost against 134 + 135 gate scripts. Repo culture is measure-then-default,
+      and the same check exists in cheaper non-type-aware linters worth
+      benchmarking against it. Deferred to a measurement, not to a preference.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-25 | reviewer: claude/host -->
@@ -132,6 +242,9 @@ consolidation, and any clone-detector dependency. Those collide with the active
 | 2 | A review dimension that fires on legacy debt | implementation | A redundancy dimension with no diff-awareness turns every unrelated PR red against 534 pre-existing entry-guard copies | 2.3 states the diff-aware rule as part of the dimension itself: new duplication is the finding, existing duplication is baseline | Phase 2 — One authority, cited at all three moments |
 | 3 | The safe-abstraction check reads as permission to skip extraction | implementation | `keep-duplicated` as a first-class verdict can be quoted to avoid any consolidation work | The check requires a named verdict with its reason, so a keep decision is recorded and reviewable rather than silent | Phase 2 — One authority, cited at all three moments |
 | 4 | Baseline numbers rot before they are used | implementation | Counts measured today drift as the tree moves, and a stale baseline is worse than none because it looks like evidence | Every row carries the command that produced it, so any consumer can re-derive rather than trust the number | Phase 1 — One measured baseline |
+| 5 | A term sweep destroys a real distinction | product | `route`, `dispatch`, `delegate`, `spawn` and `forward` read as synonyms and denote five different mechanisms here; a sweep over them deletes information | 4.1 measured the concept clusters and found no defect; only the mechanical spelling pairs are sweep candidates, and `keep-distinct` is a first-class verdict | Phase 4 — The dual: one concept, one word |
+| 6 | The closed-set procedure becomes a blanket ban on `default` | implementation | An agent reading "a default hides the missing case" as "never write a default" would break every protocol parser and boundary parse in the tree | 5.1 states the three-way classification with deliberate fallback as a legitimate outcome, and says the blanket rule would be refuted | Phase 5 — Propagation: the change that only half landed |
+| 7 | The naming extension inflates the one authority it was meant to protect | product | `redundancy-taxonomy.md` grew from 132 to ~180 lines; a document nobody finishes reading enforces nothing | The carriers cite rather than restate, so the growth is paid once; the guideline stays inside its size band and the parked items keep enforcement out of it | Phase 4 — The dual: one concept, one word |
 
 ## Acceptance Criteria
 
@@ -141,11 +254,18 @@ consolidation, and any clone-detector dependency. Those collide with the active
 - [x] AC-2 — `src/skills/code-refactoring/SKILL.md` cannot reach an extraction
       without a recorded verdict, and `keep-duplicated` is available as a
       successful outcome.
-- [x] AC-3 — A reader can reproduce every number in the baseline artefact from
+- [x] AC-3 — A reader can reproduce every number in the baseline artifact from
       the commands it quotes, and the four corrections against the inbox claims
       are visible there.
 - [x] AC-4 — The seven divergent shipped twins are recorded with measured diff
       sizes and the decision is in front of the maintainer, not guessed.
+- [x] AC-5 — The taxonomy covers naming as well as duplication, and the same
+      three carriers cite it for both without restating either.
+- [x] AC-6 — A closed-set change cannot be called done from an identifier
+      search alone: the rule names the shapes, the classification, and the probe
+      that proves the sweep fired.
+- [x] AC-7 — Every number this branch asserts is reproducible with the command
+      printed beside it, and no number appears twice with two values.
 
 ## Parking lot — deliberately not now
 
@@ -153,7 +273,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
   `_lib/schema.ts`): ~500 files of churn against an active
   `road-to-merge-surface-zero` with 13 open steps on the same surface. Needs
   that roadmap closed first.
-- **`REPO_ROOT` consolidation**: measured refutation — 245 declarations, 29 at
+- **`REPO_ROOT` consolidation**: measured refutation — 245 declarations, 22 at
   the two-level depth. The copies encode different caller depths, so the verdict
   today is `keep-duplicated` until caller-location tests exist.
 - **Clone-detector dependency** (`jscpd`, `ast-grep`): neither is a dependency,
