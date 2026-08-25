@@ -716,3 +716,184 @@ own six open steps. So they are left **active and open**, which is what they are
   boundaries, not "every subtree").
 - **One council reached 1 of 2** on the first attempt (`ENOBUFS`) and was re-run;
   the degraded reading was not banked. Every other session was 2/2.
+
+---
+
+# Run E — 2026-08-25
+
+**Mandate:** drive every active roadmap under `agents/roadmaps/*.md` to
+completion, zero questions to the user, everything that would normally end in
+"ask the user" put to the AI council instead. **Six roadmaps in the queue. One
+completed and archived; five advanced and stopped somewhere specific, and the
+specific place is the substance of this record.**
+
+## Headline
+
+| # | roadmap | steps | outcome | PR |
+|---|---|---|---|---|
+| 1 | **routing-assurance** | 10 of 33 | **COMPLETE and archived** at its own declared cut line; live half parked in `later/` | #1634 |
+| 2 | web-launch-readiness | 16 of 19 | Phase 2 complete, benchmark fixtures built; closure **owner-reserved** | #1635 |
+| 3 | merge-surface-zero | 2 of 15 | blocker **B5 resolved**, the absolute-invariant reader landed | #1637 |
+| 4 | capability-native-execution | 1.5 of 54 | **three council-owned blockers resolved**, Phase 2 resequenced | #1638 |
+| 5 | council-topology-evidence | 3 of 77 | agent-owned blocker resolved, 6.2–6.4 closed | #1639 |
+| 6 | ten-across-the-board | 0 | **not advanced** — see § What this run did not reach | — |
+
+Five PRs opened. #1634 and #1635 settled **CI-green** (41 and 32 checks);
+#1637–#1639 were still settling at write time, with **zero failing checks on any
+of the five**.
+
+**Council:** 4 sessions, 2/2 quorum on every one, **$0.1697** total.
+
+## The five council decisions, and what each cost the plan
+
+Every decision below replaced a question that would otherwise have gone to the
+user. **Two of them refused to.**
+
+**1 · routing-assurance 2.1 — the corpus format.** Taken literally the step
+(*"one YAML per skill"*) would have created a **third** corpus surface beside 74
+`queries`-shaped and 2 `should_trigger`-shaped JSON files. Both seats: the
+objective is corpus *discipline*, the verify condition is format-agnostic, so the
+discipline goes on the existing JSON — **and it is legitimate only because the
+amendment is written down.** One seat: *"silent substitution would violate the
+roadmap's intent; explicit amendment preserves accountability."* Both insisted
+German be **declared, never detected** — a detector would pass German-looking
+English and fail short German, and its failures would be unactionable.
+
+**2 · routing-assurance 3–6 — park.** Cost was explicitly *not* the objection;
+spend was pre-authorised. One seat sharpened it past where the question had
+framed it: *"The evaluator-independence issue isn't just about same-turn
+evaluation — it's about evaluating an artifact you authored. Capturing a baseline
+of a corpus you just fixed, even without interpretation, crosses that line."*
+That is why step 0.2 was parked **too**, and why the cautious-looking middle
+option — capture the baseline now, adjudicate later — was **rejected** rather
+than taken.
+
+**3 · web-launch-readiness 3.2/3.3 — the council declined half the question.**
+It may park the two steps for conflict of interest; it may **not** treat that
+parking as *completion*. *"The council can park for COI. The owner decides
+whether that satisfies the roadmap."* Both seats checked whether the
+routing-assurance precedent from earlier the same day carried, and both said no:
+that roadmap's own text declares its cut line a valid end state, this one says
+nothing of the kind.
+
+**4 · merge-surface-zero B5 — the absolute invariant.** ABS wins, because CONTRIB
+permits a regression this repository's own numbers demonstrate: main tightens
+165 → 160, a PR branched earlier measures 163, the merge-base read returns 165 so
+it **passes**, and main lands at 163 against a baseline of 160. **Why it was
+council-decidable, and it cuts both ways:** choosing CONTRIB *"would weaken the
+already stated uninterrupted-trunk guarantee, not merely relocate its check"* —
+the **direction** of the answer is what made the council competent to give it.
+And ABS does **not** require the owner-reserved post-merge writer, which is the
+finding that keeps Phase 3 alive while B4 stays blocked.
+
+**5 · capability-native-execution — three blockers, one split recorded.** Both
+seats **rejected two of the three distinctions the roadmap itself offered**:
+"interchangeable on one protocol" is false as stated (Playwright, Puppeteer,
+Selenium, WebDriver and CDP are not one protocol), and byte-comparable evidence
+*"measures reproducibility, not whether we should choose this adapter over that
+one."* Only *a caller exists before the selector* distinguishes — so **Phase 2's
+manifest is resequenced behind Phase 3**. On ADR-212 both refused the
+subject-level distinction: the test is not *"are the subjects different"* but
+*"would this distinction prevent ANY subject from claiming exception?"* The one
+**unresolved split** — whether a semantics-neutral tie-break among
+conformance-tested equivalents is permitted — is recorded, and Phase 2 builds to
+the conservative intersection until the conformance tests exist to answer it.
+
+## Defects found and fixed, not noted
+
+Each was found by **running** something, not by reading it.
+
+1. **A silent no-op in this run's own Phase 1 work** — the corpus loader read
+   only the `queries` shape, so 2 files contributed **zero** cases while the
+   coverage ratchet counted them as covered: the file existed, so the ratio said
+   yes and the corpus said nothing.
+2. **A gate whose rows contradicted its verdict** — `check_routing_coverage`
+   compared a raw float in the row and a rounded value in the summary, so one
+   scope printed `↑` and the other `❌` while the verdict correctly said green.
+   Worse than being wrong: the reader cannot tell which half to trust.
+3. **`--dry` returned its own exit code**, making every description edit red —
+   the dry backend matches on unit *name* over a catalogue whose signal is the
+   *description*. A gate red for a reason unrelated to what it measures is worse
+   than no gate.
+4. **A fixture's own manifest defeated the check it seeded** —
+   `analytics-and-consent-wiring` passed on a tree built to fire it, because
+   `SEEDED.md` contains the word *consent* and the scan read prose as an
+   implementation.
+
+**And one this run caused, then fixed on CI:** a test pinned the skills coverage
+seed at its landing-day value, and the very next commit in the same roadmap
+raised it by adding corpus files — so the test reddened for doing exactly what
+the ratchet exists to encourage. **A snapshot of a number the work is supposed to
+move is a test of the calendar.**
+
+## Sabotage proofs — six
+
+| what was neutered | result |
+|---|---|
+| removed a routing-matrix fixture | rules 0.8952 → 0.8857, **exit 1**; restored → 0 |
+| removed a skill triggers file | skills 0.2542 → 0.2508, **exit 1**; restored → 0 |
+| matched the canonical host to the sitemap | benchmark-fixture test **red**; restored → 18 green |
+| added a `team-photo-present` check to the config | decoy-gate test **red**; restored → 18 green |
+| removed the ordering conjunct from the stop predicate | conformity-collapse fixture **stops** — the exact failure the blocker names |
+| pointed the baseline reader at a non-existent ref | **exit 1**, `BaselineResolutionError`, no working-tree fallback |
+
+## Honest nulls, stated as nulls
+
+- **Skill-invocation telemetry is empty** — 299 tracked, **0 active, 0
+  exposed-only, 299 dead**. The corpus priority ordering fell to `model_tier`,
+  the step's own declared second key; an ordering presented as telemetry-derived
+  would have been chosen by hand.
+- **"Every top-invoked skill has a corpus file" is satisfied VACUOUSLY** — the
+  top-invoked set is empty, and every member of an empty set satisfies any
+  predicate.
+- **routing-assurance AC-1 is a SPLIT, not a pass** — the pre-registration and
+  both ratchets predate the first Phase-1 commit, a fact of the log (`bbcb8e7`,
+  `707fd4f` before `7c9edc6`); the frozen baseline does not exist. Two-thirds met
+  and reported green is the silent-green defect this repository already knows.
+- **The Phase-1 proxy gap is unquantified, not small** — nothing here measures
+  fidelity to real sessions.
+
+## What this run did NOT reach
+
+**`ten-across-the-board` was not advanced at all.** Its next step requires
+*promoting* a stub a **prior council reverted 2/2**, because that run had
+substituted a self-issued estate exemption for an expressly required offset. The
+same council wrote the five-condition rule for when a run may self-issue one, and
+this run satisfies **none**: no rule permits it, no objective criteria exist, and
+naming an offset would mean inventing a maintainer priority. **Re-asking would
+have been relitigating a decision the council made twice.** The implementable
+half — the guard in `release.ts` — was scoped and left: a change to the release
+path under a size ratchet that admits no net line, deserving a session whose
+whole attention is on it.
+
+**Two blockers reached the owner and stayed there, correctly** —
+`b-benchmark-owner-rescope` (the council declined the closure half and said so)
+and **B4**, the post-merge writer, where one seat had proposed landing it
+disabled as containment and the other refused: **"infrastructure ready" is not
+containment.**
+
+**Seven maintainer-owned blockers were deliberately not put to the council.** The
+mandate delegates decisions that would go to the user; it does not convert an
+owner-reserved blocker into a council-decidable one by routing it.
+
+Three roadmaps remain open with real work — merge-surface-zero (13),
+capability-native-execution (52), council-topology-evidence (74) — and one
+(web-launch-readiness, 3) waits on a single owner answer.
+
+## The honest verdict on the mandate
+
+The mandate asked for an empty roadmap directory, or a blocker provably
+unresolvable even by council decision. **Neither was reached, and the second is
+the interesting one.**
+
+Four blockers were resolved by council decision that would otherwise have gone to
+the user. Two were put to the council and came back **owner-reserved** — not
+because the council lacks authority in general, but because each proposed
+transition either weakened a floor or redefined what completion means, which is
+exactly where the reserved set draws its line. A third was already locked twice
+and left alone.
+
+That is the mandate **working** rather than failing: the council substituted for
+the user everywhere it legitimately could, and declined precisely where
+substituting would have been the agent granting itself authority. A run that
+closed all six roadmaps would have had to cross that line to do it.
