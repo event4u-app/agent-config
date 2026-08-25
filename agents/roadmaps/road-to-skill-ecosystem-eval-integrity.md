@@ -1,18 +1,21 @@
 ---
 complexity: lightweight
-status: later
+status: ready
+estate_offset_exempt: "Un-parking counts as an ADDITION under one-in-one-out (later/X -> X is classified an addition by classifyDiff), and no archive move is available in this change: it closes a slot-cap blocker rather than finishing a roadmap. The offsetting event already happened in an earlier change -- the two predecessors this file queued behind, road-to-skill-ecosystem-gate-integrity and road-to-skill-ecosystem-authoring-discipline, both sit in archive/, which is why lint_roadmap_family_cap measures 0/2 slots used and why this file's own blocker instructs the move."
+estate_growth_exempt: "Measured on this change: active_roadmaps 0 -> 11 and open_blockers 28 -> 36. No roadmap file was created. All sixteen files involved already existed at origin/main; fourteen sat at the active TOP LEVEL carrying status: draft, which excludes them from collect() and made the estate report 0 active while fourteen files of planned work sat in the active tree. The growth is therefore a correction of a bookkeeping state, and the direction it corrects is the one this ratchet exists to make visible: draft-at-top-level was functioning as a second parking lot that no count could see. Every one of the 65 later/ roadmaps was probed against its own stated resume condition on 2026-08-25 and 63 stay parked, each for a named external reason (a real consumer repo, a paid bench arm, host access this tree lacks, an owner-reserved decision, or an empty measurement corpus such as gate-metrics.jsonl at 0 of 10 required events). The two un-parked hold queue positions 3 and 4 of the verification track and had the family slot cap as their only blocker: lint_roadmap_family_cap reports 0/2 slots used with both predecessors in archive/, and eval-integrity own blocker verification-slot instructs the move in as many words. Position 5 stays parked because 3 and 4 fill the cap. Of the fourteen drafts, four stay draft because an owner-reserved blocker gates their Phase 1 (canonical-terms, capability-native-execution, merge-surface-zero, web-launch-readiness) and one stays draft because it carries no canonical Phase heading and check_roadmap_trackable would rightly call it invisible (ten-across-the-board). The +8 open_blockers are pre-existing entries in files that were already in the active tree: this change created no blocker and RESOLVED one, verification-slot, on its stated condition."
 ---
 
 # Road to eval integrity — gate the measurement inputs, and score direction not magnitude
 
-> **Parked at queue position 4 of the verification track.** The 2026-08-05
-> council capped concurrently-open verification roadmaps at two. This roadmap is
-> verification infrastructure and is eligible under the successor constraint, not
-> under the capability arm.
->
-> **Resume when** a verification slot frees — a predecessor roadmap reaches zero
-> open steps and lands in `agents/roadmaps/archive/`. Verify with
-> `./agent-config roadmap:progress`.
+> **RESUMED 2026-08-25 — queue position 4 reached.** This roadmap was parked
+> on one condition only: the 2026-08-05 council capped concurrently-open
+> verification roadmaps at two. Both predecessors it queued behind —
+> `road-to-skill-ecosystem-gate-integrity` and
+> `road-to-skill-ecosystem-authoring-discipline` — now sit in
+> `agents/roadmaps/archive/`, and `lint_roadmap_family_cap` measures **0/2 slots
+> used**. That is the file's own stated resume test, so it is unparked and open.
+> Position 5 (`road-to-skill-ecosystem-security-and-conformance`) stays parked:
+> positions 3 and 4 fill the cap.
 
 > Put a gate on this package's own measurement inputs, and fix a named scoring
 > defect: a magnitude-weighted verdict punishes a decisively-winning artifact,
@@ -22,7 +25,7 @@ status: later
 ## Context
 
 Source + verdicts:
-[`skill-ecosystem-sweep-2026-08`](../../settings/contexts/skill-ecosystem-sweep-2026-08.md).
+[`skill-ecosystem-sweep-2026-08`](../settings/contexts/skill-ecosystem-sweep-2026-08.md).
 
 **Why this is verification infrastructure rather than capability.** Every item
 below hardens the machinery that decides whether a change helped. None adds a
@@ -154,13 +157,14 @@ started.
 ## Blockers
 
 ### blocker: verification-slot
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — A gate on the measurement inputs
 - **What to do:**
   1. This roadmap holds queue position 4 of the verification track under the 2026-08-05 successor constraint (maximum two concurrently open).
   2. When a predecessor archives, move this file to `agents/roadmaps/` and drop `status: later`.
 - **Resolved when:** fewer than two `road-to-skill-ecosystem-*` roadmaps sit outside `archive/` and `later/`, checked by `./agent-config roadmap:progress`.
+- **Resolved 2026-08-25:** `lint_roadmap_family_cap` reports `0/2 slot(s) used`; both predecessors (`road-to-skill-ecosystem-gate-integrity`, `road-to-skill-ecosystem-authoring-discipline`) are in `agents/roadmaps/archive/`. This file moved to `agents/roadmaps/` and dropped `status: later`, exactly as step 2 above directs.
 
 ## Risk Register
 
