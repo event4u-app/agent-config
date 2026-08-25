@@ -55,7 +55,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
 
 ## Phase 2 — One authority, cited at all three moments
 
-- [ ] **2.1 Write the shared redundancy taxonomy as one guideline.** Create
+- [x] **2.1 Write the shared redundancy taxonomy as one guideline.** Create
       `docs/guidelines/redundancy-taxonomy.md` holding the implementation
       classes (exact clone, renamed clone, near clone, structural pattern,
       boilerplate, test repetition, intentional independence, wrong
@@ -70,17 +70,17 @@ consolidation, and any clone-detector dependency. Those collide with the active
       verify: `test -f docs/guidelines/redundancy-taxonomy.md` and the file names
       all six representation classes and both keep-side verdicts.
 
-- [ ] **2.2 Point the authoring moment at it.** In
+- [x] **2.2 Point the authoring moment at it.** In
       `docs/guidelines/code-clarity.md`, add the Information Delta Test as the
       decision procedure the existing comment-discipline section already implies
       but never states, and link the taxonomy for the representation classes.
       No new rule and no new skill: both source consolidations converged on the
       finding that new prose carriers are themselves the redundancy problem.
       verify: `grep -c 'redundancy-taxonomy' docs/guidelines/code-clarity.md`
-      returns at least 1, and `./scripts-run src/scripts/check_references --quiet`
+      returns at least 1, and `./scripts-run src/scripts/check_references`
       exits 0.
 
-- [ ] **2.3 Give the review moment a real redundancy dimension.** In
+- [x] **2.3 Give the review moment a real redundancy dimension.** In
       `src/skills/code-review/SKILL.md`, replace the bare `DRY` token in the
       Quality dimension with a dimension that names the taxonomy, requires a
       verdict rather than a finding, and states the diff-aware rule: newly
@@ -89,7 +89,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
       verify: `grep -c 'redundancy-taxonomy' src/skills/code-review/SKILL.md`
       returns at least 1 and the bare `DRY,` token is gone.
 
-- [ ] **2.4 Gate the refactoring moment.** In
+- [x] **2.4 Gate the refactoring moment.** In
       `src/skills/code-refactoring/SKILL.md` — which today carries zero
       redundancy content while being the skill that performs extractions — add
       the safe-abstraction check that runs before any extract: is this the same
@@ -98,10 +98,10 @@ consolidation, and any clone-detector dependency. Those collide with the active
       future divergence be a defect or legitimate evolution. A `keep-duplicated`
       outcome ends the refactor successfully.
       verify: `grep -c 'redundancy-taxonomy' src/skills/code-refactoring/SKILL.md`
-      returns at least 1, and `./scripts-run src/scripts/skill_linter --quiet`
+      returns at least 1, and `./scripts-run src/scripts/skill_linter --all --quiet`
       exits 0.
 
-- [ ] **2.5 Regenerate the projections.** Run `task sync` then
+- [x] **2.5 Regenerate the projections.** Run `task sync` then
       `task generate-tools` so `dist/agent-src/` and the per-tool trees carry the
       edited skills.
       verify: `git status --short dist/agent-src` shows the two edited skills and
@@ -109,7 +109,7 @@ consolidation, and any clone-detector dependency. Those collide with the active
 
 ## Phase 3 — The delivery defect, decided by its owner
 
-- [ ] **3.1 Name the ADR the twins need.** Add a short proposal section to the
+- [x] **3.1 Name the ADR the twins need.** Add a short proposal section to the
       baseline artefact stating what an ADR must settle: whether
       `src/scripts/` becomes the sole authority with the template copies
       generated at build time, and what happens to consumers pinned to the
@@ -135,16 +135,16 @@ consolidation, and any clone-detector dependency. Those collide with the active
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One file states the redundancy taxonomy and verdict set, and the
+- [x] AC-1 — One file states the redundancy taxonomy and verdict set, and the
       authoring, review and refactoring carriers each cite it rather than
       restating it.
-- [ ] AC-2 — `src/skills/code-refactoring/SKILL.md` cannot reach an extraction
+- [x] AC-2 — `src/skills/code-refactoring/SKILL.md` cannot reach an extraction
       without a recorded verdict, and `keep-duplicated` is available as a
       successful outcome.
-- [ ] AC-3 — A reader can reproduce every number in the baseline artefact from
+- [x] AC-3 — A reader can reproduce every number in the baseline artefact from
       the commands it quotes, and the four corrections against the inbox claims
       are visible there.
-- [ ] AC-4 — The seven divergent shipped twins are recorded with measured diff
+- [x] AC-4 — The seven divergent shipped twins are recorded with measured diff
       sizes and the decision is in front of the maintainer, not guessed.
 
 ## Parking lot — deliberately not now
