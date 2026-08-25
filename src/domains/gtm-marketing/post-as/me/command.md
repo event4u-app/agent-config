@@ -75,7 +75,11 @@ operator notes, not voice signal.
 Per [`write-engine § 2`](../../../docs/contracts/write-engine.md).
 Flag form: `--tone=<formal|casual|neutral>`,
 `--length=<words>`, `--channel=<linkedin-post|tweet|blog|freeform>`,
-`--audience=<text>`. Missing flags → interactive prompt, **one
+`--audience=<text>`. The channel values and their length defaults are
+the schema-validated set in `src/config/drafting-channels.yml` — edit
+that file and `write-engine.md` together, never one alone;
+`tests/scripts/drafting_channels_schema.test.ts` fails on drift, and on
+the short form `linkedin`, which is not a value. Missing flags → interactive prompt, **one
 question per turn**, in the order Topic → Tone → Length → Channel →
 Audience. Defaults inherit from the engine's per-channel table and
 the pace mapping above.
