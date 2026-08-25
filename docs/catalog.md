@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **732 public artefacts** shipped by
+Consumer-facing catalog of all **733 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -657,7 +657,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (113)
+## Guidelines (114)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -681,6 +681,7 @@ are excluded.
 | guideline | [`domain-adoption-gates`](../docs/guidelines/agent-infra/domain-adoption-gates.md) | agent-infra |  |
 | guideline | [`domain-eval-anti-pattern`](../docs/guidelines/agent-infra/domain-eval-anti-pattern.md) | agent-infra |  |
 | guideline | [`domain-pack-architecture`](../docs/guidelines/agent-infra/domain-pack-architecture.md) | agent-infra |  |
+| guideline | [`downstream-changes-mechanics`](../docs/guidelines/agent-infra/downstream-changes-mechanics.md) | agent-infra |  |
 | guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md) | agent-infra |  |
