@@ -293,11 +293,27 @@ it.
         reintroduced violations. A test asserts it never returns the exculpatory
         answer when the merge-base reading is missing.
 
-      **STILL OPEN, and it is the larger half:** every gate's read site must move
-      onto this reader, and the PR job must measure on `refs/pull/N/merge` with a
-      freshness binding so the result that passed is the result that lands. Both
-      seats named that binding as essential and neither treated the synthetic
-      merge alone as sufficient.
+      **The 18 read sites migrated in one move, not eighteen.**
+      `GATE_BASELINE_TARGET_REF` switches `checkRatchet` itself — every caller
+      goes through it, so there is no chance of migrating seventeen and
+      forgetting one. Demonstrated end-to-end on a real gate:
+      `GATE_BASELINE_TARGET_REF=origin/main check_ci_local_parity` → exit 0;
+      pointed at a ref that does not exist → **exit 1** with
+      `BaselineResolutionError: cannot resolve target ref`; unset → unchanged.
+
+      **Unset is not a fallback, and the distinction is the council's clause.** A
+      local run with no target configured has no merge to judge, so the
+      working-tree read is the only answer there. What is forbidden — and what
+      throws — is a target that IS configured and fails to resolve.
+
+      **STILL OPEN, and it is the remaining half:** the PR job must measure on
+      `refs/pull/N/merge` and carry a freshness binding, so the result that
+      passed is the result that lands. Both seats named that binding as
+      essential and neither treated the synthetic merge alone as sufficient —
+      one was explicit that `refs/pull/N/merge` *"is not enough"* without branch
+      protection or a merge queue holding the head/base pair. Making a check
+      **required** is a repo-admin action, so that half ends outside this
+      roadmap's reach whatever it builds.
 
       **The contradiction that produced B5, kept for the record.** These two
       acceptance criteria selected **different contracts** and no implementation

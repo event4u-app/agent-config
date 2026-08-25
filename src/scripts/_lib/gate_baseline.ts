@@ -35,6 +35,7 @@
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import process from 'node:process';
 
 /** Days a baseline may sit unchanged before it must be fixed or reaffirmed. */
 export const STALE_AFTER_DAYS = 56;
@@ -243,6 +244,12 @@ export interface RatchetOptions {
     baselineRel?: string;
     /** Override "now" as `YYYY-MM-DD` (tests); defaults to the current UTC date. */
     today?: string;
+    /**
+     * Read the governing baseline from this commit instead of the working tree.
+     * Defaults to `process.env[TARGET_REF_ENV]`; absent means a local run with
+     * no merge to judge, which is not the same as a failed resolution.
+     */
+    targetRef?: string;
 }
 
 /**
@@ -252,9 +259,30 @@ export interface RatchetOptions {
  * does not print or exit. A gate with no entry behaves exactly as it did before
  * the ratchet existed: any violation fails.
  */
+/**
+ * The env var that switches every ratchet onto the ABSOLUTE invariant at once.
+ *
+ * Set it to the target ref (`origin/main`, or the base SHA a PR job already
+ * knows) and all 18 `checkRatchet` call sites read the governing baseline from
+ * that commit instead of the working tree — no per-gate migration, no chance of
+ * migrating seventeen and forgetting one.
+ *
+ * **Unset is not a fallback.** A local run with no target configured has no
+ * merge to judge, so the working-tree read is the right and only answer there.
+ * What the council forbade is different and is honoured: a target that IS
+ * configured and fails to resolve throws, rather than quietly reverting to the
+ * working tree and changing the governing policy on an infrastructure error.
+ */
+export const TARGET_REF_ENV = 'GATE_BASELINE_TARGET_REF';
+
 export function checkRatchet(opts: RatchetOptions): BaselineVerdict {
     const { gate, actual } = opts;
-    const file = loadBaselines(opts.repoRoot, opts.baselineRel ?? BASELINE_REL);
+    const rel = opts.baselineRel ?? BASELINE_REL;
+    const target = opts.targetRef ?? process.env[TARGET_REF_ENV];
+    const file =
+        target !== undefined && target !== ''
+            ? loadBaselinesAt(opts.repoRoot, target, rel)
+            : loadBaselines(opts.repoRoot, rel);
     const entry = file.gates[gate];
 
     if (entry === undefined) {

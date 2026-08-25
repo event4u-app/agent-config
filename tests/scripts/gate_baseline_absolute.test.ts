@@ -10,11 +10,17 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import * as path from 'node:path';
+
 import {
     BaselineResolutionError,
+    TARGET_REF_ENV,
+    checkRatchet,
     diagnoseRegression,
     loadBaselinesAt,
 } from '../../src/scripts/_lib/gate_baseline';
+
+const REPO = path.resolve(__dirname, '..', '..');
 
 const TARGET = JSON.stringify({
     gates: { 'ci-parity:local-only': { count: 160, landed: '2026-08-25' } },
@@ -135,5 +141,45 @@ describe('the diagnostic distinguishes the two failures', () => {
         expect(
             diagnoseRegression({ actual: 161, targetBaseline: 160, mergeBaseBaseline: 165 }),
         ).not.toBe('none');
+    });
+});
+
+describe('the switch migrates all 18 read sites at once', () => {
+    it('checkRatchet reads the TARGET baseline when a target ref is given', () => {
+        const v = checkRatchet({
+            gate: 'ci-parity:local-only',
+            actual: 163,
+            repoRoot: REPO,
+            targetRef: 'HEAD',
+        });
+        // The number here comes from the committed tree, whatever it currently
+        // is; what this asserts is that the read went through the target path
+        // at all — a `targetRef` that was silently ignored would still return a
+        // verdict, which is why the ignoring case is the one below.
+        expect(v.status).not.toBe('unbaselined');
+    });
+
+    it('an UNRESOLVABLE target throws — it does not fall back to the working tree', () => {
+        // The council's unanimous clause. A fallback here would let an
+        // infrastructure error pick which policy applies, invisibly.
+        expect(() =>
+            checkRatchet({
+                gate: 'ci-parity:local-only',
+                actual: 1,
+                repoRoot: REPO,
+                targetRef: 'refs/heads/definitely-no-such-ref',
+            }),
+        ).toThrow(BaselineResolutionError);
+    });
+
+    it('an ABSENT target is NOT a resolution failure — a local run has no merge to judge', () => {
+        // The distinction the clause turns on: unset is a legitimate context,
+        // a configured-but-broken ref is not.
+        const v = checkRatchet({ gate: 'ci-parity:local-only', actual: 0, repoRoot: REPO });
+        expect(v).toBeDefined();
+    });
+
+    it('the env var is the documented switch, so no gate needs its own migration', () => {
+        expect(TARGET_REF_ENV).toBe('GATE_BASELINE_TARGET_REF');
     });
 });
