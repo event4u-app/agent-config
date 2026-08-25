@@ -65,16 +65,70 @@ not a divergence between them. Step 1.4 below.
 
 ## Phase 1 — Read before deciding
 
-- [ ] **1.1 Characterise `memory_signal.ts`'s 36 non-comment lines.** Name each
+- [x] **1.1 Characterise `memory_signal.ts`'s 36 non-comment lines.** Name each
       difference, and for each say which side has it and whether a consumer
       running the template today would behave differently.
       verify: a table in this roadmap with one row per difference; no row reads
       "misc" or "formatting".
-- [ ] **1.2 Characterise `check_memory_proposal.ts`'s 45 non-comment lines**,
+
+      **DONE 2026-08-26. The 36 lines are ONE difference in four hunks, not 36
+      differences** — and that reframing is the finding: the dev side carries
+      ADR-130's provenance gate and the template side carries **none of it**.
+
+      | # | difference | side | would a consumer running the template behave differently today? |
+      |---|---|---|---|
+      | 1 | `ProvenanceRefusedError`, `_GLOBAL_STORE_MARKER`, `_origin_is_global()`, `_assert_project_writable()` — the ADR-130 provenance gate | **dev only** | **Yes, and this is the consequential one.** The template can write a `subject: user` record, and a record whose `origin` resolves into the user-global store, into tracked project intake. The dev side **throws** on both. |
+      | 2 | the call site: default `subject` to `'project'` when absent, then `_assert_project_writable(record)` | **dev only** | **Yes** — without it the gate above is unreachable even if the functions were copied. A record with no `subject` also stays absent rather than defaulting. |
+      | 3 | `import * as os from 'node:os'` | **dev only** | No, on its own — it exists solely to expand `~` inside `_origin_is_global`. Listed because removing it without #1 would break the build, so it belongs to that verdict rather than being loose. |
+
+      **No row reads "misc" or "formatting"**, and none needed to: every hunk
+      belongs to the same mechanism.
+
+      **The likely verdict is `dev-side-correct` and the reconciliation direction
+      is template ← dev**, but 2.1 records the verdict, not this step. Naming it
+      here anyway because it changes how the release class reads: the template is
+      not merely *different*, it is **missing a safety gate an ADR requires**,
+      which strengthens rather than weakens 2.3's decision against a silent patch.
+- [x] **1.2 Characterise `check_memory_proposal.ts`'s 45 non-comment lines**,
       same shape. The mutual-exclusion difference is a CLI contract change in
       whichever direction it lands, so it is named explicitly.
       verify: the table states, for the `--intake-id` / `--proposal` pair, what
       each side does today and which is intended.
+
+      **DONE 2026-08-26. The 45 lines are FOUR differences.**
+
+      | # | difference | side | would a consumer running the template behave differently today? |
+      |---|---|---|---|
+      | 1 | `--quiet` — the flag, its usage line, and suppression of the `✅ … gate passed` message | **dev only** | **Yes** — a template consumer cannot suppress the pass line, so the gate is unusable in a quiet pipeline. Surplus feature on the dev side. |
+      | 2 | mutual exclusion of `--intake-id` / `--proposal` | **both, implemented differently** | **Yes, in the error message — see below.** Both sides *reject* the combination; they disagree on what they say. |
+      | 3 | `assertScanned({ gate: 'check_memory_proposal', … })` with its `allowEmpty` rationale | **dev only** | **Yes** — the dev side declares its scan scope to the gate ledger and is protected by `DeadScopeError`; the template scans an undeclared scope, so a dead root reads as a clean pass. |
+      | 4 | `import { assertScanned } from './_lib/scan_scope.js'` | **dev only** | No, on its own — it belongs to #3's verdict for the same build reason as 1.1's row 3. |
+
+      **Row 2 in full, because the step demands it explicitly — and it was
+      MEASURED, both sides, both argument orders:**
+
+      | invocation | dev side says | template side says |
+      |---|---|---|
+      | `--intake-id A --proposal B` | `argument --proposal: not allowed with argument --intake-id` | `argument --proposal: not allowed with argument --intake-id` |
+      | `--proposal B --intake-id A` | `argument --proposal: not allowed with argument --intake-id` | **`argument --intake-id: not allowed with argument --proposal`** |
+
+      Dev checks **after** the parse loop, so its message is **order-stable**.
+      Template checks **inside** the loop, so it names whichever flag arrived
+      **second**.
+
+      **Which is intended is NOT obvious, and this step deliberately does not
+      decide it.** The reflex is to call the dev side correct because a stable
+      message is a better contract. But this repository states **argparse parity**
+      as a convention — `archive_completed_roadmaps.ts` records mirroring
+      *"the argparse usage / error text"* EXACTLY — and argparse names the
+      argument being *added* when it conflicts, which is what the **template**
+      does. So the template may be the faithful one and the **dev side** may be
+      the drift.
+
+      Recorded as **undecided, with both behaviours measured**, and handed to 2.1
+      where verdicts belong. Guessing here would have inverted the answer on a
+      plausible-sounding reflex, which is exactly why this step says *"named
+      explicitly"* rather than *"resolved"*.
 - [ ] **1.3 Characterise `check_memory.ts` (195) and `memory_lookup.ts` (506).**
       These two carry most of the estate's divergence and may split into more
       than one decision each.
@@ -99,10 +153,54 @@ direction and its consumer-visible effect.
       regression bisects to one file.
       verify: `diff -u` between the two copies of each reconciled twin shows
       only differences a `keep-duplicated` verdict covers.
-- [ ] **2.3 State the release class.** Reconciling changes behaviour for installs
+- [x] **2.3 State the release class.** Reconciling changes behaviour for installs
       already running the template side, so the change is a patch, a minor, or
       gated behind a migration note — decided, not defaulted.
       verify: the class is recorded here with its reason before 2.2 lands.
+
+      **DECIDED 2026-08-25 — MINOR, with a migration note naming each reconciled
+      twin.** AI council 2/2 on the class itself; recorded here **before** any
+      reconciliation lands, which is what AC-3 asks for.
+
+      **Patch was rejected on Hyrum's Law, explicitly.** The blocker's option (1)
+      rested on *"the template side is the unintended copy and its behaviour was
+      never specified"*. Both seats refused the inference: with enough consumers,
+      **observable** behaviour becomes a depended-on contract regardless of what
+      was documented, so *"unspecified"* describes the record and not the
+      dependency. One seat: a patch that silently changes what an installed
+      template does is *"too quiet"* for a change the roadmap concedes is
+      consumer-visible.
+
+      **The flag was proposed and is NOT adopted — a 1-of-2 split, recorded as
+      one.** One seat argued for option (3), a `memory.reconcile_templates` flag
+      defaulting to current behaviour for one release, on the ground that memory
+      errors *"can be silent and compound"* where an API break fails a test
+      immediately. The other refused on two grounds, and both are adopted:
+
+      1. **Procedural** — option (3) as written *"is not a complete release
+         decision"*: it names a rollout mechanism, not a class. "Minor with a
+         flag" combines (2) and (3) rather than choosing among the three offered.
+      2. **Evidential** — *"'Silent data corruption' is not supported by the
+         supplied facts. The artifact establishes behavior divergence, not
+         corruption or data loss."*
+
+      The second is decisive here for a reason bigger than this blocker: **the
+      same evidence discipline that killed `plan-injection-decision`'s
+      attestation in this same council session kills this flag.** Both are
+      defensive mechanisms proposed against a hypothesised failure mode with no
+      recorded instance. Adopting one while refusing the other on identical
+      evidence would be incoherent.
+
+      **What the minor must carry**, per both seats: every reconciled twin named,
+      with its old behaviour, its new behaviour, the likely consumer impact, the
+      remediation, and a rollback path. That is Phase 2's deliverable, and 2.2's
+      one-commit-per-twin shape already produces the per-twin granularity it
+      needs.
+
+      **Revisit-if:** consumer-corpus testing shows irreversible effects, delayed
+      failures, or migration costs documentation cannot mitigate. Then the flag
+      is reopened — **as a complete release-class proposal**, which is the form
+      it lacked here.
 
 **Exit:** the four twins carry only differences a verdict covers.
 
@@ -149,8 +247,16 @@ direction and its consumer-visible effect.
 - **If you do nothing:** Phase 1 completes and Phase 2 cannot land, because
   every verdict is a consumer-visible behaviour change with no declared release
   class.
-- **Status:** open.
-- **Resolved when:** the class is recorded at step 2.3 with its reason.
+- **Status:** resolved 2026-08-25 — **MINOR** (option 2), recorded at step 2.3
+  with its reason. AI council 2/2 on the class; the flag proposal was a 1-of-2
+  split and is not adopted, with both refusal grounds recorded at the step.
+  Inlined convergence: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+  3 rounds, blind chairman, quorum concluded 2/2, $0.070 actual, under the
+  maintainer's standing delegation for the autonomous drain run.
+- **Resolved when:** the class is recorded at step 2.3 with its reason. **Met** —
+  2.3 carries the class, why patch was rejected (Hyrum's Law: observable
+  behaviour is depended-on regardless of documentation), why the flag was not
+  adopted, and what the minor must carry.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-25 | reviewer: claude/host -->
@@ -169,7 +275,11 @@ direction and its consumer-visible effect.
       as an unread subtree with a reason.
 - [ ] AC-2 — Every named difference carries a verdict, and no verdict is
       assigned per file where the file's differences point opposite ways.
-- [ ] AC-3 — The release class is recorded before any reconciliation lands.
+- [x] AC-3 — The release class is recorded before any reconciliation lands.
+      **Met.** **MINOR**, recorded at 2.3 on 2026-08-25, and no reconciliation
+      has landed — Phase 2's steps 2.1 and 2.2 are still open, so the ordering
+      this criterion exists to guarantee holds by construction rather than by
+      assertion.
 - [ ] AC-4 — The parity gate is registered on all four surfaces, reds on a
       planted behavioural divergence, and stays green on a planted comment-only
       one.
