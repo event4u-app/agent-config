@@ -37,11 +37,36 @@ Use this skill when:
 2. **Detect the change-type + depth** — route to the right checklist and pick the review depth (below).
 3. **Architecture** — does the approach make sense? Right layer? Right pattern?
 4. **Correctness** — does it actually work? Edge cases? Error handling?
-5. **Quality** — types, naming, readability, DRY, SOLID?
-6. **Security** — input validation, authorization, injection?
-7. **Performance** — N+1 queries, missing indexes, unbounded queries?
-8. **Tests** — are new paths covered? Are existing tests still valid?
-9. **Conventions** — does it follow project standards?
+5. **Quality** — types, naming, readability, SOLID?
+6. **Redundancy** — see below; a verdict, not a "this looks duplicated".
+7. **Security** — input validation, authorization, injection?
+8. **Performance** — N+1 queries, missing indexes, unbounded queries?
+9. **Tests** — are new paths covered? Are existing tests still valid?
+10. **Conventions** — does it follow project standards?
+
+## The redundancy dimension
+
+`DRY` as a checklist word produced findings nobody could act on: it names a
+principle, not a decision, and it has no answer for the case where two copies
+should stay. Replace it with a verdict.
+
+Classify the finding against
+[`redundancy-taxonomy`](../../../docs/guidelines/redundancy-taxonomy.md) —
+implementation, knowledge, or representation — and record one verdict from that
+document's list. `keep-duplicated` and `de-abstract` are successful outcomes; a
+finding with no recorded verdict stays open. Knowledge, policy, contract and
+delivery-authority duplication outrank clone percentage: two copies of a
+*decision* diverge into a bug, two copies of a loop usually do not.
+
+**Diff-aware, always.** The finding is duplication this change **introduces**,
+or duplication on a surface it touches. Pre-existing duplication is baseline —
+it is named once if the reviewer thinks it matters and it never fails an
+unrelated change. A review that reds a diff against debt it did not create is a
+review nobody will run twice.
+
+For comments, labels, tooltips, placeholders and empty states, run the
+Information Delta Test from the same document rather than judging text volume.
+A reduction that removes an accessibility name is a defect, not a cleanup.
 
 ## Change-type routing — load only the checklist the diff needs
 

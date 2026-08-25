@@ -29,7 +29,37 @@ Do NOT use when:
 3. **Find ALL references** — use `codebase-retrieval` and `view` with `search_query_regex` to find every
    caller, implementation, test, and configuration that references the code being changed.
 4. **Map the impact** — create a list of all files that will need changes.
-5. **Present the plan** — show the user what will be affected before starting.
+5. **Decide the verdict, if the refactor is a de-duplication** — see the
+   safe-abstraction gate below. An extraction with no recorded verdict is a
+   guess about whether two things are the same thing.
+6. **Present the plan** — show the user what will be affected before starting.
+
+### Safe-abstraction gate — before merging two things into one
+
+This skill performs extractions; it is therefore the place that decides
+whether one should happen. A wrong abstraction costs more than the
+duplication it replaced, because the duplication is visible and the wrong
+abstraction grows caller flags until nobody can remove it. Ask, before
+moving any code:
+
+1. Is this the same knowledge, or two facts that currently look alike?
+2. Would both copies change for the same reason?
+3. Is there one honest domain name that fits **every** call site?
+4. Can the common core stay free of caller-specific flags and modes?
+5. Are public contracts preserved, and do tests prove behavioural equivalence?
+6. **If the two copies diverged tomorrow, would that be a defect or
+   legitimate evolution?**
+
+A "legitimate evolution" answer to the last question is decisive: stop, and
+record the verdict `keep-duplicated`. That closes the refactor **successfully**
+— so does `de-abstract`, splitting a shared unit that has grown modes back
+apart. Neither is a failure to act, and neither needs an apology in the
+output. Textual similarity is not evidence of shared knowledge: copies that
+read identically can encode different assumptions, and merging them changes
+behaviour silently.
+
+The class names and the full verdict list are in
+[`redundancy-taxonomy`](../../../docs/guidelines/redundancy-taxonomy.md).
 
 ## Procedure: Refactor code
 
@@ -140,6 +170,7 @@ After the code changes are verified, update all affected documentation:
 1. Find all usages → update all usages → update docs → run the static analyser → run tests.
 
 ### Extract method / class
+0. Run the safe-abstraction gate above — a `keep-duplicated` verdict ends it here.
 1. Create the new method/class → move logic → update caller → update docs → run the static analyser → run tests.
 
 ### Move class to different namespace
