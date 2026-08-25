@@ -357,22 +357,111 @@ recorded null.
 
 ## Phase 3 — Benchmark and verdict
 
-- [ ] **3.1 Build the three fixture sites** to the Phase 0.4 ground-truth list,
+- [x] **3.1 Build the three fixture sites** to the Phase 0.4 ground-truth list,
       served locally in CI rather than deployed.
-      verify: each fixture's seeded defect list is a checked-in manifest, and
-      the decoy is present in exactly one fixture.
+      verify: **`tests/fixtures/web-launch-benchmark/`** — `local-business/`,
+      `saas-app/`, `docs/`, plus `GROUND-TRUTH.md` with **19 numbered defect rows
+      and one decoy**, and 18 tests asserting every row is actually in the tree.
+      Static directories, served locally; nothing is deployed.
+
+      **The manifest is checked in so neither arm's author can move the target
+      after seeing a score** — and a fixture that quietly stops carrying a defect
+      is a visible diff rather than a weaker benchmark.
+
+      **The decoy is present in exactly one fixture** (`saas-app`, a missing team
+      photo) and the test asserts it from the CONFIG, not from memory: no
+      configured check id may match `team|photo|portrait|about-us`. If a future
+      check ever asked for team imagery the decoy would stop being a decoy, and
+      the benchmark would silently start scoring it.
+
+      **Both load-bearing tests were sabotage-proved rather than assumed
+      sensitive.** Rewriting `docs/sitemap.xml` so the canonical host matches →
+      1 failed. Adding a `team-photo-present` check to the config → 1 failed.
+      Restored → 18 passed. A test never seen red has unknown sensitivity.
+
+      Two rows are seeded because a presence check would miss them: an Impressum
+      **without** a Datenschutz page (the common real-world DE shape), and a
+      canonical that is **present and wrong** — copied from the marketing site,
+      so the page that gets indexed is not the page anyone chose.
 - [ ] **3.2 Run the comparator arm** — identical model, bare audit prompt, same
       site access.
       verify: both arms' raw outputs are archived with the run.
+
+      **OPEN, and deliberately not closed.** Protocol preserved verbatim in
+      `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md`; see
+      `b-benchmark-owner-rescope` below for the verdict that put it there and
+      for why this roadmap stays open rather than closing around it.
 - [ ] **3.3 Resolve the claim** — PROVE, DROP, or UNDERPOWERED. The decoy gate
       is checked first: a decoy false positive is DROP regardless of the recall
       delta.
       verify: the verdict PR flips the claim status; on DROP the skill stays
       default-off and the null is recorded rather than noted.
 
-**Exit:** a resolved verdict in either direction.
+      **OPEN.** `claim:web-launch-readiness-finds-more` stays `unbacked` and the
+      command stays default-off, which is already its shipped state — an honest
+      **interim** state, and explicitly not completion.
+
+**Exit:** a resolved verdict in either direction. NOT reached.
 
 ## Blockers
+
+### blocker: b-benchmark-owner-rescope
+- **Blocks:** 3.2, 3.3, AC-6, and the closure of this roadmap.
+- **Owner:** user.
+- **Resolved when:** the owner either (a) approves moving 3.2 and 3.3 into
+  `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md` as satisfying
+  this roadmap's scope, or (b) directs that the benchmark run and the roadmap
+  stay open until it does.
+- **What to do:** put exactly these two options to the owner, in one numbered
+  question — (1) approve moving 3.2 and 3.3 into
+  `agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md` as
+  satisfying this roadmap's scope, so it may be archived; (2) keep this roadmap
+  open until the benchmark actually runs. Do not run 3.2 in the meantime: the
+  council's parking decision stands on its own and forbids the authoring session
+  from executing either arm, whichever way the closure question is answered.
+- **Recommendation:** option (1) — approve the move. The implementation half is
+  done and independently testable; what remains is an experiment whose validity
+  depends on being run by someone else, and holding a completed body of work
+  open to wait for a different session's calendar does not make the experiment
+  any more likely to happen. Option (2) is the right call only if you want the
+  benchmark visible in the ACTIVE estate as pressure to schedule it.
+- **If you do nothing:** the roadmap stays open indefinitely with two steps
+  nobody in this repository is permitted to execute, the dashboard carries a
+  permanently-13-of-19 entry, and `claim:web-launch-readiness-finds-more` sits
+  `unbacked` with no owner — which over time reads as an abandoned claim rather
+  than a pending one. The command itself is unaffected either way: it ships
+  default-off and stays that way until the claim resolves.
+- **Status:** open.
+- **Why it reached the owner and not the council (2026-08-25).** The council was
+  asked and **declined the closure half of the question**, 2/2 convergent. It
+  ruled it may park the two steps for conflict-of-interest reasons — the session
+  that authored the checks, the fixtures AND the ground truth may not also run
+  and adjudicate the experiment that grades them — but that treating the parking
+  as *completion* is **owner-reserved**, because this roadmap carries **no cut
+  line** and removing two required phases redefines what completion means. One
+  seat: *"The council can park for COI. The owner decides whether that satisfies
+  the roadmap."* The other, independently: *"the council may recommend Option A,
+  but only the owner can approve the scope change."*
+
+  The routing-assurance precedent decided earlier the same day does **not**
+  carry: that roadmap's own text declared stopping at its cut line a valid end
+  state, and this one says nothing of the kind.
+
+  **What the council DID settle, and it is acted on here:** Option C — run the
+  arms now, adjudicate later — was rejected rather than taken as the compromise
+  it looks like. Executing the arms is only mechanical once seven protocol items
+  are frozen (comparator prompt text, context packaging, model snapshot and
+  sampling, retry policy, whether a finding must name the correct page,
+  semantic-match and partial-credit rules, who scores ambiguous output), and
+  every one of them can be chosen with knowledge of the expected defects.
+  *Archiving raw output creates auditability; it cannot undo an execution choice
+  made with knowledge of the answer.* The seven are recorded in the parked
+  roadmap as its blocker's resolution condition.
+
+  **Three statuses this roadmap now keeps apart**, per the council's framing —
+  conflating them is the failure mode: **implementation complete** (yes, Phase 2
+  and 3.1), **validation unresolved** (yes, the claim is `unbacked`), **roadmap
+  complete** (no, and not callable so without the owner).
 
 ### blocker: b-estate-decision-web-launch
 - **Status:** resolved 2026-08-25 — **NO to a standalone skill slot; the domain
