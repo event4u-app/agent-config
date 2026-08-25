@@ -1,13 +1,52 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-13
+keep-beta-until: 2026-09-24
 ---
 
 # Write-engine contract (v1)
 
-> **Status:** beta — shared procedural contract consumed by
-> `/ghostwriter:write`, `/post-as:ghostwriter` (alias), and
-> `/post-as:me`. Locked alongside the ghostwriter cluster roadmap.
+> **Status:** beta — shared procedural contract consumed by **six** files:
+> the commands `/ghostwriter:write`, `/post-as`, `/post-as:ghostwriter`
+> (alias), `/post-as:me` and `/humanize`, plus `src/skills/humanizer/SKILL.md`.
+> Locked alongside the ghostwriter cluster roadmap.
+>
+> **`keep-beta-until` extended to 2026-09-24 on 2026-08-25. This is an
+> administrative holding period, NOT approval, and the distinction is the whole
+> content of this note.** The previous deadline (2026-08-13) expired without a
+> substantive review, and the reason nobody noticed is a gate defect rather than
+> an oversight: `src/scripts/check_beta_review_markers.ts` compares
+> `keep-beta-until` only against `today + 90 days` and errors when the date is
+> too far in the **future**. It has no floor check, so a date arbitrarily far in
+> the **past** passes and the gate prints
+> `✅ All beta contracts carry a valid review marker`.
+>
+> **This file is one of 86.** Measured 2026-08-25 across `docs/contracts/`:
+> 86 of the 121 `stability: beta` contracts carry a lapsed `keep-beta-until`;
+> 35 carry a future one; none lack the marker. So the presence half of the
+> convention is healthy and the date half is not, and extending this one file's
+> date fixes nothing systemic — said plainly because the alternative is to let a
+> fresher number read as a review that did not happen.
+>
+> **The population and the missing floor check are tracked, not orphaned.** An
+> active roadmap owns both — it records the same 86 as its first finding, the
+> gate's inverted comparison as its third, and names this file as one of two
+> already-filed one-off instances. Its first phase is *disposition before
+> enforcement*, deliberately: landing the floor check while 85 other files still
+> violate it would swap a false-green gate for a red one that blocks every PR in
+> the repository. The roadmap is deliberately not cited by path here — a
+> contract is a durable artefact and roadmap files move as work completes, so a
+> link would rot; grep `keep-beta-until` under `agents/roadmaps/` to find it.
+>
+> **What must happen before 2026-09-24, or this note is worthless:** the
+> contract is reviewed against those six consumers and the window ends in one
+> of three states — promoted to `stable`, continued as `beta` with the review
+> evidence cited, or superseded with the consumers migrated. **Another
+> unevidenced extension is not an acceptable outcome.** Decided by AI council
+> 2/2 (2026-08-25, `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+> 3 rounds, blind chairman, $0.045) under the maintainer's standing delegation;
+> both seats named the risk of the run that discovered the lapse also granting
+> the extension, and the short window plus this named end-condition is the
+> agreed protection against it.
 
 The **write engine** is the deterministic procedure that produces a
 copyable markdown draft in a captured voice. It deliberately has no
