@@ -3,7 +3,8 @@ adr: 124
 status: accepted
 date: 2026-07-23
 decision: embedded-engine-doctrine
-supersedes: ADR-088 (engine-adoption interpretation only), ADR-094 (engine-adoption interpretation only)
+supersedes: ADR-088, ADR-094
+supersedes_scope: engine-adoption interpretation only
 superseded_by: —
 phase: road-to-native-code-intelligence
 type: structural

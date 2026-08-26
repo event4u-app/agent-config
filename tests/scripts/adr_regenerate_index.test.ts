@@ -179,3 +179,52 @@ describe('regenerate_index — pure helpers', () => {
         expect(noLegacy).not.toContain('## Unnumbered (legacy)');
     });
 });
+
+// The partial-supersession scope moved OUT of the ref value and into a sibling
+// `*_scope` field, because prose inside a comma-separated ref list forced every
+// reader to strip parentheses before resolving a number. The index generator did
+// not learn the new field in the same change, so regenerating silently DROPPED
+// the qualifier from three rows — a human-facing information loss that the
+// freshness check reports as "stale" and says nothing about. These pin the
+// rendering so the next move of that field cannot lose it quietly.
+describe('supersessionCell — the partial-supersession scope survives the field move', () => {
+    it('appends a declared scope to the refs', () => {
+        expect(rgi.supersessionCell('ADR-124', 'engine-adoption interpretation only')).toBe(
+            'ADR-124 (engine-adoption interpretation only)',
+        );
+    });
+
+    it('applies one scope across a multi-ref list', () => {
+        expect(rgi.supersessionCell('ADR-088, ADR-094', 'engine-adoption interpretation only')).toBe(
+            'ADR-088, ADR-094 (engine-adoption interpretation only)',
+        );
+    });
+
+    it('renders refs alone when no scope is declared', () => {
+        expect(rgi.supersessionCell('ADR-124', undefined)).toBe('ADR-124');
+        expect(rgi.supersessionCell('ADR-124', '')).toBe('ADR-124');
+        expect(rgi.supersessionCell('ADR-124', '—')).toBe('ADR-124');
+    });
+
+    it('renders an em dash for no refs, scope or not — a qualifier on nothing is not a supersession', () => {
+        expect(rgi.supersessionCell(undefined, undefined)).toBe('—');
+        expect(rgi.supersessionCell('—', 'engine-adoption interpretation only')).toBe('—');
+        expect(rgi.supersessionCell('', 'engine-adoption interpretation only')).toBe('—');
+    });
+
+    it('row() reads BOTH scope fields, not just one', () => {
+        const out = rgi.row({
+            num: '124',
+            slug: 'x',
+            path: 'ADR-124-x.md',
+            decision: 'x',
+            supersedes: 'ADR-088',
+            supersedes_scope: 'forward scope',
+            superseded_by: 'ADR-900',
+            superseded_scope: 'backward scope',
+        });
+        expect(out).toContain('ADR-088 (forward scope)');
+        expect(out).toContain('ADR-900 (backward scope)');
+    });
+});
+

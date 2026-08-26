@@ -150,6 +150,12 @@ export function check_reopen_authority(
 }
 
 const ALLOWED_STATUS = new Set([
+    // `challenged` — accepted, and under active question. It names NO successor
+    // and SUSPENDS NOTHING: an ADR at `challenged` still binds until something
+    // replaces it. Without that clause the status becomes a way to stop obeying
+    // a decision without reopening it, which is the failure mode
+    // road-to-decision-conformance 1.2 exists to prevent.
+    'challenged',
     'accepted',
     'proposed',
     'superseded',

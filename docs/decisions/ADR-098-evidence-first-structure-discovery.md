@@ -4,7 +4,8 @@ status: accepted
 date: 2026-06-15
 decision: evidence-first-structure-discovery
 supersedes: —
-superseded_by: ADR-100 (Decision-10 only)
+superseded_by: ADR-100
+superseded_scope: Decision-10 only
 phase: structure-grounding
 type: structural
 ---
