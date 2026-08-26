@@ -241,6 +241,14 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
+      - name: Beta review deadlines — a lapsed contract is visible on the PR
+        # road-to-contract-review-deadlines 2.1. The gate lived only in `task ci`,
+        # which no workflow invokes, so its findings were red on main and invisible
+        # — the failure class two comments in this same file already record twice.
+        # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
+        # fail; a FRESH lapse fails, which is what a pull request needs to see.
+        run: ./scripts-run src/scripts/check_beta_review_markers
+
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
 

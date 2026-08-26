@@ -42,13 +42,13 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 291 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 292 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **63 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 60 of those 63 are listed below.** The manifest is
+# **64 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 61 of those 64 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~21 % of the population.
 #
@@ -1805,3 +1805,23 @@ gates:
       `tests/scripts/check_score_contract.test.ts` asserts each reds on exactly
       one finding CODE — not merely on a non-zero exit, which would let a twin
       keep passing while testing the wrong defect.
+  - id: check_beta_review_markers
+    argv: []
+    min_scanned: 100
+    corpus: "every `stability: beta` contract under docs/contracts/ — 121 at the time this row landed. The floor sits at 100 because the beta population shrinks as contracts promote to stable, so a slow decline is expected and a drop below 100 is a scan-root collapse rather than a promotion wave."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: docs/contracts/zz-canary-beta-lapse.md
+      content: |
+        ---
+        stability: beta
+        keep-beta-until: 2026-01-01
+        ---
+
+        # ZZ canary — a beta contract whose review deadline lapsed
+
+        Planted by `check_gate_coverage --canary`; never ships. The date is far
+        in the past, so this is a FRESH lapse rather than one inside the frozen
+        2026-08-25 baseline — the distinction is the whole point of the gate,
+        because an inherited lapse warns and a new one must fail.
