@@ -28,6 +28,67 @@ either been re-run on the current build or its inputs are named as a blocker
 with an owner, the routing code and its governing contract agree, and no
 document still claims a permanence that the record retracted.
 
+## Outcome — read this before the phases
+
+**Archived does not mean achieved.** This section exists so nobody reads a
+closed roadmap as a solved problem.
+
+| Phase | State | What that means |
+|---|---|---|
+| **1** — close the two measurable extraction gaps | **satisfied** | 1.1 classified the 67,593 `AMBIGUOUS` edges onto a persisted `ambiguity_reason` field and inverted the premise: 86.7 % have no in-repo candidate at all. 1.2 took the null route for that class and removed a real false positive (the arbitrary-winner rule) for the second. 1.3 added the identifier-reference case: `EXTRACTED` 89,452 → 99,022 with `AMBIGUOUS` unchanged. |
+| **2** — make the routing and the contract agree | **satisfied** | The contract was right and the code changed. `classifyLookup` now takes `codeGraphEnabled`, 7 tests pin both directions. |
+| **3** — re-measure, or name the blocker | **transferred (3.1) + satisfied (3.2, 3.3)** | 3.2 corrected four permanence assertions and added the `measured_on:` ledger field now printed in `docs/proof.md`. 3.3 wrote ADR-246. **3.1 is `[~]` transferred** — see below. |
+
+### The Phase 3.1 transfer, which is what lets this roadmap close at all
+
+Step 3.1 needs four SHA-256-pinned input files that live outside the public tree
+and three external repository clones of private third-party code. Measured on
+2026-08-26: all four files read **absent** (not stale — a tree-wide `find`
+returns 0 for each), no corpus clone is reachable, and the harness itself is
+present, so only its inputs are missing. No automation in this repository can
+produce them.
+
+Moved verbatim to
+[`stubs/road-to-code-graph-benchmark-rerun.md`](../stubs/road-to-code-graph-benchmark-rerun.md)
+with a named producer (the maintainer), a five-reading probe (four hash checks
+plus corpus reachability), every reading measured here as the absent-input
+control, and an explicit honest-null closing path. Outcome state: **transferred**
+— never cancelled, which would drop a live question, and never `[x]`, which would
+convert "cannot measure" into "measured".
+
+**This is not a contradiction of the 2026-08-26 council ruling that 3.1 must stay
+open.** That ruling forbade *evidentiary completion*. A second AI council on
+2026-08-26 (2/2 convergent, anthropic/claude-sonnet-4-5 + openai/codex-default,
+two rounds with blind peer review) ruled the transfer is a *work-item placement*
+and is the closure shape the first ruling's own words implied — *"an indefinitely
+blocked step becomes misleading operational debt when its private inputs may
+never be recovered."* Both seats attached the same condition: the transfer is
+honest only if `[~]` cannot satisfy a completion check and the stub is
+structurally discoverable. Both were verified before archiving — `[~]` is
+`count_deferred`, never `count_done`, and `agents/roadmaps/stubs/` is a governed
+class with a README, a CI gate (`check_no_stub_inventory_table`), and three
+scripts that read it.
+
+**What did NOT change, ruled on explicitly.** `claim:code-graph-retrieval-null`
+stays `status: backed` with its landed `measured_on:` scoping. One seat asked for
+one addition — a line recording that a re-measurement was attempted and deferred,
+so silence does not read as "we never tried again". That line is in the claim.
+
+### Council decisions, both recorded inline rather than linked
+
+Council artefacts are gitignored and auto-pruned after the retention window, so a
+path to one is a reference that rots (`no-roadmap-references`, council clause).
+
+1. **2026-08-26, 2/2** — disposition (c) for `b-bench-inputs-absent`; 3.1 stays
+   open; `measured_on:` rather than `resolved-null` or `superseded_by`. Recorded
+   at 3.1, 3.2 and in the blocker.
+2. **2026-08-26, 2/2** — transfer 3.1 to a stub and archive the parent under an
+   explicit `transferred` outcome state, conditional on the two checks above.
+   Recorded here and in the blocker's disposition line. `revisit-if`: the four
+   pinned inputs **and** all three corpus clones become available, **or** a
+   maintainer explicitly retires the benchmark obligation with recorded
+   rationale — a new non-comparable benchmark alone does not satisfy it.
+
 ## Context — the bundle is right about the shape and wrong about five specifics
 
 **The one fact that carries the whole roadmap.** The honest null
@@ -178,7 +239,7 @@ on three of them.
 
 ## Phase 3 — re-measure, or name the blocker
 
-- [ ] **3.1 Re-run the benchmark on the current build.**
+- [~] **3.1 Re-run the benchmark on the current build.**
       This is the archived extractor-defect roadmap's unfinished half. It is
       gated on `b-bench-inputs-absent` below; if that blocker resolves, this
       step runs unedited — no threshold is renegotiated after the repair.
@@ -234,7 +295,7 @@ on three of them.
 
 ### b-bench-inputs-absent — the harness cannot run here
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** 3.1
 - **What to do:** pick exactly one — (a) supply the three SHA-256-pinned question
@@ -276,6 +337,27 @@ on three of them.
   determination that the inputs are irrecoverable, which either retires this
   step or approves a separately named non-comparable benchmark. This run cannot
   make that determination and does not pretend to.
+
+- **How it was resolved, and what that does NOT claim:** by **transfer**, not by
+  measurement. Disposition (c) landed on 2026-08-26 (`measured_on:` in
+  `docs/CLAIMS.md`, printed in `docs/proof.md`), which scopes the stale figure;
+  options (a) and (b) and the re-run itself moved verbatim to
+  [`stubs/road-to-code-graph-benchmark-rerun.md`](../stubs/road-to-code-graph-benchmark-rerun.md)
+  under outcome state **transferred**. The status token above reads `resolved`
+  because that is the only closed token the blocker gates recognise —
+  `transferred` reads as OPEN to every one of them. **The outcome state is
+  `transferred` and the benchmark was never re-run**; the word in the field is a
+  gate token, not a claim about the work.
+- **Decided by:** AI council 2026-08-26, 2/2 convergent
+  (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer
+  review), on the maintainer's standing delegation of owner-reserved decisions
+  for an autonomous drain run. Both seats attached the same condition — the
+  transfer is honest only if `[~]` cannot satisfy a completion check and the stub
+  is structurally discoverable — and both were verified before archiving.
+- **Revisit-if:** the four SHA-256-pinned inputs **and** all three registered
+  corpus clones become available, **or** a maintainer explicitly retires the
+  benchmark obligation with recorded rationale. A new non-comparable benchmark
+  alone does not satisfy this condition.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
