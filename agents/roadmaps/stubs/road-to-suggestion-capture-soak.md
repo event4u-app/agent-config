@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 # Stub: the suggestion-capture soak window
 
@@ -50,7 +51,7 @@ Fourteen days is also wall-clock a run does not have, but that is the lesser
 half — a shorter window with a real independent denominator would still be
 science; a fourteen-day window without one would not.
 
-## The named producer and its probe
+## Probe and its named producer
 
 **Producer:** the maintainer, on a workspace with
 `hooks.suggestion_capture.enabled: true`.

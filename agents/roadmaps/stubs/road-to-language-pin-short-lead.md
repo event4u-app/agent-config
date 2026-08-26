@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: a short typed lead makes the language pin follow the PASTE, in both directions
@@ -9,6 +10,18 @@ complexity: lightweight
 > rather than fixed in that PR because the fix changes a public behavioural
 > surface and belongs in its own change (`minimal-safe-diff`), and recorded as a
 > **stub** rather than an active roadmap so it does not move the estate ratchet.
+
+## Probe — the defect still reproduces
+
+**Probe:** call `classify` in `src/scripts/language_mirror_hook.ts` on the three
+prompt shapes in the table below. While they still return `de` / `de` / `en`,
+the defect is live and this stub is promotable; a reading of `en` / `en` / `de`
+closes it instead, whichever change produced it.
+
+**Measured against the committed implementation, 2026-08-23:** `de` (de=6 /
+en=1), `de` (de=6 / en=1), `en` (de=2 / en=6) — all three wrong, so the stub
+stands. What promotion also needs is the `und`-fallback decision named in
+§ What a fix has to establish; that is a behaviour choice, not a reading.
 
 ## The defect, reproducible
 

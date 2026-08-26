@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Road to Team SSO — STUB
 
 > **Status** · stub. Not started. Created 2026-05-24 to satisfy
@@ -19,7 +24,7 @@ requires it, no funded security audit covers it. The
 [`team-deployment-posture`](../../../docs/deploy/team-deployment-posture.md)
 document codifies the cancellation.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 1. **Recruited customer** — a real organisation (named in
    `agents/recruit-sessions/<role>/`) asks for SSO and commits to

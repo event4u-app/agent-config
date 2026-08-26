@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it
