@@ -105,6 +105,29 @@ inflate coverage, which is the defect this record's own § Consequences names.
 **Require `reopen_policy` on every ADR, so the doctrine has data.** Rejected —
 see Decision 2 above, and the recorded dissent in `adr-layout.md`.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| The obligation exists as a rule and is enforced by nothing — the rule says so itself | `src/rules/decision-revisit-gate.md:27` (`instruction-only: no gate can observe an agent citing a decision it never opened`) and its `## Honest enforcement` section at `:181` |
+| `adr_cite_check` treats `challenged` as a LIVE lock rather than a cleared one | `src/scripts/adr_cite_check.ts:506-508` — the `challenged` branch is separate from `accepted` and from `superseded`, and its comment records "accepted, and under active question" |
+| The corpus view exists and is a real mode, not a plan | `src/scripts/adr_cite_check.ts:950` (`const survey_mode = argv.includes('--all')`), documented in the usage block at `:965-969` |
+| The `reopen_policy`-stays-optional decision and its dissent are recorded, not asserted here | `docs/contracts/adr-layout.md:248` (§ Reopen authority), `:331` (the 2026-08-26 decision), `:353-360` (the dissent and its preserved implementation path) |
+| Estate coverage is a number rather than an impression | `adr_cite_check --all`, run this session: 137 of 161 accepted ADRs cited outside `docs/decisions/` (14.9 % uncited); 74 records carry a `review_trigger`, all 74 indeterminate; 7 of 203 declare a `reopen_policy` |
+| The memory-layer reference classification behind Decision 2 is a committed artifact | `agents/evidence/analysis/agent-memory-reference-classification-2026-08-26.md` |
+
+The grade is **E2 — repeated and comparative**. Every row above is read off a
+file in this tree at a named line, and the one quantitative row is a live run of
+the tool this record governs. It is not E3: there is no external authority and
+no pre-registered benchmark behind the doctrine itself.
+
+**What the evidence does NOT establish.** It does not show that the doctrine
+changes agent behaviour. The central obligation — evaluate before citing — leaves
+no artifact, so the 14.9 % uncited figure measures *findability*, never
+*obedience*, and no reading of it should be taken as the latter. That is the
+same limit § Consequences states, restated here so the grade is not read as more
+than it is.
+
 ## References
 
 - [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) — the mechanics.

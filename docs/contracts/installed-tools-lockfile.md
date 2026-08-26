@@ -112,7 +112,7 @@ UNASKED, AND NEVER PROMPT INSIDE A DIAGNOSTIC.
 
 ### Why silent-null was rejected
 
-It was the behaviour in force, and it is the reason four of four inspected
+It was the behavior in force, and it is the reason four of four inspected
 consumer repositories drifted unnoticed: `doctor` could not distinguish
 *"healthy"* from *"unable to assess health"*, and reported the two identically.
 
@@ -196,7 +196,7 @@ all.
 - When `pyyaml` is available, v2 round-trips fully.
 - When `pyyaml` is missing, the manual fallback parser extracts v1-equivalent fields (top-level scalars + per-tool scalar fields) and **silently drops** v2 nested fields (`files`, `merged_keys`, `deploy_roots`). Callers that need full v2 fidelity must ensure `pyyaml` is on the path.
 
-## Compatibility — writer behaviour
+## Compatibility — writer behavior
 
 - `write_manifest(path, version, tools, *, deploy_roots=None)` always emits `schema_version: 2`.
 - Optional v2 fields (`deploy_roots`, per-tool `files` / `merged_keys` / `status`) are emitted only when non-empty, so a v1-shaped call produces a v2 file that is structurally minimal and v1-readable for the core fields.
