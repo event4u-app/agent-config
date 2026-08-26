@@ -33,7 +33,10 @@ estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving 
 >
 > Items marked `corrected-from-reproduction` differ from the master because
 > running or checking its step produced something else. Items marked
-> `from-skipped-parent` come from deep-v4 and appear in no master.
+> `from-skipped-parent` come from deep-v4 and appear in no master — a claim to
+> check, not a source: two such markers in this pair turned out to credit a
+> declared parent instead. That parent is now citable, with its residual, in
+> `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`.
 
 ## Goal
 
@@ -440,9 +443,19 @@ once.
       teeth. This is not what the parked curriculum generator was.
       verify: a promotion with no scope field is refused, and a scope raise with
       one configuration's evidence is refused.
-- [ ] **7.4 Reject semantic no-ops.** `from-skipped-parent`: a no-op detector
-      plus a minimum material-improvement threshold. The master kept the
-      cooldown and lineage from the same attack and dropped both gates.
+- [ ] **7.4 Reject semantic no-ops.** A no-op detector plus a minimum
+      material-improvement threshold. The master kept the cooldown and lineage
+      from the same attack and dropped both gates.
+      **Marker corrected 2026-08-26:** this step carried
+      `from-skipped-parent`, and it should not have. The clause is at
+      `road-to-evidence-driven-harness-evolution.md:1200-1201` — a **declared**
+      parent — and the skipped parent contains no no-op gate at all (its only
+      paraphrase mention, `:1342` "Avoid five paraphrases", is about candidate
+      diversity at generation time, which is a different mechanism). So the
+      master dropped this having read it, not having missed it. That is the
+      second misattributed marker found in this pair; see
+      `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`
+      § Marker reliability.
       verify: a paraphrase-only candidate is refused before the cascade.
 - [ ] **7.5 Roll out by canary, never silently.** `from-skipped-parent`: opt-in
       candidate bundles.
@@ -597,18 +610,29 @@ If this cut fails, the architecture is refuted before anything is built.
 - **E3 — Budget ceiling** for 0.5 (candidates × trials × spend per run) and the
   sampling strategy for the 5.1 body variant.
 - **E4 — Activation-ladder arity:** 4 states or 6? Recommendation: 6, because
-  Phase 6 measures delivery and `delivered ≠ visible` is that axis.
+  Phase 6 measures delivery and `delivered ≠ visible` is that axis. **Decide
+  together with E9 — they are one question**, and the evidence for both is in
+  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E5 — Minimality tie-break order,** and whether the fifth criterion (simpler
   mechanism) is in. The two parents' orders invert, so this changes outcomes.
 - **E6 — Curator operation set:** 4 ops or 7? Recommendation: 7 — split and
-  retire are the anti-sprawl actions, and 7.6 depends on them existing.
+  retire are the anti-sprawl actions, and 7.6 depends on them existing. Brief:
+  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — it adds that `RETIRE` already has a carrier
+  (`artifact-engagement-flow.md:32-33`) while `SPLIT` is the one genuinely new
+  mechanism, so a 6-op middle exists.
 - **E7 — Sealed-holdout cadence:** every cascade, or promotion candidates only?
   One parent killed every-iteration as an adaptive-overfitting risk; the other
-  runs it every cascade.
+  runs it every cascade. Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — and it
+  reframes the question: there is **no** holdout machinery in this repository
+  yet, so nothing is being preserved and the decision is greenfield.
 - **E8 — State-taxonomy arity:** 4 classes or 5, splitting experiment-adaptive
-  from production-adaptive with the latter prohibited by default?
+  from production-adaptive with the latter prohibited by default? Brief:
+  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — which finds the proposed 5th class
+  restates ADR-124's Class A/C boundary, and the prohibition it would add
+  already exists.
 - **E9 — Cascade stage set:** 9 stages or 12? If 9, Phase 1's exit criterion
-  cannot be produced and must be rewritten.
+  cannot be produced and must be rewritten. **One question with E4**; brief:
+  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E10 — Mutation dimensions:** do `activation/routing/content` stand alone, or
   does `verification` join immediately? Separate from 3.2, which is about arity.
 - **E11 — Second opinion:** is the fixture holdout enough, or does a council
