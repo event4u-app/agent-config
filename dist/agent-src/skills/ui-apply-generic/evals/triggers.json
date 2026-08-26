@@ -1,0 +1,32 @@
+{
+    "skill": "ui-apply-generic",
+    "last_eval": "2026-08-26",
+    "description": "3 positives (1 de) + 3 near-misses. This is the stack-INDEPENDENT UI executor, for stacks with no framework-specific one. The near-misses are the two stacks that DO have their own executor (React/shadcn, Blade) and the design-side request that precedes implementation rather than being it.",
+    "queries": [
+        {
+            "q": "implement this UI brief in our Svelte app",
+            "trigger": true
+        },
+        {
+            "q": "build the settings screen — it's plain HTML and CSS, no framework",
+            "trigger": true
+        },
+        {
+            "q": "setz das Layout in unserer Astro-App um",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "build this screen as a React component with shadcn",
+            "trigger": false
+        },
+        {
+            "q": "add this partial to our Blade views",
+            "trigger": false
+        },
+        {
+            "q": "design a settings screen for us",
+            "trigger": false
+        }
+    ]
+}
