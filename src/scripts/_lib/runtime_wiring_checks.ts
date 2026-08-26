@@ -279,7 +279,45 @@ export function checkInheritedGitEnv(env: NodeJS.ProcessEnv = process.env): Wiri
  * two spreads.
  */
 /** The four ids, in render order. Spread into `cmd_doctor`'s two id registries. */
-export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env'] as const;
+export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env', 'hooks-kill-switch'] as const;
+
+
+/**
+ * The estate kill switch, reported so a DISABLED estate is visible.
+ *
+ * `road-to-skill-ecosystem-runtime-enforcement` Phase 1 Step 7's second clause,
+ * which could not be satisfied until the Phase 2 diagnostic existed. The flag
+ * itself has been implemented since Phase 1; what was missing is that a session
+ * running with every guard switched off looked exactly like one running with
+ * them all armed.
+ *
+ * ONLY the exact value `1` disarms, and the check mirrors that rather than
+ * guessing: a truthy-ish test would report `=0` as disabled, which is the
+ * opposite of what it means.
+ */
+export function checkHooksDisabled(env: NodeJS.ProcessEnv = process.env): WiringCheck {
+    const raw = env['AGENT_CONFIG_DISABLE_HOOKS'];
+    if (raw !== '1') {
+        return {
+            id: 'hooks-kill-switch',
+            status: 'ok',
+            message:
+                raw === undefined || raw === ''
+                    ? 'AGENT_CONFIG_DISABLE_HOOKS is not set — the hook estate is armed'
+                    : `AGENT_CONFIG_DISABLE_HOOKS=${raw} — only the exact value "1" disarms, so the estate is armed`,
+            remedy: '',
+        };
+    }
+    return {
+        id: 'hooks-kill-switch',
+        status: 'warn',
+        message:
+            'AGENT_CONFIG_DISABLE_HOOKS=1 — EVERY hook and shim in this environment is disabled. ' +
+            'A run under this flag enforces nothing, and without this line it would look identical ' +
+            'to one with the whole estate armed.',
+        remedy: 'unset AGENT_CONFIG_DISABLE_HOOKS (it is intended for one command, not a session)',
+    };
+}
 
 export function wiringRunners(opts: {
     packageRoot: string;
@@ -293,6 +331,7 @@ export function wiringRunners(opts: {
         // a multi-second one. `probeHookCost` is exported for a caller that wants it.
         'hook-resolution': () => checkHookResolution(opts.packageRoot).check,
         'inherited-git-env': () => checkInheritedGitEnv(),
+        'hooks-kill-switch': () => checkHooksDisabled(),
     };
 }
 
