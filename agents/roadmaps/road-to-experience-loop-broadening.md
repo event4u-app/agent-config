@@ -37,7 +37,10 @@ estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving 
 >
 > Items marked `corrected-from-reproduction` differ from the master because
 > checking its step produced something else. Items marked `from-skipped-parent`
-> come from that third file and appear in no master.
+> come from that third file and appear in no master — a claim to check, not a
+> source: two such markers in this pair turned out to credit a declared parent
+> instead. That third file is now citable, with its residual, in
+> `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`.
 
 ## Goal
 
