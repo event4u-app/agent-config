@@ -1,12 +1,8 @@
 ---
 complexity: structural
 status: ready
-estate_offset_exempt: >-
-  Nothing in the estate covers the consumer-install surface this measures; the
-  three findings classes it opens have no existing roadmap to merge into, and
-  archiving an unrelated file to pay for it would be an accounting move, not a
-  drawdown.
-estate_growth_exempt: "This roadmap opens a surface the estate does not cover — the installed state of this package inside a consumer tree — and the findings behind it were measured, not assumed. No active roadmap covers it, and closing an unrelated one to make room would trade a real drawdown for an accounting one."
+estate_offset_exempt: "No active roadmap covers the consumer-install surface this measures, so there is nothing to merge into; the tooling overlap this phase does have is with existing doctor verbs, which it composes rather than duplicates. Archiving an unrelated roadmap to pay for this one would be an accounting move, not a drawdown."
+estate_growth_exempt: "The findings behind this roadmap were measured in installed consumer trees, not assumed, and each carries a named public ecosystem mechanism as its anchor. No active roadmap covers the same surface. Phase 1 extends the existing doctor family rather than adding a parallel one — the overlap is deliberate and is stated in the phase itself."
 execution:
   mode: phase-checkpoints
 ---
@@ -16,9 +12,30 @@ execution:
 > install this package — a framework-based PHP API, a JS/TS monorepo with a
 > component library and workshops, and a mixed legacy/modern PHP+React
 > application. Each pass re-entered the repositories carrying the previous
-> pass's conclusions. Every finding below is a **class** observed in a real
-> installed tree, deliberately stripped of the repositories' identity: what is
-> planned here must hold for any consumer with the same shape.
+> pass's conclusions. **Three trees of one organisation are a discovery
+> channel, never a validation sample:** they share a toolchain culture and one
+> team's habits, so the reading below is where each shape was *noticed*, and
+> the generality bar — not the reading — is what admits it.
+
+## The generality bar
+
+Every shape in this roadmap must clear **both** tests. The first was in the
+original draft and is insufficient on its own; the second exists because a
+purely in-house convention is just as expressible as a universal one.
+
+1. **Fixture-expressible.** The shape can be stated as a fixture with no
+   reference to an observed tree. A finding that needs the tree to be
+   understood is not a shape yet.
+2. **Publicly anchored.** A named, publicly documented ecosystem mechanism
+   exists independently of any tree read here — a specified config directive, a
+   package-manager protocol, a published distribution model, a named pattern.
+   The anchor is cited in the phase. "We saw it in our repositories" is a
+   discovery, not an anchor.
+
+A step whose anchor is a single organisation's practice is marked
+**anchor-pending** and does not get built until a second, independent,
+external instance is recorded next to it. One such step is marked below rather
+than quietly promoted, because the bar is worth more than the step.
 
 ## Goal
 
@@ -33,92 +50,130 @@ framework is no longer routed to that framework's skill.
 
 ## Phase 1 — The map is not the territory: install integrity
 
+**Anchor:** root agent-instruction files are a multi-vendor ecosystem
+convention (`AGENTS.md`, the Copilot instructions file, per-tool root files),
+and a manifest pin diverging from an installed artefact is the ordinary
+manifest-versus-lockfile drift every package ecosystem has. Neither depends on
+who the consumer is.
+
 The sharpest finding, because it is silent and it was present in two of the
 three trees. A root instruction file listed an agent layer — rules, skills,
 guidelines — under a path that **did not exist in the tree**. In one repository
 the entire layer was absent while the file still described it; in another the
-layer existed but two of its four advertised directories did not. Nothing
-detects this. An agent reads the root file, believes the layer is there, and
-routes on names it can never load. A third repository carried no agent surface
-at all while sitting inside the same product boundary as the other two.
+layer existed but two of its four advertised directories did not. An agent
+reads the root file, believes the layer is there, and routes on names it can
+never load. A third repository carried no agent surface at all while sitting
+inside the same product boundary as the other two.
 
 The same trees show the version axis of the identical defect: a committed
 project settings file pinning a version several majors behind the installed
 projection, under a **settings filename this package no longer reads**, while a
-generated artifact in that tree still cites a generator script in a language
-this package has not shipped for generations. Three independent staleness
-signals, none of them surfaced.
+generated artefact in that tree still cites a generator script in a language
+this package has not shipped for generations.
 
-- [ ] **1.1 Add an install-integrity verb that resolves every path a root
-      instruction file names.** Parse the root instruction files (`AGENTS.md`,
-      the Copilot instructions file, any per-tool root file), extract every
-      repository-relative path they point at, and report each as present or
-      dangling. This is the check that would have caught all three trees.
+**This phase composes, it does not duplicate.** The tree already carries a
+doctor family — `hooks:doctor`, `routing:doctor`, `reach:doctor`,
+`workspace:doctor`, `settings:check`, `mcp:check`, `packs:active` — and
+`routing:doctor` sets the precedent by composing existing single-purpose
+surfaces instead of re-implementing them. Each of those answers "is the
+mechanism I configured working". **None of them asks whether a path a root
+instruction file names resolves at all**, which is the one question added here.
+Building an eighth independent diagnostic would be the failure mode; the first
+step is therefore a placement decision made against the existing family, in
+public, before any code.
+
+- [ ] **1.1 Decide the placement against the existing doctor family, and record
+      it.** Enumerate what each existing verb already answers, name the residual
+      question none of them covers, and choose: extend one of them, or add one
+      that composes them. A new top-level verb is the outcome only if the
+      enumeration shows no host for the question.
+      verify: the decision is recorded with the enumeration that produced it,
+      and names which existing verb was extended or which ones the new surface
+      composes — a placement asserted without the enumeration does not count.
+- [ ] **1.2 Resolve every path a root instruction file names.** Parse the root
+      instruction files, extract every repository-relative path they point at,
+      and report each as present, dangling, or unresolvable-for-a-stated-reason.
+      This is the check that would have caught all three trees.
       verify: a fixture consumer whose root file names one existing and one
       absent directory exits non-zero and names exactly the absent one; a
-      fixture whose paths all resolve exits zero.
-- [ ] **1.2 Report the version axis as a three-way comparison.** Pinned version
+      fixture whose paths all resolve exits zero; a fixture with a path the
+      parser cannot interpret reports it as unresolvable, never as absent.
+- [ ] **1.3 Report the version axis as a three-way comparison.** Pinned version
       (from whichever settings file the consumer actually carries, legacy
       filenames included), installed-projection version, and the version the
       resolver would pick now — printed together, with legacy settings paths
       named as legacy rather than ignored.
       verify: a fixture carrying only the legacy settings filename is read, not
       skipped, and its pin is reported alongside a differing installed version.
-- [ ] **1.3 Stop generated artifacts from hard-coding their generator's path.**
+- [ ] **1.4 Stop generated artefacts from hard-coding their generator's path.**
       A generated file that names the script that wrote it becomes a lie the
       moment that script moves. Emit a stable, resolvable reference instead.
-      verify: grep the generated-artifact templates for a literal script path;
+      verify: grep the generated-artefact templates for a literal script path;
       zero matches, and the count is reported so a future addition is visible.
-- [ ] **1.4 Carry the discipline on the agent side, not only in a command.**
+- [ ] **1.5 Carry the discipline on the agent side, not only in a command.**
       A path named by an instruction file is a claim, not a fact — probe before
-      routing on it, and say which source answered. Extend the existing
-      missing-skill recovery discipline, which already covers a catalogue that
-      under-reports, to cover an instruction file that over-reports.
-      verify: the rule or skill that carries this states the probe explicitly
-      and is reachable from the install-integrity verb's own output.
+      routing on it, and say which source answered. The obligation belongs next
+      to [`missing-skill-recovery`](../../src/rules/missing-skill-recovery.md),
+      which already covers the mirror case of a **catalogue that under-reports**;
+      this is an **instruction file that over-reports**, and the two are one
+      discipline stated from opposite sides.
+      verify: that rule (or its named successor) states the over-reporting
+      direction explicitly and is reachable from the diagnostic's own output.
 
 ## Phase 2 — Configuration resolution follows the chain
+
+**Anchor:** `extends` is a specified directive in TypeScript, ESLint, Biome and
+Stylelint, with `includes` playing the same role in PHPStan and Rector;
+`workspace:` is a documented protocol in npm, yarn, pnpm and bun; catalogued
+dependency versions are a documented feature of pnpm and bun. All four are
+published mechanisms with public specifications.
 
 A root linter configuration in one tree is fourteen lines, of which the
 load-bearing one is an `extends` into a package inside the same workspace; the
 root TypeScript configuration is a single `extends` into another. Read
 literally — which is what "derive standards from the real config" currently
 does — both yield nothing, and an agent concludes the project has no standards
-while the standards sit one hop away. The same tree keeps dependency versions
-in a single root catalogue that workspace packages reference by protocol rather
-than by literal version, and pins every one of them exactly.
+while the standards sit one hop away.
 
 - [ ] **2.1 Resolve `extends` / preset chains before digesting a config.**
       Follow the chain through relative paths and through workspace-package
       specifiers; report the resolved chain, and treat an unresolvable hop as a
-      named gap rather than as an absence of standards.
+      **named gap with a partial digest**, never as an absence of standards.
       verify: a fixture whose root config only extends a workspace package
-      yields the workspace package's rules in the digest, and a fixture whose
-      extends target is missing reports the unresolved hop by name.
+      yields that package's rules in the digest; a fixture whose extends target
+      is missing yields the hops that did resolve, plus the unresolved hop by
+      name, and is reported as partial rather than complete.
 - [ ] **2.2 Treat per-workspace configuration as the config.** Where a
       repository carries linter, environment or deployment configuration per
       package rather than at the root, the file that governs an edit is the one
       nearest that edit. State the precedence explicitly.
       verify: a fixture with a root config and a differing per-package config
       returns the per-package one for a path inside that package.
-- [ ] **2.3 Never invent a dependency version.** Before adding a dependency,
-      find the repository's version source of truth — a catalogue, a workspace
-      protocol, a lockfile-pinned convention — and use it. A literal version
-      string written into a package manifest that references a catalogue
-      everywhere else is a silent convention break.
+- [ ] **2.3 Never invent a dependency version — and define invention.**
+      **Invention** is writing a version string that no source in the repository
+      produced. **Lookup failure** is having searched the declared version
+      sources — catalogue, workspace protocol, existing manifests, lockfile —
+      and found none. The two get opposite handling: invention is forbidden;
+      lookup failure is reported as unresolved, and the version comes from the
+      user or from the registry with that provenance stated. Silence is neither.
       verify: the supply-chain intake step names the version-source lookup as a
-      precondition, and a fixture manifest using a catalogue protocol is not
-      rewritten to a literal.
+      precondition and distinguishes the two outcomes; a fixture manifest using
+      a catalogue protocol is not rewritten to a literal, and a fixture with no
+      version source produces an unresolved report rather than a guess.
 
 ## Phase 3 — Framework families have a third state
 
-One tree runs a PHP application on framework *components* — the ORM, the
-container, the collections, the HTTP layer — with **no framework**: a custom
-entry point, a custom router, and no framework CLI. Dependency-presence routing
-sends this to that framework's skill, which then offers a CLI that does not
-exist, a request-validation primitive that is not wired, and a routes file that
-was never there. The same failure is available in the other direction for any
-component-based framework family.
+**Anchor:** component-based distribution is a published model — a framework
+family that ships its ORM, container, collections and HTTP layer as
+independently installable packages, usable with no framework present. PHP has
+at least two such families distributed exactly this way; the shape is a
+property of the distribution model, not of any consumer.
+
+One tree runs a PHP application on framework *components* with **no
+framework**: a custom entry point, a custom router, and no framework CLI.
+Dependency-presence routing sends this to that framework's skill, which then
+offers a CLI that does not exist, a request-validation primitive that is not
+wired, and a routes file that was never there.
 
 - [ ] **3.1 Detect the application shape from the entry point and the router,
       not from the dependency list.** A dependency proves a library is
@@ -131,12 +186,19 @@ component-based framework family.
       framework-routing rules do not claim it.
 - [ ] **3.2 Make the two framework-routing rules state the discriminator they
       actually use.** Both currently read as dependency-flavour tests. Name the
-      entry-point-and-router discriminator in each, so the third state is not
-      re-derived per session.
-      verify: both rules name the discriminator, and a fixture prompt in the
-      third state routes to neither.
+      entry-point-and-router discriminator in each, specified as a small fixed
+      set of file probes with a stated cost, so it is cheap enough to actually
+      run and not re-derived per session.
+      verify: both rules name the discriminator and its probe set; a fixture
+      prompt in the third state routes to neither.
 
 ## Phase 4 — Working inside a repository that is half-migrated
+
+**Anchor:** incremental replacement of a legacy system alongside the system it
+replaces is a named, published migration pattern, and the server-composed
+bootstrap payload of 4.2 is a documented mechanism in several mainstream
+frameworks — each ships its own named channel for serialising server state into
+the page for a client island. 4.3 has no such anchor and says so.
 
 The mixed tree is roughly two-fifths namespaced, strict-typed, PSR-shaped code
 and three-fifths an older include-and-dispatch module system, with the two
@@ -144,9 +206,13 @@ meeting **inside single files**: a strict-typed, namespaced service importing
 non-namespaced global singletons. Current guidance says to respect existing
 patterns and to keep diffs minimal, but nothing produces the artefact that
 makes either decidable — a per-path verdict on which half a file belongs to.
-The same tree hands a server-composed bootstrap payload to a client-side island
-and gates behaviour through a repository-local feature-flag mechanism that no
-generic flag skill knows about.
+
+**The overfitting trap in this phase, named so the implementer cannot miss it:**
+4.2 and 4.3 were each noticed in exactly one tree. What may be encoded is the
+**question** — which fields are exposed, does a mechanism already exist. What
+may never be encoded is the *particular* mechanism that tree happened to use.
+A step here that names a concrete implementation shape has failed, whatever its
+tests say.
 
 - [ ] **4.1 Produce a legacy/modern boundary map before applying modern
       idioms.** Per path: which conventions hold there, what the neighbouring
@@ -156,64 +222,107 @@ generic flag skill knows about.
       verdict, and a file mixing both is reported as mixed rather than assigned
       to one side.
 - [ ] **4.2 Add the server-composed bootstrap payload to the render-security
-      surface.** A payload assembled server-side and serialised into the page
-      for a client island is a data-exposure surface: whatever is put in it is
-      readable by anyone who can load the page, including fields nobody meant
-      to expose. Name it, with the check.
-      verify: the render-security checklist names the pattern and states the
-      per-field question; a fixture payload carrying a privileged field is
-      flagged.
+      surface, with a named enforcement mechanism.** A payload assembled
+      server-side and serialised into the page for a client island is a
+      data-exposure surface: whatever is put in it is readable by anyone who can
+      load the page. Enforcement is the existing pattern for this class — a
+      checklist entry in the render-security skill (advisory, model-carried) plus
+      a diff-scoped grep gate over the framework-named payload channels that
+      fires when a field is **added** to such a payload. State plainly which half
+      is deterministic and which is not; a checklist entry alone is not
+      enforcement and must not be described as one.
+      verify: the checklist names the pattern and the per-field question; the
+      gate is registered in the gate coverage registry with its scanned count,
+      and a fixture adding a privileged field to a payload channel is flagged
+      while a fixture touching an unrelated file is not.
 - [ ] **4.3 Discover the repository's own mechanism before adding one.**
-      Feature flags, dispatch whitelists, permission checks: a repository that
-      already has a mechanism does not want a second one. Make "find the
-      existing mechanism" a step, not an assumption.
-      verify: the step is stated in the relevant skills and names how the
-      lookup is done, not merely that it should happen.
+      **anchor-pending** — the generality bar's second test is not met: the only
+      instance recorded is one tree's feature-flag mechanism, and "a repository
+      may already have a mechanism" is a truism rather than an anchored shape.
+      Do not build this until a second, independent, external instance is
+      recorded here. If the second instance never arrives, the step is deleted
+      rather than downgraded — that outcome is a success of the bar, not a gap.
+      verify: this step stays unbuilt while its anchor line is empty; a change
+      that implements it while the anchor is still empty is the violation.
 
 ## Phase 5 — Honesty at the repository boundary
+
+**Anchor:** a package published to a registry and consumed by another
+repository, and an API described by a shared contract, are the two standard
+ways a product spans repositories. Both make an exported surface a public
+mechanism rather than an in-house arrangement.
 
 Three repositories form one product: one publishes a component package the
 second consumes, and the third serves the API both call. The downstream-changes
 discipline greps one tree and reports completeness, which is true of that tree
 and false of the product. Separately, two of the three trees override the
-**same three shipped skills** — a signal that those skills' defaults are wrong
-for a whole class of consumer, and a signal nothing currently reads.
+**same three shipped skills**.
+
+**What that override observation is, and is not.** It is n=2 from one
+organisation — below this roadmap's own generality bar, and therefore **not a
+basis for changing any shipped default**. 5.2 builds the channel that would
+make such a signal readable across independent consumers; it does not act on
+the observation that prompted it. Changing those three skills now, on the
+strength of two same-culture installs, is precisely how this package would
+become one organisation's house style, and no step here authorises it.
 
 - [ ] **5.1 State the repository boundary in the downstream sweep.** When a
-      changed surface is exported beyond the repository — a published package,
-      a served API, a shared schema — say that the sweep stopped at the tree
-      edge and name the consumers it could not check. Completeness claimed over
-      one tree of a multi-tree product is the failure.
+      changed surface is exported beyond the repository — a published package, a
+      served API, a shared schema — say that the sweep stopped at the tree edge
+      and name the consumers it could not check. Completeness claimed over one
+      tree of a multi-tree product is the failure.
       verify: the sweep's output names the boundary when an exported surface is
       touched, and does not when nothing is exported.
-- [ ] **5.2 Read a repeated override as evidence about the shipped default.**
-      The same skill overridden in independent consumer installs is the
-      cheapest available signal that the default is wrong. Define how that
-      signal is collected and where it lands, without collecting anything about
-      the consumers themselves.
-      verify: the mechanism is specified with its privacy floor stated, and a
-      fixture with one skill overridden twice produces the signal while a
-      single override does not.
+- [ ] **5.2 Make a repeated override readable, and wire it to a flow that
+      exists.** The same artefact overridden in independent installs is the
+      cheapest available signal that a shipped default is wrong. Define the
+      signal as artefact identity and a count only, with **no field capable of
+      holding a path, a diff, or consumer content** — the shape the existing
+      telemetry floor uses. Wire it into a flow a consumer already runs: the
+      diagnostic from Phase 1 reports the local override set, and the existing
+      upstream-contribution path is where an aggregate becomes a proposal. A
+      mechanism with no flow is a mechanism nobody runs.
+      verify: the signal type has no free-form field; the Phase 1 diagnostic
+      reports the local override set; a fixture with one artefact overridden
+      twice produces the signal while a single override does not.
+- [ ] **5.3 Hold the line on the observation that prompted 5.2.** No shipped
+      default is changed on the strength of the three overrides recorded in the
+      Source above, and no follow-up change may cite them as evidence for a
+      default change. They are admissible only as one input to an aggregate that
+      clears the generality bar.
+      verify: the three artefacts are named here so a later change citing them
+      is visible in review; a diff changing any of their defaults with this
+      roadmap as its stated justification is the violation.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Findings drawn from three trees of one organisation are read as universal | product | Three repositories share a toolchain culture, a package manager preference and one team's habits. A shape that looks like a class here may be one team's convention, and building a gate for it costs every other consumer. | Each phase names the shape, never the repository, and its verify step is a fixture rather than the observed tree — a finding that cannot be expressed as a fixture is not general enough to build. | Phase 1 — The map is not the territory: install integrity |
-| 2 | The install-integrity verb becomes a second source of truth about the install | implementation | A checker that parses instruction files can drift from the installer that wrote them, and then reports failures that are its own. | The verb resolves paths against the filesystem only, and claims nothing the filesystem cannot answer; where it cannot resolve, it reports unresolved rather than absent. | Phase 1 — The map is not the territory: install integrity |
-| 3 | Config-chain resolution silently follows a chain into a dependency and digests someone else's rules as the project's | implementation | An `extends` chain can leave the repository entirely; presenting a third-party preset as the project's own standard is worse than reporting nothing. | The resolved chain is reported with each hop's origin, and a hop leaving the repository is labelled as external rather than merged into the project digest. | Phase 2 — Configuration resolution follows the chain |
-| 4 | The third framework state is added but never fires, because the discriminator is expensive to evaluate | implementation | Entry-point-and-router detection is more work than reading a dependency list, and a check that is skipped under time pressure is not a check. | The discriminator is specified as a small fixed set of file probes with a stated cost, and its fixture asserts the third verdict on a tree that would otherwise route to the framework. | Phase 3 — Framework families have a third state |
-| 5 | The override signal collects something about a consumer's tree | product | Any mechanism that reads consumer installs is a privacy surface, and the package's own floor forbids carrying consumer content. | 5.2 specifies the signal as artefact identity and a count only, with no field capable of holding a path, a diff or consumer content — the same shape the existing telemetry floor uses. | Phase 5 — Honesty at the repository boundary |
+| 1 | Findings drawn from three trees of one organisation are read as universal | product | Three repositories share a toolchain culture, a package manager preference and one team's habits. A shape that looks like a class here may be one team's convention, and building a gate for it costs every other consumer. Expressibility as a fixture does not separate the two — an in-house convention is equally expressible. | The generality bar requires a named public ecosystem mechanism per shape in addition to fixture-expressibility, each phase cites its anchor, and a shape with only an in-house instance is marked anchor-pending and left unbuilt — 4.3 is marked that way rather than promoted, which is the bar demonstrating it bites. | The generality bar |
+| 2 | The house style is exported through the override observation | product | Two same-culture installs overriding the same three skills is n=2, and the temptation to "just fix the defaults, we already know" converts a discovery channel into a mandate. | 5.3 forbids it explicitly, names the three artefacts so a later citing change is visible in review, and 5.2 builds a cross-consumer channel instead of acting on the observation. | Phase 5 — Honesty at the repository boundary |
+| 3 | An eighth parallel diagnostic is built next to seven existing ones | implementation | The tree already carries a doctor family. A new top-level verb that re-answers what `settings:check` or `packs:active` already answer adds a second source of truth about the install and drifts from the installer that wrote it. | 1.1 makes placement a recorded decision produced by an enumeration of the existing verbs, before any code; the residual question is named, and composition is the precedent `routing:doctor` already set. | Phase 1 — The map is not the territory: install integrity |
+| 4 | The install diagnostic reports failures that are its own | implementation | A checker that parses instruction files can misparse a path and report a healthy install as broken, which is worse than not checking. | It resolves paths against the filesystem and reports three outcomes, not two: present, dangling, and unresolvable-for-a-stated-reason. A path it cannot interpret is never reported as absent, and the parse failure is attributed to the checker in its own output. | Phase 1 — The map is not the territory: install integrity |
+| 5 | Config-chain resolution follows a chain out of the repository and digests someone else's rules as the project's | implementation | An `extends` chain can leave the repository entirely; presenting a third-party preset as the project's own standard is worse than reporting nothing. | The resolved chain is reported with each hop's origin, and a hop leaving the repository is labelled external rather than merged into the project digest. | Phase 2 — Configuration resolution follows the chain |
+| 6 | Phase 4 encodes one tree's concrete mechanism as the pattern | product | 4.2 and 4.3 were each observed once. Encoding the particular payload channel or flag mechanism seen there would ship one repository's implementation as guidance. | The phase states the trap in its own body, restricts what may be encoded to the question rather than the mechanism, and anchors 4.2 on framework-named channels rather than on the observed one; 4.3 is anchor-pending and unbuilt. | Phase 4 — Working inside a repository that is half-migrated |
+| 7 | The third framework state is added but never fires, because the discriminator is expensive to evaluate | implementation | Entry-point-and-router detection is more work than reading a dependency list, and a check skipped under time pressure is not a check. | 3.2 specifies the discriminator as a small fixed set of file probes with a stated cost, and its fixture asserts the third verdict on a tree that would otherwise route to the framework. | Phase 3 — Framework families have a third state |
+| 8 | The override signal collects something about a consumer's tree | product | Any mechanism reading consumer installs is a privacy surface, and this package's floor forbids carrying consumer content. | 5.2 specifies the signal as artefact identity and a count, with no field capable of holding a path, a diff or consumer content — enforced by the type's shape rather than by a scrubbing pass. | Phase 5 — Honesty at the repository boundary |
 
 ## Acceptance Criteria
 
+- [ ] AC-0 — Every built step cites a named public ecosystem mechanism as its
+      anchor, and every step whose only instance is in-house is either
+      anchor-pending and unbuilt, or deleted. No step is built on
+      fixture-expressibility alone.
 - [ ] AC-1 — A consumer install whose root instruction file names a layer that
-      is not present is reported as such by a command, and the report names the
-      dangling paths rather than the fact that something is wrong.
+      is not present is reported as such, and the report names the dangling
+      paths rather than the fact that something is wrong. A path the checker
+      cannot interpret is reported as unresolvable, never as absent.
 - [ ] AC-2 — A project whose real standards sit behind an `extends` chain,
-      including a chain into a workspace package, yields those standards; the
-      previous behaviour of returning nothing is not reachable for that shape.
+      including a chain into a workspace package, yields those standards. Where
+      a hop cannot be resolved, the result is a partial digest naming the
+      unresolved hop; returning nothing for a chain that partly resolved is not
+      reachable for that shape.
 - [ ] AC-3 — A PHP application built from framework components with a custom
       entry point and no framework CLI resolves to a third verdict, and neither
       framework-routing rule claims it.
@@ -223,3 +332,6 @@ for a whole class of consumer, and a signal nothing currently reads.
 - [ ] AC-5 — A downstream sweep over a repository that exports a surface names
       the boundary it stopped at; over a repository that exports nothing, it
       does not.
+- [ ] AC-6 — No shipped default was changed on the strength of the override
+      observation recorded in the Source, and the aggregate channel exists and
+      is reachable from a flow a consumer already runs.
