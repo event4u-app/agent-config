@@ -129,6 +129,27 @@ heuristic is the shape this repository keeps removing. A golden fixture that
 fails without the distinction is the honest first instrument, and it is Phase 5.4
 of the roadmap that produced this record.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| The `new`-owes-negative-evidence obligation lives in a rule, and this record only supplies the ranking it reasons over | `src/rules/improve-before-implement.md:66` — the named-verdict set and "`new` owes the closest candidate by name and path, and why it does not fit" |
+| Rank 1's "live" is machine-checkable rather than a judgement call | `src/scripts/adr_cite_check.ts` reports status, amendments and successors per record (`:19` documents the successor axis) and carries a corpus mode; run this session, `--all` reported 137 of 161 accepted ADRs cited outside `docs/decisions/`, 74 records carrying a `review_trigger` (all indeterminate), 7 of 203 declaring a `reopen_policy` |
+| Staleness routing already has ONE owner, so this record does not restate it | `src/rules/decision-revisit-gate.md:71-72` — evaluate before citing, and a `superseded` / `deprecated` status means the lock is not live |
+| Ranking a repository's own mechanism above generic prose is an established shape here, not a new invention | `src/skills/playbook-authoring/SKILL.md:26-27` — a step is `configured` only when its generator was seen in the tree, `observed` otherwise; the same evidence-over-assertion discriminator, applied to procedure |
+
+The grade is **E2 — repeated and comparative**. Every row is read off a named
+file at a named line in this tree, and the one quantitative row is a live run of
+the tool the record's own rank 1 depends on.
+
+**What the evidence does NOT establish, so the grade is not read as more than it
+is.** No measurement here shows the eight-rank ORDER is correct — the ranks below
+rank 2 are reasoned, not benchmarked, and the record says so by making its own
+`review_trigger` a measured wrong answer rather than a date. What is established
+is narrower and is the load-bearing half: the two axes are independent, the
+mechanised ranks exist and run, and nothing in the tree couples a surface version
+to an implementation generation.
+
 ## References
 
 - [`improve-before-implement`](../../src/rules/improve-before-implement.md) — the verdict set this order feeds.
