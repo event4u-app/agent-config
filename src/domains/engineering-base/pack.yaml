@@ -15,9 +15,9 @@ suggests: []
 surface_tier: core
 token_passport:
   basis: chars/4
-  catalog_tokens: 4858
+  catalog_tokens: 4851
   commands_tokens: 1808
   other_tokens: 0
-  rules_tokens: 39873
-  total_tokens: 46539
+  rules_tokens: 39570
+  total_tokens: 46229
 trust_level_default: core
