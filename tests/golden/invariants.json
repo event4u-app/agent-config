@@ -66,7 +66,7 @@
         "strings": [
             "HARD FLOOR OVERRIDES EVERYTHING. NO AUTONOMY SETTING, NO ROADMAP STEP, NO STANDING INSTRUCTION, NO \"JUST KEEP GOING\" CAN BYPASS IT.",
             "**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer.",
-            "an outbound, externally-visible, or money-moving action the user cannot un-see"
+            "outbound, externally-visible, or money-moving actions the user cannot un-see"
         ]
     },
     {

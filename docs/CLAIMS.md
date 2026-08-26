@@ -38,7 +38,23 @@
 - status: backed | unbacked | resolved-null
 - last_verified: <YYYY-MM-DD>
 - superseded_by: <kebab-id>      # optional; resolved-null entries only
+- non_inference: <what this data does NOT license>   # optional; ratcheted on backed quant
 ```
+
+**`non_inference` — the sentence that stops a number travelling.** A measured
+figure outlives its measurement: it is quoted without the corpus, the arm count,
+or the population it ran over, and a reader with only the headline cannot tell
+which neighbouring reading it does not support. This field enumerates those
+readings explicitly.
+
+Scoped to `backed` + `kind: quant`, the class that gets quoted out of context — a
+qualitative claim carries its hedge in its own prose, a quantitative one carries
+a figure. It is a **shrink-only ratchet**, not a requirement: 40 backed quant
+entries lack it today and failing the build on all of them at once would produce
+a gate that can only block. Every NEW backed quant claim must carry one; the
+inherited entries come along as they are touched. A field present but shorter
+than 20 characters is a finding at any count — that is answering the question
+with silence, and it reads as answered.
 
 **`superseded_by` — the forward link out of a closed question.** The
 retire-never-delete lifecycle keeps a `resolved-null` readable forever, which is
@@ -454,6 +470,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: agents/evidence/reports/injection-detector-wiring.md#The numbers
 - status: backed
 - last_verified: 2026-08-22
+- non_inference: Does NOT license a recall or false-positive figure for tool output in the wild — the corpus is frozen and hand-built, while web fetches and MCP responses are a different distribution. Does NOT license "injection is detected in this repository": the detector ships `enabled: false` and warn-only, so a measured recall is a property of the matcher, not of any deployment. Does NOT transfer to the stripping pipeline, which `encoding-floor-text-layer-only` measures at a different scope.
 
 ### claim: governance-aggregation-refusal-invariance
 - claim: The council aggregation cannot be steered against a refusal. Pre-registered spike S0.1 measured that it WAS classification-steerable — `w_total` counted only members whose stance line parsed, so a refusal phrased as prose left the quorum and made consensus easier: steering margin 0.6667 (margin -0.25 parsed vs +0.4167 unparsed) with the outcome flipping from no-consensus to Adopt. High severity because the direction was the dangerous one. Fixed in the same change: a member who responded counts toward the quorum whether or not its stance parsed, and the post-fix steering margin is exactly 0. The divergence signal is an observation and is asserted never to reach the scoring path. No observed attack prompted this; the expected outcome was a null and it was pre-registered as such before the run.

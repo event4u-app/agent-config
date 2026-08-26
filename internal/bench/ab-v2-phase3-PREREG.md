@@ -148,3 +148,105 @@ project.
 - Per-trial preserved **transcripts**, written beside the clone rather than into
   it — T5's equivalent of delta #7, and the reason a completed sweep can gain
   the endpoint without being re-run.
+
+---
+
+## Amendment v2 — 2026-08-26 · verdict method
+
+**Status:** adopted. **Decided by:** AI council, 2026-08-26, 2/2 convergent
+(`anthropic/claude-sonnet-4-5` + `openai/codex-default`), on a maintainer
+delegation for an autonomous drain run. Question and both answers:
+`agents/runtime/council/questions/prereg-verdict-method.md` and the response
+beside it. **Driven by:** `road-to-skill-ecosystem-eval-integrity` Phase 2.
+
+### What changed
+
+The **significance half** of the T1/T2 endpoints moves from a Wilcoxon
+signed-rank *p* to an **exact one-sided sign test over non-tied pairs**
+(`src/scripts/_lib/paired_verdict.ts`). Wilcoxon ranks by |difference| and is
+therefore magnitude-weighted; that was shown to disagree with the exact test on
+twelve records up to ten trials and to be the **permissive** side in every one
+of them. The visible symptom is inverted, which is why it went unnoticed: an
+artifact that won every trial still failed, because a few large
+opposite-direction deltas outweighed a clean sweep of small ones.
+
+### What did NOT change, and this is the load-bearing half
+
+`T1_MEDIAN_LINES_PCT = -10` is **unchanged and still independently binding**.
+Both council seats required this separately and it is the reason the amendment
+is safe: a sign test answers *did this help more often than it hurt* and says
+nothing about *how much*. Replacing Wilcoxon outright would let a clean sweep of
+negligible improvements claim a **size** win. So the claim now rests on two
+propositions that must both hold:
+
+| proposition | test | bar |
+|---|---|---|
+| directional reliability | exact one-sided sign test over non-tied pairs | p ≤ 0.05 |
+| practical magnitude | pre-registered median added-lines change | ≤ −10 % |
+
+Dropping either is a different claim and needs its own amendment.
+
+### Full specification of the applied test
+
+- **Tail:** one-sided, in the direction of interest. A negative delta is the
+  improvement for both added lines and cognitive complexity.
+- **Tie classification:** |delta| ≤ 1e-9 is a tie. That is the same epsilon
+  `wilcoxon()` already uses to drop zeros, so "non-tied" means one thing across
+  the whole report.
+- **Ties are excluded before anything is counted.** A tie carries no direction
+  and must not dilute the sample; a magnitude-weighted interval gets this wrong
+  in both directions at once (zero contribution to the mean, full contribution
+  to *n*).
+- **Alpha:** 0.05, matching every sibling endpoint in this report.
+- **Minimum non-tied pairs: 5, DERIVED not chosen.** The smallest attainable
+  one-sided *p* on *n* non-tied pairs is `0.5 ** n`; a pass at 0.05 is
+  arithmetically impossible until `0.5 ** n ≤ 0.05`, first true at n = 5.
+  `deriveMinDiscordant()` recomputes it, so a future alpha change moves the
+  floor rather than leaving a stale constant.
+- **Below the floor → `underpowered`,** which is neither a pass nor a
+  regression and appears in no pass-rate denominator (`passRate()` is the only
+  sanctioned way to compute one, because an inline filter reinstates the defect).
+- **Exactly on the floor → a warning.** A pass then needs every pair to agree;
+  one dissent moves *p* to 0.1875 against a bar of 0.05, so the run is decided
+  before it starts. Observed as five specifications raised to exactly the floor
+  all failing, four of them decided in advance.
+- **All pairs tied → `underpowered`,** never a null result.
+
+### Asymmetry between a claim and a refusal
+
+A **PASS** requires the direction bar to be MET. A **REFUSAL** (anti-golfing)
+fires on **either** signal — the direction counts when present, the legacy
+Wilcoxon *p* otherwise. Applying the strict reading to both would make the
+refusal disappear on any report lacking direction counts, and a missing input
+silently rescuing an arm is precisely the failure a refusal exists to prevent.
+
+### Is this fitting to data?
+
+**No for the target population, and the honest qualifier is stated rather than
+implied.** `internal/bench/reports/ab-v2/` is empty and this record's own
+preconditions 2–4 state the run is impossible, so no Phase-3 outcome exists to
+fit to. What DID inform the method choice is twelve **non-Phase-3** records — a
+council seat pressed on exactly this and the framing "before any data" was
+withdrawn as incomplete. The accurate statement is: *before any Phase-3 outcome
+data, informed by analysis of twelve non-Phase-3 records.*
+
+Consequently those **twelve diagnostic records are frozen as development
+fixtures and are excluded from any confirmatory Phase-3 analysis.** Both seats
+required this independently and it is not optional: evidence that selected the
+method cannot also be evidence for the result.
+
+One assumption is named rather than assumed away, at a council seat's
+insistence: calling the magnitude-weighted side "permissive" presumes the exact
+test is the reference. That presumption is stated here so a future reader can
+contest it.
+
+### Revisit-if
+
+- Any Phase-3 or intended-population pilot outcome was inspected before this
+  amendment (it was not — the report directory is empty).
+- Directional consistency alone ever becomes sufficient to substantiate the size
+  claim; the magnitude bar dropping is a separate amendment, not a refactor.
+- Evidence emerges that the exact sign test has its own permissive-side failure
+  modes.
+- Method selection is again informed by empirical analysis of a non-target
+  population, which is the general shape this amendment is a case of.

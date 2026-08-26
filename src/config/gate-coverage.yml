@@ -42,15 +42,29 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 294 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 295 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **66 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 63 of those 66 are listed below.** The manifest is
+# **67 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 64 of those 67 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~21 % of the population.
+# carry a floor, and covers ~22 % of the population.
+#
+# RECOUNTED ON A MERGE, 2026-08-26, and the merge left TWO stacked header claims
+# rather than a conflict inside one number — each branch had recounted correctly
+# for its own tree, and keeping both sides produced a page asserting 294/62 and
+# 295/64 four lines apart. Collapsed to one recomputed block: `count_gate_scripts()`
+# returns **295** and `grep -c '^  - id:'` returns **64** on the merged tree.
+#
+# A paragraph that briefly stood here claimed the emitter total "cannot be
+# derived by grep" and dropped it. That was true of the method it tried and
+# wrong as a conclusion — every LISTED row is an emitter by construction (a row
+# that did not emit could carry no floor) and the same three emitters remain
+# deliberately unlisted, so 64 + 3 = 67. The figure is arithmetic over this
+# file, not a grep over `src/scripts/`, and it is restored rather than left
+# absent.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the case the 2026-08-24 block below was
 # written for, arriving again. Two branches each added one row and each recorded
@@ -1851,6 +1865,21 @@ gates:
         recorded in `src/config/canonical-terms.yml` decided against. The gate
         must red on it, because a ratchet that cannot see a NEW occurrence is a
         ratchet that only records history.
+  - id: lint_eval_specs
+    argv: []
+    min_scanned: 120
+    corpus: "every eval specification under src/skills/*/evals/, src/domains/*/evals/ and src/agent-src/commands/evals/ — 175 at the time this row landed. The floor sits at 120 because the corpus grows as skills gain evals and shrinks only when a skill is archived; a drop below 120 is a scan-root collapse rather than a pruning wave."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-eval-specs/evals/evals.json
+      content: |
+        {
+          "skill": "zz-canary-eval-specs",
+          "scenarios": [
+            { "id": "x", "prompt": "planted by check_gate_coverage --canary; never ships", "assertions": [{ "kind": "tool-choice" }] }
+          ]
+        }
   - id: lint_memory_twin_parity
     argv: []
     min_scanned: 7
