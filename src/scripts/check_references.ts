@@ -55,7 +55,30 @@ function makeBrokenRef(
     return { file, line, ref, ref_type, severity, suggestion };
 }
 
-const SCAN_DIRS = ['dist/agent-src', 'agents'];
+// `docs/guidelines` joins the scan on 2026-08-26 (`road-to-contract-review-deadlines`
+// 4.3), and the decision is the NARROW one of the three that step offered —
+// widen to the SHIPPED roots only.
+//
+// Priced before deciding, which is what the step asked for. Measured with
+// `measure_docs_dead_links`: 544 dead relative links across `docs/`, of which
+// **104 sat in files `package.json:files[]` publishes** and 440 did not.
+// Widening to all of `docs/` would land ~300 findings on the next unrelated pull
+// request — the flood that gets a gate waived rather than adopted, and the same
+// argument this roadmap's Phase 0 already accepted for the beta backlog.
+// Widening to the shipped roots lands **zero**, because 4.2 repaired all 104
+// first, so the gate arrives green and holds the gain instead of announcing it.
+//
+// The excluded class is named rather than left implicit: **297 dead links in
+// NON-shipped `docs/`** — analysis notes, ADR records, architecture pages — stay
+// out of scope. They cost a maintainer a confused minute; a dead link under
+// `docs/guidelines/` is shipped to a consumer and is the only half that reaches
+// anyone. Re-measure any time with `./scripts-run src/scripts/measure_docs_dead_links`.
+//
+// The three named single-file contracts in `files[]`
+// (`persona-schema`, `provider-lifecycle`, `settings-classes`) are NOT added:
+// a directory scan cannot express "these three files under a directory that is
+// otherwise excluded", and all three measure zero dead links today.
+const SCAN_DIRS = ['dist/agent-src', 'agents', 'docs/guidelines'];
 const SKIP_DIRS = [
     // Archived roadmaps have historical refs — a link to a file that existed when
     // the plan was written is not drift, so the exclusion is right on the merits.
