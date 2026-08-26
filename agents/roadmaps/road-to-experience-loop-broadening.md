@@ -9,13 +9,24 @@ estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving 
 
 > **Source:** `agents/tmp.old/evolver/` — three session proposals plus the
 > operator transcript. Every repo claim below was re-verified against this tree
-> on 2026-08-26; the proposals were drafted against `1899f92b9`, which is HEAD
-> minus one commit, so the staleness window is empty.
+> on 2026-08-26; the proposals were drafted against `1899f92b9`.
+>
+> **Corrected after a neutral review: the staleness window is not empty.** An
+> earlier revision said `1899f92b9` was "HEAD minus one commit" — true when the
+> verification started, false by the time this branch was pushed, because the
+> branch was rebased in between and the sentence was never re-measured.
+> `git rev-list --count 1899f92b9..HEAD` reads **7**, of which three are
+> upstream: `387dd3e68`, `82e47cefc` (#1676) and `9e8344a3f`. None of them touch
+> the contracts or scripts this roadmap cites — those were re-checked against the
+> post-rebase tree — but #1676 changed the estate that E1 reasons about, and the
+> first version of E1 carried the pre-rebase number.
 >
 > **The consolidation those files produced was incomplete, and that is the first
 > finding.** `road-to-experience-loop-master.md` declares
 > `consolidates: [road-to-outcome-informed-assets, road-to-evidence-gated-self-evolving-agent-config]`
-> — two files. The folder holds a third,
+> — two files. (That key is quoted verbatim; the arithmetic sentence below is
+> translated from the German original at `road-to-experience-loop-master.md:243`,
+> so it is a rendering rather than a quotation.) The folder holds a third,
 > `road-to-outcome-grounded-harness-evolution.md` (2728 lines, 25 phases, 20
 > acceptance criteria, its own kill register), whose frontmatter declares it
 > supersedes **both** of the two the master consolidated. The master's own
@@ -50,7 +61,7 @@ learning loop; every phase widens the one in the tree.
 |---|---|---|
 | "No persistent learning loop" | `docs/contracts/audit-log-v1.md` — append-only JSONL per `/work` phase carrying `outcome`, `rules_applied`, `confidence_band`, `risk_class`; corrections only as a new `type=supersede` line | `:44` the example line, `:77` the outcome enum, `:85` the `type` enum, `:114` the supersede rule |
 | "No pattern mining" | `src/scripts/extract_audit_patterns.ts` — mints patterns across **independent** `work_id` values behind a `--min-count` floor, exit 2 below it | `:7-8` flags and exit codes, `:14` "across INDEPENDENT runs — distinct `work_id` values" |
-| "No promotion gate" | `src/skills/learning-to-rule-or-skill/SKILL.md`, named by the contract as the human review gate | contract `:26` |
+| "No promotion gate" | `src/skills/learning-to-rule-or-skill/SKILL.md` | the contract's consumer row `:26` names a human review gate but attributes it to `extract_audit_patterns`; the skill itself is named at `:11` and `:147-148` ("Skill that consumes promoted patterns") — corrected after a neutral review |
 | "No runtime taxonomy; the ADRs contradict the code" | ADR-124 already classifies: Class A embedded/per-invocation, Class B resident with its own escalation path, Class C state stores prohibited | `ADR-124:110` Class A incl. the termination clause, `:153` the Class-B escalation, `:170-177` Class C plus the state-store test |
 | "Experience needs a new home" | ADR-094 removed Layer 2 (the companion package) and **kept** Layer 1 (file-first `agents/memory/` plus intake JSONL) | `ADR-094:25` Layer 1, `:44` remove Layer 2, `:51` keep Layer 1 |
 | "Deterministic capture is impossible" | `src/scripts/hooks/telemetry_usage_hook.ts` — `post_tool_use` with `tool_name === "Skill"` present in **164 of 164** real invocations across 14,171 records | `:15-19` verbatim |
@@ -120,12 +131,20 @@ parents must restate the letter's meaning rather than carry it.
       (`success · blocked · skipped · error`);
       `src/scripts/_lib/outcome_envelope.ts:24-30` has six
       (`success · clean-no-op · blocked · approval-required · exhausted ·
-      stagnated`). Phase 2 below writes `clean-no-op` into the audit stream,
-      where that value does not exist. This step owns the reconciliation; the
-      sibling roadmap `road-to-governed-harness-evolution.md` names the same
-      defect and defers to this one.
-      verify: one module exports the enum both the contract and the envelope
-      import, and a lint rejects an inline duplicate.
+      stagnated`). One of this roadmap's source proposals planned
+      to write `clean-no-op` into the audit stream, where that value does not
+      exist — which is how the split was found. Phase 2 below deliberately does
+      **not** write it: which outcome an empty-but-contract-satisfying return
+      resolves to is E3, and E3 cannot be answered before this step. Corrected
+      after a neutral review caught the earlier wording attributing that plan to
+      Phase 2 itself. This step owns the reconciliation; the sibling roadmap
+      `road-to-governed-harness-evolution.md` names the same defect and defers to
+      this one.
+      verify: one module is the single definition, `outcome_envelope.ts` imports
+      it rather than declaring its own, and the contract's enum table is either
+      generated from it or lint-checked against it — a markdown contract cannot
+      import, so the binding is the check, not an import. A lint rejects an
+      inline duplicate.
 - [ ] **1.4 Carry a privacy class on every captured event, and a redaction rule
       for anything free-form.** `from-skipped-parent`, and this is the gap with
       the sharpest consequence. The master has **no** privacy, redaction or
@@ -332,10 +351,11 @@ parents must restate the letter's meaning rather than carry it.
       `corrected-from-reproduction`: the master called this "the mechanical core
       of `road-to-canonical-wording-and-propagation`" and an attachment point
       for "the open script-twin decision from PR #1636". Verified on this tree:
-      **no file anywhere in the repository mentions
-      `canonical-wording-and-propagation`** — zero hits from `grep -rl` over
-      `*.md`, `*.ts` and `*.json`. It is not active, not parked, not a stub, not
-      archived. The PR reference was **not checked**: that is an external system
+      **no plan by that name exists.** `grep -rl` over `*.md`, `*.ts` and
+      `*.json` returned zero hits when the check was run, and now returns exactly
+      one — this roadmap, because the name is written here; a reader re-running it
+      should expect that single self-hit and nothing else. It is not active, not
+      parked, not a stub, not archived. The PR reference was **not checked**: that is an external system
       and this analysis ran offline by its own bound, so it is unverified rather
       than false. Either author the parent or drop the framing; do not cite a
       plan that does not exist.
@@ -435,7 +455,7 @@ parents must restate the letter's meaning rather than carry it.
 | 4 | Measuring self-report as if it were outcome | implementation | An aggregation built before the anti-forgery gate cannot separate a claimed success from a real one afterwards | Phase 2 lands before Phase 6; 6.1 counts a missing signal as unknown; 6.2 makes an estimated figure visibly estimated | Phase 2 — Outcome integrity: anti-forgery at the subagent return |
 | 5 | A win rate that cannot be acted on | implementation | Without the activation-versus-adherence split, a low rate points at the asset's content when the real cause may be that the router never activated it. The wrong fix follows deterministically | Phase 5 adds the five-state split, with `unknown` where no evidence exists | Phase 5 — Activation versus adherence |
 | 6 | The one core metric cannot be computed | implementation | Repeats and regressions arrive after the audit line is terminal. Without an amendment path the repeated-failure rate systematically under-reports | Phase 3 adds the episode lifecycle with append-only amendment | Phase 3 — Episode lifecycle and delayed amendment |
-| 7 | Schema extension against a value that does not exist | implementation | Phase 2 writes `clean-no-op`; the audit contract's enum has four values and does not include it. The write looks successful and the consumer silently does not read it | 1.3 reconciles the two enums before either is extended; 9.1 makes reintroduction lintable | Phase 1 — Broaden capture |
+| 7 | Schema extension against a value that does not exist | implementation | A source proposal planned to write `clean-no-op` into a stream whose enum has four values and does not include it. Such a write looks successful while the consumer silently does not read it — live for any later step that resolves an outcome before the vocabulary is settled | 1.3 reconciles the two enums before either is extended; 9.1 makes reintroduction lintable | Phase 1 — Broaden capture |
 | 8 | A rolling buffer makes a pre-registered floor unreachable | implementation | Already recorded once in this tree at `docs/CLAIMS.md:691`. A ledger whose retention rotates cannot back a floor above its window, and the discovery comes at verdict time | The `experience-retention-policy` blocker decides it before the report is relied on | Phase 6 — Evaluation: a per-asset report, read-only |
 | 9 | The unknown share is treated as noise | product | A report whose unknown share is large reads as weak data and gets ignored, when the unknown share *is* the measurement of the capture gap and the most actionable number on the page | 6.1 reports unknown as a first-class share, never folded into neutral | Phase 6 — Evaluation: a per-asset report, read-only |
 | 10 | Cards accumulate faster than they are reviewed | product | A card store growing without expiry becomes a second undocumented authority surface competing with rules, and a global-scope card mined from one repository's runs generalises on no evidence | 7.2 makes expiry, falsifier and epistemic type mandatory; 7.4 routes promotion through the human gate; 7.5 adds the scope ladder and transfer requirement; 9.3 requires a removal | Phase 7 — Experience cards |
@@ -497,11 +517,20 @@ is refuted, cheaply.
   `src/scripts/lint_roadmap_family_cap.ts:41` sets
   `FAMILY_PREFIX = 'road-to-skill-ecosystem-'` and counts only top-level active
   roadmaps, so that gate **cannot** fire on this name or the sibling's; it
-  reports 0/2 slots used. The gate that does apply is `check_estate_count`,
-  reading `active_roadmaps 3` against a floor of 7 — four slots of headroom. The
-  real question is whether this roadmap and
-  `road-to-governed-harness-evolution.md` stay separate or fold into one; they
-  overlap on trigger evals, on the paired-verdict mechanism, and on step 1.3.
+  reports 0/2 slots used. The gate that does apply is `check_estate_count`.
+
+  **Corrected after a neutral review, and it reverses this decision's force.** An
+  earlier revision read "`active_roadmaps 3` against a floor of 7 — four slots of
+  headroom". That was a pre-rebase reading; #1676 landed four roadmaps in the
+  window named above. The gate now reports
+  `active_roadmaps 7 (floor 7 at origin/main, +0)` — **at the floor, zero
+  headroom.** These three clear it only because `status: draft` excludes them from
+  the counted set and each carries `estate_offset_exempt` for the file-based half.
+  So flipping any of them to `ready` without a disposal in the same change raises
+  a floor already at its ceiling. The question is whether this roadmap and
+  `road-to-governed-harness-evolution.md` stay separate or fold into one — they
+  overlap on trigger evals, on the paired-verdict mechanism and on step 1.3 — and
+  on the estate axis folding is now the cheaper answer, not just the tidier one.
 - **E2 — audit-log v2:** confirm the schema-bump procedure — supersede lines, or
   a new file generation?
 - **E3 — Does `clean-no-op` count as its own outcome in the report?
@@ -519,11 +548,16 @@ is refuted, cheaply.
 - **E9 — Terminology:** one canonical word for the card object, then propagate
   it. Phase 9's discipline applies reflexively to this decision.
 - **E10 — Host scope.** The master scopes capture to Claude Code, the one host
-  with a measured 164/164. `from-skipped-parent` required at least three
-  materially different hosts plus a capability matrix with
+  with a measured 164/164. The skipped parent required at least three materially
+  different hosts (`road-to-outcome-grounded-harness-evolution.md:1662`,
+  `:2500`). The capability matrix with
   `required / optional / unavailable / inferred` per field and the rule "never
-  manufacture parity". One host is defensible; the rule against manufacturing
-  parity should be adopted either way.
+  manufacture parity" is **not** from the skipped parent — it sits in one of the
+  two declared parents
+  (`road-to-evidence-gated-self-evolving-agent-config.md:1365-1373`), so the
+  master dropped it having read it, which is a different failure from never
+  having seen it. Corrected after a neutral review caught the marker on the wrong
+  side. One host is defensible; the parity rule should be adopted either way.
 - **E11 — Owner-reserved actions.** `from-skipped-parent` lists relaxing an
   evaluator threshold as owner-reserved. Confirm that, or name what else is.
 
@@ -532,7 +566,7 @@ is refuted, cheaply.
 | ID | Rejected | Reason |
 |---|---|---|
 | K1 | A new `src/` asset family, and pre-seeded strategy families | Additive push with no verified defect behind it; the card form in Phase 7 covers the empirical core and only ever arises from the mining gate. |
-| K2 | Hub / network / credit / reputation-index / team-sharing / interop adapters | The one independent measurement of that design reports ~2 % asset reuse and >84 % of released assets bypassing meaningful validation — the failure mode is publication reward, not sharing. ADR-088 and ADR-216 also stand. |
+| K2 | Hub / network / credit / reputation-index / team-sharing / interop adapters | Stands on this tree: ADR-088 and ADR-216 (internal scope, adoption is not a goal) already settle it, and no defect verified here asks for any of it. The source proposals additionally cited an independent measurement reporting ~2 % asset reuse and >84 % of released assets bypassing validation; that figure was **not** checked here and is not load-bearing — recorded because it points the same way, not because it decides. |
 | K3 | The ADR-reopen package | The runtime taxonomy exists (ADR-124 Class A/B/C); ADR-094 is owner-decided with revival behind an unmet gate. The single legitimate door is the Phase 9 blocker. |
 | K4 | SQLite as the *source* of experience | Class C by the state-store test, quoted verbatim in 6.5. Admissible only as a rebuildable index. |
 | K5 | An evaluator-mesh framework, personality/mutation objects, strategy presets, session-spawn directives, auto-issue-filing | No verified defect behind any of them, and several rest on mechanics that could not be inspected. Adopted from that cluster: exactly one rule — a missing signal is `unknown`, never `success`. |

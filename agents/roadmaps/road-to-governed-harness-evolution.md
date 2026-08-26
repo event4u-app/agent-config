@@ -9,8 +9,17 @@ estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving 
 
 > **Source:** `agents/tmp.old/evolve/` — three session proposals plus the
 > operator transcript. Every repo claim below was re-verified against this tree
-> on 2026-08-26; the proposals were drafted against `1899f92b9`, which is HEAD
-> minus one commit, so the staleness window is empty.
+> on 2026-08-26; the proposals were drafted against `1899f92b9`.
+>
+> **Corrected after a neutral review: the staleness window is not empty.** An
+> earlier revision of this line said `1899f92b9` was "HEAD minus one commit", which
+> was true when the verification started and false by the time this branch was
+> pushed — the branch was rebased in between and the sentence was never
+> re-measured. `git rev-list --count 1899f92b9..HEAD` reads **7**, of which three
+> are upstream: `387dd3e68`, `82e47cefc` (#1676, four database-mastery roadmaps)
+> and `9e8344a3f`. That matters here specifically: #1676 changed the very estate
+> the E2 decision below reasons about, and reading a pre-rebase number is exactly
+> how the first version of E2 got its figure wrong.
 >
 > **The consolidation those files produced was incomplete, and that is the first
 > finding.** `road-to-governed-harness-evolution-master.md` names two parents it
@@ -45,7 +54,7 @@ carriers and builds only the remainder.
 
 | Wanted capability | Existing carrier | Verified on this tree |
 |---|---|---|
-| Candidate worktrees, isolated checkout, no writes to the original tree | `src/scripts/bench_ab_clone.ts` | `--variant` already accepts three values (`with`, `without`, `with-rdp`), plus `--refresh`, `--print-shape-hash`, `target_shape_hash` (`:197`) |
+| Candidate worktrees, isolated checkout, no writes to the original tree | `src/scripts/bench_ab_clone.ts` | `--variant` already carries three real variants (`with`, `without`, `with-rdp`) — its choice list is five, the other two being the aggregates `both` and `all` (`:289`, `:303`) — plus `--refresh`, `--print-shape-hash`, `target_shape_hash` (`:197`) |
 | Leakage assertion / path-ownership sabotage fails closed | `src/scripts/bench_ab_integrity.ts` | present; byte-wise clone comparison |
 | Paired verdict, direction over magnitude, `underpowered` is not a pass | `src/scripts/_lib/paired_verdict.ts` | `:25-26` four outcomes, `underpowered` "deliberately not a kind of pass"; `:54-65` the minimum discordant-trial floor is **derived** from the exact sign test, not chosen |
 | Planted bad candidate rejected cheaply | `src/scripts/_lib/eval_publication.ts` | `PlantedItem` `:13`, `discriminationDeficit` `:31` |
@@ -58,8 +67,9 @@ carriers and builds only the remainder.
 **corrected-from-reproduction — the isolation work is smaller than the master
 claimed.** The master described `bench_ab_clone` as living on a single "package
 present / absent" axis needing an axis extension. It already carries a
-`--variant` flag whose third value sits on a different axis entirely. Adding a
-candidate variant is a new enum member on existing multi-variant machinery.
+`--variant` flag whose third real value (`with-rdp`) sits on a different axis
+entirely. Adding a candidate variant is a new enum member on existing
+multi-variant machinery.
 
 ## The parent disagreements — decide these, do not inherit a silent pick
 
@@ -177,9 +187,10 @@ once.
       `src/scripts/_lib/outcome_envelope.ts:24-30` has six
       (`success · clean-no-op · blocked · approval-required · exhausted ·
       stagnated`). The sibling roadmap
-      `road-to-experience-loop-broadening.md` owns the reconciliation and plans
-      to write `clean-no-op` into the audit stream, where that value does not
-      exist. This step depends on that one; it does not duplicate it.
+      `road-to-experience-loop-broadening.md` owns the reconciliation; one of its
+      source proposals planned to write `clean-no-op` into the audit stream,
+      where that value does not exist, which is how the split was found. This
+      step depends on that one; it does not duplicate it.
       verify: one module exports the enum both readers import, and a lint
       rejects an inline duplicate.
 
@@ -490,7 +501,7 @@ once.
 | 6 | Cost blindness turns a truncated run into a false pass | implementation | Cascade evaluation over candidates × task families × repeated trials is the dominant cost. Truncating to fit budget yields `underpowered`, which a reader treats as a pass | 0.5 aborts rather than truncates; 4.3 makes `underpowered` a non-pass in code; 5.6 reduces the cost instead of only capping it | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 7 | Stopping only on spend | implementation | Six of the parents' nine stop conditions detect epistemic invalidity, which a spend cap never sees. A run can complete inside budget and be worthless | 0.6 pre-registers the validity conditions with detectors, and names the ones that stay model-carried | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 8 | Monotonic estate growth after the gate | product | Every promotion adds; nothing reopens a promoted artefact. The gate-side `artifact-count delta` does not constrain the estate over time | 7.6 adds post-promotion re-evaluation with an exercised RETIRE path; 7.3 keeps most promotions below global scope | Phase 7 — Promotion bridge and the lifecycle after it |
-| 9 | Search becomes the product | product | One parent warned against this and then listed a meta-evolver, a curriculum generator and a routing tree as phases. The surface doubles before a single trustworthy run exists | Those three are killed or parked below; this roadmap stops at seven phases and 6.1 takes the measurable core | Phase 6 — Delivery: measure the existing substrate first |
+| 9 | Search becomes the product | product | One parent warned against this and then listed a meta-evolver, a curriculum generator and a routing tree as phases. The surface doubles before a single trustworthy run exists | Those three are killed or parked below; this roadmap stops at Phase 7 and 6.1 takes the measurable core | Phase 6 — Delivery: measure the existing substrate first |
 | 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | 0.4 adds a per-field visibility class, a disclosure log, and a run abort | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 
 ## Acceptance Criteria
@@ -560,16 +571,29 @@ If this cut fails, the architecture is refuted before anything is built.
   `road-to-experience-loop-master` and `road-to-evidence-routed-skills-master`
   v2. Verified on this tree: the second name **appears nowhere in the
   repository** — not in `agents/roadmaps/` in any disposition and not in any
-  tracked file (`grep -rl` over `*.md`, `*.ts`, `*.json`, zero hits). The first
+  tracked file. `grep -rl` over `*.md`, `*.ts` and `*.json` returned zero hits
+  when the check was run; it now returns exactly one, this roadmap, because the
+  name is written above. A reader re-running it should expect that single
+  self-hit and nothing else. The first
   exists only as the sibling inbox proposal, now
   `road-to-experience-loop-broadening.md`. Also verified:
   `lint_roadmap_family_cap` **cannot** fire on either name —
   `src/scripts/lint_roadmap_family_cap.ts:41` sets
   `FAMILY_PREFIX = 'road-to-skill-ecosystem-'`, and it reports 0/2 slots used.
-  The gate that does apply is `check_estate_count`, reading
-  `active_roadmaps 3` against a floor of 7 — four slots of headroom. So the real
-  question is narrow: fold the sibling in, or keep both. 0.2's five-verb
-  disposition is where it gets answered.
+  The gate that does apply is `check_estate_count`.
+
+  **Corrected after a neutral review, and the correction reverses this
+  decision's force.** An earlier revision read "`active_roadmaps 3` against a
+  floor of 7 — four slots of headroom". That was a pre-rebase reading; #1676
+  landed four database-mastery roadmaps in the window named above. The gate now
+  reports `active_roadmaps 7 (floor 7 at origin/main, +0)` — **at the floor, zero
+  headroom.** These three roadmaps clear it only because `status: draft` excludes
+  them from the counted set and each carries `estate_offset_exempt` for the
+  file-based half. So the choice is not between two comfortable options: flipping
+  any of them to `ready` without a disposal in the same change raises a floor at
+  its ceiling, which makes folding the cheaper path on the estate axis rather
+  than merely the tidier one. 0.2's five-verb disposition is where it gets
+  answered, and it should be answered before any status flip.
 - **E3 — Budget ceiling** for 0.5 (candidates × trials × spend per run) and the
   sampling strategy for the 5.1 body variant.
 - **E4 — Activation-ladder arity:** 4 states or 6? Recommendation: 6, because
@@ -603,8 +627,8 @@ If this cut fails, the architecture is refuted before anything is built.
 | ID | Rejected | Reason |
 |---|---|---|
 | K1 | The external reference as a dependency or runtime | Wrong layer (a Python benchmark laboratory). Shapes yes, code no. |
-| K2 | Embedding / vector index for routing | **Contract violation**, not a preference: `docs/contracts/no-runtime-boundary.md:40` classifies it Class C, verbatim, while the BM25 core passes the same test. |
-| K3 | Ungated autonomous self-evolution in canonical | Dense self-updates degrade in the cited external work. Autonomy belongs in the laboratory, not at the authority boundary. |
+| K2 | Embedding / vector index for routing | **Contract violation**, not a preference: `docs/contracts/no-runtime-boundary.md:40` says verbatim that "a vector/embedding index fails — it enables query semantics absent from source, and stays Class C". That line names the code-graph cache as passing and says nothing about BM25; that the BM25 core also passes is this roadmap's own inference from `lexical_index.ts:9-15` (deterministic, in-memory, rebuilt per invocation), not a quotation. |
+| K3 | Ungated autonomous self-evolution in canonical | Autonomy belongs in the laboratory, not at the authority boundary — and that argument stands on this tree alone: `ADR-239:188` records merge authority as open, so nothing here may promote autonomously regardless of what the literature says. The source proposals justified this kill with external findings that dense self-updates degrade; those were not checked here and are **not** load-bearing for the kill. |
 | K4 | An episodic memory layer | ADR-094 removed Layer 2 and kept Layer 1; the intake JSONL plus its fold step is already that layer. `ADR-094:85` records revival as **gated** (≥2 funded consumer projects) — so this is a gated no with an unmet gate, and the gate is the thing to cite, not a prohibition. |
 | K5 | A separate sprawl dashboard | Replaced by the minimality tie-break (4.5) and the `artifact-count delta` row (4.2) — inside the gate, where it prevents something. |
 | K6 | Weighted total fitness score, or a frontier as promotion criterion | Two truths next to `paired_verdict`. |

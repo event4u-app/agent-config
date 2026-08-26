@@ -31,34 +31,68 @@ consolidate**, and it says so in its own header:
 
 - `road-to-gated-harness-evolution-deep-v4.md:9-13` claims to supersede the
   planning shape of both parents the `evolve/` master names.
-- `road-to-outcome-grounded-harness-evolution.md:9-11` carries
+- `road-to-outcome-grounded-harness-evolution.md:10-12` carries
   `supersedes_analysis:` listing both parents the `evolver/` master names.
-- `road-to-frontend-operating-system.md:6-10` carries `research.basis:` listing
-  exactly the three parents the `impeccable/` master names.
+- `road-to-frontend-operating-system.md:6-11` carries `research.basis:` listing
+  the three parents the `impeccable/` master names **plus** a fourth entry,
+  `chat(3).txt`. Stated precisely because this third case is weaker than the
+  other two: `research.basis:` is a grounding list, not a supersession claim, so
+  reading it as a self-declared later synthesis is an inference. The first two
+  cases declare supersession in as many words; this one does not.
 
 So the consolidation reached the first generation and stopped one generation
-short, three times independently.
+short, three times independently — twice on the artefact's own declaration, once
+on inference.
 
 *Competing-terminal-syntheses* (1 of 4). `road-to-one-spine.md` and
 `road-to-redundancy-governance-master.md` are two masters over the **same four**
 parents, both dated 2026-08-25, both marked PROPOSAL, and neither names the
-other. Different mechanism, same consequence: an artefact that reads as the
-settled answer while a peer of equal standing exists.
+other: an artefact that reads as the settled answer while a peer of equal
+standing exists.
+
+**Corrected 2026-08-26, after a neutral review of this file: the two shapes are
+not as separate as the headings above suggest, and the `redundanz/` case is not
+the only one that fits the second.** In `evolve/`,
+`road-to-gated-harness-evolution-deep-v4.md:10-11` declares supersession over
+*exactly* the two parents the master names, and neither document names the other
+— which is the competing-terminal-syntheses shape verbatim. The same holds in
+`evolver/`, where `supersedes_analysis:` and `consolidates:` list the identical
+pair. So the second shape occurs in **three** folders, not one, and the first is
+best read as a description of what the master did rather than as a disjoint
+class. Anything built on the distinction — including a check that expects the
+second shape in one folder only — must use the three-folder count.
 
 **Why it matters, stated as the consequence rather than the count.** A
 consolidating roadmap presents its content as adjudicated — parents named,
 conflicts resolved, a kill register listing what was rejected and why. When a
 parent is missing from that list, its content is not *killed*; it is
-*undiscussed*, and nothing in the artefact distinguishes the two. Measured on the
-two `tmp/` folders by a structural read of the omitted parents, this produced 13
-and 17 substantive items respectively — mechanisms, exit criteria and
-acceptance criteria — that appear in no master and carry no kill ID. Several
-reverse a decision the master made: in one case the master adopted verbatim a
-mutation-arity rule the omitted parent had raised to doctrine level, in another
-the master adopted an anti-forgery predicate the omitted parent named by name as
-defective, and in a third the master planned a delivery mechanism that ships in
-the tree (`src/scripts/_lib/lean_projection_mode.ts:19`) and that the omitted
-parent had killed for that reason.
+*undiscussed*, and nothing in the artefact distinguishes the two. Measured on the two
+`tmp/` folders by a structural read of the omitted parents, this produced 13 and
+17 substantive items — mechanisms, exit criteria and acceptance criteria — that
+appear in no master and carry no kill ID. **Those two figures are the counts the
+structural reads reported and no command reproduces them.** They are a judgement
+about what counts as one substantive item, and they are recorded as such rather
+than dressed as a measurement. A `grep -c` over the `from-skipped-parent` markers
+in the emitted roadmaps is *not* a substitute: it counts lines mentioning the
+marker, prose about it included, it does not distinguish an adopted item from a
+discussion of one, and it drifts with ordinary editing — it moved while this
+correction was being written. Three of them
+bear on a decision the master made, in three different ways, and the differences
+matter more than the count:
+
+- the master **omitted** a mutation-arity rule the skipped parent had raised to
+  doctrine level — it reduced the mutation *alphabet* to three dimensions, which
+  is a different invariant from limiting a candidate's *arity*;
+- the master **adopted** an anti-forgery predicate the skipped parent named by
+  name as defective;
+- the master **planned** a delivery mechanism that ships in the tree
+  (`src/scripts/_lib/lean_projection_mode.ts:19`) and that the skipped parent had
+  killed for exactly that reason.
+
+An earlier revision of this paragraph described the first as the master having
+"adopted verbatim" the arity rule. That was wrong in both directions — it was
+not adopted, and an adoption would not have been a reversal — and it contradicted
+the roadmap derived from this file, which states the omission correctly.
 
 **What this census does not establish.** It does not show that the omitted
 content was *better* — only that it was not considered. It does not measure
@@ -67,7 +101,11 @@ n=4 it cannot distinguish a property of this consolidation pattern from a
 property of the four sessions that happened to run it; a fifth folder with a
 complete lineage would not refute the finding but would bound it.
 
-**Reproduction.** The two `tmp/` rows are reproducible until those folders are
-consumed into `tmp.old/`; all four rows are reproducible from `tmp.old/` while
+**Reproduction.** The two `tmp/` rows in the table above name the paths as they
+were when the census ran; the same drain that produced this file then moved both
+folders, so they now read `agents/tmp.old/evolve/` and
+`agents/tmp.old/evolver/`. The table is left as measured rather than rewritten,
+and this note is the pointer.
+Those two rows are reproducible from their new location; all four rows are reproducible from `tmp.old/` while
 that directory is retained. Both directories are gitignored, so this file is the
 durable record and the paths above are pointers, not citable evidence in a clone.
