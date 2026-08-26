@@ -306,7 +306,7 @@ export function scanTree(
     return { findings, filesScanned: files.length };
 }
 
-function countBy<T extends string>(items: readonly { [k: string]: unknown }[], key: string): Record<string, number> {
+function countBy(items: readonly { [k: string]: unknown }[], key: string): Record<string, number> {
     const out: Record<string, number> = {};
     for (const it of items) {
         const k = String(it[key]);
