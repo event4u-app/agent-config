@@ -80,7 +80,7 @@ dependency explicitly: routing and ownership questions block narrowing
 
 ## Phase 1 — The four folklore passages in the shipped guideline
 
-- [ ] **1.1 Replace the composite-index rule with the ordering that actually decides it.**
+- [x] **1.1 Replace the composite-index rule with the ordering that actually decides it.**
       `docs/guidelines/php/database.md:25` reads "Order matters — most selective
       column first". Equality-predicate columns come before range-predicate
       columns, then columns the query orders by; selectivity is a secondary
@@ -90,7 +90,7 @@ dependency explicitly: routing and ownership questions block narrowing
       verify: `grep -n "most selective column first" docs/guidelines/php/database.md`
       returns nothing, and the replacement line names equality-before-range.
 
-- [ ] **1.2 Stop classifying `type=ALL` as a defect.**
+- [x] **1.2 Stop classifying `type=ALL` as a defect.**
       `:37` sits in a table headed "Bad value" and reads "Full table scan —
       needs index". A full scan is the correct plan on a small table or a
       high-hit-rate predicate. Reword to state the question the reader must
@@ -99,7 +99,7 @@ dependency explicitly: routing and ownership questions block narrowing
       verify: `grep -n "needs index" docs/guidelines/php/database.md` returns
       nothing on the `type`/`ALL` row, and the row states a condition.
 
-- [ ] **1.3 Make the subquery rewrite conditional.**
+- [x] **1.3 Make the subquery rewrite conditional.**
       `:52` reads "Subquery in WHERE | Rewrite as JOIN" as an unconditional fix
       in an anti-patterns table. Name the cases where the rewrite helps
       (correlated subquery re-executed per row) and where it does not (a
@@ -109,7 +109,7 @@ dependency explicitly: routing and ownership questions block narrowing
       unconditional fix; `grep -c "Rewrite as JOIN" docs/guidelines/php/database.md`
       is 0 or the surviving occurrence carries a condition.
 
-- [ ] **1.4 Resolve the small-table contradiction the register missed.**
+- [x] **1.4 Resolve the small-table contradiction the register missed.**
       `:15` says to index foreign-key columns; `:20` says not to index small
       tables. Both are absolute and they collide on a small child table. State
       the resolution — uniqueness and foreign-key constraints are indexed
@@ -120,7 +120,7 @@ dependency explicitly: routing and ownership questions block narrowing
       exception stated at `:20`, and `grep -c "unique" docs/guidelines/php/database.md`
       is greater than 0 inside the indexing section.
 
-- [ ] **1.5 Add adversarial fixtures where the folklore answer is wrong.**
+- [x] **1.5 Add adversarial fixtures where the folklore answer is wrong.**
       One fixture per corrected passage: a range-predicate column that must not
       lead the composite index, a small table where the full scan is the
       cheapest plan, a subquery that must stay a subquery, a 40-row lookup
@@ -131,7 +131,7 @@ dependency explicitly: routing and ownership questions block narrowing
 
 ## Phase 2 — Reversibility: one contract, two surfaces
 
-- [ ] **2.1 State the recovery contract in one place.**
+- [x] **2.1 State the recovery contract in one place.**
       Replace the split between `laravel-migration/SKILL.md:39,158` ("Always
       include a reversible `down()`" / "Do NOT forget") and
       `database.md:74` ("Make reversible when possible") with a single
@@ -141,9 +141,20 @@ dependency explicitly: routing and ownership questions block narrowing
       the violation, not the absence of `down()`.
       verify: `grep -n "Always include a reversible" src/skills/laravel-migration/SKILL.md`
       returns nothing, and both surfaces state the same two-branch obligation.
-      **Gated on `blocker: recovery-contract-breaks-a-shipped-do-not`.**
+      **Gated on `blocker: recovery-contract-breaks-a-shipped-do-not` — resolved
+      (a) by council 2026-08-27, 2/2 convergent.**
 
-- [ ] **2.2 Update the fixtures that assert the old dogma.**
+      Landed with the escape-hatch guard both seats independently required, which
+      is stricter than the step as written: the roll-forward plan lives **in the
+      migration file itself**, and records why restoration is impossible *with
+      the evidence* (checked, not assumed), the ordered recovery steps with their
+      inputs and validation criteria, and a named responsible owner. Vague intent
+      or missing detail is the violation. That answers risk 3 directly — the
+      concern was that "named plan" is easier to claim than to plan, and a plan
+      that must be ordered, evidenced, owned and reviewable in the same diff is
+      not a label.
+
+- [x] **2.2 Update the fixtures that assert the old dogma.**
       Any fixture or eval asserting `down()` presence as the pass condition
       asserts the recovery contract instead.
       verify: `grep -rn "down()" tests/ | grep -i "requir\|always"` returns
@@ -151,7 +162,7 @@ dependency explicitly: routing and ownership questions block narrowing
 
 ## Phase 3 — MySQL is not MariaDB, as a discipline rather than a footnote
 
-- [ ] **3.1 Promote the two divergence lines that already exist.**
+- [x] **3.1 Promote the two divergence lines that already exist.**
       `src/skills/database/SKILL.md:118` ("`EXPLAIN` output varies between
       MariaDB and MySQL") and `src/skills/sql-writing/SKILL.md:69` ("MariaDB and
       MySQL have subtle syntax differences") are true and buried. Promote them
@@ -162,7 +173,7 @@ dependency explicitly: routing and ownership questions block narrowing
       verify: both skills state the principle above their gotcha lists, and the
       two original lines are still present or subsumed verbatim.
 
-- [ ] **3.2 Resolve the dialect contradiction between the skill and its own corpus.**
+- [x] **3.2 Resolve the dialect contradiction between the skill and its own corpus.**
       `src/skills/sql-writing/SKILL.md:33` says "Use MariaDB syntax — Not
       PostgreSQL or MSSQL" while the grounding corpus it points at
       (`src/skills/database/SKILL.md:23-24`) is declared "(PostgreSQL 16 / MySQL
@@ -176,7 +187,7 @@ dependency explicitly: routing and ownership questions block narrowing
 
 ## Phase 4 — Cascade as a decision, at both sites
 
-- [ ] **4.1 Replace the hardcoded cascade in the canonical template.**
+- [x] **4.1 Replace the hardcoded cascade in the canonical template.**
       `src/skills/laravel-migration/SKILL.md:76` writes
       `->onDelete('cascade')` into the template a reader copies. Replace it with
       the decision and a pointer: expendable children cascade, self-valued
@@ -186,7 +197,7 @@ dependency explicitly: routing and ownership questions block narrowing
       returns nothing, or the surviving occurrence is inside a labelled example
       of one branch of the decision.
 
-- [ ] **4.2 Fix the second site.**
+- [x] **4.2 Fix the second site.**
       `docs/guidelines/php/database.md:71` says "Add foreign keys with
       `constrained()` + proper `onDelete()`" — "proper" presumes a decision the
       guideline never states. Point it at the same decision as 4.1.
@@ -196,7 +207,7 @@ dependency explicitly: routing and ownership questions block narrowing
 ## Blockers
 
 ### blocker: recovery-contract-breaks-a-shipped-do-not
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 only. Phases 1, 3 and 4 ship without it.
 - **What to do:** step 2.1 deletes a shipped `Do NOT` line
@@ -216,9 +227,10 @@ dependency explicitly: routing and ownership questions block narrowing
 - **Resolved when:** one of (a), (b) or (c) above is chosen and recorded in `## Notes`; if (c), Phase 2 is marked `[-]` carrying that reason.
 - **Recommendation:** (a) — adopt the recovery contract. The tree already ships both positions, so (a) picks one instead of inventing a third, and it is the only option that gives a genuinely irreversible migration a compliant path.
 - **If you do nothing:** the guideline keeps saying "when possible" while the skill keeps saying "Always", and a consumer reading either one is following advice the other contradicts. Phase 2 stays unbuildable and step 2.2's fixtures keep asserting the dogma.
+- **Resolution (2026-08-27, AI council, 2/2 convergent): (a)**, with an escape-hatch guard neither the step nor the recommendation contained. Both seats reached (a) on the same ground — (b) leaves a genuinely irreversible migration with no compliant path, (c) knowingly ships contradictory gates — and both then added, independently, that a *named* plan is not enough. The roll-forward branch requires, in the migration file itself: why restoration is impossible with the evidence; ordered recovery steps with their inputs and validation criteria; a responsible owner. Recorded in full at [`db-advice-blockers`](../evidence/council/db-advice-blockers.md). **Revisit-if:** a migration passes review with a roll-forward plan that cannot be executed as written, or whose "why impossible" rationale is later shown false.
 
 ### blocker: small-table-fk-contradiction-wording
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 1.4 only.
 - **What to do:** `:15` and `:20` are both absolute and they collide. Step 1.4
@@ -231,6 +243,7 @@ dependency explicitly: routing and ownership questions block narrowing
 - **Resolved when:** `## Notes` records which of `:15` and `:20` is the rule and which is the exception, and step 1.4's wording follows that choice.
 - **Recommendation:** exempt uniqueness and foreign-key constraints from the row-count guidance — they exist for integrity and lookup latency, which a row count does not bear on.
 - **If you do nothing:** the two absolute lines stay in the same section and keep colliding on every small child table, and step 1.4 cannot be written either way without picking one silently.
+- **Resolution (2026-08-27, AI council, 2/2 convergent): (a)** — the foreign-key/uniqueness line is the rule and the row-count guidance carries the exception. Both seats added the same two refinements the recommendation lacked: the section must keep **three** concepts apart (declaring an integrity constraint · indexing the referencing column · optional query-performance indexes), with the row-count guidance governing the third only; and "small" alone decides nothing, so the text reads "small **and rarely accessed**" and states the access-pattern axis explicitly rather than leaving it to inference. One seat also rejected an over-broad framing of constraint indexes as "infrastructure for enforcement" on engine-neutrality grounds, which is why no engine is named anywhere in the section. Recorded in full at [`db-advice-blockers`](../evidence/council/db-advice-blockers.md). **Revisit-if:** engine inspection plus workload measurement repeatedly shows the baseline creating redundant indexes that serve no access path.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
@@ -244,9 +257,64 @@ dependency explicitly: routing and ownership questions block narrowing
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -nE "most selective column first|needs index|Rewrite as JOIN" docs/guidelines/php/database.md` returns nothing, and each replacement passage states the condition or ordering that decides the case.
-- [ ] AC-2 — The indexing section of `docs/guidelines/php/database.md` no longer contains two absolute rules that collide on a small child table, and it mentions unique indexes.
-- [ ] AC-3 — Four adversarial fixtures exist, one per corrected passage, each naming both the correct answer and the folklore answer; a run over them produces the correct answer in all four.
-- [ ] AC-4 — `src/skills/database/SKILL.md` and `src/skills/sql-writing/SKILL.md` each state that MySQL and MariaDB share a query-syntax world and never share migration, online-DDL or feature behaviour, and neither skill selects a dialect without reading the project first.
-- [ ] AC-5 — No canonical template in the tree writes a referential action without stating it as a decision: `grep -rn "onDelete('cascade')" src/skills/` returns nothing outside a labelled decision example.
-- [ ] AC-6 — Either the recovery contract is stated identically on both surfaces, or `blocker: recovery-contract-breaks-a-shipped-do-not` is resolved as (c) and Phase 2 is recorded as cut with that reason.
+- [x] AC-1 — `grep -nE "most selective column first|needs index|Rewrite as JOIN" docs/guidelines/php/database.md` returns nothing, and each replacement passage states the condition or ordering that decides the case.
+
+      **Met.** All three folklore strings are gone, and each replacement states
+      what decides its case: equality-before-range with selectivity as a
+      tie-break; `rows` estimate against table size; correlated-vs-uncorrelated
+      with the driving-set case named. Asserted by
+      `tests/scripts/database_advice_fixtures.test.ts`.
+- [x] AC-2 — The indexing section of `docs/guidelines/php/database.md` no longer contains two absolute rules that collide on a small child table, and it mentions unique indexes.
+
+      **Met.** The section now opens by keeping three concepts apart and says
+      which of them the row-count guidance governs; `:20`'s line reads "small
+      **and rarely accessed**"; the unique-index case is stated in `When to add
+      indexes` and in the constraint paragraph.
+- [x] AC-3 — Four adversarial fixtures exist, one per corrected passage, each naming both the correct answer and the folklore answer; a run over them produces the correct answer in all four.
+
+      **Met.** `tests/fixtures/database-advice/folklore-adversarial.md` carries
+      four cases, each naming both answers.
+      `tests/scripts/database_advice_fixtures.test.ts` asserts the deciding
+      vocabulary per case and that the folklore strings are gone — **verified
+      sensitive** by reverting three phrases and watching cases 1 and 4 go red.
+      Stated honestly at the top of that test: it is a text check on our own
+      advice, not an engine measurement, which is exactly what risk 2 requires.
+- [x] AC-4 — `src/skills/database/SKILL.md` and `src/skills/sql-writing/SKILL.md` each state that MySQL and MariaDB share a query-syntax world and never share migration, online-DDL or feature behaviour, and neither skill selects a dialect without reading the project first.
+
+      **Met.** Both skills carry the shared-query / never-shared-migration
+      principle above their gotcha lists, and the two original divergence lines
+      survive verbatim beneath it. `sql-writing` step 3 now reads the engine from
+      the project — config, compose file, migration syntax — and names the
+      unknown case rather than assuming, which is risk 4's requirement.
+- [x] AC-5 — No canonical template in the tree writes a referential action without stating it as a decision: `grep -rn "onDelete('cascade')" src/skills/` returns nothing outside a labelled decision example.
+
+      **Met.** The one surviving `onDelete('cascade')` in
+      `src/skills/laravel-migration/SKILL.md` is a labelled branch of the
+      decision, commented as such and pointing at the three-row table.
+- [x] AC-6 — Either the recovery contract is stated identically on both surfaces, or `blocker: recovery-contract-breaks-a-shipped-do-not` is resolved as (c) and Phase 2 is recorded as cut with that reason.
+
+
+      **Met** on the first branch: the recovery contract is stated on both
+      surfaces, with the guideline pointing at the full contract rather than
+      restating a divergent second copy. Phase 2 was not cut.
+## Notes
+
+**2026-08-27 — both blockers resolved by AI council, 2/2 convergent**
+(`anthropic/claude-sonnet-4-5`, `openai/codex-default`; two rounds, blind peer
+review; $0.044), under the maintainer's delegation of owner-reserved decisions
+for an autonomous drain run. Verdicts verbatim and the implementation map:
+[`db-advice-blockers`](../evidence/council/db-advice-blockers.md).
+
+- `recovery-contract-breaks-a-shipped-do-not` → **(a)**, adopt the two-branch
+  recovery contract, with an in-file, evidenced, ordered and owned roll-forward
+  plan.
+- `small-table-fk-contradiction-wording` → **(a)**, the foreign-key/uniqueness
+  line is the rule; the row-count guidance carries the exception and governs
+  optional performance indexes only.
+
+Both resolutions are **stricter than this roadmap's own recommendations**, in
+the same direction: each seat independently found that the recommendation as
+written left the corrected passage able to be satisfied by a label. That is
+recorded here because it is the useful part — the council did not ratify the
+plan, it repaired two places where the plan would have shipped a checkable-
+sounding rule that was not checkable.
