@@ -44,6 +44,7 @@ import {
     parse_exec_pointer,
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _FILE = fileURLToPath(import.meta.url);
@@ -136,6 +137,22 @@ export interface LedgerEntry {
      * ledger exists to make impossible.
      */
     superseded_by: string;
+    /**
+     * Optional: the inferences this claim's data does NOT license.
+     *
+     * `road-to-skill-ecosystem-eval-integrity` Phase 5 Step 5. A measured number
+     * travels further than its measurement, and the sentence that stops it is
+     * one nobody writes unless a field asks for it. A `quant` claim backed by a
+     * benchmark supports exactly what the benchmark measured, on the population
+     * it ran over — and a reader with only the headline has no way to know which
+     * neighbouring reading it does not support.
+     *
+     * Optional rather than required, with a shrink-only ratchet on `backed`
+     * quant entries that lack it. Making it required would fail the build on
+     * every existing entry at once, which is the shape this repository's own
+     * records call a gate that could only block.
+     */
+    non_inference: string;
 }
 
 interface Args {
@@ -177,6 +194,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 status: cur.status ?? '',
                 last_verified: cur.last_verified ?? '',
                 superseded_by: cur.superseded_by ?? '',
+                non_inference: cur.non_inference ?? '',
             });
         }
         cur = {};
@@ -189,7 +207,9 @@ function load_ledger(): Map<string, LedgerEntry> {
             continue;
         }
         if (!cur.id) continue;
-        const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified|superseded_by):\s*(.*)$/);
+        const field = line.match(
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|non_inference):\s*(.*)$/,
+        );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
             (cur as Record<string, string>)[key] = (field[2] ?? '').trim();
@@ -484,6 +504,59 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 execSkipped.push(entry.id);
             }
         }
+    }
+
+    // 5. Non-inference ratchet (road-to-skill-ecosystem-eval-integrity 5.5).
+    //
+    // A measured number travels further than its measurement. `non_inference`
+    // is the sentence that stops it, and it is a sentence nobody writes unless
+    // something asks. Scoped to `backed` + `quant`, which is exactly the class
+    // that gets quoted out of context: a qualitative claim carries its own
+    // hedge in the prose, a quantitative one carries a figure.
+    //
+    // A RATCHET rather than a requirement, deliberately: 42 backed quant
+    // entries lack the field today, and failing the build on all of them at
+    // once produces a gate that can only block — the shape this repository's
+    // own records name as the reason a gate gets suppressed. Every NEW backed
+    // quant claim must carry it; the inherited 42 come along as they are
+    // touched. A present-but-empty field is a finding at any count, because
+    // that is an author answering the question with silence.
+    const missingNonInference = [...ledger.values()].filter(
+        (e) => e.status === 'backed' && e.kind === 'quant' && e.non_inference === '',
+    );
+    const emptyNonInference = [...ledger.values()].filter(
+        (e) => e.non_inference !== '' && e.non_inference.trim().length < 20,
+    );
+    for (const e of emptyNonInference) {
+        findings.push({
+            id: e.id,
+            file: LEDGER_REL,
+            reason:
+                'non_inference is present but says almost nothing — the field exists to enumerate ' +
+                'what the data does NOT license, and a placeholder is worse than an absent field ' +
+                'because it reads as answered',
+        });
+    }
+    // The ratchet is a property of a repository that RECORDS baselines. A tree
+    // with no baselines file at all is a fixture, not a repository silencing a
+    // gate, and the two are distinguishable: a MISSING FILE skips, while a
+    // present file with no entry still fails — which is the anti-silencing
+    // property, since deleting one entry from a tracked file is the cheap way
+    // to make this go away and it must not work.
+    const baselinesPath = path.join(REPO, 'src', 'config', 'gate-violation-baselines.json');
+    const nonInferenceVerdict = fs.existsSync(baselinesPath)
+        ? checkRatchet({
+              gate: 'check_claims:non-inference',
+              actual: missingNonInference.length,
+              repoRoot: REPO,
+          })
+        : { ok: true, message: '' };
+    if (!nonInferenceVerdict.ok) {
+        findings.push({
+            id: 'non-inference',
+            file: LEDGER_REL,
+            reason: nonInferenceVerdict.message,
+        });
     }
 
     if (findings.length > 0) {
