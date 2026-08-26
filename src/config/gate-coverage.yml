@@ -42,29 +42,29 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 293 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 294 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **62 rows are listed below**, covering ~21 % of the population.
+# **66 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 63 of those 66 are listed below.** The manifest is
+# therefore complete with respect to its own contract for every gate that can
+# carry a floor, and covers ~21 % of the population.
 #
-# RECOUNTED on 2026-08-26 in a MERGE, which is the case the 2026-08-24 block
-# below predicted in writing and is why both commands were re-run rather than
-# reconciled by hand. Two branches each added one row and each recorded its own
-# population line, so the merge produced the two conflicting figures 292 and 293
-# side by side — arithmetic-on-prose arriving through a merge exactly as that
-# block warned. Recomputed on the merged tree: `count_gate_scripts()` returns
-# **293** and `grep -c '^  - id:'` returns **62**. Neither side was wrong on its
-# own tree; 292 was measured before `lint_canonical_terms` existed.
+# RECOUNTED ON A MERGE, 2026-08-26 — the case the 2026-08-24 block below was
+# written for, arriving again. Two branches each added one row and each recorded
+# a correct population line for its own tree, so the merge put 293 and 294 side
+# by side; after the merge both gates exist, so either figure describes a tree
+# that no longer does. Recomputed on the merged tree rather than reconciled by
+# hand: `count_gate_scripts()` returns **294** and `grep -c '^  - id:'` returns
+# **63**.
 #
-# NOT re-measured here, and named rather than carried forward silently: the
-# "64 of them emit `scanned:` under their CI-identical argv" figure the previous
-# revision asserted. That number cannot be derived by grep — `reportScanned`
-# appears in 98 files and the literal in 267 — because it counts gates that
-# actually EMIT the line when run, which only a full ledger pass establishes.
-# The claim is therefore dropped rather than incremented past a merge that
-# added two emitters; `check_gate_coverage --ledger` recomputes it.
+# The emitter total moves with the listed count for the reason the 2026-08-25
+# paragraph already states: every LISTED row is an emitter, because a row that
+# did not emit could carry no floor, and the same three emitters remain
+# deliberately unlisted (`lint_evidence_artifacts`, `adr_cite_check`,
+# `check_new_adr_evidence`). 63 + 3 = 66.
 #
 # RECOUNTED on 2026-08-26 while adding `lint_canonical_terms`
 # (road-to-canonical-terms 2.3). Recomputed, not adjusted — the two commands in
@@ -1851,3 +1851,19 @@ gates:
         recorded in `src/config/canonical-terms.yml` decided against. The gate
         must red on it, because a ratchet that cannot see a NEW occurrence is a
         ratchet that only records history.
+  - id: lint_memory_twin_parity
+    argv: []
+    min_scanned: 7
+    corpus: "the twins declared in src/config/memory-twin-verdicts.yml — 7 today. The floor is the exact count rather than a lower bound: this list does not grow by ordinary work (a twin is added only when a script is duplicated into the template tree, which is a deliberate act), and a DROP means a verdict was deleted rather than earned. A new twin raises the floor in the same commit."
+    status: enforced
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus. The gate's population is the
+      `twins:` list inside one tracked config file, and every violation it can
+      have is a MODIFICATION — a twin drifting, a verdict deleted, a ceiling
+      exceeded. A newly created file lands outside the list by construction and
+      the gate correctly ignores it. Same class as `check_no_automerge_key`,
+      `check_condensation` and `check_ci_local_parity`. Discrimination is proven
+      instead by the gate's own `--self-test`: 5 cases, 3 rejecting, including
+      the two states the roadmap's verify clause names by hand — a one-line
+      behavioural divergence must RED, and a comment-only divergence must stay
+      GREEN.
