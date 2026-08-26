@@ -34,6 +34,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { capPerCategory, envelope } from './_lib/outcome_envelope.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 
@@ -41,6 +42,9 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** Artefact roots that may name a tool or a subagent type. */
+/** Per-KIND finding cap. A global cap lets one kind hide the other. */
+export const FINDING_CAP_PER_KIND = 20;
+
 export const SCAN_ROOTS = ['src/skills', 'src/agent-src', 'src/domains', 'src/subagents'] as const;
 
 /**
@@ -274,7 +278,11 @@ export function selfTest(): number {
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('-h') || argv.includes('--help')) {
-        process.stdout.write('usage: lint_host_portability [--root DIR] [--quiet] [--self-test]\n');
+        process.stdout.write(
+            'usage: lint_host_portability [--root DIR] [--quiet] [--json] [--self-test]\n' +
+                '  --json emits an outcome envelope: terminal state, retry class, suggestion,\n' +
+                '         and a `truncated` flag with per-category pre-cap totals.\n',
+        );
         return 0;
     }
     if (argv.includes('--self-test')) return selfTest();
@@ -306,9 +314,40 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     ledger?.report(quiet ? () => undefined : undefined);
     process.stdout.write(`scanned: ${String(report.scanned)}\n`);
 
+    // Findings are capped PER KIND, not globally: one high-volume kind would
+    // otherwise fill the list and hide the other entirely — the failure a cap is
+    // supposed to prevent, arriving through the cap. `truncated` and the pre-cap
+    // totals come from the same call, so the flag and the counts cannot drift.
+    const capped = capPerCategory(report.findings, (f) => f.kind, FINDING_CAP_PER_KIND);
+
+    if (argv.includes('--json')) {
+        const env = envelope({
+            state: report.findings.length > 0 ? 'blocked' : report.scanned === 0 ? 'clean-no-op' : 'success',
+            retry: report.findings.length > 0 ? 'hard-blocker' : 'not-applicable',
+            suggestion:
+                report.findings.length > 0
+                    ? 'rename the grant to a verified tool, or define the subagent type — a retry ' +
+                      'changes nothing, the artefact has to change'
+                    : '',
+            truncated: capped.truncated,
+            totals: capped.totals,
+            payload: capped.kept,
+        });
+        process.stdout.write(`${JSON.stringify(env, null, 2)}\n`);
+        return report.findings.length > 0 ? 1 : 0;
+    }
+
     if (report.findings.length > 0) {
-        for (const f of report.findings) {
+        for (const f of capped.kept) {
             process.stderr.write(`  🔴 [${f.kind}] ${f.file}:${String(f.line)} — ${f.detail}\n`);
+        }
+        if (capped.truncated) {
+            const dropped = Object.entries(capped.totals)
+                .map(([k, n]) => `${k}=${String(n)}`)
+                .join(' · ');
+            process.stderr.write(
+                `  … list CAPPED at ${String(FINDING_CAP_PER_KIND)} per kind. Pre-cap totals: ${dropped}\n`,
+            );
         }
         process.stderr.write(`❌  lint_host_portability: ${String(report.findings.length)} finding(s).\n`);
         return 1;

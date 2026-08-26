@@ -313,11 +313,25 @@ branch setting, push, open a PR, re-run CI, update a merge base, fix a failing
 test, authorise spend inside a budget — is machine-executable by the agent, and
 is therefore remediation work rather than a blocker.
 
-| Outcome | When | Success? |
-|---|---|---|
-| `complete` | `count_open == 0` and the PR is open | yes — archival check runs |
-| `blocked` | every remaining open step is **externally impossible** for the agent | **no** — partial progress, labelled as such |
-| a halt | one of the five conditions fired | **no** — the halt is reported |
+| Outcome | When | Success? | terminal state |
+|---|---|---|---|
+| `complete` | `count_open == 0` and the PR is open | yes — archival check runs | `success` |
+| `blocked` | every remaining open step is **externally impossible** for the agent | **no** — partial progress, labelled as such | `blocked`, or `approval-required` where the work is finished and waiting on a human |
+| a halt | one of the five conditions fired | **no** — the halt is reported | `exhausted` when a declared budget ran out; `stagnated` when the same failure signature repeated with budget left |
+
+**The closing report names the terminal state by word**, from
+[`terminal-states`](../../../../src/agent-src/contexts/execution/terminal-states.md).
+The reason is the failure that vocabulary exists to stop: a run that stopped at
+its iteration cap and one that finished both leave the roadmap looking the same,
+because the checkbox glyphs cannot express `exhausted`, `stagnated` or
+`approval-required` — they collapse into `[ ]` and `[~]`. Three of the six states
+are therefore invisible in the dashboard and visible only in the report, which is
+why the report has to say the word.
+
+`exhausted` and `stagnated` are **never** reported as `complete`, whatever
+partial progress exists, and they are kept apart on purpose: `exhausted` says the
+budget may have been too small and raising it is a legitimate response;
+`stagnated` says more of the same will not help and raising it is the wrong one.
 
 `blocked-preflight` no longer exists. A run always starts.
 
