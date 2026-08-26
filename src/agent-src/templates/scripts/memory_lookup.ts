@@ -246,6 +246,74 @@ function _pad2(v: string): string {
  * (`agents/memory/<type>.yml` or `<type>/entries.yml` with an `entries:`
  * list), so consumers can adopt either.
  */
+const _CURATED_STATUS_EXCLUDE: ReadonlySet<string> = new Set(['deprecated', 'archived', 'superseded']);
+
+/** Mirror Python `entry.get("status") in _CURATED_STATUS_EXCLUDE`. */
+function _statusExcluded(entry: Record<string, unknown>): boolean {
+    const status = entry['status'];
+    return typeof status === 'string' && _CURATED_STATUS_EXCLUDE.has(status);
+}
+
+
+/*
+ * Staleness, ported from `src/scripts/memory_lookup.ts` on 2026-08-26
+ * (`road-to-memory-twin-reconciliation` 2.2, verdict `dev-side-correct`).
+ *
+ * The template previously had NO staleness handling at all — `grep -c stale`
+ * returned 0 — so a consumer retrieved curated entries whose own
+ * `review_after_days` window had expired, with nothing saying so. `check_memory`
+ * required both fields on every entry the whole time; only retrieval ignored
+ * them.
+ *
+ * Portable by construction: Date math and a regex, no `_lib` import.
+ */
+function _today(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+function _parseIsoDate(s: string): Date | null {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) {
+        return null;
+    }
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) {
+        return null;
+    }
+    const date = new Date(Date.UTC(y, mo - 1, d));
+    // Reject overflow (e.g. 2026-02-31 → March), matching fromisoformat's strictness.
+    if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) {
+        return null;
+    }
+    return date;
+}
+
+function _pyStrDateLike(lv: unknown): string {
+    if (lv instanceof PyTimestamp) {
+        return lv.pyStr;
+    }
+    return _pyStr(lv);
+}
+
+function _isStale(entry: Record<string, unknown>, today: Date): boolean {
+    const lv = entry['last_validated'];
+    const rad = entry['review_after_days'];
+    // Python: `not lv or not isinstance(rad, int)`. PyYAML ints land as JS
+    // numbers; booleans are int in Python but excluded here as the common path.
+    if (!lv || typeof rad !== 'number' || !Number.isInteger(rad)) {
+        return false;
+    }
+    const validated = _parseIsoDate(_pyStrDateLike(lv));
+    if (validated === null) {
+        return false;
+    }
+    const days = Math.round((today.getTime() - validated.getTime()) / 86_400_000);
+    return days > rad;
+}
+
 function* _iter_curated_entries(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
@@ -254,6 +322,9 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
         const entries = _isPlainObject(data) ? data['entries'] : null;
         for (const e of Array.isArray(entries) ? entries : []) {
             if (_isPlainObject(e)) {
+                if (_statusExcluded(e)) {
+                    continue;
+                }
                 yield [single_file, e];
             }
         }
@@ -266,11 +337,17 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
             if (Array.isArray(entries)) {
                 for (const e of entries) {
                     if (_isPlainObject(e)) {
+                        if (_statusExcluded(e)) {
+                            continue;
+                        }
                         yield [yml, e];
                     }
                 }
             } else if (_isPlainObject(data) && data['id']) {
                 // Flat, one-entry-per-file layout (content-addressed).
+                if (_statusExcluded(data)) {
+                    continue;
+                }
                 yield [yml, data];
             }
         }
@@ -454,6 +531,7 @@ function _cross_repo_hits(keys: string[], limit: number): Hit[] {
  */
 export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
     const repo_hits: Hit[] = [];
+    const today = _today();
     for (const mtype of types) {
         if (mtype === KNOWLEDGE_TYPE) {
             for (const [p, entry] of _iter_knowledge_entries()) {
@@ -488,6 +566,14 @@ export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
             continue;
         }
         for (const [p, entry] of _iter_curated_entries(mtype)) {
+            // A curated entry past its own `review_after_days` window is not
+            // retrieved. The dev side additionally reports it under `skipped`;
+            // this copy has no `retrieve_with_meta`, so it filters silently —
+            // the exclusion is the behaviour that matters, the report is the
+            // richer surface.
+            if (_isStale(entry, today)) {
+                continue;
+            }
             repo_hits.push(new Hit(String(entry['id'] ?? ''), mtype, 'curated', String(p), _score(entry, keys), entry));
         }
         for (const [p, entry] of _iter_intake_entries(mtype)) {
