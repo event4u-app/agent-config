@@ -135,7 +135,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 - **`tdd`** — TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
 - **`tdd-green`** — TDD green phase — write the minimum production code to make the failing test pass; no test edits
-- **`tdd-red`** — TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behavior under test
+- **`tdd-red`** — TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behaviour under test
 - **`tdd-refactor`** — TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 - **`team`** — Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
 - **`team-adversarial`** — Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.

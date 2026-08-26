@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: test-driven-development
-description: "Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. Owns the red-green-refactor ORDER; whether the test itself is well-formed is `testing-anti-patterns`."
+description: "Use when implementing a feature, fixing a bug, or refactoring — write the failing test first, then the code, even on 'add this function'. Owns the ORDER; test shape is `testing-anti-patterns`."
 domain: quality
 workspaces:
   - engineering
