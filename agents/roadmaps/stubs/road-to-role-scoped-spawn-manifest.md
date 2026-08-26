@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to a role-scoped spawn manifest
@@ -85,7 +86,7 @@ were answerable without a capture and are answered in the evidence file.
 **Phase 3 is independent in both directions** and is complete; it is not
 waiting on anything here.
 
-### 3. Named producer, detection probe, and the baseline at cancellation
+### Probe, named producer, and the baseline at cancellation (3)
 
 **Producer:** the **host owner**, per the containment protocol in
 [`road-to-subagent-payload-capture.md`](road-to-subagent-payload-capture.md).

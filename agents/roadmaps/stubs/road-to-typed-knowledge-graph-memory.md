@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: road to typed knowledge-graph memory

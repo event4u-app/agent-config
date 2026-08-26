@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: prove the re-add guard refuses a stale branch, from `main`
@@ -36,7 +37,7 @@ exit 1, each naming its paths and the `git rm --cached` that fixes them. What
 that does **not** establish is the workflow-provenance half: that the definition
 GitHub runs comes from the merge ref rather than from the head branch alone.
 
-## What closes this
+## Probe — what closes this
 
 1. `feat/generated-artifacts-out-of-repo` is merged, so `main` carries the guard
    and the untracked state.

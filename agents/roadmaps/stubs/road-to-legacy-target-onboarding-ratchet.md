@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Road to legacy target onboarding via ratchets — stub
 
 > **Source:** `agents/tmp.old/robert-c-martin/road-to-legacy-target-onboarding-ratchet.md` — landed by `/analyze:inbox` on 2026-08-22.
@@ -57,7 +62,7 @@ into a named list and excluded from RED/GREEN evidence until fixed; a
 quarantine list above a pre-registered size binds the *test strength*
 dimension at 1.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 Parent Phase 1 merged; at least one real legacy target repo the
 maintainer is willing to run this on; estate offset.

@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Road to target-project bootstrap and enforcement — stub
 
 > **Source:** `agents/tmp.old/robert-c-martin/road-to-target-project-bootstrap-enforce.md` — landed by `/analyze:inbox` on 2026-08-22.
@@ -43,7 +48,7 @@ Rules of the loop:
    the parent's matrix must move the dimension from 1 to 2 after the run,
    and that movement is the acceptance test.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 - Parent Phase 1 merged; matrix output over ≥ 3 real target repos archived
   under `agents/evidence/`.

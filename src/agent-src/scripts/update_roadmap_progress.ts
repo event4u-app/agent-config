@@ -71,6 +71,7 @@ import {
     type DashboardMode,
 } from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
+import { headerFragment as stubHeaderFragment } from './stubs_due.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -995,6 +996,8 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                   ? `, **${user_open_blockers}** need you → \`agent-config gates\``
                   : '')
             : '') +
+        // Two integers, never a row — see `stubs_due.headerFragment`.
+        stubHeaderFragment(path.join(roadmap_root, 'stubs')) +
         '\n';
     lines.push(
         // Honest provenance (road-to-roadmap-archival-robustness, gap C): name a

@@ -3,9 +3,21 @@ complexity: lightweight
 status: later
 execution:
   mode: phase-checkpoints
+family_cap_state: not-blocked
 ---
 
 # Road to executable skill payloads — a skill that only describes work cannot be measured doing it
+
+<!-- Intake note, 2026-08-26. This file is repeatedly re-proposed by incoming
+     bundles because from outside the estate it looks unowned. It is not.
+     The family cap is NOT what is holding it: `lint_roadmap_family_cap.ts:42`
+     sets CAP = 2 (reason: ADR-215 § D2, kept at 2 by AI council 2026-08-26,
+     2/2 convergent), and `./scripts-run src/scripts/lint_roadmap_family_cap`
+     reads 0/2 slot(s) used — all three `road-to-skill-ecosystem-*` roadmaps sit
+     in later/, so no slot is occupied and none needs to free.
+     What actually holds this file is the Blocked-until condition below: the
+     three Phase-0 spike results. A null counts.
+     Registered as owner decision 8 in stubs/road-to-owner-authority-decisions.md. -->
 
 > Close the one axis where an external skill estate beats this one: deterministic
 > work belongs in code with a declared runtime, a machine-readable output, and a
