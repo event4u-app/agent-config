@@ -8,12 +8,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     CITATION_ROOTS,
+    TRIGGER_VERDICTS,
     PARTIAL_COVERAGE,
     LOW_EVIDENCE_NOTICE,
     SURFACES_NOT_SCANNED,
     amendment_blocks,
     basis_ref_kind,
     cite_check,
+    corpus_summary,
+    corpus_survey,
     cited_refs,
     normalise_ref,
     parse_frontmatter,
@@ -698,5 +701,61 @@ describe('the CI gate — exit codes and the scanned: line', () => {
         const payload = JSON.parse(out) as { results: unknown[] };
         expect(payload.results).toHaveLength(200);
         fs.rmSync(tree, { recursive: true, force: true });
+    });
+});
+
+// `road-to-decision-conformance` Phase 2 — the corpus survey.
+//
+// A NEAR MISS WORTH PINNING. The first implementation keyed the citation join on
+// a private `/ADR-(\d+)/` regex on one side and `normalise_ref()` on the other.
+// It typechecked-failed but ran, the join produced an empty set, and the report
+// read "0 of 160 accepted ADRs are cited outside docs/decisions/ — 100.0 %
+// uncited". That is a plausible, alarming, entirely fabricated number, and
+// nothing about the output said it was wrong. Both sides now derive the id from
+// `normalise_ref`, and this suite is what would catch the drift returning.
+describe('adr corpus survey — one row per record', () => {
+    it('surveys every decision record and the counts close', () => {
+        const rows = corpus_survey();
+        const sum = corpus_summary(rows);
+        expect(rows.length).toBeGreaterThan(150);
+        expect(sum.total).toBe(rows.length);
+        // Every row lands in exactly one status bucket.
+        const statusSum = Object.values(sum.by_status).reduce((a, b) => a + b, 0);
+        expect(statusSum).toBe(sum.total);
+    });
+
+    it('THE 2.2 VERIFY: the three trigger states sum to the carrying count', () => {
+        const sum = corpus_summary(corpus_survey());
+        const three = TRIGGER_VERDICTS.reduce((a, k) => a + (sum.trigger_counts[k] ?? 0), 0);
+        expect(three).toBe(sum.with_trigger);
+        // `none` is deliberately NOT one of the three — a record with no trigger
+        // is outside the denominator, not a fourth bucket inside it.
+        expect(TRIGGER_VERDICTS).not.toContain('none');
+    });
+
+    it('the citation join is NOT empty — the near-miss regression', () => {
+        const sum = corpus_summary(corpus_survey());
+        expect(sum.accepted).toBeGreaterThan(100);
+        // The broken join made this 0. A real corpus cites most of its accepted
+        // decisions somewhere outside the decision directory.
+        expect(sum.accepted_cited_outside).toBeGreaterThan(50);
+        expect(sum.uncited_pct).toBeLessThan(60);
+    });
+
+    it('every row carries a status and a reopen_policy, defaulted not blank', () => {
+        for (const r of corpus_survey()) {
+            expect(r.status, `${r.file} has no status`).not.toBe('');
+            expect(r.reopen_policy, `${r.file} has a blank reopen_policy`).not.toBe('');
+        }
+    });
+
+    it('has_trigger and the trigger verdict agree', () => {
+        for (const r of corpus_survey()) {
+            if (r.has_trigger) {
+                expect(TRIGGER_VERDICTS as readonly string[], r.file).toContain(r.trigger);
+            } else {
+                expect(r.trigger, r.file).toBe('none');
+            }
+        }
     });
 });

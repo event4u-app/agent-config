@@ -109,6 +109,7 @@ import {
     render_native_model_md,
 } from './_lib/model_tier.js';
 import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
+import { SCOPE_DETECT_AI_DIRS, SCOPE_DETECT_MANIFESTS } from '../install/detect.js';
 
 // ---------------------------------------------------------------------------
 // Python-runtime parity helpers
@@ -2328,28 +2329,12 @@ function _run_scope_prompt(opts: Options, reason: string, custom_path: string | 
     return 'project';
 }
 
-const SCOPE_DETECT_MANIFESTS: readonly string[] = [
-    'package.json',
-    'composer.json',
-    'pyproject.toml',
-    'Cargo.toml',
-    'go.mod',
-    'Gemfile',
-];
-const SCOPE_DETECT_AI_DIRS: readonly string[] = [
-    '.claude',
-    '.cursor',
-    '.windsurf',
-    '.augment',
-    '.clinerules',
-    '.copilot',
-    '.gemini',
-    '.codex',
-    '.aider',
-    '.continue',
-    '.roo',
-    '.kilocode',
-];
+// SCOPE_DETECT_MANIFESTS and SCOPE_DETECT_AI_DIRS were duplicated here, byte
+// for byte, alongside their definitions in `src/install/detect.ts`. Two copies
+// of a detection constant is the shape that makes divergence invisible: the
+// test pinned ONE of them exactly, so a change to the other would have passed
+// CI. De-duplicated 2026-08-26 (road-to-internal-estate-fit 2.3) — one exported
+// definition, imported here.
 const SCOPE_DETECT_AI_FILES: readonly string[] = [
     'CLAUDE.md',
     'AGENTS.md',

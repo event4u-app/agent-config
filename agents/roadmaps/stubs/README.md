@@ -235,6 +235,75 @@ ls agents/roadmaps/stubs/*.md
 head -n 20 agents/roadmaps/stubs/road-to-*.md | grep -E '^(==>|# )'
 ```
 
+## When is this file next read? — `review_by:` and `probe:`
+
+Every stub carries two frontmatter fields. Before 2026-08-26 neither existed:
+exactly **one** of 76 stubs carried a next-read date, and nothing scheduled a
+re-read of any of them.
+
+**The defect that field closes is not invisibility.** A stub is deliberately not
+a backlog item and `update_roadmap_progress.ts` excludes this directory on
+purpose — putting 76 of them on a progress dashboard would be wrong, and § What
+every stub carries records why the hand-maintained index was deleted rather than
+regenerated. The defect is one layer down: nothing ever re-reads them. A transfer
+says the scope decision is made, the work is wanted, and only an environment is
+missing — and that is a claim about **today**. With no scheduled probe,
+*capability-gated* decays silently into *abandoned*, and the only mechanism that
+re-surfaces it is the owner asking again.
+
+```
+review_by: <YYYY-MM-DD>     # required on every stub
+probe: none                 # required ONLY when the file names no probe
+```
+
+### What the date means, per class
+
+The two classes have genuinely different clocks, and this directory already
+separates them, so the cadence adds a number to a distinction that exists rather
+than inventing one.
+
+| class | cadence | why this number |
+|---|---:|---|
+| **drain-run transfer** | **30 days** | capability-gated: an environment, a secret, a host session can appear at any time, and the probe is cheap to re-run. A stale month is the most a real capability should wait unnoticed. |
+| **org-mode stub** | **180 days** | demand-gated: the open question is whether the work *should* be built, and a demand question rarely moves inside a quarter. Re-asking it monthly manufactures churn and teaches the reader to skip the field. |
+
+**These are defaults, not laws.** A file may carry an earlier date when its own
+text names one — a stub whose subject expires on a specific day sets that day,
+and § The two classes' expiry stubs do exactly that.
+
+### "Last touch" means the last SUBSTANTIVE review
+
+The date is computed from the last time somebody actually re-read the stub, never
+from the last commit that touched the file. A formatting sweep, a path migration,
+or a link repair must not silently reset the clock — that is how a field starts
+certifying attention nobody paid, which is strictly worse than no field because a
+fresh date reads as evidence.
+
+### `probe: none` is a real answer and has to be written out loud
+
+68 of 76 stubs name a probe or a promotion condition. For a file that names
+none, the honest record is the explicit line rather than silence: a stub with no
+probe is an abandonment wearing a directory name, and saying so is what makes it
+reviewable. `stubs:due` reports those files separately from the overdue ones,
+because they are a different problem — one is late, the other has no finish line.
+
+### What this is NOT
+
+**Not the index the 2026-08-21 council deleted.** That verdict settled *an
+inventory of the directory living inside the directory's own README*, and
+`check_no_stub_inventory_table` refuses its return. These are frontmatter fields
+on the stub files themselves plus a read-only query: the stub stays the single
+source, no row is authored twice, and there is no append surface to conflict on.
+A different mechanism, so the lock does not apply — recorded here so a later
+reader does not have to re-derive the distinction.
+
+**Decided by** AI council 2026-08-26, 2/2 convergent, on the maintainer's
+delegation for an autonomous drain run: per-shape cadence over a uniform one
+(a uniform clock loses the distinction) and over author-set dates (76 bespoke
+decisions with no framework, and every future stub needs another one).
+**Revisit if** two consecutive review cycles show most reviews producing no
+substantive change, or a material change is found later than the cadence should
+have caught it.
 ## Promotion criteria (shared)
 
 Governs the **demand-gated** org-mode stubs only — never a drain-run transfer,

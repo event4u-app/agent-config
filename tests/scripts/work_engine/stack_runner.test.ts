@@ -31,7 +31,9 @@ import {
     SPEED_E2E,
     SPEED_FAST,
     SPEED_SLOW,
+    PACKAGE_MANAGER_BRANCHES,
     ToolchainResult,
+    _resolve_package_manager,
     resolve_toolchain,
     write_config,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/runner.js';
@@ -335,5 +337,91 @@ describe('stack/runner — toolchain resolution', () => {
         // The file ends with a newline and sorts keys.
         expect(text.endsWith('\n')).toBe(true);
         expect(text.indexOf('"confidence"')).toBeLessThan(text.indexOf('"ecosystems"'));
+    });
+});
+
+/**
+ * `road-to-internal-estate-fit` Phase 3. The package-manager cascade is
+ * specified in `src/skills/monorepo-workspace/SKILL.md` § 1 ("Package manager —
+ * from the declaration, then the lockfile"), and that prose was already correct
+ * while the code implemented three of its five branches and silently broke the
+ * two-lockfile tie it says to report.
+ *
+ * The skill section named above is the SOURCE of this branch list. These tests
+ * do not parse it — a test that read the prose would be over-engineering — but
+ * a test that fails when the code's branch count drops below the documented one
+ * is exactly the pin that was missing.
+ */
+describe('package-manager cascade — monorepo-workspace SKILL.md § 1', () => {
+    it('declares all five documented branches', () => {
+        expect([...PACKAGE_MANAGER_BRANCHES].sort()).toEqual(
+            ['bun', 'npm', 'packageManager', 'pnpm', 'yarn'].sort(),
+        );
+        expect(PACKAGE_MANAGER_BRANCHES.length).toBe(5);
+    });
+
+    it('packageManager declaration wins over any lockfile', () => {
+        write('package.json', JSON.stringify({ packageManager: 'yarn@4.1.0' }));
+        write('pnpm-lock.yaml', 'lockfileVersion: 9\n');
+        const res = _resolve_package_manager(tmp, { packageManager: 'yarn@4.1.0' });
+        expect(res.manager).toBe('yarn');
+        expect(res.via).toBe('packageManager');
+        expect(res.finding).toBe('');
+    });
+
+    it.each([
+        ['pnpm-lock.yaml', 'lockfileVersion: 9\n', 'pnpm'],
+        ['yarn.lock', '# yarn lockfile v1\n', 'yarn'],
+        ['bun.lock', '{}\n', 'bun'],
+        ['bun.lockb', 'binary\n', 'bun'],
+        ['package-lock.json', '{"lockfileVersion":3}\n', 'npm'],
+    ])('%s resolves to %s', (file, body, expected) => {
+        write(file, body as string);
+        const res = _resolve_package_manager(tmp, {});
+        expect(res.manager).toBe(expected);
+        expect(res.finding).toBe('');
+    });
+
+    it('two DIFFERENT lockfiles is a finding, not a tie-break', () => {
+        write('pnpm-lock.yaml', 'lockfileVersion: 9\n');
+        write('yarn.lock', '# yarn lockfile v1\n');
+        const res = _resolve_package_manager(tmp, {});
+        // The defect this replaces returned 'pnpm' here — the first branch it
+        // happened to test — which is a guess presented as an answer.
+        expect(res.manager).toBeNull();
+        expect(res.via).toBe('ambiguous');
+        expect(res.finding).toContain('pnpm-lock.yaml');
+        expect(res.finding).toContain('yarn.lock');
+    });
+
+    it('bun.lock and bun.lockb together are ONE manager, not an ambiguity', () => {
+        write('bun.lock', '{}\n');
+        write('bun.lockb', 'binary\n');
+        const res = _resolve_package_manager(tmp, {});
+        expect(res.manager).toBe('bun');
+        expect(res.finding).toBe('');
+    });
+
+    it('no lockfile and no declaration falls back to npm', () => {
+        const res = _resolve_package_manager(tmp, {});
+        expect(res.manager).toBe('npm');
+        expect(res.via).toBe('npm');
+    });
+
+    it('the derived script command names the resolved manager, not npm', () => {
+        write('pnpm-lock.yaml', 'lockfileVersion: 9\n');
+        write(
+            'package.json',
+            JSON.stringify({
+                devDependencies: { '@playwright/test': '^1' },
+                scripts: { 'test:e2e': 'playwright test' },
+            }),
+        );
+        const cfg = resolve_toolchain(tmp).to_config();
+        const commands = (cfg.runners as { command: string }[]).map((r) => r.command);
+        // The defect: every derived command read `npm run …` whatever the
+        // lockfile said, and the work engine hands these to an agent verbatim.
+        expect(commands.some((c) => c.startsWith('pnpm run test:e2e'))).toBe(true);
+        expect(commands.some((c) => c.startsWith('npm run '))).toBe(false);
     });
 });

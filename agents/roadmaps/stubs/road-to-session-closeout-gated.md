@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-12-24
+probe: none
 ---
 
 # Session-closeout residue that needs something this repository cannot supply
