@@ -80,7 +80,7 @@ Three options were considered:
   `recommended_for_user_types` MUST have a corresponding YAML, and
   every YAML SHOULD be consumed by at least one skill. The audit ships
   as a CI gate (`task lint-user-type-axis` →
-  [`scripts/audit_user_type_axis.py`](../../src/scripts/audit_user_type_axis.py)).
+  [`scripts/audit_user_type_axis.py`](../../src/scripts/audit_user_type_axis.ts)).
   Initial sweep at Phase 4 close: 7 declared / 7 used / 0 orphans / 0
   unused — coverage is clean, no rename or backfill needed. Report:
   [`agents/runtime/reports/user-type-axis-audit.md`](../../agents/runtime/reports/user-type-axis-audit.md).

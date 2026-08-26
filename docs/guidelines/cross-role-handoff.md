@@ -93,7 +93,7 @@ Council Q3 (2026-05-05) locks the disambiguation between L4
   shipping — becomes **input to L4**. The escalation is one-way:
   L4 produces the dissent log that decides whether C8's verdict
   is overridden, with the override recorded in
-  [`decision-record`](../../.agent-src.uncondensed/skills/decision-record/SKILL.md).
+  [`decision-record`](../../src/skills/decision-record/SKILL.md).
 
 The boundary keeps the two skills sharp — neither absorbs the other —
 and gives the agent a deterministic rule for which one to load when
@@ -108,7 +108,7 @@ acquisition channel is paid search, but only if CAC payback < 6 months"*:
 2. The CAC question is Wing-4 cognition — `unit-economics-modeling`.
 3. `refine-ticket` hands off via:
    - WHEN NOT entry: *"CAC / payback questions — route to
-     [`unit-economics-modeling`](../unit-economics-modeling/SKILL.md)"*.
+     [`unit-economics-modeling`](../../src/skills/unit-economics-modeling/SKILL.md)"*.
    - Composes line in the procedure step that needs the answer.
 4. The delegate's `## Input` block lists the fields (channel,
    cohort, time horizon); `refine-ticket` passes them.

@@ -14,7 +14,7 @@ dist/cloud/<skill>.zip              ← Anthropic Skills bundle (Claude.ai Web /
 ```
 
 Per-skill tier classification comes from
-[`scripts/audit_cloud_compatibility.py`](../../src/scripts/audit_cloud_compatibility.py):
+[`scripts/audit_cloud_compatibility.py`](../../src/scripts/audit_cloud_compatibility.ts):
 
 | Tier | Bundle action |
 |---|---|
@@ -66,10 +66,10 @@ Cloud-side caps enforced by the builder:
 
 ## Proving the pipeline
 
-- [`tests/test_build_cloud_bundle.py`](../../tests/test_build_cloud_bundle.py)
+- [`tests/test_build_cloud_bundle.py`](../../tests/scripts/build_cloud_bundle.test.ts)
   — covers tier filtering, sandbox-note injection, path-swap, and
   description-cap enforcement.
-- [`tests/test_claude_desktop_bundler.py`](../../tests/test_claude_desktop_bundler.py)
+- [`tests/test_claude_desktop_bundler.py`](../../tests/lib/claude_desktop_bundler.test.ts)
   — complementary coverage for the Claude Desktop bundle surface.
 - CI gate: `task ci-cloud-bundle` runs the builder in `--check` mode
   on every PR.

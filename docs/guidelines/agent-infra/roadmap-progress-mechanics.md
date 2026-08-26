@@ -10,7 +10,7 @@ _Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` p
 # Roadmap Progress Sync
 
 > **Enforced by (defence in depth):**
-> 1. [`scripts/roadmap_progress_hook.ts`](../../src/scripts/roadmap_progress_hook.ts)
+> 1. [`scripts/roadmap_progress_hook.ts`](../../../src/scripts/roadmap_progress_hook.ts)
 >    on Augment + Claude Code (`PostToolUse`) — auto-regen on write.
 > 2. `.git/hooks/pre-commit` (installed by `scripts/install-hooks.sh`) —
 >    blocks any commit whose staged set touches `agents/roadmaps/` or
@@ -147,7 +147,7 @@ dashboard, commit if commit policy allows.
 A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **Deterministic flip-guard.** The autonomous loop carries a per-step
-guard at [`roadmap-process-loop § 5b`](../../.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
+guard at [`roadmap-process-loop § 5b`](../../../src/agent-src/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
 after the atomic flip, the loop runs
 `git diff --name-only -- agents/roadmaps/<file>.md` and halts loudly
 when the diff is empty. The `command:` triggers on
@@ -165,10 +165,14 @@ the step lands; that's a normal `[ ] → [x]` transition.
 
 The triggers table, the regen command (`./agent-config roadmap:progress`),
 the mandatory pre-send self-check, the failure-mode catalog, and the
-`Do NOT` list live in
-[`contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md`](../contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md).
-Pull it whenever a trigger fires — the rule above is the obligation
-surface; the mechanics file is the lookup material.
+`Do NOT` list are **in this file** — the rule
+[`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) is the
+obligation surface and this document is the lookup material.
+
+> **Corrected 2026-08-26** (`road-to-contract-review-deadlines` 4.2): this
+> paragraph used to point at a `rules-auto` mechanics file under the contexts
+> tree, which exists nowhere in it — it promised a split that never happened, and a
+> reader following it found nothing. The content it names was already here.
 
 ## Copilot fallback
 

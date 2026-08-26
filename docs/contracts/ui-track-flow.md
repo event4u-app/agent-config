@@ -56,9 +56,9 @@ exists so the dispatcher's completeness check is satisfied; no logic
 runs and no state is touched.
 
 Source of truth for slot wiring:
-[`directives/ui/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/__init__.py),
-[`directives/mixed/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/mixed/__init__.py),
-[`directives/ui_trivial/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/__init__.py).
+[`directives/ui/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui/index.ts),
+[`directives/mixed/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/mixed/index.ts),
+[`directives/ui_trivial/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui_trivial/index.ts).
 
 ## The `ui` set — slot-by-slot
 
@@ -75,7 +75,7 @@ Mandatory pre-step. Routes on `state.ui_audit` shape:
 | Anything else populated | `BLOCKED` numbered options | User picks candidate to extend (or "build new"); records `audit_path = "ambiguous"` + `candidate_pick` |
 
 Constants live in
-[`directives/ui/audit.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/audit.py):
+[`directives/ui/audit.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui/audit.ts):
 `STRONG_SIMILARITY = 0.7`, `TIE_GAP = 0.05`,
 `TESTED_AGAINST_SHADCN_MAJOR = 2`. Idempotent re-entry: once
 `audit_path` is set the step round-trips through `SUCCESS` without
@@ -229,7 +229,7 @@ Stack-directive table mirrors apply / review with prefix
 ### `report` → backend renderer
 
 Re-export of
-[`directives.backend.report.run`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/report.py).
+[`directives.backend.report.run`](../../src/agent-src/templates/scripts/work_engine/directives/backend/report.ts).
 The renderer is pure and state-driven; the same Markdown contract
 serves both tracks.
 
@@ -273,7 +273,7 @@ adjustment). Phase-1 intent classifier writes
 `directive_set = "ui-trivial"`.
 
 Hard preconditions in
-[`directives/ui_trivial/apply.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/apply.py):
+[`directives/ui_trivial/apply.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui_trivial/apply.ts):
 
 - `MAX_FILES = 1` — exactly one file touched.
 - `MAX_LINES_CHANGED = 5` — diff stays under five changed lines.

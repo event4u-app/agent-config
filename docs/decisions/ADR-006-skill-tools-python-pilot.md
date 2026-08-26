@@ -140,6 +140,6 @@ dir, and the `lint-skill-tools` task entry. Mark this ADR
 - Council: [`block-d-python-tools-pilot-verdict`](../../agents/runtime/council/responses/block-d-python-tools-pilot-verdict.md). <!-- council-ref-allowed: ADR decision trace -->
 
 - Tools: [`scripts/skill_tools/`](../../src/scripts/skill_tools/).
-- Linter: [`scripts/lint_skill_tools.py`](../../src/scripts/lint_skill_tools.py).
+- Linter: [`scripts/lint_skill_tools.py`](../../src/scripts/lint_skill_tools.ts).
 - Corpora + report: [`agents/evidence/eval-corpora/block-d/`](../../agents/evidence/eval-corpora/block-d/).
 - Tests: `tests/test_lint_skill_tools.py`, `tests/test_score_skill_relevance.py`, `tests/test_audit_persona_coverage.py`, `tests/test_suggest_skill_for_task.py`.

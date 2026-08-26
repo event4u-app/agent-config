@@ -43,7 +43,7 @@ plan, changes, test verdict, judge findings, suggested next command
 (`/commit`).
 
 **Anchored in:** [`commands/implement-ticket.md`](../dist/agent-src/commands/implement-ticket.md)
-(eight-step contract) · [`work_engine/dispatcher.py`](../dist/agent-src/templates/scripts/work_engine/dispatcher.py)
+(eight-step contract) · [`work_engine/dispatcher.py`](../src/agent-src/templates/scripts/work_engine/dispatcher.ts)
 (`STEP_ORDER`).
 
 ---
