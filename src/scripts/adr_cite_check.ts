@@ -503,6 +503,20 @@ export function verdict_for(r: Omit<CiteResult, 'verdict'>): string {
         const by = r.superseded_by !== undefined && r.superseded_by !== '—' ? ` (by ${r.superseded_by})` : '';
         return `NOT A LIVE LOCK — status is \`${status}\`${by}. Citing it as a blocker is a stale-state claim.`;
     }
+    if (status === 'challenged') {
+        // Reported DISTINCTLY from `accepted` and from `superseded`, and it is a
+        // LIVE lock. `challenged` records "accepted, and under active question";
+        // it names no successor and suspends nothing. If citing it cleared the
+        // lock, the status would become a way to stop obeying a decision without
+        // reopening it — road-to-decision-conformance 1.2 names that as the
+        // failure to prevent, and this branch is where it would have happened.
+        return (
+            'LIVE, CHALLENGED — the decision is under active question and STILL BINDS. ' +
+            'A challenge is not a successor: nothing has replaced this record. Read the ' +
+            'challenge, then either satisfy it or route the reopening — do not treat the ' +
+            'status as permission to act against the decision.'
+        );
+    }
     if (status === 'rejected') {
         return (
             'LIVE — status `rejected` records a REJECTED PROPOSAL, so the rejection is the ' +
@@ -793,18 +807,167 @@ export function selfTest(): number {
     }
 }
 
+/**
+ * One row per ADR — the corpus survey `road-to-decision-conformance` Phase 2
+ * asks for. Distinct from `--cited`, which resolves every ADR *citation* and
+ * answers "does this reference land"; this answers "what state is the corpus
+ * in", which is a different denominator (186 records vs the citations that
+ * happen to name them).
+ */
+export interface CorpusRow {
+    ref: string;
+    file: string;
+    status: string;
+    /** `superseded_by` when present, else `—`. */
+    successor: string;
+    /** Does the record carry a `review_trigger` at all? */
+    has_trigger: boolean;
+    /** Only meaningful when `has_trigger`; see `TRIGGER_VERDICTS`. */
+    trigger: 'fired' | 'not-fired' | 'indeterminate' | 'none';
+    reopen_policy: string;
+    /** Cited anywhere OUTSIDE `docs/decisions/`. */
+    cited_outside: boolean;
+}
+
+/**
+ * The three states 2.2 requires, and why a fourth exists beside them.
+ *
+ * `none` is NOT one of the three. The step asks that fired + not-fired +
+ * indeterminate sum to "the number of ADRs carrying a trigger", so a record
+ * with no trigger is outside the denominator rather than a fourth bucket
+ * inside it.
+ */
+export const TRIGGER_VERDICTS = ['fired', 'not-fired', 'indeterminate'] as const;
+
+/** Every ADR file, surveyed. */
+export function corpus_survey(repo_root: string = REPO_ROOT): CorpusRow[] {
+    const files = adr_files(repo_root);
+    const cited_outside = new Set<string>();
+    for (const root of CITATION_ROOTS) {
+        for (const file of walk_citable(path.join(repo_root, root))) {
+            const rel = path.relative(repo_root, file);
+            if (rel.startsWith(path.join('docs', 'decisions'))) continue;
+            for (const m of fs.readFileSync(file, 'utf-8').matchAll(CITATION_RE)) {
+                const parsed = normalise_ref(m[0]);
+                if (parsed !== null) cited_outside.add(parsed.id);
+            }
+        }
+    }
+    const rows: CorpusRow[] = [];
+    for (const f of files) {
+        const text = fs.readFileSync(f, 'utf-8');
+        const fm = parse_frontmatter(text) ?? {};
+        const base = path.basename(f);
+        // Key on the SAME identity the citation side produces, via
+        // `normalise_ref`. Deriving it with a private regex here is how the two
+        // halves of a join silently stop matching.
+        const parsedSelf = normalise_ref(path.relative(repo_root, f));
+        const num = parsedSelf?.id ?? base;
+        const raw_trigger = (fm['review_trigger'] ?? '').trim();
+        rows.push({
+            ref: num,
+            file: path.relative(repo_root, f),
+            status: (fm['status'] ?? '(none)').trim(),
+            successor: (fm['superseded_by'] ?? '—').trim() || '—',
+            has_trigger: raw_trigger !== '' && raw_trigger.toLowerCase() !== 'unclassified',
+            trigger: trigger_state(fm),
+            reopen_policy: (fm['reopen_policy'] ?? 'unclassified').trim() || 'unclassified',
+            cited_outside: cited_outside.has(num),
+        });
+    }
+    return rows.sort((a, b) => a.ref.localeCompare(b.ref));
+}
+
+export interface CorpusSummary {
+    total: number;
+    by_status: Record<string, number>;
+    with_trigger: number;
+    trigger_counts: Record<string, number>;
+    accepted: number;
+    accepted_cited_outside: number;
+    uncited_pct: number;
+    reopen_policy_declared: number;
+}
+
+export function corpus_summary(rows: readonly CorpusRow[]): CorpusSummary {
+    const by_status: Record<string, number> = {};
+    for (const r of rows) by_status[r.status] = (by_status[r.status] ?? 0) + 1;
+    const with_trigger = rows.filter((r) => r.has_trigger).length;
+    const trigger_counts: Record<string, number> = { fired: 0, 'not-fired': 0, indeterminate: 0 };
+    for (const r of rows) {
+        if (!r.has_trigger) continue;
+        trigger_counts[r.trigger] = (trigger_counts[r.trigger] ?? 0) + 1;
+    }
+    const accepted = rows.filter((r) => r.status.toLowerCase() === 'accepted');
+    const cited = accepted.filter((r) => r.cited_outside).length;
+    return {
+        total: rows.length,
+        by_status,
+        with_trigger,
+        trigger_counts,
+        accepted: accepted.length,
+        accepted_cited_outside: cited,
+        uncited_pct: accepted.length === 0 ? 0 : ((accepted.length - cited) * 100) / accepted.length,
+        reopen_policy_declared: rows.filter((r) => r.reopen_policy !== 'unclassified').length,
+    };
+}
+
+function render_corpus(rows: readonly CorpusRow[], sum: CorpusSummary): string {
+    const out: string[] = [];
+    out.push(`adr corpus survey · ${String(sum.total)} decision record(s)\n`);
+    out.push('  status:');
+    for (const [k, v] of Object.entries(sum.by_status).sort()) {
+        out.push(`      ${k.padEnd(14)} ${String(v)}`);
+    }
+    out.push('');
+    out.push(`  review_trigger — ${String(sum.with_trigger)} record(s) carry one:`);
+    for (const k of TRIGGER_VERDICTS) {
+        out.push(`      ${k.padEnd(14)} ${String(sum.trigger_counts[k] ?? 0)}`);
+    }
+    const triSum = TRIGGER_VERDICTS.reduce((a, k) => a + (sum.trigger_counts[k] ?? 0), 0);
+    out.push(
+        `      ${'sum'.padEnd(14)} ${String(triSum)}` +
+            (triSum === sum.with_trigger ? '  ✅ equals the carrying count' : '  ❌ DOES NOT equal the carrying count'),
+    );
+    out.push('');
+    out.push(
+        `  citation reach — ${String(sum.accepted_cited_outside)} of ${String(sum.accepted)} accepted ` +
+            `ADR(s) are cited outside docs/decisions/ (${sum.uncited_pct.toFixed(1)} % uncited)`,
+    );
+    out.push(
+        `  reopen_policy  — ${String(sum.reopen_policy_declared)} of ${String(sum.total)} declare one; ` +
+            'the rest resolve to `unclassified`',
+    );
+    out.push('');
+    out.push('  Reports only. This command decides nothing and gates nothing.');
+    return out.join('\n') + '\n';
+}
+
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
     if (argv.includes('--self-test')) return selfTest();
     const corpus_mode = argv.includes('--cited');
+    const survey_mode = argv.includes('--all');
+    if (survey_mode) {
+        const root = scan_root();
+        const rows = corpus_survey(root);
+        const sum = corpus_summary(rows);
+        process.stdout.write(
+            as_json ? `${JSON.stringify({ summary: sum, rows }, null, 2)}\n` : render_corpus(rows, sum),
+        );
+        return 0;
+    }
     const explicit = argv.filter((a) => !a.startsWith('--'));
     if (!corpus_mode && explicit.length === 0) {
         process.stderr.write(
             'usage: adr_cite_check <ADR-NNN> [ADR-NNN …] [--json]\n' +
                 '       adr_cite_check --cited [--json]\n' +
+                '       adr_cite_check --all [--json]\n' +
                 '       evaluate a decision before citing it as a reason not to act\n' +
                 '       --cited: resolve every ADR citation in ' +
-                `${CITATION_ROOTS.join(', ')} (the CI gate)\n`,
+                `${CITATION_ROOTS.join(', ')} (the CI gate)\n` +
+                '       --all: one row per decision record — status, successor, trigger\n' +
+                '              state, reopen_policy, citation reach. Reports only.\n',
         );
         return 2;
     }
