@@ -43,6 +43,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -317,6 +318,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         names = [];
     }
 
+    // Per-artifact accounting. `scanned` counts candidate ROWS, so a sweep
+    // artifact whose table the parser walked past contributes zero rows and is
+    // indistinguishable from one with no candidates — exactly the "looked at
+    // almost nothing" reading the ledger exists to separate from "found
+    // nothing".
+    const ledger = new GateLedger('lint_adr_sweep_routing');
+    ledger.plan(names);
     const violations: Violation[] = [];
     let scanned = 0;
     for (const name of names) {
@@ -325,7 +333,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         const [v, n] = lintSweep(rel, fs.readFileSync(abs, 'utf-8'));
         violations.push(...v);
         scanned += n;
+        if (v.length > 0) ledger.fail(name, `${String(v.length)} unrouted candidate row(s)`);
+        else if (n === 0) ledger.skip(name, 'no_applicable_files');
+        else ledger.complete(name);
     }
+    ledger.report(json ? () => undefined : undefined);
 
     process.stdout.write(`scanned: ${scanned}\n`);
     try {

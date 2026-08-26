@@ -42,6 +42,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -292,6 +293,40 @@ function main(argv?: readonly string[]): number {
         return 1;
     }
     const { readings, malformed } = parseStore(text);
+
+    // Per-line accounting. `malformed` is a COUNT, and a count cannot say WHICH
+    // lines were dropped — a store whose last 40 appends were malformed reads
+    // the same as one with 40 fewer readings, which is the "looked at almost
+    // nothing" case. The ledger names each dropped line.
+    const ledger = new GateLedger('check_composite_arming');
+    const storeLines = text.split('\n').map((l, i) => ({ n: i + 1, t: l.trim() })).filter((l) => l.t !== '');
+    ledger.plan(storeLines.map((l) => `line:${String(l.n)}`));
+    let parsedSeen = 0;
+    for (const l of storeLines) {
+        let ok = false;
+        try {
+            const o = JSON.parse(l.t) as { session?: unknown };
+            ok = typeof o.session === 'string' && 'composite_ms' in (o as object);
+        } catch {
+            ok = false;
+        }
+        if (ok) {
+            parsedSeen += 1;
+            ledger.complete(`line:${String(l.n)}`);
+        } else {
+            ledger.skip(`line:${String(l.n)}`, 'precondition_unmet');
+        }
+    }
+    ledger.report();
+    /* c8 ignore next 6 */
+    if (parsedSeen !== readings.length) {
+        process.stderr.write(
+            `❌  check_composite_arming: ledger counted ${String(parsedSeen)} parseable line(s) but ` +
+                `parseStore returned ${String(readings.length)} reading(s) — the accounting and the ` +
+                'parser disagree, which means one of them is wrong about what was read.\n',
+        );
+        return 2;
+    }
     if (malformed > 0 && readings.length === 0) {
         process.stderr.write(
             `❌  ${path.relative(REPO_ROOT, store)}: ${String(malformed)} malformed line(s) and no usable ` +
