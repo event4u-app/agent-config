@@ -53,7 +53,7 @@ PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
 2. **Typo-adjacency** — is the name within 1–2 chars of a far-more-popular package (`python-dateutil` vs `dateutil`, `lodahs` vs `lodash`)? If so, you probably want the popular one — confirm before installing.
 3. **Version source — look it up BEFORE you write a version, and report which outcome you got.** This is a precondition of step 4, not a note on it. Two outcomes, with opposite handling, and only the first is forbidden:
    - **Invention** — writing a version string that **no source in the repository produced**. Always forbidden. A version that appeared from nowhere is unverifiable by anyone downstream, including you an hour later.
-   - **Lookup failure** — having searched the **declared version sources** (a catalogue, a `workspace:` protocol entry, an existing manifest in the tree, the lockfile) and found none. This is **not** a violation. Resolving it from the registry or from the user is the correct move; report it as *unresolved-then-resolved* with the source named.
+   - **Lookup failure** — having searched the **declared version sources** and found none. Those sources are per ecosystem: a catalogue or a `workspace:` protocol entry, an existing manifest in the tree (`package.json`, `composer.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`), and the lockfile. This is **not** a violation. Resolving it from the registry or from the user is the correct move; report it as *unresolved-then-resolved* with the source named.
 
    **Silence is the failure, never the fallback.** Producing a version with no source and no report is the thing the rule forbids; reporting an unresolved lookup is the thing it asks for.
 

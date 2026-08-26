@@ -94,11 +94,26 @@ export function detectPhpShape(root) {
             probes: probes + 1,
         };
     }
+    // TWO PASSES, and the order between them is the fix for a real defect.
+    //
+    // A single pass that returned on the first family with ANY component present
+    // reported a genuine Symfony application as components-without-framework the
+    // moment its composer.json also required `illuminate/collections` — because
+    // `laravel` is examined first, has a component, has no Laravel skeleton, and
+    // returned before Symfony's three markers were ever looked at. Both
+    // `illuminate/collections` and `illuminate/support` are widely used
+    // standalone, so a mixed manifest is ordinary rather than exotic.
+    //
+    // PASS 1 — a real skeleton anywhere wins. A framework whose own installer
+    // wrote its console entry point and bootstrap config is running, whatever
+    // else the manifest happens to carry.
+    const present = [];
     for (const family of ['laravel', 'symfony']) {
         const hasFramework = FRAMEWORK_PACKAGES[family].some((p) => requires.includes(p));
         const hasComponents = requires.some((r) => COMPONENT_PREFIXES[family].some((p) => r.startsWith(p)));
         if (!hasFramework && !hasComponents)
             continue;
+        present.push(family);
         const markersFound = _markers(root, family);
         probes += SKELETON_MARKERS[family].length;
         if (markersFound.length > 0) {
@@ -110,14 +125,22 @@ export function detectPhpShape(root) {
                 probes,
             };
         }
+    }
+    // PASS 2 — components present, no skeleton for ANY of them. Only now is the
+    // third state the right answer, and it names every family whose components
+    // are available rather than only the first one examined.
+    const first = present[0];
+    if (first !== undefined) {
+        const missing = present.flatMap((f) => SKELETON_MARKERS[f]);
+        const families = present.join(' and ');
         return {
             shape: 'components-without-framework',
-            componentsOf: family,
+            componentsOf: first,
             markersFound: [],
-            reason: `${family} components are required in composer.json but NO skeleton marker exists ` +
-                `(none of ${SKELETON_MARKERS[family].join(', ')}). The entry point and router are the ` +
-                `application's own, so ${family}'s CLI, its request-validation primitive and its routes ` +
-                'file are not there. Routing to that framework\'s skill would offer all three.',
+            reason: `${families} component(s) are required in composer.json but NO skeleton marker exists ` +
+                `(none of ${missing.join(', ')}). The entry point and router are the ` +
+                `application's own, so the framework CLI, its request-validation primitive and its routes ` +
+                'file are not there. Routing to a framework skill would offer all three.',
             probes,
         };
     }
