@@ -104,7 +104,48 @@ const RATIO = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
 // The optional `<word>-` allows a qualified unit: `13,881 GPT-tokens` is the
 // same claim shape as `13,881 tokens` and was missed without it.
 const MAGNITUDE = /\b\d[\d,._]*\s*(?:[A-Za-z]+-)?(?:tokens?|ms|USD|KB|MB|GB|chars?)\b/i;
-const SELF_COUNT = /\b\d+\+?\s+(?:host agents?|hosts|supported (?:agents?|hosts))\b/i;
+/**
+ * The nouns this package counts ITSELF in. Widened 2026-08-26
+ * (road-to-published-number-truth 2.1) from the three host-reach nouns to the
+ * package's own artifact vocabulary, because the host-reach miss was an
+ * instance and the artifact counts are the population: the badge block alone
+ * publishes six of them, and until this widening `is_quantified_claim` returned
+ * false for every one.
+ *
+ * Extended rather than given a sibling pattern on purpose — the sweep, the
+ * surfaces and the `unverified` allow path all already exist, and a second gate
+ * would trip three ratchets to reach the same lines.
+ */
+const SELF_COUNT_NOUNS =
+    'host agents?|hosts|supported (?:agents?|hosts)|' +
+    'skills?|commands?|rules?|guidelines?|personas?|advisors?|' +
+    'packs?|profiles?|ADRs?|contexts?|scripts?';
+
+/**
+ * Prose shape: `299 skills`, `7+ host agents`, `13,881 tokens`, and — the shape
+ * that shipped wrong twice — a QUALIFIED noun, `112 Python scripts`. The
+ * optional `<word> ` before the noun is what makes the qualified form match; a
+ * pattern anchored directly on the noun read straight past it.
+ */
+const SELF_COUNT_PROSE = new RegExp(
+    String.raw`\b\d[\d,]*\+?\s+(?:[A-Za-z][A-Za-z.+-]*\s+)?(?:` + SELF_COUNT_NOUNS + String.raw`)\b`,
+    'i',
+);
+
+/**
+ * Badge-URL shape: `badge/Skills-299`. This is how six of this package's own
+ * counts are published, and it carries no whitespace at all, so no prose
+ * pattern can see it. `Personas-29` is the live instance that motivated it.
+ */
+const SELF_COUNT_BADGE = new RegExp(
+    String.raw`badge/(?:` + SELF_COUNT_NOUNS + String.raw`)-\d[\d,]*\b`,
+    'i',
+);
+
+const SELF_COUNT = new RegExp(
+    `(?:${SELF_COUNT_PROSE.source})|(?:${SELF_COUNT_BADGE.source})`,
+    'i',
+);
 
 /** True when a line carries any figure shape that must bind to a claim. */
 export function is_quantified_claim(line: string): boolean {
