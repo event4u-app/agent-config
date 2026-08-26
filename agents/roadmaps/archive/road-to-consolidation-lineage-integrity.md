@@ -3,7 +3,16 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and it cannot fold into either sibling roadmap because the defect is in the process that produced both of them, not in either subject."
+relates: []
+# relates: `agent-config roadmap:context` on 2026-08-27, run at promotion time —
+# scanned 2 PRs, 783 roadmap file(s) across active/later/stubs/archive,
+# 348 remote branch(es), 3 live session record(s), 0 inbox file name(s).
+# No sibling roadmap on the topic, no remote branch carrying the slug, and no
+# open-PR file overlap for this roadmap — the two open PRs (#1675, #1679) touch
+# neither this file nor a path it cites. Context fingerprint 1fad1aa7901bc34b,
+# base 0be1cf6b7.
+estate_offset_exempt: "Landed as a draft proposal; promoted to ready on 2026-08-27. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and it cannot fold into either sibling roadmap because the defect is in the process that produced both of them, not in either subject."
+estate_growth_exempt: "Promoted draft -> ready by the /analyze:inbox run of 2026-08-27. Measured after the change rather than predicted before it: check_estate_count reports active_roadmaps 7 -> 10 against a floor at +0, and open_blockers unchanged at 42. An earlier version of this line predicted +1 on the blocker metric; the gate contradicts it, so the measurement stands and the prediction is withdrawn. The promotion is warranted on the roadmap's own terms rather than on tidiness: its single blocker scopes to Phase 3 step 3.3 and states in writing that Phases 1-2 and steps 3.1-3.2 land regardless, so nothing about the file is waiting on a decision; the census it is built on exists at agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md; and its Risk Register carries a dated review marker. Draft was an estate-ratchet accommodation at authoring time, not a statement that the work was undecided."
 ---
 # Road to consolidation lineage integrity
 
