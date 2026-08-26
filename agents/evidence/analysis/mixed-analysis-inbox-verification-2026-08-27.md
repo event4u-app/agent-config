@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Inbox verification — `mixed-analysis`, 2026-08-27
 
 A record of what an inbox drop of 24 files claimed, what survived verification
