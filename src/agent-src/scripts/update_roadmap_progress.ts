@@ -64,13 +64,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
+import { stub_queue_counts } from './stub_queue.js';
+import { collect_bundles, type Bundle } from './ticket_bundles.js';
 import {
     evaluateDashboardOnDisk,
     parseModeToken,
     reportCheckVerdict,
     type DashboardMode,
 } from './dashboard_mode.js';
-import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -696,65 +697,6 @@ function _blockerAnchor(rel: string): string {
     );
 }
 
-/**
- * Two integers about the PARKED estate: overdue stubs, and stubs routing a
- * decision to a person.
- *
- * `road-to-inbox-harvest-2026-08-f-owner-decision-queue` Phase 2.3. The
- * dashboard excludes `stubs/` on purpose and that stays — see `EXCLUDE_DIRS`
- * and `stubs/README.md`. What was missing is that a maintainer had no way to
- * learn a stub had gone unread without listing the directory.
- *
- * **Two integers are not an inventory.** No row, no link, nothing to conflict
- * on — which is exactly the distinction that keeps this clear of the 2026-08-21
- * council verdict that deleted the hand-maintained index, and of
- * `check_no_stub_inventory_table`, which refuses its return.
- *
- * Reads frontmatter only, and returns `null` on any failure: a dashboard is not
- * the place to surface a parse error, and a missing directory in a consumer
- * install is normal rather than a fault.
- */
-function stub_queue_counts(roadmap_root: string): { overdue: number; owner: number } | null {
-    const dir = path.join(roadmap_root, 'stubs');
-    let names: string[];
-    try {
-        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md') && n !== 'README.md');
-    } catch {
-        return null;
-    }
-    if (names.length === 0) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    const OWNER_ROUTING = [
-        'owner-reserved',
-        'owner reserved',
-        'owner: maintainer',
-        'reserved to the owner',
-        'requires owner',
-        'maintainer decision',
-        'owner decision',
-        'owner sign-off',
-        'awaiting the owner',
-    ];
-    let overdue = 0;
-    let owner = 0;
-    for (const n of names) {
-        let source: string;
-        try {
-            source = fs.readFileSync(path.join(dir, n), 'utf-8');
-        } catch {
-            continue;
-        }
-        const fm = FRONTMATTER_RE.exec(source);
-        const due = /^review_by:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(fm?.[1] ?? '');
-        // An ABSENT date counts as overdue: the contract requires it, so missing
-        // means nobody scheduled a read — the state the count exists to surface.
-        if (due === null || (due[1] as string) <= today) overdue += 1;
-        const lower = source.toLowerCase();
-        if (OWNER_ROUTING.some((phrase) => lower.includes(phrase))) owner += 1;
-    }
-    return { overdue, owner };
-}
-
 function bar(pct: number, width = 10): string {
     const filled = _pyRound((pct * width) / 100);
     return '█'.repeat(filled) + '░'.repeat(width - filled);
@@ -966,64 +908,10 @@ function pending_iron_law_3(roadmaps: RoadmapStats[]): RoadmapStats[] {
     return roadmaps.filter((r) => r.total_active > 0 && r.open_ === 0 && r.deferred > 0);
 }
 
-interface Bundle {
-    slug: string;
-    tickets: number;
-    status: string;
-    roadmap: string;
-}
-
-function collect_bundles(repo_root: string): Bundle[] {
-    const reg = path.join(repo_root, 'agents', 'tickets', '_registry.yml');
-    if (!fs.existsSync(reg)) {
-        return [];
-    }
-    let YAML: typeof YamlModule;
-    try {
-        YAML = _require('yaml') as typeof YamlModule;
-    } catch {
-        return [];
-    }
-    let data: unknown;
-    try {
-        // yaml.safe_load(...) or {} — PyYAML 1.1 semantics; graceful on malformed.
-        data = YAML.parse(fs.readFileSync(reg, { encoding: 'utf-8' }), { version: '1.1' }) ?? {};
-    } catch {
-        return [];
-    }
-    const out: Bundle[] = [];
-    const bundles =
-        data && typeof data === 'object' && !Array.isArray(data)
-            ? ((data as Record<string, unknown>)['bundles'] ?? null)
-            : null;
-    const bundleMap =
-        bundles && typeof bundles === 'object' && !Array.isArray(bundles)
-            ? (bundles as Record<string, unknown>)
-            : {};
-    for (const slug of Object.keys(bundleMap).sort()) {
-        const metaRaw = bundleMap[slug];
-        const meta =
-            metaRaw && typeof metaRaw === 'object' && !Array.isArray(metaRaw)
-                ? (metaRaw as Record<string, unknown>)
-                : {};
-        const bdir = path.join(repo_root, 'agents', 'tickets', slug);
-        let n = 0;
-        if (_isDir(bdir)) {
-            try {
-                n = fs.readdirSync(bdir).filter((f) => f.startsWith('T-') && f.endsWith('.md')).length;
-            } catch {
-                n = 0;
-            }
-        }
-        out.push({
-            slug,
-            tickets: n,
-            status: (meta['status'] as string) ?? '?',
-            roadmap: (meta['source_roadmap'] as string) ?? '',
-        });
-    }
-    return out;
-}
+// `Bundle` and `collect_bundles` live in `./ticket_bundles.js`, imported above.
+// Extracted for the same mechanical reason as `stub_queue`: this file is past
+// the 1500-line ceiling `check_source_size_budget` charges, so lines added to
+// it are paid back by extraction rather than by a baseline bump.
 
 function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root: string): string {
     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
