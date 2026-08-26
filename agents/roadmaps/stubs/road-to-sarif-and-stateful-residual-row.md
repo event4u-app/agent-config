@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub — SARIF upload, the stateful residual row, and worst-family null gating
@@ -40,7 +41,7 @@ Measured at landing:
 What survived is below: three items, none of which is a control, and none of
 which the archived roadmaps cover.
 
-## Item 1 — SARIF upload
+## Probe — Item 1: SARIF upload
 
 - **What:** `src/scripts/lint_agent_security.ts` already emits SARIF. It carries
   a `--sarif PATH` argument (`:158-171`), builds a SARIF 2.1.0 report
@@ -57,7 +58,7 @@ which the archived roadmaps cover.
   repository. The capability that is missing is a repo-settings surface (Code
   Scanning enablement), which is why this is a transfer rather than a step.
 
-## Item 2 — The stateful / multi-turn residual-risk row
+## Probe — Item 2: The stateful / multi-turn residual-risk row
 
 - **What:** every shipped control here is per-message and stateless.
   Gradual-steering and in-session protocol-setup attacks are invisible at the
@@ -75,7 +76,7 @@ which the archived roadmaps cover.
   sufficient, so read the row before closing this item.
 - **Named producer:** the next threat-model revision.
 
-## Item 3 — Worst-family, not mean, null gating
+## Probe — Item 3: Worst-family, not mean, null gating
 
 - **What:** one paragraph of measurement discipline. A per-family coverage
   report must gate its honest-null on the **worst** family, never the mean: a

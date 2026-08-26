@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Road to Central Policy — STUB
 
 > **Status** · stub. Not started. Created 2026-05-24 to satisfy
@@ -21,7 +26,7 @@ together with SSO. The
 document points teams at git-shared `agents/overrides/` for the
 small-team case, which suffices until org-mode is funded.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 1. **SSO must land first** — promote [`road-to-team-sso.md`](road-to-team-sso.md)
    before this stub. Policy without identity is meaningless.
