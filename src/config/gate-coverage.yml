@@ -42,43 +42,39 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 295 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 296 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **68 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 65 of those 68 are listed below.** The manifest is
+# **69 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 66 of those 69 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~22 % of the population.
 #
-# RECOUNTED ON A MERGE, 2026-08-26, and this one left TWO STACKED emitter
-# sentences rather than a conflict inside one number — 67/64 from this branch and
-# 66/63 from main, four lines apart, each correct for its own tree. Recomputed on
-# the merged tree rather than reconciled: `count_gate_scripts()` returns **295**
-# and `grep -c '^  - id:'` returns **65**. Both branches added one row and the
-# population was already 295 on each, so the listed count moved by two while the
-# population did not — the arithmetic looks wrong until that is said.
+# RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
+# the 2026-08-24 block below describes, and this one left TWO STACKED claim
+# blocks rather than a conflict inside one number: 295/68 from this branch and
+# 296/67 from main, each correct for its own tree. Collapsed to one recomputed
+# block rather than reconciled by hand: `count_gate_scripts()` returns **296**
+# and `grep -c '^  - id:'` returns **66** on the merged tree.
 #
-# 65 + 3 unlisted emitters (`lint_evidence_artifacts`, `adr_cite_check`,
-# `check_new_adr_evidence`) = 68.
+# 66 + 3 unlisted emitters (`lint_evidence_artifacts`, `adr_cite_check`,
+# `check_new_adr_evidence`) = 69.
 #
-# RECOUNTED ON A MERGE, 2026-08-26 — the third time this file has met the case
-# the 2026-08-24 block below describes, and it arrived the same way each time:
-# two branches each add a row, each recounts correctly for its own tree, and
-# after the merge both figures describe a tree that no longer exists. Recomputed
-# rather than reconciled: `count_gate_scripts()` returns **295** and
-# `grep -c '^  - id:'` returns **64**.
+# RECOUNTED ON A MERGE, 2026-08-26, and the merge left TWO stacked header claims
+# rather than a conflict inside one number — each branch had recounted correctly
+# for its own tree, and keeping both sides produced a page asserting 294/62 and
+# 295/64 four lines apart. Collapsed to one recomputed block: `count_gate_scripts()`
+# returns **295** and `grep -c '^  - id:'` returns **64** on the merged tree.
 #
-# One of the two rows added here is not a new gate. `check_host_loadability`
-# already existed and STARTED EMITTING the contract line when its reach mode
-# landed, which the manifest test caught — so the population moved by one while
-# the listed count moved by two. Recorded because the arithmetic looks wrong
-# until that is said, and hand-adjusting either number would have hidden it.
-#
-# The emitter total tracks the listed count for the reason the 2026-08-25
-# paragraph already gives: every listed row is an emitter, and the same three
-# emitters remain deliberately unlisted. 64 + 3 = 67.
+# A paragraph that briefly stood here claimed the emitter total "cannot be
+# derived by grep" and dropped it. That was true of the method it tried and
+# wrong as a conclusion — every LISTED row is an emitter by construction (a row
+# that did not emit could carry no floor) and the same three emitters remain
+# deliberately unlisted, so 64 + 3 = 67. The figure is arithmetic over this
+# file, not a grep over `src/scripts/`, and it is restored rather than left
+# absent.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the case the 2026-08-24 block below was
 # written for, arriving again. Two branches each added one row and each recorded
@@ -1909,6 +1905,21 @@ gates:
     status: enforced
     no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artefact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
     argv_note: "The `--reach` argv, not the default. The default mode checks that two projections PARSE and emits no coverage line; reach accounts for every host surface and is the mode that carries a corpus. Registered on the argv that emits, per this manifest\u0027s own CI-identical-argv rule \u2014 and note that `--reach` is declared LOCAL-ONLY in ci-local-parity.yml, because a CI runner has no host tool installed and every row would resolve `skipped-tool-absent`, which is the empty-scope false green this manifest exists to refuse."
+  - id: lint_eval_specs
+    argv: []
+    min_scanned: 120
+    corpus: "every eval specification under src/skills/*/evals/, src/domains/*/evals/ and src/agent-src/commands/evals/ — 175 at the time this row landed. The floor sits at 120 because the corpus grows as skills gain evals and shrinks only when a skill is archived; a drop below 120 is a scan-root collapse rather than a pruning wave."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-eval-specs/evals/evals.json
+      content: |
+        {
+          "skill": "zz-canary-eval-specs",
+          "scenarios": [
+            { "id": "x", "prompt": "planted by check_gate_coverage --canary; never ships", "assertions": [{ "kind": "tool-choice" }] }
+          ]
+        }
   - id: lint_memory_twin_parity
     argv: []
     min_scanned: 7

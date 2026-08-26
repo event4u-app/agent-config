@@ -1,12 +1,12 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-26
 estate_offset_exempt: "No archive move is available in this change. The addition is the smaller half of a reduction: a six-document, roughly 8,400-line proposal bundle produced one roadmap, and five of its six documents were recorded as superseded, stale or refuted rather than landed. Its predecessor, agents/roadmaps/archive/road-to-code-graph-extractor-defect.md, is already archived and cannot be retired again."
-estate_growth_exempt: "Charges +0 on the count half (status-scoped, this file ships draft) and +1 on one-in-one-out, which is file-based. It also adds one blocker against a floor of 31, which carries no automatic allowance. Warranted on measurement: the verdict this package publishes about its own code graph was measured on 2026-07-28 against a build that no longer exists, the extractor defect it blamed was repaired on 2026-08-22 and the harness was never re-run, and a fresh build at HEAD shows 42.9 per cent of its edges carry AMBIGUOUS confidence with no recorded cause. No open roadmap carries a code-graph item; grepped across all twelve active files."
+estate_growth_exempt: "Activation change (2026-08-26): this file flips status draft -> ready, so it now charges +1 on the count half, which read +0 for as long as it shipped draft. One-in-one-out is file-based and was already paid by the change that landed the file; the claim is re-stated here because it is diff-scoped and an earlier one cannot be banked. It also adds one blocker against a floor of 31, which carries no automatic allowance. Warranted on measurement: the verdict this package publishes about its own code graph was measured on 2026-07-28 against a build that no longer exists, the extractor defect it blamed was repaired on 2026-08-22 and the harness was never re-run, and a fresh build at HEAD shows 42.9 per cent of its edges carry AMBIGUOUS confidence with no recorded cause. No open roadmap carries a code-graph item; grepped across all twelve active files."
 ---
 # Road to a code-graph verdict that measures the code that exists
 

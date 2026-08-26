@@ -18,10 +18,18 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
-// check_claims imports the exec: evidence lib and the scan-scope assertion, so
-// the throwaway tree needs both. Each imports only node builtins, so the chain
-// ends here.
-const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts'].map((n) =>
+// check_claims imports the exec: evidence lib, the scan-scope assertion, and —
+// since the non-inference ratchet landed — the baseline reader. The throwaway
+// tree needs all three. Each imports only node builtins, so the chain ends
+// here; a fourth arriving without this line fails as a module-resolution error
+// in every case at once, which is what it did.
+//
+// The fixture writes no `src/config/gate-violation-baselines.json`, and that is
+// deliberate rather than an omission: check_claims SKIPS the ratchet when the
+// baselines file is absent (a fixture) and still fails when the file exists
+// with no entry (a repository silencing a gate). This harness exercises the
+// first branch by construction.
+const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts'].map((n) =>
     path.join(REPO_ROOT, 'src', 'scripts', '_lib', n),
 );
 

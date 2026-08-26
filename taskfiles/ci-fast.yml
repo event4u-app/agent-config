@@ -1291,6 +1291,11 @@ tasks:
         --base "${LINT_BASE:-origin/main}" \
         --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
 
+  lint-eval-specs:
+    silent: true
+    desc: Gate this package's own measurement inputs — duplicate keys, untracked fixtures, self-disagreeing derivations, graders that enforce nothing (road-to-skill-ecosystem-eval-integrity Phase 1)
+    cmd: ./scripts-run src/scripts/lint_eval_specs {{.QUIET_FLAG}}
+
   lint-canonical-terms:
     silent: true
     desc: Hold the house dialect recorded in src/config/canonical-terms.yml — ratchet over authored prose under src/ and docs/ (road-to-canonical-terms Phase 2)

@@ -36,6 +36,15 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+// `mcnemar_exact` and `cohens_h` live in `_lib/paired_stats.ts` and are
+// re-exported here, so every existing importer of this module is unchanged.
+// Extracted rather than left in place: this file sits above the 1500-line
+// ceiling `check_source_size_budget` charges, so lines added to it are paid
+// back by extraction rather than by raising a baseline.
+import { cohens_h, mcnemar_exact, _pyRound, _pyRoundNoArg, wilcoxon } from './_lib/paired_stats.js';
+
+export { cohens_h, mcnemar_exact, wilcoxon };
+
 import { cost_usd, tier_for_model, type TierRates } from './_lib/bench_ab_activation.js';
 import { load_pricing } from './_lib/bench_cost.js';
 
@@ -80,180 +89,10 @@ const COMPARISONS: Array<[string, string, string]> = [
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
 //
-// CPython's `m_erf` (Modules/mathmodule.c): a Maclaurin series for |x| < 1.5
-// and 1 - erfc for larger |x|; `m_erfc` uses a continued-fraction expansion.
-// Ported verbatim so `_phi(z)` matches python3 to full double precision.
+// The erf/normal-CDF port and `wilcoxon` live in `_lib/paired_stats.ts`,
+// re-exported above. Same reason as the two functions beside them: this file
+// is over the 1500-line ceiling, so additions are paid back by extraction.
 
-const _ERF_SERIES_CUTOFF = 1.5;
-const _ERF_SERIES_TERMS = 25;
-const _ERFC_CONTFRAC_CUTOFF = 30.0;
-const _ERFC_CONTFRAC_TERMS = 50;
-const _SQRTPI = 1.772453850905516027298167483341145182798;
-
-function _m_erf_series(x: number): number {
-    // erf(x) = 2/sqrt(pi) * x * sum_{k>=0} (-x^2)^k / (k! (2k+1))
-    let x2 = x * x;
-    let acc = 0.0;
-    let fk = _ERF_SERIES_TERMS + 0.5;
-    for (let i = 0; i < _ERF_SERIES_TERMS; i += 1) {
-        acc = 2.0 + (x2 * acc) / fk;
-        fk -= 1.0;
-    }
-    return (acc * x * Math.exp(-x2)) / _SQRTPI;
-}
-
-function _m_erfc_contfrac(x: number): number {
-    if (x >= _ERFC_CONTFRAC_CUTOFF) {
-        return 0.0;
-    }
-    const x2 = x * x;
-    let a = 0.0;
-    let da = 0.5;
-    let p = 1.0;
-    let p_last = 0.0;
-    let q = da + x2;
-    let q_last = 1.0;
-    for (let i = 0; i < _ERFC_CONTFRAC_TERMS; i += 1) {
-        a += da;
-        da += 2.0;
-        const b = da + x2;
-        const temp_p = b * p - a * p_last;
-        p_last = p;
-        p = temp_p;
-        const temp_q = b * q - a * q_last;
-        q_last = q;
-        q = temp_q;
-    }
-    return (((p / q) * x) * Math.exp(-x2)) / _SQRTPI;
-}
-
-function _erf(x: number): number {
-    if (Number.isNaN(x)) {
-        return x;
-    }
-    const absx = Math.abs(x);
-    if (absx < _ERF_SERIES_CUTOFF) {
-        return _m_erf_series(x);
-    }
-    const cf = _m_erfc_contfrac(absx);
-    return x > 0.0 ? 1.0 - cf : cf - 1.0;
-}
-
-/** Python `math.comb(n, k)` — exact non-negative integer (BigInt → Number). */
-function _comb(n: number, k: number): number {
-    if (k < 0 || k > n) {
-        return 0;
-    }
-    let kk = BigInt(Math.min(k, n - k));
-    if (kk === 0n) {
-        return 1;
-    }
-    const N = BigInt(n);
-    let result = 1n;
-    let i = 0n;
-    while (i < kk) {
-        result = (result * (N - i)) / (i + 1n);
-        i += 1n;
-    }
-    return Number(result);
-}
-
-function _phi(z: number): number {
-    // Standard-normal CDF via erf.
-    return 0.5 * (1.0 + _erf(z / Math.sqrt(2.0)));
-}
-
-export function mcnemar_exact(b: number, c: number): number {
-    // Two-sided exact McNemar p-value (binomial on discordant pairs).
-    const n = b + c;
-    if (n === 0) {
-        return 1.0;
-    }
-    const k = Math.min(b, c);
-    let tail = 0;
-    for (let i = 0; i <= k; i += 1) {
-        tail += _comb(n, i);
-    }
-    tail = tail * 0.5 ** n;
-    return Math.min(1.0, 2.0 * tail);
-}
-
-export function cohens_h(p1: number, p2: number): number {
-    return (
-        2 * Math.asin(Math.sqrt(Math.max(0, Math.min(1, p1)))) -
-        2 * Math.asin(Math.sqrt(Math.max(0, Math.min(1, p2))))
-    );
-}
-
-interface WilcoxonResult {
-    n: number;
-    W_plus: number; // PyFloat-flagged at dump for the rounded case
-    W_minus: number;
-    p: number;
-    rank_biserial: number;
-}
-
-export function wilcoxon(diffs: number[]): WilcoxonResult {
-    // Wilcoxon signed-rank on paired differences (treatment - baseline).
-    // Returns W+, W-, normal-approx two-sided p (continuity-corrected), and
-    // rank-biserial effect size. Zeros are dropped.
-    const nz = diffs.filter((d) => Math.abs(d) > 1e-9);
-    const n = nz.length;
-    if (n === 0) {
-        return { n: 0, W_plus: 0, W_minus: 0, p: 1.0, rank_biserial: 0.0 };
-    }
-    // order = sorted(range(n), key=lambda i: abs(nz[i])) — stable sort.
-    const order = Array.from({ length: n }, (_, i) => i).sort((x, y) => {
-        const ax = Math.abs(nz[x] as number);
-        const ay = Math.abs(nz[y] as number);
-        return ax < ay ? -1 : ax > ay ? 1 : x - y; // stable on tie
-    });
-    const ranks: number[] = new Array(n).fill(0.0);
-    let i = 0;
-    while (i < n) {
-        let j = i;
-        while (j + 1 < n && Math.abs(nz[order[j + 1] as number] as number) === Math.abs(nz[order[i] as number] as number)) {
-            j += 1;
-        }
-        const avg = (i + 1 + j + 1) / 2.0; // average rank for ties (1-based)
-        for (let k = i; k <= j; k += 1) {
-            ranks[order[k] as number] = avg;
-        }
-        i = j + 1;
-    }
-    let w_plus = 0.0;
-    let w_minus = 0.0;
-    for (let idx = 0; idx < n; idx += 1) {
-        if ((nz[idx] as number) > 0) {
-            w_plus += ranks[idx] as number;
-        } else if ((nz[idx] as number) < 0) {
-            w_minus += ranks[idx] as number;
-        }
-    }
-    const total = w_plus + w_minus;
-    const rb = total ? (w_plus - w_minus) / total : 0.0;
-    // Normal approximation (ok-ish for n>=10; for small n it's conservative —
-    // we surface n so the reader can weight it).
-    const mean = (n * (n + 1)) / 4.0;
-    const sd = Math.sqrt((n * (n + 1) * (2 * n + 1)) / 24.0);
-    const w = Math.min(w_plus, w_minus);
-    let p: number;
-    if (sd === 0) {
-        p = 1.0;
-    } else {
-        const z = (w - mean + 0.5) / sd;
-        p = Math.min(1.0, 2.0 * _phi(z));
-    }
-    return {
-        n,
-        // W_plus / W_minus are not surfaced in JSON/markdown (compare() drops
-        // them), so plain numbers suffice; p / rank_biserial are floats.
-        W_plus: _pyRound(w_plus, 1),
-        W_minus: _pyRound(w_minus, 1),
-        p: _pyRound(p, 4),
-        rank_biserial: _pyRound(rb, 4),
-    };
-}
 
 /** Wrap a `round(...)`/float result so it renders `1.0` not `1` (Python float). */
 function PF(x: number): PyFloat {
@@ -478,6 +317,14 @@ function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
     // Percent change of the medians. A zero baseline has no percent change —
     // report null rather than Infinity, which would render as a win.
     const pct = mb === 0 ? null : PF(_pyRound(((mt - mb) / Math.abs(mb)) * 100, 4));
+    // Direction counts, ADDITIVE (Phase-3 PREREG amendment v2, 2026-08-26).
+    // The significance half of the size verdict now reads these rather than
+    // `wilcoxon_p`; every pre-existing key is untouched, so a consumer reading
+    // named keys is unaffected. Tie epsilon matches `wilcoxon`'s own 1e-9 zero
+    // drop, so "non-tied" means the same thing to both tests — two definitions
+    // of a tie in one report is how the numbers start disagreeing.
+    const wins = diffs.filter((d) => d < -1e-9).length;
+    const losses = diffs.filter((d) => d > 1e-9).length;
     return {
         measured: true,
         n_pairs: diffs.length,
@@ -488,6 +335,13 @@ function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
         wilcoxon_p: PF(wil.p),
         rank_biserial: PF(wil.rank_biserial),
         n_nonzero: wil.n,
+        // "Win" is DIRECTION-OF-INTEREST, not sign: for added lines and for
+        // cognitive complexity a NEGATIVE delta is the improvement. Naming them
+        // wins/losses here rather than positive/negative keeps the verdict from
+        // having to know which endpoint it is looking at.
+        direction_wins: wins,
+        direction_losses: losses,
+        direction_ties: diffs.length - wins - losses,
     };
 }
 
@@ -733,6 +587,15 @@ function _toContinuous(block: Dict): PairedContinuous {
         median_delta_pct: block['median_delta_pct'] == null ? null : _pyFloat(block['median_delta_pct']),
         median_delta: _pyFloat(block['median_delta']),
         wilcoxon_p: _pyFloat(block['wilcoxon_p']),
+        // Optional-absent rather than defaulted to 0: an older report carries
+        // no direction counts, and zeroing them would read as "no trial went
+        // either way", which is a measurement rather than a missing field.
+        ...(block['direction_wins'] === undefined
+            ? {}
+            : {
+                  direction_wins: _pyFloat(block['direction_wins']),
+                  direction_losses: _pyFloat(block['direction_losses']),
+              }),
     };
 }
 
@@ -1366,46 +1229,10 @@ function _pyStr(v: unknown): string {
     return String(v);
 }
 
-/** Python `round(x)` (no ndigits) → int, round-half-to-even. */
-function _pyRoundNoArg(x: number): number {
-    if (!Number.isFinite(x)) return x;
-    const floor = Math.floor(x);
-    const frac = x - floor;
-    if (frac < 0.5) return floor;
-    if (frac > 0.5) return floor + 1;
-    return floor % 2 === 0 ? floor : floor + 1;
-}
+// `_pyRound` / `_pyRoundNoArg` live in `_lib/paired_stats.ts` (imported above):
+// `wilcoxon` needs them and moved there, and two copies of a float-parity
+// rounder is how byte-stable output stops being byte-stable.
 
-/** Python `round(x, ndigits)` — round-half-to-even on the exact double. */
-function _pyRound(value: number, ndigits: number): number {
-    if (!Number.isFinite(value) || value === 0) {
-        return value;
-    }
-    const neg = value < 0;
-    const abs = Math.abs(value);
-    const exact = abs.toFixed(40);
-    const dot = exact.indexOf('.');
-    const intPart = dot === -1 ? exact : exact.slice(0, dot);
-    const fracPart = dot === -1 ? '' : exact.slice(dot + 1);
-    const keepFrac = fracPart.slice(0, ndigits).padEnd(ndigits, '0');
-    const rest = fracPart.slice(ndigits);
-    const scaledStr = (intPart + keepFrac).replace(/^0+(?=\d)/, '');
-    let scaled = BigInt(scaledStr === '' ? '0' : scaledStr);
-    if (rest.length > 0) {
-        const firstRest = rest.charCodeAt(0) - 48;
-        const hasMore = /[1-9]/.test(rest.slice(1));
-        if (firstRest > 5 || (firstRest === 5 && hasMore)) {
-            scaled += 1n;
-        } else if (firstRest === 5 && !hasMore) {
-            if (scaled % 2n === 1n) {
-                scaled += 1n;
-            }
-        }
-    }
-    const factor = 10 ** ndigits;
-    const result = Number(scaled) / factor;
-    return neg ? -result : result;
-}
 
 /** `format(x, '.Nf')` — round-half-even on the exact double, fixed N decimals. */
 function _pyFixed(x: number, ndigits: number): string {

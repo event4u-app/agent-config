@@ -1,12 +1,12 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-26
 estate_offset_exempt: "No archive move is available in this change. The addition is the smaller half of a reduction: a six-document, roughly 5,400-line proposal bundle carrying 23 distinct work items produced one roadmap, because sixteen of the 23 were measured owned, locked, or already shipped and are recorded as prevented rather than planned. The predecessors on this axis, road-to-routing-assurance and road-to-composition-ratchet, are both already archived and cannot be retired again."
-estate_growth_exempt: "Charges +0 on the count half (status-scoped, this file ships draft) and +1 on one-in-one-out, which is file-based. It also adds one blocker against a floor of 31, which carries no automatic allowance. Warranted on measurement: the skill ranker's CLI default points at a directory that does not exist in this repository and returns '(no relevant skills found)' with exit 0, which is the exact false negative the missing-skill-recovery rule was written to prevent; and the cross-skill link surface grew from a recorded 943 to a measured 976 while the only gate that checks it validates against the full tree. No open roadmap carries either item; grepped across all twelve active files and all 65 in later/."
+estate_growth_exempt: "Activation change (2026-08-26): this file flips status draft -> ready, so it now charges +1 on the count half, which read +0 for as long as it shipped draft. One-in-one-out is file-based and was already paid by the change that landed the file; the claim is re-stated here because it is diff-scoped and an earlier one cannot be banked. It also adds one blocker against a floor of 31, which carries no automatic allowance. Warranted on measurement: the skill ranker's CLI default points at a directory that does not exist in this repository and returns '(no relevant skills found)' with exit 0, which is the exact false negative the missing-skill-recovery rule was written to prevent; and the cross-skill link surface grew from a recorded 943 to a measured 976 while the only gate that checks it validates against the full tree. No open roadmap carries either item; grepped across all twelve active files and all 65 in later/."
 ---
 # Road to skill-selection evidence — the ranker answers "nothing" and means "wrong directory"
 

@@ -153,6 +153,24 @@ export function _load_tool_trace(run_dir: string): string[] | null {
     return raw.map((e) => (typeof e === 'string' ? e : (e.tool ?? ''))).filter((s) => s !== '');
 }
 
+/**
+ * Load the recorded EVENT trace, or `null` when the run did not record one.
+ *
+ * Sibling of {@link _load_tool_trace}, and deliberately a separate file rather
+ * than a widened tool trace: a tool call is something the agent did, an event
+ * is something the harness observed — a gate running, a hook concern firing, a
+ * refusal. Conflating them would make "the linter ran" indistinguishable from
+ * "the agent invoked the linter", and the interesting failure is precisely the
+ * case where a gate was SKIPPED while the agent narrated that it passed.
+ */
+export function _load_event_trace(run_dir: string): string[] | null {
+    const p = path.join(run_dir, 'event-trace.json');
+    if (!_exists(p)) return null;
+    const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as Array<string | { event?: string }>;
+    if (!Array.isArray(raw)) return null;
+    return raw.map((e) => (typeof e === 'string' ? e : (e.event ?? ''))).filter((s) => s !== '');
+}
+
 /** Count meaningful steps: tool calls net of retries (a call whose name equals
  * the immediately-preceding call name is a retry, not a new step). */
 export function _count_meaningful_steps(trace: string[]): number {
@@ -214,6 +232,28 @@ export function _grade_assertions(
                 const forbidden = mustNot.filter((t) => used.has(t));
                 results.push({
                     kind, must_use: mustUse, must_not_use: mustNot,
+                    missing, forbidden, pass: missing.length === 0 && forbidden.length === 0,
+                });
+            }
+        } else if (kind === 'event-choice') {
+            // The forbidden-event half of the case shape. Same manual-pending
+            // rule as tool-choice: no trace is NEVER a silent pass, because a
+            // missing trace and a clean run are the two readings this assertion
+            // exists to separate.
+            const mustEmit = (a['must_emit'] as string[] | undefined) ?? [];
+            const mustNotEmit = (a['must_not_emit'] as string[] | undefined) ?? [];
+            const trace = _load_event_trace(run_dir);
+            if (trace === null) {
+                results.push({
+                    kind, must_emit: mustEmit, must_not_emit: mustNotEmit, pass: null,
+                    note: 'manual-pending: no event-trace.json in run dir — record a trace or grade manually',
+                });
+            } else {
+                const seen = new Set(trace);
+                const missing = mustEmit.filter((e) => !seen.has(e));
+                const forbidden = mustNotEmit.filter((e) => seen.has(e));
+                results.push({
+                    kind, must_emit: mustEmit, must_not_emit: mustNotEmit,
                     missing, forbidden, pass: missing.length === 0 && forbidden.length === 0,
                 });
             }
