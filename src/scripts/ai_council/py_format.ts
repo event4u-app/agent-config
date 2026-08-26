@@ -1,9 +1,20 @@
 /**
  * Python-format helpers, extracted from `config.ts`.
  *
- * Every error string this package emits is byte-faithful to the Python original
- * it replaced, which is why `repr()`, `type().__name__` and `oct()` are
- * reimplemented here instead of being approximated with template literals.
+ * THE LIVE CONTRACT, stated instead of a fidelity claim: `config.ts` and
+ * `clients.ts` raise `ValueError` / `TypeError` whose messages are built from
+ * these helpers — `invalid literal for int() with base 10: <repr>`, `could not
+ * convert string to float: <repr>`, `'<typeName>'`. That exact wording is what
+ * makes a malformed `.ai-council.yml` diagnosable, so the helpers reimplement
+ * `repr()`, `type().__name__` and `oct()` rather than approximating them with
+ * template literals.
+ *
+ * WHAT PINS IT TODAY: nothing. Searched 2026-08-26 — no test in `tests/` asserts
+ * any of those three strings, and the only other occurrences in the tree are
+ * independent copies in the work-engine templates. So this docstring records an
+ * INTENDED contract with no gate behind it; a refactor that changed the wording
+ * would pass every check in this repository. Naming the gap is the honest form,
+ * and it is cheaper than a fidelity claim to a deleted file nobody can consult.
  *
  * Pure and self-contained: these functions call only each other, which is what
  * made the section safe to move out whole. Extracted because config.ts is
