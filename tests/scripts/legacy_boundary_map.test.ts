@@ -109,6 +109,73 @@ describe('4.1 — a per-path verdict, never a per-repository one', () => {
         expect(v.regions[0]?.startLine).toBe(1);
     });
 
+    // THREE DEFECTS A REVIEW FOUND, each an ordinary file shape this module
+    // classified wrongly. Every fixture above segregates the two halves, which is
+    // why none of them caught these: the failure mode is a foreign signal INSIDE
+    // otherwise uniform code.
+    it('does not call the canonical PSR-4 bootstrap mixed', () => {
+        const boot = [
+            '<?php',
+            '',
+            'declare(strict_types=1);',
+            '',
+            "require __DIR__ . '/../vendor/autoload.php';",
+            '',
+            'use App\\Kernel;',
+            '',
+            'final class Boot {}',
+        ].join('\n');
+        const v = classifyText('public/index.php', boot);
+        expect(v.convention).toBe('modern');
+        expect(conventionAt(v, 5)).toBe('modern');
+    });
+
+    it('does not read a comment about legacy code as legacy code', () => {
+        const src = [
+            '<?php',
+            'declare(strict_types=1);',
+            'namespace App;',
+            "// never touch $GLOBALS['cfg'] from here",
+            'final class Svc {}',
+        ].join('\n');
+        expect(classifyText('src/Svc.php', src).convention).toBe('modern');
+    });
+
+    it('treats a lone foreign signal as a POINT, so the lines after it keep their convention', () => {
+        const src = [
+            '<?php',
+            'declare(strict_types=1);',
+            'namespace App;',
+            'final class Svc',
+            '{',
+            '    public function bar(): void {',
+            "        $x = $GLOBALS['legacy_cfg'] ?? null;",
+            '    }',
+            '',
+            '    public function baz(): int { return 1; }',
+            '}',
+        ].join('\n');
+        const v = classifyText('src/Svc.php', src);
+        expect(v.convention).toBe('modern');
+        // The point itself is kept — an edit AT line 7 does touch a global.
+        expect(v.foreignPoints.map((f) => f.line)).toEqual([7]);
+        expect(conventionAt(v, 7)).toBe('legacy');
+        // ...and line 10, plain modern code, is not dragged along with it.
+        expect(conventionAt(v, 10)).toBe('modern');
+    });
+
+    it('still reports a genuinely mixed file as mixed — two signals each side', () => {
+        const src = [
+            '<?php',
+            'declare(strict_types=1);',
+            'namespace App;',
+            'final class Svc {}',
+            "require_once __DIR__ . '/../lib/legacy.php';",
+            'global $config;',
+        ].join('\n');
+        expect(classifyText('src/Svc.php', src).convention).toBe('mixed');
+    });
+
     it('returns unknown rather than a default for a file with no signal', () => {
         const v = classifyText('README.md', '# Notes\n\nSome prose.\n');
         expect(v.convention).toBe('unknown');

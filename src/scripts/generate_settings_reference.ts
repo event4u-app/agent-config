@@ -120,7 +120,7 @@ export function renderPage(rows: readonly ReferenceRow[]): string {
     const out: string[] = [];
     out.push('# Settings reference — every key, its class, and its default');
     out.push('');
-    out.push('> **Generated** by `src/scripts/generate_settings_reference.ts` — do NOT');
+    out.push('> **Generated** by `generate_settings_reference` — do NOT');
     out.push('> hand-edit. Derived from the zod settings schema plus the A/B/C class');
     out.push('> table in [`settings-classes`](contracts/settings-classes.md).');
     out.push('> Drift-checked in CI (`--check`).');

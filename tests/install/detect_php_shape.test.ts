@@ -90,6 +90,42 @@ describe('3.1 — the third state: components without the framework', () => {
         expect(detectPhpShape(root).shape).toBe('symfony');
     });
 
+    // A REAL DEFECT this suite did not catch until a review pointed at it. A
+    // single pass returning on the first family with any component reported a
+    // genuine Symfony application as components-without-framework the moment its
+    // manifest also required `illuminate/collections` — `laravel` is examined
+    // first, has a component, has no Laravel skeleton, and returned before
+    // Symfony's markers were looked at. Both `illuminate/collections` and
+    // `illuminate/support` are widely used standalone, so this is ordinary.
+    it('a real skeleton wins even when the OTHER family also has components', () => {
+        const root = tree({
+            'composer.json': composer({ 'symfony/framework-bundle': '^7.0', 'illuminate/collections': '^11.0' }),
+            'bin/console': "<?php\n",
+            'config/bundles.php': "<?php\n",
+        });
+        const v = detectPhpShape(root);
+        expect(v.shape).toBe('symfony');
+        expect(frameworkRoutingIsWrong(v)).toBe(false);
+    });
+
+    it('holds in the mirror direction — family order must not decide the verdict', () => {
+        const root = tree({
+            'composer.json': composer({ 'laravel/framework': '^11.0', 'symfony/console': '^7.0' }),
+            artisan: "#!/usr/bin/env php\n",
+        });
+        expect(detectPhpShape(root).shape).toBe('laravel');
+    });
+
+    it('names EVERY family whose components are present when no skeleton exists', () => {
+        const root = tree({
+            'composer.json': composer({ 'illuminate/database': '^11.0', 'symfony/http-foundation': '^7.0' }),
+        });
+        const v = detectPhpShape(root);
+        expect(v.shape).toBe('components-without-framework');
+        expect(v.reason).toContain('laravel');
+        expect(v.reason).toContain('symfony');
+    });
+
     it('does NOT call the whole framework a component install', () => {
         const root = tree({
             'composer.json': composer({ 'laravel/framework': '^11.0' }),

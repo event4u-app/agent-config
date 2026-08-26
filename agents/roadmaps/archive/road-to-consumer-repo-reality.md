@@ -120,12 +120,21 @@ public, before any code.
       parser cannot interpret reports it as unresolvable, never as absent.
 
       **DONE.** `src/scripts/_lib/install_reach_checks.ts`, 26 fixtures.
-      Run against this repository's own root files it reports 161 claims — 96
-      present, 18 dangling, 47 unresolvable-with-a-reason — and all 18 dangling
-      are real (10 from the `scripts/` → `src/scripts/` move, 2 from py2ts).
-      The first revision reported 38 and most were not paths at all; the
-      anchoring rule that fixes that is pinned by three tests named after the
-      false positives they encode.
+      Run against this repository's own root files it reports **100 claims — 71
+      present, 8 dangling, 21 unresolvable-with-a-reason**, and all 8 dangling
+      are real (3× `scripts/install.sh` from the `scripts/` → `src/scripts/`
+      move, 2 retired by py2ts, 3 absent generated directories).
+
+      **Two earlier figures here were wrong and are corrected rather than
+      quietly replaced.** The first revision reported 38 dangling, most of which
+      were not paths at all — fixed by the anchoring rule, pinned by three tests
+      named after the false positives they encode. The second reported 18, and a
+      neutral review of the branch found that number inflated by two further
+      defects: the extractor read a markdown link's backticked **label** as a
+      path claim, and the generated single-file concatenations (`.windsurfrules`
+      and its siblings) were being read at all. Together those produced 49 of 57
+      dangling paths on the live tree, every one a false positive. Both are
+      fixed and pinned; the honest number is 8.
 - [x] **1.3 Report the version axis as a three-way comparison.** Pinned version
       (from whichever settings file the consumer actually carries, legacy
       filenames included), installed-projection version, and the version the

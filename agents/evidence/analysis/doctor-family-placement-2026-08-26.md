@@ -120,19 +120,32 @@ any form: `link_crypto.ts`, `size-enforcement.md` and `pathlib.Path` all reached
 the classifier during development and all three would have been reported
 dangling.
 
-**Final measurement: 161 path claims — 96 present, 18 dangling, 47
-unresolvable.** All 18 dangling are real:
+**A second correction, from a neutral review of the branch.** The figure
+recorded here first was 161 claims / 18 dangling. Two further defects inflated
+it: the extractor read a markdown link's backticked **label** as a path claim,
+and the generated single-file concatenations (`.windsurfrules`, `.cursorrules`,
+`.clinerules`) were read as if they were authored root documents. A path inside
+a concatenated rule body is relative to that rule's original location, so
+resolving it from the repository root is a category error — and since those
+files are also this package's own projections, shipped into consumer trees,
+reading them would have made `doctor` fail for every consumer that installs
+them. On the live tree they produced 49 of 57 dangling paths, all false.
 
-- **10** from the `scripts/` → `src/scripts/` move: `scripts/install.sh` (named
-  in three separate root files), `scripts/skill_linter.ts`,
-  `scripts/check_condensation.ts`, `scripts/check_no_roadmap_refs.ts`,
-  `scripts/check_council_references.ts`, `scripts/lint_framework_leakage.ts`,
-  `scripts/check_token_optimizer_freshness.ts`, and two under
-  `scripts/ai_council/`.
-- **2** retired by the py2ts migration: `src/scripts/condense.py`,
-  `src/scripts/check_portability.py`.
-- **6** others including `.agent-src.uncondensed/rules/` and
-  `data/low-impact-decisions-seed.md`.
+**Final measurement: 100 path claims — 71 present, 8 dangling, 21
+unresolvable.** All 8 dangling are real:
+
+| # | Path | Named in | Why it is absent |
+|--:|---|---|---|
+| 1-3 | `scripts/install.sh` | `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` | the root `scripts/` directory moved to `src/scripts/` |
+| 4 | `src/scripts/condense.py` | `copilot-instructions.md` | retired by the py2ts migration (ADR-200) |
+| 5 | `src/scripts/check_portability.py` | `copilot-instructions.md` | retired by the py2ts migration |
+| 6 | `.agent-src.uncondensed/rules/` | `copilot-instructions.md` | the directory does not exist |
+| 7 | `.claude/rules/` | `copilot-instructions.md` | generated and untracked — absent in a fresh clone |
+| 8 | `.cursor/rules/` | `copilot-instructions.md` | generated and untracked — absent in a fresh clone |
+
+Rows 7 and 8 are worth naming separately: they are real over-reports for a
+consumer who clones and reads the file before running a generator, which is
+exactly the reader this check is for.
 
 This package's own root instruction files carry the exact defect the check was
 written for. That is the strongest evidence available that it is worth shipping,

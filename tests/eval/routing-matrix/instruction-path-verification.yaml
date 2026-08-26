@@ -1,0 +1,24 @@
+rule: instruction-path-verification
+# Triggers (dist/router.json): phrases "the rules directory", "the skills
+# directory", "agent layer", "as described in AGENTS.md", "laut AGENTS.md",
+# "instruction file". All are phrase triggers, so matching is unanchored
+# substring on the prompt and no open_files are needed.
+#
+# The near-misses are the discipline here: this rule's sibling
+# `missing-skill-recovery` fires on the OPPOSITE direction (a catalogue that
+# under-reports), so a prompt about a missing SKILL must not route here.
+positives:
+  - prompt: "Load the retry policy from the rules directory and apply it to the worker."
+  - prompt: "Walk the agent layer and tell me which parts are actually installed."
+  - prompt: "Add a validator as described in AGENTS.md, section 3."
+  - prompt: "Lies die Konventionen laut AGENTS.md und wende sie auf den neuen Service an."
+  - prompt: "Our instruction file points at four directories — build the feature they describe."
+  - prompt: "Pull the review checklist out of the skills directory before you start."
+near_misses:
+  # The mirror case: a catalogue that UNDER-reports. Routes to the sibling rule,
+  # never here.
+  - prompt: "I cannot find a skill for parsing OpenAPI — does one exist?"
+  - prompt: "The catalogue you were shown is truncated; ask by task instead."
+  # Ordinary file work with no claim about an instruction surface.
+  - prompt: "Rename the helper in src/worker/queue.ts and update its callers."
+  - prompt: "Der Build bricht ab, weil ein Import ins Leere zeigt — finde ihn."

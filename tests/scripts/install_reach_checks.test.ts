@@ -26,8 +26,10 @@ import {
     readVersionPins,
     repeatedOverrides,
     resolveInstructionPaths,
+    EXCLUDED_CONCATENATIONS,
     REACH_CHECK_IDS,
     reachRunners,
+    ROOT_INSTRUCTION_FILES,
 } from '../../src/scripts/_lib/install_reach_checks.js';
 
 const tmps: string[] = [];
@@ -141,6 +143,30 @@ describe('1.2 — instruction-file paths resolve, or say why not', () => {
         const named = resolveInstructionPaths(root);
         expect(named.map((n) => n.raw)).toEqual(['src/rules/index.md']);
         expect(named[0]?.outcome).toBe('dangling');
+    });
+
+    // TWO DEFECTS A REVIEW FOUND. On this repository the check reported 57
+    // dangling paths of which 49 were its own misparse — risk-register rank 4 in
+    // its sharpest form. Both fixes are pinned here.
+    it('reads a link TARGET, never the backticked label in front of it', () => {
+        // The dominant link style in this package's rule bodies. The label
+        // carries an extension and would resolve from the root; the target is
+        // the actual claim.
+        const root = tree({ 'AGENTS.md': 'See [`src/rules/x.md`](../src/rules/x.md).\n' }, ['src']);
+        const named = resolveInstructionPaths(root);
+        expect(named.map((n) => n.raw)).not.toContain('src/rules/x.md');
+        // The `../` target is separately and correctly unresolvable.
+        expect(named.every((n) => n.outcome === 'unresolvable')).toBe(true);
+    });
+
+    it('does not read the generated single-file concatenations', () => {
+        // A path inside a concatenated rule body is relative to that rule's
+        // ORIGINAL location, so resolving it from the root is a category error.
+        for (const f of EXCLUDED_CONCATENATIONS) {
+            expect(ROOT_INSTRUCTION_FILES).not.toContain(f);
+        }
+        const root = tree({ '.windsurfrules': 'See `contexts/execution/x.md` and `media/likeness.md`.\n' });
+        expect(resolveInstructionPaths(root)).toHaveLength(0);
     });
 
     it('skips a tree whose root files name no path at all', () => {

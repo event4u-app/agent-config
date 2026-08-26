@@ -56,6 +56,15 @@ export interface PathVerdict {
      * single-convention file — a caller should not need two code paths.
      */
     regions: Region[];
+    /**
+     * A single foreign signal inside an otherwise uniform file — one `$GLOBALS`
+     * read in a namespaced class, one class-like declaration in an
+     * include-and-dispatch file. Reported as a POINT and deliberately not as a
+     * region: a lone signal says something true about ITS line and nothing about
+     * the lines after it, and letting it open a region made every line to the end
+     * of the file inherit a convention it does not have.
+     */
+    foreignPoints: { line: number; convention: 'modern' | 'legacy'; signal: string }[];
     /** One sentence naming what decided it. Never empty. */
     reason: string;
 }
@@ -79,11 +88,31 @@ const LEGACY: readonly { re: RegExp; signal: string }[] = [
     { re: /^\s*(?:require|include)(?:_once)?\s*[\s(]/, signal: 'require/include' },
     { re: /^\s*global\s+\$/, signal: 'global statement' },
     { re: /\$GLOBALS\s*\[/, signal: '$GLOBALS access' },
-    { re: /^\s*(?:function|class)\s+[a-z][A-Za-z0-9_]*\s*\(/, signal: 'unnamespaced snake/camel function' },
+    { re: /^\s*function\s+[a-z][A-Za-z0-9_]*\s*\(/, signal: 'unnamespaced snake/camel function' },
 ];
 
+/**
+ * Requiring the Composer autoloader is the MODERN ecosystem's own bootstrap, not
+ * the include-and-dispatch pattern. Without this exception the canonical PSR-4
+ * entry point — `require __DIR__ . '/../vendor/autoload.php';` — makes every
+ * modern application's front controller come back `mixed`, which is the single
+ * most common file shape in the ecosystem this module is meant to classify.
+ */
+const AUTOLOAD_REQUIRE = /vendor\/autoload\.php/;
+
+/**
+ * A line that is only a comment carries no convention. `// never touch
+ * $GLOBALS['x']` is advice ABOUT legacy code, and reading it as legacy code
+ * flips the region a reader is standing in. Block-comment interiors are not
+ * tracked — that needs a lexer — so only whole-line `//`, `#` and `*`
+ * continuations are skipped.
+ */
+const COMMENT_ONLY = /^\s*(?:\/\/|#|\*|\/\*)/;
+
 function _signalFor(line: string): { convention: 'modern' | 'legacy'; signal: string } | null {
+    if (COMMENT_ONLY.test(line)) return null;
     for (const { re, signal } of MODERN) if (re.test(line)) return { convention: 'modern', signal };
+    if (AUTOLOAD_REQUIRE.test(line)) return null;
     for (const { re, signal } of LEGACY) if (re.test(line)) return { convention: 'legacy', signal };
     return null;
 }
@@ -98,10 +127,29 @@ function _signalFor(line: string): { convention: 'modern' | 'legacy'; signal: st
  */
 export function classifyText(pathName: string, text: string): PathVerdict {
     const lines = text.split('\n');
-    const regions: Region[] = [];
+    const hits: { line: number; convention: 'modern' | 'legacy'; signal: string }[] = [];
     for (let i = 0; i < lines.length; i += 1) {
         const hit = _signalFor(lines[i] ?? '');
-        if (hit === null) continue;
+        if (hit !== null) hits.push({ line: i + 1, ...hit });
+    }
+
+    // A lone signal of one convention, against two or more of the other, is a
+    // POINT rather than a region boundary. Two is the threshold because one
+    // occurrence is as likely to be an artifact — a legacy global read inside a
+    // modern service, a single class declaration in an old dispatch file — as a
+    // statement about the surrounding code.
+    const counts = { modern: 0, legacy: 0 };
+    for (const h of hits) counts[h.convention] += 1;
+    const isolated: 'modern' | 'legacy' | null =
+        counts.modern === 1 && counts.legacy >= 2 ? 'modern'
+        : counts.legacy === 1 && counts.modern >= 2 ? 'legacy'
+        : null;
+    const foreignPoints = isolated === null ? [] : hits.filter((h) => h.convention === isolated);
+    const structural = isolated === null ? hits : hits.filter((h) => h.convention !== isolated);
+
+    const regions: Region[] = [];
+    for (const hit of structural) {
+        const i = hit.line - 1;
         const last = regions[regions.length - 1];
         if (last !== undefined && last.convention === hit.convention) {
             last.endLine = i + 1;
@@ -115,6 +163,7 @@ export function classifyText(pathName: string, text: string): PathVerdict {
             path: pathName,
             convention: 'unknown',
             regions: [],
+            foreignPoints,
             reason: 'no convention signal found — neither a namespaced construct nor an include-and-dispatch one',
         };
     }
@@ -135,13 +184,20 @@ export function classifyText(pathName: string, text: string): PathVerdict {
             path: pathName,
             convention: only,
             regions,
-            reason: `every signal in this file is ${only} (${regions.map((r) => r.signal).join(', ')})`,
+            foreignPoints,
+            reason:
+                `every structural signal in this file is ${only} (${regions.map((r) => r.signal).join(', ')})` +
+                (foreignPoints.length === 0
+                    ? ''
+                    : `. One isolated ${isolated} signal at L${foreignPoints.map((f) => f.line).join(', L')} ` +
+                      `(${foreignPoints.map((f) => f.signal).join(', ')}) — true of that line, not of the lines after it`),
         };
     }
     return {
         path: pathName,
         convention: 'mixed',
         regions,
+        foreignPoints,
         reason:
             `both conventions appear in this file, in ${regions.length} regions. ` +
             regions.map((r) => `L${r.startLine}-${r.endLine} ${r.convention} (${r.signal})`).join('; ') +
@@ -154,7 +210,7 @@ export function classifyPath(absPath: string, displayPath = absPath): PathVerdic
     try {
         return classifyText(displayPath, fs.readFileSync(absPath, 'utf8'));
     } catch {
-        return { path: displayPath, convention: 'unknown', regions: [], reason: 'unreadable' };
+        return { path: displayPath, convention: 'unknown', regions: [], foreignPoints: [], reason: 'unreadable' };
     }
 }
 
@@ -164,6 +220,7 @@ export function classifyPath(absPath: string, displayPath = absPath): PathVerdic
  * real answer, and different from "modern by default".
  */
 export function conventionAt(verdict: PathVerdict, line: number): 'modern' | 'legacy' | null {
+    for (const f of verdict.foreignPoints) if (f.line === line) return f.convention;
     for (const r of verdict.regions) {
         if (line >= r.startLine && line <= r.endLine) return r.convention;
     }

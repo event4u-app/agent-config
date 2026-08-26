@@ -469,9 +469,13 @@ wrong, and the correction was the finding.**
 - `ParsedRef.canonical` does not exist. The broken join reported *"0 of 160
   accepted ADRs cited — 100.0% uncited"*; the real figure is **14.4%**.
 - Run against this repository's own root instruction files, the new install-reach
-  check found **18 dangling paths**, 10 of them from the `scripts/` →
-  `src/scripts/` move — and its first revision reported 38, most of which were
-  not paths at all. Both numbers are in the PR body.
+  check found **8 dangling paths**, three of them `scripts/install.sh` named in
+  three separate root files after the `scripts/` → `src/scripts/` move. That
+  number took **three** revisions to become true: the first reported 38, the
+  second 18, and a neutral review of the branch found the second still inflated
+  by two parser defects (a markdown link's backticked label read as a claim, and
+  the generated single-file concatenations read as authored documents). Every
+  revision is recorded rather than replaced.
 
 ## Two loose ratchets, deliberately not lowered
 
@@ -479,3 +483,37 @@ wrong, and the correction was the finding.**
 `lint_canonical_terms` reads 1,006 against 1,007. Both are local readings.
 Lowering a ratchet on a local number is how a gain gets silently given back when
 CI measures something else; they should be lowered from CI's own figure.
+
+## The neutral review, and what it changed
+
+Commissioned after the work was called complete, over the whole delta, with the
+prompt recorded at `agents/evidence/review/consumer-repo-reality-review-prompt.md`
+per [`evaluator-independence`](../../src/rules/evaluator-independence.md).
+
+**It refuted the completion claim.** "All gates green" had been asserted on the
+five NEW suites; the existing suites were never run, and the branch left **ten
+test files red**, five of them directly caused by the change. The claim was
+wrong at the moment it was made, and the review is the only reason that surfaced
+before the PR.
+
+| Class | Finding | Disposition |
+|---|---|---|
+| critical | two existing tests pinned the generator-attribution string this change rewrote | fixed |
+| critical | the MCP consumer catalog was not regenerated after its description changed | regenerated |
+| critical | the routing-coverage seed did not know about the new rule | matrix added, coverage ROSE 0.8952 → 0.8962 |
+| critical | the size-budget ratchet was left loose, and the test asserts exact equality — so the improvement was itself a red | lowered 18,474 → 18,446 with its derivation |
+| high | `detect_php_shape` returned on the first family with any component, so a real Symfony app with `illuminate/collections` was told its framework was not real | two-pass fix; skeleton anywhere wins |
+| high | `legacy_boundary_map` called the canonical PSR-4 bootstrap `mixed`, read comments as code, and let one `$GLOBALS` line flip the rest of a file | autoload exception, comment skip, isolated signals became POINTS |
+| high | the instruction-path check reported 57 dangling on this tree, 49 of them its own misparse | link labels skipped, concatenations excluded |
+| high | the 1.4 sweep reported "0 hits" while fifteen attributions survived in five shapes it could not match — one naming a script that does not exist | pattern widened, **positive control added** |
+
+**The sharpest lesson is the last one.** A sweep with no positive control cannot
+tell *clean* from *blind*, and this one was blind while reporting a green
+denominator of 1,257 files. Its replacement asserts that it detects all eight
+attribution shapes before it is allowed to report zero.
+
+**The review also found tests that constrain nothing** — assertions that pass
+whatever the implementation does. Those are named in its report and are the
+reason several of the fixes above ship with a sabotage result rather than a
+green run: a test never seen red has unknown sensitivity, and several of these
+had never been seen red against the defect they were supposed to cover.

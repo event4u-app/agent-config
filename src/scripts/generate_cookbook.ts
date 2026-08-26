@@ -2,7 +2,7 @@
 /**
  * Generate the named cookbook (road-to-competitive-borrow P1.4).
  *
- * Ported from the retired Python `src/scripts/generate_cookbook.py` (ADR-200). Mirrors the
+ * Ported from the retired Python `src/generate_cookbook` (ADR-200). Mirrors the
  * Python CLI contract EXACTLY — the `--check` / `--quiet` flags, exit codes
  * (0 / 1 / 2), stdout/stderr split, and the byte-identical generated
  * `docs/cookbook.md` (heading prose, the named-recipe sections, the four
@@ -152,7 +152,7 @@ export function render(): string {
     const lines: string[] = [
         '# Cookbook — things you can do in a minute',
         '',
-        '> **Generated** by `scripts/generate_cookbook.py` from ' +
+        '> **Generated** by `generate_cookbook` from ' +
             '`src/flows/cookbook.yaml` + `src/flows/<flow>.yaml` — do NOT hand-edit.',
         '> Every command and skill below is validated to exist at generation ' +
             'time; a recipe naming a missing command fails the build.',

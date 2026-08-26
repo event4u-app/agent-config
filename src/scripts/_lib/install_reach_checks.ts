@@ -49,10 +49,30 @@ export const ROOT_INSTRUCTION_FILES: readonly string[] = [
     'CLAUDE.md',
     'GEMINI.md',
     '.github/copilot-instructions.md',
-    '.cursorrules',
-    '.windsurfrules',
-    '.clinerules',
 ];
+
+/**
+ * Deliberately NOT read: `.windsurfrules`, `.cursorrules`, `.clinerules`.
+ *
+ * They are single-file CONCATENATIONS of many rule bodies rather than authored
+ * root documents, and that difference decides whether their paths are claims at
+ * all. A path inside a concatenated body is relative to the rule's ORIGINAL
+ * location, not to the repository root, so resolving it from the root is a
+ * category error. Many are not even claims: a rule that enumerates the four
+ * candidate locations a resolver searches (`assets/tokens.json`,
+ * `resources/tokens.json`, …) is listing possibilities, and at most one exists
+ * by design.
+ *
+ * Measured on this repository before the exclusion: `.windsurfrules` produced 49
+ * of 57 "dangling" paths, every one a false positive, while the four authored
+ * files above produced 8 — all real. Since these three are ALSO this package's
+ * own generated projections, shipped into consumer trees, reading them would
+ * have made `doctor` fail for every consumer that installs them.
+ *
+ * Risk-register rank 4, in its sharpest form: a checker that reports a healthy
+ * install as broken is worse than not checking.
+ */
+export const EXCLUDED_CONCATENATIONS: readonly string[] = ['.windsurfrules', '.cursorrules', '.clinerules'];
 
 /** One path a root instruction file named, and what resolving it found. */
 export interface NamedPath {
@@ -161,6 +181,16 @@ export function extractNamedPaths(projectRoot: string, source: string, text: str
         re.lastIndex = 0;
         let m: RegExpExecArray | null;
         while ((m = re.exec(text)) !== null) {
+            // A backticked span immediately followed by `](` is a link LABEL, and
+            // the real path is the target that follows. Reading the label as a
+            // claim was the module's largest source of false "dangling" verdicts:
+            // the dominant link style in this package's own rule bodies is
+            // [`contexts/execution/x.md`](../contexts/execution/x.md), whose label
+            // carries an extension, resolves from the repository root, and is not
+            // there — while the target, being `../`-relative, is separately and
+            // correctly reported unresolvable. 49 of 57 dangling paths in the
+            // generated `.windsurfrules` concatenation were this one bug.
+            if (re === BACKTICKED && text.slice(m.index + m[0].length, m.index + m[0].length + 2) === '](') continue;
             const raw = (m[1] ?? '').trim();
             if (!_looksLikePath(projectRoot, raw) || seen.has(raw)) continue;
             seen.add(raw);
