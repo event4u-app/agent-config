@@ -29,10 +29,30 @@ NO HOST AGENT PERFORMS A RUNTIME LOOKUP AGAINST IT.
 
 This paragraph replaced a sentence that said host agents *"read [the table]
 once at session start"* (retired 2026-08-08, P3.3 of
-`road-to-rule-delivery-integrity`). No host does. Measured: `dist/router.json`
-has 20 consumers across lint, eval, telemetry and prepack scripts, and **zero**
-under `src/scripts/hooks/` — no hook slot loads it, and no slot injects
-trigger-matched rule bodies. Describing a lookup nobody performs is the posture
+`road-to-rule-delivery-integrity`). No host does that.
+
+**Corrected 2026-08-26 — the zero is no longer zero.** This paragraph read
+*"`dist/router.json` has 20 consumers across lint, eval, telemetry and prepack
+scripts, and **zero** under `src/scripts/hooks/` — no hook slot loads it, and no
+slot injects trigger-matched rule bodies."* Both clauses are now false. The
+`rule-inject` concern (`src/scripts/hooks/rule_inject_hook.ts:61,196`) calls
+`loadRouter` (`src/scripts/_lib/rule_injection.ts:76-79`), and it is bound on
+**three** slots — `user_prompt_submit`, `pre_tool_use` and `pre_compact`
+(`src/scripts/hook_manifest.yaml:1067,1068,1086`). Injecting trigger-matched
+rule bodies is that concern's entire purpose.
+
+**What is still true, and it is the load-bearing half:** the concern is
+**DEFAULT-OFF and off means zero bytes.** It returns before reading the router
+unless `lean_projection.mode: delivery` is set, and the shipped default is
+`eager-all` (`src/scripts/_lib/lean_projection_mode.ts:21`, with anything
+unrecognised normalising to it). So under every shipped default nothing loads
+`dist/router.json` at runtime — but that is now a **statement about a setting**,
+not about the absence of a mechanism, and the two are not interchangeable.
+
+**Unmeasured, stated because the correction invites the question:** the
+concern's own header records that its budget row *"is registered against the
+per-prompt cap rather than a measured emission: there is no measured emission to
+register yet."* Built, bound, default-off, unmeasured. Describing a lookup nobody performs is the posture
 ADR-127 rejects: a promised check that does not run is decoration, and a
 documented mechanism that does not exist is the same defect one layer up.
 
@@ -268,7 +288,12 @@ Legacy `rule_loading_tier: balanced` values map to `essential`.
 
 ## Activation semantics
 
-**Read this first: nothing loads `dist/router.json` at runtime.** This section
+**Read this first: under every shipped default, nothing loads
+`dist/router.json` at runtime.** Corrected 2026-08-26 — this line read
+*"nothing loads `dist/router.json` at runtime"* without the qualifier, and a
+default-off runtime consumer now exists (see the correction above). The
+qualifier is the whole difference: no mechanism versus a mechanism nobody has
+turned on. This section
 used to describe a per-turn loader — "the host agent reads `dist/router.json`
 once per session … active rules are loaded inline" — while § Schema v2 thirty
 lines above said, correctly, *"per ADR-040 the filtering happens at projection
