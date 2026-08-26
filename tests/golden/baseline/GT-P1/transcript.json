@@ -186,6 +186,116 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: observe-red ticket=(no id)\n> Ticket (no id) — implement gate refused: no `state.tests.red` recorded. Write the failing test for the next single behaviour and observe it fail first.\n> 1. Continue — write and run that one failing test\n> 2. Record an exemption — `state.tests.red = {exempt: \"<reason>\"}`\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add modulo(a, b) to src/calculator.py — return a % b for ints\n",
+            "reconstructed_ac": [
+              "modulo(a, b) should return the integer remainder, divisor-signed",
+              "when called with modulo(7, 3) it must return 1",
+              "when called with modulo(-2, 3) it must return 1 (divisor-signed)"
+            ],
+            "assumptions": [
+              "function lives in src/calculator.ts next to add/subtract/power",
+              "no behaviour change to existing functions"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 1,
+              "dimensions": {
+                "goal_clarity": 2,
+                "scope_boundary": 2,
+                "ac_evidence": 2,
+                "stack_data": 2,
+                "reversibility": 2
+              },
+              "reasons": [
+                "goal_clarity=2: action verb + bounded length + single outcome",
+                "scope_boundary=2: explicit file/class/identifier named",
+                "ac_evidence=2: 3 criteria, 3 anchored",
+                "stack_data=2: prompt is behavioural, no stack/data signal",
+                "reversibility=2: code-only change, cheap to revert"
+              ],
+              "ui_intent": false
+            },
+            "acceptance_criteria": [
+              "modulo(a, b) should return the integer remainder, divisor-signed",
+              "when called with modulo(7, 3) it must return 1",
+              "when called with modulo(-2, 3) it must return 1 (divisor-signed)"
+            ]
+          }
+        },
+        "intent": "backend-coding",
+        "directive_set": "backend",
+        "stack": null,
+        "ui_audit": null,
+        "app_spec": null,
+        "ui_design": null,
+        "ui_scaffold": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "self_fix": null,
+        "halts": [],
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": [
+          {
+            "title": "Add modulo(a, b)",
+            "detail": "Append modulo(a: number, b: number): number to src/calculator.ts"
+          },
+          {
+            "title": "Add modulo(a, b)",
+            "detail": "Append a modulo test to tests/calculator.test.ts"
+          },
+          {
+            "title": "Add modulo(a, b)",
+            "detail": "Run vitest to confirm the new test passes"
+          }
+        ],
+        "changes": [],
+        "tests": {
+          "red": {
+            "behaviour": "the changed behaviour under test",
+            "failure_class": "missing_target"
+          }
+        },
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "blocked"
+        },
+        "questions": [
+          "@agent-directive: observe-red ticket=(no id)",
+          "> Ticket (no id) — implement gate refused: no `state.tests.red` recorded. Write the failing test for the next single behaviour and observe it fail first.",
+          "> 1. Continue — write and run that one failing test",
+          "> 2. Record an exemption — `state.tests.red = {exempt: \"<reason>\"}`"
+        ],
+        "report": ""
+      },
+      "directive": "observe-red",
+      "recipe_action": "observe-red",
+      "recipe_notes": [
+        "observed RED for the next behaviour"
+      ]
+    },
+    {
+      "index": 4,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
       "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: apply-plan ticket=(no id)\n> Ticket (no id) — applying the recorded plan under `minimal-safe-diff` + `scope-control`.\n> 1. Continue — apply the plan as recorded\n> 2. Abort — stop before any edits are made\n",
       "stderr": "",
       "state_after": {
@@ -268,7 +378,12 @@
             "purpose": "applied by GT recipe"
           }
         ],
-        "tests": null,
+        "tests": {
+          "red": {
+            "behaviour": "the changed behaviour under test",
+            "failure_class": "missing_target"
+          }
+        },
         "verify": null,
         "outcomes": {
           "refine": "success",
@@ -292,7 +407,7 @@
       ]
     },
     {
-      "index": 4,
+      "index": 5,
       "cmd": [
         "./agent-config",
         "work",
@@ -412,7 +527,7 @@
       ]
     },
     {
-      "index": 5,
+      "index": 6,
       "cmd": [
         "./agent-config",
         "work",
@@ -543,7 +658,7 @@
       ]
     },
     {
-      "index": 6,
+      "index": 7,
       "cmd": [
         "./agent-config",
         "work",

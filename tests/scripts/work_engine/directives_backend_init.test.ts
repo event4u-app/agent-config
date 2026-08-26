@@ -74,6 +74,7 @@ describe('directives/backend index — summary contract', () => {
               ],
               "implement": [
                 "upstream_plan_failed",
+                "no_red_evidence",
                 "empty_changes_delegate",
                 "malformed_changes",
               ],
