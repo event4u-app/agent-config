@@ -1,7 +1,7 @@
 # Personas
 
 Personas are **review lenses** the host agent adopts when running a
-skill — not sub-agents, not execution modes. Each persona shapes
+skill — not subagents, not execution modes. Each persona shapes
 *what* the agent looks for in a diff, plan, or artifact; the host
 identity, tools, and workflow stay the same.
 
@@ -166,7 +166,7 @@ for the mechanics.
 
 ## Anti-patterns
 
-- **Personas as agents.** Personas are lenses, not sub-agents. They do
+- **Personas as agents.** Personas are lenses, not subagents. They do
   not spawn processes or run tools independently.
 - **Personas as modes.** They do not change the host's contract or
   refuse work. Use `/mode` for that.

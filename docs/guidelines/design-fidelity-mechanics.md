@@ -161,7 +161,7 @@ The Iron Law and both discriminator clauses stay in
 
 | The artefact declares | The spec is | The spec is NOT |
 |---|---|---|
-| low fidelity — greyscale, box-and-line, placeholder copy | layout · element set · hierarchy · states shown | greys · placeholder text · borders · exact spacing |
+| low fidelity — greyscale, box-and-line, placeholder copy | layout · element set · hierarchy · states shown | grays · placeholder text · borders · exact spacing |
 | finished — colour, real copy, real assets | everything visible (the 1:1 floor, unchanged) | — |
 
 Grounded in [`wireframe`](../../src/skills/wireframe/SKILL.md) § Gotchas. The near-miss
