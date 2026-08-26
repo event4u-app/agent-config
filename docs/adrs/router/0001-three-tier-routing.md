@@ -126,6 +126,6 @@ diff cleanly in PRs.
 - [`docs/contracts/rule-router.md`](../../contracts/rule-router.md) — frontmatter contract.
 - [`docs/contracts/kernel-membership.md`](../../contracts/kernel-membership.md) — kernel cap.
 - [`dist/router.json`](../../../dist/router.json) — compiled output.
-- [`scripts/compile_router.py`](../../../src/scripts/compile_router.py) — compiler.
+- [`scripts/compile_router.py`](../../../src/scripts/compile_router.ts) — compiler.
 - [`scripts/schemas/rule.schema.json`](../../../src/scripts/schemas/rule.schema.json) — schema.
 - an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

@@ -19,11 +19,11 @@ shape below must (a) bump `install_layout_version` and (b) carry a
 `### Breaking` / deprecation note per the install-ABI deprecation-window rule in
 [`BREAKING_CHANGES.md`](../../BREAKING_CHANGES.md).
 
-- **Authoritative writer:** [`src/scripts/install.py`](../../src/scripts/install.py)
+- **Authoritative writer:** [`src/scripts/install.py`](../../src/scripts/install.ts)
   (the wizard plans via `src/install/`, then `install.py --apply-payload`
   performs the real writes).
-- **Lockfile writers:** [`src/scripts/_lib/installed_tools.py`](../../src/scripts/_lib/installed_tools.py)
-  (project manifest), [`src/scripts/_lib/installed_lock.py`](../../src/scripts/_lib/installed_lock.py)
+- **Lockfile writers:** [`src/scripts/_lib/installed_tools.py`](../../src/scripts/_lib/installed_tools.ts)
+  (project manifest), [`src/scripts/_lib/installed_lock.py`](../../src/scripts/_lib/installed_lock.ts)
   (global lockfile).
 - **Companion contracts:** [`install-scopes.md`](install-scopes.md) (user-global
   vs project-local), [`installed-tools-lockfile.md`](installed-tools-lockfile.md)
@@ -32,7 +32,7 @@ shape below must (a) bump `install_layout_version` and (b) carry a
 ## `install_layout_version`
 
 The on-disk layout carries a single integer version, defined in
-[`src/scripts/_lib/install_layout.py`](../../src/scripts/_lib/install_layout.py)
+[`src/scripts/_lib/install_layout.py`](../../src/scripts/_lib/install_layout.ts)
 as `INSTALL_LAYOUT_VERSION`. The installer stamps it into the global lockfile
 (`~/.event4u/agent-config/installed.lock`) so an installed tree self-declares
 which ABI it was written under.
@@ -50,7 +50,7 @@ is dropped.
 ## Supported tools
 
 The canonical install targets are `_VALID_TOOLS` in
-[`install.py`](../../src/scripts/install.py):
+[`install.py`](../../src/scripts/install.ts):
 
 ```
 claude-code  claude-desktop  cursor  windsurf  cline  gemini-cli  copilot
@@ -91,7 +91,7 @@ pointer's first segment carries the dot verbatim and the plugin path is
 
 ### Per-tool project-scope bridge markers
 
-`PROJECT_BRIDGE_MARKERS` in [`install.py`](../../src/scripts/install.py). The
+`PROJECT_BRIDGE_MARKERS` in [`install.py`](../../src/scripts/install.ts). The
 manifest records the marker path as the tool's `bridge_marker`.
 
 | Tool | Path (project-relative) | Kind |
@@ -125,7 +125,7 @@ Anchor-pointer bridges (subset, project scope): `.windsurf/agent-config.bridge.y
 ### User-global content deployment (`--global` / `--scope=global`)
 
 User-scope anchor roots are `USER_SCOPE_PATHS`; deployed subtrees are
-`GLOBAL_DEPLOY_SOURCES` (both in [`install.py`](../../src/scripts/install.py)).
+`GLOBAL_DEPLOY_SOURCES` (both in [`install.py`](../../src/scripts/install.ts)).
 
 | Tool | User-scope anchor | Deployed subtrees |
 |---|---|---|

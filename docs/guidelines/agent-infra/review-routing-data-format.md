@@ -1,8 +1,8 @@
 # Review Routing Data Format
 
 Schema and conventions for the two project-local YAML files that feed the
-[`reviewer-awareness`](../../rules/reviewer-awareness.md) rule
-and the [`review-routing`](../../skills/review-routing/SKILL.md) skill.
+[`reviewer-awareness`](../../../src/rules/reviewer-awareness.md) rule
+and the [`review-routing`](../../../src/skills/review-routing/SKILL.md) skill.
 
 Both files are **optional** and live in the consumer repository — never
 in package-shipped artifacts. Absence is handled gracefully: routing
@@ -69,7 +69,7 @@ Field semantics:
   `pr-risk-config.yml`. First match wins; later entries are ignored for
   that path.
 - **roles** (required, list) — role identifiers from the common
-  vocabulary in [`reviewer-awareness`](../../rules/reviewer-awareness.md)
+  vocabulary in [`reviewer-awareness`](../../../src/rules/reviewer-awareness.md)
   or project-custom roles.
 - **focus** (optional, string) — one-line description of what reviewers
   should look at. Surfaced in the PR comment verbatim.
@@ -124,8 +124,8 @@ Field semantics:
   diff when **any** changed file matches any glob.
 - **required_test** (required, string) — the specific assertion or
   regression test the pattern demands. Feeds
-  [`verify-before-complete`](../../rules/verify-before-complete.md) and
-  [`judge-test-coverage`](../../skills/judge-test-coverage/SKILL.md).
+  [`verify-before-complete`](../../../src/rules/verify-before-complete.md) and
+  [`judge-test-coverage`](../../../src/skills/judge-test-coverage/SKILL.md).
 - **references** (optional, list) — links to prior PRs, incidents, or
   postmortems. Agents quote these verbatim when warning about a match.
 
@@ -139,5 +139,5 @@ Field semantics:
 
 ## See also
 
-- [`reviewer-awareness`](../../rules/reviewer-awareness.md)
-- [`review-routing`](../../skills/review-routing/SKILL.md)
+- [`reviewer-awareness`](../../../src/rules/reviewer-awareness.md)
+- [`review-routing`](../../../src/skills/review-routing/SKILL.md)

@@ -123,12 +123,12 @@ is not a forensic record.
 Each file also carries the template-specific body. See the example
 templates for the full shape:
 
-- [`domain-invariants.example.yml`](../../templates/agents/memory/domain-invariants.example.yml)
+- [`domain-invariants.example.yml`](../../../src/agent-src/templates/agents/memory/domain-invariants.example.yml)
   adds `rule`, `boundary`, `scope.paths`, `violation_contract`.
-- [`incident-learnings.example.yml`](../../templates/agents/memory/incident-learnings.example.yml)
+- [`incident-learnings.example.yml`](../../../src/agent-src/templates/agents/memory/incident-learnings.example.yml)
   adds `pattern`, `trigger_conditions`, `consequence`, `guardrail`,
   `enforcement`, `severity`.
-- [`product-rules.example.yml`](../../templates/agents/memory/product-rules.example.yml)
+- [`product-rules.example.yml`](../../../src/agent-src/templates/agents/memory/product-rules.example.yml)
   adds `rule`, `applies_to`, `enforcement`, `error_contract`, `version`.
 
 ## Ownership (who writes, who reads)

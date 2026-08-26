@@ -129,8 +129,9 @@ compose don't duplicate) is paradigm-independent; only its *shape* is OO here:
 
 Language / framework carve-outs (never restated here): PHP →
 [`php-coding-patterns`](php/php-coding-patterns.md) +
-[`patterns.md`](php/patterns.md) (+ `patterns/strategy.md`,
-`patterns/dependency-injection.md`, `patterns/factory.md`, `patterns/service-layer.md`)
+[`patterns.md`](php/patterns.md) (+ `php/patterns/strategy.md`,
+`php/patterns/dependency-injection.md`, `php/patterns/factory.md`,
+`php/patterns/service-layer.md`)
 + skills [`php-coder`](../../src/skills/php-coder/SKILL.md) /
 [`php-service`](../../src/skills/php-service/SKILL.md); Laravel →
 [`laravel`](../../src/skills/laravel/SKILL.md); Symfony →

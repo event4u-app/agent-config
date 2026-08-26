@@ -10,7 +10,7 @@ prose_delta:
 
 # Simplicity and Goal Discipline — wrong/right demos
 
-Recognition surface for [`minimal-safe-diff § Anti-over-engineering`](../../src/rules/minimal-safe-diff.md)
+Recognition surface for [`minimal-safe-diff § Anti-over-engineering`](../../../src/rules/minimal-safe-diff.md)
 (own-orphan cleanup, speculative-complexity bans) and the goal-driven
 execution clause in `think-before-action`. Per council convergence
 (2026-07-10): the demos ARE the enforcement — an agent that has never seen
@@ -166,7 +166,7 @@ pre-existing debt: mention it, don't delete it.
 
 The boundary is mechanical (grep after editing), so there is no
 judgment call to rationalize — see
-[`minimal-safe-diff § Own-orphan cleanup`](../../src/rules/minimal-safe-diff.md#own-orphan-cleanup).
+[`minimal-safe-diff § Own-orphan cleanup`](../../../src/rules/minimal-safe-diff.md#own-orphan-cleanup).
 
 ## Demo 6 — Vague plan vs. verifiable per-step plan
 

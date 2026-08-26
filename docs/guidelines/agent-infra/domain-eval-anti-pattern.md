@@ -50,4 +50,4 @@ A false structural blocker is as much an error as false objectivity.
 
 - [ADR-107 — Legal domain-pack adoption](../../decisions/ADR-107-legal-domain-pack-adoption.md)
 - `domain-pack-architecture.md` — the retrospective sequence this is part of.
-- `src/domains/legal/evals/README.md` — the regression harness in practice.
+- `src/domains/legal-review-prep/evals/README.md` — the regression harness in practice.

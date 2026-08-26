@@ -72,7 +72,7 @@ gate solves this with a **deterministic, heuristic-only scorer** at the
 `refine` boundary.
 
 **Single source of truth:**
-[`scripts/work_engine/scoring/confidence.py`](../../dist/agent-src/templates/scripts/work_engine/scoring/confidence.py).
+[`scripts/work_engine/scoring/confidence.py`](../../src/agent-src/templates/scripts/work_engine/scoring/confidence.ts).
 The rubric, dimension definitions, weights, and band thresholds live in
 that module. SKILL.md, this ADR, and `implement-ticket-flow.md` cite
 the module — they do **not** re-derive the values. Tuning happens by

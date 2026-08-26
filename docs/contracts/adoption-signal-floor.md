@@ -116,7 +116,7 @@ Re-audit on each of:
 
 ## See also
 
-- [`scripts/adoption_snapshot.py`](../../src/scripts/adoption_snapshot.py)
+- [`scripts/adoption_snapshot.py`](../../src/scripts/adoption_snapshot.ts)
   — the collector for the four public signals.
 - `domain-safety-pii` rule — the redaction floor any future opt-in
   telemetry would inherit.

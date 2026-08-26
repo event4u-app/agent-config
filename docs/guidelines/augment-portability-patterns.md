@@ -54,10 +54,12 @@ installer, gitignored). Artefacts MUST prefer the CLI over raw
 
 The full `task`-to-script translation table, the `./agent-config`
 CLI mapping, and the rationale (Task absence on consumers,
-maintainer-vs-artefact split) all live in
-[`contexts/communication/rules-auto/augment-portability-mechanics.md`](../contexts/communication/rules-auto/augment-portability-mechanics.md).
-Pull it whenever an artefact is about to mention a runtime
-invocation.
+maintainer-vs-artefact split) are **in this file**.
+
+> **Corrected 2026-08-26** (`road-to-contract-review-deadlines` 4.2): this
+> paragraph used to point at a `rules-auto` mechanics file under the contexts
+> tree, which exists nowhere in it. The pointer described a split that was never
+> made; the material it names was already here.
 
 ## Enforcement
 
