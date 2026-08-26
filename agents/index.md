@@ -562,7 +562,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`optimize-prompt`](../src/domains/meta/optimize/prompt/command.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize-rtk`](../src/domains/meta/optimize/rtk/command.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize-skills`](../src/domains/meta/optimize/skills/command.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
-| command | [`orchestrate`](../src/domains/meta/orchestrate/command.md) | cluster: orchestrate | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
+| command | [`orchestrate`](../src/domains/meta/orchestrate/command.md) | cluster: orchestrate | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / subagents per the orchestration-dsl-v1 contract |
 | command | [`override`](../src/domains/meta/override/command.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`override-create`](../src/domains/meta/override/create/command.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override-manage`](../src/domains/meta/override/manage/command.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
