@@ -130,7 +130,7 @@ export function measure(repoRoot: string = REPO_ROOT): Measurement {
  * Repair a dead target by finding the ONE file in the tree it can only mean.
  *
  * The tail heuristic, and why it is safe: nearly every dead link here points at
- * a container that MOVED — `.agent-src.uncondensed/rules/x.md` after ADR-051
+ * a container that MOVED — the retired uncondensed source tree after ADR-051
  * flattened the source tree, or `../../rules/x.md` written from the wrong depth.
  * The container changed; the tail did not. So the tail from a known segment
  * onward (`rules/x.md`, `skills/x/SKILL.md`) still names the file uniquely.
