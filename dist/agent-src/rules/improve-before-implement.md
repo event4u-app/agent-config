@@ -26,6 +26,17 @@ obligation_frequency: "per-task"
 
 # Improve Before Implement
 
+## The Iron Law
+
+```
+BEFORE PRODUCTION CODE, ANSWER TWO QUESTIONS WHERE A LATER READER CAN CHECK
+THE ANSWER: DOES THIS ALREADY EXIST IN THE TREE, AND IS THE APPROACH SOUND.
+THE EXISTENCE QUESTION IS A NAMED VERDICT, NEVER A YES OR NO.
+`new` OWES THE CLOSEST CANDIDATE BY NAME AND PATH, AND WHY IT DOES NOT FIT —
+"NOTHING SIMILAR EXISTS" NAMING NO CANDIDATE IS AN UNRUN SEARCH.
+CHALLENGE TO IMPROVE, NEVER TO REFUSE. THE USER PICKS, THEN YOU EXECUTE.
+```
+
 ## When to activate
 
 Before implementing:
@@ -42,7 +53,7 @@ Before implementing:
 - Tasks where the user said "just do it" or "skip validation"
 - Trivial changes (rename, typo, formatting)
 
-**The one cheap question fires on all four rows anyway** — *does this already exist in the tree?* Bug fixes and renames re-add an existing helper more often than features do, so switching the reuse rung off there switches it off where it pays most. Cheap the [`ui-audit-gate`](ui-audit-gate.md) way — one `code-graph query`, one named verdict, no interview: the exclusion buys the **checks**, never the question. Skip the question only when the **diff alone** says it is moot — ≤ 1 file, ≤ 5 changed lines, no new symbol, no new dependency — which a typo satisfies with no state to consult, and an added symbol never does.
+**The one cheap question fires on all four rows anyway** — *does this already exist in the tree?* Bug fixes and renames re-add an existing helper more often than features do, so the exclusion buys the **checks**, never the question. Cheap the [`ui-audit-gate`](ui-audit-gate.md) way, and the skip is decidable from the diff alone: ≤ 1 file, ≤ 5 changed lines, no new symbol, no new dependency. Detail: guideline § 8b-cheap.
 
 ## Demand gate — should this exist? (build / defer)
 
@@ -52,7 +63,7 @@ On a "build me an app / add this feature" ask, ONE reflexive pre-check before th
 
 Once the demand gate says build, "does this already exist?" has an **ordered** answer set: need-to-exist → reuse-in-repo → stdlib / framework → **native platform** → installed dependency → smallest working form. Stop at the first rung that carries the requirement. Ordered **after** comprehension — it shortens the solution, never the reading. Two axes, not one: the ladder is *scope*; **shape** is the other half — of what must exist, the form with the least cognitive load, explicitly not the fewest keystrokes. Rungs, the platform-rung examples, and the precedence order when they pull against each other: guideline § 8b-ladder / § 8b-shape / § 8b-precedence.
 
-The answer is a **named verdict, never a yes/no**: `reuse` · `extract` · `refactor` · `extend` · `migrate` · `new`. **`new` owes negative evidence** — the closest existing candidate by name and path, and why it does not carry the requirement; "nothing similar exists" naming no candidate is an unrun search, not an answer. Two clauses hold the set honest: the order is a **thinking preference, not a ranking** (a `new` after a real search beats an `extend` that bends a helper out of shape), and **textual similarity alone is never grounds for an abstraction** — two blocks that read alike and change for different reasons are two blocks ([`abstraction-thresholds`](../docs/guidelines/abstraction-thresholds.md)). Reach the verdict with `agent-config code-graph query` and `code-graph affected`, never a fresh grep protocol: [`external-code-graph-interop`](external-code-graph-interop.md) already mandates query-before-grep and names grep the fallback, so a second search specification here would contradict it rather than add to it.
+The answer is a **named verdict, never a yes/no**: `reuse` · `extract` · `refactor` · `extend` · `migrate` · `new`. **`new` owes negative evidence** — the closest existing candidate by name and path, and why it does not carry the requirement; *"nothing similar exists"* naming no candidate is an unrun search. The order is a thinking preference, not a ranking, and textual similarity alone is never grounds for an abstraction. Reach the verdict with `code-graph query` / `code-graph affected` per [`external-code-graph-interop`](external-code-graph-interop.md) — never a fresh grep protocol. Verdict table, the two honesty clauses and the search rationale: guideline § 8b-verdict.
 
 ## The three checks
 
@@ -75,14 +86,7 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 
 ## Why the existence question is not routed through the TDD cluster
 
-Two source proposals put it in `/tdd`'s design mode as the one point every
-behaviour passes. It cannot live there, and the reason is delivery rather than
-design: `src/domains/engineering-base/tdd/command.md` carries
-`visibility: internal`, `disable-model-invocation: true` and
-`workspaces: [agent-config-maintainer]`, so a **consumer cannot reach that
-orchestrator at all** — the chokepoint argument fails before its merits. The
-question therefore sits in this rule, which every engineering consumer
-receives. Recorded so the next author does not re-propose the routing.
+`src/domains/engineering-base/tdd/command.md` carries `visibility: internal` and `disable-model-invocation: true`, so **a consumer cannot reach it** — the routing two source proposals asked for is undeliverable, not merely unwanted. Verified before being asserted; recorded so it is not re-proposed. Detail: guideline § 8b-routing.
 
 ## Creating new agent artifacts
 
