@@ -71,7 +71,7 @@ import {
     type DashboardMode,
 } from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
-import { counts as stub_counts, scan_dir as scan_stub_dir } from './stubs_due.js';
+import { headerFragment as stubHeaderFragment } from './stubs_due.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -982,22 +982,6 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
         (s, r) => s + r.open_blockers.filter((b) => blocker_needs_user(b.owner)).length,
         0,
     );
-    // Stub counts for the header. Read-only and failure-tolerant: a repository
-    // with no `agents/roadmaps/stubs/` yields zero, which renders nothing rather
-    // than an error — the dashboard is generated in consumer installs that carry
-    // no stub directory at all.
-    let stub_overdue = 0;
-    let stub_owner_decisions = 0;
-    try {
-        const sc = stub_counts(
-            scan_stub_dir(path.join(roadmap_root, 'stubs'), new Date().toISOString().slice(0, 10)),
-        );
-        stub_overdue = sc.overdue;
-        stub_owner_decisions = sc.owner_decisions;
-    } catch {
-        stub_overdue = 0;
-        stub_owner_decisions = 0;
-    }
     const lines: string[] = [];
     lines.push('# Roadmap Progress\n');
     const header_meta =
@@ -1012,18 +996,8 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                   ? `, **${user_open_blockers}** need you → \`agent-config gates\``
                   : '')
             : '') +
-        // Two integers from `stubs:due`, and deliberately ONLY two. The stub
-        // index tables were deleted on 2026-08-21 and `check_no_stub_inventory_table`
-        // keeps them deleted; a count is not an inventory, so there is no row and
-        // no per-stub link here for one to grow back from. The dashboard still
-        // excludes `stubs/` from every section below — this line exists so a
-        // parked file with a passed review date is visible where the owner
-        // already looks, instead of only to whoever lists the directory.
-        (stub_overdue > 0 || stub_owner_decisions > 0
-            ? ` · **${stub_overdue}** overdue stub${stub_overdue !== 1 ? 's' : ''}` +
-              `, **${stub_owner_decisions}** owner decision${stub_owner_decisions !== 1 ? 's' : ''}` +
-              ' → `agent-config stubs:due`'
-            : '') +
+        // Two integers, never a row — see `stubs_due.headerFragment`.
+        stubHeaderFragment(path.join(roadmap_root, 'stubs')) +
         '\n';
     lines.push(
         // Honest provenance (road-to-roadmap-archival-robustness, gap C): name a
