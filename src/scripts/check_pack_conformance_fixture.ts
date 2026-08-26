@@ -50,7 +50,7 @@ import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const DEFAULT_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const SELF = 'check_pack_conformance_fixture';
+const SELF = 'src/scripts/check_pack_conformance_fixture.ts';
 
 const SELF_TEST_MIN_CASES = 4;
 const SELF_TEST_MIN_REJECT = 2;
