@@ -98,6 +98,98 @@ tools:
 The pointer constraint is enforced at write time in P1.5; readers in v2.x
 must reject manifests that contain array-index pointers.
 
+## Absence — what a manifest-less tree means, and what `doctor` says
+
+Recorded 2026-08-26 (`road-to-internal-estate-fit` 0.2). AI council 2/2
+convergent on **report-and-offer** over silent-null and over a hard failure.
+
+```
+AN ABSENT PROJECT MANIFEST IS NOT AUTOMATICALLY A DEFECT.
+A CONSUMER INSTALL IS GLOBAL-ONLY BY ADR-020, SO IT HAS NONE BY DESIGN.
+REPORT THE ABSENCE, EXPLAIN WHAT IT COSTS, PRINT THE COMMAND — NEVER WRITE ONE
+UNASKED, AND NEVER PROMPT INSIDE A DIAGNOSTIC.
+```
+
+### Why silent-null was rejected
+
+It was the behaviour in force, and it is the reason four of four inspected
+consumer repositories drifted unnoticed: `doctor` could not distinguish
+*"healthy"* from *"unable to assess health"*, and reported the two identically.
+
+### Why a hard failure was rejected
+
+Every pre-manifest install would red at once, and the fastest fix a user finds
+is to stop running the check. The roadmap registered this as its rank-1 risk
+before the decision was taken.
+
+### The three states, and their exit codes
+
+| Tree | What it means | `doctor` says | Exit |
+|---|---|---|---|
+| No manifest, **consumer install marker present** | Global-only install. **Expected under ADR-020** — there is nothing to write. | informational: *"global-only consumer: install marker present, no project lockfile (expected under ADR-020)"*, and project-manifest checks are **skipped**, not failed | **0** |
+| No manifest, **no install marker** | Indeterminate. Either pre-manifest, or a genuine gap. | warning naming the tree, plus the two commands that resolve it (`init` for a project install, `refresh --project` for a global-only consumer) | **2** |
+| Manifest present | Assessable. | the ordinary drift report | 0 / 1 on findings |
+
+**Exit 0 on the expected case is deliberate.** A finding that reports an absence
+guaranteed by an ADR is noise, and noise is what teaches a maintainer to bypass
+a gate.
+
+**Indeterminate must not be described as benign OR as defective.** The wording
+above says what is unknown and what would resolve it, and says nothing about
+which of the two it is.
+
+### The offer is a printed command, never a write
+
+No automatic write and no interactive prompt. Both would break CI use, and an
+automatic write contradicts the suite's propose-never-silent-run discipline.
+A command the human runs is the whole offer.
+
+Note what such a command can and cannot do, because it is easy to expect too
+much: writing a manifest from current state **baselines whatever drift already
+exists**. It makes future drift detectable; it does not certify the present.
+
+### The distinction this contract does NOT yet draw
+
+**Pre-manifest** (installed before the manifest existed — benign, migratable)
+versus **regressed** (the writer should have written one and did not — a
+defect). Both council seats wanted them reported differently, and both noted the
+same obstacle: no stable local marker currently establishes which one a given
+tree is. A package version alone does not, because an installer bug or a
+bypassed path produces the same absence.
+
+So the two collapse into the single **indeterminate** row above, and that is
+recorded as a known limitation rather than papered over with a guess.
+**Revisit-if:** the installer gains deterministic provenance metadata that
+distinguishes them, or manifest creation has been the documented default for a
+full release cycle and the distinction stops mattering.
+
+### Strict mode
+
+A repository that has adopted the invariant can opt into failing on absence
+rather than reporting it. That is an **opt-in** flag, never a default — the
+default must not red every pre-manifest install.
+
+### Not to be confused with the user-global lockfile
+
+`agents/installed-tools.lock` is **project-scope**. `~/.event4u/agent-config/installed.lock`
+is **user-global**, has a different schema, and is what `write_lockfile`
+(`src/scripts/_lib/installed_lock.ts:228`) writes on all five of its call sites.
+A consumer install writes the second and never the first.
+
+Conflating the two is not hypothetical: it produced a whole planning phase built
+on the wrong file, discovered only when a scratch install was actually run. The
+table above is here rather than in that plan precisely so the next reader meets
+it at the contract instead of rediscovering it.
+
+**The open question the conflation was hiding**, recorded here because it
+outlives any plan that raises it: *does repository-specific install verification
+justify reopening ADR-020's global-only decision?* It is owner-reserved — it
+changes what a consumer install writes into a consumer's repository. Until it is
+answered, per-repository projection state is **unverifiable by design**: one
+lockfile per user cannot say what a particular repository received, whether its
+files changed afterwards, or whether it took part in the recorded install at
+all.
+
 ## Compatibility — reader tolerance
 
 - `read_manifest` accepts both v1 and v2 wire formats.

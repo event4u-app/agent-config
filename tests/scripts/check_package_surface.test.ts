@@ -110,6 +110,40 @@ describe('check_package_surface', () => {
             expect(codes(dir)).not.toContain('workspace-range-publishable');
         });
 
+        // road-to-internal-estate-fit 4.1: `catalog:` is the same unpublishable
+        // protocol as `workspace:`. It had been passing as an ordinary registry
+        // range, so the finding did not fire where it should.
+        it('(d) warns on a catalog: range in a publishable package', () => {
+            const dir = mutated(BUILT, (m) => {
+                m['dependencies'] = { react: 'catalog:' };
+                delete m['publishConfig'];
+            });
+            expect(codes(dir)).toContain('workspace-range-publishable');
+        });
+
+        it('(d) warns on a NAMED catalog range too', () => {
+            const dir = mutated(BUILT, (m) => {
+                m['dependencies'] = { react: 'catalog:react18' };
+                delete m['publishConfig'];
+            });
+            expect(codes(dir)).toContain('workspace-range-publishable');
+        });
+
+        it('(d) stays quiet on an ordinary registry range', () => {
+            const dir = mutated(BUILT, (m) => {
+                m['dependencies'] = { react: '^18.2.0' };
+                delete m['publishConfig'];
+            });
+            expect(codes(dir)).not.toContain('workspace-range-publishable');
+        });
+
+        it('(d) stays quiet on a catalog: range when the package is private', () => {
+            const dir = mutated(SOURCE, (m) => {
+                m['dependencies'] = { react: 'catalog:' };
+            });
+            expect(codes(dir)).not.toContain('workspace-range-publishable');
+        });
+
         it('errors when a declared export target is not in the tree', () => {
             // The drift the whole surface rests on: a manifest that promises a file the
             // package does not ship.

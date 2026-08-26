@@ -17714,6 +17714,30 @@ if (!_inForeignBundle && (_isCliEntry() || process2.argv[1] === _HERE)) {
   }
 }
 
+// src/install/detect.ts
+var SCOPE_DETECT_MANIFESTS = [
+  "package.json",
+  "composer.json",
+  "pyproject.toml",
+  "Cargo.toml",
+  "go.mod",
+  "Gemfile"
+];
+var SCOPE_DETECT_AI_DIRS = [
+  ".claude",
+  ".cursor",
+  ".windsurf",
+  ".augment",
+  ".clinerules",
+  ".copilot",
+  ".gemini",
+  ".codex",
+  ".aider",
+  ".continue",
+  ".roo",
+  ".kilocode"
+];
+
 // src/scripts/install.ts
 var _HERE2 = fileURLToPath5(import.meta.url);
 var SystemExitError = class extends Error {
@@ -19433,28 +19457,6 @@ function _run_scope_prompt(opts, reason, custom_path) {
   if (!state.QUIET) info(`Custom destination: ${cp}`);
   return "project";
 }
-var SCOPE_DETECT_MANIFESTS = [
-  "package.json",
-  "composer.json",
-  "pyproject.toml",
-  "Cargo.toml",
-  "go.mod",
-  "Gemfile"
-];
-var SCOPE_DETECT_AI_DIRS = [
-  ".claude",
-  ".cursor",
-  ".windsurf",
-  ".augment",
-  ".clinerules",
-  ".copilot",
-  ".gemini",
-  ".codex",
-  ".aider",
-  ".continue",
-  ".roo",
-  ".kilocode"
-];
 var SCOPE_DETECT_AI_FILES = [
   "CLAUDE.md",
   "AGENTS.md",
