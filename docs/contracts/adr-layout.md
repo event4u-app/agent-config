@@ -56,6 +56,8 @@ date: YYYY-MM-DD
 decision: <slug>
 supersedes: — | ADR-MMM | ADR-MMM, ADR-NNN, …    # a list is legal; see below
 superseded_by: — | ADR-MMM
+supersedes_scope: <prose>              # optional — partial supersession; see below
+superseded_scope: <prose>              # optional — reciprocal of `supersedes_scope`
 amends: — | ADR-MMM                    # optional; this ADR amends that one
 amended_by: — | ADR-MMM                # optional; reciprocal of `amends`
 phase: <roadmap-stem> · <phase-id>     # optional but recommended
@@ -100,6 +102,18 @@ until someone reads both.
 - **`supersedes:` takes a list**, which the single-value grammar denied: ADR-206
   supersedes sixteen records in one field. The reciprocity check below is
   list-aware for exactly this reason.
+- **A partial supersession's scope is a SIBLING FIELD, never a parenthetical
+  inside the ref.** Four records carried it inline — `superseded_by: ADR-124
+  (engine-adoption interpretation only)` — which put prose inside a
+  comma-separated ref list and forced every reader to strip parentheses before
+  resolving a number. `supersedes_scope` / `superseded_scope` hold it instead.
+  The **rendered** index cell is unchanged (`regenerate_index.ts` →
+  `supersessionCell` re-appends the scope in parentheses), so a partial
+  supersession is still visible at a glance; only the source shape moved. One
+  scope applies across the whole ref list — correct for ADR-124, whose qualifier
+  covers both of its refs — so a record whose refs need DIFFERENT scopes says so
+  in the prose, as ADR-209 does. A scope with no refs is not a supersession and
+  renders as `—`.
 
 `status:` also gains `rejected`, which the validator has always accepted and
 this block omitted.
