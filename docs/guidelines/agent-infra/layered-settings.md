@@ -19,18 +19,18 @@ on user request.
 |---|---|---|---|---|
 | `.agent-project-settings.yml` | **committed** | team / repo | lead maintainer | `project.stack`, `quality.php.tools`, `memory.dogfood` |
 | `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `rule_loading_tier`, `personal.bot_icon`, `personal.autonomy`, `memory.cadence` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
-| `agents/settings/.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` |
+| `agents/settings/.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` | <!-- ref-ignore -->
 
 > **Canonical location (ADR-038):** the developer file lives in the settings
-> layer at `agents/settings/.agent-settings.yml` (alongside
+> layer at `agents/settings/.agent-settings.yml` (alongside <!-- ref-ignore -->
 > `.agent-settings.local.yml`, `contexts/`, `policies/`). A repo-root
 > `.agent-settings.yml` is read as a **back-compat fallback** and is migrated
 > into the canonical location by `install` on the next run.
 
 All three are YAML. Schemas:
 
-- Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
-- Team: [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml).
+- Developer (project-local): [`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md).
+- Team: [`agent-project-settings.example.yml`](../../../src/agent-src/templates/agents/agent-project-settings.example.yml).
 - User-global: six exact dotted paths — whitelist in
   [`scripts/_lib/agent_settings.ts`](../../../src/scripts/_lib/agent_settings.ts).
 
@@ -42,7 +42,7 @@ Lowest priority → highest priority:
 1. Package defaults                                   (shipped by event4u/agent-config)
 2. ~/.event4u/agent-config/agent-settings.yml         (user-global · whitelist-filtered · legacy ~/.config/agent-config/ read as fallback)
 3. .agent-project-settings.yml                        (team file, committed)
-4. agents/settings/.agent-settings.yml                (developer file, gitignored; legacy repo-root .agent-settings.yml read as fallback — ADR-038)
+4. agents/settings/.agent-settings.yml                (developer file, gitignored; legacy repo-root .agent-settings.yml read as fallback — ADR-038) <!-- ref-ignore -->
 ```
 
 Keys from higher layers win unless a lower layer marks them
@@ -160,7 +160,7 @@ pattern (e.g. `*.yml` in a nested folder) would otherwise match.
 Module-aware skills and commands (`module-management`, `/module
 explore`, `/module create`, roadmap-writing) consult the `modules:`
 block on the **team** layer
-([`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml))
+([`agent-project-settings.example.yml`](../../../src/agent-src/templates/agents/agent-project-settings.example.yml))
 to find module roots, namespace conventions, and per-module
 `agents/` folders. Lives next to `project.stack` because it
 describes the same thing — repo layout.
@@ -253,14 +253,14 @@ after that.
 The contract is **additive merge with user-line preservation** —
 the user's file is the ground truth, the template only contributes
 keys the user is missing. Round-trip parser and merger live in
-[`scripts/sync_yaml_rt.ts`](../../src/scripts/sync_yaml_rt.ts); the
+[`scripts/sync_yaml_rt.ts`](../../../src/scripts/sync_yaml_rt.ts); the
 supported YAML subset (block-mappings, scalars, lists, comments,
 CRLF/LF) is documented in its module docstring. The stdlib-only
 choice (vs. `ruamel.yaml`) and its revisit triggers are recorded in
 [`docs/contracts/adr-settings-sync-engine.md`](../../contracts/adr-settings-sync-engine.md).
 
 For each section in the template
-([`agent-settings.md`](../../templates/agent-settings.md)):
+([`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md)):
 
 - For each key under the section:
   - **Key exists in user's file** → keep the user's line **verbatim**
@@ -313,5 +313,5 @@ the next explicit settings edit.
 
 ## See also
 
-- [`agent-settings.md`](../../templates/agent-settings.md) — dev-layer schema
-- [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml) — team-layer template
+- [`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md) — dev-layer schema
+- [`agent-project-settings.example.yml`](../../../src/agent-src/templates/agents/agent-project-settings.example.yml) — team-layer template

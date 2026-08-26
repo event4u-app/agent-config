@@ -59,11 +59,11 @@ After projection, those paths resolve through the symlinks in
 
 ## Proving the pipeline
 
-- [`tests/test_condense.py`](../../tests/test_condense.py) §
+- [`tests/test_condense.py`](../../tests/scripts/condense.test.ts) §
   `test_project_to_augment_rules_mode_toggle` and surrounding cases
   — exercises both copy-mode and symlink-mode for rules; verifies
   symlink targets for skills / commands / contexts.
-- [`scripts/smoke_path_resolution.py`](../../src/scripts/smoke_path_resolution.py)
+- [`scripts/smoke_path_resolution.py`](../../src/scripts/smoke_path_resolution.ts)
   — walks `.augment/rules/*.md` and resolves every `load_context:`
   entry; non-zero exit means a consumer would see the same break.
 

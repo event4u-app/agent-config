@@ -56,14 +56,14 @@ reproducer to the follow-up ticket.
 
 These rules stay fully in force, break-glass or not:
 
-- [`minimal-safe-diff`](../../rules/minimal-safe-diff.md) — the hotfix is
+- [`minimal-safe-diff`](../../../src/rules/minimal-safe-diff.md) — the hotfix is
   still the **smallest** change that stops the bleeding. No drive-by
   cleanups.
-- [`security-sensitive-stop`](../../rules/security-sensitive-stop.md) — a
+- [`security-sensitive-stop`](../../../src/rules/security-sensitive-stop.md) — a
   security-relevant change still needs the threat-model pass.
-- [`scope-control`](../../rules/scope-control.md) — never mix the
+- [`scope-control`](../../../src/rules/scope-control.md) — never mix the
   hotfix with unrelated refactors from another branch.
-- [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — more
+- [`ask-when-uncertain`](../../../src/rules/ask-when-uncertain.md) — more
   asking, not less, when the blast radius is live.
 
 ## Required artifacts
@@ -104,10 +104,10 @@ Within 24 hours:
 
 ## See also
 
-- [`minimal-safe-diff`](../../rules/minimal-safe-diff.md) — break-glass
+- [`minimal-safe-diff`](../../../src/rules/minimal-safe-diff.md) — break-glass
   exception section.
-- [`verify-before-complete`](../../rules/verify-before-complete.md) —
+- [`verify-before-complete`](../../../src/rules/verify-before-complete.md) —
   break-glass reduction section.
-- [`security-sensitive-stop`](../../rules/security-sensitive-stop.md).
+- [`security-sensitive-stop`](../../../src/rules/security-sensitive-stop.md).
 - [`review-routing-data-format`](review-routing-data-format.md) —
   where to register newly-discovered failure modes.

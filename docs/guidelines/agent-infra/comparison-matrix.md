@@ -7,7 +7,7 @@ quality, and viewpoints to synthesize an integrated understanding rather
 than a stack of independent summaries. Adopted under the
 **Reference-Guideline Sunset Policy** and cross-referenced from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../src/skills/deep-reading-analyst/SKILL.md)
   — L4 Research analysis depth (web-search 2–3 related sources, compare,
   synthesize).
 - [`critical-thinking`](critical-thinking.md) — per-source argument

@@ -77,7 +77,7 @@ Referenced by `road-to-role-modes.md` Phase 1. Each contract is a
 mode exits, the agent MUST either emit an intake signal via
 [`memory-access`](memory-access.md) (`scripts/memory_signal.ts`
 append — one line, fire-and-forget) or draft a curated entry with
-[`/memory-add incident-learnings`](../../commands/memory-add.md).
+[`/memory-add incident-learnings`](../../../src/domains/meta/memory/add/command.md).
 Pattern + consequence + guardrail, redacted. Skipping this field
 means the incident did not produce a learning — log the absence,
 do not pretend verification happened.
@@ -150,7 +150,7 @@ output contract.
 
 This table is **advisory**, not enforcing. A skill may cite any
 persona inside any mode; the mapping below is just the most common
-fit. See [`../../personas/README.md`](../../personas/README.md) for
+fit. See [`../../personas/README.md`](../../../src/agent-src/personas/README.md) for
 the persona catalog and schema.
 
 | Mode | Typical persona companions | Why |

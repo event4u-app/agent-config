@@ -5,7 +5,7 @@
   "measured_at_as_of": "2026-08-25",
   "clear_by": "2026-11-23",
   "_clear_by_comment": "Not a soft target. If the list is not empty by this date the 90-day review cadence itself is reassessed, on measured workload from the first complete post-migration cycle \u2014 the migration is not silently extended.",
-  "count": 86,
+  "count": 85,
   "contracts": [
     "docs/contracts/adr-architectural-consensus-mechanism.md",
     "docs/contracts/adr-chat-history-split.md",
@@ -91,7 +91,6 @@
     "docs/contracts/ui-track-flow.md",
     "docs/contracts/universal-skills.md",
     "docs/contracts/user-type-schema.md",
-    "docs/contracts/workflow-packs.md",
-    "docs/contracts/write-engine.md"
+    "docs/contracts/workflow-packs.md"
   ]
 }

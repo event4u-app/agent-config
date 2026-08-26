@@ -16,9 +16,9 @@ stability: stable
 R3 ships four directive sets — `backend` (R1/R2), **`ui`**, **`ui-trivial`**,
 and **`mixed`** — dispatched at the engine boundary on
 `state.directive_set`. The slot wiring is fixed by
-[`directives/ui/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/__init__.py),
-[`directives/ui_trivial/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/__init__.py),
-and [`directives/mixed/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/mixed/__init__.py);
+[`directives/ui/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui/index.ts),
+[`directives/ui_trivial/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui_trivial/index.ts),
+and [`directives/mixed/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/mixed/index.ts);
 the contract for each lives in [`ui-track-flow.md`](ui-track-flow.md).
 
 The UI set drives `audit → design → apply → review → polish → report`
@@ -84,7 +84,7 @@ the gate emits `@agent-directive: existing-ui-audit` and refuses to advance.
 Two enforcement layers, deliberately redundant:
 
 - **Dispatcher layer** —
-  [`directives/ui/audit.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/audit.py)
+  [`directives/ui/audit.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui/audit.ts)
   refuses to write `outcomes["refine"] = "success"` without a populated
   audit. Purely structural; no LLM, no heuristic.
 - **Agent layer** — [`ui-audit-gate`](../../.agent-src.uncondensed/rules/ui-audit-gate.md)
@@ -102,7 +102,7 @@ the failure modes are different enough to justify it.
 ### Confidence-path resolution
 
 Audit findings carry a confidence label and per-candidate similarity.
-[`directives/ui/audit.py::_decide_path`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/audit.py)
+[`directives/ui/audit.py::_decide_path`](../../src/agent-src/templates/scripts/work_engine/directives/ui/audit.ts)
 resolves to one of:
 
 - `high_confidence` — confidence `high` + ≥1 match with similarity
@@ -176,7 +176,7 @@ adjustment), the Phase-1 intent classifier writes
 `directive_set = "ui-trivial"`. The slot wiring collapses to
 `refine → ⊘ → ⊘ → ⊘ → apply → test → ⊘ → report` with
 `MAX_FILES = 1` and `MAX_LINES_CHANGED = 5` enforced inside
-[`directives/ui_trivial/apply.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/apply.py).
+[`directives/ui_trivial/apply.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui_trivial/apply.ts).
 
 **Mandatory reclassification at apply time.** When a trivial edit
 exceeds the preconditions, apply flips
@@ -193,7 +193,7 @@ preconditions don't hold.
 
 ## Stack detection and dispatch
 
-[`scripts/work_engine/stack/detect.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/stack/detect.py)
+[`scripts/work_engine/stack/detect.py`](../../src/agent-src/templates/scripts/work_engine/stack/detect.ts)
 reads `composer.json` and `package.json` once, applies a four-rule
 priority table, and writes `state.stack.frontend`:
 
@@ -223,7 +223,7 @@ direct executor. R3 splits the responsibilities:
 
 - **Reference (kept):** layout patterns, form / table design,
   responsive strategy, a11y heuristics. Cited by
-  [`directives/ui/design.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/design.py).
+  [`directives/ui/design.py`](../../src/agent-src/templates/scripts/work_engine/directives/ui/design.ts).
 - **Executor (removed):** code-writing responsibilities migrated to
   the stack-specific apply / review / polish skills (`flux`,
   `livewire`, `blade-ui`, `react-shadcn-ui`, `ui-apply-vue`).

@@ -11,7 +11,7 @@ stability: stable
 >
 > **Source:** Step-11 Phase 5 Step 1
 > (an internal parity roadmap (local-only)).
-> **Enforcer:** [`scripts/lint_namespace.py`](../../src/scripts/lint_namespace.py),
+> **Enforcer:** [`scripts/lint_namespace.py`](../../src/scripts/lint_namespace.ts),
 > wired into `task lint-skills`.
 
 ## 1. Shape
