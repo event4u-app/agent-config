@@ -274,6 +274,47 @@ completion or archival path at its next scheduled review; independent work is
 demonstrably harmed by serialization; or re-proposals continue after the waiting
 state is visible to intake.
 
+## Unresolved decision 9 — the missing `never-act-while-asking` kernel clause
+
+**Added 2026-08-26** by the drain of
+[`road-to-kernel-invariant-restoration`](../archive/road-to-kernel-invariant-restoration.md).
+**This one is not a judgement waiting to be made.** The remedy is decided; what
+is missing is an authority no agent holds. It is registered here because this
+file is where the owner looks for exactly that class, and because the sibling
+entries would otherwise make it look like a decision nobody had reached.
+
+**Instrument:** `src/rules/non-destructive-by-default.md:41` — the protected
+literal `**Never act while asking.** The ask and the action are strictly
+sequential: surface the confirmation, then WAIT for the answer.` is absent, in
+the source and in its `dist/` projection.
+`./scripts-run src/scripts/check_rule_invariants` reports **2 findings** and is
+red on `main`.
+
+> **What is required:** a two-line restore plus `task sync`, landed in its own PR
+> with the >= 24 h soak. Full text, reasoning and baseline:
+> [`stubs/road-to-kernel-clause-1-restore.md`](road-to-kernel-clause-1-restore.md).
+
+**Why it is here rather than done.** `block_kernel_rule_writes` is
+`fail_closed: true` and denies the write to an agent on **both** the editor path
+and the shell path (`:247-255`), with a docblock stating *"No agent-accessible
+override"*. Both council seats ruled that authoring the patch for a human to
+merge is refused rather than merely impractical — the human-owned exception
+registry is an authorization boundary, not an agent channel — and that the
+>= 24 h soak is not satisfiable by one run in any case.
+
+**If the owner performs the restore** — `check_rule_invariants` goes green,
+`task ci` stops failing at that gate, and the kernel floor regains the stopping
+condition: acting in a later turn with no answer becomes forbidden, not merely
+discouraged.
+**If the owner declines** — the § 10 amendment path is the legal alternative and
+would have to argue that *"WAIT"* is assertion-equivalent to *"WAIT for the
+answer"*, which an AI council (2026-08-26, 2/2) says it is not. Declining
+without taking that path leaves the gate red indefinitely and the floor at the
+narrower guarantee.
+
+**Not a third option:** deleting the invariant entry. That makes CI green in one
+line and retires a protection that caught two real content losses.
+
 ## Blocking cost — recorded as `unknown`, deliberately
 
 The parent required that each non-`yes` row record its blocking cost "as sourced
@@ -306,12 +347,14 @@ that a decision is wrong.
 
 ## Reopens when
 
-An explicit owner ruling on any of the **eight**, independently of the others.
+An explicit owner ruling on any of the **nine**, independently of the others.
 Each is severable; none implies the others — and Decision 4 is severable per
 RECORD, so a ruling on ADR-108 does not settle ADR-107.
 
-Decisions 5-8 were added on 2026-08-26 and are severable from 1-4 in both
-directions. Two of them (6 and 7) are **surfaced without a position**: this file
+Decisions 5-9 were added on 2026-08-26 and are severable from 1-4 in both
+directions. Decision 9 is the odd one: it is not an undecided question at all
+but a decided edit awaiting an authority, registered here because this is where
+the owner looks for that class. Two of them (6 and 7) are **surfaced without a position**: this file
 records where the decision lives and what each answer costs, and takes neither
 side. Decision 8 is narrower still — the council settled the operational
 question and only the underlying reasoning is registered here.
