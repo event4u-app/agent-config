@@ -4,7 +4,9 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config) [![MCP Toplist](https://mcptoplist.com/badge/glama%2Fevent4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/glama%2Fevent4u-app%2Fagent-config)
 
-[![Skills](https://img.shields.io/badge/Skills-299-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-120-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-202-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-114-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-299-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-120-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-202-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-114-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/) <!-- claim:published-artifact-counts -->
+
+<sub>**How these are counted** — one canonical counter, `agent-config` → `update_counts --check`, re-derives all six from the tree and fails CI on a drift of one. Two bases are not what the linked directory shows, so they are stated here rather than left to be inferred: **Commands 202** counts every command file **recursively** (the linked directory holds 61 at its top level), and **Rules 120** counts the **source** rules while the linked projection holds 119 — one rule is dormant and is not projected. **Personas 29** excludes the directory README. Counts are of files and directories: none of them measures quality, activation, or adoption. <!-- claim:published-artifact-counts --></sub>
 
 **Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
 
@@ -86,7 +88,7 @@ is platform operation, not a user-work flow.)
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
-  <a href="MIGRATION.md">Upgrade to 6.0</a> ·
+  <a href="MIGRATION.md">Upgrade to 14.x</a> ·
   <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup">Breaking changes</a> ·
   <a href="https://github.com/event4u-app/agent-config/releases/latest">Latest release</a> ·
   <a href="https://github.com/event4u-app/agent-config/discussions">Discussions</a>
@@ -324,7 +326,7 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 → Operator walkthrough: [`mcp-cloud-setup`](docs/setup/mcp-cloud-setup.md) · Per-client config: [`mcp-client-config`](docs/setup/mcp-client-config.md) · Endpoints: [`mcp-cloud-endpoints`](docs/setup/mcp-cloud-endpoints.md).
 
-> **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the ~112 Python scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
+> **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the repository's local scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
 
 > The built-in **local stdio** server is listed for discovery in the [Glama MCP Registry](https://glama.ai/mcp/servers/event4u-app/agent-config) (agent developers / contributors; requires a local checkout, not a turnkey install — see [ADR-067](docs/decisions/ADR-067-glama-registry-listing.md)).
 
@@ -597,7 +599,7 @@ task dev:setup        # boot the onboarding wizard against the working tree
 
 **Invoking the CLI from a source checkout:** `./agent-config <command>` (the maintainer shim at the repo root → `scripts/agent-config` → `dist/cli/agent-config.js`). `npx @event4u/agent-config` doesn't resolve in the source repo without a prior `npm link`, since there's no `node_modules/.bin/agent-config` symlink — use `./agent-config` instead. Build the TS binary with `npm run build:cli` if `dist/cli/agent-config.js` is missing.
 
-→ Full project structure and commands: [**docs/development.md**](docs/development.md) · [CONTRIBUTING.md](CONTRIBUTING.md). Stack: **TypeScript** CLI/UI + **Python 3.10+** build/lint scripts. MCP registry payloads render under `dist/mcp/` ([submission checklist](docs/distribution/mcp-submission-checklist.md)).
+→ Full project structure and commands: [**docs/development.md**](docs/development.md) · [CONTRIBUTING.md](CONTRIBUTING.md). Stack: **TypeScript** throughout — CLI, UI, and the build / lint scripts. MCP registry payloads render under `dist/mcp/` ([submission checklist](docs/distribution/mcp-submission-checklist.md)).
 
 ---
 
