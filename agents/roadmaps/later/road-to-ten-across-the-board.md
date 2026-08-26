@@ -2,11 +2,54 @@
 complexity: structural
 status: draft
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and so are unavailable as offsets. This file owns zero progress state and is the index the other two landed roadmaps and the parked deep-capabilities file are read through; it replaces no single roadmap and therefore has no natural one-out."
+estate_growth_exempt: "later_roadmaps 65 -> 66, and active_roadmaps +0. The +1 is the PARKING ITSELF, not a side effect: this file moves from the top level into later/, and check_estate_count counts later_roadmaps with countIn(), a bare name filter that never reads status -- so a status: draft file is exempt from active_roadmaps and exempt from nothing in later/. The same asymmetry is recorded on road-to-ac-deep-capabilities.md, which was parked under it. No new roadmap was authored; the estate holds exactly the files it held, one of them relocated. The alternative shapes are both worse: archiving would claim a completion that did not happen (AC-1 through AC-4 are unevaluable, not met), and leaving it at the top level as status: draft keeps a known program-level limitation invisible to the dashboard, which is the specific defect an AI council 2/2 named when it chose this disposition. open_blockers +0: this change files none and closes none. Revisit-if: the authoritative rubric review is restored, at which point the file returns to the active estate and later_roadmaps drops back to 65."
 execution:
   mode: phase-checkpoints
+park: later
+status_note: "parked — the completion predicate is unevaluable, not failed"
+blocked_on: "the authoritative 32-category rubric review is absent from the tracked tree and its inbox copy is gone"
+known_manifest_rows: 23
+unknown_manifest_identities: 9
+affected_acceptance_criteria: [AC-1, AC-2, AC-3, AC-4]
+downstream_execution: unaffected
+entry_condition: "The authoritative rubric review is restored at a tracked, stable path AND agents/evidence/ac-capability-scorecard.yaml can declare state: complete with authority naming that path — at which point check_score_contract stops refusing the redeclaration and AC-1 becomes evaluable for the first time. Nothing else resumes this file: no amount of downstream track progress closes a manifest the tree does not hold. <!-- ref-ignore -->"
 pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 ---
 # Road to ten across the board (program roadmap, v2 council-merged)
+
+> ## PARKED — and this does NOT suspend anything downstream
+>
+> **The referenced roadmaps and tracks (Waves 2-5, and every per-track file this
+> index points at) continue independently. Their progress is not blocked by this
+> file's parked state, and nothing here should be read as halting them.**
+>
+> This index is parked because its own completion predicate is **unevaluable**,
+> not because it failed and not because the work stopped. AC-1 quantifies over
+> *"every rubric category in the declared manifest"*, and **nine of the 32
+> category identities are unknown** — not their scores, their identities. The
+> authoritative external review that would supply them is not in the tracked
+> tree and its inbox copy is gone. An acceptance criterion over a set the
+> repository does not hold cannot be assessed, which is a different state from
+> unmet, and the frontmatter above records it as such.
+>
+> Parked rather than transferred to a stub, by AI council 2026-08-26, 2/2
+> convergent. A stub holds deferred *executable scope* behind a *feasibility*
+> probe; this file holds sequencing and a score contract over work owned
+> elsewhere, and its only reactivation event is an external restoration. One
+> seat: *"stubbing it would duplicate topology while obscuring ownership."*
+>
+> **`status: draft` was replaced deliberately.** Draft hid this file from the
+> dashboard entirely, which is worse than either being active or being visibly
+> parked: a known program-level limitation was invisible rather than represented.
+>
+> **What landed before parking**, under the council's condition that only
+> independently-complete work leaves an index: Step 3.3 (the router's runtime
+> consumer measured, and three shipped artefacts corrected where they contradicted
+> the tree) and AC-6 (recording a blocker that has read `Status: resolved` since
+> 2026-08-24). **Step 1.2 did NOT land** — the release-placeholder guard is
+> technically buildable but its promotion criterion requires a maintainer-named
+> `one_in_one_out` offset, and re-promoting without one would repeat verbatim the
+> act that got its last promotion reverted.
 
 > **Source:** agents/tmp.old/road-to-10/road-to-ten-across-the-board.md
 
@@ -262,13 +305,68 @@ survive; what survives is the narrower D3 above.
 - [ ] **Step 3.2:** Fingerprint binding decision, gated on 3.1 (D7).
       verify: the decision cites 3.1's population; an unbound outcome is
       recorded as a decision, not left as silence.
-- [ ] **Step 3.3:** Routing corpus + the **narrowed** router question: does
+- [x] **Step 3.3:** Routing corpus + the **narrowed** router question: does
       `dist/router.json` have any *runtime* consumer, or is its 20+ consumer
       set entirely build-time?
       verify: the consumer inventory is enumerated from grep, not asserted;
       the outcome is one measured runtime consumer default-off, or an
       honest-null recording build-time-only — passive-with-implicit-promise is
       the only losing state.
+
+      **DONE — the narrowed question is answered in the direction the step did
+      not expect, and that is where its value turned out to be.**
+
+      **A runtime consumer EXISTS.** `src/scripts/hooks/rule_inject_hook.ts:61,196`
+      calls `loadRouter`, which reads `dist/router.json` at
+      `src/scripts/_lib/rule_injection.ts:76-79`. The `rule-inject` concern is
+      bound on **three** slots — `user_prompt_submit`, `pre_tool_use` and
+      `pre_compact` (`hook_manifest.yaml:1067,1068,1086`). A literal grep for
+      `router.json` does not find it: the hook never spells the filename, which
+      is why the earlier "zero consumers under `src/scripts/hooks/`" measurement
+      read clean.
+
+      **It is default-off, and off means zero bytes.** The concern returns before
+      reading the router unless `lean_projection.mode: delivery` is set, and the
+      shipped default is `eager-all` (`_lib/lean_projection_mode.ts:21`, with
+      anything unrecognised normalising to it). So the step's first permitted
+      outcome — *"one measured runtime consumer default-off"* — holds on the
+      mechanism half and **not** on "measured": the concern's own header records
+      that its budget row is *"registered against the per-prompt cap rather than
+      a measured emission: there is no measured emission to register yet."*
+      Built, bound, default-off, **unmeasured**.
+
+      **The deliverable is the contradiction, and it runs OPPOSITE to the one the
+      step guarded against.** The step protects against a passive router carrying
+      an implicit promise. What the tree held was **four artefacts asserting no
+      runtime consumer exists**, written before one was built and never updated:
+
+      | Artefact | The assertion | Disposition |
+      |---|---|---|
+      | `docs/contracts/rule-router.md:32-35` | *"zero under `src/scripts/hooks/` — no hook slot loads it, and no slot injects trigger-matched rule bodies"* | **corrected** |
+      | `docs/contracts/rule-router.md:271` | *"Read this first: nothing loads `dist/router.json` at runtime."* | **corrected** — now carries the "under every shipped default" qualifier |
+      | `src/scripts/check_rule_projection_integrity.ts:6-13` | a live GATE citing the above as its own rationale | **corrected** |
+      | `agents/evidence/analysis/rule-payload-per-host-2026-08-10.md:66` | *"no host consumes `dist/router.json` at runtime"* | **left as written** |
+
+      The evidence file is deliberately not rewritten. Per
+      `docs/contracts/evidence-artifact-types.md`, an `analysis` *"asserts what
+      was true when it was written and is never re-bound"* — it was true on
+      2026-08-10, and editing it would destroy the record rather than correct it.
+
+      The gate is the sharpest of the four: a live gate's stated reason rested on
+      a premise the tree refutes. **Its conclusion survives** — with the concern
+      default-off, projection IS still the only reach mechanism on a shipped
+      default — but the stronger claim that no such mechanism exists does not,
+      and the docblock now says so rather than being quietly reworded.
+
+      verify, met: the consumer inventory is enumerated from grep (33 build-time
+      source readers, 32 test files, 2 CI path filters, **1** runtime), not
+      asserted; the outcome recorded is a runtime consumer that is default-off,
+      with "unmeasured" stated rather than glossed.
+
+      **Landed under the council's condition for taking anything out of this
+      index:** it is independently valuable. Three shipped artefacts stopped
+      contradicting the tree, and that stands whatever happens to the program.
+
 - [ ] **Step 3.4:** Context accounting fields (`standing_tokens`,
       `load_frequency`, `activation_count`, `retrieval_count`, `miss_count`,
       `outcome_linked_use`, `last_reviewed`).
@@ -362,7 +460,14 @@ survive; what survives is the narrower D3 above.
 - [ ] AC-4 — Every measured null is preserved verbatim with its
       pre-registered criterion; none was rewritten after its number was read.
 - [ ] AC-5 — A default local install still requires no external service.
-- [ ] AC-6 — Blocker `b-standing-delivery-red` reads `Status: resolved`.
+- [x] AC-6 — Blocker `b-standing-delivery-red` reads `Status: resolved`.
+
+      **Met, and it was met before this run touched the file** — line 302, since
+      2026-08-24. Ticking it records an observed fact; leaving it unticked was
+      stale bookkeeping rather than caution. AI council 2026-08-26, 2/2, was
+      explicit that recording a satisfied AC is not the same act as claiming
+      program progress, and that the parked-state marker is what prevents the
+      second reading.
 
 ## Corrections applied at landing (2026-08-24)
 
