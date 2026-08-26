@@ -67,7 +67,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`image-analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
 - **`image-create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
 - **`image-verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
-- **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git — `implement` refuses production work for a behaviour with no observed failing test.
+- **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
 - **`judge-on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
@@ -159,7 +159,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
 - **`video-stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
-- **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git — `implement` refuses production work for a behaviour with no observed failing test.
+- **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over `work_engine`, confidence-band gated, no auto-git, test-first.
 - **`worktree`** — Worktree orchestrator — routes to create, status, verify, cleanup
 - **`worktree-cleanup`** — Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
 - **`worktree-create`** — Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred
