@@ -210,6 +210,16 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         what: 'paths exempt from the external-source scan',
     },
     {
+        file: 'src/config/lapsed-beta-baseline.json',
+        listKey: 'contracts',
+        tier: 'string_list',
+        newInThisChange: true,
+        what:
+            'beta contracts already lapsed at 2026-08-25, which WARN instead of ' +
+            'failing check_beta_review_markers — every lapse outside this list is ' +
+            'an error, so the list is the ratchet and may not grow',
+    },
+    {
         file: 'src/config/gate-violation-baselines.json',
         listKey: 'gates',
         tier: 'object',

@@ -99,6 +99,65 @@ The audit is repeated whenever the `keep-beta-until` date passes for
 ≥ 25 % of beta contracts, or at the start of any roadmap phase that
 touches the contract surface.
 
+### 2026-08-25 — the 25 % trigger fired at 71.1 %, and what was decided
+
+**Measured**, pinned at `AC_AS_OF=2026-08-25` and reproducible: **86 of the 121
+`stability: beta` contracts had passed `keep-beta-until` — 71.1 %**, nearly three
+times the trigger above. 35 carried a future date; **none lacked the marker**, so
+the *presence* half of this convention was healthy and the *date* half was not.
+
+**Why nobody noticed.** `check_beta_review_markers.ts` compared
+`keep-beta-until` only against `today + 90 days` and errored when the date was
+too far in the **future**. There was no floor, so a date arbitrarily far in the
+**past** passed and the gate printed *"All beta contracts carry a valid review
+marker"* over 86 lapsed ones. The trigger above had fired and the only mechanism
+that could have observed it was measuring the opposite direction.
+
+**The backlog is a cohort, not 86 lapses of discipline.** 44 of the 86 lapsed on
+**one day** (2026-08-12), 64 within a four-day band, and the whole population
+spanned 2–13 days of age. That is one past session's uniform window expiring at
+once. It does **not** establish that the 90-day cadence is unsustainable — a
+question this record deliberately leaves open.
+
+**Decision — a frozen, no-growth baseline ratchet.** AI council 2/2 (2026-08-25,
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 3 rounds, blind chairman)
+under the maintainer's standing delegation, choosing this over both a flat report
+and a flat error:
+
+- The **86 contracts inventoried on 2026-08-25** are frozen in
+  `src/config/lapsed-beta-baseline.json`. A lapse among them **warns**.
+- **Any lapsed beta contract not in that list is an ERROR**, immediately. Fresh
+  work is enforced today; the cohort does not red an arbitrary future PR whose
+  author caused none of it.
+- **The list may not grow and an entry may not be re-added.** Both fall out of the
+  rule above rather than needing a separate check: anything absent errors.
+- **An entry leaves only because the contract's own state changed** — promoted,
+  recorded unmaintained, superseded, or given a reviewed new deadline. Never by
+  editing the file to make a red disappear. A seat asked for this qualification
+  explicitly: an allowlist whose entries can simply be deleted is cosmetic.
+- **Promotion condition:** when the list is empty and a pinned run reports zero
+  lapsed contracts, the **same change** deletes the file and makes every lapse an
+  error. The gate already treats an absent file as *no inherited debt*, so the
+  deletion is the flip.
+- **Clear by 2026-11-23.** Not a soft target: if the list is not empty by then,
+  the 90-day cadence itself is reassessed on measured workload from the first
+  complete post-migration cycle, rather than the migration being silently
+  extended.
+- **The cadence is unchanged at 90 days.** The cohort shows clustering, not a
+  steady-state failure rate, so there is no evidence here that the window is too
+  short.
+
+**This decision closes the fired 25 % trigger.** The trigger's purpose was to
+force a re-audit; the re-audit happened, produced the inventory at
+`agents/evidence/analysis/lapsed-beta-inventory-2026-08-25.md` (49 extend / 36
+promote / 1 unmaintained / 0 supersede), and produced the mechanism above. Once
+enforcement is unconditional, a percentage-based lapse trigger is redundant —
+every lapse already fails.
+
+**Revisit-if:** the baseline is not cleared by 2026-11-23; or measured review
+workload during the first complete post-migration cycle shows the 90-day window
+cannot be sustained.
+
 ## Current contracts
 
 See the file headers themselves for current levels. The frontmatter is
