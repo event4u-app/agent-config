@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-09-25
+probe: none
 ---
 
 # Stub: road to the demand-gate audience default

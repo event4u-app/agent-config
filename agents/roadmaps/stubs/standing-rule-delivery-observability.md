@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-12-24
+probe: none
 ---
 
 # Stub: `check_standing_rule_delivery` cannot observe a rule-body diet

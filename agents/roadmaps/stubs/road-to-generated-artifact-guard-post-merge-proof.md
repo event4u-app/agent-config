@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-12-24
+probe: none
 ---
 
 # Stub: prove the re-add guard refuses a stale branch, from `main`
