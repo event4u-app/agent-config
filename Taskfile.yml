@@ -223,6 +223,7 @@ tasks:
       - task: check-score-contract
       - task: lint-skill-router-head
       - task: lint-provenance-vocabulary
+      - task: lint-canonical-terms
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums

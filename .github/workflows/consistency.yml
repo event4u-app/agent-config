@@ -241,6 +241,13 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
+      - name: Canonical terms — the house dialect, held by a ratchet
+        # road-to-canonical-terms Phase 2. The corpus is NOT clean on day one:
+        # `sweep_authorised: false` in src/config/canonical-terms.yml is a live
+        # council constraint, so the gate reds only when the count RISES above
+        # its recorded baseline. Report-only for existing debt, blocking for new.
+        run: ./scripts-run src/scripts/lint_canonical_terms
+
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
 

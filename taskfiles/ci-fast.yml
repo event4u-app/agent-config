@@ -1283,6 +1283,11 @@ tasks:
         --base "${LINT_BASE:-origin/main}" \
         --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
 
+  lint-canonical-terms:
+    silent: true
+    desc: Hold the house dialect recorded in src/config/canonical-terms.yml — ratchet over authored prose under src/ and docs/ (road-to-canonical-terms Phase 2)
+    cmd: ./scripts-run src/scripts/lint_canonical_terms {{.QUIET_FLAG}}
+
   lint-discovery-vocab:
     silent: true
     desc: Validate src/config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
