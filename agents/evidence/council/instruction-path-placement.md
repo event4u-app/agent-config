@@ -69,7 +69,7 @@ output:
 
 ## What landed
 
-`src/rules/instruction-path-verification.md`, `type: auto`, `tier: 2a`,
+`instruction-path-verification` (not in the tree — transferred), `type: auto`, `tier: 2a`,
 `packs: [meta]`, `enforced_by: instruction-only`. It carries:
 
 - the over-reporting direction in its own Iron Law;

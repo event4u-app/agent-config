@@ -370,7 +370,7 @@ Established rather than assumed:
 - **It reproduces in a freshly created worktree at the same commit**, so it is
   not residue from this session's edits.
 - **The main checkout passes it** because it carries a gitignored, machine-local
-  `agents/settings/.agent-settings.yml` that scopes the projection: 15 augment
+  a gitignored project settings file under `agents/settings/` that scopes the projection: 15 augment
   rules there versus 120 in a worktree without it.
 
 Four of the five original failures WERE fixed at source: the worktree received
@@ -396,7 +396,7 @@ scope.
 — the framework of record for the seven transfers out of `evidence-gated-change`.
 
 **2. The TDD overlap disposition**
-(`agents/evidence/council/tdd-overlap-disposition.md`) — 2/2 convergent.
+(recorded on the `evidence-gated-change` branch) — 2/2 convergent.
 `audit_skill_overlap --strict` failed at `0.712 test-driven-development ↔
 testing-anti-patterns`. Measured with the audit's own `collect()` + `_cosine()`,
 the pair sat at **0.7000 before the change** — already at the cap, so any body
@@ -429,7 +429,7 @@ trust.
 ## Descopes and honest nulls
 
 **Seven items transferred** out of `evidence-gated-change` into
-`agents/roadmaps/stubs/road-to-tdd-phase-guard.md`. The stub states plainly that
+the tdd-phase-guard stub on the `evidence-gated-change` branch. The stub states plainly that
 it is a **capacity** transfer and not a capability one: nothing blocks the work,
 it needs a change of its own size with a reviewer looking at a new
 blocking-capable `pre_tool_use` surface.

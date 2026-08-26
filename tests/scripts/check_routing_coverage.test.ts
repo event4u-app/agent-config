@@ -172,8 +172,8 @@ describe('the live tree', () => {
         expect(s.rules - s.skills).toBeGreaterThan(0.4);
     });
 
-    it('measures 106 routed rules and 299 routed skills', () => {
-        expect(measureRules(REPO).units).toBe(106);
+    it('measures 105 routed rules and 299 routed skills', () => {
+        expect(measureRules(REPO).units).toBe(105);
         expect(measureSkills(REPO).units).toBe(299);
     });
 });

@@ -23,7 +23,7 @@
     "framework-neutrality-in-generic-skills": 636,
     "git-history-discipline": 1205,
     "improve-before-implement": 845,
-    "laravel-routing": 135,
+    "laravel-routing": 126,
     "laravel-translations": 82,
     "legal-safety-floor": 1401,
     "linked-projects-onboarding-gate": 172,
@@ -42,7 +42,7 @@
     "skill-improvement-trigger": 81,
     "skill-quality": 78,
     "slash-command-routing-policy": 77,
-    "symfony-routing": 139,
+    "symfony-routing": 129,
     "ui-audit-gate": 1491,
     "untrusted-input-defense": 934,
     "upstream-proposal": 76
@@ -110,20 +110,6 @@
       "from": 621,
       "to": 636,
       "reason": "Two entries on the exempt list, +15 tokens: `^monorepo-workspace$` and `^workspace-link$`, the two skills road-to-monorepo-scope-and-detection adds. The list is not lookup material and cannot go to the pointer target: it is the rule's own ACTIVATION condition -- the gate decides from it whether an artefact is generic at all, so a rule whose exempt list lives elsewhere cannot answer its own first question. Every prior addition to that list moved this number for the same reason, and the alternative the gate offers (move prose to the pointer target) has nothing to move here: the two entries ARE the change. Raised rather than condensed because 15 tokens of pattern cannot be condensed without deleting one of the two patterns, which would make a framework-specific skill fail a rule it is exempt from."
-    },
-    {
-      "date": "2026-08-26",
-      "rule": "laravel-routing",
-      "from": 126,
-      "to": 135,
-      "reason": "road-to-consumer-repo-reality 3.2, +9 tokens: the rule now names the DISCRIMINATOR it actually uses. Before this change it read as a dependency-flavour test, and that is the defect 3.1 measured: an application built on Laravel COMPONENTS with a custom entry point and no skeleton marker was routed here by dependency presence, and then offered a CLI that does not exist, a request-validation primitive that is not wired, and a routes file that was never there. Component-based distribution is a published model, so the third state is a property of the distribution and not of one consumer. The prose CANNOT go to the pointer target: it is the rule's own ACTIVATION condition -- a routing rule whose claim-or-not-claim test lives elsewhere cannot answer its own first question, which is the same argument the framework-neutrality-in-generic-skills entry above makes for its exempt list. What DID go to the pointer target is everything that is lookup material rather than activation: the full probe table, its per-marker meaning, and the cost statement now live in the skill, and the deterministic implementation is src/install/detect_php_shape.ts. The clause was compressed twice before raising -- the first form cost +27, this one costs +9 -- and what remains is the minimum that states the discriminator at all: remove any further word and the rule stops saying which signal decides."
-    },
-    {
-      "date": "2026-08-26",
-      "rule": "symfony-routing",
-      "from": 129,
-      "to": 139,
-      "reason": "road-to-consumer-repo-reality 3.2, +10 tokens: the rule now names the DISCRIMINATOR it actually uses. Before this change it read as a dependency-flavour test, and that is the defect 3.1 measured: an application built on Symfony COMPONENTS with a custom entry point and no skeleton marker was routed here by dependency presence, and then offered a CLI that does not exist, a request-validation primitive that is not wired, and a routes file that was never there. Component-based distribution is a published model, so the third state is a property of the distribution and not of one consumer. The prose CANNOT go to the pointer target: it is the rule's own ACTIVATION condition -- a routing rule whose claim-or-not-claim test lives elsewhere cannot answer its own first question, which is the same argument the framework-neutrality-in-generic-skills entry above makes for its exempt list. What DID go to the pointer target is everything that is lookup material rather than activation: the full probe table, its per-marker meaning, and the cost statement now live in the skill, and the deterministic implementation is src/install/detect_php_shape.ts. The clause was compressed twice before raising -- the first form cost +30, this one costs +10 -- and what remains is the minimum that states the discriminator at all: remove any further word and the rule stops saying which signal decides."
     }
   ]
 }

@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 301
+- **artefacts**: 300
 
 ## Commands (154)
 
@@ -166,7 +166,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (71)
+## Rules (70)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -196,7 +196,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead
 - **`guidelines`** — Writing or reviewing code — check relevant guideline before writing or reviewing code
-- **`instruction-path-verification`** — Verify instruction-referenced repository paths exist before routing through them — a root instruction file that names an absent layer is read as fact
 - **`invite-challenge`** — Before executing a complex plan — ask 'am I solving the right problem?' and pause for confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
 - **`low-impact-corpus-privacy-floor`** — Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor

@@ -157,7 +157,7 @@ public, before any code.
       `scripts/` move). `_lib/generated_by.ts` emits a command or a module name
       and THROWS on a path separator. Sweep: 0 hits over 1,257 files, count
       reported on the green path.
-- [x] **1.5 Carry the discipline on the agent side, not only in a command.**
+- [~] **1.5 Carry the discipline on the agent side, not only in a command.**
       A path named by an instruction file is a claim, not a fact — probe before
       routing on it, and say which source answered. [`missing-skill-recovery`](../../src/rules/missing-skill-recovery.md)
       covers the mirror case — a **catalogue that under-reports** — and **does
@@ -170,11 +170,19 @@ public, before any code.
       reachable from the diagnostic's own output.
 
 
-      **DONE.** New sibling rule `instruction-path-verification`. Council
-      2026-08-26 verdict B, **DEGRADED 1/2** — anthropic returned `exit_1`, and
-      the single-seat basis is recorded rather than presented as convergence:
-      `agents/evidence/council/instruction-path-placement.md`. The diagnostic's
-      `fail` message names the rule, so reachability runs both ways.
+      **TRANSFERRED — built, measured, and removed on a budget, not a doubt.**
+      The rule was written (`instruction-path-verification`, sibling to
+      `missing-skill-recovery` per the placement council, DEGRADED 1/2 and
+      recorded as such) and then removed: it costs ~1,314 tokens of project-scope
+      rule payload against a grace ceiling pinned EXACTLY at HEAD, so any
+      addition reds `check_preamble_payload_budget` by that gate's stated design.
+      Council 2026-08-26, 2/2 convergent on **D — fund it by an audited
+      reduction, and not before**; raising the ceiling and shipping a red check
+      were both rejected by name. Transferred to
+      `agents/roadmaps/stubs/road-to-instruction-path-obligation.md`.
+      **The deterministic half ships**: `doctor --check instruction-path-reach`
+      adds no rule payload and names the rule in its `fail` output, so
+      reachability is wired the moment the rule lands.
 ## Phase 2 — Configuration resolution follows the chain
 
 **Anchor:** `extends` is a specified directive in TypeScript, ESLint, Biome and
@@ -371,7 +379,7 @@ the observation that prompted it. Changing those three skills now, on the
 strength of two same-culture installs, is precisely how this package would
 become one organisation's house style, and no step here authorises it.
 
-- [x] **5.1 State the repository boundary in the downstream sweep.** When a
+- [~] **5.1 State the repository boundary in the downstream sweep.** When a
       changed surface is exported beyond the repository — a published package, a
       served API, a shared schema — say that the sweep stopped at the tree edge
       and name the consumers it could not check. Completeness claimed over one
@@ -379,8 +387,11 @@ become one organisation's house style, and no step here authorises it.
       verify: the sweep's output names the boundary when an exported surface is
       touched, and does not when nothing is exported.
 
-      **DONE.** `downstream-changes` § the sweep stops at the tree edge, plus
-      verification step 7. It does not fire on a purely internal refactor.
+      **TRANSFERRED, same budget line.** The section was written and measured at
+      ~417 tokens of project-scope rule payload — smaller than 1.5's, and still
+      more than the zero headroom available. Removed and transferred to the same
+      stub, which notes that if only one of the two can be funded, this is the
+      one that fits.
 - [x] **5.2 Make a repeated override readable, and wire it to a flow that
       exists.** The same artefact overridden in independent installs is the
       cheapest available signal that a shipped default is wrong. Define the
@@ -468,12 +479,12 @@ become one organisation's house style, and no step here authorises it.
 
       **Met.** Per-path verdicts, and a file containing both halves is `mixed`
       with per-region governance rather than assigned to one side.
-- [x] AC-5 — A downstream sweep over a repository that exports a surface names
+- [~] AC-5 — A downstream sweep over a repository that exports a surface names
       the boundary it stopped at; over a repository that exports nothing, it
       does not.
 
-      **Met.** Both directions are stated in the rule: named on an exported
-      surface, and explicitly not fired on a purely internal refactor.
+      **NOT MET — transferred with 5.1.** Both directions were written into
+      `downstream-changes` and removed on the payload budget; see 5.1.
 - [x] AC-6 — No shipped default was changed on the strength of the override
       observation recorded in the Source, and the aggregate channel exists and
       is reachable from a flow a consumer already runs.
@@ -482,3 +493,36 @@ become one organisation's house style, and no step here authorises it.
       **Met.** No shipped default was changed. The channel exists
       (`doctor --check override-set`) and is reachable from a flow a consumer
       already runs, with the admissibility bar stated in `upstream-contribute`.
+
+## Deferred-item resolution — 2026-08-26
+
+Iron Law 3 of [`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md)
+fires: three items close `[~]`. All three are **one disposition**, taken by the
+council rather than by this run.
+
+**Steps 1.5 and 5.1, and AC-5 with them, are TRANSFERRED to
+[`stubs/road-to-instruction-path-obligation.md`](../stubs/road-to-instruction-path-obligation.md).**
+
+That is the **preserving** disposition and therefore council-decidable rather
+than owner-reserved: the work is carried into a named artifact created in the
+same change, with its measurements, its rejected alternatives and the condition
+that closes it. Nothing is dropped, weakened, or permanently accepted as lost.
+
+**The blocker is a budget, not a doubt.** Both steps were built and measured.
+`check_preamble_payload_budget`'s CI ceiling is a grace ceiling pinned exactly at
+HEAD, whose stated property is that **any** growth reds it. The two steps measure
++1,731 tokens together; the shipped branch measures exactly 138,212 — net zero.
+
+Council 2026-08-26, 2/2 convergent, verdict **D**: fund the addition by a
+documented value-and-overlap audit, and not before. Raising the ceiling and
+shipping a red check were rejected by name, and the `type: auto` exemption
+shortcut was closed on the ground that the budget is defined as standing
+per-spawn payload and an exemption needs spawn traces rather than a label.
+Record: [`preamble-ceiling-vs-new-rule`](../../evidence/council/preamble-ceiling-vs-new-rule.md).
+
+**The deterministic half of 1.5 ships**, because it adds no rule payload:
+`doctor --check instruction-path-reach` finds every dangling path at once and
+names the absent rule in its own `fail` output, so reachability is already wired
+for the day the rule lands.
+
+The roadmap archives with outcome state **transferred**.

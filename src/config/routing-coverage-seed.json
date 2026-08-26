@@ -9,11 +9,11 @@
         "skills": "src/skills/*/evals/triggers.json over src/skills/*/SKILL.md."
     },
     "seed": {
-        "rules": 0.8962,
+        "rules": 0.8952,
         "skills": 0.3144
     },
     "seed_provenance": {
-        "rules": "95 covered of 106 routed rules (tier-1 21/24, tier-2 74/82) on 2026-08-26. The +1 on both sides is `instruction-path-verification` (road-to-consumer-repo-reality 1.5) landing WITH its matrix, so the ratio rose rather than fell -- a new routed rule without a corpus case is exactly the units-added-without-cases decrease this seed's own comment calls a defect.",
+        "rules": "94 covered of 105 routed rules (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
         "skills": "94 of 299 skills carry evals/triggers.json on 2026-08-26.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
     },
