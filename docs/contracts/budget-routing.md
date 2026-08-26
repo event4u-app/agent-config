@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Budget Routing — ARCHIVED, migration record
 
 **Status: RETIRED 2026-08-16. This page is a migration record, not a live

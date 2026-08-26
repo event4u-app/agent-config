@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Settings classes — A / B / C
 
 > Every leaf key in `src/config/agent-settings.template.yml` carries exactly one

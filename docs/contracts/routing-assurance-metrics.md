@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Routing-assurance metrics — pre-registration
 
 > `road-to-routing-assurance` Phase 0.1. **Registered before any Phase-1
