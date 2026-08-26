@@ -26,7 +26,7 @@ obligation_frequency: "none"
 
 # Laravel Routing
 
-**Iron Law.** Laravel-flavoured PHP (Eloquent, Artisan, FormRequest, jobs, events, policies) → load the `laravel` skill, not `symfony-workflow` and not `php-coder`.
+**Iron Law.** Laravel-flavoured PHP → the `laravel` skill. Discriminator: the **entry point and router**, never the dependency list — `illuminate/*` with no skeleton marker is *components-without-the-framework* and this rule does not claim it.
 
 Body migrated to `skill:laravel`. Disambiguates the laravel ↔ symfony-workflow cluster head per [`adr-architectural-consensus-mechanism`](../docs/contracts/adr-architectural-consensus-mechanism.md).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

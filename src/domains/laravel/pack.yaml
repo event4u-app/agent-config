@@ -20,6 +20,6 @@ token_passport:
   catalog_tokens: 1086
   commands_tokens: 0
   other_tokens: 0
-  rules_tokens: 486
-  total_tokens: 1572
+  rules_tokens: 506
+  total_tokens: 1592
 trust_level_default: professional
