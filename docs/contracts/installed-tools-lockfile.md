@@ -9,11 +9,11 @@ Canonical wire-format spec for `agents/installed-tools.lock` — the
 project-committed bill of materials for AI tooling installed into this
 repository.
 
-- **Authoritative module:** [`scripts/_lib/installed_tools.py`](../../src/scripts/_lib/installed_tools.py)
+- **Authoritative module:** [`src/scripts/_lib/installed_tools.ts`](../../src/scripts/_lib/installed_tools.ts)
 - **ADR:** [`docs/decisions/ADR-008-installed-tools-manifest.md`](../decisions/ADR-008-installed-tools-manifest.md)
 - **Workflow guide:** [`docs/guidelines/agent-infra/installed-tools-manifest.md`](../guidelines/agent-infra/installed-tools-manifest.md)
-- **Active roadmap:** P1.1 of the `road-to-multi-package-coexistence`
-  roadmap (see `agents/roadmaps/` for current status).
+- **Active roadmap:** none. `road-to-multi-package-coexistence` was archived;
+  this contract is not currently driven by an open roadmap.
 
 ## Versions
 
@@ -108,7 +108,7 @@ must reject manifests that contain array-index pointers.
 
 - `write_manifest(path, version, tools, *, deploy_roots=None)` always emits `schema_version: 2`.
 - Optional v2 fields (`deploy_roots`, per-tool `files` / `merged_keys` / `status`) are emitted only when non-empty, so a v1-shaped call produces a v2 file that is structurally minimal and v1-readable for the core fields.
-- All writes are crash-safe via [`scripts/_lib/fs_atomic.py`](../../src/scripts/_lib/fs_atomic.py) (`write_atomic`: tmp + fsync + rename + parent-dir fsync). See P1.0 of the multi-package roadmap.
+- All writes are crash-safe via [`scripts/_lib/fs_atomic.py`](../../src/scripts/_lib/fs_atomic.ts) (`write_atomic`: tmp + fsync + rename + parent-dir fsync). See P1.0 of the multi-package roadmap.
 
 ## Determinism
 

@@ -99,7 +99,7 @@ duplicating the root file.
 
 The user-global file is created **only on explicit opt-in via the
 setup wizard** (`agent-config setup`). The loader at
-[`scripts/_lib/agent_settings.py`](../src/scripts/_lib/agent_settings.py)
+[`scripts/_lib/agent_settings.py`](../src/scripts/_lib/agent_settings.ts)
 is **read-only** — no script can create or mutate it without explicit
 wizard confirmation. Edit the file by hand for mid-life changes;
 `/sync-agent-settings` stays project-scoped and never touches
@@ -620,7 +620,7 @@ Each project decides; the user-global file cannot flip it on or off
 for unrelated projects.
 
 The decision logic lives at
-[`scripts/_lib/update_check.py`](../src/scripts/_lib/update_check.py); the
+[`scripts/_lib/update_check.py`](../src/scripts/_lib/update_check.ts); the
 dispatcher integration lives in [`scripts/agent-config`](../src/scripts/agent-config)
 (`run_update_check_banner`).
 

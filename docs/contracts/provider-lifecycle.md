@@ -76,7 +76,7 @@ When the agent picks a provider for a `/video:*` / `/image:*` /
 2. **Refuse-and-surface** if the operator's resolved default is a
    non-`stable` tier — name the tier and the path to this contract
    document, then emit one clarifying question (per
-   [`ask-when-uncertain`](../../.augment/rules/ask-when-uncertain.md)):
+   [`ask-when-uncertain`](../../src/rules/ask-when-uncertain.md)):
    either pick a `stable` provider, or confirm the non-stable run.
    No silent default. No "I'll just try it".
 3. **Record** in the run summary which tier the chosen adapter

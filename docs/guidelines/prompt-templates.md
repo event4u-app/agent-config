@@ -1,8 +1,8 @@
 # Prompt Templates
 
-Reference catalogue of prompt structures the [`prompt-optimizer`](../../.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md)
+Reference catalogue of prompt structures the [`prompt-optimizer`](../../src/skills/prompt-optimizer/SKILL.md)
 skill picks from during the **Develop** step of the 4-D methodology.
-Cited by the [`refine-prompt`](../../.agent-src.uncondensed/skills/refine-prompt/SKILL.md)
+Cited by the [`refine-prompt`](../../src/skills/refine-prompt/SKILL.md)
 skill in `mini` mode for stack-aware shaping.
 
 Templates are tools, not dogma. Pick by request type, not by upstream
@@ -108,7 +108,7 @@ warrants either reaction. The stance slot makes the honest-when-warranted
 contract explicit.
 
 **Package equivalents** — inside this agent-config, the
-[`adversarial-review`](../../.agent-src.uncondensed/skills/adversarial-review/SKILL.md)
+[`adversarial-review`](../../src/skills/adversarial-review/SKILL.md)
 skill implements the same stance via an Attack-Defend-Revise loop and is
 the right tool when the user submits finished work for a critical take.
 This template is for **end-users prompting their own LLM** (ChatGPT,
@@ -155,7 +155,7 @@ are slots the model cannot fill honestly.
 The catalogue's own position: a template earns its place by making a
 request *checkable*, not by making it sound authoritative. Where a rough
 prompt carries one of these three, the
-[`prompt-optimizer`](../../.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md)
+[`prompt-optimizer`](../../src/skills/prompt-optimizer/SKILL.md)
 strips it in its de-inflation sub-step before any template is picked —
 and strips nothing else, because everything outside these three is a
 requirement the author meant. This section is own analysis; it records a
@@ -183,7 +183,7 @@ membership.
 
 ## See also
 
-- [`prompt-optimizer`](../../.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md) — engine-outbound; cites this catalogue in its Develop step
-- [`refine-prompt`](../../.agent-src.uncondensed/skills/refine-prompt/SKILL.md) — engine-inbound; uses templates in `mini` mode for stack-aware shaping
-- [`prompt-engineering-patterns`](../../.agent-src.uncondensed/skills/prompt-engineering-patterns/SKILL.md) — production-LLM prompt patterns (sibling skill, not a catalogue)
+- [`prompt-optimizer`](../../src/skills/prompt-optimizer/SKILL.md) — engine-outbound; cites this catalogue in its Develop step
+- [`refine-prompt`](../../src/skills/refine-prompt/SKILL.md) — engine-inbound; uses templates in `mini` mode for stack-aware shaping
+- [`prompt-engineering-patterns`](../../src/skills/prompt-engineering-patterns/SKILL.md) — production-LLM prompt patterns (sibling skill, not a catalogue)
 - AI Council session: `agents/runtime/council/responses/prompt-master-mini.json` (2026-05-17) <!-- council-ref-allowed: ADR decision trace -->

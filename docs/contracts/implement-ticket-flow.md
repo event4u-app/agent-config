@@ -278,7 +278,7 @@ Bounded per the top-level roadmap rule:
 
 Read from `.agent-settings.yml` `roles.active_role` and resolved
 via `resolve_policy()` in
-[`persona_policy.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/persona_policy.py).
+[`persona_policy.py`](../../src/agent-src/templates/scripts/work_engine/persona_policy.ts).
 Policies live alongside the dispatcher so the flow can consume
 them directly; the shared
 [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
@@ -332,7 +332,7 @@ the context. V1 explicitly does **not** attempt resumable sessions.
 Every step declares — in code — the conditions under which it
 can return `blocked`. The declarations live as module-level
 `AMBIGUITIES` tuples (see
-[`directives/backend/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/__init__.py)
+[`directives/backend/__init__.py`](../../src/agent-src/templates/scripts/work_engine/directives/backend/index.ts)
 `.all_ambiguities()`). The
 [`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
 suite locks the contract: adding a new `blocked` path without
@@ -420,7 +420,7 @@ empty, but all headings are present unless explicitly marked
    because nothing was changed.
 
 Implementation: see
-[`directives/backend/report.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/report.py).
+[`directives/backend/report.py`](../../src/agent-src/templates/scripts/work_engine/directives/backend/report.ts).
 Section renderers are pure and deterministic; consumers can rely
 on the heading order and on each section either rendering with
 content or being omitted per the rules above.
@@ -559,7 +559,7 @@ Phase 1 Step 7).
 ## Replay protocol — Strict-Verb comparison (R1 Phase 6)
 
 The Capture Pack alone is a frozen artefact; the **replay harness**
-under [`tests/golden/harness.py`](../../tests/golden/harness.py) is what
+under [`tests/golden/harness.py`](../../tests/golden/harness.ts) is what
 turns that artefact into a continuous behavioural contract. It loads
 each baseline, drives the same recipe against the *live* `work_engine`,
 and reports structural drift. Every PR that touches the engine,
@@ -660,7 +660,7 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 ## See also
 
 - `tests/golden/` — capture sandbox, recipes, and Capture Packs
-- [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
+- [`../../tests/golden/harness.py`](../../tests/golden/harness.ts) — Strict-Verb replay harness
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
 - [`../guidelines/agent-infra/memory-access.md`](../guidelines/agent-infra/memory-access.md)
 - [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md)

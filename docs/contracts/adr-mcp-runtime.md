@@ -48,10 +48,10 @@ re-litigated every time a contributor read `scripts/mcp_server/server.py`.
 
 Evidence the decision is already realised in code:
 
-- [`scripts/mcp_server/server.py`](../../src/scripts/mcp_server/server.py) — uses
+- [`scripts/mcp_server/server.py`](../../src/scripts/mcp_server/server.ts) — uses
   `mcp.server.Server`, `mcp.server.stdio.stdio_server`, `InitializationOptions`
   directly (no FastMCP decorators).
-- [`scripts/mcp_server/__init__.py`](../../src/scripts/mcp_server/__init__.py) —
+- [`scripts/mcp_server/__init__.py`](../../src/scripts/mcp_server/__main__.ts) —
   pins `__version__` and declares stability/contract pointer.
 - [`scripts/mcp_server/requirements.txt`](../../src/scripts/mcp_server/requirements.txt)
   — `mcp==1.27.1`, no FastMCP, no Node tooling.
@@ -63,7 +63,7 @@ Evidence the decision is already realised in code:
 Locked separately by [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) Phase 4
 amendment. The current ALLOWLIST is exactly two tools, registered as a
 hardcoded module-level tuple in
-[`scripts/mcp_server/tools.py`](../../src/scripts/mcp_server/tools.py):
+[`scripts/mcp_server/tools.py`](../../src/scripts/mcp_server/tools.ts):
 
 | Tool | Mode | Source |
 |---|---|---|

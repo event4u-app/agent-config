@@ -72,7 +72,7 @@ trigger-rich descriptions are required — polite or hedged ones cause
 undertriggering. The full recipe (concrete verb phrase, ≥2 triggers,
 `even if they don't explicitly ask for …` tail, ≤200 chars,
 litmus test) lives in
-[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../../../src/agent-src/contexts/communication/rules-auto/skill-quality-mechanics.md)
 § Description Triggering.
 
 ## Skill Independence
@@ -94,7 +94,7 @@ When merging or condensing skills, the result MUST preserve the
 strongest validation, strongest examples, all anti-patterns, all
 decision criteria, and trigger quality. Full preservation invariants
 and "merge is invalid if …" / "condensation may remove …" lists in
-[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../../../src/agent-src/contexts/communication/rules-auto/skill-quality-mechanics.md)
 § Merge Preservation and § Condensation Preservation.
 
 ## Refactor Safety
@@ -125,7 +125,7 @@ check. No retrofit pass on existing Wing-1 skills.
 
 Subsection specs (≤ 6-line spec + 1 reference example each), good /
 bad pattern pairs, and the WHEN-NOT routing peer rules live in
-[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../../../src/agent-src/contexts/communication/rules-auto/skill-quality-mechanics.md)
 § Senior-tier patterns.
 
 ## Structural Malice Floor
@@ -139,10 +139,10 @@ linter exits with code **3** (security-failure), distinct from
 exit 2 (build-failure) so CI surfaces can split the two.
 
 The check is **structural**, not semantic — it catches the shapes
-the [`tool-safety`](tool-safety.md) rule denies in prose: hidden
+the [`tool-safety`](../../../src/rules/tool-safety.md) rule denies in prose: hidden
 credentials, arbitrary execution, write-without-approval. Fixtures
 and the exit-code-3 contract live in
-[`tests/test_skill_linter_malice.py`](../../tests/test_skill_linter_malice.py).
+[`tests/test_skill_linter_malice.py`](../../../tests/scripts/skill_linter.test.ts).
 
 ## Confidence Tagging
 
@@ -152,6 +152,6 @@ across steps. Optional but recommended when a step's output feeds a
 downstream decision.
 
 Text-tag form is deliberate. Emoji 🟢 / 🟡 / 🔴 is **not** allowed —
-collides with [`direct-answers`](direct-answers.md) § Emoji scope
+collides with [`direct-answers`](../../../src/rules/direct-answers.md) § Emoji scope
 (functional markers only). Linter does not enforce the tag itself;
 the rule documents the placement so authors converge on one form.

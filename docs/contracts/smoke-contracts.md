@@ -111,7 +111,7 @@ constant in the script body and the row below.
   `.agent-src.uncondensed/skills/*/SKILL.md` and re-validated via
   `scripts/validate_frontmatter.py`. `agent-config explain skill` is
   **not** invoked — `explain` only supports `{config,rule,route}` today
-  ([`scripts/agent-config/cmd_explain.py`](../../src/scripts/agent-config/cmd_explain.py));
+  ([`scripts/agent-config/cmd_explain.py`](../../src/scripts/_cli/cmd_explain.ts));
   filesystem-resolution is the contract.
 
 ## § 4 — Local invocation

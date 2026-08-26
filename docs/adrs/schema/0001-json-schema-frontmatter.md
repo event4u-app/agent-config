@@ -110,5 +110,5 @@ JetBrains / any JSON-Schema-aware tool tomorrow.
 - [`scripts/schemas/command.schema.json`](../../../src/scripts/schemas/command.schema.json) — command contract.
 - [`scripts/schemas/persona.schema.json`](../../../src/scripts/schemas/persona.schema.json) — persona contract.
 - [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md) — human-readable contract.
-- [`scripts/skill_linter.py`](../../../src/scripts/skill_linter.py) — primary validator.
+- [`scripts/skill_linter.py`](../../../src/scripts/skill_linter.ts) — primary validator.
 - an internal parity roadmap (local-only) Phase 4 Step 3 — origin.
