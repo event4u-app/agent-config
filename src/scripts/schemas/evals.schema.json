@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/evals.schema.json",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "title": "Skill behavioural evals (evals.json)",
   "$comment": "Behavioural-eval spec consumed by run_skill_evals.ts (scaffold/aggregate/report) and counted by skill_eval_coverage.ts. Distinct from triggers.json (activation/routing axis). Roadmap: road-to-skill-eval-coverage Phase 1. Assertion kinds mirror _grade_assertions() in run_skill_evals.ts exactly \u2014 add a kind there before adding it here.",
   "type": "object",

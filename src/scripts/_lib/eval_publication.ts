@@ -103,7 +103,7 @@ export interface LeakFinding {
  */
 export function scanLeaks(input: LeakScanInput): LeakFinding[] {
     const out: LeakFinding[] = [];
-    const norm = (s: string): string => s.split(String.fromCharCode(92)).join('/');
+    const norm = (s: string): string => s.split('\\').join('/');
     for (const d of input.denied) {
         const needle = norm(d);
         if (needle === '') continue;
@@ -118,6 +118,11 @@ export function scanLeaks(input: LeakScanInput): LeakFinding[] {
 }
 
 // ── Phase 4.5 — a cache key that includes the CRITERIA ──────────────────────
+
+/** Field delimiter for the identity hash. An escape, never a raw byte. */
+const FIELD_SEP = '\u001e';
+/** Element delimiter inside one array field. Different from FIELD_SEP on purpose. */
+const ELEMENT_SEP = '\u001f';
 
 export interface BaselineIdentity {
     prompt: string;
@@ -142,8 +147,13 @@ export interface BaselineIdentity {
 export function baselineIdentity(id: BaselineIdentity): string {
     const h = createHash('sha256');
     const feed = (label: string, v: string | readonly string[] | number): void => {
-        h.update(` ${label} `);
-        h.update(Array.isArray(v) ? [...v].join('') : String(v));
+        // The separators are ESCAPES, never raw control bytes: a raw U+1F in a
+        // text source makes grep, file(1) and git treat the file as binary and
+        // skip it silently, which `lint_hidden_unicode` refuses. A field
+        // delimiter and an element delimiter that differ are what keep two
+        // fields concatenating to the same text from producing one hash.
+        h.update(FIELD_SEP + label + FIELD_SEP);
+        h.update(Array.isArray(v) ? [...v].join(ELEMENT_SEP) : String(v));
     };
     feed('prompt', id.prompt);
     feed('fixtures', id.fixtures);
@@ -193,7 +203,7 @@ export function firstAttempts(receipts: readonly Receipt[]): Receipt[] {
         // configuration "ab" with case "c" collides with "a" and "bc", which
         // silently drops a receipt — and the completeness precondition below
         // would then report a missing first attempt for a case that has one.
-        const key = r.configuration + String.fromCharCode(0) + r.caseId;
+        const key = r.configuration + FIELD_SEP + r.caseId;
         const seen = best.get(key);
         if (seen === undefined || r.attempt < seen.attempt) best.set(key, r);
     }
