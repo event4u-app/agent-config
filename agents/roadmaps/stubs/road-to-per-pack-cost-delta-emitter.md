@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: road to the per-pack cost-delta emitter
@@ -9,7 +10,7 @@ complexity: lightweight
 > drained. It carries that roadmap's cancelled Phase 3. Outcome state on the
 > parent: **transferred**.
 
-## The probe that promotes this
+## Probe — the one that promotes this
 
 ```
 A PER-PR DELTA-COMMENT SURFACE EXISTS IN THE TREE.

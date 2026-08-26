@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to a gate pre-authorisation the agent cannot sign
@@ -52,7 +53,7 @@ append-only reader/writer in `src/agent-src/scripts/gate_budget.ts`, and the
 class-1 execution path in `gate_execute.ts` that runs under the caps and
 receipts what it spends.
 
-## Transferred item — verbatim, with producer, probe and baseline
+## Probe, producer and baseline — transferred item, verbatim
 
 Quoted exactly as it stands in the parent (where it carries `[-]`).
 
