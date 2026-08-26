@@ -217,7 +217,21 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
             return;
         }
         if (r.relation === 'imports' || r.relation === 'uses') {
-            const resolved = sym.classByName.get(k(ex.lang, r.targetName));
+            // A class name first, which is what `imports` and the pre-existing
+            // `uses` sites emit. Then a FREE FUNCTION, which the registry
+            // literals added by 1.3 point at: `{ foo: handleFoo }` names a
+            // function, not a class, so a class-only lookup left every such edge
+            // at `symbol:<name>` — an edge that exists and resolves nowhere,
+            // which is barely better than the missing edge it replaced.
+            //
+            // Same predicate as the `free` call branch below (`#` and no `::`),
+            // so a function reference and a function call resolve identically
+            // rather than by two rules that can drift.
+            const resolved =
+                sym.classByName.get(k(ex.lang, r.targetName)) ??
+                (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find(
+                    (id) => id.includes('#') && !id.includes('::'),
+                );
             emit({
                 source: r.sourceId,
                 target: resolved ?? `symbol:${r.targetName}`,
@@ -258,9 +272,14 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 const cands = methodCandidates(r.targetName, ex.lang);
                 emit({
                     source: r.sourceId,
-                    target: cands[0] ?? `symbol:${r.targetName}`,
+                    target: ambiguousTarget(cands, r.targetName),
                     relation: 'calls',
                     confidence: 'AMBIGUOUS',
+                    // The enclosing class extends a base outside this
+                    // repository, so the method is not findable HERE — a
+                    // different cause from a call whose receiver is unknown,
+                    // and the two need different fixes.
+                    ambiguity_reason: 'hierarchy-unresolved',
                     ...(cands.length ? { candidates: cands } : {}),
                 });
             }
@@ -270,9 +289,13 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         const cands = methodCandidates(r.targetName, ex.lang);
         emit({
             source: r.sourceId,
-            target: cands[0] ?? `symbol:${r.targetName}`,
+            target: ambiguousTarget(cands, r.targetName),
             relation: 'calls',
             confidence: 'AMBIGUOUS',
+            // Receiver type unknown: `$obj->m()` or an unresolved `C::m()`.
+            // Resolving this needs type inference the extractor does not do,
+            // which is exactly what 1.2 has to decide about rather than assume.
+            ambiguity_reason: 'receiver-unknown',
             ...(cands.length ? { candidates: cands } : {}),
         });
     }
@@ -311,6 +334,35 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
 }
 
 /** Stable JSON with sorted keys — the byte-equality anchor. */
+/**
+ * The `target` of an AMBIGUOUS edge.
+ *
+ * `road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh` 1.2. The rule
+ * that was here — `candidates[0] ?? symbol:<name>` — is the false positive the
+ * roadmap names verbatim: `discoverTurboGenerators --calls--> LruCache::set`,
+ * measured across three files, produced by a generic `.set(...)` call whose
+ * first alphabetical candidate happened to be a cache class in a bench fixture.
+ *
+ * **The defect is not the ambiguity, it is the ARBITRARY WINNER.** Every
+ * consumer that reads `target` and ignores `confidence` sees a specific method
+ * on a specific class — and the taxonomy's own acceptance rule is that an
+ * AMBIGUOUS edge is correct when the true target is *among the candidates*,
+ * which says plainly that no single one of them is the answer.
+ *
+ * So: ONE candidate is a real resolution and is kept as the target; MORE than
+ * one is a choice the extractor cannot make, and the target becomes the
+ * unresolved symbol while `candidates` carries every option. Nothing is lost —
+ * the list was already emitted — and the graph stops asserting a method call
+ * that does not happen.
+ *
+ * Measured effect on this repository: 8,960 AMBIGUOUS edges carried candidates,
+ * of which 8,939 had more than one and therefore an arbitrary target.
+ */
+function ambiguousTarget(candidates: readonly string[], targetName: string): string {
+    if (candidates.length === 1) return candidates[0] as string;
+    return `symbol:${targetName}`;
+}
+
 export function serializeGraph(g: CodeGraph): string {
     const key_order: (keyof CodeGraph)[] = [
         'schema_version',
@@ -335,6 +387,11 @@ export function serializeGraph(g: CodeGraph): string {
             relation: e.relation,
             confidence: e.confidence,
         };
+        // Ordered before `candidates` deliberately: the reason is the coarser
+        // axis and a reader scanning the serialized graph sees WHY before HOW
+        // MANY. Both are omitted when absent, so an EXTRACTED edge is byte-for-
+        // byte what it was before this field existed.
+        if (e.ambiguity_reason) base['ambiguity_reason'] = e.ambiguity_reason;
         if (e.candidates) base['candidates'] = e.candidates;
         return base;
     };

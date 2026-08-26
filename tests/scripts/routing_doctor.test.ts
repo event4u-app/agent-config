@@ -151,7 +151,13 @@ describe("collect_orchestration (via collect_report)", () => {
     expect(o.host_manifest.subagent_spawn).toBe(true);
     expect(o.activation.action).toBe("dispatch");
     expect(o.sample?.lookup_route).toBe("primitive");
-    expect(o.sample?.lookup_primitive).toBe("code-graph-query");
+    // Capped grep, not the graph: the code-graph primitive is an opportunistic
+    // accelerant gated on `hooks.code_graph.enabled`, and the doctor does not
+    // pass that flag. The lookup CLASS is still recognised — which is what this
+    // assertion is really about — and the primitive follows the gate rather than
+    // being hardcoded. See auto_dispatch.classifyLookup and
+    // road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 2.1.
+    expect(o.sample?.lookup_primitive).toBe("fts-or-capped-grep");
   });
 
   // Regression: the doctor resolved capabilities through `normalizeHostManifest`

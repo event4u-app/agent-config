@@ -449,11 +449,18 @@ function render(): string {
                 `${nulls} resolved-null.`,
         );
         L.push('');
-        L.push('| Claim id | Kind | Status | Evidence pointer |');
-        L.push('|---|---|---|---|');
+        // `Measured on` exists because a status alone cannot say that a real
+        // measurement describes a build that no longer exists — and an AI
+        // council (2026-08-26, 2/2) required the binding to reach every index,
+        // not only the detailed entry, since a prose-only qualification drifts
+        // from the structured record it qualifies. Empty for every claim that
+        // describes the current tree, which is almost all of them.
+        L.push('| Claim id | Kind | Status | Measured on | Evidence pointer |');
+        L.push('|---|---|---|---|---|');
         for (const e of ledger) {
             const ev = e.evidence.length > 0 ? `\`${e.evidence.replace(/\|/g, '\\|')}\`` : '—';
-            L.push(`| \`${e.id}\` | ${e.kind} | ${e.status} | ${ev} |`);
+            const on = e.measured_on.length > 0 ? e.measured_on.replace(/\|/g, '\\|') : '—';
+            L.push(`| \`${e.id}\` | ${e.kind} | ${e.status} | ${on} | ${ev} |`);
         }
     }
     L.push('');

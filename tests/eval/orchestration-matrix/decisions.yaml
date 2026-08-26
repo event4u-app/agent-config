@@ -115,12 +115,22 @@ routing:
     expect: { tier: lite, model: cheap-alias, quota_pool: shared, tier_source: static }
 
 lookup:
-  - name: definition lookup routes to the code-graph primitive, not a spawn
+  # The code-graph primitive is an OPPORTUNISTIC ACCELERANT gated on
+  # `hooks.code_graph.enabled`, which is what the contract has always said and
+  # what `classifyLookup` did not do until
+  # road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 2.1. With the
+  # flag off — the default, and the state of this repository — a
+  # definition/reference lookup routes to capped grep, which is the arm the only
+  # measurement that exists says wins (recall 0.797 vs the graph's 0.365).
+  #
+  # Both directions are pinned below: the class is still recognised, and the
+  # primitive follows the flag rather than being hardcoded either way.
+  - name: definition lookup is recognised and routes to grep while the graph is gated off
     task: "Where is resolveSubagentRouting defined?"
-    expect: { route: primitive, primitive: code-graph-query }
-  - name: references lookup routes to the code-graph primitive
+    expect: { route: primitive, primitive: fts-or-capped-grep }
+  - name: references lookup is recognised and routes to grep while the graph is gated off
     task: "Who calls resolve_canary_name across the repo?"
-    expect: { route: primitive, primitive: code-graph-query }
+    expect: { route: primitive, primitive: fts-or-capped-grep }
   - name: string-existence lookup routes to FTS/capped grep
     task: "Does the string 'budget_routing' exist anywhere in src?"
     expect: { route: primitive, primitive: fts-or-capped-grep }

@@ -1,12 +1,12 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-26
 estate_offset_exempt: "No archive move is available in this change. The addition is the smaller half of a reduction: a six-document, roughly 8,400-line proposal bundle produced one roadmap, and five of its six documents were recorded as superseded, stale or refuted rather than landed. Its predecessor, agents/roadmaps/archive/road-to-code-graph-extractor-defect.md, is already archived and cannot be retired again."
-estate_growth_exempt: "Charges +0 on the count half (status-scoped, this file ships draft) and +1 on one-in-one-out, which is file-based. It also adds one blocker against a floor of 31, which carries no automatic allowance. Warranted on measurement: the verdict this package publishes about its own code graph was measured on 2026-07-28 against a build that no longer exists, the extractor defect it blamed was repaired on 2026-08-22 and the harness was never re-run, and a fresh build at HEAD shows 42.9 per cent of its edges carry AMBIGUOUS confidence with no recorded cause. No open roadmap carries a code-graph item; grepped across all twelve active files."
+estate_growth_exempt: "active_roadmaps 8 -> 9 on 2026-08-26, and this SUPERSEDES the claim that stood here. The previous text claimed +0 on the count half because the file shipped `status: draft`; that is no longer true and leaving it would have been an exemption asserting a fact its own change had falsified. The flip to `ready` is the deliberate act: ten of the eleven items closed in this change, and the eleventh (3.1, the benchmark re-run) is genuinely open on `b-bench-inputs-absent`, which an AI council ruled 2/2 must NOT be closed because closing it would convert \"cannot measure\" into \"measured\". A file carrying one real open step owned by a maintainer belongs in the counted estate; leaving it `draft` would keep it out of every count and out of the dashboard the blocker exists to surface, which is the shape road-to-inbox-harvest-2026-08-f-owner-decision-queue was written against. open_blockers is +0: this change created no blocker and closed none. The other half of the trade is real work delivered rather than a promise -- EXTRACTED edges 89,452 -> 99,022, a named false positive removed, the routing/contract disagreement resolved in the contract's favour with 7 tests pinning both directions, four permanence assertions corrected, and ADR-246 written for a packaging decision that had lived in a script comment. Revisit-if: the benchmark inputs are supplied and 3.1 runs, at which point this file closes and the count returns to 8."
 ---
 # Road to a code-graph verdict that measures the code that exists
 
@@ -111,7 +111,7 @@ on three of them.
 
 ## Phase 1 — close the two measurable extraction gaps
 
-- [ ] **1.1 Give `AMBIGUOUS` edges a recorded cause and a number.**
+- [x] **1.1 Give `AMBIGUOUS` edges a recorded cause and a number.**
       Classify the 67,732 unresolved edges at HEAD by why they did not resolve —
       same basename across files, method name without a receiver type, import
       alias — and publish the breakdown as an evidence file. This is a
@@ -120,7 +120,11 @@ on three of them.
       class breakdown, and the command that produced it, and the totals sum to
       the build's own `AMBIGUOUS` count.
 
-- [ ] **1.2 Resolve the class that 1.1 shows is largest, or record why not.**
+      **DONE — `agents/evidence/analysis/code-graph-ambiguous-classes-2026-08-26.md`, and the classification is a FIELD on the edge (`ambiguity_reason`) rather than a one-off script's output.** That choice is the difference between a number and a reproducible one: anyone can now rebuild and read the cause, where before the answer required re-running the extractor with bespoke code.
+
+      **The answer inverts the premise.** 67,593 of 157,231 edges (43.0 %, confirming the roadmap's figure at a different HEAD), and **58,612 of them — 86.7 % — are `receiver-unknown` with NO in-repo candidate at all**. 1,301 distinct target names, zero of which resolve to a node in this graph, and the top of the distribution settles it: `join` (5,843), `push` (3,205), `slice`, `map`, `readFileSync`, `trim`, `toBe`. Those are `Array.prototype`, `node:fs` and vitest matchers. **No type inference over this repository could resolve them, because the definitions are not in it** — and an extractor reporting them as EXTRACTED would be inventing edges. The 43 % is the taxonomy working, not 43 % of the graph being broken. `hierarchy-unresolved` is 21 edges and can be ignored.
+
+- [x] **1.2 Resolve the class that 1.1 shows is largest, or record why not.**
       Scope is one class, not all of them, and the null route is a legitimate
       finish: if the largest class needs type information the extractor does not
       have, say so and stop.
@@ -129,7 +133,15 @@ on three of them.
       `discoverTurboGenerators --calls--> LruCache::set` no longer resolves
       across three files — or the step closes with the recorded reason.
 
-- [ ] **1.3 Emit edges for statically resolvable identifier references.**
+      **DONE, and it is the NULL route for the largest class and a real FIX for the second.** The step permits either; the measurement says both apply, to different classes.
+
+      **Largest class — the recorded reason to stop.** The 58,612 no-candidate edges need definitions that are not in this repository. Not "needs type information the extractor does not have" but *needs a target that does not exist here*, which no amount of inference reaches.
+
+      **Second class — the false positive was the ARBITRARY WINNER, not the ambiguity.** The rule was `candidates[0] ?? symbol:<name>`, so the first alphabetical same-named method became the edge's `target`: 1,707 edges pointed every generic `.resolve(...)` at one gate-ledger method, 414 pointed every `.set(...)` at a cache class in a bench fixture. Every consumer reading `target` and ignoring `confidence` saw a specific method call that does not happen — while the taxonomy's own acceptance rule already says the edge is correct when the true target is *among* the candidates, which states plainly that no single one of them is the answer. `ambiguousTarget` now keeps a target only when there is exactly ONE candidate and names the unresolved symbol otherwise, with `candidates` carrying every option. Nothing is lost; the list was already emitted.
+
+      verify, met: the roadmap's named worked example `discoverTurboGenerators --calls--> LruCache::set` **no longer resolves** — that edge is gone from the rebuild. 4,818 edges had >1 candidate and now name the symbol; 4,154 had exactly one and keep their target. `EXTRACTED` went 89,452 → 89,454, up rather than unchanged.
+
+- [x] **1.3 Emit edges for statically resolvable identifier references.**
       `const registry = { foo: handleFoo }` currently produces none. Add the
       identifier-reference case to the extractor for the shape that needs no
       inference, and leave genuinely dynamic dispatch alone.
@@ -138,15 +150,31 @@ on three of them.
       the repository build's `EXTRACTED` count rises with no rise in
       `AMBIGUOUS`.
 
+      **DONE — and it required a second fix the step did not anticipate.** The `pair` / `shorthand_property_identifier` case now emits an edge for `{ foo: handleFoo }`, scoped deliberately to the shape that needs no inference: a bare identifier value. A computed key, a call, an arrow function or a spread is left alone, because resolving those DOES need inference and guessing there is how the arbitrary-winner defect 1.2 just removed got in.
+
+      Emitted as **`uses`, not `calls`** — a table naming a handler is not a call site; the call happens wherever the table is looked up, and claiming otherwise would assert a control-flow edge that does not exist. `uses` already exists, so the relation union is not widened and the validator, the query surface and every consumer are untouched.
+
+      **The second fix:** the `uses` resolution branch looked up CLASS names only, so every new edge landed at `symbol:handleFoo` — an edge that exists and resolves nowhere, barely better than the missing edge it replaced. It now falls back to a free function using the same predicate as the `free` call branch, so a function reference and a function call resolve identically rather than by two rules that can drift.
+
+      verify, met on both halves: a fixture outside the tracked tree (`const registry = { foo: handleFoo, bar: handleBar }`) produces `uses src/reg.ts -> src/reg.ts#handleFoo` and `#handleBar`, resolved rather than symbolic. On the repository, **EXTRACTED 89,454 → 99,022 (+9,568) with AMBIGUOUS unchanged at 67,593** — the direction the step requires. `code-graph validate` passes.
+
 ## Phase 2 — make the routing and the contract agree
 
-- [ ] **2.1 Decide which of the two is right, and change the other.**
+- [x] **2.1 Decide which of the two is right, and change the other.**
       Either `auto_dispatch.ts:132,137` should be conditional on the setting the
       contract names, or `auto-dispatch-classification.md:227-235` should stop
       describing a gate that the code does not apply and stop calling its own
       clause inert. Do not change both to a third thing.
       verify: the routing behaviour and the contract text state the same rule,
       and a test pins whichever one is now normative.
+
+      **DONE — the CONTRACT is right and the CODE changed.** `auto-dispatch-classification.md` has always described the graph as an opportunistic accelerant conditional on `hooks.code_graph.enabled`; `classifyLookup` hardcoded `primitive: 'code-graph-query'` with no setting check.
+
+      The decision rests on the only evidence that exists rather than on preference: the pre-registered benchmark measured native-graph recall **0.365 against grep's 0.797** on exactly these graph-shaped questions, so routing unconditionally to the graph routed to the arm that lost — and no re-measurement has replaced that figure, because 3.1 is blocked.
+
+      `classifyLookup` now takes `codeGraphEnabled` and defaults it FALSE — not because the setting's default is false, but because an absent flag means nobody said the index is present and fresh, and an accelerant taken on an absent index is a miss that escalates, i.e. slower than the grep it replaced. **The class is still recognised**; only the primitive follows the gate, so turning the flag on is the whole change needed to use the graph.
+
+      Pinned in both directions by 7 new tests, with class recognition asserted SEPARATELY from the primitive — a change that stopped recognising `definition` and `references` altogether would also make the primitive grep, and one assertion could not tell those apart. Two existing expectations were updated with the reason written in place (`decisions.yaml`, `routing_doctor.test.ts`); 91 tests pass across the three affected suites.
 
 ## Phase 3 — re-measure, or name the blocker
 
@@ -158,7 +186,13 @@ on three of them.
       second run with its own date, and the delta against the 2026-07-28 figures
       is stated whichever direction it goes.
 
-- [ ] **3.2 Correct every document that still asserts a permanence the record retracted.**
+      **BLOCKED, and deliberately left open — see `## Blockers` → `b-bench-inputs-absent`.** AI council 2026-08-26, 2/2 convergent, ruled option **(c)** for this run AND that this step must NOT be closed: *"closing 3.1 would convert 'cannot measure' into 'measured' when the question is still answerable, just not here."* The disposition landed (see 3.2); the measurement did not, and the two are not the same thing.
+
+      Option (a) is not executable here — the three SHA-256-pinned question files live under gitignored `agents/tmp/`, and no automation in this repository can produce three external repository clones. Option (b) was rejected by both seats: a benchmark against different corpora destroys the comparability that makes the re-run worth doing, and if pursued it is a separately pre-registered claim rather than a replacement.
+
+      **What this run measured is NOT a substitute, and the council was explicit about that.** +9,568 EXTRACTED edges and a removed false positive are EXTRACTION quality; the claim is about RETRIEVAL. One seat noted the extraction gains make the old figure *more likely pessimistic* rather than less — which is a reason to re-run, not a reason to assume the outcome.
+
+- [x] **3.2 Correct every document that still asserts a permanence the record retracted.**
       Eight surfaces: `docs/CLAIMS.md:423` and `:426-427`; `docs/proof.md:54`
       (generated — regenerate with `build_proof` in the **same** change or the
       drift guard reds); `docs/MIGRATION.md:20`, whose removal commitment was
@@ -172,7 +206,13 @@ on three of them.
       also state a reopen condition, and `./scripts-run src/scripts/check_claims`
       is green.
 
-- [ ] **3.3 Record who owns the consumer-reachability decision.**
+      **DONE — four surfaces, and the count in this step was high because some were already fixed.** `ADR-124:229` already carried its own correction note, and `surface-tiers.yml`, `settings-reference.md`, `settings.ts` and `settings-classes.md` carry no permanence assertion at all. The four that did: `docs/CLAIMS.md:423`, `docs/MIGRATION.md:20`, `agent-settings.template.yml:1333` and `auto-dispatch-classification.md:235`. Each now says the setting is `false` **by default** and names its reopen condition; `MIGRATION.md`'s row was self-contradictory, asserting permanence three sentences before withdrawing the removal commitment that permanence rested on.
+
+      **The council added a requirement this step did not have, and it is structural.** Both seats rejected the two obvious statuses for `claim:code-graph-retrieval-null`: `resolved-null` would say the retrieval question was ANSWERED null on the current build, which is exactly what nobody measured; `superseded_by` expects replacement EVIDENCE, and a repair commit is the wrong semantic object. What they required instead was structured scoping that reaches **every index and summary, not only the detailed entry** — because a prose-only qualification drifts from the structured record it qualifies.
+
+      So the ledger gains a `measured_on:` field, parsed by `check_claims` and **printed as a column in `docs/proof.md`'s table**, where the row now reads `backed | a build predating the 2026-08-22 extractor repair — post-repair recall UNMEASURED`. Empty for every claim that describes the current tree, which is almost all of them. `check_claims` and `build_proof --check` are green, and `docs/proof.md` is regenerated in this change so the drift guard does not red.
+
+- [x] **3.3 Record who owns the consumer-reachability decision.**
       The ABI-locked parser pair sits in `devDependencies`
       (`package.json:112,117`), which npm does not install for consumers, so no
       consumer can reach the engine whatever any flag says. The demotion is
@@ -183,6 +223,12 @@ on three of them.
       that is the answer.
       verify: a decision record or an ADR states the packaging choice, its ~51 MB
       cost, and the condition under which it is revisited.
+
+      **DONE — `docs/decisions/ADR-246-code-graph-parsers-stay-devdependencies.md`, `status: accepted`.** The answer is the one the step names as legitimate: **it stays a `devDependency`, and the engine is maintainer-only.**
+
+      The gap was not the packaging choice, which is old, but that it lived in a **script comment** (`check_dependency_floors.ts:50-54`, mentioning it only to explain why an exception list is empty) and in no decision record, with no roadmap owning re-promotion. The record carries the ~51 MB cost, the consequence that flipping `enabled: true` in a consumer install is **not sufficient** because the loader has nothing to load, and the consumer-facing alternative that is actually served: the consumer-index interop path, which needs no parser.
+
+      Its `review_trigger` names what would reopen it and, more usefully, what would not: **an improvement in EXTRACTION quality is explicitly NOT a trigger.** This record was written in the same change that raised EXTRACTED from 89,452 to 99,022, and that number moves nothing — a graph with better edges is still a graph no consumer can load. Three alternatives are recorded as refused with reasons, including `optionalDependencies`, which installs by default and would re-impose the 51 MB it is meant to avoid.
 
 ## Blockers
 
@@ -207,6 +253,29 @@ on three of them.
   measurement predates the fix it blames, which is the exact defect
   `road-to-published-number-truth` exists to stop, on a surface that roadmap's
   population does not reach.
+- **Council disposition, 2026-08-26, 2/2 convergent:** option **(c)** is recorded
+  as this run's action and **3.1 stays OPEN**. Both seats were explicit that the
+  disposition is not the measurement — *"closing 3.1 would convert 'cannot
+  measure' into 'measured' when the question is still answerable, just not
+  here."* (a) is not executable by an automated run: the pinned question files
+  live under gitignored `agents/tmp/` and no automation here produces three
+  external repository clones. (b) was refused by both seats — different corpora
+  destroy the comparability that makes the re-run worth doing, and if pursued it
+  is a separately pre-registered claim rather than a replacement.
+- **Ruled on explicitly, because the run asked rather than chose:**
+  `claim:code-graph-retrieval-null` stays `status: backed`. NOT `resolved-null`,
+  which would assert that the retrieval question was ANSWERED null on the
+  current build — exactly what nobody measured. NOT `superseded_by`, which
+  expects replacement EVIDENCE, and a repair commit is the wrong semantic object
+  for it. The requirement instead was structured build-scoping reaching every
+  index and summary, discharged by the `measured_on:` field now printed in
+  `docs/proof.md`.
+- **What is still missing, named by a council seat rather than by this run:** an
+  indefinitely blocked step becomes misleading operational debt when its private
+  inputs may never be recovered. The honest closure for that is a maintainer
+  determination that the inputs are irrecoverable, which either retires this
+  step or approves a separately named non-comparable benchmark. This run cannot
+  make that determination and does not pretend to.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
@@ -219,15 +288,15 @@ on three of them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — the `AMBIGUOUS` edge population carries a published cause
+- [x] AC-1 — the `AMBIGUOUS` edge population carries a published cause
       breakdown, and the largest class is either resolved or recorded as
       terminal with its reason.
-- [ ] AC-2 — a statically resolvable identifier reference produces an edge, and
+- [x] AC-2 — a statically resolvable identifier reference produces an edge, and
       the repository build shows it without a rise in `AMBIGUOUS`.
-- [ ] AC-3 — `auto_dispatch.ts` and `auto-dispatch-classification.md` state the
+- [x] AC-3 — `auto_dispatch.ts` and `auto-dispatch-classification.md` state the
       same rule, and a test pins the normative one.
-- [ ] AC-4 — no shipped document asserts that the code-graph setting is
+- [x] AC-4 — no shipped document asserts that the code-graph setting is
       permanent without also stating its reopen condition, and `check_claims` is
       green.
-- [ ] AC-5 — `claim:code-graph-retrieval-null` either carries a second
+- [x] AC-5 — `claim:code-graph-retrieval-null` either carries a second
       measurement or states which commit its figures describe.
