@@ -29,6 +29,69 @@ split is measurable without judgement.
 | `gray` / `grey` | 34 | 2 | 94 / 6 |
 | `canonicalize*` / `canonicalise*` | 13 | 4 | 76 / 24 |
 
+### CORRECTION 2026-08-25 (later the same day) — the aggregate hides a scope effect, and three pairs FLIP
+
+The table above sums `src/ docs/ agents/`. Decomposed by directory, **three of
+the nine pairs point one way on the shipped surface and the other way in the
+aggregate**, so the aggregate split is not a safe input to a canonicalisation
+decision. Same command as the § Scope block, run once per directory:
+
+```
+grep -rioE '\b<pattern>' <dir> --include='*.md' | wc -l
+```
+
+| Pair | `src/` | `docs/` | `agents/` | aggregate above |
+|---|---|---|---|---|
+| `artifact` / `artefact` | **63/37** (n=965) | 47/53 (n=1445) | 49/51 (n=4374) | 51/49 |
+| `behaviour` / `behavior` | **22/78** (n=600) | 62/38 (n=596) | 68/32 (n=1769) | 57/43 |
+| `subagent` / `sub-agent` | 98/2 (n=558) | 99/1 (n=551) | 99/1 (n=2349) | 99/1 |
+| `handoff` / `hand-off` | 84/16 (n=243) | 85/15 (n=294) | 95/5 (n=648) | 90/10 |
+| `preflight` / `pre-flight` | **44/56** (n=25) | 62/38 (n=70) | 71/29 (n=338) | 68/32 |
+| `organize*` / `organise*` | 100/0 (n=16) | 100/0 (n=5) | 53/47 (n=13) | 81/19 |
+| `license` / `licence` | 94/6 (n=184) | 89/11 (n=123) | 79/21 (n=408) | 86/14 |
+| `gray` / `grey` | 68/32 (n=25) | 54/46 (n=11) | 58/42 (n=29) | 94/6 |
+| `canonicalize*` / `canonicalise*` | 100/0 (n=2) | 85/15 (n=14) | 70/30 (n=10) | 76/24 |
+
+**The three that flip**, and why it matters:
+
+- **`behaviour` / `behavior` — the sharpest.** The aggregate says 57/43 with the
+  British side ahead. `src/` says **22/78 with the American side ahead**. The
+  British majority is produced almost entirely by `agents/` (971 vs 419), which
+  is roadmaps, evidence notes and archive — this repository's own working prose,
+  much of it in archived files nobody will edit again. The shipped surface has
+  no ambiguity at all.
+- **`artifact` / `artefact`.** The aggregate is a coin-flip (51/49) and `agents/`
+  is 49/51, but `src/` is **63/37**. A decision taken on the aggregate would call
+  this the hardest pair; taken on `src/` it is decided.
+- **`preflight` / `pre-flight`.** The aggregate says 68/32 for the closed form;
+  `src/` says **44/56 for the hyphenated one**, on n=25. Small enough that the
+  honest reading is *undecided on the shipped surface*, not *decided the other
+  way*.
+
+**What this does NOT change.** `subagent`, `handoff` and `license` point the same
+direction in all three directories, so their majorities are real rather than
+scope artifacts. `cancelled` / `canceled` at 946/0 is unaffected.
+
+**Two counts in the aggregate row are also not reproducible** from the
+per-directory sums, and are left standing rather than silently amended:
+`gray`/`grey` sums to 65 across the three directories against 36 in the
+aggregate row, and `organize*`/`organise*` to 34 against 116. The likely cause is
+the trailing `*` in the original patterns (`organize*` matches `organizes`,
+`organized`, `organizational`) against this pass's `\b<word>` prefix form. Recorded
+as a discrepancy to resolve before either pair is swept, not as a refutation.
+
+**Why this correction exists.** `road-to-canonical-terms` Phase 1.1 rests on the
+`behaviour` row, describing it as a case where *"the majority rule and the
+consistency rule point in opposite directions."* On the shipped surface they do
+not point in opposite directions — they agree, and they agree on `behavior`.
+That is a different decision from the one the roadmap poses.
+
+**A citation defect found alongside it.** `road-to-canonical-terms` says *"Every
+number below is in `agents/evidence/analysis/redundancy-baseline-2026-08-25.md`
+with the command that produced it."* That file contains **zero** dialect
+content — it covers implementation and knowledge duplication. The dialect numbers
+are in **this** file. Corrected at the roadmap.
+
 `hand off` as two words adds a further 62 to the handoff cluster.
 `cancelled` / `canceled` is **946 / 0** — already canonical, recorded so a
 later sweep does not spend a pass on it.
