@@ -107,8 +107,8 @@ const MAGNITUDE = /\b\d[\d,._]*\s*(?:[A-Za-z]+-)?(?:tokens?|ms|USD|KB|MB|GB|char
 /**
  * The nouns this package counts ITSELF in. Widened 2026-08-26
  * (road-to-published-number-truth 2.1) from the three host-reach nouns to the
- * package's own artefact vocabulary, because the host-reach miss was an
- * instance and the artefact counts are the population: the badge block alone
+ * package's own artifact vocabulary, because the host-reach miss was an
+ * instance and the artifact counts are the population: the badge block alone
  * publishes six of them, and until this widening `is_quantified_claim` returned
  * false for every one.
  *
