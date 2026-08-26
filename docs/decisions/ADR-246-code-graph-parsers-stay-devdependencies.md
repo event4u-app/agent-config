@@ -103,6 +103,28 @@ installs by default and merely tolerates failure, so it would re-impose the
 about a package they are correctly not installing. Neither expresses
 "maintainer-only" better than the current shape.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| The parser pair is in `devDependencies`, not `dependencies` | `package.json:112,117` (`web-tree-sitter@0.24.7`, `tree-sitter-wasms@0.1.13`); read this session |
+| `npm install` does not install it for a consumer | Definitional for `devDependencies`; the consequence is stated for this tree in `docs/MIGRATION.md`'s `code_graph` row — "no consumer installs it" |
+| The demotion was recorded in a script comment and in no decision record | `src/scripts/check_dependency_floors.ts:50-54` mentions it only to explain why `EXACT_PIN_EXCEPTIONS` is empty; a grep of `docs/decisions/` for the package names returns nothing before this record |
+| No roadmap owns re-promoting it | Grepped across `agents/roadmaps/*.md`, `later/` and `stubs/` this session — no file carries a re-promotion item |
+| ~51 MB unpacked | `docs/MIGRATION.md`'s `code_graph` row, which records the figure at the time of the demotion; not re-measured here and stated as the recorded figure rather than a fresh one |
+| Source removal would free ~112 K against a 27 M tree | Same row, maintainer measurement 2026-08-15; carried forward rather than re-derived |
+| The only retrieval measurement lost to grep | `claim:code-graph-retrieval-null` — recall 0.365 vs 0.797. Its `measured_on:` field, added in this same change, records that it describes a build predating the 2026-08-22 extractor repair |
+| Extraction quality improved in this same change | `agents/evidence/analysis/code-graph-ambiguous-classes-2026-08-26.md`: EXTRACTED 89,452 → 99,022, AMBIGUOUS unchanged. Named here so the review trigger can exclude it explicitly |
+| The engine loads for a maintainer | `./agent-config code-graph build --root .` ran in this session — 2,953 files, 23,101 nodes, grammar ABI 14 |
+
+The grade is **E2 — repeated and comparative**, and deliberately not higher. Every
+row is either a live read of this tree or a maintainer figure carried forward with
+its provenance named. What is NOT here, and what keeps it off E3: no consumer was
+asked. The claim that the consumer-index interop path is sufficient in practice
+has no consumer behind it — it is an argument from the path's existence, and the
+§ honest-limit section below says so rather than letting the grade imply
+otherwise.
+
 ## The honest limit of this record
 
 It documents a packaging state and its reopen conditions. It does **not**
