@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Database inbox drop — verification pass, 2026-08-26
 
 Verification record for the four `road-to-database-*` roadmaps. The inbox
