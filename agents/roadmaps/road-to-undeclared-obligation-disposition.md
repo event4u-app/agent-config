@@ -16,6 +16,7 @@ relates: []
 # fingerprint is its own digest of the inputs it read; a later run whose
 # fingerprint differs has seen a changed estate. Fingerprint b1cce950ff54fb2e,
 # base 612b817e7.
+estate_growth_exempt: "open_blockers 42 -> 44, and the rise is a CORRECTION rather than growth — a distinction this gate has no field for, so it is stated here. Both blockers already existed and were invisible to `update_roadmap_progress.ts:439`, whose `BLOCKER_HEADING_RE` requires a literal `blocker:` prefix that neither heading carried: this roadmap's own, and `road-to-composition-before-creation.md`'s, which landed unparsed in PR #1681. Repairing the two headings is what made them countable; nothing new was added to the backlog. Four further instances across three files are recorded in `stubs/road-to-blocker-parse-visibility.md` and deliberately not repaired here — one is being archived by open PR #1682, and two sit in drafts with open owner decisions. The gate defect behind it is also recorded there: `lint_roadmap_blockers` reported this file blocker-contract-clean while its blocker parsed to nothing."
 estate_offset_exempt: "No disposal is available in this change: the dashboard reports the active estate mid-flight with three completion PRs open (#1675, #1679, #1682), so nothing is archivable from here, and parking this would grow the later_roadmaps floor instead of the active one. It folds into no sibling — grepping every active, parked and stub roadmap for `undeclared`, `obligation_frequency` and `check_enforcement_coverage` returns six files, and each owns a different slice: `stubs/road-to-kernel-instruction-only-migration.md` owns exactly one kernel rule's `enforced_by` value, `later/road-to-mixed-trigger-activation-cost.md` owns activation cost, and `archive/road-to-obligation-carrier-audit.md` built the instrument and closed while explicitly leaving this cohort unmeasured. The cohort itself has no owner."
 ---
 # Road to disposing the undeclared 82 — the instrument has been printing the number for months and nobody has read it
@@ -158,7 +159,7 @@ step is this roadmap.
 
 ## Blockers
 
-### is-a-declaration-worth-anything
+### blocker: is-a-declaration-worth-anything
 
 - **Status:** open
 - **Owner:** maintainer

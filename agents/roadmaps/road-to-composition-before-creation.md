@@ -169,7 +169,7 @@ would be the fabrication this table exists to avoid.
 
 ## Blockers
 
-### disposition-vocabulary-authority
+### blocker: disposition-vocabulary-authority
 
 - **Status:** open
 - **Owner:** maintainer
