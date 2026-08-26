@@ -168,7 +168,7 @@ const EXIT_BLOCK = 1;
  * same defect the next time one side is tuned.
  */
 import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
-import { atomicWriteJson, detectUnavailableDependency, type UnavailableDependency } from '../_lib/loop_guards.js';
+import { atomicWriteJson, detectUnavailableDependency, stallSignal, type StallLevel, type UnavailableDependency } from '../_lib/loop_guards.js';
 
 /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
 export { TRANSCRIPT_READ_MAX_BYTES };
@@ -213,6 +213,11 @@ export interface RunState {
     last_turn: number;
     /** Open-step count recorded at each engagement, newest last. */
     history: number[];
+    /**
+     * The derived stall level (Phase 6.6): `progressing` | `flat` | `stalled`.
+     * Written by the producer so a reader never re-derives it from `history`.
+     */
+    stall?: StallLevel;
     /**
      * Set once the over-cap-transcript rung has reported this run inert.
      *
@@ -1400,6 +1405,12 @@ export function main(): number {
     } catch {
         unavailable = null;
     }
+
+    // Phase 6.6 — the stall signal, WRITTEN rather than re-derived. A consumer
+    // asking "is this run still making progress" had to reconstruct it from the
+    // history array and the window constant, so every reader could answer
+    // differently. One producer, one definition.
+    state.stall = stallSignal(state.history, STALL_WINDOW).level;
 
     const action = ladder(state, scan.open, Date.now(), scan.blocked, undefined, unavailable);
 

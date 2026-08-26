@@ -75,6 +75,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps; archives completed ones (--no-archive to skip).' },
     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
+    { name: 'roadmap:set-step', disposition: 'delegate', synopsis: 'The single sanctioned writer of a checkbox glyph: advisory lock, line-anchored edit, live step-count invariant, post-write survival check.' },
     { name: 'gates', disposition: 'delegate', synopsis: 'Open decisions that need you, as actions — owner-filtered roadmap blockers; --all, --json, --reply, --pending (staged requires_confirmation actions).' },
     { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },
     { name: 'adr:effective', disposition: 'delegate', synopsis: "Effective state of one ADR: status, Decision verbatim, clauses its own amendments superseded, active amendments, axes, trigger state. Authorizes nothing." },

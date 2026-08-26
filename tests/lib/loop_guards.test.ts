@@ -14,6 +14,7 @@ import {
     atomicWriteJson,
     detectUnavailableDependency,
     matchesWholeLine,
+    stallSignal,
 } from '../../src/scripts/_lib/loop_guards.js';
 
 let tmp: string;
@@ -108,5 +109,40 @@ describe('detectUnavailableDependency', () => {
     it('carries the evidence line, so a halt names what is missing', () => {
         const d = detectUnavailableDependency('gh: command not found');
         expect(d?.evidence).toContain('command not found');
+    });
+});
+
+describe('stallSignal', () => {
+    it('reports PROGRESSING on a new minimum — the primary signal', () => {
+        const s = stallSignal([9, 7, 5]);
+        expect(s.level).toBe('progressing');
+        expect(s.newMinimum).toBe(true);
+        expect(s.minimum).toBe(5);
+    });
+
+    it('reports STALLED on a full window of identical readings', () => {
+        const s = stallSignal([9, 7, 7, 7], 3);
+        expect(s.level).toBe('stalled');
+        expect(s.flatRun).toBe(3);
+    });
+
+    it('is FLAT, not stalled, before the window fills', () => {
+        expect(stallSignal([7, 7], 3).level).toBe('flat');
+    });
+
+    it('is FLAT when the count ROSE — regression is not progress, and not a stall either', () => {
+        // A rising count means work was ADDED. Calling it progress would let a
+        // growing plan keep the budget alive forever; calling it a stall would
+        // halt a run that is doing exactly what it should.
+        expect(stallSignal([5, 5, 9], 3).level).toBe('flat');
+    });
+
+    it('does not call a return to a PREVIOUS minimum a new minimum', () => {
+        // 5 was already reached; coming back to it is not fresh progress.
+        expect(stallSignal([5, 9, 5], 3).newMinimum).toBe(false);
+    });
+
+    it('handles an empty history without pretending to know anything', () => {
+        expect(stallSignal([])).toEqual({ level: 'flat', flatRun: 0, minimum: null, newMinimum: false });
     });
 });

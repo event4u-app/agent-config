@@ -118,3 +118,61 @@ export function detectUnavailableDependency(
     }
     return null;
 }
+
+/**
+ * The machine-readable stall signal, derived from a run's open-step history.
+ *
+ * `road-to-skill-ecosystem-runtime-enforcement` Phase 6 Step 6, and it is what
+ * makes Phase 4's progress-primary ordering usable rather than aspirational: a
+ * consumer asking "is this run still making progress" had to re-derive the
+ * answer from a history array and a window constant, so every reader could
+ * derive it differently.
+ *
+ * Three levels rather than a boolean, because the ordering they enable is
+ * different:
+ *
+ *   `progressing` — the newest reading is a NEW MINIMUM. This is the primary
+ *     signal Phase 4 names: the budget may keep running.
+ *   `flat`        — no new minimum, but the window is not yet full or not yet
+ *     uniform. Not stalled; simply not evidence of progress either.
+ *   `stalled`     — a full window of IDENTICAL readings. More of the same will
+ *     not help, and raising the budget is the WRONG response — which is exactly
+ *     what separates `stagnated` from `exhausted` in the terminal-state
+ *     vocabulary.
+ *
+ * Pure over the history array, so a reader and the ladder cannot disagree.
+ */
+export type StallLevel = 'progressing' | 'flat' | 'stalled';
+
+export interface StallSignal {
+    level: StallLevel;
+    /** How many of the most recent readings are identical. */
+    flatRun: number;
+    /** The lowest reading seen, i.e. the best progress this run has made. */
+    minimum: number | null;
+    /** True when the LAST reading equals the minimum and is strictly below the one before it. */
+    newMinimum: boolean;
+}
+
+export function stallSignal(history: readonly number[], window = 3): StallSignal {
+    if (history.length === 0) {
+        return { level: 'flat', flatRun: 0, minimum: null, newMinimum: false };
+    }
+    const last = history[history.length - 1] as number;
+    const minimum = Math.min(...history);
+    // Strictly below every EARLIER reading — not merely below the one before it.
+    // The weaker form calls a return to an already-reached minimum progress, so an
+    // oscillating run (5, 9, 5, 9, …) would look like it was advancing forever
+    // while closing nothing.
+    const earlier = history.slice(0, -1);
+    const newMinimum = earlier.length > 0 && last < Math.min(...earlier);
+
+    let flatRun = 1;
+    for (let i = history.length - 2; i >= 0; i -= 1) {
+        if (history[i] !== last) break;
+        flatRun += 1;
+    }
+    if (newMinimum) return { level: 'progressing', flatRun, minimum, newMinimum };
+    if (flatRun >= window) return { level: 'stalled', flatRun, minimum, newMinimum };
+    return { level: 'flat', flatRun, minimum, newMinimum };
+}
