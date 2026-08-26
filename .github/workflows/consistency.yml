@@ -241,6 +241,7 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
+<<<<<<< HEAD
       - name: Eval specifications — a gate on the measurement inputs
         # road-to-skill-ecosystem-eval-integrity Phase 1 Step 7. Promoted to a
         # PR-blocking gate on day one rather than landing advisory: the
@@ -251,12 +252,28 @@ jobs:
         # corpus has to rest on.
         run: ./scripts-run src/scripts/lint_eval_specs
 
+=======
+      - name: Beta review deadlines — a lapsed contract is visible on the PR
+        # road-to-contract-review-deadlines 2.1. The gate lived only in `task ci`,
+        # which no workflow invokes, so its findings were red on main and invisible
+        # — the failure class two comments in this same file already record twice.
+        # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
+        # fail; a FRESH lapse fails, which is what a pull request needs to see.
+        run: ./scripts-run src/scripts/check_beta_review_markers
+>>>>>>> origin/main
       - name: Canonical terms — the house dialect, held by a ratchet
         # road-to-canonical-terms Phase 2. The corpus is NOT clean on day one:
         # `sweep_authorised: false` in src/config/canonical-terms.yml is a live
         # council constraint, so the gate reds only when the count RISES above
         # its recorded baseline. Report-only for existing debt, blocking for new.
         run: ./scripts-run src/scripts/lint_canonical_terms
+      - name: Memory-twin parity — the two shipped copies may not drift apart
+        # road-to-memory-twin-reconciliation Phase 3. package.json files[] ships
+        # BOTH src/scripts/ and src/agent-src/templates/scripts/, and until this
+        # gate nothing compared them — the divergence was found by a redundancy
+        # audit rather than by CI. Non-comment lines only, so the deliberately
+        # different headers do not fire it.
+        run: ./scripts-run src/scripts/lint_memory_twin_parity
 
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix

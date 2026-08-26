@@ -41,8 +41,8 @@ A generic artifact may end a section with a one-line handoff to its
 framework-specific peers. Canonical shape:
 
 ```
-→ Laravel-specific: see [laravel-validation](../skills/laravel-validation/SKILL.md)
-→ Next.js-specific: see [nextjs-patterns](../skills/nextjs-patterns/SKILL.md)
+→ Laravel-specific: see [laravel-validation](../../../src/skills/laravel-validation/SKILL.md)
+→ Next.js-specific: see [nextjs-patterns](../../../src/skills/nextjs-patterns/SKILL.md)
 ```
 
 The pointer is a link, not a procedure — the generic artifact never

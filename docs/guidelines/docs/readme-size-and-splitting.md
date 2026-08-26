@@ -38,9 +38,9 @@ Hard triggers — split immediately:
   deep links
 - **More than 3 framework adapters** → each adapter gets its own doc
 - **Architecture or design rationale > 30 lines** → `docs/architecture.md`
-- **API reference > 50 lines** → `docs/api.md` or auto-generated reference
+- **API reference > 50 lines** → `docs/api.md` or auto-generated reference <!-- ref-ignore -->
 - **Multiple audiences with different needs** → audience-specific docs
-  (`docs/consumers.md`, `docs/contributors.md`)
+  (`docs/consumers.md`, `docs/contributors.md`) <!-- ref-ignore -->
 
 Soft triggers — review and probably split:
 
@@ -122,7 +122,7 @@ deep-link the other:
 - **Package repo** → consumers primary; contributors go to
   `CONTRIBUTING.md` or `docs/development.md`
 - **Application repo** → contributors/team primary; end users (if any)
-  go to `docs/user-guide.md`
+  go to `docs/user-guide.md` <!-- ref-ignore -->
 
 The README must declare its audience within the first screen. Readers
 in the other audience must find their link within the first screen too.

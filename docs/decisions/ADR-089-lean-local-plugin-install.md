@@ -114,5 +114,5 @@ untouched.
 
 - [`.claude-plugin/marketplace.json`](../../.claude-plugin/marketplace.json) — `source: "./"` unchanged by this decision.
 - [`docs/contracts/skill-distribution-channels.md`](../contracts/skill-distribution-channels.md) — git-consumed marketplace channel.
-- [`src/scripts/condense.py`](../../src/scripts/condense.py) — `generate_plugin_hooks`; skill projection into `.claude-plugin/skills/` (the symlinks).
+- [`src/scripts/condense.py`](../../src/scripts/condense.ts) — `generate_plugin_hooks`; skill projection into `.claude-plugin/skills/` (the symlinks).
 - ADR-085 (MCP stdio distribution shape), ADR-088 (no external runtime federation) — sibling distribution-shape decisions.

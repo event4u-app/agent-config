@@ -145,5 +145,5 @@ Other types remain accessible on demand via
 
 - [`engineering-memory-data-format.md`](engineering-memory-data-format.md)
   — the on-disk schema
-- [`../../rules/context-hygiene.md`](../../rules/context-hygiene.md)
+- [`../../rules/context-hygiene.md`](../../../src/rules/context-hygiene.md)
   — token budget that `max_entries_per_task` protects

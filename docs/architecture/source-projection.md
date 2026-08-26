@@ -10,7 +10,7 @@
 > boundaries (`.augment/`, `.claude/`, `.cursor/`, `.windsurf/`,
 > `.clinerules/`, `.windsurfrules`, `GEMINI.md`) is measured separately
 > — see [`multi-tool-projection.md § Per-tool projection size`](multi-tool-projection.md#per-tool-projection-size)
-> for the table produced by [`scripts/measure_projection_bytes.py`](../../src/scripts/measure_projection_bytes.py).
+> for the table produced by [`scripts/measure_projection_bytes.py`](../../src/scripts/measure_projection_bytes.ts).
 
 > **Historical note.** This pipeline was previously labelled
 > "Condensation". Renamed in the v2.10.0 feedback follow-up after the
@@ -35,12 +35,12 @@ dist/agent-src/**                      ← Byte-exact projection, shipped in @ev
 | Commands | `.agent-src.uncondensed/commands/**` | `dist/agent-src/commands/**` |
 | Personas, contexts, templates | `.agent-src.uncondensed/<dir>/**` | `dist/agent-src/<dir>/**` |
 
-The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.py)
+The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.ts)
 `apply_path_rewriter()`) converts logical names in source frontmatter
 (`contexts/execution/foo.md`) into the relative form expected from
 `dist/agent-src/rules/` (`../contexts/execution/foo.md`). Hardcoding
 `.agent-src.uncondensed/` in source is a CI failure — caught by
-[`scripts/check_condensed_paths.py`](../../src/scripts/check_condensed_paths.py).
+[`scripts/check_condensed_paths.py`](../../src/scripts/check_condensed_paths.ts).
 
 ## Entry points
 
@@ -78,7 +78,7 @@ The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.py)
 
 ## Proving the pipeline
 
-- [`tests/test_condense.py`](../../tests/test_condense.py) — end-to-end
+- [`tests/test_condense.py`](../../tests/scripts/condense.test.ts) — end-to-end
   projection, byte-exactness, path rewriter.
 - [`tests/test_condense_paths.py`](../../tests/test_condense_paths.py)
   — path-rewriter edge cases and forbidden-substring detection.

@@ -28,7 +28,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 
 - **Trigger:** a rule-worthy event. Bug pattern repeats, review
   finding recurs, a successful pattern is worth codifying.
-  The existing `capture-learnings` rule signals the event.
+  The existing `skill-improvement-trigger` rule signals the event.
 - **Input:** raw observation (PR link, log line, review comment).
 - **Output:** learning note at `agents/learnings/<date>-<slug>.md`
   with frontmatter `source`, `evidence[]` (≥1 link), `stage: captured`.
@@ -55,7 +55,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 - **Input:** classified learning + any referenced existing artefact.
 - **Output:** proposal doc at
   `agents/proposals/<proposal_id>.md` following
-  [`proposal.example.md`](../../templates/agents/proposal.example.md).
+  [`proposal.example.md`](../../../src/agent-src/templates/agents/proposal.example.md).
   Frontmatter `stage: proposed`.
 - **Guardrails:** the draft body and the proposal doc are a single
   file. An artefact draft without its proposal wrapper is rejected.
@@ -99,7 +99,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 
 | Stage | Human role | Automation |
 |---|---|---|
-| 1 Capture | Any contributor | `capture-learnings` rule auto-triggers |
+| 1 Capture | Any contributor | `skill-improvement-trigger` rule auto-triggers |
 | 2 Classify | Drafter | `learning-to-rule-or-skill` suggests |
 | 3 Propose | Drafter + reviewer | `skill-improvement-pipeline` refines |
 | 4 Gate | Gate script | fully automated, block is final |
@@ -129,6 +129,6 @@ unreviewed upstream changes is not.
 
 ## See also
 
-- [`proposal.example.md`](../../templates/agents/proposal.example.md) — the template every proposal derives from
-- [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — Understand → Research → Draft sequence used inside Stage 3
-- [`preservation-guard`](../../rules/preservation-guard.md) — invoked by the gate to check replacement proposals
+- [`proposal.example.md`](../../../src/agent-src/templates/agents/proposal.example.md) — the template every proposal derives from
+- [`artifact-drafting-protocol`](../../../src/rules/artifact-drafting-protocol.md) — Understand → Research → Draft sequence used inside Stage 3
+- [`preservation-guard`](../../../src/rules/preservation-guard.md) — invoked by the gate to check replacement proposals

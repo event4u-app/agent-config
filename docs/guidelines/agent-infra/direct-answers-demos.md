@@ -13,9 +13,9 @@ prose_delta:
 > Wrong / right / why demos for the three Iron Laws of
 > `direct-answers` (no flattery, no invented facts, brevity by
 > default). Linked from
-> [`direct-answers`](../../.agent-src.uncondensed/rules/direct-answers.md)
+> [`direct-answers`](../../../src/rules/direct-answers.md)
 > § Examples. Outcome baseline at
-> [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
+> [`tests/golden/outcomes/direct_answers.json`](../../../tests/golden/outcomes/direct_answers.json).
 
 ## Demo 1 — Flattery opener (Iron Law 1)
 

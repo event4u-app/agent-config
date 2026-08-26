@@ -16,7 +16,7 @@ doors), its **canonical path** (the typical command sequence), and the
 **skills** it composes end-to-end. Source of truth:
 [`src/flows/<flow>.yaml`](../src/flows/) (schema + lint:
 [`flow.schema.json`](../src/scripts/schemas/flow.schema.json),
-[`lint_flows.py`](../src/scripts/lint_flows.py); data-model in
+[`lint_flows.py`](../src/scripts/lint_flows.ts); data-model in
 [`ADR-055`](decisions/ADR-055-flow-layer-data-model.md)).
 
 ## 🔍 Discovery — *what should we build, and how*

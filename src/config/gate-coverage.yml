@@ -42,28 +42,43 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 294 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 295 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **62 rows are listed below**, covering ~21 % of the population.
+# **67 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 64 of those 67 are listed below.** The manifest is
+# therefore complete with respect to its own contract for every gate that can
+# carry a floor, and covers ~22 % of the population.
 #
-# RECOUNTED on 2026-08-26 while adding `lint_eval_specs`
-# (road-to-skill-ecosystem-eval-integrity 1.1). Recomputed, not adjusted, per
-# the 2026-08-24 block below: `count_gate_scripts()` returns **294** and
-# `grep -c '^  - id:'` returns **62**. One script arrived and one row landed, so
-# for once the arithmetic and the measurement agree — recorded anyway, because
-# the value of the recount is that it is a measurement rather than that it
-# disagrees.
+# RECOUNTED ON A MERGE, 2026-08-26, and the merge left TWO stacked header claims
+# rather than a conflict inside one number — each branch had recounted correctly
+# for its own tree, and keeping both sides produced a page asserting 294/62 and
+# 295/64 four lines apart. Collapsed to one recomputed block: `count_gate_scripts()`
+# returns **295** and `grep -c '^  - id:'` returns **64** on the merged tree.
 #
-# NOT re-measured here, and dropped rather than carried forward: the
-# "64 of them emit `scanned:` under their CI-identical argv" figure. It cannot
-# be derived by grep — `reportScanned` appears in ~98 files and the literal in
-# ~267 — because it counts gates that actually EMIT the line when run, which
-# only a full ledger pass establishes. `check_gate_coverage --ledger`
-# recomputes it; asserting a stale number on this page is worse than an absent
-# one, since the number is what a reader trusts.
+# A paragraph that briefly stood here claimed the emitter total "cannot be
+# derived by grep" and dropped it. That was true of the method it tried and
+# wrong as a conclusion — every LISTED row is an emitter by construction (a row
+# that did not emit could carry no floor) and the same three emitters remain
+# deliberately unlisted, so 64 + 3 = 67. The figure is arithmetic over this
+# file, not a grep over `src/scripts/`, and it is restored rather than left
+# absent.
+#
+# RECOUNTED ON A MERGE, 2026-08-26 — the case the 2026-08-24 block below was
+# written for, arriving again. Two branches each added one row and each recorded
+# a correct population line for its own tree, so the merge put 293 and 294 side
+# by side; after the merge both gates exist, so either figure describes a tree
+# that no longer does. Recomputed on the merged tree rather than reconciled by
+# hand: `count_gate_scripts()` returns **294** and `grep -c '^  - id:'` returns
+# **63**.
+#
+# The emitter total moves with the listed count for the reason the 2026-08-25
+# paragraph already states: every LISTED row is an emitter, because a row that
+# did not emit could carry no floor, and the same three emitters remain
+# deliberately unlisted (`lint_evidence_artifacts`, `adr_cite_check`,
+# `check_new_adr_evidence`). 63 + 3 = 66.
 #
 # RECOUNTED on 2026-08-26 while adding `lint_canonical_terms`
 # (road-to-canonical-terms 2.3). Recomputed, not adjusted — the two commands in
@@ -1809,6 +1824,26 @@ gates:
       `tests/scripts/check_score_contract.test.ts` asserts each reds on exactly
       one finding CODE — not merely on a non-zero exit, which would let a twin
       keep passing while testing the wrong defect.
+  - id: check_beta_review_markers
+    argv: []
+    min_scanned: 100
+    corpus: "every `stability: beta` contract under docs/contracts/ — 121 at the time this row landed. The floor sits at 100 because the beta population shrinks as contracts promote to stable, so a slow decline is expected and a drop below 100 is a scan-root collapse rather than a promotion wave."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: docs/contracts/zz-canary-beta-lapse.md
+      content: |
+        ---
+        stability: beta
+        keep-beta-until: 2026-01-01
+        ---
+
+        # ZZ canary — a beta contract whose review deadline lapsed
+
+        Planted by `check_gate_coverage --canary`; never ships. The date is far
+        in the past, so this is a FRESH lapse rather than one inside the frozen
+        2026-08-25 baseline — the distinction is the whole point of the gate,
+        because an inherited lapse warns and a new one must fail.
   - id: lint_canonical_terms
     argv: []
     min_scanned: 1200
@@ -1845,3 +1880,19 @@ gates:
             { "id": "x", "prompt": "planted by check_gate_coverage --canary; never ships", "assertions": [{ "kind": "tool-choice" }] }
           ]
         }
+  - id: lint_memory_twin_parity
+    argv: []
+    min_scanned: 7
+    corpus: "the twins declared in src/config/memory-twin-verdicts.yml — 7 today. The floor is the exact count rather than a lower bound: this list does not grow by ordinary work (a twin is added only when a script is duplicated into the template tree, which is a deliberate act), and a DROP means a verdict was deleted rather than earned. A new twin raises the floor in the same commit."
+    status: enforced
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus. The gate's population is the
+      `twins:` list inside one tracked config file, and every violation it can
+      have is a MODIFICATION — a twin drifting, a verdict deleted, a ceiling
+      exceeded. A newly created file lands outside the list by construction and
+      the gate correctly ignores it. Same class as `check_no_automerge_key`,
+      `check_condensation` and `check_ci_local_parity`. Discrimination is proven
+      instead by the gate's own `--self-test`: 5 cases, 3 rejecting, including
+      the two states the roadmap's verify clause names by hand — a one-line
+      behavioural divergence must RED, and a comment-only divergence must stay
+      GREEN.

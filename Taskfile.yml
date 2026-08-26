@@ -225,6 +225,7 @@ tasks:
       - task: lint-provenance-vocabulary
       - task: lint-eval-specs
       - task: lint-canonical-terms
+      - task: lint-memory-twin-parity
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums

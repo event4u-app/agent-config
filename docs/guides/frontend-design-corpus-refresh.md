@@ -79,5 +79,5 @@ autonomously.
 ## See also
 
 - [`recordTriggerEval.ts`](../../src/cli/commands/recordTriggerEval.ts) — the `eval:record` implementation + domain-specific floors.
-- [`lint_eval_freshness.py`](../../src/scripts/lint_eval_freshness.py) — the deterministic freshness gate.
+- [`lint_eval_freshness.py`](../../src/scripts/lint_eval_freshness.ts) — the deterministic freshness gate.
 - [`corpus-grounding`](../../src/skills/corpus-grounding/SKILL.md) + [ADR-061](../decisions/ADR-061-corpus-grounding-layer.md) §6 — the provenance discipline this DoD enforces.

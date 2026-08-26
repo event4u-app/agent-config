@@ -67,10 +67,10 @@ Until a v2 bench (broader corpus or a re-tuned dialect) lifts the
 
 ## Consumers
 
-- [`scripts/telegraph_stats.py`](../../src/scripts/telegraph_stats.py) — reads
+- [`scripts/telegraph_stats.py`](../../src/scripts/telegraph_stats.ts) — reads
   this constant, computes per-session / per-conversation / lifetime
   deltas from `agents/cost-tracking/sessions.jsonl`.
-- [`scripts/cost_summary.py`](../../src/scripts/cost_summary.py) — emits
+- [`scripts/cost_summary.py`](../../src/scripts/cost_summary.ts) — emits
   the stable JSON contract for inter-tool consumption per
   [`cost-summary-schema.md`](cost-summary-schema.md).
 - `agent-status` skill — surfaces the per-session delta in the

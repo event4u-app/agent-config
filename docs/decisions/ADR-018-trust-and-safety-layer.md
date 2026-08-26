@@ -24,8 +24,8 @@ Session: [`agents/runtime/council/responses/phase-5-trust-safety.json`](../../ag
 Companion artefacts:
 - Contract: [`docs/contracts/trust-and-safety.md`](../contracts/trust-and-safety.md)
 - Roadmap: [`agents/roadmaps/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
-- Lint: [`scripts/lint_trust_coherence.py`](../../src/scripts/lint_trust_coherence.py) + [`tests/test_lint_trust_coherence.py`](../../tests/test_lint_trust_coherence.py)
-- Condenseor: [`scripts/condense.py`](../../src/scripts/condense.py) (`_inject_hrr_banner`)
+- Lint: [`scripts/lint_trust_coherence.py`](../../src/scripts/lint_trust_coherence.ts) + [`tests/test_lint_trust_coherence.py`](../../tests/scripts/lint_trust_coherence.test.ts)
+- Condenseor: [`scripts/condense.py`](../../src/scripts/condense.ts) (`_inject_hrr_banner`)
 - Installer: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
 
 ## Context

@@ -29,6 +29,7 @@
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -217,6 +218,45 @@ export interface SignalRecord {
  * The file path is the single source of truth: there is no external backend
  * to route to, so merge-safety holds in every mode.
  */
+export class ProvenanceRefusedError extends Error {}
+
+// lint-store-boundary: ignore — the provenance gate must RECOGNISE the global root to refuse it
+const _GLOBAL_STORE_MARKER = `.event4u${path.sep}agent-config`;
+
+export function _origin_is_global(origin: string): boolean {
+    if (!origin.includes('/') && !origin.includes(path.sep) && !origin.startsWith('~')) {
+        return false; // symbolic origins ('agent', 'claude', 'cursor', …) are not paths
+    }
+    const expanded = origin.startsWith('~')
+        ? path.join(os.homedir(), origin.slice(1)) // lint-store-boundary: ignore — the gate itself must recognise the global root
+        : origin;
+    let resolved: string;
+    try {
+        resolved = path.resolve(expanded);
+    } catch {
+        return false;
+    }
+    return resolved.includes(_GLOBAL_STORE_MARKER) || /(^|[\\/])\.event4u([\\/]|$)/.test(origin);
+}
+
+export function _assert_project_writable(record: { origin: string; subject?: unknown }): void {
+    if (record.subject === 'user') {
+        throw new ProvenanceRefusedError(
+            'provenance gate: subject: user records live global-only and may ' +
+                'never be written into a tracked project artifact (ADR-130).',
+        );
+    }
+    if (_origin_is_global(record.origin)) {
+        throw new ProvenanceRefusedError(
+            `provenance gate: origin resolves into the user-global store ` +
+                `(${record.origin}) — refused entry into tracked project intake (ADR-130).`,
+        );
+    }
+}
+
+/**
+ * Append a signal entry. Returns the written record, or null when skipped.
+ */
 export function emit(
     entry_type: string,
     p: string,
@@ -255,6 +295,10 @@ export function emit(
             }
         }
     }
+    if (!('subject' in record)) {
+        record.subject = 'project'; // additive default (ADR-130)
+    }
+    _assert_project_writable(record as { origin: string; subject?: unknown });
     fs.mkdirSync(INTAKE_ROOT, { recursive: true });
     const target = _monthly_file();
     fs.appendFileSync(target, `${_jsonDumpsUnicode(record)}\n`, 'utf-8');

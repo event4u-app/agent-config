@@ -167,7 +167,7 @@ a zero-fabrication floor on published metrics.
       per [`downstream-changes`](../../src/rules/downstream-changes.md)
       § Defect-pattern search.
 
-      **`agents/roadmaps/road-to-contract-review-deadlines.md` already owns the
+      **`agents/roadmaps/archive/road-to-contract-review-deadlines.md` already owns the
       population and the gate defect** — its D1 is the same 86, its D3 the same
       inverted comparison, and its **D6 names this very file** as one of two
       already-filed one-off instances. So no new follow-up roadmap was created,
