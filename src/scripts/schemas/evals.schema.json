@@ -198,6 +198,29 @@
                       "description": "Ceiling on meaningful steps = tool calls net of retries (a call repeating the immediately-preceding call name is a retry, not a step). Counted from <run_dir>/tool-trace.json; no trace → manual-pending. v2, additive."
                     }
                   }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind"],
+                  "anyOf": [
+                    { "required": ["kind", "must_emit"] },
+                    { "required": ["kind", "must_not_emit"] }
+                  ],
+                  "properties": {
+                    "kind": { "const": "event-choice" },
+                    "must_emit": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "description": "Harness events the run MUST have emitted, checked against <run_dir>/event-trace.json. v2, additive."
+                    },
+                    "must_not_emit": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "description": "Harness events the run MUST NOT have emitted — a skipped gate or a refused turn becomes checkable rather than narrated. v2, additive."
+                    }
+                  },
+                  "$comment": "Forbidden-event array alongside the expected-event array. An EVENT is something the harness observed (a gate running, a hook concern firing, a refusal); a TOOL call is something the agent did — conflating them makes \"the linter ran\" indistinguishable from \"the agent invoked the linter\", and the interesting failure is a gate that was SKIPPED while the agent narrated a pass. Hence a separate kind and a separate trace file. `anyOf` requires at least one of the two arrays BY CONSTRUCTION: the sibling tool-choice shape requires neither, so {\"kind\": \"tool-choice\"} is schema-valid and enforces nothing — this kind cannot express that. No trace present → pass:null manual-pending, never a silent pass."
                 }
               ]
             }

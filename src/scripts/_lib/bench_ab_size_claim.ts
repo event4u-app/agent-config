@@ -13,6 +13,8 @@
  * change to either has to touch the record and the code together.
  */
 
+import { decidePairedVerdict, floorWarning, MIN_DISCORDANT } from './paired_verdict.js';
+
 /** T1 — median added lines must fall by at least this much. */
 export const T1_MEDIAN_LINES_PCT = -10;
 /** Two-sided significance for every endpoint in the pair. */
@@ -25,7 +27,15 @@ export interface PairedContinuous {
     /** `null` when the baseline median is 0 — no percent change exists. */
     median_delta_pct: number | null;
     median_delta: number;
+    /**
+     * Retained for TRIAGE and reporting. Since PREREG amendment v2 it decides
+     * nothing — see {@link evaluateSizeClaim}.
+     */
     wilcoxon_p: number;
+    /** Non-tied pairs in the direction of interest. Absent on a pre-amendment report. */
+    direction_wins?: number | undefined;
+    /** Non-tied pairs against the direction of interest. Absent on a pre-amendment report. */
+    direction_losses?: number | undefined;
 }
 
 /** A paired binary endpoint (the safety tier). */
@@ -54,6 +64,44 @@ export interface SizeClaimVerdict {
     size_measured: boolean;
     complexity_measured: boolean;
     safety_measured: boolean;
+}
+
+
+
+/** One clause naming the directional evidence, printable in a verdict reason. */
+function describeDirection(v: ReturnType<typeof decidePairedVerdict> | null): string {
+    if (v === null) {
+        return `no direction counts in the report — pre-amendment or unmeasured, so the direction bar is not met`;
+    }
+    if (v.kind === 'underpowered') {
+        return `underpowered: ${String(v.discordant)} non-tied pair(s) below the derived floor of ${String(MIN_DISCORDANT)}`;
+    }
+    const warn = floorWarning(v);
+    return `${String(v.wins)}/${String(v.discordant)} non-tied pairs, one-sided exact p=${v.p.toFixed(4)}` +
+        (warn === null ? '' : ` — ${warn}`);
+}
+
+/**
+ * The directional verdict for one endpoint, or `null` when it cannot be formed.
+ *
+ * `null` means the report carries no direction counts — a pre-amendment report,
+ * or an unmeasured endpoint. The caller treats that as "not significant" rather
+ * than reaching for `wilcoxon_p`, which is the whole point of the amendment.
+ *
+ * The counts are reconstructed into a delta vector of ±1 rather than carrying
+ * raw deltas through the report: the exact sign test needs direction only, and
+ * a council seat noted the raw deltas are preferable for auditability but not
+ * mathematically required. The raw values remain in the trial artifacts.
+ */
+function directionVerdict(e: PairedContinuous): ReturnType<typeof decidePairedVerdict> | null {
+    if (!e.measured) return null;
+    const w = e.direction_wins;
+    const l = e.direction_losses;
+    if (w === undefined || l === undefined) return null;
+    return decidePairedVerdict({
+        deltas: [...Array<number>(w).fill(1), ...Array<number>(l).fill(-1)],
+        alpha: ALPHA,
+    });
 }
 
 /**
@@ -98,9 +146,52 @@ export function evaluateSizeClaim(input: SizeClaimInput): SizeClaimVerdict {
         };
     }
 
-    const cx_rose = cx.measured && cx.median_delta > 0 && cx.wilcoxon_p < ALPHA;
+    // ── PREREG amendment v2, 2026-08-26 — direction decides significance ────
+    //
+    // The significance half of every endpoint below was a Wilcoxon signed-rank
+    // p, which ranks by |difference| and is therefore magnitude-weighted. That
+    // was shown to disagree with the exact test on twelve records up to ten
+    // trials, PERMISSIVE in every one, with the visible symptom inverted: an
+    // artifact winning every trial still failed, because a few large
+    // opposite-direction deltas outweighed a clean sweep of small ones.
+    //
+    // TWO PROPOSITIONS, KEPT SEPARATE — this is the refinement both council
+    // seats independently required (2026-08-26, 2/2) and it is the half that
+    // makes the amendment safe. A sign test answers "did this help more often
+    // than it hurt" and says NOTHING about how much. Replacing Wilcoxon with it
+    // outright would let a clean sweep of negligible improvements claim a SIZE
+    // win. So:
+    //   · directional reliability → exact one-sided sign test over non-tied pairs
+    //   · practical magnitude     → the pre-registered T1_MEDIAN_LINES_PCT bar,
+    //                               unchanged and still independently binding
+    // Both must hold. Dropping either is a different claim and needs its own
+    // amendment.
+    //
+    // A report predating the amendment carries no direction counts. It is
+    // treated as UNMEASURED for the significance half rather than falling back
+    // to `wilcoxon_p`, because a silent fallback to the defective test is
+    // exactly what this amendment removes.
+    const sizeDir = directionVerdict(size);
+    const cxDir = directionVerdict(cx);
+    // ASYMMETRY, deliberate and the conservative direction of it. A PASS needs
+    // the direction bar MET; a REFUSAL fires on EITHER signal. Applying the
+    // strict reading to both would make the anti-golfing refusal disappear on
+    // any report without direction counts — a missing input silently rescuing
+    // an arm is the failure mode a refusal exists to prevent, and it is the
+    // opposite of what the amendment is for. So the refusal keeps the legacy
+    // Wilcoxon signal as a second trigger; the claim does not.
+    const cx_rose =
+        cx.measured &&
+        cx.median_delta > 0 &&
+        (cxDir === null ? cx.wilcoxon_p < ALPHA : cxDir.kind === 'regression');
+    // `regression`, NOT `pass`, and the distinction cost a test run to find.
+    // `direction_wins` counts the endpoint's IMPROVEMENT direction — a negative
+    // delta — for every continuous endpoint, so on complexity a `pass` means
+    // complexity FELL. What `cx_rose` needs is the opposite tail, which is
+    // exactly what `regression` names. Writing `pass` here reads correctly in
+    // English and inverts the anti-golfing guard.
     const pct = size.measured ? size.median_delta_pct : null;
-    const lines_fell = pct !== null && pct <= T1_MEDIAN_LINES_PCT && size.wilcoxon_p < ALPHA;
+    const lines_fell = pct !== null && pct <= T1_MEDIAN_LINES_PCT && sizeDir?.kind === 'pass';
 
     // (2b) Golfing is refused as soon as T2 shows it, and does NOT wait for T4.
     //
@@ -161,8 +252,11 @@ export function evaluateSizeClaim(input: SizeClaimInput): SizeClaimVerdict {
         ...base,
         verdict: lines_fell ? 'PASS' : 'NO-SIZE-WIN',
         reason: lines_fell
-            ? `median added lines ${pct}% at p=${size.wilcoxon_p} with no significant complexity rise and no safety regression`
-            : `T1 not met (median added lines ${pct}% at p=${size.wilcoxon_p}; bar is <= ${T1_MEDIAN_LINES_PCT}% at p<${ALPHA})`,
+            ? `median added lines ${pct}% (magnitude bar) AND ${describeDirection(sizeDir)} (direction bar) ` +
+              'with no significant complexity rise and no safety regression'
+            : `T1 not met (median added lines ${pct}%, bar <= ${T1_MEDIAN_LINES_PCT}%; ` +
+              `direction: ${describeDirection(sizeDir)}). Wilcoxon p=${size.wilcoxon_p} is reported for ` +
+              'triage and decides nothing.',
         lines_fell,
         size_measured: true,
         complexity_measured: true,

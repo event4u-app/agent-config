@@ -478,6 +478,14 @@ function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
     // Percent change of the medians. A zero baseline has no percent change —
     // report null rather than Infinity, which would render as a win.
     const pct = mb === 0 ? null : PF(_pyRound(((mt - mb) / Math.abs(mb)) * 100, 4));
+    // Direction counts, ADDITIVE (Phase-3 PREREG amendment v2, 2026-08-26).
+    // The significance half of the size verdict now reads these rather than
+    // `wilcoxon_p`; every pre-existing key is untouched, so a consumer reading
+    // named keys is unaffected. Tie epsilon matches `wilcoxon`'s own 1e-9 zero
+    // drop, so "non-tied" means the same thing to both tests — two definitions
+    // of a tie in one report is how the numbers start disagreeing.
+    const wins = diffs.filter((d) => d < -1e-9).length;
+    const losses = diffs.filter((d) => d > 1e-9).length;
     return {
         measured: true,
         n_pairs: diffs.length,
@@ -488,6 +496,13 @@ function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
         wilcoxon_p: PF(wil.p),
         rank_biserial: PF(wil.rank_biserial),
         n_nonzero: wil.n,
+        // "Win" is DIRECTION-OF-INTEREST, not sign: for added lines and for
+        // cognitive complexity a NEGATIVE delta is the improvement. Naming them
+        // wins/losses here rather than positive/negative keeps the verdict from
+        // having to know which endpoint it is looking at.
+        direction_wins: wins,
+        direction_losses: losses,
+        direction_ties: diffs.length - wins - losses,
     };
 }
 
@@ -733,6 +748,15 @@ function _toContinuous(block: Dict): PairedContinuous {
         median_delta_pct: block['median_delta_pct'] == null ? null : _pyFloat(block['median_delta_pct']),
         median_delta: _pyFloat(block['median_delta']),
         wilcoxon_p: _pyFloat(block['wilcoxon_p']),
+        // Optional-absent rather than defaulted to 0: an older report carries
+        // no direction counts, and zeroing them would read as "no trial went
+        // either way", which is a measurement rather than a missing field.
+        ...(block['direction_wins'] === undefined
+            ? {}
+            : {
+                  direction_wins: _pyFloat(block['direction_wins']),
+                  direction_losses: _pyFloat(block['direction_losses']),
+              }),
     };
 }
 

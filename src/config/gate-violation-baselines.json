@@ -1,6 +1,11 @@
 {
   "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time \u2014 the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
   "gates": {
+    "check_claims:non-inference": {
+      "count": 40,
+      "landed": "2026-08-26",
+      "note": "Backed `kind: quant` ledger entries carrying no `non_inference` field, which enumerates the readings the data does NOT license. Introduced by road-to-skill-ecosystem-eval-integrity Phase 5 Step 5. NOT a scan-root repair \u2014 the field is new, so every pre-existing quant entry lacks it by construction and 40 is the count at introduction rather than revealed debt. A ratchet rather than a requirement because failing the build on 41 entries at once produces a gate that can only block, which this repository's own records name as the reason a gate gets suppressed. Every NEW backed quant claim must carry one; the inherited entries come along as they are touched. One was written at introduction (`injection-scan-corpus-rates`) to prove the field is real rather than declared, which is why the count is 40 and not 41. Clearing this entry is authoring work spread across whoever next touches each claim, not a sweep: a non_inference written in bulk without re-reading the evidence would be the placeholder the <20-character check already refuses."
+    },
     "audit_user_type_axis": {
       "count": 1,
       "landed": "2026-08-02",
