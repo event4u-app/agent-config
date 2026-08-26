@@ -356,6 +356,11 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_consolidation_lineage
+    argv: []
+    min_scanned: 5
+    corpus: "every agents/roadmaps/*.md, counted as FILES rather than as declarations. Today none of them carries a `consolidates:` field, so the finding count is legitimately zero while the scanned count is not — that split is the point: a declaration-count floor would be a zero-check wearing a ratchet's name, and would go green the moment the scan root moved. The floor sits at 5 rather than near the present 12 because the active estate is under deliberate drawdown (one-in-one-out plus an explicit drain), so a falling count is expected work rather than a collapse; below 5 the estate would be smaller than any point in its recorded history. NO CANARY, deliberately: the council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in REPORT mode, so it exits 0 on findings by design and a planted violation could not turn it red. Its ability to go red is proven instead by `--self-test`, which the same decision required: six declaration spellings must parse identically, all four finding types must fire, and a complete folder must stay silent."
+    status: enforced
   - id: lint_skill_trigger_corpus
     argv: []
     min_scanned: 70
