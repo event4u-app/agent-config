@@ -71,7 +71,14 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { OVERLAP_THRESHOLD, _cosine, collect } from './audit_skill_overlap.js';
+import {
+    ALLOWLIST as OVERLAP_ALLOWLIST,
+    OVERLAP_THRESHOLD,
+    _cosine,
+    _loadAllowlist,
+    _pairKey,
+    collect,
+} from './audit_skill_overlap.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './skill_overlap.js';
 
@@ -168,9 +175,18 @@ const QUOTED_PHRASE_RE = /['"`][^'"`]{3,}['"`]/;
  * Uses the canonical instrument, not a second implementation — one metric, one
  * threshold, one answer. Cross-pack pairs are excluded for the same reason a
  * cross-pack merge is out of scope: they do not compete for the same install.
+ *
+ * "One answer" includes the canonical EXCEPTIONS. A pair in
+ * `audit_skill_overlap_allowlist.json` is one a human read both sides of and
+ * ruled structural — shared domain vocabulary, distinct responsibility. Reading
+ * the same metric at the same threshold while ignoring its reviewed exceptions
+ * would be a second implementation wearing the first one's numbers, and it
+ * would ask an author to satisfy (e)/(f) for an overlap the project already
+ * decided is not a routing hazard.
  */
 function computeClusters(root: string, threshold: number = OVERLAP_THRESHOLD): Map<string, string[]> {
     const clusters = new Map<string, string[]>();
+    const reviewed = _loadAllowlist(OVERLAP_ALLOWLIST);
     const skills = collect(root).map((s) => ({
         slug: path.basename(path.dirname(s.relpath)),
         packs: s.packs,
@@ -189,6 +205,7 @@ function computeClusters(root: string, threshold: number = OVERLAP_THRESHOLD): M
             }
             if (!sharesPack) continue;
             if (_cosine(a.vector, b.vector) < threshold) continue;
+            if (reviewed.has(_pairKey(a.slug, b.slug))) continue;
             clusters.set(a.slug, [...(clusters.get(a.slug) ?? []), b.slug]);
             clusters.set(b.slug, [...(clusters.get(b.slug) ?? []), a.slug]);
         }
