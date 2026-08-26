@@ -247,6 +247,13 @@ jobs:
         # council constraint, so the gate reds only when the count RISES above
         # its recorded baseline. Report-only for existing debt, blocking for new.
         run: ./scripts-run src/scripts/lint_canonical_terms
+      - name: Memory-twin parity — the two shipped copies may not drift apart
+        # road-to-memory-twin-reconciliation Phase 3. package.json files[] ships
+        # BOTH src/scripts/ and src/agent-src/templates/scripts/, and until this
+        # gate nothing compared them — the divergence was found by a redundancy
+        # audit rather than by CI. Non-comment lines only, so the deliberately
+        # different headers do not fire it.
+        run: ./scripts-run src/scripts/lint_memory_twin_parity
 
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
