@@ -363,3 +363,38 @@ function _isCliEntry(): boolean {
 if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exitCode = main();
 }
+
+/**
+ * The dashboard header fragment: two integers and a pointer, or `''` when both
+ * are zero.
+ *
+ * Lives here rather than in `update_roadmap_progress` deliberately. That file
+ * sits on the wrong side of the 1,500-line source-size ratchet, so every line
+ * added to it is charged; this one is 365 lines and is charged nothing. The
+ * generator gets a one-line call, and the rule that a count is not an inventory
+ * — no row, no per-stub link, nothing for the deleted index tables to grow back
+ * from — is enforced in one place instead of two.
+ *
+ * Failure-tolerant by construction: a tree with no `agents/roadmaps/stubs/`
+ * yields `''` rather than throwing. This runs in consumer installs that carry no
+ * stub directory at all, so a throwing read here would break their dashboard.
+ */
+export function headerFragment(stubsDir: string, today?: string): string {
+    let overdue = 0;
+    let decisions = 0;
+    try {
+        const c = counts(scan_dir(stubsDir, today ?? new Date().toISOString().slice(0, 10)));
+        overdue = c.overdue;
+        decisions = c.owner_decisions;
+    } catch {
+        return '';
+    }
+    if (overdue === 0 && decisions === 0) {
+        return '';
+    }
+    return (
+        ` · **${overdue}** overdue stub${overdue !== 1 ? 's' : ''}` +
+        `, **${decisions}** owner decision${decisions !== 1 ? 's' : ''}` +
+        ' → `agent-config stubs:due`'
+    );
+}
