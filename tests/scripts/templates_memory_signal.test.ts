@@ -59,6 +59,14 @@ function writtenRecord(dir: string): Record<string, unknown> {
 }
 
 describe('templates/memory_signal — emit', () => {
+    // `subject: "project"` entered these snapshots on 2026-08-26, and it is an
+    // ADDED CONTROL rather than snapshot drift. The template was missing
+    // ADR-130's provenance gate entirely, so a consumer could write a
+    // `subject: user` record into tracked project intake; the reconciliation
+    // recorded in `src/config/memory-twin-verdicts.yml` (memory_signal.ts,
+    // verdict `dev-side-correct`) restored it. Updating the expectation is
+    // therefore correct — reverting it would re-open the hole.
+
     it('emit stdout shape (id masked)', () => {
         const dir = mkdtempSync(join(tmpdir(), 'tpl-memsig-emit-'));
         try {
@@ -80,6 +88,7 @@ describe('templates/memory_signal — emit', () => {
                 "id",
                 "origin",
                 "path",
+                "subject",
                 "ts",
               ]
             `);
@@ -91,6 +100,7 @@ describe('templates/memory_signal — emit', () => {
                 "entry_type": "historical-patterns",
                 "origin": "agent",
                 "path": "app/Foo.php",
+                "subject": "project",
               }
             `);
         } finally {
@@ -127,6 +137,7 @@ describe('templates/memory_signal — emit', () => {
                 "origin",
                 "owner",
                 "path",
+                "subject",
                 "symptom",
                 "ts",
               ]
@@ -140,6 +151,7 @@ describe('templates/memory_signal — emit', () => {
                 "origin": "agent",
                 "owner": "team-x",
                 "path": "app/Bill",
+                "subject": "project",
                 "symptom": "flaky",
               }
             `);

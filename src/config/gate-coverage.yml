@@ -42,15 +42,32 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 294 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 295 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **65 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 62 of those 65 are listed below.** The manifest is
+# **67 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 64 of those 67 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~21 % of the population.
+# carry a floor, and covers ~22 % of the population.
+#
+# RECOUNTED ON A MERGE, 2026-08-26 — the third time this file has met the case
+# the 2026-08-24 block below describes, and it arrived the same way each time:
+# two branches each add a row, each recounts correctly for its own tree, and
+# after the merge both figures describe a tree that no longer exists. Recomputed
+# rather than reconciled: `count_gate_scripts()` returns **295** and
+# `grep -c '^  - id:'` returns **64**.
+#
+# One of the two rows added here is not a new gate. `check_host_loadability`
+# already existed and STARTED EMITTING the contract line when its reach mode
+# landed, which the manifest test caught — so the population moved by one while
+# the listed count moved by two. Recorded because the arithmetic looks wrong
+# until that is said, and hand-adjusting either number would have hidden it.
+#
+# The emitter total tracks the listed count for the reason the 2026-08-25
+# paragraph already gives: every listed row is an emitter, and the same three
+# emitters remain deliberately unlisted. 64 + 3 = 67.
 #
 # RECOUNTED on 2026-08-26 while adding `lint_canonical_terms`
 # (road-to-canonical-terms 2.3). Recomputed, not adjusted — the two commands in
@@ -1847,3 +1864,19 @@ gates:
     status: enforced
     no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artefact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
     argv_note: "The `--reach` argv, not the default. The default mode checks that two projections PARSE and emits no coverage line; reach accounts for every host surface and is the mode that carries a corpus. Registered on the argv that emits, per this manifest\u0027s own CI-identical-argv rule \u2014 and note that `--reach` is declared LOCAL-ONLY in ci-local-parity.yml, because a CI runner has no host tool installed and every row would resolve `skipped-tool-absent`, which is the empty-scope false green this manifest exists to refuse."
+  - id: lint_memory_twin_parity
+    argv: []
+    min_scanned: 7
+    corpus: "the twins declared in src/config/memory-twin-verdicts.yml — 7 today. The floor is the exact count rather than a lower bound: this list does not grow by ordinary work (a twin is added only when a script is duplicated into the template tree, which is a deliberate act), and a DROP means a verdict was deleted rather than earned. A new twin raises the floor in the same commit."
+    status: enforced
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus. The gate's population is the
+      `twins:` list inside one tracked config file, and every violation it can
+      have is a MODIFICATION — a twin drifting, a verdict deleted, a ceiling
+      exceeded. A newly created file lands outside the list by construction and
+      the gate correctly ignores it. Same class as `check_no_automerge_key`,
+      `check_condensation` and `check_ci_local_parity`. Discrimination is proven
+      instead by the gate's own `--self-test`: 5 cases, 3 rejecting, including
+      the two states the roadmap's verify clause names by hand — a one-line
+      behavioural divergence must RED, and a comment-only divergence must stay
+      GREEN.

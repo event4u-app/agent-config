@@ -1295,6 +1295,10 @@ tasks:
     silent: true
     desc: Hold the house dialect recorded in src/config/canonical-terms.yml — ratchet over authored prose under src/ and docs/ (road-to-canonical-terms Phase 2)
     cmd: ./scripts-run src/scripts/lint_canonical_terms {{.QUIET_FLAG}}
+  lint-memory-twin-parity:
+    silent: true
+    desc: Parity between src/scripts/ and src/agent-src/templates/scripts/ — both ship, and they diverged in both directions until road-to-memory-twin-reconciliation. Non-comment diff only; verdicts in src/config/memory-twin-verdicts.yml
+    cmd: ./scripts-run src/scripts/lint_memory_twin_parity {{.QUIET_FLAG}}
 
   lint-host-portability:
     silent: true

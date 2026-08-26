@@ -51,6 +51,26 @@ function errorLine(stderr: string): string {
     return found ?? stderr.trimEnd();
 }
 
+// Freshness fixtures must be relative to the REAL clock. A hardcoded
+// `last_validated` silently expires past `review_after_days` and flips
+// retrieve() to zero hits — the memory-test clock-drift the dev-side twin's own
+// test documents at `tests/scripts/memory_lookup.test.ts:21-23`. This template
+// copy carried the hardcoded date, and it went stale the moment the staleness
+// filter was ported across (road-to-memory-twin-reconciliation 2.2), which is
+// the drift arriving rather than a new problem.
+//
+// Snapshots stay stable because `scrubDates` maps the live date back to a fixed
+// literal before matching.
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const SNAPSHOT_DATE = '2026-01-01';
+function scrubDates(s: string): string {
+    return s.split(TODAY_ISO).join(SNAPSHOT_DATE);
+}
+
+/** Snapshot-stable view of a run: the live fixture date maps to a fixed literal. */
+function scrubRun(r: Run): Run {
+    return { stdout: scrubDates(r.stdout), stderr: scrubDates(r.stderr), status: r.status };
+}
 const CURATED_ENTRY = [
     '  - id: own-1',
     '    status: active',
@@ -58,10 +78,14 @@ const CURATED_ENTRY = [
     '    source:',
     '      - ADR-1',
     '    owner: team',
-    '    last_validated: 2026-01-01',
+    `    last_validated: ${TODAY_ISO}`,
     '    review_after_days: 180',
     '    path: "app/Http/Controllers/Billing"',
 ];
+// The same entry, deliberately past its own review window.
+const STALE_CURATED_ENTRY = CURATED_ENTRY.map((l) =>
+    l.startsWith('    last_validated:') ? '    last_validated: 2020-01-01' : l,
+);
 
 describe('templates/memory_lookup — intent', () => {
     let tmp: string;
@@ -80,7 +104,7 @@ describe('templates/memory_lookup — intent', () => {
     }
 
     it('no memory tree → no hits (text)', () => {
-        expect(runTs(['--types', 'ownership', '--key', 'billing'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership', '--key', 'billing'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -92,7 +116,7 @@ describe('templates/memory_lookup — intent', () => {
 
     it('curated single-file layout (text)', () => {
         writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
-        expect(runTs(['--types', 'ownership', '--key', 'Billing'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership', '--key', 'Billing'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -100,6 +124,39 @@ describe('templates/memory_lookup — intent', () => {
           ",
           }
         `);
+    });
+
+    // --- reconciled behaviours (road-to-memory-twin-reconciliation 2.2) -----
+    //
+    // Both were absent from this copy and present on the dev side. They are
+    // asserted here rather than trusted, because a filter that silently stops
+    // filtering looks exactly like a filter that works.
+
+    it('excludes a curated entry past its own review_after_days window', () => {
+        writeMem('ownership.yml', `entries:\n${STALE_CURATED_ENTRY.join('\n')}\n`);
+        const r = runTs(['--types', 'ownership', '--key', 'Billing'], tmp);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('(no hits)');
+        expect(r.stdout).not.toContain('own-1');
+    });
+
+    it.each(['deprecated', 'archived', 'superseded'])(
+        'excludes a curated entry with status %s',
+        (status) => {
+            const entry = CURATED_ENTRY.map((l) =>
+                l.startsWith('    status:') ? `    status: ${status}` : l,
+            );
+            writeMem('ownership.yml', `entries:\n${entry.join('\n')}\n`);
+            const r = runTs(['--types', 'ownership', '--key', 'Billing'], tmp);
+            expect(r.status).toBe(0);
+            expect(r.stdout).not.toContain('own-1');
+        },
+    );
+
+    it('still retrieves an ACTIVE, fresh entry — the exclusions are not a blanket', () => {
+        writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
+        const r = runTs(['--types', 'ownership', '--key', 'Billing'], tmp);
+        expect(r.stdout).toContain('own-1');
     });
 
     it('curated content-addressed layout (text)', () => {
@@ -112,7 +169,7 @@ describe('templates/memory_lookup — intent', () => {
                 'rule: "amounts are integers"',
             ].join('\n') + '\n',
         );
-        expect(runTs(['--types', 'domain-invariants', '--key', 'money'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'domain-invariants', '--key', 'money'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -132,7 +189,7 @@ describe('templates/memory_lookup — intent', () => {
                 JSON.stringify({ type: 'supersede', supersedes: 'k-1' }),
             ].join('\n') + '\n',
         );
-        expect(runTs(['--types', 'ownership', '--key', 'billing', '--format', 'json'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership', '--key', 'billing', '--format', 'json'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -165,7 +222,7 @@ describe('templates/memory_lookup — intent', () => {
             intake,
             JSON.stringify({ id: 'k-9', entry_type: 'ownership', path: 'app/Http', body: 'b' }) + '\n',
         );
-        expect(runTs(['--types', 'ownership', '--key', 'app/Http', '--format', 'json'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership', '--key', 'app/Http', '--format', 'json'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -212,7 +269,7 @@ describe('templates/memory_lookup — intent', () => {
 
     it('v1 envelope (known + unknown type)', () => {
         writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
-        expect(runTs(['--types', 'ownership,bogus-type', '--key', 'billing', '--envelope', 'v1'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership,bogus-type', '--key', 'billing', '--envelope', 'v1'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -271,7 +328,7 @@ describe('templates/memory_lookup — intent', () => {
                     .join('\n') +
                 '\n',
         );
-        expect(runTs(['--types', 'ownership', '--key', 'app/Http', '--limit', '2', '--format', 'json'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'ownership', '--key', 'app/Http', '--limit', '2', '--format', 'json'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
@@ -309,7 +366,7 @@ describe('templates/memory_lookup — intent', () => {
     });
 
     it('no hits text branch (empty key, no entries)', () => {
-        expect(runTs(['--types', 'incident-learnings'], tmp)).toMatchInlineSnapshot(`
+        expect(scrubRun(runTs(['--types', 'incident-learnings'], tmp))).toMatchInlineSnapshot(`
           {
             "status": 0,
             "stderr": "",
