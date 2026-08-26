@@ -123,7 +123,7 @@ a file.
 
 ## Phase 1 — make the ranker fail loudly instead of quietly
 
-- [ ] **1.1 Repoint or remove the stale CLI default.**
+- [x] **1.1 Repoint or remove the stale CLI default.**
       Either resolve the skills root the way the two real consumers already do —
       `catalogue.resolveSkillsRoot` — or drop the default and require the flag.
       What must not survive is a default that resolves to a non-existent path.
@@ -132,7 +132,9 @@ a file.
       naming the unresolved directory. The current output — `(no relevant skills
       found)` with exit 0 — is the state this step removes.
 
-- [ ] **1.2 Make "no matches" and "no catalogue" distinguishable at every entry point.**
+      **DONE — repointed to `resolveSkillsRoot`, the resolver the two real consumers already use.** Defect reproduced first: `--task "review a pull request" --top 3` printed `(no relevant skills found)` and **exit 0**, on a task that scores 47 against the real catalogue. After: three ranked rows. Repointed rather than dropped, because requiring the flag would move the failure from the CLI to every caller — and the shared resolver is shared on purpose: two resolvers over one catalogue is how a ranker and the tool that exposes it start ranking different trees.
+
+- [x] **1.2 Make "no matches" and "no catalogue" distinguishable at every entry point.**
       `missing-skill-recovery` already distinguishes a ranked empty list from an
       unreachable catalogue (`status: no_catalogue`) for the MCP tool. The CLI
       does not. Give it the same two outcomes.
@@ -140,23 +142,37 @@ a file.
       empty-result form; a run against a missing root prints the no-catalogue
       form; the two differ in exit code.
 
-- [ ] **1.3 Pin the regression.**
+      **DONE, and there are THREE states, not two — the third is the one that actually bit.** `.claude/skills` is a gitignored projection, so a worktree that never ran `generate-tools` has a root that **EXISTS and is EMPTY**. `resolveSkillsRoot` accepted it, and the ranker reported an empty catalogue as an empty result all over again through a second door. Measured live in this run: that worktree ranked zero skills and exited 0 on the same task that scores 47 against `src/skills`.
+
+      So `resolveSkillsRoot` now requires a NON-EMPTY directory, and the CLI reports `no_catalogue` with **exit 3** for all three deficits — missing, empty, unreadable — each naming which. The check covers an **explicit** `--skills-dir` too, not only the default: an operator passing a wrong path is in exactly the position the silent failure was about, and answering them with `(no relevant skills found)` is the same wrong answer with a different cause. `--json` carries `status: no_catalogue` and **no `ranked` key at all**, so a consumer cannot read an absent catalogue as an empty ranking.
+
+      The two other consumers of `DEFAULT_SKILLS_DIR` were patched too, and deliberately NOT with `?? ''` — an empty string re-creates the exact defect. They fall back to a literal `<no-skills-catalogue>` sentinel that can never resolve.
+
+- [x] **1.3 Pin the regression.**
       A test that fails if the default resolves to a directory that does not
       exist in the repository. The defect survived because nothing looked.
       verify: the test fails when `DEFAULT_SKILLS_DIR` is reverted to the
       pre-move path, and passes after 1.1. Sabotage it once and record that it
       went red — a test never seen red has unknown sensitivity.
 
+      **DONE — 9 tests, and sensitivity proven exactly as the step demands.** Reverting `DEFAULT_SKILLS_DIR` to the pre-move path reds **2 of 9**; restoring it returns 9. The step's own words — *a test never seen red has unknown sensitivity* — so it was sabotaged once and the result is recorded here rather than asserted.
+
+      Coverage is wider than the step asked because the empty-root state was found during the work: the default resolves to a directory that exists, the default path ranks real rows with no flag at all, `resolveSkillsRoot` skips an empty candidate and falls through to the next, and the three CLI outcomes differ in exit code with `--json` carrying a machine-readable status.
+
 ## Phase 2 — check links against the shape a consumer receives
 
-- [ ] **2.1 Re-measure and publish the link surface.**
+- [x] **2.1 Re-measure and publish the link surface.**
       976 today against 943 recorded. Publish the current count, the delta, and
       the command, so the next reader compares rather than re-derives.
       verify: an evidence file carries the number, the date, and the verbatim
       grep — including the note that a trailing `\)` in the pattern yields 974
       and misses two anchor links.
 
-- [ ] **2.2 Validate links against one delivered subset.**
+      **DONE — `agents/evidence/analysis/skill-link-surface-2026-08-26.md`.** **976** links across **299** delivered skills; **+33** against the previously-published 943, and that is corpus growth rather than a correction — no link was found to have been miscounted. The verbatim grep is in the file.
+
+      The trailing-paren note is recorded and acted on rather than just noted: `\]\(\.\./[a-z0-9-]+/SKILL\.md\)` yields **974**, missing two links that carry an anchor. Two of 976 is 0.2 % and easy to write off; it should not be, because an anchored link is the shape most likely to rot — a heading renames without touching any path — and a checker blind to exactly that shape reports clean while missing the failure it is least able to catch otherwise.
+
+- [x] **2.2 Validate links against one delivered subset.**
       One subset, not all of them: pick the narrowest real delivery shape and
       check that every cross-skill body link inside it resolves within it. The
       per-pack half belongs to the parked owner and is not taken here.
@@ -164,9 +180,17 @@ a file.
       and is registered in `src/config/gate-coverage.yml` with a `reportScanned`
       count and a `--self-test`.
 
+      **DONE — `lint_skill_link_reach`, corpus `dist/agent-src/skills`.** What it adds over `check_references`, which already walks that tree: `check_references` reports a broken PATH, and cannot answer the question a consumer has — *does this link resolve in the tree I was given*. A link is not broken because its target is missing from the repository; it is broken because the target is missing from the SUBSET that shipped, and those are different failures with different fixes.
+
+      Measured: 976 links, 299 delivered skills, **zero unresolved** — stated as a clean result rather than a discovery. The gate's value is that the next projection change cannot break it silently.
+
+      Registered in CI (`consistency.yml`), in `task ci`, and in `gate-coverage.yml` with `reportScanned` (299), a `min_scanned` floor of **200** (a scoped projection can legitimately deliver fewer; below 200 the projection is broken rather than smaller), a create-only canary, and a `--self-test` of 4 cases, 3 rejecting — including the anchored link and an empty delivered tree, which is REFUSED rather than passed.
+
+      **Per-pack delivery is deliberately NOT checked.** A link resolving across the whole delivered tree can still dangle inside one pack, and that half belongs to the parked owner per this step's own wording. A check that quietly widened to it would answer a question nobody asked here.
+
 ## Phase 3 — evaluate the lock before touching the corpus
 
-- [ ] **3.1 Read the composition-ratchet disposition and record a verdict.**
+- [x] **3.1 Read the composition-ratchet disposition and record a verdict.**
       `archive/road-to-composition-ratchet.md:69-74` and `:84`. Apply
       `decision-revisit-gate` step 2: read the record's status, its reopen
       condition, any amendment and any successor, then state one of — the lock
@@ -175,18 +199,48 @@ a file.
       verify: the verdict is written down with the record's file:line and its
       reopen condition quoted, and it names which of the three it is.
 
-- [ ] **3.2 Decide the corpus question on that verdict, not around it.**
+      **DONE. THE LOCK STANDS** — and this is the first of `decision-revisit-gate` step 2's three outcomes, not a default taken for want of reading.
+
+      The record, read rather than cited: `archive/road-to-composition-ratchet.md` carries `status: ready`, so it is not `superseded` or `deprecated` and is a live lock. No amendment, no successor. Its § New disposition reads verbatim:
+
+      > *scope: batch backfill of `triggers.json` over the grandfathered skill set. Rejected. revisit-if: real consumer misfire data names specific skills (backfill exactly those). Settled-by-decision.*
+
+      **Mechanism-match: CONFIRMED, which is the half that would have let it not apply.** The proposal is the catalogue-wide backfill the record rejected — the same mechanism, not a neighbouring one.
+
+      **The reopen condition has NOT fired, and this was checked rather than assumed.** It requires *real consumer misfire data naming specific skills*. The only observation store that exists is `agents/evidence/metrics/skill-catalogue.jsonl`, 7 rows, and every row records catalogue DELIVERY counts (`entries_total`, `bare_count`, `described_count`) on two hosts. **No row names a skill, and no row records a wrong activation.** A delivery census is not misfire data; the condition asks for a named misfire and there is not one.
+
+      Recorded against the roadmap's own recommendation, which argued that 94 of 299 is not the estate the rejection was written against and is therefore an argument for re-READING the lock. It was re-read, and re-reading is what produced this verdict.
+
+- [x] **3.2 Decide the corpus question on that verdict, not around it.**
       If the lock stands, this roadmap adds no corpus work and says so. If it
       does not apply, the scope is whatever the differing mechanism actually is —
       not the catalogue-wide backfill by another name.
       verify: either a recorded no-op with the reason, or a scoped item whose
       scope is derived from 3.1's verdict.
 
+      **DONE — a recorded NO-OP with its reason, which is what a standing lock earns.** This roadmap adds **no** corpus work: no `triggers.json` is authored, no allowlist entry is dropped, and no skill's trigger set is touched.
+
+      That is the whole of it, and the discipline is in what did not happen. The tempting move — backfill a small, defensible subset and call it something other than the catalogue-wide backfill — is the one this step forbids by name: *"not the catalogue-wide backfill by another name"*. A lock rejecting a mechanism is not satisfied by doing a tenth of that mechanism.
+
+      What WOULD unlock it is cheap and specific, which is why waiting costs little: one real misfire, named, with the skill it named. The observation log already exists to hold it.
+
 ## Blockers
 
 ### b-backfill-lock-authority — who may reopen the batch-backfill rejection
 
-- **Status:** open
+- **Status:** resolved
+- **Resolved 2026-08-26 as (a) — the lock stands.** No further authority was
+  needed, and the blocker's own wording says so: *(a) needs no further authority
+  and is the default if nothing is decided*. What this run added is that it is no
+  longer the default-by-silence — it is a verdict, recorded at step 3.1 with the
+  record's `status`, its reopen condition quoted verbatim, the mechanism-match
+  confirmed, and the misfire question CHECKED rather than assumed: the only
+  observation store (`agents/evidence/metrics/skill-catalogue.jsonl`, 7 rows)
+  records delivery counts and names no skill and no wrong activation.
+  Neither (b) nor (c) was reached, so neither the council nor the owner was
+  asked — (b) requires misfire data that does not exist, and (c) asks to lift a
+  lock on grounds the record excluded, which nothing here argues for.
+- **Status was:** open
 - **Owner:** maintainer
 - **Blocks:** 3.2
 - **What to do:** pick exactly one — (a) the lock stands and no corpus work
@@ -218,15 +272,15 @@ a file.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — the skill ranker's CLI, invoked with no directory flag, either
+- [x] AC-1 — the skill ranker's CLI, invoked with no directory flag, either
       returns ranked rows or exits non-zero naming the unresolved directory; it
       never returns an empty list with exit 0.
-- [ ] AC-2 — an empty ranking and an unreachable catalogue are distinguishable
+- [x] AC-2 — an empty ranking and an unreachable catalogue are distinguishable
       at every entry point, by exit code and by message.
-- [ ] AC-3 — a regression test covers the default path and has been observed red
+- [x] AC-3 — a regression test covers the default path and has been observed red
       against the pre-move path.
-- [ ] AC-4 — cross-skill links are validated against at least one delivered
+- [x] AC-4 — cross-skill links are validated against at least one delivered
       subset, in CI, with the gate registered and self-testing.
-- [ ] AC-5 — the batch-backfill disposition carries a written verdict quoting its
+- [x] AC-5 — the batch-backfill disposition carries a written verdict quoting its
       own reopen condition, and any corpus work in this roadmap derives its scope
       from that verdict.
