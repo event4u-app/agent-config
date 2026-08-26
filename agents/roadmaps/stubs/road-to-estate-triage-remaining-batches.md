@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-20
 ---
 
 # Stub: road to the remaining estate-triage batches

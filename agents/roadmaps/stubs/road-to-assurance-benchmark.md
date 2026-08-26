@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-09-22
+---
+
 # Road to an assurance benchmark — stub
 
 > **Class:** drain-run transfer. Created 2026-08-23 by the closure run of

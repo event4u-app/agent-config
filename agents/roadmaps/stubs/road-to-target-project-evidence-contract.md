@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2027-02-18
+---
+
 # Road to a target-project evidence contract — stub
 
 > **Source:** `agents/tmp.old/robert-c-martin/road-to-target-project-evidence-contract.md` — landed by `/analyze:inbox` on 2026-08-22.

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-19
 ---
 
 # Stub: road to release-gate council auto-dispatch

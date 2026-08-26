@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2027-02-18
+---
+
 # Road to legacy target onboarding via ratchets — stub
 
 > **Source:** `agents/tmp.old/robert-c-martin/road-to-legacy-target-onboarding-ratchet.md` — landed by `/analyze:inbox` on 2026-08-22.

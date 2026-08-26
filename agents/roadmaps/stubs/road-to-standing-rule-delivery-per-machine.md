@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-20
 ---
 
 # Stub: road to a standing-rule-delivery reading on every team machine

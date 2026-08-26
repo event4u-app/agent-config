@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-19
 ---
 
 # Stub: road to the first true reference-analysis run

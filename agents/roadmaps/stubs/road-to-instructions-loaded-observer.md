@@ -1,5 +1,7 @@
 ---
 complexity: lightweight
+review_by: 2026-09-20
+probe: none
 ---
 
 # Stub: road to the InstructionsLoaded observer, and the fork it would decide

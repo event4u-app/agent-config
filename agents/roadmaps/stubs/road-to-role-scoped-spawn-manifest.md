@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2027-02-19
 ---
 
 # Stub: road to a role-scoped spawn manifest

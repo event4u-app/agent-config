@@ -1,5 +1,7 @@
 ---
 complexity: structural
+review_by: 2026-09-21
+probe: none
 ---
 
 # Stub: road to the owner-reserved authority decisions
@@ -141,6 +143,64 @@ keeps working for every new record; nothing degrades. The 56-day expiry on the
 entry is the real clock — if the number has not moved by then, the gate fails
 until someone decides whether the doctrine is real.
 
+## Unresolved decisions 5-8 — added 2026-08-26 by the inbox-harvest drain
+
+Four more, each with the exact instrument it moves and what changes on a yes and
+on a no. Added here rather than in a new file because this stub already IS the
+queue, and a second queue is how a queue stops being read.
+
+### Decision 5 — the release-placeholder guard's estate offset
+
+- **Instrument:** `agents/roadmaps/stubs/road-to-release-placeholder-guard.md:3`
+  (`status: stub`) against `CHANGELOG.md:419-422`, which ships four
+  `_auto-derived, rewrite before merge:_` lines under `## [14.12.0]`.
+- **The situation:** that stub's AC-1 at `:426` **is** the gate reviewers asked
+  for. It was promoted on 2026-08-24 and reverted the same day by a 2/2 council
+  verdict — **not on merit**, but because the run self-certified an estate
+  exemption where a named offset was required.
+- **Yes** (name an offset and promote): the guard lands and placeholder lines
+  stop reaching a release.
+- **No:** the four lines stay in a shipped CHANGELOG and the next release
+  inherits the same shape, because nothing refuses them.
+
+### Decision 6 — the Class-B resident-service prohibition
+
+- **Instrument:** `docs/decisions/ADR-124-embedded-engine-doctrine.md:109-110`
+  together with the backed `claim:no-runtime-daemon` at `docs/CLAIMS.md:104-108`.
+- **Yes** (relax): a resident service becomes admissible, and the backed claim
+  must be retired through the ledger's own lifecycle rather than edited.
+- **No:** the prohibition stands and every design that wants a daemon is
+  answered by the ADR without a fresh argument. **This is the status quo and it
+  costs nothing to keep** — recorded so the question is not re-argued from
+  scratch each time.
+
+### Decision 7 — accepting ADR-240
+
+- **Instrument:** `docs/decisions/ADR-240-evidence-based-decision-floor.md`,
+  which ships `status: proposed` and whose own text reserves acceptance to the
+  owner.
+- **Yes:** the evidence floor becomes citable as accepted, and gates may rest on
+  it.
+- **No / indefinite:** it stays `proposed`, which means anything citing it cites
+  a proposal — and a proposal cited as a floor is the shape
+  `decision-revisit-gate` warns about.
+
+### Decision 8 — the `road-to-skill-ecosystem-*` family cap
+
+- **Instrument:** `lint_roadmap_family_cap.ts:42` (`CAP = 2`), whose reason is
+  `ADR-215 § D2`.
+- **Council-settled for now, 2026-08-26, 2/2:** leave the cap at 2. The queue
+  is real — `later/road-to-skill-ecosystem-executable-payloads.md:69-75` is
+  third in a queue of two — but the cap is doing what it was built for, and
+  both current occupants were completed work awaiting merge at the time of the
+  verdict.
+- **Yes** (raise): `lint_roadmap_family_cap.ts:19-20` says that is a one-line
+  change **plus a new decision record**, never a silent edit, and `ADR-215 § D2`
+  must be amended rather than contradicted.
+- **No:** the payloads roadmap waits for the first slot a merge frees.
+- **Revisit if** either in-flight family PR stays unmerged beyond seven days, or
+  becomes materially blocked, or any completion or release gate turns out to
+  rest on the non-executing evaluations that roadmap owns.
 ## Blocking cost — recorded as `unknown`, deliberately
 
 The parent required that each non-`yes` row record its blocking cost "as sourced

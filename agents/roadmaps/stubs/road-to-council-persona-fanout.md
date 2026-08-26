@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2027-02-18
 ---
 
 # Stub: road to council persona fan-out

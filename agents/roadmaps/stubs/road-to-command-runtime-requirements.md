@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-23
 ---
 # Stub: command runtime prerequisites
 

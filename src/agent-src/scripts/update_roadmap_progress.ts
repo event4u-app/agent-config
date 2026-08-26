@@ -696,6 +696,65 @@ function _blockerAnchor(rel: string): string {
     );
 }
 
+/**
+ * Two integers about the PARKED estate: overdue stubs, and stubs routing a
+ * decision to a person.
+ *
+ * `road-to-inbox-harvest-2026-08-f-owner-decision-queue` Phase 2.3. The
+ * dashboard excludes `stubs/` on purpose and that stays — see `EXCLUDE_DIRS`
+ * and `stubs/README.md`. What was missing is that a maintainer had no way to
+ * learn a stub had gone unread without listing the directory.
+ *
+ * **Two integers are not an inventory.** No row, no link, nothing to conflict
+ * on — which is exactly the distinction that keeps this clear of the 2026-08-21
+ * council verdict that deleted the hand-maintained index, and of
+ * `check_no_stub_inventory_table`, which refuses its return.
+ *
+ * Reads frontmatter only, and returns `null` on any failure: a dashboard is not
+ * the place to surface a parse error, and a missing directory in a consumer
+ * install is normal rather than a fault.
+ */
+function stub_queue_counts(roadmap_root: string): { overdue: number; owner: number } | null {
+    const dir = path.join(roadmap_root, 'stubs');
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md') && n !== 'README.md');
+    } catch {
+        return null;
+    }
+    if (names.length === 0) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const OWNER_ROUTING = [
+        'owner-reserved',
+        'owner reserved',
+        'owner: maintainer',
+        'reserved to the owner',
+        'requires owner',
+        'maintainer decision',
+        'owner decision',
+        'owner sign-off',
+        'awaiting the owner',
+    ];
+    let overdue = 0;
+    let owner = 0;
+    for (const n of names) {
+        let source: string;
+        try {
+            source = fs.readFileSync(path.join(dir, n), 'utf-8');
+        } catch {
+            continue;
+        }
+        const fm = FRONTMATTER_RE.exec(source);
+        const due = /^review_by:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(fm?.[1] ?? '');
+        // An ABSENT date counts as overdue: the contract requires it, so missing
+        // means nobody scheduled a read — the state the count exists to surface.
+        if (due === null || (due[1] as string) <= today) overdue += 1;
+        const lower = source.toLowerCase();
+        if (OWNER_ROUTING.some((phrase) => lower.includes(phrase))) owner += 1;
+    }
+    return { overdue, owner };
+}
+
 function bar(pct: number, width = 10): string {
     const filled = _pyRound((pct * width) / 100);
     return '█'.repeat(filled) + '░'.repeat(width - filled);
@@ -996,6 +1055,15 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                   : '')
             : '') +
         '\n';
+    // Phase 2.3 — the parked estate's two integers, appended to the header the
+    // maintainer already reads. Omitted entirely when the directory is absent or
+    // unreadable, so a consumer install without it sees no change.
+    const stubs = stub_queue_counts(roadmap_root);
+    const stub_meta =
+        stubs === null
+            ? ''
+            : `> ${String(stubs.overdue)} stub${stubs.overdue !== 1 ? 's' : ''} overdue for review · ` +
+              `${String(stubs.owner)} routing a decision to a person → \`agent-config stubs:due\`\n`;
     lines.push(
         // Honest provenance (road-to-roadmap-archival-robustness, gap C): name a
         // regen path that exists in EVERY install, not a hardcoded
@@ -1007,7 +1075,8 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
             'rewritten on every roadmap create / execute / completion change. ' +
             'A repository that does not commit this file has no git history for ' +
             'it — regenerate to see the current state.\n>\n' +
-            header_meta,
+            header_meta +
+            stub_meta,
     );
     lines.push('## Overall\n');
     lines.push(`**${total_done} / ${total_active} steps done · ${overall_pct}%**\n`);

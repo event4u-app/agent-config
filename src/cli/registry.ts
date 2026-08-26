@@ -74,6 +74,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'roadmap:context', disposition: 'delegate', synopsis: 'One live situational-awareness probe: open PRs + their file sets, roadmap-tail branches, live sessions, inbox note names, sibling-roadmap keyword hits; --roadmap <slug>, --json.' },
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps; archives completed ones (--no-archive to skip).' },
     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
+    { name: 'stubs:due', disposition: 'delegate', synopsis: 'List parked stubs whose review date has passed, that declare no promotion probe, or whose text routes a decision to a person. Read-only.' },
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
     { name: 'gates', disposition: 'delegate', synopsis: 'Open decisions that need you, as actions — owner-filtered roadmap blockers; --all, --json, --reply, --pending (staged requires_confirmation actions).' },
     { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },

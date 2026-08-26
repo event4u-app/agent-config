@@ -235,6 +235,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
                              (archives completed roadmaps; --no-archive to skip)
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  stubs:due                  List parked stubs overdue for review, with no probe, or waiting on a person
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview)
   gates                      Open decisions that need you, rendered as actions —
@@ -753,6 +754,13 @@ cmd_roadmap_progress() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
   exec_ts "$script" --archive "$@"
+}
+
+# The parked estate's front door — read-only, and deliberately so. It authors
+# nothing under `agents/roadmaps/stubs/`, which is what keeps it clear of the
+# 2026-08-21 council verdict that deleted the hand-maintained index there.
+cmd_stubs_due() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/stubs_due.ts" "$@"
 }
 
 cmd_roadmap_progress_check() {
@@ -1480,6 +1488,7 @@ main() {
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+    stubs:due)               cmd_stubs_due "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
     gates)                   cmd_gates "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;

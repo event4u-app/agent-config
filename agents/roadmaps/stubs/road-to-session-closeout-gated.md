@@ -1,3 +1,9 @@
+---
+complexity: lightweight
+review_by: 2026-09-19
+probe: none
+---
+
 # Session-closeout residue that needs something this repository cannot supply
 
 > **Transferred from** [`road-to-session-closeout.md`](../archive/road-to-session-closeout.md),

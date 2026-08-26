@@ -1,5 +1,6 @@
 ---
 complexity: bounded
+review_by: 2026-09-22
 ---
 
 # Stub: road to fixture seams for the three unprovable pack gates

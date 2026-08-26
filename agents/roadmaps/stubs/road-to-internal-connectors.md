@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2027-02-15
+---
+
 # Road to Internal Connectors — STUB
 
 > **Ownership (deduped 2026-07-12, road-to-opt-portfolio-consolidation

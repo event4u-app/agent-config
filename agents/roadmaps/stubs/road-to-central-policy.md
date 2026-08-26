@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-06
+---
+
 # Road to Central Policy — STUB
 
 > **Status** · stub. Not started. Created 2026-05-24 to satisfy

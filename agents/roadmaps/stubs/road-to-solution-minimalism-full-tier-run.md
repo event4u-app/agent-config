@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-22
 ---
 
 # Stub: road to the solution-minimalism full-tier run

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2027-01-04
 ---
 
 # Stub: road to governed worktree lifecycle

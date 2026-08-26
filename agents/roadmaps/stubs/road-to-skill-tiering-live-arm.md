@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-22
 ---
 
 # Stub: the live arm for skill tiering (H1) — needs host sessions, not a repository

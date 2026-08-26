@@ -1,5 +1,7 @@
 ---
 complexity: lightweight
+review_by: 2026-09-20
+probe: none
 ---
 
 # Stub: append-safety for the ratchet baselines
