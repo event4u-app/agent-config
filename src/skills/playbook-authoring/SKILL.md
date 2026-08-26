@@ -131,7 +131,7 @@ paths last**.
 
 Two bounds, both deliberate:
 
-- **Per scope, never per artefact type.** A repository may legitimately have two
+- **Per scope, never per artifact type.** A repository may legitimately have two
   right answers in two modules. There is no single global exemplar, and a
   playbook claiming one is over-reaching its own `scope`.
 - **No second contract.** This is the ADR-244 playbook class unchanged — not a
@@ -183,7 +183,7 @@ Two bounds, both deliberate:
 
 ## See also
 
-- [ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md) — the artefact class, its grades, its home, and the two deferred kinds.
+- [ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md) — the artifact class, its grades, its home, and the two deferred kinds.
 - [`standards-from-config`](../standards-from-config/SKILL.md) — the Class-A rule this applies to procedure rather than to style.
 - [`context-document`](../context-document/SKILL.md) — the contexts machinery a playbook reuses as its sixth type.
 - [`command-writing`](../command-writing/SKILL.md) — the numbered-step shape the body follows.
