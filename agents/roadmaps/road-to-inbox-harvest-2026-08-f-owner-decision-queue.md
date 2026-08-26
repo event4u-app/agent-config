@@ -1,12 +1,12 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-26
 estate_offset_exempt: "No archive move is available in this change. This file is the smaller half of a reduction: a three-bundle inbox drain of roughly 24,000 lines yielded three roadmaps, and more of its content was recorded as already-owned or already-fixed than became work. Its own subject is the estate's reachability, so retiring an active roadmap to pay for it would be the priority pick the 2026-08-24 council refused to make on exactly this ground."
-estate_growth_exempt: "Charges +0 on the count half (that half is status-scoped and this file ships draft) and +1 on one-in-one-out, which is file-based and fires whatever the status. It also adds blockers against a floor of 31, which carries no automatic allowance. Warranted on measurement rather than appetite: 77 files sit in agents/roadmaps/stubs/, exactly one carries a review_by, 48 carry no probe or promotion heading at all, and four owner-reserved decisions have been waiting in a single one of them since 2026-08-21. No open roadmap carries a stub-lifecycle or owner-decision-queue item; grepped across all twelve active files and all 65 in later/."
+estate_growth_exempt: "Activation change (2026-08-26): this file flips status draft -> ready, so it now charges +1 on the count half, which read +0 for as long as it shipped draft. One-in-one-out is file-based and was already paid by the change that landed the file; the claim is re-stated here because it is diff-scoped and an earlier one cannot be banked. It also adds blockers against a floor of 31, which carries no automatic allowance. Warranted on measurement rather than appetite: 77 files sit in agents/roadmaps/stubs/, exactly one carries a review_by, 48 carry no probe or promotion heading at all, and four owner-reserved decisions have been waiting in a single one of them since 2026-08-21. No open roadmap carries a stub-lifecycle or owner-decision-queue item; grepped across all twelve active files and all 65 in later/."
 ---
 # Road to the owner-decision queue — the answers exist, and the owner cannot see them
 
