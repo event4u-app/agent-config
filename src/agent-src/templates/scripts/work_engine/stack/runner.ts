@@ -236,7 +236,7 @@ export function resolve_toolchain(
         quality.push(..._php_quality(project_root, composer, wrappers));
     }
     if (has_package) {
-        runners.push(..._js_runners(pkg, wrappers));
+        runners.push(..._js_runners(pkg, wrappers, _package_manager(project_root, pkg)));
         quality.push(..._js_quality(pkg, wrappers));
     }
     if (has_python) {
@@ -347,7 +347,7 @@ function _php_runners(root: string, composer: Manifest, wrappers: Wrappers): Run
     ];
 }
 
-function _js_runners(pkg: Manifest, wrappers: Wrappers): RunnerResult[] {
+function _js_runners(pkg: Manifest, wrappers: Wrappers, manager: string): RunnerResult[] {
     const deps = _all_dependencies(
         pkg,
         'dependencies',
@@ -383,17 +383,17 @@ function _js_runners(pkg: Manifest, wrappers: Wrappers): RunnerResult[] {
 
     // e2e runner — separate bucket, excluded unless --include-e2e.
     if ('@playwright/test' in deps || 'playwright' in deps) {
-        const cmd = _script_command(scripts, ['test:e2e', 'e2e', 'playwright']) || 'npx playwright test';
+        const cmd = _script_command(scripts, ['test:e2e', 'e2e', 'playwright'], manager) || 'npx playwright test';
         out.push(
             new RunnerResult('js', 'playwright', cmd, SPEED_E2E, HIGH, '@playwright/test in package deps'),
         );
     } else if ('cypress' in deps) {
-        const cmd = _script_command(scripts, ['test:e2e', 'e2e', 'cypress']) || 'npx cypress run';
+        const cmd = _script_command(scripts, ['test:e2e', 'e2e', 'cypress'], manager) || 'npx cypress run';
         out.push(new RunnerResult('js', 'cypress', cmd, SPEED_E2E, HIGH, 'cypress in package deps'));
     }
 
     // slow bucket — an explicit slow/integration script.
-    const slow_cmd = _script_command(scripts, ['test:slow', 'test:integration']);
+    const slow_cmd = _script_command(scripts, ['test:slow', 'test:integration'], manager);
     if (slow_cmd) {
         out.push(
             new RunnerResult(
@@ -487,19 +487,100 @@ function _task_runner_wrappers(root: string, pkg: Manifest): Wrappers {
     }
     const scripts: Manifest = _isDict(pkg.scripts) ? pkg.scripts : {};
     if (_isDict(scripts) && 'test' in scripts) {
-        out['js-test'] = `${_package_manager(root)} test`;
+        out['js-test'] = `${_package_manager(root, pkg)} test`;
     }
     return out;
 }
 
-function _package_manager(root: string): string {
-    if (_is_file(path.join(root, 'pnpm-lock.yaml'))) {
-        return 'pnpm';
+/**
+ * Lockfile → manager, in the order `monorepo-workspace/SKILL.md` § 1 states.
+ * Kept as data rather than a chain of ifs so `PACKAGE_MANAGER_BRANCHES` below
+ * can assert the count against the documented one.
+ */
+const LOCKFILE_MANAGERS: ReadonlyArray<readonly [string, string]> = [
+    ['pnpm-lock.yaml', 'pnpm'],
+    ['yarn.lock', 'yarn'],
+    ['bun.lock', 'bun'],
+    ['bun.lockb', 'bun'],
+    ['package-lock.json', 'npm'],
+];
+
+/**
+ * The five branches `monorepo-workspace/SKILL.md` § 1 specifies, named so a
+ * test can assert none went missing. The skill is the contract and it was
+ * already correct; this list exists because the code implemented three of the
+ * five and nothing noticed.
+ */
+export const PACKAGE_MANAGER_BRANCHES: readonly string[] = [
+    'packageManager',
+    'pnpm',
+    'yarn',
+    'bun',
+    'npm',
+] as const;
+
+export interface PackageManagerResolution {
+    /** The resolved manager, or `null` when the cascade deliberately refuses. */
+    manager: string | null;
+    /** Which branch answered — one of `PACKAGE_MANAGER_BRANCHES`, or `'ambiguous'`. */
+    via: string;
+    /** Non-empty when the cascade refuses: the reported finding. */
+    finding: string;
+}
+
+/**
+ * Resolve the package manager per `monorepo-workspace/SKILL.md` § 1.
+ *
+ * Two behaviours the previous three-branch version did not have, and both are
+ * in the skill rather than invented here:
+ *
+ *  - `packageManager` in the root `package.json` is the DECLARATION and wins
+ *    when present, because it is what Corepack enforces. A lockfile is an
+ *    inference; a declaration is not.
+ *  - **Two lockfiles is a finding, not a tie to break.** The old code returned
+ *    `pnpm` for a repository carrying both `pnpm-lock.yaml` and `yarn.lock`,
+ *    silently picking the first branch it tested. That is a guess presented as
+ *    an answer, and the skill says to report both and stop.
+ */
+export function _resolve_package_manager(
+    root: string,
+    pkg?: Manifest,
+): PackageManagerResolution {
+    const declared = pkg === undefined ? undefined : pkg['packageManager'];
+    if (typeof declared === 'string' && declared.trim() !== '') {
+        // `pnpm@9.1.0` → `pnpm`. Corepack's own format.
+        const name = declared.trim().split('@')[0] as string;
+        if (name !== '') {
+            return { manager: name, via: 'packageManager', finding: '' };
+        }
     }
-    if (_is_file(path.join(root, 'yarn.lock'))) {
-        return 'yarn';
+    const present = LOCKFILE_MANAGERS.filter(([file]) => _is_file(path.join(root, file)));
+    const distinct = [...new Set(present.map(([, mgr]) => mgr))];
+    if (distinct.length > 1) {
+        return {
+            manager: null,
+            via: 'ambiguous',
+            finding:
+                `two package-manager lockfiles present (${present.map(([f]) => f).join(', ')}) ` +
+                'and no `packageManager` declaration — report both and stop, per ' +
+                'monorepo-workspace SKILL.md § 1',
+        };
     }
-    return 'npm';
+    if (distinct.length === 1) {
+        const mgr = distinct[0] as string;
+        return { manager: mgr, via: mgr, finding: '' };
+    }
+    return { manager: 'npm', via: 'npm', finding: '' };
+}
+
+/**
+ * The resolved manager as a bare string for command construction. Falls back to
+ * `npm` on the ambiguous case so a caller building a command string still gets
+ * one — the FINDING is what carries the ambiguity, and a caller that needs it
+ * calls `_resolve_package_manager` directly.
+ */
+function _package_manager(root: string, pkg?: Manifest): string {
+    return _resolve_package_manager(root, pkg).manager ?? 'npm';
 }
 
 // --------------------------------------------------------------------------
@@ -580,10 +661,17 @@ function _script_uses(scripts: Manifest, name: string, tool: string): boolean {
     return typeof value === 'string' && value.includes(tool);
 }
 
-function _script_command(scripts: Manifest, names: string[]): string {
+/**
+ * Build a `<manager> run <script>` command for the first matching script name.
+ *
+ * `manager` used to be hardcoded `npm`. Every command the work engine hands an
+ * agent for verification inherited that, so a pnpm or yarn repository was told
+ * to run a command its lockfile contradicts.
+ */
+function _script_command(scripts: Manifest, names: string[], manager: string): string {
     for (const name of names) {
         if (typeof scripts[name] === 'string') {
-            return `npm run ${name}`;
+            return `${manager} run ${name}`;
         }
     }
     return '';
