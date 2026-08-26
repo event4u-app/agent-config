@@ -1,7 +1,8 @@
 ---
 title: "Road to Episode Finalizer and Outcome Attribution v2"
 complexity: structural
-status: ready
+status: later
+estate_growth_exempt: "Charges +1 later_roadmaps / -1 active on a MOVE, not an addition: the same file leaves the active tree for later/, and no roadmap was created. The move is the disposition AI council 2/2 directed on 2026-08-26 after both blockers resolved -- one as a host null, the other as NOT RESOLVABLE BY AN AUTONOMOUS RUN. roadmap-progress-sync section Later disposition requires it: AC-2 demands a ledger carrying >=2 distinct machine provenances, all 4,912 measured stops are machine-local, and a second machine with independent traffic cannot be produced inside a session. +0 open_blockers: this change created none and RESOLVED two."
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted and so are unavailable as offsets. Its predecessor road-to-episode-finalizer-and-outcome-attribution was never landed in the active estate either, so the supersedes edge offsets nothing countable."
 execution:
   mode: phase-checkpoints
@@ -10,6 +11,44 @@ supersedes:
   - road-to-episode-finalizer-and-outcome-attribution
 ---
 # Road to Episode Finalizer and Outcome Attribution v2
+
+> **PARKED to `later/` on 2026-08-26 — blocked-for-later, not abandoned.** AI
+> council 2/2 (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 3 rounds,
+> blind chairman, $0.079) under the maintainer's standing delegation.
+>
+> **Resume when** a ledger carries **≥ 200 non-local stops** from a machine with
+> an independent identity, identical instrumentation, comparable traffic and
+> **separately retained** evidence. Replaying this ledger, running fixtures, or
+> assigning a different identity do **not** satisfy it, and CI does not qualify
+> on the evidence available.
+>
+> **Both blockers are RESOLVED; the roadmap is parked anyway, and the two facts
+> are not in tension.** `b-quality-columns-unreachable` closed as a **host null**
+> and `b-machine-local-denominator` closed as **not resolvable by an autonomous
+> run** — a resolved blocker records an answer, and here both answers are that
+> the work cannot proceed. Steps 2.2 and 5.2 are `[-]` descoped in consequence.
+>
+> **The external-validity gap is stated HERE, at the outcome, and not only beside
+> the two steps.** A seat named the exact failure mode: *"Descoping the steps
+> risks converting an unresolved external-validity gap into apparent roadmap
+> completion."* So, plainly: **no cross-machine rate was established, and none is
+> establishable from this ledger.** All 4,912 measured stops are machine-local.
+>
+> **Why parking rather than closing around the descopes.** One seat made the test
+> checkable rather than a matter of taste — park only if a qualifying
+> cross-source rate is an *acceptance criterion* of the central outcome. It is:
+> **AC-2** requires *"a ledger carrying ≥2 distinct machine provenances"*. The
+> other seat reached `later/` independently, on the ground that `unknown` quality
+> fields undermine the *"outcome attribution v2"* the title claims. Both routes
+> land in the same place.
+>
+> **Recorded now so it is not rediscovered later: confirmability ≠
+> representativeness.** Two machine identities buy confirmability. They do **not**
+> buy representativeness while both carry the same operator's drain-run traffic —
+> and this ledger's does. So a future rate is **descriptive of the measured
+> traffic**, must say so wherever it is quoted, and per-machine figures come
+> **before** any pooled one (which AC-2 already required, and the council
+> independently re-derived).
 
 > **Source:** agents/tmp.old/road-to-10/road-to-episode-finalizer-and-outcome-attribution-v2.md
 
@@ -117,7 +156,16 @@ producers do not emit the shape — not because the schema rejects them.
       (2) delivery pointer outranked. Write expected signatures before fixes.
       verify: each cause has a written expected signature recorded before its
       probe runs; a probe whose signature was written afterwards is discarded.
-- [ ] **Step 2.2:** Read the registered claim rather than re-registering it.
+- [-] **Step 2.2:** Read the registered claim rather than re-registering it.
+      **DESCOPED 2026-08-26, AI council 2/2** — `b-machine-local-denominator` is
+      **not resolvable by an autonomous run**. The band's population line reads
+      `>=200 non-local stops` and **all 4,912 measured stops are machine-local**.
+      Independent traffic and separately retained external evidence cannot be
+      produced by replaying, relabelling or reprocessing the existing ledger
+      inside this session, so this step has no denominator to read a rate from.
+      Marked `[-]` rather than left `[ ]`: nothing here is pending work an
+      autonomous run can pick up.
+
       The pre-registered band stands:
 
       ```text
@@ -208,7 +256,14 @@ producers do not emit the shape — not because the schema rejects them.
       explicit terminal state.
       verify: each twin is proven RED by sabotaging the mechanism it guards,
       then restored — a twin never seen red has unknown sensitivity.
-- [ ] **Step 5.2:** Pre-register coverage:
+- [-] **Step 5.2:** Pre-register coverage:
+      **DESCOPED 2026-08-26, same decision as Step 2.2.** The criterion reads
+      `>=200 representative episodes`, and **representative** is precisely what
+      this ledger cannot supply: even a second machine identity would give
+      confirmability without representativeness while both carry the same
+      operator's drain-run traffic. Descoping the pre-registration rather than
+      registering a claim whose population cannot exist yet.
+
 
       ```text
       episode-finalizer-coverage
@@ -326,7 +381,46 @@ producers do not emit the shape — not because the schema rejects them.
   a flat rate is legal going forward.
 
 ### blocker: b-quality-columns-unreachable
-- **Status:** open
+- **Status:** resolved 2026-08-26 — **option (2): a HOST NULL, narrowly scoped.**
+  AI council 2/2, inlined convergence: `anthropic/claude-sonnet-4-5` +
+  `openai/codex-default`, 3 rounds, blind chairman, quorum concluded 2/2,
+  $0.079 actual.
+
+  **Both seats overruled this blocker's own recommendation of option (1).** The
+  reason is arithmetic rather than preference: option (1) says *adopt the
+  candidate and evaluate its falsifier over a recorded corpus*, and **there is no
+  eligible corpus to evaluate it against** — 0 populated rows at each
+  re-derivation, three successive corpus growths moving no verdict,
+  `dispatch_mode` 0 across both measured months. *"A zero eligible denominator
+  cannot test the candidate's falsifier."* Adopting a contract definition whose
+  falsifier is unevaluable is the wrong order of operations.
+
+  **The null's exact scope — this wording is the deliverable, not a formality:**
+
+  > Under the current contract and completion-time instrumentation,
+  > `first_pass_success` and `escalated` cannot be determined, because both
+  > depend on **subsequent parent behaviour**. This is a limitation of the
+  > current observation point — **not** evidence that the concepts are
+  > unmeasurable in principle, and **not an observed value of zero.**
+
+  The last clause is the one that matters and is why a bare `unknown` was
+  rejected: a `0/0` denominator is an **absent measurement**, not a null result,
+  and a reader who takes it for a measured zero concludes the opposite of the
+  truth. Phase 4's dependent fields therefore carry a documented unavailable
+  state rather than a bare `unknown`.
+
+  **The candidate is preserved as an EXPERIMENT and deliberately not written into
+  the contract.** It stays a recorded proposal with its falsifier attached
+  (~20 % session-stop closes ⇒ the boundary measures the session, not adoption);
+  `orchestration-telemetry.md` is **not** amended. Before it could be adopted,
+  both seats required: closure reasons, censoring rules, the denominator, a
+  minimum sample and the exact session-stop threshold predeclared — plus an
+  attribution audit showing the candidate boundaries actually track the same task
+  scope, not merely that they close.
+
+  **Revisit-if:** a predeclared minimum corpus contains observable closed
+  episodes with sufficient rework and re-dispatch variation, the session-stop
+  rule becomes evaluable, and an attribution audit passes.
 - **Owner:** council
 - **Blocks:** Phase 5 Step 5.3; the `parent_action_delta` and `verification`
   fields of Phase 4 degrade to `unknown` without it.
@@ -377,6 +471,41 @@ producers do not emit the shape — not because the schema rejects them.
   and this ledger's is exactly that. Satisfying `≥2 distinct machine identities`
   would therefore close the letter of this blocker while leaving the
   generalisation limit intact, and any rate quoted afterwards still has to say so.
+- **Status:** resolved 2026-08-26 — **NOT resolvable by an autonomous run, by
+  construction.** AI council 2/2, same session. Asked directly whether this run
+  could resolve it at all, both seats said no: *"Independent traffic and
+  separately retained external evidence cannot be created by replaying,
+  relabelling, or processing the existing machine-local ledger inside this
+  session."* All **4,912** measured stops are machine-local against a band line
+  requiring **≥ 200 non-local**.
+
+  **Consequence — Phase 2 Step 2.2 and Phase 5 Step 5.2 are `[-]` DESCOPED**,
+  each citing the 4,912-of-4,912 figure. Both quote a rate; no rate is
+  quotable.
+
+  **The limitation belongs to the ROADMAP's outcome, not only to the two steps.**
+  One seat named the failure mode precisely: *"Descoping the steps risks
+  converting an unresolved external-validity gap into apparent roadmap
+  completion."* So it is stated in the parking header as well as here.
+
+  **The confirmability-versus-representativeness choice, recorded NOW rather than
+  when someone quotes a number** — both seats asked for exactly that ordering.
+  Two machine identities buy **confirmability**. They do not buy
+  **representativeness** if both carry the same operator's drain-run traffic, and
+  this ledger's does. So even after a qualifying second machine appears, any rate
+  is **descriptive of the measured traffic** and must say so. Broader
+  generalisation needs independent *operators* or genuinely diverse workloads —
+  not another machine identity.
+
+  **Per-source before pooled, and this was already the contract.** Both seats
+  required per-machine figures rather than a pooled number, on the ground that
+  4,912 local + 200 non-local pooled is dominated by the original machine so
+  *"multi-machine" becomes a label on an effectively single-machine statistic*.
+  **AC-2 already says this** — *"every published rate reports per-machine figures
+  before any pooled one"* — so the council independently re-derived a requirement
+  the roadmap had already written down. Recorded because agreement reached twice
+  from different directions is worth more than either pass alone.
+
 - **Owner:** council
 - **Blocks:** Phase 2 Step 2.2 and Phase 5 Step 5.2 — both quote a rate.
   Phase 2 Step 2.3 is the work that resolves it.
