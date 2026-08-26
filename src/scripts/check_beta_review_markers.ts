@@ -16,11 +16,13 @@
  * Exit codes: 0 = clean, 1 = violations found, 3 = internal error.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { DeadScopeError, assertScanned, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -261,17 +263,65 @@ function check_one(p: string, todayOrdinal: number): Violation[] {
     return [];
 }
 
+
+/**
+ * STABILITY.md's own re-audit condition, as a command instead of as prose.
+ *
+ * `STABILITY.md`:
+ *
+ *   "The audit is repeated whenever the `keep-beta-until` date passes for
+ *    >= 25 % of beta contracts, or at the start of any roadmap phase that
+ *    touches the contract surface."
+ *
+ * That condition was met at 71.1 % and nothing noticed, which is the defect
+ * `road-to-contract-review-deadlines` D2 records. A trigger nobody can run is
+ * how a threshold gets crossed by a factor of three in silence — so the
+ * percentage is computed here, next to the data, and printed.
+ *
+ * Deliberately a REPORT, not a gate: the enforcement half is the frozen
+ * baseline plus the fresh-lapse error above. A second failing check over the
+ * same population would red the same PRs twice for one cause.
+ */
+export const REAUDIT_TRIGGER_PCT = 25;
+
+export interface TriggerVerdict {
+    betaContracts: number;
+    lapsed: number;
+    pct: number;
+    fired: boolean;
+}
+
+export function evaluateTrigger(violations: readonly Violation[], betaContracts: number): TriggerVerdict {
+    const lapsed = violations.filter((v) => v.reason.includes('has LAPSED')).length;
+    const pct = betaContracts === 0 ? 0 : (lapsed / betaContracts) * 100;
+    return { betaContracts, lapsed, pct, fired: pct >= REAUDIT_TRIGGER_PCT };
+}
+
 interface ParsedArgs {
     json: boolean;
+    trigger: boolean;
+    /** Fixture root, for `--self-test`. A fixture is never judged against the repo baseline. */
+    root: string | null;
 }
 
 function parse_args(argv: readonly string[]): ParsedArgs {
-    const args: ParsedArgs = { json: false };
-    for (const arg of argv) {
+    const args: ParsedArgs = { json: false, trigger: false, root: null };
+    for (let i = 0; i < argv.length; i += 1) {
+        const arg = argv[i] as string;
         if (arg === '--json') {
             args.json = true;
+        } else if (arg === '--root') {
+            args.root = argv[i + 1] ?? null;
+            i += 1;
+        } else if (arg === '--trigger') {
+            args.trigger = true;
         } else if (arg === '-h' || arg === '--help') {
-            process.stdout.write('usage: check_beta_review_markers [-h] [--json]\n');
+            process.stdout.write(
+                'usage: check_beta_review_markers [-h] [--json] [--trigger]\n' +
+                    '  --trigger  print the lapsed percentage and whether STABILITY.md\n' +
+                    '             re-audit condition (>= 25 %) has fired. Reports; never fails.\n' +
+                    '  --root DIR judge a fixture tree instead of the repo (self-test seam).\n',
+            );
             process.exit(0);
         } else {
             process.stderr.write(
@@ -289,12 +339,70 @@ function _todayOrdinal(): number {
     return _dateOrdinal(now.getFullYear(), now.getMonth() + 1, now.getDate());
 }
 
+
+/**
+ * Self-test — the gate proving it still DISCRIMINATES, not merely that it ran.
+ *
+ * A `scanned:` floor proves a gate read something; only a rejecting case proves
+ * the reading changes the verdict. All four cases shell out to the real CLI
+ * through a fixture `docs/contracts/`, because an in-process call cannot catch
+ * an argv parser or an entry guard that silently no-ops.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'beta-selftest-'));
+    const write = (name: string, body: string): string => {
+        const dir = path.join(tmp, name, 'docs', 'contracts');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'sample.md'), body, 'utf-8');
+        return path.join(tmp, name);
+    };
+    const run = (root: string): number =>
+        runGateCli(ROOT, 'src/scripts/check_beta_review_markers.ts', ['--root', root], root);
+
+    try {
+        return runSelfTest({
+            gate: 'check_beta_review_markers',
+            minCases: 4,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a lapsed deadline outside the frozen baseline is rejected',
+                    expect: 'reject',
+                    run: () => run(write('lapsed', '---\nstability: beta\nkeep-beta-until: 2020-01-01\n---\n')),
+                },
+                {
+                    name: 'a beta contract with NO marker at all is rejected',
+                    expect: 'reject',
+                    run: () => run(write('nomarker', '---\nstability: beta\n---\n')),
+                },
+                {
+                    name: 'a beta contract inside its window passes',
+                    expect: 'accept',
+                    run: () => run(write('fresh', `---\nstability: beta\nkeep-beta-until: ${_ordinalToISO(_todayOrdinal() + 30)}\n---\n`)),
+                },
+                {
+                    name: 'a stable contract needs no marker and passes',
+                    expect: 'accept',
+                    run: () => run(write('stable', '---\nstability: stable\n---\n')),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 function main(): number {
+    if (process.argv.slice(2).includes('--self-test')) return selfTest();
     const args = parse_args(process.argv.slice(2));
     const todayOrdinal = _todayOrdinal();
     const violations: Violation[] = [];
-    const contracts = _globMdSorted(path.join(ROOT, CONTRACTS_DIR));
+    const scanRoot = args.root ?? ROOT;
+    const contracts = _globMdSorted(path.join(scanRoot, CONTRACTS_DIR));
+    let betaContracts = 0;
     for (const p of contracts) {
+        const fm = read_frontmatter(p);
+        if (fm !== null && /^stability:\s*beta\s*$/m.test(fm)) betaContracts += 1;
         violations.push(...check_one(p, todayOrdinal));
     }
     // Count every contract read, not the `stability: beta` subset: over a moved
@@ -302,7 +410,13 @@ function main(): number {
     // the same clean line, and only the second is a dead gate. Exit 1 is the
     // violation code; 3 stays reserved for the internal-error handler below.
     try {
-        assertScanned({
+        // `reportScanned`, not `assertScanned`: the gate-coverage manifest's
+        // rule 1 requires exactly one machine-readable `scanned: <N>` line, and
+        // asserting without printing satisfies the scope guard while leaving the
+        // census blind — which is the same "green over nothing" shape both
+        // mechanisms exist to end. Emitted on the RED path too, so the gate
+        // cannot report its coverage only when it passes.
+        reportScanned({
             gate: 'check_beta_review_markers',
             scanned: contracts.length,
             units: 'contract file(s)',
@@ -314,6 +428,22 @@ function main(): number {
             return 1;
         }
         throw exc;
+    }
+    if (args.trigger) {
+        const t = evaluateTrigger(violations, betaContracts);
+        const line =
+            `beta contracts: ${String(t.betaContracts)} · lapsed: ${String(t.lapsed)} · ` +
+            `${t.pct.toFixed(1)} % · STABILITY.md re-audit trigger (>= ${String(REAUDIT_TRIGGER_PCT)} %): ` +
+            (t.fired ? 'FIRED' : 'not fired');
+        if (args.json) {
+            process.stdout.write(JSON.stringify({ trigger: t }, null, 2) + '\n');
+        } else {
+            process.stdout.write(`${line}\n`);
+        }
+        // A report never fails a build. The enforcement half is the frozen
+        // baseline plus the fresh-lapse error; failing here too would red the
+        // same pull request twice for one cause.
+        return 0;
     }
     if (args.json) {
         process.stdout.write(JSON.stringify({ violations }, null, 2) + '\n');
