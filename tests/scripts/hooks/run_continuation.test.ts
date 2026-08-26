@@ -45,6 +45,7 @@ import {
     deriveSessionKey,
     sessionRefusalFile,
 } from '../../../src/scripts/_lib/turn_end_refusals.js';
+import { readUnavailableDependency } from '../../../src/scripts/_lib/loop_guards.js';
 
 let tmp: string;
 
@@ -513,5 +514,57 @@ describe('extractVerify — both forms the tree actually writes', () => {
         for (const line of lines) {
             expect(extractVerify(line), line.trim()).not.toBeNull();
         }
+    });
+});
+
+describe('run_continuation — the dependency-halt WIRING, not only the rung', () => {
+    /**
+     * Regression, and the reason it is written against the reader rather than
+     * against `ladder()`: the inline version of this read referenced a constant
+     * that did not exist. The read sits inside a `catch` that fail-opens to
+     * `null`, so the ReferenceError was swallowed on every fire and the rung was
+     * dead while every pure-ladder assertion stayed green. A decision function
+     * cannot observe a caller that never computes its input.
+     */
+    it('names a dependency the run cannot obtain, from the tail', () => {
+        const t = path.join(tmp, 'transcript.txt');
+        fs.writeFileSync(t, ['building', 'php: command not found', 'stopped'].join('\n'), 'utf8');
+        const got = readUnavailableDependency(t);
+        expect(got?.kind).toBe('binary');
+        expect(got?.evidence).toContain('command not found');
+    });
+
+    it('feeds the rung, which then outranks the counter rungs', () => {
+        const t = path.join(tmp, 'transcript.txt');
+        fs.writeFileSync(t, 'gh: authentication failed\n', 'utf8');
+        const unavailable = readUnavailableDependency(t);
+        // Iterations already over the cap: without the dependency input this is
+        // `halt-max-iterations`, an anonymous cap-out. The whole point of the
+        // rung is that a nameable blocker wins.
+        const over: RunState = {
+            started_at: new Date().toISOString(),
+            iterations: MAX_ITERATIONS + 5,
+            last_turn: -1,
+            history: [],
+        };
+        const caps = {
+            maxIterations: MAX_ITERATIONS,
+            wallClockMs: WALL_CLOCK_CAP_MS,
+            stallWindow: STALL_WINDOW,
+        };
+        expect(ladder(over, 3, Date.now(), 0, caps, unavailable)).toBe('halt-dependency-unavailable');
+        expect(ladder(over, 3, Date.now(), 0, caps, null)).toBe('halt-max-iterations');
+    });
+
+    it('fails OPEN on an unreadable transcript — a detector that cannot read must not halt', () => {
+        expect(readUnavailableDependency(path.join(tmp, 'does-not-exist.txt'))).toBeNull();
+    });
+
+    it('reads only the tail, so a failure the run already recovered from cannot halt it', () => {
+        const t = path.join(tmp, 'transcript.txt');
+        const stale = 'gh: authentication failed';
+        const recovered = Array.from({ length: 400 }, (_, i) => `step ${i} ok`);
+        fs.writeFileSync(t, [stale, ...recovered].join('\n'), 'utf8');
+        expect(readUnavailableDependency(t)).toBeNull();
     });
 });

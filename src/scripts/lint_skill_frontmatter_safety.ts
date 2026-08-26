@@ -115,6 +115,28 @@ function _exec_block(body: ReadonlyArray<[number, string]>): Record<string, [num
     return out;
 }
 
+
+/**
+ * Which grant key is legal on this artefact's surface.
+ *
+ * `road-to-skill-ecosystem-runtime-enforcement` Phase 3 Step 6. The failure this
+ * catches is silent by construction: **a loader ignores an unrecognised
+ * frontmatter key**, so a tool restriction written on the wrong surface parses
+ * fine, restricts nothing, and the artefact inherits every tool. A parse success
+ * is not a restriction — and nothing in the tree said so before this check.
+ *
+ * - `src/subagents/*.md` — subagent-v1 (`subagent.schema.json`) grants with a
+ *   TOP-LEVEL `tools:`. It has no `execution:` block at all.
+ * - everything else (skills, commands, domain artefacts) — grants live under
+ *   `execution.allowed_tools`, or as the consumer-format `allowed-tools`.
+ *   A top-level `tools:` here is read by nothing.
+ */
+export type GrantSurface = 'subagent' | 'skill-like';
+
+export function grantSurface(rel: string): GrantSurface {
+    return rel.replace(/\\/g, '/').includes('src/subagents/') ? 'subagent' : 'skill-like';
+}
+
 export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     if (sf.pragma_allows(CHECK)) {
         return [];
@@ -129,6 +151,42 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     const ex = _exec_block(body);
     const handler = _stripQuotes((ex['handler'] ?? [0, ''])[1]);
     const is_execution_skill = Object.keys(ex).length > 0 && handler !== '' && handler !== 'none';
+
+    // Wrong-surface tool restrictions. A key the loader does not recognise is
+    // IGNORED, so the artefact inherits everything — the restriction reads as
+    // present and is not. Both directions are checked, because both have a
+    // plausible author: a skill copying a subagent's `tools:` list, and a
+    // subagent copying a skill's `execution:` block.
+    const surface = grantSurface(sf.rel);
+    for (const [lineno, text] of body) {
+        if (surface === 'skill-like' && _RE_TOOLS_KEY.test(text)) {
+            out.push(
+                new sl.Finding(
+                    sf.rel,
+                    lineno,
+                    CHECK,
+                    'HIGH',
+                    'top-level `tools:` on a non-subagent surface — subagent-v1 only; ' +
+                        'the loader ignores it here, so this artefact is NOT restricted ' +
+                        '(use execution.allowed_tools)',
+                    sf.weight,
+                ),
+            );
+        }
+        if (surface === 'subagent' && _RE_EXECUTION.test(text)) {
+            out.push(
+                new sl.Finding(
+                    sf.rel,
+                    lineno,
+                    CHECK,
+                    'HIGH',
+                    '`execution:` block on a subagent definition — subagent-v1 has no such ' +
+                        'key, so any allowed_tools under it restricts nothing (use top-level `tools:`)',
+                    sf.weight,
+                ),
+            );
+        }
+    }
 
     // consumer consent-bypass header + wildcard `allowed-tools` (hyphen = Claude
     // format; the underscore source key is covered by the execution block below).

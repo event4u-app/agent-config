@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **574**
-- Edges (incl. self-WRITE): **2203**
+- Files indexed: **575**
+- Edges (incl. self-WRITE): **2208**
 
 ## READ_ONLY edges
 
@@ -73,6 +73,7 @@
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/rdp-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
@@ -201,6 +202,9 @@
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-topologies.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/toolchain-resolver.md` | `.agent-src.uncondensed/contexts/execution/non-interactive-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/toolchain-resolver.md` | `.agent-src.uncondensed/rules/architecture.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/toolchain-resolver.md` | `.agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md` | `body_link` | 1 |
@@ -1646,7 +1650,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 58 |
+| `context` | 59 |
 | `persona` | 36 |
 | `rule` | 120 |
 | `skill` | 360 |

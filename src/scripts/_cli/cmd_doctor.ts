@@ -99,6 +99,7 @@ import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
 import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
+import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
@@ -106,6 +107,7 @@ import {
     ROOT_OVERRIDE_ENV,
     ProjectRootError,
     find_project_root_with_trace,
+    iter_setting_overrides,
     project_settings_path,
     resolve_project_root,
     type TraceRecord,
@@ -771,6 +773,7 @@ const CHECK_IDS = [
     'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
+    ...runtime_wiring.WIRING_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -802,6 +805,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
+    ...runtime_wiring.WIRING_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -1361,79 +1365,16 @@ function pathExistsAny(p: string): boolean {
 }
 
 
-/**
- * Managed hook wiring (single-surface model): the deterministic hook matrix
- * must be registered in ~/.claude/settings.json AND the dispatch target
- * (`agent-config` binary) must resolve on PATH. Both halves are required —
- * hooks without a binary silently no-op every session.
- */
+/** Managed hook wiring — moved to `_lib/runtime_wiring_checks.ts` (it IS a runtime-wiring check). */
 function _check_hook_wiring(): Dict {
-    const claude = shutilWhich('claude');
-    if (claude === null) {
-        return {
-            id: 'hook-wiring',
-            status: 'skipped',
-            message: 'Claude Code CLI not on PATH — hook-wiring check not applicable',
-            remedy: '',
-        };
-    }
-    const settings_path = path.join(os.homedir(), '.claude', 'settings.json');
-    let missing: string[];
-    try {
-        const matrix = claude_settings_hooks.build_claude_hook_matrix(
-            path.join(_package_root(), 'src', 'scripts', 'hook_manifest.yaml'),
-        );
-        const settings = pathExists(settings_path)
-            ? (JSON.parse(fs.readFileSync(settings_path, 'utf8')) as Record<string, unknown>)
-            : {};
-        const hooks = ((settings['hooks'] ?? {}) as Record<string, unknown>) || {};
-        missing = Object.keys(matrix).filter((ev) => {
-            const groups = hooks[ev];
-            if (!Array.isArray(groups)) return true;
-            return !JSON.stringify(groups).includes(claude_settings_hooks.MANAGED_SIGNATURE);
-        });
-    } catch (e) {
-        return {
-            id: 'hook-wiring',
-            status: 'fail',
-            message: `cannot evaluate managed hooks: ${String(e)}`,
-            remedy: 'fix ~/.claude/settings.json (invalid JSON?), then agent-config refresh --global',
-        };
-    }
-    const binary_ok = shutilWhich('agent-config') !== null;
-    if (missing.length === 0 && binary_ok) {
-        return {
-            id: 'hook-wiring',
-            status: 'ok',
-            message: 'managed hooks registered in ~/.claude/settings.json; dispatch binary on PATH',
-            remedy: '',
-        };
-    }
-    if (missing.length > 0 && claude_plugin.claude_plugin_installed()) {
-        return {
-            id: 'hook-wiring',
-            status: 'warn',
-            message:
-                `managed hooks missing for: ${missing.join(', ')} — currently carried by the ` +
-                'installed plugin (deprecated surface)',
-            remedy: 'agent-config refresh --global (writes the managed settings.json block)',
-        };
-    }
-    const parts: string[] = [];
-    if (missing.length > 0) parts.push(`managed hooks missing for: ${missing.join(', ')}`);
-    if (!binary_ok) parts.push('`agent-config` not on PATH (hooks would silently no-op)');
-    if (parts.length === 0) {
-        // hooks complete, binary missing was the only issue → covered above.
-        parts.push('`agent-config` not on PATH');
-    }
-    return {
-        id: 'hook-wiring',
-        status: 'fail',
-        message: parts.join('; '),
-        remedy: binary_ok
-            ? 'agent-config refresh --global'
-            : 'npm install -g @event4u/agent-config, then agent-config refresh --global',
-    };
+    return runtime_wiring.checkHookWiring({
+        which: shutilWhich,
+        packageRoot: _package_root(),
+        homeDir: os.homedir(),
+        buildMatrix: (mp) => claude_settings_hooks.build_claude_hook_matrix(mp) as Record<string, unknown>,
+        managedSignature: claude_settings_hooks.MANAGED_SIGNATURE,
+        pluginInstalled: () => claude_plugin.claude_plugin_installed(),
+    }) as unknown as Dict;
 }
 
 function _check_bridge_drift(
@@ -2970,6 +2911,7 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
@@ -3054,6 +2996,7 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         // BOTH registries need the id. Registering only the first one crashed with
         // `runners[cid] is not a function` on a global-only consumer, which is the

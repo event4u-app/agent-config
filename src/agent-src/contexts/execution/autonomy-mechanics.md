@@ -157,6 +157,27 @@ When validating a single target, run the **specific** check, not a meta-task tha
 
 Concrete tool mapping — verify with the narrowest tool that proves the target green: a single `curl` / Playwright spec / browser run for HTTP behavior, the project's test runner with a `--filter` for one test, a debugger / `xdebug` step-through for one frame. Never substitute a meta-pipeline for a tool that pinpoints the failure.
 
+### Progress-primary ordering — and why the cap stays
+
+Where the objective is **countable** — findings closed, tests passing,
+occurrences remaining — the primary stop signal is **no progress** or a **new
+minimum**, and the N=3 iteration cap is the **backstop**. A counter alone cannot
+tell three attempts that each closed a finding from three that changed nothing.
+
+**Do not remove the cap.** A no-progress signal is only as good as the metric
+behind it, and a metric that stops moving because the MEASUREMENT broke looks
+exactly like one that stops moving because the work is done. The cap bounds the
+damage when the primary signal is wrong.
+
+The two stops are different outcomes and are reported as different words: the cap
+firing is `exhausted`, a repeating failure signature with budget left is
+`stagnated` — see
+[`terminal-states`](terminal-states.md). Collapsing them invites the wrong
+remedy, because raising a budget helps the first and never the second.
+
+Where the objective is NOT countable, the cap is the only signal and the N=3
+budget above applies unchanged.
+
 ## Adaptive effort & stop (RDP)
 
 Scale effort to task difficulty, and stop when marginal evidence drops — coupled

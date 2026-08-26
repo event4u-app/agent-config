@@ -44,11 +44,18 @@ import { parse as parseYaml } from 'yaml';
 
 import { iter_commands } from './_lib/agent_src.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
+import { resolveRepoRoot } from './_lib/repo_root.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/generate_capabilities_index.ts → parents[2] is repo root.
-const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+// Root resolution goes through the sentinel resolver rather than a bare `..`
+// walk: `path.resolve(dirname, '..', '..')` is correct until this file moves,
+// and then it addresses a parent directory that also exists — the generator
+// writes nothing, reports success, and nothing fails. `resolveRepoRoot` REFUSES
+// when no directory on the walk carries this package's `package.json`
+// (road-to-skill-ecosystem-runtime-enforcement Phase 2 Step 6).
+const ROOT = resolveRepoRoot(path.dirname(_HERE));
 const OUT = path.join(ROOT, 'CAPABILITIES.yaml');
 const PACKS_YML = path.join(ROOT, 'src', 'config', 'discovery', 'packs.yml');
 const SKILLS_DIR = path.join(ROOT, 'src', 'skills');

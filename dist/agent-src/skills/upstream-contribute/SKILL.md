@@ -9,7 +9,7 @@ scope:
 execution:
   type: assisted
   handler: internal
-  allowed_tools: ["github"]
+  allowed_tools: ["Bash(gh:*)"]
 workspaces:
   - agent-config-maintainer
 packs:

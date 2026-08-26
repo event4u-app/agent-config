@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-23T18:56:39.799Z",
-    "git_sha": "2e3af822abfe20c44e2e7ead43a74ce5aae04d07",
+    "recorded_at": "2026-08-26T04:29:12.936Z",
+    "git_sha": "34dae8d2c46bd6f97d0d41fdf53f371d6ab08426",
     "run_url": null,
-    "conditions": "Refresh for the 106 -> 107 cli_help_command_count move on the merge of drain/roadmap-situational-awareness into main: main had already recorded 106 for road-to-frontend-power's ui:audit + ui:render, this branch adds roadmap:context. Re-measured on the MERGED tree via the budget pinned method (registry enumeration): 107. mcp_public_tool_count unchanged at 20 — neither branch exposes a new MCP tool.",
+    "conditions": "Refresh for the 107 -> 108 cli_help_command_count move: the roadmap:set-step verb (road-to-skill-ecosystem-runtime-enforcement Phase 6) registers in the same PR that adds the surface. Re-measured via the pinned method (registry enumeration) on this tree: 108. mcp_public_tool_count carried forward unchanged — this branch adds no MCP tool.",
     "measurements": {
-        "cli_help_command_count": 107,
+        "cli_help_command_count": 108,
         "mcp_public_tool_count": 20
     }
 }

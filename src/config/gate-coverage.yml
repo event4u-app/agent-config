@@ -42,15 +42,25 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 295 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 296 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **67 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 64 of those 67 are listed below.** The manifest is
+# **69 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 66 of those 69 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~22 % of the population.
+#
+# RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
+# the 2026-08-24 block below describes, and this one left TWO STACKED claim
+# blocks rather than a conflict inside one number: 295/68 from this branch and
+# 296/67 from main, each correct for its own tree. Collapsed to one recomputed
+# block rather than reconciled by hand: `count_gate_scripts()` returns **296**
+# and `grep -c '^  - id:'` returns **66** on the merged tree.
+#
+# 66 + 3 unlisted emitters (`lint_evidence_artifacts`, `adr_cite_check`,
+# `check_new_adr_evidence`) = 69.
 #
 # RECOUNTED ON A MERGE, 2026-08-26, and the merge left TWO stacked header claims
 # rather than a conflict inside one number — each branch had recounted correctly
@@ -1865,6 +1875,36 @@ gates:
         recorded in `src/config/canonical-terms.yml` decided against. The gate
         must red on it, because a ratchet that cannot see a NEW occurrence is a
         ratchet that only records history.
+  - id: lint_host_portability
+    argv: []
+    min_scanned: 600
+    corpus: "every .md under src/skills, src/agent-src, src/domains and src/subagents — 717 today. The floor sits at 600 because the artefact estate only grows by ordinary work and a reading below it means a scan root moved, not that 117 artefacts were deleted."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-host-portability/SKILL.md
+      content: |
+        ---
+        name: zz-canary-host-portability
+        description: Canary planted by check_gate_coverage --canary; never ships.
+        execution:
+          type: assisted
+          handler: internal
+          allowed_tools: ["FileWriterTool"]
+        ---
+
+        # Canary
+
+        The grant above names a tool no host in this tree is known to honour. A
+        loader IGNORES an unrecognised key, so this artefact reads as restricted
+        and is not — which is the whole defect class the gate exists to refuse.
+  - id: check_host_loadability
+    argv: ["--reach", "--root", "."]
+    min_scanned: 6
+    corpus: "the six host surfaces in HOST_SURFACES (claude-code, cursor, cline, windsurf, gemini-cli, copilot). The floor is the full set rather than a fraction: the surface list is a committed constant, so a reading below 6 means a row was dropped from the constant, never that a projection is legitimately smaller. An ABSENT host tool is a ledger SKIP with its detection signal named, not a missing row."
+    status: enforced
+    no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artefact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
+    argv_note: "The `--reach` argv, not the default. The default mode checks that two projections PARSE and emits no coverage line; reach accounts for every host surface and is the mode that carries a corpus. Registered on the argv that emits, per this manifest\u0027s own CI-identical-argv rule \u2014 and note that `--reach` is declared LOCAL-ONLY in ci-local-parity.yml, because a CI runner has no host tool installed and every row would resolve `skipped-tool-absent`, which is the empty-scope false green this manifest exists to refuse."
   - id: lint_eval_specs
     argv: []
     min_scanned: 120
