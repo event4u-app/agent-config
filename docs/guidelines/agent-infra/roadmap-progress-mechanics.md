@@ -164,15 +164,13 @@ the step lands; that's a normal `[ ] → [x]` transition.
 ## Mechanics — triggers, regen command, self-check, failures
 
 The triggers table, the regen command (`./agent-config roadmap:progress`),
-the mandatory pre-send self-check, the failure-mode catalog, and the
-`Do NOT` list are **in this file** — the rule
+the pre-send self-check, the failure-mode catalog and the `Do NOT` list are
+**in this file**; the rule
 [`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) is the
-obligation surface and this document is the lookup material.
+obligation surface.
 
-> **Corrected 2026-08-26** (`road-to-contract-review-deadlines` 4.2): this
-> paragraph used to point at a `rules-auto` mechanics file under the contexts
-> tree, which exists nowhere in it — it promised a split that never happened, and a
-> reader following it found nothing. The content it names was already here.
+> **Corrected 2026-08-26.** This pointed at a `rules-auto` mechanics file that
+> exists nowhere — a split that never happened, while the content was here.
 
 ## Copilot fallback
 

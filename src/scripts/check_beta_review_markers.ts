@@ -22,7 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { DeadScopeError, assertScanned, reportScanned } from './_lib/scan_scope.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
