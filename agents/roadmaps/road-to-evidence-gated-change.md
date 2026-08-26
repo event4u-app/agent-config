@@ -127,7 +127,7 @@ sixth the size of what arrived.
   Those are installer presets; the key is `discipline_profile` with
   `off|essential|full|auto|custom` (`src/config/agent-settings.template.yml:134,157`).
   A new `discipline.tdd` key exists in neither proposal-land nor the tree.
-- **`agents/context/conventions-map.md` names a directory that does not exist.**
+- **`agents/context/conventions-map.md` names a directory that does not exist.** <!-- ref-ignore -->
   The convention is `agents/settings/contexts/`, and the artefact class is
   `playbook-authoring`.
 - **The commit-order test-first check was never in the tree.**
