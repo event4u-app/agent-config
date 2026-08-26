@@ -546,7 +546,7 @@ are excluded.
 | command | [`image-analyse`](../dist/agent-src/commands/image/analyse.md) | cluster: image | Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report. |
 | command | [`image-create`](../dist/agent-src/commands/image/create.md) | cluster: image | Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default. |
 | command | [`image-verify`](../dist/agent-src/commands/image/verify.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
-| command | [`implement-ticket`](../dist/agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git. |
+| command | [`implement-ticket`](../dist/agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced. |
 | command | [`jira-ticket`](../dist/agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../dist/agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge-on-diff`](../dist/agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
@@ -626,7 +626,7 @@ are excluded.
 | command | [`sync-gitignore-fix`](../dist/agent-src/commands/sync/gitignore/fix.md) | cluster: sync | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`tdd`](../dist/agent-src/commands/tdd.md) | cluster: tdd | TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green) |
 | command | [`tdd-green`](../dist/agent-src/commands/tdd/green.md) | cluster: tdd | TDD green phase — write the minimum production code to make the failing test pass; no test edits |
-| command | [`tdd-red`](../dist/agent-src/commands/tdd/red.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error) |
+| command | [`tdd-red`](../dist/agent-src/commands/tdd/red.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behaviour under test |
 | command | [`tdd-refactor`](../dist/agent-src/commands/tdd/refactor.md) | cluster: tdd | TDD refactor phase — clean up (rename, deduplicate) while keeping the test green |
 | command | [`team-knowledge`](../dist/agent-src/commands/team-knowledge.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../dist/agent-src/commands/team-knowledge/bootstrap.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
@@ -650,7 +650,7 @@ are excluded.
 | command | [`video-scene`](../dist/agent-src/commands/video/scene.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate. |
 | command | [`video-stitch`](../dist/agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video-storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
-| command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
+| command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over `work_engine`, confidence-band gated, no auto-git, test-first. |
 | command | [`worktree`](../dist/agent-src/commands/worktree.md) | cluster: worktree | Worktree orchestrator — routes to create, status, verify, cleanup |
 | command | [`worktree-cleanup`](../dist/agent-src/commands/worktree/cleanup.md) | cluster: worktree | Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes |
 | command | [`worktree-create`](../dist/agent-src/commands/worktree/create.md) | cluster: worktree | Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred |
