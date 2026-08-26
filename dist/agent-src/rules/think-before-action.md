@@ -40,13 +40,13 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Never guess behavior — verify using code, data, or tools.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
 - Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.
-- **Behaviour-changing work is test-first by default, not by preference.** One
-  behaviour at a time: the test written, **observed failing**, then the minimum
-  code that makes that one behaviour pass. The only exceptions are the
+- **Behavior-changing work is test-first by default, not by preference.** One
+  behavior at a time: the test written, **observed failing**, then the minimum
+  code that makes that one behavior pass. The only exceptions are the
   *Do NOT use when* list in [`test-driven-development`](../skills/test-driven-development/SKILL.md)
   — do not restate them here and do not extend them inline. Going code-first
   outside that list is an **override, and an override is recorded**: name the
-  behaviour and the reason in the reply and in the decision log. A silent
+  behavior and the reason in the reply and in the decision log. A silent
   code-first pass is the failure this line exists to stop, not a style choice.
 - **Multi-step task → restate as verifiable success criteria first** (test that reproduces the bug, failing-then-passing check, before/after invariant) and plan `step → verify:` per step; a task whose success cannot be checked is a clarification trigger, not an execution trigger. Transformation table: [`think-before-action-mechanics § Goal-driven execution`](../contexts/communication/rules-auto/think-before-action-mechanics.md#goal-driven-execution--vague-ask--verifiable-goal).
 - Unclear requirements → precise clarification question, not hidden assumptions.
@@ -54,9 +54,9 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
 - Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
-## The intent line, before a behaviour-changing edit
+## The intent line, before a behavior-changing edit
 
-Before an edit that changes behaviour, emit the **intent line**: what the code
+Before an edit that changes behavior, emit the **intent line**: what the code
 does · what the failing check expects · what the specification says. When the
 three disagree, the disagreement is the finding and the edit does not proceed.
 Shape, the other four mandated lines, and the pre-send sweep:

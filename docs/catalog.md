@@ -626,7 +626,7 @@ are excluded.
 | command | [`sync-gitignore-fix`](../dist/agent-src/commands/sync/gitignore/fix.md) | cluster: sync | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`tdd`](../dist/agent-src/commands/tdd.md) | cluster: tdd | TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green) |
 | command | [`tdd-green`](../dist/agent-src/commands/tdd/green.md) | cluster: tdd | TDD green phase — write the minimum production code to make the failing test pass; no test edits |
-| command | [`tdd-red`](../dist/agent-src/commands/tdd/red.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behaviour under test |
+| command | [`tdd-red`](../dist/agent-src/commands/tdd/red.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behavior under test |
 | command | [`tdd-refactor`](../dist/agent-src/commands/tdd/refactor.md) | cluster: tdd | TDD refactor phase — clean up (rename, deduplicate) while keeping the test green |
 | command | [`team-knowledge`](../dist/agent-src/commands/team-knowledge.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../dist/agent-src/commands/team-knowledge/bootstrap.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |

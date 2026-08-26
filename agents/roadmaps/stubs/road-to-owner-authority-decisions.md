@@ -1,6 +1,7 @@
 ---
 complexity: structural
 review_by: 2026-09-25
+probe: none
 ---
 
 # Stub: road to the owner-reserved authority decisions

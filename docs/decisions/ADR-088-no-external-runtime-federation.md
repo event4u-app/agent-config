@@ -4,7 +4,8 @@ status: accepted
 date: 2026-06-11
 decision: no-external-runtime-federation
 supersedes: —
-superseded_by: ADR-124 (engine-adoption interpretation only)
+superseded_by: ADR-124
+superseded_scope: engine-adoption interpretation only
 phase: external-runtime-coexistence
 type: structural
 ---

@@ -57,6 +57,24 @@ In precedence order, and report which one answered:
 Globs are globs: `packages/*` means every direct child carrying a manifest, not
 every directory.
 
+### 2b. Catalogs — the version is declared once, not per member
+
+When the workspace defines a **catalog**, a member's `catalog:` range is a
+REFERENCE, not a declaration. Report the catalog as the version's home:
+
+- A member range starting `catalog:` (bare, or `catalog:<name>`) resolves
+  against the workspace catalog definition. It does not resolve outside the
+  workspace at all — treat it exactly as `workspace:` for publishability.
+- **An upgrade edits the catalog, not the member.** Editing a member that reads
+  `catalog:` is either a no-op or a silent divergence from the catalog, and the
+  catalog exists precisely so the version has one home.
+- **A member carrying a version LITERAL for a dependency the catalog also
+  declares is reported, not gated** — see § Do NOT. Name the member, the
+  dependency, the literal range, the catalog name and the catalog range. Where
+  several catalogs declare the same dependency, list every candidate rather than
+  inventing an applicable one; nothing in the workspace definition says which
+  the literal intended to follow.
+
 ### 3. Task runner — ask the runner, do not read its config
 
 When a runner is present, its own listing is the source of truth, because a
@@ -132,6 +150,14 @@ When the runner was absent, the last line reads
   was never run with it. Report the mismatch.
 
 ## Do NOT
+
+- **Do NOT gate on a member version literal.** Whether a catalog repository
+  permits selective literals is that repository's convention, not this suite's
+  to impose. Report it as a structural observation — *"member literal overlaps
+  catalog entry"*, never *"invalid"* — and let the reader decide. An exact
+  mismatch between the literal and the catalog range is reported at higher
+  severity, and still does not gate.
+
 
 - Read `project.json` by hand to enumerate Nx projects — `nx show projects` is
   the source of truth and includes inferred targets.

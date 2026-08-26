@@ -320,7 +320,7 @@ consult; an added symbol never does.
 #### 8b-routing. Why this is not routed through the TDD cluster
 
 Two source proposals put the existence question in `/tdd`'s design mode, as the
-one point every behaviour passes through. **It cannot live there, and the reason
+one point every behavior passes through. **It cannot live there, and the reason
 is delivery rather than design:**
 `src/domains/engineering-base/tdd/command.md` carries `visibility: internal` and
 `disable-model-invocation: true`, so **a consumer cannot reach it.** The routing

@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: test-driven-development
-description: "Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'."
+description: "Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. Owns the red-green-refactor ORDER; whether the test itself is well-formed is `testing-anti-patterns`."
 domain: quality
 workspaces:
   - engineering
@@ -85,8 +85,8 @@ answers, and only the first is a deletion:
 | The code is | Do |
 |---|---|
 | **untested, written by this task** | delete it, write the test, reimplement — the Iron Law above |
-| **pre-existing and tested** | keep it. Its tests are the record of its behaviour; deleting it to re-derive the same thing discards evidence and contradicts the reuse verdict |
-| **pre-existing and untested** | do NOT delete. Write a **characterization test** pinning the behaviour it has today — including the behaviour you think is wrong — then change it under that test |
+| **pre-existing and tested** | keep it. Its tests are the record of its behavior; deleting it to re-derive the same thing discards evidence and contradicts the reuse verdict |
+| **pre-existing and untested** | do NOT delete. Write a **characterization test** pinning the behavior it has today — including the behavior you think is wrong — then change it under that test |
 
 The middle row is the one this law used to get wrong: unqualified, it read as
 a standing instruction to delete tested legacy that a reuse verdict would
@@ -103,17 +103,17 @@ checks it from the diff** — an unverifiable prohibition does not ship.
 | Mode | Goal | Activities | Forbidden (diff check) | Output contract |
 |---|---|---|---|---|
 | **Design** | One-sentence behavior + enumerated cases | Steps 1–2 | **No production code** (diff touches no `src/**` production path) · no test bodies yet | Case list (happy/boundary/error) |
-| **Test-Red** | A failing test that fails RIGHT | Steps 3–4 | **No production edits** (diff = `tests/**` only) · the failure must be **about the behaviour under test**. Valid: a failing **assertion** · a **missing target** — class-not-found, or a compile/type error naming the unimplemented symbol · a **contract failure** (wrong shape, wrong status, unmet interface). Invalid: a broken **fixture** · a **syntax error** in the test · a missing **unrelated dependency** · a **runner or environment** fault | Failing test + its observed failure, named as one of the three valid classes |
+| **Test-Red** | A failing test that fails RIGHT | Steps 3–4 | **No production edits** (diff = `tests/**` only) · the failure must be **about the behavior under test**. Valid: a failing **assertion** · a **missing target** — class-not-found, or a compile/type error naming the unimplemented symbol · a **contract failure** (wrong shape, wrong status, unmet interface). Invalid: a broken **fixture** · a **syntax error** in the test · a missing **unrelated dependency** · a **runner or environment** fault | Failing test + its observed failure, named as one of the three valid classes |
 | **Implement** | Minimum code to green | Steps 5–6 | **No test edits** (no `tests/**` paths in Implement-phase diffs — changing the assertion to fit the code is the canonical violation; genuinely-wrong test → STOP and ask, never silently edit) · no scope beyond the one case | Green run output |
 | **Debug** | Fix a defect found later | (re-enter at 3) | **No bugfix before a reproducing regression test exists** (the fix commit contains a `tests/**` addition that fails without the fix) | Regression test + fix, verified red→green |
 
 #### What makes a RED valid — relevance, not the line number it fails on
 
-The discriminator is **whether the failure is about the behaviour under test**,
+The discriminator is **whether the failure is about the behavior under test**,
 never where in the run it surfaces. A class that does not exist yet can only
 fail at load, so demanding an assertion would force a production stub before
 the first test — the exact thing this skill forbids. The four invalid classes
-are failures of the harness: they would fail identically with the behaviour
+are failures of the harness: they would fail identically with the behavior
 fully implemented, so they measure nothing about it. Unsure → re-read the
 failure output and name which of the seven it is; an unclassified red is not a
 RED.
