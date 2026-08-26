@@ -241,7 +241,6 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
-<<<<<<< HEAD
       - name: Eval specifications — a gate on the measurement inputs
         # road-to-skill-ecosystem-eval-integrity Phase 1 Step 7. Promoted to a
         # PR-blocking gate on day one rather than landing advisory: the
@@ -252,7 +251,6 @@ jobs:
         # corpus has to rest on.
         run: ./scripts-run src/scripts/lint_eval_specs
 
-=======
       - name: Beta review deadlines — a lapsed contract is visible on the PR
         # road-to-contract-review-deadlines 2.1. The gate lived only in `task ci`,
         # which no workflow invokes, so its findings were red on main and invisible
@@ -260,7 +258,6 @@ jobs:
         # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
         # fail; a FRESH lapse fails, which is what a pull request needs to see.
         run: ./scripts-run src/scripts/check_beta_review_markers
->>>>>>> origin/main
       - name: Canonical terms — the house dialect, held by a ratchet
         # road-to-canonical-terms Phase 2. The corpus is NOT clean on day one:
         # `sweep_authorised: false` in src/config/canonical-terms.yml is a live
