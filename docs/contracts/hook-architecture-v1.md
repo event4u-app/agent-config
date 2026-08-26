@@ -609,6 +609,37 @@ session — so no observed host discriminator exists, matching the judgment
 ladder's caller-supplied `insideSubagentSession` stance. `--dry-run` prints the
 resolved role alongside the concern plan.
 
+## Stop-event capability tiers — where enforcement is REAL
+
+> `road-to-skill-ecosystem-runtime-enforcement` Phase 5 Step 5.
+
+A bounded loop driven from the stop event is only as strong as the host's answer
+to one question: **can this host be told to keep going?** Three tiers, and the
+distinction is not a nuance — a mechanism described as "enforced" on tier 2 or 3
+is described wrongly.
+
+| tier | what the host does with a stop-slot block | hosts |
+|---|---|---|
+| **1 — blocks** | the turn does not end; the concern's stderr is fed back and the agent continues in the SAME turn | `claude` |
+| **2 — re-injects** | the turn ends; the text reaches the next turn as context, so continuation depends on the model reading it | hosts that bind a stop slot and discard the dispatcher's verdict — `augment`, `cowork` today |
+| **3 — notifies only** | the event fires and nothing the concern returns changes what happens next | every host with a stop-adjacent event and no verdict channel |
+
+**Enforcement is real on tier 1 and nowhere else.** On tier 2 the loop is a
+suggestion the model may decline, and on tier 3 it is a log line. That is why
+`run-continuation` carries `severity: blocking` and why the honest claim about it
+is *"the loop is enforced on claude and advisory elsewhere"* — not *"the loop is
+enforced"*.
+
+Two consequences worth stating rather than leaving to be re-derived:
+
+- **A budget is still worth keeping on tiers 2 and 3.** The iteration counter,
+  the wall-clock cap and the stall window all still bound what the concern ASKS
+  for, so a degraded tier produces fewer, better-targeted re-engagements rather
+  than an unbounded stream of ignored ones.
+- **`agent-config hooks:status` is the answer for the host you are on**, not this
+  table. The table records what the manifest binds; the status command reads what
+  is actually installed, and the two can differ on any given machine.
+
 ## Concurrency — atomic state writes
 
 Concerns that write under `agents/runtime/state/` MUST use the pattern:

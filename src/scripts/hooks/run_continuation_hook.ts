@@ -168,6 +168,7 @@ const EXIT_BLOCK = 1;
  * same defect the next time one side is tuned.
  */
 import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
+import { atomicWriteJson, detectUnavailableDependency, type UnavailableDependency } from '../_lib/loop_guards.js';
 
 /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
 export { TRANSCRIPT_READ_MAX_BYTES };
@@ -341,7 +342,8 @@ export type LadderAction =
     | 'blocked'
     | 'halt-max-iterations'
     | 'halt-wall-clock'
-    | 'halt-stall';
+    | 'halt-stall'
+    | 'halt-dependency-unavailable';
 
 /** The terminal rungs — the set `RunState.halted` may hold. */
 /**
@@ -356,6 +358,10 @@ export const HALT_ACTIONS: readonly LadderAction[] = [
     'halt-max-iterations',
     'halt-wall-clock',
     'halt-stall',
+    // Phase 5.4. Checked BEFORE the counter rungs: a dependency the run cannot
+    // obtain is not something more iterations close, so consuming the budget
+    // against it is the waste the rung exists to stop.
+    'halt-dependency-unavailable',
 ];
 
 /**
@@ -479,6 +485,9 @@ export function ladder(
         wallClockMs: WALL_CLOCK_CAP_MS,
         stallWindow: STALL_WINDOW,
     },
+    // Phase 5.4. `null` when nothing unobtainable was detected. Optional so every
+    // existing caller and test keeps its meaning unchanged.
+    unavailable: UnavailableDependency | null = null,
 ): LadderAction {
     // A halt is terminal for this run id. Checked BEFORE `complete` so a
     // halted run whose roadmap later reads zero-open does not report a
@@ -488,6 +497,10 @@ export function ladder(
     // with blocked steps left is exhaustion of runnable work, not completion —
     // ADR-235's own terminal outcome, and never a sixth halt.
     if (openCount === 0) return blockedCount > 0 ? 'blocked' : 'complete';
+    // BEFORE the counter rungs, deliberately: a missing credential, an absent
+    // binary or an exhausted quota is not closed by iterating, so spending the
+    // budget on it converts a nameable blocker into an anonymous cap-out.
+    if (unavailable !== null) return 'halt-dependency-unavailable';
     if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
     const started = Date.parse(state.started_at);
     if (Number.isFinite(started) && nowMs - started >= caps.wallClockMs) {
@@ -576,13 +589,12 @@ export function readRunState(
  * the ladder cannot bound the loop. Every other caller ignores it (fail-open).
  */
 function writeState(file: string, state: RunState): boolean {
-    try {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, `${JSON.stringify(state)}\n`, 'utf8');
-        return true;
-    } catch {
-        return false;
-    }
+    // ATOMIC (runtime-enforcement Phase 5.2): temp beside the target, then
+    // rename. This file is the loop's ITERATION BUDGET — a torn direct write
+    // leaves a record `parseRecord` rejects, the counter restarts at zero, and
+    // the cap stops bounding anything. A non-atomic budget write fails as an
+    // UNBOUNDED loop, which is what the budget exists to prevent.
+    return atomicWriteJson(file, state);
 }
 
 /**
@@ -1377,7 +1389,19 @@ export function main(): number {
         state.history_source = roadmapFile;
     }
 
-    const action = ladder(state, scan.open, Date.now(), scan.blocked);
+    // Phase 5.4 — a dependency the run cannot obtain. Read from the transcript
+    // TAIL only: an authentication failure from an hour ago that was then fixed
+    // must not halt the run now. A read failure is `null` (fail-open), because a
+    // detector that cannot read must not manufacture a halt.
+    let unavailable: UnavailableDependency | null = null;
+    try {
+        const raw = fs.readFileSync(transcriptPath, 'utf8');
+        unavailable = detectUnavailableDependency(raw.slice(-DEPENDENCY_SCAN_BYTES));
+    } catch {
+        unavailable = null;
+    }
+
+    const action = ladder(state, scan.open, Date.now(), scan.blocked, undefined, unavailable);
 
     if (action !== 'engage') {
         // A run that is ALREADY stamped emits nothing further — round 6 finding 6.

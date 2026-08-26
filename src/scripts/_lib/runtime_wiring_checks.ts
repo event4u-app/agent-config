@@ -269,3 +269,111 @@ export function checkInheritedGitEnv(env: NodeJS.ProcessEnv = process.env): Wiri
             'or resolve the root with _lib/repo_root.ts, which refuses instead of guessing',
     };
 }
+
+/**
+ * The four runtime-wiring runners, as one table.
+ *
+ * Returned as a map rather than registered inline at each of `cmd_doctor`'s TWO
+ * runner tables: written there it is ~20 lines duplicated, and every line of
+ * that file above 1,500 is charged by `check_source_size_budget`. One factory,
+ * two spreads.
+ */
+/** The four ids, in render order. Spread into `cmd_doctor`'s two id registries. */
+export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env'] as const;
+
+export function wiringRunners(opts: {
+    packageRoot: string;
+    iterOverrides: () => Iterable<[string, unknown, string]>;
+}): Record<string, () => WiringCheck> {
+    return {
+        'settings-resolution': () => checkSettingsResolution(opts.iterOverrides),
+        'router-artifact': () => checkRouterArtifact(opts.packageRoot),
+        // Per-hook COST is not probed on the default path: it spawns one process
+        // per registered concern (53 today), turning a read-only diagnostic into
+        // a multi-second one. `probeHookCost` is exported for a caller that wants it.
+        'hook-resolution': () => checkHookResolution(opts.packageRoot).check,
+        'inherited-git-env': () => checkInheritedGitEnv(),
+    };
+}
+
+/**
+ * Managed hook wiring (single-surface model): the deterministic hook matrix
+ * must be registered in ~/.claude/settings.json AND the dispatch target
+ * (`agent-config` binary) must resolve on PATH. Both halves are required —
+ * hooks without a binary silently no-op every session.
+ */
+export interface HookWiringDeps {
+    which: (bin: string) => string | null;
+    packageRoot: string;
+    homeDir: string;
+    buildMatrix: (manifestPath: string) => Record<string, unknown>;
+    managedSignature: string;
+    pluginInstalled: () => boolean;
+}
+
+export function checkHookWiring(deps: HookWiringDeps): WiringCheck {
+    const claude = deps.which('claude');
+    if (claude === null) {
+        return {
+            id: 'hook-wiring',
+            status: 'skipped',
+            message: 'Claude Code CLI not on PATH — hook-wiring check not applicable',
+            remedy: '',
+        };
+    }
+    const settings_path = path.join(deps.homeDir, '.claude', 'settings.json');
+    let missing: string[];
+    try {
+        const matrix = deps.buildMatrix(path.join(deps.packageRoot, 'src', 'scripts', 'hook_manifest.yaml'));
+        const settings = fs.existsSync(settings_path)
+            ? (JSON.parse(fs.readFileSync(settings_path, 'utf8')) as Record<string, unknown>)
+            : {};
+        const hooks = ((settings['hooks'] ?? {}) as Record<string, unknown>) || {};
+        missing = Object.keys(matrix).filter((ev) => {
+            const groups = hooks[ev];
+            if (!Array.isArray(groups)) return true;
+            return !JSON.stringify(groups).includes(deps.managedSignature);
+        });
+    } catch (e) {
+        return {
+            id: 'hook-wiring',
+            status: 'fail',
+            message: `cannot evaluate managed hooks: ${String(e)}`,
+            remedy: 'fix ~/.claude/settings.json (invalid JSON?), then agent-config refresh --global',
+        };
+    }
+    const binary_ok = deps.which('agent-config') !== null;
+    if (missing.length === 0 && binary_ok) {
+        return {
+            id: 'hook-wiring',
+            status: 'ok',
+            message: 'managed hooks registered in ~/.claude/settings.json; dispatch binary on PATH',
+            remedy: '',
+        };
+    }
+    if (missing.length > 0 && deps.pluginInstalled()) {
+        return {
+            id: 'hook-wiring',
+            status: 'warn',
+            message:
+                `managed hooks missing for: ${missing.join(', ')} — currently carried by the ` +
+                'installed plugin (deprecated surface)',
+            remedy: 'agent-config refresh --global (writes the managed settings.json block)',
+        };
+    }
+    const parts: string[] = [];
+    if (missing.length > 0) parts.push(`managed hooks missing for: ${missing.join(', ')}`);
+    if (!binary_ok) parts.push('`agent-config` not on PATH (hooks would silently no-op)');
+    if (parts.length === 0) {
+        // hooks complete, binary missing was the only issue → covered above.
+        parts.push('`agent-config` not on PATH');
+    }
+    return {
+        id: 'hook-wiring',
+        status: 'fail',
+        message: parts.join('; '),
+        remedy: binary_ok
+            ? 'agent-config refresh --global'
+            : 'npm install -g @event4u/agent-config, then agent-config refresh --global',
+    };
+}
