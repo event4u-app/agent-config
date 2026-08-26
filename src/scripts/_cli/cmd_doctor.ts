@@ -99,6 +99,7 @@ import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
 import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
+import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
@@ -106,6 +107,7 @@ import {
     ROOT_OVERRIDE_ENV,
     ProjectRootError,
     find_project_root_with_trace,
+    iter_setting_overrides,
     project_settings_path,
     resolve_project_root,
     type TraceRecord,
@@ -771,6 +773,10 @@ const CHECK_IDS = [
     'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
+    'settings-resolution',
+    'router-artifact',
+    'hook-resolution',
+    'inherited-git-env',
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -802,6 +808,10 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
+    'settings-resolution',
+    'router-artifact',
+    'hook-resolution',
+    'inherited-git-env',
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -2970,6 +2980,23 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        // Runtime-wiring checks (road-to-skill-ecosystem-runtime-enforcement
+        // Phase 2). They live in `_lib/runtime_wiring_checks.ts` rather than
+        // here: this file is already 3,700 lines, and every line above 1,500 is
+        // charged by `check_source_size_budget`.
+        //
+        // Per-hook COST is deliberately NOT probed on the default path — it
+        // would spawn one process per registered concern (53 today), turning a
+        // read-only diagnostic into a multi-second one. `probeHookCost` is
+        // exported for a caller that wants the number.
+        'settings-resolution': () =>
+            runtime_wiring.checkSettingsResolution(() =>
+                iter_setting_overrides({ cwd: project_root }),
+            ) as unknown as Dict,
+        'router-artifact': () => runtime_wiring.checkRouterArtifact(_package_root()) as unknown as Dict,
+        'hook-resolution': () =>
+            runtime_wiring.checkHookResolution(_package_root()).check as unknown as Dict,
+        'inherited-git-env': () => runtime_wiring.checkInheritedGitEnv() as unknown as Dict,
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
@@ -3054,6 +3081,23 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        // Runtime-wiring checks (road-to-skill-ecosystem-runtime-enforcement
+        // Phase 2). They live in `_lib/runtime_wiring_checks.ts` rather than
+        // here: this file is already 3,700 lines, and every line above 1,500 is
+        // charged by `check_source_size_budget`.
+        //
+        // Per-hook COST is deliberately NOT probed on the default path — it
+        // would spawn one process per registered concern (53 today), turning a
+        // read-only diagnostic into a multi-second one. `probeHookCost` is
+        // exported for a caller that wants the number.
+        'settings-resolution': () =>
+            runtime_wiring.checkSettingsResolution(() =>
+                iter_setting_overrides({ cwd: project_root }),
+            ) as unknown as Dict,
+        'router-artifact': () => runtime_wiring.checkRouterArtifact(_package_root()) as unknown as Dict,
+        'hook-resolution': () =>
+            runtime_wiring.checkHookResolution(_package_root()).check as unknown as Dict,
+        'inherited-git-env': () => runtime_wiring.checkInheritedGitEnv() as unknown as Dict,
         'stale-orphans': _check_stale_orphans,
         // BOTH registries need the id. Registering only the first one crashed with
         // `runners[cid] is not a function` on a global-only consumer, which is the
