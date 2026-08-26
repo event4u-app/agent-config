@@ -108,7 +108,13 @@ export function runReach(root: string): { failures: string[]; scanned: number } 
             continue;
         }
         if (r.status === 'skipped-tool-absent') {
-            ledger.skip(r.id, 'optional_surface_absent');
+            // `precondition_unmet` rather than a new code: the closed union in
+            // `_lib/gate_ledger.ts` is the audit surface, and an absent host
+            // tool IS a precondition that settled the verdict before the
+            // projection could be inspected. Widening the union for one caller
+            // would make the ledger's vocabulary grow per gate, which is the
+            // property that keeps `SKIP_REASON_MESSAGE` readable.
+            ledger.skip(r.id, 'precondition_unmet');
             continue;
         }
         ledger.fail(r.id, r.reason);

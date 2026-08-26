@@ -193,7 +193,22 @@ block on this host constrains every new hook's exit contract.
       **DONE — `matchesWholeLine`, with an honest scope note.** The hazard is cheap to hit: a transcript contains everything the agent said, including quoted examples, so a substring match lets *"exit when you print RUN-COMPLETE"* terminate a run and a fenced example extend one. **This loop derives completion from roadmap checkboxes, not from transcript text, so it has no substring hazard today** — the matcher exists for Step 4's detector, which does read the transcript, and for the next reader who reaches for `includes()`.
 - [x] **Step 4:** Detect an unavailable dependency in the transcript and exit rather than consuming iterations against a gap the loop cannot close.
 
-      **DONE — `halt-dependency-unavailable`, checked BEFORE the counter rungs.** A missing credential, an absent binary, a 403 or an exhausted quota is not closed by iterating, so spending the budget on it converts a nameable blocker into an anonymous cap-out. The detector is a short LITERAL pattern list, never a heuristic: a general "looks like an error" match would end runs on ordinary test failures, which are exactly what a loop should iterate on. Tail-scanned, so an auth failure that was already fixed cannot halt a healthy run.
+      **DONE — `halt-dependency-unavailable`, checked BEFORE the counter rungs.**
+      **CORRECTED IN THE SAME PR, and the correction is the more useful half.**
+      The rung shipped DEAD: the transcript read referenced a constant that was
+      never defined, and because that read sits inside a `catch` that fail-opens
+      to `null`, the ReferenceError was swallowed on every fire. `task
+      typecheck-ts` caught it — `npx tsc` against the root config did not, which
+      is why the project's own task is the typecheck that counts. Every pure
+      `ladder()` assertion stayed green throughout, because a decision function
+      cannot observe a caller that never computes its input.
+      The read is now `readUnavailableDependency`, exported so the WIRING is
+      testable rather than only the rung, with four tests including a fail-open
+      case and a tail-bound case. Sensitivity proven against the exact original
+      defect: re-introducing the undefined constant reds 2 of 45; restoring it
+      returns 45 passed.
+
+      A missing credential, an absent binary, a 403 or an exhausted quota is not closed by iterating, so spending the budget on it converts a nameable blocker into an anonymous cap-out. The detector is a short LITERAL pattern list, never a heuristic: a general "looks like an error" match would end runs on ordinary test failures, which are exactly what a loop should iterate on. Tail-scanned, so an auth failure that was already fixed cannot halt a healthy run.
 - [x] **Step 5:** Record the host-capability tier for the stop event: which hosts can genuinely block, which can only re-inject, and which can only notify — and state plainly that enforcement is real only on the first tier.
 
       **DONE — `hook-architecture-v1` § Stop-event capability tiers.** Blocks (claude) / re-injects / notifies-only, and the step's own demand is met in as many words: **enforcement is real on tier 1 and nowhere else.** The honest claim about this loop is *"enforced on claude, advisory elsewhere"*. Two consequences recorded rather than left to be re-derived: a budget is still worth keeping on the degraded tiers, and `agent-config hooks:status` answers for the host you are actually on.

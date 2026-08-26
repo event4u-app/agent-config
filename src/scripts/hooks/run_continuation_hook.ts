@@ -168,7 +168,13 @@ const EXIT_BLOCK = 1;
  * same defect the next time one side is tuned.
  */
 import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
-import { atomicWriteJson, detectUnavailableDependency, stallSignal, type StallLevel, type UnavailableDependency } from '../_lib/loop_guards.js';
+import {
+    atomicWriteJson,
+    readUnavailableDependency,
+    stallSignal,
+    type StallLevel,
+    type UnavailableDependency,
+} from '../_lib/loop_guards.js';
 
 /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
 export { TRANSCRIPT_READ_MAX_BYTES };
@@ -1398,13 +1404,7 @@ export function main(): number {
     // TAIL only: an authentication failure from an hour ago that was then fixed
     // must not halt the run now. A read failure is `null` (fail-open), because a
     // detector that cannot read must not manufacture a halt.
-    let unavailable: UnavailableDependency | null = null;
-    try {
-        const raw = fs.readFileSync(transcriptPath, 'utf8');
-        unavailable = detectUnavailableDependency(raw.slice(-DEPENDENCY_SCAN_BYTES));
-    } catch {
-        unavailable = null;
-    }
+    const unavailable = readUnavailableDependency(transcriptPath);
 
     // Phase 6.6 — the stall signal, WRITTEN rather than re-derived. A consumer
     // asking "is this run still making progress" had to reconstruct it from the

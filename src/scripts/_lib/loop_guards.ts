@@ -93,6 +93,21 @@ const DEPENDENCY_PATTERNS: readonly { kind: UnavailableDependency['kind']; re: R
 ];
 
 /**
+ * How much of the transcript tail a caller should read before scanning it.
+ *
+ * The detector takes text, not a file, so the BYTE bound belongs to the read
+ * and the LINE bound (`tailLines`) belongs to the scan. Both exist and they
+ * bound different things: 64 KiB keeps an arbitrarily long transcript from
+ * being loaded whole, and the line count then keeps a stale failure from
+ * halting a run that already recovered.
+ *
+ * Exported rather than inlined at the one call site so the bound is visible
+ * beside the detector it feeds. A caller that reads the whole file and then
+ * passes it here is not wrong, only wasteful — the line bound still applies.
+ */
+export const DEPENDENCY_SCAN_BYTES = 64 * 1024;
+
+/**
  * Find a dependency the run cannot obtain, from recent transcript text.
  *
  * Returns the FIRST match with the line that produced it, so a halt event can
@@ -175,4 +190,28 @@ export function stallSignal(history: readonly number[], window = 3): StallSignal
     if (newMinimum) return { level: 'progressing', flatRun, minimum, newMinimum };
     if (flatRun >= window) return { level: 'stalled', flatRun, minimum, newMinimum };
     return { level: 'flat', flatRun, minimum, newMinimum };
+}
+
+/**
+ * Read the transcript tail and name a dependency the run cannot obtain.
+ *
+ * Lives here rather than at the call site, beside the detector and the byte
+ * bound it uses. EXPORTED so the wiring is testable,
+ * which is the half that was actually broken: the inline version referenced a
+ * constant that did not exist, and because the read sits inside a `catch`
+ * that fail-opens to `null`, the ReferenceError was swallowed on every fire.
+ * The rung was dead and every pure `ladder()` test stayed green — a test over
+ * the decision function cannot see a caller that never computes the input.
+ *
+ * Fail-open is deliberate and unchanged: a detector that cannot read must not
+ * manufacture a halt. What changed is that "cannot read" is now the only way
+ * to reach `null` by accident.
+ */
+export function readUnavailableDependency(transcriptPath: string): UnavailableDependency | null {
+    try {
+        const raw = fs.readFileSync(transcriptPath, 'utf8');
+        return detectUnavailableDependency(raw.slice(-DEPENDENCY_SCAN_BYTES));
+    } catch {
+        return null;
+    }
 }

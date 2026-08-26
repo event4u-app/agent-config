@@ -295,14 +295,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const report = run(root, ledger);
 
     try {
+        // `exactOptionalPropertyTypes` distinguishes an ABSENT key from one set
+        // to `undefined`, and `ScannedOptions.allowEmpty` is optional-absent
+        // rather than optional-undefined. Spreading the key in only when it
+        // applies says the same thing the ternary meant and type-checks: a
+        // non-fixture run must not carry an empty-scope escape at all.
         assertScanned({
             gate: 'lint_host_portability',
             scanned: report.scanned,
             units: 'authored artefact(s)',
             roots: SCAN_ROOTS,
-            allowEmpty: isFixture
-                ? 'OPTIONAL_INPUT: a self-test fixture may legitimately contain no artefact under a given root.'
-                : undefined,
+            ...(isFixture
+                ? {
+                      allowEmpty:
+                          'OPTIONAL_INPUT: a self-test fixture may legitimately contain no artefact under a given root.',
+                  }
+                : {}),
         });
     } catch (e) {
         if (e instanceof DeadScopeError) {
