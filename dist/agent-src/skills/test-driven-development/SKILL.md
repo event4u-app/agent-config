@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: test-driven-development
-description: "Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'."
+description: "Implementing a feature, fixing a bug, refactoring — failing test first, then the code. For a WRONG test, `testing-anti-patterns` wins."
 domain: quality
 workspaces:
   - engineering

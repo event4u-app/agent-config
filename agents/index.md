@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **734 artefacts** in this package.
+Maintainer-facing index of all **735 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -286,9 +286,9 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`terraform`](../src/skills/terraform/SKILL.md) | official | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../src/skills/terragrunt/SKILL.md) | official | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
 | skill | [`test-case-discovery`](../src/skills/test-case-discovery/SKILL.md) | official | Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'. |
-| skill | [`test-driven-development`](../src/skills/test-driven-development/SKILL.md) | official | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
+| skill | [`test-driven-development`](../src/skills/test-driven-development/SKILL.md) | official | Implementing a feature, fixing a bug, refactoring — failing test first, then the code. For a WRONG test, `testing-anti-patterns` wins. |
 | skill | [`test-performance`](../src/skills/test-performance/SKILL.md) | official | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
-| skill | [`testing-anti-patterns`](../src/skills/testing-anti-patterns/SKILL.md) | official | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions |
+| skill | [`testing-anti-patterns`](../src/skills/testing-anti-patterns/SKILL.md) | official | BEFORE writing/changing tests, mocks, or test-only methods on production classes — mocking-the-mock, production pollution, overfit assertions. Fires on 'this test is flaky'; for order, `test-driven-d… |
 | skill | [`threat-modeling`](../src/skills/threat-modeling/SKILL.md) | official | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
 | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
@@ -642,7 +642,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (114)
+## Guidelines (115)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -670,6 +670,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md) | agent-infra |  |
+| guideline | [`existence-question-verdicts`](../docs/guidelines/agent-infra/existence-question-verdicts.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`false-green`](../docs/guidelines/agent-infra/false-green.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |

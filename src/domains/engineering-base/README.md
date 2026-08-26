@@ -132,9 +132,9 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`terraform`** — Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform.
 - **`terragrunt`** — Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt.
 - **`test-case-discovery`** — Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'.
-- **`test-driven-development`** — Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'.
+- **`test-driven-development`** — Implementing a feature, fixing a bug, refactoring — failing test first, then the code. For a WRONG test, `testing-anti-patterns` wins.
 - **`test-performance`** — Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives.
-- **`testing-anti-patterns`** — Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions
+- **`testing-anti-patterns`** — BEFORE writing/changing tests, mocks, or test-only methods on production classes — mocking-the-mock, production pollution, overfit assertions; for order, `test-driven-development` wins.
 - **`threat-modeling`** — Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation.
 - **`traefik`** — Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
 - **`ui-apply-generic`** — Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus.

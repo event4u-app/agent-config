@@ -224,7 +224,7 @@ sixth the size of what arrived.
       behaviour-slice pair, and the test obligation moved out of the summary
       phase. That example was the exact shape this workstream exists to reject,
       shipped as guidance.
-- [x] **1.3 Raise the rule-layer wording from a preference to a default.**
+- [~] **1.3 Raise the rule-layer wording from a preference to a default.**
       `src/rules/think-before-action.md:43` says `prefer test-first / TDD`. Make
       it the default for behaviour-changing work with an override that is
       recorded rather than silent, and cite the TDD skill Do-NOT list at
@@ -237,6 +237,25 @@ sixth the size of what arrived.
       silent**. Exceptions are **cited**, not restated — the TDD skill's Do-NOT
       list is the single exception set, so the two surfaces cannot drift.
       verify, met: `grep -n "prefer test-first"` → **0**.
+
+      **TRANSFERRED 2026-08-27 — a payload ceiling with zero headroom, not a
+      doubt.** The rule text was written and measured. `check_preamble_payload_budget`
+      enforces a GRACE ceiling pinned exactly at HEAD (138,212), whose stated
+      property is that any growth reds it; `origin/main` measures exactly that,
+      so the headroom is zero. This roadmap's rule-layer additions measured
+      ~2,540 chars across `improve-before-implement` and `think-before-action`,
+      ~490 tokens over. Compression recovered ~800 chars and could not close it —
+      what remained was obligation surface, not prose. Reverted to `origin/main`
+      and transferred to `agents/roadmaps/stubs/road-to-test-first-rule-clauses.md`,
+      which carries this blocker and the council's disposition
+      (2026-08-26, 2/2, **D — fund by a documented value-and-overlap audit, and
+      not before**; raising the ceiling and shipping a red check were both
+      rejected by name).
+
+      **Everything that is not rule payload still ships**: the depth landed in
+      `docs/guidelines/agent-infra/existence-question-verdicts.md`, extracted in
+      the same change, so the reasoning is written down and reachable — only the
+      always-loaded clause is deferred.
 - [x] **1.4 Record the engine ordering decision without producing batch-TDD.**
       `.../work_engine/directives/backend/index.ts:52-55` is a linear tuple, so
       moving `test` in front of `implement` buys a single test phase followed by
@@ -311,7 +330,7 @@ sixth the size of what arrived.
       that file is near its 400-line cap. `skill_linter` green on both.
 ## Phase 3 — The existence question, on the changes that currently skip it
 
-- [x] **3.1 Fire the existence question on bug fixes and trivial changes.**
+- [~] **3.1 Fire the existence question on bug fixes and trivial changes.**
       `src/rules/improve-before-implement.md:38-43` excludes both from
       activation, which switches the reuse rung off for exactly the change
       classes that most often duplicate an existing helper. Narrow the exclusion
@@ -330,7 +349,26 @@ sixth the size of what arrived.
       **diff-decidable**: ≤ 1 file, ≤ 5 changed lines, no new symbol, no new
       dependency — which a typo satisfies with no state to consult, and an added
       symbol never does.
-- [x] **3.2 Give the answer a verdict set instead of a yes or no.**
+
+      **TRANSFERRED 2026-08-27 — a payload ceiling with zero headroom, not a
+      doubt.** The rule text was written and measured. `check_preamble_payload_budget`
+      enforces a GRACE ceiling pinned exactly at HEAD (138,212), whose stated
+      property is that any growth reds it; `origin/main` measures exactly that,
+      so the headroom is zero. This roadmap's rule-layer additions measured
+      ~2,540 chars across `improve-before-implement` and `think-before-action`,
+      ~490 tokens over. Compression recovered ~800 chars and could not close it —
+      what remained was obligation surface, not prose. Reverted to `origin/main`
+      and transferred to `agents/roadmaps/stubs/road-to-test-first-rule-clauses.md`,
+      which carries this blocker and the council's disposition
+      (2026-08-26, 2/2, **D — fund by a documented value-and-overlap audit, and
+      not before**; raising the ceiling and shipping a red check were both
+      rejected by name).
+
+      **Everything that is not rule payload still ships**: the depth landed in
+      `docs/guidelines/agent-infra/existence-question-verdicts.md`, extracted in
+      the same change, so the reasoning is written down and reachable — only the
+      always-loaded clause is deferred.
+- [~] **3.2 Give the answer a verdict set instead of a yes or no.**
       Extend the ladder at `src/rules/improve-before-implement.md:49-51` to a
       named verdict — reuse, extract, refactor, extend, migrate, or new — where
       the new verdict owes negative evidence naming the best existing candidate
@@ -353,7 +391,26 @@ sixth the size of what arrived.
       negative evidence"* instead. The obligation is there and the literal string
       is not. Adding the phrase purely to satisfy a grep would be writing to the
       test, so the substance was kept and the mismatch is reported.
-- [x] **3.3 Point the search at the engine that already exists.**
+
+      **TRANSFERRED 2026-08-27 — a payload ceiling with zero headroom, not a
+      doubt.** The rule text was written and measured. `check_preamble_payload_budget`
+      enforces a GRACE ceiling pinned exactly at HEAD (138,212), whose stated
+      property is that any growth reds it; `origin/main` measures exactly that,
+      so the headroom is zero. This roadmap's rule-layer additions measured
+      ~2,540 chars across `improve-before-implement` and `think-before-action`,
+      ~490 tokens over. Compression recovered ~800 chars and could not close it —
+      what remained was obligation surface, not prose. Reverted to `origin/main`
+      and transferred to `agents/roadmaps/stubs/road-to-test-first-rule-clauses.md`,
+      which carries this blocker and the council's disposition
+      (2026-08-26, 2/2, **D — fund by a documented value-and-overlap audit, and
+      not before**; raising the ceiling and shipping a red check were both
+      rejected by name).
+
+      **Everything that is not rule payload still ships**: the depth landed in
+      `docs/guidelines/agent-infra/existence-question-verdicts.md`, extracted in
+      the same change, so the reasoning is written down and reachable — only the
+      always-loaded clause is deferred.
+- [~] **3.3 Point the search at the engine that already exists.**
       The verdict step calls `agent-config code-graph query` and `code-graph affected`
       rather than specifying a fresh grep protocol; `src/rules/external-code-graph-interop.md`
       already mandates query-before-grep, and a second search specification would
@@ -365,7 +422,26 @@ sixth the size of what arrived.
       than restated — it already mandates query-before-grep and names grep the
       fallback, so a second search specification here would contradict it.
       verify, met: 2 `code-graph` references in the rule.
-- [x] **3.4 Record why the discovery gate is not routed through the TDD cluster.**
+
+      **TRANSFERRED 2026-08-27 — a payload ceiling with zero headroom, not a
+      doubt.** The rule text was written and measured. `check_preamble_payload_budget`
+      enforces a GRACE ceiling pinned exactly at HEAD (138,212), whose stated
+      property is that any growth reds it; `origin/main` measures exactly that,
+      so the headroom is zero. This roadmap's rule-layer additions measured
+      ~2,540 chars across `improve-before-implement` and `think-before-action`,
+      ~490 tokens over. Compression recovered ~800 chars and could not close it —
+      what remained was obligation surface, not prose. Reverted to `origin/main`
+      and transferred to `agents/roadmaps/stubs/road-to-test-first-rule-clauses.md`,
+      which carries this blocker and the council's disposition
+      (2026-08-26, 2/2, **D — fund by a documented value-and-overlap audit, and
+      not before**; raising the ceiling and shipping a red check were both
+      rejected by name).
+
+      **Everything that is not rule payload still ships**: the depth landed in
+      `docs/guidelines/agent-infra/existence-question-verdicts.md`, extracted in
+      the same change, so the reasoning is written down and reachable — only the
+      always-loaded clause is deferred.
+- [~] **3.4 Record why the discovery gate is not routed through the TDD cluster.**
       Two source proposals put it in the TDD design mode. Add a one-paragraph
       note in the rule stating that `src/domains/engineering-base/tdd/command.md`
       is `visibility: internal` and maintainer-scoped, so a consumer cannot reach
@@ -379,6 +455,25 @@ sixth the size of what arrived.
       cannot reach it** — the routing two source proposals asked for is
       undeliverable, not merely unwanted. Recorded in the rule so the next author
       does not re-propose it.
+
+      **TRANSFERRED 2026-08-27 — a payload ceiling with zero headroom, not a
+      doubt.** The rule text was written and measured. `check_preamble_payload_budget`
+      enforces a GRACE ceiling pinned exactly at HEAD (138,212), whose stated
+      property is that any growth reds it; `origin/main` measures exactly that,
+      so the headroom is zero. This roadmap's rule-layer additions measured
+      ~2,540 chars across `improve-before-implement` and `think-before-action`,
+      ~490 tokens over. Compression recovered ~800 chars and could not close it —
+      what remained was obligation surface, not prose. Reverted to `origin/main`
+      and transferred to `agents/roadmaps/stubs/road-to-test-first-rule-clauses.md`,
+      which carries this blocker and the council's disposition
+      (2026-08-26, 2/2, **D — fund by a documented value-and-overlap audit, and
+      not before**; raising the ceiling and shipping a red check were both
+      rejected by name).
+
+      **Everything that is not rule payload still ships**: the depth landed in
+      `docs/guidelines/agent-infra/existence-question-verdicts.md`, extracted in
+      the same change, so the reasoning is written down and reachable — only the
+      always-loaded clause is deferred.
 ## Phase 4 — One runtime carrier, advisory first
 
 - [x] **4.1 Emit a durable RED-run identifier.**
