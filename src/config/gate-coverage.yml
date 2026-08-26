@@ -1936,3 +1936,23 @@ gates:
       the two states the roadmap's verify clause names by hand — a one-line
       behavioural divergence must RED, and a comment-only divergence must stay
       GREEN.
+  - id: lint_skill_link_reach
+    argv: []
+    min_scanned: 200
+    corpus: "every skill directory under dist/agent-src/skills — the tree the installer deploys. 299 at the time this row landed, and the floor sits at 200 because the delivered set shrinks when a skill is archived and a scoped projection can legitimately deliver fewer, while a reading below 200 means the projection is broken rather than smaller."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: dist/agent-src/skills/zz-canary-link-reach/SKILL.md
+      content: |
+        ---
+        name: zz-canary-link-reach
+        description: Canary planted by check_gate_coverage --canary; never ships.
+        ---
+
+        # Canary
+
+        This body links to [a skill that is not delivered](../zz-canary-absent-target/SKILL.md).
+        The gate must red on it: a consumer following that link gets a 404, and a
+        link checker that reads only `src/` cannot see the difference between a
+        missing file and a file that exists but did not ship.
