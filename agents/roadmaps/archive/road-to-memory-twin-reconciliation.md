@@ -129,30 +129,158 @@ not a divergence between them. Step 1.4 below.
       where verdicts belong. Guessing here would have inverted the answer on a
       plausible-sounding reflex, which is exactly why this step says *"named
       explicitly"* rather than *"resolved"*.
-- [ ] **1.3 Characterise `check_memory.ts` (195) and `memory_lookup.ts` (506).**
+- [x] **1.3 Characterise `check_memory.ts` (195) and `memory_lookup.ts` (506).**
       These two carry most of the estate's divergence and may split into more
       than one decision each.
       verify: every difference is in the table, or the step states which subtree
       was not read and why.
-- [ ] **1.4 Decide the `memory_report.ts` export surface** — remove the two
+
+      **DONE 2026-08-26, and the finding is that ONE fact explains both files.**
+      1.1 and 1.2 resolved 36→1 and 45→4; the hypothesis at risk-register rank 2
+      was that the remaining 701 lines were probably not 701 decisions. Measured,
+      it is stronger than that: **there is no bidirectional drift in either file
+      at all.**
+
+      The decisive measurement is the direction count. Of the non-comment diff,
+      the lines present ONLY on the template side are **7** in `check_memory.ts`
+      and **10** in `memory_lookup.ts` — and every one of them is a *shrunken
+      form* of a dev line (a signature without the extra parameter, a loop
+      without the filter), not a behaviour the dev side lacks. The template is a
+      **stale snapshot**, not a fork.
+
+      **The cause is structural, and it is the same one in both files.** The
+      installed consumer tree has **no `scripts/_lib/`** — every template script
+      imports node built-ins, `yaml` and its own installed siblings, nothing
+      else. So a dev behaviour that depends on `_lib/` *cannot* be in the
+      template. Verified per file:
+
+      | file | dev-only imports the template cannot have |
+      |---|---|
+      | `check_memory.ts` | `_lib/as_of.js`, `_lib/scan_scope.js` |
+      | `memory_lookup.ts` | `_lib/lexical_index.js`, `_lib/retrieval_sanitize.js`, `_lib/memory_fts_index.js`, `_lib/as_of.js`, and the uninstalled sibling `learning_sidecar.js` |
+      | `memory_signal.ts` | **none** |
+      | `check_memory_proposal.ts` | `_lib/scan_scope.js` |
+
+      That table is the whole characterisation, because it partitions every
+      difference into **portable** (no such import — must be reconciled) and
+      **structural** (`keep-duplicated`, with the module named).
+
+      **`check_memory.ts` — SEVEN portable differences, all dev-only:** the
+      `priority` enum, the critical-stale SLA (90 days), the one-fact 600-char
+      limit, relative-date discipline, per-type entry caps, the tier-0 inflation
+      warning, and `status: superseded` in `VALID_STATUS`. Two structural:
+      `assertScanned` and `asOf`.
+
+      **`memory_lookup.ts` — TWO portable differences hiding inside a large
+      structural one**, and both are consequential:
+      1. the dev side excludes curated entries with status `deprecated` /
+         `archived` / `superseded` (`_statusExcluded`); the template excluded
+         **none** — it has a `superseded` *relationship* set for intake, which is
+         a different mechanism, so a consumer retrieved deprecated memory;
+      2. the template had **no staleness handling at all** — `grep -c stale`
+         returned **0** — so it served curated entries past their own
+         `review_after_days` window, while its own `check_memory` twin required
+         both fields on every entry.
+      The rest — lexical reranking, FTS recall-gap hits, entry sanitisation, the
+      learning overlay, `retrieve_with_meta` — sits behind the five
+      non-installable imports above.
+- [x] **1.4 Decide the `memory_report.ts` export surface** — remove the two
       `export` keywords, or state the caller that justifies them.
       verify: `git grep` for both names returns either a real caller or nothing,
       and the step records which.
 
+      **DONE 2026-08-26 — BOTH exports stay, and only one of the two reasons is
+      the one this step expected.**
+
+      `_iter_curated_entries` has a **real caller**:
+      `src/scripts/memory_replay_24.ts:41` imports it by name and uses it at
+      `:111`. So the export is load-bearing and the step's first branch applies.
+
+      `CuratedTuple` has **no importer** — the grep returns only its declaration
+      and its use as that function's return type. Removing the `export` would
+      nonetheless make the surface *worse*, not smaller: it is the return type of
+      an exported function, so unexporting it leaves a caller able to receive the
+      value and unable to name it. Recorded as kept, with that reason, rather
+      than deleted on the no-importer reading alone.
+
 **Exit:** every non-comment difference across the four is named, with its
-direction and its consumer-visible effect.
+direction and its consumer-visible effect. **Met**, and the direction turned out
+to be the finding: three of the four diverge in one direction only (the template
+is a stale snapshot), and the fourth diverges in both.
 
 ## Phase 2 — Decide and land
 
-- [ ] **2.1 One recorded verdict per difference** — `dev-side-correct`,
+- [x] **2.1 One recorded verdict per difference** — `dev-side-correct`,
       `template-correct`, or `keep-duplicated` with its reason. A verdict per
       FILE is too coarse: `check_memory_proposal.ts` already has differences
       pointing opposite ways.
       verify: no difference from Phase 1 lacks a verdict.
-- [ ] **2.2 Land each verdict on both sides**, one commit per twin so a
+
+      **DONE 2026-08-26 — every difference carries a verdict, and the verdicts
+      are machine-readable at `src/config/memory-twin-verdicts.yml` rather than
+      only in this prose.**
+
+      | file | difference | verdict |
+      |---|---|---|
+      | `memory_signal.ts` | ADR-130 provenance gate | **dev-side-correct** — portable, and an ABSENT CONTROL rather than a difference |
+      | `check_memory.ts` | 7 validations (priority, critical-stale, one-fact, relative-date, per-type caps, tier-0, `superseded`) | **dev-side-correct** — all portable |
+      | `check_memory.ts` | `assertScanned`, `asOf` | **keep-duplicated** — `_lib/` is not installed |
+      | `check_memory_proposal.ts` | `--quiet` | **dev-side-correct** — portable |
+      | `check_memory_proposal.ts` | mutual-exclusion check | **template-correct** — see below |
+      | `check_memory_proposal.ts` | `assertScanned` | **keep-duplicated** — `_lib/` |
+      | `memory_lookup.ts` | status exclusion, staleness | **dev-side-correct** — portable |
+      | `memory_lookup.ts` | lexical / FTS / sanitize / learning overlay | **keep-duplicated** — five non-installable imports |
+      | `memory_report.ts`, `memory_status.ts` | `__AGENT_CONFIG_BUNDLE__` guard | **keep-duplicated** — unchanged verdict |
+
+      **Rank 5 of the risk register was right, and the verdict went the way it
+      warned.** `check_memory_proposal.ts`'s mutual exclusion is
+      **template-correct**: the dev side checked after the parse loop, so its
+      error always blamed `--proposal` whichever flag came first, while the
+      template checks inline and blames the flag that arrived **second** — which
+      is what argparse does with a mutually exclusive group, and what this file
+      mirrors. A per-file verdict would have taken the dev side wholesale and
+      shipped the drift. Both orders are now pinned by tests on the dev side,
+      which had no coverage of this at all.
+- [x] **2.2 Land each verdict on both sides**, one commit per twin so a
       regression bisects to one file.
       verify: `diff -u` between the two copies of each reconciled twin shows
       only differences a `keep-duplicated` verdict covers.
+
+      **DONE 2026-08-26. Measured before and after, per twin, with the gate's own
+      metric:**
+
+      | twin | before | after | what remains |
+      |---|---:|---:|---|
+      | `memory_signal.ts` | 36 | **0** | nothing — EXACT parity |
+      | `check_memory.ts` | 195 | **18** | `assertScanned` + `asOf` and their imports |
+      | `check_memory_proposal.ts` | 45 | **12** | the `assertScanned` block |
+      | `memory_lookup.ts` | 506 | **504** | the five non-installable imports |
+
+      Every remaining line is covered by a `keep-duplicated` verdict naming the
+      module that forces it, and the parity gate now enforces exactly that.
+
+      **Each ported behaviour is pinned by a test that was observed RED under
+      sabotage** — a filter that silently stops filtering looks identical to one
+      that works. Removing the staleness and status filters from the template
+      reds four assertions; restoring them returns 15/15.
+
+      **A latent trap surfaced and was fixed rather than worked around.**
+      `templates_memory_lookup.test.ts` used a hardcoded `last_validated:
+      2026-01-01`, so the moment staleness was ported its fixtures were 237 days
+      expired and three snapshots went to `(no hits)`. That is the exact
+      clock-drift the dev twin's own test documents at
+      `tests/scripts/memory_lookup.test.ts:21-23`. The fixture is now
+      clock-relative with the live date scrubbed back to a fixed literal for the
+      snapshots — and **all eight pre-existing snapshots then matched byte for
+      byte**, which is the evidence that the reconciliation changed nothing else.
+
+      **What the migration note owes, per risk-register rank 6:** the twins split
+      into *gains a feature* and *closes a hole*, and the second class is
+      `memory_signal.ts` (a consumer could write global-origin and `subject:
+      user` records into tracked project intake) and `memory_lookup.ts` (a
+      consumer retrieved deprecated, archived and stale entries). That
+      distinction is in `src/config/memory-twin-verdicts.yml` per twin, so the
+      release note is generated from the verdicts rather than re-derived.
 - [x] **2.3 State the release class.** Reconciling changes behaviour for installs
       already running the template side, so the change is a patch, a minor, or
       gated behind a migration note — decided, not defaulted.
@@ -202,22 +330,76 @@ direction and its consumer-visible effect.
       is reopened — **as a complete release-class proposal**, which is the form
       it lacked here.
 
-**Exit:** the four twins carry only differences a verdict covers.
+**Exit:** the four twins carry only differences a verdict covers. **Met** — and
+enforced rather than asserted: `lint_memory_twin_parity` fails if any twin
+exceeds its recorded verdict.
 
 ## Phase 3 — A gate, so this cannot recur silently
 
-- [ ] **3.1 A parity gate over the two directories.** For every basename present
+- [x] **3.1 A parity gate over the two directories.** For every basename present
       in both, fail when the non-comment diff exceeds what a recorded
       `keep-duplicated` verdict allows. The verdicts are the allowlist, and each
       entry carries its reason.
       verify: the gate reds on a planted one-line behavioural divergence and
       stays green on a planted comment-only one — both states demonstrated.
-- [ ] **3.2 Register it** — `gate-coverage.yml` row with a canary, a `ci-fast`
+
+      **DONE 2026-08-26 — `src/scripts/lint_memory_twin_parity.ts`, reading
+      `src/config/memory-twin-verdicts.yml`.**
+
+      **Both verify states demonstrated**, as cases 2 and 3 of the gate's own
+      `--self-test`, which shells out to the real CLI over a fixture tree:
+      `✅ a comment-only divergence passes (expected accept, exit 0)` and
+      `✅ a one-line behavioural divergence is rejected (expected reject,
+      exit 1)`. Two further rejecting cases guard the config itself — a declared
+      twin missing on one side, and a bounded twin one line over its ceiling.
+
+      **Two modes, and the second is honest about what it does not do.** `exact`
+      requires an EMPTY non-comment diff and is used wherever a twin can be
+      driven to zero — `memory_signal.ts` and `memory_hash.ts` today. `bounded`
+      is a shrink-only ceiling for the twins that structurally cannot reach zero.
+      It catches **growth, not substitution**: replacing one 18-line divergence
+      with a different 18-line divergence passes. That limit is stated in the
+      gate's header rather than left for a reader to discover, and it is why
+      every twin that can be `exact` is `exact` instead.
+
+      **Rank 4 of the risk register is addressed by construction:** the
+      comparison strips block comments, line comments and blanks from both sides
+      first, so the deliberately different file headers — the template's explains
+      what a consumer installed — cannot fire it.
+
+      The changed-line metric is a **multiset difference**, so moving a function
+      is not a divergence while changing a line's content is. Twelve unit tests
+      pin the stripper and the metric, including the reorder case.
+- [x] **3.2 Register it** — `gate-coverage.yml` row with a canary, a `ci-fast`
       task, the `Taskfile.yml` `ci:` list, and a workflow step.
       verify: `check_ci_local_parity` exits 0 and `check_gate_coverage --canary`
       reports the planted defect caught.
 
-**Exit:** a new divergence fails a build instead of accumulating.
+      **DONE 2026-08-26 — all four surfaces.** `gate-coverage.yml` row
+      (`min_scanned: 7`), `taskfiles/ci-fast.yml` → `lint-memory-twin-parity`,
+      the `Taskfile.yml` `ci:` list, and a `.github/workflows/consistency.yml`
+      step. `check_ci_local_parity` exits **0** and `check_gate_coverage` reports
+      `✅ lint_memory_twin_parity: scanned 7 ≥ 7`.
+
+      **The canary is a `no_canary_reason`, and that is a finding rather than an
+      omission.** The canary contract is create-only; this gate's population is
+      the `twins:` list inside one tracked config file, and every violation it
+      can have is a MODIFICATION — a twin drifting, a verdict deleted, a ceiling
+      exceeded. A planted new file lands outside the list by construction and the
+      gate correctly ignores it. Same class as `check_no_automerge_key`,
+      `check_condensation` and `check_ci_local_parity`, and recorded in the row
+      with the `--self-test` cited as what proves discrimination instead.
+
+      **The floor is the EXACT count, not a lower bound.** This list does not
+      grow by ordinary work — a twin is added only when a script is deliberately
+      duplicated into the template tree — so a DROP means a verdict was deleted
+      rather than earned.
+
+**Exit:** a new divergence fails a build instead of accumulating. **Met for
+growth and for the two exact-parity twins; NOT met for a same-size substitution
+inside a bounded twin**, which the gate's header states plainly. Closing that
+needs per-hunk verdicts, and the honest position today is a ceiling with its
+limit named rather than a stronger claim than the mechanism supports.
 
 ## What this roadmap does NOT do
 
@@ -272,16 +454,46 @@ direction and its consumer-visible effect.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every non-comment difference across the four twins is named in a
+- [x] AC-1 — Every non-comment difference across the four twins is named in a
       table with its direction and its consumer-visible effect, or is recorded
       as an unread subtree with a reason.
-- [ ] AC-2 — Every named difference carries a verdict, and no verdict is
+      **Met, and the table is smaller than the line count implied because the
+      direction is uniform.** 1.1 and 1.2 named their differences individually
+      (1 and 4); 1.3 partitions the remaining 701 lines by the one fact that
+      explains them — whether the dev behaviour depends on a module the
+      installed template cannot import. No subtree is recorded unread: the
+      template-only line counts (7 and 10) were measured to establish that
+      neither large twin has any behaviour the dev side lacks, which is what
+      makes a partition legitimate instead of a shortcut.
+- [x] AC-2 — Every named difference carries a verdict, and no verdict is
       assigned per file where the file's differences point opposite ways.
+      **Met, and the second clause was load-bearing exactly where the risk
+      register predicted.** `check_memory_proposal.ts` carries three verdicts,
+      not one: `dev-side-correct` for `--quiet`, **`template-correct`** for the
+      mutual-exclusion check, and `keep-duplicated` for `assertScanned`. A
+      per-file verdict would have taken the dev side wholesale and shipped an
+      argparse-unfaithful error message. `memory_lookup.ts` likewise carries two
+      opposing verdicts — `dev-side-correct` for the two portable filters,
+      `keep-duplicated` for everything behind the five non-installable imports.
+      The verdicts are machine-readable in `src/config/memory-twin-verdicts.yml`
+      and are the allowlist the gate reads, so a verdict cannot rot away from the
+      thing it governs.
 - [x] AC-3 — The release class is recorded before any reconciliation lands.
-      **Met.** **MINOR**, recorded at 2.3 on 2026-08-25, and no reconciliation
-      has landed — Phase 2's steps 2.1 and 2.2 are still open, so the ordering
-      this criterion exists to guarantee holds by construction rather than by
-      assertion.
-- [ ] AC-4 — The parity gate is registered on all four surfaces, reds on a
+      **Met, and the wording is CORRECTED rather than left standing.** It read
+      *"no reconciliation has landed — Phase 2's steps 2.1 and 2.2 are still
+      open"*, which was true when written on 2026-08-25 and is not true of this
+      change. The criterion is still met, and by the stronger reading: **MINOR**
+      was recorded at 2.3 on 2026-08-25, and 2.1/2.2 landed on 2026-08-26 — the
+      ordering this criterion exists to guarantee is now a fact about the commit
+      history rather than a consequence of nothing having happened yet.
+- [x] AC-4 — The parity gate is registered on all four surfaces, reds on a
       planted behavioural divergence, and stays green on a planted comment-only
       one.
+      **Met on all three clauses.** Four surfaces: `gate-coverage.yml` row,
+      `ci-fast` task, the `Taskfile.yml` `ci:` list, a `consistency.yml` step;
+      `check_ci_local_parity` exits 0 and the coverage census reports
+      `scanned 7 ≥ 7`. Both plant states are cases 2 and 3 of the gate's
+      `--self-test`, run through the real CLI. The row carries a
+      `no_canary_reason` rather than a recipe, because a create-only plant
+      cannot reach a corpus that is a list inside one tracked config file — the
+      reason and the `--self-test` citation are in the row.

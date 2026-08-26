@@ -230,14 +230,24 @@ function parse_args(argv: readonly string[]): ParsedArgs {
     let quiet = false;
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i]!;
-        if (arg === '--intake-id') {
-            intake_id = _need(argv, ++i, '--intake-id');
-        } else if (arg.startsWith('--intake-id=')) {
-            intake_id = arg.slice('--intake-id='.length);
-        } else if (arg === '--proposal') {
-            proposal = _need(argv, ++i, '--proposal');
-        } else if (arg.startsWith('--proposal=')) {
-            proposal = arg.slice('--proposal='.length);
+        // Mutual exclusion is checked INLINE, at the second flag, and the error
+        // names the flag that arrived second. That is what argparse does with a
+        // mutually exclusive group, and this file mirrors argparse's messages
+        // exactly — the post-loop check it replaced was order-stable and always
+        // blamed `--proposal`, which inverts the blame when `--proposal` came
+        // first. Reconciled toward the TEMPLATE side (road-to-memory-twin
+        // -reconciliation 2.1): the copy that looked like the drift was the
+        // faithful one.
+        if (arg === '--intake-id' || arg.startsWith('--intake-id=')) {
+            if (proposal !== null) {
+                _argparse_error('argument --intake-id: not allowed with argument --proposal');
+            }
+            intake_id = arg === '--intake-id' ? _need(argv, ++i, '--intake-id') : arg.slice('--intake-id='.length);
+        } else if (arg === '--proposal' || arg.startsWith('--proposal=')) {
+            if (intake_id !== null) {
+                _argparse_error('argument --proposal: not allowed with argument --intake-id');
+            }
+            proposal = arg === '--proposal' ? _need(argv, ++i, '--proposal') : arg.slice('--proposal='.length);
         } else if (arg === '--format') {
             const v = _need(argv, ++i, '--format');
             format = _checkFormat(v);
@@ -254,9 +264,6 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         } else {
             _argparse_error(`unrecognized arguments: ${arg}`);
         }
-    }
-    if (intake_id !== null && proposal !== null) {
-        _argparse_error('argument --proposal: not allowed with argument --intake-id');
     }
     if (intake_id === null && proposal === null) {
         _argparse_error('one of the arguments --intake-id --proposal is required');

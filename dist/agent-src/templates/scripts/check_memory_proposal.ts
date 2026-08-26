@@ -217,6 +217,7 @@ interface ParsedArgs {
     intake_id: string | null;
     proposal: string | null;
     format: 'text' | 'json';
+    quiet: boolean;
 }
 
 function _argparse_error(message: string): never {
@@ -228,6 +229,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
     let intake_id: string | null = null;
     let proposal: string | null = null;
     let format: 'text' | 'json' = 'text';
+    let quiet = false;
     // argparse reports a mutually-exclusive conflict against the SECOND-seen
     // arg at the point it is parsed (order-sensitive), so check inline rather
     // than after the loop.
@@ -248,10 +250,12 @@ function parse_args(argv: readonly string[]): ParsedArgs {
             format = _checkFormat(v);
         } else if (arg.startsWith('--format=')) {
             format = _checkFormat(arg.slice('--format='.length));
+        } else if (arg === '--quiet') {
+            quiet = true;
         } else if (arg === '-h' || arg === '--help') {
             process.stdout.write(
                 'usage: check_memory_proposal [-h] (--intake-id INTAKE_ID | --proposal PROPOSAL)\n' +
-                    '                             [--format {text,json}]\n',
+                    '                             [--format {text,json}] [--quiet]\n',
             );
             process.exit(0);
         } else {
@@ -261,7 +265,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
     if (intake_id === null && proposal === null) {
         _argparse_error('one of the arguments --intake-id --proposal is required');
     }
-    return { intake_id, proposal, format };
+    return { intake_id, proposal, format, quiet };
 }
 
 function _need(argv: readonly string[], i: number, flag: string): string {
@@ -322,7 +326,9 @@ function main(argv?: readonly string[]): number {
                 process.stdout.write(`  🔴 ${f}\n`);
             }
         } else {
-            process.stdout.write(`✅  ${source} — gate passed\n`);
+            if (!args.quiet) {
+                process.stdout.write(`✅  ${source} — gate passed\n`);
+            }
         }
     }
     return failures.length > 0 ? 1 : 0;

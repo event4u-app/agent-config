@@ -1,0 +1,129 @@
+# Memory-twin parity verdicts — the allowlist `lint_memory_twin_parity.ts` reads.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# Seven scripts exist twice: once under `src/scripts/` (this repository's own
+# tooling) and once under `src/agent-src/templates/scripts/` (what a consumer
+# installs). `package.json:files[]` ships BOTH directories, and until
+# `road-to-memory-twin-reconciliation` landed there was no sync, no drift check
+# and no parity gate between them — so the copies diverged in both directions
+# and nothing noticed.
+#
+# THE STRUCTURAL CONSTRAINT THAT SHAPES EVERY VERDICT
+# ---------------------------------------------------
+# The installed consumer tree has NO `scripts/_lib/`. A template script may
+# import node built-ins, `yaml`, and its own installed siblings — nothing else.
+# So every `keep-duplicated` verdict below is one of exactly two things:
+#
+#   (a) the dev side uses a `_lib/` module the template cannot import, or
+#   (b) the dev side uses a sibling under `src/scripts/` that is not installed.
+#
+# A difference that is NEITHER is drift, and the gate says so.
+#
+# THE TWO MODES
+# -------------
+# `exact` — the non-comment diff must be EMPTY. Any divergence fails.
+# NOTE ON THE NUMBERS: the ceilings are the gate's own MULTISET metric — a line
+# present N times on one side and M on the other contributes |N-M| — not a
+# `diff -u` hunk count, which is larger because it is order-sensitive. Read them
+# with `lint_memory_twin_parity`, never off a diff.
+#
+# `bounded` — a recorded ceiling on non-comment changed lines, shrink-only. It
+#   catches GROWTH, which is the failure mode ("the copies drift apart again"),
+#   and deliberately does not claim to catch a same-size substitution. Where a
+#   twin can be driven to `exact` it is, because `exact` is the stronger check
+#   and a ceiling is what you accept when you cannot have one.
+schema_version: memory-twin-verdicts-v1
+registered_at: '2026-08-26'
+owner: maintainer
+review_by: '2027-08-26'
+
+dev_root: src/scripts
+template_root: src/agent-src/templates/scripts
+
+twins:
+  - file: memory_signal.ts
+    mode: exact
+    verdict: dev-side-correct
+    reason: >-
+      Reconciled to zero on 2026-08-26. The template was missing ADR-130's
+      provenance gate entirely — ProvenanceRefusedError, _origin_is_global,
+      _assert_project_writable and the additive `subject: project` default — so a
+      consumer could write a `subject: user` record, and a record whose origin
+      resolves into the user-global store, into tracked project intake. That is
+      an ABSENT CONTROL rather than a behaviour difference. The gate is portable
+      (node built-ins only), so nothing justified the gap.
+
+  - file: memory_hash.ts
+    mode: exact
+    verdict: keep-duplicated
+    reason: >-
+      Already at zero before this roadmap. Recorded as `exact` rather than left
+      unlisted so a future divergence fails instead of being discovered later.
+
+  - file: check_memory.ts
+    mode: bounded
+    max_changed_lines: 18
+    verdict: dev-side-correct
+    reason: >-
+      Reconciled 195 -> 18 on 2026-08-26. The template was a stale snapshot
+      missing SEVEN validations the dev side had grown: the `priority` enum, the
+      critical-stale SLA, the one-fact length limit, relative-date discipline,
+      per-type caps, tier-0 inflation, and `status: superseded`. All are portable
+      and all were ported. The 18 that remain are case (a) twice — `assertScanned`
+      (`_lib/scan_scope.js`) and `asOf` (`_lib/as_of.js`) — plus the two import
+      lines and the `new Date()` substitution they force.
+
+  - file: check_memory_proposal.ts
+    mode: bounded
+    max_changed_lines: 12
+    verdict: mixed
+    reason: >-
+      Reconciled 45 -> 12 on 2026-08-26, and this twin is why a per-FILE verdict
+      would have been wrong. It diverged in BOTH directions: `--quiet` was
+      dev-only and was ported to the template, while the mutual-exclusion check
+      was TEMPLATE-correct and was ported to the dev side — the template's error
+      names the flag that arrived second, which is what argparse does and what
+      this file mirrors, whereas the dev side's post-loop check always blamed
+      `--proposal`. The remaining 12 are case (a): the `assertScanned` block and
+      its import.
+
+  - file: memory_report.ts
+    mode: bounded
+    max_changed_lines: 8
+    verdict: keep-duplicated
+    reason: >-
+      Case (a) — the `__AGENT_CONFIG_BUNDLE__` entry guard, whose absence in the
+      template is correct by construction: the flag is defined only by the three
+      `esbuild --define` bundles, every one of their entrypoints is under
+      `src/scripts/`, and it appears in no file under the templates tree.
+      Reconciling would put a guard into a file that can never be bundled.
+
+  - file: memory_status.ts
+    mode: bounded
+    max_changed_lines: 4
+    verdict: keep-duplicated
+    reason: Same `__AGENT_CONFIG_BUNDLE__` entry guard as memory_report.ts.
+
+  - file: memory_lookup.ts
+    mode: bounded
+    max_changed_lines: 504
+    verdict: keep-duplicated
+    reason: >-
+      The one twin that cannot be reconciled, and the ceiling is high because the
+      divergence is STRUCTURAL rather than neglect. The dev side depends on FOUR
+      modules the template cannot import — `_lib/lexical_index.js`,
+      `_lib/retrieval_sanitize.js`, `_lib/memory_fts_index.js`, `_lib/as_of.js` —
+      plus the sibling `learning_sidecar.js`, which is not installed. Lexical
+      reranking, FTS recall-gap hits, entry sanitisation, the learning overlay
+      and `retrieve_with_meta` all sit behind those imports.
+      TWO portable gaps were found inside that structural one and BOTH were
+      closed on 2026-08-26: curated entries with status `deprecated` / `archived`
+      / `superseded` were retrieved by the template (the dev side excludes them),
+      and the template had NO staleness handling at all — `grep -c stale`
+      returned zero — so it served curated entries past their own
+      `review_after_days` window. Both are pinned by tests that were observed RED
+      under sabotage.
+      Shrink-only from here. Lowering this number needs either a portable
+      re-implementation or a decision to install `_lib/`, which is the
+      delivery-authority question this roadmap explicitly does not answer.

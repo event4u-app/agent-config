@@ -1,17 +1,36 @@
 #!/usr/bin/env tsx
+/*
+ * TEMPLATE COPY — reconciled with `src/scripts/check_memory.ts` on 2026-08-26
+ * (`road-to-memory-twin-reconciliation` 2.2, verdict `dev-side-correct`).
+ *
+ * TWO differences remain, and both are `keep-duplicated` for the same
+ * STRUCTURAL reason rather than by preference: the installed consumer tree has
+ * no `scripts/_lib/`, so a template script may import node built-ins, `yaml`
+ * and its own installed siblings — nothing else.
+ *
+ *   - `assertScanned` (`_lib/scan_scope.js`), the dead-scope guard. Not
+ *     importable here, and its absence is safe in the direction that matters:
+ *     a consumer with no `agents/memory/` scans zero and passes, which is the
+ *     correct reading for a project that keeps no memory.
+ *   - `asOf` (`_lib/as_of.js`), the reproducible-clock pin behind this
+ *     repository's own `AC_AS_OF` discipline. A consumer has no such pin, so
+ *     `new Date()` is the right substitute rather than a downgrade.
+ *
+ * Everything else is identical, INCLUDING the validations this copy used to
+ * lack entirely: the `priority` enum, the critical-stale SLA, the one-fact
+ * length limit, relative-date discipline, per-type caps, tier-0 inflation, and
+ * `status: superseded`.
+ */
 /**
  * Engineering Memory validator.
  *
- * TypeScript twin of `src/agent-src/templates/scripts/check_memory.py`
- * (ADR-200, Phase 1 — consumer-shipped template). Adapted from the dev-side
- * `src/scripts/check_memory.ts` twin: the template `.py` is the leaner
- * consumer surface — it has NO `--shadow-report`, NO `priority`/date-discipline/
- * critical-stale/tier-0-inflation checks. Those are stripped here so this twin
- * matches the template `.py` exactly. The CLI contract mirrors the Python
- * original EXACTLY — same flags (`--path`, `--format`, `--append-only`,
- * `--base`), same exit codes, same stdout/stderr split, byte-identical finding
- * messages, same scan scope and ordering. No behaviour changes — latent bugs
- * are replicated and flagged in the porting report, not fixed.
+ * Ported from the retired Python `src/scripts/check_memory.py` (ADR-200, Phase 4 /
+ * Wave 4a). The CLI contract pins the historical contract exactly — same
+ * flags (`--path`, `--format`, `--append-only`, `--base`), same exit
+ * codes, same stdout/stderr split,
+ * byte-identical finding messages, same scan scope and ordering. No
+ * behaviour changes — latent bugs are replicated and flagged in the
+ * porting report, not fixed.
  *
  * Validates YAML files under `agents/memory/<type>/**\/*.yml` against the
  * schema documented in `guidelines/agent-infra/engineering-memory-data-format`.
@@ -39,7 +58,7 @@
  *     check_memory --append-only       # CI: diff vs origin/main
  *     check_memory --append-only --base HEAD~1
  *
- * Note on YAML date typing: the Python original relies on PyYAML's
+ * Note on YAML date typing: the retired Python implementation relies on PyYAML's
  * `safe_load` converting unquoted `YYYY-MM-DD` scalars to `datetime.date`
  * (and `YYYY-MM-DD HH:MM:SS` to `datetime.datetime`). The `yaml` npm
  * package parses every scalar to a string, so this twin re-implements
@@ -56,6 +75,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML, { parseDocument } from 'yaml';
 
+
 type Severity = 'error' | 'warning' | 'info';
 
 const REQUIRED_KEYS: ReadonlySet<string> = new Set([
@@ -67,13 +87,47 @@ const REQUIRED_KEYS: ReadonlySet<string> = new Set([
     'last_validated',
     'review_after_days',
 ]);
-const VALID_STATUS: ReadonlySet<string> = new Set(['active', 'deprecated', 'archived']);
+const VALID_STATUS: ReadonlySet<string> = new Set(['active', 'deprecated', 'archived', 'superseded']);
 const VALID_CONFIDENCE: ReadonlySet<string> = new Set(['low', 'medium', 'high']);
+// `priority` is optional (default `normal`); enum is the smallest set that
+// solves the tier-0 surfacing use case. See the Phase 2 council brief for why
+// the `high` tier was rejected.
+const VALID_PRIORITY: ReadonlySet<string> = new Set(['critical', 'normal', 'low']);
+// Soft-cap on `priority: critical` entries per memory type. Tier-0 inflation
+// is the failure mode: when too many entries claim "always surface", the
+// slice loses signal. Warn (not fail) when the cap is exceeded so curators
+// notice without being blocked.
+const CRITICAL_WARN_THRESHOLD = 10;
+// Stale-critical guard: a `priority: critical` entry that hasn't been
+// re-validated in this many days emits a warning. Surfaced separately
+// from the generic `stale:` info so reviewers see it before merge.
+const CRITICAL_STALE_DAYS = 90;
 const KNOWN_TYPES: ReadonlySet<string> = new Set([
     'domain-invariants',
+    'historical-patterns',
     'incident-learnings',
+    'ownership',
     'product-rules',
 ]);
+
+// Per-type soft entry cap (size-bounding without a decay engine). Over-cap →
+// warning, never a hard fail: the right answer to bloat is a consolidation pass
+// (prune archived, merge duplicates), not CI failure. See
+// road-to-memory-pipeline-consolidation.md Phase 7.
+const PER_TYPE_CAPS: Readonly<Record<string, number>> = {
+    ownership: 50,
+    'domain-invariants': 150,
+    'product-rules': 100,
+    'incident-learnings': 150,
+    'historical-patterns': 150,
+};
+const DEFAULT_TYPE_CAP = 150;
+// One-durable-fact-per-entry: a content field longer than this reads as a
+// transcript / narrative blob, not a single durable fact → warning.
+const ONE_FACT_MAX_CHARS = 600;
+const ONE_FACT_FIELDS = ['rule', 'pattern', 'statement', 'observation', 'body', 'decision', 'note'] as const;
+// Per-type entry tally, populated during validation, consumed by main().
+const _TYPE_COUNTS: Record<string, number> = {};
 
 // Redaction heuristics — plain-regex, deliberately conservative.
 // False positives are fixed by quoting the line differently; false
@@ -89,6 +143,15 @@ const REDACTION_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
     [/\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/, 'internal ipv4 range'],
     [/\b192\.168\.\d{1,3}\.\d{1,3}\b/, 'internal ipv4 range'],
 ];
+
+// Date-discipline — relative-date phrases without an ISO YYYY-MM-DD anchor
+// within ±20 chars are rejected. Memory entries that say "yesterday" or
+// "last week" rot the moment the file is re-read on another day; the
+// anchor pins meaning.
+const RELATIVE_DATE_PATTERN =
+    /\b(yesterday|today|tomorrow|last\s+(?:week|month|year)|next\s+(?:week|month|year)|this\s+(?:week|month|year))\b/gi;
+const ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/;
+const DATE_ANCHOR_WINDOW = 20;
 
 // PyYAML timestamp implicit-resolver. A *plain* (unquoted) scalar matching
 // this is constructed as datetime.date / datetime.datetime — both pass
@@ -246,6 +309,15 @@ function _isInteger(v: unknown): v is number {
     return typeof v === 'number' && Number.isInteger(v);
 }
 
+/** Mirror Python len(str) — code-point count, not UTF-16 unit count. */
+function _pyLen(s: string): number {
+    let n = 0;
+    for (const _ of s) {
+        n += 1;
+    }
+    return n;
+}
+
 function _memoryType(p: string): string {
     // Supports `memory/<type>.yml`, `memory/<type>/<hash>.yml`, and
     // `memory/<type>.example.yml` template filenames.
@@ -270,7 +342,13 @@ function _stem(name: string): string {
     return base.slice(0, dot);
 }
 
-function _validateEntry(entry: Entry, p: string, seenIds: Set<string>, findings: Finding[]): void {
+function _validateEntry(
+    entry: Entry,
+    p: string,
+    seenIds: Set<string>,
+    findings: Finding[],
+    criticalCounts: Record<string, number> | null,
+): void {
     const eid = typeof entry['id'] === 'string' ? (entry['id'] as string) : entry['id'] != null ? String(entry['id']) : '';
     const eidStr = entry['id'] == null ? '' : eid;
     const present = new Set(Object.keys(entry));
@@ -292,6 +370,22 @@ function _validateEntry(entry: Entry, p: string, seenIds: Set<string>, findings:
     if (confidence && typeof confidence === 'string' && !VALID_CONFIDENCE.has(confidence)) {
         findings.push(new Finding(p, 0, 'error', `invalid confidence '${confidence}'`, eidStr));
     }
+    // Priority is optional (defaults to `normal` at read time). When present
+    // it MUST be one of the three-tier enum — see VALID_PRIORITY for the
+    // rationale on rejecting a fourth `high` tier.
+    const priority = entry['priority'];
+    if (priority !== undefined && priority !== null && !(typeof priority === 'string' && VALID_PRIORITY.has(priority))) {
+        const sortedPri = [...VALID_PRIORITY].sort();
+        findings.push(
+            new Finding(
+                p,
+                0,
+                'error',
+                `invalid priority '${_pyStr(priority)}' (expected one of [${sortedPri.map((x) => `'${x}'`).join(', ')}])`,
+                eidStr,
+            ),
+        );
+    }
     const sources = (entry['source'] ?? []) as unknown;
     if (!Array.isArray(sources) || sources.length < 1) {
         findings.push(new Finding(p, 0, 'error', 'source must be a list with ≥1 entry', eidStr));
@@ -309,6 +403,71 @@ function _validateEntry(entry: Entry, p: string, seenIds: Set<string>, findings:
             findings.push(new Finding(p, 0, 'info', `stale: last_validated ${age} days ago (limit ${days})`, eidStr));
         }
     }
+    // Critical-stale guard: a `priority: critical` entry that has not been
+    // re-validated within CRITICAL_STALE_DAYS surfaces as a warning, even
+    // when the entry's own `review_after_days` is more lenient. Critical
+    // entries surface on every /memory:load — they have a tighter SLA.
+    if (priority === 'critical' && entry['status'] === 'active' && lv instanceof PyDate) {
+        const critAge = _dateDiffDays(_today(), lv);
+        if (critAge > CRITICAL_STALE_DAYS) {
+            findings.push(
+                new Finding(
+                    p,
+                    0,
+                    'warning',
+                    `critical-stale: last_validated ${critAge} days ago (critical SLA is ${CRITICAL_STALE_DAYS} days)`,
+                    eidStr,
+                ),
+            );
+        }
+    }
+    // One-durable-fact-per-entry: reject transcript/narrative blobs. A single
+    // content field over ONE_FACT_MAX_CHARS is the bloat signal.
+    for (const fld of ONE_FACT_FIELDS) {
+        const val = entry[fld];
+        if (typeof val === 'string' && _pyLen(val) > ONE_FACT_MAX_CHARS) {
+            findings.push(
+                new Finding(
+                    p,
+                    0,
+                    'warning',
+                    `one-fact: \`${fld}\` is ${_pyLen(val)} chars (limit ${ONE_FACT_MAX_CHARS}) — split into separate durable facts, not a narrative blob`,
+                    eidStr,
+                ),
+            );
+            break;
+        }
+    }
+    // Tier-0 inflation tracking — increment per memory type. The aggregate
+    // warning is emitted in main() after all files are validated.
+    if (criticalCounts !== null && priority === 'critical' && entry['status'] === 'active') {
+        const mtype = _memoryType(p);
+        criticalCounts[mtype] = (criticalCounts[mtype] ?? 0) + 1;
+    }
+    // Per-type entry-count tracking — aggregate cap warning in main().
+    if (criticalCounts !== null) {
+        const mt = _memoryType(p);
+        _TYPE_COUNTS[mt] = (_TYPE_COUNTS[mt] ?? 0) + 1;
+    }
+}
+
+/** Mirror Python's `str(value)` for the priority error message. */
+function _pyStr(value: unknown): string {
+    if (value === null) {
+        return 'None';
+    }
+    if (value === true) {
+        return 'True';
+    }
+    if (value === false) {
+        return 'False';
+    }
+    if (value instanceof PyDate) {
+        const mm = String(value.month).padStart(2, '0');
+        const dd = String(value.day).padStart(2, '0');
+        return `${value.year}-${mm}-${dd}`;
+    }
+    return String(value);
 }
 
 function _checkRedaction(p: string, findings: Finding[]): void {
@@ -328,6 +487,38 @@ function _checkRedaction(p: string, findings: Finding[]): void {
     });
 }
 
+function _checkDateDiscipline(p: string, findings: Finding[]): void {
+    // Reject relative-date phrases without an ISO YYYY-MM-DD anchor.
+    const text = fs.readFileSync(p, 'utf-8');
+    const lines = _splitlines(text);
+    lines.forEach((line, idx) => {
+        const lineNo = idx + 1;
+        const stripped = line.trimStart();
+        if (stripped.startsWith('#') || stripped.startsWith('last_validated')) {
+            return;
+        }
+        RELATIVE_DATE_PATTERN.lastIndex = 0;
+        let match: RegExpExecArray | null;
+        while ((match = RELATIVE_DATE_PATTERN.exec(line)) !== null) {
+            const start = Math.max(0, match.index - DATE_ANCHOR_WINDOW);
+            const end = Math.min(line.length, match.index + match[0].length + DATE_ANCHOR_WINDOW);
+            const windowStr = line.slice(start, end);
+            if (ISO_DATE_PATTERN.test(windowStr)) {
+                continue;
+            }
+            const phrase = match[0];
+            findings.push(
+                new Finding(
+                    p,
+                    lineNo,
+                    'error',
+                    `relative date '${phrase}' without an ISO YYYY-MM-DD anchor within ±${DATE_ANCHOR_WINDOW} chars (re-anchor before commit)`,
+                ),
+            );
+        }
+    });
+}
+
 /** Mirror Python str.splitlines() for the line-numbering used above. */
 function _splitlines(text: string): string[] {
     if (text === '') {
@@ -342,12 +533,17 @@ function _splitlines(text: string): string[] {
     return lines;
 }
 
-function _validateFile(p: string, findings: Finding[]): void {
+function _validateFile(
+    p: string,
+    findings: Finding[],
+    criticalCounts: Record<string, number> | null,
+): void {
     const mtype = _memoryType(p);
     if (!KNOWN_TYPES.has(mtype)) {
         findings.push(new Finding(p, 0, 'warning', `unknown memory type '${mtype}'`));
     }
     _checkRedaction(p, findings);
+    _checkDateDiscipline(p, findings);
     let data: unknown;
     try {
         data = pyYamlSafeLoad(fs.readFileSync(p, 'utf-8'));
@@ -369,7 +565,7 @@ function _validateFile(p: string, findings: Finding[]): void {
     if (Array.isArray(entries)) {
         for (const entry of entries) {
             if (_isPlainObject(entry)) {
-                _validateEntry(entry as Entry, p, seenIds, findings);
+                _validateEntry(entry as Entry, p, seenIds, findings, criticalCounts);
             }
         }
     }
@@ -549,8 +745,53 @@ function main(): number {
         }
         return 0;
     }
-    for (const yml of _rglobYmlSorted(root)) {
-        _validateFile(yml, findings);
+    // An ABSENT root stays a pinned exit-0 no-op (the branch above; the memory
+    // tree is an optional surface and `task check-memory` short-circuits it).
+    // A root that EXISTS but walks to zero `*.yml` is the case nothing covered:
+    // entries moved to a subtree this walk does not reach, and the validator
+    // reported "0 error(s)" over an empty read. No `allowEmpty` for that half —
+    // a present-but-unreadable corpus is blindness, not a clean bill of health.
+    // Exit 1 is this gate's only failure code (see `_emit`).
+    // No dead-scope guard: `_lib/scan_scope.js` is not installed with the
+    // template, and a consumer with no `agents/memory/` legitimately scans zero.
+    const ymls = _rglobYmlSorted(root);
+
+    const criticalCounts: Record<string, number> = {};
+    for (const key of Object.keys(_TYPE_COUNTS)) {
+        delete _TYPE_COUNTS[key];
+    }
+    for (const yml of ymls) {
+        _validateFile(yml, findings, criticalCounts);
+    }
+    // Tier-0 inflation warning — soft cap on `priority: critical` per type.
+    // Council convergence (Phase 2 B2): warn rather than block, because the
+    // right answer to "too many criticals" is curator review, not CI failure.
+    for (const [mtype, count] of Object.entries(criticalCounts).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+        if (count > CRITICAL_WARN_THRESHOLD) {
+            findings.push(
+                new Finding(
+                    `agents/memory/${mtype}`,
+                    0,
+                    'warning',
+                    `tier-0 inflation: ${count} active 'priority: critical' entries (threshold ${CRITICAL_WARN_THRESHOLD}) — review whether all still warrant always-surface treatment`,
+                ),
+            );
+        }
+    }
+    // Per-type entry-count cap (size-bounding, Phase 7). Warn, never block —
+    // over-cap signals a consolidation pass is due (prune archived, merge dups).
+    for (const [mtype, count] of Object.entries(_TYPE_COUNTS).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+        const cap = PER_TYPE_CAPS[mtype] ?? DEFAULT_TYPE_CAP;
+        if (count > cap) {
+            findings.push(
+                new Finding(
+                    `agents/memory/${mtype}`,
+                    0,
+                    'warning',
+                    `entry-cap: ${count} entries (soft cap ${cap}) — run a consolidation pass (prune archived, merge duplicates)`,
+                ),
+            );
+        }
     }
     return _emit(findings, args.format);
 }
