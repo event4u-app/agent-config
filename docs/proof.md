@@ -90,7 +90,7 @@ evidence pointer, or `task check-claims` fails the build.
 | We publish our own measured null results and retire or constrain features when the evidence does not support them. Deliberately falsifiable — every published null links the run that produced it; find one that does not resolve and this line updates. | qual | `docs/benchmark.md#honest` | ✅ |
 | Every artifact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-08-26 via that counter: skills 299, rules 120, commands 202 (recursive; 61 top-level), guidelines 114, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 61 top-level files, and `rules` counts the 120 source rules while the linked projection holds 119 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one. | quant | `exec:update_counts --check -> 0` | ✅ |
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.111 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal). SOLE RECORD for this artefact as of 2026-07-25: a second entry (`second-brain-retrieval-precision`) described the same measurement from the precision angle and had drifted to 5/27, 5/27 and tie-set 3.3 — figures absent from the shared artefact. Two entries over one artefact is what allowed them to disagree while both resolved, so the pair was folded into this one. | quant | `internal/bench/reports/second-brain-retrieval.json#retrieval-on` | ✅ |
-| 120 governed rules. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+| 121 governed rules. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today. | quant | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
@@ -305,9 +305,9 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 10 observer · 0 local-only · 82 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 121 rules · 15 blocking (12.4%) · 10 observer · 0 local-only · 82 undeclared (no `enforced_by` yet).
 
-`denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
+`denominator: 121 rule(s), frame in-scope (src/rules/*.md) == governed-total 121`
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
@@ -321,6 +321,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `fix-what-you-see` | none | `instruction-only: ownership-as-excuse is a disposition in prose; no gate can see a red check handed back with its cause named` |
 | `framework-neutrality-in-generic-skills` | validator | `validator:src/scripts/lint_framework_leakage.ts` |
 | `git-history-discipline` | hook | `hook:block-no-verify` |
+| `instruction-path-verification` | none | `instruction-only: nothing observes an agent routing on a path it never resolved; `agent-config doctor --check instruction-path-reach` finds the dangling paths but only when somebody runs it` |
 | `language-and-tone` | validator | `validator:src/scripts/check_md_language.ts` |
 | `lethal-trifecta-guard` | validator | `validator:src/scripts/lint_skill_frontmatter_safety.ts` |
 | `media-governance-routing` | validator | `validator:src/scripts/lint_media_policy_linkage.ts` |

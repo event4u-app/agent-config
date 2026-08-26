@@ -280,7 +280,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 120 governed rules.
+- claim: 121 governed rules.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
