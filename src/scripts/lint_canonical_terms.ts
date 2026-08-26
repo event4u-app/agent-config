@@ -94,8 +94,11 @@ const GENERATED_PREFIXES = [
     '.claude/',
     '.cursor/',
     '.clinerules/',
-    '.agent-src.uncondensed/',
     'node_modules/',
+    // The retired uncondensed source container ADR-051 abandoned is deliberately
+    // NOT listed. `check_no_new_legacy_path` refuses new references to it under
+    // src/, and no scan root here reaches it — so an entry would be a dead
+    // literal reintroducing a path this repository has spent a ratchet removing.
     // Built by `src/scripts/build_proof.ts` from the Claims Ledger; editing it
     // is a no-op that the next build reverts.
     'docs/proof.md',
