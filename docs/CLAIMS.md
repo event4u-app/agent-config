@@ -124,6 +124,14 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-04
 
+### claim: published-artifact-counts
+- claim: Every artefact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-08-26 via that counter: skills 299, rules 120, commands 202 (recursive; 61 top-level), guidelines 114, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 61 top-level files, and `rules` counts the 120 source rules while the linked projection holds 119 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one.
+- kind: quant
+- evidence: exec:update_counts --check -> 0
+- non_inference: These six integers count FILES AND DIRECTORIES, and license nothing about quality, activation, or reach. A skill in the 299 may never have been loaded by any session; the activation rate is separately measured and is near zero. `commands 202` counts every command file recursively, including deprecation shims where any exist, and is NOT a count of distinct user-facing verbs — the top-level figure for that is 61. `rules 120` counts source rules, of which one is dormant and reaches no consumer, so it is not a count of rules in force. `personas 29` counts lens files, not lenses ever used in a review. None of the six is a measure of coverage, correctness, or adoption, and a rise in any of them is a rise in artefact count only.
+- status: backed
+- last_verified: 2026-08-26
+
 ### claim: shipped-artifacts-hidden-instruction-scanned
 - claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge.
 - kind: qual
