@@ -1330,9 +1330,13 @@ hooks:
   # benchmark measured the native graph at recall 0.365 vs grep 0.797 on
   # graph-shaped questions across 3 real repos (internal/bench/reports/
   # code-graph-vs-grep.md; claim code-graph-retrieval-null). `enabled: false`
-  # is permanent; deprecation notice lands at the next major, removal the
-  # major after — unless external evidence (a consumer case the graph answers
-  # and grep cannot) appears first.
+  # is the DEFAULT and is not permanent — the removal commitment this comment
+  # used to carry was withdrawn on 2026-08-15 (docs/MIGRATION.md, the code_graph
+  # row), and "permanent" was retracted with it. What holds is the default and
+  # its reopen condition, which is the same one that was always written here:
+  # external evidence — a consumer case the graph answers and disciplined grep
+  # cannot — or a re-measurement on a build that postdates the extractor repair
+  # of 2026-08-22, which the 2026-07-28 figures predate.
   #
   # The engine's parser pair is NO LONGER a runtime dependency (~51 MB that
   # every consumer installed for a path none of them can reach); it is a

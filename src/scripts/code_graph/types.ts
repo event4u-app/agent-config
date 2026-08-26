@@ -38,6 +38,30 @@ export interface CodeEdge {
      * among these (the honest-taxonomy acceptance rule).
      */
     candidates?: string[];
+    /**
+     * Present only on AMBIGUOUS edges: WHY the target did not resolve.
+     *
+     * Added by `road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh`
+     * 1.1. Before it, 43 % of this graph's edges carried AMBIGUOUS with no
+     * recorded cause, so "resolve the largest class" was not a question the
+     * artifact could answer — you had to re-run the extractor with a bespoke
+     * script to find out what the classes even were.
+     *
+     * The taxonomy is the extractor's own branch structure, not a guess:
+     *
+     * · `receiver-unknown` — a dynamic (`$obj->m()`) or scoped (`C::m()`) call
+     *   whose receiver type is not known. Resolving this needs type inference
+     *   the extractor does not do.
+     * · `hierarchy-unresolved` — a `this`/`self`/`static`/`parent` call inside a
+     *   class whose hierarchy does not contain the method, i.e. the base class
+     *   is outside the repository. Not resolvable from this tree at all.
+     *
+     * And the second axis, which decides whether resolution is even possible:
+     * an edge with `candidates` has same-named methods to choose between; one
+     * without has NO in-repo candidate, so no amount of inference would find a
+     * target.
+     */
+    ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved';
 }
 
 export interface CodeGraph {

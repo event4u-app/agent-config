@@ -138,6 +138,27 @@ export interface LedgerEntry {
      */
     superseded_by: string;
     /**
+     * Optional: the build a quantitative measurement describes, when that is not
+     * the current one.
+     *
+     * `road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh` 3.2, on an
+     * AI council ruling (2026-08-26, 2/2). `claim:code-graph-retrieval-null` is
+     * a real measurement of a build that no longer exists: its figures date from
+     * 2026-07-28 and the extractor defect they blame was repaired on 2026-08-22.
+     *
+     * The council rejected both obvious statuses. `resolved-null` would say the
+     * retrieval question was ANSWERED null on the current build, which is
+     * exactly what nobody has measured; `superseded_by` expects replacement
+     * EVIDENCE, and a repair commit is the wrong semantic object for it. What
+     * was required instead was structured scoping — and that it reach every
+     * index and summary rather than only the detailed entry, because a prose-only
+     * qualification drifts from the structured record it qualifies.
+     *
+     * So this field is printed in `docs/proof.md`'s ledger table, not merely
+     * parsed.
+     */
+    measured_on: string;
+    /**
      * Optional: the inferences this claim's data does NOT license.
      *
      * `road-to-skill-ecosystem-eval-integrity` Phase 5 Step 5. A measured number
@@ -194,6 +215,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 status: cur.status ?? '',
                 last_verified: cur.last_verified ?? '',
                 superseded_by: cur.superseded_by ?? '',
+                measured_on: cur.measured_on ?? '',
                 non_inference: cur.non_inference ?? '',
             });
         }
@@ -207,8 +229,12 @@ function load_ledger(): Map<string, LedgerEntry> {
             continue;
         }
         if (!cur.id) continue;
+        // Keeping both sides of the merge is right for the FIELD LIST and wrong
+        // for the call: `String.match` takes one pattern, so two lines here
+        // would have silently ignored the second and dropped whichever field
+        // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|non_inference):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|measured_on|non_inference):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;

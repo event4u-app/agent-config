@@ -232,8 +232,11 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 **Why rg-first** (council 2026-07-28, 2 rounds): the pre-registered benchmark
 behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
 native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
-indexing gap that keeps `code_graph.enabled` false permanently. The accelerant
-clause in the table above is that bound's escape hatch and is inert today.
+indexing gap that keeps `code_graph.enabled` false BY DEFAULT — not
+permanently: the 2026-08-15 withdrawal retracted that, and the figures predate
+the 2026-08-22 extractor repair. The accelerant clause above is that bound's
+escape hatch; `classifyLookup` reads the flag, so turning it on is the whole
+change.
 
 **Escalation, not degradation:** a primitive that returns nothing (index miss,
 pattern too ambiguous, report script absent) — **or an unusable result**
