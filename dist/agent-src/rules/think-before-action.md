@@ -40,14 +40,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Never guess behavior — verify using code, data, or tools.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
 - Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.
-- **Behavior-changing work is test-first by default, not by preference.** One
-  behavior at a time: the test written, **observed failing**, then the minimum
-  code that makes that one behavior pass. The only exceptions are the
-  *Do NOT use when* list in [`test-driven-development`](../skills/test-driven-development/SKILL.md)
-  — do not restate them here and do not extend them inline. Going code-first
-  outside that list is an **override, and an override is recorded**: name the
-  behavior and the reason in the reply and in the decision log. A silent
-  code-first pass is the failure this line exists to stop, not a style choice.
+- **Behavior-changing work is test-first by default, not by preference** — one behavior, test written and **observed failing**, then the minimum code. Exceptions are exactly the *Do NOT use when* list in [`test-driven-development`](../skills/test-driven-development/SKILL.md); going code-first outside it is an override and is recorded, never silent.
 - **Multi-step task → restate as verifiable success criteria first** (test that reproduces the bug, failing-then-passing check, before/after invariant) and plan `step → verify:` per step; a task whose success cannot be checked is a clarification trigger, not an execution trigger. Transformation table: [`think-before-action-mechanics § Goal-driven execution`](../contexts/communication/rules-auto/think-before-action-mechanics.md#goal-driven-execution--vague-ask--verifiable-goal).
 - Unclear requirements → precise clarification question, not hidden assumptions.
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless explicitly changed.

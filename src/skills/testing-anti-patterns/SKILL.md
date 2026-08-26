@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: testing-anti-patterns
-description: "Use BEFORE writing/changing tests or adding mocks — mocking-the-mock, production pollution, overfit assertions — even on 'is this test any good?'. Test SHAPE; the order is `test-driven-development`."
+description: "Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions"
 domain: quality
 workspaces:
   - engineering
