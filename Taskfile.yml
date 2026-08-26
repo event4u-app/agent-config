@@ -223,6 +223,7 @@ tasks:
       - task: check-score-contract
       - task: lint-skill-router-head
       - task: lint-provenance-vocabulary
+      - task: lint-eval-specs
       - task: lint-canonical-terms
       - task: lint-memory-twin-parity
       - task: validate-discovery-manifest

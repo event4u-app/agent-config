@@ -241,6 +241,16 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
+      - name: Eval specifications — a gate on the measurement inputs
+        # road-to-skill-ecosystem-eval-integrity Phase 1 Step 7. Promoted to a
+        # PR-blocking gate on day one rather than landing advisory: the
+        # classification that step asks for was run first and the corpus is
+        # CLEAN across all 175 specifications, so there is no inherited debt an
+        # advisory period could classify. Discrimination rests on --self-test
+        # (7 cases, 5 rejecting), which is what a preventive gate over a clean
+        # corpus has to rest on.
+        run: ./scripts-run src/scripts/lint_eval_specs
+
       - name: Beta review deadlines — a lapsed contract is visible on the PR
         # road-to-contract-review-deadlines 2.1. The gate lived only in `task ci`,
         # which no workflow invokes, so its findings were red on main and invisible
