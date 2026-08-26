@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: road to a code-graph benchmark re-run on the repaired extractor

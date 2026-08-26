@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to a standing-rule-delivery reading on every team machine
@@ -89,7 +90,7 @@ measured **1** distinct reviewer over the trailing 90 days. If the affected set
 turns out to be one machine, this stub closes with one run and one settings
 entry.
 
-## Re-entry probe — per machine, mechanically decidable
+## Probe — re-entry, per machine, mechanically decidable
 
 Per machine, one command and one of two outcomes:
 

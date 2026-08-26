@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Session-closeout residue that needs something this repository cannot supply
 
 > **Transferred from** [`road-to-session-closeout.md`](../archive/road-to-session-closeout.md),
@@ -18,7 +23,7 @@
 > performs one it needs its own this-turn approval naming the exact object, per
 > [`non-destructive-by-default`](../../../src/rules/non-destructive-by-default.md).
 
-## A · Release integrity — four decisions and one missing record
+## Probe A · Release integrity — four decisions and one missing record
 
 **Producer:** the owner named in [`docs/release-runbook.md`](../../../docs/release-runbook.md)
 and on `src/config/pack-size-budget.json` (`owner: maintainer`). Not the drain

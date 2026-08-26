@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: the live arm for skill tiering (H1) — needs host sessions, not a repository
@@ -64,7 +65,7 @@ Scripting forty headless prompts would measure a script, not a model, and would
 produce a number in exactly the shape H1 wants while answering a different
 question. That is the failure mode this stub exists to avoid.
 
-## Named producer and detection probe
+## Probe and named producer
 
 **Producer:** the maintainer, doing ordinary work on one machine across two
 install configurations. Not a subsystem, not "when telemetry exists".

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: road to the discipline-default flip and its human-judged benchmark

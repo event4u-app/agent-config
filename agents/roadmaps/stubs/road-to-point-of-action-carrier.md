@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-09-25
 ---
 
 # Stub: road to the point-of-action delegation carrier
@@ -42,7 +43,7 @@ Phase 7.3's negative statement stays as it is: no hard tool-deny on the main
 session and no point-of-action pre-tool-use ladder ships today, verified
 against `hook_manifest.yaml`'s pre_tool_use chains.
 
-## 3. Re-entry producer and detection probe
+## Probe — § 3, re-entry producer and detection
 
 - **Named producer:** a **maintainer with a real multi-agent host session** —
   one session that demonstrably runs both a main agent and a subagent, so

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: append-safety for the ratchet baselines
@@ -65,7 +66,7 @@ schema-valid. A concurrent edit to that **pointer** still conflicts — and that
 is wanted: two competing baseline transitions require a human to reconcile
 which one won.
 
-### Re-entry gate
+### Probe — re-entry gate
 
 A change proposing this ships all of:
 
@@ -103,7 +104,7 @@ branch `feat/merge-hotspot-drawdown` (**PR #1513**). Implementing it a second
 time on `main` would duplicate a written mechanism and guarantee a structural
 conflict in the same file, so this waits rather than races.
 
-### Re-entry gate
+### Probe — re-entry gate
 
 PR #1513 merges. Then one change adds the three paths to its `REMEASURED` list
 with a test asserting each classifies as re-measured — the same shape as the

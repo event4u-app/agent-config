@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to task-completion observability
@@ -122,7 +123,7 @@ One correction to the draft, so a later reader does not chase it: it names a
 exists in this tree — `grep -rn result_consumed src/` returns nothing. The
 constraint above is therefore written against the contract's own wording.
 
-## Re-entry producer and detection probes
+## Probe and re-entry producer
 
 Promotion is not "when someone builds it". The producer is named, and each
 precondition carries a probe a reader can run today and get a decidable answer
