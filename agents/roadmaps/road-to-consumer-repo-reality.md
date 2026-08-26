@@ -245,19 +245,20 @@ tests say.
       one side, and the mixed verdict names the governing convention per region
       rather than for the file as a whole.
 - [ ] **4.2 Add the server-composed bootstrap payload to the render-security
-      surface, with a named enforcement mechanism.** A payload assembled
+      surface, and state plainly that nothing enforces the judgement.** A payload assembled
       server-side and serialised into the page for a client island is a
       data-exposure surface: whatever is put in it is readable by anyone who can
-      load the page. Enforcement is the existing pattern for this class — a
-      checklist entry in the render-security skill (advisory, model-carried) plus
-      a diff-scoped grep gate over the framework-named payload channels that
-      fires when a field is **added** to such a payload. The gate
-      ships **advisory, non-blocking**: a grep over framework-named channels
-      cannot tell a privileged field from a public one, so blocking on it would
-      buy false reds at the cost of the checklist being ignored. State plainly
-      that the deterministic half only flags a site for review and that the
-      judgement is model-carried; a checklist entry alone is not enforcement and
-      must not be described as one.
+      load the page. The question — *should this field be
+      here* — is not decidable by any check: a grep over the framework-named
+      payload channels cannot tell a privileged field from a public one. So this
+      step ships **discovery, not enforcement**, and the two halves are labelled
+      as such. A diff-scoped grep over those channels, advisory and
+      non-blocking, **locates** a payload a field was added to; a checklist entry
+      in the render-security skill carries the **judgement**, model-carried like
+      every other obligation of that class. Neither half refuses anything, and
+      the step must not be written as though one did — `enforced_by: none` is the
+      honest field, and the value of the deterministic half is that it puts the
+      question in front of a reader who would otherwise never see it.
       verify: the checklist names the pattern and the per-field question; the
       gate is registered in the gate coverage registry with its scanned count,
       and a fixture adding a privileged field to a payload channel is flagged
