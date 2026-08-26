@@ -1,0 +1,101 @@
+#!/usr/bin/env sh
+# Container-only tooling shim — road-to-skill-ecosystem-runtime-enforcement
+# Phase 1 Steps 2-4. AI council 2/2 (2026-08-25) scoped Phase 1 to THIS shim
+# alone; the hook-bypass-flag and package-manager candidates are recorded as
+# out of scope at `blocker: shim-scope-decision`.
+#
+# WHAT IT DOES. Refuses a host invocation of a tool the container-only rule
+# reserves for the project container, and prints the sanctioned in-container
+# form with the caller's own arguments re-quoted, so the alternative is
+# directly runnable rather than a template to adapt.
+#
+# WHY SHELL AND NOT AN INTERPRETED RUNTIME. Startup dominates: this runs on
+# every invocation of the shimmed names, most of which are legitimate, so a
+# node or python start would be paid constantly to say nothing. Same reason the
+# fast-pass below is a case statement rather than a parse.
+#
+# WHY A PATH PREPEND AND NOT A PER-TOOL-CALL HOOK. A prepend costs nothing per
+# call and works for any process the session starts, including ones no hook
+# surface observes. It is also session-scoped and reversible by construction --
+# the installer never writes a profile.
+#
+# EXIT CODE. Non-zero (2) on refusal. Never 0 on a refusal: a shim that exits 0
+# has told the caller nothing the caller must act on, and the recorded trap on
+# this host is the opposite mistake -- an ADVISORY exit 2 read as a hard block.
+# This one is not advisory; the refusal is the point.
+
+set -eu
+
+# --- The global kill switch (Step 7) -------------------------------------
+#
+# One variable disables every hook for one invocation. It is checked FIRST so
+# the escape hatch cannot be shadowed by anything below, and it re-execs the
+# real binary rather than exiting, so `AGENT_CONFIG_DISABLE_HOOKS=1 php -v`
+# does what it says instead of merely not refusing.
+#
+# Finding the real binary: strip this shim's own directory out of PATH and look
+# again. Without that the re-exec finds the shim and loops.
+if [ "${AGENT_CONFIG_DISABLE_HOOKS:-}" = "1" ]; then
+    _shim_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+    _clean_path=$(printf '%s' "${PATH:-}" | tr ':' '\n' | while IFS= read -r _p; do
+        [ -n "$_p" ] || continue
+        _rp=$(CDPATH= cd -- "$_p" 2>/dev/null && pwd -P) || continue
+        [ "$_rp" = "$_shim_dir" ] && continue
+        printf '%s:' "$_p"
+    done)
+    _real=$(PATH="${_clean_path%:}" command -v "$(basename -- "$0")" 2>/dev/null || true)
+    if [ -n "$_real" ]; then
+        exec "$_real" "$@"
+    fi
+    # Disabled, and there is no real binary to fall through to. Say so rather
+    # than exiting 0: the caller asked for the tool, not for silence.
+    printf '%s: hooks disabled, but no %s found outside the shim directory\n' \
+        "shims/php" "$(basename -- "$0")" >&2
+    exit 127
+fi
+
+# The basename this was invoked as. Dispatch on it so one script serves several
+# names (Step 3) -- today the set is deliberately one entry wide.
+INVOKED="$(basename -- "$0")"
+
+case "$INVOKED" in
+    php) ;;
+    *)
+        # Invoked under a name this shim does not claim. Say so rather than
+        # guessing: a silent pass-through would make the shim look installed and
+        # inert, which is worse than an error.
+        printf '%s: shim invoked under an unclaimed basename %s\n' "shims/php" "$INVOKED" >&2
+        exit 2
+        ;;
+esac
+
+# --- Re-quote the received arguments -------------------------------------
+#
+# Single-quote each argument and escape embedded single quotes as '\'' so the
+# printed line survives copy-paste through a shell unchanged. Without this a
+# suggestion containing a space or a quote is a suggestion that silently does
+# something else when run.
+quoted=''
+for arg in "$@"; do
+    esc=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+    quoted="$quoted '$esc'"
+done
+
+SERVICE="${AGENT_CONFIG_PHP_SERVICE:-php}"
+
+cat >&2 <<EOF
+❌  \`$INVOKED\` was run on the HOST. This project's tooling is container-only.
+
+    Run it in the container instead:
+
+      docker compose exec -T $SERVICE $INVOKED$quoted
+
+    Why: the container-only tooling rule reserves php / artisan / composer /
+    phpstan / rector / ecs / phpunit for the project container, because a host
+    run picks up the host's PHP version and extensions and produces results
+    that do not match CI.
+
+    Override for one command:  AGENT_CONFIG_DISABLE_HOOKS=1 $INVOKED ...
+    Service name:              AGENT_CONFIG_PHP_SERVICE=<name> (default: php)
+EOF
+exit 2
