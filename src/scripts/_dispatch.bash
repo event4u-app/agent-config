@@ -239,6 +239,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              live invariant + survival check)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview)
+  stubs:due                  Read-only: roadmap stubs past their `review_by:`
+                             date, plus the decisions routed to the owner.
+                             Writes nothing. Flags: --json, --counts,
+                             --today <ISO> (pin "now")
   gates                      Open decisions that need you, rendered as actions —
                              roadmap blockers filtered by owner, most-unblocking
                              first. Flags: --all (include maintainer/external),
@@ -774,6 +778,12 @@ cmd_roadmap_archive() {
 cmd_roadmap_set_step() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/roadmap_set_step.ts" ".augment/scripts/roadmap_set_step.ts")"
+  exec_ts "$script" "$@"
+}
+
+cmd_stubs_due() {
+  local script
+  script="$(resolve_script "dist/agent-src/scripts/stubs_due.ts" ".augment/scripts/stubs_due.ts")"
   exec_ts "$script" "$@"
 }
 
@@ -1490,6 +1500,7 @@ main() {
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
     roadmap:set-step)        cmd_roadmap_set_step "$@" ;;
+    stubs:due)               cmd_stubs_due "$@" ;;
     gates)                   cmd_gates "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;
     adr:effective)           cmd_adr_effective "$@" ;;
