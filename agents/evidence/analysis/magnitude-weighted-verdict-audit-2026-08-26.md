@@ -1,6 +1,4 @@
----
-type: analysis
----
+<!-- evidence-type: analysis -->
 
 # Magnitude-weighted verdict audit — every scored path, 2026-08-26
 

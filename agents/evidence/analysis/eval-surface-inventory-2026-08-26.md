@@ -1,6 +1,4 @@
----
-type: analysis
----
+<!-- evidence-type: analysis -->
 
 # Eval and golden-fixture surfaces — inventory, 2026-08-26
 
