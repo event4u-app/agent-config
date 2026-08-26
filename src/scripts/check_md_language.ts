@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { classifyMarkdownLines } from './_lib/md_prose_lines.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 // Umlauts and German-only characters.
@@ -52,9 +53,6 @@ function _escapeRegExp(s: string): string {
 // Labeled bilingual anchor: lines starting with "DE:" or "- DE:" (and EN).
 const DE_ANCHOR_RE = /^\s*[-*]?\s*(DE|EN):\s/i;
 
-// Inline code spans.
-const INLINE_CODE_RE = /`[^`]*`/g;
-
 // Per-line escape marker.
 const IGNORE_RE = /<!--\s*md-language-check:\s*ignore\s*-->/i;
 
@@ -66,118 +64,37 @@ export interface Violation {
     context: string;
 }
 
-function _strip_inline_code(text: string): string {
-    return text.replace(INLINE_CODE_RE, '');
-}
-
-/** Python `str.splitlines()` — universal-newline split, no trailing empty element. */
-function splitlines(text: string): string[] {
-    if (text === '') return [];
-    const lines: string[] = [];
-    let current = '';
-    for (let i = 0; i < text.length; i++) {
-        const ch = text[i] as string;
-        const code = text.charCodeAt(i);
-        if (ch === '\r') {
-            lines.push(current);
-            current = '';
-            if (text[i + 1] === '\n') i += 1; // \r\n consumed as one
-            continue;
-        }
-        if (
-            ch === '\n' ||
-            code === 0x0b ||
-            code === 0x0c ||
-            code === 0x1c ||
-            code === 0x1d ||
-            code === 0x1e ||
-            code === 0x85 ||
-            code === 0x2028 ||
-            code === 0x2029
-        ) {
-            lines.push(current);
-            current = '';
-            continue;
-        }
-        current += ch;
-    }
-    if (current !== '') lines.push(current);
-    return lines;
-}
-
 export function scan_file(p: string): Violation[] {
     const violations: Violation[] = [];
-    let lines: string[];
+    let content: string;
     try {
-        lines = splitlines(fs.readFileSync(p, 'utf-8'));
+        content = fs.readFileSync(p, 'utf-8');
     } catch (exc) {
         const msg = exc instanceof Error ? exc.message : String(exc);
-        process.stderr.write(`⚠️  Cannot read ${p}: ${msg}\n`);
+        process.stderr.write(`\u26a0\ufe0f  Cannot read ${p}: ${msg}\n`);
         return violations;
     }
 
-    let in_fence = false;
-    let in_frontmatter = false;
-    for (let idx = 0; idx < lines.length; idx++) {
-        const raw = lines[idx] as string;
-        const lineno = idx + 1;
-        const stripped = _lstrip(raw);
-
-        // YAML frontmatter at top of file.
-        if (lineno === 1 && stripped === '---') {
-            in_frontmatter = true;
-            continue;
-        }
-        if (in_frontmatter) {
-            if (stripped === '---') {
-                in_frontmatter = false;
-            }
-            continue;
-        }
-
-        // Fenced code blocks.
-        if (stripped.startsWith('```') || stripped.startsWith('~~~')) {
-            in_fence = !in_fence;
-            continue;
-        }
-        if (in_fence) {
-            continue;
-        }
-
-        // Indented code blocks (4+ leading spaces, non-list).
-        const listStarts = ['-', '*', '+', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        if (raw.startsWith('    ') && !listStarts.some((c) => stripped.startsWith(c))) {
-            continue;
-        }
-
-        // Labeled bilingual anchor.
-        if (DE_ANCHOR_RE.test(raw)) {
-            continue;
-        }
-
-        // Per-line opt-out marker.
-        if (IGNORE_RE.test(raw)) {
-            continue;
-        }
-
-        // Strip inline code spans before scanning.
-        const scan_text = _strip_inline_code(raw);
-        const ctx = _rstrip(raw);
+    // Frontmatter / fence / indented-code / marker skipping is shared with
+    // `lint_canonical_terms` via `_lib/md_prose_lines` — see that module's
+    // header for why a second copy was refused. The classification is the same
+    // code this function used to carry inline; the DE:/EN: anchor and the
+    // per-line ignore marker are passed in as this gate's own markers.
+    for (const line of classifyMarkdownLines(content, { markers: [DE_ANCHOR_RE, IGNORE_RE] })) {
+        if (line.kind !== 'prose') continue;
+        const scan_text = line.text;
+        const ctx = _rstrip(line.raw);
 
         for (const m of scan_text.matchAll(UMLAUT_RE)) {
-            violations.push({ file: p, line: lineno, kind: 'umlaut', match: m[0], context: ctx });
+            violations.push({ file: p, line: line.lineno, kind: 'umlaut', match: m[0], context: ctx });
         }
 
         for (const m of scan_text.matchAll(DE_WORD_RE)) {
-            violations.push({ file: p, line: lineno, kind: 'de_word', match: m[0], context: ctx });
+            violations.push({ file: p, line: line.lineno, kind: 'de_word', match: m[0], context: ctx });
         }
     }
 
     return violations;
-}
-
-function _lstrip(s: string): string {
-    return s.replace(/^\s+/, '');
 }
 
 function _rstrip(s: string): string {

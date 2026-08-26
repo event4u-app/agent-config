@@ -1,0 +1,32 @@
+{
+    "skill": "judge-spec-compliance",
+    "last_eval": "2026-08-26",
+    "description": "3 positives (1 de) + 3 near-misses. The near-misses are the three adjacent judge surfaces this skill must NOT answer: quality of the code, correctness bugs, and writing the criteria in the first place. This judge reads a diff against STATED acceptance criteria and never infers them.",
+    "queries": [
+        {
+            "q": "check this diff against the acceptance criteria on the ticket",
+            "trigger": true
+        },
+        {
+            "q": "does the PR actually satisfy every requirement we listed, or did it skip one?",
+            "trigger": true
+        },
+        {
+            "q": "pruefe, ob die Aenderung jedes genannte Abnahmekriterium erfuellt",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "review this diff for code quality and naming",
+            "trigger": false
+        },
+        {
+            "q": "find the bug that makes this endpoint return 500",
+            "trigger": false
+        },
+        {
+            "q": "write acceptance criteria for this feature",
+            "trigger": false
+        }
+    ]
+}

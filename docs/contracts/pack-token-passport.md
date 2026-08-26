@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Pack token passport — what a pack costs a session
 
 A pack is accountable for what it costs. The tree-wide payload budget answers

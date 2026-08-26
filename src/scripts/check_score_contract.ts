@@ -63,6 +63,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as os from 'node:os';
 import { parse as parseYaml } from 'yaml';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_FILE), '..', '..');
@@ -323,37 +324,57 @@ export function checkRubric(rubric: Row, rowCount: number, ids: string[]): Findi
 
 /* ── driver ────────────────────────────────────────────────────────────────── */
 
-export function check(rel: string): Finding[] {
+export function check(rel: string, ledger?: GateLedger): Finding[] {
     // An absolute `--file` must be honoured as given. path.join(REPO, '/abs')
     // silently produces REPO + '/abs', which reports `missing_file` for a file
     // that exists — the shape a test using a temp copy hits first.
     const abs = path.isAbsolute(rel) ? rel : path.join(REPO, rel);
     if (!fs.existsSync(abs)) {
+        ledger?.plan([rel]);
+        ledger?.fail(rel, 'scorecard does not exist');
         return [{ where: rel, code: 'missing_file', detail: 'scorecard does not exist' }];
     }
     let doc: unknown;
     try {
         doc = parseYaml(fs.readFileSync(abs, 'utf8'));
     } catch (exc) {
+        ledger?.plan([rel]);
+        ledger?.fail(rel, 'unparseable YAML');
         return [{ where: rel, code: 'unparseable', detail: String(exc) }];
     }
     if (doc === null || typeof doc !== 'object') {
+        ledger?.plan([rel]);
+        ledger?.fail(rel, 'top level is not a mapping');
         return [{ where: rel, code: 'unparseable', detail: 'top level is not a mapping' }];
     }
     const top = doc as Row;
     const rubric = top['rubric'];
     const cats = top['categories'];
     if (rubric === undefined || typeof rubric !== 'object' || rubric === null) {
+        ledger?.plan([rel]);
+        ledger?.fail(rel, 'no `rubric:` block');
         return [{ where: rel, code: 'missing_field', detail: 'no `rubric:` block' }];
     }
     if (!Array.isArray(cats)) {
+        ledger?.plan([rel]);
+        ledger?.fail(rel, '`categories:` must be a list');
         return [{ where: rel, code: 'missing_field', detail: '`categories:` must be a list' }];
     }
     const rows = cats as Row[];
     const ids = rows.map((r) => String(r['category'] ?? '<unnamed>'));
+    // Per-row accounting. Every early return above aborts BEFORE any row is
+    // read, and until this ledger existed those aborts produced a one-line
+    // finding indistinguishable, in the coverage record, from a full pass over
+    // 23 rows. The ledger separates "checked every row and found one problem"
+    // from "never reached a row".
+    ledger?.plan(ids.map((id, i) => `${id}#${String(i)}`));
     const findings = [...checkRubric(rubric as Row, rows.length, ids)];
     rows.forEach((r, i) => {
-        findings.push(...checkRow(r, `${rel} → ${ids[i] ?? `row ${i}`}`));
+        const target = `${ids[i] ?? '<unnamed>'}#${String(i)}`;
+        const rowFindings = checkRow(r, `${rel} → ${ids[i] ?? `row ${i}`}`);
+        findings.push(...rowFindings);
+        if (rowFindings.length > 0) ledger?.fail(target, `${String(rowFindings.length)} finding(s)`);
+        else ledger?.complete(target);
     });
     return findings;
 }
@@ -450,7 +471,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stderr.write('usage: check_score_contract [--quiet] [--file <path>]\n');
         return 2;
     }
-    const findings = check(rel);
+    const ledger = new GateLedger('check_score_contract');
+    const findings = check(rel, ledger);
+    ledger.report(quiet ? () => undefined : undefined);
     // Rule 1 of the gate-coverage contract: exactly one `scanned: <N>` line,
     // emitted on the red path too — a gate that only reports coverage when it
     // passes cannot be caught going blind at the moment it matters.

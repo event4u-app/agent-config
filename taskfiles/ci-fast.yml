@@ -828,8 +828,10 @@ tasks:
 
   check-preamble-payload:
     silent: true
-    desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%)"
-    cmd: ./scripts-run src/scripts/check_preamble_payload_budget
+    desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%). CEILING PARITY, added 2026-08-26: this used to invoke the gate bare, so it judged against the DESIGN ceiling (107,646) while standing-payload-delta.yml judges the same tree against the GRACE ceiling from ci_delivery (138,212, expires 2026-11-10). The tree measures 138,212, so `task ci` red on a number remote CI passes — the mirror image of the green-locally/red-remotely class check_ci_local_parity exists for, and just as misleading. The ceiling is read out of the budget file here for the same reason the workflow reads it: one home for the number, no second place to drift."
+    cmd: |
+      ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
+      ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling"
 
   check-standing-payload-delta:
     silent: true
@@ -1282,6 +1284,11 @@ tasks:
       ./scripts-run src/scripts/lint_commit_subjects \
         --base "${LINT_BASE:-origin/main}" \
         --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
+
+  lint-canonical-terms:
+    silent: true
+    desc: Hold the house dialect recorded in src/config/canonical-terms.yml — ratchet over authored prose under src/ and docs/ (road-to-canonical-terms Phase 2)
+    cmd: ./scripts-run src/scripts/lint_canonical_terms {{.QUIET_FLAG}}
 
   lint-discovery-vocab:
     silent: true

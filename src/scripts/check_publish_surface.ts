@@ -228,6 +228,15 @@ export function buildSurfaceFrom(npmignore: readonly string[], payload: readonly
     return npmignore.filter((pat) => payload.some((p) => npmignoreMatches(pat, p)));
 }
 
+// ledger-exempt: this gate has ONE target, not a population. The verdict is a
+// single comparison — `driftKey(committed)` against `driftKey(live)` — over the
+// resolved publish surface as a whole. `payload` is the SCANNED corpus (guarded
+// by `assertScanned` and published as `scanned:`), not a set of targets each
+// reaching its own outcome: no file in it is ever individually skipped,
+// completed or failed. A ledger here would plan one target and complete one
+// target, which measures nothing and reads as adoption. The silent-skip class
+// the ledger exists to catch is closed here by a different mechanism: the
+// gate's own `--self-test` proves the comparison discriminates.
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) return selfTest();
     const payload = packPayload(REPO_ROOT);

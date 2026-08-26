@@ -34,6 +34,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -108,10 +109,35 @@ export function main(argv: readonly string[] = []): number {
     const repoRoot = rootIdx >= 0 ? (argv[rootIdx + 1] ?? REPO_ROOT) : REPO_ROOT;
 
     const prompts = collectPrompts(repoRoot);
+    // Per-target accounting. `collectPrompts` already drops a `.review-input`
+    // directory that carries no `prompt.md`, and that drop is the gate's own
+    // stated bypass ("omission") — the ledger is what makes it countable instead
+    // of invisible, so a run over N review directories cannot look identical to
+    // a run over N-3 of them.
+    const ledger = new GateLedger('lint_judge_prompt_expectation');
+    const dirs = fs.existsSync(path.join(repoRoot, REVIEWS_DIR))
+        ? fs
+              .readdirSync(path.join(repoRoot, REVIEWS_DIR), { withFileTypes: true })
+              .filter((e) => e.isDirectory() && e.name.endsWith('.review-input'))
+              .map((e) => path.join(REVIEWS_DIR, e.name))
+              .sort()
+        : [];
+    ledger.plan(dirs);
+    const withPrompt = new Set(prompts.map((p) => path.dirname(path.relative(repoRoot, p))));
+    for (const d of dirs) {
+        if (!withPrompt.has(d)) ledger.skip(d, 'no_applicable_files');
+    }
+
     const findings: Finding[] = [];
     for (const p of prompts) {
-        findings.push(...scanPromptText(path.relative(repoRoot, p), fs.readFileSync(p, 'utf-8')));
+        const rel = path.relative(repoRoot, p);
+        const hits = scanPromptText(rel, fs.readFileSync(p, 'utf-8'));
+        findings.push(...hits);
+        const dir = path.dirname(rel);
+        if (hits.length > 0) ledger.fail(dir, `${String(hits.length)} expectation phrase(s)`);
+        else ledger.complete(dir);
     }
+    ledger.report(quiet ? () => undefined : undefined);
 
     reportScanned({
         gate: 'lint_judge_prompt_expectation',

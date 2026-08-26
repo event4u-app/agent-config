@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -107,7 +107,7 @@ and re-measuring is what decided Phase 1. The published aggregate sums
 
 ## Phase 2 — The sweep, and a gate so it stays swept
 
-- [ ] **2.1 Sweep the prose layer.** ~5000 occurrences across the three largest
+- [x] **2.1 Sweep the prose layer.** ~5000 occurrences across the three largest
       pairs. **Sequenced behind `road-to-merge-surface-zero`** — a tree-wide text
       sweep against its 13 open steps multiplies the merge surface, which is the
       exact failure that roadmap exists to reduce.
@@ -149,6 +149,66 @@ and re-measuring is what decided Phase 1. The published aggregate sums
       `sweep_authorised: false` so this limit is machine-readable rather than
       resting on this paragraph.
 
+      **DONE 2026-08-26 — both council conditions built and discharged, and the
+      sweep that ran is the BOUNDED PILOT, not the ~5000-occurrence rewrite.**
+      `sweep_authorised: false` is unchanged in the map, deliberately: the key
+      gates the corpus-wide sweep, and that is still not authorised.
+
+      **Condition 1 — the classified inventory.** Built as a mode of the gate
+      itself (`./scripts-run src/scripts/lint_canonical_terms --inventory`),
+      not as a second script, so the classification the inventory reports is
+      literally the classification `--fix` obeys. Written up with its commands
+      at `agents/evidence/analysis/canonical-terms-inventory-2026-08-26.md`.
+      Measured across `src/`, `docs/`, `agents/` and `dist/` — 4,750
+      occurrences in 3,971 files:
+
+      | category | occurrences | share |
+      |---|---:|---:|
+      | (a) repository-authored prose | 1,615 | 34 % |
+      | (b) protected exact text | 21 | 0.4 % |
+      | (c) generated / externally synchronised | 446 | 9 % |
+      | (d) ambiguous — immutable records | 2,668 | **56 %** |
+
+      **The classification changes the migration's shape, which is exactly what
+      the council said a frequency table could not do.** 56 % of the corpus sits
+      in archived roadmaps, dated evidence files, ADRs and frozen changelog
+      slices — repository-authored, but rewriting them makes a published record
+      disagree with the measurement it published. Another 9 % is generated and
+      would be reverted by the next `task sync`. A naive tree-wide sweep would
+      have spent two thirds of its diff on edits that are wrong or wasted.
+
+      **Condition 2 — a bounded pilot chosen by BLAST RADIUS, not by pair.**
+      Overlap with active work is **zero** (`gh pr list --state open` returned
+      no open PRs). Radius per pair in the gate's enforcing scope, before the
+      pilot: `canonicalise` 1 file · `grey` 3 · `sub-agent` 8 · `licence` 12 ·
+      `hand-off` 36 · `behaviour` 171 · `artefact` 239. The pilot took the three
+      smallest — **18 occurrences across 12 files, 3.2 % of the eligible
+      files** — and every one was read before the rewrite. `licence` was
+      excluded despite a medium radius: the map flags it
+      `semantic-care-required`, and a pilot exists to validate the
+      protected-context rules, not to exercise them where a mistake is hardest
+      to see.
+
+      **Report-only, promoted by the ratchet rather than by a flag.** The
+      council asked that any gate begin report-only. `checkRatchet` is that
+      staging expressed as a mechanism instead of a mode: the recorded baseline
+      (1,007) makes every pre-existing occurrence non-blocking while a NEW one
+      reds the build immediately. There is no second step to remember, and no
+      window in which the gate is switched off.
+
+      **Which sequencing clause cleared, restated because the verify demands
+      it:** the second — the conflicting branches merged. `road-to-merge-surface-zero`
+      did not close; it was parked to `later/`. Re-verified on 2026-08-26: there
+      are no open pull requests at all, so the merge surface this step was
+      sequenced behind is empty.
+
+      **What is NOT done, said plainly.** The two large pairs — `artefact` (619
+      occurrences / 239 files) and `behaviour` (325 / 171) — are untouched, and
+      so are `hand-off` and `licence`. They are the ratchet's remaining 1,007,
+      shrink-only from here. And the strongest objection stays unrebutted: one
+      seat argued no evidence of harm has been produced. This work bounds the
+      sweep; it does not justify it.
+
       **The strongest objection, recorded because it is unrebutted.** One seat
       argued the sweep may not be worth doing at all: no evidence of harm has
       been produced — no routing failure, no review confusion, no filed ticket —
@@ -156,19 +216,100 @@ and re-measuring is what decided Phase 1. The published aggregate sums
       of this roadmap does not depend on that objection being answered, because
       declaring the convention `src/` already follows changes no file. This step
       does depend on it.
-- [ ] **2.2 Gate it.** `lint_canonical_terms.ts` as the fourth member of the
+- [x] **2.2 Gate it.** `lint_canonical_terms.ts` as the fourth member of the
       existing vocabulary-linter family, ratchet mode, reusing
       `check_md_language`'s frontmatter / fence / marker skip machinery rather
       than a second copy of it.
       verify: the gate reds on a planted wrong-dialect occurrence in prose and
       stays green on the same word inside a fence, a frontmatter value and a
       quoted licence name — all four states demonstrated.
-- [ ] **2.3 Register it** — `gate-coverage.yml` row with a canary, a `ci-fast`
+
+      **DONE 2026-08-26 — `src/scripts/lint_canonical_terms.ts`.**
+
+      **The skip machinery is SHARED, not copied.** `check_md_language`'s
+      frontmatter / fence / indented-code / inline-code / marker classifier moved
+      verbatim to `src/scripts/_lib/md_prose_lines.ts`, and BOTH gates now read
+      it. `check_md_language`'s CLI contract is pinned byte-for-byte (ADR-200),
+      so the extraction was verified as a refactor rather than asserted to be
+      one: the old and new binaries were run over the same 3,000-file corpus and
+      their JSON output is **byte-identical** (294,352 bytes each), and its
+      8-test pinned suite passes unchanged.
+
+      **All four states demonstrated, and each one demonstrated RED.** A test
+      that has never failed has unknown sensitivity, so every state was probed by
+      sabotaging the mechanism behind it and watching the corresponding test go
+      red, then restoring it:
+
+      | state | expected | test | sabotage that reds it |
+      |---|---|---|---|
+      | `behaviour` in prose | RED | `1. reds on a planted…` | — (this is the red case) |
+      | same word in a fence | green | `2. stays green…fence` | remove the `inFence` skip |
+      | same word in a frontmatter value | green | `3. stays green…frontmatter` | remove the `inFrontmatter` skip |
+      | same word in a quoted licence title | green | `4. …protected text` | remove `LICENCE_TITLE_RE` blanking |
+
+      Sabotaging the fence and frontmatter skips reds **four** tests — two here
+      and two in `check_md_language`'s own suite — which is the extraction
+      working: one classifier, one place to break. Sabotaging the licence
+      blanking reds two, the second being the council's limit clause below.
+
+      **The licence carve-out is span-scoped, not line-scoped**, because the
+      council's wording was explicit that proximity to a protected name does not
+      exempt the surrounding prose. A line carrying both a protected title and an
+      ordinary use produces **two** findings, one of each category — pinned as
+      its own test.
+
+      **Ratchet, and why it is not a hard zero.** `sweep_authorised: false` means
+      the corpus is not clean on day one, so a hard-zero gate would either red
+      `main` on arrival or have to suppress the very findings it exists to
+      surface. The baseline entry in `src/config/gate-violation-baselines.json`
+      records 1,007 with the pilot's before/after (1,025 → 1,007), the remaining
+      per-pair radii, and the anti-fossilization expiry that stops the number
+      hardening into configuration.
+
+      Thirteen unit tests in `tests/scripts/lint_canonical_terms.test.ts`, plus a
+      four-case `--self-test` that shells out to the real CLI — because an
+      in-process test cannot catch an entry guard or an argv parser that
+      silently no-ops.
+- [x] **2.3 Register it** — `gate-coverage.yml` row with a canary, a `ci-fast`
       task, the `Taskfile.yml` `ci:` list, and a workflow step.
       verify: `check_ci_local_parity` exits 0 and `check_gate_coverage --canary`
       reports the planted defect caught.
 
+      **DONE 2026-08-26 — all four surfaces.**
+
+      | surface | where |
+      |---|---|
+      | `gate-coverage.yml` row + canary | `src/config/gate-coverage.yml` — `min_scanned: 1200` against a live corpus of 1,577 |
+      | `ci-fast` task | `taskfiles/ci-fast.yml` → `lint-canonical-terms` |
+      | `Taskfile.yml` `ci:` list | after `lint-provenance-vocabulary` |
+      | workflow step | `.github/workflows/consistency.yml` |
+
+      **Both verify commands, run:**
+      `check_ci_local_parity` → `✅ CI ↔ local parity: 145 CI gate(s), 285 local,
+      29 declared CI-only, 5 declared local-only.` (exit 0). Registering on the
+      task side ONLY would have raised the `ci-parity:local-only` ratchet; the
+      workflow step is what keeps it at 165.
+      `check_gate_coverage --canary` → `✅ lint_canonical_terms: caught the
+      planted contract-violation defect (exit 1)`.
+
+      **One design decision the canary forced, recorded because it is a trap.**
+      The canary contract is CREATE-only, so it plants an untracked file. A gate
+      listing its corpus with a plain `git ls-files` would not see it and would
+      report green **on its own canary** — the "gate that cannot fail" failure the
+      canary exists to catch, arriving through the canary itself. `listMarkdown`
+      therefore unions `git ls-files` with `git ls-files --others
+      --exclude-standard`, and the manifest row says so.
+
+      **The corpus floor is 1,200 against a live 1,577** — below a legitimate
+      documentation prune, far above a scan-root collapse, per rule 3 of the
+      manifest's own contract.
+
 **Exit:** the prose layer is consistent and a new divergence fails a build.
+**Met, with its scope stated.** A new divergence in authored prose under `src/`
+or `docs/` reds the build. "Consistent" is true of the pilot's three pairs and
+NOT of the other four — 1,007 occurrences remain, recorded in the ratchet and
+shrink-only. Claiming full consistency here would be the silent-green this
+roadmap's own Phase 1 refused.
 
 ## Phase 3 — The closed-set row, when the budget allows
 
@@ -346,15 +487,23 @@ and re-measuring is what decided Phase 1. The published aggregate sums
       quotations excluded and proximity explicitly not exempting prose). A third,
       `preflight`/`pre-flight`, is recorded `undecided` with its reason rather
       than forced to a side — a 44/56 near-tie on n=25 in `src/`.
-- [ ] AC-2 — `lint_canonical_terms.ts` reds on a planted prose occurrence and
+- [x] AC-2 — `lint_canonical_terms.ts` reds on a planted prose occurrence and
       stays green inside a fence, a frontmatter value and a quoted licence name.
-      **OPEN.** The gate is not built. Per the council it must begin
-      **report-only** and be promoted to blocking only after its
-      protected-context rules are validated against 2.1's classified inventory —
-      so building it blocking-first would invert the sequence both seats asked
-      for.
-- [ ] AC-3 — The gate is registered on all four surfaces, with the canary
+      **Met.** All four states are demonstrated twice over — as unit tests in
+      `tests/scripts/lint_canonical_terms.test.ts` and as a `--self-test` that
+      shells out to the real CLI — and each was probed by sabotaging the
+      mechanism behind it and observing the matching test go red. The sequencing
+      the council asked for is honoured rather than inverted: the gate is
+      report-only for the existing corpus by construction, because the ratchet
+      baseline absorbs it, and blocking only for occurrences added after the
+      classified inventory of 2.1 validated the protected-context rules.
+- [x] AC-3 — The gate is registered on all four surfaces, with the canary
       reporting the planted defect caught.
+      **Met.** `gate-coverage.yml` row + canary, `taskfiles/ci-fast.yml` task,
+      the `Taskfile.yml` `ci:` list, and a `consistency.yml` workflow step.
+      `check_ci_local_parity` exits 0 with the `ci-parity:local-only` ratchet
+      unmoved at 165, and `check_gate_coverage --canary` reports
+      `✅ lint_canonical_terms: caught the planted contract-violation defect`.
 - [x] AC-4 — The closed-set row is either in the rule's table with the payload
       budget passing, or its guideline placement is recorded as the accepted
       outcome with the reason.

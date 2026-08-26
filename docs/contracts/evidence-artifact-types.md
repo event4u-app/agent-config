@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Evidence artifact types
 
 > One definition of what a file under `agents/evidence/` **is**, so a reader

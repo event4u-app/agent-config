@@ -5,7 +5,7 @@ pack: meta
 visibility: internal
 cluster: orchestrate
 skills: [subagent-orchestration]
-description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
+description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / subagents per the orchestration-dsl-v1 contract
 argument-hint: "<pipeline-name | path> [key=value ...]"
 suggestion:
   eligible: true
@@ -23,7 +23,7 @@ packs:
 
 Execute a YAML pipeline file from `.agent-config/orchestrations/`
 against the current workspace. Pipelines are deterministic chains of
-personas, skills, commands, and sub-agents pinned by the
+personas, skills, commands, and subagents pinned by the
 [`orchestration-dsl-v1`](../docs/contracts/orchestration-dsl-v1.md)
 contract.
 
