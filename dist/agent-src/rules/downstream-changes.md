@@ -136,6 +136,31 @@ can still break someone when it disappears.
 - Internal refactoring that doesn't change the public interface
 - Fixing a bug (the current behavior is wrong)
 
+## The sweep stops at the tree edge — say so when the surface is exported
+
+```
+A GREP OVER ONE TREE IS COMPLETE FOR THAT TREE AND SILENT ABOUT THE PRODUCT.
+CHANGED AN EXPORTED SURFACE → NAME THE BOUNDARY AND THE CONSUMERS YOU COULD
+NOT CHECK. COMPLETENESS CLAIMED ACROSS A BOUNDARY YOU NEVER CROSSED IS THE
+FAILURE, NOT A ROUNDING ERROR.
+```
+
+**Exported surface** = one that leaves the repository: a package published to a
+registry, an HTTP API another repository calls, a shared schema or contract, a
+queue message or event another service consumes, a database another service
+reads. A registry package and a contract-described API are the two standard ways
+a product spans repositories, so this is an ordinary shape, not an exotic one.
+
+When one is touched, the closing report says three things: **that** the sweep
+stopped at the tree edge, **which** exported surface crossed it, and **which**
+consumers went unchecked — named where the tree knows them (a workspace sibling,
+a `repository` field, a declared client), and stated as unknown where it does
+not. "I could not enumerate the consumers" is a real answer; silence is not.
+
+**When NOT to fire:** nothing exported changed. A purely internal refactor is
+complete over one tree because one tree is all there is, and adding a boundary
+caveat there is noise that trains readers to skip it.
+
 ## Verification
 
 After completing all downstream changes:
@@ -146,3 +171,4 @@ After completing all downstream changes:
 4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.
 5. **No own-orphans** — the same sweep applied to the new diff: identifiers whose last reference disappeared in a file this diff touched are removed in the same diff (see [`minimal-safe-diff § Own-orphan cleanup`](minimal-safe-diff.md#own-orphan-cleanup)); pre-existing dead code stays.
 6. **No doc drift** — a public surface changed this diff has its describing doc updated (or the one-line no-doc-needed reason stated), per Doc-Impact above.
+7. **No boundary silence** — an exported surface changed this diff has the tree edge named, with the unchecked consumers listed or stated as unenumerable, per the section above.
