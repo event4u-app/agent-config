@@ -31,6 +31,33 @@ Before upgrading:
 - **Review upgrade guides** — many packages provide migration docs.
 - **Check runtime version requirements** — does the new version need a newer PHP / Node / Python / Go / Rust toolchain?
 
+### 1b. Find where the version is DECLARED, before naming a file to edit
+
+```
+NEVER NAME AN EDIT SITE BEFORE ASKING WHERE THE VERSION IS DECLARED.
+IN A CATALOG WORKSPACE THE MEMBER MANIFEST IS THE WRONG FILE:
+THE VERSION IS ONE ROOT LINE WITH N REFERENTS.
+```
+
+A member `package.json` is the declaration site in an ordinary repository and
+**not** in a workspace using a catalog. There, the member reads `catalog:` and
+the range lives once in the workspace definition — editing the member either
+does nothing or silently diverges from the catalog.
+
+Ask in this order, and stop at the first that answers:
+
+1. **A catalog entry for this dependency** — `pnpm-workspace.yaml` `catalogs:` /
+   `catalog:`, or the equivalent in another manager's workspace definition. If
+   the member's range starts with `catalog:`, this is the edit site. Name the
+   catalog (`default` included) in the guidance, not the member.
+2. **A root-level pin** — `overrides` / `resolutions` / `pnpm.overrides`. A
+   member edit under one of these is overridden at install time.
+3. **The member manifest** — the ordinary case, and only after 1 and 2 are
+   silent.
+
+A repository with no catalog and no root pin behaves exactly as before; this
+step adds a lookup, not a change of default.
+
 ### 2. Plan
 
 Categorize changes needed:

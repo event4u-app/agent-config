@@ -123,8 +123,51 @@ Prop budget per component:
 | Composite (Card, Dialog) | ≤ 8 props; prefer slots for variants |
 | Page section / feature shell | ≤ 4 props; everything else via context |
 
-Over-budget triggers a refactor: extract a config object, push
-state into context, or split into compound parts.
+Over-budget is a **prompt to look**, not a verdict. Extract a config object,
+push state into context, or split into compound parts — **or record why the
+count is right for this component.**
+
+```
+THE CAPS ABOVE ARE ADVISORY. THEY ARE NOT A GATE AND MUST NOT BECOME ONE
+WITHOUT A NEW MEASUREMENT. NOTHING COMPUTES THE TIER, SO NOTHING CAN APPLY THEM
+AUTOMATICALLY EVEN IF IT WANTED TO.
+```
+
+**Why advisory, measured rather than asserted** (2026-08-24, one production
+component library: 55 atoms, 3 molecules, 2 organisms):
+
+| component | its level | props | cap here | over |
+|---|---|---:|---:|---:|
+| `file-upload` | **atom** | 19 | 6 | **3.2×** |
+| `date-navigator` | molecule | 18 | 8 | 2.25× |
+| `picker-sheet` | organism | 14 | 4 | **3.5×** |
+| `duration-input` | molecule | 13 | 8 | 1.6× |
+| `stepper` | molecule | 4 | 8 | — |
+
+**The budget is INVERTED, and that is the finding rather than a calibration
+error.** This table tightens as granularity rises. Reality goes the other way:
+a higher-level component legitimately surfaces every label, callback and test id
+of the pattern it orchestrates, so a cap that shrinks with tier flags the
+components that are **correctly built** and clears the one that is 3.2× over.
+
+**And for most components the number does not exist.** Between **45 % and 72 %**
+of that library declares no root prop interface at all, depending on how you
+count — `React.ComponentProps<'div'> & VariantProps<cva>` is the dominant idiom.
+A cap over an uncountable quantity is not a lenient rule; it is no rule.
+
+**The tier itself is not computable.** Composition depth, state, sub-component
+count and prop count were each tested as a discriminator between the three
+levels. **Every one overlapped completely, and several inverted.** Sub-component
+count is the tempting replacement and fails the same way: `atoms/combobox`
+exports **16**, more than every molecule (1, 1, 2) and more than one of the two
+organisms. So there is no measurement that could assign the tier a cap would be
+applied to.
+
+**Revisit-if:** a corpus of levelled libraries — plural, and not four days old —
+yields a discriminator that separates the tiers without overlap, at which point
+the caps can be re-derived against it rather than restated. Until then these
+numbers are a conversation starter for a human reviewer, which is the only role
+the evidence supports.
 
 ### 5. Name the slot contract
 

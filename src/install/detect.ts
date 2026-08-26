@@ -35,10 +35,16 @@ export const SETTINGS_FILE = '.agent-settings.yml';
 /**
  * Manifest files that, when present, count as a project-shape signal.
  *
- * Listed in the order they are most commonly canonical; detection
- * short-circuits on the first hit. `.git/` is intentionally absent —
- * monorepos, dotfile-git repos, and non-Git workspaces all break it
- * (ADR-007 D2).
+ * `.git/` is intentionally absent — monorepos, dotfile-git repos, and non-Git
+ * workspaces all break it (ADR-007 D2). **That clause is about the `.git/`
+ * signal and nothing else.** It used to be cited here for a second property as
+ * well — that detection "short-circuits on the first hit" — which ADR-007 D2
+ * does not state. The citation was corrected on 2026-08-26
+ * (road-to-internal-estate-fit 2.2), and the behaviour it described was
+ * corrected with it: `detectProjectShape` now returns EVERY detected manifest
+ * (2.1), so the order below is a reporting order rather than a tie-break, and
+ * a polyglot repository is described as what it is instead of as its first
+ * alphabetically-privileged half.
  */
 export const SCOPE_DETECT_MANIFESTS: readonly string[] = [
     'package.json',
@@ -127,10 +133,37 @@ export function scopeToTarget(scope: Scope): InstallTarget | null {
 }
 
 /** Project shape inferred from manifest presence. */
+export type ProjectKind =
+    | 'composer'
+    | 'npm'
+    | 'cargo'
+    | 'pyproject'
+    | 'go'
+    | 'ruby'
+    | 'unknown';
+
 export interface ProjectShape {
-    readonly kind: 'composer' | 'npm' | 'cargo' | 'pyproject' | 'go' | 'ruby' | 'unknown';
+    /**
+     * The primary kind — the first manifest in {@link SCOPE_DETECT_MANIFESTS}
+     * order that is present. Retained unchanged so every existing caller keeps
+     * working; a single-manifest repository sees exactly what it saw before.
+     */
+    readonly kind: ProjectKind;
     readonly root: string;
+    /** The primary manifest, matching {@link ProjectShape.kind}. */
     readonly manifest: string | null;
+    /**
+     * EVERY detected kind, in {@link SCOPE_DETECT_MANIFESTS} order.
+     *
+     * Added 2026-08-26 (road-to-internal-estate-fit 2.1). The shape of a
+     * repository carrying two manifests is *both*, and the caller can decide
+     * what to do with that — a `find()` returning the first one described a
+     * polyglot repository as its first half and gave the caller no way to know
+     * a second existed. Empty only when `kind` is `'unknown'`.
+     */
+    readonly kinds: readonly ProjectKind[];
+    /** Every detected manifest filename, parallel to {@link ProjectShape.kinds}. */
+    readonly manifests: readonly string[];
 }
 
 /**
@@ -139,20 +172,30 @@ export interface ProjectShape {
  * Manifest-to-kind mapping mirrors {@link SCOPE_DETECT_MANIFESTS}:
  * `package.json` → npm, `composer.json` → composer, etc.
  */
+const MANIFEST_KIND = {
+    'package.json': 'npm',
+    'composer.json': 'composer',
+    'pyproject.toml': 'pyproject',
+    'Cargo.toml': 'cargo',
+    'go.mod': 'go',
+    Gemfile: 'ruby',
+} as const satisfies Record<string, ProjectKind>;
+
 export function detectProjectShape(root: string): ProjectShape {
-    const manifest = SCOPE_DETECT_MANIFESTS.find((m) => existsSync(join(root, m)));
-    if (manifest === undefined) {
-        return { kind: 'unknown', root, manifest: null };
+    const manifests = SCOPE_DETECT_MANIFESTS.filter((m) => existsSync(join(root, m)));
+    if (manifests.length === 0) {
+        return { kind: 'unknown', root, manifest: null, kinds: [], manifests: [] };
     }
-    const kind = ({
-        'package.json': 'npm',
-        'composer.json': 'composer',
-        'pyproject.toml': 'pyproject',
-        'Cargo.toml': 'cargo',
-        'go.mod': 'go',
-        Gemfile: 'ruby',
-    } as const)[manifest] ?? 'unknown';
-    return { kind, root, manifest };
+    const kinds = manifests.map(
+        (m) => (MANIFEST_KIND as Record<string, ProjectKind>)[m] ?? 'unknown',
+    );
+    return {
+        kind: kinds[0] as ProjectKind,
+        root,
+        manifest: manifests[0] as string,
+        kinds,
+        manifests,
+    };
 }
 
 /** AI-tool presence flags discovered in a project tree. */

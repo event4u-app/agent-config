@@ -49,9 +49,41 @@ export const COVERAGE_BUCKETS: readonly string[] = ['honoured', 'translated', 'f
 
 export const ARTEFACT_REL = path.join('agents', 'runtime', 'state', 'ui-audit.json');
 
+/**
+ * The audit `kind` vocabulary — ONE definition, and the source the skill is
+ * tested against rather than a second hand-written list.
+ *
+ * Canonicalised 2026-08-26 (road-to-component-granularity-vocabulary 0.1). The
+ * skill declared `page | partial | component | layout` and the code emitted
+ * `component | view | style | page`; only two values were common, so an audit
+ * artefact written by the code was being read against a contract it did not
+ * satisfy. AI council 2/2: the emitted schema is authoritative for
+ * compatibility, one seat adding the refinement that the enum should live in a
+ * single module the producer, the consumer and the doc-conformance test all
+ * depend on — which is what this constant is.
+ *
+ * `partial` and `layout` are NOT adopted. Both sound like they mean something,
+ * and neither has an operational definition anyone could test: measured against
+ * a real tree, there is no line. Adding them would replace two undocumented
+ * values with two speculative ones.
+ *
+ * `view` IS retained, against both council seats' recommendation, because the
+ * premise they were given is false. The roadmap records `view` as "0 in any JS
+ * tree" and both seats read that as zero-yield. Measured on this repository
+ * 2026-08-26: **`view` = 2**, on
+ * `tests/eval/frontend-corpus/cases/blade-view/…` and
+ * `…/livewire-flux/…`. It is the BLADE branch. "Zero in a JS tree" is true of it
+ * the way "zero cats in a dog show" is true — the instrument was pointed at the
+ * wrong corpus. Removing it would have deleted this suite's only Laravel
+ * classification.
+ */
+export const AUDIT_KINDS = ['component', 'view', 'style', 'page'] as const;
+
+export type AuditKind = (typeof AUDIT_KINDS)[number];
+
 export interface ComponentEntry {
     path: string;
-    kind: 'component' | 'view' | 'style' | 'page';
+    kind: AuditKind;
     exports: string[];
 }
 export interface DesignSystemMarker {
@@ -88,7 +120,16 @@ export interface UiAuditArtefact {
     degradation_reason?: string;
 }
 
-/** Files that mark an adopted design system, and the marker each implies. */
+/**
+ * Files that mark an adopted design system, and the marker each implies.
+ *
+ * The `shadcn` row is a FALLBACK, not the detector. shadcn's own
+ * `components.json` declares where its primitives live under `aliases.ui`, and a
+ * project that points that alias anywhere other than `components/ui/` was
+ * reported as having no design system at all. Read the declaration first — see
+ * `shadcnUiDirs` — and keep this pattern for the case where `components.json`
+ * is absent or unreadable.
+ */
 const SYSTEM_MARKERS: ReadonlyArray<readonly [RegExp, string]> = [
     [/components\/ui\/[a-z-]+\.tsx?$/i, 'shadcn'],
     [/\btailwind\.config\.[cm]?[jt]s$/i, 'tailwind'],
@@ -119,10 +160,44 @@ function walk(root: string, out: string[] = [], depth = 0): string[] {
     return out;
 }
 
-function classify(rel: string): ComponentEntry['kind'] {
+/**
+ * True when a module's body is re-exports and nothing else — a barrel.
+ *
+ * `index.[jt]sx?` is one of the page markers, and a barrel is the commonest
+ * thing to call `index`. Reproduced 2026-08-26: `src/ui/components/index.tsx`
+ * containing two `export { X } from './X'` lines classified as `page`, which is
+ * wrong in a way that matters — `page` is what the `audit_path` branch and every
+ * downstream consumer read as "a screen".
+ *
+ * Deliberately conservative. Comments and blank lines are ignored; ANY other
+ * statement — a declaration, a side effect, an `export default` — makes it not a
+ * barrel, so a hybrid `index.tsx` that both re-exports and renders keeps its
+ * page classification. A false negative here costs a page label; a false
+ * positive would silently reclassify real screens.
+ */
+export function isBarrel(text: string): boolean {
+    const body = text
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l !== '' && !l.startsWith('//'));
+    if (body.length === 0) return false;
+    return body.every((l) => /^export\s+(?:\*|\{)[^;]*from\s+['"][^'"]+['"];?$/.test(l));
+}
+
+function classify(rel: string, text = ''): AuditKind {
     if (/\.(css|scss|sass|less)$/i.test(rel)) return 'style';
-    if (/(^|\/)(pages|app)\//i.test(rel) || /(^|\/)(page|index)\.[jt]sx?$/i.test(rel)) return 'page';
+    // `view` is the BLADE branch, not a dead one. It reads 0 in a JS tree by
+    // construction and 2 in this repository's own Laravel fixtures — the two
+    // statements are not in tension, and reading the first as "unused" is the
+    // misreading `road-to-component-granularity-vocabulary` 0.6 was written
+    // against.
     if (/\.blade\.php$/.test(rel) || /resources\/views\//.test(rel)) return 'view';
+    if (/(^|\/)(pages|app)\//i.test(rel)) return 'page';
+    // An `index.*` that only re-exports is a barrel, not a screen.
+    if (/(^|\/)(page|index)\.[jt]sx?$/i.test(rel)) {
+        return /(^|\/)index\.[jt]sx?$/i.test(rel) && isBarrel(text) ? 'component' : 'page';
+    }
     return 'component';
 }
 
@@ -130,6 +205,40 @@ function classify(rel: string): ComponentEntry['kind'] {
  * Pure core. Takes (relative path, text) pairs so every branch is testable
  * without a tree on disk — the same reason `ui_authority` takes a record.
  */
+/**
+ * The directories shadcn's own `components.json` declares as its UI root, as
+ * repo-relative prefixes with a trailing slash. Empty when the file is absent,
+ * unparseable, or declares no `aliases.ui`.
+ *
+ * `aliases.ui` is written as a path alias (`@/components/ui`, `~/lib/ui`, or a
+ * bare `src/ui`). The leading alias token is stripped rather than resolved: this
+ * is a marker detector, not a module resolver, and resolving `@` would mean
+ * reading `tsconfig.json` paths for a signal that only has to be right about
+ * WHICH DIRECTORY, never about which module.
+ */
+export function shadcnUiDirs(
+    files: ReadonlyArray<readonly [string, string]>,
+): string[] {
+    const out: string[] = [];
+    for (const [rel, text] of files) {
+        if (path.basename(rel) !== 'components.json') continue;
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(text);
+        } catch {
+            continue;
+        }
+        if (typeof parsed !== 'object' || parsed === null) continue;
+        const aliases = (parsed as Record<string, unknown>)['aliases'];
+        if (typeof aliases !== 'object' || aliases === null) continue;
+        const ui = (aliases as Record<string, unknown>)['ui'];
+        if (typeof ui !== 'string' || ui.trim() === '') continue;
+        const stripped = ui.trim().replace(/^[@~]\//, '').replace(/^\.\//, '').replace(/\/+$/, '');
+        if (stripped !== '') out.push(`${stripped}/`);
+    }
+    return [...new Set(out)];
+}
+
 export function buildArtefact(
     root: string,
     files: ReadonlyArray<readonly [string, string]>,
@@ -142,7 +251,19 @@ export function buildArtefact(
     const markers: DesignSystemMarker[] = [];
     const families = new Set<string>();
 
+    // Declared shadcn UI roots win over the hardcoded `components/ui/` pattern.
+    // A project whose `aliases.ui` points elsewhere used to report NO design
+    // system, which is the opposite of the truth.
+    const declaredUiDirs = shadcnUiDirs(files);
     for (const [rel] of files) {
+        if (
+            declaredUiDirs.length > 0 &&
+            /\.tsx?$/i.test(rel) &&
+            declaredUiDirs.some((d) => rel.startsWith(d)) &&
+            !markers.some((m) => m.marker === 'shadcn')
+        ) {
+            markers.push({ marker: 'shadcn', path: rel });
+        }
         for (const [re, marker] of SYSTEM_MARKERS) {
             if (re.test(rel) && !markers.some((m) => m.marker === marker)) markers.push({ marker, path: rel });
         }
@@ -158,7 +279,7 @@ export function buildArtefact(
             exports.push(m[1]!);
             primitives.add(m[1]!);
         }
-        components.push({ path: rel, kind: classify(rel), exports });
+        components.push({ path: rel, kind: classify(rel, text), exports });
     }
 
     // Greenfield is the ABSENCE of a UI surface, not the absence of a
