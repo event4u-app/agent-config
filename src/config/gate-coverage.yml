@@ -1840,3 +1840,10 @@ gates:
         The grant above names a tool no host in this tree is known to honour. A
         loader IGNORES an unrecognised key, so this artefact reads as restricted
         and is not — which is the whole defect class the gate exists to refuse.
+  - id: check_host_loadability
+    argv: ["--reach", "--root", "."]
+    min_scanned: 6
+    corpus: "the six host surfaces in HOST_SURFACES (claude-code, cursor, cline, windsurf, gemini-cli, copilot). The floor is the full set rather than a fraction: the surface list is a committed constant, so a reading below 6 means a row was dropped from the constant, never that a projection is legitimately smaller. An ABSENT host tool is a ledger SKIP with its detection signal named, not a missing row."
+    status: enforced
+    no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artefact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
+    argv_note: "The `--reach` argv, not the default. The default mode checks that two projections PARSE and emits no coverage line; reach accounts for every host surface and is the mode that carries a corpus. Registered on the argv that emits, per this manifest\u0027s own CI-identical-argv rule \u2014 and note that `--reach` is declared LOCAL-ONLY in ci-local-parity.yml, because a CI runner has no host tool installed and every row would resolve `skipped-tool-absent`, which is the empty-scope false green this manifest exists to refuse."

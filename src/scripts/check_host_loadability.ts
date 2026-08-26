@@ -17,8 +17,11 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { HOST_SURFACES, measureReach } from './_lib/host_projection_reach.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
+const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
 /** @returns how many skill directories were examined. */
 export function check_claude_skills(root: string, errors: string[]): number {
@@ -124,11 +127,62 @@ export function runReach(root: string): { failures: string[]; scanned: number } 
     return { failures, scanned: HOST_SURFACES.length };
 }
 
+
+/**
+ * Self-test — proof that the reach mode's REJECTIONS still fire.
+ *
+ * Required by the `gate-self-test:registered-non-adopters` ratchet, and worth
+ * having independently: an enforced `scanned:` floor proves the gate READ
+ * something, and only a self-test proves the reading changes the verdict.
+ *
+ * **One case is deliberately absent and the reason is a real limit.** The
+ * verdict this mode exists for — an INSTALLED tool whose projection directory
+ * is empty — cannot be built from a fixture root, because presence is read from
+ * the machine (`PATH` and `$HOME`), not from the tree under test. A fixture can
+ * make a projection empty; it cannot make a tool installed. The rejecting case
+ * below is therefore the dead-scope one, and the discriminating half rests on
+ * the live measurement, which reports every surface with its own verdict.
+ */
+function reachSelfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(REPO_ROOT, '.host-reach-selftest-'));
+    const invoke = (dir: string): number =>
+        runGateCli(
+            REPO_ROOT,
+            'src/scripts/check_host_loadability.ts',
+            ['--reach', '--root', dir],
+            REPO_ROOT,
+        );
+    try {
+        return runSelfTest({
+            gate: 'check_host_loadability',
+            minCases: 2,
+            minRejectCases: 1,
+            cases: [
+                {
+                    name: 'a root carrying no host projection at all is REFUSED, never passed',
+                    expect: 'reject',
+                    run: () => invoke(tmp),
+                },
+                {
+                    name: 'this repository accounts for every host surface',
+                    expect: 'accept',
+                    run: () => invoke(REPO_ROOT),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 const isMain = process.argv[1] !== undefined
     && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (isMain) {
     const rootIdx = process.argv.indexOf('--root');
     const root = rootIdx !== -1 ? process.argv[rootIdx + 1] ?? '.' : '.';
+    if (process.argv.includes('--self-test')) {
+        process.exit(reachSelfTest());
+    }
     if (process.argv.includes('--reach')) {
         const { failures, scanned } = runReach(root);
         process.stdout.write(`scanned: ${String(scanned)}\n`);

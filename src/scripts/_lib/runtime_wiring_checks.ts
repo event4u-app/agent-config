@@ -32,7 +32,14 @@ import { inheritedGitOverrides } from './repo_root.js';
 /** The verdict shape `cmd_doctor` renders. Mirrors its internal `Dict` rows. */
 export interface WiringCheck {
     id: string;
-    status: 'ok' | 'warn' | 'fail' | 'skipped' | 'info';
+    /**
+     * The four the doctor's own report contract publishes. `info` was a fifth
+     * here for one commit and is gone: the MCP `doctor_report` tool asserts the
+     * published union, so a fifth value that never reached that contract failed
+     * the tool's shape test rather than appearing in a report. A vocabulary a
+     * consumer cannot receive is not a vocabulary.
+     */
+    status: 'ok' | 'warn' | 'fail' | 'skipped';
     message: string;
     remedy: string;
 }
@@ -63,7 +70,12 @@ export function checkSettingsResolution(
     if (pairs.length === 0) {
         return {
             id: 'settings-resolution',
-            status: 'info',
+            // `skipped`, not `ok`: the cascade RESOLVED and there was nothing
+            // in it, which is a check that had nothing to inspect rather than a
+            // check that passed. Reporting `ok` here would read as "settings
+            // resolved fine" on a tree where no setting exists at all — the
+            // same conflation the reach check exists to remove elsewhere.
+            status: 'skipped',
             message:
                 'settings cascade resolves, and NO layer sets any key — every read falls to the ' +
                 'template default. That is a valid state, not a failure: a fresh project has no settings.',

@@ -28,11 +28,18 @@ afterEach(() => {
 });
 
 describe('checkSettingsResolution', () => {
-    it('reports INFO, not a failure, when no layer sets any key', () => {
-        // A fresh project legitimately has no settings. Reporting that as a
-        // failure would train a reader to ignore the check.
+    it('reports SKIPPED, not a failure and not a pass, when no layer sets any key', () => {
+        // A fresh project legitimately has no settings, so a failure here would
+        // train a reader to ignore the check. `ok` would be wrong in the other
+        // direction — it reads as "settings resolved fine" on a tree where no
+        // setting exists at all. `skipped` says the check had nothing to inspect.
+        //
+        // It was `info` for one commit. The MCP `doctor_report` tool asserts the
+        // four-value union the doctor publishes, so a fifth value failed that
+        // tool's shape test in CI rather than reaching any report — a vocabulary
+        // a consumer cannot receive is not a vocabulary.
         const r = checkSettingsResolution(() => []);
-        expect(r.status).toBe('info');
+        expect(r.status).toBe('skipped');
         expect(r.message).toContain('NO layer sets any key');
     });
 
