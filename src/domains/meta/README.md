@@ -67,7 +67,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`image-analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
 - **`image-create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
 - **`image-verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
-- **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git.
+- **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git — `implement` refuses production work for a behaviour with no observed failing test.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
 - **`judge-on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
@@ -135,7 +135,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 - **`tdd`** — TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
 - **`tdd-green`** — TDD green phase — write the minimum production code to make the failing test pass; no test edits
-- **`tdd-red`** — TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error)
+- **`tdd-red`** — TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behaviour under test
 - **`tdd-refactor`** — TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 - **`team`** — Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
 - **`team-adversarial`** — Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.
@@ -159,7 +159,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
 - **`video-stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
-- **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
+- **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git — `implement` refuses production work for a behaviour with no observed failing test.
 - **`worktree`** — Worktree orchestrator — routes to create, status, verify, cleanup
 - **`worktree-cleanup`** — Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
 - **`worktree-create`** — Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred

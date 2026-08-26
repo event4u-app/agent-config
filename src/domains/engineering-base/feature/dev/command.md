@@ -7,7 +7,7 @@ cluster: feature
 sub: dev
 description: Full 7-phase feature development workflow for complex features.
 argument-hint: "[description]"
-skills: [laravel, php-coder]
+skills: [laravel, php-coder, test-driven-development]
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -88,7 +88,12 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
 3. Follow chosen architecture from Phase 4.
 4. Follow codebase conventions strictly (read guidelines).
 5. Update task list as progress is made.
-6. Write tests alongside the implementation.
+6. Work **one behaviour at a time**: write the failing test for that behaviour,
+   observe it fail, write the minimum code that makes that one behaviour pass,
+   then take the next behaviour. A test phase followed by a code phase is
+   batch-TDD, not test-first — it buys the ordering and loses the feedback.
+   The only exceptions are the Do-NOT list in the `test-driven-development`
+   skill; a skipped test-first cycle is recorded in the decision log, never silent.
 
 ### Phase 6: Quality Review
 

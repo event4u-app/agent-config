@@ -7,7 +7,7 @@ routes_to: [refine-prompt, command-routing]
 replaces: []
 visibility: visible
 skills: [refine-prompt, command-routing]
-description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
+description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git — `implement` refuses production work for a behaviour with no observed failing test.
 argument-hint: "[prompt]"
 suggestion:
   eligible: true
