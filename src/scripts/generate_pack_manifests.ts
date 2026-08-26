@@ -31,11 +31,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { SRC_AGENT, iter_all_sources, resolve_logical } from './_lib/agent_src.js';
+import { resolveRepoRoot } from './_lib/repo_root.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/generate_pack_manifests.ts → parents[2] is the repo root (mirrors
 // `Path(__file__).resolve().parents[2]` in the .py).
-const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+// Root resolution goes through the sentinel resolver rather than a bare `..`
+// walk: `path.resolve(dirname, '..', '..')` is correct until this file moves,
+// and then it addresses a parent directory that also exists — the generator
+// writes nothing, reports success, and nothing fails. `resolveRepoRoot` REFUSES
+// when no directory on the walk carries this package's `package.json`
+// (road-to-skill-ecosystem-runtime-enforcement Phase 2 Step 6).
+const ROOT = resolveRepoRoot(path.dirname(_HERE));
 const PACKAGES = path.join(ROOT, 'packages');
 const SRC_DOMAINS = path.join(ROOT, 'src', 'domains');
 const SRC_PACKS = path.join(ROOT, 'src', 'packs');

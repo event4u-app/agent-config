@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2027-02-19
+review_by: 2026-12-24
 probe: none
 ---
 
@@ -42,7 +42,7 @@ openai 50/50)**. With no verdict available and no honest way to satisfy the
 criterion as written, the criterion was descoped here instead of being marked
 satisfied on a number that does not exist.
 
-## What would close this
+## Promotion — what would close this
 
 Three candidates, in ascending order of how much they change:
 

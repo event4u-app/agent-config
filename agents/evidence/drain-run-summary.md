@@ -5,10 +5,14 @@
 > The single report for the run, per its mandate: **every PR, every council
 > decision, every descope.** Written as the last commit of the final PR.
 >
-> **The roadmap directory is NOT empty, and this run did not empty it.** 8 PRs
-> landed across 8 roadmaps; 7 roadmaps were never opened. What follows says which
-> and why, because a summary that reported only the work done would misdescribe
-> the run.
+> **The roadmap directory is NOT empty, and this run did not empty it.** What
+> follows says which roadmaps were never opened and why, because a summary that
+> reported only the work done would misdescribe the run.
+>
+> **§§ 1–7 cover the run's FIRST SEGMENT and §§ 8–13 the SECOND.** They are kept
+> separate rather than merged: the second segment re-opened four roadmaps the first had
+> advanced and left active, so a single merged table would report the same
+> roadmap twice with two different outcomes and hide which came first.
 
 ## 1. The pull requests
 
@@ -171,3 +175,150 @@ evidence type, a stale risk review answered with an actual re-review, and a
 suppression file undeclared in `SUPPRESSION_INVENTORY` — the last caught by CI
 after the local gate passed, because that gate is diff-scoped and blind until
 committed. `AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT` was never used.
+
+---
+
+# Second segment — 2026-08-26
+
+> The first segment's eight PRs were still open when it ended. This segment
+> merged five of them after fixing what CI found, then opened five more.
+>
+> **The directory is still not empty**, and § 12 says what remains.
+
+## 8. The pull requests
+
+| PR | roadmap | outcome |
+|---|---|---|
+| #1653 | `canonical-terms` | **merged** — post-merge red fixed (the routing seed IS the live measurement) |
+| #1654 | `contract-review-deadlines` | **merged** — three merge conflicts resolved, all in count-carrying prose |
+| #1655 | `memory-twin-reconciliation` | **merged** — snapshot red fixed; the added key is a restored CONTROL, not drift |
+| #1657 | `skill-ecosystem-runtime-enforcement` | 53 items, **archived** |
+| #1659 | `skill-ecosystem-eval-integrity` | **merged** — 43 items |
+| #1660 | `kernel-invariant-restoration` | **merged** — 3 of 5; clause 1 filed as human-only |
+| #1661 | `inbox-harvest-f-owner-decision-queue` | 10 items, **archived** |
+| #1662 | `inbox-harvest-f-code-graph-evidence-refresh` | 10 of 11; 3.1 **open by council ruling** |
+| *(this PR)* | `inbox-harvest-f-skill-selection-evidence` | 12 items, **archived** |
+
+## 9. Council decisions — 3 sessions, 6 decisions
+
+Same shape as the first segment: two seats, blind peer review, quorum 2/2, on the
+maintainer's delegation. Every one is recorded at the roadmap step it settled and
+**none is linked by path** — council artefacts are gitignored and auto-pruned, so
+a path to one is a reference that rots.
+
+| # | decision | verdict |
+|---|---|---|
+| 16 | the PREREG verdict method | **amend now, before any run** 2/2 — with the magnitude bar kept independently binding |
+| 17 | kernel invariant clause 1 | **restore the literal** 2/2 — *the reverse of the roadmap's own guess* |
+| 18 | kernel invariant clause 2 | **amend the invariant** 2/2, with an explicit equivalence statement |
+| 19 | stub review cadence | **per-shape: 30 / 180 days** 2/2 |
+| 20 | the family cap | **leave `CAP = 2`** 2/2, revisit at **seven** days not thirty |
+| 21 | the code-graph benchmark | **(c) now, and 3.1 must NOT close** 2/2 |
+
+### Where the council corrected the work rather than approving it
+
+- **#17 is the sharpest.** `road-to-kernel-invariant-restoration` assumed clause 1
+  was the *amend* candidate because the current sentence reads better. Both seats
+  rejected that: *"WAIT"* plus *"never fire in the turn you ask"* does **not**
+  forbid acting in a LATER turn without an answer, while *"WAIT for the answer"*
+  does. The reworded form is a tighter sentence about a **narrower guarantee** —
+  exactly the shape the gate exists to catch, and exactly the shape a reviewer
+  reading only the prose would approve.
+- **#16** — both seats independently refused the bare replacement: a sign test
+  answers *direction* and says nothing about *magnitude*, so replacing Wilcoxon
+  outright would let a clean sweep of negligible improvements claim a **size**
+  win. A seat also forced the framing correction — *before any Phase-3 outcome
+  data, informed by twelve non-Phase-3 records*, not "before any data".
+- **#21** — the run asked which ledger status was correct rather than choosing.
+  Both seats: `backed` stays. NOT `resolved-null`, which would assert the
+  retrieval question was **answered** null on a build nobody measured; NOT
+  `superseded_by`, which expects replacement *evidence* and takes a claim, not a
+  repair commit. What they required instead was structured build-scoping reaching
+  **every index**, not only the detailed entry.
+- **#19 / #20** — both seats also ruled that a delegated agent MAY settle these,
+  because each is a reversible operating policy rather than a floor. That ruling
+  is recorded because it is what made the rest of the segment legitimate rather
+  than presumptuous.
+
+## 10. Five premises measurement contradicted
+
+The most useful rows here. Each is a roadmap's own framing, corrected in place.
+
+| the roadmap said | measured |
+|---|---|
+| 15 hook concerns | **53** |
+| **48** stubs carry no probe | **8** — it counted only level-2 headings |
+| 77 stub files | **76** |
+| 43 % of edges AMBIGUOUS is a defect | 86.7 % of them have **no in-repo target at all** — the taxonomy working, not the graph broken |
+| clause 1 is the amend candidate | the **reverse** (§ 9) |
+
+## 11. Descopes, nulls and recorded no-ops
+
+| item | disposition | reason |
+|---|---|---|
+| the largest AMBIGUOUS class (58,612 edges) | **null route** | `join`, `push`, `map`, `readFileSync`, `toBe` — `Array.prototype`, `node:fs`, vitest. Not resolvable, not merely hard |
+| the catalogue-wide `triggers.json` backfill | **no-op, lock stands** | mechanism-match confirmed; reopen condition **checked and unfired** — the observation store records delivery counts and names no skill |
+| per-pack link validation | out of scope | belongs to a parked owner; widening quietly would answer a question nobody asked |
+| `lint_eval_specs` advisory period | **skipped** | the corpus measured clean in all five classes; an advisory window over zero debt measures nothing and delays the protection |
+| option (b) for the code-graph benchmark | refused | different corpora destroy the comparability that makes the re-run worth doing |
+| the four pre-existing owner decisions | left verbatim | re-formatting someone else's open decision to satisfy a later roadmap's criterion edits the record, not the queue |
+| AC-3 (eight decisions), AC-1 (non-inference) | **partially met, stated as such** | claiming them fully met would be the overstatement those very criteria exist to prevent |
+
+## 12. What remains
+
+Eight roadmaps, roughly 250 open steps. Two carry the blockers below; six were
+**not reached** rather than assessed: `published-number-truth`,
+`ten-across-the-board`, `internal-estate-fit`,
+`component-granularity-vocabulary`, `decision-conformance`,
+`capability-native-execution` (5 blockers), and
+`inbox-harvest-e-council-topology-evidence` (5 blockers, largest in the estate).
+
+**Two blockers left open, both `Owner: maintainer`, both with the exact work
+written down:**
+
+- **`clause-1-restore-is-human-only`** — `block_kernel_rule_writes` denies the
+  write. The guard's scope was established by **reading** it, never by attempting
+  the write: a council seat was explicit that probing a safety guard by writing
+  to it is not an acceptable way to learn its reach, and this run did not. The
+  cost of doing nothing is named: the kernel's never-act-while-asking floor
+  currently holds the **narrower** guarantee.
+- **`b-bench-inputs-absent`** — pinned question files under gitignored
+  `agents/tmp/` plus three external repository clones. A seat named what this run
+  cannot supply: a maintainer determination that the inputs are irrecoverable,
+  which either retires the step or approves a separately named non-comparable
+  benchmark.
+
+**Nothing was merged by this run.** A production-branch merge needs a this-turn
+confirmation and no standing mandate lifts it, so the green PRs above are waiting
+on a human.
+
+## 13. Method, and the two disciplines that changed outcomes
+
+`task ci` is red on `main` for pre-existing reasons, so *"the pipeline is green"*
+was never an available claim. Every PR instead ran **every task in the `ci` list
+individually, on the branch and on a detached `origin/main`, and compared the
+failure sets.** The claim is *zero branch-only failures*; where one survived it is
+named in the PR body with its reason.
+
+Found and fixed that way rather than by CI after the fact: a **dead
+dependency-halt rung** whose ReferenceError was swallowed by its own `catch` (and
+whose pure-decision tests all stayed green, because a decision function cannot
+observe a caller that never computes its input); a fifth status value the MCP
+tool's published union does not carry; a **raw U+1F control byte** where an escape
+was meant; a schema change with no `x-schemaVersion` bump; a suppression entry
+with no falsifier; evidence artifacts declaring their type in frontmatter a
+marker-reading gate cannot see; and **four ratchet crossings, every one paid back
+by extraction rather than by raising a baseline**.
+
+Two disciplines are worth naming because they changed outcomes:
+
+**Sabotage before claiming.** The concurrency guard was proven by disabling it —
+1 of 8 parallel writes survived; 8 of 8 with it restored. Five regression tests
+were each shown red before being trusted, including the one for the ranker's
+stale default (reverting it reds 2 of 9) and the one for the memory-signal
+provenance gate (removing it reds 2 of 45).
+
+**Read the guard, do not probe it.** The one place where the cheap way to learn a
+limit would have meant writing to a safety mechanism. The limit was read out of
+the guard's own source instead, and the fact that it was read rather than tested
+is recorded in the blocker so a later reader knows which.

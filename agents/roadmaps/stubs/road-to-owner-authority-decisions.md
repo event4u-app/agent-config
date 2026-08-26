@@ -1,6 +1,6 @@
 ---
 complexity: structural
-review_by: 2026-09-21
+review_by: 2026-09-25
 probe: none
 ---
 
@@ -12,6 +12,15 @@ probe: none
 > because each either widens agent write authority or weakens the reach of an
 > authority floor — the owner-reserved class. Outcome state recorded on the
 > parent: **transferred**.
+
+## Probe — a recorded owner ruling, per decision
+
+Read, independently per decision: does a dated, explicit ruling by the
+repository owner exist in the tree — an ADR, a recorded decision entry, or a
+signed statement under `agents/` — answering Decision 1, 2, 3, or 4 (and for
+Decision 4, that individual record)? Silence is not an answer: recording an
+owner's absence as an owner's decision is the fabrication § Disposition below
+refuses. **Baseline 2026-08-22:** four open, no ruling recorded on any.
 
 ## Disposition — read this before anything else
 
@@ -143,64 +152,129 @@ keeps working for every new record; nothing degrades. The 56-day expiry on the
 entry is the real clock — if the number has not moved by then, the gate fails
 until someone decides whether the doctrine is real.
 
-## Unresolved decisions 5-8 — added 2026-08-26 by the inbox-harvest drain
+## Unresolved decision 5 — the release-placeholder offset
 
-Four more, each with the exact instrument it moves and what changes on a yes and
-on a no. Added here rather than in a new file because this stub already IS the
-queue, and a second queue is how a queue stops being read.
+**Added 2026-08-26** by `road-to-inbox-harvest-2026-08-f-owner-decision-queue`
+step 2.2, which registers the owner-reserved decisions that drain run surfaced.
 
-### Decision 5 — the release-placeholder guard's estate offset
+**Instrument:** `agents/roadmaps/stubs/road-to-release-placeholder-guard.md:36-38`
+— the stub records that its own promotion needed both an owner instruction and a
+named `one_in_one_out` offset; the instruction existed, the offset did not, and
+the run *"wrote an `estate_offset_exempt` claim to itself instead"*.
 
-- **Instrument:** `agents/roadmaps/stubs/road-to-release-placeholder-guard.md:3`
-  (`status: stub`) against `CHANGELOG.md:419-422`, which ships four
-  `_auto-derived, rewrite before merge:_` lines under `## [14.12.0]`.
-- **The situation:** that stub's AC-1 at `:426` **is** the gate reviewers asked
-  for. It was promoted on 2026-08-24 and reverted the same day by a 2/2 council
-  verdict — **not on merit**, but because the run self-certified an estate
-  exemption where a named offset was required.
-- **Yes** (name an offset and promote): the guard lands and placeholder lines
-  stop reaching a release.
-- **No:** the four lines stay in a shipped CHANGELOG and the next release
-  inherits the same shape, because nothing refuses them.
+> **Question:** may a run satisfy the one-in-one-out estate rule with a
+> self-written `estate_offset_exempt` claim when no archive move is available,
+> or does an offset require a named counterpart the run did not choose?
 
-### Decision 6 — the Class-B resident-service prohibition
+**If the owner says yes** — self-certified exemptions stay legal, and the estate
+ratchet's one-in-one-out half is discipline rather than a constraint: any run
+that cannot find a counterpart writes its own reason and proceeds.
+**If the owner says no** — a run with no available offset cannot add to the
+estate at all, and the placeholder guard (plus every future addition in the same
+position) waits for a real archive move. That is the stricter reading and it is
+the one the stub itself argues for.
 
-- **Instrument:** `docs/decisions/ADR-124-embedded-engine-doctrine.md:109-110`
-  together with the backed `claim:no-runtime-daemon` at `docs/CLAIMS.md:104-108`.
-- **Yes** (relax): a resident service becomes admissible, and the backed claim
-  must be retired through the ledger's own lifecycle rather than edited.
-- **No:** the prohibition stands and every design that wants a daemon is
-  answered by the ADR without a fresh argument. **This is the status quo and it
-  costs nothing to keep** — recorded so the question is not re-argued from
-  scratch each time.
+**Why it is owner-reserved:** the party writing the exemption is the party
+gaining the slot. Self-certification of an estate constraint is the same
+authority shape as the grade-derived-authority question in Decision 3.
 
-### Decision 7 — accepting ADR-240
+## Unresolved decision 6 — the Class-B resident-service prohibition
 
-- **Instrument:** `docs/decisions/ADR-240-evidence-based-decision-floor.md`,
-  which ships `status: proposed` and whose own text reserves acceptance to the
-  owner.
-- **Yes:** the evidence floor becomes citable as accepted, and gates may rest on
-  it.
-- **No / indefinite:** it stays `proposed`, which means anything citing it cites
-  a proposal — and a proposal cited as a floor is the shape
-  `decision-revisit-gate` warns about.
+**Added 2026-08-26** by the same step. **Surfaced, not decided** — an AI council
+(2026-08-26, 2/2) was explicit that this is *established policy being preserved*,
+not a new constraint, and that reopening it is owner-reserved.
 
-### Decision 8 — the `road-to-skill-ecosystem-*` family cap
+**Instrument, two halves that must move together:**
+- `docs/decisions/ADR-124-embedded-engine-doctrine.md:110` — the Class-B row:
+  *"Anything with a lifecycle beyond one command … **PROHIBITED in core**,
+  unchanged."*
+- `docs/CLAIMS.md:120-125` — `claim:no-runtime-daemon`, `status: backed`,
+  *"The whole layer is compiled into host agents with zero runtime daemon."*
 
-- **Instrument:** `lint_roadmap_family_cap.ts:42` (`CAP = 2`), whose reason is
-  `ADR-215 § D2`.
-- **Council-settled for now, 2026-08-26, 2/2:** leave the cap at 2. The queue
-  is real — `later/road-to-skill-ecosystem-executable-payloads.md:69-75` is
-  third in a queue of two — but the cap is doing what it was built for, and
-  both current occupants were completed work awaiting merge at the time of the
-  verdict.
-- **Yes** (raise): `lint_roadmap_family_cap.ts:19-20` says that is a one-line
-  change **plus a new decision record**, never a silent edit, and `ADR-215 § D2`
-  must be amended rather than contradicted.
-- **No:** the payloads roadmap waits for the first slot a merge frees.
-- **Revisit if** either in-flight family PR stays unmerged beyond seven days, or
-  becomes materially blocked, or any completion or release gate turns out to
-  rest on the non-executing evaluations that roadmap owns.
+**Provenance correction, recorded rather than silently fixed:** the roadmap step
+that requested this entry cited `docs/CLAIMS.md:104-108` for that claim. Read at
+HEAD, `:104-108` is the `**What \`exec:\` cannot cover.**` paragraph; the claim is
+at `:120-125`. The instrument is the one above.
+
+> **Question:** does core ever admit a Class-B resident service — a watcher, a
+> memory backend run as a server, a background worker?
+
+**If the owner says yes** — `claim:no-runtime-daemon` loses its backing and must
+be restated or retired, `docs/contracts/no-runtime-boundary.md` is amended, and
+the sibling-package routing ADR-124 prescribes stops being the answer.
+**If the owner says no** — nothing changes; the row and the claim stand, and
+proposals for a resident index, daemon or watcher keep routing to
+`agent-ide-plugin` or a sibling package.
+
+**This entry takes no position.** It exists because the prohibition was
+reachable only by reading two documents that do not cite each other.
+
+## Unresolved decision 7 — acceptance of ADR-240
+
+**Added 2026-08-26** by the same step. **Surfaced, not decided**, and for a
+reason stronger than convention: the record's own text reserves acceptance to
+the owner, so an agent accepting it would be using the record to authorise
+accepting the record.
+
+**Instrument:** `docs/decisions/ADR-240-evidence-based-decision-floor.md:3` —
+`status: proposed`.
+
+> **Question:** is ADR-240 accepted, and if so does its evidence floor bind
+> retroactively or only records written after acceptance?
+
+**If the owner says yes** — the evidence floor becomes live and every ADR
+carrying an evidence grade is gradeable against it; the retroactivity half needs
+its own answer, because a floor applied backwards reclassifies 185 existing
+records at once.
+**If the owner says no** — the floor stays proposed, the grading vocabulary stays
+descriptive, and `decision-revisit-gate`'s statement that *no grade lets an agent
+supersede a record* stays the operative rule with nothing behind it but prose.
+
+## Unresolved decision 8 — the `CAP = 2` family limit
+
+**Added 2026-08-26** by the same step. **The council DID decide the immediate
+question** (2026-08-26, 2/2 convergent: keep `CAP = 2`), so what is registered
+here is narrower than the other three: not whether the cap stands today, but
+whether `ADR-215 § D2`'s reasoning is the owner's settled position.
+
+**Instrument:** `src/scripts/lint_roadmap_family_cap.ts:42` — `const CAP = 2;`,
+whose stated reason is `ADR-215 § D2`. Raising it is *"a one-line change plus a
+new decision record, never a silent edit"* (`:19-20`).
+
+**The premise the blocker was written against is STALE, and this is the
+correction rather than the decision.** The blocker described *"a queue of two
+with three files in it"*. Measured at HEAD on 2026-08-26:
+`./scripts-run src/scripts/lint_roadmap_family_cap` reports
+**`0/2 slot(s) used`** — all three `road-to-skill-ecosystem-*` roadmaps
+(`capability-queue`, `executable-payloads`, `security-and-conformance`) sit in
+`agents/roadmaps/later/`, and the cap binds nothing at all today.
+
+So the cost the blocker named — *"the eval-runner stub keeps being re-proposed by
+every incoming bundle, because from outside the estate it looks unowned"* — is
+**not a cap problem**. Nothing is waiting for a slot; three files are parked for
+their own reasons. Both council seats independently predicted that registering a
+decision in a distant register would not stop the re-proposal loop, and the
+measurement says why: the loop is not about the cap.
+
+> **Question:** does `ADR-215 § D2`'s reasoning — one maintainer cannot hold more
+> than two parallel workstreams in one family — stand as the owner's position?
+
+**If the owner says yes** — `CAP = 2` stays, and a future family member above the
+cap waits rather than widening the road.
+**If the owner says no** — the cap is raised in a one-line change **with** a new
+decision record amending `ADR-215 § D2` rather than contradicting it, per the
+linter's own docblock.
+
+**Refused explicitly, so it is not re-proposed silently:** re-anchoring the
+eval-runner work outside the family prefix. That roadmap calls it gate-gaming at
+its own `:74`, and this entry records the refusal rather than leaving the option
+to look unconsidered.
+
+**Council `revisit-if`:** a slot opens; an active family member lacks a credible
+completion or archival path at its next scheduled review; independent work is
+demonstrably harmed by serialization; or re-proposals continue after the waiting
+state is visible to intake.
+
 ## Blocking cost — recorded as `unknown`, deliberately
 
 The parent required that each non-`yes` row record its blocking cost "as sourced
@@ -233,6 +307,12 @@ that a decision is wrong.
 
 ## Reopens when
 
-An explicit owner ruling on any of the four, independently of the others. Each
-is severable; none implies the others — and Decision 4 is severable per RECORD,
-so a ruling on ADR-108 does not settle ADR-107.
+An explicit owner ruling on any of the **eight**, independently of the others.
+Each is severable; none implies the others — and Decision 4 is severable per
+RECORD, so a ruling on ADR-108 does not settle ADR-107.
+
+Decisions 5-8 were added on 2026-08-26 and are severable from 1-4 in both
+directions. Two of them (6 and 7) are **surfaced without a position**: this file
+records where the decision lives and what each answer costs, and takes neither
+side. Decision 8 is narrower still — the council settled the operational
+question and only the underlying reasoning is registered here.

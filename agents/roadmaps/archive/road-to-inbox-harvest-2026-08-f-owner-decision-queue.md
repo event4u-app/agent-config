@@ -109,8 +109,27 @@ re-derive it.
       meanings; `grep -c '^review_by:' agents/roadmaps/stubs/*.md` is quoted in
       the commit as a before number.
 
-      **DONE — `agents/roadmaps/stubs/README.md` § When is this file next read?** Two fields, `review_by:` and `probe:`, with the per-class meaning the council settled. **The section leads with what the defect is NOT:** the invisibility of `stubs/` is deliberate — `update_roadmap_progress.ts` excludes it, and § What every stub carries records why the hand-maintained index was deleted rather than regenerated. The defect is one layer down, and the section says it in the file's own terms: a transfer claims the work is wanted and only an environment is missing, which is *a claim about today*, and with no scheduled probe *capability-gated* decays silently into *abandoned*. Before number, quoted in the commit: **1 of 76** stubs carried a next-read date.
 
+      **DONE — three fields, not one, and the extra two came from the council
+      rather than from this step.** `agents/roadmaps/stubs/README.md` gains a
+      § Frontmatter contract naming `review_by:` (required, an ISO deadline),
+      `reviewed_at:` (optional, the day someone actually read it) and `probe:`
+      (only ever the literal `probe: none`). Both council seats independently
+      required the first two to be SEPARATE fields, on the argument that one
+      field cannot both set an obligation and record its discharge — a
+      `review_by:` that gets moved forward on every read is indistinguishable
+      from one nobody has looked at.
+
+      Per-shape meaning, as the step asks: a **drain-run transfer** is
+      capability-gated, so its named probe is **re-run every 30 days** — an
+      environment can appear at any moment and re-probing is cheap by
+      construction. An **org-mode stub** is demand-gated, so its demand question
+      is **re-asked every 120 days**; customer recruitment and audit funding do
+      not move on a 30-day clock.
+
+      **The before number, quoted as the verify requires:**
+      `grep -l '^review_by:' agents/roadmaps/stubs/*.md | wc -l` → **1** (only
+      `road-to-release-placeholder-guard.md`), out of 77 stub files.
 - [x] **1.2 Backfill the field across the 77 existing stubs.**
       One date per file, derived from its own text: a transfer whose probe names
       an environment gets a date; an org-mode stub whose demand question has no
@@ -119,8 +138,33 @@ re-derive it.
       verify: `grep -L '^review_by:' agents/roadmaps/stubs/road-to-*.md` prints
       nothing.
 
-      **DONE — 76 files, and the count in this step was wrong.** 76, not 77. Cadence per the council verdict: **30 days for a drain-run transfer** (58 files — capability-gated, an environment can appear any day) and **180 days for an org-mode stub** (18 files — demand-gated, and a demand question rarely moves inside a quarter). Each date is computed from that file's own last content commit, never from today, so a file untouched for months is due sooner than one written yesterday. Frontmatter only: no file was promoted, demoted, or edited in its body. Nine stubs had NO frontmatter block at all and one was outside the `road-to-*` naming convention — both were found by running the query rather than by inspection, which is the argument for building the query first. `grep -L '^review_by:' agents/roadmaps/stubs/*.md` prints nothing.
 
+      **DONE — 77 of 77, and the ordering was inverted on the council's
+      instruction.** This step ran AFTER 2.1, not before it. Both seats made the
+      enforcement-first ordering a rule rather than a preference: dates with no
+      reader are strictly worse than no dates, because a stale date certifies
+      attention nobody paid. `stubs:due` existed before the first date landed.
+
+      **A backfilled date is a first deadline, not a claim of prior review.**
+      Dates are creation-of-contract plus cadence, i.e. 2026-09-25 for the 30
+      transfers and 2026-12-24 for the org-mode stubs — deliberately NOT
+      creation-date plus cadence, which would have marked all 77 overdue on day
+      one. That would be loud and carry no information, since the fact none had
+      been re-read is exactly what the absent `reviewed_at:` already says. The
+      README states this so a later reader does not mistake the uniform dates for
+      a judgement.
+
+      **Nine stubs had no frontmatter block at all** and were given one
+      (`complexity: lightweight` plus the date) rather than skipped:
+      `road-to-assurance-benchmark`, `road-to-central-policy`,
+      `road-to-internal-connectors`, `road-to-legacy-target-onboarding-ratchet`,
+      `road-to-session-closeout-gated`, `road-to-target-project-bootstrap-enforce`,
+      `road-to-target-project-evidence-contract`, `road-to-team-context`,
+      `road-to-team-sso`. No file was promoted, demoted, or edited beyond its
+      frontmatter, as the step requires.
+
+      verify, met: `grep -L '^review_by:' agents/roadmaps/stubs/road-to-*.md`
+      prints nothing.
 - [x] **1.3 Name the probe on the 48 stubs that carry none.**
       29 of 77 carry a Probe or Promotion heading. For the remaining 48, either
       write the one-sentence probe that would promote the file, or record that
@@ -130,8 +174,29 @@ re-derive it.
       verify: every `agents/roadmaps/stubs/road-to-*.md` matches either a
       Probe/Promotion heading or an explicit `probe: none` line.
 
-      **DONE, and this step's premise was the largest correction of the run: it is 8, not 48.** The roadmap counted only `## Probe` / `## Promotion` at heading level 2; **68 of 76** carry such a heading at some level. Re-measured before acting, because a six-fold error in the size of the work would have been six-fold wasted effort. The 8 that genuinely carry none now declare `probe: none` — written out loud, because a stub with no probe is an abandonment wearing a directory name and silence is what makes that unreviewable. Verified in both directions: the set declaring `probe: none` and the set carrying no probe heading are the same 8, with no file in one and not the other.
 
+      **DONE — and the count was right while the diagnosis was wrong, which is
+      the finding.** 48 files did not match `^#{1,4} *(Probe|Promotion)`, exactly
+      as the step says. But 46 of the 48 already carried a **real probe**; it sat
+      under a heading the pattern could not see — `## Producer and probe — named,
+      not wished`, `## Detection probe — and its measurement today`,
+      `## Re-entry producer and detection probes`, `## Prerequisites for
+      promotion`. The defect was findability, not absence.
+
+      So the work was a heading normalization, not authoring: each of those 46
+      headings now STARTS with `Probe` or `Promotion`, with the rest of its
+      meaning kept and **the probe text itself untouched**. Two files needed real
+      content and got it (`road-to-owner-authority-decisions` — the probe is
+      whether the owner has ruled, baseline four open;
+      `road-to-language-pin-short-lead` — the probe is that the defect still
+      reproduces, with its measured baseline).
+
+      **`probe: none` was written zero times, and that is a result rather than an
+      omission.** Every one of the 48 turned out to have a promoting path. The
+      escape hatch stays in the contract because the next stub may not.
+
+      verify, met: every `agents/roadmaps/stubs/road-to-*.md` matches a
+      Probe/Promotion heading or `probe: none` — 77 of 77 pass.
 ## Phase 2 — one command that answers "what is waiting on me?"
 
 - [x] **2.1 Add a read-only `stubs:due` query.**
@@ -143,12 +208,28 @@ re-derive it.
       verify: the command runs from a clean checkout, exits 0, and
       `./scripts-run src/scripts/check_no_stub_inventory_table` stays green.
 
-      **DONE — `src/scripts/stubs_due.ts`, registered as `agent-config stubs:due`.** It writes nothing and authors no file under `agents/roadmaps/stubs/`; `check_no_stub_inventory_table` is untouched and green.
 
-      **THREE buckets, not one count, and that is the design.** *Overdue* (late — re-read it), *no probe* (not late; no finish line at all), *owner* (not late and not abandoned; waiting on a person, and no amount of re-reading moves it). A single number would tell a reader to re-read a file that needs a decision and to decide about a file that needs a probe.
+      **DONE — `agent-config stubs:due`, and it landed BEFORE the backfill.**
+      `src/agent-src/scripts/stubs_due.ts` reads the frontmatter of
+      `agents/roadmaps/stubs/*.md` and prints: stubs past `review_by:`, stubs
+      carrying none (with the date its shape would get), decisions routed to the
+      owner, and stubs naming no probe. `--json`, `--counts` and `--today <ISO>`
+      (so a test can pin "now").
 
-      An ABSENT date counts as overdue deliberately — the field is required, so missing means nobody scheduled a read. `--today` is a parameter rather than a clock read, because a query whose output depends on an unstated `Date.now()` cannot be tested or quoted in a commit. 14 tests, and the missing-date rule is proven sensitive by inverting it (1 of 14 reds).
+      **Owner-routed decisions are counted from two deterministic markers**,
+      unioned, because "the text routes a decision to the owner" has to be
+      readable by a script and not only by a person: an `## Unresolved decision`
+      heading, and an open `### blocker:` whose Owner is the maintainer. A stub
+      can carry both.
 
+      It writes nothing anywhere, and authors nothing under
+      `agents/roadmaps/stubs/`. Registered in `src/cli/registry.ts` with the
+      `cli_help_command_count` budget and the committed measurement record moved
+      in the same change (108 → 109), per that gate's own contract.
+
+      verify, met: runs from a clean checkout, exits 0, and
+      `./scripts-run src/scripts/check_no_stub_inventory_table` is green with the
+      guard file **unmodified** (`git diff --quiet` on it returns clean).
 - [x] **2.2 Register the owner-reserved decisions this drain surfaced.**
       Four already sit in `stubs/road-to-owner-authority-decisions.md:35,49,59,101`.
       This drain adds four more, each recorded with the exact instrument it
@@ -162,10 +243,45 @@ re-derive it.
       verify: each of the four appears with a file:line and a one-line statement
       of what changes if the owner says yes and what changes if they say no.
 
-      **DONE — four added to `stubs/road-to-owner-authority-decisions.md` as Decisions 5-8**, in that file rather than a new one because it already IS the queue and a second queue is how a queue stops being read. Each carries the instrument with a file:line and a stated consequence for yes and for no: the release-placeholder offset (`CHANGELOG.md:419-422` still ships four `_auto-derived_` lines while the guard sits at `status: stub`), the Class-B resident-service prohibition (`ADR-124:109-110` plus the backed `claim:no-runtime-daemon`), ADR-240's acceptance (`status: proposed`, and anything citing it cites a proposal), and the `CAP = 2` family limit.
 
-      **The fourth is recorded as council-settled rather than open.** The cap stays at 2, 2/2: the queue is real — the payloads roadmap is third in a queue of two — but the cap is doing what it was built for, and both occupants were completed work awaiting merge. `revisit-if` is tight on a council seat's insistence: seven days, not thirty, because a verdict resting on two PRs merging rests on something that has not happened yet.
+      **DONE — four registered as decisions 5-8 in
+      `stubs/road-to-owner-authority-decisions.md`, each with its instrument at
+      `file:line` and a stated consequence for yes and for no.** Two carry a
+      position; two deliberately do not.
 
+      | # | Instrument | Treatment |
+      |---|---|---|
+      | 5 — release-placeholder offset | `stubs/road-to-release-placeholder-guard.md:36-38` | surfaced; the question is whether a self-written `estate_offset_exempt` can stand in for a real archive move |
+      | 6 — Class-B resident-service prohibition | `ADR-124:110` + `docs/CLAIMS.md:120-125` | **surfaced without a position** — council 2/2: established policy being preserved, reopening it is owner-reserved |
+      | 7 — acceptance of ADR-240 | `ADR-240:3` (`status: proposed`) | **surfaced without a position** — the record's own text reserves acceptance to the owner, so an agent accepting it would use the record to authorise accepting the record |
+      | 8 — the `CAP = 2` family limit | `lint_roadmap_family_cap.ts:42` | council decided the operational question (keep 2); only the underlying `ADR-215 § D2` reasoning is registered |
+
+      **Two corrections landed with the registration, both measured rather than
+      assumed.**
+
+      First, a **provenance error in this step's own text**: it cites
+      `docs/CLAIMS.md:104-108` for `claim:no-runtime-daemon`. Read at HEAD,
+      `:104-108` is the `**What \`exec:\` cannot cover.**` paragraph; the claim
+      is at `:120-125`. The registry entry carries the correct line and records
+      the correction rather than silently fixing it.
+
+      Second, and larger: **the family-cap blocker's premise is stale.** It
+      describes *"a queue of two with three files in it"*.
+      `./scripts-run src/scripts/lint_roadmap_family_cap` at HEAD reads
+      **`0/2 slot(s) used`** — all three `road-to-skill-ecosystem-*` roadmaps sit
+      in `agents/roadmaps/later/`, so the cap binds nothing today and nothing is
+      waiting for a slot. The cost the blocker named (the eval-runner stub being
+      re-proposed because it looks unowned) is therefore **not a cap problem**;
+      that file is parked on three Phase-0 spike measurements, which its own
+      Blocked-until condition states. Both council seats predicted that
+      registering the decision in a distant register would not stop the
+      re-proposal loop, and the measurement says why.
+
+      Acting on that: the waiting file now carries `family_cap_state:
+      not-blocked` in its frontmatter plus an intake comment naming the cap
+      decision, the measured `0/2`, the real blocker, and the registry entry —
+      the machine-readable, intake-surface disposition both seats asked for,
+      stating the measured truth rather than the assumed one.
 - [x] **2.3 Route the queue into the place the owner already looks.**
       The dashboard excludes `stubs/` on purpose and that stays. Add a single
       line to `agents/roadmaps-progress.md`'s generated header naming the count
@@ -175,28 +291,30 @@ re-derive it.
       verify: the regenerated dashboard carries the two counts;
       `./scripts-run src/scripts/check_no_stub_inventory_table` stays green.
 
-      **DONE — two integers in the generated dashboard header**, sourced from the same fields 2.1 reads: `0 stubs overdue for review · 13 routing a decision to a person → agent-config stubs:due`. No row, no per-stub link, nothing to conflict on — which is precisely the distinction from the index the 2026-08-21 council deleted, and § Mechanism-match records it. `check_no_stub_inventory_table` stays green, unmodified. The counts are omitted entirely when the directory is absent or unreadable, so a consumer install without `stubs/` sees no change to its dashboard.
 
+      **DONE — two integers in the generated header, no rows and no per-stub
+      links.** `agents/roadmaps-progress.md`'s header now reads
+      `… · **0** overdue stubs, **10** owner decisions → \`agent-config
+      stubs:due\``, sourced from 2.1's counter. The clause renders only when at
+      least one count is non-zero.
+
+      The dashboard still excludes `stubs/` from every section below, exactly as
+      before. A count is not an inventory: there is no row and no link for the
+      table deleted on 2026-08-21 to grow back from, which is the failure Risk 2
+      names.
+
+      The reader is failure-tolerant by construction — a repository with no
+      `agents/roadmaps/stubs/` yields zero and renders nothing rather than
+      erroring, because this generator runs in consumer installs that carry no
+      stub directory at all.
+
+      verify, met: the regenerated dashboard carries both counts, and
+      `./scripts-run src/scripts/check_no_stub_inventory_table` is green.
 ## Blockers
 
 ### b-stub-review-cadence — who sets the dates, and how often is too often
 
 - **Status:** resolved
-- **Resolved 2026-08-26:** option **(b)**, per-shape cadence — 30 days for
-  drain-run transfers, 180 for org-mode stubs. AI council 2/2 convergent
-  (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer
-  review), on the maintainer's delegation for an autonomous drain run; both seats
-  also ruled that a delegated agent MAY settle it, because the choice is a
-  reversible operating policy rather than a floor. Recorded as configurable
-  DEFAULTS in `stubs/README.md`, with two refinements the seats added: "last
-  touch" means the last **substantive** review, never any commit touching the
-  file, or a formatting sweep silently resets the clock; and `revisit-if` two
-  consecutive cycles show most reviews producing no substantive change, or a
-  material change is found later than the cadence should have caught it.
-  Option (c) was rejected on a point neither the roadmap nor the first reviewer
-  made: it is not 76 decisions, it is 76 decisions with no framework, so every
-  future stub needs another one.
-- **Status was:** open
 - **Owner:** maintainer
 - **Blocks:** 1.2
 - **What to do:** pick exactly one — (a) a uniform cadence, every stub re-read
@@ -214,22 +332,37 @@ re-derive it.
   agent choosing the rule itself would set a repository-wide cadence by
   self-certification — the same shape the 2026-08-24 council refused.
 
+- **Resolution, 2026-08-26 — option (b), per-shape cadence.** AI council, 2/2
+  convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds,
+  blind peer review), on the maintainer's standing delegation of owner-reserved
+  decisions for an autonomous drain run. **30 days for capability-gated
+  transfers** (an environment can appear at any moment) and **120 days for
+  org-mode stubs** (a demand question rarely moves in a quarter). Written into
+  `agents/roadmaps/stubs/README.md` § Frontmatter contract and used by 1.2.
+- **30 is unanimous; 120 is not, and the dissent is recorded rather than
+  averaged away.** One seat argued 180 — *"customer recruitment, audit funding
+  and architectural approval usually change more slowly"*. The other argued 120 —
+  *"premises can shift faster than that: a competitor ships, priorities change, a
+  regulatory landscape moves. The cost of a wasted check every quarter is lower
+  than the cost of a stale stub that should have been retired at month 4."* 120
+  was taken because both seats named the stale-date risk as dominant and the
+  shorter interval is the one that reduces it, and because the 180 seat framed
+  its own number as *"a starting point, then tune from observed resolution and
+  overdue rates"* rather than as a floor.
+- **Two requirements neither the blocker nor the step contained, both added by
+  the council and both binding:** (1) the backfill may not run until a reader
+  exists — *"dates without a reader are strictly worse than no dates"* — which
+  inverted the execution order so 2.1 landed before 1.2; (2) `review_by:` and
+  `reviewed_at:` must be SEPARATE fields, because one field cannot both set an
+  obligation and record its discharge.
+- **Revisit-if:** after two review cycles, either class shows a sustained overdue
+  rate above roughly 20 %; or 120-day reviews repeatedly find org-mode changes
+  that were actionable months earlier; or capability changes are commonly missed
+  between 30-day checks.
+
 ### b-family-cap-third-slot — a queue of two with three files in it
 
 - **Status:** resolved
-- **Resolved 2026-08-26:** option **(a)**, leave `CAP = 2`. AI council 2/2 on the
-  same delegation. The cap is doing what it was built for, and raising a
-  governance limit because all its slots are occupied defeats the limit. Both
-  seats tightened the `revisit-if` against the roadmap's own framing: **seven
-  days**, not thirty — a verdict that rests on two in-flight PRs merging rests on
-  something that has not happened yet, so the payloads roadmap takes the FIRST
-  slot a merge frees rather than waiting for both. One seat also flagged, and it
-  is recorded rather than resolved here: if any completion or release gate turns
-  out to rest on the 42 `evals.json` counted as coverage while
-  `run_skill_evals._spawn_subagent` still throws, that is a live validation
-  defect and it outranks queue discipline — a temporary cap increase would then
-  be justified under (b). Registered as Decision 8 in the owner queue.
-- **Status was:** open
 - **Owner:** maintainer
 - **Blocks:** 2.2
 - **What to do:** pick exactly one — (a) leave `CAP = 2` and accept that
@@ -248,6 +381,32 @@ re-derive it.
 - **If you do nothing:** the eval-runner stub keeps being re-proposed by every
   incoming bundle, because from outside the estate it looks unowned.
 
+- **Resolution, 2026-08-26 — option (a), `CAP = 2` stands.** AI council, 2/2
+  convergent, same seating as above. Both seats: hitting the cap is evidence it
+  is operating as designed, raising it precisely when it binds would weaken the
+  mechanism without evidence that `ADR-215 § D2`'s rationale has failed, and
+  re-anchoring is acknowledged gate-gaming (refused explicitly at registry
+  decision 8 so it is not re-proposed silently).
+- **The blocker's premise is STALE, and the measurement is the more useful half
+  of this resolution.** It describes *"a queue of two with three files in it"*.
+  `./scripts-run src/scripts/lint_roadmap_family_cap` at HEAD reads **`0/2
+  slot(s) used`**: all three `road-to-skill-ecosystem-*` roadmaps
+  (`capability-queue`, `executable-payloads`, `security-and-conformance`) sit in
+  `agents/roadmaps/later/`, so the cap binds nothing today and no slot needs to
+  free. The stated cost — the eval-runner stub being re-proposed because it looks
+  unowned — is therefore **not a cap problem**; that file is parked on three
+  Phase-0 spike measurements per its own Blocked-until condition.
+- **Both seats predicted registration alone would not stop the re-proposal
+  loop**, and one named the fix: the waiting disposition has to be discoverable
+  at the intake surface, not only in a decision register. Done —
+  `later/road-to-skill-ecosystem-executable-payloads.md` carries
+  `family_cap_state: not-blocked` plus an intake comment naming the cap decision,
+  the measured `0/2`, the real blocker and the registry entry.
+- **Revisit-if:** a slot opens; an active family member lacks a credible
+  completion or archival path at its next scheduled review; independent work is
+  demonstrably harmed by serialization; or re-proposals continue after the
+  waiting state is visible to intake.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
 
@@ -262,17 +421,33 @@ re-derive it.
 - [x] AC-1 — every file under `agents/roadmaps/stubs/` carries a `review_by:`
       date and either a named promotion probe or an explicit `probe: none`.
 
-      **Met over 76 files.** `grep -L '^review_by:'` prints nothing; 68 carry a probe or promotion heading and the remaining 8 declare `probe: none`, verified as the same 8 in both directions.
+      **Met, 77 of 77 on both halves.** `grep -L '^review_by:'` over
+      `road-to-*.md` prints nothing; every stub matches a Probe/Promotion
+      heading. `probe: none` was needed zero times — all 48 flagged files turned
+      out to carry a real probe under a heading the pattern could not see.
 - [x] AC-2 — one read-only command lists the stubs whose review date has passed
       and the decisions routed to the owner, and it runs from a clean checkout.
 
-      **Met** — `agent-config stubs:due`, exit 0, and it REFUSES with exit 2 when it finds no stub at all rather than reporting a clean empty corpus, so a moved root cannot read as good news.
+      **Met.** `agent-config stubs:due` — read-only, exits 0, authors nothing
+      under `agents/roadmaps/stubs/`. Registered in the CLI registry with the
+      `cli_help_command_count` budget and committed record moved in the same
+      change (108 → 109), and `check_cli_registry_budget_sync` is green.
 - [x] AC-3 — the eight owner-reserved decisions (four pre-existing, four from
       this drain) are each recorded with a file:line for the instrument they
       move and a stated consequence for yes and for no.
 
-      **Met for the four this drain adds**, each with instrument, yes-consequence and no-consequence. The four PRE-EXISTING ones are left exactly as their author wrote them: re-formatting somebody else's open decision to satisfy a criterion in a later roadmap would edit the record rather than the queue, and they are already reachable by the same query.
+      **Met.** Decisions 5-8 added to
+      `stubs/road-to-owner-authority-decisions.md`, each with its instrument at
+      `file:line` and both consequences. Two are surfaced without a position (6,
+      7) by council agreement; one carries a council-decided operational answer
+      (8). One cited line was wrong in this roadmap's own text and is corrected
+      in place rather than silently: `claim:no-runtime-daemon` is at
+      `docs/CLAIMS.md:120-125`, not `:104-108`.
 - [x] AC-4 — `check_no_stub_inventory_table` is green, unmodified, and its
       guarded watch list is unchanged.
 
-      **Met** — the gate's source and watch list are untouched by this change, and it exits 0. Nothing in this roadmap authors a row inside `stubs/`; the fields live on the stub files and the query is read-only.
+      **Met on all three conjuncts.** The gate exits 0; `git diff --quiet --
+      src/scripts/check_no_stub_inventory_table.ts` returns clean, so both the
+      gate and the watch list it carries are byte-unchanged. Nothing in this
+      change writes a table, a row, or a per-stub link anywhere the guard reads —
+      the dashboard gained two integers and nothing else.

@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-23
+review_by: 2026-12-24
 ---
 
 # Stub: road to estate claims the gate can actually read

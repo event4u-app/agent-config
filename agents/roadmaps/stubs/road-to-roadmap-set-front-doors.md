@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the roadmap-set front doors
@@ -86,7 +86,7 @@ Nothing else moves. The parent's Phase 2 auto-continuity and failure-isolation
 steps, its Phase 3 dependency detection, and every other Phase 1/4/5/6/8 item
 are satisfied, narrowed or abandoned in its `## Outcome` section.
 
-## Producer and probe — named, not wished
+## Probe and producer — named, not wished
 
 Promote **per item**, not per file.
 

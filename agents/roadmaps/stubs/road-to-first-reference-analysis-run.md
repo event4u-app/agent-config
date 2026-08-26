@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to the first true reference-analysis run
@@ -78,7 +78,7 @@ Deliberately **not** moved: the `/analyze:reference-repo` command itself, which
 is shipped and unchanged, and the §5b contract text, which is the thing under
 test rather than part of the test.
 
-## Re-entry producer and detection probes
+## Probe and re-entry producer
 
 Promotion is not "when someone runs it". One named producer, three probes a
 reader can run today, each returning a decidable answer. All three were measured

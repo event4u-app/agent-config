@@ -124,6 +124,14 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-04
 
+### claim: published-artifact-counts
+- claim: Every artifact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-08-26 via that counter: skills 299, rules 120, commands 202 (recursive; 61 top-level), guidelines 114, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 61 top-level files, and `rules` counts the 120 source rules while the linked projection holds 119 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one.
+- kind: quant
+- evidence: exec:update_counts --check -> 0
+- non_inference: These six integers count FILES AND DIRECTORIES, and license nothing about quality, activation, or reach. A skill in the 299 may never have been loaded by any session; the activation rate is separately measured and is near zero. `commands 202` counts every command file recursively, including deprecation shims where any exist, and is NOT a count of distinct user-facing verbs — the top-level figure for that is 61. `rules 120` counts source rules, of which one is dormant and reaches no consumer, so it is not a count of rules in force. `personas 29` counts lens files, not lenses ever used in a review. None of the six is a measure of coverage, correctness, or adoption, and a rise in any of them is a rise in artifact count only.
+- status: backed
+- last_verified: 2026-08-26
+
 ### claim: shipped-artifacts-hidden-instruction-scanned
 - claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge.
 - kind: qual
@@ -436,11 +444,12 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-02
 
 ### claim: code-graph-retrieval-null
-- claim: On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears.
+- claim: On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false BY DEFAULT. NOT permanently, and the removal schedule this line used to carry was withdrawn on 2026-08-15 (docs/MIGRATION.md, the code_graph row) — the payload it existed for had already shipped when the parser pair moved to devDependencies. SCOPE OF THESE FIGURES, corrected 2026-08-26: they were measured on 2026-07-28 against a build predating the extractor repair of 2026-08-22, so they describe a build that no longer exists. The claim is retained rather than dropped because the measurement was real and no re-measurement has replaced it; road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 3.1 is the re-run and it is blocked on benchmark inputs this repository does not hold. Reopen on that re-run, or on external evidence (a consumer case the graph answers and disciplined grep cannot). RE-MEASUREMENT ATTEMPTED 2026-08-26 and deferred: the four SHA-256-pinned question files and all three registered corpus clones read absent on the machine that attempted it, so the run could not start. The obligation is transferred, not dropped - agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md carries the criterion verbatim with a five-reading probe. Silence here would read as 'nobody tried again'.
 - kind: quant
 - evidence: internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively
 - status: backed
 - last_verified: 2026-07-28
+- measured_on: a build predating the 2026-08-22 extractor repair — post-repair recall UNMEASURED
 
 ### claim: cross-source-consistency-precision
 - claim: On the shared 30-fixture false-premise corpus (20 positives across the four discrepancy classes text-image / silent-needed / spec-code / intra-ticket + 10 negative controls), the default-on `cross-source-consistency` rule surfaces real discrepancies at >= 85% precision with an unnecessary-ask (over-firing) rate <= 5% on the negative controls.

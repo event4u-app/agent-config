@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-22
+review_by: 2026-09-25
 ---
 
 # Stub: road to the direct-order merge-confirmation doctrine
@@ -10,7 +10,7 @@ review_by: 2026-09-22
 > was drained. It carries the one thing that roadmap could not do: a kernel-rule
 > edit. Outcome state recorded on the parent: **transferred**.
 
-## The probe that promotes this
+## Probe that promotes this
 
 ```
 A MAINTAINER (NOT AN AGENT) IS READY TO OPEN A KERNEL-RULE PR

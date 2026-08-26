@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the per-turn hook-economy host reproduction

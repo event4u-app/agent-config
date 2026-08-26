@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to release-gate council auto-dispatch
@@ -50,7 +50,7 @@ a stub whose only exit is "build it" is a parking lot.
 Phase 4.1's verdict-handoff envelope does **not** move — it shipped, and it is
 what makes a dispatched verdict consumable in the first place.
 
-## 3. Re-entry producer and detection probe
+## Probe and re-entry producer (3)
 
 - **Named producer:** the **gate-autonomy maintainer** — the owner of the
   release-gate escalation path. Not "when telemetry is ready"; the producer is

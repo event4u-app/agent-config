@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to a compaction-survival census
@@ -102,7 +102,7 @@ three-point integrity check. It is deliberately not phrased as "when session
 capture lands for its own reason" — that names nobody and turns a stub into a
 parking lot.
 
-## Detection probe — and its measurement today
+## Probe — detection, and its measurement today
 
 The probe the disposition record specifies: **the finding contains detectability,
 five-session results where measurable, per-probe values, host versions, and

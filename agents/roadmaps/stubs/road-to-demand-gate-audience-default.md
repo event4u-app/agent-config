@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-21
+review_by: 2026-09-25
 probe: none
 ---
 
@@ -65,7 +65,7 @@ to leave the active estate: `stubs` is in `EXCLUDE_DIRS` at
 `skipped` and `later`, and `check_estate_count` reads that same `collect()`. So
 the exclusion is real and not a naming convention.
 
-## Reopens when — either one alone is sufficient
+## Promotion reopens when — either one alone is sufficient
 
 - **Evidence** exists: an instrument that can report the audience mix of installs.
 - **Or** an explicit maintainer judgement is recorded as such.

@@ -1,6 +1,6 @@
 ---
 complexity: bounded
-review_by: 2026-09-22
+review_by: 2026-09-25
 ---
 
 # Stub: road to fixture seams for the three unprovable pack gates
@@ -11,7 +11,7 @@ review_by: 2026-09-22
 > driven from a fixture tree; three cannot, and for one of them the block is a
 > deliberately pinned contract. Outcome state on the parent: **transferred**.
 
-## The probe that promotes this
+## Probe that promotes this
 
 ```
 A NARROW ADR-200 AMENDMENT AUTHORIZES AN ISOLATED-ROOT SEAM ON A PORTED GATE,

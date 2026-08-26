@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2027-02-18
+review_by: 2026-12-24
 ---
 
 # Road to target-project bootstrap and enforcement — stub
@@ -48,7 +48,7 @@ Rules of the loop:
    the parent's matrix must move the dimension from 1 to 2 after the run,
    and that movement is the acceptance test.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 - Parent Phase 1 merged; matrix output over ≥ 3 real target repos archived
   under `agents/evidence/`.

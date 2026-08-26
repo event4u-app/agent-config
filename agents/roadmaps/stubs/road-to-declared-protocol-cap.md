@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to setting the declared-protocol read cap from data
@@ -89,7 +89,7 @@ open work anyone may pick up. What is transferred is the **decision the counter
 feeds**, because until 2026-11-04 neither branch of the trigger can fire
 regardless of how good the instrument is.
 
-## Named re-entry producer and probe
+## Probe and named re-entry producer
 
 **Producer:** the maintainer **`matze4u` (m.berg@galawork.de)**, on or after
 **2026-11-04** — the first date on which the trigger's own second branch is

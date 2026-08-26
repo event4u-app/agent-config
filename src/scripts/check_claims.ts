@@ -104,7 +104,48 @@ const RATIO = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
 // The optional `<word>-` allows a qualified unit: `13,881 GPT-tokens` is the
 // same claim shape as `13,881 tokens` and was missed without it.
 const MAGNITUDE = /\b\d[\d,._]*\s*(?:[A-Za-z]+-)?(?:tokens?|ms|USD|KB|MB|GB|chars?)\b/i;
-const SELF_COUNT = /\b\d+\+?\s+(?:host agents?|hosts|supported (?:agents?|hosts))\b/i;
+/**
+ * The nouns this package counts ITSELF in. Widened 2026-08-26
+ * (road-to-published-number-truth 2.1) from the three host-reach nouns to the
+ * package's own artifact vocabulary, because the host-reach miss was an
+ * instance and the artifact counts are the population: the badge block alone
+ * publishes six of them, and until this widening `is_quantified_claim` returned
+ * false for every one.
+ *
+ * Extended rather than given a sibling pattern on purpose — the sweep, the
+ * surfaces and the `unverified` allow path all already exist, and a second gate
+ * would trip three ratchets to reach the same lines.
+ */
+const SELF_COUNT_NOUNS =
+    'host agents?|hosts|supported (?:agents?|hosts)|' +
+    'skills?|commands?|rules?|guidelines?|personas?|advisors?|' +
+    'packs?|profiles?|ADRs?|contexts?|scripts?';
+
+/**
+ * Prose shape: `299 skills`, `7+ host agents`, `13,881 tokens`, and — the shape
+ * that shipped wrong twice — a QUALIFIED noun, `112 Python scripts`. The
+ * optional `<word> ` before the noun is what makes the qualified form match; a
+ * pattern anchored directly on the noun read straight past it.
+ */
+const SELF_COUNT_PROSE = new RegExp(
+    String.raw`\b\d[\d,]*\+?\s+(?:[A-Za-z][A-Za-z.+-]*\s+)?(?:` + SELF_COUNT_NOUNS + String.raw`)\b`,
+    'i',
+);
+
+/**
+ * Badge-URL shape: `badge/Skills-299`. This is how six of this package's own
+ * counts are published, and it carries no whitespace at all, so no prose
+ * pattern can see it. `Personas-29` is the live instance that motivated it.
+ */
+const SELF_COUNT_BADGE = new RegExp(
+    String.raw`badge/(?:` + SELF_COUNT_NOUNS + String.raw`)-\d[\d,]*\b`,
+    'i',
+);
+
+const SELF_COUNT = new RegExp(
+    `(?:${SELF_COUNT_PROSE.source})|(?:${SELF_COUNT_BADGE.source})`,
+    'i',
+);
 
 /** True when a line carries any figure shape that must bind to a claim. */
 export function is_quantified_claim(line: string): boolean {
@@ -137,6 +178,27 @@ export interface LedgerEntry {
      * ledger exists to make impossible.
      */
     superseded_by: string;
+    /**
+     * Optional: the build a quantitative measurement describes, when that is not
+     * the current one.
+     *
+     * `road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh` 3.2, on an
+     * AI council ruling (2026-08-26, 2/2). `claim:code-graph-retrieval-null` is
+     * a real measurement of a build that no longer exists: its figures date from
+     * 2026-07-28 and the extractor defect they blame was repaired on 2026-08-22.
+     *
+     * The council rejected both obvious statuses. `resolved-null` would say the
+     * retrieval question was ANSWERED null on the current build, which is
+     * exactly what nobody has measured; `superseded_by` expects replacement
+     * EVIDENCE, and a repair commit is the wrong semantic object for it. What
+     * was required instead was structured scoping — and that it reach every
+     * index and summary rather than only the detailed entry, because a prose-only
+     * qualification drifts from the structured record it qualifies.
+     *
+     * So this field is printed in `docs/proof.md`'s ledger table, not merely
+     * parsed.
+     */
+    measured_on: string;
     /**
      * Optional: the inferences this claim's data does NOT license.
      *
@@ -194,6 +256,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 status: cur.status ?? '',
                 last_verified: cur.last_verified ?? '',
                 superseded_by: cur.superseded_by ?? '',
+                measured_on: cur.measured_on ?? '',
                 non_inference: cur.non_inference ?? '',
             });
         }
@@ -207,8 +270,12 @@ function load_ledger(): Map<string, LedgerEntry> {
             continue;
         }
         if (!cur.id) continue;
+        // Keeping both sides of the merge is right for the FIELD LIST and wrong
+        // for the call: `String.match` takes one pattern, so two lines here
+        // would have silently ignored the second and dropped whichever field
+        // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|non_inference):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|measured_on|non_inference):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;

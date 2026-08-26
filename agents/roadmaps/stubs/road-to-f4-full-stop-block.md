@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the F4-full stop-block continuation
@@ -49,7 +49,7 @@ Nothing about the current advisory carrier moves. `end_review_nudge_hook`
 ships, emits one `review_skipped` telemetry line per qualifying Stop, and
 never reports block severity — that is the shipped state and it stays.
 
-## 3. Re-entry producer and detection probe
+## Probe — § 3, re-entry producer and detection
 
 - **Named producer:** the **maintainer running the supported host** — the one
   host whose Stop slot both fires and honours a deny. Not "whoever hits the

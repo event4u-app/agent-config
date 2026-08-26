@@ -213,6 +213,30 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: check_host_loadability_reach
+    class: developer-machine-scoped
+    reason: >
+      `check_host_loadability --reach` asks whether each generated host tree
+      carries artefacts, and — when it does not — whether the TOOL is absent or
+      the PROJECTION is dead. Those two are opposite findings that every current
+      gate reports as the same green, because a checker that returns early on a
+      missing tree cannot tell them apart.
+
+      Local-only by declaration rather than by omission, and the reason inverts
+      the obvious one: the verdict depends on which host tools are INSTALLED,
+      and a CI runner has none. Wired into a workflow, every row would resolve
+      `skipped-tool-absent` and the gate would scan nothing — the empty-scope
+      false green this repository's gate-coverage manifest exists to refuse.
+
+      This CORRECTS `road-to-skill-ecosystem-runtime-enforcement` Phase 3 Step 2,
+      which asked for a continuous-integration-only job. That instruction fits
+      the SHAPE half (`check_host_loadability --root .`), which is already
+      wired into `consistency.yml` and does not depend on installed tools; it
+      does not fit the reach half, and wiring it there would have produced a
+      permanently-skipping check that looked like coverage. Measured on a
+      developer machine: 6 of 6 host surfaces present and projecting
+      (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1,
+      copilot 1).
   - id: check_hook_bundle_content
     class: developer-machine-scoped
     reason: >

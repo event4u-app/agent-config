@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the batch-elicitation kernel delta
@@ -52,7 +52,7 @@ were not, verified against the tree on 2026-08-20 and again in this change:
 A 4:1 scope overstatement in a blocker is the failure worth naming here: it
 held three ordinary rule edits behind a soak window they never needed.
 
-## Producer and probe — named, not wished
+## Probe and producer — named, not wished
 
 - **Producer:** the **kernel-rule maintainer**, in a session where a human
   authorizes the delta. Not "when someone gets to it": the write is denied by

@@ -64,14 +64,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
-import { stub_queue_counts } from './stub_queue.js';
-import { collect_bundles, type Bundle } from './ticket_bundles.js';
 import {
     evaluateDashboardOnDisk,
     parseModeToken,
     reportCheckVerdict,
     type DashboardMode,
 } from './dashboard_mode.js';
+import type * as YamlModule from 'yaml';
+import { headerFragment as stubHeaderFragment } from './stubs_due.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -908,10 +908,64 @@ function pending_iron_law_3(roadmaps: RoadmapStats[]): RoadmapStats[] {
     return roadmaps.filter((r) => r.total_active > 0 && r.open_ === 0 && r.deferred > 0);
 }
 
-// `Bundle` and `collect_bundles` live in `./ticket_bundles.js`, imported above.
-// Extracted for the same mechanical reason as `stub_queue`: this file is past
-// the 1500-line ceiling `check_source_size_budget` charges, so lines added to
-// it are paid back by extraction rather than by a baseline bump.
+interface Bundle {
+    slug: string;
+    tickets: number;
+    status: string;
+    roadmap: string;
+}
+
+function collect_bundles(repo_root: string): Bundle[] {
+    const reg = path.join(repo_root, 'agents', 'tickets', '_registry.yml');
+    if (!fs.existsSync(reg)) {
+        return [];
+    }
+    let YAML: typeof YamlModule;
+    try {
+        YAML = _require('yaml') as typeof YamlModule;
+    } catch {
+        return [];
+    }
+    let data: unknown;
+    try {
+        // yaml.safe_load(...) or {} — PyYAML 1.1 semantics; graceful on malformed.
+        data = YAML.parse(fs.readFileSync(reg, { encoding: 'utf-8' }), { version: '1.1' }) ?? {};
+    } catch {
+        return [];
+    }
+    const out: Bundle[] = [];
+    const bundles =
+        data && typeof data === 'object' && !Array.isArray(data)
+            ? ((data as Record<string, unknown>)['bundles'] ?? null)
+            : null;
+    const bundleMap =
+        bundles && typeof bundles === 'object' && !Array.isArray(bundles)
+            ? (bundles as Record<string, unknown>)
+            : {};
+    for (const slug of Object.keys(bundleMap).sort()) {
+        const metaRaw = bundleMap[slug];
+        const meta =
+            metaRaw && typeof metaRaw === 'object' && !Array.isArray(metaRaw)
+                ? (metaRaw as Record<string, unknown>)
+                : {};
+        const bdir = path.join(repo_root, 'agents', 'tickets', slug);
+        let n = 0;
+        if (_isDir(bdir)) {
+            try {
+                n = fs.readdirSync(bdir).filter((f) => f.startsWith('T-') && f.endsWith('.md')).length;
+            } catch {
+                n = 0;
+            }
+        }
+        out.push({
+            slug,
+            tickets: n,
+            status: (meta['status'] as string) ?? '?',
+            roadmap: (meta['source_roadmap'] as string) ?? '',
+        });
+    }
+    return out;
+}
 
 function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root: string): string {
     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
@@ -942,16 +996,9 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                   ? `, **${user_open_blockers}** need you → \`agent-config gates\``
                   : '')
             : '') +
+        // Two integers, never a row — see `stubs_due.headerFragment`.
+        stubHeaderFragment(path.join(roadmap_root, 'stubs')) +
         '\n';
-    // Phase 2.3 — the parked estate's two integers, appended to the header the
-    // maintainer already reads. Omitted entirely when the directory is absent or
-    // unreadable, so a consumer install without it sees no change.
-    const stubs = stub_queue_counts(roadmap_root);
-    const stub_meta =
-        stubs === null
-            ? ''
-            : `> ${String(stubs.overdue)} stub${stubs.overdue !== 1 ? 's' : ''} overdue for review · ` +
-              `${String(stubs.owner)} routing a decision to a person → \`agent-config stubs:due\`\n`;
     lines.push(
         // Honest provenance (road-to-roadmap-archival-robustness, gap C): name a
         // regen path that exists in EVERY install, not a hardcoded
@@ -963,8 +1010,7 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
             'rewritten on every roadmap create / execute / completion change. ' +
             'A repository that does not commit this file has no git history for ' +
             'it — regenerate to see the current state.\n>\n' +
-            header_meta +
-            stub_meta,
+            header_meta,
     );
     lines.push('## Overall\n');
     lines.push(`**${total_done} / ${total_active} steps done · ${overall_pct}%**\n`);

@@ -24,7 +24,7 @@ execution:
   handler: shell
   safety_mode: strict
   allowed_tools:
-    - npx
+    - Bash(npx:*)
 ---
 
 # react-shadcn-ui

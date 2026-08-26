@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2027-02-18
+review_by: 2026-12-24
 ---
 
 # Road to a target-project evidence contract — stub
@@ -50,7 +50,7 @@ a reason string, and the count of such markings is itself a nightly metric.
 - The sibling `road-to-review-independence` recording fields for reviewer
   relation — same vocabulary, no second schema.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 Parent Phase 2 merged (class is computed); bootstrap stub at least
 partially promoted (otherwise most gate fields are `not-detectable`);

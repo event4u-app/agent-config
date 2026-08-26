@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the kernel cross-link and its post-merge soak
@@ -128,7 +128,7 @@ Editing a kernel rule changes the always-loaded prefix, so
 commit the regenerated `internal/bench/reports/kernel-prefix.json` **in the same
 pull request**. Local preflight does not catch the miss.
 
-## Re-entry producer and detection probes
+## Probe and re-entry producer
 
 Promotion is **not** "when someone gets round to it". One named producer, three
 probes a reader can run today, each returning a decidable answer.

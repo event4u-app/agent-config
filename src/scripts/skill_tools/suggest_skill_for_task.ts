@@ -29,6 +29,9 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { audit, type PersonaRow } from './audit_persona_coverage.js';
+/** Sentinel for "no catalogue root resolved" — never a readable path. */
+const NO_CATALOGUE = '<no-skills-catalogue>';
+
 import { DEFAULT_SKILLS_DIR, rank } from './score_skill_relevance.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -211,7 +214,11 @@ function _parseInt(raw: string): number {
 export function parse_args(argv: string[]): Args {
     const args: Args = {
         task: '',
-        skills_dir: DEFAULT_SKILLS_DIR,
+        // `?? ''` is deliberately NOT used here: an empty string re-creates
+        // exactly the silent-empty-catalogue defect that repointing
+        // DEFAULT_SKILLS_DIR removed. When no catalogue resolves, this reads
+        // as the literal marker below and the caller's own check reports it.
+        skills_dir: DEFAULT_SKILLS_DIR ?? NO_CATALOGUE,
         personas_dir: DEFAULT_PERSONAS,
         top: 3,
         json: false,

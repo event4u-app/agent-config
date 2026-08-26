@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2027-02-18
+review_by: 2026-12-24
 ---
 
 # Stub: road to council persona fan-out
@@ -70,7 +70,7 @@ directive cannot be applied between them and the conformity drift it exists to
 counter is exactly what sequential conditioning invites. Kept here so the option
 is not rediscovered as new.
 
-## 4. Pre-registered bench — three arms, decided before the numbers
+## Probe — § 4, pre-registered bench: three arms, decided before the numbers
 
 The substrate exists: `internal/bench/adversarial-council` (`corpus.json`,
 `runs/`, `subtlety-distribution.md`).

@@ -258,6 +258,16 @@ jobs:
         # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
         # fail; a FRESH lapse fails, which is what a pull request needs to see.
         run: ./scripts-run src/scripts/check_beta_review_markers
+      - name: Cross-skill links resolve in the DELIVERED tree
+        # road-to-inbox-harvest-2026-08-f-skill-selection-evidence 2.2.
+        # `check_references` already reports a broken path; what it cannot answer
+        # is whether a link resolves in the SUBSET a consumer received. Corpus is
+        # dist/agent-src/skills — what the installer deploys — and the pattern
+        # deliberately does not close on `\)`, because two of the 976 links carry
+        # an anchor and a link checker with a two-link blind spot reports clean
+        # while missing the shape most likely to rot.
+        run: ./scripts-run src/scripts/lint_skill_link_reach
+
       - name: Canonical terms — the house dialect, held by a ratchet
         # road-to-canonical-terms Phase 2. The corpus is NOT clean on day one:
         # `sweep_authorised: false` in src/config/canonical-terms.yml is a live
@@ -271,6 +281,13 @@ jobs:
         # audit rather than by CI. Non-comment lines only, so the deliberately
         # different headers do not fire it.
         run: ./scripts-run src/scripts/lint_memory_twin_parity
+
+      - name: Host portability — grants and subagent types that resolve to nothing
+        # road-to-skill-ecosystem-runtime-enforcement Phase 3 Steps 4-5. Both
+        # defects are SILENT: a loader ignores an unrecognised grant key, so the
+        # artefact reads restricted and inherits everything; a dispatch to an
+        # undefined subagent type fails on the turn that needed it.
+        run: ./scripts-run src/scripts/lint_host_portability
 
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix

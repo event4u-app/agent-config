@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-22
+review_by: 2026-09-25
 ---
 
 # Road to an assurance benchmark — stub

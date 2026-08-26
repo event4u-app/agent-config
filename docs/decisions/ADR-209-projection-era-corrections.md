@@ -3,7 +3,10 @@ adr: 209
 status: accepted
 date: 2026-08-03
 decision: projection-era-corrections
-supersedes: ADR-089, ADR-030 (Decision 2 — the "keep the skills-list projection for now" carve-out only)
+supersedes: ADR-089, ADR-030
+supersedes_scope: >-
+  ADR-030 partially only — Decision 2, the keep-the-skills-list-projection-for-now
+  carve-out. ADR-089 is superseded in full.
 superseded_by: —
 phase: road-to-renewal-adr-hygiene
 type: structural

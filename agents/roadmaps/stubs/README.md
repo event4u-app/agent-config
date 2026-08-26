@@ -69,6 +69,102 @@ and its batch-B sibling. That pointer is kept here deliberately: it is the only
 central path to where disposition B and the numbered rules are formally defined,
 and most transfer stubs do not link it themselves.
 
+## Frontmatter contract — every stub declares when it is next read
+
+```
+A STUB WITHOUT A NEXT-READ DATE IS NOT PARKED WORK. IT IS AN ABANDONMENT
+WEARING A DIRECTORY NAME.
+`review_by:` IS A DEADLINE, NEVER PROOF THAT ANYONE LOOKED.
+WHAT WAS ACTUALLY READ, AND WHEN, GOES IN `reviewed_at:` — A SEPARATE FIELD,
+BECAUSE ONE FIELD CANNOT BOTH SET AN OBLIGATION AND RECORD ITS DISCHARGE.
+```
+
+Three fields, on top of the `complexity:` key the linter already expects.
+
+| Field | Required | What it means |
+|---|---|---|
+| `review_by:` | yes | An ISO date. The day this file is next read. Passing it is an **overdue** state, surfaced by `agent-config stubs:due` — never a silent lapse. |
+| `reviewed_at:` | no | An ISO date. The last day someone actually read the file and re-set `review_by:`. Absent means never re-read since creation. |
+| `probe:` | only when there is none | The literal `probe: none`. Present **only** on a stub that carries no promoting probe anywhere in its body — see § Naming the probe. A stub with a real probe omits this key. |
+
+### What `review_by:` means, per shape
+
+The two classes in § The two classes have genuinely different clocks, so they
+get different cadences. This adds a number to a distinction the file already
+draws rather than inventing one.
+
+| Shape | Cadence | What happens on that date |
+|---|---|---|
+| **Drain-run transfer** (capability-gated) | **30 days** | The named probe is **re-run**. An environment — a secret, a host session, an admin write, another human — can appear at any time, and the whole file is waiting on exactly that. Re-probing is cheap by construction: every transfer's probe is specified as a small number of readings. |
+| **Org-mode stub** (demand-gated) | **120 days** | The demand question is **re-asked**. Customer recruitment, audit funding and ADR sign-off move on a slower clock than an environment does, so a 30-day cadence here would be noise. |
+
+Set `review_by:` to creation date plus the cadence. On a review, move it forward
+by the cadence from the review date and set `reviewed_at:` to that date.
+
+**A backfilled date is a first deadline, not a claim of prior review.** The 77
+files that predate this contract were given `review_by:` from the **backfill**
+date plus their cadence, and deliberately **no** `reviewed_at:`. Dating them from
+their creation instead would have marked every one of them overdue on day one —
+loud, and carrying no information, since the fact they had never been re-read is
+exactly what the absent `reviewed_at:` already says. The first honest `reviewed_at:`
+on each of those files is written the first time someone actually reads it.
+
+### The rank-1 risk this field creates, and the thing that answers it
+
+Adding a date to 77 files is **strictly worse than adding nothing** if no
+mechanism ever reads the dates: the repository then carries a field that
+certifies attention it does not pay, and a stale date reads as evidence.
+
+So the ordering is a rule, not a preference:
+
+```
+NO BACKFILL WITHOUT A READER. THE OVERDUE QUERY LANDS FIRST.
+```
+
+`agent-config stubs:due` is that reader. It is read-only, it authors nothing
+inside `agents/roadmaps/stubs/`, and its two counts appear in the generated
+header of `agents/roadmaps-progress.md` — two integers, no rows, nothing for the
+deleted inventory table to grow back from.
+
+### Naming the probe
+
+Every stub either carries a promoting probe in its body or says `probe: none` in
+its frontmatter. There is no third state, because the third state in practice is
+a file nobody can promote and nobody has admitted is dead —
+[`later/road-to-ac-deep-capabilities.md`](../later/road-to-ac-deep-capabilities.md)
+names that shape as a failure mode for parked files.
+
+A probe is one sentence naming a **reading someone can take**, not a wish. "When
+the maintainer has time" is not a probe. "`AGENT_CONFIG_HOOKS_ISOLATED` is set in
+that machine's env, shell profile or CI — yes or no" is.
+
+`probe: none` is a legitimate and complete answer. It says out loud that the file
+records something worth keeping but has no path back to active work, which is
+information; silence in the same position is not.
+
+### Provenance of the cadence numbers
+
+AI council 2026-08-26, 2/2 convergent on the per-shape option
+(anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer
+review), over a uniform 90-day cadence and over author-set-per-file. Both seats
+independently added the enforcement-first ordering and the
+`review_by:` / `reviewed_at:` split above; neither was in the question.
+
+**30 is unanimous. 120 is not** — one seat argued 180 ("customer recruitment,
+audit funding and architectural approval usually change more slowly"), the other
+120 ("premises can shift faster than that — a competitor ships, priorities
+change, a regulatory landscape moves; the cost of a wasted check every quarter is
+lower than the cost of a stale stub that should have been retired at month 4").
+120 was taken because both seats named the stale-date risk as dominant and the
+shorter interval is the one that reduces it, and because the 180 seat framed its
+own number as "a starting point, then tune from observed resolution and overdue
+rates" rather than as a floor.
+
+**Revisit-if:** after two review cycles, either class shows a sustained overdue
+rate above roughly 20 %; or 120-day reviews repeatedly find org-mode changes that
+were actionable months earlier; or capability changes are commonly missed between
+30-day checks.
+
 ## What every stub carries — and why this file no longer lists them
 
 Each stub carries the framework's three-point stub-integrity check: the original

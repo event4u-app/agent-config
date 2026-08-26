@@ -405,6 +405,50 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                     });
                 break;
             }
+            // A static registry literal — `const registry = { foo: handleFoo }`.
+            //
+            // road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 1.3.
+            // Before this, such a table produced NO edge at all: the value is an
+            // identifier reference rather than a call, so nothing in the walker
+            // saw it, and every dispatch table in the tree was invisible to the
+            // graph. That is a real gap rather than an honest absence — the
+            // reference is statically resolvable, with no inference involved.
+            //
+            // Scope is deliberately the shape that needs no inference: a
+            // shorthand or `key: identifier` property whose value is a bare
+            // identifier. A computed key, a call, an arrow function or a spread
+            // is left alone, because resolving those DOES need inference and
+            // guessing there is how the arbitrary-winner defect 1.2 removed got
+            // in. Emitted as `references` rather than `calls`, because a table
+            // naming a handler is not a call site — the call happens wherever
+            // the table is looked up, and claiming otherwise would assert a
+            // control-flow edge that does not exist. `uses` is the existing
+            // relation for exactly that, so the union is not widened — a new
+            // relation would be a schema change reaching the validator, the
+            // query surface and every consumer, for a distinction `uses`
+            // already draws.
+            case 'pair':
+            case 'shorthand_property_identifier': {
+                if (n.type === 'shorthand_property_identifier') {
+                    out.rawEdges.push({
+                        sourceId: scopeId,
+                        relation: 'uses',
+                        targetName: n.text,
+                        confidenceHint: 'EXTRACTED',
+                    });
+                    break;
+                }
+                const val = n.childForFieldName('value');
+                if (val?.type === 'identifier') {
+                    out.rawEdges.push({
+                        sourceId: scopeId,
+                        relation: 'uses',
+                        targetName: val.text,
+                        confidenceHint: 'EXTRACTED',
+                    });
+                }
+                break;
+            }
             case 'call_expression': {
                 const fn = n.childForFieldName('function');
                 if (fn) {

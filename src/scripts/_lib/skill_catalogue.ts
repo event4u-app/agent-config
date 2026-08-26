@@ -93,7 +93,17 @@ export function resolveSkillsRoot(workspaceRoot: string): string | null {
     for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
         const abs = path.join(workspaceRoot, candidate);
         try {
-            if (fs.existsSync(abs) && fs.statSync(abs).isDirectory()) return abs;
+            if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) continue;
+            // NON-EMPTY, and that qualifier is the whole fix. `.claude/skills`
+            // is a gitignored projection, so in a fresh worktree it EXISTS and
+            // holds nothing — and an empty root resolved as a match makes the
+            // ranker report an empty catalogue as an empty RESULT, which is the
+            // silent failure `road-to-inbox-harvest-2026-08-f-skill-selection-evidence`
+            // is about, arriving through a second door. Measured in that run: a
+            // worktree that had never run `generate-tools` ranked zero skills
+            // and exited 0 on a task that scores 47 against `src/skills`.
+            if (fs.readdirSync(abs).length === 0) continue;
+            return abs;
         } catch {
             // Unreadable candidate is not a match; try the next.
         }

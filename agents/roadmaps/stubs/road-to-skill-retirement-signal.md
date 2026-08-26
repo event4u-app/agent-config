@@ -1,6 +1,6 @@
 ---
 complexity: bounded
-review_by: 2026-09-24
+review_by: 2026-12-24
 ---
 # Stub: the skill-retirement signal
 
@@ -43,7 +43,7 @@ council seats refused that route independently: **"no eval coverage" means
 UNMEASURED, not unnecessary**, so the 257 skills without an eval are not
 candidates — they are the un-instrumented majority.
 
-## The named producer and its probe
+## Probe and the named producer
 
 **Producer:** whoever builds the never-triggered instrument, plus the maintainer
 who approves the tranche. Both seats required **BOTH** gates, and the pairing is

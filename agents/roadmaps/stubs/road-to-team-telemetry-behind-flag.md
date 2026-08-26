@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to team telemetry behind the experimental flag
@@ -49,7 +49,7 @@ Nothing else in Phase 5 moves. 5.1's script, 5.2's ADR-109 contract line
 (`tools` + `model` honoured, `skills`/`mcpServers` not) and 5.3's AGENTS.md
 obligation all shipped and stay shipped.
 
-## 3. Re-entry producer and detection probe
+## Probe — 3. re-entry producer and detection
 
 - **Named producer:** the maintainer of a **flag-enabled environment** — a
   host session running with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set. Not

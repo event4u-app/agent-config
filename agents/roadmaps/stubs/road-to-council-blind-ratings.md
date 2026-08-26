@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to council blind ratings (Ü2 / Ü3)
@@ -79,7 +79,7 @@ An **honest null is a full outcome here**, not a failure: "the preference was
 not majority" closes Ü2 exactly as cleanly as adoption does. A deferral is the
 only answer the criterion refuses.
 
-## Re-entry producer and detection probes
+## Probe and re-entry producer
 
 Promotion is not "when someone gets round to it". One named producer, two
 probes, both measured failing today.

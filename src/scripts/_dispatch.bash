@@ -235,9 +235,14 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
                              (archives completed roadmaps; --no-archive to skip)
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
-  stubs:due                  List parked stubs overdue for review, with no probe, or waiting on a person
+  roadmap:set-step           Flip ONE checkbox glyph safely (lock + line anchor +
+                             live invariant + survival check)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview)
+  stubs:due                  Read-only: roadmap stubs past their `review_by:`
+                             date, plus the decisions routed to the owner.
+                             Writes nothing. Flags: --json, --counts,
+                             --today <ISO> (pin "now")
   gates                      Open decisions that need you, rendered as actions —
                              roadmap blockers filtered by owner, most-unblocking
                              first. Flags: --all (include maintainer/external),
@@ -774,6 +779,18 @@ cmd_roadmap_progress_check() {
 cmd_roadmap_archive() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/archive_completed_roadmaps.ts" ".augment/scripts/archive_completed_roadmaps.ts")"
+  exec_ts "$script" "$@"
+}
+
+cmd_roadmap_set_step() {
+  local script
+  script="$(resolve_script "dist/agent-src/scripts/roadmap_set_step.ts" ".augment/scripts/roadmap_set_step.ts")"
+  exec_ts "$script" "$@"
+}
+
+cmd_stubs_due() {
+  local script
+  script="$(resolve_script "dist/agent-src/scripts/stubs_due.ts" ".augment/scripts/stubs_due.ts")"
   exec_ts "$script" "$@"
 }
 
@@ -1488,8 +1505,9 @@ main() {
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
-    stubs:due)               cmd_stubs_due "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
+    roadmap:set-step)        cmd_roadmap_set_step "$@" ;;
+    stubs:due)               cmd_stubs_due "$@" ;;
     gates)                   cmd_gates "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;
     adr:effective)           cmd_adr_effective "$@" ;;

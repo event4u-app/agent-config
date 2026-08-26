@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-12-06
+review_by: 2026-12-24
 ---
 
 # Road to Team Context — STUB
@@ -30,7 +30,7 @@ authorisation model, a conflict-resolution strategy for concurrent
 edits, and an audit log. None of these are reachable without
 crossing the Hard-Floor item on auth-adjacent shipping.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 1. **Small-team recipe hits its ceiling** — at least one recruited
    team reports that git-shared overrides + per-laptop knowledge no

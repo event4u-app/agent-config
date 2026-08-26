@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to subagent payload capture
@@ -60,7 +60,7 @@ manifest comment already records this exact blocker at
 `hook_manifest.yaml:863-870` and needs no edit when the capture lands, only an
 update.
 
-### 3. Named producer, detection probe, and the baseline measured at transfer
+### Probe — 3. named producer, detection, and the baseline measured at transfer
 
 **Producer:** the **host owner**, performing a fresh-session capture on the
 machine whose `~/.claude/settings.json` the host reads. Not a maintainer role and

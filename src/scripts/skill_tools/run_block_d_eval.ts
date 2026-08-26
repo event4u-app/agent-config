@@ -28,6 +28,9 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { audit, type PersonaRow } from './audit_persona_coverage.js';
+/** Sentinel for "no catalogue root resolved" — never a readable path. */
+const NO_CATALOGUE = '<no-skills-catalogue>';
+
 import { DEFAULT_SKILLS_DIR, rank } from './score_skill_relevance.js';
 import { suggest } from './suggest_skill_for_task.js';
 import { pyRound } from '../_lib/value_ladder.js';
@@ -312,7 +315,11 @@ function _argError(message: string): never {
 
 export function parse_args(argv: string[]): Args {
     const args: Args = {
-        skills_dir: DEFAULT_SKILLS_DIR,
+        // `?? ''` is deliberately NOT used here: an empty string re-creates
+        // exactly the silent-empty-catalogue defect that repointing
+        // DEFAULT_SKILLS_DIR removed. When no catalogue resolves, this reads
+        // as the literal marker below and the caller's own check reports it.
+        skills_dir: DEFAULT_SKILLS_DIR ?? NO_CATALOGUE,
         personas_dir: PERSONAS_DIR,
         corpus_dir: CORPUS_DIR,
         json: false,

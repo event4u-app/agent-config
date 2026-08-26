@@ -6,10 +6,20 @@
  * WHY THIS GATE EXISTS (road-to-conformance-round5 Phase 1, measured 2026-08-07)
  * ---------------------------------------------------------------------------
  * `docs/contracts/rule-router.md` (§ "The router earns its place as a
- * **compile-time** artifact", measured: zero consumers under
- * `src/scripts/hooks/`) states that nothing loads
- * `dist/router.json` at runtime, so **projection is the only reach mechanism
- * there is**: a non-kernel rule activates by the model's judgment over text
+ * **compile-time** artifact") states that under every shipped default nothing
+ * loads `dist/router.json` at runtime, so **projection is the only reach
+ * mechanism there is**:
+ *
+ * CORRECTED 2026-08-26. This docblock used to cite that section's "measured:
+ * zero consumers under `src/scripts/hooks/`", and that measurement is stale: the
+ * `rule-inject` concern reads the router via `_lib/rule_injection.ts:76-79` and
+ * is bound on three slots. The gate's rationale survives the correction because
+ * the concern is DEFAULT-OFF and returns before reading the router unless
+ * `lean_projection.mode: delivery` is set — so on a shipped default, projection
+ * IS still the only reach mechanism. What no longer holds is the stronger claim
+ * that no such mechanism exists. Stated here rather than quietly re-worded,
+ * because a gate whose stated reason rests on a refuted premise is exactly the
+ * decoration ADR-127 rejects: a non-kernel rule activates by the model's judgment over text
  * already in context, and the per-tool rule tree is what puts it there. That
  * makes the state of the projection load-bearing, and it was broken:
  *

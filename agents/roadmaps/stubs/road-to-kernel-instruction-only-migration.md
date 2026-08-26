@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2027-02-19
+review_by: 2026-12-24
 ---
 
 # Stub: road to the last `enforced_by: "none"` leaving the kernel
@@ -64,7 +64,7 @@ Every other half of 2.3 shipped in the parent: the schema pattern, the resolver'
 the `--check` ratchet reds on), the nine migrations, and the twelve prose
 rewrites.
 
-## Producer, probe and baseline
+## Probe, producer and baseline
 
 - **Producer:** the maintainer, in a kernel-rule PR of its own, observing the
   ≥ 24 h soak. The reason text is the only content decision, and one is already

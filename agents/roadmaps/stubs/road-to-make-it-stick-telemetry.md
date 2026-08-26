@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-23
+review_by: 2026-12-24
 ---
 # Stub: "make it stick" needs telemetry that does not exist
 
@@ -31,7 +31,7 @@ direction"*).
 An autonomous run cannot manufacture the observation, and building the feature
 first is exactly the ordering the parent's own phase title forbids.
 
-## The named producer and its probe
+## Probe and its named producer
 
 **Producer:** whichever change lands per-invocation telemetry with a shape that
 can group by command form.

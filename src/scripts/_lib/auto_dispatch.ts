@@ -156,14 +156,43 @@ const LOOKUP_PATTERNS: Array<{ cls: LookupClass; primitive: LookupPrimitive; re:
  * silently degraded answer; an index-miss at execution time escalates the
  * same way (runtime concern, documented in the classification context).
  */
-export function classifyLookup(taskText: string): LookupRoute {
+export function classifyLookup(
+    taskText: string,
+    opts: { codeGraphEnabled?: boolean | undefined } = {},
+): LookupRoute {
+    // The graph is an OPPORTUNISTIC ACCELERANT, gated on the setting — which is
+    // what `auto-dispatch-classification.md` § Task pattern has always said and
+    // what this function did not do.
+    //
+    // road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 2.1 required
+    // deciding which of the two was right and changing the other, not splitting
+    // the difference. The CONTRACT is right, on the only evidence that exists:
+    // the pre-registered benchmark behind `claim:code-graph-retrieval-null`
+    // measured native-graph recall 0.365 against grep's 0.797 on exactly these
+    // graph-shaped questions. Routing to the graph unconditionally routed to the
+    // arm that lost, and no re-measurement has replaced that figure — Phase 3.1
+    // is blocked on inputs this repository does not hold.
+    //
+    // Default FALSE, deliberately, and not because the setting's default is
+    // false: an absent flag means nobody said the index is present and fresh,
+    // and an accelerant taken on an absent index is a miss that escalates —
+    // slower than the grep it replaced. When the flag is on, the class still
+    // routes to `code-graph-query`, so turning it on is the whole change needed
+    // to use the graph.
+    const graphOk = opts.codeGraphEnabled === true;
     for (const p of LOOKUP_PATTERNS) {
         if (p.re.test(taskText)) {
+            const primitive: LookupPrimitive =
+                p.primitive === 'code-graph-query' && !graphOk ? 'fts-or-capped-grep' : p.primitive;
             return {
                 lookup_class: p.cls,
                 route: 'primitive',
-                primitive: p.primitive,
-                reason: `lookup-class ${p.cls} — deterministic primitive, no spawn`,
+                primitive,
+                reason:
+                    primitive === p.primitive
+                        ? `lookup-class ${p.cls} — deterministic primitive, no spawn`
+                        : `lookup-class ${p.cls} — capped grep; the code-graph accelerant is ` +
+                          'gated on hooks.code_graph.enabled and it is not on',
             };
         }
     }

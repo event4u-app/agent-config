@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the org telemetry sink
@@ -63,7 +63,7 @@ the enablement stub.
 | Phase 5, step 3 | "Transport and store Class-B text as quoted, typed data, never concatenated into a downstream prompt as instruction." — the **store** half only. The repository-side half landed: `self_repair_class_b.ts` types the case, serialises it as one JSON object, and `assertNeverInterpolated` refuses a prompt-shaped use. There is nowhere to store it. |
 | Phase 6, step 1 | "Cluster sink-side on artefact and failure class, with a threshold of at least three distinct sessions aligned to the existing constant. At threshold, generate one deduplicated issue carrying Class-A statistics in the header and approved Class-B examples quoted as data blocks." |
 
-## Re-entry producer and detection probe
+## Probe and re-entry producer
 
 Promotion is not "when someone builds it".
 

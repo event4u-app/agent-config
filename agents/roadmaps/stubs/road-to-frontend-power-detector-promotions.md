@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-23
+review_by: 2026-09-25
 ---
 
 # Stub: road to the frontend-power detector promotions

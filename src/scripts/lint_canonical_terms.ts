@@ -568,6 +568,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     if (!verdict.ok) {
         ledger?.report();
+        // The machine-readable count is emitted on the RED path too. Rule 1 of
+        // the gate-coverage manifest asks for exactly one `scanned:` line, and a
+        // gate that publishes its coverage only when it passes cannot be caught
+        // going blind at the moment that matters most. This was missing when the
+        // gate landed, and `check_gate_coverage` reported it the first time the
+        // ratchet went red — which is the census working.
+        process.stdout.write(`scanned: ${result.filesScanned}\n`);
         if (!quiet) {
             for (const f of actionable.slice(0, 40)) {
                 process.stderr.write(`    ${f.file}:${f.line} · \`${f.variant}\` → \`${f.canonical}\`\n`);

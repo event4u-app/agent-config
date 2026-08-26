@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-21
+review_by: 2026-12-24
 ---
 
 # Stub: road to a subagent return gate
@@ -37,7 +37,7 @@ Three measured facts, none of them a scheduling problem:
 Shipping it would be the build-the-mechanism-before-measuring-the-premise
 pattern this package has recorded three times.
 
-## The probe that promotes this stub
+## Probe — the one that promotes this stub
 
 ```
 A REPRODUCIBLE `no_message` — OR ANOTHER PRECISELY DEFINED VERDICT — IN WHICH

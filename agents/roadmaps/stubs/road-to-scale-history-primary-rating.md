@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-19
+review_by: 2026-09-25
 ---
 
 # Stub: road to the scale-history PRIMARY rubric rating
@@ -67,7 +67,7 @@ From the `manual-rubric-rater` blocker as authored 2026-08-14:
 > **Resolved when:** a human rubric score exists per artifact, recorded before
 > the secondary `lint_persistence` pass for that artifact.
 
-## Re-entry producer and detection probes
+## Probe and re-entry producer — detection probes
 
 Promotion is **not** "when someone rates it". Three named preconditions, each
 with a probe that returns a decidable answer, all three measured at the

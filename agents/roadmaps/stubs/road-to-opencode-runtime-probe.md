@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-23
+review_by: 2026-12-24
 ---
 # Stub: the opencode runtime probe
 
@@ -44,7 +44,7 @@ the guarded operation, and does its untyped `metadata` carry the decision input?
 That is a runtime observation. No offline read answers it, and an autonomous run
 has no opencode session to drive.
 
-## The named producer and its probe
+## Probe and named producer
 
 **Producer:** the maintainer, on a machine with opencode installed and the plugin
 loaded.

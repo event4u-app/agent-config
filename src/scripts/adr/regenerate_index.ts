@@ -171,6 +171,28 @@ export function scan(d: string): [Row[], Row[], string[]] {
     return [num, leg, errs];
 }
 
+/**
+ * A supersession cell: the refs, plus the partial-supersession scope in
+ * parentheses when the record declares one.
+ *
+ * The scope used to live INSIDE the ref value — `superseded_by: ADR-124
+ * (engine-adoption interpretation only)` — which put prose inside a
+ * comma-separated ref list and forced every reader to strip parentheses before
+ * resolving a number. `adr-layout` moved it to a sibling `*_scope` field. This
+ * helper is why that move costs the reader nothing: the rendered cell is
+ * unchanged, so a partial supersession is still visible at a glance, while the
+ * SOURCE stays parseable without a regex.
+ *
+ * A scope with no refs renders as `—`: a qualifier on nothing is not a
+ * supersession, and printing the prose alone would read as one.
+ */
+export function supersessionCell(refs: string | undefined, scope: string | undefined): string {
+    const r = (refs ?? '').trim();
+    if (r === '' || r === '—') return '—';
+    const s = (scope ?? '').trim();
+    return s === '' || s === '—' ? r : `${r} (${s})`;
+}
+
 /** Mirror `row(r)`. */
 export function row(r: Row): string {
     const decision = r.decision ?? r.slug ?? '—';
@@ -179,7 +201,8 @@ export function row(r: Row): string {
     return (
         `| [${label}](${r.path}) | ${title} | ${r.status ?? '—'} ` +
         `| ${r.date ?? '—'} | ${r.provenance_kind ?? '—'} | ${r.evidence_grade ?? '—'} ` +
-        `| ${r.supersedes ?? '—'} | ${r.superseded_by ?? '—'} ` +
+        `| ${supersessionCell(r.supersedes, r.supersedes_scope)} ` +
+        `| ${supersessionCell(r.superseded_by, r.superseded_scope)} ` +
         `| ${r.amended_by ?? '—'} |`
     );
 }

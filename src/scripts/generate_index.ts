@@ -26,11 +26,18 @@ import {
 } from './_lib/agent_src.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
 import { skip_compile_disabled_rule } from './condense.js';
+import { resolveRepoRoot } from './_lib/repo_root.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/generate_index.ts → parents[2] of the .py file is the repo root.
-export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+// Root resolution goes through the sentinel resolver rather than a bare `..`
+// walk: `path.resolve(dirname, '..', '..')` is correct until this file moves,
+// and then it addresses a parent directory that also exists — the generator
+// writes nothing, reports success, and nothing fails. `resolveRepoRoot` REFUSES
+// when no directory on the walk carries this package's `package.json`
+// (road-to-skill-ecosystem-runtime-enforcement Phase 2 Step 6).
+export const ROOT = resolveRepoRoot(path.dirname(_HERE));
 
 // Legacy single-root anchor — kept as fallback for pure-condensed consumer
 // projections. Multi-root discovery uses artefact_roots() per ADR-017.
