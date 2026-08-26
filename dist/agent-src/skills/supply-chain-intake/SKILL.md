@@ -51,18 +51,25 @@ PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
    ```
    Non-existent, brand-new (published days ago), or near-zero-download → **stop**, treat as hallucination/slopsquat.
 2. **Typo-adjacency** — is the name within 1–2 chars of a far-more-popular package (`python-dateutil` vs `dateutil`, `lodahs` vs `lodash`)? If so, you probably want the popular one — confirm before installing.
-3. **Version safety** — the model's version pin may predate a CVE fix (training-cutoff reintroduction). Take the current patched release, then scan:
+3. **Version source — look it up BEFORE you write a version, and report which outcome you got.** This is a precondition of step 4, not a note on it. Two outcomes, with opposite handling, and only the first is forbidden:
+   - **Invention** — writing a version string that **no source in the repository produced**. Always forbidden. A version that appeared from nowhere is unverifiable by anyone downstream, including you an hour later.
+   - **Lookup failure** — having searched the **declared version sources** (a catalogue, a `workspace:` protocol entry, an existing manifest in the tree, the lockfile) and found none. This is **not** a violation. Resolving it from the registry or from the user is the correct move; report it as *unresolved-then-resolved* with the source named.
+
+   **Silence is the failure, never the fallback.** Producing a version with no source and no report is the thing the rule forbids; reporting an unresolved lookup is the thing it asks for.
+
+   A manifest that already expresses a version through a protocol — `workspace:*`, a catalogue reference — is **left as it is**. Rewriting it to a literal discards the mechanism the repository chose and pins a value the workspace was resolving for you. `workspace:` is documented in npm, yarn, pnpm and bun; catalogued versions are a documented feature of pnpm and bun.
+4. **Version safety** — the model's version pin may predate a CVE fix (training-cutoff reintroduction). Take the current patched release, then scan:
    ```bash
    npm audit           # block on high/critical
    pip-audit
    osv-scanner -r .
    ```
-4. **Pin + lock** — install exact + commit the lockfile; reject floating ranges (`^`, `latest`, no lockfile) on production deps.
+5. **Pin + lock** — install exact + commit the lockfile; reject floating ranges (`^`, `latest`, no lockfile) on production deps.
    ```bash
    npm install --save-exact <pkg> && git add package-lock.json
    ```
-5. **License** — confirm the license is compatible with the project's declared license before it lands.
-6. **No pipe-to-shell** — never `curl … | bash` an install; download → inspect → execute over pinned HTTPS, or surface it to the user for confirmation.
+6. **License** — confirm the license is compatible with the project's declared license before it lands.
+7. **No pipe-to-shell** — never `curl … | bash` an install; download → inspect → execute over pinned HTTPS, or surface it to the user for confirmation.
 
 ## MCP-server intake — the dependency gate plus two extra checks
 

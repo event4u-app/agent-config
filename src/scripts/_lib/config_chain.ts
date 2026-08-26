@@ -387,7 +387,7 @@ export function resolveConfigChain(repoRoot: string, startPath: string): ChainRe
             hops.push({ ...hop, origin: 'unresolved', reason: `chain exceeds ${MAX_HOPS} hops` });
             break;
         }
-        const abs = path.resolve(repoRoot, hop.path as string);
+        const abs = path.resolve(repoRoot, hop.path as string); // non-null: unresolved hops are never queued
         if (seen.has(abs)) {
             hops.push({ ...hop, origin: 'unresolved', reason: 'cycle: this file is already in the chain' });
             continue;
@@ -406,7 +406,17 @@ export function resolveConfigChain(repoRoot: string, startPath: string): ChainRe
         // the report with paths the project does not own.
         if (hop.origin === 'external') continue;
         for (const specifier of directives(read.value)) {
-            queue.push(resolveSpecifier(repoRoot, path.dirname(abs), specifier, workspaces));
+            const next = resolveSpecifier(repoRoot, path.dirname(abs), specifier, workspaces);
+            // A hop the specifier resolver could not place has no path to read,
+            // so it is RECORDED and not queued. Queueing it walked into
+            // `path.resolve(root, null)` and threw — which turned a partial
+            // digest, the whole point of this module, into a crash on exactly
+            // the input it exists to handle gracefully.
+            if (next.path === null) {
+                hops.push(next);
+                continue;
+            }
+            queue.push(next);
         }
     }
 
