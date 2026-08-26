@@ -66,6 +66,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -451,11 +452,29 @@ export function selfTest(): number {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, body);
     };
-    const problems: string[] = [];
+    const cli = (dir: string, extra: readonly string[]): number =>
+        runGateCli(REPO_ROOT, 'src/scripts/lint_consolidation_lineage.ts', ['--root', path.join(tmp, dir), '--strict', ...extra], REPO_ROOT);
 
-    // (1) Every declaration spelling parses to the SAME parent set. A parser
-    // that reads one shape and returns empty for the others reports every
-    // legacy consolidation as declaring zero parents.
+    // Rejection is measured under `--strict`. The gate ships in REPORT mode by
+    // council decision, so its default exit code carries no verdict — asserting
+    // against it would prove nothing. `--strict` is the same detection with a
+    // non-zero exit, which is what a self-test needs and what a canary cannot
+    // supply for a report-mode gate.
+    w('cmp/road-to-master.md', '---\nconsolidates:\n  - road-to-a.md\n  - road-to-ghost.md\n---\n# m\n');
+    w('cmp/road-to-a.md', '# a\n');
+    w('cmp/road-to-b.md', '---\nsupersedes_analysis:\n  - road-to-a\n---\n# b\n');
+    w('claim/road-to-a.md', '# a\n');
+    w('claim/road-to-m.md', '# m\n\n**Status: ersetzt als führendes Proposal:** `road-to-a` v1, prose only.\n');
+    w('clean/road-to-a.md', '# a\n');
+    w('clean/road-to-b.md', '# b\n');
+    w('clean/road-to-m.md', '---\nconsolidates:\n  - road-to-a.md\n  - road-to-b.md\n---\n# m\n');
+    w('estate-ghost/road-to-m.md', '---\nconsolidates:\n  - road-to-never-existed.md\n---\n# m\n');
+    w(
+        'estate-describes/road-to-m.md',
+        '---\nstatus: draft\n---\n# m\n\n> **Source:** an inbox folder. The master there\n> supersedes — `road-to-x` v3 and `road-to-y`.\n\nA set difference over `road-to-*.md`.\n',
+    );
+    w('estate-describes/road-to-other.md', '# unrelated estate work\n');
+
     const spellings: ReadonlyArray<readonly [DeclKind, string]> = [
         ['consolidates', '---\nconsolidates:\n  - road-to-a.md\n  - road-to-b.md\n---\n#\n'],
         ['supersedes_analysis', '---\nsupersedes_analysis:\n  - road-to-a\n  - road-to-b\n---\n#\n'],
@@ -473,53 +492,59 @@ export function selfTest(): number {
             '# m\n\n> This document deliberately supersedes the planning shape of\n> `road-to-a` and `road-to-b`.\n',
         ],
     ];
-    for (const [kind, body] of spellings) {
-        const d = parseDeclaration(body);
-        if (d.kind !== kind || d.parents.join(',') !== 'road-to-a,road-to-b' || d.unparseable) {
-            problems.push(`spelling ${kind} parsed as ${d.kind} -> [${d.parents.join(', ')}]`);
-        }
-    }
 
-    // (2) Every finding type fires — including on a tree that holds none of
-    // them today. A gate whose corpus is legitimately clean reports zero
-    // whether it works or not; this is the arm that proves it can go red.
-    w('cmp/road-to-master.md', '---\nconsolidates:\n  - road-to-a.md\n  - road-to-ghost.md\n---\n# m\n');
-    w('cmp/road-to-a.md', '# a\n');
-    w('cmp/road-to-b.md', '---\nsupersedes_analysis:\n  - road-to-a\n---\n# b\n');
-    w('claim/road-to-a.md', '# a\n');
-    w('claim/road-to-m.md', '# m\n\n**Status: ersetzt als führendes Proposal:** `road-to-a` v1, prose only.\n');
-    w('clean/road-to-a.md', '# a\n');
-    w('clean/road-to-b.md', '# b\n');
-    w('clean/road-to-m.md', '---\nconsolidates:\n  - road-to-a.md\n  - road-to-b.md\n---\n# m\n');
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a folder with an omitted sibling, a ghost parent and two competing masters',
+            expect: 'reject',
+            run: () => cli('cmp', []),
+        },
+        {
+            name: 'a consolidation claim with no readable parent list',
+            expect: 'reject',
+            run: () => cli('claim', []),
+        },
+        {
+            name: 'a complete folder stays silent — without this, a checker returning every code would pass',
+            expect: 'accept',
+            run: () => cli('clean', []),
+        },
+        {
+            name: 'estate surface still reports a canonical declaration naming a file that does not exist',
+            expect: 'reject',
+            run: () => cli('estate-ghost', ['--surface', 'estate']),
+        },
+        {
+            name: 'estate surface does NOT read a roadmap describing a consolidation as declaring one',
+            expect: 'accept',
+            run: () => cli('estate-describes', ['--surface', 'estate']),
+        },
+        {
+            name: 'all six declaration spellings parse to the identical parent set',
+            expect: 'accept',
+            run: () => {
+                for (const [kind, body] of spellings) {
+                    const d = parseDeclaration(body);
+                    if (d.kind !== kind || d.parents.join(',') !== 'road-to-a,road-to-b' || d.unparseable) {
+                        process.stdout.write(
+                            `      spelling ${kind} parsed as ${d.kind} -> [${d.parents.join(', ')}]\n`,
+                        );
+                        return 1;
+                    }
+                }
+                return 0;
+            },
+        },
+    ];
 
-    const fired = new Set([
-        ...analyseFolder(path.join(tmp, 'cmp'), 'cmp').map((f) => f.code),
-        ...analyseFolder(path.join(tmp, 'claim'), 'claim').map((f) => f.code),
-    ]);
-    const want = ['omitted-sibling', 'missing-parent', 'overlapping-sets', 'claims-without-field'] as const;
-    for (const c of want) {
-        if (!fired.has(c)) problems.push(`finding ${c} did not fire`);
-    }
-
-    // (3) A complete folder stays silent. Without this arm a checker that
-    // returned every code unconditionally would pass arm (2).
-    const clean = analyseFolder(path.join(tmp, 'clean'), 'clean');
-    if (clean.length > 0) {
-        problems.push(`a complete folder produced ${clean.length} finding(s): ${clean.map((f) => f.code).join(', ')}`);
-    }
-
+    const code = runSelfTest({
+        gate: 'lint_consolidation_lineage',
+        cases,
+        minCases: 6,
+        minRejectCases: 3,
+    });
     fs.rmSync(tmp, { recursive: true, force: true });
-
-    if (problems.length > 0) {
-        process.stderr.write(`❌  lint_consolidation_lineage --self-test:\n`);
-        for (const p of problems) process.stderr.write(`      ${p}\n`);
-        return 1;
-    }
-    process.stdout.write(
-        `✅  lint_consolidation_lineage --self-test: ${String(spellings.length)} declaration spelling(s) parse ` +
-            `identically, ${String(want.length)} finding type(s) fire, a complete folder stays silent.\n`,
-    );
-    return 0;
+    return code;
 }
 
 export function main(argv: string[] | null = null): number {

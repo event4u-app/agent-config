@@ -1,4 +1,4 @@
-<!-- evidence-type: council -->
+<!-- evidence-type: analysis -->
 # Council decision — consolidation-lineage enforcement surface (E1/E2)
 
 **Date:** 2026-08-27 · **Members:** anthropic/claude-sonnet-4-5, openai/codex-default · **Rounds:** 2 · **Peer review:** blind · **Quorum:** 2/2, needed 1 — concluded · **Actual cost:** $0.0560
