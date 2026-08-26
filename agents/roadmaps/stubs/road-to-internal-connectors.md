@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+review_by: 2026-12-24
+---
+
 # Road to Internal Connectors — STUB
 
 > **Ownership (deduped 2026-07-12, road-to-opt-portfolio-consolidation
@@ -38,7 +43,7 @@ mounted via DAV, Dropbox desktop sync) as filesystem paths. The
 workspace's knowledge ingestion (Phase 2) reads from a file path,
 not an API.
 
-## Prerequisites for promotion
+## Promotion prerequisites
 
 1. **Org customer per connector** — each connector requires its own
    recruited customer who agrees in writing to a scope review of

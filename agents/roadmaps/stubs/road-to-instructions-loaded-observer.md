@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to the InstructionsLoaded observer, and the fork it would decide
@@ -103,7 +104,7 @@ registration emits install settings, so it changes what the installer writes int
 a consumer's `.claude/settings.json` — a shipped-default change, and Rule 3 is
 categorical.
 
-## Item 1 — bind the event
+## Probe — item 1, bind the event
 
 Named producer: **`matze4u` (Mathias Berg)**, the maintainer, who owns the hook
 architecture. This is a single-maintainer repository — measured **1** distinct

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 # Stub: command runtime prerequisites
 
@@ -42,7 +43,7 @@ reds immediately on a new registered gate with no `--self-test`), and the
 `ci-parity:local-only` direction. Every one of those was hit and paid on this
 run's other branches; a later reader should not rediscover them.
 
-## The named producer and its probe
+## Probe and named producer
 
 **Producer:** the maintainer, on the schema-ownership decision.
 

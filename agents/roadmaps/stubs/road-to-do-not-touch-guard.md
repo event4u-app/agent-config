@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to a `do_not_touch` write guard
@@ -53,7 +54,7 @@ consumer is recorded as an unproven design direction, not a decision.
 supplying test data, so shipping (c) first would canonise semantics for data
 that cannot reach enforcement. If either ever ships, (d) goes first.
 
-## The probe that promotes this stub
+## Probe that promotes this stub
 
 ```
 A VERSIONED do_not_touch SCHEMA EXISTS, AND A PUBLICATION MECHANISM BINDS THE

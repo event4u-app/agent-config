@@ -9,10 +9,10 @@ This report maps the existing systems in event4u/agent-config that support spawn
 **Purpose:** Declares the user's audience identity. Selects default skill/command surface, README entry-paragraph, and persona pre-selection.
 
 **Activation Mechanism:**
-- File location: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/profiles/` (immutable built-ins) or `.agent-src.uncondensed/profiles/` (user-defined)
-- Schema: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/profile-system.md`
+- File location: `src/profiles/` (immutable built-ins) or `.agent-src.uncondensed/profiles/` (user-defined)
+- Schema: `docs/contracts/profile-system.md`
 - Loader: `scripts/config/profiles.py` (phase-1, resolves in order: pack.profile_id → .agent-settings.yml → env var `AGENT_CONFIG_PROFILE_ID` → CLI flag `--profile=<id>`)
-- Template reference: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/templates/agent-settings.md` (no explicit profile: block yet; expected in 6.1)
+- Template reference: `dist/agent-src/templates/agent-settings.md` (no explicit profile: block yet; expected in 6.1)
 
 **What a Profile Carries:**
 ```yaml
@@ -70,9 +70,9 @@ Subagent spawning mechanism can read `profile.id` from `.agent-settings.yml` or 
 **Mechanism:** `/mode <name>` command sets `roles.active_role` in `.agent-settings.yml`. The rule `role-mode-adherence` (auto-triggered when active) enforces contract conformance on every closing output.
 
 **Location:**
-- Source rule: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/rules/role-mode-adherence.md` (lines 16-43 define the six modes)
-- Contract detail: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/guidelines/agent-infra/role-contracts.md` (lines 12–94 define mode skeletal contracts)
-- Settings activation: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/templates/agent-settings.md` (lines 268–277)
+- Source rule: `src/rules/role-mode-adherence.md` (lines 16-43 define the six modes)
+- Contract detail: `docs/guidelines/agent-infra/role-contracts.md` (lines 12–94 define mode skeletal contracts)
+- Settings activation: `dist/agent-src/templates/agent-settings.md` (lines 268–277)
 
 **The Six Role Modes:**
 
@@ -114,9 +114,9 @@ Subagent spawning can set `roles.active_role: <mode>` in the subagent's `.agent-
 | **ORGANIZATIONAL ROLE EXPERIENCE** (six roles: sales, support, content-creator, consultant, leadership, galabau) | Job-specific onboarding flow; first tasks + prompts + skill shortlist | `agents/roles/<role>/index.md` (status: beta-internal, recruit sessions pending) | Wizard `/onboard` + MCP install path hint | README entry-para, first-task scaffolding, persona defaults, recommended packs |
 
 **Organizational Role Location:**
-- Directory: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/roles/`
-- Evidence basis: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/roles/EVIDENCE_BASIS.md` (lines 1–52, explains beta-internal status)
-- Example (sales): `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/roles/sales/index.md` (frontmatter shows: recommended_packs, display_name, tagline, recruit_session_ref, status)
+- Directory: `agents/roles/`
+- Evidence basis: `agents/roles/EVIDENCE_BASIS.md` (lines 1–52, explains beta-internal status)
+- Example (sales): `agents/roles/sales/index.md` (frontmatter shows: recommended_packs, display_name, tagline, recruit_session_ref, status)
 
 **For Subagent Orchestration:**
 Organizational roles are **onboarding scaffolding**, not runtime enforcement. They're consumed at install time (wizard path selection) or for offline persona/pack recommendations. Subagents do not "activate" a role; they inherit packs + persona defaults via the profile they load.
@@ -128,11 +128,11 @@ Organizational roles are **onboarding scaffolding**, not runtime enforcement. Th
 **Purpose:** Personas are **review-checklists** the agent overlays on a skill's procedure. Not sub-agents; not execution modes. They shape **what** the agent looks for, not the outcome contract.
 
 **Location:**
-- Core (6) + Specialists (18) live in: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/agent-src/personas/`
-- Advisors (5, for AI council debates): `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/agent-src/personas/advisors/`
-- Catalog + governance rule: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/personas.md` (full catalog, tier rules, skill citations)
-- Governance enforcement: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/rules/persona-governance.md` (lines 1–60, ≤2 specialists per domain cap)
-- Schema contract: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/persona-schema.md`
+- Core (6) + Specialists (18) live in: `src/agent-src/personas/`
+- Advisors (5, for AI council debates): `src/agent-src/personas/advisors/`
+- Catalog + governance rule: `docs/personas.md` (full catalog, tier rules, skill citations)
+- Governance enforcement: `src/rules/persona-governance.md` (lines 1–60, ≤2 specialists per domain cap)
+- Schema contract: `docs/contracts/persona-schema.md`
 
 **The 11 Core + Specialist Personas (24 active):**
 
@@ -198,7 +198,7 @@ Subagent can be spawned with a persona set by:
 **Purpose:** File-first local-only knowledge cache for expensive structural evidence (negative facts, pointers to authoritative URLs).
 
 **Location:**
-- Ingestion contract: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/local-knowledge-ingestion.md` (lines 1–97)
+- Ingestion contract: `docs/contracts/local-knowledge-ingestion.md` (lines 1–97)
 - Storage: `agents/knowledge/<source>.md` (committed, trusted cache)
 - Session scratch: `agents/memory/knowledge/session/` (gitignored, ephemeral)
 - Global cross-project store: `~/.event4u/agent-config/knowledge/` (unversioned, file-first, re-verified each session)
@@ -231,10 +231,10 @@ Task-specific knowledge injected into a subagent via:
 **Purpose:** Spawn implementer/judge subagents with explicit model pairing, parallelism, and topology from `.agent-settings.yml`.
 
 **Location:**
-- Skill: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/skills/subagent-orchestration/SKILL.md` (lines 1–200+)
-- Context configuration: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/agent-src/contexts/subagent-configuration.md` (lines 1–64)
+- Skill: `src/skills/subagent-orchestration/SKILL.md` (lines 1–200+)
+- Context configuration: `src/agent-src/contexts/subagent-configuration.md` (lines 1–64)
 - Commands: `/judge` (orchestrator), `/judge solo`, `/judge on-diff`, `/judge steps`
-- Settings: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/templates/agent-settings.md` (lines 247–258)
+- Settings: `dist/agent-src/templates/agent-settings.md` (lines 247–258)
 
 **Configuration Keys** (lines 247–258 in template):
 ```yaml
@@ -268,7 +268,7 @@ haiku  →  sonnet  →  opus
 ```
 
 **Subagent Status Schema:**
-File: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/skills/subagent-orchestration/schemas/subagent-status.json`
+File: `src/skills/subagent-orchestration/schemas/subagent-status.json`
 
 ---
 
@@ -379,34 +379,34 @@ subagents:
 ## Files Referenced (All Verified Absolute Paths)
 
 **Profiles:**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/profiles/README.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/profiles/developer.yaml`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/profile-system.md`
+- `src/profiles/README.md`
+- `src/profiles/developer.yaml`
+- `docs/contracts/profile-system.md`
 
 **Roles (Role Modes):**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/rules/role-mode-adherence.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/guidelines/agent-infra/role-contracts.md`
+- `src/rules/role-mode-adherence.md`
+- `docs/guidelines/agent-infra/role-contracts.md`
 
 **Roles (Organizational):**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/roles/EVIDENCE_BASIS.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/roles/sales/index.md`
+- `agents/roles/EVIDENCE_BASIS.md`
+- `agents/roles/sales/index.md`
 
 **Personas:**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/agent-src/personas/developer.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/personas.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/rules/persona-governance.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/persona-schema.md`
+- `src/agent-src/personas/developer.md`
+- `docs/personas.md`
+- `src/rules/persona-governance.md`
+- `docs/contracts/persona-schema.md`
 
 **Knowledge:**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/knowledge/README.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/docs/contracts/local-knowledge-ingestion.md`
+- `agents/knowledge/README.md`
+- `docs/contracts/local-knowledge-ingestion.md`
 
 **Subagent Orchestration:**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/skills/subagent-orchestration/SKILL.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/src/agent-src/contexts/subagent-configuration.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/commands/judge.md`
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/templates/agent-settings.md`
+- `src/skills/subagent-orchestration/SKILL.md`
+- `src/agent-src/contexts/subagent-configuration.md`
+- `dist/agent-src/commands/judge.md`
+- `dist/agent-src/templates/agent-settings.md`
 
 **Settings:**
-- `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/dist/agent-src/templates/agent-settings.md` (profiles not yet exposed; roadmap 6.1)
+- `dist/agent-src/templates/agent-settings.md` (profiles not yet exposed; roadmap 6.1)
 

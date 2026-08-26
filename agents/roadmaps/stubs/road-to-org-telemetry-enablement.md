@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+review_by: 2026-12-24
 ---
 
 # Stub: road to org telemetry enablement
@@ -77,7 +78,7 @@ measurement needs at least three distinct users, so a null published without
 this sign-off would be an artefact of the missing approval rather than a finding
 about adoption. Do not publish that null as an adoption result.
 
-## Re-entry producer and detection probe
+## Probe and re-entry producer
 
 | Field | Value |
 |---|---|
