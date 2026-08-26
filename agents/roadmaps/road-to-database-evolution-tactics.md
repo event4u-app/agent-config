@@ -3,17 +3,8 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: >
-  One of four siblings split from a single inbox drop carrying 24 verified
-  defect claims. This one holds schema-evolution tactics and the measurement
-  layer the whole campaign depends on; rule 11 forbids folding it into the
-  modeling sibling, whose subject is design rather than rollout, and rule 1
-  caps a structural roadmap at 1000 lines.
-estate_growth_exempt: >
-  Two blockers were discovered during verification rather than proposed by the
-  inbox artifact: promoting any new linter rule to gate tier requires a
-  pre-registered spike per rule, and the waiver kind three proposals depend on
-  does not exist in a closed union that would have to be widened.
+estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds schema-evolution tactics and the measurement layer the whole campaign depends on; rule 11 forbids folding it into the modeling sibling, whose subject is design rather than rollout, and rule 1 caps a structural roadmap at 1000 lines."
+estate_growth_exempt: "Two blockers were discovered during verification rather than proposed by the inbox artifact: promoting any new linter rule to gate tier requires a pre-registered spike per rule, and the waiver kind three proposals depend on does not exist in a closed union that would have to be widened."
 ---
 # Road to database evolution tactics
 

@@ -3,18 +3,8 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: >
-  One of four siblings split from a single inbox drop. This one exists because
-  the analysis found a finished, tested capability sitting off-trunk that three
-  of the four input proposals planned to build from scratch. Its disposition is
-  landing, not building, which is a different task from every sibling and from
-  anything in the current estate — rule 11 forbids folding it into the modeling
-  roadmap that would otherwise have rebuilt it.
-estate_growth_exempt: >
-  Two blockers were discovered while verifying the branch: the skill it adds
-  consumes a skill_count allowance that is deliberately zero, and its last green
-  CI predates every gate added since release/14.6.0. Both were found by the
-  verification pass, not proposed by the inbox artifact.
+estate_offset_exempt: "One of four siblings split from a single inbox drop. This one exists because the analysis found a finished, tested capability sitting off-trunk that three of the four input proposals planned to build from scratch. Its disposition is landing, not building, which is a different task from every sibling and from anything in the current estate — rule 11 forbids folding it into the modeling roadmap that would otherwise have rebuilt it."
+estate_growth_exempt: "Two blockers were discovered while verifying the branch: the skill it adds consumes a skill_count allowance that is deliberately zero, and its last green CI predates every gate added since release/14.6.0. Both were found by the verification pass, not proposed by the inbox artifact."
 ---
 # Road to database ERD landing
 

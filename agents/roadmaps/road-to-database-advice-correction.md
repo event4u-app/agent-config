@@ -3,18 +3,8 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: >
-  One of four siblings split from a single inbox drop that carried 24 verified
-  defect claims. Rule 11 (one task per file) forbids folding them together and
-  rule 1 caps a structural roadmap at 1000 lines, so the split is the template's
-  own requirement rather than estate growth by preference. Nothing in the
-  current estate covers database advice quality, so there is no sibling to
-  archive against.
-estate_growth_exempt: >
-  Phase 2 rests on a maintainer decision that breaks a shipped Do-NOT line, and
-  Phase 1 surfaced an unresolved contradiction inside the same guideline
-  section. Both are recorded as blockers discovered during verification, not
-  invented scope.
+estate_offset_exempt: "One of four siblings split from a single inbox drop that carried 24 verified defect claims. Rule 11 (one task per file) forbids folding them together and rule 1 caps a structural roadmap at 1000 lines, so the split is the template's own requirement rather than estate growth by preference. Nothing in the current estate covers database advice quality, so there is no sibling to archive against."
+estate_growth_exempt: "Phase 2 rests on a maintainer decision that breaks a shipped Do-NOT line, and Phase 1 surfaced an unresolved contradiction inside the same guideline section. Both are recorded as blockers discovered during verification, not invented scope."
 ---
 # Road to database advice correction
 

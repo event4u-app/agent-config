@@ -3,18 +3,8 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: >
-  One of four siblings split from a single inbox drop carrying 24 verified
-  defect claims. This one holds the capability work and the ownership question
-  the council refused to settle without evidence; rule 11 forbids folding it
-  into the advice-correction sibling, which changes existing text and adds no
-  capability. No roadmap in the current estate covers database modeling.
-estate_growth_exempt: >
-  Three blockers were discovered during verification, not proposed by the inbox
-  artifact: the new skill's admission burden against 34 existing backend-data
-  skills, a frontmatter key three proposals depend on that the skill schema
-  forbids, and the fact that an ownership map placed in docs/ is unreachable by
-  any agent in a consumer install.
+estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds the capability work and the ownership question the council refused to settle without evidence; rule 11 forbids folding it into the advice-correction sibling, which changes existing text and adds no capability. No roadmap in the current estate covers database modeling."
+estate_growth_exempt: "Three blockers were discovered during verification, not proposed by the inbox artifact: the new skill's admission burden against 34 existing backend-data skills, a frontmatter key three proposals depend on that the skill schema forbids, and the fact that an ownership map placed in docs/ is unreachable by any agent in a consumer install."
 ---
 # Road to database relational modeling
 
