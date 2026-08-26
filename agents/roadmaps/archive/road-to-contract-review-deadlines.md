@@ -217,7 +217,7 @@ that the deadline itself is enforced by nothing.
 
 ## Phase 2 — put it where a pull request can see it
 
-- [ ] **2.1 Wire the task target into the workflow that owns contract surfaces.**
+- [x] **2.1 Wire the task target into the workflow that owns contract surfaces.**
       `consistency.yml` already runs 24 individual `task` targets, so this is one
       more step in an existing job rather than new infrastructure. Its own
       comments record two incidents of a ratchet sitting red on `main` because it
@@ -225,21 +225,70 @@ that the deadline itself is enforced by nothing.
       verify: `grep -rn beta .github/workflows/` returns the step, and a branch
       with a deliberately lapsed contract reds the check on its PR.
 
-- [ ] **2.2 Register it in gate-coverage.**
+      **DONE 2026-08-26 — `.github/workflows/consistency.yml`.** `grep -rn beta
+      .github/workflows/` now returns the step; before this change it returned
+      nothing, which is D5 exactly.
+
+      **The lapsed-contract half is demonstrated, not asserted.** A contract
+      planted at `docs/contracts/zz-canary-beta-lapse.md` with
+      `keep-beta-until: 2026-01-01` makes the gate exit **1** and report it as a
+      `[FRESH lapse — not in the frozen baseline, which may not grow]`, while the
+      85 inherited ones stay warnings and the gate stays green without it. That
+      is the Phase-0 ratchet working end to end: inherited debt warns, new debt
+      fails, and a pull request now sees the difference.
+
+- [x] **2.2 Register it in gate-coverage.**
       `grep -n beta .github/gate-coverage.yml` returns nothing today, so the
       gate is outside the coverage census that exists to notice exactly this.
       verify: the entry exists with its `scanned:` line, and the coverage census
       counts it.
 
-- [ ] **2.3 Resolve the one live violation, or record why it stands.**
+      **DONE 2026-08-26 — `src/config/gate-coverage.yml`.** `min_scanned: 100`
+      against a live corpus of 121 beta contracts; the floor sits below it
+      deliberately, because the beta population **shrinks** as contracts promote
+      to stable, so a slow decline is expected and a drop under 100 is a
+      scan-root collapse rather than a promotion wave.
+
+      The row carries a canary, and it fires: `check_gate_coverage --canary`
+      reports `✅ check_beta_review_markers: caught the planted
+      contract-violation defect (exit 1)`. Coverage proves a gate READ
+      something; only the canary proves it can still FAIL.
+
+      Denominators in the manifest header were **recomputed, not incremented** —
+      292 gate scripts, 61 rows, both re-run on this tree.
+
+- [x] **2.3 Resolve the one live violation, or record why it stands.**
       `ui-authority.md` is over by a single day. Either the date moves inside the
       window or the 90-day ceiling gets the same 0.2 treatment as the floor.
       verify: the gate is green at HEAD, or the exception carries a written
       reason at the contract.
 
+      **DONE 2026-08-26 — the gate is green at HEAD, and the honest reason is
+      that the violation CLEARED ITSELF. No file was edited to achieve it.**
+
+      `ui-authority.md` still carries `keep-beta-until: 2026-11-23`, unchanged.
+      What moved is today: the ceiling is computed as `today + 90`
+      (`check_beta_review_markers.ts:248`), so the maximum was 2026-11-22 when
+      the roadmap measured on 08-24 and is 2026-11-24 now. The same date is
+      outside the window on one day and inside it two days later.
+
+      **That is a defect in the ceiling's ANCHOR, and recording it is the point
+      of writing this down rather than ticking the box.** `STABILITY.md:95` says
+      *"max 90 days from the last review"* — from the LAST REVIEW, not from
+      today. No contract carries a `last-reviewed:` field, so the check
+      substitutes today, and against that anchor a forward date can only drift
+      INTO range as time passes. The upper bound is therefore unenforceable by
+      construction, while the lower bound (the lapse check Phase 1 added) is
+      real.
+
+      Not fixed here: a real ceiling needs a `last-reviewed:` field on 121
+      contracts, which is a schema change to `STABILITY.md` and a migration, not
+      a step in this roadmap. What this step buys is that the number is no longer
+      mistaken for enforcement.
+
 ## Phase 3 — close the two one-off filings
 
-- [ ] **3.1 Fold the `write-engine.md` and `no-runtime-boundary.md` instances into the sweep.**
+- [x] **3.1 Fold the `write-engine.md` and `no-runtime-boundary.md` instances into the sweep.**
       `road-to-channel-contract-and-profile-drift` step 1.1 fixes one of the 86
       by hand. Once Phase 0 dispositions all of them, that step is either
       redundant or is the sweep's first row — it must not be both, and two
@@ -249,11 +298,56 @@ that the deadline itself is enforced by nothing.
       `write-engine.md` or is closed as covered; the two files do not both
       change the same frontmatter.
 
-- [ ] **3.2 State the trigger evaluation as a command, not as a habit.**
+      **DONE 2026-08-26 — the other roadmap's fix is treated as the sweep's first
+      row, and the ratchet was tightened to record it.**
+
+      Verified live rather than from the roadmap text:
+      `road-to-channel-contract-and-profile-drift` is **archived**, and
+      `docs/contracts/write-engine.md` now carries `keep-beta-until: 2026-09-24`
+      — its 1.1 shipped. This branch touches that file **zero** times, so the
+      two-roadmaps-one-file collision the risk register names did not occur.
+
+      **What that left, and what was done about it.** The frozen baseline still
+      listed `write-engine.md` among the 86, so it was carrying an entry for a
+      contract that is no longer lapsed. Measured: baseline 86, currently lapsed
+      85, difference exactly that one file. Per Phase 0's own rule — *"an entry
+      leaves only because the contract's own state changed, never by editing the
+      file"* — its state changed, so the entry left: **86 → 85** in
+      `src/config/lapsed-beta-baseline.json`, with the `count` field moved to
+      match. That is the ratchet shrinking for the one reason it is allowed to.
+
+      `no-runtime-boundary.md` remains lapsed and remains **inside** the frozen
+      baseline, which is its disposition: Phase 0 dispositioned all 86 as a
+      cohort, so hand-fixing it here would be the second roadmap editing the same
+      frontmatter that this step exists to prevent.
+
+- [x] **3.2 State the trigger evaluation as a command, not as a habit.**
       `STABILITY.md`'s 25 % condition is prose. Whatever Phase 1 lands can
       compute it, and a trigger nobody can run is how this one reached 71.1 %.
       verify: a command prints the current percentage and whether the trigger has
       fired; running it at HEAD reproduces 0.1's number.
+
+      **DONE 2026-08-26 — `check_beta_review_markers --trigger`.**
+
+      ```
+      $ ./scripts-run src/scripts/check_beta_review_markers --trigger
+      beta contracts: 121 · lapsed: 85 · 70.2 % · STABILITY.md re-audit trigger (>= 25 %): FIRED
+      ```
+
+      `--json` emits the same verdict as a record. The threshold lives in one
+      exported constant next to the data it measures, so the prose condition in
+      `STABILITY.md` and the number a command prints cannot drift apart.
+
+      **Deliberately a REPORT, and it returns 0 even when FIRED.** The
+      enforcement half is Phase 0's frozen baseline plus the fresh-lapse error; a
+      second failing check over the same population would red the same pull
+      request twice for one cause.
+
+      **It reproduces 0.1's number with one honest difference: 85, not 86.** The
+      missing row is `write-engine.md`, whose deadline was extended by the other
+      roadmap's PR after 0.1 measured — the same state change 3.1 records. 85 of
+      121 is 70.2 %, still nearly three times the 25 % trigger, and the verdict
+      is unchanged in the direction that matters.
 
 ## Phase 4 — the same shape, one surface over
 
@@ -263,7 +357,20 @@ module"*, and that file does not exist — it became `.ts` under the TypeScript
 migration. Sweeping that construct gave a second population with the same cause
 as D5: a gate exists, and `docs/` is not in its scope.
 
-- [ ] **4.1 Measure the dead-reference population in `docs/` and split it by whether the file ships.**
+- [x] **4.1 Measure the dead-reference population in `docs/` and split it by whether the file ships.**
+
+      **DONE 2026-08-26 — `agents/evidence/analysis/docs-dead-links-2026-08-26.md`,
+      reproducible by `./scripts-run src/scripts/measure_docs_dead_links`.**
+      Measured **544 dead relative links across 701 files**, split
+      **104 shipped · 440 internal · 152 `.py`-target** — the shipped and `.py`
+      figures reproduce this step's numbers **exactly**. The total is higher than
+      the recorded 487 because `docs/` grew between the two measurements; stated
+      rather than reconciled away, because the two figures describe different
+      trees.
+
+      **`measure_*`, deliberately not `lint_*` / `check_*`.** The scope decision
+      is 4.3 and was still open; a gate landed before it would have pre-empted a
+      choice this roadmap explicitly reserves.
       Measured 2026-08-24: **487 dead relative links across 656 files, 11.2 %**;
       **104** of them sit in files `package.json:files[]` actually ships
       (`docs/guidelines/` is a shipped root); **152** point at `.py` paths left
@@ -274,14 +381,63 @@ as D5: a gate exists, and `docs/` is not in its scope.
       verify: a committed count under `agents/evidence/analysis/` split
       shipped / internal / `.py`-target, reproducible by a command in the file.
 
-- [ ] **4.2 Repair the shipped 104 first, and the migration leftovers as a class.**
+- [x] **4.2 Repair the shipped 104 first, and the migration leftovers as a class.**
+
+      **DONE 2026-08-26 — shipped 104 → 0, `.py`-target 152 → 9, and the nine
+      survivors carry a reason.**
+
+      The repair is driven by the same classifier that produced the measurement,
+      and rewrites a target only when **exactly one** file in the tree matches
+      it, through four ordered strategies: path tail from a known segment,
+      `.py` → `.ts`, pytest's `test_x.py` → vitest's `x.test.ts`, and unique
+      basename. Two tie-breaks, both principled: toward `src/` (the single source
+      of truth, every other tree being a projection) and toward the path the
+      author literally wrote once `../` is stripped — which is what separates
+      `src/scripts/memory_status.ts` from its templates twin. **Anything still
+      ambiguous is reported, never guessed:** a link silently repointed at the
+      wrong candidate is worse than a dead one, because a dead link is visible.
+
+      **The nine survivors are not a fixable class, and the reason is a bigger
+      finding than the link count.** Each names a file the TypeScript migration
+      **deleted** rather than renamed — no successor exists under any name — and
+      each is a contract or architecture page citing a TEST as evidence that its
+      rule holds. So the citation is a **coverage claim with nothing behind it**,
+      and six of the nine sit in `docs/contracts/`. Repairing the link is
+      impossible without first deciding whether the coverage still exists, which
+      is seven contracts read against the current suite and its own change. This
+      step admits a survivor that *carries a reason*; that is the reason, and it
+      is recorded at the evidence file rather than buried here.
       The `.py` targets are mechanical — the same path with a different
       extension, or a file that no longer exists at all. Shipped-first because a
       dead link a consumer follows is the only half of this that reaches anyone.
       verify: the shipped count is 0; the `.py`-target count is 0 or every
       survivor carries a reason.
 
-- [ ] **4.3 Decide whether `docs/` enters `check_references`'s scope — and price it before deciding.**
+- [x] **4.3 Decide whether `docs/` enters `check_references`'s scope — and price it before deciding.**
+
+      **DONE 2026-08-26 — the NARROW option: `SCAN_DIRS` gains `docs/guidelines`,
+      the shipped root, and nothing else.**
+
+      Priced before choosing, which is what the step demanded. Widening to **all**
+      of `docs/` lands ~300 findings on the next unrelated pull request — the
+      flood that gets a gate waived rather than adopted, and the same argument
+      Phase 0 already accepted for the beta backlog. Widening to the shipped root
+      lands **zero**, because 4.2 repaired all 104 first: the gate arrives green
+      and holds the gain instead of announcing a backlog.
+
+      The excluded class is named in the code, not left implicit — 297 dead links
+      in non-shipped `docs/`, re-measurable any time. The three named single-file
+      contracts in `files[]` are **not** added, because a directory scan cannot
+      express "these three files under a directory that is otherwise excluded",
+      and all three measure zero today.
+
+      **Turning it on found 13 defects the link measurement could not see**,
+      because `check_references` also reads backticked path references: a renamed
+      pack directory, four PHP pattern pages cited one directory too shallow, a
+      rule renamed to `skill-improvement-trigger`, and six prose strings that are
+      not references at all (hypothetical filenames in README-splitting advice, a
+      consumer-side settings path). All repaired; the six carry
+      `<!-- ref-ignore -->`. `check_references` exits 0 with the wider scope.
       Widening the scan is one constant, and it lands 383 internal findings on
       the next PR unless 4.2 ran first. The same flood argument as Phase 0
       applies, and the same three outcomes are legitimate: widen, widen to the
@@ -289,7 +445,20 @@ as D5: a gate exists, and `docs/` is not in its scope.
       verify: `SCAN_DIRS` carries the decision, or `check_references.ts`'s module
       docstring names `docs/` as deliberately out of scope and says why.
 
-- [ ] **4.4 Correct the two stale pointers the contract itself carries.**
+- [x] **4.4 Correct the two stale pointers the contract itself carries.**
+
+      **DONE 2026-08-26 — both resolve, in `docs/contracts/installed-tools-lockfile.md`.**
+      The *Authoritative module* line named `scripts/_lib/installed_tools.py`,
+      a file the TypeScript migration renamed, while its link target already
+      pointed at the `.ts` — so the label and the link disagreed, which is worse
+      than either being wrong alone. Both now read
+      `src/scripts/_lib/installed_tools.ts`.
+
+      The *Active roadmap* line cited P1.1 of `road-to-multi-package-coexistence`;
+      that roadmap is archived, verified in `agents/roadmaps/archive/`. Replaced
+      with the true state — **none** — rather than with a different roadmap,
+      because inventing a current owner for a contract nobody is driving is the
+      same defect in the other direction.
       `installed-tools-lockfile.md` names a `.py` authoritative module that does
       not exist, and cites *"Active roadmap: P1.1 of the
       `road-to-multi-package-coexistence` roadmap"* — that roadmap is archived.
@@ -340,8 +509,41 @@ itself creates.
       **Met, in both directions and on both severities** — recorded at 1.2. `ui-authority.md` (future-dated, deliberately chosen so the probe proves something) → 86→87 and `exit 1` with `[FRESH lapse — not in the frozen baseline]`; restored → 86 and `exit 0`. Four unit-test probes were run besides, each failing only its own target.
 - [x] **AC-5** — two runs at the same `--as-of` over the same tree produce byte-identical output.
       **Met** — two runs at `AC_AS_OF=2026-08-25`: 88 lines, **17,159 bytes**, `diff` clean. Independently reinforced when the wall clock rolled to 2026-08-26 mid-session and the pinned count stayed **86** at both dates.
-- [ ] **AC-6** — the gate runs in a workflow, a deliberately lapsed contract reds its PR, and the gate is registered in `gate-coverage.yml`.
-- [ ] **AC-7** — the gate is green at HEAD, `ui-authority.md` included, or its exception carries a written reason at the contract.
-- [ ] **AC-8** — `write-engine.md` and `no-runtime-boundary.md` are each fixed exactly once across this PR's roadmaps, and no two files change the same frontmatter.
-- [ ] **AC-9** — the `docs/` dead-reference count is measured and split shipped / internal / `.py`-target, the shipped count is driven to 0, and `check_references`'s scope either includes `docs/` or names it as deliberately excluded with the class stated.
-- [ ] **AC-10** — a command prints the current lapsed percentage and whether `STABILITY.md`'s 25 % trigger has fired, and reproduces AC-1's number at HEAD.
+- [x] **AC-6** — the gate runs in a workflow, a deliberately lapsed contract reds its PR, and the gate is registered in `gate-coverage.yml`.
+      **Met on all three.** Step in `.github/workflows/consistency.yml`;
+      `docs/contracts/zz-canary-beta-lapse.md` at `keep-beta-until: 2026-01-01`
+      makes the gate exit 1 as a `[FRESH lapse]` while the 85 inherited ones stay
+      warnings; row in `src/config/gate-coverage.yml` with `min_scanned: 100`,
+      and `check_gate_coverage --canary` reports it caught the planted defect.
+- [x] **AC-7** — the gate is green at HEAD, `ui-authority.md` included, or its exception carries a written reason at the contract.
+      **Met on the first branch, with the reason stated rather than implied.**
+      The gate exits 0 and `ui-authority.md` produces no finding — but no file
+      was edited to achieve that. Its date is unchanged; the CEILING moved,
+      because it is computed as `today + 90` rather than from a last-review date
+      no contract carries. 2.3 records that as a defect in the ceiling's anchor
+      instead of banking it as a fix, which is the only honest way to tick this.
+- [x] **AC-8** — `write-engine.md` and `no-runtime-boundary.md` are each fixed exactly once across this PR's roadmaps, and no two files change the same frontmatter.
+      **Met.** `write-engine.md` was fixed once, by the now-archived
+      `road-to-channel-contract-and-profile-drift`; this branch touches that file
+      zero times and instead removes its stale row from the frozen baseline
+      (86 → 85), which is the ratchet recording a state change rather than a
+      second fix. `no-runtime-boundary.md` is fixed zero times here on purpose —
+      it sits inside the Phase-0 cohort disposition, and hand-fixing it would be
+      exactly the second-roadmap edit this criterion forbids.
+- [x] **AC-9** — the `docs/` dead-reference count is measured and split shipped / internal / `.py`-target, the shipped count is driven to 0, and `check_references`'s scope either includes `docs/` or names it as deliberately excluded with the class stated.
+      **Met on all three.** Measured 544 dead links across 701 files, split
+      **104 shipped / 440 internal / 152 `.py`-target**, reproducible by
+      `./scripts-run src/scripts/measure_docs_dead_links` and written up at
+      `agents/evidence/analysis/docs-dead-links-2026-08-26.md`. Shipped is now
+      **0**. `check_references` carries the decision in `SCAN_DIRS` — widened to
+      `docs/guidelines`, the shipped root, with the 297 excluded internal links
+      named in the code rather than left implicit.
+- [x] **AC-10** — a command prints the current lapsed percentage and whether `STABILITY.md`'s 25 % trigger has fired, and reproduces AC-1's number at HEAD.
+      **Met, with the one-row difference stated.**
+      `check_beta_review_markers --trigger` prints
+      `beta contracts: 121 · lapsed: 85 · 70.2 % · STABILITY.md re-audit trigger
+      (>= 25 %): FIRED`. AC-1's number was 86 / 71.1 %; the missing row is
+      `write-engine.md`, whose deadline the other roadmap's PR extended after
+      that measurement. Same population, one real state change, and the verdict
+      is unchanged in the direction that matters — still nearly three times the
+      trigger.
