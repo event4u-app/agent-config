@@ -101,7 +101,7 @@ is sufficient:
 
 ## Phase 2 — Land it under the kernel-edit process
 
-- [~] **2.1 Land the chosen remedy in its own PR, with the soak window.** No
+- [ ] **2.1 Land the chosen remedy in its own PR, with the soak window.** No
       other change rides along; that is the process, not a preference.
       verify: `./scripts-run src/scripts/check_rule_invariants` exits 0 on the
       merged tree, and the PR carries the >= 24 h soak.
@@ -191,7 +191,7 @@ is sufficient:
 
 ## Acceptance Criteria
 
-- [~] AC-1 — `check_rule_invariants` exits 0 on `main`, and the reason is either
+- [ ] AC-1 — `check_rule_invariants` exits 0 on `main`, and the reason is either
       a restored literal or a § 10 amendment with its record — never a deleted
       invariant entry.
 
@@ -208,6 +208,29 @@ is sufficient:
       pre-write guard already exists and is stronger than the check the step
       proposed, plus the limit that it does not and should not refuse a
       maintainer.
+
+## Deferred-item resolution — 2026-08-26
+
+Iron Law 3 of [`roadmap-progress-sync`](../../src/rules/roadmap-progress-sync.md)
+fired at closure: three of five items closed and two carried `[~]`.
+
+**Resolved by RESTORING both to `[ ]`, which is the preserving disposition and
+therefore council-decidable rather than owner-reserved.** `[~]` means *deferred*
+— planned for later, no longer being worked. Neither item is that: step 2.1's
+remaining half and AC-1 are blocked on one named, decided, owner-executable edit,
+recorded as `clause-1-restore-is-human-only` with the exact two-line change. Open
+work with a live blocker is `[ ]`, and marking it `[~]` said the work was parked
+when it is queued.
+
+The consequence is deliberate: this roadmap does **not** archive. It stays in the
+active estate carrying an open blocker, which is the only shape that puts a
+maintainer action item where the dashboard can see it. Parking it in `later/`
+would hide exactly the thing this file exists to surface, and archiving it would
+claim a completion that did not happen.
+
+Nothing is lost by the glyph change — the evidence that clause 2 landed stays
+written at 2.1, so a reader sees an open step whose first half is done rather
+than an unattempted one.
 
 ## Blockers
 

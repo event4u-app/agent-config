@@ -25,16 +25,16 @@ This is a soft ratchet, not a gate: no feature carries a per-change declaration 
 
 ## Delta vs previous report
 
-Previous report generated: 2026-07-12.
+Previous report generated: 2026-08-26.
 
 | Metric | Previous | Current | Δ |
 |---|---|---|---|
-| Active settings axes | 108 | 136 | +28 |
-| Runtime-state surfaces | 12 | 59 | +47 |
-| Cross-subsystem dependency edges | 83 | 173 | +90 |
-| Always-loaded rule bytes | 30,563 | 29,466 | -1,097 |
-| Gate mentions (total) | 73 | 79 | +6 |
-| Rule→skill coupling (backlinks) | 84 | 109 | +25 |
+| Active settings axes | 136 | 136 | 0 |
+| Runtime-state surfaces | 59 | 59 | 0 |
+| Cross-subsystem dependency edges | 173 | 173 | 0 |
+| Always-loaded rule bytes | 29,466 | 29,466 | 0 |
+| Gate mentions (total) | 79 | 79 | 0 |
+| Rule→skill coupling (backlinks) | 109 | 109 | 0 |
 
 ## Ratchet vs baseline
 
