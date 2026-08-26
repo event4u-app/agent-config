@@ -104,6 +104,38 @@ started.
 - [ ] **Step 5:** Add a forbidden-event array to the case shape alongside the expected-event array, so a skipped gate or a wrong tool call is checkable rather than narrated.
 - [ ] **Step 6:** Add a self-test sibling with an assertion-count floor, per the gate-integrity roadmap's second-order guard.
 - [ ] **Step 7:** Land advisory, classify every hit on the real corpus, then promote to error.
+- [ ] **Step 8:** Drain the `check_trigger_eval_presence` ratchet, which is red
+      today and is red on `origin/main` — **18 violations, in two classes that
+      need different work**, so they are counted separately rather than as one
+      number.
+
+      **Found 2026-08-25** by the `road-to-channel-contract-and-profile-drift`
+      run, which touched `src/skills/brand-asset-generation/SKILL.md` and had
+      the gate fire. Recorded here rather than fixed there: the diff adds **zero**
+      new violations (the failure set is byte-identical on a clean `main`
+      checkout), and an 18-row ratchet cleanup does not belong in a
+      channel-contract change.
+
+      | class | count | the work |
+      |---|---:|---|
+      | in the grandfather allowlist **and** now shipping `evals/triggers.json` | 14 | delete the allowlist entry — the ratchet is shrink-only, so removal is the direction it wants; mechanical |
+      | missing `evals/triggers.json` and **not** grandfathered | 4 | author a real trigger-eval set each: `judge-spec-compliance`, `overbuild-review-lens`, `playbook-authoring`, `ui-apply-generic` |
+
+      The two classes are not one task. The 14 are bookkeeping the gate can
+      verify immediately. The 4 need should-trigger / should-not-trigger
+      fixtures written to `artifact-drafting-protocol` Phase C, and a
+      should-not-trigger list that is only near-misses of the four skills' own
+      surfaces — a set of unrelated prompts would pass while measuring nothing.
+
+      **The gate is Taskfile-only.** `Taskfile.yml:155` runs it under `task ci`;
+      no `.github/workflows/` file references it, so this red does not block a
+      PR today and has been able to accumulate unobserved. Whether it should be
+      wired into CI is part of this step, not assumed by it — wiring an 18-row
+      red into CI before draining it would red every PR in the repository.
+      verify: `./scripts-run src/scripts/check_trigger_eval_presence` exits 0,
+      the allowlist has 14 fewer entries, and each of the four named skills has
+      an `evals/triggers.json` that `check_trigger_evals` accepts as fresh and
+      valid.
 
 ## Phase 2: Score direction, not magnitude
 

@@ -28,16 +28,29 @@ adapters — not a second image-gen stack.
 
 ## When to use
 
-- User asks to generate a banner, social card, header image, or CIP (corporate identity) element.
+- User asks to generate a banner, social card, header image, **platform profile
+  or cover image** (a LinkedIn cover, an X header, a YouTube channel art), or a
+  CIP (corporate identity) element.
 - Branded asset production where palette, typography, or voice must stay consistent.
 - When brand tokens are available and should drive the visual output.
 - When a brief alone (no tokens) still needs a governance-aware image output.
 
 ## Procedure
 
-1. **Identify asset type and spec** — determine format (banner, social card, CIP element),
-   output dimensions (e.g. 1200×630 for Open Graph, 1080×1080 for square social),
-   and target channel (web, print, social platform).
+1. **Identify asset type and spec** — determine format (banner, social card,
+   platform profile/cover image, CIP element), output dimensions (e.g. 1200×630
+   for Open Graph, 1080×1080 for square social), and target channel (web, print,
+   social platform).
+
+   **A platform cover is a dimension constraint, not a new asset class**, and it
+   is the one case where guessing the number is the whole failure: a cover
+   rendered at the wrong aspect ratio is cropped by the platform, so the brand
+   marks land outside the visible area and the asset is unusable rather than
+   merely off-brand. Take the required dimensions from the platform's own
+   current spec at generation time — never from memory, and never from a number
+   written here, because these change without notice. If the spec cannot be
+   established, say so and ask rather than emitting an asset that will be
+   cropped.
 2. **Inject brand tokens when present** — if `pack-brand` is installed, load `.tokens.json`
    (colors, typography, voice). Feed hex values, font names, and tone keywords directly
    into the prompt. Without tokens, derive palette and type from the brief itself;

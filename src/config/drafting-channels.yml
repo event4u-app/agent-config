@@ -1,0 +1,43 @@
+# Drafting channel registry — the `--channel` enum and its per-channel
+# defaults, extracted from docs/contracts/write-engine.md § Per-channel
+# defaults (road-to-channel-contract-and-profile-drift Phase 1.2).
+#
+# WHY THIS IS A SIBLING OF reach-channels.yml AND NOT AN EXTENSION OF IT.
+# One line, as the step requires: a drafting channel is an OUTPUT SHAPE for
+# prose this package writes (how long, how many paragraphs, whether hashtags
+# are allowed), whereas a reach channel is an EXTERNAL RETRIEVAL BACKEND the
+# operator installs and the package never calls — that file's own header says
+# it is "not a routing table, not a recommendation, not an agent-facing
+# surface" and that its Phase-0 benchmark returned `band: stop`, so nothing in
+# it is agent-facing at all. The two share the word "channel" and no field: a
+# drafting channel has no backend, no install string, no health probe and no
+# lifecycle; a reach channel has no length and no cadence. Merging them would
+# produce one schema in which every field is optional for half its rows, which
+# is the "two truths for one word" this roadmap's Risk Register row 2 names.
+#
+# WHAT READS THIS FILE. `docs/contracts/write-engine.md` is the prose contract
+# and stays the human-facing statement of the same values; this file is the
+# machine-checked copy, and
+# `tests/scripts/drafting_channels_schema.test.ts` asserts the two agree, so a
+# future edit to one that is not made to the other fails rather than drifts.
+#
+# THE VALUE IS THE FLAG VALUE. `id` is what a user types after `--channel=`.
+# `linkedin-post` is the value; `linkedin` is not a value and is rejected —
+# see the test case that pins exactly that, because the short form is the
+# plausible typo and silently accepting it would make the enum decorative.
+schema_version: drafting-channels-v1
+channels:
+  - id: tweet
+    length_default: 50
+    cadence: One paragraph, no lists.
+  - id: linkedin-post
+    length_default: 180
+    cadence: >-
+      2–4 short paragraphs. Hashtags only if
+      `style.fingerprint.hashtag_rules` allows.
+  - id: blog
+    length_default: 600
+    cadence: Inherits `style.fingerprint.paragraph_cadence`.
+  - id: freeform
+    length_default: 250
+    cadence: Inherits `style.fingerprint.paragraph_cadence`.
