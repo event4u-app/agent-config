@@ -129,7 +129,40 @@ const PUBLISHED_MD_ROOTS: readonly string[] = [
     'src/config',
 ];
 
-/** Named `.md` / text files `files[]` ships individually. */
+/**
+ * Named `.md` / text files `files[]` ships individually.
+ *
+ * SCOPE DECISION, recorded 2026-08-26 (road-to-published-number-truth 4.2)
+ * because it had been DERIVED from `files[]` rather than chosen, and a derived
+ * scope answers no question when someone asks why a leaking file is not caught.
+ *
+ * **This gate's scope is the npm payload, deliberately — not "every tracked
+ * public file".** It exists to stop an absolute home path reaching a consumer's
+ * disk, so its unit is what the tarball carries.
+ *
+ * **The class it therefore excludes, named rather than left implicit:
+ * tracked-but-unshipped `.md`.** These are public on the forge and readable by
+ * anyone, but never installed. `ONBOARDING.md` is the live instance: it is
+ * tracked, it is not in `files[]`, and on 2026-08-26 it carried 37 occurrences
+ * of one maintainer's absolute home path. Those were rewritten to repo-relative
+ * in the same change (`grep -c '/Users/' ONBOARDING.md` → 0), but that was a
+ * ONE-TIME fix and this gate does not keep it that way.
+ *
+ * **Why not simply widen.** The sibling test at
+ * `tests/scripts/check_bundle_path_leakage.test.ts:313-324` asserts that every
+ * `PUBLISHED_MD_ROOTS` entry is inside `files[]`, with the reason stated in its
+ * own comment: *"a root outside the tarball would scan content no consumer
+ * receives, which is scope creep dressed as rigour."* Adding a non-shipped file
+ * here would contradict that principle while leaving its test green only
+ * because the loop happens to walk ROOTS and not FILES — passing on a
+ * technicality is not the same as being in scope.
+ *
+ * **The residual, stated rather than closed.** Nothing currently prevents a new
+ * absolute path from landing in a tracked-but-unshipped `.md`. Closing it means
+ * a separate scan with its own name and its own scope sentence — a
+ * forge-visibility gate, not a payload gate — and that is a deliberate
+ * non-goal here rather than an oversight.
+ */
 const PUBLISHED_MD_FILES: readonly string[] = [
     'AGENTS.md',
     'CHANGELOG.md',
