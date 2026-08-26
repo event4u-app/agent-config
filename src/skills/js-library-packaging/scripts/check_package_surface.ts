@@ -143,20 +143,54 @@ export const checkPackage = (root: string): SurfaceReport => {
     };
     if (exportsField !== undefined) walkConditions(exportsField, 'exports.');
 
-    // (d) — a `workspace:` range only resolves inside the workspace. Published with no
+    // (d) — a range that only resolves INSIDE the workspace. Published with no
     // `private: true` and no publishConfig, the consumer's install fails on a protocol
     // their registry has never heard of.
-    const allDeps = { ...deps, ...asRecord(manifest['devDependencies']), ...peers };
-    const workspaceRanges = Object.entries(allDeps).filter(([, v]) => typeof v === 'string' && v.startsWith('workspace:'));
+    //
+    // `catalog:` was added 2026-08-26 (road-to-internal-estate-fit 4.1) and it is the
+    // same defect, not an adjacent one: pnpm's catalog protocol resolves against the
+    // workspace's catalog definition and means nothing to a registry. It had been
+    // passing as an ordinary registry range, so the finding did not fire where it
+    // should. One predicate, two prefixes — the finding code and its reason carry over
+    // unchanged, which is why this is not a second finding type.
+    const UNPUBLISHABLE_RANGE_PREFIXES = ['workspace:', 'catalog:'] as const;
+    // Each dependency map is scanned SEPARATELY rather than spread into one
+    // object. The previous `{ ...deps, ...devDeps, ...peers }` merge let a later
+    // map SHADOW an earlier one for the same package name: a `workspace:` range
+    // in `dependencies` for a package that also appears in `peerDependencies`
+    // with a registry range was invisible, because the peer value won the spread.
+    // Found 2026-08-26 by a `catalog:` fixture for a name the test manifest also
+    // lists as a peer; fixed with 4.1 rather than noted, because it is the same
+    // predicate and the same few lines.
+    const workspaceRanges: [string, unknown][] = [
+        deps,
+        asRecord(manifest['devDependencies']),
+        peers,
+    ].flatMap((m) =>
+        Object.entries(m).filter(
+            ([, v]) =>
+                typeof v === 'string' &&
+                UNPUBLISHABLE_RANGE_PREFIXES.some((pre) => v.startsWith(pre)),
+        ),
+    );
     if (
         workspaceRanges.length > 0 &&
         manifest['private'] !== true &&
         manifest['publishConfig'] === undefined
     ) {
+        const prefixes = [
+            ...new Set(
+                workspaceRanges.map(
+                    ([, v]) =>
+                        UNPUBLISHABLE_RANGE_PREFIXES.find((pre) => (v as string).startsWith(pre)) ??
+                        '',
+                ),
+            ),
+        ].sort();
         findings.push({
             code: 'workspace-range-publishable',
             severity: 'warn',
-            message: `${String(workspaceRanges.length)} \`workspace:\` range(s) in a package that is neither private nor carrying publishConfig — the protocol does not resolve outside the workspace`,
+            message: `${String(workspaceRanges.length)} workspace-local range(s) (${prefixes.join(', ')}) in a package that is neither private nor carrying publishConfig — the protocol does not resolve outside the workspace`,
         });
     }
 
