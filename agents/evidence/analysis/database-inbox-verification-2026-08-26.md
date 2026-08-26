@@ -28,7 +28,7 @@ D15, D16, D18 and D21 each assert what a specific MySQL, MariaDB or PostgreSQL
 version does. No network was used and this tree carries no engine
 documentation. They are recorded as questions, not facts, and
 `road-to-database-relational-modeling` carries
-`blocker: engine-facts-need-a-source` so no artefact states one without a
+`blocker: engine-facts-need-a-source` so no artifact states one without a
 pinned citation or a measurement.
 
 **Zero-hit rigour.** Three negative claims needed a second pass because the

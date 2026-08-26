@@ -310,7 +310,7 @@ order.
       Every claim marked pending in Phases 1–3 either becomes a measured fact
       with its fixture, or a pinned upstream citation, or stays a question. A
       fact with neither does not ship.
-      verify: `grep -rn "pending Phase 5" ` across the artefacts this campaign
+      verify: `grep -rn "pending Phase 5" ` across the artifacts this campaign
       added returns nothing, and each formerly pending claim cites a measurement
       or a source.
 
@@ -392,7 +392,7 @@ order.
 - [ ] AC-6 — Every rule at gate tier has a pre-registered spike with a recorded result; every rule without one ships as advice, recorded as such.
 - [ ] AC-7 — The defect-seeding benchmark ran once with a pre-registered threshold, its result is on the claims surface, and the anti-expert class carries at least four cases each naming the folklore answer it must not give.
 - [ ] AC-8 — The live-engine stage reports three distinguishable outcomes, reports `not-run` with the runtime absent, never gates, and its abort thresholds cite an observed distribution.
-- [ ] AC-9 — `grep -rn "pending Phase 5"` across the artefacts this campaign added returns nothing, and every engine-specific claim cites a measurement or a pinned upstream source.
+- [ ] AC-9 — `grep -rn "pending Phase 5"` across the artifacts this campaign added returns nothing, and every engine-specific claim cites a measurement or a pinned upstream source.
 
 ## Notes
 

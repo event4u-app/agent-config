@@ -25,7 +25,7 @@ because grep finds one.
 
 Three of the four inbox proposals contain a phase for exactly this work —
 "ERD-Artefakt + `schema_to_mermaid`", "Mermaid ERD", "ERD as a generated
-artefact from one canonical source". All three would have written it from
+artifact from one canonical source". All three would have written it from
 nothing. The branch `feat/schema-erd-diff` already carries **5456 insertions
 across 33 files**: `src/skills/schema-erd/SKILL.md` with `evals/triggers.json`,
 `src/scripts/schema_erd/ir.ts` (SchemaIR v1 with validator and byte-stable
@@ -97,7 +97,7 @@ allowance the modeling sibling is arguing about — recorded as
 | Build a canonical schema model the ERD and the DDL share | `schema_erd/ir.ts`, SchemaIR v1 with validator and canonicaliser, 402 lines | **CUT** — already built |
 | Read the schema from migrations / Prisma / DDL | four adapters, 33 files, 134 tests | **CUT** — already built |
 | Diff two schema states with change status | `diff.ts` 498 lines + `rename_scan.ts` 209 lines, with the normalisation-class invariant enforced | **CUT** — already built, and richer than any proposal asked for |
-| ERD as a skill vs. an artefact | the branch ships it as a skill (`src/skills/schema-erd/`), `install.default: false`, `trust.level: experimental` | **KEEP as a decision** — three proposals argued ERD must be an artefact and never a skill; the branch already decided the other way. Phase 1 records which position lands, it does not silently inherit one. |
+| ERD as a skill vs. an artifact | the branch ships it as a skill (`src/skills/schema-erd/`), `install.default: false`, `trust.level: experimental` | **KEEP as a decision** — three proposals argued ERD must be an artifact and never a skill; the branch already decided the other way. Phase 1 records which position lands, it does not silently inherit one. |
 | DBML export alongside Mermaid | not on the branch | **FOLD** into `-relational-modeling` — optional by every proposal's own verdict, and out of scope for landing |
 | Land the branch | `merge-tree` reports 8 conflicts, all in generated surfaces, none in `src/` or `tests/` | **KEEP** — this roadmap |
 | Make the roadmap-archive sweep re-depth relative links it moves | `check_references.ts` records 530 dead links across 147 archived roadmaps from exactly this cause | **CUT** — a real defect, unrelated to this branch, and its own change |
@@ -120,9 +120,9 @@ allowance the modeling sibling is arguing about — recorded as
       and the conflicted path list contain no path under `src/scripts/schema_erd/`,
       `src/skills/schema-erd/` or `tests/`.
 
-- [ ] **1.3 Decide skill-versus-artefact explicitly, and write the reason down.**
+- [ ] **1.3 Decide skill-versus-artifact explicitly, and write the reason down.**
       The branch ships ERD as a skill; three inbox proposals argued it must be a
-      generated artefact with no skill of its own, because the DB family already
+      generated artifact with no skill of its own, because the DB family already
       has a routing problem. The branch's own framing — `install.default: false`,
       `trust.level: experimental`, and a description that triggers on "show me
       the schema" — is a third position: an opt-in skill rather than a
@@ -143,7 +143,7 @@ allowance the modeling sibling is arguing about — recorded as
 
 - [ ] **2.1 Rebase the branch onto current `main` before regenerating anything.**
       The merge base is `release/14.6.0`. Regenerating derived output from a
-      stale branch deletes artefacts that landed on `main` in between — the
+      stale branch deletes artifacts that landed on `main` in between — the
       generators write the whole tree from what the branch can see.
       verify: `git merge-base origin/main <rebased-ref>` equals
       `git rev-parse origin/main`, and this is confirmed **before** any
@@ -256,10 +256,10 @@ allowance the modeling sibling is arguing about — recorded as
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Stale validation — green CI at `release/14.6.0` is read as green CI today | implementation | The branch's own roadmap is archived as fully closed, which is exactly the artefact most likely to be trusted instead of re-run. Every gate added in the interval is unproven against this code: schema legality, estate limits, packaging projection, generator invariants, Node version, adapter contracts. | Phase 2 refuses the branch's own evidence: 2.4 requires a fresh full run on the rebased ref, and 1.4 diffs the public shapes against current contracts before the rebase begins. | Phase 2 — Rebase and revalidate against today's gates |
+| 1 | Stale validation — green CI at `release/14.6.0` is read as green CI today | implementation | The branch's own roadmap is archived as fully closed, which is exactly the artifact most likely to be trusted instead of re-run. Every gate added in the interval is unproven against this code: schema legality, estate limits, packaging projection, generator invariants, Node version, adapter contracts. | Phase 2 refuses the branch's own evidence: 2.4 requires a fresh full run on the rebased ref, and 1.4 diffs the public shapes against current contracts before the rebase begins. | Phase 2 — Rebase and revalidate against today's gates |
 | 2 | Regenerating from the stale branch deletes work that landed since | implementation | The generators write the whole derived tree from what the branch can see. Running them before the rebase removes every skill, page and manifest entry added to `main` after `release/14.6.0`, and the diff looks like a legitimate regeneration. | 2.1 is ordered before 2.3 and its verify is an equality check on the merge base, not an impression. 2.3 fixes the generator order as well, because the reverse order reds projection integrity and invites a second wrong fix. | Phase 2 — Rebase and revalidate against today's gates |
 | 3 | The blanket conflict policy silently drops hand-authored content | implementation | Six conflicts are documentation pages. "Take main's side, they are generated" is true of the skill counts and unverified for the prose around them. | 2.2 requires the owning generator to be named per file, and resolves by inspection where none is found. The step cannot be satisfied by asserting the class. | Phase 2 — Rebase and revalidate against today's gates |
-| 4 | The 134 tests pass without exercising anything | implementation | A suite whose fixtures moved or whose assertions became vacuous is a false green, and it is the single artefact this roadmap most relies on to justify landing rather than rebuilding. | 2.5 requires two sabotage probes with the failing test names recorded. A suite never seen red has unknown sensitivity. | Phase 2 — Rebase and revalidate against today's gates |
+| 4 | The 134 tests pass without exercising anything | implementation | A suite whose fixtures moved or whose assertions became vacuous is a false green, and it is the single artifact this roadmap most relies on to justify landing rather than rebuilding. | 2.5 requires two sabotage probes with the failing test names recorded. A suite never seen red has unknown sensitivity. | Phase 2 — Rebase and revalidate against today's gates |
 | 5 | Landing consumes an allowance the modeling sibling also needs | product | Both roadmaps add a skill against an allowance of zero. If each assumes the exemption independently, the second one to land fails the gate after its work is done. | `blocker: erd-skill-consumes-the-zero-allowance` forces the total accounting before either merges, and names option (c) so the cheap-but-worse path is visible rather than discovered. | Phase 2 — Rebase and revalidate against today's gates |
 | 6 | The same capability is proposed again next month | product | It was proposed three times in one inbox drop by sources that could not see the branch. Landing it fixes the grep; nothing yet fixes the class of finished-but-unlanded work. | Phase 3 writes the mechanism down as evidence and either registers a probe or records why one would be worse than none. | Phase 3 — Close the loop that let this sit for six days |
 
@@ -275,5 +275,5 @@ allowance the modeling sibling is arguing about — recorded as
 
 ## Notes
 
-The skill-versus-artefact decision from 1.3 and the probe-or-not reason from 3.2
+The skill-versus-artifact decision from 1.3 and the probe-or-not reason from 3.2
 belong here once taken.

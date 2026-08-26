@@ -22,7 +22,7 @@ An agent asked to design or extend a relational schema in this package has a
 procedure that starts from invariants rather than from UI fields, states
 cardinalities explicitly, interrogates access patterns before choosing indexes,
 and chooses referential actions and enum representations as decisions with named
-costs. One artefact owns each of those concepts and says so in a place a
+costs. One artifact owns each of those concepts and says so in a place a
 consumer install can read. When this is finished, the modeling question is
 answerable from the shipped surface without reading a guideline that was never
 written.
@@ -244,7 +244,7 @@ corpus follows the ownership decision, not the other way round.
 
 ## Phase 3 — The modeling procedure
 
-- [ ] **3.1 Author the procedure in the artefact Phase 1 selected.**
+- [ ] **3.1 Author the procedure in the artifact Phase 1 selected.**
       Ordered, and the order is the content: invariants first (what must always
       hold — uniqueness, lifecycle, ownership), then entity candidates, then a
       cardinality interrogation (1-1, 1-n, n-n, optional versus mandatory,
@@ -261,7 +261,7 @@ corpus follows the ownership decision, not the other way round.
       singular, `project_user`. Reference it and add only what it lacks: when a
       junction table earns its own primary key and additional attributes, and
       when it stays a pure link.
-      verify: the modeling artefact links to that guideline row, and
+      verify: the modeling artifact links to that guideline row, and
       `grep -c "project_user" ` across the new text is 0 — the convention is
       cited, not copied.
 
@@ -385,7 +385,7 @@ corpus follows the ownership decision, not the other way round.
 - **Owner:** maintainer
 - **Blocks:** step 1.4's "new skill" branch, and therefore Phase 3's location.
   Phases 1.1–1.3, 2, 4, 5 and 6 run regardless; Phase 3 can be authored against
-  whichever artefact 1.4 selects.
+  whichever artifact 1.4 selects.
 - **What to do:** two gates fire on a new skill and neither is discretionary.
   `check_estate_count` carries `skill_count` allowance **0**, annotated "no
   allowance, deliberately", so a new skill needs a growth exemption in the same
@@ -438,10 +438,10 @@ corpus follows the ownership decision, not the other way round.
   PostgreSQL version does, and neither the tree nor an offline pass can settle
   them. Every such fact this campaign wants either cites a pinned upstream
   document or is measured by the non-gating live-engine stage in
-  `-evolution-tactics`. Until one of those exists, the artefacts state the
+  `-evolution-tactics`. Until one of those exists, the artifacts state the
   question and the detection step, never the answer. Decide which of the two
   routes each needed fact takes.
-- **Resolved when:** `grep -rn "pending Phase 5"` across the artefacts this campaign added returns nothing, and each formerly pending claim cites a pinned source or a measurement.
+- **Resolved when:** `grep -rn "pending Phase 5"` across the artifacts this campaign added returns nothing, and each formerly pending claim cites a pinned source or a measurement.
 - **Recommendation:** route each needed fact to the Phase 5 live-engine measurement in `-evolution-tactics`, and use a pinned upstream citation only where a measurement is impractical.
 - **If you do nothing:** the campaign replaces verified-wrong advice with unverified advice, which is the same defect class `-advice-correction` exists to remove, one layer deeper and harder to spot.
 
@@ -455,20 +455,20 @@ corpus follows the ownership decision, not the other way round.
 | 3 | The generated map becomes a second control plane anyway | implementation | A generated file is easy to hand-edit once, and the edit survives until the next regeneration — at which point the ownership statement silently reverts or the generator is bypassed. | 2.4's verify is byte-identity against a fresh generator run, so a hand edit fails the step rather than persisting. 2.3 keeps the metadata authoritative, so the map has no independent content to drift. | Phase 2 — Routing authority, and a map generated from it |
 | 4 | Engine-specific facts are asserted and are wrong | product | The proposals carry confident version claims — CHECK enforcement thresholds, `INVISIBLE` versus `IGNORED`, metadata-only DDL cases. Five such halves were recorded unverifiable, and a wrong engine fact in shipped guidance is the same defect class the `-advice-correction` sibling exists to remove. | `blocker: engine-facts-need-a-source` requires a pinned upstream citation or a live-engine measurement for each. Steps 3.3, 3.4, 4.1 and 4.2 explicitly defer their engine halves rather than filling them in. | Phase 3 — The modeling procedure |
 | 5 | The corpus becomes a place where advice hides from review | product | 6.1 and 6.2 add prose rows to a retrieval corpus. Rows are not read the way a skill body is read, so a wrong row survives longer — and 6.2's rows are specifically corrections of folklore, which is exactly the content most likely to be stated too absolutely. | Every added row carries a verification probe (6.1) and the misconception rows are retrieval-tested against the folklore phrasing (6.2). The rows correcting engine behaviour fall under blocker 3 like any other engine claim. | Phase 6 — One corpus, typed |
-| 6 | The census routing lands and nothing uses it | implementation | 5.1 adds a routing line to two skills. A routing line is not a step, and `blast-radius-analyzer` is currently referenced by zero DB skills precisely because a pointer is easy to ignore. | 5.1's verify requires the reference in both skills and forbids restating the checklist; 5.3's per-consumer question set makes the census produce an artefact the migration plan needs, so skipping it is visible downstream. | Phase 5 — The consumer census, wired rather than rebuilt |
+| 6 | The census routing lands and nothing uses it | implementation | 5.1 adds a routing line to two skills. A routing line is not a step, and `blast-radius-analyzer` is currently referenced by zero DB skills precisely because a pointer is easy to ignore. | 5.1's verify requires the reference in both skills and forbids restating the checklist; 5.3's per-consumer question set makes the census produce an artifact the migration plan needs, so skipping it is visible downstream. | Phase 5 — The consumer census, wired rather than rebuilt |
 | 7 | Phase 2.2 lowers a coverage ratchet instead of raising it | implementation | Deleting four grandfather lines and adding four eval files moves `check_routing_coverage` against a committed seed. A branch that regenerates the seed rather than clearing the gate honestly turns a ratchet into a rubber stamp. | 2.2's verify names `check_trigger_eval_presence` and the corpus linter as the gates, and states that the grandfather list may only shrink. The seed moves because coverage rose, and the four eval files are the evidence. | Phase 2 — Routing authority, and a map generated from it |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — A 34-row overlap table for `family: backend-data` exists with a per-row verdict and a stated maximum overlap figure, and the ownership verdict in Notes cites that figure.
-- [ ] AC-2 — One artefact owns relational modeling, states it in its own scope metadata, and no other DB-family skill claims the same concept.
-- [ ] AC-3 — `grep -n "designing schemas" src/skills/database/SKILL.md` returns nothing, and the concept is claimed by the artefact from AC-2.
+- [ ] AC-2 — One artifact owns relational modeling, states it in its own scope metadata, and no other DB-family skill claims the same concept.
+- [ ] AC-3 — `grep -n "designing schemas" src/skills/database/SKILL.md` returns nothing, and the concept is claimed by the artifact from AC-2.
 - [ ] AC-4 — `database`, `sql-writing`, `laravel-migration` and `migration-architect` each carry `evals/triggers.json` passing the corpus floor, and none of the four appears in `src/scripts/trigger_eval_grandfather.json`.
 - [ ] AC-5 — The modeling procedure answers the junction fixture with a junction table carrying its extra attribute, the no-new-index fixture with no new index and four filled fields, and the invoice-cascade fixture with a rejection and a semantic reason.
 - [ ] AC-6 — `./scripts-run src/scripts/validate_frontmatter` exits 0 and `grep -rn "min_version:" src/skills/` returns nothing.
 - [ ] AC-7 — `query-tuning.csv` carries both design-decision and misconception rows, distinguished by a declared column, with `check_corpus_staleness` green; no second CSV was added.
 - [ ] AC-8 — `migration-architect` and `schema-review` both route to `blast-radius-analyzer`, and neither restates its checklist.
-- [ ] AC-9 — No artefact this roadmap adds states a version-specific engine behaviour without either a pinned upstream citation or a live-engine measurement.
+- [ ] AC-9 — No artifact this roadmap adds states a version-specific engine behaviour without either a pinned upstream citation or a live-engine measurement.
 - [ ] AC-10 — Either a projected context is shown to reach the model before skill selection on a named host, or the fallback is recorded and no routing claim is made for the map.
 
 ## Notes
