@@ -42,13 +42,13 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 293 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 294 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **64 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 61 of those 64 are listed below.** The manifest is
+# **65 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 62 of those 65 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~21 % of the population.
 #
@@ -1817,3 +1817,26 @@ gates:
         recorded in `src/config/canonical-terms.yml` decided against. The gate
         must red on it, because a ratchet that cannot see a NEW occurrence is a
         ratchet that only records history.
+  - id: lint_host_portability
+    argv: []
+    min_scanned: 600
+    corpus: "every .md under src/skills, src/agent-src, src/domains and src/subagents — 717 today. The floor sits at 600 because the artefact estate only grows by ordinary work and a reading below it means a scan root moved, not that 117 artefacts were deleted."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-host-portability/SKILL.md
+      content: |
+        ---
+        name: zz-canary-host-portability
+        description: Canary planted by check_gate_coverage --canary; never ships.
+        execution:
+          type: assisted
+          handler: internal
+          allowed_tools: ["FileWriterTool"]
+        ---
+
+        # Canary
+
+        The grant above names a tool no host in this tree is known to honour. A
+        loader IGNORES an unrecognised key, so this artefact reads as restricted
+        and is not — which is the whole defect class the gate exists to refuse.

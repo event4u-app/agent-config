@@ -124,6 +124,12 @@ tasks:
       # benchmarked and falsified (recursive-verification, TERMINAL 2026-07-28).
       - ./scripts-run src/scripts/lint_never_silent
       - ./scripts-run src/scripts/check_host_loadability --root .
+      # Per-host projection REACH — does each generated host tree carry anything,
+      # and when it does not, is the tool absent or the projection dead? The shape
+      # check above reports those two as the same green. LOCAL-only by declaration:
+      # a CI runner has no host tool installed, so every row would skip and the gate
+      # would scan nothing (road-to-skill-ecosystem-runtime-enforcement Phase 3.2).
+      - ./scripts-run src/scripts/check_host_loadability --reach --root .
       - ./scripts-run src/scripts/check_bundle_path_leakage
       - ./scripts-run src/scripts/check_installer_import_purity
       - ./scripts-run src/scripts/check_backstop_debt
@@ -1289,6 +1295,11 @@ tasks:
     silent: true
     desc: Hold the house dialect recorded in src/config/canonical-terms.yml — ratchet over authored prose under src/ and docs/ (road-to-canonical-terms Phase 2)
     cmd: ./scripts-run src/scripts/lint_canonical_terms {{.QUIET_FLAG}}
+
+  lint-host-portability:
+    silent: true
+    desc: A tool grant no host is known to honour, and a subagent_type that resolves to nothing — both are IGNORED at load, so the artefact reads restricted and is not (road-to-skill-ecosystem-runtime-enforcement Phase 3)
+    cmd: ./scripts-run src/scripts/lint_host_portability {{.QUIET_FLAG}}
 
   lint-discovery-vocab:
     silent: true

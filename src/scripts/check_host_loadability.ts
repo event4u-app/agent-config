@@ -16,6 +16,8 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { GateLedger } from './_lib/gate_ledger.js';
+import { HOST_SURFACES, measureReach } from './_lib/host_projection_reach.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /** @returns how many skill directories were examined. */
@@ -84,11 +86,53 @@ export function run(root: string): string[] {
     return errors;
 }
 
+/**
+ * `--reach`: per-host projection reach, with a NAMED reason for every host that
+ * carries nothing (road-to-skill-ecosystem-runtime-enforcement Phase 3 Step 1).
+ *
+ * The shape checks above answer "is what exists well-formed". This answers "does
+ * anything exist, and if not, is the tool absent or the projection dead" — two
+ * findings the shape checks report as the same green, because a checker that
+ * returns early on a missing tree cannot distinguish them.
+ *
+ * A dead projection for a PRESENT tool fails. An absent tool is a ledger SKIP
+ * with its detection signals named, never a silent zero.
+ */
+export function runReach(root: string): { failures: string[]; scanned: number } {
+    const ledger = new GateLedger('check_host_loadability:reach');
+    ledger.plan(HOST_SURFACES.map((s) => s.id));
+    const failures: string[] = [];
+    for (const r of measureReach(root)) {
+        if (r.status === 'ok') {
+            ledger.complete(r.id);
+            continue;
+        }
+        if (r.status === 'skipped-tool-absent') {
+            ledger.skip(r.id, 'optional_surface_absent');
+            continue;
+        }
+        ledger.fail(r.id, r.reason);
+        failures.push(`${r.id}: ${r.reason}`);
+    }
+    ledger.report();
+    return { failures, scanned: HOST_SURFACES.length };
+}
+
 const isMain = process.argv[1] !== undefined
     && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (isMain) {
     const rootIdx = process.argv.indexOf('--root');
     const root = rootIdx !== -1 ? process.argv[rootIdx + 1] ?? '.' : '.';
+    if (process.argv.includes('--reach')) {
+        const { failures, scanned } = runReach(root);
+        process.stdout.write(`scanned: ${String(scanned)}\n`);
+        if (failures.length > 0) {
+            for (const f of failures) process.stderr.write(`❌  ${f}\n`);
+            process.exit(1);
+        }
+        process.stdout.write(`✅  host projection reach: ${String(scanned)} host surface(s) accounted for\n`);
+        process.exit(0);
+    }
     let errors: string[];
     try {
         errors = run(root);

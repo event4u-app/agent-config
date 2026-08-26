@@ -248,6 +248,13 @@ jobs:
         # its recorded baseline. Report-only for existing debt, blocking for new.
         run: ./scripts-run src/scripts/lint_canonical_terms
 
+      - name: Host portability — grants and subagent types that resolve to nothing
+        # road-to-skill-ecosystem-runtime-enforcement Phase 3 Steps 4-5. Both
+        # defects are SILENT: a loader ignores an unrecognised grant key, so the
+        # artefact reads restricted and inherits everything; a dispatch to an
+        # undefined subagent type fails on the turn that needed it.
+        run: ./scripts-run src/scripts/lint_host_portability
+
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
 
