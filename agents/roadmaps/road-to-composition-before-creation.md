@@ -10,7 +10,10 @@ relates: []
 # 783 roadmap file(s) across active/later/stubs/archive, 348 remote branch(es),
 # 3 live session record(s), 0 inbox file name(s). No sibling roadmap on the
 # topic, no remote branch carrying the slug, and no open-PR file overlap for
-# this roadmap. Context fingerprint 1fad1aa7901bc34b, base 0be1cf6b7.
+# this roadmap. The "context fingerprint" is the probe's own digest of the
+# inputs it read, printed by `agent-config roadmap:context`; a later run whose
+# fingerprint differs has seen a changed estate and the relates block should be
+# re-probed. Fingerprint 1fad1aa7901bc34b, base 0be1cf6b7.
 estate_offset_exempt: "No disposal is available in this change — the dashboard reports 6/205 steps done across the seven active roadmaps, so nothing is near archival, and parking this would grow the later_roadmaps floor instead of the active one. No sibling owns the subject: grepping every active and parked roadmap for `incumbent`, `composition gate`, `overlap gate` and `declared delta` returns one file, `later/road-to-catalogue-host-fit.md:280`, where the word is incidental prose about record dating, not an authoring gate."
 ---
 # Road to composition before creation — the estate grew to 299 skills and nothing ever asked "what does this extend?"
@@ -62,6 +65,17 @@ source will otherwise re-propose all six.
 | One automatic routing hop | already-decided, more strongly | a second retrieval router was REJECTED by council 2026-07-07; `later/road-to-deferred-rule-retriever.md` holds it behind three named re-open conditions |
 | Eight-state finding lifecycle | corrected — extend, do not add | `check_finding_dispositions.ts` already ships a committed ledger with `fixed \| false_positive \| accepted_risk` plus rationale and `verified_by`. A parallel eight-state vocabulary is the duplicate-terminology failure the source's own third-pass challenge names |
 
+**The rows do not share one kind of authority, and the table should not read as
+if they do** — added 2026-08-27 per gate finding `75d4bd8c5efc` (low): only one
+row cites an ADR, which invites the reading that the others are weaker. They are
+not weaker, they are different: rows 1, 2 and 6 cite a **shipped script**, which
+is the strongest form here because it can be run; row 3 cites an **active
+roadmap**; row 4 cites a parked roadmap **plus** ADR-202; row 5 cites a **council
+REJECT of 2026-07-07** whose record lives in the archived flow-learnings and
+whose re-open conditions are carried in `later/road-to-deferred-rule-retriever.md:12`
+— a council decision, not an ADR, and citing an ADR number it does not have
+would be the fabrication this table exists to avoid.
+
 ## Corrected from reproduction — two collisions in the source's own text
 
 - **The field name `requires:` is taken.** The source's relationship block lists
@@ -89,11 +103,20 @@ source will otherwise re-propose all six.
       low, it is a new field. Write which, and why, before Phase 2 starts.
       verify: the sentence names the measured count out of twenty, not an
       impression.
-- [ ] **1.3 Kill criterion.** If 15 or more of the 20 already carry a searchable
-      record, Phases 2 to 4 are cancelled and this roadmap closes with the
-      measurement as its deliverable.
-      verify: the criterion is evaluated in writing against 1.1's table, with the
-      cancel or continue stated.
+- [ ] **1.3 Kill criterion, with its own detector validated first.** If 15 or
+      more of the 20 already carry a searchable record, Phases 2 to 4 are
+      cancelled and this roadmap closes with the measurement as its deliverable.
+      **The criterion may not be evaluated until 1.1's detection has been checked
+      in both directions** — added 2026-08-27 per gate finding `e76ae09bb9f2`
+      (medium): a criterion whose instrument is unvalidated can cancel real work
+      on a miss, or authorise unnecessary work on a false hit, and neither is
+      visible from the count alone.
+      verify: before the count is read, one artefact known to carry a record and
+      one known to carry none are run through the same detection and come back
+      positive and negative respectively. Then the criterion is evaluated in
+      writing against 1.1's table, with the cancel or continue stated **and the
+      two-direction check cited**. A count from an instrument never seen fail is
+      not a count.
 
 ## Phase 2 — One disposition vocabulary, reconciled
 
