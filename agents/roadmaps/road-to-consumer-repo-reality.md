@@ -32,6 +32,15 @@ purely in-house convention is just as expressible as a universal one.
    The anchor is cited in the phase. "We saw it in our repositories" is a
    discovery, not an anchor.
 
+**Frequency inside the sample is not an input to either test, and not an
+input to ordering.** How many of the three trees showed a shape says something
+about one organisation's toolchain and nothing about the shape's reach, so the
+counts recorded in the phases below are provenance — where the shape was seen —
+never an argument for its priority or its admission. Phases are ordered by what
+their anchor implies about blast radius on an arbitrary consumer: a silent
+mis-read that makes every later routing decision wrong outranks one that
+degrades a single skill's output.
+
 A step whose anchor is a single organisation's practice is marked
 **anchor-pending** and does not get built until a second, independent,
 external instance is recorded next to it. One such step is marked below rather
@@ -56,8 +65,12 @@ and a manifest pin diverging from an installed artefact is the ordinary
 manifest-versus-lockfile drift every package ecosystem has. Neither depends on
 who the consumer is.
 
-The sharpest finding, because it is silent and it was present in two of the
-three trees. A root instruction file listed an agent layer — rules, skills,
+This phase is first because of what its anchor implies, not because of what
+the sample showed: a dangling pointer is read as a working one, so **every**
+routing decision downstream of it is made against a layer that is not there,
+and nothing surfaces the fault. That is the widest blast radius on the list.
+The counts below are provenance only. A root instruction file listed an agent
+layer — rules, skills,
 guidelines — under a path that **did not exist in the tree**. In one repository
 the entire layer was absent while the file still described it; in another the
 layer existed but two of its four advertised directories did not. An agent
@@ -112,13 +125,15 @@ public, before any code.
       zero matches, and the count is reported so a future addition is visible.
 - [ ] **1.5 Carry the discipline on the agent side, not only in a command.**
       A path named by an instruction file is a claim, not a fact — probe before
-      routing on it, and say which source answered. The obligation belongs next
-      to [`missing-skill-recovery`](../../src/rules/missing-skill-recovery.md),
-      which already covers the mirror case of a **catalogue that under-reports**;
-      this is an **instruction file that over-reports**, and the two are one
-      discipline stated from opposite sides.
-      verify: that rule (or its named successor) states the over-reporting
-      direction explicitly and is reachable from the diagnostic's own output.
+      routing on it, and say which source answered. [`missing-skill-recovery`](../../src/rules/missing-skill-recovery.md)
+      covers the mirror case — a **catalogue that under-reports** — and **does
+      not cover this one**. An instruction file that **over-reports** is the
+      opposite direction and is currently carried by nothing. Whether that rule
+      is extended or a sibling is added is a placement decision to be made and
+      recorded the same way 1.1 makes its own, not asserted here.
+      verify: the placement is recorded with its reasoning; whichever artefact
+      carries it states the over-reporting direction explicitly, and is
+      reachable from the diagnostic's own output.
 
 ## Phase 2 — Configuration resolution follows the chain
 
@@ -153,9 +168,12 @@ while the standards sit one hop away.
       **Invention** is writing a version string that no source in the repository
       produced. **Lookup failure** is having searched the declared version
       sources — catalogue, workspace protocol, existing manifests, lockfile —
-      and found none. The two get opposite handling: invention is forbidden;
-      lookup failure is reported as unresolved, and the version comes from the
-      user or from the registry with that provenance stated. Silence is neither.
+      and found none. The two get opposite handling, and **only the first is
+      forbidden**: on lookup failure, resolving the version from the registry or
+      from the user is the correct move, not a violation — it is reported as
+      unresolved-then-resolved with the source named. What the rule forbids is
+      producing a version with no source and no report. Silence is the failure,
+      never the fallback.
       verify: the supply-chain intake step names the version-source lookup as a
       precondition and distinguishes the two outcomes; a fixture manifest using
       a catalogue protocol is not rewritten to a literal, and a fixture with no
@@ -218,9 +236,14 @@ tests say.
       idioms.** Per path: which conventions hold there, what the neighbouring
       files actually do, and whether a modern idiom is an improvement or a
       foreign body. The verdict is per path, never per repository.
+      A **mixed** verdict is not a refusal to decide: it
+      carries which convention governs which region of the file, and which of
+      the two an edit at a given point must follow. A verdict that says only
+      "mixed" leaves the caller exactly where it started.
       verify: run it against a fixture with both halves; every path gets a
-      verdict, and a file mixing both is reported as mixed rather than assigned
-      to one side.
+      verdict, a file mixing both is reported as mixed rather than assigned to
+      one side, and the mixed verdict names the governing convention per region
+      rather than for the file as a whole.
 - [ ] **4.2 Add the server-composed bootstrap payload to the render-security
       surface, with a named enforcement mechanism.** A payload assembled
       server-side and serialised into the page for a client island is a
@@ -228,9 +251,13 @@ tests say.
       load the page. Enforcement is the existing pattern for this class — a
       checklist entry in the render-security skill (advisory, model-carried) plus
       a diff-scoped grep gate over the framework-named payload channels that
-      fires when a field is **added** to such a payload. State plainly which half
-      is deterministic and which is not; a checklist entry alone is not
-      enforcement and must not be described as one.
+      fires when a field is **added** to such a payload. The gate
+      ships **advisory, non-blocking**: a grep over framework-named channels
+      cannot tell a privileged field from a public one, so blocking on it would
+      buy false reds at the cost of the checklist being ignored. State plainly
+      that the deterministic half only flags a site for review and that the
+      judgement is model-carried; a checklist entry alone is not enforcement and
+      must not be described as one.
       verify: the checklist names the pattern and the per-field question; the
       gate is registered in the gate coverage registry with its scanned count,
       and a fixture adding a privileged field to a payload channel is flagged
