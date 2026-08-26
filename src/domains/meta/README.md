@@ -90,7 +90,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`optimize-prompt`** — Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt.
 - **`optimize-rtk`** — Create or optimize project-local rtk filters based on the actual toolchain
 - **`optimize-skills`** — Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
-- **`orchestrate`** — Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
+- **`orchestrate`** — Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / subagents per the orchestration-dsl-v1 contract
 - **`override`** — Override orchestrator — routes to create, manage
 - **`override-create`** — Creates a project-level override for a shared skill, rule, or command.
 - **`override-manage`** — Reviews, updates, and refactors existing project-level overrides.

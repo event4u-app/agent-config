@@ -213,7 +213,12 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/lapsed-beta-baseline.json',
         listKey: 'contracts',
         tier: 'string_list',
-        newInThisChange: true,
+        // `newInThisChange` removed 2026-08-26: the baseline resolves at the base
+        // ref, so the bootstrap window this flag exists for has closed. Same
+        // self-closing contract as the sibling entry below — the gate reported
+        // the stale flag rather than leaving it to silently accept a future
+        // mistyped path as a fresh baseline forever.
+
         what:
             'beta contracts already lapsed at 2026-08-25, which WARN instead of ' +
             'failing check_beta_review_markers — every lapse outside this list is ' +

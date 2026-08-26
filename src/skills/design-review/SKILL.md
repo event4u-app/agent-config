@@ -221,7 +221,7 @@ fields change what a finding *means*:
   all. Under `preserve` a palette or type-family delta is a **defect**; under
   `redesign` it is the point.
 - **`reference_maturity`** decides whether a difference from the reference is a
-  defect. A `wireframe` declares structure, so reproducing its grey boxes is
+  defect. A `wireframe` declares structure, so reproducing its gray boxes is
   over-fidelity, not fidelity.
 
 ```

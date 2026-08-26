@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Evaluator output contract
 
 > The machine-readable verdict a mechanical verifier emits so an optimization

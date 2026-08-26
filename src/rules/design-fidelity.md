@@ -98,7 +98,7 @@ MANDATE, NEVER A **PIXEL** MANDATE — WHATEVER `design.fidelity_mode` SAYS.
 REPRODUCING A WIREFRAME'S GREYS 1:1 HONOURS THE WRONG HALF OF THE ARTEFACT.
 ```
 
-`strict` means *do not redesign*; never *reproduce a wireframe's placeholder greys*, which
+`strict` means *do not redesign*; never *reproduce a wireframe's placeholder grays*, which
 are **non-decisions** ([`wireframe`](../skills/wireframe/SKILL.md) § Gotchas).
 **The discriminator reads the ARTEFACT, never the prose.** A finished comp whose prose
 mentions a wireframe it replaces routes **strictly** — a reference to a previous artefact,

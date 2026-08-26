@@ -1,0 +1,32 @@
+{
+    "skill": "overbuild-review-lens",
+    "last_eval": "2026-08-26",
+    "description": "3 positives (1 de) + 3 near-misses. This lens hunts for DELETION — code that should not exist, a dependency the platform already covers, a clever form where a flat one reads better. The near-misses are the three reviews that hunt for additions instead: missing tests, a security gap, and a performance fix.",
+    "queries": [
+        {
+            "q": "is any of this over-engineered? what could we just delete",
+            "trigger": true
+        },
+        {
+            "q": "we pulled in a library for something the stdlib already does — check the diff for that pattern",
+            "trigger": true
+        },
+        {
+            "q": "schau, ob die Abstraktion hier ueberhaupt noetig ist oder nur Ballast",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "which branches of this function are untested?",
+            "trigger": false
+        },
+        {
+            "q": "does this endpoint check tenant ownership before returning the row?",
+            "trigger": false
+        },
+        {
+            "q": "this loop is slow — make it faster",
+            "trigger": false
+        }
+    ]
+}

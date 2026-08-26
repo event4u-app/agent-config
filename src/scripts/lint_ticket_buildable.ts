@@ -609,6 +609,22 @@ function _cycle(graph: Map<string, string[]>): string[] | null {
 // iterdir / glob helpers (pathlib-faithful sort)
 // ---------------------------------------------------------------------------
 
+/**
+ * Directories under `agents/tickets/` that are NOT ticket bundles.
+ *
+ * `archive` was the original member and was tested inline. `symptoms` joins it
+ * because it is a different artefact class that happens to live under the same
+ * root: one markdown file per operator symptom report, plus a README and a
+ * template, established so a production symptom had somewhere in the tree to
+ * land. It has no tickets, no dependency graph and no Definition-of-Ready, so
+ * every check below is meaningless there — and demanding a `manifest.yml` from
+ * it is the gate asserting a contract that directory never claimed.
+ *
+ * A named set rather than a second `||`: the next non-bundle directory should
+ * cost one line here instead of another inline special case.
+ */
+const NON_BUNDLE_DIRS: ReadonlySet<string> = new Set(['archive', 'symptoms']);
+
 /** sorted(TICKETS_ROOT.iterdir()) — all entries (files + dirs), name-sorted. */
 function _iterdirSorted(root: string): string[] {
     let names: string[];
@@ -707,7 +723,7 @@ function lint(): number {
     const bundle_ids = new Set<string>();
 
     for (const bundle of _iterdirSorted(TICKETS_ROOT)) {
-        if (!_isDir(bundle) || path.basename(bundle) === 'archive') {
+        if (!_isDir(bundle) || NON_BUNDLE_DIRS.has(path.basename(bundle))) {
             continue;
         }
 

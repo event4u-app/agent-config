@@ -1,0 +1,32 @@
+{
+    "skill": "playbook-authoring",
+    "last_eval": "2026-08-26",
+    "description": "3 positives (1 de) + 3 near-misses. This skill DERIVES a repo-local playbook from real generators and config. The near-misses are the three neighbours: following a playbook that already exists, writing a generic skill, and running the generator itself — none of which is authoring a playbook.",
+    "queries": [
+        {
+            "q": "this repo has its own turbo generators — write a playbook so the agent uses them instead of the generic skill",
+            "trigger": true
+        },
+        {
+            "q": "capture how components actually get added here, derived from the config rather than from memory",
+            "trigger": true
+        },
+        {
+            "q": "leite aus unseren echten Generatoren ein Playbook fuer neue Pakete ab",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "follow the component playbook and add a Button",
+            "trigger": false
+        },
+        {
+            "q": "write a skill for adding React components",
+            "trigger": false
+        },
+        {
+            "q": "run turbo gen component",
+            "trigger": false
+        }
+    ]
+}

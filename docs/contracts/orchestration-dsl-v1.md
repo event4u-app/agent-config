@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Orchestration DSL v1
 
 **Purpose.** Pin the YAML schema that the `/orchestrate` command
-reads to chain personas / skills / sub-agents into reproducible
+reads to chain personas / skills / subagents into reproducible
 pipelines. A pipeline file is a deterministic, reviewable artifact
 that re-runs the same step sequence with the same inputs.
 

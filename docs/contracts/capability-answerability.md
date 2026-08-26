@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-11-24
+---
+
 # Capability answerability — carry it, or name the check
 
 An agent repeatedly has to decide whether a capability is available. Two

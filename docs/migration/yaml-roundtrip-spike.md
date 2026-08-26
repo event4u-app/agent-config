@@ -84,7 +84,7 @@ Differential test (`tests/spikes/yaml_rt_spike.test.ts`, 31 tests, green):
 Representative real files — `Taskfile.yml`, `taskfiles/engine.yml`,
 `src/config/agent-settings.template.yml`, `.github/workflows/consistency.yml`
 — parsed with PyYAML `safe_load` and with npm `yaml` (`YAML.parse`),
-canonicalised to sorted compact JSON on both sides: **semantically equal**
+canonicalized to sorted compact JSON on both sides: **semantically equal**
 (5 tests, green).
 
 Two load-bearing findings for the production port:
@@ -94,7 +94,7 @@ Two load-bearing findings for the production port:
    defaults to YAML 1.2 (those stay strings). Every PyYAML replacement
    must pass `{ version: '1.1' }` to keep semantics identical. Without
    the pin, the workflow fixture fails.
-2. Non-string keys (boolean `true` from `on:`) must be canonicalised the
+2. Non-string keys (boolean `true` from `on:`) must be canonicalized the
    same way on both sides when comparing (Python dict key `True` ↔ JS
    object key `"true"`); with that, equality holds.
 

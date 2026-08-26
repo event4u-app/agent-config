@@ -132,7 +132,7 @@ Verify the doc works for someone without your context.
 * **One question per turn** (Iron Law from `ask-when-uncertain`) — never bundle clarifying + brainstorm + curate prompts in one message.
 * **Never reprint the full doc** during iteration — always use `str-replace-editor`. Reprinting wastes tokens and creates merge drift.
 * **Reader test is not optional** — without it, you ship the version that makes sense to you, not to readers. Skip only on explicit user override.
-* **Sub-agent absence** — `ai-council` may not be configured. Have the manual fresh-Claude fallback ready (Stage 3 step 2).
+* **Subagent absence** — `ai-council` may not be configured. Have the manual fresh-Claude fallback ready (Stage 3 step 2).
 * **Image alt-text** — if the doc embeds images, add alt-text inline; without it, fresh-reader tools can't see them.
 * **Language discipline** — keep the doc body in English (per `language-and-tone`). For verbatim German user phrases or interview quotes, use `DE: … · EN: …` anchor blocks.
 

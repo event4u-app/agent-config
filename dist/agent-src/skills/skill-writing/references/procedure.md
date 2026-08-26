@@ -258,7 +258,7 @@ rubric:
 ```
 
 `contains` / `file_exists` grade deterministically. `rubric` items grade
-via a fresh sub-agent reading the output against the criterion — keep
+via a fresh subagent reading the output against the criterion — keep
 each criterion to one falsifiable sentence.
 
 **Loop** (orchestrated by `scripts/run_skill_evals.ts`):
@@ -266,14 +266,14 @@ each criterion to one falsifiable sentence.
 1. **Scaffold** — `./scripts-run src/scripts/run_skill_evals scaffold {skill}`
    creates `runs/{timestamp}-{baseline,with-skill}/` and seeds each
    scenario's `meta.json`.
-2. **Baseline run** — spawn one sub-agent per scenario **without** the
+2. **Baseline run** — spawn one subagent per scenario **without** the
    skill loaded. Capture stdout + any artifacts into
    `runs/{timestamp}-baseline/{scenario-id}/`.
-3. **With-skill run** — same scenarios, same sub-agent harness, **with**
+3. **With-skill run** — same scenarios, same subagent harness, **with**
    the skill loaded. Capture into `runs/{timestamp}-with-skill/{scenario-id}/`.
 4. **Grade** — for each scenario, write a `grade.json` file with
    per-assertion pass/fail. Deterministic assertions auto-grade;
-   rubric assertions need a grader sub-agent.
+   rubric assertions need a grader subagent.
 5. **Aggregate** — `./scripts-run src/scripts/run_skill_evals aggregate {skill}
    --run {timestamp}` produces `runs/{timestamp}-benchmark.json` with
    pass-rate, timing, token deltas baseline-vs-with-skill.
@@ -281,7 +281,7 @@ each criterion to one falsifiable sentence.
    --run {timestamp}` prints the diff. Iterate on the skill body
    until `with-skill` outperforms `baseline` on every scenario.
 
-The script ships with sub-agent spawning **stubbed** — the orchestration
+The script ships with subagent spawning **stubbed** — the orchestration
 layer is per-environment (Claude Code, Augment, council). Implement
 the spawn function once for your environment, the rest of the loop
 (aggregate / report / scaffold) works out of the box.

@@ -42,15 +42,37 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
 # ----------------------------------------------------------
-# 292 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 293 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **64 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 61 of those 64 are listed below.** The manifest is
-# therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~21 % of the population.
+# **62 rows are listed below**, covering ~21 % of the population.
+#
+# RECOUNTED on 2026-08-26 in a MERGE, which is the case the 2026-08-24 block
+# below predicted in writing and is why both commands were re-run rather than
+# reconciled by hand. Two branches each added one row and each recorded its own
+# population line, so the merge produced the two conflicting figures 292 and 293
+# side by side — arithmetic-on-prose arriving through a merge exactly as that
+# block warned. Recomputed on the merged tree: `count_gate_scripts()` returns
+# **293** and `grep -c '^  - id:'` returns **62**. Neither side was wrong on its
+# own tree; 292 was measured before `lint_canonical_terms` existed.
+#
+# NOT re-measured here, and named rather than carried forward silently: the
+# "64 of them emit `scanned:` under their CI-identical argv" figure the previous
+# revision asserted. That number cannot be derived by grep — `reportScanned`
+# appears in 98 files and the literal in 267 — because it counts gates that
+# actually EMIT the line when run, which only a full ledger pass establishes.
+# The claim is therefore dropped rather than incremented past a merge that
+# added two emitters; `check_gate_coverage --ledger` recomputes it.
+#
+# RECOUNTED on 2026-08-26 while adding `lint_canonical_terms`
+# (road-to-canonical-terms 2.3). Recomputed, not adjusted — the two commands in
+# the 2026-08-24 block below were re-run on this tree and returned 293 and 61.
+# The population moved by TWO while one row was added, which is why the prose was
+# not incremented by hand: a second gate script had arrived since the last count
+# without a manifest row, and hand-arithmetic would have recorded 292 and been
+# wrong in a way nobody could see.
 #
 # `description_route_check` is counted in the POPULATION and deliberately NOT
 # listed: it is diff-scoped, so its natural reading on most trees is zero cases,
@@ -1755,37 +1777,20 @@ gates:
     min_scanned: 20
     corpus: "rows in `agents/evidence/ac-capability-scorecard.yaml` — one per rubric category recoverable from the tracked tree (23 at baseline, 2026-08-24)"
     status: enforced
-    canary:
-      class: contract-violation
-      path: agents/evidence/ac-capability-scorecard-zz-canary.yaml
-      content: |
-        # zz canary probe: a scorecard awarding `ten` with an empty required
-        # evidence class, which is the one thing this gate exists to refuse.
-        # Create-only, so it is expressible as a canary — unlike the MODIFICATION
-        # shapes (a redeclared `state: complete`, a count edited to match an
-        # added row) that most of this file's ratchets detect.
-        schema_version: 1
-        rubric:
-          state: incomplete
-          authority: unavailable-external-review
-          reported_category_count: 32
-          recovered_category_count: 1
-          missing_category_count: 31
-          manifest_version: baseline_v1
-          recovery_source: agents/roadmaps/road-to-ten-across-the-board.md
-          excluded_from_manifest: []
-        categories:
-          - category: release-integrity
-            baseline: 9.2
-            claim: "canary"
-            closing_path: "canary"
-            mechanism_evidence: ["src/scripts/check_score_contract.ts"]
-            adoption_evidence: ["src/scripts/check_score_contract.ts"]
-            negative_control_evidence: []
-            production_window: src/scripts/check_score_contract.ts
-            outcome_evidence: ["src/scripts/check_score_contract.ts"]
-            non_regression_evidence: ["src/scripts/check_score_contract.ts"]
-            status: ten
+    no_canary_reason: >-
+      Create-only canary cannot reach this corpus. Measured 2026-08-26: the row
+      declared one, and `check_gate_coverage --canary` reported the gate DEAD —
+      it stayed green over the plant. The gate is not dead; the recipe was
+      unreachable. `check_score_contract` reads ONE file (`DEFAULT_REL`, or
+      `--file`), so a newly created `ac-capability-scorecard-zz-canary.yaml`
+      sits outside the corpus by construction and the gate correctly ignores it.
+      Same class as `check_no_automerge_key` and `check_condensation`: the only
+      violation this gate can have is a MODIFICATION of the one tracked
+      scorecard, which a create-only canary cannot express. Discrimination is
+      proven instead by the gate's own `--self-test` (8 cases, 6 of them
+      pointing at the committed twins under `tests/fixtures/score-contract/twins/`)
+      and by `tests/scripts/check_score_contract.test.ts`, which asserts each
+      twin reds on exactly one finding CODE rather than merely on a non-zero exit.
     note: >
       The floor is 20 against a live corpus of 23, and the gap is deliberately
       narrow because this corpus does not grow by ordinary work: a row is added
@@ -1825,3 +1830,24 @@ gates:
         in the past, so this is a FRESH lapse rather than one inside the frozen
         2026-08-25 baseline — the distinction is the whole point of the gate,
         because an inherited lapse warns and a new one must fail.
+  - id: lint_canonical_terms
+    argv: []
+    min_scanned: 1200
+    corpus: "every markdown file under src/ and docs/, tracked and untracked. 1,577 exist in the shipped tree; the floor sits at 1,200 so a legitimate documentation prune cannot red it while a scan-root collapse still can. Untracked files are IN the corpus deliberately — the canary below is create-only by contract, so a tracked-only listing would leave the gate green on its own canary."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-canonical-terms/SKILL.md
+      content: |
+        ---
+        name: zz-canary-canonical-terms
+        description: Canary planted by check_gate_coverage --canary; never ships.
+        ---
+
+        # Canary
+
+        This sentence describes the observed behaviour of an artefact, in prose,
+        outside any fence — two non-canonical spellings the house dialect
+        recorded in `src/config/canonical-terms.yml` decided against. The gate
+        must red on it, because a ratchet that cannot see a NEW occurrence is a
+        ratchet that only records history.
