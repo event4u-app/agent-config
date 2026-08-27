@@ -15,17 +15,17 @@
 # THE CONTRACT (three rules, each from a real failure)
 # ----------------------------------------------------
 # 1. MACHINE-READABLE COUNT. Every listed gate emits exactly one line
-#    `scanned: <N>` (stdout or stderr), N = artefacts it actually inspected. The
+#    `scanned: <N>` (stdout or stderr), N = artifacts it actually inspected. The
 #    guard never parses a gate's human output — that would make the guard itself
 #    fragile, and a fragile guard is the thing being replaced.
 #
 # 2. CI-IDENTICAL INVOCATION. `argv` MUST match how CI/Taskfile calls the gate.
 #    A bare probe produced a false alarm during the sweep: `skill_linter` looked
 #    blind when called with no arguments, but CI passes `--all` and it scans 429
-#    artefacts. The guard must reproduce the real call or it invents defects.
+#    artifacts. The guard must reproduce the real call or it invents defects.
 #
 # 3. BASELINE, NOT `> 0`. `min_scanned` is a floor, not a zero-check. A gate that
-#    drops from 428 artefacts to 3 is as broken as one that drops to 0, and `> 0`
+#    drops from 428 artifacts to 3 is as broken as one that drops to 0, and `> 0`
 #    cannot see it. Set the floor below the true corpus (room for legitimate
 #    deletions) but far above a collapse.
 #
@@ -352,7 +352,7 @@
 # in-place edit would need byte-exact restoration of a tracked file, and a canary
 # that can corrupt the tree violates the never-ships rule it inherits. The
 # consequence is a real gap — a gate whose only possible violation is a
-# modification of an existing tracked artefact (`check_condensation`, whose
+# modification of an existing tracked artifact (`check_condensation`, whose
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
@@ -458,7 +458,7 @@ gates:
       per-class red observation lives in the gate's own `--self-test` (9 cases,
       6 rejecting), which proves every class discriminates over a synthetic
       payload with no pack run. Two of the four cannot be planted through the
-      register at all: `compiled-test-artefact` is excluded from the payload by
+      register at all: `compiled-test-artifact` is excluded from the payload by
       the `files[]` negations that fixed it, so a plant never ships and never
       reds, and `source-map` needs 121 files in a BUILT tree.
 
@@ -513,7 +513,7 @@ gates:
     corpus: "the npm pack payload (2,686 in an unbuilt worktree on 2026-08-22), read to classify each .npmignore pattern against what actually shipped"
     status: enforced
     no_canary_reason: >-
-      the violation is a MODIFICATION, not a creation: this gate reds when package.json `files[]` or `.npmignore` changes and the committed artefact does not, and the canary contract is create-only. A planted FILE cannot move either surface — the closest it gets is changing the payload-derived shadowed set, which is informational and deliberately excluded from the drift verdict, so a plant would leave the gate green and be reported as dead. Discrimination is proven by the gate's own `--self-test` (8 cases, 5 rejecting) over the pattern matcher, and end to end by hand: editing `files[]` alone exits 1, regenerating exits 0, editing `.npmignore` alone exits 1, restoring exits 0.
+      the violation is a MODIFICATION, not a creation: this gate reds when package.json `files[]` or `.npmignore` changes and the committed artifact does not, and the canary contract is create-only. A planted FILE cannot move either surface — the closest it gets is changing the payload-derived shadowed set, which is informational and deliberately excluded from the drift verdict, so a plant would leave the gate green and be reported as dead. Discrimination is proven by the gate's own `--self-test` (8 cases, 5 rejecting) over the pattern matcher, and end to end by hand: editing `files[]` alone exits 1, regenerating exits 0, editing `.npmignore` alone exits 1, restoring exits 0.
 
   - id: check_pack_passport_reconciliation
     argv: []
@@ -873,7 +873,7 @@ gates:
   - id: check_no_roadmap_refs
     argv: []
     min_scanned: 700
-    corpus: "stable artefacts across src/{rules,skills,agent-src/*} + docs/ + agents/settings/contexts (872 at baseline)"
+    corpus: "stable artifacts across src/{rules,skills,agent-src/*} + docs/ + agents/settings/contexts (872 at baseline)"
     status: enforced
     canary:
       class: stale-reference
@@ -881,7 +881,7 @@ gates:
       content: |
         ---
         type: auto
-        description: "Planted canary rule linking a stable artefact into the transient roadmap tree."
+        description: "Planted canary rule linking a stable artifact into the transient roadmap tree."
         ---
 
         See [the plan](../../agents/roadmaps/road-to-nowhere.md) — the exact
@@ -889,7 +889,7 @@ gates:
     note: >
       Retargeted 2026-07-29 from the ADR-051-emptied tree. It had been enforcing the
       no-roadmap-references rule for docs/ only while the rule + skill layer went
-      unscanned — 0 -> 872 artefacts. No violation had slipped through (verified),
+      unscanned — 0 -> 872 artifacts. No violation had slipped through (verified),
       so this closed a latent gap, not a live breach.
 
   - id: check_context_paths
@@ -973,7 +973,7 @@ gates:
       silent-green found in the same sweep — the per-pack lint matrix, whose path was
       a double ADR-051 casualty and which exited 0 on an empty match across 17 CI
       shards — is NOT listed here because it was deleted rather than repaired
-      (skill_linter --all already covers all 429 artefacts in 0.5s).
+      (skill_linter --all already covers all 429 artifacts in 0.5s).
 
 
   # ── Registered 2026-08-02 (road-to-renewal-foundation Phase 1) ───────────
@@ -1017,7 +1017,7 @@ gates:
     corpus: "src/rules + src/skills + src/agent-src/commands + docs/guidelines .md (533 at baseline)"
     status: enforced
     no_canary_reason: >-
-      thresholds are computed across the whole corpus; a single planted artefact has no population to exceed.
+      thresholds are computed across the whole corpus; a single planted artifact has no population to exceed.
     note: >
       A collapse below the floor would mean the gate stopped reading the tree
       that states extraction thresholds, so a bare or diverging threshold
@@ -1154,14 +1154,14 @@ gates:
   - id: check_completion_review
     argv: ["--advisory", "--base", "origin/main"]
     min_scanned: 1
-    corpus: "findings artefacts under agents/evidence/reviews/ + the current-diff evaluation (1 at baseline — the evaluation itself; artefact count grows with gated PRs)"
+    corpus: "findings artifacts under agents/evidence/reviews/ + the current-diff evaluation (1 at baseline — the evaluation itself; artifact count grows with gated PRs)"
     status: enforced
     no_canary_reason: >-
       git-dependent: it evaluates the current diff against a base ref.
     note: >
       Gate R2 (docs/contracts/plan-review-gates.md § 2). HONEST LIMIT, stated
       because a floor that cannot fail is exactly the false green this file
-      exists to prevent: scanned = artefacts inspected + 1 for the diff
+      exists to prevent: scanned = artifacts inspected + 1 for the diff
       evaluation, so on any run that REACHES the count `min_scanned: 1` cannot
       trip. It is not unreachable in principle — a moved reviews root exits
       before the inventory and reports `scanned: 0`, which the guard does read —
@@ -1193,7 +1193,7 @@ gates:
       deleted, so a drop to 7 means the reviews root moved or the naming
       convention drifted — not that the work went clean. That is precisely the
       case rule 3 exists for. The gate reads the FROZEN records because R2
-      selects only artefacts in the CURRENT review scope, so a superseded round
+      selects only artifacts in the CURRENT review scope, so a superseded round
       renamed out of the `*.findings.md` glob is read by nothing at all — two
       findings sat recorded as `open` in this repo's own corpus for a day
       through exactly that gap.
@@ -1236,15 +1236,15 @@ gates:
       collision gate across four roots at once; one planted name collides with nothing.
     note: >
       Counts NAMES, not files — the scan-scope census counts files under the same
-      roots, so the two artefacts legitimately report different numbers here.
+      roots, so the two artifacts legitimately report different numbers here.
 
   - id: lint_artefact_frontmatter
     argv: ["--quiet"]
     min_scanned: 540
-    corpus: "artefacts carrying frontmatter across the discovery roots (619 at baseline)"
+    corpus: "artifacts carrying frontmatter across the discovery roots (619 at baseline)"
     status: enforced
     no_canary_reason: >-
-      a planted artefact is judged, but the gate reports adoption across the discovery roots, so the number rather than a red is the output.
+      a planted artifact is judged, but the gate reports adoption across the discovery roots, so the number rather than a red is the output.
 
   - id: audit_skill_overlap
     argv: ["--quiet", "--print-table", "--strict"]
@@ -1462,7 +1462,7 @@ gates:
     note: >
       The plant needs a slug that already carries a `prompt_hash` but no committed
       package — a brand-new `zz-canary` slug is skipped, not caught, because an
-      artefact without a package is deliberately out of scope. `zcs-closure` is a
+      artifact without a package is deliberately out of scope. `zcs-closure` is a
       closed round, so it will not gain a real package and the plant cannot
       collide with one. The two planted failures the roadmap asked for (a one-byte
       prompt edit, a pre-loaded verdict) are pinned in
@@ -1521,7 +1521,7 @@ gates:
       That case is the gate's own subject, so it is pinned by a test fixture
       too (`a table that parses to zero rows reds rather than exiting green`).
       No `canary:` recipe: this gate's only violation shape is a MODIFICATION of
-      a tracked artefact (`docs/MIGRATION.md`), and the canary contract is
+      a tracked artifact (`docs/MIGRATION.md`), and the canary contract is
       create-only, so it reports UNPROVEN rather than green. Discrimination is
       proven instead by paired fixtures in
       `tests/scripts/lint_scheduled_deprecations.test.ts`, verified by mutation:
@@ -1652,7 +1652,7 @@ gates:
   #     cmd_settings_check), forcing them into the ledger contract and reddening
   #     the completeness ratchet for work nobody asked for;
   #   - renaming the script to `check_adr_citations.ts` is the convention-conform
-  #     answer and touches 26 files, including archived review artefacts and a
+  #     answer and touches 26 files, including archived review artifacts and a
   #     committed diff.patch that must not be rewritten;
   #   - manifest-driven classification is explicitly rejected by
   #     gate_population.ts's own header (a new gate lands before anyone
@@ -1675,7 +1675,7 @@ gates:
       the gate correctly stays green. Measured on a previous attempt, where the
       gate was then mis-reported as dead. Same class as `check_condensation` and
       `check_ci_local_parity` — the only possible violation is a modification of
-      an existing tracked artefact. The red is proven instead by the committed
+      an existing tracked artifact. The red is proven instead by the committed
       violating fixture `tests/fixtures/automerge-key/` plus two recorded
       sabotage probes in `tests/scripts/check_no_automerge_key.test.ts`.
     note: >
@@ -1684,7 +1684,7 @@ gates:
       lands OUTSIDE the corpus and the gate correctly stays green — measured on a
       previous attempt at this gate, where it was then mis-reported as dead. The
       only violation this gate can have is a modification of an existing tracked
-      artefact, which is the same class as `check_condensation` and
+      artifact, which is the same class as `check_condensation` and
       `check_ci_local_parity`, and the CANARY section above already states that
       such a gate carries no recipe and is reported UNPROVEN rather than green.
 
@@ -1876,7 +1876,7 @@ gates:
 
         # Canary
 
-        This sentence describes the observed behaviour of an artefact, in prose,
+        This sentence describes the observed behaviour of an artifact, in prose,
         outside any fence — two non-canonical spellings the house dialect
         recorded in `src/config/canonical-terms.yml` decided against. The gate
         must red on it, because a ratchet that cannot see a NEW occurrence is a
@@ -1884,7 +1884,7 @@ gates:
   - id: lint_host_portability
     argv: []
     min_scanned: 600
-    corpus: "every .md under src/skills, src/agent-src, src/domains and src/subagents — 717 today. The floor sits at 600 because the artefact estate only grows by ordinary work and a reading below it means a scan root moved, not that 117 artefacts were deleted."
+    corpus: "every .md under src/skills, src/agent-src, src/domains and src/subagents — 717 today. The floor sits at 600 because the artifact estate only grows by ordinary work and a reading below it means a scan root moved, not that 117 artifacts were deleted."
     status: enforced
     canary:
       class: contract-violation
@@ -1902,14 +1902,14 @@ gates:
         # Canary
 
         The grant above names a tool no host in this tree is known to honour. A
-        loader IGNORES an unrecognised key, so this artefact reads as restricted
+        loader IGNORES an unrecognised key, so this artifact reads as restricted
         and is not — which is the whole defect class the gate exists to refuse.
   - id: check_host_loadability
     argv: ["--reach", "--root", "."]
     min_scanned: 6
     corpus: "the six host surfaces in HOST_SURFACES (claude-code, cursor, cline, windsurf, gemini-cli, copilot). The floor is the full set rather than a fraction: the surface list is a committed constant, so a reading below 6 means a row was dropped from the constant, never that a projection is legitimately smaller. An ABSENT host tool is a ledger SKIP with its detection signal named, not a missing row."
     status: enforced
-    no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artefact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
+    no_canary_reason: "Create-only canary cannot reach this corpus, and the reason is structural rather than incidental. The corpus is a committed CONSTANT (HOST_SURFACES in _lib/host_projection_reach.ts), so a planted FILE lands in no row: the six rows exist whatever the filesystem holds. The violation this gate can have is an installed host tool whose projection directory is EMPTY \u2014 a state a create-only plant is the opposite of. Discrimination is proven instead by the measurement itself, which reports 6/6 present and projecting with per-host artifact counts (claude-code 13, cursor 228, cline 14, windsurf 215, gemini-cli 1, copilot 1); a dead projection reads as `empty-projection` and a missing tool as `skipped-tool-absent`, and those two verdicts being DIFFERENT is the whole point of the mode."
     argv_note: "The `--reach` argv, not the default. The default mode checks that two projections PARSE and emits no coverage line; reach accounts for every host surface and is the mode that carries a corpus. Registered on the argv that emits, per this manifest\u0027s own CI-identical-argv rule \u2014 and note that `--reach` is declared LOCAL-ONLY in ci-local-parity.yml, because a CI runner has no host tool installed and every row would resolve `skipped-tool-absent`, which is the empty-scope false green this manifest exists to refuse."
   - id: lint_eval_specs
     argv: []
@@ -1986,7 +1986,7 @@ gates:
       candidate resolves to nothing, or whose `none`/`none_found` pair
       disagrees, exits 1 — a record pointing at a non-existent incumbent reads
       as evidence of a search that cannot have happened. The PRESENCE half is
-      advisory and exits 0: an artefact added without a record is reported by
+      advisory and exits 0: an artifact added without a record is reported by
       path and never blocks. Flipping that to a block needs a false-positive
       rate from at least one release of advisory operation, which the roadmap
       records as not yet measured and does not pre-authorise.

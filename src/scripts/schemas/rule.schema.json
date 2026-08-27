@@ -158,7 +158,7 @@
         "type": "string",
         "enum": ["developer", "reviewer", "tester", "po", "incident", "planner"]
       },
-      "description": "Subagent role-mode scoping axis (road-to-lean-agent-init Phase 4), parallel to `workspaces`/`packs`. Closed vocabulary — the six RoleMode ids from src/scripts/_lib/subagent_spawn.ts. Absent/empty = untagged, fails safe (ships to every role). Kernel rules (type: always) always ship regardless of this field. Enforced via this schema's `enum` (not a src/config/discovery/*.yml + lint_artefact_frontmatter.ts cross-check like workspaces/packs) because lint_artefact_frontmatter.ts still scans the retired legacy rules tree (0 artefacts post-ADR-051 src/ migration) and is a no-op for src/rules/*.md today; validate_frontmatter.ts (the active src/rules linter) enforces this enum instead."
+      "description": "Subagent role-mode scoping axis (road-to-lean-agent-init Phase 4), parallel to `workspaces`/`packs`. Closed vocabulary — the six RoleMode ids from src/scripts/_lib/subagent_spawn.ts. Absent/empty = untagged, fails safe (ships to every role). Kernel rules (type: always) always ship regardless of this field. Enforced via this schema's `enum` (not a src/config/discovery/*.yml + lint_artefact_frontmatter.ts cross-check like workspaces/packs) because lint_artefact_frontmatter.ts still scans the retired legacy rules tree (0 artifacts post-ADR-051 src/ migration) and is a no-op for src/rules/*.md today; validate_frontmatter.ts (the active src/rules linter) enforces this enum instead."
     },
     "lifecycle": {
       "type": "string",
@@ -195,15 +195,15 @@
     "composition_review": {
       "type": "array",
       "minItems": 1,
-      "description": "The authoring-search record (road-to-composition-before-creation Phase 3): which incumbents were searched before this artefact was created, and the declared delta for each. Optional on existing artefacts by design \u2014 nothing is backfilled. Distinct from `collision_ok`, which is keyed by trigger VALUE and fires only on a trigger collision; this is keyed by INCUMBENT and is written at authoring time whether or not any trigger is shared.",
+      "description": "The authoring-search record (road-to-composition-before-creation Phase 3): which incumbents were searched before this artifact was created, and the declared delta for each. Optional on existing artifacts by design \u2014 nothing is backfilled. Distinct from `collision_ok`, which is keyed by trigger VALUE and fires only on a trigger collision; this is keyed by INCUMBENT and is written at authoring time whether or not any trigger is shared.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["candidate", "disposition", "rationale"],
         "properties": {
           "candidate": {"type": "string", "minLength": 1, "description": "The incumbent searched, as `skill:<name>` / `rule:<name>` / `command:<name>` / `guideline:<path>`. The literal `none` records a search that found no credible incumbent \u2014 the value that must exist so an author is never pushed to invent one to satisfy the schema."},
-          "disposition": {"type": "string", "enum": ["extend_incumbent", "compose_with_incumbent", "create_separate", "none_found"], "description": "What happened to this candidate. `create_separate` is the value no other disposition vocabulary in this tree can express: an incumbent exists, was evaluated, and a separate artefact was authored anyway."},
-          "rationale": {"type": "string", "minLength": 16, "description": "One sentence naming the delta \u2014 what this artefact does that the candidate does not, or why the candidate could not absorb it. A lint checks that this is non-empty and that `candidate` resolves; it cannot check that the search was diligent, and does not pretend to."}
+          "disposition": {"type": "string", "enum": ["extend_incumbent", "compose_with_incumbent", "create_separate", "none_found"], "description": "What happened to this candidate. `create_separate` is the value no other disposition vocabulary in this tree can express: an incumbent exists, was evaluated, and a separate artifact was authored anyway."},
+          "rationale": {"type": "string", "minLength": 16, "description": "One sentence naming the delta \u2014 what this artifact does that the candidate does not, or why the candidate could not absorb it. A lint checks that this is non-empty and that `candidate` resolves; it cannot check that the search was diligent, and does not pretend to."}
         }
       }
     },

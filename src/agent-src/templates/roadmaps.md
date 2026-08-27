@@ -229,7 +229,7 @@ that was never a judgement call.
     gap-table ritual. When it fires:
     - **(a) Gap-table before drafting.** Audit each proposed item against
       the existing skill / command / rule surface and keep only verified
-      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artefact) /
+      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artifact) /
       `CUT` (already covered). The plan integrates, it does not dump.
     - **(b) `## Provenance` block** — source named by a **neutral
       descriptor** (never the raw competitor / tool name, per

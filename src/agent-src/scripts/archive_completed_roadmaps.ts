@@ -144,7 +144,7 @@ function _branch_touched_paths(root: string, base: string): Set<string> | null {
  *   the payload. Rewriting them detaches the patch from the commit it records
  *   AND makes `git apply` target a path the diff never created.
  *
- * Measured 2026-08-11: archiving one roadmap rewrote four frozen artefacts
+ * Measured 2026-08-11: archiving one roadmap rewrote four frozen artifacts
  * under `agents/evidence/reviews/`, including the `diff.patch` headers of a
  * recorded review input. Nothing caught it — the sweep reported it as
  * "4 ref(s) migrated", which reads like success.

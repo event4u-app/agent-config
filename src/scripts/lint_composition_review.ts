@@ -19,13 +19,13 @@
  * ## What this gate does, and the split that matters
  *
  * **HARD (exit 1) — a `composition_review` that is present and malformed.** A
- * `candidate` that resolves to no artefact in the tree, a `none` candidate
+ * `candidate` that resolves to no artifact in the tree, a `none` candidate
  * paired with a disposition other than `none_found` (or the reverse), or a
  * duplicate candidate inside one block. A record pointing at an incumbent that
  * does not exist is worse than no record: it reads as evidence of a search that
  * cannot have happened.
  *
- * **ADVISORY (never fails) — an artefact ADDED relative to a base ref carrying
+ * **ADVISORY (never fails) — an artifact ADDED relative to a base ref carrying
  * no record at all.** Reported by count and by path, exit 0. Flipping this to a
  * block needs a false-positive rate from at least one release of advisory
  * operation, which this roadmap does not have and deliberately does not
@@ -116,7 +116,7 @@ export interface CompositionEntry {
  * that gate's finding, not this one's, and duplicating the check would produce
  * two error messages for one defect.
  *
- * @returns `null` when the artefact carries no block at all.
+ * @returns `null` when the artifact carries no block at all.
  */
 export function parseCompositionReview(text: string): CompositionEntry[] | null {
     const fm = _frontmatter(text);
@@ -152,7 +152,7 @@ function _unquote(s: string): string {
     return t;
 }
 
-/** Every artefact id the tree defines, as `skill:x` / `rule:y` / `command:z`. */
+/** Every artifact id the tree defines, as `skill:x` / `rule:y` / `command:z`. */
 export function artefactIds(repo: string): Set<string> {
     const ids = new Set<string>();
     const skills = path.join(repo, 'src', 'skills');
@@ -173,7 +173,7 @@ export function artefactIds(repo: string): Set<string> {
 }
 
 /**
- * Structural check on one artefact's record. Returns [] when it carries none —
+ * Structural check on one artifact's record. Returns [] when it carries none —
  * absence is the ADVISORY half and is never a violation here.
  */
 export function checkArtefact(rel: string, text: string, known: ReadonlySet<string>): Violation[] {
@@ -240,7 +240,7 @@ export function checkArtefact(rel: string, text: string, known: ReadonlySet<stri
                 out.push({
                     kind: 'unresolvable-candidate',
                     file: rel,
-                    detail: `${where}: \`${cand}\` names no artefact in the tree — a record pointing at a non-existent incumbent reads as evidence of a search that cannot have happened.`,
+                    detail: `${where}: \`${cand}\` names no artifact in the tree — a record pointing at a non-existent incumbent reads as evidence of a search that cannot have happened.`,
                 });
             }
         }
@@ -267,9 +267,9 @@ function _corpus(repo: string): string[] {
 }
 
 /**
- * Artefacts ADDED relative to `baseRef`, unioned with untracked files.
+ * Artifacts ADDED relative to `baseRef`, unioned with untracked files.
  *
- * The union is load-bearing: a create-only canary plants an untracked artefact,
+ * The union is load-bearing: a create-only canary plants an untracked artifact,
  * and `git diff --name-only` against a base ref cannot see it, so the gate would
  * report green on its own canary and the advisory half would be blind exactly
  * where it is being tested.
@@ -321,7 +321,7 @@ export function main(argv?: readonly string[]): number {
         reportScanned({
             gate: GATE,
             scanned: corpus.length,
-            units: 'skill/rule artefact(s)',
+            units: 'skill/rule artifact(s)',
             roots: ['src/skills', 'src/rules'],
         });
     } catch (exc) {
@@ -354,7 +354,7 @@ export function main(argv?: readonly string[]): number {
         }
     } catch (exc) {
         process.stderr.write(
-            `❌  ${GATE}: internal error after ${String(scanned)} artefact(s): ${String(exc)}\n`,
+            `❌  ${GATE}: internal error after ${String(scanned)} artifact(s): ${String(exc)}\n`,
         );
         return 2;
     }
@@ -371,12 +371,12 @@ export function main(argv?: readonly string[]): number {
 
     if (violations.length > 0) {
         process.stderr.write(
-            `❌  ${GATE}: ${String(violations.length)} malformed record(s) across ${String(corpus.length)} artefact(s).\n`,
+            `❌  ${GATE}: ${String(violations.length)} malformed record(s) across ${String(corpus.length)} artifact(s).\n`,
         );
         return 1;
     }
     process.stdout.write(
-        `✅  ${GATE}: ${String(corpus.length)} artefact(s) — records well-formed; ` +
+        `✅  ${GATE}: ${String(corpus.length)} artifact(s) — records well-formed; ` +
             `${String(advisories.length)} addition(s) without one (advisory).\n`,
     );
     return 0;
@@ -428,17 +428,17 @@ function selfTest(): number {
                 run: () =>
                     run({
                         'src/rules/probe.md': _fm(
-                            'composition_review:\n  - candidate: none\n    disposition: none_found\n    rationale: no artefact in the tree covers this surface\n',
+                            'composition_review:\n  - candidate: none\n    disposition: none_found\n    rationale: no artifact in the tree covers this surface\n',
                         ),
                     }),
             },
             {
-                name: 'an artefact with NO record is accepted — absence is advisory, never a block',
+                name: 'an artifact with NO record is accepted — absence is advisory, never a block',
                 expect: 'accept',
                 run: () => run({ 'src/rules/probe.md': _fm('') }),
             },
             {
-                name: 'a candidate naming no artefact in the tree is REJECTED',
+                name: 'a candidate naming no artifact in the tree is REJECTED',
                 expect: 'reject',
                 run: () =>
                     run({
