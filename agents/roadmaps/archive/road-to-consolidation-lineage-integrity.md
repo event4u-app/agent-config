@@ -62,7 +62,7 @@ about it, and it moved while these very corrections were being written.
 
 ## Phase 1 — Make the lineage declarable and comparable
 
-- [ ] **1.1 Fix one field name for the parent set.** The measured folders used
+- [x] **1.1 Fix one field name for the parent set.** The measured folders used
       **five** distinguishable forms, corrected after a neutral review found the
       earlier count of four had omitted one that the census's own `grep` searches
       for: `consolidates:` frontmatter · a `supersedes_analysis:` key · a prose
@@ -75,7 +75,7 @@ about it, and it moved while these very corrections were being written.
       verify: the field is documented in the roadmap template contract, and a
       fixture in each of the five legacy shapes parses to the same parent set or
       is explicitly reported as unparseable.
-- [ ] **1.2 Require the field on any artefact that claims to consolidate.** The
+- [x] **1.2 Require the field on any artefact that claims to consolidate.** The
       trigger is the claim, not the filename: `-master` in a name is not the
       signal, because two of the four omissions were in files without it.
       verify: an artefact using consolidation vocabulary without the field is
@@ -83,19 +83,19 @@ about it, and it moved while these very corrections were being written.
 
 ## Phase 2 — Compare the declared set against what is present
 
-- [ ] **2.1 Report every sibling roadmap in the same folder that the declared
+- [x] **2.1 Report every sibling roadmap in the same folder that the declared
       set omits.** Plain set difference over `road-to-*.md` in the
       consolidation's own directory. No judgement about whether the omission was
       correct — the output is "declared 2, present 3, omitted X".
       verify: run against all four census folders and reproduce the census table
       exactly; run against a synthetic complete folder and get zero findings.
-- [ ] **2.2 Report the reverse direction too.** A declared parent that is not
+- [x] **2.2 Report the reverse direction too.** A declared parent that is not
       present is the other half of the same defect and cheaper to get wrong: it
       means the lineage names a file nobody can open. Both sibling roadmaps
       authored from this inbox carry a verified instance of this shape — a master
       citing a plan that exists nowhere in the repository.
       verify: a declared parent with no matching file is reported with its name.
-- [ ] **2.3 Detect the second shape: two artefacts, one parent set.** When two
+- [x] **2.3 Detect the second shape: two artefacts, one parent set.** When two
       artefacts in one folder declare overlapping parent sets and neither names
       the other, report both. A plain set comparison finds it.
       **Corrected after a neutral review: this fires on three of the four census
@@ -113,7 +113,7 @@ about it, and it moved while these very corrections were being written.
 
 ## Phase 3 — Put the obligation where the artefacts are produced
 
-- [ ] **3.1 Extend `/analyze:inbox` rather than adding a surface.** That command
+- [x] **3.1 Extend `/analyze:inbox` rather than adding a surface.** That command
       already triages inbox folders, already has a `recurrence` column in its
       Phase 2 table, and already asks "is this the second time?" in Phase 4c.
       Lineage completeness is one more triage column on the same pass, and no
@@ -131,23 +131,54 @@ about it, and it moved while these very corrections were being written.
       holds; the earlier evidence for it did not.
       verify: the command's Phase 2 table gains the column, and its Phase 5
       artefact-mapping table says what an omission becomes.
-- [ ] **3.2 Say what an omission obliges.** Not "consolidate it too" — that is a
+- [x] **3.2 Say what an omission obliges.** Not "consolidate it too" — that is a
       judgement the operator makes. The obligation is to **name it**: either fold
       the omitted parent in, or record a kill ID for it, or state that it was
       read and adds nothing. Silence is the failure mode; any of the three is a
       discharge.
       verify: the command text enumerates the three discharges and forbids
       silence.
-- [~] **3.3 Consider a gate.** Deferred: needs E1. A check that runs over
+- [x] **3.3 Consider a gate.** A check that runs over
       gitignored inbox directories cannot be a CI gate, because CI never sees
       them. It could run locally from the command, or as a pre-commit check on
       any roadmap carrying the field. Whether it enforces or reports is E2.
 
+      **DECIDED 2026-08-27 by AI council, 2/2 convergent: E1 = (b), E2 = report**
+      (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, two rounds with
+      blind peer review), on the maintainer's delegation of owner-reserved
+      decisions for this autonomous drain run. Verdicts transcribed at
+      [`lineage-enforcement-surface`](../evidence/council/lineage-enforcement-surface.md)
+      — the council artefact itself is gitignored and auto-pruned, so a path to
+      it would rot.
+
+      Both surfaces ship, on one axis rather than two: `--surface inbox`
+      (invoked locally by `/analyze:inbox`, all six declaration spellings,
+      sibling inference on) and `--surface estate` (the default, over
+      `agents/roadmaps/`, frontmatter declarations only, **no** sibling
+      inference). Registered in `src/config/gate-coverage.yml` with
+      `min_scanned: 5` and a `reportScanned` count; report-mode, so `--strict`
+      exists and is deliberately not wired into CI.
+
+      **The estate surface is narrower than the inbox one, and both narrowings
+      are corrections to a first implementation that ran the inbox rules over
+      `agents/roadmaps/`.** Each produced findings that were not merely noisy but
+      wrong on their face, which is risk 1 arriving exactly where the register
+      predicted:
+
+      | narrowing | what the unnarrowed version did |
+      |---|---|
+      | no sibling inference | 11 `omitted-sibling` findings for one declaring roadmap on a 12-file estate — every neighbour a mandatory parent |
+      | frontmatter declarations only | read two roadmaps' headers *describing* an inbox consolidation as declaring one, and parsed the glob `road-to-*.md` as a parent |
+
+      Both are pinned by tests
+      (`tests/scripts/lint_consolidation_lineage.test.ts` § the estate surface is
+      narrower, deliberately).
+
 ## Blockers
 
-### lineage-check-enforcement-surface
+### blocker: lineage-check-enforcement-surface
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 step 3.3 only. Phases 1, 2 and steps 3.1–3.2 land
   regardless.
@@ -168,6 +199,29 @@ about it, and it moved while these very corrections were being written.
   make the obligation model-carried. That is the same honesty position several
   rules in this tree already state, and it is a legitimate outcome — but it
   should be a decision, not a default reached by not deciding.
+- **Resolution (2026-08-27, AI council, 2/2 convergent):** **(b) + report.**
+  Both surfaces ship — a local inbox check invoked by `/analyze:inbox` and a
+  CI-visible check over `agents/roadmaps/` — and the tracked half reports rather
+  than blocks. `src/scripts/lint_consolidation_lineage.ts` is registered in
+  `src/config/gate-coverage.yml` with `min_scanned: 5`, publishes `scanned: <N>`
+  on every run, and carries a `--self-test` exercising six declaration spellings
+  and all four finding types. **No `canary` row, and the omission is
+  deliberate**: a report-mode gate exits 0 on findings by design, so a planted
+  violation could not turn it red — its ability to go red is proven by the
+  self-test and by the committed fixture corpus instead.
+
+  Both seats reached (b)/report independently and named the same revisit
+  condition in different words: promote the tracked half to blocking once real
+  tracked consolidations have landed and the check has demonstrated precision on
+  them — one put that at >= 5 tracked consolidations with >= 1 true positive and
+  < 20 % false positives, or one incomplete consolidation reaching PR review
+  that would have merged without the check.
+
+  The decision substitutes for owner sign-off under the maintainer's delegation
+  of owner-reserved decisions for this autonomous drain run. It is reversible
+  inside the authorised envelope — no safety floor weakened, nothing external or
+  irreversible committed, governance untouched. Verdicts verbatim:
+  [`lineage-enforcement-surface`](../evidence/council/lineage-enforcement-surface.md).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
@@ -181,24 +235,60 @@ about it, and it moved while these very corrections were being written.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Running the comparison over a committed fixture set that mirrors the
+- [x] AC-1 — Running the comparison over a committed fixture set that mirrors the
       four census folders reproduces the census table exactly, and running it over
       a synthetic complete folder produces zero findings. **The fixtures are the
       criterion, not the live folders**: both inbox directories are gitignored and
       `agents/tmp/` is already emptied, so an acceptance criterion phrased against
       them would be satisfiable on one machine and nowhere else. Corrected after a
       neutral review; E4 carries the same limitation from the retention side.
-- [ ] AC-2 — A declared parent with no matching file is reported by name, and a
+
+      **Met.** `tests/fixtures/consolidation-lineage/census-mirror/` mirrors the
+      four folders' declaration shapes and structure, and
+      `tests/scripts/lint_consolidation_lineage.test.ts` asserts each row's
+      `declared N, present M, omitted X` string against the census table;
+      `complete/` produces zero findings. Verified 2026-08-27 that the mirror and
+      the live `agents/tmp.old/` folders produce the **same ten findings**.
+- [x] AC-2 — A declared parent with no matching file is reported by name, and a
       present sibling absent from the declared set is reported by name.
-- [ ] AC-3 — Each of the five legacy declaration shapes either parses to the same
+
+      **Met**, and both halves are exercised on real data rather than only on
+      fixtures. `missing-parent` fired on
+      `agents/roadmaps/road-to-governed-harness-evolution.md` during development
+      — a declared parent that exists nowhere in the repository, which is 2.2's
+      stated shape; `omitted-sibling` reproduces the four census rows. Both are
+      pinned by tests, and the estate surface keeps `missing-parent` while
+      dropping sibling inference.
+- [x] AC-3 — Each of the five legacy declaration shapes either parses to the same
       parent set as the canonical field or is reported as unparseable — never as
       an empty set. The count is five, not four: a parser fixed at four accepts
       the omitted shape blind, and the omitted shape is one the census greps for.
-- [ ] AC-4 — `/analyze:inbox` carries the lineage column and enumerates the three
+
+      **Met, and the count is SIX rather than five — recorded as a correction,
+      not applied silently.** The five are the shapes the census *grepped* for:
+      the ways an artefact announces "I am a consolidation". A sixth exists — a
+      prose supersession sentence — and it announces the same relation while
+      being invisible to that grep. 2.3's verify needs it: in `evolve/` the
+      omitted sibling declares supersession over exactly the master's two
+      parents in prose and in no field, so without shape 6 that verification
+      cannot be met on its own evidence. All six parse to the identical parent
+      set in `--self-test` and in the fixture suite; a claim with no readable
+      list reports `claims-without-field`, never an empty declaration.
+- [x] AC-4 — `/analyze:inbox` carries the lineage column and enumerates the three
       discharges for an omission, so an omission cannot be discharged by silence.
-- [ ] AC-5 — The enforcement surface is a recorded decision, and if a script
+
+      **Met.** Phase 2's triage table gains a `lineage` column filled by one
+      command over the folder, and Phase 5 enumerates the three discharges —
+      fold it in · record a kill ID · state it was read and adds nothing — and
+      says in as many words that silence is the failure mode.
+- [x] AC-5 — The enforcement surface is a recorded decision, and if a script
       exists it is registered with a scanned count and a self-test.
 
+
+      **Met.** The decision is recorded at the blocker and at
+      [`lineage-enforcement-surface`](../evidence/council/lineage-enforcement-surface.md);
+      the script is registered in `gate-coverage.yml` with a `min_scanned` floor,
+      a published `scanned:` count and a `--self-test`.
 ## Open maintainer decisions
 
 - **E1 — Enforcement surface.** See Blockers.

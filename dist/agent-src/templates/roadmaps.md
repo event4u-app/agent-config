@@ -467,6 +467,46 @@ that was never a judgement call.
     Register: the register ranks *known* risks with mitigations; the
     pre-mortem imagines the *whole plan dead* and reconstructs why.
 
+26. **A consolidating roadmap declares its parent set in `consolidates:`.**
+    When a roadmap claims to fold sibling proposals into one — a "master",
+    a consolidation, a document that supersedes others — it declares every
+    parent as a frontmatter list:
+
+    ```yaml
+    consolidates:
+      - road-to-first-parent.md
+      - road-to-second-parent.md
+    ```
+
+    The field is the *only* spelling a tracked roadmap may use. Five
+    legacy spellings exist in inbox artifacts and are read by
+    `lint_consolidation_lineage` so a legacy folder parses to the same
+    parent set rather than to an empty one — `supersedes_analysis:`, a
+    prose `**Inputs consolidated:**` list, a prose `**Ersetzt als
+    führendes Proposal:**` list, a `Master-Konsolidierung` heading with a
+    table, and a prose supersession sentence. They are **deprecated
+    spellings a reader may still encounter**, never shapes to author.
+
+    Why the field rather than prose: a consolidation presents its content
+    as adjudicated — parents named, conflicts resolved, a kill register
+    for what was rejected. A parent missing from that list is not
+    *killed*, it is *undiscussed*, and nothing in the artifact
+    distinguishes those two states. Measured
+    (`agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md`):
+    four inbox folders carrying a declared consolidation, four with an
+    incomplete lineage.
+
+    An omission is discharged in exactly one of three ways, never by
+    silence: fold the parent in · record a kill ID for it · state that it
+    was read and adds nothing. `/analyze:inbox` carries the obligation at
+    the point the artifacts are produced.
+
+    Reported by `lint_consolidation_lineage` — report-mode, not blocking
+    (council 2026-08-27, 2/2 convergent: the four measured cases come from
+    a high-noise drafting context and do not establish precision on the
+    tracked estate; blocking is earned by tracked-scope evidence, not
+    assumed).
+
 ---
 
 ## Quality Gates (remote CI by default)
