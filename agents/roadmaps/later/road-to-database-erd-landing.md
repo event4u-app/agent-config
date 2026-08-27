@@ -1,12 +1,19 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "One of four siblings split from a single inbox drop. This one exists because the analysis found a finished, tested capability sitting off-trunk that three of the four input proposals planned to build from scratch. Its disposition is landing, not building, which is a different task from every sibling and from anything in the current estate — rule 11 forbids folding it into the modeling roadmap that would otherwise have rebuilt it."
-estate_growth_exempt: "Claims `open_blockers` 43 -> 44: ONE blocker, `erd-skill-cannot-clear-the-preamble-ceiling`, recording a MEASURED obstacle rather than an unanswered question. `check_preamble_payload_budget`'s grace ceiling leaves 17 tokens of headroom on origin/main (138,195 against 138,212) and the skill needs 53 -- measured in clean worktrees, including a probe that gutted the description to 12 tokens and was STILL one token over, because the catalog bucket costs 6 tokens for `\"- schema-erd: \"` before any description. Its config says the ceiling \"may never move UP\", so the addition is blocked on headroom, not on work. The blocker exists because the alternative is losing the measurement: without it the next attempt re-derives 5,456 lines of revalidation from scratch, which is the exact seven-day loss `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md` records. AI council 2026-08-27, 2/2, chose \"block until a separate payload-reduction change creates headroom\" over raising the ceiling or dropping the skill. This change adds NO skill and NO roadmap -- skill_count and active_roadmaps are unchanged."
+estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Its blocker was re-measured today by merging the prepared branch into a scratch checkout of origin/main -- catalogue 14851 -> 14904 tok, total 138208 -> 138261 against a grace ceiling of 138212, i.e. the skill costs 53 tokens and 4 are available. A 2/2-convergent council chose park over shipping a skill-less renderer or reopening the ceiling. The change adds no skill and no roadmap; skill_count and open_blockers are unchanged, and active_roadmaps falls by one. Supersedes the claim this file carried at creation (open_blockers 43 -> 44 for the ceiling blocker): that blocker is now resolved, so this change lowers open_blockers rather than raising it."
 ---
 # Road to database ERD landing
+
+> **Resume when** `check_preamble_payload_budget` reports a measured total at
+> least **60 tokens** below `ci_delivery.grace_ceiling` on `origin/main`, **and**
+> `check_estate_count`'s `skill_count` allowance has been explicitly allocated
+> across this roadmap and `road-to-database-relational-modeling`. Parked
+> 2026-08-27 by AI council; the implementation is finished and preserved — see
+> `## Notes` § Parked, and the recovery recipe there.
 
 > **Source:** `agents/tmp.old/database-structure/` — an inbox drop of 2026-08-26
 > whose defect register listed "no ERD capability" as defect D3. The claim is
@@ -215,7 +222,7 @@ allowance the modeling sibling is arguing about — recorded as
 ## Blockers
 
 ### blocker: erd-skill-consumes-the-zero-allowance
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.6 and therefore the merge. Phases 1, 2.1–2.5 and 3 run
   without it.
@@ -235,7 +242,7 @@ allowance the modeling sibling is arguing about — recorded as
 - **If you do nothing:** whichever of the two roadmaps lands second fails `check_estate_count` after its work is finished, and the cheap fix at that point is option (c) — a renderer with no skill, which no agent routes to.
 
 ### blocker: erd-branch-merge-is-a-git-op
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** the final merge only. Every verification step above runs on a
   branch and produces its evidence without it.
@@ -252,7 +259,7 @@ allowance the modeling sibling is arguing about — recorded as
 
 ### blocker: erd-skill-cannot-clear-the-preamble-ceiling
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** the merge, and only the merge. Every verification step in Phases 1,
   2 and 3 ran and produced its evidence — the cherry-pick is clean, the 134 tests
@@ -276,8 +283,14 @@ allowance the modeling sibling is arguing about — recorded as
   UP" invariant, which is a maintainer decision about a registered budget and was
   refused 2/2 here.
 - **Resolved when:** either `check_preamble_payload_budget` reports a measured
-  total at least 36 tokens below 138,212 on `origin/main`, or `## Notes` records
+  total at least **49** tokens below 138,212 on `origin/main`, or `## Notes` records
   which of (b) or (c) was chosen and why.
+  <!-- corrected 2026-08-27: the figure was 36, derived from a 2026-08-24 reading
+  of 138,195. It is wrong in both terms. The skill's real catalogue cost was
+  measured by merging the prepared branch into a scratch checkout of current
+  `origin/main` and running the census: catalogue 14,851 -> 14,904 tok, total
+  138,208 -> 138,261 against a ceiling of 138,212. The skill costs **53** tokens
+  and the tree is over by **49**. See `## Notes` § Parked. -->
 - **Recommendation:** (a). The work is done and verified; it is waiting on
   headroom, not on effort, and the 5,456 lines are safe on
   `feat/schema-erd-diff` plus the cherry-picked `drain/database-erd-landing`
@@ -315,3 +328,151 @@ allowance the modeling sibling is arguing about — recorded as
 
 The skill-versus-artifact decision from 1.3 and the probe-or-not reason from 3.2
 belong here once taken.
+
+## Parked — 2026-08-27, AI council, with the blocking number measured
+
+### The measurement that decided it
+
+The blocker `erd-skill-cannot-clear-the-preamble-ceiling` carried an estimate
+(≥36 tokens of headroom needed) derived from a 2026-08-24 reading. Both terms
+were re-measured today rather than re-cited, by merging the prepared branch into
+a scratch checkout of current `origin/main` and running the census on the merged
+tree:
+
+| | catalogue bucket | measured total | ceiling | verdict |
+|---|---|---|---|---|
+| `origin/main` = `830e31aa3` | 14,851 tok | **138,208** | 138,212 | 4 tokens of headroom |
+| + `drain/database-erd-landing` merged | 14,904 tok | **138,261** | 138,212 | **over by 49** |
+
+```
+$ git merge-tree --write-tree origin/main drain/database-erd-landing | grep -c CONFLICT
+0
+$ git merge --no-edit drain/database-erd-landing &&   ./scripts-run src/scripts/check_preamble_payload_budget --ceiling 138212
+  measured total   138261 tok (baseline 102520, +35741; ceiling 138212)
+❌  per-spawn preamble payload grew past the ratchet: 138261 > 138212 tok.
+```
+
+**The skill costs 53 tokens. There are 4.** The headroom was 17 on 2026-08-24 and
+is 4 today, with no reduction work in the interval — the budget file's own
+recorded drift is ~+1,400 tokens/day. Waiting does not help; the number moves the
+wrong way.
+
+### Why no alternative bucket exists
+
+`agents/evidence/analysis/preamble-headroom-is-in-the-rules-2026-08-27.md`
+measures the whole catalogue: 299 skills, longest description **200 chars**,
+median 182, **zero** over 200 — the description cap is already enforced, so there
+is no verbose-description slack to reclaim. Capping every description in the
+estate at 100 characters would recover ~5,760 tokens, 16 % of the overshoot, at
+the cost of the field that decides whether a skill is ever selected.
+
+88.7 % of the gated payload is the **rules** bucket (122,611 of 138,208 tok). The
+council seat that proposed landing the capability as scripts plus a routing
+*rule* instead of a skill, on the ground that this would cost nothing in the
+catalogue, is refused on its own arithmetic: the rules bucket is the first entry
+in `preamble-payload-budget.json`'s `gated_buckets`, and the smallest rule in the
+projection is larger than the 53-token description it was avoiding.
+
+### The three blockers, resolved
+
+**`erd-skill-cannot-clear-the-preamble-ceiling` → resolved as (a), park until
+headroom exists.** Not (b) "ship scripts without the skill": a renderer no agent
+routes to satisfies `grep -rl "erDiagram" src/` and nothing else, and three of
+four council positions refused it on that ground. Not (c) "reopen the ceiling":
+owner-reserved, and refused 2/2 both today and on 2026-08-24. The unlock is a
+**rules** reduction, which is what `road-to-cost-parity-1-rule-payload-diet` and
+`road-to-standing-context-40k` exist for; both are themselves in `later/`, and
+`preamble-payload-budget.json`'s `committed_reduction_mechanism` reads `"NONE"`.
+That circularity is the finding, and it is published rather than smoothed over.
+
+**`erd-skill-consumes-the-zero-allowance` → resolved: neither roadmap takes it.**
+The question was which of the two database roadmaps spends the zero `skill_count`
+allowance. The payload ceiling settles it above the allowance question entirely:
+**neither can add a skill**, so there is nothing to allocate. The allowance is
+untouched by this change and stays available to whichever roadmap resumes first.
+
+**`erd-branch-merge-is-a-git-op` → resolved: fresh branch, no push, no rewrite.**
+The council was unanimous across all four positions: cherry-pick onto a fresh
+branch, never rebase-and-force-push five inherited commits. That work is already
+done and verified — `drain/database-erd-landing` carries the four implementation
+commits plus the archive commit on top of `460b62007`, merges into current
+`origin/main` with **zero conflicts**, and adds 25 files / 5,431 insertions, all
+of them new paths. Nothing is pushed by this change:
+`non-destructive-by-default` makes a push a this-turn Hard Floor, and no turn has
+said so.
+
+### Recovery recipe — the preservation half of the park
+
+Recorded because a park is only responsible if the work survives it. Both refs
+are **local-only and unpushed**; a machine loss loses 5,456 lines.
+
+| Ref | HEAD | Base | Shape |
+|---|---|---|---|
+| `feat/schema-erd-diff` (original) | `3996829e65d8b85b0f4f498b86b43cadf9a798a1` | `release/14.6.0` | 33 files, 5,456 insertions, 8 conflicts against current `main` |
+| `drain/database-erd-landing` (prepared) | `0813ff655db3ed9fafc08f1dcda918f71d620ded` | `460b62007` | 25 files, 5,431 insertions, **0 conflicts** |
+
+The four implementation commits on the original branch, in order:
+
+```
+6c5c838973d19fc4ab4d176f14552f63a93562e2  docs(roadmap): adopt road-to-schema-erd-diff from the inbox artifact
+09db69ddc9c07e63955841b691a6f523c9418a03  feat(schema-erd): SchemaIR v1, four adapters, the differ and two renderers
+ba9518c60acc4b123045d467e17c6ee56186760c  test(schema-erd): 134 cases over a fixture pair carrying one delta per class
+05e45142a4488c144cd36ff80e2dee9862832e19  feat(schema-erd): the skill, its evals, and the regenerated surface
+3996829e65d8b85b0f4f498b86b43cadf9a798a1  chore(roadmaps): archive road-to-schema-erd-diff, fully closed
+```
+
+To resume, once the payload gate has ≥49 tokens of headroom:
+
+```bash
+git checkout -b feat/schema-erd-landing origin/main
+git cherry-pick 6c5c8389 09db69dd ba9518c6 05e45142   # implementation only
+# then Phase 2.3 (task sync, then task generate-tools), 2.4 (task ci fresh),
+# 2.5 (two sabotage probes), 2.6 (skill admission ledger line)
+```
+
+If both local refs are lost before then, the recipe above is the only surviving
+description of the work and the capability must be rebuilt — which is the exact
+seven-day loss `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md`
+records, repeated at larger scale.
+
+**One decision is left with the owner and is stated rather than taken:** whether
+to authorise a durable remote backup of `feat/schema-erd-diff` — a push of the
+five commits **unchanged, to a new remote ref**, which is a backup and not a
+rewrite. A council seat raised it specifically because parking a fourth time
+without one puts 5,456 tested lines on a single disk. This run does not push it.
+
+### Council record
+
+Convened 2026-08-27 on all five blockers of this roadmap and its
+`-relational-modeling` sibling together, because the allowance question
+entangled them. Members `anthropic`, `openai`; both present before and after
+(`2/2 present, needed 1 — concluded`). Reported cost $0.0625, on subscription CLI
+transport with `billable=0` — PR #1695 records that this figure is not a real
+charge.
+
+Verdict on the disposition: **3 of 4 positions for parking** (both in-run
+reviewers, plus the second seat). The dissenting seat proposed landing scripts
+plus a routing rule; that option is refused above on measured arithmetic rather
+than by vote, and the seat itself framed it as conditional on a rules-cost
+assumption that the measurement falsifies.
+
+Convergent on every other point, with no dissent: fresh branch never a rebase; no
+push in an autonomous run; the overlap evidence in the sibling is still mandatory
+and cannot be substituted by budget pressure; blocker 5 takes fallback (b) and
+blocker 6 is recorded as *deferred verification*, not resolution.
+
+**Revisit-if:** `check_preamble_payload_budget` reports a measured total at least
+49 tokens below `ci_delivery.grace_ceiling` on `origin/main` — via a committed
+rules reduction, not a catalogue trim — **and** the `skill_count` allowance is
+explicitly allocated across this roadmap and `-relational-modeling`. The
+`grace_end_date` of 2026-11-10 is a second trigger: at that date the design
+ceiling of 107,646 applies and the gap becomes 30,615 tokens rather than 49.
+
+### What is NOT claimed
+
+No step in Phases 1, 2 or 3 is marked done by this change. Step 3.1 was already
+`[x]` before it. The prepared branch's own verification claims — 134 tests
+passing, two sabotage probes fired, the admission ledger line — are **carried
+from the prior run that produced it and were not re-run here**; Phase 2.4
+explicitly refuses carried evidence, so they must be re-executed on resume.
+
