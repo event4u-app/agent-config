@@ -24,17 +24,13 @@
       "detail": "Re-run vitest to confirm both assertions pass"
     }
   ],
-  "changes": [
-    {
-      "path": "src/calculator.ts",
-      "purpose": "applied by GT recipe"
-    },
-    {
-      "path": "tests/calculator.test.ts",
-      "purpose": "applied by GT recipe"
+  "changes": [],
+  "tests": {
+    "red": {
+      "behaviour": "the changed behaviour under test",
+      "failure_class": "missing_target"
     }
-  ],
-  "tests": null,
+  },
   "verify": null,
   "outcomes": {
     "refine": "success",
@@ -44,10 +40,10 @@
     "implement": "blocked"
   },
   "questions": [
-    "@agent-directive: apply-plan ticket=GT-3-POW",
-    "> Ticket GT-3-POW — applying the recorded plan under `minimal-safe-diff` + `scope-control`.",
-    "> 1. Continue — apply the plan as recorded",
-    "> 2. Abort — stop before any edits are made"
+    "@agent-directive: observe-red ticket=GT-3-POW",
+    "> Ticket GT-3-POW — implement gate refused: no `state.tests.red` recorded. Write the failing test for the next single behaviour and observe it fail first.",
+    "> 1. Continue — write and run that one failing test",
+    "> 2. Record an exemption — `state.tests.red = {exempt: \"<reason>\"}`"
   ],
   "report": ""
 }

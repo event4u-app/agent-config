@@ -149,6 +149,49 @@ describe('lint_skill_descriptions — CLI contract', () => {
     });
 });
 
+/**
+ * The zero above is only meaningful while it is EARNED. A pair sitting at or
+ * above the canonical threshold and reviewed into
+ * `audit_skill_overlap_allowlist.json` is deliberately not a cluster — but the
+ * exclusion has to be wired, and an unwired linter would report the same zero
+ * only until someone edited a skill body.
+ *
+ * So this suite asserts the mechanism rather than the number: for every
+ * allowlisted pair, the RAW cosine is at or above the threshold (the pair
+ * genuinely qualifies) and the linter nonetheless counts zero clusters. Delete
+ * the `reviewed.has(...)` line in `computeClusters` and the second assertion
+ * goes red — verified by doing exactly that.
+ */
+describe('lint_skill_descriptions — reviewed overlaps are excluded from clusters', () => {
+    it('every allowlisted pair is above threshold on the raw metric, and is still not a cluster', async () => {
+        const overlap = await import('../../src/scripts/audit_skill_overlap.js');
+        const allow = overlap._loadAllowlist(overlap.ALLOWLIST);
+        if (allow.size === 0) {
+            // Empty is the healthy state the allowlist's own comment names.
+            // Nothing to prove, and asserting a non-empty list would make the
+            // healthy state a failure.
+            return;
+        }
+        const bySlug = new Map(
+            overlap.collect().map((sk) => [path.basename(path.dirname(sk.relpath)), sk] as const),
+        );
+        for (const key of allow) {
+            const [a, b] = key.split('::');
+            const sa = bySlug.get(a as string);
+            const sb = bySlug.get(b as string);
+            expect(sa, `allowlisted slug not found: ${a}`).toBeDefined();
+            expect(sb, `allowlisted slug not found: ${b}`).toBeDefined();
+            const cos = overlap._cosine(sa!.vector, sb!.vector);
+            expect(cos, `${key} is allowlisted but below threshold — the entry is stale`).toBeGreaterThanOrEqual(
+                overlap.OVERLAP_THRESHOLD,
+            );
+        }
+        const r = spawnSync(TSX, [SCRIPT], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+        expect(r.status).toBe(0);
+        expect(r.stdout, 'a reviewed overlap must not be counted as a cluster').toMatch(/\(0 clustered\)/);
+    }, 120_000);
+});
+
 describe('lint_skill_descriptions — (g) preemption phrases', () => {
     // A description argues for its own routing CONDITIONS. The moment it argues
     // against its siblings, it stops competing on fit and starts competing on

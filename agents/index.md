@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **734 artefacts** in this package.
+Maintainer-facing index of all **736 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -286,9 +286,9 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`terraform`](../src/skills/terraform/SKILL.md) | official | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../src/skills/terragrunt/SKILL.md) | official | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
 | skill | [`test-case-discovery`](../src/skills/test-case-discovery/SKILL.md) | official | Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'. |
-| skill | [`test-driven-development`](../src/skills/test-driven-development/SKILL.md) | official | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
+| skill | [`test-driven-development`](../src/skills/test-driven-development/SKILL.md) | official | Implementing a feature, fixing a bug, refactoring — failing test first, then the code. For a WRONG test, `testing-anti-patterns` wins. |
 | skill | [`test-performance`](../src/skills/test-performance/SKILL.md) | official | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
-| skill | [`testing-anti-patterns`](../src/skills/testing-anti-patterns/SKILL.md) | official | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions |
+| skill | [`testing-anti-patterns`](../src/skills/testing-anti-patterns/SKILL.md) | official | BEFORE writing/changing tests, mocks, or test-only methods on production classes — mocking-the-mock, production pollution, overfit assertions; for order, `test-driven-development` wins. |
 | skill | [`threat-modeling`](../src/skills/threat-modeling/SKILL.md) | official | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
 | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
@@ -531,7 +531,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`image-analyse`](../src/domains/ai-video/image/analyse/command.md) | cluster: image | Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report. |
 | command | [`image-create`](../src/domains/ai-video/image/create/command.md) | cluster: image | Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default. |
 | command | [`image-verify`](../src/domains/ai-video/image/verify/command.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
-| command | [`implement-ticket`](../src/domains/engineering-base/implement-ticket/command.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git. |
+| command | [`implement-ticket`](../src/domains/engineering-base/implement-ticket/command.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced. |
 | command | [`jira-ticket`](../src/domains/product-basic/jira-ticket/command.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../src/domains/engineering-base/judge/command.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge-on-diff`](../src/domains/engineering-base/judge/on-diff/command.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
@@ -611,7 +611,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`sync-gitignore-fix`](../src/domains/meta/sync/gitignore/fix/command.md) | cluster: sync | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`tdd`](../src/domains/engineering-base/tdd/command.md) | cluster: tdd | TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green) |
 | command | [`tdd-green`](../src/domains/engineering-base/tdd/green/command.md) | cluster: tdd | TDD green phase — write the minimum production code to make the failing test pass; no test edits |
-| command | [`tdd-red`](../src/domains/engineering-base/tdd/red/command.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error) |
+| command | [`tdd-red`](../src/domains/engineering-base/tdd/red/command.md) | cluster: tdd | TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behaviour under test |
 | command | [`tdd-refactor`](../src/domains/engineering-base/tdd/refactor/command.md) | cluster: tdd | TDD refactor phase — clean up (rename, deduplicate) while keeping the test green |
 | command | [`team-knowledge`](../src/domains/meta/team-knowledge/command.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../src/domains/meta/team-knowledge/bootstrap/command.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
@@ -635,14 +635,14 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`video-scene`](../src/domains/ai-video/video/scene/command.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate. |
 | command | [`video-stitch`](../src/domains/ai-video/video/stitch/command.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video-storyboard`](../src/domains/ai-video/video/storyboard/command.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
-| command | [`work`](../src/domains/engineering-base/work/command.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
+| command | [`work`](../src/domains/engineering-base/work/command.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over `work_engine`, confidence-band gated, no auto-git, test-first. |
 | command | [`worktree`](../src/domains/engineering-base/worktree/command.md) | cluster: worktree | Worktree orchestrator — routes to create, status, verify, cleanup |
 | command | [`worktree-cleanup`](../src/domains/engineering-base/worktree/cleanup/command.md) | cluster: worktree | Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes |
 | command | [`worktree-create`](../src/domains/engineering-base/worktree/create/command.md) | cluster: worktree | Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred |
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (114)
+## Guidelines (116)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -670,6 +670,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md) | agent-infra |  |
+| guideline | [`existence-question-verdicts`](../docs/guidelines/agent-infra/existence-question-verdicts.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`false-green`](../docs/guidelines/agent-infra/false-green.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |
@@ -691,6 +692,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`recurring-criticism-mechanics`](../docs/guidelines/agent-infra/recurring-criticism-mechanics.md) | agent-infra |  |
+| guideline | [`reuse-verdict-mechanics`](../docs/guidelines/agent-infra/reuse-verdict-mechanics.md) | agent-infra |  |
 | guideline | [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md) | agent-infra |  |
 | guideline | [`roadmap-deferred-resolution-provenance`](../docs/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md) | agent-infra |  |
 | guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |

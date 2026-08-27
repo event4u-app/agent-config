@@ -115,9 +115,16 @@ describe('the live corpus', () => {
     it('reads 299 maintained skills and an exact token total', () => {
         // Pinned so a later reader can tell movement from a re-derivation. If
         // this fails after a legitimate change, the gate has already said so.
+        //
+        // 11461 -> 11455 on 2026-08-27: this branch shortened the
+        // `test-driven-development` and `testing-anti-patterns` descriptions to
+        // fit the standing-payload ceiling and to add the sibling-routing
+        // clauses a description cluster requires. Six tokens, in the direction
+        // the ceiling wants — a re-derivation of the pin after a decided
+        // change, which is what the comment above describes.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(299);
-        expect(e.skill_description_tokens).toBe(11461);
+        expect(e.skill_description_tokens).toBe(11455);
         expect(e.deprecated_count).toBe(0);
     });
 

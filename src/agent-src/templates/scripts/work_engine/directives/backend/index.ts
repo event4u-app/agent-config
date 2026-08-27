@@ -45,6 +45,17 @@ export const SUPPORTED_KINDS: ReadonlyArray<string> = ['ticket', 'prompt'];
 // test, verify, report). The leaf name is the dispatcher slot key; in Python
 // it is derived via `step.__name__.rsplit(".", 1)[-1]` — hardcoded here since
 // the modules are imported statically.
+//
+// `implement` stays BEFORE `test`, deliberately, and the order is not the
+// test-after instruction it looks like. The tuple is linear and runs once per
+// flow, so moving `test` in front of `implement` would buy exactly one test
+// phase followed by one code phase — batch-TDD, which is the second
+// anti-pattern rather than a fix for the first. Test-first is enforced INSIDE
+// `implement` instead: `./implement.ts` refuses to emit production work for a
+// behaviour whose failing test has not been observed (`state.tests.red`), so
+// the discipline is per behaviour while the tuple stays per flow. The `test`
+// slot here is the whole-suite verdict that gates `verify`, never the first
+// time a test is written.
 const _STEPS: ReadonlyArray<[string, { run: Step; AMBIGUITIES: ReadonlyArray<Record<string, string>> }]> = [
     ['refine', refine],
     ['memory', memory],

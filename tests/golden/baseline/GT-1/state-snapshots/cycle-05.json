@@ -58,9 +58,13 @@
     "plan": "success",
     "implement": "success",
     "test": "success",
-    "verify": "success",
-    "report": "success"
+    "verify": "blocked"
   },
-  "questions": [],
-  "report": "## Ticket\n\nGT-1-MULT — Add multiply(a, b) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add multiply(a, b)** — Append multiply(a: number, b: number): number to src/calculator.ts\n2. **Add multiply(a, b)** — Append a multiply test to tests/calculator.test.ts\n3. **Add multiply(a, b)** — Run vitest to confirm the new test passes\n\n## Changes\n\n- `src/calculator.ts` — applied by GT recipe\n- `tests/calculator.test.ts` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** Tests 4 passed (4)\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+  "questions": [
+    "@agent-directive: review-changes ticket=GT-1-MULT",
+    "> Ticket GT-1-MULT — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+    "> 1. Continue — run `review-changes` now",
+    "> 2. Abort — skip review (NOT recommended)"
+  ],
+  "report": ""
 }
