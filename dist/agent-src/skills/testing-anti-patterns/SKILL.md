@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: testing-anti-patterns
-description: "Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions"
+description: "BEFORE writing/changing tests, mocks, or test-only methods on production classes — mocking-the-mock, production pollution, overfit assertions; for order, `test-driven-development` wins."
 domain: quality
 workspaces:
   - engineering

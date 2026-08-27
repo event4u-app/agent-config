@@ -7,10 +7,20 @@
   "grader": {
     "path": "src/scripts/grade_target_readiness.ts",
     "dimensions": 10,
-    "knockouts": ["test-presence", "static-analysis", "security-supply-chain", "ci-enforcement"],
+    "knockouts": [
+      "test-presence",
+      "static-analysis",
+      "security-supply-chain",
+      "ci-enforcement"
+    ],
     "note": "Grades 0 Absent / 1 Present / 2 Enforced-in-CI / 3 Independent-and-diff-scoped, verdict `min` over the four knockouts, printed as `L<n> — bound by <dimension>`. Emits no aggregate figure — a test greps its own output for `%` and `/100`. `null` is 'this tool cannot tell' and is NOT a zero; on a knockout it binds at L0 with its reason printed."
   },
-  "state_vocabulary": ["available", "missing", "degraded", "unknown"],
+  "state_vocabulary": [
+    "available",
+    "missing",
+    "degraded",
+    "unknown"
+  ],
   "capabilities": {
     "unit-test": {
       "axis": "target",
@@ -53,9 +63,9 @@
       "owner_surface": "src/skills/test-driven-development/SKILL.md",
       "projection": null,
       "state": "available",
-      "rationale": "A process obligation, not a repository artefact: an observed failing test is a fact about a run, and no repository scan can recover it. Owned by the TDD skill's RED → GREEN → REFACTOR cycle, which this roadmap explicitly does not duplicate.",
-      "evidence": "src/skills/test-driven-development/SKILL.md:140 — 'Each case from the list then gets its own RED → GREEN cycle'",
-      "revisit_if": "a durable RED-run identifier is emitted somewhere a later reader can check, at which point this becomes projectable"
+      "rationale": "Was `projection: null` on the rationale that \"an observed failing test is a fact about a run, and no repository scan can recover it\". That held until 2026-08-26, when this entry's own `revisit_if` fired: `src/scripts/_lib/test_red_state.ts` now emits a durable RED-run record carrying the target, the observed failure CLASS, and a run identifier a later reader can cite. The classification stays the TDD skill's -- the store records the class the caller observed and never decides it, because a store that classified would be a second opinion competing with the contract. `projection` stays null on the contract's own terms: it names a grader DIMENSION, and `grade_target_readiness` reads a target repository, while this record is gitignored per-run state at `agents/runtime/state/test-results.json` on the machine that ran the test. An `axis: self` fact no shipped probe can read off a target is exactly the null case. Still owned by the RED -> GREEN -> REFACTOR cycle; what changed is that the cycle now leaves a trace.",
+      "evidence": "src/scripts/_lib/test_red_state.ts + tests/scripts/test_red_state.test.ts (22 tests). The load-bearing half is the invalid set: a broken fixture, a test syntax error, a missing unrelated dependency and a runner fault are recorded and marked NOT a valid red, so a production edit cannot be cleared by a failure that was never about the behaviour under test. Sensitivity proven -- admitting `broken-fixture` to the valid set turns 4 of the 22 red.",
+      "revisit_if": "The record is gitignored per-run state, so it proves a red was observed on THIS machine and nothing about CI or another developer. Revisit if a cross-machine claim is ever wanted: that needs a tracked artefact, which is a different decision under ADR-124 and not this entry's to make. Also revisit if a consumer of the record starts fuzzy-matching targets -- exact match is what stops a red observed for one behaviour clearing an edit to another."
     },
     "mutation-sensitivity": {
       "axis": "target",
