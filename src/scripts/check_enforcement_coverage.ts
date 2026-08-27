@@ -852,6 +852,34 @@ function main(argv: string[]): number {
         }
         const base = JSON.parse(fs.readFileSync(BASELINE, 'utf-8')).summary as Summary;
         const regressions: string[] = [];
+
+        // `undeclared` is the only counter here that is a TRUE shrink-only
+        // ratchet, and the asymmetry is worth stating because the two below it
+        // are not.
+        //
+        // A rule with no declaration has no carrier, so it can contribute to
+        // neither `frequency_gap` nor `local_only`. DECLARING one truthfully can
+        // therefore only RAISE both — the gap and the taskfile-only reach were
+        // always there, and the declaration is what made them computable. Both
+        // checks compare a number against a baseline taken when the rule was
+        // invisible, so an honest declaring change reds them by construction.
+        //
+        // Measured 2026-08-27, landing 14 declarations from
+        // `road-to-undeclared-obligation-disposition` Phase 1.3:
+        // `frequency gaps rose: 9 → 14` and `validators fell back to
+        // taskfile-only: 0 → 3`. Nothing fell back and no carrier fired less
+        // often. Both readings were new visibility.
+        //
+        // The sanctioned response is the one the failure message already names —
+        // regenerate the baseline — and the obligation this comment adds is that
+        // a change doing so SAYS WHY, because a regenerated baseline and a
+        // hidden regression look identical in a diff.
+        if (summary.undeclared > (base.undeclared ?? Number.POSITIVE_INFINITY)) {
+            regressions.push(
+                `undeclared rules rose: ${base.undeclared} → ${summary.undeclared} ` +
+                    `(a rule lost its enforced_by, or a new rule landed without one)`,
+            );
+        }
         if (summary.blocking < base.blocking) {
             regressions.push(`blocking coverage fell: ${base.blocking} → ${summary.blocking}`);
         }
