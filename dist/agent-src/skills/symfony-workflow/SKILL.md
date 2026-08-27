@@ -180,3 +180,38 @@ Then add these **Symfony-specific** checks:
 - Messenger `failure_transport` is opt-in; without it, failures vanish.
 - Compiled container changes need `cache:clear` in `prod` before debugging "config not applied".
 - Symfony 7.x removed deprecated APIs — verify `composer.lock` before assuming 6.x patterns work.
+
+## When NOT to use — components without the framework
+
+```
+A DEPENDENCY PROVES A LIBRARY IS AVAILABLE. ONLY THE ENTRY POINT AND THE
+ROUTER PROVE WHICH APPLICATION SHAPE IS RUNNING.
+`symfony/*` PACKAGES WITH NO SKELETON MARKER IS A THIRD STATE, AND THIS SKILL
+DOES NOT APPLY TO IT.
+```
+
+Symfony ships its ORM, container, collections and HTTP layer as
+independently installable packages, usable with no framework present — a
+published distribution model, not one consumer's arrangement. An application
+built that way has a **custom entry point and a custom router**. Routing it here
+offers a CLI that does not exist, a request-validation primitive that is not
+wired, and a routes file that was never there: every suggestion confidently
+wrong, and the reason visible only from the entry point.
+
+**The probe set, and its cost.** A fixed set of filesystem existence checks plus
+one manifest read — no directory walk, no content scan, and never re-derived per
+session. Any ONE marker present means the framework is real:
+
+| Probe | Meaning |
+|---|---|
+| `bin/console` | the console entry point the skeleton writes |
+| `config/bundles.php` | the bundle registry |
+| `config/services.yaml` | the DI service config |
+
+`symfony/*` in `composer.json` with **none** of those markers is
+*components-without-the-framework*. Say so and route away from this skill rather
+than answering as though the framework were there.
+
+Implemented deterministically in `src/install/detect_php_shape.ts`
+(`detectPhpShape`), whose `PROBE_PATHS` is this table and whose verdict names
+what a wrong route would have offered.
