@@ -28,6 +28,19 @@ roadmap_ref: road-to-frictionless-employee-workspace.md
 > The marker is `promote-to: stable`, not `stability: stable`: per
 > `STABILITY.md` § Beta markers that schedules the promotion for the next
 > release, which is the sanctioned step and keeps the flip a release decision.
+>
+> **Decided by AI council 2026-08-27, 2/2 convergent**, under the maintainer's
+> delegation of owner-reserved decisions for an autonomous drain run. Both seats
+> were explicit that the delegation is **bounded to that run** and establishes
+> no standing authority to promote a beta contract; the next one still needs an
+> owner decision or its own delegation. One seat added the discriminator this
+> review turned on — *settled* means enforced, actively referenced, carrying
+> zero open clauses, and reviewed on a trigger appropriate to its concern, while
+> *quiet* means merely unedited. The stale `.py` path both seats called ordinary
+> documentation drift rather than beta evidence is fixed in the same change.
+> **Revisit if** `lint_role_experiences` reports a pattern class the matrix does
+> not cover, or a non-developer reader hits a term-mismatch it does not handle —
+> the lint proves internal conformance, never that the labels are understood.
 
 ## What this is
 

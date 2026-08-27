@@ -22,8 +22,19 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 > is promoted or its own window is resolved, and the two advisory rows below
 > that carry pending maintainer work — `cloud-release.yml`'s rate-limit fix and
 > `deploy-mcp-worker.yml`'s auth alignment, each with a stated promotion
-> criterion — reach a recorded outcome. Reviewed together with the two sibling
-> contracts that lapsed on the same day; see § See also.
+> criterion — reach a recorded outcome, **and the resulting classification is
+> written into this contract** rather than left implicit in CI history. That is
+> a fact about the contract, measurable from CI, not a schedule.
+>
+> **Decided by AI council 2026-08-27, 2/2 convergent** (extend), under the
+> maintainer's delegation of owner-reserved decisions for an autonomous drain
+> run. One seat put the reason for extending most sharply: this contract's own
+> text declares the partition *not final* and names the two pending migrations,
+> so promoting it now would encode an explicitly unfinished state as
+> authoritative. It also named this file's self-documenting incompleteness as
+> the shape a genuinely-beta contract should have. **Revisit if** either
+> workflow meets its stated criterion, or the maintainer formally rejects the
+> proposed reclassification.
 
 ## The Iron Law
 
