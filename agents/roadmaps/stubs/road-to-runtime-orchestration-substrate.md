@@ -26,6 +26,15 @@ as `road-to-runtime-governance-flip.md` and
 `road-to-executable-specification-layer.md`. What remains is listed here so
 it is findable, not planned.
 
+**Provenance warning, and it is load-bearing.** The § references below point into
+`agents/tmp.old/`, which is a **disposable** inbox archive — the operator may
+delete it at any time, and it is gitignored, so it is not in a clone. The table's
+"Source section" column will then dereference into nothing. Before this stub is
+acted on, whoever acts on it either re-obtains the master or accepts that the
+column is a historical note rather than a pointer. The table's own content — the
+track and its gate — is written to stand alone precisely because of this; the
+section numbers are a convenience, not the record.
+
 | Track | Gate that must open first | Source section |
 |---|---|---|
 | One authoritative control store (SQLite/WAL for runs, tasks, leases, events) | governance-flip Phase 1; then a second question — whether a transactional store is a "state store" under the successor contract's own class table | § 3.2 |

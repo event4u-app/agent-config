@@ -16,7 +16,7 @@ relates: []
 # authored — a different question from whether an executable behaviour
 # contract exists at all, and now a landed one.
 estate_growth_exempt: "Charges +1 on the count half. Warranted on a measurement, not an opinion: `grep -rniI 'gherkin|cucumber|behat|given.when.then' src/` returns exactly ONE hit across 299 skills, and that hit is a rubric line in judge-artifact-completeness telling a reviewer that acceptance criteria should be Given-When-Then — the suite grades the shape and teaches nobody to execute it. The companion measurement is harder: zero of 299 skills mention mutation testing (`grep -rliI 'mutation test|stryker|infection|mutmut' src/skills/` is empty) while `grade_target_readiness.ts:183-189` grades consumer repos on exactly that dimension."
-estate_offset_exempt: "No archive move is available in this change. Sixteen source proposals across four generations are reduced to two roadmaps plus one stub; the seven infrastructure tracks the sources wanted as their own files (Concern DAG, resident code intelligence, confidence ladder, independence classes, evidence graph, workspace leases, multi-repo pilot) are consolidated into that single stub rather than landed as seven roadmaps."
+estate_offset_exempt: "NO OFFSET IS CLAIMED FOR THIS FILE. The first draft cited the same source-consolidation as the sibling roadmap, and the council (2/2, 2026-08-27) was right that one avoided expansion cannot independently offset two additions; the consolidation offset is claimed by road-to-runtime-governance-flip.md alone. This addition therefore rests on its growth claim only, and it is the weaker of the two — Phase 1 is earned by the measurement, Phases 2 and 3 are gated behind a demand blocker precisely because a measured absence is not a mandate to build."
 ---
 # Road to an executable specification layer — the suite grades a capability it does not teach, on both axes
 
@@ -34,12 +34,19 @@ estate_offset_exempt: "No archive move is available in this change. Sixteen sour
 ## Goal
 
 An agent working in a consumer repo can be told, by this suite, when a change
-needs an executable behaviour contract and when it does not — and for the stacks
-this suite already supports it can write one that runs on the project's *own*
-test runner. The suite stops grading consumer repos on assurance dimensions it
-teaches nothing about: either the skill exists, or the grading dimension is
-withdrawn. Nothing here introduces a second test framework, a parser, or an
-intermediate representation.
+needs an executable behaviour contract and when it does not. That is Phase 1 and
+it is what the measurements below earn.
+
+If and only if demand arrives (see the first blocker), the same agent can write
+such a contract that runs on a runner the consumer **already had**, or on one the
+consumer explicitly decided to adopt — the two branches are different and both
+are named, because the first draft claimed no new framework and then proposed
+one. Nothing here builds a parser or an intermediate representation.
+
+The suite also stops carrying an unexplained asymmetry: it grades consumer repos
+on mutation-test strength while teaching nothing about it. Whether that is closed
+by adding the guidance or by explaining the dimension is the second blocker's
+question — the Goal is that it is answered, not that the grader is withdrawn.
 
 ## The two measurements this exists for
 
@@ -124,13 +131,16 @@ and re-proposing it later should cost an argument:
 
 ## Phase 2 — One native adapter, integrate before replacing
 
-- [ ] **2.1 Detect what the consumer already has, and use it.** An existing
-      Behat, Codeception-BDD or Cucumber setup is the runner; nothing is
-      introduced beside it. Absent one, the choice is the stack's native path,
-      never a second framework: `playwright-bdd` for TypeScript because it sits
-      on the Playwright foundation this suite already teaches, and Behat for
-      Laravel with Pest staying at the unit layer.
-      verify: the detection step is added to the stack-detection skill and returns a named runner or an explicit "none detected" for each of three fixtures.
+- [ ] **2.1 Reuse an existing runner where one exists; otherwise make the
+      adoption explicit.** The first draft said "never a second framework" and
+      then named Behat alongside Pest, which is a second framework — the council
+      (2/2) caught the contradiction, and `playwright-bdd` is an added dependency
+      too unless it is already installed. The honest invariant has two branches:
+      an existing Behat, Codeception-BDD or Cucumber setup **is** the runner and
+      nothing is introduced beside it; absent one, adopting a runner is an
+      explicit dependency decision the consumer makes, not a default this suite
+      slips in.
+      verify: the detection step returns a named existing runner or an explicit "none detected" across three fixtures, AND the none-detected branch emits an adoption decision rather than a recommendation.
 - [ ] **2.2 Ship exactly one adapter end to end.** One stack, one worked
       example, one runnable specification that fails before the implementation
       and passes after. Two adapters is where a generic API starts looking
@@ -166,11 +176,36 @@ and re-proposing it later should cost an argument:
 
 ## Blockers
 
+### blocker: phase-2-and-3-need-demand-not-only-a-stack
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** all of Phase 2 and all of Phase 3. Phase 1 lands regardless.
+- **What to do:** pick exactly one — (a) require a named consumer request
+  before Phase 2 starts: a stack, a change that needed an executable contract,
+  and what went wrong without one; (b) start Phase 2 on the maintainer's own
+  judgement of which stack matters most, accepting that the adapter is built
+  against a hypothesis; or (c) move Phases 2 and 3 into
+  `stubs/road-to-runtime-orchestration-substrate.md` and reduce this file to the
+  Phase 1 increment.
+- **Resolved when:** the choice is recorded here, and for (a) the first
+  qualifying request is quoted in this roadmap with its stack and failure case.
+- **Recommendation:** (a). The council (2/2, 2026-08-27) rejected the first
+  draft on exactly this point and the objection holds: the two measurements
+  establish that this suite *teaches* nothing about executable specification or
+  mutation testing, which earns Phase 1 — documentation — and does not establish
+  that anyone needs an adapter. (c) is cleaner but throws away a scoped design
+  that is cheap to keep; (a) keeps it and refuses to build it on a guess.
+- **If you do nothing:** Phase 1 lands and the suite gains the routing decision
+  it currently lacks, which is the increment the measurement actually bought.
+  That is the expected outcome, not a stalled one.
+
 ### blocker: which-stack-gets-the-first-adapter
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** Phase 2 steps 2.2 and 2.3. Phase 1 lands regardless — the
+- **Blocks:** Phase 2 steps 2.2 and 2.3, and only once the demand blocker above
+  is resolved in favour of building. Phase 1 lands regardless — the
   observable-behaviour test and the anti-script rule are stack-neutral prose —
   and Phase 3.2 only needs whichever specification 2.2 produced.
 - **What to do:** pick exactly one — (a) TypeScript via `playwright-bdd`, which
@@ -231,9 +266,17 @@ and re-proposing it later should cost an argument:
 
 ## Acceptance Criteria
 
+**AC-1 and AC-2 are the closure set.** They are what the two measurements bought
+and they are stack-neutral. AC-3 to AC-6 belong to Phases 2 and 3 and are
+**conditional on the demand blocker resolving in favour of building** — if it
+does not, they close `[-]` with that blocker as the reason, and the roadmap is
+complete on AC-1 and AC-2. Writing them as unconditional was the contradiction
+the council named: a roadmap whose own blocker recommends shipping Phase 1 alone
+cannot also require adapter work to close.
+
 - [ ] AC-1 — A single named section in the suite answers "does this change owe an executable behaviour contract?", contains at least two cases answering no, and carries the anti-script rule with a worked wrong-then-right pair.
 - [ ] AC-2 — `judge-artifact-completeness/rubrics/ticket-quality-score.json:21` no longer asserts a Given-When-Then convention the suite defines nowhere; it references the section from AC-1.
-- [ ] AC-3 — For one stack, an executable specification runs on the project's own runner, and its recorded CI run shows red before the implementation and green after — the green alone does not satisfy this.
-- [ ] AC-4 — Every stack the detection step recognises is either covered by an adapter or named as uncovered; the uncovered list is non-empty and its count matches the detection surface's own list.
-- [ ] AC-5 — Altering one example value in that specification turns the run red, asserted by a test rather than by a claim.
-- [ ] AC-6 — A changed-surface mutation pass reports survivors and timeouts as separate counts, cites the archived refusal in its header, and every assurance-registry state changed in this roadmap carries an `evidence` field naming a runnable command — with `e2e-test` unchanged.
+- [ ] AC-3 — *(conditional)* For one stack, an executable specification runs on a runner the consumer already had or explicitly adopted, and its recorded CI run shows red before the implementation and green after — the green alone does not satisfy this.
+- [ ] AC-4 — *(conditional)* The detected stacks partition exactly into covered and uncovered — `covered ∪ uncovered = detected`, the two sets disjoint — and `uncovered` is non-empty. The first draft required the uncovered count to equal the whole detection list, which with one adapter shipped is arithmetically impossible; the council (2/2) caught it.
+- [ ] AC-5 — *(conditional)* Altering one example value in that specification turns the run red, asserted by a test rather than by a claim.
+- [ ] AC-6 — *(conditional)* A changed-surface mutation pass reports survivors and timeouts as separate counts, cites the archived refusal in its header, and every assurance-registry state changed in this roadmap carries an `evidence` field naming a runnable command — with `e2e-test` unchanged.
