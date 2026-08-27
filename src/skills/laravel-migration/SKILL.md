@@ -36,7 +36,8 @@ Use this skill when the user asks to create a database migration, add a column, 
 - Use `decimal` for money — never `float`.
 - Add indexes for columns used in WHERE clauses and JOINs.
 - Match existing column naming patterns in the same table or domain.
-- Always include a reversible `down()` method.
+- Declare recovery: a reversible `down()`, or a roll-forward plan in the file
+  (see § The recovery contract below). Silence is the violation.
 
 ## Laravel projects
 
@@ -73,7 +74,10 @@ return new class extends Migration {
             $table->foreign('customer_id')
                 ->references('id')
                 ->on('customers')
-                ->onDelete('cascade');
+                // Choose the referential action; never inherit it from a
+                // template. See "Referential action is a decision" below.
+                ->onDelete('cascade'); // cascade: rows here are expendable
+                                       // WITHOUT their customer
 
             $table->index('is_active');
         });
@@ -143,6 +147,54 @@ php artisan migrate --env=testing             # testing
 1. Migration file with up() and down() methods
 2. Model updates if columns or relationships changed
 
+### The recovery contract — one obligation, two branches
+
+Every migration declares **one** of these, and silence is the violation:
+
+1. a `down()` that restores the prior state; **or**
+2. a **roll-forward recovery plan, written in the migration file itself**, for
+   the cases where restoration is genuinely impossible — a completed
+   destructive backfill, a dropped column whose data is gone.
+
+The second branch is not a lighter obligation. A migration taking it records, in
+its own file comments, all three of:
+
+1. **why restoration is impossible**, with the evidence — the data was checked
+   and is unrecoverable, not assumed to be;
+2. **the ordered recovery procedure** — the steps, the inputs each needs, and
+   the criteria that say recovery succeeded;
+3. **the responsible recovery owner**.
+
+Vague intent or missing detail is the violation. The plan lives in the migration
+file and lands in the same diff, because a plan documented "later" somewhere else
+is a plan nobody can review at the moment it matters.
+
+## Referential action is a decision
+
+The template above labels its `onDelete('cascade')` as **one branch**, not a
+default. Copying it unchanged is how a delete of one customer silently removes
+records that had independent value.
+
+| The child row, without its parent, is | Action | What happens |
+|---|---|---|
+| **expendable** — it only means something as part of the parent | `cascade` | deleted with the parent |
+| **self-valued** — it is a record in its own right (an invoice, an audit row, a payment) | `restrict` (or `no action`) | the parent delete FAILS until the child is dealt with |
+| **survivable** — it outlives the parent with the link removed | `set null` | the column is nulled; requires a nullable column |
+
+Two consequences worth stating because they are the ones missed:
+
+- `restrict` is the safe default for anything a finance, audit, or legal reader
+  would expect to still exist. A failed delete is a conversation; a cascaded
+  delete is a recovery.
+- `set null` needs the foreign-key column to be nullable, and it needs the
+  application to handle the orphan state. Choosing it without both is choosing a
+  constraint error later.
+
+Soft deletes do **not** interact with this: `onDelete` fires on a real `DELETE`,
+so a soft-deleting parent never triggers it. If the model soft-deletes, the
+referential action describes what happens on a force-delete or a purge, and that
+is the case to decide against.
+
 ## Gotcha
 
 - Always check if the table/column already exists before creating the migration — the model doesn't always check.
@@ -155,7 +207,9 @@ php artisan migrate --env=testing             # testing
 - Do NOT create migrations without specifying the correct connection when multiple databases exist.
 - Do NOT create tables without checking the project's naming conventions (prefixes, casing).
 - Do NOT use raw SQL in migrations when Schema builder works.
-- Do NOT forget to make migrations reversible (down method).
+- Do NOT leave recovery undeclared — ship a `down()` that restores the prior
+  state, or the three-part roll-forward plan in the migration file. Neither is
+  optional; choosing between them is.
 - Do NOT use `float` for money — use `decimal`.
 - Do NOT forget indexes on foreign keys and frequently filtered columns.
 
