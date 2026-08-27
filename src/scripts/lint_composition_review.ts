@@ -22,8 +22,17 @@
  * `candidate` that resolves to no artifact in the tree, a `none` candidate
  * paired with a disposition other than `none_found` (or the reverse), or a
  * duplicate candidate inside one block. A record pointing at an incumbent that
- * does not exist is worse than no record: it reads as evidence of a search that
- * cannot have happened.
+ * does not exist is worse than no record: the reference is checkable and wrong.
+ *
+ * **What that certifies is REFERENTIAL CONSISTENCY, never that a search
+ * happened.** Narrowed after an independent review, where both seats made the
+ * point independently: an author can name any existing artifact, write
+ * `create_separate` and a sixteen-character rationale, and pass every check
+ * here. The earlier wording said such a record "reads as evidence of a search
+ * that cannot have happened", which is a claim about the search — and this gate
+ * has none to make. It buys that a record cannot point at nothing; whether it
+ * points at the RIGHT thing is a reviewer's judgement, and the roadmap's own
+ * Risk 1 is that the field becomes a pro-forma line.
  *
  * **ADVISORY (never fails) — an artifact ADDED relative to a base ref carrying
  * no record at all.** Reported by count and by path, exit 0. Flipping this to a
@@ -351,7 +360,7 @@ export function checkArtefact(rel: string, text: string, known: ReadonlySet<stri
                 out.push({
                     kind: 'unresolvable-candidate',
                     file: rel,
-                    detail: `${where}: \`${cand}\` names no artifact in the tree — a record pointing at a non-existent incumbent reads as evidence of a search that cannot have happened.`,
+                    detail: `${where}: \`${cand}\` names no artifact in the tree. The reference is checkable and wrong — which is all this gate can tell you; it cannot tell you whether a search happened.`,
                 });
             }
         }

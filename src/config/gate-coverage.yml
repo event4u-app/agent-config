@@ -1983,13 +1983,43 @@ gates:
     note: >
       road-to-composition-before-creation Phase 4.1. Two halves with different
       teeth, on purpose. The STRUCTURAL half is hard: a present record whose
-      candidate resolves to nothing, or whose `none`/`none_found` pair
-      disagrees, exits 1 — a record pointing at a non-existent incumbent reads
-      as evidence of a search that cannot have happened. The PRESENCE half is
-      advisory and exits 0: an artifact added without a record is reported by
-      path and never blocks. Flipping that to a block needs a false-positive
-      rate from at least one release of advisory operation, which the roadmap
-      records as not yet measured and does not pre-authorise.
+      candidate resolves to nothing, whose `none`/`none_found` pair disagrees,
+      whose disposition is off-enum, which repeats a candidate, which is empty,
+      or which uses a YAML block scalar, exits 1. The PRESENCE half is advisory
+      and exits 0: an artifact added without a record is reported by path and
+      never blocks. Flipping that to a block needs a false-positive rate from at
+      least one release of advisory operation, which the roadmap records as not
+      yet measured and does not pre-authorise.
+
+      WHAT IT CERTIFIES, narrowed after an independent review (2 seats, both
+      raising it): REFERENTIAL CONSISTENCY, never that a search happened. An
+      author can name any existing artifact, write `create_separate` and a
+      sixteen-character rationale, and pass. The earlier wording here said a
+      record pointing at a non-existent incumbent "reads as evidence of a search
+      that cannot have happened", which reads as a claim about the search — it is
+      not one, and the module docstring makes the same narrowing. What the hard
+      half buys is that a record cannot point at nothing; whether it points at
+      the RIGHT thing is a reviewer's judgement, and the roadmap's own Risk 1 is
+      that the field becomes a pro-forma line.
+
+      DISCRIMINATION is carried by `--self-test` (8 cases, 5 rejecting), not by
+      the canary. The canary is one create-only recipe by design and exercises
+      the unresolvable-candidate door only; the other five hard doors and the
+      advisory path are covered by the self-test and by
+      tests/scripts/lint_composition_review.test.ts, including a real-git
+      fixture for the untracked-addition union.
+
+      COMPATIBILITY: this is a new HARD whole-corpus gate, so a pre-existing
+      malformed record anywhere in the tree would fail every later PR. Measured
+      at landing: 419 artifacts scanned, 0 records malformed, because zero
+      artifacts carry the field at all — the hard half can only fire on a record
+      that EXISTS, so a corpus with none cannot fail it. The first record written
+      is the first thing that can.
+
+      `{{.QUIET_FLAG}}` in the taskfile against `argv: []` here: `--quiet`
+      suppresses per-finding lines only. Verified — `scanned: 419` and the exit
+      code are byte-identical with and without it, so the coverage measurement
+      and the CI invocation cannot diverge.
 
       The floor is 380 against a live 419 — room for real deletions, far above
       a collapse. The corpus is the whole estate rather than the diff precisely
