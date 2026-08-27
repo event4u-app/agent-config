@@ -18,8 +18,8 @@
       "name": "Acceptance criteria",
       "cross_cutting": false,
       "weight": 3,
-      "criterion": "Acceptance criteria are written as verifiable Given-When-Then or numbered checklist items, not as task descriptions. Each criterion is independently testable. An implementer can write a test before touching code.",
-      "gap_signal": "AC section missing; or AC items are task descriptions ('implement the API') rather than verifiable outcomes ('returns 200 with a body matching the schema')."
+      "criterion": "Acceptance criteria are independently testable outcomes, not task descriptions — an implementer can write a test before touching code. Whether they are owed in Given-When-Then form is decided by the observable-behavior test in `src/skills/test-case-discovery/SKILL.md` § Does this change owe an executable behavior contract?, not asserted here: most tickets owe verifiable checklist items, and only a change with an audience outside the code owes a behavior contract. Where one is owed, that section's anti-script rule applies — a criterion naming a selector, a timeout or a keystroke scores as a gap, however well-formed its Given-When-Then.",
+      "gap_signal": "AC section missing; or AC items are task descriptions ('implement the API') rather than verifiable outcomes ('returns 200 with a body matching the schema'); or a Given-When-Then criterion scripts the interface ('When I click #submit') instead of stating the rule."
     },
     {
       "id": "dor_readiness",

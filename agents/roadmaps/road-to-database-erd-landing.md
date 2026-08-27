@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "One of four siblings split from a single inbox drop. This one exists because the analysis found a finished, tested capability sitting off-trunk that three of the four input proposals planned to build from scratch. Its disposition is landing, not building, which is a different task from every sibling and from anything in the current estate — rule 11 forbids folding it into the modeling roadmap that would otherwise have rebuilt it."
-estate_growth_exempt: "Two blockers were discovered while verifying the branch: the skill it adds consumes a skill_count allowance that is deliberately zero, and its last green CI predates every gate added since release/14.6.0. Both were found by the verification pass, not proposed by the inbox artifact."
+estate_growth_exempt: "Claims `open_blockers` 43 -> 44: ONE blocker, `erd-skill-cannot-clear-the-preamble-ceiling`, recording a MEASURED obstacle rather than an unanswered question. `check_preamble_payload_budget`'s grace ceiling leaves 17 tokens of headroom on origin/main (138,195 against 138,212) and the skill needs 53 -- measured in clean worktrees, including a probe that gutted the description to 12 tokens and was STILL one token over, because the catalog bucket costs 6 tokens for `\"- schema-erd: \"` before any description. Its config says the ceiling \"may never move UP\", so the addition is blocked on headroom, not on work. The blocker exists because the alternative is losing the measurement: without it the next attempt re-derives 5,456 lines of revalidation from scratch, which is the exact seven-day loss `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md` records. AI council 2026-08-27, 2/2, chose \"block until a separate payload-reduction change creates headroom\" over raising the ceiling or dropping the skill. This change adds NO skill and NO roadmap -- skill_count and active_roadmaps are unchanged."
 ---
 # Road to database ERD landing
 
@@ -194,14 +194,13 @@ allowance the modeling sibling is arguing about — recorded as
 
 ## Phase 3 — Close the loop that let this sit for six days
 
-- [ ] **3.1 Record why a finished branch went unlanded, as a finding rather than an anecdote.**
+- [x] **3.1 Record why a finished branch went unlanded, as a finding rather than an anecdote.**
       The mechanism is identifiable: `road-to-session-closeout` step 7.2 required
       "a merged change or a recorded disposal" per rescued worktree and was
       marked `[x]` with neither for this branch. Write the finding to
       `agents/evidence/analysis/` — what the step asked for, what it got, and
       why the checkbox could be flipped anyway.
-      verify: the evidence file exists and names the step, the branch, and the
-      six-day gap.
+      verify: **discharged, and it is the one step in this roadmap whose whole deliverable is in this change.** `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md` names the step (`archive/road-to-session-closeout.md:596-599`), the branch (`feat/schema-erd-diff`, five commits dated 2026-08-20) and the gap — **seven** days, not six. The mechanism is identified rather than asserted: 7.2's verify joins two clauses with **and** that have different observability. "None appears in a fresh dirty-worktree scan" is a command that answered yes; "each has a merged change or a recorded disposal" is a fact about `origin` the step never queries plus the absence of a record, which is indistinguishable from the absence of a need for one. The observable half passed and the conjunction reported its value — the same shape as a gate that scans an empty corpus and exits 0.
 
 - [ ] **3.2 Make an unlanded finished branch findable by something other than memory.**
       The analysis found this branch by scanning every local ref for commits
@@ -250,6 +249,45 @@ allowance the modeling sibling is arguing about — recorded as
 - **Resolved when:** either the rebase-and-push of `feat/schema-erd-diff` is authorised in a turn that says so, or `## Notes` records a replacement landing shape with the commits it carries.
 - **Recommendation:** cherry-pick the four implementation commits onto a fresh branch and leave the archive commit behind. It avoids rewriting five inherited commits and drops the archive-index conflict at the same time.
 - **If you do nothing:** 5456 tested lines stay off-trunk, the capability is proposed again by the next analysis pass that cannot see the branch, and the six-day gap becomes a longer one.
+
+### blocker: erd-skill-cannot-clear-the-preamble-ceiling
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** the merge, and only the merge. Every verification step in Phases 1,
+  2 and 3 ran and produced its evidence — the cherry-pick is clean, the 134 tests
+  pass, both sabotage probes fired, the admission is recorded, and
+  `check_estate_count` is satisfied by this roadmap's own
+  `estate_growth_exempt` claim. What cannot happen is the push.
+- **Class:** 3
+- **What to do:** `check_preamble_payload_budget`'s `grace_ceiling` is **138,212**,
+  set to the exact measured total on 2026-08-24 with zero slack, and its config
+  states "**It may never move UP**". Measured in clean worktrees:
+  `origin/main` = **138,195** (−17), plus this skill = **138,248** (+36), plus
+  the same skill with its description gutted to 12 tokens = **138,213** (+1). The
+  floor is structural: the catalog bucket is `Σ "- <name>: <description>\n"`
+  (`preamble_byte_census.ts:399`) and `"- schema-erd: "` alone is **6 tokens**, so
+  17 tokens of headroom cannot hold a name plus a usable description. **No skill
+  of any description lands until headroom exists.** Pick one: (a) land a separate
+  payload-reduction change first, then this — the council's own fallback; (b) ship
+  the scripts and tests without the skill, which the council refused 2/2 on
+  reachability but which does make `grep -rl "erDiagram" src/` non-empty and stops
+  the capability being re-proposed; (c) reopen the grace ceiling's "may never move
+  UP" invariant, which is a maintainer decision about a registered budget and was
+  refused 2/2 here.
+- **Resolved when:** either `check_preamble_payload_budget` reports a measured
+  total at least 36 tokens below 138,212 on `origin/main`, or `## Notes` records
+  which of (b) or (c) was chosen and why.
+- **Recommendation:** (a). The work is done and verified; it is waiting on
+  headroom, not on effort, and the 5,456 lines are safe on
+  `feat/schema-erd-diff` plus the cherry-picked `drain/database-erd-landing`
+  branch. Full measurement and the council reasoning:
+  `agents/evidence/analysis/estate-payload-ratchet-collision-2026-08-27.md`.
+- **If you do nothing:** the capability stays off-trunk and gets proposed a fourth
+  time. It has already been proposed three times by sources that could not see the
+  branch, and the seven-day gap in
+  `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md` becomes a
+  longer one — which is the exact failure Phase 3 exists to stop repeating.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->

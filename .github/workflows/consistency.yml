@@ -442,6 +442,32 @@ jobs:
             fi
           }
 
+      - name: The authoring-search record is well-formed where it exists
+        # Two halves with different teeth. STRUCTURAL is hard: a present
+        # `composition_review` whose candidate resolves to no artefact, or whose
+        # `none`/`none_found` pair disagrees, exits 1 — a record naming an
+        # incumbent that is not in the tree reads as evidence of a search that
+        # cannot have happened, which is worse than carrying no record.
+        # PRESENCE is advisory and exits 0: an added artefact without a record
+        # is reported by path. Flipping that to a block needs a false-positive
+        # rate from at least one release of advisory operation, which
+        # road-to-composition-before-creation records as not yet measured and
+        # explicitly does not pre-authorise.
+        #
+        # Exit 2 is degraded-advisory here, matching every sibling step; a dead
+        # scan scope is exit 1 inside the gate for the same reason the step
+        # below states — otherwise a moved corpus root downgrades the hard half
+        # to advisory without anyone noticing.
+        run: |
+          ./scripts-run src/scripts/lint_composition_review || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::lint_composition_review internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
       - name: Archived-review dispositions are terminal (plan-review-gates §2.7)
         # NOT gated on `pull_request`, unlike the two R2 steps above: those
         # evaluate the current diff, this reads the FROZEN records, which R2

@@ -44,7 +44,7 @@ Fires once per creation task, not once per edit.
 
 ## The three phases
 
-**A — Understand** (≤ 5 clarifying questions: problem, trigger surface, should-trigger examples, near-misses, artifact type) · **B — Research** (mandatory four-surface overlap scan; open + skim the 3 nearest matches; extend-vs-create decision) · **C — Draft** (2-3 description variants first, then the body; live size enforcement). Per-phase procedure + the roadmap batch-mode carve-out: the mechanics guideline below.
+**A — Understand** (≤ 5 clarifying questions: problem, trigger surface, should-trigger examples, near-misses, artifact type) · **B — Research** (mandatory four-surface overlap scan; open + skim the 3 nearest matches; extend-vs-create decision, written into the artifact as `composition_review:`) · **C — Draft** (2-3 description variants first, then the body; live size enforcement). Per-phase procedure + the roadmap batch-mode carve-out: the mechanics guideline below.
 
 ## Golden rules
 

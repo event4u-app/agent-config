@@ -194,6 +194,7 @@ tasks:
       - task: check-gate-completeness
       - task: check-suppression-hygiene
       - task: check-review-dispositions
+      - task: lint-composition-review
       - task: lint-evidence-artifacts
       - task: lint-plan-risk-register
       - task: check-completion-review

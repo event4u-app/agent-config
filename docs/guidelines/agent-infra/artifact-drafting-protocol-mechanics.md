@@ -57,6 +57,61 @@ and let the user re-decide.
 Carry the summary into the commit message (*"Reviewed before drafting:
 X, Y"*).
 
+### Where the answer is written — `composition_review:`
+
+A commit message is not a tree artifact. Measured 2026-08-27 over the twenty most
+recently added skills and rules
+(`agents/evidence/analysis/authoring-search-record-sample-2026-08-27.md`), **1 of
+20** carried a machine-readable record of the Phase-B verdict; 9 carried a strict
+prose one, and the rest carried a `See also` gloss or a routing row. So an
+artifact authored after a thorough scan and one authored after none were
+indiscernible in the tree — which is why the overlap tools
+(`audit_overlap`, `audit_skill_overlap`, `report_layer_overlap`) run over a
+corpus rather than over a decision.
+
+The record is a frontmatter block, defined in `skill.schema.json` and
+`rule.schema.json`, and **optional on existing artifacts by design — nothing is
+backfilled**:
+
+```yaml
+composition_review:
+  - candidate: skill:existing-ui-audit      # skill: / rule: / command: / guideline: / none
+    disposition: create_separate            # what happened to this candidate
+    rationale: audits what exists before a write; this governs the write itself
+```
+
+Four dispositions, and the discriminator for each:
+
+| Value | Means |
+|---|---|
+| `extend_incumbent` | the incumbent absorbed the change; no new artifact was created |
+| `compose_with_incumbent` | the new artifact routes to the incumbent rather than restating it |
+| `create_separate` | the incumbent exists, was evaluated, and a separate artifact was authored anyway |
+| `none_found` | the search ran and found no credible incumbent — pairs only with `candidate: none` |
+
+`none_found` exists so an author is never pushed to **invent** an incumbent to
+satisfy the schema. That failure would manufacture the pro-forma record the
+mechanism is supposed to measure, using the mechanism.
+
+`create_separate` is the value no other disposition vocabulary in this tree can
+express, and it is why this is a fifth enum rather than a reuse. The nearest
+incumbent is the harvest ledger's `adopt | adapt`
+(`lint_harvest_provenance.ts:76`), which deliberately **excludes** rejection
+(`:222`) because a rejected harvest has no artifact to cite. This record is the
+mirror image — it is written *on* the artifact being created — so rejection is
+the value it most needs. The finding, review and archive vocabularies are about
+defects, review rows and roadmap files respectively; none of them has a slot for
+"an incumbent existed and I built anyway".
+
+**What the lint does and does not do.** `lint_composition_review` fails a record
+whose `candidate` resolves to no artifact, or whose `none` / `none_found` pair
+disagrees — a record naming an incumbent that is not in the tree reads as
+evidence of a search that cannot have happened. It *reports without failing* an
+addition carrying no record at all. It cannot check that the search happened,
+that the rationale is true, or that the named incumbent is the nearest one;
+flipping the advisory half to a block needs a false-positive rate from at least
+one release of advisory operation, which does not exist yet.
+
 ## Phase C — Draft
 
 Propose **2-3 description variants** — Conservative / Pushy
@@ -135,7 +190,7 @@ that lives only in the roadmap that flipped the default becomes unreachable
 the moment that roadmap is archived.
 
 
-## Complexity budget — the six questions before a new artefact
+## Complexity budget — the six questions before a new artifact
 
 Folded here from the 9.4.0 review (Prio 5), which named the failure mode:
 "das Paket kann fast jede Kritik mit einem weiteren Mechanismus beantworten"
@@ -144,12 +199,12 @@ inflation). This REPLACES the ad-hoc "should this exist" prose — it is a
 checklist, not a new gate/rule (adding a gate to enforce "add less" would be
 the very inflation it guards against). Before drafting any new skill / rule /
 command / hook / gate, answer all six; a "no" on **replaces** or **removable**
-is a strong signal to fold into an existing artefact instead:
+is a strong signal to fold into an existing artifact instead:
 
 1. **Replaces?** — what existing mechanism does this retire or subsume? (If
    nothing, justify why the surface must grow.)
 2. **Overlaps?** — does it duplicate a trigger / responsibility another
-   artefact already owns?
+   artifact already owns?
 3. **Discoverable?** — will a user actually find it, or does it just raise the
    catalog count?
 4. **Measurable?** — is there a signal that would show it earning its place
