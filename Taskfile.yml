@@ -222,6 +222,7 @@ tasks:
       - task: lint-provenance
       - task: lint-harvest-provenance
       - task: check-score-contract
+      - task: check-supervision-claim-atomicity
       - task: lint-skill-router-head
       - task: lint-provenance-vocabulary
       - task: lint-eval-specs

@@ -268,7 +268,6 @@ that (`task check-comparison`), so this column can never lie.
 
 | Claim | Our evidence | The category | Checkable? |
 |---|---|---|---|
-| No resident runtime — no background daemon, no state database or service, no auto-write memory; deterministic, rebuildable file indexes only. | [`docs/contracts/no-runtime-boundary.md#file-first`](../docs/contracts/no-runtime-boundary.md) | Swarm-runtime tools in this category ship a background process and/or a resident state store by design; that is an architectural fact of the runtime approach, not a defect. | ✅ |
 | Capability/benchmark results are published — including the runs where the package changed nothing. | [`docs/benchmark.md`](../docs/benchmark.md) | A category headline figure (e.g. an '84.8%' score) appears across marketing surfaces with no reproducible methodology published — so it cannot be verified either way. | ✅ |
 | Every public claim binds to machine-checked evidence. | [`docs/CLAIMS.md`](../docs/CLAIMS.md) | Marketing claims in this category are not bound to a machine-checked ledger a reader can reproduce. | ✅ |
 | Skills publish their own known limits, each with a witness test. | [`tests/scripts/witness/check_refs_relative_gap.test.ts`](../tests/scripts/witness/check_refs_relative_gap.test.ts) | Published known-limitation surfaces backed by reproducing tests are not a standard artifact in this category. | ✅ |
@@ -287,7 +286,6 @@ keep in sync.
 
 | Without it | The control | Evidence |
 |---|---|---|
-| A background process keeps running after you stop using it, holds state you did not write, and has to be kept alive and upgraded. | No resident runtime — no background daemon, no state database or service, no auto-write memory; deterministic, rebuildable file indexes only. | [`docs/contracts/no-runtime-boundary.md#file-first`](../docs/contracts/no-runtime-boundary.md) |
 | You adopt on a headline number nobody can re-run, and never learn which of its measurements changed nothing. | Capability/benchmark results are published — including the runs where the package changed nothing. | [`docs/benchmark.md`](../docs/benchmark.md) |
 | A shipped number drifts from the artefact it came from and stays published, because nothing re-checks the claim against its source. | Every public claim binds to machine-checked evidence. | [`docs/CLAIMS.md`](../docs/CLAIMS.md) |
 | A limitation is discovered by you, in your repo, at the moment it costs you something — instead of being stated up front and held by a test. | Skills publish their own known limits, each with a witness test. | [`tests/scripts/witness/check_refs_relative_gap.test.ts`](../tests/scripts/witness/check_refs_relative_gap.test.ts) |

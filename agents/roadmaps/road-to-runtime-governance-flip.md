@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -19,7 +19,14 @@ relates:
 # road-to-portable-runtime-and-update-check, road-to-mcp-runtime-integrity) uses
 # "runtime" for the CLI's own execution, not for a resident process, so none of
 # them carries the doctrine this file repeals.
-# STATUS IS DRAFT, DELIBERATELY. Both council seats held that an open blocker
+# STATUS WAS DRAFT, DELIBERATELY, AND IS NOW READY (flipped 2026-08-27).
+# The flip is not a status edit — it is the third clause of
+# `blocker: public-claim-transition-shape`'s Resolved-when, and AC-9 makes it
+# the thing that RECORDS the resolution. Both blockers now carry `resolved`
+# naming their chosen option, and Phase 3's 3.4 check has been seen red on all
+# three seeded negatives. The historical reason for draft is kept below
+# because it explains a vocabulary limit that has not changed.
+# ORIGINAL NOTE: Both council seats held that an open blocker
 # asking the maintainer to choose among three release strategies contradicts
 # `status: ready`, and both prescribed `status: blocked`. That value does not
 # exist here — `src/agent-src/templates/roadmaps.md:31` states the vocabulary is
@@ -350,19 +357,45 @@ already governs something running — a second seat flagged exactly that phrasin
 in the first draft. Where the two readings are hard to separate, say the contract
 is *being established*.
 
-- [ ] **3.1 Rewrite the README headline and body to the policy, not the
+- [x] **3.1 Rewrite the README headline and body to the policy, not the
       property.** `README.md:3` and `:17`. The old text asserts an absence
       (`zero runtime daemon`); the replacement states the governed position —
       runtime is permitted under a supervision contract — and says nothing yet
       about what has been measured.
-      verify: `grep -c 'zero runtime daemon' README.md` returns 0, AND `grep -ci 'no unsupervised' README.md` returns 0 until Phase 6 lands.
-- [ ] **3.2 Replace the positioning story rather than leaving a hole.**
+      verify: **discharged, both counts 0.** The headline now reads *"every claim
+      machine-checked, including the counts in these badges"* — the differentiator
+      kept, its worked example swapped from the retired absence claim to
+      `claim:published-artifact-counts`, which is backed. The body states the
+      adopted constraint and labels it: *"**Resident processes are permitted only
+      under the supervision contract ADR-249 establishes** — a policy this
+      repository adopted on 2026-08-27, not a description of anything running
+      today."* That wording is deliberate against this phase's own rule: it names
+      a rule the repository holds itself to, not a state of the world, and the
+      3.4 gate's discrimination tests assert this exact sentence does **not**
+      match its capability-claim pattern. The absence-claim removal itself landed
+      earlier, in delivery Group B, where the roadmap put it.
+- [x] **3.2 Replace the positioning story rather than leaving a hole.**
       `docs/positioning-evidence.md:56`–`:74` records "zero runtime" as the
       load-bearing differentiator and argues explicitly that it is only credible
       *because* it is machine-checked. That argument survives intact; its object
       becomes the supervision contract, stated as the policy this repo adopted.
-      verify: `grep -c "zero runtime" docs/positioning-evidence.md` returns 0, AND the replacement paragraph contains no present-tense supervision guarantee.
-- [ ] **3.3 Retire the published comparison row, and do not replace it yet.**
+      verify: **discharged, count 0, and the argument survived rather than being
+      replaced.** The July decision's reasoning is intact — verifiability as the
+      frame, architectural claims as *what you verify* — and only its OBJECT
+      moved. A new dated subsection says so directly and is the evidence for the
+      argument rather than a caveat on it: a positioning built on *"trust this
+      specific architectural property"* would have needed rewriting from the
+      ground up when the property was withdrawn; one built on *"every claim here
+      is bound to evidence or it fails the build"* survived, because the
+      mechanism that retired the claim IS the differentiator. The replacement
+      contains no present-tense supervision guarantee and says explicitly that
+      the successor ledger entry is `unbacked` so it may not be markered.
+      **The H1-options block is preserved as history with a dated header** rather
+      than deleted — a decision whose alternatives are gone cannot be reviewed —
+      but the retired assertion's exact wording is not reproduced, because a live
+      public document should not republish a retired claim even as a quotation.
+      The original text is in git history and in the `withdrawn` ledger entry.
+- [x] **3.3 Retire the published comparison row, and do not replace it yet.**
       `docs/comparison.yaml:31` publishes "No resident runtime — no background
       daemon, no state database or service" as `checkable: true`, and its
       `failure_mode` describes a daemon as the competitor's defect. A published
@@ -373,8 +406,16 @@ is *being established*.
       the lifecycle suite fully supports the template it would use** — a council
       seat objected that the first draft's "decide later" left the outcome open,
       and it was right that the defect was the missing default, not the timing.
-      verify: `grep -c "No resident runtime" docs/comparison.yaml` returns 0, AND `docs/comparison.yaml` gains no row mentioning supervision in this phase.
-- [ ] **3.4 Add the atomicity check as a gate, and define what counts as
+      verify: **discharged.** `grep -c "No resident runtime" docs/comparison.yaml`
+      returns 0; rows fall 9 → 8, and a YAML parse confirms **0 rows** mention
+      supervision (the three textual matches are in the removal note, which is a
+      comment and not a row). No successor row is written, and the deterministic
+      default is recorded in the file itself rather than left as a later
+      judgement: no row is published unless a lifecycle suite fully supports the
+      template it would use, and if that suite never lands the correct outcome is
+      no row at all. The removal is annotated in place rather than done silently,
+      because a comparison table that quietly loses a row reads as an oversight.
+- [x] **3.4 Add the atomicity check as a gate, and define what counts as
       evidence.** A check that finds a present-tense supervision claim on any
       public surface while the lifecycle evidence does not exist must fail. "Can
       only pass once the suite is green" is not an implementation — a council seat
@@ -382,8 +423,42 @@ is *being established*.
       establishes four things: the named suite exists, it ran on **this**
       revision, it exercised real processes, and its result was not empty or
       skipped.
-      verify: the check reds on a deliberately seeded README line asserting supervision; it also reds when handed an emptied suite and when handed a result from a different revision. Three seeded negatives, all three observed — a check never seen red has unknown sensitivity.
-- [ ] **3.5 Correct the stale figure only if the rewritten argument uses it.**
+      verify: **discharged — three seeded negatives, all three OBSERVED red, plus
+      a positive control.** `src/scripts/check_supervision_claim_atomicity.ts`
+      `--self-test` builds a throwaway **git repo** per case (so the revision
+      check is meaningful rather than mocked) and drives the real CLI through
+      `_lib/gate_self_test.ts`:
+
+      ```
+      ✅ a seeded supervision claim with no lifecycle evidence at all (reject, exit 1)
+      ✅ an emptied suite — every case skipped, none run              (reject, exit 1)
+      ✅ a result recorded against a different revision               (reject, exit 1)
+      ✅ sufficient evidence on this revision lets the same claim through (accept, exit 0)
+      4/4 case(s) behaved (3 rejecting, floor 4)
+      ```
+
+      The council seat's objection — *"a file-presence check can masquerade as
+      evidence"* — is answered by refusing **four** things separately: an unnamed
+      suite, a foreign revision, `processes_exercised != true`, and a run that
+      was empty or skipped at least as much as it ran. A suite that ran on a
+      parent commit, one that skipped everything, and one that mocked the process
+      layer are three different lies.
+      **Registered as a gate, not left as a script nothing runs:**
+      `src/config/gate-coverage.yml` (`min_scanned: 6`, floor below the live 8, so
+      a renamed page cannot silently shrink the scan), `taskfiles/ci-fast.yml`,
+      the `ci:` list in `Taskfile.yml`, and a step in
+      `.github/workflows/rule-backstops.yml` — `check_ci_local_parity` confirms
+      154 CI gates against 291 local with no undeclared drift. It counts as an
+      ADOPTER on the self-test ratchet, which stays at its baseline of 24.
+      21 unit cases in `tests/scripts/` cover the half a self-test cannot: the
+      pattern must match a present-tense property claim and must NOT match the
+      policy sentence 3.1 publishes. A gate that refused its own policy statement
+      would be worse than none.
+      **Honest scope:** it passes vacuously today, because no public surface
+      carries such a claim. That is the correct state and the reason the
+      self-test exists — a gate that scans a corpus and finds nothing is
+      indistinguishable from a blind one.
+- [-] **3.5 Correct the stale figure only if the rewritten argument uses it.**
       `docs/positioning-evidence.md` states "261 skills, 93 rules"; the measured
       count is 299 (`find src/skills -name SKILL.md | wc -l`). The first draft
       justified fixing it with "while in the file", and a council seat rejected
@@ -393,7 +468,21 @@ is *being established*.
       rewritten paragraph still cites a corpus size, the number is part of this
       change. If the rewrite drops the figure, this step closes `[-]` and the
       stale number elsewhere becomes its own maintenance item.
-      verify: either `grep -c "261 skills" docs/positioning-evidence.md` returns 0 with the rewritten paragraph citing a measured figure, or the step is `[-]` and a separate item exists.
+      verify: **`[-]` — the second branch, and the reason is that the first branch
+      would have been dishonest.** The rewritten live paragraph cites **no corpus
+      figure at all**, so there is no measured figure for it to carry. The July
+      numbers survive inside the H1-options block, which 3.2 converted into an
+      explicitly dated historical record — and there they are **not stale**: they
+      are correct as of 2026-07-04, which is now stated in the block's own header
+      together with a pointer to the live counts (the README badges, re-derived by
+      `update_counts --check`). The step's premise was that the figure sits in a
+      live differentiator argument; after 3.2 it does not.
+      Recorded rather than silently closed: a literal `grep -c "261 skills"` now
+      returns 0 for an accidental reason — the phrase spans a line break in the
+      rewritten block — and that is **not** the discharge. The honest reading is
+      the `[-]` above. The separate item the branch requires is the measured
+      delta itself: 261 → **299** skills, which is not corrected here because
+      correcting a dated snapshot would falsify it.
 
 ## Phase 4 — Contract replacement and the census over everything else
 
@@ -435,7 +524,7 @@ is *being established*.
 
 ### blocker: public-claim-transition-shape
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** all of Phase 3, and `status: ready` for this file. Phases 0, 1, 2
   and 4 land regardless — with the one exception encoded in delivery Group B,
@@ -476,9 +565,12 @@ is *being established*.
   from any revision that has not already retired the claim — is now governance
   condition 4 in ADR-249, so the obligation survives whichever roadmap builds
   first.
-  **The blocker stays open** because two of its three `Resolved when` clauses are
-  Phase 3 work: the 3.4 check has not been seen red on three seeded negatives, and
-  this file's `status` is still `draft`. Recording the choice does not close it.
+  **Closed 2026-08-27, all three clauses met.** (1) The choice is in the Phase 1
+  ADR. (2) The 3.4 check exists and was seen red on all three seeded negatives —
+  no evidence at all, an emptied suite, and a result from a foreign revision —
+  each with a distinct refusal, plus a positive control proving it still accepts
+  sufficient evidence. (3) This file's `status` is flipped to `ready` in the same
+  change, which AC-9 makes the recording act rather than a formality.
 - **If you do nothing:** Phase 3 is blocked, so the repo keeps publishing the old
   no-daemon claim while its own ADR says otherwise. **That is stale only until
   the dependent roadmap's collector runs** — a council seat corrected the first
