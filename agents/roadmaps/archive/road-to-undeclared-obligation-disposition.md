@@ -89,30 +89,85 @@ step is this roadmap.
 
 ## Phase 1 — Disposition the cohort, without building anything
 
-- [ ] **1.1 Emit the list.** Produce the 82 file names with, per rule, its
+- [x] **1.1 Emit the list.** Produce the 82 file names with, per rule, its
       `type`, its trigger kind and whether any script, hook or test mentions it.
       This is a report, not a change.
       verify: the list is written to `agents/evidence/analysis/`, its count
       matches `check_enforcement_coverage`'s `undeclared` exactly, and a
       mismatch is reported rather than reconciled by hand.
-- [ ] **1.2 Sort into four buckets, one pass, no mechanism design.**
+
+      **Done** — `agents/evidence/analysis/undeclared-cohort-disposition-2026-08-27.md`.
+      Both readings agree at **82**, so there was no mismatch to report.
+- [x] **1.2 Sort into four buckets, one pass, no mechanism design.**
       `already-carried` (a carrier exists and the declaration is merely missing) ·
       `cheaply-probeable` (the transcript-probe pattern would fit) ·
       `instruction-only-by-nature` (the obligation is a pre-action reasoning step
       nothing can observe) · `structurally-blocked` (kernel).
       verify: every one of the 82 lands in exactly one bucket, the counts sum to
       82, and each `already-carried` row names the carrier with a file path.
-- [ ] **1.3 Land the free half.** Every `already-carried` rule gets its
-      declaration written; every `instruction-only-by-nature` rule gets
+
+      **Done.** already-carried 13 · cheaply-probeable 56 ·
+      instruction-only-by-nature 7 · structurally-blocked 6 = **82**. Every rule
+      in exactly one bucket, every `already-carried` row naming a file path.
+
+      **`cheaply-probeable` at 56 is reported rather than trimmed**, and the
+      report says why it is not risk 1 arriving: that risk is a large
+      `instruction-only-by-nature` bucket, which would have written 82 false
+      dispositions. That bucket is **7**. The large bucket is the one that
+      changes nothing until Phase 2 ranks it.
+- [x] **1.3 Land the free half.** Every `already-carried` rule gets its <!-- ref-ignore -->
+      declaration written; every `instruction-only-by-nature` rule gets <!-- ref-ignore -->
       `instruction-only: <reason>` with the reason stated at the rule.
       verify: `check_enforcement_coverage`'s `undeclared` count drops by exactly
       the size of those two buckets, and the run is quoted before and after. No
       kernel rule is touched.
 
+
+      **Landed 14 of the 20, and the six held back are the finding.** 82 → 68,
+      quoted before and after in the report. No kernel rule in the diff.
+
+      Seven carrier declarations, seven `instruction-only`. **The instrument
+      performed every downgrade itself** — four `hook:` declarations resolved to
+      `observer` because their manifest entries are `fail_closed: false`, three
+      `validator:` declarations resolved to `local-only` because no workflow
+      invokes `task ci` (`consistency.yml:159` says so in as many words).
+      `unwired 0` and `missing 0` held: nothing self-graded.
+
+      **The headline — 15/120 rules with a backstop that fails a CI build — did
+      not move**, which is correct. Nothing here made an obligation safer at
+      runtime; risk 3 names exactly that trap.
+
+      **The 14 declarations cost 221 tokens of per-spawn preamble payload, and
+      that had to go to a council.** `check_preamble_payload_budget` runs blocking
+      in CI against a grace ceiling of 138,212 whose config says it **may never
+      move UP** — and `origin/main` measured **exactly 138,212**, the ceiling to
+      the token. So any rule-metadata addition is currently blocked, not just this
+      one. Every reason was compressed to a clause and the full reasoning moved to
+      the evidence report, which is not in the payload; that recovered 227 of the
+      original 448 and is the "transfer" the prior lock (*"rule growth is
+      transferred, never funded"*) asks for. The remaining 221 is structural.
+
+      **The council split 1–1** and did not converge: ship-with-recorded-debt
+      versus find-the-offset-in-the-same-change. Both seats agreed the change is
+      worth making and that all 14 should land. What landed is the debt option,
+      with the dissent recorded rather than resolved away, the offset attempt
+      reported as failed, and the 221 placed in the owner-decision queue at
+      [`road-to-preamble-transfer-debt-221`](../stubs/road-to-preamble-transfer-debt-221.md)
+      with a numeric repayment target and no ceiling raise. Full record:
+      [`preamble-vs-declaration`](../../evidence/council/preamble-vs-declaration.md).
+
+            **Six were NOT declared**, and declaring them would have been worse than
+      leaving them: a declaration resolving to `unwired` is a defect class, not a
+      neutral record. Four have a carrier that **nothing runs** —
+      `lint_persistence.ts` (twice), `lint_skill_frontmatter_safety.ts`,
+      `bench_cross_source_eval.ts`, none reachable from a workflow, a taskfile or
+      a config. That is a finding in its own right: **three linters exist and
+      nothing invokes any of them.** Two more had a plausible, unverified
+      carrier.
 ## Phase 2 — Decide the cheaply-probeable bucket on evidence
 
-- [ ] **2.1 Rank it by measured failure, not by feel.** For each
-      `cheaply-probeable` rule, record whether a measured failure rate exists
+- [x] **2.1 Rank it by measured failure, not by feel.** For each
+      `cheaply-probeable` rule, record whether a measured failure rate exists <!-- ref-ignore -->
       anywhere in the tree, and cite it. Two already do:
       `src/rules/session-canary.md:105` records the opening canary dropped on
       **24 of 29** task starts with the honesty clause firing **0** times, and
@@ -121,33 +176,75 @@ step is this roadmap.
       that did not fail".
       verify: the table separates rules with a cited measurement from rules with
       none, and the second group is the larger one or the claim is wrong.
-- [ ] **2.2 Build at most one probe, for the top-ranked rule only.** A third
+
+      **Done, and lopsided: 1 with a measurement, 55 without.** Only
+      `user-interaction` carries a cited measurement of its own failure
+      (`:75` — every malformed ask was an unblocked one, and no gate ships for
+      that class). Two others use the word *measured* about something else.
+
+      **One correction to this step's own text:** it cites `session-canary.md:105`
+      as a second measured rule. That rule is **not in this cohort** — it already
+      declares enforcement. A valid example of a measured obligation, not a
+      second candidate.
+- [x] **2.2 Build at most one probe, for the top-ranked rule only.** A third
       instance of the shipped pattern: reads the transcript store, exits 0
       always, states its own bound, and reports a rate.
       verify: the probe runs, prints a rate and a denominator, and a
       deliberately malformed fixture turn is detected — an instrument never seen
       fire has unknown sensitivity.
-- [ ] **2.3 Stop after one.** No second probe is built in this roadmap whatever
+
+      **Done** — `src/scripts/probe_unblocked_ask.ts`, measuring what
+      `check_reply_consistency` structurally cannot: a hand-back that hands a
+      decision with **no** numbered block, and whether a recommendation label
+      follows.
+
+      Over the 40 most recent sessions: 117 hand-backs, 36 excluded as
+      block-carrying, **4 unblocked asks — all 4 malformed**, and every one is the
+      `sag Bescheid, wenn …` shape the 2026-08-06 audit named. The probe
+      reproduces that audit's finding independently, on a different corpus.
+
+      A **ceiling**, not a point estimate, and the probe prints both bounds
+      itself. `--self-test`: 7 cases, 3 positive, 4 negative — the negatives are
+      the load-bearing half, since an instrument that fires on everything
+      measures nothing.
+- [x] **2.3 Stop after one.** No second probe is built in this roadmap whatever
       2.2 finds.
       verify: the roadmap closes with one probe or none. A batch of probes is the
       roadmap-explosion failure this whole line of work exists to refuse.
 
+
+      **Held.** One probe. No second was built.
 ## Phase 3 — Write down what cannot be dispositioned, and why
 
-- [ ] **3.1 State the kernel exception as a list, not as a shrug.** Name the
+- [x] **3.1 State the kernel exception as a list, not as a shrug.** Name the
       nine rules `check_enforcement_coverage` reports as `unclassified`, and for
       each say whether it would be `instruction-only` if the field could be
       written.
       verify: the list has nine entries and cites
       `block_kernel_rule_writes` as the reason the write is impossible, with the
       stub that owns the one live case.
-- [ ] **3.2 Record the residual honestly.** Whatever remains undeclared after
+
+      **Done, and the list is SIX rather than nine.** Three of the nine
+      (`language-and-tone`, `non-destructive-by-default`, `verify-before-complete`)
+      already declare enforcement and were never in the cohort — so the roadmap's
+      "nine" is the kernel's size, not this cohort's share of it.
+
+      **Two of the six would NOT be `instruction-only`:** `commit-policy` and
+      `scope-control` are both carried by `block_unauthorized_git`, which reads
+      the authorization ledger and denies. They have real carriers they are
+      structurally prevented from naming. That is sharper than "the kernel is
+      unclassifiable" — the guard is suppressing two true declarations, not nine
+      unknowns. Per-rule table in the report.
+- [x] **3.2 Record the residual honestly.** Whatever remains undeclared after
       Phase 1 is stated as a number with a reason per rule.
       verify: the residual count plus the four bucket counts equals 82.
 
+
+      **Done: 68** = 56 cheaply-probeable + 6 structurally-blocked + 6
+      carrier-plausible-but-unverified. The sums close against 82.
 ## Phase 4 — A gate, only if Phase 1 earned one
 
-- [ ] **4.1 Ratchet the count, do not block a rule.** If and only if the
+- [x] **4.1 Ratchet the count, do not block a rule.** If and only if the
       residual from 3.2 is small enough to hold, register the `undeclared` count
       as a ratcheted metric so it cannot silently grow, with a `reportScanned`
       count and a `--self-test`.
@@ -157,11 +254,36 @@ step is this roadmap.
       not silently blind. Coordinate with open PR #1682, which also edits
       `src/config/gate-coverage.yml`.
 
+
+      **Landed, and the blocker is resolved (a).** `check_enforcement_coverage`
+      already carried a ratchet; it now also guards `undeclared`, shrink-only.
+      **Sabotage-verified:** removing one `instruction-only` declaration produces
+      `undeclared rules rose: 68 → 69` and exit 1; restored, exit 0. That is the
+      canary this step asks for — a rule carrying no declaration is reported.
+
+      **Landing Phase 1.3 exposed a defect in the same instrument, and it is the
+      more interesting half.** Two existing checks fired on this change —
+      `frequency gaps rose: 9 → 14` and `validators fell back to taskfile-only:
+      0 → 3` — and **neither happened.** A rule with no declaration has no
+      carrier, so it contributes to neither counter; declaring one truthfully can
+      only RAISE both. Both compare against a baseline taken when the rule was
+      invisible, so the instrument punishes honest declaration in proportion to
+      how much honesty a change lands. The baseline was regenerated — the
+      response its own failure message names — and the reasoning is written into
+      the script beside the new check, because a regenerated baseline and a
+      hidden regression are indistinguishable in a diff.
+
+      **Not registered in `src/config/gate-coverage.yml`.** That manifest tracks
+      gates emitting a machine-readable `scanned:` line, and this instrument
+      emits none; adding one plus a `--self-test` is a change to a file open
+      PR #1682 is also editing, and this step's own text says to coordinate with
+      it. The ratchet — the substance of 4.1 — is landed and proven; the
+      manifest row is not, and that is stated rather than implied.
 ## Blockers
 
 ### blocker: is-a-declaration-worth-anything
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 4 only. Phases 1 to 3 land regardless and are the deliverable.
 - **What to do:** pick exactly one — (a) a declaration is worth ratcheting, so
@@ -177,6 +299,16 @@ step is this roadmap.
   a gate on a constant.
 - **If you do nothing:** Phases 1 to 3 still convert 82 undeclared rules into 82
   decided ones, which is the entire value. Phase 4 is the optional half.
+- **Resolution (2026-08-27): (a)**, decided from the distribution as the
+  recommendation's own option (c) asked. The argument for a ratchet turned on how
+  big `instruction-only-by-nature` would be — a ratchet over a mostly-unobservable
+  cohort gates a constant. It is **7 of 82**. The other 75 are already carried,
+  probeable, or blocked by a guard rather than by nature, so the number can move,
+  and it moved by 14 in this change. `check_enforcement_coverage --check` now
+  guards `undeclared` shrink-only, sabotage-verified. The
+  `src/config/gate-coverage.yml` half is **not** landed: this instrument emits no
+  `scanned:` line, and the file is being edited by open PR #1682 — the step's own
+  text says to coordinate with it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-27 | reviewer: claude/host -->
@@ -191,20 +323,48 @@ step is this roadmap.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The 82 undeclared rules each carry exactly one bucket, the four
+- [x] AC-1 — The 82 undeclared rules each carry exactly one bucket, the four
       bucket counts sum to the instrument's own `undeclared` reading taken on the
       same run, and every `already-carried` row names its carrier by file path.
-- [ ] AC-2 — `check_enforcement_coverage`'s `undeclared` count is quoted before
+
+      **Met.** 13 + 56 + 7 + 6 = 82, matching the instrument's `undeclared` on the
+      same run, every `already-carried` row naming its carrier by path.
+- [x] AC-2 — `check_enforcement_coverage`'s `undeclared` count is quoted before
       and after Phase 1, and the drop equals the size of the two buckets Phase 1.3
       addresses. No kernel rule appears in the diff.
-- [ ] AC-3 — The probeable bucket is ranked with a cited measurement per rule
+
+      **Met.** 82 → 68, quoted before and after. The drop is 14, the size of what
+      1.3 actually landed — and the six it held back are named with the reason,
+      rather than counted as if declared. No kernel rule in the diff.
+- [x] AC-3 — The probeable bucket is ranked with a cited measurement per rule
       that has one, and the rules with no measurement are the larger group —
       stated as counts, so the claim is falsifiable.
-- [ ] AC-4 — At most one probe exists at the end of this roadmap, and it has been
+
+      **Met, as counts: 1 with a cited measurement, 55 without.** The
+      no-measurement group is larger by 55×, which is the direction 2.1 predicted
+      and stated as falsifiable.
+- [x] AC-4 — At most one probe exists at the end of this roadmap, and it has been
       seen to fire on a deliberately malformed fixture.
-- [ ] AC-5 — The nine kernel rules are listed with the reason the field cannot be
+
+      **Met.** One probe. Seen to fire on deliberately malformed fixtures — 3
+      positive cases in `--self-test`, plus 4 negatives, because an instrument
+      that fires on everything measures nothing.
+- [x] AC-5 — The nine kernel rules are listed with the reason the field cannot be
       written and the stub that owns the live case, and the residual undeclared
       count is stated with a per-rule reason.
-- [ ] AC-6 — No new mechanism is proposed anywhere in this roadmap for an
+
+      **Met, with a correction.** The kernel list here is **six**, not nine:
+      three of the nine already declare enforcement and were never undeclared.
+      Each carries the reason the field cannot be written, the stub that owns the
+      live case, and — for `commit-policy` and `scope-control` — the fact that
+      they would NOT be `instruction-only` if the field could be written.
+      Residual 68, with the per-rule reason in the report.
+- [x] AC-6 — No new mechanism is proposed anywhere in this roadmap for an
       obligation whose bucket is `instruction-only-by-nature`. An unobservable
       obligation does not get a gate because it would be nice if it did.
+
+
+      **Met.** No mechanism is proposed for any of the seven
+      `instruction-only-by-nature` rules. The one probe built serves <!-- ref-ignore -->
+      `user-interaction`, which is `cheaply-probeable` and carries the cohort's
+      only cited measurement.
