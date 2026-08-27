@@ -193,7 +193,7 @@ that was never a judgement call.
     gap-table ritual. When it fires:
     - **(a) Gap-table before drafting.** Audit each proposed item against
       the existing skill / command / rule surface and keep only verified
-      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artifact) /
+      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artefact) /
       `CUT` (already covered). The plan integrates, it does not dump.
     - **(b) `## Provenance` block** — source named by a **neutral
       descriptor** (never the raw competitor / tool name, per
@@ -462,7 +462,7 @@ that was never a judgement call.
     NOT required: a failure register written to satisfy a template stops
     being a forecast, and boilerplate in a failure register is worse than
     its absence. Include it when the plan is heavy or irreversible enough
-    that a named tripwire changes behavior; omit it entirely otherwise —
+    that a named tripwire changes behaviour; omit it entirely otherwise —
     never ship an empty or perfunctory one. Distinct from rule 24's Risk
     Register: the register ranks *known* risks with mitigations; the
     pre-mortem imagines the *whole plan dead* and reconstructs why.
@@ -616,7 +616,7 @@ complexity: lightweight
 {Optional: edge cases, decisions, links to related docs.}
 
 <!-- ## Pre-mortem — INCLUDE ONLY when the plan is heavy or irreversible
-     enough that a failure forecast changes behavior (rule 25). OMIT
+     enough that a failure forecast changes behaviour (rule 25). OMIT
      entirely otherwise — a perfunctory register is worse than none.
      Shape: the four-part failure register from the premortem skill.
 1. Causes of death, ranked: {three, one paragraph each — mechanisms, not topics}
