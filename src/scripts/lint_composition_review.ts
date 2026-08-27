@@ -91,8 +91,26 @@ export interface Advisory {
     file: string;
 }
 
+/** Thrown when a diff-scoped read was requested and git could not answer it. */
+export class GitScopeError extends Error {
+    constructor(command: string, cause: unknown) {
+        super(
+            `git ${command} failed, so the added-artifact set is UNKNOWN rather than empty — a ` +
+                'diff-scoped reading that silently reports zero is indistinguishable from a clean ' +
+                `one. Underlying error: ${String(cause)}`,
+        );
+        this.name = 'GitScopeError';
+    }
+}
+
+/** Sentinel for a field whose value was a YAML block scalar this parser refuses. */
+export const BLOCK_SCALAR = '\u0000block-scalar';
+
 /** `skill:foo`, `rule:bar`, `command:baz`, `guideline:a/b`, or the literal `none`. */
-const CANDIDATE_RE = /^(skill|rule|command|guideline):([A-Za-z0-9._\/-]+)$/;
+// Path segments are non-empty, so `guideline:/foo`, `guideline:foo/` and
+// `guideline:foo//bar` are rejected rather than accepted-then-unresolvable.
+// Found by review: the previous class admitted all three.
+const CANDIDATE_RE = /^(skill|rule|command|guideline):([A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*)$/;
 
 function _frontmatter(text: string): string | null {
     if (!text.startsWith('---')) return null;
@@ -138,7 +156,16 @@ export function parseCompositionReview(text: string): CompositionEntry[] | null 
             continue;
         }
         const field = /^\s+(\w+):\s*(.*)$/.exec(line);
-        if (field && cur !== null) cur[field[1] as keyof CompositionEntry] = _unquote(field[2] as string);
+        if (field && cur !== null) {
+            const raw = (field[2] as string).trim();
+            // A YAML block scalar (`rationale: |`) would otherwise capture the
+            // `|` itself and yield a one-character value — valid YAML read
+            // wrongly, which is worse than a parse error because it looks like
+            // data. Found by review. Marked, so the caller reports it.
+            cur[field[1] as keyof CompositionEntry] = /^[|>][-+0-9]*$/.test(raw)
+                ? BLOCK_SCALAR
+                : _unquote(field[2] as string);
+        }
     }
     if (cur !== null) entries.push(cur as CompositionEntry);
     return entries;
@@ -152,7 +179,18 @@ function _unquote(s: string): string {
     return t;
 }
 
-/** Every artifact id the tree defines, as `skill:x` / `rule:y` / `command:z`. */
+/**
+ * Every artifact id the tree defines, across all four kinds.
+ *
+ * **All four, and that is a correction.** The first version resolved only
+ * `skill:` and `rule:`, and carried a comment saying a `command:` or
+ * `guideline:` id "lives in a tree this gate does not walk" — while this
+ * module's own contract and BOTH schema descriptions said a lint checks that
+ * `candidate` resolves. An independent cross-model review found the
+ * contradiction: `candidate: command:this-does-not-exist` passed every check.
+ * Two ways to close it — narrow the claim, or walk the trees. The trees are
+ * right here, so the claim stands and the code now earns it.
+ */
 export function artefactIds(repo: string): Set<string> {
     const ids = new Set<string>();
     const skills = path.join(repo, 'src', 'skills');
@@ -169,7 +207,54 @@ export function artefactIds(repo: string): Set<string> {
             if (e.isFile() && e.name.endsWith('.md')) ids.add(`rule:${e.name.slice(0, -3)}`);
         }
     }
+
+    // Commands are `src/domains/<pack>/<path...>/command.md`, addressed by the
+    // path BELOW the pack — `refine-ticket`, `roadmap/create`. The pack is a
+    // distribution detail, not part of the name a rule or skill cites.
+    const domains = path.join(repo, 'src', 'domains');
+    for (const pack of _dirs(domains)) {
+        const walk = (rel: string): void => {
+            for (const e of fs.readdirSync(path.join(domains, pack, rel), { withFileTypes: true })) {
+                if (e.isDirectory()) walk(path.join(rel, e.name));
+                else if (e.name === 'command.md' && rel !== '') {
+                    ids.add(`command:${rel.split(path.sep).join('/')}`);
+                }
+            }
+        };
+        try {
+            walk('');
+        } catch {
+            // An unreadable pack resolves no command — the conservative
+            // direction, since the candidate then fails rather than passing.
+        }
+    }
+
+    // Guidelines are `docs/guidelines/<path>.md`, addressed without the
+    // extension — `code-clarity`, `agent-infra/rule-type-governance`.
+    const guidelines = path.join(repo, 'docs', 'guidelines');
+    const walkG = (rel: string): void => {
+        for (const e of fs.readdirSync(path.join(guidelines, rel), { withFileTypes: true })) {
+            if (e.isDirectory()) walkG(path.join(rel, e.name));
+            else if (e.name.endsWith('.md')) {
+                ids.add(`guideline:${path.join(rel, e.name.slice(0, -3)).split(path.sep).join('/')}`);
+            }
+        }
+    };
+    try {
+        walkG('');
+    } catch {
+        // Same direction: an unreadable tree resolves nothing, never everything.
+    }
+
     return ids;
+}
+
+function _dirs(root: string): string[] {
+    try {
+        return fs.readdirSync(root, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+    } catch {
+        return [];
+    }
 }
 
 /**
@@ -180,6 +265,23 @@ export function checkArtefact(rel: string, text: string, known: ReadonlySet<stri
     const entries = parseCompositionReview(text);
     if (entries === null) return [];
 
+    // `composition_review: []` is PRESENT and says nothing — neither of the two
+    // states this gate distinguishes. The schema's `minItems: 1` rejects it, but
+    // a gate whose comments claim "present and malformed → exit 1" has to deliver
+    // that itself rather than rely on another gate having run first. Found by
+    // review: the parser returned `[]` and this returned no violation.
+    if (entries.length === 0) {
+        return [
+            {
+                kind: 'empty-record',
+                file: rel,
+                detail:
+                    'a `composition_review:` block is present but has no entries — record at least one ' +
+                    'candidate, or omit the block entirely. Absence is advisory; an empty claim is not.',
+            },
+        ];
+    }
+
     const out: Violation[] = [];
     const seen = new Set<string>();
     for (const [i, e] of entries.entries()) {
@@ -189,6 +291,15 @@ export function checkArtefact(rel: string, text: string, known: ReadonlySet<stri
 
         if (cand === '') {
             out.push({ kind: 'missing-candidate', file: rel, detail: `${where}: no \`candidate\`.` });
+            continue;
+        }
+        const blockScalar = [e.candidate, e.disposition, e.rationale].filter((v) => v === BLOCK_SCALAR);
+        if (blockScalar.length > 0) {
+            out.push({
+                kind: 'block-scalar-field',
+                file: rel,
+                detail: `${where}: a field uses a YAML block scalar (\`|\` / \`>\`). This gate reads one line per field, so a block scalar would be read as its marker character rather than its text — write the value inline.`,
+            });
             continue;
         }
         if (seen.has(cand)) {
@@ -232,11 +343,11 @@ export function checkArtefact(rel: string, text: string, known: ReadonlySet<stri
                     file: rel,
                     detail: `${where}: \`${cand}\` is not \`skill:<name>\` / \`rule:<name>\` / \`command:<name>\` / \`guideline:<path>\` / \`none\`.`,
                 });
-            } else if ((m[1] === 'skill' || m[1] === 'rule') && !known.has(cand)) {
-                // Only the two kinds this gate can resolve are checked. A
-                // `command:` or `guideline:` id lives in a tree this gate does
-                // not walk, and asserting against a corpus it never read would
-                // be the false-confidence the whole roadmap is about.
+            } else if (!known.has(cand)) {
+                // All four kinds, since `artefactIds` now walks all four. The
+                // carve-out that used to sit here let `command:` and
+                // `guideline:` ids through unchecked while the contract claimed
+                // otherwise — found by review, closed rather than documented.
                 out.push({
                     kind: 'unresolvable-candidate',
                     file: rel,
@@ -283,8 +394,8 @@ export function addedArtefacts(repo: string, baseRef: string, corpus: readonly s
                 .split('\n')
                 .map((s) => s.trim())
                 .filter((s) => s !== '');
-        } catch {
-            return [];
+        } catch (exc) {
+            throw new GitScopeError(args.join(' '), exc);
         }
     };
     for (const f of run(['diff', '--name-only', '--diff-filter=A', `${baseRef}...HEAD`])) {

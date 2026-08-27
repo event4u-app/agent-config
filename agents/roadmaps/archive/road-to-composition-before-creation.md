@@ -192,6 +192,48 @@ would be the fabrication this table exists to avoid.
   because a rejected harvest has no artefact to cite, while this record is
   written on the artefact being created and therefore needs rejection most.
   Enforced by the disjointness suite rather than asserted.
+- **Five defects in the shipped gate were found by an independent cross-model
+  review after 4.1 was written, and all five are fixed rather than noted.**
+  Neither seat wrote the code or the review prompt's expectations; the scope was
+  the whole non-doc delta, split mechanically by file group because it exceeded
+  the transport ceiling.
+
+  1. **The contract over-claimed.** This module's docstring and BOTH schema
+     descriptions said a lint checks that `candidate` resolves — while the code
+     exempted `command:` and `guideline:` with a comment calling their trees
+     unwalked. `candidate: command:this-does-not-exist` passed every check. Two
+     ways to close it; the trees are readable, so `artefactIds` now walks all
+     four kinds and the claim is earned. Commands resolve as the path below their
+     pack (`command:refine-ticket`), guidelines without the extension
+     (`guideline:code-clarity`).
+  2. **`composition_review: []` was accepted.** Present, saying nothing —
+     neither of the two states the gate distinguishes. The schema's `minItems: 1`
+     catches it, but a gate claiming "present and malformed → exit 1" has to
+     deliver that itself rather than assume another gate ran first. Now
+     `empty-record`.
+  3. **A git failure read as "no additions".** With an unresolvable base ref the
+     diff call failed, the catch returned `[]`, and the gate exited 0 reporting
+     zero advisories — a blind run indistinguishable from a clean one, which is
+     the exact failure `gate-coverage.yml`'s own header describes. Now throws
+     `GitScopeError`.
+  4. **The advisory path had ZERO test coverage**, despite a comment calling its
+     `ls-files --others` union load-bearing. Now covered by a real git fixture:
+     an untracked artifact is reported and a committed one is not.
+  5. **Two parser holes.** A YAML block scalar (`rationale: |`) captured the `|`
+     and produced a one-character value — valid YAML read wrongly, which is worse
+     than a parse error because it looks like data. And the candidate grammar
+     admitted `guideline:/foo`, `guideline:foo/` and `guideline:foo//bar`. Both
+     rejected now.
+
+  Sensitivity, one probe per finding: restoring the carve-out turns **2** red,
+  accepting an empty record **1**, git-failure-as-empty **1**, the loose grammar
+  **1**, unmarking block scalars **1**; 24/24 restored, tree clean.
+
+  Two of the original specs had to be **corrected rather than kept**: one
+  asserted the carve-out that turned out to be the defect, and one measured the
+  coverage floor against `artefactIds` rather than the scanned corpus, so it went
+  red the moment candidate resolution widened — the floor it was checking had not
+  changed.
 - **Revisit-if:** the false-positive rate from
   `road-to-composition-review-false-positive-rate.md` lands **and** the four
   vocabularies show genuine semantic equivalence — not merely similar enum

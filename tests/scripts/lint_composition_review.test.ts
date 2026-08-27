@@ -31,8 +31,11 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+    BLOCK_SCALAR,
     COMPOSITION_DISPOSITIONS,
+    GitScopeError,
     NO_INCUMBENT,
+    addedArtefacts,
     artefactIds,
     checkArtefact,
     main,
@@ -96,15 +99,115 @@ describe('lint_composition_review — the structural half is HARD', () => {
         expect(checkArtefact('a.md', text, known).map((x) => x.kind)).toContain('duplicate-candidate');
     });
 
-    it('does not check `command:` or `guideline:` ids against a corpus it never read', () => {
-        // Asserting resolvability against a tree the gate does not walk would be
-        // exactly the false confidence the roadmap is about. Shape is checked;
-        // existence is not claimed.
-        expect(checkArtefact('a.md', _record('command:some-command', 'extend_incumbent'), known)).toEqual([]);
-        expect(checkArtefact('a.md', _record('guideline:php/x', 'extend_incumbent'), known)).toEqual([]);
-        // Shape still is:
-        expect(checkArtefact('a.md', _record('not-a-kind:x', 'extend_incumbent'), known).map((x) => x.kind))
+    it('checks EVERY candidate kind — the carve-out is gone', () => {
+        // This spec is the inverse of the one it replaces. The original asserted
+        // that `command:` and `guideline:` ids are NOT checked, on the reasoning
+        // that asserting against an unread tree would be false confidence. An
+        // independent review pointed out the real problem: the module contract
+        // and both schema descriptions already claimed those ids resolve, so the
+        // carve-out made the CLAIM false rather than the check honest. The trees
+        // are readable, so the code now earns the claim.
+        const real = artefactIds(REPO_ROOT);
+        expect(checkArtefact('a.md', _record('command:refine-ticket', 'extend_incumbent'), real)).toEqual([]);
+        expect(
+            checkArtefact('a.md', _record('command:not-a-real-command', 'extend_incumbent'), real).map((x) => x.kind),
+        ).toContain('unresolvable-candidate');
+        // Shape is still checked before existence:
+        expect(checkArtefact('a.md', _record('not-a-kind:x', 'extend_incumbent'), real).map((x) => x.kind))
             .toContain('malformed-candidate');
+    });});
+
+/**
+ * Everything below this comment exists because an independent cross-model review
+ * found it missing. Both reviewing seats read the whole gate; none of these
+ * cases was in the first version, and each one failed against it.
+ */
+describe('lint_composition_review — defects found by review', () => {
+    it('resolves all FOUR candidate kinds, not just skill and rule', () => {
+        // The finding: the contract and both schema descriptions said "a lint
+        // checks that `candidate` resolves", and `command:` / `guideline:` were
+        // silently exempt. `command:this-does-not-exist` passed every check.
+        const ids = artefactIds(REPO_ROOT);
+        for (const kind of ['skill:', 'rule:', 'command:', 'guideline:']) {
+            expect([...ids].filter((i) => i.startsWith(kind)).length, kind).toBeGreaterThan(0);
+        }
+        // And the real ids are addressed the way a rule or skill cites them —
+        // command below its pack, guideline without its extension.
+        expect(ids).toContain('command:refine-ticket');
+        expect(ids).toContain('guideline:code-clarity');
+    });
+
+    it('rejects a non-existent `command:` and `guideline:` candidate', () => {
+        const known = artefactIds(REPO_ROOT);
+        for (const cand of ['command:this-does-not-exist', 'guideline:missing/path']) {
+            const v = checkArtefact('a.md', _record(cand, 'create_separate'), known);
+            expect(v.map((x) => x.kind), cand).toContain('unresolvable-candidate');
+        }
+        // Sensitivity: a real one of each still passes, so this is not a probe
+        // that rejects everything.
+        expect(checkArtefact('a.md', _record('command:refine-ticket', 'create_separate'), known)).toEqual([]);
+        expect(checkArtefact('a.md', _record('guideline:code-clarity', 'create_separate'), known)).toEqual([]);
+    });
+
+    it('rejects a PRESENT but empty record', () => {
+        // `composition_review: []` is present and says nothing — neither of the
+        // two states the gate distinguishes. It used to return no violation.
+        const v = checkArtefact('a.md', _fm('composition_review: []\n'), new Set());
+        expect(v).toHaveLength(1);
+        expect(v[0]?.kind).toBe('empty-record');
+    });
+
+    it('rejects a field written as a YAML block scalar', () => {
+        // Valid YAML the line parser reads wrongly: it would capture `|` and
+        // produce a one-character rationale. Worse than a parse error, because
+        // it looks like data.
+        const text = _fm(
+            'composition_review:\n  - candidate: rule:incumbent\n    disposition: create_separate\n    rationale: |\n      a multi-line rationale\n',
+        );
+        expect(parseCompositionReview(text)?.[0]?.rationale).toBe(BLOCK_SCALAR);
+        const v = checkArtefact('a.md', text, new Set(['rule:incumbent']));
+        expect(v.map((x) => x.kind)).toContain('block-scalar-field');
+    });
+
+    it('rejects malformed candidate paths that used to be accepted', () => {
+        const known = artefactIds(REPO_ROOT);
+        for (const bad of ['guideline:/foo', 'guideline:foo/', 'guideline:foo//bar']) {
+            const v = checkArtefact('a.md', _record(bad, 'create_separate'), known);
+            expect(v.map((x) => x.kind), bad).toContain('malformed-candidate');
+        }
+    });
+
+    it('a git failure is UNKNOWN, never "no additions"', () => {
+        // The finding: with an unresolvable base ref, `git diff` failed, the catch
+        // returned `[]`, and the gate exited 0 reporting zero advisories — a blind
+        // run indistinguishable from a clean one.
+        expect(() => addedArtefacts(REPO_ROOT, 'refs/heads/definitely-not-a-ref-xyz', ['src/rules/a.md']))
+            .toThrow(GitScopeError);
+    });
+
+    it('the advisory path actually reports an untracked addition', () => {
+        // The load-bearing union (`ls-files --others`) had ZERO coverage, despite
+        // a comment calling it load-bearing. Real git repo, real untracked file.
+        const root = mkdtempSync(join(tmpdir(), 'lcr-git-'));
+        const git = (...a: string[]): void => {
+            execFileSync('git', a, { cwd: root, encoding: 'utf-8' });
+        };
+        git('init', '-q');
+        git('config', 'user.email', 't@example.com');
+        git('config', 'user.name', 't');
+        mkdirSync(join(root, 'src', 'rules'), { recursive: true });
+        writeFileSync(join(root, 'src', 'rules', 'base.md'), _fm(''));
+        git('add', '-A');
+        git('commit', '-qm', 'base');
+        // Untracked, never committed — exactly what a create-only canary plants.
+        writeFileSync(join(root, 'src', 'rules', 'planted.md'), _fm(''));
+
+        const added = addedArtefacts(root, 'HEAD', ['src/rules/base.md', 'src/rules/planted.md']);
+        expect(added).toContain('src/rules/planted.md');
+        expect(added).not.toContain('src/rules/base.md');
+
+        // End to end through main(): reported, and still exit 0.
+        expect(main(['--repo', root, '--base-ref', 'HEAD', '--quiet'])).toBe(0);
     });
 });
 
@@ -154,9 +257,22 @@ describe('lint_composition_review — scan scope', () => {
         expect(yml).toContain('- id: lint_composition_review');
         const floor = /- id: lint_composition_review[\s\S]*?min_scanned: (\d+)/.exec(yml);
         expect(floor).not.toBeNull();
-        const live = artefactIds(REPO_ROOT).size;
-        expect(Number(floor?.[1])).toBeLessThan(live);
-        expect(Number(floor?.[1])).toBeGreaterThan(live * 0.8);
+        // Measured against the SCANNED corpus (skills + rules), which is what
+        // `reportScanned` publishes — not against `artefactIds`, which now also
+        // indexes commands and guidelines for candidate RESOLUTION and is
+        // therefore a much larger set. The first version of this spec conflated
+        // the two and went red the moment resolution was widened; the floor it
+        // was checking had not changed.
+        const scanned = Number(/scanned: (\d+)/.exec(
+            execFileSync(
+                join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
+                [join(REPO_ROOT, 'src/scripts/lint_composition_review.ts'), '--repo', REPO_ROOT, '--quiet'],
+                { cwd: REPO_ROOT, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 },
+            ),
+        )?.[1]);
+        expect(scanned).toBeGreaterThan(0);
+        expect(Number(floor?.[1])).toBeLessThan(scanned);
+        expect(Number(floor?.[1])).toBeGreaterThan(scanned * 0.8);
     });
 
     it('the self-test suite passes with a rejecting majority', () => {
