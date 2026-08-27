@@ -68,7 +68,7 @@ DB::select("SELECT * FROM users WHERE email = '{$email}'");
 
 **MySQL and MariaDB share a query-syntax world. They never share a migration
 one.** Same principle as `database`: one engine for writing a `SELECT`, two for
-online-DDL semantics, lock behaviour under `ALTER`, feature availability and
+online-DDL semantics, lock behavior under `ALTER`, feature availability and
 `EXPLAIN` output. Never carry a claim from the second group across the two
 without naming the engine and version it was measured on.
 

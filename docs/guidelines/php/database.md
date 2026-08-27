@@ -45,7 +45,7 @@ rule.
 They serve integrity and lookup latency, and a row count bears on neither. A
 40-row child table pointing at a customers table gets its foreign-key column
 indexed like any other. Omit one only on the strength of inspected schema
-behaviour plus a representative workload measurement showing it serves no access
+behavior plus a representative workload measurement showing it serves no access
 path — never on an anticipated write cost.
 
 ### Composite indexes
@@ -120,7 +120,7 @@ as a JOIN" they used to carry here was wrong more often than it was right:
 | a **bound on the driving set** — it produces a small list the outer query then filters on | leave it. Rewriting widens the driving set, which is the opposite of the intent |
 
 Check the plan before rewriting: if the subquery already shows as a semi-join or
-a materialised derived table executed once, the rewrite buys nothing and costs
+a materialized derived table executed once, the rewrite buys nothing and costs
 correctness.
 ### Pagination
 

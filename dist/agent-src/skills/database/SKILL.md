@@ -116,7 +116,7 @@ SQLite; ORM-agnostic):
 **MySQL and MariaDB share a query-syntax world. They never share a migration
 one.** Treat them as one engine for writing a `SELECT`, and as two engines for
 everything that changes a schema or reports on a plan: online-DDL semantics,
-lock behaviour under `ALTER`, feature availability, and `EXPLAIN` output all
+lock behavior under `ALTER`, feature availability, and `EXPLAIN` output all
 diverge. Read the engine and its version from the project before making any
 claim in that second group; where the project does not declare one, say the
 engine is unknown rather than assuming.

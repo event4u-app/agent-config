@@ -7,7 +7,7 @@
  * package ships, not an engine measurement. It asserts that each corrected
  * passage carries the vocabulary that decides its case, and that the folklore
  * formulations are gone. It cannot verify that the advice is true of any
- * particular engine — five of the campaign's engine-behaviour halves were
+ * particular engine — five of the campaign's engine-behavior halves were
  * recorded as unverifiable offline, and no passage here asserts one.
  *
  * That is a real limit and the reason the fixtures name BOTH answers: a reader
