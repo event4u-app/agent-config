@@ -266,6 +266,7 @@ is a pairwise contract scoped to the always-on kernel rules — forking that
 linted contract with a second prose ordering over a different kind of object is
 the drift this ladder exists to avoid.
 
+
 ### 8c. Is the approach sound?
 
 - Is there a simpler way to achieve the same result?

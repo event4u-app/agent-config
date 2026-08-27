@@ -121,6 +121,12 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
 - Follow chosen architecture from Phase 4.
 - Follow codebase conventions strictly.
 - Track progress via task list or roadmap.
+- **One behavior at a time**: the failing test for that behavior, observed
+  failing, then the minimum code that makes it pass, then the next behavior.
+  Tests are a step of this phase, never a follow-up suggested in Phase 7 —
+  a plan that reaches the summary owing its tests planned test-after.
+  Exceptions are the Do-NOT list in the `test-driven-development` skill,
+  and a skipped cycle is recorded in the decision log rather than passed over.
 
 #### Phase 6: Quality Review
 - Review the implementation for:
@@ -132,7 +138,8 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
 
 #### Phase 7: Summary
 - Summarize what was built, key decisions, files modified.
-- Suggest next steps (tests, documentation, follow-up features).
+- Suggest next steps (documentation, follow-up features) — never tests, which
+  Phase 5 already closed per behavior.
 - Update roadmap if applicable.
 
 ## Decision log
@@ -147,7 +154,7 @@ This ensures future developers (and agents) understand the reasoning, not just t
 
 ## Bite-sized task granularity (structural roadmaps only)
 
-When a feature plan's generated roadmap declares `complexity: structural` in its frontmatter, every task bullet must be self-contained and 2–5 minutes of work. Lightweight roadmaps (the default) skip this section — coarse-grained tasks ("Add login endpoint", "Update tests") are correct when the work is well-scoped and low-risk.
+When a feature plan's generated roadmap declares `complexity: structural` in its frontmatter, every task bullet must be self-contained and 2–5 minutes of work. Lightweight roadmaps (the default) skip this section — coarse-grained tasks are correct when the work is well-scoped and low-risk — but coarse means *one behavior*, not one layer: ("Reject login with an unknown email — test, then handler", "Reject login with a wrong password — test, then handler"), never an implementation step followed by an "Update tests" step.
 
 Structural roadmap tasks must include:
 

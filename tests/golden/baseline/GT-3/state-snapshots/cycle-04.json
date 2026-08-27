@@ -35,10 +35,10 @@
     }
   ],
   "tests": {
-    "verdict": "success",
+    "verdict": "failed",
     "scope": "targeted",
-    "exit_code": 0,
-    "targeted": "Tests 4 passed (4)"
+    "exit_code": 1,
+    "targeted": "Tests 1 failed | 3 passed (4)"
   },
   "verify": null,
   "outcomes": {
@@ -50,11 +50,10 @@
     "test": "blocked"
   },
   "questions": [
-    "@agent-directive: fix-failing-checks ticket=GT-3-POW lane=test attempt=1 ceiling=3",
-    "> Ticket GT-3-POW — `test` reported `failed`. Self-fix attempt 1 of 3.",
-    "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
-    "> 1. Continue — fix the failures and re-run `run-tests`",
-    "> 2. Abort — stop this cycle and hand the failures back"
+    "@agent-directive: run-tests ticket=GT-3-POW scope=targeted",
+    "> Ticket GT-3-POW — running tests: targeted first (`--filter` on the changed paths), full suite only if targeted passes.",
+    "> 1. Continue — run targeted tests now",
+    "> 2. Abort — skip testing (NOT recommended)"
   ],
   "report": ""
 }
