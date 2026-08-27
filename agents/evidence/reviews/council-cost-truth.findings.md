@@ -1,12 +1,12 @@
 # Findings: council-cost-truth
-<!-- completion-review: v1 | reviewed: 2026-08-27 | scope: b6a8d44bc183675621fda54e89f69c04fa7772be4e42e25d09cc0244b6583d47 | diff: 80de6f69a5b99a4c05aa2ac5092539b15bf745ce | reviewer: council-2of2-cross-model | prompt_hash: fb596a15f47fbdeab4dcd0b6784a4ddf45a0df4ca63c5fe3a94820009f302945 -->
+<!-- completion-review: v1 | reviewed: 2026-08-27 | scope: 1c923b9425ecfdf16b34e18d96ad99b063c3d646a056a29aef5ededcec02c406 | diff: b4abe77cdfc6aff1acd081163f1677f432a7abb2 | reviewer: council-2of2-cross-model | prompt_hash: fb596a15f47fbdeab4dcd0b6784a4ddf45a0df4ca63c5fe3a94820009f302945 -->
 <!-- {"review-independence":{"review_independence":"cross-model","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["council-anthropic-claude-sonnet-4-5","council-openai-codex-default"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-27 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 80de6f69a5b99a4c05aa2ac5092539b15bf745ce
-  scope_hash: b6a8d44bc183675621fda54e89f69c04fa7772be4e42e25d09cc0244b6583d47
+  diff_sha: b4abe77cdfc6aff1acd081163f1677f432a7abb2
+  scope_hash: 1c923b9425ecfdf16b34e18d96ad99b063c3d646a056a29aef5ededcec02c406
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -28,7 +28,7 @@ expectation of the outcome was stated in it and the scope was not narrowed, per
 the evaluator-independence rule.
 
 **The review ran against scope `561db04c` (head `333a18a9c`).** This artefact is
-bound to `b6a8d44b` because every finding below was fixed in `1a88531c6`, which
+bound to `1c923b94` because every finding below was fixed in `1a88531c6`, which
 moved the reviewed content. Both seats converged on the same two defects **in the
 fix under review** and independently rated the display-logic one highest.
 
@@ -44,7 +44,7 @@ fix under review** and independently rated the display-logic one highest.
 - `tests/scripts/ai_council/billable_cost.test.ts` — 22/22.
 - Council suite (`tests/scripts/council_cli.test.ts` + `tests/scripts/ai_council/`) — **1066/1066**, airgap golden parity included, so no pinned CLI output string broke.
 - `task typecheck-ts` and `eslint` on the three changed source files — clean.
-- `check_source_size_budget` total excess **falls** 18446 → 18439.
+- `check_source_size_budget` total excess **falls** 18,446 → 18,440, and the baseline is walked down to match in `b4abe77cd` — the equality assertion in that gate's test is what made the lowering mandatory rather than optional.
 - Live proof from the review run's own output: `spent $0.0000 — all seats subscription-authed, nothing billed`, where the same command previously printed `actual $0.1055`.
 - Replayed against the two artefacts that produced the original defect: recorded `0.105525` / `0.10077`, billable-aware `0` / `0`, both seats `billable=false` including the persisted string form.
 
@@ -71,3 +71,11 @@ byte-identical; only its position moved. The review itself genuinely preceded th
 fixes — the council ran against scope `561db04c` before a line was changed — so
 what the recorded order now shows and what happened agree. The three-commit
 detour is visible in the log on purpose.
+
+**Re-bound twice, and the reason is in this section rather than implied.** The
+scope moved from `b6a8d44b` to `1c923b94` when `b4abe77cd` walked the source-size
+baseline down. That commit changes no reviewed logic — it is one integer and a
+derivation note in `src/config/gate-violation-baselines.json` — but the contract
+re-binds on any content change and does not care why, which is the correct
+default. The findings above are unchanged and still describe the code as it
+stands.
