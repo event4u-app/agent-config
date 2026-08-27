@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-11-25
+keep-beta-until: 2026-10-19
 roadmap_ref: road-to-adoption-proof-and-ci-green.md
 ---
 
@@ -12,11 +12,45 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 > the package may measure, what it may NOT, and the opt-in gate
 > consumer-side telemetry would need to clear before it could ship.
 >
-> **Beta review 2026-08-27** · window extended to 2026-11-25 (90 days, the
-> maximum this contract's own frontmatter table allows). Reviewed during a
-> PR-drain run: the text is unchanged since 2026-05-26 and no consumer count
-> is established, so promotion to `stable` is not evidenced. The extension is
-> a recorded review outcome, not a deferral.
+> **Beta review, 2026-08-27 — extended to 2026-10-19, and the date is derived
+> rather than chosen.** The Iron Law and both closed lists are settled and
+> unhedged; what keeps this contract in beta is one live bet it holds itself.
+> **What has to happen before promotion:** § Extraction demand gate opened its
+> window when the probe page landed on `main` (2026-07-20), and that window
+> closes **2026-10-18**. Neither of its two branches — floor met, floor missed —
+> has been recorded as a decision anywhere under `docs/decisions/`. The new date
+> is the day after the window closes, so the next review has an outcome to read
+> instead of the same open bet. It is the **earliest review date, not an
+> automatic promotion date** — one seat was explicit about the difference.
+>
+> **Decided by AI council 2026-08-27, and this verdict REVERSES an earlier one
+> from the same day.** The first round returned 2/2 PROMOTE, on a framing I
+> wrote that asserted "nothing in the file is marked open, pending, or
+> undecided". That was false — § Extraction demand gate is exactly such a
+> clause — and the PROMOTE reasoning had rested on a "zero open clauses" axis
+> the omitted fact bears on directly. Re-put with the correction and with the
+> earlier verdict quoted, both seats returned **B, extend**, and one stated
+> plainly that it was not holding an earlier answer but deciding on the
+> corrected record. Recorded here because a reversal that hides its first
+> verdict is indistinguishable from verdict-shopping.
+>
+> One argument for promoting survives and is worth keeping visible: the demand
+> gate tests future *extraction* demand, not the privacy floor, and a contract
+> can be normatively complete while running an optional experiment. What
+> outweighed it was dependence — two roadmaps gate their own work on this gate's
+> outcome, which makes it material rather than observational.
+>
+> **Revisit on or after 2026-10-19, and only when** a durable decision records
+> "floor met", "floor missed" or "experiment abandoned", cites its evidence
+> including an explicit no-data finding if that is the finding, and resolves the
+> two dependent roadmap branches.
+>
+> One thing found and **not** fixed here, stated rather than left silent: the
+> collector's own store, `agents/runtime/metrics/adoption-snapshots.jsonl`, does
+> not exist on this tree. One seat read that as evidence the experiment has not
+> run; the other refused the inference, and is right — the path is gitignored, so
+> its absence here establishes that the evidence is **unavailable on this tree**,
+> never that no collection occurred. Recorded at that strength.
 
 ## The Iron Law
 
@@ -36,7 +70,7 @@ gate.
 
 All four signals below come from public APIs and require no
 consumer-side instrumentation. The roadmap's Phase D Step 2
-collector (`scripts/adoption_snapshot.py`) pulls them into a single
+collector (`src/scripts/adoption_snapshot.ts`) pulls them into a single
 weekly snapshot.
 
 | Signal | Source | Refresh cadence | Privacy posture |
@@ -122,7 +156,7 @@ Re-audit on each of:
 
 ## See also
 
-- [`scripts/adoption_snapshot.py`](../../src/scripts/adoption_snapshot.ts)
+- [`src/scripts/adoption_snapshot.ts`](../../src/scripts/adoption_snapshot.ts)
   — the collector for the four public signals.
 - `domain-safety-pii` rule — the redaction floor any future opt-in
   telemetry would inherit.
