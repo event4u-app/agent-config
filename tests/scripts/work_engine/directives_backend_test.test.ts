@@ -34,6 +34,49 @@ describe('directives/backend/test — AMBIGUITIES', () => {
     });
 });
 
+describe('directives/backend/test — RED evidence is not a verdict', () => {
+    it('tests carrying only `red` → delegate run-tests, not a shape complaint', () => {
+        expect(
+            runTs({
+                ticket: { id: 'T-R1' },
+                tests: { red: { behaviour: 'export returns CSV', failure_class: 'missing_target' } },
+                outcomes: ok,
+            }),
+        ).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: run-tests ticket=T-R1 scope=targeted",
+              "> Ticket T-R1 — running tests: targeted first (\`--filter\` on the changed paths), full suite only if targeted passes.",
+              "> 1. Continue — run targeted tests now",
+              "> 2. Abort — skip testing (NOT recommended)"
+            ],
+            "message": "Ticket T-R1 needs its tests run before verification."
+          }"
+        `);
+    });
+
+    it('`red` plus a present-but-invalid verdict still BLOCKS on shape', () => {
+        expect(
+            runTs({
+                ticket: { id: 'T-R2' },
+                tests: { red: { behaviour: 'x', failure_class: 'assertion' }, verdict: 'green' },
+                outcomes: ok,
+            }),
+        ).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket T-R2 — recorded test output is malformed: state.tests['verdict'] must be one of success, failed, mixed; got 'green'.",
+              "> 1. Re-run tests and resume",
+              "> 2. Abort — test verdict cannot be trusted"
+            ],
+            "message": "Ticket T-R2 tests shape invalid: state.tests['verdict'] must be one of success, failed, mixed; got 'green'."
+          }"
+        `);
+    });
+});
+
 describe('directives/backend/test — outcome contract', () => {
     it('advisory persona → SUCCESS short-circuit', () => {
         expect(runTs({ ticket: { id: 'T-1' }, persona: 'advisory', outcomes: ok })).toMatchInlineSnapshot(`

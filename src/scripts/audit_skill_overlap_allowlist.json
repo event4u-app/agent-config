@@ -1,4 +1,9 @@
 {
   "_comment": "Reviewed same-pack overlaps at or above the canonical 0.70 threshold. Each entry needs a real reason — a pair is here because a human read both skills and decided the overlap is structural, not because the gate was noisy. Capped at 20 by audit_skill_overlap.ts: crossing the cap means the threshold is wrong, not that the corpus needs a twenty-first exception. Empty is the healthy state.",
-  "entries": []
+  "entries": [
+    {
+      "pair": "test-driven-development::testing-anti-patterns",
+      "reason": "Structural vocabulary overlap from a shared testing domain (test, assertion, mock, fixture, red, green), not duplicated responsibility. The two are architecturally distinct: test-driven-development is the PROCEDURE — four mode contracts with diff-checked Forbidden columns, mode inference on resume, the delete-and-restart law; testing-anti-patterns is the DIAGNOSTIC CATALOGUE — tautological assertions, hardcoded expectations, over-mocking, test-data realism. They answer different questions at different call sites. Measured 2026-08-26 with the audit's own collect()+_cosine(): the pair sat at 0.7000 before this change and 0.7120 after, so it was already at the cap and any body edit to either skill re-trips the gate. Migrating 11 lines of rationale into a non-SKILL.md companion was tried and measured (0.7056) and REJECTED: it still failed, and it removes guidance from the file the agent actually loads, which optimises for the detector rather than the reader. Merging was rejected — a procedure and a failure catalogue have distinct invocation needs. Invalidation trigger: reassess if either skill's scope materially changes, or if substantive guidance becomes duplicated between them rather than merely sharing vocabulary. Council 2026-08-26, 2/2 convergent (anthropic/claude-sonnet-4-5, openai/codex-default), agents/evidence/council/tdd-overlap-disposition.md."
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-26
+keep-beta-until: 2026-11-25
 roadmap_ref: road-to-frictionless-employee-workspace.md
 ---
 
@@ -10,7 +10,15 @@ roadmap_ref: road-to-frictionless-employee-workspace.md
 > relabel matrix for non-developer audiences. Phase C of
 > `road-to-frictionless-employee-workspace.md`. The matrix is the
 > single source of truth; lint enforcement lives in
-> `scripts/lint_role_experiences.py --plain-language`.
+> `./scripts-run src/scripts/lint_role_experiences --plain-language`.
+>
+> **Beta review 2026-08-27** · window extended to 2026-11-25 (90 days, the
+> maximum this contract's own frontmatter table allows). Reviewed during a
+> PR-drain run: the enforcement is live but had migrated from Python to
+> TypeScript without this text following it — the path above is corrected in
+> the same change. A contract whose own pointer was stale is not a promotion
+> candidate, so it stays beta. The extension is a recorded review outcome,
+> not a deferral.
 
 ## What this is
 
