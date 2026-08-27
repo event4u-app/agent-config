@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -15,7 +15,8 @@ relates:
 # could not be executed inside the parent and is carried rather than dropped
 # (roadmap-progress-sync Iron Law 3, preservation test: a carried follow-up
 # created in the SAME change is the council-decidable disposition).
-estate_offset_exempt: "+1 active, and the parent archives in the same change: +1 / -1, net zero on the active-roadmap floor. Carries no blocker, so the open_blockers floor is untouched."
+estate_growth_exempt: "later_roadmaps 66 -> 67. This change parks one roadmap that a 2/2 convergent council found unexecutable today: its AC-1 requires a population greater than zero and the measured population is 0, because the gate it measures landed two commits before HEAD. Parking is the disposition the later/ contract names for an elapsed-time gate; the alternative that would keep the bucket flat is leaving an unadvanceable roadmap on the active dashboard, which is the state later/ exists to remove. Active roadmaps fall 5 -> 4 in the same change, so the total estate does not grow."
+estate_offset_exempt: "consumed at creation (7cb1d1ddf): +1 active, parent archived in the same change, net zero. Parking this file in later/ is a further -1 on the active count with no offsetting event; it lowers the floor and never raises it."
 ---
 # Road to a false-positive rate for the authoring-search record
 
@@ -71,6 +72,53 @@ Stated before the measurement so the number cannot be defined after the fact:
   whose author is a script.
 - **Not counted either way** — an addition whose record is present but
   malformed. That is the gate's hard half and is a different finding.
+
+## Measurement Baseline — recorded 2026-08-27, before parking
+
+The population was measured in a clean worktree at `origin/main` = `830e31aa3`
+so that the resume does not have to re-derive the starting point:
+
+- **Base ref:** `7cb1d1ddf` — the commit that added
+  `src/scripts/lint_composition_review.ts`, timestamped 2026-08-27 21:16:30 +0200.
+- **Command:** `./scripts-run src/scripts/lint_composition_review --base-ref 7cb1d1ddf`
+- **Result:** `419 artifact(s) — records well-formed; 0 addition(s) without one (advisory).`
+- **Population:** **0**.
+
+The advisory half derives its added-artefact set from
+`git diff --name-only --diff-filter=A <base>...HEAD`
+(`src/scripts/lint_composition_review.ts:410`), and only two commits sit in that
+range, neither adding a skill, rule, command or guideline. Step 1.1's verify
+clause and AC-1 both require a count **greater than zero**, so the roadmap is
+**unexecutable today rather than unfinished** — the shortfall is elapsed time,
+not effort.
+
+### Council decision — 2026-08-27, park in `later/`
+
+Convened on the disposition (members: anthropic, openai; both present; actual
+cost $0.0352). **Convergent 2/2 on parking in `agents/roadmaps/later/`.**
+
+Options put: (a) park in `later/`; (b) re-scope AC-1 to a retroactive population
+using a much earlier base ref; (c) add a `## Blockers` entry and leave the
+roadmap active at 0/8; (d) name another.
+
+Rationale recorded: (b) was refused because a retroactive population predates the
+record entirely, so every row is an addition-without-a-record by construction —
+it would measure the *absence of the mechanism*, not the *wrongness of a
+finding*, which is precisely the failure Risk #1 and Risk #2 in this file were
+written to prevent. (c) was refused because an active roadmap no run can advance
+is the exact state `later/` exists to remove. The council additionally required
+that this baseline section be written **before** the move, so the file is
+self-contained on resume; that requirement is discharged above.
+
+**Estate effect:** −1 on the active-roadmap count. The `+1 / -1` offset this file
+declared was consumed at creation in `7cb1d1ddf`, where the parent archived in
+the same change; this move carries no offsetting parent event.
+
+**Revisit-if:** a release has shipped carrying `lint_composition_review` in
+advisory mode **and** the post-`7cb1d1ddf` range produces more than zero in-scope
+additions without a `composition_review` record. No fixed artefact threshold is
+set — Step 1.1's floor is "greater than zero", and the measurement itself decides
+whether the number is actionable.
 
 ## Phase 1 — Collect
 

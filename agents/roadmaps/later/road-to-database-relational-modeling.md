@@ -1,12 +1,21 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds the capability work and the ownership question the council refused to settle without evidence; rule 11 forbids folding it into the advice-correction sibling, which changes existing text and adds no capability. No roadmap in the current estate covers database modeling."
+estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Step 1.3 was executed and measured the highest scope overlap in the 34-skill backend-data family at 25 percent against a 70 percent threshold, so a new skill is architecturally warranted -- and inadmissible, because the per-spawn preamble payload has 4 tokens of headroom against a skill catalogue cost of 53. A 2/2-convergent council required the overlap number to be produced anyway rather than writing a budget-forced extend verdict into the admissions ledger. Two of three blockers are resolved and the third is resolved as deferred verification, so open_blockers falls; skill_count is unchanged and active_roadmaps falls by one."
 estate_growth_exempt: "Three blockers were discovered during verification, not proposed by the inbox artifact: the new skill's admission burden against 34 existing backend-data skills, a frontmatter key three proposals depend on that the skill schema forbids, and the fact that an ownership map placed in docs/ is unreachable by any agent in a consumer install."
 ---
 # Road to database relational modeling
+
+> **Resume when** a modeling skill is admissible: `check_preamble_payload_budget`
+> reports at least 53 tokens of headroom below `ci_delivery.grace_ceiling` on
+> `origin/main`, **and** `check_estate_count`'s `skill_count` allowance is
+> explicitly allocated across this roadmap and `road-to-database-erd-landing`.
+> Parked 2026-08-27 by AI council with Phase 1 discharged — the ownership
+> question is answered on evidence and only the capacity is missing. See
+> `## Notes` § Parked.
 
 > **Source:** `agents/tmp.old/database-structure/` — four database roadmap
 > proposals from two parallel external LLM sessions plus two competing
@@ -167,24 +176,37 @@ corpus follows the ownership decision, not the other way round.
       verify: three contracts recorded, each citing the `file:line` its scope
       lines come from.
 
-- [ ] **1.3 Measure scope overlap across the whole `backend-data` family.**
+- [x] **1.3 Measure scope overlap across the whole `backend-data` family.**
       Not only the three obvious candidates — `docs/contracts/skill-family-map.yml`
       lists 34. For each, record whether it already covers the four probe
       intents the council named: when to normalize, when to denormalize, how to
       model time-varying data, how to model hierarchies.
-      verify: a table with 34 rows and a per-row overlap verdict, and the
-      highest overlap figure stated as a number.
+      verify: **discharged.** `agents/evidence/analysis/relational-modeling-overlap-2026-08-27.md`
+      carries all **34** rows with a per-row verdict, the four probe regexes
+      verbatim, and the highest overlap figure stated as a number: **25 %**
+      (1 of 4 intents, `database`). Both non-zero raw hits were opened and read
+      rather than counted — `laravel-validation`'s "normalization" is input
+      normalisation at the request boundary (`SKILL.md:40`) and adjudicates to
+      0/4; `database`'s surviving hit is one query-tuning row prescribing a
+      materialized view (`data/query-tuning.csv:7`). The probe searches each
+      skill's whole subtree, not its description, so it is biased **toward**
+      finding overlap.
 
-- [ ] **1.4 Apply the threshold and record the verdict.**
+- [~] **1.4 Apply the threshold and record the verdict.**
       Above roughly 70% overlap with one host, the modeling procedure extends
       that host. Below it, the admission gate is the obstacle rather than the
       architecture, and the honest path is a new skill with a truthful
       `why_not_extend`. Record the verdict, the number it rests on, and the
       alternative rejected.
-      verify: the verdict is in Notes with its overlap figure; and if it is
-      "new skill", `agents/decisions/skill-admissions.jsonl` carries the line
-      and `./scripts-run src/scripts/check_skill_admissions` exits 0.
-      **Gated on `blocker: modeling-skill-admission`.**
+      verify: **half discharged, half deferred — `[~]`.** The verdict and its
+      number are in `## Notes` § Parked: 25 % against a 70 % threshold, so a new
+      skill is architecturally warranted and `why_not_extend` can be answered
+      truthfully. The second half — the `agents/decisions/skill-admissions.jsonl`
+      line and `check_skill_admissions` exiting 0 — is **not** done, and is not
+      attempted: the skill cannot be admitted while the preamble payload has 4
+      tokens of headroom against a 53-token catalogue cost. Writing the ledger
+      line for a skill that cannot land would put a record in the tree for an
+      artefact that does not exist.
 
 ## Phase 2 — Routing authority, and a map generated from it
 
@@ -381,7 +403,7 @@ corpus follows the ownership decision, not the other way round.
 ## Blockers
 
 ### blocker: modeling-skill-admission
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 1.4's "new skill" branch, and therefore Phase 3's location.
   Phases 1.1–1.3, 2, 4, 5 and 6 run regardless; Phase 3 can be authored against
@@ -403,7 +425,7 @@ corpus follows the ownership decision, not the other way round.
 - **If you do nothing:** the modeling procedure is authored with no owner, or a skill is created whose `why_not_extend` cannot be answered truthfully — which is the one field in the ledger that outlives the decision.
 
 ### blocker: projected-context-reachability-unknown
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.5's positive branch, and any claim that the ownership map
   routes. Steps 2.1–2.4 and 2.6 do not depend on it.
@@ -428,7 +450,7 @@ corpus follows the ownership decision, not the other way round.
 - **If you do nothing:** the generated map is described as routing when it may only be documentation, and the ownership mechanism rests on a reachability claim nobody checked.
 
 ### blocker: engine-facts-need-a-source
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** any step that would state a version-specific engine behaviour as
   fact. No step above does; this blocker exists so none is added later without
@@ -473,6 +495,114 @@ corpus follows the ownership decision, not the other way round.
 
 ## Notes
 
-The ownership verdict from 1.4 with its overlap figure, the reachability
-observation from 2.5, and the corpus-split revisit threshold from 6.3 belong
-here once established.
+The reachability observation from 2.5 and the corpus-split revisit threshold
+from 6.3 belong here once established. The ownership verdict from 1.4 is below.
+
+## Parked — 2026-08-27, AI council, with Phase 1's number produced first
+
+### 1.4's verdict: architecturally warranted, presently inadmissible
+
+**Highest scope overlap across the 34-skill `backend-data` family: 25 %.** One
+skill (`database`) matches 1 of the 4 probe intents; the other 33 match none.
+Full 34-row table, the four probe regexes, and the adjudication of both non-zero
+raw hits: `agents/evidence/analysis/relational-modeling-overlap-2026-08-27.md`.
+
+Step 1.4's rule is *"above roughly 70 % overlap with one host, the modeling
+procedure extends that host; below it, the admission gate is the obstacle rather
+than the architecture."* 25 % is not near the line. The three candidate hosts the
+roadmap named all fail for reasons the number now backs:
+
+| Candidate | Overlap | Why not |
+|---|---|---|
+| `database` | 25 % | Its own description narrows it to operations — *"MariaDB/MySQL tuning, indexing strategies, slow queries"*. Its single point of contact is one query-tuning CSV row prescribing a materialized view. Adding modeling contradicts the narrowing step 2.6 of this same roadmap is trying to complete. |
+| `schema-review` | not in the family | Validates an existing schema. Coupling it with design puts author and reviewer in one artefact. |
+| `migration-architect` | not in the family | Owns the transition between two schemas; modeling decides what the second one should be, which is upstream. |
+
+**The verdict is therefore "new skill" on architecture and "not now" on
+capacity** — the third branch, distinct from both options the blocker offered.
+`check_estate_count`'s `skill_count` allowance is 0, and the harder constraint is
+the per-spawn preamble payload: **4 tokens of headroom** against a catalogue cost
+of ~53 for any skill (measured the same day in
+`agents/evidence/analysis/preamble-headroom-is-in-the-rules-2026-08-27.md`, and
+confirmed to 49 tokens over by merging the sibling's prepared branch).
+
+### Why the number was produced even though the answer was capacity-bound
+
+Both council seats insisted on it, and the reason is specific rather than
+procedural: budget pressure can prevent an admission but cannot establish
+architectural overlap. Writing *"extend"* here because the estate is full would
+put a false answer in `agents/decisions/skill-admissions.jsonl`'s
+`why_not_extend` — the one field `blocker: modeling-skill-admission` says
+*"outlives the decision"*. The ledger line is deliberately **not** written: a
+record for an artefact that cannot exist is worse than no record.
+
+### The three blockers, resolved
+
+**`modeling-skill-admission` → resolved.** Its `Resolved when` has two clauses.
+The first — *"step 1.4's verdict is in `## Notes` with its overlap figure"* — is
+discharged above with a measured 25 %. The second — *"on the new-skill branch
+`check_skill_admissions` exits 0"* — is conditioned on a new-skill branch that
+this change does not create and could not land. The total `skill_count`
+accounting the sibling blocker also demanded is now settled from the other side:
+**neither database roadmap takes the allowance**, because neither can add a skill
+at all. It stays available to whichever resumes first.
+
+**`projected-context-reachability-unknown` → resolved as fallback (b),
+convergent 2/2.** No host observation of a `dist/agent-src/contexts/` file
+reaching the model before skill selection could be made, and this roadmap cannot
+make one from the tree. The generated ownership map is therefore **not** claimed
+as a routing input; step 2.5's positive branch is to be marked `[-]` when Phase 2
+runs, and the ownership statements ship in each skill's own metadata (2.3)
+instead. **Cost, stated rather than glossed:** pre-selection routing is lost, the
+map is documentation and not a control plane, and the ownership information may
+have to be duplicated in the per-skill metadata that does deliver.
+*Revisit-if:* a reproducible host trace shows a projected context consulted
+before skill selection.
+
+**`engine-facts-need-a-source` → resolved as deferred verification, not as
+resolution.** Every version-specific engine claim routes to the non-gating
+live-engine stage in `road-to-database-evolution-tactics`, with a pinned upstream
+citation only where measurement is impractical. Both seats flagged that this is a
+**verification plan and not a verification** — and one added the sharper point:
+the `-evolution-tactics` stage is itself blocked on a runtime decision, so until
+that resolves the five claims stay explicitly provisional, non-gating, and
+unavailable as implementation guarantees. Recorded that way here so a later
+reader does not mistake the routing for an answer.
+
+### Council record
+
+Convened 2026-08-27 jointly with `road-to-database-erd-landing`, because the
+`skill_count` allowance entangled the two. Members `anthropic`, `openai`; both
+present before and after (`2/2 present, needed 1 — concluded`). Reported cost
+$0.0625 on subscription-CLI transport with `billable=0` — PR #1695 records that
+this figure is not a real charge.
+
+On this roadmap the seats were **convergent with no dissent** on every point: the
+overlap evidence is mandatory and cannot be substituted by budget pressure;
+budget scarcity cannot decide architectural overlap; the honest 1.4 verdict is
+the three-way one (high overlap → extend / low overlap → warranted but
+inadmissible / inconclusive → park without a verdict) rather than the binary the
+blocker offered; fallback (b) for reachability; deferred verification for engine
+facts; and no manufactured progress — *"do not advance implementation phases
+merely because preparatory paperwork can be completed."*
+
+One seat set the precondition this change honours: run Phase 1.3 and 1.4 **only
+if independently executable today**, park at 0/34 otherwise. 1.3 was
+independently executable — it is a read over the tree — so it ran.
+
+**Revisit-if:** `check_preamble_payload_budget` reports at least 53 tokens of
+headroom below `ci_delivery.grace_ceiling` on `origin/main`, via a rules
+reduction rather than a catalogue trim, **and** the `skill_count` allowance is
+explicitly allocated across this roadmap and `-erd-landing`. The `grace_end_date`
+of 2026-11-10 is a second trigger: after it the design ceiling of 107,646
+applies and the gap is ~30,600 tokens rather than ~49.
+
+### What is NOT claimed
+
+Steps 1.1, 1.2 and all of Phases 2 through 6 are untouched and unchecked — 32 of
+34 boxes remain open, and all acceptance criteria remain unmet. Step 1.4 is `[~]`
+because exactly half of its verify clause is discharged. No skill is created, no
+admissions-ledger line is written, no skill description is narrowed, and
+`database`'s description is unchanged — step 2.6's narrowing explicitly must not
+run before modeling has an owner, and it does not have one yet.
+

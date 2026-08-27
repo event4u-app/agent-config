@@ -148,6 +148,112 @@ export function estimate_cost(
     };
 }
 
+// ── billable-aware aggregation ─────────────────────────────────────
+//
+// A vendor-official CLI seat (anthropic / openai / gemini) runs under the
+// user's subscription auth and is `billable = false`; the contract states it
+// in as many words (`docs/contracts/ai-council-config.md:173`). Pricing such
+// an answer at API rates and reporting the figure as spend is the defect these
+// two helpers exist to close, found 2026-08-27: `council_cli.ts` ran
+// `estimate_cost` over every non-errored response with no `billable` check, so
+// one run printed `TOTAL: $0.0000` from the pre-run path (which filters) and
+// `actual $0.1055` from the post-run path, two lines apart.
+//
+// Why the coercion below is not paranoia: `_serialise_responses` stringifies
+// every metadata value with `String(v)`, so a persisted artefact carries
+// `"billable": "false"` — and `Boolean("false")` is `true` in JavaScript. A
+// consumer reading the field back with a bare `Boolean()` sees a subscription
+// seat as billable, which is the same wrong answer arrived at from the other
+// direction.
+
+/** The subset of a `CouncilResponse` the cost aggregation reads. */
+export interface BillableCostInput {
+    provider: string;
+    model: string;
+    input_tokens: number;
+    output_tokens: number;
+    error?: string | null;
+    metadata?: Record<string, unknown> | null;
+}
+
+/**
+ * Does this response represent money actually spent?
+ *
+ * ABSENT means billable. A missing flag is not evidence of a free call, and
+ * defaulting the other way would let a client that forgot to stamp its
+ * transport silently zero its own spend.
+ */
+export function isBillableResponse(r: BillableCostInput): boolean {
+    const raw = (r.metadata ?? {})['billable'];
+    if (raw === undefined || raw === null) {
+        return true;
+    }
+    if (typeof raw === 'boolean') {
+        return raw;
+    }
+    if (typeof raw === 'string') {
+        // The persisted form. Only the two literals a `String(v)` round-trip
+        // can produce are interpreted; anything else falls through to the
+        // conservative default rather than being guessed at.
+        const t = raw.trim().toLowerCase();
+        if (t === 'false') {
+            return false;
+        }
+        return true;
+    }
+    // Every other type is BILLABLE, not truthiness-of-value. The first draft of
+    // this function ended `return Boolean(raw)` while its own comment promised a
+    // conservative default, and a council review (2/2) caught the contradiction:
+    // `Boolean(0)` and `Boolean([])` are `false`, so a numeric or empty-array
+    // value would have zeroed a billable seat's spend. The serialiser should
+    // never emit those, which is exactly why guessing at them is wrong.
+    return true;
+}
+
+/**
+ * Did every answered response come from a non-billable transport?
+ *
+ * Exported because the CLI's output line needs it and must NOT infer it from a
+ * zero total. A council review (2/2) rated that inference the highest-severity
+ * finding in the first draft, and the reasoning is concrete: `estimate_cost`
+ * returns `0.0` when `lookup` finds no price row, so an unpriced BILLABLE model
+ * produces a zero total. So do a billable seat that errored and one that
+ * reported zero tokens. All three would have printed "all seats
+ * subscription-authed" over real spend.
+ *
+ * Vacuously false on an empty or all-errored set: with nothing answered there is
+ * no transport to make a claim about, and silence is the honest output.
+ */
+export function allSeatsNonBillable(responses: BillableCostInput[]): boolean {
+    const answered = responses.filter((r) => !r.error);
+    if (answered.length === 0) {
+        return false;
+    }
+    return answered.every((r) => !isBillableResponse(r));
+}
+
+/**
+ * Total USD actually spent across a set of responses.
+ *
+ * Errored responses contribute nothing (no tokens were billed for an answer
+ * that never arrived), and non-billable transports contribute nothing (the
+ * subscription already paid). What remains is spend.
+ */
+export function sumBillableCost(responses: BillableCostInput[], table: PriceTable): number {
+    let total = 0.0;
+    for (const r of responses) {
+        if (r.error) {
+            continue;
+        }
+        if (!isBillableResponse(r)) {
+            continue;
+        }
+        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
+        total += ce.input_usd + ce.output_usd;
+    }
+    return total;
+}
+
 // ── prompt-cache repricing ─────────────────────────────────────────
 //
 // Prompt-cache multipliers derived from the base input rate (Anthropic, GA —

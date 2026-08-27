@@ -1,12 +1,20 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds schema-evolution tactics and the measurement layer the whole campaign depends on; rule 11 forbids folding it into the modeling sibling, whose subject is design rather than rollout, and rule 1 caps a structural roadmap at 1000 lines."
+estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Its three Class-3 blockers are RESOLVED by a 2026-08-27 AI council with decisions recorded, and the park is then forced by the council's own roadmap-admission rule: a roadmap is executable only when every remaining step's declared inputs and runtime are presently available. Three frozen-corpus spike runs, a defect-seeding benchmark corpus and pinned engine images are none of them available to this run, and a partially authored tactics reference is the wrong-but-confident guidance the -advice-correction sibling exists to remove. open_blockers falls by three; skill_count is unchanged and active_roadmaps falls by one."
 estate_growth_exempt: "Two blockers were discovered during verification rather than proposed by the inbox artifact: promoting any new linter rule to gate tier requires a pre-registered spike per rule, and the waiver kind three proposals depend on does not exist in a closed union that would have to be widened."
 ---
 # Road to database evolution tactics
+
+> **Resume when** the three inputs this roadmap needs exist: a frozen corpus for
+> the three rule spikes (step 4.1), the defect-seeding benchmark fixtures
+> (5.1), and pinned engine images with a scheduled runner (5.3). Parked
+> 2026-08-27 by AI council with all three blockers resolved and their decisions
+> recorded — the design questions are answered; the inputs are missing. See
+> `## Notes` § Parked.
 
 > **Source:** `agents/tmp.old/database-structure/` — four database roadmap
 > proposals from two parallel external LLM sessions plus two competing
@@ -323,7 +331,7 @@ order.
 ## Blockers
 
 ### blocker: gate-tier-needs-a-spike-per-rule
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 4.3's promotion branch. Phases 1, 2, 3, 5 and steps 4.1, 4.2
   and 4.4 run without it.
@@ -340,7 +348,7 @@ order.
 - **If you do nothing:** either the rules are promoted without their spikes — turning the waiver mechanism into noise the first time one misfires — or they are not written at all and the tactics reference has no enforcement behind it.
 
 ### blocker: waiver-union-change-is-a-shared-contract
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 4.2 only.
 - **What to do:** `WAIVER_KINDS` is a closed `as const` read by every
@@ -354,7 +362,7 @@ order.
 - **If you do nothing:** step 4.2 stalls, and the rename rule from 4.1 has no waiver to name — so a legitimate expand/contract rename has no compliant way past the rule.
 
 ### blocker: live-engine-stage-needs-a-runtime-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 5.3 only. Steps 5.1, 5.2, 5.4, 5.5 and 5.6 run without it,
   and 5.5 falls back to pinned citations where a measurement is unavailable.
@@ -396,5 +404,159 @@ order.
 
 ## Notes
 
-The waiver-union decision from 4.2, the lock-queue exclusion reason from 4.4,
-and the adopted abort thresholds from 5.4 belong here once taken.
+The lock-queue exclusion reason from 4.4 and the adopted abort thresholds from
+5.4 belong here once taken. The waiver-union decision from 4.2 is below.
+
+## Parked — 2026-08-27, AI council: three blockers resolved, then admission refused
+
+### The three blockers, and why every roadmap recommendation was overturned
+
+The council was asked not to ratify. All three of this roadmap's own written
+recommendations were **rejected as written**, unanimously or near-unanimously
+across four positions.
+
+**`waiver-union-change-is-a-shared-contract` → resolved: add a new waiver kind.
+Unanimous 4/4 against the roadmap's "reuse `migration-unsafe`".**
+
+The decisive point is that the waiver token is the historical record, not a
+type-checker detail. `migration-unsafe: deliberate GDPR destruction` and a
+compatibility-window admission are **opposite developer statements** — one says
+"I am destroying data on purpose", the other says "I am renaming without a
+transition". Collapsing them makes the waiver ledger permanently unsearchable for
+either. The roadmap's "the lost precision is one word in a message the rule can
+carry itself" is wrong in exactly the way that matters: a message is prose, a
+waiver kind is a grep key.
+
+The four-file blast radius is also overstated. `types.ts:70` generates the parser
+regex **from** the union
+(`(?://|--|#)\s*(${WAIVER_KINDS.join('|')})\s*:\s*(.*)$`), so adding a member
+extends the parser automatically; the real work is fixtures, parser tests and
+the waiver documentation.
+
+**The token is NOT `expand-contract`, and this is a defect one seat caught that
+none of the others did.** Every existing kind names *the condition being waived*
+— `no-index`, `no-retention`, `sync-required`, `accepted-loss`,
+`migration-unsafe`. `expand-contract` names the **safe remedy**, so
+`// expand-contract: rename cannot support a compatibility window` reads as
+though expand-contract *was performed*, which is the opposite of the admission
+being made. **Adopt `no-compat-window`.** It matches the negative-naming
+convention of the union it joins and states the violation rather than the cure.
+
+**`gate-tier-needs-a-spike-per-rule` → resolved as (ii), incremental per-rule
+promotion. The roadmap's (iii) "all three at advice tier, revisit after the
+Phase 5 benchmark" is rejected on two independent grounds.**
+
+First, it couples three independent decisions to one downstream event:
+`docs/spikes/scale-history-spikes.md` requires *a* spike per rule with a
+pre-registered threshold on a frozen corpus, and the shipped verdict table there
+already promotes and refuses rules **individually** — `R-A2 index-parity` shipped
+gate on a narrow 80.8 % pass with a pre-registered constraint attached, while
+`R-A4 reference-over-copy` is permanently advice because it is heuristic by
+design. One rule's failure must not hold another rule's gate.
+
+Second — and this is the counter-risk the roadmap's recommendation does not
+address — shipping three unvalidated rules as advice trains developers on
+guidance that may later prove to have a high false-positive rate. That is the
+`-advice-correction` failure mode arriving through the advice tier instead of the
+gate tier.
+
+So: each rule runs its own spike. Pass → that rule promotes to gate. Misses the
+threshold but retains useful precision → stays advisory **with the measured
+limitation recorded**. Fails materially → redesign or omit. Until its spike runs,
+a rule ships only as **explicitly provisional** advice carrying a notice that
+validation is pending, never as established guidance.
+
+**`live-engine-stage-needs-a-runtime-decision` → resolved: the local target is
+the execution primitive, invoked from a scheduled non-gating job. Unanimous 4/4
+against the roadmap's "maintainer-local, invoked deliberately".**
+
+The decisive evidence was supplied by this campaign itself, on the same day:
+`road-to-database-relational-modeling` was parked with **five engine-behaviour
+claims routed to this stage as their verification path**. A target with no owner
+and no trigger is not a verification path — it defers five claims to an event
+with no date. The roadmap's "honest by construction" argument confuses being
+honest about an absence with being useful, and both seats said so independently.
+
+The result model must carry **four** outcomes, not three:
+
+| Outcome | Meaning | Routing |
+|---|---|---|
+| `pass` | the engine behaved as the claim states | no action |
+| `behavior-fail` | the engine contradicted the claim | a real finding; escalate |
+| `not-run` | the engine is unsupported or intentionally unavailable | operational metric |
+| `infrastructure-error` | provisioning, credentials or runner failure | operational metric; escalate on repetition |
+
+Collapsing `infrastructure-error` into `not-run` is specifically forbidden: it
+would make operational decay look like an honest absence, which is the exact
+failure `not-run` was introduced to prevent. One seat proposed exit-code
+segregation as the mechanism — 0 pass, 1 behavior-fail, 2 runtime-absent,
+3+ harness error — with only exit 1 routed to maintainer attention.
+
+The stage still **never gates**, which was already convergent and is unchanged.
+
+### Why the roadmap is parked despite every blocker being resolved
+
+The council was asked, in the same round, to fix a run-level policy so that seven
+remaining roadmaps are not each decided by judgement. It chose **depth-first
+execution with roadmap-level admission decided BEFORE work begins**, and stated
+the rule mechanically:
+
+> A roadmap is executable only when (1) it has no unresolved blocker, (2) every
+> remaining step's declared inputs and runtime are presently available to the
+> autonomous run, and (3) every remaining verify clause can be executed by the
+> run. Otherwise, record resolved decisions and park it **before** modifying
+> implementation or guidance.
+
+The "start and discover whether you can finish" alternative was explicitly
+rejected, because it discovers infeasibility *after* work has begun and produces
+exactly the partial authoring the policy exists to prevent.
+
+Applied here, and one seat applied it to this roadmap by name: eligibility
+requires the frozen corpus, all three spike runners, the benchmark inputs and the
+live-engine runtime to be **available now**.
+
+| Requirement | Present? | Where it is needed |
+|---|---|---|
+| Frozen corpus with pre-registered thresholds for three new rules | **no** | 4.1, 4.3, AC-6 |
+| Defect-seeding benchmark fixtures | **no** | 5.1, 5.2, 5.4, 5.6, AC-7 |
+| Pinned engine images + a scheduled runner | **no** | 5.3, 5.5, AC-8, AC-9 |
+
+Three of the nine acceptance criteria are unreachable from this run, so it parks
+before a line of the tactics reference is written. `src/skills/migration-architect/`
+is a single 125-line `SKILL.md` with no `references/` directory; a half-written
+DDL tactics reference under it would be precisely the *"wrong-but-confident
+guidance"* that `-advice-correction` exists in this same campaign to remove.
+
+### Council record
+
+Convened 2026-08-27. Members `anthropic`, `openai`; both present before and after
+(`2/2 present, needed 1 — concluded`). Reported cost $0.0434 on subscription-CLI
+transport with `billable=0` — PR #1695 records that this figure is not a real
+charge.
+
+Verdicts: A2 and A3 **unanimous 4/4** against the roadmap's recommendation; A1
+convergent on per-rule promotion with a residual difference of emphasis about
+whether the provisional advice ships before or after its spike (recorded above as
+"ships provisional, labelled" — the weaker of the two, deliberately, because it
+is the one both readings permit); Part B **unanimous P2** with the admission rule
+quoted verbatim above.
+
+One seat added a run-level escape clause worth recording where it will be found:
+**more than four parks in a single autonomous run is a structural signal that the
+campaign's roadmap granularity is wrong**, and should be surfaced as a
+restructuring recommendation rather than ground through.
+
+**Revisit-if:** a frozen corpus exists for the three candidate rules, **or** the
+defect-seeding benchmark fixtures land, **or** pinned engine images and a
+scheduled runner exist. Any one of the three unblocks a distinct phase; all three
+are needed for the roadmap to close.
+
+### What is NOT claimed
+
+No step is marked done — 30 of 30 remain open, and all nine acceptance criteria
+are unmet. No tactics reference, no porting checklist, no linter rule, no spike
+and no benchmark is created by this change. The `no-compat-window` waiver kind is
+**decided, not implemented**: `WAIVER_KINDS` in
+`src/scripts/_lib/persistence/types.ts:61` is untouched, because adding a member
+with no rule that emits it would leave a parser vocabulary entry nothing produces.
+

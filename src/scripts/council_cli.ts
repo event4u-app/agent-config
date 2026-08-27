@@ -140,10 +140,11 @@ import {
 import {
     type PriceTable,
     downgrade_coupling,
-    estimate_cost,
+    allSeatsNonBillable,
     estimate_input_tokens,
     load_prices,
     prices_file_for,
+    sumBillableCost,
 } from './ai_council/pricing.js';
 import { detect_project_context } from './ai_council/project_context.js';
 import {
@@ -2761,13 +2762,10 @@ function cmd_run(
         all_responses.push(chairman.response);
     }
     all_responses.push(...stance_repairs);
-    for (const r of all_responses) {
-        if (r.error) {
-            continue;
-        }
-        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
-        actual_total += ce.input_usd + ce.output_usd;
-    }
+    // Billable-aware: a subscription-CLI seat spent nothing, so pricing it at
+    // API rates and calling the figure "actual" is a false statement about
+    // money. See pricing.ts § billable-aware aggregation.
+    actual_total += sumBillableCost(all_responses, table);
     const payload: Dict = {
         schema_version: SCHEMA_VERSION,
         mode: question.mode,
@@ -2819,9 +2817,16 @@ function cmd_run(
     });
     fs.mkdirSync(path.dirname(_resolveTarget(out_path)), { recursive: true });
     fs.writeFileSync(_resolveTarget(out_path), _jsonDumpsIndent2(payload) + '\n', { encoding: 'utf-8' });
+    // The trailing note is not decoration. Before 2026-08-27 this line read
+    // `actual $0.1055` on a run whose every seat was subscription-authed, two
+    // lines below a `TOTAL: $0.0000` from the pre-run path — and an operator
+    // reading the tail of the output saw only the wrong one. When every seat is
+    // non-billable the figure is now 0 and says why, so the two lines agree.
+    const _all_subscription = allSeatsNonBillable(all_responses);
     _stdout(
         `\ncouncil:run · wrote ${out_path} ` +
-            `(estimated $${_pyFixed(estimated_total, 4)} / actual $${_pyFixed(actual_total, 4)})\n`,
+            `(estimated $${_pyFixed(estimated_total, 4)} / spent $${_pyFixed(actual_total, 4)}` +
+            `${_all_subscription ? ' — all seats subscription-authed, nothing billed' : ''})\n`,
     );
     const replay_path = _maybe_write_decision_replay({
         ai_cfg,
@@ -2863,14 +2868,9 @@ function _write_debate_round(
     },
 ): string {
     fs.mkdirSync(_resolveTarget(out_dir), { recursive: true });
-    let actual_total = 0.0;
-    for (const r of responses) {
-        if (r.error) {
-            continue;
-        }
-        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, opts.table);
-        actual_total += ce.input_usd + ce.output_usd;
-    }
+    // Billable-aware, same reason as the sibling site above: a subscription
+    // seat contributes nothing to `cost_usd_actual`.
+    const actual_total = sumBillableCost(responses, opts.table);
     const payload: Dict = {
         schema_version: SCHEMA_VERSION,
         mode: opts.question.mode,
@@ -3220,13 +3220,7 @@ function cmd_debate(
 
     let actual_total = 0.0;
     for (const rnd of [...all_rounds, restate_responses]) {
-        for (const r of rnd) {
-            if (r.error) {
-                continue;
-            }
-            const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
-            actual_total += ce.input_usd + ce.output_usd;
-        }
+        actual_total += sumBillableCost(rnd, table);
     }
     _stdout(
         `\ncouncil:debate · ${all_rounds.length} round(s) complete · ` +
