@@ -50,20 +50,43 @@ found", do not fabricate one).
    - Python: `pyproject.toml` / `ruff.toml` (`[tool.ruff]`, `[tool.black]`),
      `setup.cfg`.
    - Ruby: `.rubocop.yml`. Go: `gofmt`/`golangci.yml`.
-2. **Derive as pointer + digest, never a flattened claim.** Each standard is one
+2. **Follow the chain before you digest, and pick the config NEAREST the edit.**
+   Read literally — one file, one parse — this procedure returns a null on a
+   repository whose root config is a single `extends`. A fourteen-line linter
+   config whose only load-bearing line points into a package in the same
+   workspace is not a project without standards; it is a project whose standards
+   are one hop away, and "no enforced standard found" there is a false negative
+   that reads exactly like a true one. `extends` is specified in TypeScript,
+   ESLint, Biome and Stylelint; `includes` plays the same role in PHPStan and
+   Rector; `workspace:` is documented in npm, yarn, pnpm and bun.
+   - **Precedence is nearest-first, and it is not a preference.** The config in
+     the edited path's own directory governs, then its parent, up to the
+     repository root. A per-package `tsconfig.json`, `.eslintrc`, `.env` or
+     deployment manifest is the one that package's build reads; a root file it
+     does not extend has no effect on it. Reading the root config for an edit
+     inside a package that carries its own is a **wrong** answer, not a coarse
+     one. Report the outranked root candidate too, so the precedence is visible.
+   - **An unresolvable hop is a named gap with a PARTIAL digest, never an
+     absence.** Say which hop failed and why. A partial digest naming its gap is
+     usable; a null that reads as "no standards" is a lie.
+   - **A hop that leaves the repository is labelled `external` and excluded from
+     the digest.** Presenting a third-party preset as the project's own standard
+     is worse than reporting nothing — the reader cannot tell which rules the
+     project chose. Report it with its path; do not merge it.
+3. **Derive as pointer + digest, never a flattened claim.** Each standard is one
    line: the **value**, the **config file it came from**, and the **scope** it
    applies to. Write `ruff.toml → line-length = 88 (scope: src/**/*.py)`, NOT
    "the project uses line length 88". The pointer makes the claim re-checkable
    and the next agent can open the config to confirm.
-3. **Preserve scope; surface conflicts, never flatten them.** If two configs (or
+4. **Preserve scope; surface conflicts, never flatten them.** If two configs (or
    an inline / per-directory override) give two values, emit **two pointers with
    two values + their scopes** — never one ambiguous merged claim. A visible
    conflict is correct; a hidden flattened guess is the failure mode.
-4. **Stamp staleness.** Record each source's `config_mtime` (or content hash).
+5. **Stamp staleness.** Record each source's `config_mtime` (or content hash).
    The digest is stale when the config file's mtime/hash changes → re-derive. No
    human gate is needed (Class A is deterministic) — the digest is **regenerated
    from the config, never hand-edited**.
-5. **Persist** as a Class-A context card under `agents/settings/contexts/` (see
+6. **Persist** as a Class-A context card under `agents/settings/contexts/` (see
    Output format). Class A is high-trust *because* config-derived — it is read
    for heuristics only and never bypasses a fresh structural read (the v1↔v2
    isolation contract in `evidence-discipline`).

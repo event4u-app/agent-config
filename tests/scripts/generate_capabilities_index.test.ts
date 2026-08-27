@@ -67,7 +67,7 @@ describe('generate_capabilities_index — helpers (real repo)', () => {
         expect(out).toContain('\nmeta:\n');
         expect(out).toContain('\ncapability_areas:\n');
         expect(out).toContain('\ngaps:\n');
-        expect(out).toContain('  generated_by: src/scripts/generate_capabilities_index.py\n');
+        expect(out).toContain('  generated_by: generate_capabilities_index\n');
         expect(out.endsWith('\n')).toBe(true);
         expect(out.endsWith('\n\n')).toBe(false);
     });

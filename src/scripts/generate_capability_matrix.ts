@@ -2,7 +2,7 @@
 /**
  * Generate the cross-host capability matrix (road-to-competitive-borrow P1.3).
  *
- * Ported from the retired Python `src/scripts/generate_capability_matrix.py` (ADR-200).
+ * Ported from the retired Python `src/generate_capability_matrix` (ADR-200).
  * The CLI contract is pinned — the `--check` / `--quiet` flags,
  * exit codes (0 / 1 / 2), stdout/stderr split, the byte-identical
  * `docs/capability-matrix.md` (heading prose, the host-header table, the glyph
@@ -222,7 +222,7 @@ export function render_md(matrix: Record<string, Record<string, string>>): strin
     const lines: string[] = [
         '# Capability matrix — what works on which host',
         '',
-        '> **Generated** by `scripts/generate_capability_matrix.py` — do NOT',
+        '> **Generated** by `generate_capability_matrix` — do NOT',
         '> hand-edit. Derived from the `generate_tools()` projection logic in',
         '> `condense.py` (each cell traces to a `generate_*` dispatcher call).',
         '> Drift-checked in CI (`--check`).',
@@ -318,7 +318,7 @@ function _jsonStringAscii(s: string): string {
 export function render_json(matrix: Record<string, Record<string, string>>): string {
     const payload: Record<string, unknown> = {
         schema: 'capability-matrix/1',
-        generated_by: 'scripts/generate_capability_matrix.py',
+        generated_by: 'generate_capability_matrix',
         hosts: HOSTS,
         artifacts: ARTIFACTS,
         matrix,

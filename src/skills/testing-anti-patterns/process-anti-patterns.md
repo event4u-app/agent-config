@@ -17,10 +17,47 @@ is still mocking the mock.
 ```
 WHEN YOU FIND YOURSELF KEEPING UNTESTED CODE "AS REFERENCE" WHILE WRITING
 A TEST FOR IT — DELETE THE CODE. WRITE THE TEST. THEN REIMPLEMENT.
+THE CODE IN QUESTION IS THE UNTESTED CODE THIS TASK JUST WROTE.
+IT IS NOT PRE-EXISTING CODE, AND THE LAW NEVER OVERRIDES A REUSE VERDICT.
 ```
 
 The cheap path is one extra round-trip. The expensive path is a test that
 silently encodes the bug it was supposed to catch.
+
+### The three cases — only one of them is a deletion
+
+Unqualified, this law reads as a standing instruction to delete any untested
+code in reach. That reading is wrong in two of the three cases, and the wrong
+one is expensive: it discards working behavior a reuse verdict would keep.
+
+| The code is | Do | Why |
+|---|---|---|
+| **untested, written by this task** | delete it, write the test, reimplement | Nothing is lost — you can rewrite what you wrote minutes ago, and the test is then written against the behavior you wanted rather than the code you happened to produce |
+| **pre-existing and tested** | keep it | Its tests ARE the record of its behavior. Deleting it to re-derive the same thing throws away evidence you cannot cheaply rebuild, and directly contradicts a reuse / extend verdict |
+| **pre-existing and untested** | write a characterization test first | Deleting it destroys the only remaining record of what it does. The test comes first, but it pins TODAY's behavior — not the behavior you wish it had |
+
+### The characterization-test procedure
+
+For the third case, in order:
+
+1. **Observe, do not judge.** Run the code on real inputs and record what it
+   actually returns — including outputs you believe are wrong. Bug-compatible
+   is the point: the test's job is to detect *change*, not to assert *correctness*.
+2. **Pin the observed values.** Assert them exactly. A characterization test
+   whose expected value is derived from the same code it tests is a tautology.
+3. **Name it as one.** Prefix or tag the test (`characterizes_…`, a
+   `@characterization` marker) so a later reader does not mistake a pinned bug
+   for a desired behavior.
+4. **Now change the behavior.** With the pin in place, the intended change is
+   an ordinary red-green cycle: the characterization test that must now change
+   is the blast radius, made visible.
+5. **Update or delete the pin deliberately.** When the new behavior is
+   correct, the pinned assertion is edited *because the behavior changed* —
+   stated in the diff, never quietly.
+
+**What this is NOT.** Not permission to skip TDD on new behavior — the pin
+covers what exists, the new behavior still starts from a failing test. Not a
+coverage exercise: pin the behavior the change will touch, not the whole file.
 
 ## 12-row anti-rationalization table
 

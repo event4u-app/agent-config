@@ -75,6 +75,13 @@ function resumeAsAgent(state: DeliveryState, verb: string): void {
             { title: 'Wire frontend download button' },
         ];
         state.outcomes['plan'] = Outcome.SUCCESS;
+    } else if (verb === 'observe-red') {
+        // The agent wrote the failing test for the next behaviour and observed
+        // it fail; the implement gate reads the record, not the agent's word.
+        state.tests = {
+            ...(state.tests as Record<string, unknown> | null ?? {}),
+            red: { behaviour: 'GET /api/exports returns a CSV', failure_class: 'missing_target' },
+        };
     } else if (verb === 'apply-plan') {
         state.changes = [
             { path: 'app/Http/Controllers/Export.php', purpose: 'new endpoint' },
@@ -82,7 +89,12 @@ function resumeAsAgent(state: DeliveryState, verb: string): void {
         ];
         state.outcomes['implement'] = Outcome.SUCCESS;
     } else if (verb === 'run-tests') {
-        state.tests = { verdict: 'success', targeted: 'all green', duration_ms: 1420 };
+        state.tests = {
+            ...(state.tests as Record<string, unknown> | null ?? {}),
+            verdict: 'success',
+            targeted: 'all green',
+            duration_ms: 1420,
+        };
         state.outcomes['test'] = Outcome.SUCCESS;
     } else if (verb === 'review-changes') {
         state.verify = { verdict: 'success', confidence: 'high', findings: [] };
@@ -120,13 +132,13 @@ function wellFormedTicket(): Record<string, unknown> {
 }
 
 describe('full backend flow — four-rebound convergence', () => {
-    it('converges with the create-plan → apply-plan → run-tests → review-changes chain', () => {
+    it('converges with the create-plan → observe-red → apply-plan → run-tests → review-changes chain', () => {
         installInfluentialMemory();
         const state = new DeliveryState({ ticket: wellFormedTicket() });
 
         const verbs = driveLoop(state);
 
-        expect(verbs).toEqual(['create-plan', 'apply-plan', 'run-tests', 'review-changes']);
+        expect(verbs).toEqual(['create-plan', 'observe-red', 'apply-plan', 'run-tests', 'review-changes']);
         for (const name of STEP_ORDER) {
             expect(state.outcomes[name], JSON.stringify(state.outcomes)).toBe(Outcome.SUCCESS);
         }
@@ -180,7 +192,7 @@ describe('full backend flow — four-rebound convergence', () => {
 
         const verbs = driveLoop(state);
 
-        expect(verbs).toEqual(['create-plan', 'apply-plan', 'run-tests', 'review-changes']);
+        expect(verbs).toEqual(['create-plan', 'observe-red', 'apply-plan', 'run-tests', 'review-changes']);
     });
 
     it('halts BLOCKED at test when the test verdict is failed', () => {
@@ -188,7 +200,7 @@ describe('full backend flow — four-rebound convergence', () => {
         const state = new DeliveryState({ ticket: wellFormedTicket() });
 
         // Resume through plan + implement, then populate a failed verdict.
-        for (const expectedVerb of ['create-plan', 'apply-plan']) {
+        for (const expectedVerb of ['create-plan', 'observe-red', 'apply-plan']) {
             const [final] = dispatch(state, REAL_STEPS);
             expect(final).toBe(Outcome.BLOCKED);
             expect(extractDirectiveVerb(state.questions)).toBe(expectedVerb);

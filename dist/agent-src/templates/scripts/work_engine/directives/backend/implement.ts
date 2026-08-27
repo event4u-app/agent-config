@@ -16,6 +16,9 @@
  * Flow:
  *
  * - `plan` outcome is not `success` → BLOCKED on precondition.
+ * - no RED evidence on `state.tests` → BLOCKED with
+ *   `@agent-directive: observe-red` so the agent writes and observes the
+ *   failing test for the next single behaviour BEFORE any production edit.
  * - `state.changes` empty → BLOCKED with `@agent-directive:
  *   apply-plan` so the agent applies the plan.
  * - `state.changes` populated but malformed (entries missing
@@ -26,6 +29,26 @@
  * `docs/contracts/implement-ticket-flow.md#deliverystate-the-only-shared-object`
  * — each entry is a dict with at least a `path`; optional
  * `lines` / `purpose` feed the delivery report.
+ *
+ * RED evidence lives at `state.tests.red` and is the engine-side carrier for
+ * the test-first default in `rules/think-before-action.md`. Two accepted
+ * shapes, and nothing else counts:
+ *
+ * - one observation, or a list of them, each a dict with a non-empty
+ *   `behaviour` and a `failure_class` from `_RED_FAILURE_CLASSES` — the three
+ *   valid RED classes the `test-driven-development` skill admits (a failing
+ *   assertion, a missing target, a contract failure). A broken fixture, a
+ *   syntax error in the test, a missing unrelated dependency and a runner
+ *   fault are NOT RED and are rejected by that same contract, not here.
+ * - `{exempt: "<reason>"}` — the recorded override for work the skill's
+ *   *Do NOT use when* list already excludes (scaffolding, generated files,
+ *   documentation). Recorded, never silent: an absent key is not an exemption.
+ *
+ * The gate is per behaviour, not per run: it names the behaviour it is waiting
+ * on and re-fires for the next one. It does NOT detect a batch — an agent that
+ * front-loads every test for the feature satisfies it, and the eval that fails
+ * a one-test-phase-then-one-code-phase plan is the control for that, not this
+ * step.
  */
 
 import type { DeliveryState} from '../../delivery_state.js';
@@ -38,6 +61,13 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
         code: 'upstream_plan_failed',
         trigger: '`plan` outcome is not `success`',
         resolution: 're-run `/implement-ticket` from the start',
+    },
+    {
+        code: 'no_red_evidence',
+        trigger: '`state.tests.red` carries neither an observed failing test for a ' +
+            'behaviour nor a recorded exemption',
+        resolution: 'agent directive `observe-red` → write the failing test for the ' +
+            'next single behaviour, observe it fail, record it',
     },
     {
         code: 'empty_changes_delegate',
@@ -68,6 +98,13 @@ export function run(state: DeliveryState): StepResult {
         return _blocked_on_precondition(state);
     }
 
+    // Test-first, enforced where the engine can see it: no production work is
+    // emitted for a behaviour whose failing test has not been observed.
+    const redIssue = _diagnose_red(state.tests);
+    if (redIssue !== null) {
+        return _blocked_on_missing_red(state, redIssue);
+    }
+
     if (!_pyTruthy(state.changes)) {
         return _delegate_to_apply_plan(state);
     }
@@ -96,6 +133,59 @@ function _diagnose_changes(changes: Any[]): string[] {
         }
     });
     return issues;
+}
+
+/** The three RED classes the `test-driven-development` mode contract admits. */
+const _RED_FAILURE_CLASSES = ['assertion', 'missing_target', 'contract'] as const;
+
+/**
+ * `null` when `state.tests` carries usable RED evidence, else the complaint.
+ *
+ * Absent is a complaint, not an exemption — the whole point of the gate.
+ */
+function _diagnose_red(tests: Any): string | null {
+    if (!_isPlainObject(tests)) {
+        return 'no `state.tests.red` recorded';
+    }
+    const red = (tests as Record<string, unknown>).red;
+    if (!_pyTruthy(red)) {
+        return 'no `state.tests.red` recorded';
+    }
+    if (_isPlainObject(red) && _pyTruthy((red as Record<string, unknown>).exempt)) {
+        return null;
+    }
+    const observations = Array.isArray(red) ? red : [red];
+    for (const obs of observations) {
+        if (!_isPlainObject(obs)) {
+            return 'a `red` observation is not a dict';
+        }
+        const o = obs as Record<string, unknown>;
+        if (typeof o.behaviour !== 'string' || _pyStrip(o.behaviour).length === 0) {
+            return 'a `red` observation names no `behaviour`';
+        }
+        if (!_RED_FAILURE_CLASSES.includes(o.failure_class as (typeof _RED_FAILURE_CLASSES)[number])) {
+            return (
+                `\`red\` observation for \`${_pyStrip(o.behaviour)}\` has ` +
+                `\`failure_class\` outside ${_RED_FAILURE_CLASSES.join(', ')}`
+            );
+        }
+    }
+    return null;
+}
+
+function _blocked_on_missing_red(state: DeliveryState, issue: string): StepResult {
+    const ticketId = _ticketId(state);
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: [
+            agent_directive('observe-red', { ticket: ticketId }),
+            `> Ticket ${ticketId} — implement gate refused: ${issue}. Write the ` +
+                'failing test for the next single behaviour and observe it fail first.',
+            '> 1. Continue — write and run that one failing test',
+            '> 2. Record an exemption — `state.tests.red = {exempt: "<reason>"}`',
+        ],
+        message: `Ticket ${ticketId} needs an observed failing test before production work: ${issue}.`,
+    });
 }
 
 function _delegate_to_apply_plan(state: DeliveryState): StepResult {

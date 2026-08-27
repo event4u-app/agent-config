@@ -203,9 +203,36 @@ describe('audit_skill_overlap — --strict blocking gate', () => {
         expect(r.stderr).toContain(`> ${ALLOWLIST_CAP}`);
     });
 
-    it('the shipped allowlist is empty — the healthy state', () => {
-        const shipped = JSON.parse(fs.readFileSync(ALLOWLIST, 'utf-8')) as { entries: unknown[] };
-        expect(shipped.entries).toEqual([]);
+    /**
+     * This assertion used to read `expect(shipped.entries).toEqual([])`.
+     *
+     * Empty IS the healthy state, and the allowlist's own comment says so — but
+     * pinning zero made the file's first legitimate entry a test failure, which
+     * is not the same control. The real control is what the loader already
+     * enforces and what a reviewer reads: every entry names a real pair and
+     * carries a real reason, and the list stays under the cap. The cap is the
+     * re-litigation trigger; the count is not.
+     *
+     * The entry that forced this correction was decided by council on
+     * 2026-08-26 (2/2 convergent, disposition A: add the first entry with a
+     * justification), so an assertion of emptiness would have contradicted a
+     * recorded decision rather than caught a defect.
+     */
+    it('every shipped allowlist entry names a real pair and carries a real reason, under the cap', () => {
+        const shipped = JSON.parse(fs.readFileSync(ALLOWLIST, 'utf-8')) as {
+            entries: Array<{ pair?: unknown; reason?: unknown }>;
+        };
+        expect(Array.isArray(shipped.entries)).toBe(true);
+        expect(shipped.entries.length).toBeLessThanOrEqual(ALLOWLIST_CAP);
+        for (const e of shipped.entries) {
+            expect(typeof e.pair, JSON.stringify(e)).toBe('string');
+            expect(String(e.pair)).toMatch(/^[a-z0-9-]+::[a-z0-9-]+$/);
+            // A one-word "structural" is not a reason. The bar is a human
+            // having read both skills; the length floor is the cheapest proxy
+            // for that and the only one a test can check.
+            expect(typeof e.reason, JSON.stringify(e.pair)).toBe('string');
+            expect(String(e.reason).length, `reason for ${String(e.pair)}`).toBeGreaterThan(80);
+        }
     });
 
     it('_pairKey is order-independent', () => {
