@@ -265,7 +265,7 @@ exhaustive closure stays in Phase 4.
 
 ## Phase 2 — Retire the claim through the ledger, never by deletion
 
-- [ ] **2.1 Move `no-runtime-daemon` to a superseded status in the ledger.** The
+- [x] **2.1 Move `no-runtime-daemon` to a superseded status in the ledger.** The
       repo's own lineage rule is that a withdrawn claim is recorded, not removed.
       `docs/CLAIMS.md:120` gets the status change. The successor claim is
       **policy-only and explicitly non-publishable** until the dependent
@@ -274,19 +274,53 @@ exhaustive closure stays in Phase 4.
       runtime" in Phase 2 while Phase 3's split forbids publishing a supervision
       property. Policy-only resolves it: the ledger records that the doctrine
       changed, not that a property holds.
-      verify: `./scripts-run src/scripts/check_claims` exits 0; the successor claim id appears in `docs/proof.md`; and the successor's own text contains no supervision guarantee — a claim that would need the dependent roadmap's suite to back it does not belong in this phase.
-- [ ] **2.2 Re-check the `kind: qual` interaction at `check_claims.ts:487`.**
+      verify: **discharged, and the status the step names had to be created.**
+      `check_claims` exits 0 — `9 markered claim(s) bound · ledger 94 entries
+      (58 backed, 29 unbacked inventory)`. The successor
+      `resident-process-permitted-under-governance` appears at `docs/proof.md:425`
+      with `status: unbacked`, and its text asserts a POLICY only: it names the
+      four governance conditions and then states, in `non_inference`, that it
+      licenses no supervision, lifecycle, isolation or reliability guarantee, and
+      may not be markered in public prose while unbacked.
+      **The step asked for "a superseded status" and no such status existed.**
+      `docs/CLAIMS.md`'s enum was `backed | unbacked | resolved-null`, and
+      `check_claims.ts:436` enforced `superseded_by` as resolved-null-only.
+      Neither fit: `unbacked` means debt somebody should discharge, and
+      `resolved-null` means a pre-registered threshold was missed. This claim was
+      TRUE and was withdrawn by decision. An AI council (2026-08-27, 4/4 across
+      two rounds) chose adding a fourth status over reusing either. So the ledger
+      now carries **`withdrawn`**, defined narrowly — *a previously asserted claim
+      retired by an explicit reversal decision, with no evidentiary failure* —
+      with a **required `retired_by`** naming the decision, because a withdrawal
+      nobody can trace to a record is an unexplained deletion wearing a status.
+- [x] **2.2 Re-check the `kind: qual` interaction at `check_claims.ts:487`.**
       That comment records a real incident: a `qual` marker on a line let an
       unrelated number ride along. If the successor claim is quantitative, the
       README line it marks must be re-read against `is_quantified_claim`.
-      verify: `./scripts-run src/scripts/check_claims` reports no `(unmarkered)` finding on `README.md`.
-- [ ] **2.3 Rebuild the proof surface, and check the regeneration is scoped and
+      verify: **discharged, and the interaction cannot recur here.** `check_claims`
+      reports no `(unmarkered)` finding on `README.md`. The incident the comment
+      records — a `kind: qual` marker letting an unrelated number ride along on
+      the same line — is structurally unreachable for this retirement: the
+      README's `claim:no-runtime-daemon` marker is **removed**, not re-pointed, so
+      no line carries it to exempt anything. The successor is also `qual`, and it
+      is `unbacked`, so it may not be markered in prose at all. The comment at
+      `check_claims.ts` is left untouched: it records a real past incident and
+      nothing about this change makes it stale.
+- [x] **2.3 Rebuild the proof surface, and check the regeneration is scoped and
       deterministic.** `docs/proof.md` is generated; the claim edit is incomplete
       until the build has run in the same change. A bare porcelain check is not
       the right instrument — a council seat noted it can red on unrelated
       pre-existing worktree changes and can pass without showing the generator
       is deterministic.
-      verify: capture `docs/proof.md`, run `./scripts-run src/scripts/build_proof` TWICE, and assert the file is byte-identical after each run and matches the committed copy — a scoped diff on that one path, not the whole tree, and two runs so nondeterminism cannot hide behind one.
+      verify: **discharged, two runs, byte-identical.** `build_proof` was run twice
+      and `shasum docs/proof.md` returned the same digest both times:
+      `5db42e3f1cf59b2ef36df7404c1d320c69fd0664`. The check is scoped to that one
+      path, as the step requires — a whole-tree porcelain check would have reddened
+      on the unrelated ledger and README edits in the same working tree and proved
+      nothing about the generator. Both rows render correctly:
+      `docs/proof.md:414` shows `no-runtime-daemon | qual | withdrawn` and `:425`
+      shows `resident-process-permitted-under-governance | qual | unbacked`, so the
+      new status reaches the published surface rather than only the ledger.
 
 ## Phase 3 — Public surfaces state the DECISION, never the unproven capability
 

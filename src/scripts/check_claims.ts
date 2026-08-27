@@ -179,6 +179,19 @@ export interface LedgerEntry {
      */
     superseded_by: string;
     /**
+     * REQUIRED on a `withdrawn` entry: the decision record that retired the
+     * claim. Empty everywhere else.
+     *
+     * `road-to-runtime-governance-flip` Phase 2, on an AI council ruling
+     * (2026-08-27, 4/4 across two rounds). `withdrawn` is the ledger's third
+     * closure — a claim that was true and asserted, and that the package decided
+     * to stop having. The status alone does not say WHOSE decision, and a
+     * withdrawal nobody can trace to a record is an unexplained deletion wearing
+     * a status. Requiring the pointer is what keeps the fourth status from
+     * becoming the dumping ground both council rounds warned about.
+     */
+    retired_by: string;
+    /**
      * Optional: the build a quantitative measurement describes, when that is not
      * the current one.
      *
@@ -256,6 +269,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 status: cur.status ?? '',
                 last_verified: cur.last_verified ?? '',
                 superseded_by: cur.superseded_by ?? '',
+                retired_by: cur.retired_by ?? '',
                 measured_on: cur.measured_on ?? '',
                 non_inference: cur.non_inference ?? '',
             });
@@ -275,7 +289,7 @@ function load_ledger(): Map<string, LedgerEntry> {
         // would have silently ignored the second and dropped whichever field
         // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|measured_on|non_inference):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
@@ -431,13 +445,19 @@ function main(argv: string[] = process.argv.slice(2)): number {
     //     reader arriving at a `resolved-null` learns the question was reopened
     //     by a different mechanism — a dangling id would send them nowhere, and
     //     the field on a live entry would claim a closure that never happened.
+    //
+    //     `withdrawn` joins `resolved-null` as a closure that may carry a
+    //     successor (road-to-runtime-governance-flip Phase 2). The two are
+    //     different closures — one is "we measured and the threshold was missed",
+    //     the other is "we decided to stop having the property" — but both are
+    //     closed, and both leave a reader who needs the forward link.
     for (const entry of ledger.values()) {
         if (!entry.superseded_by) continue;
-        if (entry.status !== 'resolved-null') {
+        if (entry.status !== 'resolved-null' && entry.status !== 'withdrawn') {
             findings.push({
                 id: entry.id,
                 file: LEDGER_REL,
-                reason: `superseded_by is only meaningful on a resolved-null entry (status: ${entry.status || 'missing'})`,
+                reason: `superseded_by is only meaningful on a closed entry — resolved-null or withdrawn (status: ${entry.status || 'missing'})`,
             });
             continue;
         }
@@ -452,6 +472,31 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 id: entry.id,
                 file: LEDGER_REL,
                 reason: 'superseded_by points at its own entry',
+            });
+        }
+    }
+
+    // 2c. A withdrawal names the decision that retired it. Without the pointer
+    //     `withdrawn` says only "this closed for a reason that was not a
+    //     measurement", which is the half of the statement a reader can already
+    //     infer from the absence of `resolved-null`.
+    for (const entry of ledger.values()) {
+        if (entry.status !== 'withdrawn') continue;
+        if (!entry.retired_by) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: 'status is withdrawn but no `retired_by` names the decision that retired it',
+            });
+        }
+        continue;
+    }
+    for (const entry of ledger.values()) {
+        if (entry.retired_by && entry.status !== 'withdrawn') {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `retired_by is only meaningful on a withdrawn entry (status: ${entry.status || 'missing'})`,
             });
         }
     }
