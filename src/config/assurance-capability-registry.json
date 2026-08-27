@@ -74,7 +74,8 @@
       "state": "degraded",
       "limitations": [
         "detection only — the grader reads stryker/infection/mutmut config presence and never runs a mutation pass",
-        "the projected dimension is UNSCORED as of 2026-08-27 — `advanced-testing-signals` emits `grade: null` plus an `observations` array, because config presence orders targets by adoption and was being read as effectiveness",
+        "the projected dimension is UNSCORED as of 2026-08-27 \u2014 `advanced-testing-signals` emits `grade: null` plus an `observations` array, because config presence orders targets by adoption and was being read as effectiveness",
+        "the CI observation is `mutation-testing-ci-reference-detected`, never `-enforcement-`: static matching over a workflow file establishes that a mutation tool is REFERENCED there, and cannot establish that the step is enabled, blocking, reached on the required branches, or ever executed. Renamed 2026-08-27 after an independent cross-model review found the original name handed a consumer an assurance token the probe does not earn",
         "no universal min-MSI constant exists here and none may be added (AC-8)",
         "a tool-assisted rig for THIS package was refused on measured grounds by the sibling roadmap"
       ],

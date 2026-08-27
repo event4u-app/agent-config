@@ -348,6 +348,39 @@ and re-proposing it later should cost an argument:
   testing (`fast-check`, `hypothesis`), which round 1 did not discuss. Corrected
   in the table above.
 
+  **Three defects in this implementation were found by an independent cross-model
+  review after it was written, and all three are fixed here rather than noted.**
+  Neither reviewing seat wrote the code or the review prompt's expectations; the
+  scope was the whole non-doc delta, split mechanically by file group because it
+  exceeded the transport ceiling.
+
+  1. **`mutation-testing-ci-enforcement-detected` overclaimed.** Both seats:
+     static matching over a workflow file proves a mutation tool is *referenced*,
+     not that the step is enabled, blocking, reached on the required branches, or
+     ever executed. One seat argued the `notDetectable` disclaimer covers it; the
+     other answered that a consumer is entitled to read a token's name. Renamed
+     to `mutation-testing-ci-reference-detected`. The probe is unchanged — only
+     the claim it makes.
+  2. **The level test was deletion-insensitive.** It asserted
+     `grade(full).level > 0`, which stays green if the dimension is removed
+     outright, so it proved nothing about the mechanism its own comment claimed.
+     Rewritten to assert the relationship: the dimension exists, is `null`, is
+     not a knockout, and the level equals an independently-computed minimum over
+     knockouts only. Sabotage: deleting the dimension now turns **8** red;
+     folding non-knockouts into the level turns **4** red.
+  3. **`evidence` and `observations` were two representations of one fact.** The
+     ternary reported only the mutation signal when both fired — which the
+     `python` fixture does — so the string and the array disagreed about the same
+     target. `evidence` is now derived from `observations`. **The first version of
+     this fix had no spec behind it and the sabotage passed**, which is the same
+     defect class the review had just named; two specs were added and the
+     sabotage now turns **2** red.
+
+  One seat also noted the id rename is a breaking contract change for any caller
+  doing id lookup. Checked rather than assumed: `grep -rn "test-strength"` over
+  the tree returns the two registry `projection` fields and the one test, all
+  updated here, and no other consumer.
+
   One seat proposed numeric reopen thresholds (">20 survivors", ">2hrs"); the
   other rejected them as unsupported by any record here, and they are **not**
   adopted — recorded so a later reader does not inherit an invented cutoff.

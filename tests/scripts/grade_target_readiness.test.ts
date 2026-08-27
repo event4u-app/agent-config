@@ -179,17 +179,20 @@ describe('grade_target_readiness — advanced-testing-signals is observed, never
         expect(d?.grade).toBeNull();
     });
 
-    it('separates a mutation tool that CI actually runs from one that merely sits in the repo', () => {
+    it('separates a mutation tool CI REFERENCES from one that merely sits in the repo', () => {
+        // "references", not "runs" — an independent review flagged the original
+        // name as overclaiming what static workflow matching can establish. The
+        // probe is unchanged; the token it emits no longer promises execution.
         const files = { 'package.json': '{"name":"m"}', 'stryker.conf.json': '{}' };
         const noCi = grade(_target(files)).dimensions.find((x) => x.id === 'advanced-testing-signals');
         expect(noCi?.observations).toContain('mutation-testing-config-detected');
-        expect(noCi?.observations).not.toContain('mutation-testing-ci-enforcement-detected');
+        expect(noCi?.observations).not.toContain('mutation-testing-ci-reference-detected');
 
         const withCi = grade(_target({
             ...files,
             '.github/workflows/ci.yml': 'jobs:\n  t:\n    steps:\n      - run: npx stryker run\n',
         })).dimensions.find((x) => x.id === 'advanced-testing-signals');
-        expect(withCi?.observations).toContain('mutation-testing-ci-enforcement-detected');
+        expect(withCi?.observations).toContain('mutation-testing-ci-reference-detected');
     });
 
     it('states that EFFECTIVENESS is what cannot be evaluated, whether or not a signal fired', () => {
@@ -205,9 +208,31 @@ describe('grade_target_readiness — advanced-testing-signals is observed, never
     });
 
     it('does not bind the level — an unscored non-knockout must stay advisory', () => {
-        // `full/` is otherwise high. If an unscored non-knockout could bind,
-        // this would collapse to L0.
-        expect(grade(full).level).toBeGreaterThan(0);
+        // An INDEPENDENT review caught the first version of this spec: it asserted
+        // only `grade(full).level > 0`, which stays green if the dimension is
+        // deleted outright, so it proved nothing about the mechanism its own
+        // comment claimed. Both reviewing seats named it deletion-insensitive.
+        //
+        // The mechanism is "the level is the MINIMUM over KNOCKOUTS", so the
+        // assertion has to be about the relationship between this dimension and
+        // that computation, not about the level being nonzero.
+        const m = grade(full);
+        const d = m.dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(d, 'the dimension must exist for this spec to mean anything').toBeDefined();
+
+        // 1. It is present AND unscored AND not a knockout — the exact
+        //    combination that would bind at L0 if `null` were read as 0 by the
+        //    knockout fold. Deleting the dimension fails the assertion above.
+        expect(d?.grade).toBeNull();
+        expect(d?.knockout).toBe(false);
+
+        // 2. The level equals the minimum over knockouts ONLY, computed here
+        //    independently of the implementation. If the fold started including
+        //    non-knockouts, this diverges — and a `null` non-knockout would drag
+        //    it to 0 while the knockout minimum stays above it.
+        const knockoutMin = Math.min(...m.dimensions.filter((x) => x.knockout).map((x) => x.grade ?? 0));
+        expect(m.level).toBe(knockoutMin);
+        expect(knockoutMin).toBeGreaterThan(0); // otherwise this fixture proves nothing
     });
 
     it('renders each observation under its dimension, never as a grade word', () => {
@@ -215,6 +240,38 @@ describe('grade_target_readiness — advanced-testing-signals is observed, never
         expect(out).toContain('observed: mutation-testing-config-detected');
         expect(out).toContain('observed: property-testing-library-detected');
         expect(out).toMatch(/advanced testing signals\s+not detectable/);
+    });
+
+    it('`evidence` agrees with `observations` — one fact, not two representations', () => {
+        // The original code built `evidence` as a ternary independent of the
+        // observation array, so on the `python` fixture — which carries BOTH
+        // `[tool.mutmut]` and `hypothesis` — the string said only "mutation
+        // config present" while the array reported both signals. An independent
+        // review caught the divergence; this pins it.
+        //
+        // Sabotage-checked: restoring the parallel ternary turns this red. The
+        // first version of the fix had NO spec behind it and that sabotage
+        // passed, which is the same defect class the review had just named.
+        for (const root of [full, ciAbsent, python]) {
+            const d = grade(root).dimensions.find((x) => x.id === 'advanced-testing-signals');
+            const obs = d?.observations ?? [];
+            if (obs.length === 0) {
+                expect(d?.evidence, root).toBe('no advanced-testing signal detected');
+                continue;
+            }
+            // Every observed signal appears in the human-readable string, and the
+            // string introduces nothing the array does not have.
+            for (const o of obs) expect(d?.evidence, `${root} / ${o}`).toContain(o);
+            expect(d?.evidence?.split(', ').sort(), root).toEqual([...obs].sort());
+        }
+    });
+
+    it('`evidence` names BOTH signals when both fire', () => {
+        // The concrete case the review named. `python/` has mutmut AND hypothesis.
+        const d = grade(python).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(d?.observations?.length).toBeGreaterThan(1);
+        expect(d?.evidence).toContain('mutation-testing-config-detected');
+        expect(d?.evidence).toContain('property-testing-library-detected');
     });
 
     it('the old graded dimension id is gone', () => {

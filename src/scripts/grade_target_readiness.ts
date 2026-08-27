@@ -198,21 +198,33 @@ export function grade(root: string): Matrix {
     const property =
         /fast-check/.test(_readIfAny(root, 'package.json')) || /hypothesis/.test(pyproject + _readIfAny(root, 'requirements.txt'));
     const mutationCi = mutation && _ciBlocks(ci, 'stryker', 'infection', 'mutmut');
+    // `ci-reference-detected`, not `ci-enforcement-detected`. Static matching over
+    // a workflow file establishes that a mutation tool is REFERENCED there; it
+    // cannot establish that the step is enabled, blocking, reached on the required
+    // branches, or ever executed. Naming it "enforcement" hands a consumer an
+    // assurance token the probe does not earn — and a consumer is entitled to read
+    // a token's name, `notDetectable` disclaimer or no disclaimer.
+    const observed: string[] = [
+        ...(mutation ? ['mutation-testing-config-detected'] : []),
+        ...(property ? ['property-testing-library-detected'] : []),
+        ...(mutationCi ? ['mutation-testing-ci-reference-detected'] : []),
+    ];
     dims.push({
         id: 'advanced-testing-signals',
         label: 'advanced testing signals',
         knockout: false,
         grade: null,
-        observations: [
-            ...(mutation ? ['mutation-testing-config-detected'] : []),
-            ...(property ? ['property-testing-library-detected'] : []),
-            ...(mutationCi ? ['mutation-testing-ci-enforcement-detected'] : []),
-        ],
+        observations: observed,
         notDetectable:
             'test effectiveness — static config and dependency signals cannot establish mutation sensitivity, ' +
             'property quality, or whether either was ever executed. Outcome evidence would be needed: survivor and ' +
             'timeout counts from a real mutation run, or executed property-test results.',
-        evidence: mutation ? 'mutation config present' : property ? 'property-based library present' : 'neither mutation nor property testing',
+        // Derived from `observations`, never a parallel ternary. The original
+        // ternary reported only the mutation signal when BOTH fired — which the
+        // `python` fixture does — so the human-readable string and the machine
+        // list disagreed about the same target. Two representations of one fact
+        // drift; one is computed from the other.
+        evidence: observed.length > 0 ? observed.join(', ') : 'no advanced-testing signal detected',
     });
 
     // 4. static analysis & types — KNOCKOUT, and the not-detectable case
