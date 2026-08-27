@@ -64,9 +64,17 @@ schema version bump the reader can branch on, or a stated caveat in the report.
 
 The field now holds spend. It held an API-price valuation. Both are called
 `cost_usd_actual` in artefacts a reader cannot distinguish without checking the
-write date. Options: a `schema_version` bump, a sibling
-`cost_usd_notional` field, or leaving it and documenting the cut-over date.
-This is the decision that makes this a stub rather than a second commit.
+write date.
+
+**Recommendation: bump `SCHEMA_VERSION` and leave the field name alone.** The
+version is the one thing a reader can branch on without knowing the write date,
+which is exactly the problem; a rename breaks every existing consumer to fix a
+label, and a sibling `cost_usd_notional` field means two numbers where the
+confusion was already one number too many.
+
+**Deferred to the maintainer, not open for an agent to take.** A persisted-schema
+change touches `replay`, `cache_realization_report` and the airgap golden tests,
+and this is the decision that makes this a stub rather than a second commit.
 
 ### 4. No gate asserts the two output lines agree
 
