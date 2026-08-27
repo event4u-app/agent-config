@@ -1,0 +1,507 @@
+diff --git a/agents/roadmaps/stubs/road-to-council-cost-truth.md b/agents/roadmaps/stubs/road-to-council-cost-truth.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..08702ff32a6fbe87d1610415138fcf5d1dd3ab0b
+--- /dev/null
++++ b/agents/roadmaps/stubs/road-to-council-cost-truth.md
+@@ -0,0 +1,101 @@
++---
++complexity: lightweight
++review_by: 2026-11-27
++---
++
++# Road to council cost truth — the surface the point fix did not reach — stub
++
++> **Source:** found 2026-08-27 while answering "why does the council cost money
++> when it is CLI-first?". It does not. The agent had reported $0.21 across two
++> runs by quoting `cost_usd_actual`, a field that prices subscription answers at
++> API rates. The reporting was wrong, not the transport.
++
++> **Class:** follow-up to a landed point fix. `sumBillableCost` /
++> `isBillableResponse` in `src/scripts/ai_council/pricing.ts` now close the
++> aggregation defect, with `tests/scripts/ai_council/billable_cost.test.ts`
++> covering both the boolean and the persisted-string form. What is listed here is
++> everything that fix deliberately did **not** touch.
++
++## What was fixed, so this stub is not read as still-open
++
++`council_cli.ts` computed `cost_usd_actual` by running `estimate_cost` over every
++non-errored response with **no `billable` check**, at three sites. The same run
++printed two contradictory lines two apart:
++
++```
++council:run · mode=pr · members=2 (billable=0)
++  TOTAL:  $0.0000                                        ← pre-run path, filters on billable
++council:run · wrote … (estimated $0.0000 / actual $0.1055)  ← post-run path, did not
++```
++
++Proven against the two real artefacts after the fix: recorded `0.105525` and
++`0.10077`, billable-aware **0** and **0**, both seats `billable=false`
++(`claude-pro`, `chatgpt-plus`).
++
++## What remains, and why each was left
++
++### 1. `String(v)` flattens every metadata value — the field-semantics question
++
++`council_cli.ts:_serialise_responses` stringifies **all** metadata with
++`String(v)`, so the persisted artefact carries `"billable": "false"`,
++`"cli": "true"`, `"billable": "true"`. Consequences:
++
++- `Boolean("false") === true` in JavaScript, so any consumer reading the field
++  back with a bare `Boolean()` inverts the answer. `isBillableResponse` now
++  coerces defensively, which fixes the reader rather than the writer.
++- `response_render.ts:33` still does exactly that bare `Boolean()`. In memory it
++  is correct — `_stamp_transport_metadata` stores a real boolean — so this only
++  bites on a **replayed or re-read** artefact. Unverified whether any live path
++  reaches it; that measurement is step one below.
++
++Left because changing the serialiser changes the shape of every persisted
++artefact, which is a contract change for `replay`, `cache_realization_report`
++and the airgap golden tests. A defensive reader was the smaller correct move.
++
++### 2. `cache_realization_report.ts:373` sums the same field
++
++`recorded += numOrUndef(data.cost_usd_actual) ?? 0` over historical artefacts.
++Every council artefact written before 2026-08-27 carries a subscription-priced
++figure there, so the report's "recorded" column systematically overstates.
++The fix does not rewrite history and should not — the honest repair is either a
++schema version bump the reader can branch on, or a stated caveat in the report.
++
++### 3. `cost_usd_actual` is a misleading field name in a persisted schema
++
++The field now holds spend. It held an API-price valuation. Both are called
++`cost_usd_actual` in artefacts a reader cannot distinguish without checking the
++write date.
++
++**Recommendation: bump `SCHEMA_VERSION` and leave the field name alone.** The
++version is the one thing a reader can branch on without knowing the write date,
++which is exactly the problem; a rename breaks every existing consumer to fix a
++label, and a sibling `cost_usd_notional` field means two numbers where the
++confusion was already one number too many.
++
++**Deferred to the maintainer, not open for an agent to take.** A persisted-schema
++change touches `replay`, `cache_realization_report` and the airgap golden tests,
++and this is the decision that makes this a stub rather than a second commit.
++
++### 4. No gate asserts the two output lines agree
++
++The defect's whole signature was two contradictory cost lines in one run. A
++check that the pre-run `TOTAL:` and the post-run spend figure agree when no
++member is billable would have caught it, and nothing does. Cheap, and it belongs
++with whatever answers 3.
++
++## Tracks, with what would open each
++
++| Track | Gate that must open first |
++|---|---|
++| Measure whether any live path reaches `response_render` with deserialised metadata | none — a read, and it decides whether 1 is live or latent |
++| Fix the writer instead of the readers (typed metadata, no `String(v)`) | the schema decision in 3, because it changes every artefact's shape |
++| `cache_realization_report` honesty | the schema decision in 3 |
++| Field rename or sibling field | maintainer decision — a persisted-schema change |
++| Cross-check gate on the two cost lines | the field decision, so it checks the right thing |
++
++## What this stub does NOT claim
++
++That any of it should be built now. The user-visible defect — a council that
++reported spend it never incurred — is closed. What is left is a persisted-schema
++question and one historical report that overstates a column, neither of which
++misleads an operator about money in the moment.
+diff --git a/src/scripts/ai_council/pricing.ts b/src/scripts/ai_council/pricing.ts
+index ad2a6f74600015d93e9590810b78b90dde080c1f..f2f89b809d95e9791c7ed7c5dbde1c90acdedf3a 100644
+--- a/src/scripts/ai_council/pricing.ts
++++ b/src/scripts/ai_council/pricing.ts
+@@ -148,6 +148,112 @@ export function estimate_cost(
+     };
+ }
+ 
++// ── billable-aware aggregation ─────────────────────────────────────
++//
++// A vendor-official CLI seat (anthropic / openai / gemini) runs under the
++// user's subscription auth and is `billable = false`; the contract states it
++// in as many words (`docs/contracts/ai-council-config.md:173`). Pricing such
++// an answer at API rates and reporting the figure as spend is the defect these
++// two helpers exist to close, found 2026-08-27: `council_cli.ts` ran
++// `estimate_cost` over every non-errored response with no `billable` check, so
++// one run printed `TOTAL: $0.0000` from the pre-run path (which filters) and
++// `actual $0.1055` from the post-run path, two lines apart.
++//
++// Why the coercion below is not paranoia: `_serialise_responses` stringifies
++// every metadata value with `String(v)`, so a persisted artefact carries
++// `"billable": "false"` — and `Boolean("false")` is `true` in JavaScript. A
++// consumer reading the field back with a bare `Boolean()` sees a subscription
++// seat as billable, which is the same wrong answer arrived at from the other
++// direction.
++
++/** The subset of a `CouncilResponse` the cost aggregation reads. */
++export interface BillableCostInput {
++    provider: string;
++    model: string;
++    input_tokens: number;
++    output_tokens: number;
++    error?: string | null;
++    metadata?: Record<string, unknown> | null;
++}
++
++/**
++ * Does this response represent money actually spent?
++ *
++ * ABSENT means billable. A missing flag is not evidence of a free call, and
++ * defaulting the other way would let a client that forgot to stamp its
++ * transport silently zero its own spend.
++ */
++export function isBillableResponse(r: BillableCostInput): boolean {
++    const raw = (r.metadata ?? {})['billable'];
++    if (raw === undefined || raw === null) {
++        return true;
++    }
++    if (typeof raw === 'boolean') {
++        return raw;
++    }
++    if (typeof raw === 'string') {
++        // The persisted form. Only the two literals a `String(v)` round-trip
++        // can produce are interpreted; anything else falls through to the
++        // conservative default rather than being guessed at.
++        const t = raw.trim().toLowerCase();
++        if (t === 'false') {
++            return false;
++        }
++        return true;
++    }
++    // Every other type is BILLABLE, not truthiness-of-value. The first draft of
++    // this function ended `return Boolean(raw)` while its own comment promised a
++    // conservative default, and a council review (2/2) caught the contradiction:
++    // `Boolean(0)` and `Boolean([])` are `false`, so a numeric or empty-array
++    // value would have zeroed a billable seat's spend. The serialiser should
++    // never emit those, which is exactly why guessing at them is wrong.
++    return true;
++}
++
++/**
++ * Did every answered response come from a non-billable transport?
++ *
++ * Exported because the CLI's output line needs it and must NOT infer it from a
++ * zero total. A council review (2/2) rated that inference the highest-severity
++ * finding in the first draft, and the reasoning is concrete: `estimate_cost`
++ * returns `0.0` when `lookup` finds no price row, so an unpriced BILLABLE model
++ * produces a zero total. So do a billable seat that errored and one that
++ * reported zero tokens. All three would have printed "all seats
++ * subscription-authed" over real spend.
++ *
++ * Vacuously false on an empty or all-errored set: with nothing answered there is
++ * no transport to make a claim about, and silence is the honest output.
++ */
++export function allSeatsNonBillable(responses: BillableCostInput[]): boolean {
++    const answered = responses.filter((r) => !r.error);
++    if (answered.length === 0) {
++        return false;
++    }
++    return answered.every((r) => !isBillableResponse(r));
++}
++
++/**
++ * Total USD actually spent across a set of responses.
++ *
++ * Errored responses contribute nothing (no tokens were billed for an answer
++ * that never arrived), and non-billable transports contribute nothing (the
++ * subscription already paid). What remains is spend.
++ */
++export function sumBillableCost(responses: BillableCostInput[], table: PriceTable): number {
++    let total = 0.0;
++    for (const r of responses) {
++        if (r.error) {
++            continue;
++        }
++        if (!isBillableResponse(r)) {
++            continue;
++        }
++        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
++        total += ce.input_usd + ce.output_usd;
++    }
++    return total;
++}
++
+ // ── prompt-cache repricing ─────────────────────────────────────────
+ //
+ // Prompt-cache multipliers derived from the base input rate (Anthropic, GA —
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index 9169462fe700e1ab7cf24a9631f8d0c168c6fdb7..8b4838e070c84344c68459a804ca965ac3172c6b 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -140,10 +140,11 @@ import {
+ import {
+     type PriceTable,
+     downgrade_coupling,
+-    estimate_cost,
++    allSeatsNonBillable,
+     estimate_input_tokens,
+     load_prices,
+     prices_file_for,
++    sumBillableCost,
+ } from './ai_council/pricing.js';
+ import { detect_project_context } from './ai_council/project_context.js';
+ import {
+@@ -2761,13 +2762,10 @@ function cmd_run(
+         all_responses.push(chairman.response);
+     }
+     all_responses.push(...stance_repairs);
+-    for (const r of all_responses) {
+-        if (r.error) {
+-            continue;
+-        }
+-        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
+-        actual_total += ce.input_usd + ce.output_usd;
+-    }
++    // Billable-aware: a subscription-CLI seat spent nothing, so pricing it at
++    // API rates and calling the figure "actual" is a false statement about
++    // money. See pricing.ts § billable-aware aggregation.
++    actual_total += sumBillableCost(all_responses, table);
+     const payload: Dict = {
+         schema_version: SCHEMA_VERSION,
+         mode: question.mode,
+@@ -2819,9 +2817,16 @@ function cmd_run(
+     });
+     fs.mkdirSync(path.dirname(_resolveTarget(out_path)), { recursive: true });
+     fs.writeFileSync(_resolveTarget(out_path), _jsonDumpsIndent2(payload) + '\n', { encoding: 'utf-8' });
++    // The trailing note is not decoration. Before 2026-08-27 this line read
++    // `actual $0.1055` on a run whose every seat was subscription-authed, two
++    // lines below a `TOTAL: $0.0000` from the pre-run path — and an operator
++    // reading the tail of the output saw only the wrong one. When every seat is
++    // non-billable the figure is now 0 and says why, so the two lines agree.
++    const _all_subscription = allSeatsNonBillable(all_responses);
+     _stdout(
+         `\ncouncil:run · wrote ${out_path} ` +
+-            `(estimated $${_pyFixed(estimated_total, 4)} / actual $${_pyFixed(actual_total, 4)})\n`,
++            `(estimated $${_pyFixed(estimated_total, 4)} / spent $${_pyFixed(actual_total, 4)}` +
++            `${_all_subscription ? ' — all seats subscription-authed, nothing billed' : ''})\n`,
+     );
+     const replay_path = _maybe_write_decision_replay({
+         ai_cfg,
+@@ -2863,14 +2868,9 @@ function _write_debate_round(
+     },
+ ): string {
+     fs.mkdirSync(_resolveTarget(out_dir), { recursive: true });
+-    let actual_total = 0.0;
+-    for (const r of responses) {
+-        if (r.error) {
+-            continue;
+-        }
+-        const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, opts.table);
+-        actual_total += ce.input_usd + ce.output_usd;
+-    }
++    // Billable-aware, same reason as the sibling site above: a subscription
++    // seat contributes nothing to `cost_usd_actual`.
++    const actual_total = sumBillableCost(responses, opts.table);
+     const payload: Dict = {
+         schema_version: SCHEMA_VERSION,
+         mode: opts.question.mode,
+@@ -3220,13 +3220,7 @@ function cmd_debate(
+ 
+     let actual_total = 0.0;
+     for (const rnd of [...all_rounds, restate_responses]) {
+-        for (const r of rnd) {
+-            if (r.error) {
+-                continue;
+-            }
+-            const ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table);
+-            actual_total += ce.input_usd + ce.output_usd;
+-        }
++        actual_total += sumBillableCost(rnd, table);
+     }
+     _stdout(
+         `\ncouncil:debate · ${all_rounds.length} round(s) complete · ` +
+diff --git a/tests/scripts/ai_council/billable_cost.test.ts b/tests/scripts/ai_council/billable_cost.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..678958d0e298180fd010519b7f502242e6f8c1f8
+--- /dev/null
++++ b/tests/scripts/ai_council/billable_cost.test.ts
+@@ -0,0 +1,191 @@
++/**
++ * A subscription-CLI answer costs nothing, and the artefact must say so.
++ *
++ * Regression cover for the defect found 2026-08-27: `council_cli.ts` computed
++ * `cost_usd_actual` by running `estimate_cost` over EVERY non-errored response
++ * with no `billable` check, so two `claude-pro` / `chatgpt-plus` answers that
++ * were billed nothing were recorded at API rates. The same run printed
++ * `TOTAL: $0.0000` from the pre-run path — which does filter on `billable` —
++ * and `actual $0.1055` from the post-run path, two lines apart and two orders
++ * of magnitude apart, with the misleading one labelled "actual".
++ *
++ * Second half of the same defect, and the reason the coercion is tested
++ * explicitly: `_serialise_responses` stringifies every metadata value with
++ * `String(v)`, so a persisted artefact carries `"billable": "false"`. In
++ * JavaScript `Boolean("false") === true`, so any consumer reading the field
++ * back with a bare `Boolean()` sees a NON-billable seat as billable.
++ */
++import { describe, expect, it } from 'vitest';
++
++import {
++    allSeatsNonBillable,
++    isBillableResponse,
++    sumBillableCost,
++    type BillableCostInput,
++    type PriceTable,
++} from '../../../src/scripts/ai_council/pricing.js';
++import { priceKey } from '../../../src/scripts/ai_council/_default_prices.js';
++
++/**
++ * An inline table charging $1 per 1M in and $1 per 1M out, so one million
++ * tokens each way costs exactly $2 and the assertions read as arithmetic.
++ * Built as a literal rather than via `load_prices`, which writes a file on a
++ * cache miss — a test must not write into the tracked tree.
++ */
++function table(): PriceTable {
++    const prices = new Map();
++    for (const [provider, model] of [
++        ['anthropic', 'claude-sonnet-4-5'],
++        ['openai', 'codex-default'],
++    ] as const) {
++        prices.set(priceKey(provider, model), {
++            provider,
++            model,
++            input_per_1m_usd: 1.0,
++            output_per_1m_usd: 1.0,
++        });
++    }
++    return {
++        last_updated: '2026-08-27',
++        currency: 'USD',
++        unit: 'per_1M_tokens',
++        source: 'test-literal',
++        prices,
++    };
++}
++
++function resp(over: Partial<BillableCostInput> = {}): BillableCostInput {
++    return {
++        provider: 'anthropic',
++        model: 'claude-sonnet-4-5',
++        input_tokens: 1_000_000,
++        output_tokens: 1_000_000,
++        error: null,
++        metadata: {},
++        ...over,
++    };
++}
++
++describe('isBillableResponse', () => {
++    it('defaults to billable when the field is absent — a missing flag never buys a free pass', () => {
++        expect(isBillableResponse(resp({ metadata: {} }))).toBe(true);
++    });
++
++    it('reads a real boolean false as non-billable', () => {
++        expect(isBillableResponse(resp({ metadata: { billable: false } }))).toBe(false);
++    });
++
++    it('reads the STRING "false" as non-billable — Boolean("false") is true in JS', () => {
++        expect(isBillableResponse(resp({ metadata: { billable: 'false' } }))).toBe(false);
++    });
++
++    it('reads the string "true" as billable', () => {
++        expect(isBillableResponse(resp({ metadata: { billable: 'true' } }))).toBe(true);
++    });
++
++    // Council review (2/2, 2026-08-27) medium finding: the first draft ended
++    // `return Boolean(raw)` while promising a conservative default. Boolean(0)
++    // and Boolean([]) are false, so a numeric or empty-array value would have
++    // zeroed a billable seat.
++    it.each([
++        ['numeric 0', 0],
++        ['numeric 1', 1],
++        ['empty array', []],
++        ['non-empty array', ['x']],
++        ['empty object', {}],
++        ['an unrecognised string', 'maybe'],
++    ])('treats %s as BILLABLE — unknown types never buy a free pass', (_label, value) => {
++        expect(isBillableResponse(resp({ metadata: { billable: value } }))).toBe(true);
++    });
++});
++
++describe('allSeatsNonBillable', () => {
++    it('true when every answered seat is non-billable', () => {
++        const a = resp({ metadata: { billable: 'false' } });
++        const b = resp({ provider: 'openai', model: 'codex-default', metadata: { billable: false } });
++        expect(allSeatsNonBillable([a, b])).toBe(true);
++    });
++
++    it('false when one answered seat is billable', () => {
++        const sub = resp({ metadata: { billable: 'false' } });
++        const billed = resp({ provider: 'openai', model: 'codex-default', metadata: { billable: true } });
++        expect(allSeatsNonBillable([sub, billed])).toBe(false);
++    });
++
++    // The council's HIGHEST-severity finding, as an executable case. The first
++    // draft inferred this label from `actual_total === 0`, and estimate_cost
++    // returns 0 for a model with no price row — so an unpriced BILLABLE seat
++    // produced a zero total and would have printed "all subscription-authed".
++    it('false for a billable seat whose model has no price row — zero cost is not zero billability', () => {
++        const t = table();
++        const unpriced = resp({ model: 'model-nobody-priced', metadata: { billable: true } });
++        expect(sumBillableCost([unpriced], t)).toBe(0);
++        expect(allSeatsNonBillable([unpriced])).toBe(false);
++    });
++
++    it('false for a billable seat reporting zero tokens — the same trap from another angle', () => {
++        const t = table();
++        const empty = resp({ input_tokens: 0, output_tokens: 0, metadata: { billable: true } });
++        expect(sumBillableCost([empty], t)).toBe(0);
++        expect(allSeatsNonBillable([empty])).toBe(false);
++    });
++
++    it('errored seats are ignored, and a billable error does not make the set non-billable', () => {
++        const sub = resp({ metadata: { billable: 'false' } });
++        const brokenBillable = resp({ metadata: { billable: true }, error: 'timeout' });
++        expect(allSeatsNonBillable([sub, brokenBillable])).toBe(true);
++    });
++
++    it('false on an empty set and on an all-errored set — no transport, no claim', () => {
++        expect(allSeatsNonBillable([])).toBe(false);
++        expect(allSeatsNonBillable([resp({ error: 'timeout' })])).toBe(false);
++    });
++});
++
++describe('sumBillableCost', () => {
++    it('a subscription-CLI seat contributes zero', () => {
++        const t = table();
++        const sub = resp({ metadata: { billable: false, subscription_label: 'claude-pro' } });
++        expect(sumBillableCost([sub], t)).toBe(0);
++    });
++
++    it('the persisted string form also contributes zero — this is the replay path', () => {
++        const t = table();
++        const sub = resp({ metadata: { billable: 'false', subscription_label: 'claude-pro' } });
++        expect(sumBillableCost([sub], t)).toBe(0);
++    });
++
++    it('two subscription seats — the shape of the runs that produced this defect — total zero', () => {
++        const t = table();
++        const a = resp({
++            provider: 'anthropic',
++            model: 'claude-sonnet-4-5',
++            metadata: { billable: 'false', subscription_label: 'claude-pro' },
++        });
++        const o = resp({
++            provider: 'openai',
++            model: 'codex-default',
++            metadata: { billable: 'false', subscription_label: 'chatgpt-plus' },
++        });
++        expect(sumBillableCost([a, o], t)).toBe(0);
++    });
++
++    it('a billable seat still contributes its estimate — the filter must not zero everything', () => {
++        const t = table();
++        const billed = resp({ metadata: { billable: true } });
++        expect(sumBillableCost([billed], t)).toBeGreaterThan(0);
++    });
++
++    it('mixes correctly: the billable seat alone sets the total', () => {
++        const t = table();
++        const billed = resp({ metadata: { billable: true } });
++        const sub = resp({ metadata: { billable: false } });
++        expect(sumBillableCost([billed, sub], t)).toBe(sumBillableCost([billed], t));
++    });
++
++    it('an errored response contributes nothing regardless of billability', () => {
++        const t = table();
++        const broken = resp({ metadata: { billable: true }, error: 'timeout' });
++        expect(sumBillableCost([broken], t)).toBe(0);
++    });
++});
