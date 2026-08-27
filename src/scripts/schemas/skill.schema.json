@@ -374,6 +374,21 @@
       "default": "active",
       "description": "ADR-013 lifecycle state."
     },
+    "composition_review": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The authoring-search record (road-to-composition-before-creation Phase 3): which incumbents were searched before this artefact was created, and the declared delta for each. Optional on existing artefacts by design \u2014 nothing is backfilled. Distinct from `collision_ok`, which is keyed by trigger VALUE and fires only on a trigger collision; this is keyed by INCUMBENT and is written at authoring time whether or not any trigger is shared.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate", "disposition", "rationale"],
+        "properties": {
+          "candidate": {"type": "string", "minLength": 1, "description": "The incumbent searched, as `skill:<name>` / `rule:<name>` / `command:<name>` / `guideline:<path>`. The literal `none` records a search that found no credible incumbent \u2014 the value that must exist so an author is never pushed to invent one to satisfy the schema."},
+          "disposition": {"type": "string", "enum": ["extend_incumbent", "compose_with_incumbent", "create_separate", "none_found"], "description": "What happened to this candidate. `create_separate` is the value no other disposition vocabulary in this tree can express: an incumbent exists, was evaluated, and a separate artefact was authored anyway."},
+          "rationale": {"type": "string", "minLength": 16, "description": "One sentence naming the delta \u2014 what this artefact does that the candidate does not, or why the candidate could not absorb it. A lint checks that this is non-empty and that `candidate` resolves; it cannot check that the search was diligent, and does not pretend to."}
+        }
+      }
+    },
     "requires_skills": {
       "type": "array",
       "minItems": 1,

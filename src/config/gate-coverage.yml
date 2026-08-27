@@ -47,10 +47,10 @@
 # re-run on the tree carrying these rows, with `check_skill_admissions`,
 # `check_command_examples`, `check_routing_coverage`, `description_route_check`
 # and `lint_skill_trigger_corpus` counted).
-# **69 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 66 of those 69 are listed below.** The manifest is
+# **71 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 69 of those 71 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~22 % of the population.
+# carry a floor, and covers ~23 % of the population.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -1962,3 +1962,37 @@ gates:
         The gate must red on it: a consumer following that link gets a 404, and a
         link checker that reads only `src/` cannot see the difference between a
         missing file and a file that exists but did not ship.
+  - id: lint_composition_review
+    argv: []
+    min_scanned: 380
+    corpus: "the skill + rule corpus — every src/skills/*/SKILL.md and src/rules/*.md (419 at baseline: 299 skills + 120 rules)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/rules/__canary_composition_review__.md
+      content: |
+        ---
+        name: __canary_composition_review__
+        composition_review:
+          - candidate: rule:this-rule-does-not-exist
+            disposition: create_separate
+            rationale: a canary record naming an incumbent that is not in the tree
+        ---
+
+        # canary
+    note: >
+      road-to-composition-before-creation Phase 4.1. Two halves with different
+      teeth, on purpose. The STRUCTURAL half is hard: a present record whose
+      candidate resolves to nothing, or whose `none`/`none_found` pair
+      disagrees, exits 1 — a record pointing at a non-existent incumbent reads
+      as evidence of a search that cannot have happened. The PRESENCE half is
+      advisory and exits 0: an artefact added without a record is reported by
+      path and never blocks. Flipping that to a block needs a false-positive
+      rate from at least one release of advisory operation, which the roadmap
+      records as not yet measured and does not pre-authorise.
+
+      The floor is 380 against a live 419 — room for real deletions, far above
+      a collapse. The corpus is the whole estate rather than the diff precisely
+      so the floor can be honest: `lint_evidence_artifacts` declines
+      registration here because a diff-scoped gate legitimately scans 0, and
+      this gate narrows to the diff only for the advisory half.

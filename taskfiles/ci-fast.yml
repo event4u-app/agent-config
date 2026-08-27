@@ -1153,6 +1153,18 @@ tasks:
       a contributor sees it before pushing.
     cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
 
+  lint-composition-review:
+    silent: true
+    desc: |
+      The authoring-search record. A `composition_review` block that is present
+      must be well-formed: its candidate resolves to a real artefact, and its
+      `none`/`none_found` pair agrees — a record naming an incumbent that is not
+      in the tree reads as evidence of a search that cannot have happened, which
+      is worse than no record. An artefact ADDED without a record is reported
+      and never blocks; flipping that needs a false-positive rate from a release
+      of advisory operation, which does not exist yet.
+    cmd: ./scripts-run src/scripts/lint_composition_review {{.QUIET_FLAG}}
+
   lint-evidence-artifacts:
     silent: true
     desc: |
