@@ -140,6 +140,7 @@ import {
 import {
     type PriceTable,
     downgrade_coupling,
+    allSeatsNonBillable,
     estimate_input_tokens,
     load_prices,
     prices_file_for,
@@ -2821,7 +2822,7 @@ function cmd_run(
     // lines below a `TOTAL: $0.0000` from the pre-run path — and an operator
     // reading the tail of the output saw only the wrong one. When every seat is
     // non-billable the figure is now 0 and says why, so the two lines agree.
-    const _all_subscription = actual_total === 0 && all_responses.some((r) => !r.error);
+    const _all_subscription = allSeatsNonBillable(all_responses);
     _stdout(
         `\ncouncil:run · wrote ${out_path} ` +
             `(estimated $${_pyFixed(estimated_total, 4)} / spent $${_pyFixed(actual_total, 4)}` +
