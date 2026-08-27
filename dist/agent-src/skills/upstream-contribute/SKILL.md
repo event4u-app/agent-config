@@ -49,6 +49,43 @@ shared `agent-config` package — with correct file placement, quality gates, an
 - **Quality verified** — must pass linter before PR creation
 - **Local benefit immediately** — use override for instant project benefit while PR is pending
 
+## A repeated override is a signal, and a signal is not evidence
+
+```
+THE SAME ARTIFACT OVERRIDDEN IN INDEPENDENT INSTALLS IS THE CHEAPEST AVAILABLE
+HINT THAT A SHIPPED DEFAULT IS WRONG. IT IS A HINT.
+NEVER CHANGE A SHIPPED DEFAULT ON OVERRIDES FROM ONE ORGANISATION.
+INDEPENDENT MEANS DIFFERENT TEAMS, NOT DIFFERENT DIRECTORIES.
+```
+
+`agent-config doctor --check override-set` reports which shipped artifacts a
+tree overrides and in how many layers. Two same-culture installs overriding the
+same artifact is **n=2 from one toolchain culture**, which is a discovery
+channel and not a mandate — and the temptation to "just fix the default, we
+already know" is exactly how a general package becomes one organisation's house
+style.
+
+**What makes an aggregate admissible**, matching the *Evidence-based* and
+*Universality first* principles above:
+
+- overrides from **independently operated** consumers, not several repositories
+  of one team;
+- the overriding change **converging on the same substance**, not merely
+  touching the same filename — two teams deleting different halves of a rule
+  are not agreeing about anything;
+- a **named public mechanism** that explains why the shipped default is wrong,
+  rather than "several people changed it".
+
+Below that bar, the signal is one input to a future aggregate and nothing more.
+Record it and leave the default alone.
+
+**The signal carries no consumer content, by construction.** Artifact kind, name
+and a layer count — the type has no field that can hold a path, a diff or
+anything from the tree, so privacy is the schema's shape rather than a scrubbing
+pass that could fail. Never widen it to make a proposal more persuasive; a
+proposal that needs the consumer's diff is a proposal that has not cleared the
+bar.
+
 ## Package repository
 
 The shared agent-config package lives at:

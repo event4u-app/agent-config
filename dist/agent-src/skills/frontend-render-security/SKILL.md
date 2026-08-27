@@ -52,6 +52,48 @@ NO SECRET, PRIVILEGED KEY, OR SESSION TOKEN LIVES IN CLIENT CODE OR localStorage
 | `target="_blank"` without `rel="noopener"` | Reverse tabnabbing (CWE-1022) | add `rel="noopener noreferrer"` |
 | Missing CSP; missing alt/label/contrast | No XSS second line of defense; a11y failures | strict CSP (no `unsafe-inline`); alt text, labels, AA contrast |
 
+## The server-composed bootstrap payload
+
+A payload assembled **server-side and serialised into the page** for a client
+island is a data-exposure surface: whatever is put in it is readable by anyone
+who can load the page — no API call, no auth check, view-source. Several
+mainstream frameworks ship their own named channel for exactly this, so the
+pattern is a documented mechanism rather than one project's arrangement.
+
+**Inspect the existing payload before judging any field.** Read what the channel
+already carries and check current call sites for what the client actually
+consumes — a field is only defensible against what the page needs, and a review
+that never opened the payload is a guess. The grep below finds it.
+
+**The per-field question, which is what this section is:**
+
+> Would I return this field from a **public, unauthenticated** endpoint?
+> If not, it does not belong in the payload.
+
+Field classes that recur and are almost always wrong there: internal ids that
+enumerate other users' rows · permission and role structures the client only
+needs a boolean of · feature-flag payloads carrying unreleased product names ·
+anything from an admin-scoped query that was convenient to reuse · a whole
+serialised model where the page needs three of its fields.
+
+**Nothing enforces this, and the split is deliberate.**
+
+| Half | What it does | What it cannot do |
+|---|---|---|
+| the grep below | **locates** a payload a field was added to | tell a privileged field from a public one |
+| this checklist entry | carries the **judgement** | run |
+
+The question is not decidable by any check: a grep over the framework-named
+payload channels cannot read intent. So the deterministic half is discovery,
+advisory and non-blocking, and its whole value is putting the question in front
+of a reader who would otherwise never see it. `enforced_by: none` is the honest
+field here — this section refuses nothing.
+
+**What may NOT be encoded.** The particular channel any one repository uses.
+What is encoded is the question and the framework-named channels; a concrete
+in-house payload shape would be one repository's implementation shipped as
+guidance.
+
 ## Backstop greps
 
 Run before committing frontend changes; each should return zero (or every hit is read and justified):
@@ -66,6 +108,8 @@ rg -n "origin:\s*['\"]\*['\"]|Access-Control-Allow-Origin.*\*"
 rg -n "addEventListener\(\s*['\"]message['\"]"   # then confirm each checks event.origin
 # Unhardened external links
 rg -n 'target=["'\'']_blank["'\'']'   # then confirm rel="noopener" present
+# Server-composed bootstrap payload — LOCATES it; the per-field judgement is yours
+rg -n '__NEXT_DATA__|__NUXT__|window\.__INITIAL_STATE__|@json\(|json_encode\([^)]*\)\s*\)?\s*</script>|dehydratedState'
 ```
 
 ## Output format
