@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-26
+keep-beta-until: 2026-10-25
 roadmap_ref: road-to-adoption-proof-and-ci-green.md
 ---
 
@@ -11,6 +11,21 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 > Defines the privacy-floor for adoption-signal collection — what
 > the package may measure, what it may NOT, and the opt-in gate
 > consumer-side telemetry would need to clear before it could ship.
+>
+> **Beta review, 2026-08-27 — extended to 2026-10-25, and the date is derived
+> rather than chosen.** The Iron Law and both closed lists are settled and
+> unhedged; what keeps this contract in beta is one live bet it holds itself.
+> **What has to happen before promotion:** § Extraction demand gate opened its
+> window when the probe page landed on `main` (2026-07-20), and that window
+> closes **2026-10-18**. Neither of its two branches — floor met, floor missed —
+> has been recorded as a decision anywhere under `docs/decisions/`. The new date
+> is a week after the window closes, so the next review has an outcome to read
+> instead of the same open bet.
+>
+> One thing found and **not** fixed here, stated rather than left silent: the
+> collector's own store, `agents/runtime/metrics/adoption-snapshots.jsonl`, does
+> not exist on this tree. That is a separate question — whether the cron has ever
+> written — and it is not what gates promotion.
 
 ## The Iron Law
 
@@ -30,7 +45,7 @@ gate.
 
 All four signals below come from public APIs and require no
 consumer-side instrumentation. The roadmap's Phase D Step 2
-collector (`scripts/adoption_snapshot.py`) pulls them into a single
+collector (`src/scripts/adoption_snapshot.ts`) pulls them into a single
 weekly snapshot.
 
 | Signal | Source | Refresh cadence | Privacy posture |
@@ -116,7 +131,7 @@ Re-audit on each of:
 
 ## See also
 
-- [`scripts/adoption_snapshot.py`](../../src/scripts/adoption_snapshot.ts)
+- [`src/scripts/adoption_snapshot.ts`](../../src/scripts/adoption_snapshot.ts)
   — the collector for the four public signals.
 - `domain-safety-pii` rule — the redaction floor any future opt-in
   telemetry would inherit.
