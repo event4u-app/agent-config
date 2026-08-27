@@ -2,7 +2,7 @@
 /**
  * Generate the role-experience catalog (road-to-competitive-borrow P1.0).
  *
- * Ported from the retired Python `src/scripts/generate_role_experiences_catalog.py`
+ * Ported from the retired Python `src/generate_role_experiences_catalog`
  * (ADR-200). The CLI contract is pinned — the `--check` /
  * `--quiet` flags, exit codes (0 / 1 / 2), stdout/stderr split, and the
  * byte-identical generated `docs/role-experiences.md` (heading prose, the
@@ -159,7 +159,7 @@ export function render(): string {
     const lines: string[] = [
         '# Role experiences — taglines at a glance',
         '',
-        '> **Generated** by `scripts/generate_role_experiences_catalog.py` from',
+        '> **Generated** by `generate_role_experiences_catalog` from',
         '> `agents/roles/<role>/index.md` — do NOT hand-edit. Taglines are the',
         '> existing role-level strings (validated by `lint_role_experiences.py`,',
         '> rendered in the GUI workspace); this page surfaces them in a catalog.',

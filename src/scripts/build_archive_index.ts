@@ -249,7 +249,7 @@ export function renderJson(entries: readonly ArchiveEntry[]): string {
     return (
         JSON.stringify(
             {
-                generated_by: 'src/scripts/build_archive_index.ts',
+                generated_by: 'build_archive_index',
                 source: ARCHIVE_REL,
                 count: entries.length,
                 entries,

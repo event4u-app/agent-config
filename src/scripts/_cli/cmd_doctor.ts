@@ -100,6 +100,8 @@ import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
 import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
 import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
+import * as install_reach from '../_lib/install_reach_checks.js';
+import * as runtime_checks from '../_lib/doctor_runtime_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
@@ -774,6 +776,7 @@ const CHECK_IDS = [
     'surface-state',
     'hook-wiring',
     ...runtime_wiring.WIRING_CHECK_IDS,
+    ...install_reach.REACH_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -806,6 +809,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'surface-state',
     'hook-wiring',
     ...runtime_wiring.WIRING_CHECK_IDS,
+    ...install_reach.REACH_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -1752,46 +1756,12 @@ function _check_duplicate_scope_rules(project_root: string, userRulesDirOverride
     };
 }
 
-function _check_python_runtime(): Dict {
-    // Post-teardown: the package runtime is TypeScript-on-`tsx`. python3 is no
-    // longer a runtime dependency, so this check no longer probes for an
-    // interpreter (spawning python3 here would be misleading in a python-free
-    // package). The check id is retained for the doctor's stable report shape;
-    // it always reports `ok`.
-    return {
-        id: 'python-runtime',
-        status: 'ok',
-        message: 'python3 is not a runtime dependency (TS runtime via tsx)',
-        remedy: '',
-    };
-}
-
-function _check_humanizer_runtime(): Dict {
-    // Write-engine step 4b (humanize audit) runs `detect_ai_tells.ts` via a
-    // Node/tsx runtime "when available", degrading to a prose-only audit
-    // otherwise. This check surfaces which path a consumer install gets so the
-    // default-on behavior is not a silent surprise. Either state is healthy —
-    // the fallback is graceful by design — so it never fails the run.
-    const node = shutilWhich('node');
-    if (node === null) {
-        return {
-            id: 'humanizer-runtime',
-            status: 'ok',
-            message:
-                'no Node runtime on PATH — write-engine step 4b uses the ' +
-                'prose-only humanize audit (graceful fallback)',
-            remedy:
-                'install Node to enable the mechanical detect_ai_tells.ts pass; ' +
-                'the prose audit runs regardless',
-        };
-    }
-    return {
-        id: 'humanizer-runtime',
-        status: 'ok',
-        message: `Node runtime present (${node}) — step 4b runs the mechanical detect_ai_tells.ts pass`,
-        remedy: '',
-    };
-}
+// Both bodies moved to `_lib/doctor_runtime_checks.ts` to pay for the Phase-1
+// install-reach wiring under `check_source_size_budget`. These wrappers keep the
+// historical names and arity, so the runner map, the export block and the
+// existing fallback test are untouched by the move.
+const _check_python_runtime = (): Dict => runtime_checks.checkPythonRuntime();
+const _check_humanizer_runtime = (): Dict => runtime_checks.checkHumanizerRuntime(shutilWhich);
 
 function _check_mcp_beta_readiness(project_root: string): Dict {
     // Maintainer-scoped gate: the six artefacts live in the agent-config
@@ -2912,6 +2882,7 @@ function _run_checks(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
@@ -2997,6 +2968,7 @@ function _run_checks_no_manifest(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         // BOTH registries need the id. Registering only the first one crashed with
         // `runners[cid] is not a function` on a global-only consumer, which is the

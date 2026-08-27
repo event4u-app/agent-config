@@ -22,7 +22,7 @@ obligation_frequency: "none"
 
 # Symfony Routing
 
-**Iron Law.** Symfony-flavoured PHP (DI container, bundles, Doctrine entities, Messenger, Security voters, console commands) → load the `symfony-workflow` skill, not `laravel` and not `php-coder`.
+**Iron Law.** Symfony-flavoured PHP → `symfony-workflow`. Discriminator: entry point and router, not the dependency list — `symfony/*` with no skeleton marker is the third verdict.
 
 Body migrated to `skill:symfony-workflow`. Disambiguates the laravel ↔ symfony-workflow cluster head per [`adr-architectural-consensus-mechanism`](../../docs/contracts/adr-architectural-consensus-mechanism.md).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
