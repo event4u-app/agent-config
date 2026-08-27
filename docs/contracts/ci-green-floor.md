@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-26
+keep-beta-until: 2026-09-04
 roadmap_ref: road-to-adoption-proof-and-ci-green.md
 ---
 
@@ -12,6 +12,29 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 > before merge) vs. an **advisory** signal (visible but not
 > merge-blocking), and the freeze rule that fires when main goes
 > red on a required check.
+>
+> **Beta review, 2026-08-27 — extended to 2026-09-04, and the date is the
+> anchor's, not a round number.** This contract's normative core is delegated:
+> § Blocking set says the blocking set "is defined per PR shape … in
+> `branch-protection-policy.md`". That file is itself `stability: beta` until
+> **2026-09-04**, so promoting this one now would make a stable contract depend
+> on a beta one. **What has to happen before promotion:** `branch-protection-policy.md`
+> is promoted or its own window is resolved, and the two advisory rows below
+> that carry pending maintainer work — `cloud-release.yml`'s rate-limit fix and
+> `deploy-mcp-worker.yml`'s auth alignment, each with a stated promotion
+> criterion — reach a recorded outcome, **and the resulting classification is
+> written into this contract** rather than left implicit in CI history. That is
+> a fact about the contract, measurable from CI, not a schedule.
+>
+> **Decided by AI council 2026-08-27, 2/2 convergent** (extend), under the
+> maintainer's delegation of owner-reserved decisions for an autonomous drain
+> run. One seat put the reason for extending most sharply: this contract's own
+> text declares the partition *not final* and names the two pending migrations,
+> so promoting it now would encode an explicitly unfinished state as
+> authoritative. It also named this file's self-documenting incompleteness as
+> the shape a genuinely-beta contract should have. **Revisit if** either
+> workflow meets its stated criterion, or the maintainer formally rejects the
+> proposed reclassification.
 
 ## The Iron Law
 
@@ -130,11 +153,19 @@ red within ~5 minutes (the standard required-check window):
 
 The freeze is therefore behavioural, not enforced via a separate
 "freeze-mode" workflow — branch protection already does the
-gating. `freeze-guard.yml` ([source](../../.github/workflows/freeze-guard.yml))
-is a **different** mechanism: it locks the behavioural baseline of
-the work-engine via golden-transcript diff, and is a required check
-in the engine-path subset (not the universal floor). Both apply
-together; the names don't conflict.
+gating. The **freeze-guard** is a different mechanism: it locks the
+behavioural baseline of the work-engine via golden-transcript diff.
+Both apply together; the names don't conflict.
+
+**Corrected 2026-08-27:** this paragraph cited
+`.github/workflows/freeze-guard.yml`, which **does not exist in the
+tree** — a dead normative citation, found during the beta review. The
+mechanism itself survives: the standalone workflow was folded into the
+`golden-tests` job of [`tests.yml`](../../.github/workflows/tests.yml),
+driven by `task golden-replay`. Nothing under `.github/workflows/`
+mentions a golden-transcript diff by that name any more, so a reader
+following the old link found nothing and could reasonably have concluded
+the guard was gone.
 
 ## CI delta — what the local task runner cannot run
 

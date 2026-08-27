@@ -1,5 +1,17 @@
 {
   "threshold": 0.7,
   "skills_scanned": 299,
-  "pairs": []
+  "pairs": [
+    {
+      "a": "test-driven-development",
+      "b": "testing-anti-patterns",
+      "a_path": "src/skills/test-driven-development/SKILL.md",
+      "b_path": "src/skills/testing-anti-patterns/SKILL.md",
+      "similarity": 0.712,
+      "same_domain": true,
+      "shared_packs": [
+        "engineering-base"
+      ]
+    }
+  ]
 }

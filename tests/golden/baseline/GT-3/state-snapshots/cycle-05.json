@@ -40,31 +40,21 @@
     "exit_code": 0,
     "targeted": "Tests 4 passed (4)"
   },
-  "verify": {
-    "verdict": "success",
-    "confidence": "high",
-    "judges": [
-      "bug-hunter",
-      "security",
-      "test-coverage",
-      "code-quality"
-    ],
-    "findings": []
-  },
+  "verify": null,
   "outcomes": {
     "refine": "success",
     "memory": "success",
     "analyze": "success",
     "plan": "success",
     "implement": "success",
-    "test": "success",
-    "verify": "blocked"
+    "test": "blocked"
   },
   "questions": [
-    "@agent-directive: review-changes ticket=GT-3-POW",
-    "> Ticket GT-3-POW — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
-    "> 1. Continue — run `review-changes` now",
-    "> 2. Abort — skip review (NOT recommended)"
+    "@agent-directive: fix-failing-checks ticket=GT-3-POW lane=test attempt=1 ceiling=3",
+    "> Ticket GT-3-POW — `test` reported `failed`. Self-fix attempt 1 of 3.",
+    "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
+    "> 1. Continue — fix the failures and re-run `run-tests`",
+    "> 2. Abort — stop this cycle and hand the failures back"
   ],
   "report": ""
 }

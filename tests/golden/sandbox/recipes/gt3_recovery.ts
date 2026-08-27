@@ -95,8 +95,21 @@ export function buildRecipe(workspace: string): Record<string, RecipeStep> {
         return state;
     };
 
+    // The implement gate refuses production work without an observed
+    // failing test for the behaviour; the recipe records one, as a
+    // compliant agent would after running the new test red.
+    const onObserveRed: RecipeStep = (state: Dict, record: CycleRecord) => {
+        state['tests'] = {
+            ...((state['tests'] as Dict | null) ?? {}),
+            red: { behaviour: 'the changed behaviour under test', failure_class: 'missing_target' },
+        };
+        record.recipe_notes.push('observed RED for the next behaviour');
+        return state;
+    };
+
     return {
         'create-plan': onCreatePlan,
+        'observe-red': onObserveRed,
         'apply-plan': onApplyPlan,
         'run-tests': onRunTests,
         'review-changes': onReviewChanges,

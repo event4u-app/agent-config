@@ -40,31 +40,20 @@
     "exit_code": 0,
     "targeted": "Tests 4 passed (4)"
   },
-  "verify": {
-    "verdict": "success",
-    "confidence": "high",
-    "judges": [
-      "bug-hunter",
-      "security",
-      "test-coverage",
-      "code-quality"
-    ],
-    "findings": []
-  },
+  "verify": null,
   "outcomes": {
     "refine": "success",
     "memory": "success",
     "analyze": "success",
     "plan": "success",
     "implement": "success",
-    "test": "success",
-    "verify": "blocked"
+    "test": "blocked"
   },
   "questions": [
-    "@agent-directive: review-changes ticket=GT-5-NEG",
-    "> Ticket GT-5-NEG — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
-    "> 1. Continue — run `review-changes` now",
-    "> 2. Abort — skip review (NOT recommended)"
+    "@agent-directive: run-tests ticket=GT-5-NEG scope=targeted",
+    "> Ticket GT-5-NEG — running tests: targeted first (`--filter` on the changed paths), full suite only if targeted passes.",
+    "> 1. Continue — run targeted tests now",
+    "> 2. Abort — skip testing (NOT recommended)"
   ],
   "report": ""
 }

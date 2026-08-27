@@ -112,6 +112,33 @@ The derivation therefore unwraps a thin wrapper and records what it points at, a
   confirm, and the file says which id failed. Downgrading is the honest outcome; writing
   the stronger claim and hoping is the failure this skill exists to prevent.
 
+## A confirmed canonical answer is a playbook — including the awkward one
+
+A repository's answer to *"where does new code of this kind go"* is a playbook
+once it has been **confirmed**, graded like any other: `configured` when every
+cited id resolved, `observed` when one did not.
+
+**The awkward case is the one worth writing down.** A public surface version and
+an **implementation generation** are independent axes — a `v1` controller can
+carry the current internal architecture while a `v2` one is half-migrated and
+abandoned. So the canonical answer for a scope is frequently *"the
+older-looking lane"*, and that is exactly the answer nobody records because it
+reads as a mistake. **ADR-248** holds the evidence order that produces it: a live
+decision record, then an executable architecture test, then a shared abstraction
+in maintained code, then current tests and contracts, then several recent
+analogous implementations, then migration docs, then git history, and **names and
+paths last**.
+
+Two bounds, both deliberate:
+
+- **Per scope, never per artifact type.** A repository may legitimately have two
+  right answers in two modules. There is no single global exemplar, and a
+  playbook claiming one is over-reaching its own `scope`.
+- **No second contract.** This is the ADR-244 playbook class unchanged — not a
+  conventions map, not a canonicality registry. A confirmed answer is a
+  playbook; an unconfirmed one is a hypothesis and belongs in the analysis that
+  produced it.
+
 ## Output format
 
 1. One playbook per file in the playbook home, frontmatter first: `task`, `scope`, `grade`,
@@ -156,7 +183,7 @@ The derivation therefore unwraps a thin wrapper and records what it points at, a
 
 ## See also
 
-- [ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md) — the artefact class, its grades, its home, and the two deferred kinds.
+- [ADR-244](../../../docs/decisions/ADR-244-playbook-is-a-sixth-context-type.md) — the artifact class, its grades, its home, and the two deferred kinds.
 - [`standards-from-config`](../standards-from-config/SKILL.md) — the Class-A rule this applies to procedure rather than to style.
 - [`context-document`](../context-document/SKILL.md) — the contexts machinery a playbook reuses as its sixth type.
 - [`command-writing`](../command-writing/SKILL.md) — the numbered-step shape the body follows.
