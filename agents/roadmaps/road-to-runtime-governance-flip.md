@@ -32,11 +32,12 @@ estate_offset_exempt: "No archive move is available in this change. Sixteen sour
 The reversal is not proposed here. It was directed, in the owner's own words,
 in the source transcript:
 
-> "ich will dass AC umgebaut wird, da ich aktiv entschieden habe, Zero Runtime
-> ist nicht mehr unser Ziel. Alles was das behauptet, in Frage stellt oder uns
-> von verbesserungen abhält soll deprecated oder entfernt werden. Auch die
-> Readme soll angepasst werden. Wir werden runtime und deamons haben."
+DE: "ich will dass AC umgebaut wird, da ich aktiv entschieden habe, Zero Runtime ist nicht mehr unser Ziel. Alles was das behauptet, in Frage stellt oder uns von verbesserungen abhält soll deprecated oder entfernt werden. Auch die Readme soll angepasst werden. Wir werden runtime und deamons haben. Das ist ein Ziel, um die Qualität zu gewährleisten."
 
+EN: "I want AC rebuilt, because I have actively decided that Zero Runtime is no longer our goal. Anything that asserts it, questions that, or holds us back from improvements is to be deprecated or removed. The README is to be adapted as well. We will have runtime and daemons. That is a goal, in order to guarantee quality."
+
+The German is the original, kept verbatim under the bilingual-anchor escape
+because it is the authority record; the English is the working translation.
 That sentence is the authority for every phase below. What this roadmap adds is
 the **target set** — because the analysis got it materially wrong, and executing
 its Phase 0 as written would have left the live doctrine standing.
