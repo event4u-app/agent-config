@@ -125,7 +125,27 @@ throughput problem** — never open ten files at full depth in one pass.
 
 One pass per file, shallow, producing a table before any deep read:
 
-| file | genre | age | drafted-against | recurrence | first-impression disposition |
+| file | genre | age | drafted-against | recurrence | lineage | first-impression disposition |
+
+`lineage` is `n/a` for a file that claims no consolidation, `complete` for one
+whose declared parent set matches the siblings present, or `omits: <names>` /
+`ghost: <name>` / `undeclared`. Fill it from one command over the folder, not by
+reading:
+
+```bash
+./scripts-run src/scripts/lint_consolidation_lineage --root <the inbox folder>
+```
+
+The column exists because a consolidating artifact is the one genre that reads
+as *finished* while being incomplete: it presents its content as adjudicated —
+parents named, conflicts resolved, a kill register for what was rejected — so a
+parent missing from that list is not *killed*, it is *undiscussed*, and nothing
+in the artifact distinguishes those two states. Measured over four inbox folders
+carrying a declared consolidation, four had an incomplete lineage
+(`agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md`). It sits
+in the triage table rather than in a deep read for the same reason `recurrence`
+does: it is one command, and by the time a deep read starts the artifact has
+already been believed.
 
 `recurrence` is `first-seen` or a pointer to the earlier artifact — the marker in
 the file's own words, or a hit in `agents/tmp.old/` on the same subject (Phase
@@ -413,6 +433,29 @@ The question is never "what does the file say" but **"what does it become here"*
 | reference material read on demand | a `guideline` or `context` |
 | a measured finding | a `decision-record`/ADR, not a rule |
 | a defect claim | a roadmap item, once verified |
+| a consolidation omitting a parent | **not an artifact — a discharge, see below** |
+
+**An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
+column read anything but `n/a` or `complete`, this phase says what happened to
+each omitted parent. Exactly three discharges are legal, and the choice is the
+operator's:
+
+1. **Fold it in** — read the omitted parent and carry its surviving items into
+   the consolidation, marking them as coming from it.
+2. **Record a kill ID for it** — the consolidation's kill register gains a row
+   naming the parent and why its content does not survive.
+3. **State that it was read and adds nothing** — one sentence, in the artifact,
+   naming the parent.
+
+**Silence is the failure mode; any of the three is a complete discharge.** The
+obligation is to *name* it, never to consolidate it — whether the omission was
+correct is a judgement the operator makes and this command does not. A finding
+that is usually wrong gets ignored, which is why a false positive costs one
+sentence (discharge 3) rather than a re-run.
+
+A `ghost:` reading — a declared parent with no matching file — has the same three
+discharges plus a fourth that is really a correction: fix the name. A lineage
+naming a plan nobody can open is the cheaper half of the same defect.
 
 Three hard defaults, from this repo's own scar tissue:
 

@@ -38,6 +38,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { humanTypedThisTurn as _humanTypedThisTurn } from "./_lib/machine_wake.js";
+
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
@@ -465,6 +467,14 @@ export function takePending(
     }
 }
 
+/**
+ * Re-exported so the ledger's own tests and callers keep one import site. The
+ * predicate lives in `_lib/machine_wake.ts` because the misclassification is a
+ * property of the `user_prompt_submit` SLOT, not of this concern — see that
+ * file for the discriminator and the captured evidence behind it.
+ */
+export { humanTypedThisTurn } from "./_lib/machine_wake.js";
+
 export function run(stdin_text: string, options: { consumer_root: string }): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
@@ -491,11 +501,22 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     return EXIT_ALLOW;
   }
 
+  const session = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
+
+  // A machine wake is not a user turn. Leave every per-turn record standing —
+  // the ledger AND the pending refusal — and return before either is touched.
+  // Returning early rather than branching per-record is the point: any future
+  // per-turn state added to this function inherits the protection instead of
+  // needing to remember it (risk 4 — the misclassification is a property of the
+  // slot, not of one consumer).
+  if (!_humanTypedThisTurn(prompt)) {
+    return EXIT_ALLOW;
+  }
+
   const { authorized, evidence } = classifyAuthorization(prompt);
 
   // The answer to the guard's own question. Read (and consume) on EVERY prompt,
   // so the record cannot outlive the turn it was raised in.
-  const session = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
   const pending = takePending(options.consumer_root, session, Date.now());
   if (pending && !authorized.includes(pending.op) && isAffirmative(prompt)) {
     authorized.push(pending.op);

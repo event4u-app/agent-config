@@ -113,6 +113,14 @@ SQLite; ORM-agnostic):
 
 ## Gotcha
 
+**MySQL and MariaDB share a query-syntax world. They never share a migration
+one.** Treat them as one engine for writing a `SELECT`, and as two engines for
+everything that changes a schema or reports on a plan: online-DDL semantics,
+lock behavior under `ALTER`, feature availability, and `EXPLAIN` output all
+diverge. Read the engine and its version from the project before making any
+claim in that second group; where the project does not declare one, say the
+engine is unknown rather than assuming.
+
 - Check existing indexes before adding — duplicates waste write performance.
 - Consider multi-tenant implications — queries may need customer DB scoping.
 - `EXPLAIN` output varies between MariaDB and MySQL.
