@@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
+import { humanTypedThisTurn } from '../_lib/machine_wake.js';
 
 const EXIT_ALLOW = 0;
 const SETTINGS_FILE = '.agent-settings.yml';
@@ -328,6 +329,15 @@ export function main(_argv: readonly string[] = [], now: Date = new Date()): num
             return EXIT_ALLOW;
         }
         if (event === 'user_prompt_submit') {
+            // A machine wake is not a user turn. Without this, a background task
+            // notification arriving between the block and the user's "1"
+            // consumes the latch, and the real pick then classifies as `other`
+            // — the instrument records a miss that never happened. Same defect,
+            // same predicate, as the git-authorization ledger; see
+            // `_lib/machine_wake.ts` for the captured discriminator.
+            if (!humanTypedThisTurn(str(payload['prompt'] as JsonValue | undefined))) {
+                return EXIT_ALLOW;
+            }
             const latch = consumeLatch(root);
             const v = classifyTurn(str(payload['prompt'] as JsonValue | undefined), latch, now.getTime());
             if (v.record) {
