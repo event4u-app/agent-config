@@ -333,6 +333,31 @@ const DEFERRED_STEP_RE = /^[ \t]*[-*][ \t]+\[~\][ \t]*(.*)$/;
 /** Any other checkbox, or a heading — where a step's block ends. */
 const BLOCK_END_RE = /^[ \t]*[-*][ \t]+\[[ xX~-]\]|^#{1,6}[ \t]/;
 
+/** Escape a string for literal use inside a `RegExp`. */
+function _escapeRe(v: string): string {
+    return v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Does this frontmatter declare a `relates:` row naming `slug`?
+ *
+ * Structured, not textual: the slug has to appear as a `- slug: <name>` row or a
+ * bare `- <name>` item inside the `relates:` block, which is a declaration the
+ * author made deliberately. A mention anywhere else in the file does not count.
+ */
+function _relatesTo(text: string, slug: string): boolean {
+    const lines = text.split('\n');
+    const start = lines.findIndex((l) => /^relates:/.test(l));
+    if (start === -1) return false;
+    const re = new RegExp(`^\\s*-\\s*(slug:\\s*)?${_escapeRe(slug)}\\s*$`);
+    for (let i = start + 1; i < lines.length; i++) {
+        const line = lines[i] as string;
+        if (/^\S/.test(line)) break;
+        if (re.test(line)) return true;
+    }
+    return false;
+}
+
 /** Every `[~]` step in a roadmap, with the annotation that follows it (if any). */
 export function parseDeferredItems(text: string): DeferredItem[] {
     const lines = text.split('\n');
@@ -385,7 +410,23 @@ export function parseDeferredItems(text: string): DeferredItem[] {
  *
  * @returns `problems` empty ⇒ every deferral is resolved and archival may proceed.
  */
-export function deferralProblems(root: string, rel: string, text: string): string[] {
+export function deferralProblems(
+    root: string,
+    rel: string,
+    text: string,
+    /**
+     * Slugs this same sweep is about to archive. A destination in this set is
+     * about to become dead, so accepting it would leave the carried item with no
+     * live receiver — the exact loss the annotation exists to prevent, produced
+     * by the mechanism meant to prevent it. Found by an independent review, with
+     * two reproducers: a roadmap naming ITSELF as destination, and two roadmaps
+     * both complete in one run where the parent carries to the child.
+     *
+     * Optional so the unit tests can call this with one roadmap in view; the
+     * sweep always passes the real set.
+     */
+    alsoArchiving: ReadonlySet<string> = new Set(),
+): string[] {
     const sourceSlug = rel.replace(/\.md$/, '');
     const problems: string[] = [];
     for (const item of parseDeferredItems(text)) {
@@ -405,6 +446,24 @@ export function deferralProblems(root: string, rel: string, text: string): strin
             path.join(root, 'agents', 'roadmaps', `${item.destination}.md`),
             path.join(root, 'agents', 'roadmaps', 'later', `${item.destination}.md`),
         ];
+        // Self-reference is never a carry. It passes every other check — the
+        // file exists, and a `parent_roadmap:` naming itself would satisfy the
+        // back-link — and then the sweep archives it, so the destination is dead
+        // the moment the source is.
+        if (item.destination === sourceSlug) {
+            problems.push(
+                `deferred step ${JSON.stringify(label)} names its OWN roadmap as the destination — ` +
+                    'a carry needs a different receiver, or the item is not carried at all',
+            );
+            continue;
+        }
+        if (alsoArchiving.has(item.destination)) {
+            problems.push(
+                `destination \`${item.destination}\` is being archived by this same sweep, so it would be ` +
+                    'dead the moment the carry lands — archive it first and re-run, or carry to a roadmap that stays active',
+            );
+            continue;
+        }
         const found = candidates.find((c) => fs.existsSync(c));
         if (found === undefined) {
             const dead = ['archive', 'skipped'].find((d) =>
@@ -418,16 +477,29 @@ export function deferralProblems(root: string, rel: string, text: string): strin
             continue;
         }
         const destText = fs.readFileSync(found, 'utf-8');
-        if (item.kind === 'carried-to' && !new RegExp(`^parent_roadmap:[ \t]*${sourceSlug}[ \t]*$`, 'm').test(destText)) {
+        // ESCAPED. The slug was interpolated raw, so `road.parent` matched
+        // `roadXparent` and a slug containing `[` or `(` made `new RegExp` THROW
+        // and abort the whole sweep — in a function whose entire contract is
+        // failing closed. Found by an independent review; both seats named it.
+        const backlink = new RegExp(`^parent_roadmap:[ \t]*${_escapeRe(sourceSlug)}[ \t]*$`, 'm');
+        if (item.kind === 'carried-to' && !backlink.test(destText)) {
             problems.push(
                 `destination \`${item.destination}\` carries no \`parent_roadmap: ${sourceSlug}\` back-link — ` +
                     'the link must be verifiable from both ends',
             );
             continue;
         }
-        if (!destText.includes(sourceSlug)) {
+        // A STRUCTURED link, not a substring. `destText.includes(sourceSlug)` was
+        // satisfied by any incidental mention — a filename, an example, an HTML
+        // comment — so `merged-into` proved nothing about a merge. Both review
+        // seats called it trivially spoofable. The link now has to be a
+        // frontmatter declaration: a `relates:` row naming the source, or a
+        // `parent_roadmap:` back-link. Prose cannot satisfy it.
+        if (item.kind === 'merged-into' && !backlink.test(destText) && !_relatesTo(destText, sourceSlug)) {
             problems.push(
-                `destination \`${item.destination}\` never mentions \`${sourceSlug}\` — the carried item is not traceable back`,
+                `destination \`${item.destination}\` carries no structured link back to \`${sourceSlug}\` — ` +
+                    'add a `relates:` row naming it (with a `relation:`) or a `parent_roadmap:` line. A mention ' +
+                    'in prose is not a link: it is satisfied by a filename or an example.',
             );
         }
     }
@@ -454,6 +526,15 @@ function archive_completed(
         return [];
     }
 
+    // Every slug this sweep will consider archiving, computed BEFORE any of them
+    // is judged. Without it, a deferral carried to another roadmap that is also
+    // complete passes validation and then loses its receiver in the same run.
+    const sweepSet = new Set(
+        collect(roadmap_root)
+            .filter((s2) => s2.open_ === 0)
+            .map((s2) => s2.rel.replace(/\.md$/, '')),
+    );
+
     const archived: ArchiveRecord[] = [];
     for (const stats of collect(roadmap_root)) {
         if (stats.open_ !== 0) {
@@ -464,7 +545,11 @@ function archive_completed(
         // for every way that check fails closed.
         if (stats.deferred !== 0) {
             const abs = path.join(roadmap_root, stats.rel);
-            const problems = deferralProblems(root, stats.rel, fs.readFileSync(abs, 'utf-8'));
+            // The source's own slug is removed: it is trivially in `sweepSet`,
+            // and self-reference is reported by its own, clearer message.
+            const others = new Set(sweepSet);
+            others.delete(stats.rel.replace(/\.md$/, ''));
+            const problems = deferralProblems(root, stats.rel, fs.readFileSync(abs, 'utf-8'), others);
             if (problems.length > 0) {
                 process.stderr.write(
                     `  ⚠️  ${stats.rel}: ${problems.length} unresolved deferral(s) — not archived.\n`,

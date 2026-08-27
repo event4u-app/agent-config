@@ -103,6 +103,17 @@ that was never a judgement call.
     which door closed. `merged-into` needs no back-link but the destination must
     still mention the source slug. An annotation is cheap to write, so it is
     made expensive to satisfy.
+    Three further doors, each found by an independent review of the first
+    version rather than designed in: the destination may not be the **source
+    itself** (it passes every other check and then dies with it); it may not be
+    a roadmap **this same sweep will archive** (both complete in one run leaves
+    the carried item with no receiver — the loss the annotation exists to
+    prevent, produced by the mechanism); and `merged-into` needs a
+    **structured** link — a `relates:` row or a `parent_roadmap:` line — because
+    a substring match on the source slug is satisfied by a filename, an example
+    or a comment. The back-link slug is regex-escaped: interpolated raw, a slug
+    like `road.parent` matched `roadXparent` and one containing `[` threw and
+    aborted the sweep.
     **Not checked, and stated rather than implied:** that the destination's copy
     of the criterion is faithful. Both council seats asked for stable item
     identity over verbatim text matching, and neither exists today — the
