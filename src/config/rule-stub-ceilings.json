@@ -6,7 +6,7 @@
         "active-remediation": 1595,
         "analysis-skill-routing": 76,
         "architecture": 955,
-        "artifact-drafting-protocol": 754,
+        "artifact-drafting-protocol": 690,
         "augment-edit-discipline": 137,
         "autonomous-execution": 1633,
         "brand-consistency": 133,
@@ -122,8 +122,8 @@
             "date": "2026-08-27",
             "rule": "artifact-drafting-protocol",
             "from": 680,
-            "to": 754,
-            "reason": "road-to-composition-before-creation Phase 3.3 makes Phase B's verdict a WRITTEN record rather than only a reasoned one, so the rule has to name the field that carries it. +74 tokens, 680 -> 754, and the split was deliberate: everything that is lookup material \u2014 the field's YAML shape, the four dispositions with their discriminators, why `none_found` must exist so an author is never pushed to invent an incumbent, why `create_separate` is the value no incumbent vocabulary can express, and what the lint can and cannot check \u2014 went to the pointer target (`docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` \u00a7 Where the answer is written). What stayed is obligation surface and cannot be moved without the rule mandating a field it does not name: that the verdict is written into the artifact, the field's name, and the measurement behind it (1 of the 20 most recently added skills and rules carried a machine-readable record \u2014 `agents/evidence/analysis/authoring-search-record-sample-2026-08-27.md`). Two shrink passes were run before the ceiling was raised at all: 928 -> 783 -> 754 tokens. The ceiling is set to the exact measured count with no slack, so the next growth is caught rather than absorbed."
+            "to": 690,
+            "reason": "road-to-composition-before-creation Phase 3.3 makes Phase B's verdict a WRITTEN record rather than only a reasoned one, so the rule has to name the field that carries it. +74 tokens, 680 -> 754, and the split was deliberate: everything that is lookup material \u2014 the field's YAML shape, the four dispositions with their discriminators, why `none_found` must exist so an author is never pushed to invent an incumbent, why `create_separate` is the value no incumbent vocabulary can express, and what the lint can and cannot check \u2014 went to the pointer target (`docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` \u00a7 Where the answer is written). What stayed is obligation surface and cannot be moved without the rule mandating a field it does not name: that the verdict is written into the artifact, the field's name, and the measurement behind it (1 of the 20 most recently added skills and rules carried a machine-readable record \u2014 `agents/evidence/analysis/authoring-search-record-sample-2026-08-27.md`). FOUR shrink passes, and the last one was forced by a different gate rather than chosen: 928 -> 783 -> 754 -> 690. `check_preamble_payload_budget` reds at 138,212 tokens -- its grace ceiling, set to the exact measured total on 2026-08-24 with zero slack and expiring 2026-11-10 -- and `origin/main` measures 138,195, so this branch had **17 tokens** of headroom for the whole rule payload, not 74. The addition was therefore folded into the existing Phase-B parenthetical instead of added as a paragraph, which is both cheaper and better placed: the field is now named where the phase is described. Measured after: 138,208, four under the ceiling. The ceiling here is the exact measured count with no slack, so the next growth is caught rather than absorbed."
         }
     ]
 }
